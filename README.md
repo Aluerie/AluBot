@@ -1,0 +1,2 @@
+# Irenesbot
+Personal Discord bot

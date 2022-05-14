@@ -6,6 +6,7 @@ from discord.ext import bridge, commands, tasks, pages
 from utils.var import *
 import asyncio
 from typing import List
+from datetime import datetime, timezone
 
 
 class ViewHelp(ui.View):
@@ -43,8 +44,9 @@ class BetaTest(commands.Cog):
     @commands.is_owner()
     @commands.command()
     async def elp(self, ctx: commands.Context, members: commands.Greedy[Member], reason: str = None):
-        print([i.name for i in members])
-        print(reason)
+        embed = Embed()
+        embed.timestamp = datetime.now(timezone.utc)
+        embed.description = 'nice'
         await ctx.send(content=f'{umntn(Uid.irene)} {Ems.PepoBeliever}')
 
     @commands.is_owner()

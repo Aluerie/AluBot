@@ -12,8 +12,7 @@ from os import getenv, environ, listdir
 
 jsk = True
 test_list = [  # for yen bot
-    'wolfram',
-    'info'
+    'expsys'
 ]
 
 
@@ -29,7 +28,6 @@ class MyBot(bridge.Bot):
             allowed_mentions=AllowedMentions(replied_user=False, everyone=False)  # .none()
         )
         self.__session = ClientSession()
-        self.launch_time = datetime.now(timezone.utc)
         self._help2_command = None
         self._help3_command = None
         self.yen = yen
@@ -63,10 +61,11 @@ class MyBot(bridge.Bot):
         try:
             self.load_extension(cog)
         except Exception as e:
-            print(e)
             raise e
 
     async def on_ready(self):
+        if not hasattr(self, 'launch_time'):
+            self.launch_time = datetime.now(timezone.utc)
         print(f'Logged in as {self.user}')
 
     @property
@@ -112,6 +111,10 @@ class MyBot(bridge.Bot):
             self._help3_command = None
         else:
             self._help3_command = None
+
+    async def close(self) -> None:
+        await super().close()
+        await self.__session.close()
 
 
 environ["JISHAKU_NO_UNDERSCORE"] = "True"

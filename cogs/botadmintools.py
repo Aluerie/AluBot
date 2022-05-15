@@ -14,9 +14,9 @@ class AdminTools(commands.Cog):
     @commands.command()
     async def msgcount(self, ctx, member: Member, msg_count):
         db.set_value(db.m, member.id, msg_count=msg_count)
-        await ctx.channel.send(
-            content=f'msgcount: {member.display_name}(id=`{member.id}`) to `{msg_count}`! {Ems.bubuAyaya}'
-        )
+        embed = Embed(colour=member.colour)
+        embed.description = f'msgcount: {member.mention} (id=`{member.id}`) to `{msg_count}`! {Ems.bubuAyaya}'
+        await ctx.channel.send(embed=embed)
 
     @commands.is_owner()
     @commands.command()

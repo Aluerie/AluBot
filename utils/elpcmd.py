@@ -30,9 +30,7 @@ class HelpCommand(commands.HelpCommand):
                     slash = Ems.slash
                 aliases = ''
                 if len(c.aliases):
-                    prefix = getattr(self.context, 'clean_prefix', '$')
-                    alis = [f'`{prefix}{ali}`' for ali in c.aliases]
-                    aliases = ' | aliases: ' + '; '.join(alis)
+                    aliases = ' | aliases: ' + '; '.join([f'`{ali}`' for ali in c.aliases])
                 cd_str = ''
                 if c.cooldown is not None:
                     cd_str = f' | cd: rate {c.cooldown.rate} per {display_hmstime(c.cooldown.per)}'
@@ -64,9 +62,8 @@ class HelpCommand(commands.HelpCommand):
                     value=temp_dict[category][cmd_name]
                 )
 
-        pages_list = list(embed_dict.values())
         paginator = MyPaginator(
-            pages=pages_list,
+            pages=list(embed_dict.values()),
             # show_action_row=True,
             # input_method="wait_for",
             # goto_select=True,

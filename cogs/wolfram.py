@@ -7,7 +7,6 @@ from io import BytesIO
 from urllib import parse as urlparse
 from os import getenv
 WOLFRAM_TOKEN = getenv("WOLFRAM_TOKEN")
-print(WOLFRAM_TOKEN)
 
 
 class WolframAlpha(commands.Cog):

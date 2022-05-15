@@ -1,4 +1,4 @@
-from discord import Embed, Guild, utils
+from discord import Embed, Guild, Member, utils
 from discord.ext import commands, tasks
 from utils.var import *
 from utils import database as db
@@ -12,9 +12,11 @@ class AdminTools(commands.Cog):
 
     @commands.is_owner()
     @commands.command()
-    async def msgcount(self, ctx, member_id, msg_count):
-        db.set_value(db.m, member_id, msg_count=msg_count)
-        await ctx.channel.send(content=f'Set msg_count of {member_id} to {msg_count}! {Ems.bubuAyaya}')
+    async def msgcount(self, ctx, member: Member, msg_count):
+        db.set_value(db.m, member.id, msg_count=msg_count)
+        await ctx.channel.send(
+            content=f'msgcount: {member.display_name}(id=`{member.id}`) to `{msg_count}`! {Ems.bubuAyaya}'
+        )
 
     @commands.is_owner()
     @commands.command()

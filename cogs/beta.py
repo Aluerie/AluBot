@@ -43,11 +43,9 @@ class BetaTest(commands.Cog):
 
     @commands.is_owner()
     @commands.command()
-    async def elp(self, ctx: commands.Context, members: commands.Greedy[Member], reason: str = None):
-        embed = Embed()
-        embed.timestamp = datetime.now(timezone.utc)
-        embed.description = 'nice'
-        await ctx.send(content=f'{umntn(Uid.irene)} {Ems.PepoBeliever}')
+    async def elp(self, ctx):
+
+        await ctx.send(content=Ems.PepoBeliever)
 
     @commands.is_owner()
     @commands.command()

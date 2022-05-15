@@ -147,8 +147,7 @@ class EmoteLogging(commands.Cog):
     async def turn_emote_logs(self, ctx):
         """Turn emote logs on in this channel for this guild ;"""
         db.append_row(db.c, name='emote_logs', guildid=ctx.guild.id, channelid=ctx.channel.id)
-        embed = Embed(colour=Clr.prpl)
-        embed.title = 'Emote logging is turned on'
+        embed = Embed(colour=Clr.prpl, title='Emote logging is turned on')
         embed.description = 'Now I will log emote create/delete/rename actions in this channel. Go try it!'
         embed.set_footer(text=f'With love, {ctx.bot.user.display_name}')
         embed.set_thumbnail(url=ctx.bot.user.display_avatar.url)

@@ -115,25 +115,17 @@ class DotaFeed(commands.Cog):
 
     async def send_the_embed(self, tbp, session):
         log.info("sending dota 2 embed")
-        match_id = tbp['matchid']
+        match_id, streamer, heroid, hero_ids = tbp['matchid'], tbp['streamer'], tbp['heroid'], tbp['hero_ids']
         long_ago = datetime.now(timezone.utc).timestamp() - tbp['st_time']
-        streamer = tbp['streamer']
-        heroid = tbp['heroid']
-        hero_ids = tbp['hero_ids']
 
         twitch = TwitchStream(streamer)
-
-        embed = Embed(colour=Clr.prpl)
-        embed.title = "Irene's fav streamer picked her fav hero !"
-        embed.url = twitch.url
-
+        embed = Embed(colour=Clr.prpl, title="Irene's fav streamer picked her fav hero !", url=twitch.url)
         vod = f'[TwtvVOD]({link})' if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ''
         dotabuff = f'[Dotabuff](https://www.dotabuff.com/matches/{match_id})'
         opendota = f'[Opendota](https://www.opendota.com/matches/{match_id})'
         stratz = f'[Stratz](https://stratz.com/matches/{match_id})'
-
         embed.description =\
-            f'Match started {display_relativehmstime(long_ago)}; `?match {match_id}`\n' \
+            f'`?match {match_id}` started {display_relativehmstime(long_ago)}\n' \
             f'{vod}/{dotabuff}/{opendota}/{stratz}'
 
         heroname = await d2.name_by_id(heroid)
@@ -148,7 +140,7 @@ class DotaFeed(commands.Cog):
             row.lastposted = match_id
         return 1
 
-    @tasks.loop(seconds=59)  # minutes=5)
+    @tasks.loop(seconds=59)
     async def dotafeed(self):
         with db.session_scope() as ses:
             await try_to_find_games(self.bot, ses)
@@ -162,9 +154,7 @@ class DotaFeed(commands.Cog):
 
     @dotafeed.error
     async def dotafeed_error(self, error):
-        embed = Embed(colour=Clr.error)
-        embed.title = 'Error in dotafeed'
-        await send_traceback(error, self.bot, embed=embed)
+        await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in dotafeed'))
         self.dotafeed.restart()
 
 
@@ -188,8 +178,7 @@ class DotaFeedTools(commands.Cog):
     async def add(self, ctx, *, heronames=None):
         """Add hero to database"""
         if heronames is None:
-            await ctx.send("Provide all arguments: `heroname`")
-            return
+            return await ctx.send("Provide all arguments: `heroname`")
         try:
             hero_array = set(db.get_value(db.g, Sid.irene, 'dota_fav_heroes'))
             for hero_str in re.split('; |, |,', heronames):
@@ -207,8 +196,7 @@ class DotaFeedTools(commands.Cog):
     async def remove(self, ctx, *, heronames=None):
         """Remove hero from database"""
         if heronames is None:
-            await ctx.send("Provide all arguments: `heroname`")
-            return
+            return await ctx.send("Provide all arguments: `heroname`")
         try:
             hero_array = set(db.get_value(db.g, Sid.irene, 'dota_fav_heroes'))
             for hero_str in re.split('; |, |,', heronames):
@@ -222,8 +210,7 @@ class DotaFeedTools(commands.Cog):
     @hero.command()
     async def list(self, ctx):
         """Show current list of fav heroes ;"""
-        embed = Embed(color=Clr.prpl)
-        embed.title = 'List of fav dota 2 heroes'
+        embed = Embed(color=Clr.prpl, title='List of fav dota 2 heroes')
         hero_array = db.get_value(db.g, Sid.irene, 'dota_fav_heroes')
         answer = [f'`{await d2.name_by_id(h_id)} - {h_id}`' for h_id in hero_array]
         answer.sort()

@@ -42,13 +42,12 @@ from discord import Embed
 from discord.ext import commands, tasks
 
 from utils import database as db
-from utils.var import Clr, Cid, Ems, Sid, cmntn
+from utils.var import *
 from utils.lol import get_role_mini_list
 from utils.dcordtools import send_traceback, scnf, inout_to_10
 from utils.format import display_relativehmstime
 from utils.imgtools import img_to_file, url_to_img
-from cogs.twitch import TwitchStream
-from cogs.twitch import get_db_online_streams
+from cogs.twitch import TwitchStream, get_db_online_streams
 
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, time
@@ -96,10 +95,7 @@ class LoLFeed(commands.Cog):
     async def send_the_embed(self, row, champ_ids, champ_name, long_ago, live_game_id):
         log.info("sending league embed")
         twitch = TwitchStream(row.name)
-        embed = Embed(color=Clr.rspbrry)
-        embed.title = "Irene's fav streamer picked her fav champ!"
-        embed.url = twitch.url
-
+        embed = Embed(color=Clr.rspbrry, title="Irene's fav streamer picked her fav champ!", url=twitch.url)
         twtvvod = f'[TwtvVOD]({link})' if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ''
         opggregion = ''.join(i for i in row.region if not i.isdigit())  # remove that 1/2 in the end !
         opgg = f'[Opgg](https://{opggregion}.op.gg/summoner/userName={row.accname.replace(" ", "+")})'
@@ -117,7 +113,7 @@ class LoLFeed(commands.Cog):
         msg = await self.bot.get_channel(Cid.irene_bot).send(embed=embed, file=file)
         await msg.publish()
 
-    @tasks.loop(seconds=59)  # minutes=5)
+    @tasks.loop(seconds=59)
     async def lolfeed(self):
         log.info("league feed every 59 seconds")
         with db.session_scope() as ses:

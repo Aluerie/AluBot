@@ -17,9 +17,9 @@ access_token_secret = getenv('TWITTER_ACCESS_TOKEN_SECRET')
 bearer_token = getenv('TWITTER_BEARER_TOKEN')
 
 followed_array = [
-    44680622,  # wykrhm_id
-    176507184,  # dota2_id
-    17388199,  # icefrog_id
+    44680622,   # wykrhm
+    176507184,  # dota2
+    17388199,   # icefrog
 ]
 
 

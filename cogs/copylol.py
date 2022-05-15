@@ -59,7 +59,7 @@ class CopypasteLeague(commands.Cog):
                         status = client.get_tweet(int(match))
                         if block_function(status.data.text, self.blocked_words, self.whitelist_words):
                             return
-                    embeds = [await replace_tco_links(item) for item in message.embeds]
+                    embeds = [await replace_tco_links(self.bot.ses, item) for item in message.embeds]
                     links = get_links_from_str(answer.content)
                     embeds = [move_link_to_title(link, embed) for link, embed in zip(links, embeds)]
                     content = ''

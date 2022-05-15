@@ -4,17 +4,15 @@ from discord.ext import commands, bridge
 
 from utils.var import *
 
-from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 
 fav_teams = ['[A]', 'Bald', 'GS']
 
 
-async def schedule_work(arg, mod, only_today=0, favmode=0):
-    async with ClientSession() as session:
-        async with session.get(my_url := 'https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches') as r:
-            soup = BeautifulSoup(await r.read(), 'html.parser')
+async def schedule_work(session, arg, mod, only_today=0, favmode=0):
+    async with session.get(my_url := 'https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches') as r:
+        soup = BeautifulSoup(await r.read(), 'html.parser')
     embed = Embed(colour=Clr.prpl)
     embed.set_author(name='Info from Liquipedia.net', icon_url=Img.dota2logo, url=my_url)
     embed.title = 'Dota 2 Pro Matches Schedule'
@@ -23,8 +21,8 @@ async def schedule_work(arg, mod, only_today=0, favmode=0):
     symb_amount = 15
     dt_now = datetime.now(timezone.utc)
 
-    def work_func(mod, part=1):
-        divs = soup.findAll("div", {"data-toggle-area-content": mod})
+    def work_func(modmod, part=1):
+        divs = soup.findAll("div", {"data-toggle-area-content": modmod})
         rows = divs[-1].findAll("tbody")
         for row in rows:
             lname = row.select_one('.team-left').text.strip().replace('`', '.')
@@ -111,7 +109,7 @@ class MySelect(ui.Select):
         self.arg = arg
         self.author = author
 
-    async def callback(self, interaction):
+    async def callback(self, ntr):
         only_today = 0
         mode = 0
         favmode = 0
@@ -133,8 +131,8 @@ class MySelect(ui.Select):
         self.view.clear_items()
         view = MyView(self.author)
         view.add_item(MySelect(options, placeholder=self.values[0], arg=self.arg))
-        embed = await schedule_work(self.arg, str(mode), only_today=only_today, favmode=favmode)
-        await interaction.response.edit_message(embed=embed, view=view)
+        embed = await schedule_work(ntr.client.ses, self.arg, str(mode), only_today=only_today, favmode=favmode)
+        await ntr.response.edit_message(embed=embed, view=view)
 
 
 class MyView(ui.View):
@@ -174,7 +172,7 @@ class DotaSchedule(commands.Cog):
         Use `query` to filter schedule by teams or tournaments, for example `$sch EG` will show only EG matches ;"""
         view = MyView(ctx.author)
         view.add_item(MySelect(options, arg=query, author=ctx.author))
-        await ctx.respond(embed=await schedule_work(query, "2", only_today=1, favmode=1), view=view)
+        await ctx.respond(embed=await schedule_work(self.bot.ses, query, "2", only_today=1, favmode=1), view=view)
 
 
 def setup(bot):

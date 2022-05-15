@@ -125,7 +125,7 @@ class Todo(commands.Cog):
 
     @commands.group()
     async def todo(self, ctx):
-        """Group command about ToDo lists, for actual commands use it together with subcommands"""
+        """Group command about ToDolists, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
     async def todo_remove_work(self, ctx, id_):
@@ -149,7 +149,7 @@ class Todo(commands.Cog):
 
     @todo.command()
     async def remove(self, ctx, id_: int = None):
-        """Removes todo bullet under *id* from your ToDo list. \
+        """Removes tdo bullet under *id* from your ToDolist. \
         You can find *ids* of your To Do bullets in `$todo list` command"""
         await self.todo_remove_work(ctx, id_)
 
@@ -165,7 +165,7 @@ class Todo(commands.Cog):
 
     @todo.command(usage='[member=you]')
     async def list(self, ctx, member: Member = None):
-        """Shows `@member`'s ToDo list ;"""
+        """Shows `@member`'s ToDolist ;"""
         await self.todo_list_work(ctx, member)
 
     async def todo_add_work(self, ctx, todo_text):
@@ -174,7 +174,7 @@ class Todo(commands.Cog):
 
     @todo.command()
     async def add(self, ctx, *, todo_text: str):
-        """Adds a new ToDo bullet to your ToDo list ;"""
+        """Adds a new ToDobullet to your ToDolist ;"""
         await self.todo_add_work(ctx, todo_text)
 
 

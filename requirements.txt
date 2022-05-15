@@ -27,6 +27,6 @@ matplotlib~=3.5.0
 PyGithub~=1.55
 gtts~=2.2.4
 ffmpeg
-requests~=2.27.1
+async-google-trans-new~=1.4.4
 unidiff~=0.7.3
 psutil~=5.9.0

@@ -5,7 +5,6 @@ from discord.abc import Messageable
 from pyot.utils.lol import champion
 from utils.var import Uid, Clr
 from utils.dcordtools import umntn
-from aiohttp import ClientSession
 # if they again run into no money issue then we should but new champions into dict below
 # just copypaste playrates data from page like https://www.leagueofgraphs.com/champions/stats/zeri/master
 
@@ -22,7 +21,7 @@ extra_data = {
 champion_roles = extra_data | pull_data()
 
 
-async def get_role_mini_list(all_players_champ_ids, destination: Messageable):
+async def get_role_mini_list(session, all_players_champ_ids, destination: Messageable):
     try:
         role_mini_list = \
             list(get_roles(champion_roles, all_players_champ_ids[:5]).values()) + \
@@ -39,9 +38,8 @@ async def get_role_mini_list(all_players_champ_ids, destination: Messageable):
         embed.title = 'Meraki Json problem'
 
         url_json = 'http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json'
-        async with ClientSession() as session:
-            async with session.get(url_json) as resp:
-                json_dict = await resp.json()
+        async with session.get(url_json) as resp:
+            json_dict = await resp.json()
 
         embed.description = \
             f'It seems like **{champ_name}** with id `{champ_id}` is missing from Meraki json\n ' \

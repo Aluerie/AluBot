@@ -1,12 +1,9 @@
 ### PassiveAgressive ToDo
 1. **Bootstrap Steam error EVERY TUESDAY**
    1. mb reload dota cog on error with `self.bot.reload_extension(''dotafeed')`
-2. refresh msg_count for each person for that one fact
 
 ### New Features
 3. nsfw functions
-6. reduce twitter twitch client stuff into bot attr
-7. remake roles command to include statuses and remove $status $botlist instead
 
 ### Probably Garbage
 9. better $afk commands (datetime `$afk till 01.08` or `$afk for 2hours`) maybe check ifinstance > if date then one thing if timedelta then another
@@ -28,9 +25,7 @@
 19. remember `a[start:stop:step]` so `a[::-1]` is reverse
 20. ?tag learn async
 21. remember `, default_permission=False)` in slash commands definitons
-
 23. learn collection lib
 24. ?tag eval
 26. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
 27. remember error.original in invoke command thing
-28. fix google trans into async

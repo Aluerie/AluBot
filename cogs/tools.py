@@ -20,7 +20,7 @@ class ToolsCog(commands.Cog):
     @option('url', description='url of image to convert')
     async def convert(self, ctx, *, url: str):
         """Convert image from webp to png format"""
-        img = await url_to_img(url)
+        img = await url_to_img(self.bot.ses, url)
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags
         img.thumbnail(maxsize, Image.ANTIALIAS)
         file = img_to_file(img, filename='converted.png', fmt='PNG')

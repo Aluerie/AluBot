@@ -8,9 +8,9 @@ from datetime import datetime, timezone
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 
-async def welcome_image(member):
+async def welcome_image(session, member):
     image = Image.open('./media/welcome.png', mode='r')
-    avatar = await url_to_img(member.display_avatar.url)
+    avatar = await url_to_img(session, member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
 
     width, height = image.size
@@ -45,8 +45,8 @@ async def welcome_image(member):
     return image
 
 
-async def welcome_message(member, back=0):
-    image = await welcome_image(member)
+async def welcome_message(session, member, back=0):
+    image = await welcome_image(session, member)
 
     content_text = '**💜 Welcome to Irène Adler ❤\'s server, {0} !** {1} {1} {1}\n'.format(
         member.mention, Ems.peepoWave)
@@ -81,7 +81,7 @@ class Welcome(commands.Cog):
     @commands.command()
     async def welcome_preview(self, ctx, member: Member = None):
         mbr = member or ctx.message.author
-        content_text, embed, image_file = await welcome_message(mbr)
+        content_text, embed, image_file = await welcome_message(self.bot.ses, mbr)
         await ctx.send(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
@@ -107,7 +107,7 @@ class Welcome(commands.Cog):
                 role = irene_server.get_role(Rid.level_zero)
                 await member.add_roles(role)
 
-        content_text, embed, image_file = await welcome_message(member, back=back)
+        content_text, embed, image_file = await welcome_message(self.bot.ses, member, back=back)
         await self.bot.get_channel(Cid.welcome).send(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
@@ -189,7 +189,7 @@ class WelcomeAdmin(commands.Cog):
     async def welcome_preview(self, ctx, member: Member = None):
         """Get a rendered welcome message for a `{@user}`;"""
         mbr = member or ctx.message.author
-        content_text, embed, image_file = await welcome_message(mbr)
+        content_text, embed, image_file = await welcome_message(self.bot.ses, mbr)
         await ctx.send(content=content_text, embed=embed, file=image_file)
 
 

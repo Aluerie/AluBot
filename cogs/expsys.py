@@ -10,7 +10,6 @@ from utils.myview import MyPaginator
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from datetime import datetime, time, timedelta, timezone
-from typing import Literal
 
 LAST_SEEN_TIMEOUT = 60
 
@@ -23,9 +22,9 @@ exp_lvl_table = [
 thanks_words = ['thanks', 'ty', 'thank']
 
 
-async def rank_image(lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_str, member):
+async def rank_image(session, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_str, member):
     image = Image.open('./media/welcome.png', mode='r')
-    avatar = await url_to_img(member.display_avatar.url)
+    avatar = await url_to_img(session, member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
 
     width, height = image.size
@@ -194,7 +193,9 @@ class ExperienceSystem(commands.Cog):
         next_lvl_exp, prev_lvl_exp = get_exp_for_next_level(lvl), get_exp_for_next_level(lvl-1)
 
         place = 1 + db.session.query(db.m).where(db.m.exp > mrow.exp).count()
-        image = await rank_image(lvl, mrow.exp, mrow.rep, next_lvl_exp, prev_lvl_exp, ordinal(place), member)
+        image = await rank_image(
+            self.bot.ses, lvl, mrow.exp, mrow.rep, next_lvl_exp, prev_lvl_exp, ordinal(place), member
+        )
         return img_to_file(image, filename='rank.png')
 
     async def avatar_work(self, ctx, member):

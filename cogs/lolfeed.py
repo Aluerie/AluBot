@@ -65,15 +65,15 @@ async def iconurl_by_id(champid):
     return cdragon.abs_url(champ.square_path)
 
 
-async def better_thumbnail(stream, champ_ids, champ_name):
-    img = await url_to_img(stream.preview_url)
+async def better_thumbnail(session, stream, champ_ids, champ_name):
+    img = await url_to_img(session, stream.preview_url)
     width, height = img.size
     rectangle = Image.new("RGB", (width, 100), '#9678b6')
     ImageDraw.Draw(rectangle)
     img.paste(rectangle)
 
     champ_img_urls = [await iconurl_by_id(champ_id) for champ_id in champ_ids]
-    champ_imgs = await url_to_img(champ_img_urls)
+    champ_imgs = await url_to_img(session, champ_img_urls)
     for count, champ_img in enumerate(champ_imgs):
         champ_img = champ_img.resize((62, 62))
         extra_space = 0 if count < 5 else 20
@@ -105,7 +105,7 @@ class LoLFeed(commands.Cog):
             f'{twtvvod}/{opgg}/{ugg}'
 
         image_name = f'{twitch.display_name.replace("_", "")}-is-playing-{champ_name.replace(" ", "")}.png'
-        file = img_to_file(await better_thumbnail(twitch, champ_ids, champ_name), filename=image_name)
+        file = img_to_file(await better_thumbnail(self.bot.ses, twitch, champ_ids, champ_name), filename=image_name)
         embed.set_image(url=f'attachment://{image_name}')
         champ = await lol.champion.Champion(key=champ_name).get()
         embed.set_thumbnail(url=cdragon.abs_url(champ.square_path))
@@ -126,6 +126,7 @@ class LoLFeed(commands.Cog):
                         our_player = [player for player in live_game.participants if player.summoner_id == row.id][0]
                         if our_player.champion_id in fav_ch_ids:
                             role_mini_list = await get_role_mini_list(
+                                self.bot.ses,
                                 [player.champion_id for player in live_game.participants],
                                 self.bot.get_channel(Cid.spam_me)
                             )

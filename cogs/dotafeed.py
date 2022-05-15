@@ -85,15 +85,15 @@ async def try_to_find_games(bot, ses):
     bot.dota.wait_event('top_games_response', timeout=8)
 
 
-async def better_thumbnail(stream, hero_ids, heroname):
-    img = await url_to_img(stream.preview_url)
+async def better_thumbnail(session, stream, hero_ids, heroname):
+    img = await url_to_img(session, stream.preview_url)
     width, height = img.size
     rectangle = Image.new("RGB", (width, 70), '#9678b6')
     ImageDraw.Draw(rectangle)
     img.paste(rectangle)
 
     for count, heroId in enumerate(hero_ids):
-        hero_img = await url_to_img(await d2.iconurl_by_id(heroId))
+        hero_img = await url_to_img(session, await d2.iconurl_by_id(heroId))
         # h_width, h_height = heroImg.size
         hero_img = hero_img.resize((62, 35))
         hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=Clr.dota_colour_map.get(count))
@@ -130,7 +130,7 @@ class DotaFeed(commands.Cog):
 
         heroname = await d2.name_by_id(heroid)
         image_name = f'{streamer.replace("_", "")}-playing-{heroname.replace(" ", "")}.png'
-        img_file = img_to_file(await better_thumbnail(twitch, hero_ids, heroname), filename=image_name)
+        img_file = img_to_file(await better_thumbnail(self.bot.ses, twitch, hero_ids, heroname), filename=image_name)
         embed.set_image(url=f'attachment://{image_name}')
         embed.set_thumbnail(url=await d2.iconurl_by_id(heroid))
         embed.set_author(name=f'{twitch.display_name} - {heroname}', url=twitch.url, icon_url=twitch.logo_url)

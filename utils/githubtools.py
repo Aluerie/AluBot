@@ -4,13 +4,8 @@ from github import Github
 from aiohttp import ClientSession
 import asyncio
 from unidiff import PatchSet
-from io import StringIO
 
 import vdf
-from os import getenv
-from dotenv import load_dotenv
-load_dotenv(dotenv_path='../env.env', verbose=True)
-GIT_PERSONAL_TOKEN = getenv('GIT_PERSONAL_TOKEN')
 
 
 async def human_commit(repo, commits, test_num=0):
@@ -165,15 +160,14 @@ async def human_commit(repo, commits, test_num=0):
                 for line in hunk:
                     if line.is_added or line.is_removed:
                         robot_string += f'{line.line_type}{line.value}'
-        # print('=== we dont know how to parse: ' + file.filename + '===')  # TODO: REMOVE THIS !!!
 
     human_string = '• ' + '\n• '.join(human) if len(human) else ''
     robot_string = 'CRC\n'.join(crc_files) + '\n' + robot_string if len(robot_string) or len(crc_files) else ''
     return human_string, robot_string
 
 
-async def gitmain():
-    g = Github(GIT_PERSONAL_TOKEN)
+async def gitmain(token):
+    g = Github(token)
     repo = g.get_repo("SteamDatabase/GameTracking-Dota2")
     commits = repo.get_commits()
 
@@ -187,8 +181,12 @@ async def gitmain():
 
 
 if __name__ == '__main__':
+    from os import getenv
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path='../env.env', verbose=True)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(gitmain())
-    #loop.close()
+    GIT_PERSONAL_TOKEN = getenv('GIT_PERSONAL_TOKEN')
+    loop.run_until_complete(gitmain(GIT_PERSONAL_TOKEN))
+    #  loop.close()
 

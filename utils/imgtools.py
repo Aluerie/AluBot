@@ -2,7 +2,6 @@ from discord import File
 
 from PIL import Image, ImageOps
 from io import BytesIO, StringIO
-from aiohttp import ClientSession
 
 from typing import Union
 from collections.abc import Sequence
@@ -29,6 +28,7 @@ def img_to_file(image, filename='fromireneserver.png', fmt='PNG') -> File:
 
 
 async def url_to_img(
+        session,
         url: Union[str, Sequence[str]]
 ):
     if isinstance(url, str):
@@ -39,16 +39,16 @@ async def url_to_img(
         raise TypeError('Expected url as string or sequence of urls as strings')
 
     images = []
-    async with ClientSession() as session:
-        for url_item in url_array:
-            async with session.get(url_item) as resp:
-                if resp.status != 200:
-                    print("imgtools.url_to_img: Oups; Could not download file..")
-                images.append(Image.open(BytesIO(await resp.read())))
-        return images if len(images) > 1 or len(images) == 0 else images[0]
+    for url_item in url_array:
+        async with session.get(url_item) as resp:
+            if resp.status != 200:
+                print("imgtools.url_to_img: Oups; Could not download file..")
+            images.append(Image.open(BytesIO(await resp.read())))
+    return images if len(images) > 1 or len(images) == 0 else images[0]
 
 
 async def url_to_file(
+        session,
         url: Union[str, Sequence[str]],
         filename: str = 'fromireneserver.png',
         return_list: bool = False
@@ -61,11 +61,10 @@ async def url_to_file(
         raise TypeError('Expected url as string or sequence of urls as strings')
 
     files = []
-    async with ClientSession() as session:
-        for counter, url_item in enumerate(url_array):
-            async with session.get(url_item) as resp:
-                data = BytesIO(await resp.read())
-                files.append(File(data, f'{counter}{filename}'))
+    for counter, url_item in enumerate(url_array):
+        async with session.get(url_item) as resp:
+            data = BytesIO(await resp.read())
+            files.append(File(data, f'{counter}{filename}'))
     if return_list:
         return files
     else:

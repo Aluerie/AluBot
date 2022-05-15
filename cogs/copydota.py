@@ -10,10 +10,8 @@ from utils.imgtools import str_to_file
 import asyncio
 import tweepy
 from github import Github
-
 from os import getenv
-GIT_LGN = getenv("GIT_LGN")
-GIT_PSW = getenv("GIT_PSW")
+
 
 consumer_key = getenv('TWITTER_CONSUMER_KEY')
 consumer_secret = getenv('TWITTER_CONSUMER_SECRET')
@@ -24,7 +22,7 @@ client = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token
 
 
 async def get_gitdiff_embed(test_num=0):
-    g = Github(GIT_LGN, GIT_PSW)
+    g = Github(getenv('GIT_PERSONAL_TOKEN'))
     repo = g.get_repo("SteamDatabase/GameTracking-Dota2")
     commits = repo.get_commits()
     embed = Embed(colour=0x26425A)
@@ -101,7 +99,7 @@ class CopypasteDota(commands.Cog):
             elif msg.channel.id == Cid.copydota_tweets:
                 await asyncio.sleep(2)
                 answer = await msg.channel.fetch_message(int(msg.id))
-                embeds = [await replace_tco_links(item) for item in answer.embeds]
+                embeds = [await replace_tco_links(self.bot.ses, item) for item in answer.embeds]
                 links = get_links_from_str(answer.content)
                 embeds = [move_link_to_title(link, embed) for link, embed in zip(links, embeds)]
                 msg = await self.bot.get_channel(Cid.dota_news).send(embeds=embeds)
@@ -133,5 +131,5 @@ class TestGitFeed(commands.Cog):
 
 def setup(bot):
     bot.add_cog(CopypasteDota(bot))
-    if bot.command_prefix == '~':  # this is stupid lazy check if it is testing Yen bot
+    if bot.yen:
         bot.add_cog(TestGitFeed(bot))

@@ -2,13 +2,13 @@ from discord import Embed, Member, Message, Role, Colour, option
 from discord.ext import bridge, commands, tasks
 
 from utils.format import humanize_time
-from utils.google_trans import google_translator
 from utils.var import *
 from utils.imgtools import img_to_file
 
 from datetime import datetime, timezone
 from PIL import Image, ImageColor
 import colorsys
+from async_google_trans_new import google_translator
 
 
 class Info(commands.Cog):
@@ -67,7 +67,7 @@ class Info(commands.Cog):
     )
     async def roleinfo(self, ctx, *, role: Role):
         """View info about selected role"""
-        embed = Embed(colour=role.colour, title="Role information") #TODO: this embed will be more than 6000 symbols
+        embed = Embed(colour=role.colour, title="Role information")  # TODO: this embed will be more than 6000 symbols
         embed.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
         await ctx.respond(embed=embed)
 
@@ -94,8 +94,8 @@ class InfoTools(commands.Cog):
             embed.description = "Sorry it seems this message doesn't have content"
         else:
             translator = google_translator()
-            embed.description = translator.translate(message.content, lang_tgt='en')
-            embed.set_footer(text=f'Detected language: {translator.detect(message.content)[0]}')
+            embed.description = await translator.translate(message.content, lang_tgt='en')
+            embed.set_footer(text=f'Detected language: {(await translator.detect(message.content))[0]}')
         await ctx.respond(embed=embed, ephemeral=True)
 
     @bridge.bridge_command(
@@ -108,12 +108,12 @@ class InfoTools(commands.Cog):
         """Translate text into English using Google Translate, auto-detects source language"""
         translator = google_translator()
         embed = Embed(colour=ctx.author.colour, title='Google Translate to English')
-        embed.description = translator.translate(text, lang_tgt='en')
-        embed.set_footer(text=f'Detected language: {translator.detect(text)[0]}')
+        embed.description = await translator.translate(text, lang_tgt='en')
+        embed.set_footer(text=f'Detected language: {(await translator.detect(text))[0]}')
         await ctx.respond(embed=embed)
 
     async def colour_error_work(self, ctx):
-        #if isinstance(error, ValueError):
+        # if isinstance(error, ValueError):
         ctx.error_handled = True
         embed = Embed(colour=Clr.error)
         embed.set_author(name='WrongColourFormat')

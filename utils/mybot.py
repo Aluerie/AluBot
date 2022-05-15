@@ -13,8 +13,7 @@ from os import getenv, environ, listdir
 jsk = True
 test_list = [  # for yen bot
     'wolfram',
-    'beta',
-    'expsys'
+    'info'
 ]
 
 
@@ -29,7 +28,7 @@ class MyBot(bridge.Bot):
             intents=Intents.all(),
             allowed_mentions=AllowedMentions(replied_user=False, everyone=False)  # .none()
         )
-        self.ses = ClientSession()
+        self.__session = ClientSession()
         self.launch_time = datetime.now(timezone.utc)
         self._help2_command = None
         self._help3_command = None
@@ -69,6 +68,12 @@ class MyBot(bridge.Bot):
 
     async def on_ready(self):
         print(f'Logged in as {self.user}')
+
+    @property
+    def ses(self):
+        if self.__session.closed:
+            self.__session = ClientSession()
+        return self.__session
 
     @property
     def help2_command(self) -> Optional[commands.HelpCommand]:

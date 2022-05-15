@@ -129,7 +129,7 @@ class Twitch(commands.Cog):
         embed.description = f'Playing {tw.game}\n[Watch Stream]({tw.url})\n[VOD link]({tw.last_vod_link()})'
         embed.set_author(name=f'{my_twitch_name} just went live on Twitch!', icon_url=tw.logo_url, url=tw.url)
         embed.set_thumbnail(url=tw.logo_url)
-        file = await url_to_file(tw.preview_url, filename='twtvpreview.png')
+        file = await url_to_file(self.bot.ses, tw.preview_url, filename='twtvpreview.png')
         embed.set_image(url=f'attachment://{file.filename}')
         embed.set_footer(text=f'Twitch.tv | With love, {irene_server.me.display_name}', icon_url=Img.twitchtv)
         await irene_server.get_channel(Cid.stream_notifs).send(content=content, embed=embed, file=file)

@@ -15,7 +15,7 @@ from os import getenv
 import logging
 log = logging.getLogger('root')
 
-DOTA_FRIENDID = getenv('DOTA_FRIENDID')
+DOTA_FRIENDID = int(getenv('DOTA_FRIENDID'))
 
 send_matches = []
 

@@ -51,7 +51,7 @@ class Info(commands.Cog):
             text=f'GMT is the same as UTC (Universal Time Coordinated)\nWith love, {ctx.guild.me.display_name}')
         embed.add_field(name='Time:', value=now_time)
         embed.add_field(name='Date:', value=now_date)
-        await ctx.send(embed=embed)
+        await ctx.respond(embed=embed)
 
     @commands.user_command(name="View Account Age")
     async def account_age(self, ctx, member: Member):

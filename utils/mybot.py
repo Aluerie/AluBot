@@ -55,6 +55,7 @@ class MyBot(commands.Bot):
             for item in test_list:
                 await self.load_cog(f'cogs.{item}')
         else:
+            await self.load_cog('jishaku')
             for filename in listdir('./cogs'):
                 if filename.endswith('.py'):
                     await self.load_cog(f'cogs.{filename[:-3]}')

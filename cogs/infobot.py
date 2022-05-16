@@ -1,5 +1,5 @@
 from discord import Embed
-from discord.ext import commands, bridge
+from discord.ext import commands
 
 from utils.var import Ems, Clr
 
@@ -12,7 +12,7 @@ class BotInfo(commands.Cog):
         self.bot = bot
         self.help_category = 'Info'
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='sysinfo',
         brief=Ems.slash,
         description='Get system info about machine currently hosting the bot',
@@ -45,7 +45,7 @@ class BotInfo(commands.Cog):
             )
         """
         embed.set_footer(text='This is what they give me for free plan :D')
-        await ctx.respond(embed=embed)
+        await ctx.reply(embed=embed)
 
 
 class BotAdminInfo(commands.Cog):
@@ -59,9 +59,9 @@ class BotAdminInfo(commands.Cog):
     async def invite_link(self, ctx):
         embed = Embed(color=Clr.prpl)
         embed.description = getenv('DISCORD_BOT_INVLINK')
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 
-def setup(bot):
-    bot.add_cog(BotInfo(bot))
-    bot.add_cog(BotAdminInfo(bot))
+async def setup(bot):
+    await bot.add_cog(BotInfo(bot))
+    await bot.add_cog(BotAdminInfo(bot))

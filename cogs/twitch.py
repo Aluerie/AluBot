@@ -1,17 +1,16 @@
 from discord import Embed, Streaming
 from discord.ext import commands, tasks
-from utils.var import Cid, Clr, Ems, Img, Sid, Rid, Uid
+
+from utils.var import *
 from utils.format import display_hmstime, gettimefromhms
 from utils.imgtools import url_to_file
 from utils import database as db
 
 import re
 from twitchAPI import Twitch
-
 from os import getenv
 client_id = getenv("TWITCH_CLIENT_ID")
 client_secret = getenv("TWITCH_CLIENT_SECRET")
-
 twitch = Twitch(client_id, client_secret)
 twitch.authenticate_app([])
 
@@ -103,13 +102,6 @@ class Twitch(commands.Cog):
         else:
             return
 
-    @commands.command()
-    async def stream(self, ctx):
-        embed = Embed(colour=Clr.prpl)
-        word = "live" if db.get_value(db.g, Sid.irene, "irene_is_live") else "offline"
-        embed.description = f"Irene's stream is {word}"
-        await ctx.send(embed=embed)
-
     @tasks.loop(minutes=2)
     async def mystream(self):
         tw = TwitchStream(my_twitch_name)
@@ -167,6 +159,6 @@ class TwitchThanks(commands.Cog):
         await irene_server.get_channel(Cid.stream_notifs).send(embed=embed)
 
 
-def setup(bot):
-    bot.add_cog(Twitch(bot))
-    bot.add_cog(TwitchThanks(bot))
+async def setup(bot):
+    await bot.add_cog(Twitch(bot))
+    await bot.add_cog(TwitchThanks(bot))

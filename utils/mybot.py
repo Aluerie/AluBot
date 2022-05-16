@@ -1,5 +1,5 @@
 from discord import Streaming, Intents, AllowedMentions
-from discord.ext import commands, bridge
+from discord.ext import commands
 
 from utils.mysteam import sd_login
 
@@ -16,7 +16,7 @@ test_list = [  # for yen bot
 ]
 
 
-class MyBot(bridge.Bot):
+class MyBot(commands.Bot):
     def __init__(self, prefix, yen=False):
         super().__init__(
             command_prefix=prefix,
@@ -32,7 +32,9 @@ class MyBot(bridge.Bot):
         self._help3_command = None
         self.yen = yen
 
-        if self.yen and any(item in test_list for item in ['dotafeed', 'gamerstats']):
+    async def setup_hook(self) -> None:
+        self.__session = ClientSession()
+        if self.yen and (not len(test_list) or any(item in test_list for item in ['dotafeed', 'gamerstats'])):
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
             self.steam_lgn = getenv("STEAM_TEST_LGN")
@@ -49,18 +51,20 @@ class MyBot(bridge.Bot):
 
         if self.yen and len(test_list):
             if jsk:
-                self.load_cog('jishaku')
+                await self.load_cog('jishaku')
             for item in test_list:
-                self.load_cog(f'cogs.{item}')
+                await self.load_cog(f'cogs.{item}')
         else:
             for filename in listdir('./cogs'):
                 if filename.endswith('.py'):
-                    self.load_cog(f'cogs.{filename[:-3]}')
+                    await self.load_cog(f'cogs.{filename[:-3]}')
+        environ["JISHAKU_NO_UNDERSCORE"] = "True"
 
-    def load_cog(self, cog: str) -> None:
+    async def load_cog(self, cog: str) -> None:
         try:
-            self.load_extension(cog)
+            await self.load_extension(cog)
         except Exception as e:
+            await self.__session.close()
             raise e
 
     async def on_ready(self):
@@ -68,7 +72,7 @@ class MyBot(bridge.Bot):
             return
         else:
             self.on_ready_fired = True
-        self.__session = ClientSession()
+
         self.launch_time = datetime.now(timezone.utc)
         print(f'Logged in as {self.user}')
         environ["JISHAKU_NO_UNDERSCORE"] = "True"

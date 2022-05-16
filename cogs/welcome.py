@@ -82,7 +82,7 @@ class Welcome(commands.Cog):
     async def welcome_preview(self, ctx, member: Member = None):
         mbr = member or ctx.message.author
         content_text, embed, image_file = await welcome_message(self.bot.ses, mbr)
-        await ctx.send(content=content_text, embed=embed, file=image_file)
+        await ctx.reply(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -190,9 +190,9 @@ class WelcomeAdmin(commands.Cog):
         """Get a rendered welcome message for a `{@user}`;"""
         mbr = member or ctx.message.author
         content_text, embed, image_file = await welcome_message(self.bot.ses, mbr)
-        await ctx.send(content=content_text, embed=embed, file=image_file)
+        await ctx.reply(content=content_text, embed=embed, file=image_file)
 
 
-def setup(bot):
-    bot.add_cog(Welcome(bot))
-    bot.add_cog(Milestone(bot))
+async def setup(bot):
+    await bot.add_cog(Welcome(bot))
+    await bot.add_cog(Milestone(bot))

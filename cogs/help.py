@@ -1,5 +1,6 @@
-from discord import ButtonStyle, Embed, ui
+from discord import ButtonStyle, Embed, app_commands
 from discord.ext import commands
+from discord.ui import View, button
 from utils.var import Clr, Ems, Cid, Rid, cmntn, rmntn
 from utils.elpcmd import HelpCommand
 
@@ -87,50 +88,50 @@ def features_page(ctx):
     return embed
 
 
-class ViewHelp(ui.View):
+class ViewHelp(View):
     def __init__(self, paginator):
         super().__init__()
         self.paginator = paginator
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji='🏠')
-    async def button0(self, button, interaction):
-        await self.paginator.goto_page(page_number=0, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji='🏠')
+    async def button0(self, ntr, btn):
+        await self.paginator.goto_page(page_number=0, ntr=ntr)
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji=Ems.FeelsDankMan)
-    async def button3(self, button, interaction):
-        await self.paginator.goto_page(page_number=1, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.FeelsDankMan)
+    async def button3(self, ntr, btn):
+        await self.paginator.goto_page(page_number=1, ntr=ntr)
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji=Ems.DankFix)
-    async def button4(self, button, interaction):
-        await self.paginator.goto_page(page_number=2, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.DankFix)
+    async def button4(self, ntr, btn):
+        await self.paginator.goto_page(page_number=2, ntr=ntr)
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji=Ems.PepoG)
-    async def button2(self, button, interaction):
-        await self.paginator.goto_page(page_number=3, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.PepoG)
+    async def button2(self, ntr, btn):
+        await self.paginator.goto_page(page_number=3, ntr=ntr)
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji=Ems.Smartge)
-    async def button1(self, button, interaction):
-        await self.paginator.goto_page(page_number=4, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.Smartge)
+    async def button1(self, ntr, btn):
+        await self.paginator.goto_page(page_number=4, ntr=ntr)
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji='📝')
-    async def button5(self, button, interaction):
-        await self.paginator.goto_page(page_number=5, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji='📝')
+    async def button5(self, ntr, btn):
+        await self.paginator.goto_page(page_number=5, ntr=ntr)
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji=Ems.peepoHappyDank)
-    async def button6(self, button, interaction):
-        await self.paginator.goto_page(page_number=6, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.peepoHappyDank)
+    async def button6(self, ntr, btn):
+        await self.paginator.goto_page(page_number=6, ntr=ntr)
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji=Ems.bubuAyaya)
-    async def button7(self, button, interaction):
-        await self.paginator.goto_page(page_number=7, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.bubuAyaya)
+    async def button7(self, ntr, btn):
+        await self.paginator.goto_page(page_number=7, ntr=ntr)
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji=Ems.TwoBButt)
-    async def button8(self, button, interaction):
-        await self.paginator.goto_page(page_number=8, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.TwoBButt)
+    async def button8(self, ntr, btn):
+        await self.paginator.goto_page(page_number=8, ntr=ntr)
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji=Ems.PepoDetective)
-    async def button9(self, button, interaction):
-        await self.paginator.goto_page(page_number=9, interaction=interaction)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.PepoDetective)
+    async def button9(self, ntr, btn):
+        await self.paginator.goto_page(page_number=9, ntr=ntr)
 
 
 def get_starting_embed(ctx):
@@ -206,7 +207,7 @@ class HelpCog(commands.Cog):
         )
         bot.help_command.cog = self
 
-    @commands.slash_command(
+    @app_commands.command(
         name='help',
         description='Show help menu for the bot',
     )
@@ -220,5 +221,5 @@ class HelpCog(commands.Cog):
         await myhelp.command_callback(myhelp.context)
 
 
-def setup(bot):
-    bot.add_cog(HelpCog(bot))
+async def setup(bot):
+    await bot.add_cog(HelpCog(bot))

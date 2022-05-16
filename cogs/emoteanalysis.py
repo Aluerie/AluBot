@@ -1,12 +1,13 @@
-from discord import Embed, option
-from discord.ext import commands, tasks, pages, bridge
+from discord import Embed, app_commands
+from discord.ext import commands, tasks
 
+from utils import pages
 from utils.var import *
 from utils import database as db
 
 import re
 from datetime import time, timezone
-from typing import List
+from typing import List, Literal
 
 
 def filter_emotes_condition(emote, mode):
@@ -18,14 +19,6 @@ def filter_emotes_condition(emote, mode):
         return 1
     else:
         return 0
-
-
-async def filter_emotes(ctx, mode):
-    emotes = [str(emote) for emote in ctx.guild.emojis if not emote.managed and filter_emotes_condition(emote, mode)]
-    split_size = 27
-    emotes_list = [emotes[x:x + split_size] for x in range(0, len(emotes), split_size)]
-    for item in emotes_list:
-        await ctx.send(content=' '.join(item))
 
 
 def get_sorted_emote_dict(mode):
@@ -78,10 +71,7 @@ async def topemotes_job(ctx, mode):
         offset += splitedSize
         embeds_list.append(embed)
     paginator = pages.Paginator(pages=embeds_list)
-    if isinstance(ctx, bridge.BridgeExtContext):
-        await paginator.send(ctx, mention_author=False)
-    elif isinstance(ctx, bridge.BridgeApplicationContext):
-        await paginator.respond(ctx)
+    await paginator.send(ctx)
 
 
 class EmoteAnalysis(commands.Cog):
@@ -92,6 +82,9 @@ class EmoteAnalysis(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, msg):
+        if self.bot.yen:
+            return
+
         if not msg.author.bot or msg.webhook_id:
             custom_emojis_ids = re.findall(Rgx.emote_stats_ids, msg.content)  # they are in str tho
             custom_emojis_ids = set(list(map(int, custom_emojis_ids)))
@@ -105,13 +98,13 @@ class EmoteAnalysis(commands.Cog):
                 except AttributeError:  # emote is not in database
                     pass
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='topemotes',
         brief=Ems.slash,
         description='Show emotes usage stats'
     )
-    @option('keyword', description='Possible keywords: `all`, `ani`, `nonani`', default='all')
-    async def topemotes(self, ctx, keyword: str):
+    @app_commands.describe(keyword='Possible keywords: `all`, `ani`, `nonani`')
+    async def topemotes(self, ctx, keyword: Literal['all', 'ani', 'nonani'] = 'all'):
         """Show emotes usage stats for `keyword` group ;\
         Possible keywords: `all`, `ani` for animated emotes, `nonani` for static emotes ;"""
         match keyword:
@@ -121,12 +114,6 @@ class EmoteAnalysis(commands.Cog):
                 await topemotes_job(ctx, 2)
             case 'nonani' | 'static' | 'nonanimated':
                 await topemotes_job(ctx, 3)
-            case _:
-                embed = Embed(colour=Clr.prpl)
-                embed.description = \
-                    'You need to use one of keywords: \n' \
-                    '• `all` for all emotes ;\n• `ani` for animated emotes ;\n• `nonani` for static emotes ;'
-                await ctx.respond(embed=embed)
 
     @tasks.loop(time=time(hour=17, minute=17, tzinfo=timezone.utc))
     async def daily_emote_shift(self):
@@ -141,5 +128,5 @@ class EmoteAnalysis(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-def setup(bot):
-    bot.add_cog(EmoteAnalysis(bot))
+async def setup(bot):
+    await bot.add_cog(EmoteAnalysis(bot))

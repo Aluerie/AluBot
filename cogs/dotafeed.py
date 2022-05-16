@@ -178,25 +178,25 @@ class DotaFeedTools(commands.Cog):
     async def add(self, ctx, *, heronames=None):
         """Add hero to database"""
         if heronames is None:
-            return await ctx.send("Provide all arguments: `heroname`")
+            return await ctx.reply("Provide all arguments: `heroname`")
         try:
             hero_array = set(db.get_value(db.g, Sid.irene, 'dota_fav_heroes'))
             for hero_str in re.split('; |, |,', heronames):
                 if (hero_id := await d2.id_by_name(hero_str)) is not None:
                     hero_array.add(hero_id)
                 else:
-                    await ctx.send('We got `None` somewhere, double-check: `heronames`')
+                    await ctx.reply('We got `None` somewhere, double-check: `heronames`')
             db.set_value(db.g, Sid.irene, dota_fav_heroes=list(hero_array))
             await ctx.message.add_reaction(Ems.PepoG)
         except:
-            await ctx.send('Something went wrong, double-check: `heronames`')
+            await ctx.reply('Something went wrong, double-check: `heronames`')
 
     @commands.is_owner()
     @hero.command()
     async def remove(self, ctx, *, heronames=None):
         """Remove hero from database"""
         if heronames is None:
-            return await ctx.send("Provide all arguments: `heroname`")
+            return await ctx.reply("Provide all arguments: `heroname`")
         try:
             hero_array = set(db.get_value(db.g, Sid.irene, 'dota_fav_heroes'))
             for hero_str in re.split('; |, |,', heronames):
@@ -204,7 +204,7 @@ class DotaFeedTools(commands.Cog):
                 db.set_value(db.g, Sid.irene, dota_fav_heroes=list(hero_array))
             await ctx.message.add_reaction(Ems.PepoG)
         except:
-            await ctx.send('Something went wrong, double-check: `heroname`')
+            await ctx.reply('Something went wrong, double-check: `heroname`')
 
     @commands.is_owner()
     @hero.command()
@@ -215,7 +215,7 @@ class DotaFeedTools(commands.Cog):
         answer = [f'`{await d2.name_by_id(h_id)} - {h_id}`' for h_id in hero_array]
         answer.sort()
         embed.description = '\n'.join(answer)
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.is_owner()
     @dota.group()
@@ -231,19 +231,19 @@ class DotaFeedTools(commands.Cog):
         ans_array = [f"[{row.name}](https://www.twitch.tv/{row.name}): `{row.optin}`" for row in db.session.query(db.d)]
         ans_array = sorted(list(set(ans_array)), key=str.casefold)
         embed.description = "\n".join(ans_array)
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.is_owner()
     @streamer.command(name='add')
     async def add_streamer(self, ctx, steamid=None, name=None, friendid=None):
         """Add streamer to database"""
         if name is None or steamid is None or friendid is None:
-            return await ctx.send("Provide all arguments: `steamid`, `streamer`, `friendid`")
+            return await ctx.reply("Provide all arguments: `steamid`, `streamer`, `friendid`")
         try:
             db.add_row(db.d, steamid, name=name.lower(), friendid=friendid)
             await ctx.message.add_reaction(Ems.PepoG)
         except:
-            await ctx.send('Something went wrong, double-check: `steamid`, `streamer`, `friendid`')
+            await ctx.reply('Something went wrong, double-check: `steamid`, `streamer`, `friendid`')
 
     class StreamerFlags(commands.FlagConverter, case_insensitive=True):
         id: Optional[int]
@@ -271,9 +271,9 @@ class DotaFeedTools(commands.Cog):
             db.set_value_by_name(db.d, twitch_name, optin=in_or_out)
             await ctx.message.add_reaction(Ems.PepoG)
         except:
-            await ctx.send('Something went wrong, double-check: `streamer`')
+            await ctx.reply('Something went wrong, double-check: `streamer`')
 
 
-def setup(bot):
-    bot.add_cog(DotaFeed(bot))
-    bot.add_cog(DotaFeedTools(bot))
+async def setup(bot):
+    await bot.add_cog(DotaFeed(bot))
+    await bot.add_cog(DotaFeedTools(bot))

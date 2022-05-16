@@ -129,7 +129,7 @@ class TestGitFeed(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-def setup(bot):
-    bot.add_cog(CopypasteDota(bot))
+async def setup(bot):
+    await bot.add_cog(CopypasteDota(bot))
     if bot.yen:
-        bot.add_cog(TestGitFeed(bot))
+        await bot.add_cog(TestGitFeed(bot))

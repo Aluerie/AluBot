@@ -1,5 +1,5 @@
-from discord import File, option
-from discord.ext import commands, bridge
+from discord import app_commands, File
+from discord.ext import commands
 
 from utils.var import *
 
@@ -18,14 +18,14 @@ class WolframAlpha(commands.Cog):
         self.WASHORTURL = str("http://api.wolframalpha.com/v1/result?appid=" + WOLFRAM_TOKEN + "&i=")
         self.help_category = 'Tools'
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name="wolf",
         brief=Ems.slash,
         aliases=["wolfram"],
         description="Get long answer from WolframAlpha"
     )
-    @option('query', description='Query for WolframAlpha')
-    @commands.cooldown(2, 10, commands.BucketType.user)
+    @commands.cooldown(1, 100, commands.BucketType.user)
+    @app_commands.describe(query='Query for WolframAlpha')
     async def wolf(self, ctx, *, query: str):
         """Get answer from WolframAlpha ;"""
         questionurl = str(self.WABASICURL + str(urlparse.quote(query)))
@@ -34,17 +34,17 @@ class WolframAlpha(commands.Cog):
                 result = "Sorry! The bot has wrong appid"
                 file = None
             else:
-                result = f"```python\n{query}```"
+                result = f"```py\n{query}```"
                 file = File(fp=BytesIO(content), filename="WolframAlpha.png")
-            await ctx.respond(content=result, file=file)
+            await ctx.reply(content=result, file=file)
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name="wa",
         brief=Ems.slash,
         description="Get short answer from WolframAlpha"
     )
-    @option('query', description='Query for WolframAlpha')
-    @commands.cooldown(2, 10, commands.BucketType.user)
+    @commands.cooldown(1, 100, commands.BucketType.user)
+    @app_commands.describe(query='Query for WolframAlpha')
     async def wolfram_shorter(self, ctx, *, query: str):
         """Get shorter answer from WolframAlpha ;"""
         questionurl = str(self.WASHORTURL + str(urlparse.quote(query)))
@@ -52,10 +52,10 @@ class WolframAlpha(commands.Cog):
             if await resp.read() == "Error 1: Invalid appid":
                 result = "Sorry! The bot has wrong appid"
             else:
-                result = f"```python\n{query}```"
+                result = f"```py\n{query}```"
                 result += await resp.text()
-            await ctx.respond(content=result)
+            await ctx.reply(content=result)
 
 
-def setup(bot):
-    bot.add_cog(WolframAlpha(bot))
+async def setup(bot):
+    await bot.add_cog(WolframAlpha(bot))

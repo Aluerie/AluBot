@@ -177,7 +177,7 @@ class LoLFeedTools(commands.Cog):
         """Add champion(-s) with `champnames` (can be list of names separated with `;` or `,`) \
         to database"""
         if champnames is None:
-            return await ctx.send("Provide all arguments: `heroname`")
+            return await ctx.reply("Provide all arguments: `heroname`")
         try:
             hero_array = set(db.get_value(db.g, Sid.irene, 'lol_fav_champs'))
             for champ_str in re.split('; |, |,', champnames):
@@ -185,7 +185,7 @@ class LoLFeedTools(commands.Cog):
             db.set_value(db.g, Sid.irene, lol_fav_champs=list(hero_array))
             await ctx.message.add_reaction(Ems.PepoG)
         except:
-            await ctx.send('Something went wrong, double-check: `heroname`')
+            await ctx.reply('Something went wrong, double-check: `heroname`')
 
     @commands.is_owner()
     @champ.command()
@@ -193,7 +193,7 @@ class LoLFeedTools(commands.Cog):
         """Remove champion(-s) with `champnames` (can be list of names separated with `;` or `,`) \
         from database"""
         if champnames is None:
-            return await ctx.send("Provide all arguments: `heroname`")
+            return await ctx.reply("Provide all arguments: `heroname`")
         try:
             hero_array = set(db.get_value(db.g, Sid.irene, 'lol_fav_champs'))
             for champ_str in re.split('; |, |,', champnames):
@@ -201,7 +201,7 @@ class LoLFeedTools(commands.Cog):
             db.set_value(db.g, Sid.irene, lol_fav_champs=list(hero_array))
             await ctx.message.add_reaction(Ems.PepoG)
         except:
-            await ctx.send('Something went wrong, double-check: `heroname`')
+            await ctx.reply('Something went wrong, double-check: `heroname`')
 
     @commands.is_owner()
     @champ.command()
@@ -213,7 +213,7 @@ class LoLFeedTools(commands.Cog):
         answer = [f'`{await champion.key_by_id(c_id)} - {c_id}`' for c_id in champ_array]
         answer.sort()
         embed.description = '\n'.join(answer)
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.is_owner()
     @lol.group()
@@ -242,21 +242,21 @@ class LoLFeedTools(commands.Cog):
             for subkey in ss_dict[key]:
                 ans_dict[key].append(f' {subkey} `{", ".join(ss_dict[key][subkey])}`')
         embed.description = "\n".join(sorted([f'{k}{" ".join(ans_dict[k])}' for k in ans_dict], key=str.casefold))
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.is_owner()
     @streamer.command(name='add')
     async def add_streamer(self, ctx, name=None, region=None, *, accname=None):
         """Add streamer to database"""
         if name is None or region is None or accname is None:
-            return await ctx.send("Provide all arguments: `streamer`, `region`, `accname`")
+            return await ctx.reply("Provide all arguments: `streamer`, `region`, `accname`")
         try:
             summoner = await lol.summoner.Summoner(name=accname, platform=region).get()
             if db.session.query(db.l).filter_by(id=summoner.id).first() is None:
                 db.add_row(db.l, summoner.id, name=name.lower(), region=region, accname=accname)
             await ctx.message.add_reaction(Ems.PepoG)
         except:
-            await ctx.send('Something went wrong, double-check: `streamer`, `region`, `accname`')
+            await ctx.reply('Something went wrong, double-check: `streamer`, `region`, `accname`')
 
     class StreamerFlags(commands.FlagConverter, case_insensitive=True):
         name: str
@@ -284,7 +284,7 @@ class LoLFeedTools(commands.Cog):
             db.set_value_by_name(db.l, twitch_name, optin=in_or_out)
             await ctx.message.add_reaction(Ems.PepoG)
         except:
-            await ctx.send('Something went wrong, double-check: `streamer`')
+            await ctx.reply('Something went wrong, double-check: `streamer`')
 
 
 class LoLAccCheck(commands.Cog):
@@ -307,8 +307,8 @@ class LoLAccCheck(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-def setup(bot):
-    bot.add_cog(LoLFeed(bot))
-    bot.add_cog(LoLFeedTools(bot))
+async def setup(bot):
+    await bot.add_cog(LoLFeed(bot))
+    await bot.add_cog(LoLFeedTools(bot))
     if datetime.now(timezone.utc).day == 17:
-        bot.add_cog(LoLAccCheck(bot))
+        await bot.add_cog(LoLAccCheck(bot))

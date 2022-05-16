@@ -28,7 +28,7 @@ class AdminTools(commands.Cog):
             embed.description = f'Just left guild {guild.name} with id `{guild.id}`\n'
         else:
             embed.description = f'The bot is not in the guild with id `{guild}`'
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.is_owner()
     @commands.command()
@@ -37,7 +37,7 @@ class AdminTools(commands.Cog):
         embed = Embed(colour=Clr.prpl)
         embed.description = "The bot is in these guilds\n"
         embed.description += '• ' + '\n• '.join([f'{item.name} `{item.id}`' for item in self.bot.guilds])
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.has_permissions(administrator=True)
     @commands.command()
@@ -52,7 +52,7 @@ class AdminTools(commands.Cog):
         msg_split_list = [temp_purge_list[x:x + split_size] for x in range(0, len(temp_purge_list), split_size)]
         for item in msg_split_list:
             await ctx.channel.delete_messages(item)
-        await ctx.send('Done', delete_after=10)
+        await ctx.reply('Done', delete_after=10)
 
     @commands.command()
     @commands.is_owner()
@@ -75,7 +75,7 @@ class AdminTools(commands.Cog):
         {4} {5}
         '''.format(*emote_array)
         await msg.edit(content='', embed=embed)
-        await ctx.send(f"we did it {Ems.PogChampPepe}")
+        await ctx.reply(f"we did it {Ems.PogChampPepe}")
 
     async def guild_check_work(self, guild):
         if guild.owner_id not in [Uid.irene, Uid.bot]:
@@ -108,5 +108,5 @@ class AdminTools(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-def setup(bot):
-    bot.add_cog(AdminTools(bot))
+async def setup(bot):
+    await bot.add_cog(AdminTools(bot))

@@ -1,4 +1,4 @@
-from discord import ButtonStyle, Embed, InputTextStyle, ui
+from discord import ButtonStyle, Interaction, Embed, TextStyle, ui
 from discord.ext import commands
 from utils.var import Clr, Ems
 from utils.format import humanize_time
@@ -11,29 +11,23 @@ class ConfModal(ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.add_item(ui.InputText(
-            label="Make confession to the server",
-            style=InputTextStyle.long,
-            placeholder='Type your confession text here',
-            max_length=4000,
-        ))
+    conf = ui.TextInput(
+        label="Make confession to the server",
+        style=TextStyle.short,
+        placeholder='Type your confession text here',
+        max_length=4000,
+    )
 
-    async def callback(self, ntr):
-        embed = Embed(colour=Clr.prpl)
-        embed.title = self.title
+    async def on_submit(self, ntr: Interaction):
+        embed = Embed(colour=Clr.prpl, title=self.title)
         if self.title == "Non-anonymous confession":
             embed.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
-        embed.description = self.children[0].value
-        embed.set_footer(
-            text=f"Use buttons below to make a new confession in this channel |\nWith love, {ntr.guild.me.display_name}")
+        embed.description = self.conf.value
+        embed.set_footer(text="Use buttons below to make a new confession in this channel")
         await ntr.channel.send(embeds=[embed])
         sacred_string = '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Ems.bubuChrist, '⛪', Ems.PepoBeliever)
         await ntr.channel.send(sacred_string)
-        await ntr.response.send_message(
-            content=f"The Lord be with you {Ems.PepoBeliever}",
-            ephemeral=True
-        )
-
+        await ntr.response.send_message(content=f"The Lord be with you {Ems.PepoBeliever}", ephemeral=True)
         await ntr.message.delete()
         await ntr.channel.send(view=ConfView())
         cd_dct[ntr.user.id] = datetime.now(timezone.utc)
@@ -47,8 +41,9 @@ class ConfView(ui.View):
         if ntr.user.id in cd_dct:
             if (time_pass := datetime.now(timezone.utc) - cd_dct[ntr.user.id]) < timedelta(minutes=30):
                 embed = Embed(colour=Clr.prpl)
-                embed.description = f"Sorry, you are on cooldown \n" \
-                                    f"Time left {humanize_time(timedelta(minutes=30) - time_pass)}"
+                embed.description = \
+                    f"Sorry, you are on cooldown \n" \
+                    f"Time left {humanize_time(timedelta(minutes=30) - time_pass)}"
                 await ntr.response.send_message(embed=embed, ephemeral=True)
                 return False
         return True
@@ -81,5 +76,5 @@ class Confession(commands.Cog):
         self.bot.add_view(ConfView())  # Registers a View for persistent listening
 
 
-def setup(bot):
-    bot.add_cog(Confession(bot))
+async def setup(bot):
+    await bot.add_cog(Confession(bot))

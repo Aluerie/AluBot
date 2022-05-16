@@ -54,5 +54,5 @@ class Twitter(commands.Cog):
         self.myStream.filter(follow=followed_array)
 
 
-def setup(bot):
-    bot.add_cog(Twitter(bot))
+async def setup(bot):
+    await bot.add_cog(Twitter(bot))

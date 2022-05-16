@@ -1,4 +1,4 @@
-from discord import ButtonStyle, Embed, default_permissions, ui
+from discord import ButtonStyle, Embed, app_commands, ui
 from discord.ext import commands
 from utils.var import Clr, Ems, Rid
 from utils.elpcmd import HelpCommand
@@ -23,16 +23,16 @@ class ViewHelpMod(ui.View):
         self.paginator = paginator
 
     @ui.button(label="", style=ButtonStyle.primary, emoji='🏠')
-    async def button0(self, button, interaction):
-        await self.paginator.goto_page(page_number=0, interaction=interaction)
+    async def button0(self, ntr, btn):
+        await self.paginator.goto_page(page_number=0, ntr=ntr)
 
     @ui.button(label="Mute", style=ButtonStyle.primary, emoji=Ems.peepoPolice)
-    async def button1(self, button, interaction):
-        await self.paginator.goto_page(page_number=1, interaction=interaction)
+    async def button1(self, ntr, btn):
+        await self.paginator.goto_page(page_number=1, ntr=ntr)
 
     @ui.button(label="Rules", style=ButtonStyle.primary, emoji=Ems.peepoWTF)
-    async def button2(self, button, interaction):
-        await self.paginator.goto_page(page_number=2, interaction=interaction)
+    async def button2(self, ntr, btn):
+        await self.paginator.goto_page(page_number=2, ntr=ntr)
 
 
 def get_starting_embed(ctx):
@@ -73,8 +73,8 @@ class ModHelpCog(commands.Cog):
         )
         bot.help2_command.cog = self
 
-    @default_permissions(manage_messages=True)
-    @commands.slash_command(
+    @app_commands.default_permissions(manage_messages=True)
+    @app_commands.command(
         name='helpmod',
         description='Show special help menu for mods',
     )
@@ -88,5 +88,5 @@ class ModHelpCog(commands.Cog):
         await myhelp.command_callback(myhelp.context)
 
 
-def setup(bot):
-    bot.add_cog(ModHelpCog(bot))
+async def setup(bot):
+    await bot.add_cog(ModHelpCog(bot))

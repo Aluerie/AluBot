@@ -1,5 +1,5 @@
-from discord import Embed, File, TextChannel, errors, utils, option
-from discord.ext import bridge, commands
+from discord import Embed, File, TextChannel, app_commands, errors, utils
+from discord.ext import commands
 
 from utils.var import *
 from utils.webhook import user_webhook, check_msg_react
@@ -14,7 +14,7 @@ class FunThings(commands.Cog):
         self.bot = bot
         self.help_category = 'Fun'
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         aliases=['cf'],
         brief=Ems.slash,
         description='Flip a coin: Heads or Tails?'
@@ -22,8 +22,7 @@ class FunThings(commands.Cog):
     async def coinflip(self, ctx):
         """Flip a coin ;"""
         word = 'Heads' if randint(2) == 0 else 'Tails'
-        return await ctx.respond(
-            content=word, file=File(f'media/{word}.png'))
+        return await ctx.reply(content=word, file=File(f'media/{word}.png'))
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -86,14 +85,14 @@ class FunThings(commands.Cog):
                 return
         await yourlife(message)
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         brief=Ems.slash,
         description='Send 3x random emote into #emote_spam channel',
         help=f'Send 3x random emote into {cmntn(Cid.emote_spam)} ;'
     )
     async def doemotespam(self, ctx):
         """ Read above ;"""
-        if isinstance(ctx, bridge.BridgeExtContext):
+        if isinstance(ctx, commands.Context):
             await ctx.message.delete()
         rand_guild = choice(self.bot.guilds)
         rand_emoji = choice(rand_guild.emojis)
@@ -102,41 +101,39 @@ class FunThings(commands.Cog):
         await emot_ch.send(answer_text)
         embed = Embed(colour=Clr.prpl)
         embed.description = f'I sent {answer_text} into {emot_ch.mention}'
-        if isinstance(ctx, bridge.BridgeApplicationContext):  # need to respond here, very sad
-            await ctx.respond(embed=embed, ephemeral=True)
-        elif ctx.channel.id != Cid.emote_spam:
-            await ctx.send(embed=embed, delete_after=10)
+        await ctx.reply(embed=embed, ephemeral=True, delete_after=10)
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         brief=Ems.slash,
         description='Send apuband emote combo'
     )
     async def apuband(self, ctx):
         """Send apuband emote combo ;"""
         irene_server = self.bot.get_guild(Sid.irene)
-        if isinstance(ctx, bridge.BridgeExtContext):
-            await ctx.message.delete()
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
         content = ' '.join([str(utils.get(irene_server.emojis, name=e)) for e in emote_names])
-        await ctx.send(content=content)
-        if isinstance(ctx, bridge.BridgeApplicationContext):  # need to respond here, very sad
-            await ctx.respond(content=f'Nice {Ems.DankApprove}', ephemeral=True)
+        await ctx.reply(content=content)
+        if ctx.interaction:
+            await ctx.reply(content=f'Nice {Ems.DankApprove}', ephemeral=True)
+        else:
+            await ctx.message.delete()
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         brief=Ems.slash,
         description='Roll an integer from 1 to `max_roll_number`'
     )
+    @app_commands.describe(max_roll_number="Max limit to roll")
     async def roll(self, ctx, max_roll_number: int = 100):
         """Roll an integer from 1 to `max_roll_number` ;"""
-        await ctx.send(randint(1, int(max_roll_number) + 1))
+        await ctx.reply(randint(1, int(max_roll_number) + 1))
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         brief=Ems.slash,
         usage='[channel=curr] [text=Allo]',
         description='Echo something somewhere'
     )
-    @option('channel', TextChannel, description="Channel to send to")
-    @option('text', description="Enter text to speak")
+    @app_commands.describe(channel="Channel to send to")
+    @app_commands.describe(text="Enter text to speak")
     async def echo(self, ctx, channel: Optional[TextChannel] = None, *, text: str = f'Allo'):
         """Send `text` to `#channel` and delete your invoking message, so it looks like \
         the bot is speaking on its own ;"""
@@ -146,26 +143,25 @@ class FunThings(commands.Cog):
             for url in url_array:  # forbid embeds
                 text = text.replace(url, f'<{url}>')
             await channel.send(text)
-            if isinstance(ctx, bridge.BridgeApplicationContext):
-                await ctx.respond(content=Ems.DankApprove, ephemeral=True)
+            if ctx.interaction:
+                await ctx.reply(content=Ems.DankApprove, ephemeral=True)
         else:
-            embed = Embed(colour=Clr.rspbrry)
-            embed.set_author(name='Permission_Error')
+            embed = Embed(colour=Clr.rspbrry).set_author(name='PermissionError')
             embed.description = f'Sorry, you don\'t have permissions to speak in {channel.mention}'
             embed.set_footer(text='Probably that channel is read-only mode for you')
-            return await ctx.respond(embed=embed)
+            return await ctx.reply(embed=embed)
         try:
             await ctx.message.delete()
         except:
             pass
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='emoteit',
         brief=Ems.slash,
         aliases=['emotialize'],
         description="Emotializes your text into standard emotes"
     )
-    @option('text', description="Text that will be converted into emotes")
+    @app_commands.describe(text="Text that will be converted into emotes")
     async def emoteit(self, ctx, *, text: str):
         """Emotializes your text into standard emotes"""
         answer = ''
@@ -199,10 +195,10 @@ class FunThings(commands.Cog):
             else:
                 answer += letter
         await user_webhook(ctx, content=answer)
-        if isinstance(ctx, bridge.BridgeExtContext):
-            await ctx.message.delete()
+        if ctx.interaction:
+            await ctx.reply(content=Ems.DankApprove, ephemeral=True)
         else:
-            await ctx.respond(content=Ems.DankApprove, ephemeral=True)
+            await ctx.message.delete()
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -211,5 +207,5 @@ class FunThings(commands.Cog):
                 await reaction.message.delete()
 
 
-def setup(bot):
-    bot.add_cog(FunThings(bot))
+async def setup(bot):
+    await bot.add_cog(FunThings(bot))

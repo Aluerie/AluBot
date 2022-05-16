@@ -47,7 +47,7 @@ def humanize_time(time: timedelta, full=True) -> str:
 
     if time.days > 365:
         years, days = divmod(time.days, 365)
-        return n(years, 'y') + ' ' + n(time.days, 'd')
+        return n(years, 'y') + ' ' + n(days, 'd')
     if time.days > 1:
         return n(time.days, 'd') + ' ' + humanize_time(timedelta(seconds=time.seconds))
     hours, seconds = divmod(time.seconds, 3600)

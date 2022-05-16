@@ -74,5 +74,5 @@ class CopypasteLeague(commands.Cog):
                 f'```python\n{error_message}```')
 
 
-def setup(bot):
-    bot.add_cog(CopypasteLeague(bot))
+async def setup(bot):
+    await bot.add_cog(CopypasteLeague(bot))

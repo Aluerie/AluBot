@@ -1,6 +1,6 @@
-from discord import Embed, Interaction, SelectOption, option, ui
+from discord import Embed, Interaction, SelectOption, app_commands, ui
+from discord.ext import commands
 from discord.utils import format_dt
-from discord.ext import commands, bridge
 
 from utils.var import *
 
@@ -158,7 +158,7 @@ class DotaSchedule(commands.Cog):
         self.bot = bot
         self.help_category = 'Info'
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='schedule',
         brief=Ems.slash,
         description='Dota 2 Pro Matches Schedule',
@@ -166,14 +166,14 @@ class DotaSchedule(commands.Cog):
         default_permission=False,
         # guild_ids=Sid.guild_ids
     )
-    @option('query', description="Enter search query, ie. `EG` (or any other team/tourney names)")
-    async def schedule(self, ctx, *, query=None):
+    @app_commands.describe(query="Enter search query, ie. `EG` (or any other team/tourney names)")
+    async def schedule(self, ctx, *, query: str = None):
         """Get featured Dota 2 Pro Matches Schedule, use dropdown menu to view different types of schedule.\
         Use `query` to filter schedule by teams or tournaments, for example `$sch EG` will show only EG matches ;"""
         view = MyView(ctx.author)
         view.add_item(MySelect(options, arg=query, author=ctx.author))
-        await ctx.respond(embed=await schedule_work(self.bot.ses, query, "2", only_today=1, favmode=1), view=view)
+        await ctx.reply(embed=await schedule_work(self.bot.ses, query, "2", only_today=1, favmode=1), view=view)
 
 
-def setup(bot):
-    bot.add_cog(DotaSchedule(bot))
+async def setup(bot):
+    await bot.add_cog(DotaSchedule(bot))

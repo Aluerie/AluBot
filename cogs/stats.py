@@ -1,5 +1,5 @@
-from discord import Embed, Member, TextChannel, option
-from discord.ext import commands, tasks, bridge
+from discord import Embed, Member, TextChannel, app_commands
+from discord.ext import commands, tasks
 
 from utils.var import *
 from utils.imgtools import img_to_file
@@ -16,8 +16,25 @@ class StatsCommands(commands.Cog):
         self.bot = bot
         self.help_category = 'Stats'
 
-    async def wordcloud_work(self, ctx, cm, limit):
-        cm = cm or []  # idk i don't like mutable default argument warning
+    @commands.hybrid_command(
+        name='wordcloud',
+        brief=Ems.slash,
+        description='Get `@member wordcloud over last total `limit` messages in requested `#channel`',
+        usage='[channel(s)=curr] [member(s)=you] [limit=2000]'
+    )
+    @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
+    async def wordcloud(
+            self,
+            ctx,
+            channel_or_and_member: commands.Greedy[Union[Member, TextChannel]] = None,
+            limit: int = 2000
+    ):
+        """
+        Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
+        Can accept multiple members/channels \
+        Note that it's quite slow function or even infinitely slow with bigger limits ;
+        """
+        cm = channel_or_and_member or []  # idk i don't like mutable default argument warning
         members = [x for x in cm if isinstance(x, Member)] or [ctx.author]
         channels = [x for x in cm if isinstance(x, TextChannel)] or [ctx.channel]
         await ctx.defer()
@@ -25,46 +42,27 @@ class StatsCommands(commands.Cog):
         for ch in channels:
             text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
-        await ctx.respond(file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
+        em = Embed(colour=Clr.prpl)
+        em.description = \
+            f"Members: {', '.join([m.mention for m in members])}\n" \
+            f"Channels: {', '.join([c.mention for c in channels])}\n" \
+            f"Limit: {limit}"
+        await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
 
-    @commands.slash_command(
-        name='wordcloud',
-        description='Get `@member wordcloud over last total `limit` messages in requested `#channel`'
-    )
-    @option('member', description='Choose member')
-    @option('channel', description='Choose channel')
-    async def wordcloud_slh(self, ctx, member: Member, channel: TextChannel, limit: int = 2000):
-        cm = [member, channel]
-        await self.wordcloud_work(ctx, cm, limit)
-
-    @commands.command(
-        name='wordcloud',
-        brief=Ems.slash,
-        usage='[channel(s)=curr] [member(s)=you] [limit=2000]'
-    )
-    async def wordcloud_ext(self, ctx, cm: commands.Greedy[Union[Member, TextChannel]] = None, limit: int = 2000):
-        """
-        Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
-        Can accept multiple members/channels \
-        Note that it's quite slow function or even infinitely slow with bigger limits ;
-        """
-        await self.wordcloud_work(ctx, cm, limit)
-
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='summary',
         brief=Ems.slash,
         description='Summary stats for the bot'
     )
     async def summary(self, ctx):
         """Summary stats for the bot ;"""
-        embed = Embed(colour=Clr.prpl, title='Summary bot stats')
-        embed.set_thumbnail(url=self.bot.user.avatar.url)
-        embed.add_field(name="Server Count", value=str(len(self.bot.guilds)))
-        embed.add_field(name="User Count", value=str(len(self.bot.users)))
-        embed.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")
-        embed.add_field(name='Uptime',
-                        value=humanize_time(datetime.now(timezone.utc) - self.bot.launch_time, full=False))
-        await ctx.respond(embed=embed)
+        em = Embed(colour=Clr.prpl, title='Summary bot stats')
+        em.set_thumbnail(url=self.bot.user.avatar.url)
+        em.add_field(name="Server Count", value=str(len(self.bot.guilds)))
+        em.add_field(name="User Count", value=str(len(self.bot.users)))
+        em.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")
+        em.add_field(name='Uptime', value=humanize_time(datetime.now(timezone.utc) - self.bot.launch_time, full=False))
+        await ctx.reply(embed=em)
 
 
 class Stats(commands.Cog):
@@ -107,6 +105,6 @@ class Stats(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-def setup(bot):
-    bot.add_cog(Stats(bot))
-    bot.add_cog(StatsCommands(bot))
+async def setup(bot):
+    await bot.add_cog(Stats(bot))
+    await bot.add_cog(StatsCommands(bot))

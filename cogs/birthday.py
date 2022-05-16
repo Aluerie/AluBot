@@ -87,10 +87,10 @@ class Birthday(commands.Cog):
             return None
         if (dmy_dtime := get_dtime(date)) is not None:
             db.set_value(db.m, ctx.author.id, bdate=dmy_dtime)
-            await ctx.send(f"Your birthday is successfully set to {bdate_str(dmy_dtime)}")
+            await ctx.reply(f"Your birthday is successfully set to {bdate_str(dmy_dtime)}")
             await ctx.bot.get_user(Uid.irene).send(f'{ctx.author.display_name}\'s bdate is {bdate_str(dmy_dtime)}')
         else:
-            await ctx.send(
+            await ctx.reply(
                 "Invalid date format, please use dd/mm/YYYY or dd/mm date format, ie. `$birthday set 26/02/1802`")
 
     @birthday.command(
@@ -99,7 +99,7 @@ class Birthday(commands.Cog):
     async def delete(self, ctx):
         """read above"""
         db.set_value(db.m, ctx.author.id, bdate=None)
-        await ctx.send("Your birthday is successfully deleted")
+        await ctx.reply("Your birthday is successfully deleted")
         await ctx.bot.get_user(Uid.irene).send(f'{ctx.author.display_name}\'s birthday is deleted')
 
     @birthday.command()
@@ -112,10 +112,10 @@ class Birthday(commands.Cog):
         """
         if -13 < tzone < 13:
             db.set_value(db.m, ctx.author.id, timezone=tzone)
-            await ctx.send(f"Your timezone is successfully set to GMT {tzone:+.1f}")
+            await ctx.reply(f"Your timezone is successfully set to GMT {tzone:+.1f}")
             await ctx.bot.get_user(Uid.irene).send(f'{ctx.author.display_name}\'s timezone is set to {tzone}')
         else:
-            await ctx.send("Invalid timezone value. Error id #6. Aborting...")
+            await ctx.reply("Invalid timezone value. Error id #6. Aborting...")
 
     @birthday.command(usage='[member=you]')
     async def check(self, ctx, member: Member = None):
@@ -127,7 +127,7 @@ class Birthday(commands.Cog):
             ans = f'It seems {member.display_name}\'s hasn\'t set birthday yet.'
         else:
             ans = f'{member.display_name}\'s birthday is set to {bdate_str(bdate)} and timezone is GMT {tzone:+.1f}'
-        await ctx.send(content=ans)
+        await ctx.reply(content=ans)
 
     @tasks.loop(hours=1)
     async def check_birthdays(self):
@@ -181,9 +181,9 @@ class BirthdayAdmin(commands.Cog):
             if bperson is not None:
                 text += f'{bdate_str(row.bdate, num_mod=True)}, GMT {row.timezone:+.1f} - **{bperson.mention}**\n'
         embed.description = text
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 
-def setup(bot):
-    bot.add_cog(Birthday(bot))
-    bot.add_cog(BirthdayAdmin(bot))
+async def setup(bot):
+    await bot.add_cog(Birthday(bot))
+    await bot.add_cog(BirthdayAdmin(bot))

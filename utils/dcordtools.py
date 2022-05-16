@@ -1,4 +1,4 @@
-from discord import abc, Bot, Embed
+from discord import abc, Embed
 from discord.ext import commands
 from utils.var import Uid, Cid, Clr, umntn
 
@@ -8,13 +8,13 @@ from typing import Union
 
 async def send_traceback(
         error: Exception,
-        dest: Union[Bot, abc.Messageable],
+        dest: Union[commands.Bot, abc.Messageable],
         *,
         embed: Embed = None,
         mention_dev: bool = True,
         verbosity: int = 10,
 ):
-    if isinstance(dest, Bot):
+    if isinstance(dest, commands.Bot):
         channel = dest.get_channel(Cid.spam_me)
     elif isinstance(dest, abc.Messageable):
         channel = dest
@@ -48,13 +48,12 @@ async def scnf(ctx):
             extra_space = '' if command.signature == '' else ' '
             return f'{prefix}{command.qualified_name}{extra_space}{command.signature}'
 
-        embed = Embed(colour=Clr.error)
-        embed.set_author(name='SubcommandNotFound')
+        embed = Embed(colour=Clr.error).set_author(name='SubcommandNotFound')
         ans = 'This command is used only with subcommands. Please, provide one of them:\n'
         ans += '\n'.join([f'`{get_command_signature(c)}`' for c in ctx.command.commands])
         embed.description = ans
         embed.set_footer(text=f'`{prefix}help {ctx.command.name}` for more info')
-        return await ctx.respond(embed=embed)
+        return await ctx.reply(embed=embed, ephemeral=True)
 
 
 # just convert `keyword: inout_to_10`
@@ -66,6 +65,10 @@ def inout_to_10(argument):
         return 0
     else:
         raise commands.errors.BadBoolArgument(lowered)
+
+
+def to_lower(argument):
+    return argument.lower()
 
 
 def ansi(

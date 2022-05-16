@@ -1,4 +1,4 @@
-from discord import ButtonStyle, Embed, ui, default_permissions
+from discord import ButtonStyle, Embed, ui, app_commands
 from discord.ext import commands
 from utils.var import Clr, Ems, Cid, cmntn
 from utils.elpcmd import HelpCommand
@@ -27,24 +27,24 @@ class ViewHelpAdmin(ui.View):
         self.paginator = paginator
 
     @ui.button(label="", style=ButtonStyle.primary, emoji='🏠')
-    async def button0(self, button, interaction):
-        await self.paginator.goto_page(page_number=0, interaction=interaction)
+    async def button0(self, ntr, btn):
+        await self.paginator.goto_page(page_number=0, ntr=ntr)
 
     @ui.button(label="Dota 2", style=ButtonStyle.primary, emoji=Ems.phone_numbers[1])
-    async def button1(self, button, interaction):
-        await self.paginator.goto_page(page_number=1, interaction=interaction)
+    async def button1(self, ntr, btn):
+        await self.paginator.goto_page(page_number=1, ntr=ntr)
 
     @ui.button(label="LoL", style=ButtonStyle.primary, emoji=Ems.phone_numbers[2])
-    async def button2(self, button, interaction):
-        await self.paginator.goto_page(page_number=2, interaction=interaction)
+    async def button2(self, ntr, btn):
+        await self.paginator.goto_page(page_number=2, ntr=ntr)
 
     @ui.button(label="Info", style=ButtonStyle.primary, emoji=Ems.phone_numbers[3])
-    async def button3(self, button, interaction):
-        await self.paginator.goto_page(page_number=3, interaction=interaction)
+    async def button3(self, ntr, btn):
+        await self.paginator.goto_page(page_number=3, ntr=ntr)
 
     @ui.button(label="Tools", style=ButtonStyle.primary, emoji=Ems.phone_numbers[4])
-    async def button4(self, button, interaction):
-        await self.paginator.goto_page(page_number=4, interaction=interaction)
+    async def button4(self, ntr, btn):
+        await self.paginator.goto_page(page_number=4, ntr=ntr)
 
 
 def get_starting_embed(ctx):
@@ -92,9 +92,9 @@ class AdminHelpCog(commands.Cog):
             verify_checks=False)
         bot.help3_command.cog = self
 
-    @default_permissions(administrator=True)
     @commands.is_owner()
-    @commands.slash_command(
+    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(
         name='helpadmin',
         description='Show special help menu for the bot admin'
     )
@@ -108,5 +108,5 @@ class AdminHelpCog(commands.Cog):
         await myhelp.command_callback(myhelp.context)
 
 
-def setup(bot):
-    bot.add_cog(AdminHelpCog(bot))
+async def setup(bot):
+    await bot.add_cog(AdminHelpCog(bot))

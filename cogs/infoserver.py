@@ -1,5 +1,5 @@
-from discord import Embed, option
-from discord.ext import commands, bridge
+from discord import Embed, app_commands
+from discord.ext import commands
 
 from utils.var import Rid, Ems, Clr
 from utils.dcordtools import scnf
@@ -17,29 +17,29 @@ class ServerInfo(commands.Cog):
             embed = Embed(colour=Clr.prpl)
             embed.title = f'Rule {num}'
             embed.description = f'{num}. {my_row.text}'
-            await ctx.respond(embed=embed)
+            await ctx.reply(embed=embed)
         except:
-            await ctx.respond(content='there is no such rule')
+            await ctx.reply(content='there is no such rule')
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='rule',
         brief=Ems.slash,
         description="Show rule number `num`"
     )
-    @option('num', description="Enter a number", min_value=0, max_value=99)
-    async def rule(self, ctx, num: int):  # db.session.query(func.max(db.sr.id)).scalar())
+    @app_commands.describe(number="Enter a number") #min_value=0, max_value=99) #TODO: THIS
+    async def rule(self, ctx, number: int):  # db.session.query(func.max(db.sr.id)).scalar())
         """Show rule number `num`"""
-        await self.rule_work(ctx, num, db.sr, 0)
+        await self.rule_work(ctx, number, db.sr, 0)
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='realrule',
         brief=Ems.slash,
         description="Show *real rule* number `num`"
     )
-    @option('num', description="Enter a number", min_value=1, max_value=99)
-    async def realrule(self, ctx,num: int):
+    @app_commands.describe(number="Enter a number")#, min_value=1, max_value=99)#TODO: THIS
+    async def realrule(self, ctx,number: int):
         """Show *real rule* number `num`"""
-        await self.rule_work(ctx, num, db.rr, 1)
+        await self.rule_work(ctx, number, db.rr, 1)
 
     async def rules_work(self, ctx, dtb, min_value):
         with db.session_scope() as ses:
@@ -50,9 +50,9 @@ class ServerInfo(commands.Cog):
         embed = Embed(colour=Clr.prpl)
         embed.title = 'Server rules'
         embed.description = f'\n'.join(list_rules)
-        await ctx.respond(embed=embed)
+        await ctx.reply(embed=embed)
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='rules',
         brief=Ems.slash,
         description="Show all rules of the server"
@@ -61,7 +61,7 @@ class ServerInfo(commands.Cog):
         """Show all rules of the server"""
         await self.rules_work(ctx, db.sr, 0)
 
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='realrules',
         brief=Ems.slash,
         description="Show all *real rules* of the server"
@@ -90,7 +90,7 @@ class ModServerInfo(commands.Cog):
 
     async def add_work(self, ctx, text, dtb):
         db.append_row(dtb, text=text)
-        await ctx.respond(content='added')
+        await ctx.reply(content='added')
 
     @commands.has_role(Rid.discord_mods)
     @modrule.command()
@@ -108,7 +108,7 @@ class ModServerInfo(commands.Cog):
         with db.session_scope() as ses:
             my_row = ses.query(dtb).order_by(dtb.id).limit(num+min_number)[0]
             ses.query(dtb).filter_by(id=my_row.id).delete()
-        await ctx.respond(content='removed')
+        await ctx.reply(content='removed')
 
     @commands.has_role(Rid.discord_mods)
     @modrule.command()
@@ -123,6 +123,6 @@ class ModServerInfo(commands.Cog):
         await self.remove_work(ctx, num, db.rr, 1)
 
 
-def setup(bot):
-    bot.add_cog(ServerInfo(bot))
-    bot.add_cog(ModServerInfo(bot))
+async def setup(bot):
+    await bot.add_cog(ServerInfo(bot))
+    await bot.add_cog(ModServerInfo(bot))

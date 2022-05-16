@@ -43,7 +43,7 @@ class ReactionRoles(commands.Cog):
 
         embed = Embed(colour=0x9678b6)
         embed.title = f'Colour roles №{start + 1}-{start + amount}'
-        msg = await ctx.send(content=text, embed=embed)
+        msg = await ctx.reply(content=text, embed=embed)
         for emoji in emoji_array:
             await msg.add_reaction(emoji)
 
@@ -91,7 +91,7 @@ class ReactionRoles(commands.Cog):
 
         embed = Embed(colour=0x9678b6)
         embed.title = ' '.join(arg[2 + 2 * amount:])
-        msg = await ctx.send(content=text, embed=embed)
+        msg = await ctx.reply(content=text, embed=embed)
         for emoji in emoji_array:
             await msg.add_reaction(emoji)
 
@@ -163,5 +163,5 @@ dict_reactions = {
 }  # msg_id: unique reactions
 
 
-def setup(bot):
-    bot.add_cog(ReactionRoles(bot))
+async def setup(bot):
+    await bot.add_cog(ReactionRoles(bot))

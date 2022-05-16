@@ -160,6 +160,6 @@ class ComfySpam(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-def setup(bot):
-    bot.add_cog(EmoteSpam(bot))
-    bot.add_cog(ComfySpam(bot))
+async def setup(bot):
+    await bot.add_cog(EmoteSpam(bot))
+    await bot.add_cog(ComfySpam(bot))

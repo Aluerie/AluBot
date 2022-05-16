@@ -1,4 +1,4 @@
-from discord import AuditLogAction, Embed
+from discord import AuditLogAction, Embed, Interaction
 from discord.ext import commands, tasks
 from utils.var import *
 from utils.format import inline_wordbyword_diff
@@ -151,7 +151,7 @@ class EmoteLogging(commands.Cog):
         embed.description = 'Now I will log emote create/delete/rename actions in this channel. Go try it!'
         embed.set_footer(text=f'With love, {ctx.bot.user.display_name}')
         embed.set_thumbnail(url=ctx.bot.user.display_avatar.url)
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_emojis_update(self, guild, before, after):
@@ -217,11 +217,6 @@ class EmoteLogging(commands.Cog):
                 await channel.send(embed=embed)
 
 
-from discord.ext.bridge import BridgeExtContext, BridgeApplicationContext
-from discord.ext.commands import Context
-from discord import ApplicationContext
-
-
 class CommandLogging(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -235,19 +230,22 @@ class CommandLogging(commands.Cog):
 
         prefix = getattr(ctx, 'clean_prefix', '/')
 
-        if isinstance(ctx, BridgeExtContext) or isinstance(ctx, Context):
+        if isinstance(ctx, commands.Context):
+            author = ctx.author
             ch = ctx.channel
             jump_url = ctx.message.jump_url
-        elif isinstance(ctx, BridgeApplicationContext) or isinstance(ctx, ApplicationContext):
-            ch = ctx.interaction.channel
-            msg = await ctx.interaction.original_message()
-            jump_url = msg.jump_url
+        elif isinstance(ctx, Interaction):
+            author = ctx.user
+            ch = ctx.channel
+            jump_url = (await ctx.original_message()).jump_url
         else:
+            author = False
             ch = 'unknown'
             jump_url = ''
 
         embed.description = f'Used [{prefix}{ctx.command.qualified_name}]({jump_url}) in {ch.mention}'
-        embed.set_author(icon_url=ctx.author.display_avatar.url, name=ctx.author.display_name)
+        if author:
+            embed.set_author(icon_url=author.display_avatar.url, name=author.display_name)
         await self.bot.get_channel(Cid.logs).send(embed=embed)
 
     @commands.Cog.listener()
@@ -259,7 +257,7 @@ class CommandLogging(commands.Cog):
         await self.on_cmd_work(ctx)
 
 
-def setup(bot):
-    bot.add_cog(Logging(bot))
-    bot.add_cog(EmoteLogging(bot))
-    bot.add_cog(CommandLogging(bot))
+async def setup(bot):
+    await bot.add_cog(Logging(bot))
+    await bot.add_cog(EmoteLogging(bot))
+    await bot.add_cog(CommandLogging(bot))

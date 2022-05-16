@@ -1,6 +1,4 @@
-git+https://github.com/Pycord-Development/pycord
-# https://github.com/krittick/pycord@pages-opt-row
-# py-cord==2.0.0b7
+git+https://github.com/Rapptz/discord.py
 pillow~=9.1.0
 emoji~=1.7.0
 numpy~=1.22.3
@@ -23,7 +21,7 @@ pytimeparse~=1.1.8
 beautifulsoup4~=4.11.1
 urllib3~=1.26.9
 wordcloud~=1.8.1
-jishaku~=2.4.0
+jishaku~=2.5.0
 matplotlib~=3.5.0
 PyGithub~=1.55
 gtts~=2.2.4

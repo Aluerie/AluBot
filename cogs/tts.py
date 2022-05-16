@@ -1,6 +1,5 @@
-from discord import FFmpegPCMAudio, Embed, option, OptionChoice
-from discord.commands import SlashCommandGroup
-from discord.ext import bridge, commands
+from discord import FFmpegPCMAudio, Embed, app_commands
+from discord.ext import commands
 
 from utils.var import *
 from utils.dcordtools import scnf
@@ -26,12 +25,33 @@ class TextToSpeech(commands.Cog):
         self.connections = {}
         self.help_category = 'Tools'
 
-    async def voice_work(self, ctx, dict_key, text):
+    @commands.hybrid_group(name='voice')
+    async def voice(self, ctx):
+        """Group command about Voice commands, for actual commands use it together with subcommands"""
+        await scnf(ctx)
+
+    @voice.command(
+        name='speak',
+        brief=Ems.slash,
+        description='Make Text-To-Speech request into voice-chat',
+        usage="[language keyword=fr-FR] <text='Allo'>"
+    )
+    @app_commands.describe(text="Enter text to speak", lang="Choose language/accent")
+    async def speak(
+            self,
+            ctx,
+            lang: Optional[Literal[tuple(list(lang_dict.keys()))]] = 'fr-FR',
+            *,
+            text: str = 'Allo'
+            # honourable mention of exec to avoid the warning
+            # exec('xd = typing.Literal["{0}"]'.format('","'.join(list(lang_dict.keys()))))
+    ):
+        """Bot will connect to voice-chat you're in and speak `text` using Google Text-To-Speech module. \
+        For available language keywords check `(/ or $)voice languages` ;"""
         voice = ctx.author.voice
         if not voice:
-            embed = Embed(colour=Clr.error)
-            embed.description = "You aren't in a voice channel!"
-            return await ctx.respond(embed=embed)
+            embed = Embed(colour=Clr.error, description="You aren't in a voice channel!")
+            return await ctx.reply(embed=embed, ephemeral=True)
         if ctx.voice_client is not None:
             vc = self.connections[ctx.guild.id]
             await ctx.voice_client.move_to(voice.channel)
@@ -39,56 +59,25 @@ class TextToSpeech(commands.Cog):
             vc = await voice.channel.connect()  # Connect to the voice channel the author is in.
             self.connections.update({ctx.guild.id: vc})  # Updating the cache with the guild and channel.
 
-        tts = gTTS(text, lang=lang_dict[dict_key]['lang'], tld=lang_dict[dict_key]['tld'])
+        tts = gTTS(text, lang=lang_dict[lang]['lang'], tld=lang_dict[lang]['tld'])
         audio_name = "audio.mp3"
         tts.save(audio_name)
         vc.play(FFmpegPCMAudio(audio_name))
         embed = Embed(colour=ctx.author.colour, title='Text-To-Speech request')
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-        embed.set_footer(text=f"{dict_key} Language: {lang_dict[dict_key]['locale']}")
+        embed.set_footer(text=f"{lang} Language: {lang_dict[lang]['locale']}")
         embed.description = text
-        await ctx.respond(embed=embed)
+        await ctx.reply(embed=embed)
 
-    vcslash_gr = SlashCommandGroup('voice', 'Text-To-Speech commands')
-
-    @vcslash_gr.command(
-        name='speak',
-        description='Make Text-To-Speech request into voice-chat'
-    )
-    @option('text', description="Enter text to speak")
-    @option('lang',
-            choices=[OptionChoice(lang_dict[key]['locale'], value=key) for key in lang_dict],
-            default='fr-FR',
-            description="Choose language/accent")
-    async def speak_slash(self, ctx, text: str, lang: str):
-        await self.voice_work(ctx, lang, text)
-
-    @commands.group(name='voice')
-    async def vctext_gr(self, ctx):
-        """Group command about Voice commands, for actual commands use it together with subcommands"""
-        await scnf(ctx)
-
-    @vctext_gr.command(
-        name='speak',
+    @voice.command(
+        name='languages',
         brief=Ems.slash,
-        usage="[language keyword=fr-FR] <text='Allo'>"
+        description='Show list of languages supported by `/voice speak` command',
+        aliases=['langs']
     )
-    async def speak_text(
-            self,
-            ctx,
-            lang: Optional[Literal[tuple(list(lang_dict.keys()))]] = 'fr-FR',
-            # honourable mention of exec to avoid the warning
-            # exec('xd = typing.Literal["{0}"]'.format('","'.join(list(lang_dict.keys()))))
-            *,
-            text: str = 'Allo'
-    ):
-        """Bot will connect to voice-chat you're in and speak `text` using Google Text-To-Speech module. \
-        For available language keywords check `(/ or $)voice languages` ;"""
-        await self.voice_work(ctx, lang, text)
-
-    async def langs_work(self, ctx):
-        embed = Embed(colour=Clr.prpl)
-        embed.description = 'List of languages'
+    async def languages(self, ctx):
+        """Show list of languages supported by `(/ or $)voice speak` command"""
+        embed = Embed(colour=Clr.prpl, description='List of languages')
         our_list = [f"{key}: {lang_dict[key]['locale']}" for key in lang_dict]
         embed.description = \
             f'Commands `$voice` and `/voice` support following languages.\n ' \
@@ -96,67 +85,42 @@ class TextToSpeech(commands.Cog):
             f'When using slash-command choose language from available list in its options.' \
             f'\n```\n' + \
             '\n'.join(our_list) + '```'
-        await ctx.respond(embed=embed)
+        await ctx.reply(embed=embed)
 
-    @vcslash_gr.command(
-        name='languages',
-        description='Show list of languages supported by `/voice speak` command'
-    )
-    async def langs_slash(self, ctx):
-        await self.langs_work(ctx)
-
-    @vctext_gr.command(
-        name='languages',
+    @voice.command(
+        name='stop',
         brief=Ems.slash,
-        aliases=['langs']
+        description='Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests'
     )
-    async def langs_text(self, ctx):
-        """Show list of languages supported by `(/ or $)voice speak` command"""
-        await self.langs_work(ctx)
-
-    async def stop_work(self, ctx):
+    async def stop(self, ctx):
+        """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests ;"""
         try:
             vc = self.connections[ctx.guild.id]
             if vc.is_playing():
                 vc.stop()
                 embed = Embed(colour=ctx.author.colour)
                 embed.description = 'Stopped'
-                await ctx.respond(embed=embed)
+                await ctx.reply(embed=embed)
             else:
                 embed = Embed(colour=Clr.error)
                 embed.description = "I don't think I was talking"
-                await ctx.respond(embed=embed)
+                await ctx.reply(embed=embed, ephemeral=True)
         except KeyError:
             embed = Embed(colour=Clr.error)
             embed.description = "I'm not in voice channel"
-            await ctx.respond(embed=embed)
+            await ctx.reply(embed=embed, ephemeral=True)
 
-    @vcslash_gr.command(
-        name='stop',
-        description='Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests'
-    )
-    async def stop_slash(self, ctx):
-        await self.stop_work(ctx)
-
-    @vctext_gr.command(
-        name='stop',
-        brief=Ems.slash
-    )
-    async def stop_text(self, ctx):
-        """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests ;"""
-        await self.stop_work(ctx)
-
-    @bridge.bridge_command(
+    @commands.hybrid_command(
         name='bonjour',
-        description=f'`Bonjour !` into both text/voice chats',
         brief=Ems.slash,
+        description=f'`Bonjour !` into both text/voice chats',
     )
     async def bonjour(self, ctx):
         """`Bonjour !` into both text/voice chats"""
         voice = ctx.author.voice
         if not voice:
             content = f'Bonjour {Ems.bubuAyaya}'
-            return await ctx.respond(content=content)
+            return await ctx.reply(content=content)
         if ctx.voice_client is not None:
             vc = self.connections[ctx.guild.id]
             await ctx.voice_client.move_to(voice.channel)
@@ -169,7 +133,7 @@ class TextToSpeech(commands.Cog):
         tts.save(audio_name)
         vc.play(FFmpegPCMAudio(audio_name))
         content = f'Bonjour {Ems.bubuAyaya}'
-        await ctx.respond(content=content)
+        await ctx.reply(content=content)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -179,6 +143,6 @@ class TextToSpeech(commands.Cog):
             await vc.disconnect()
 
 
-def setup(bot):
-    bot.add_cog(TextToSpeech(bot))
+async def setup(bot):
+    await bot.add_cog(TextToSpeech(bot))
 

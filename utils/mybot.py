@@ -12,7 +12,7 @@ from os import getenv, environ, listdir
 
 jsk = True
 test_list = [  # for yen bot
-    'expsys'
+    'beta'
 ]
 
 
@@ -27,7 +27,7 @@ class MyBot(bridge.Bot):
             intents=Intents.all(),
             allowed_mentions=AllowedMentions(replied_user=False, everyone=False)  # .none()
         )
-        self.__session = ClientSession()
+        self.on_ready_fired = False
         self._help2_command = None
         self._help3_command = None
         self.yen = yen
@@ -47,7 +47,7 @@ class MyBot(bridge.Bot):
             self.steam_psw = getenv("STEAM_PSW")
             sd_login(self.steam, self.dota, self.steam_lgn, self.steam_psw)
 
-        if self.yen:
+        if self.yen and len(test_list):
             if jsk:
                 self.load_cog('jishaku')
             for item in test_list:
@@ -64,9 +64,14 @@ class MyBot(bridge.Bot):
             raise e
 
     async def on_ready(self):
-        if not hasattr(self, 'launch_time'):
-            self.launch_time = datetime.now(timezone.utc)
+        if self.on_ready_fired:
+            return
+        else:
+            self.on_ready_fired = True
+        self.__session = ClientSession()
+        self.launch_time = datetime.now(timezone.utc)
         print(f'Logged in as {self.user}')
+        environ["JISHAKU_NO_UNDERSCORE"] = "True"
 
     @property
     def ses(self):
@@ -115,6 +120,3 @@ class MyBot(bridge.Bot):
     async def close(self) -> None:
         await super().close()
         await self.__session.close()
-
-
-environ["JISHAKU_NO_UNDERSCORE"] = "True"

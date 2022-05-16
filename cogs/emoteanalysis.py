@@ -110,8 +110,8 @@ class EmoteAnalysis(commands.Cog):
         brief=Ems.slash,
         description='Show emotes usage stats'
     )
-    @option('keyword', description='Possible keywords: `all`, `ani`, `nonani`')
-    async def topemotes(self, ctx, keyword=None):
+    @option('keyword', description='Possible keywords: `all`, `ani`, `nonani`', default='all')
+    async def topemotes(self, ctx, keyword: str):
         """Show emotes usage stats for `keyword` group ;\
         Possible keywords: `all`, `ani` for animated emotes, `nonani` for static emotes ;"""
         match keyword:

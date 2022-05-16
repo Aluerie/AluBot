@@ -57,8 +57,9 @@ class CommandErrorHandler(commands.Cog):
                 embed.description = f'Bad argument: {error.argument}'
             case commands.BadBoolArgument():
                 embed.description = f'Bad argument: {error.argument}'
-                """case commands.BadArgument():  # the final bad argument
-                embed.description = f'Bad argument'"""
+            case commands.BadLiteralArgument():
+                embed.description = \
+                    f'Only these choices are valid for parameter `{error.param.name}`:\n `{", ".join(error.literals)}`'
             case commands.MissingPermissions():
                 embed.description = f'Missing permissions: {error.missing_perms}'
             case commands.BotMissingPermissions():
@@ -74,7 +75,7 @@ class CommandErrorHandler(commands.Cog):
             case commands.NSFWChannelRequired():
                 embed.description = "Ask Irene to make that channel NSFW friendly"
             case commands.CommandNotFound():
-                if ctx.prefix != db.get_value(db.g, ctx.guild.id, 'prefix'):
+                if not ctx.bot.yen and ctx.prefix != db.get_value(db.g, ctx.guild.id, 'prefix'):
                     return
                 embed.description = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.NotOwner():

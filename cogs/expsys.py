@@ -100,7 +100,7 @@ class ExperienceSystem(commands.Cog):
     @option('member', description='Member to check')
     async def lastseen(self, ctx, member: Member = None):
         """Show when `@member` was last seen on this server ;"""
-        member = member or ctx.message.author
+        member = member or ctx.author
         lastseen = db.get_value(db.m, member.id, 'lastseen').replace(tzinfo=timezone.utc)
         dt_delta = datetime.now(timezone.utc) - lastseen
         answer_text = f'{member.mention} was last seen in this server {humanize_time(dt_delta)} ago'

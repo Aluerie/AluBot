@@ -1,5 +1,6 @@
-from discord import Embed, Color
-from discord.ext import commands, bridge
+import discord.ui.view
+from discord import Embed, Color, ButtonStyle
+from discord.ext import commands, bridge, pages
 from utils.format import display_hmstime
 from utils.var import *
 from utils.myview import MyPaginator
@@ -62,14 +63,29 @@ class HelpCommand(commands.HelpCommand):
                     value=temp_dict[category][cmd_name]
                 )
 
+        """page_buttons = [
+            pages.PaginatorButton("first", label="<<-", style=ButtonStyle.green),
+            pages.PaginatorButton("prev", label="<-", style=ButtonStyle.green),
+            pages.PaginatorButton("page_indicator", style=ButtonStyle.gray),
+            pages.PaginatorButton("next", label="->", style=ButtonStyle.green),
+        ]"""
+
         paginator = MyPaginator(
             pages=list(embed_dict.values()),
+            # custom_buttons=page_buttons,
+            # use_default_buttons=False,
             # show_action_row=True,
-            # input_method="wait_for",
             # goto_select=True,
+            # bot=self.context.bot
         )
         view = self.view_class(paginator)
         paginator.custom_view = view
+        """paginator.custom_view.add_item(pages.PaginatorActionButton(
+                button_type="goto",
+                paginator=paginator,
+                emoji="🔢",
+                style=discord.ButtonStyle.gray,
+            ))"""
         await paginator.respond(self.context)
 
     async def send_command_help(self, command):

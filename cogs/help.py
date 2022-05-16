@@ -1,4 +1,4 @@
-from discord import ButtonStyle, Embed, app_commands
+from discord import ButtonStyle, Embed, Interaction, app_commands
 from discord.ext import commands
 from discord.ui import View, button
 from utils.var import Clr, Ems, Cid, Rid, cmntn, rmntn
@@ -211,13 +211,13 @@ class HelpCog(commands.Cog):
         name='help',
         description='Show help menu for the bot',
     )
-    async def help_slash(self, ctx):
+    async def help_slash(self, ntr: Interaction):
         myhelp = HelpCommand(
             get_starting_embed,
             ViewHelp,
             verify_checks=False
         )
-        myhelp.context = ctx
+        myhelp.context = await commands.Context.from_interaction(ntr)
         await myhelp.command_callback(myhelp.context)
 
 

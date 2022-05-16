@@ -1,4 +1,4 @@
-from discord import ButtonStyle, Embed, app_commands, ui
+from discord import ButtonStyle, Embed, app_commands, ui, Interaction
 from discord.ext import commands
 from utils.var import Clr, Ems, Rid
 from utils.elpcmd import HelpCommand
@@ -78,13 +78,13 @@ class ModHelpCog(commands.Cog):
         name='helpmod',
         description='Show special help menu for mods',
     )
-    async def help_slash(self, ctx):
+    async def help_slash(self, ntr: Interaction):
         myhelp = HelpCommand(
             get_starting_embed,
             ViewHelpMod,
             verify_checks=False
         )
-        myhelp.context = ctx
+        myhelp.context = await commands.Context.from_interaction(ntr)
         await myhelp.command_callback(myhelp.context)
 
 

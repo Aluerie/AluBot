@@ -63,12 +63,7 @@ class HelpCommand(commands.HelpCommand):
                 )
 
         paginator = pages.Paginator(
-            pages=list(embed_dict.values()),
-            # custom_buttons=page_buttons,
-            # use_default_buttons=False,
-            # show_action_row=True,
-            # goto_select=True,
-            # bot=self.context.bot
+            pages=list(embed_dict.values())
         )
         view = self.view_class(paginator)
         paginator.custom_view = view

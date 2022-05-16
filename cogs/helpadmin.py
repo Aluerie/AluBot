@@ -1,4 +1,4 @@
-from discord import ButtonStyle, Embed, ui, app_commands
+from discord import ButtonStyle, Embed, ui, app_commands, Interaction
 from discord.ext import commands
 from utils.var import Clr, Ems, Cid, cmntn
 from utils.elpcmd import HelpCommand
@@ -98,13 +98,13 @@ class AdminHelpCog(commands.Cog):
         name='helpadmin',
         description='Show special help menu for the bot admin'
     )
-    async def help_slash(self, ctx):
+    async def help_slash(self, ntr: Interaction):
         myhelp = HelpCommand(
             get_starting_embed,
             ViewHelpAdmin,
             verify_checks=False
         )
-        myhelp.context = ctx
+        myhelp.context = await commands.Context.from_interaction(ntr)
         await myhelp.command_callback(myhelp.context)
 
 

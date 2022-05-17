@@ -2,6 +2,7 @@ from discord import app_commands, File
 from discord.ext import commands
 
 from utils.var import *
+from utils.context import Context
 
 from io import BytesIO
 from urllib import parse as urlparse
@@ -19,15 +20,16 @@ class WolframAlpha(commands.Cog):
         self.help_category = 'Tools'
 
     @commands.hybrid_command(
-        name="wolf",
+        name="wolfram_long",
         brief=Ems.slash,
-        aliases=["wolfram"],
-        description="Get long answer from WolframAlpha"
+        description="Get long answer from WolframAlpha.com",
+        aliases=["wolfram", "wolf"],
     )
-    @commands.cooldown(1, 100, commands.BucketType.user)
+    @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
-    async def wolf(self, ctx, *, query: str):
+    async def wolf(self, ctx: Context, *, query: str):
         """Get answer from WolframAlpha ;"""
+        await ctx.thinking()
         questionurl = str(self.WABASICURL + str(urlparse.quote(query)))
         async with self.bot.ses.get(questionurl) as resp:
             if (content := await resp.read()) == "Error 1: Invalid appid":
@@ -39,14 +41,16 @@ class WolframAlpha(commands.Cog):
             await ctx.reply(content=result, file=file)
 
     @commands.hybrid_command(
-        name="wa",
+        name="wolfram_short",
         brief=Ems.slash,
-        description="Get short answer from WolframAlpha"
+        description="Get short answer from WolframAlpha.com",
+        aliases=['wa']
     )
-    @commands.cooldown(1, 100, commands.BucketType.user)
+    @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
-    async def wolfram_shorter(self, ctx, *, query: str):
+    async def wolfram_shorter(self, ctx: Context, *, query: str):
         """Get shorter answer from WolframAlpha ;"""
+        await ctx.thinking()
         questionurl = str(self.WASHORTURL + str(urlparse.quote(query)))
         async with self.bot.ses.get(questionurl) as resp:
             if await resp.read() == "Error 1: Invalid appid":

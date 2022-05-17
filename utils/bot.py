@@ -15,7 +15,7 @@ from os import getenv, environ, listdir
 
 jsk = True
 test_list = [  # for yen bot
-    'beta',
+    'wolfram',
     'error'
 ]
 

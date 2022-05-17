@@ -1,6 +1,6 @@
-from discord import Embed, Member
+from discord import Embed, Member, app_commands
 from discord.ext import commands, tasks
-from utils.var import Cid, Clr, Ems, Rid, Sid, Uid, cmntn
+from utils.var import *
 from utils.dcordtools import scnf
 from utils import database as db
 
@@ -69,13 +69,19 @@ class Birthday(commands.Cog):
         self.check_birthdays.start()
         self.help_category = 'Birthday'
 
-    @commands.group()
+    @commands.hybrid_group()
     async def birthday(self, ctx):
         """Group command about birthdays, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    @birthday.command(aliases=['edit'])
-    async def set(self, ctx, *, date):
+    @birthday.command(
+        name='set',
+        brief=Ems.slash,
+        aliases=['edit'],
+        description='Set your birthday'
+    )
+    @app_commands.describe(date='Your birthday date in "DD/MM" or "DD/MM/YYYY" format')
+    async def set(self, ctx, *, date: str):
         """Set your birthday. Please send `*your_birthday*` in "DD/MM" or in "DD/MM/YYYY" format.\
         If you choose the latter format, the bot will mention your age in congratulation text too;"""
         def get_dtime(text):
@@ -88,36 +94,47 @@ class Birthday(commands.Cog):
         if (dmy_dtime := get_dtime(date)) is not None:
             db.set_value(db.m, ctx.author.id, bdate=dmy_dtime)
             await ctx.reply(f"Your birthday is successfully set to {bdate_str(dmy_dtime)}")
-            await ctx.bot.get_user(Uid.irene).send(f'{ctx.author.display_name}\'s bdate is {bdate_str(dmy_dtime)}')
         else:
             await ctx.reply(
                 "Invalid date format, please use dd/mm/YYYY or dd/mm date format, ie. `$birthday set 26/02/1802`")
 
     @birthday.command(
+        name='delete',
+        brief=Ems.slash,
         help=f'Delete your birthday and stop getting congratulations from the bot in {cmntn(Cid.bday_notifs)};',
-        aliases=['del'])
+        aliases=['del']
+    )
     async def delete(self, ctx):
         """read above"""
         db.set_value(db.m, ctx.author.id, bdate=None)
         await ctx.reply("Your birthday is successfully deleted")
-        await ctx.bot.get_user(Uid.irene).send(f'{ctx.author.display_name}\'s birthday is deleted')
 
-    @birthday.command()
-    async def timezone(self, ctx, tzone: float):
+    @birthday.command(
+        name='timezone',
+        brief=Ems.slash,
+        description='Set your timezone for birthday'
+    )
+    @app_commands.describe(timezone='Timezone in `float` format, ie. `-5.5` GMT -5:30 timezone')
+    async def timezone(self, ctx, timezone: float):
         """
         By default the bot congratulates you when your bday comes live in GMT+0 timezone. \
         This subcommand is made for adjusting that. \
         Timezone should be given as an integer or as a decimal fraction relative to GMT. \
         Usage example: `$birthday timezone -5.5` for GMT -5:30 timezone. ;
         """
-        if -13 < tzone < 13:
-            db.set_value(db.m, ctx.author.id, timezone=tzone)
-            await ctx.reply(f"Your timezone is successfully set to GMT {tzone:+.1f}")
-            await ctx.bot.get_user(Uid.irene).send(f'{ctx.author.display_name}\'s timezone is set to {tzone}')
+        if -13 < timezone < 13:
+            db.set_value(db.m, ctx.author.id, timezone=timezone)
+            await ctx.reply(f"Your timezone is successfully set to GMT {timezone:+.1f}")
         else:
             await ctx.reply("Invalid timezone value. Error id #6. Aborting...")
 
-    @birthday.command(usage='[member=you]')
+    @birthday.command(
+        name='check',
+        brief=Ems.slash,
+        usage='[member=you]',
+        description='Set your timezone for birthday'
+    )
+    @app_commands.describe(member='Member of the server or you if not specified')
     async def check(self, ctx, member: Member = None):
         """Check member's birthday in database"""
         member = member or ctx.message.author

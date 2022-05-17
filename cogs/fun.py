@@ -92,16 +92,15 @@ class FunThings(commands.Cog):
     )
     async def doemotespam(self, ctx):
         """ Read above ;"""
-        if isinstance(ctx, commands.Context):
-            await ctx.message.delete()
         rand_guild = choice(self.bot.guilds)
         rand_emoji = choice(rand_guild.emojis)
         answer_text = f'{str(rand_emoji)} ' * 3
         emot_ch = self.bot.get_channel(Cid.emote_spam)
         await emot_ch.send(answer_text)
-        embed = Embed(colour=Clr.prpl)
-        embed.description = f'I sent {answer_text} into {emot_ch.mention}'
-        await ctx.reply(embed=embed, ephemeral=True, delete_after=10)
+        em = Embed(colour=Clr.prpl, description=f'I sent {answer_text} into {emot_ch.mention}')
+        await ctx.reply(embed=em, ephemeral=True, delete_after=10)
+        if not ctx.interaction:
+            await ctx.message.delete()
 
     @commands.hybrid_command(
         brief=Ems.slash,
@@ -112,7 +111,7 @@ class FunThings(commands.Cog):
         irene_server = self.bot.get_guild(Sid.irene)
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
         content = ' '.join([str(utils.get(irene_server.emojis, name=e)) for e in emote_names])
-        await ctx.reply(content=content)
+        await ctx.channel.send(content=content)
         if ctx.interaction:
             await ctx.reply(content=f'Nice {Ems.DankApprove}', ephemeral=True)
         else:

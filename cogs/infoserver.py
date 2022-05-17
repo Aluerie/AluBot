@@ -1,9 +1,9 @@
 from discord import Embed, app_commands
 from discord.ext import commands
 
-from utils.var import Rid, Ems, Clr
-from utils.dcordtools import scnf
 from utils import database as db
+from utils.var import *
+from utils.dcordtools import scnf
 
 
 class ServerInfo(commands.Cog):
@@ -13,7 +13,7 @@ class ServerInfo(commands.Cog):
 
     async def rule_work(self, ctx, num, dtb, min_number):
         try:
-            my_row = db.session.query(dtb).order_by(dtb.id).limit(num + min_number)[num + min_number]
+            my_row = db.session.query(dtb).order_by(dtb.id).limit(num + min_number)[num - min_number]
             embed = Embed(colour=Clr.prpl, title=f'Rule {num}')
             embed.description = f'{num}. {my_row.text}'
             await ctx.reply(embed=embed)
@@ -75,13 +75,13 @@ class ModServerInfo(commands.Cog):
         self.bot = bot
         self.help_category = 'Rules'
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_permissions(manage_messages=True)
     @commands.group()
     async def modrule(self, ctx):
         """Group command about rule modding, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_permissions(manage_messages=True)
     @commands.group()
     async def modrealrule(self, ctx):
         """Group command about rule modding, for actual commands use it together with subcommands"""
@@ -91,13 +91,11 @@ class ModServerInfo(commands.Cog):
         db.append_row(dtb, text=text)
         await ctx.reply(content='added')
 
-    @commands.has_role(Rid.discord_mods)
     @modrule.command()
     async def add(self, ctx, *, text: str):
         """Add rule to server rules"""
         await self.add_work(ctx, text, db.sr)
 
-    @commands.has_role(Rid.discord_mods)
     @modrealrule.command(name='add')
     async def add2(self, ctx, *, text: str):
         """Add rule to *real rules*"""
@@ -109,13 +107,11 @@ class ModServerInfo(commands.Cog):
             ses.query(dtb).filter_by(id=my_row.id).delete()
         await ctx.reply(content='removed')
 
-    @commands.has_role(Rid.discord_mods)
     @modrule.command()
     async def remove(self, ctx, num: int):
         """Remove rule under number `num` from server rules"""
         await self.remove_work(ctx, num, db.sr, 0)
 
-    @commands.has_role(Rid.discord_mods)
     @modrealrule.command(name='remove')
     async def remove2(self, ctx, num: int):
         """Remove rule under number `num` from *real rules*"""

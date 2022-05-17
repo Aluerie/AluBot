@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import Embed
+from discord import Embed, Member
 from discord.ext import commands
 
 from utils import database as db
@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 if TYPE_CHECKING:
-    from discord import Member
+    pass
 
 
 async def welcome_image(session, member):

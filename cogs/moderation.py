@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import Embed
+from discord import Embed, Member
 from discord.ext import commands, tasks
 from discord.utils import sleep_until
 
@@ -13,7 +13,7 @@ from utils import database as db
 from utils.format import arg_to_timetext
 
 if TYPE_CHECKING:
-    from discord import Member
+    pass
 
 blocked_phrases = ['https://cdn.discordapp.com/emojis/831229578340859964.gif?v=1']
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import Embed, Colour, app_commands
+from discord import Colour, Embed,  Member, Message, Role, app_commands
 from discord.ext import commands, tasks
 
 from utils.format import humanize_time
@@ -14,7 +14,7 @@ import colorsys
 from async_google_trans_new import google_translator
 
 if TYPE_CHECKING:
-    from discord import Member, Role, Message, Interaction
+    from discord import Interaction
 
 
 async def account_age_ctx_menu(ntr: Interaction, member: Member):

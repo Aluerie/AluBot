@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import Embed, app_commands
+from discord import Embed, Member, TextChannel, app_commands
 from discord.ext import commands, tasks
 
 from utils.var import *
@@ -14,7 +14,7 @@ from typing import Union
 from wordcloud import WordCloud
 
 if TYPE_CHECKING:
-    from discord import Member, TextChannel
+    pass
 
 
 class StatsCommands(commands.Cog):

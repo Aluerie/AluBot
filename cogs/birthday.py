@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import Embed, app_commands
+from discord import Embed, Member, app_commands
 from discord.ext import commands, tasks
 
 from utils import database as db
@@ -13,7 +13,7 @@ from numpy.random import choice
 from sqlalchemy import extract
 
 if TYPE_CHECKING:
-    from discord import Member
+    pass
 
 
 def get_congratulation_text():

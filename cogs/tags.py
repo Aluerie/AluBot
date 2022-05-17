@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-from discord import Interaction, Embed, app_commands
+from discord import Interaction, Embed, Member, app_commands
 from discord.ext import commands
 from discord.utils import format_dt, get
 
@@ -13,7 +13,7 @@ from utils.dcordtools import scnf
 from datetime import datetime, timezone
 
 if TYPE_CHECKING:
-    from discord import Member, Message, MessageReference
+    from discord import Message, MessageReference
 
 reserved_words = ['edit', 'add', 'create', 'info', 'delete', 'list', 'text', 'name', 'remove', 'ban']
 
@@ -45,6 +45,11 @@ async def tag_work(ctx, tag_name):
                 await ctx.response.send_message(embed=embed)
 
 
+class TagTextFlags(commands.FlagConverter, case_insensitive=True):
+    tag_name: str
+    tag_text: str
+
+
 class Tags(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -72,10 +77,6 @@ class Tags(commands.Cog):
     async def tags_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await scnf(ctx)
-
-    class TagTextFlags(commands.FlagConverter, case_insensitive=True):
-        tag_name: str
-        tag_text: str
 
     @tags.command(
         name='add',

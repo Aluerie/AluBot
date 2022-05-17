@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import Embed, utils, app_commands
+from discord import Embed, Member, utils, app_commands
 from discord.ext import commands, tasks
 
-from utils.var import Cid, Clr, Ems, Sid
+from utils.var import *
 from utils import database as db
 from utils.format import ordinal, humanize_time
 from utils.imgtools import url_to_img, img_to_file
@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from datetime import datetime, time, timedelta, timezone
 
 if TYPE_CHECKING:
-    from discord import Interaction, Member
+    from discord import Interaction
 
 LAST_SEEN_TIMEOUT = 60
 

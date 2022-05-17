@@ -10,13 +10,12 @@ from discord.ext import commands, tasks
 
 from utils import database as db
 from utils import dota as d2
-from utils.var import Clr, Cid, Sid, Ems, cmntn
+from utils.var import *
 from utils.imgtools import img_to_file, url_to_img
 from utils.format import display_relativehmstime
 from utils.dcordtools import send_traceback, scnf, inout_to_10
 from utils.mysteam import sd_login
-from cogs.twitch import TwitchStream
-from cogs.twitch import get_db_online_streams
+from cogs.twitch import TwitchStream, get_db_online_streams
 
 import re
 from PIL import Image, ImageOps, ImageDraw, ImageFont
@@ -24,6 +23,7 @@ from datetime import datetime, timezone
 
 if TYPE_CHECKING:
     from utils.context import Context
+
 
 import logging
 log = logging.getLogger('root')
@@ -164,6 +164,12 @@ class DotaFeed(commands.Cog):
         self.dotafeed.restart()
 
 
+class StreamerFlags(commands.FlagConverter, case_insensitive=True):
+    id: Optional[int]
+    name: str
+    friendid: Optional[int]
+
+
 class DotaFeedTools(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -250,11 +256,6 @@ class DotaFeedTools(commands.Cog):
             await ctx.message.add_reaction(Ems.PepoG)
         except:
             await ctx.reply('Something went wrong, double-check: `steamid`, `streamer`, `friendid`')
-
-    class StreamerFlags(commands.FlagConverter, case_insensitive=True):
-        id: Optional[int]
-        name: str
-        friendid: Optional[int]
 
     @commands.is_owner()
     @streamer.command(name='remove')

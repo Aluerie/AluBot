@@ -15,7 +15,8 @@ from os import getenv, environ, listdir
 
 jsk = True
 test_list = [  # for yen bot
-    'beta'
+    'beta',
+    'error'
 ]
 
 if TYPE_CHECKING:

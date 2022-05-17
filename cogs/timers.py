@@ -1,8 +1,9 @@
 from discord import Embed
 from discord.ext import commands, tasks
 
-from utils.var import Cid, Clr, Ems, Rid, Sid, Uid, cmntn, rmntn, umntn
 from utils import database as db
+from utils.var import *
+
 from sqlalchemy import func
 from numpy.random import randint, seed
 

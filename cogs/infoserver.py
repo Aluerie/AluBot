@@ -13,9 +13,8 @@ class ServerInfo(commands.Cog):
 
     async def rule_work(self, ctx, num, dtb, min_number):
         try:
-            my_row = db.session.query(dtb).order_by(dtb.id).limit(num + min_number)[num]
-            embed = Embed(colour=Clr.prpl)
-            embed.title = f'Rule {num}'
+            my_row = db.session.query(dtb).order_by(dtb.id).limit(num + min_number)[num + min_number]
+            embed = Embed(colour=Clr.prpl, title=f'Rule {num}')
             embed.description = f'{num}. {my_row.text}'
             await ctx.reply(embed=embed)
         except:

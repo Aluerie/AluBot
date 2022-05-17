@@ -1,13 +1,19 @@
-from discord import Interaction, Embed, Member, Message, MessageReference, app_commands
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional
+
+from discord import Interaction, Embed, app_commands
 from discord.ext import commands
 from discord.utils import format_dt, get
 
 from utils import database as db
-from utils.dcordtools import scnf
 from utils.var import *
+from utils.dcordtools import scnf
+
 
 from datetime import datetime, timezone
-from typing import Optional
+
+if TYPE_CHECKING:
+    from discord import Member, Message, MessageReference
 
 reserved_words = ['edit', 'add', 'create', 'info', 'delete', 'list', 'text', 'name', 'remove', 'ban']
 

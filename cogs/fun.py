@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional
+
 from discord import Embed, File, TextChannel, app_commands, errors, utils
 from discord.ext import commands
 
@@ -5,8 +8,10 @@ from utils.var import *
 from utils.webhook import user_webhook, check_msg_react
 
 from numpy.random import randint, choice
-from typing import Optional
 import re
+
+if TYPE_CHECKING:
+    from discord import Message
 
 
 class FunThings(commands.Cog):
@@ -25,7 +30,7 @@ class FunThings(commands.Cog):
         return await ctx.reply(content=word, file=File(f'media/{word}.png'))
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: Message):
         if message.author.id in [Uid.bot, Uid.yen]:
             return
 

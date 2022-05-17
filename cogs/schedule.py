@@ -1,11 +1,19 @@
-from discord import Embed, Interaction, SelectOption, app_commands, ui
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import Embed, SelectOption, app_commands
 from discord.ext import commands
+from discord.ui import Select, View
 from discord.utils import format_dt
+
 
 from utils.var import *
 
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
+
+if TYPE_CHECKING:
+    from discord import Interaction
 
 fav_teams = ['[A]', 'Bald', 'GS']
 
@@ -103,7 +111,7 @@ options = [
 ]
 
 
-class MySelect(ui.Select):
+class MySelect(Select):
     def __init__(self, options, placeholder=f"Next 24h: Featured + Favourite (Default)", arg=None, author=None):
         super().__init__(placeholder=placeholder, options=options)
         self.arg = arg
@@ -135,7 +143,7 @@ class MySelect(ui.Select):
         await ntr.response.edit_message(embed=embed, view=view)
 
 
-class MyView(ui.View):
+class MyView(View):
     def __init__(self, author):
         super().__init__()
         self.author = author

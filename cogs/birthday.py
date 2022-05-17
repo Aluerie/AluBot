@@ -1,12 +1,19 @@
-from discord import Embed, Member, app_commands
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import Embed, app_commands
 from discord.ext import commands, tasks
+
+from utils import database as db
 from utils.var import *
 from utils.dcordtools import scnf
-from utils import database as db
 
 from datetime import datetime, timedelta, timezone
 from numpy.random import choice
 from sqlalchemy import extract
+
+if TYPE_CHECKING:
+    from discord import Member
 
 
 def get_congratulation_text():

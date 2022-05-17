@@ -4,6 +4,10 @@
 
 ### New Features
 3. nsfw functions
+4. Search functionalty
+6. research TypeVar stuff 
+7. TYPE_CHECKING
+9. 
 
 ### Probably Garbage
 9. better $afk commands (datetime `$afk till 01.08` or `$afk for 2hours`) maybe check ifinstance > if date then one thing if timedelta then another

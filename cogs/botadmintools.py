@@ -1,7 +1,14 @@
-from discord import Embed, Guild, Member, utils
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import Embed, utils
 from discord.ext import commands, tasks
+
 from utils.var import *
 from utils import database as db
+
+if TYPE_CHECKING:
+    from discord import Guild, Member
 
 
 class AdminTools(commands.Cog):

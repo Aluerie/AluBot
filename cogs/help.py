@@ -1,8 +1,16 @@
-from discord import ButtonStyle, Embed, Interaction, app_commands
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import ButtonStyle, Embed, app_commands
 from discord.ext import commands
 from discord.ui import View, button
-from utils.var import Clr, Ems, Cid, Rid, cmntn, rmntn
+
 from utils.elpcmd import HelpCommand
+from utils.var import *
+
+
+if TYPE_CHECKING:
+    from discord import Interaction
 
 
 def first_page(ctx):

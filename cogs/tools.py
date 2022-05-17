@@ -1,8 +1,8 @@
 from discord import Embed, app_commands
 from discord.ext import commands
 
-from utils.var import *
 from utils.imgtools import url_to_img, img_to_file
+from utils.var import *
 
 from PIL import Image
 

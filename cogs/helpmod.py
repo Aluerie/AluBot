@@ -1,36 +1,41 @@
-from discord import ButtonStyle, Embed, app_commands, ui, Interaction
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import ButtonStyle, Embed, app_commands
 from discord.ext import commands
-from utils.var import Clr, Ems, Rid
+from discord.ui import View, button
+
+from utils.var import *
 from utils.elpcmd import HelpCommand
+
+if TYPE_CHECKING:
+    from discord import Interaction
 
 
 def first_page(ctx):
-    embed = Embed(color=Clr.prpl)
-    embed.title = f'{ctx.bot.user.display_name} | $helpmod Menu'
-    embed.description = f'🏠 {ctx.bot.user.display_name} is an ultimate multi-purpose bot !'
-    embed.set_thumbnail(url=ctx.bot.user.display_avatar.url)
-    embed.set_footer(text=f'With love, {ctx.bot.user.display_name}')
-    embed.add_field(name=f'{Ems.peepoPolice} `Mute`', inline=False,
-                    value='Commands to moderate server with')
-    embed.add_field(name=f'{Ems.peepoWTF} `Rules`', inline=False,
-                    value='Commands to edit rules with')
-    return embed
+    em = Embed(color=Clr.prpl, title=f'{ctx.bot.user.display_name} | $helpmod Menu')
+    em.description = f'🏠 {ctx.bot.user.display_name} is an ultimate multi-purpose bot !'
+    em.set_thumbnail(url=ctx.bot.user.display_avatar.url)
+    em.set_footer(text=f'With love, {ctx.bot.user.display_name}')
+    em.add_field(inline=False, name=f'{Ems.peepoPolice} `Mute`', value='Commands to moderate server with')
+    em.add_field(inline=False, name=f'{Ems.peepoWTF} `Rules`', value='Commands to edit rules with')
+    return em
 
 
-class ViewHelpMod(ui.View):
+class ViewHelpMod(View):
     def __init__(self, paginator):
         super().__init__()
         self.paginator = paginator
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji='🏠')
+    @button(label="", style=ButtonStyle.primary, emoji='🏠')
     async def button0(self, ntr, btn):
         await self.paginator.goto_page(page_number=0, ntr=ntr)
 
-    @ui.button(label="Mute", style=ButtonStyle.primary, emoji=Ems.peepoPolice)
+    @button(label="Mute", style=ButtonStyle.primary, emoji=Ems.peepoPolice)
     async def button1(self, ntr, btn):
         await self.paginator.goto_page(page_number=1, ntr=ntr)
 
-    @ui.button(label="Rules", style=ButtonStyle.primary, emoji=Ems.peepoWTF)
+    @button(label="Rules", style=ButtonStyle.primary, emoji=Ems.peepoWTF)
     async def button2(self, ntr, btn):
         await self.paginator.goto_page(page_number=2, ntr=ntr)
 

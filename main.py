@@ -1,4 +1,4 @@
-from utils.mybot import MyBot
+from utils.bot import VioletBot
 
 from os import getenv
 from dotenv import load_dotenv
@@ -29,5 +29,5 @@ match args.name:
     case _:
         raise Exception('Only names `vio` and `yen` are available')
 
-bot = MyBot(prefix, yen)
+bot = VioletBot(prefix, yen)
 bot.run(token)

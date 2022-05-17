@@ -1,17 +1,25 @@
-from discord import ButtonStyle, Interaction, Embed, TextStyle, ui
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import ButtonStyle, Embed, TextStyle
 from discord.ext import commands
+from discord.ui import Modal, TextInput, View, button
+
 from utils.var import Clr, Ems
 from utils.format import humanize_time
 from datetime import datetime, timedelta, timezone
 
+if TYPE_CHECKING:
+    from discord import Interaction
+
 cd_dct = {}
 
 
-class ConfModal(ui.Modal):
+class ConfModal(Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    conf = ui.TextInput(
+    conf = TextInput(
         label="Make confession to the server",
         style=TextStyle.short,
         placeholder='Type your confession text here',
@@ -33,7 +41,7 @@ class ConfModal(ui.Modal):
         cd_dct[ntr.user.id] = datetime.now(timezone.utc)
 
 
-class ConfView(ui.View):
+class ConfView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
@@ -48,7 +56,7 @@ class ConfView(ui.View):
                 return False
         return True
 
-    @ui.button(
+    @button(
         label="Anonymous confession",
         custom_id="anonconf-button",
         style=ButtonStyle.primary,
@@ -57,7 +65,7 @@ class ConfView(ui.View):
     async def button0_callback(self, btn, ntr):
         await ntr.response.send_modal(ConfModal(title=btn.label))
 
-    @ui.button(
+    @button(
         label="Non-anonymous confession",
         custom_id="nonanonconf-button",
         style=ButtonStyle.primary,

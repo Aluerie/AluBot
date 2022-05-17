@@ -1,7 +1,15 @@
-from discord import ButtonStyle, Embed, ui, app_commands, Interaction
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import ButtonStyle, Embed, app_commands
 from discord.ext import commands
-from utils.var import Clr, Ems, Cid, cmntn
+from discord.ui import View, button
+
+from utils.var import *
 from utils.elpcmd import HelpCommand
+
+if TYPE_CHECKING:
+    from discord import Interaction
 
 
 def first_page(ctx):
@@ -21,28 +29,28 @@ def first_page(ctx):
     return embed
 
 
-class ViewHelpAdmin(ui.View):
+class ViewHelpAdmin(View):
     def __init__(self, paginator):
         super().__init__()
         self.paginator = paginator
 
-    @ui.button(label="", style=ButtonStyle.primary, emoji='🏠')
+    @button(label="", style=ButtonStyle.primary, emoji='🏠')
     async def button0(self, ntr, btn):
         await self.paginator.goto_page(page_number=0, ntr=ntr)
 
-    @ui.button(label="Dota 2", style=ButtonStyle.primary, emoji=Ems.phone_numbers[1])
+    @button(label="Dota 2", style=ButtonStyle.primary, emoji=Ems.phone_numbers[1])
     async def button1(self, ntr, btn):
         await self.paginator.goto_page(page_number=1, ntr=ntr)
 
-    @ui.button(label="LoL", style=ButtonStyle.primary, emoji=Ems.phone_numbers[2])
+    @button(label="LoL", style=ButtonStyle.primary, emoji=Ems.phone_numbers[2])
     async def button2(self, ntr, btn):
         await self.paginator.goto_page(page_number=2, ntr=ntr)
 
-    @ui.button(label="Info", style=ButtonStyle.primary, emoji=Ems.phone_numbers[3])
+    @button(label="Info", style=ButtonStyle.primary, emoji=Ems.phone_numbers[3])
     async def button3(self, ntr, btn):
         await self.paginator.goto_page(page_number=3, ntr=ntr)
 
-    @ui.button(label="Tools", style=ButtonStyle.primary, emoji=Ems.phone_numbers[4])
+    @button(label="Tools", style=ButtonStyle.primary, emoji=Ems.phone_numbers[4])
     async def button4(self, ntr, btn):
         await self.paginator.goto_page(page_number=4, ntr=ntr)
 

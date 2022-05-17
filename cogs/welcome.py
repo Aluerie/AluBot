@@ -1,11 +1,18 @@
-from discord import Embed, Member
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import Embed
 from discord.ext import commands
-from utils.var import Cid, Clr, Ems, Rid, Sid, Uid, umntn
-from utils.imgtools import url_to_img, img_to_file
+
 from utils import database as db
+from utils.var import *
+from utils.imgtools import url_to_img, img_to_file
 
 from datetime import datetime, timezone
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+if TYPE_CHECKING:
+    from discord import Member
 
 
 async def welcome_image(session, member):
@@ -111,42 +118,36 @@ class Welcome(commands.Cog):
         await self.bot.get_channel(Cid.welcome).send(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
-    async def on_member_remove(self, member):
-        irene_server = self.bot.get_guild(Sid.irene)
-        if member.guild != irene_server:
+    async def on_member_remove(self, member: Member):
+        if member.guild.id != Sid.irene:
             return
         author_text = '{0} just left the server'.format(member.display_name)
-        embed = Embed(color=0x000000)
-        embed.set_author(name=author_text, icon_url=member.display_avatar.url)
+        embed = Embed(color=0x000000).set_author(name=author_text, icon_url=member.display_avatar.url)
         embed.description = '{0} {0} {0}'.format(Ems.FeelsRainMan)
-        embed.set_footer(text="With love, " + member.guild.me.display_name)
+        embed.set_footer(text=f"With love, {member.guild.me.display_name}")
         msg = await self.bot.get_channel(Cid.welcome).send(embed=embed)
         await msg.add_reaction(Ems.FeelsRainMan)
 
     @commands.Cog.listener()
-    async def on_member_ban(self, guild, member):
-        irene_server = self.bot.get_guild(Sid.irene)
-        if member.guild != irene_server:
+    async def on_member_ban(self, guild, member: Member):
+        if guild.id != Sid.irene:
             return
         author_text = f'{member.display_name} was just banned from the server'
-        embed = Embed(color=0x800000)
-        embed.set_author(name=author_text, icon_url=member.display_avatar.url)
-        embed.description = '{0} {0} {0}'.format(Ems.peepoPolice)
-        embed.set_footer(text="With love, " + guild.me.display_name)
-        msg = await self.bot.get_channel(Cid.welcome).send(embed=embed)
+        em = Embed(color=0x800000).set_author(name=author_text, icon_url=member.display_avatar.url)
+        em.description = '{0} {0} {0}'.format(Ems.peepoPolice)
+        em.set_footer(text=f"With love, {guild.me.display_name}")
+        msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
         await msg.add_reaction(Ems.peepoPolice)
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild, member):
-        irene_server = self.bot.get_guild(Sid.irene)
-        if member.guild != irene_server:
+        if guild.id != Sid.irene:
             return
-        author_text = '{0} was just unbanned from the server'.format(member.display_name)
-        embed = Embed(color=0x00ff7f)
-        embed.set_author(name=author_text, icon_url=member.display_avatar.url)
-        embed.description = '{0} {0} {0}'.format(Ems.PogChampPepe)
-        embed.set_footer(text="With love, " + guild.me.display_name)
-        msg = await self.bot.get_channel(Cid.welcome).send(embed=embed)
+        author_text = f'{member.display_name} was just unbanned from the server'
+        em = Embed(color=0x00ff7f).set_author(name=author_text, icon_url=member.display_avatar.url)
+        em.description = '{0} {0} {0}'.format(Ems.PogChampPepe)
+        em.set_footer(text="With love, " + guild.me.display_name)
+        msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
         await msg.add_reaction(Ems.PogChampPepe)
 
 
@@ -156,8 +157,7 @@ class Milestone(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        irene_server = self.bot.get_guild(Sid.irene)
-        if member.guild != irene_server:
+        if member.guild.id != Sid.irene:
             return
         irene_guild = member.guild
         mile_rl = irene_guild.get_role(Rid.milestone)
@@ -169,14 +169,14 @@ class Milestone(commands.Cog):
             db.set_value(db.g, Sid.irene, milestone_achieved=milestone_achieved)
             await member.add_roles(mile_rl)
 
-            embed = Embed(color=Clr.prpl)
-            embed.title = f'{Ems.PogChampPepe} Milestone reached !'
-            embed.description = f'Our server reached {milestone_achieved} members ! '\
-                                f'{member.mention} is our latest milestone member '\
-                                f'who gets a special lucky {mile_rl.mention} role. Congrats !'
-            embed.set_thumbnail(url=member.guild.icon_url)
-            embed.set_footer(text=f"With love, {member.guild.me.display_name}")
-            await self.bot.get_channel(Cid.welcome).send(embed=embed)
+            em = Embed(color=Clr.prpl, title=f'{Ems.PogChampPepe} Milestone reached !')
+            em.description = \
+                f'Our server reached {milestone_achieved} members ! ' \
+                f'{member.mention} is our latest milestone member '\
+                f'who gets a special lucky {mile_rl.mention} role. Congrats !'
+            em.set_thumbnail(url=member.guild.icon_url)
+            em.set_footer(text=f"With love, {member.guild.me.display_name}")
+            await self.bot.get_channel(Cid.welcome).send(embed=em)
 
 
 class WelcomeAdmin(commands.Cog):

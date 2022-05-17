@@ -1,9 +1,13 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from discord import Embed
 from discord.ext import commands, tasks
 
 from utils import pages
 from utils import dota as d2
 from utils import database as db
+
 from utils.var import *
 from utils.imgtools import plt_to_file
 from utils.dcordtools import ansi, scnf
@@ -15,6 +19,9 @@ import numpy as np
 from os import getenv
 import logging
 log = logging.getLogger('root')
+
+if TYPE_CHECKING:
+    from utils.context import Context
 
 DOTA_FRIENDID = int(getenv('DOTA_FRIENDID'))
 
@@ -81,7 +88,7 @@ class GamerStats(commands.Cog):
     @commands.hybrid_group(
         name='irene'
     )
-    async def irene(self, ctx):
+    async def irene(self, ctx: Context):
         """Group command about Irene, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
@@ -91,9 +98,9 @@ class GamerStats(commands.Cog):
         description="View Irene's last played Dota 2 match",
         aliases=['lastmatch']
     )
-    async def lm(self, ctx):
+    async def lm(self, ctx: Context):
         """Irene's last played Dota 2 match id"""
-        await ctx.defer()
+        await ctx.thinking()
         res = try_get_gamerstats(ctx.bot, start_at_match_id=0, matches_requested=1)
         em = Embed(colour=Clr.prpl).set_author(name='Irene\'s last match id')
         em.description = f'`{res[0].match_id}`'
@@ -105,9 +112,9 @@ class GamerStats(commands.Cog):
         description="Irene's Win - Loss ratio in Dota 2 games for today",
         aliases=['winrate']
     )
-    async def wl(self, ctx):
+    async def wl(self, ctx: Context):
         """Irene's Win - Loss ratio in Dota 2 games for today"""
-        await ctx.defer()
+        await ctx.thinking()
         res = try_get_gamerstats(ctx.bot, start_at_match_id=0)
 
         def get_morning_time():
@@ -151,9 +158,9 @@ class GamerStats(commands.Cog):
         description="Irene's Dota 2 Match History (shows last 100 matches)",
         aliases = ['dotahistory']
     )
-    async def dh(self, ctx):
+    async def dh(self, ctx: Context):
         """Irene's Dota 2 Match History (shows last 100 matches)"""
-        await ctx.defer()
+        await ctx.thinking()
 
         def winlose(truefalse):
             return ansi('Win', colour='green') if truefalse else ansi('Loss', colour='red')
@@ -194,9 +201,9 @@ class GamerStats(commands.Cog):
         brief=Ems.slash,
         description="Irene's Dota 2 MMR Plot"
     )
-    async def mmr_slh(self, ctx):
+    async def mmr_slh(self, ctx: Context):
         """Irene's Dota 2 MMr Plot"""
-        await ctx.defer()
+        await ctx.thinking()
         old_dict = db.get_value(db.s, DOTA_FRIENDID, 'match_history')
         starting_mmr = 4340
         points_gain = 30

@@ -1,8 +1,8 @@
 from discord import Embed, app_commands
 from discord.ext import commands
-from utils.var import *
 
 from utils import database as db
+from utils.var import *
 
 
 class Suggestions(commands.Cog):

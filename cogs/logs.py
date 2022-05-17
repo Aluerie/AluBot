@@ -191,8 +191,7 @@ class EmoteLogging(commands.Cog):
         # Add emote ###############################################################################
         elif diff_after != [] and diff_before == []:
             for emote in diff_after:
-                embed = Embed(colour=0x00ff7f)
-                embed.title = f'`:{emote.name}:` emote created'
+                embed = Embed(colour=0x00ff7f, title=f'`:{emote.name}:` emote created')
                 await set_author(emote, embed, AuditLogAction.emoji_create)
                 embed.description = f'[Image link]({emote.url})'
                 embed.set_thumbnail(url=emote.url)

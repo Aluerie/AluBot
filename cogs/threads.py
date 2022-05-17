@@ -1,7 +1,14 @@
-from discord import Thread
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from discord.ext import commands, tasks
+
 from utils.var import Sid, Ems
+
 from datetime import time
+
+if TYPE_CHECKING:
+    from discord import Thread
 
 watched_threads_ids = []
 

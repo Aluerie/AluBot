@@ -1,5 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from discord.ext import commands
-from utils.var import Cid, Uid, umntn
+
+from utils.var import *
 from utils.format import block_function
 from utils.inettools import replace_tco_links, move_link_to_title, get_links_from_str
 
@@ -7,6 +11,9 @@ import re
 import tweepy
 import traceback
 import asyncio
+
+if TYPE_CHECKING:
+    from discord import Message
 
 from os import getenv
 GIT_KEY = getenv("GIT_KEY")
@@ -44,27 +51,27 @@ class CopypasteLeague(commands.Cog):
     ]
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, msg: Message):
         try:
-            if message.channel.id == Cid.copylol_ff20:
-                if block_function(message.content, self.blocked_words, self.whitelist_words):
+            if msg.channel.id == Cid.copylol_ff20:
+                if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
 
                 embeds = None  # TODO: if they start using actual bots then this wont work
-                content = message.content
-                if "https://twitter.com" in message.content:
+                content = msg.content
+                if "https://twitter.com" in msg.content:
                     await asyncio.sleep(2)
-                    answer = await message.channel.fetch_message(int(message.id))
+                    answer = await msg.channel.fetch_message(int(msg.id))
                     for match in re.findall(r'status/(\d+)', answer.content):
                         status = client.get_tweet(int(match))
                         if block_function(status.data.text, self.blocked_words, self.whitelist_words):
                             return
-                    embeds = [await replace_tco_links(self.bot.ses, item) for item in message.embeds]
+                    embeds = [await replace_tco_links(self.bot.ses, item) for item in msg.embeds]
                     links = get_links_from_str(answer.content)
                     embeds = [move_link_to_title(link, embed) for link, embed in zip(links, embeds)]
                     content = ''
 
-                files = [await item.to_file() for item in message.attachments]
+                files = [await item.to_file() for item in msg.attachments]
                 msg = await self.bot.get_channel(Cid.lol_news).send(content=content, embeds=embeds, files=files)
                 await msg.publish()
         except Exception as e:

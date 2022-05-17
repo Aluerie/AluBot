@@ -1,22 +1,28 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Union, Optional
+
 from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
 
+from utils.context import Context
 from utils.mysteam import sd_login
 
 from steam.client import SteamClient
 from dota2.client import Dota2Client
 from aiohttp import ClientSession
-from typing import Optional
 from datetime import datetime, timezone
 from os import getenv, environ, listdir
 
 jsk = True
 test_list = [  # for yen bot
-    'fun'
+    'beta'
 ]
 
+if TYPE_CHECKING:
+    from discord import Interaction, Message
 
-class MyBot(commands.Bot):
+
+class VioletBot(commands.Bot):
     def __init__(self, prefix, yen=False):
         super().__init__(
             command_prefix=prefix,
@@ -125,3 +131,6 @@ class MyBot(commands.Bot):
     async def close(self) -> None:
         await super().close()
         await self.__session.close()
+
+    async def get_context(self, origin: Union[Interaction, Message], /, *, cls=Context) -> Context:
+        return await super().get_context(origin, cls=cls)

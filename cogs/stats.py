@@ -1,4 +1,7 @@
-from discord import Embed, Member, TextChannel, app_commands
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import Embed, app_commands
 from discord.ext import commands, tasks
 
 from utils.var import *
@@ -9,6 +12,9 @@ from datetime import datetime, timezone, timedelta, time
 import platform
 from typing import Union
 from wordcloud import WordCloud
+
+if TYPE_CHECKING:
+    from discord import Member, TextChannel
 
 
 class StatsCommands(commands.Cog):

@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional
+
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 import vdf
@@ -18,7 +21,10 @@ from cogs.twitch import get_db_online_streams
 import re
 from PIL import Image, ImageOps, ImageDraw, ImageFont
 from datetime import datetime, timezone
-from typing import Optional
+
+if TYPE_CHECKING:
+    from utils.context import Context
+
 import logging
 log = logging.getLogger('root')
 lobbyids = set()
@@ -40,7 +46,7 @@ async def try_to_find_games(bot, ses):
 
     # @dota.on('top_source_tv_games')
     def response(result):
-        log.info(f"top_source_tv_games response NumGames: {result.num_games} SpecificGames: {result.specific_games}")
+        log.info(f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games}")
         if result.specific_games:
             friendids = [row.friendid for row in ses.query(db.d.friendid)]
             for match in result.game_list:  # games
@@ -252,7 +258,7 @@ class DotaFeedTools(commands.Cog):
 
     @commands.is_owner()
     @streamer.command(name='remove')
-    async def remove_streamer(self, ctx, *, flags: StreamerFlags):
+    async def remove_streamer(self, ctx: Context, *, flags: StreamerFlags):
         """Remove streamer(-s) from database"""
         my_dict = {k: v for k, v in dict(flags).items() if v is not None}
         with db.session_scope() as ses:

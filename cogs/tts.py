@@ -1,3 +1,5 @@
+from typing import Literal, Optional
+
 from discord import FFmpegPCMAudio, Embed, app_commands
 from discord.ext import commands
 
@@ -5,7 +7,6 @@ from utils.var import *
 from utils.dcordtools import scnf
 
 from gtts import gTTS
-from typing import Literal, Optional
 
 
 lang_dict = {

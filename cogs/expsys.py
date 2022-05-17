@@ -1,4 +1,7 @@
-from discord import Embed, Interaction, Member, utils, app_commands
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import Embed, utils, app_commands
 from discord.ext import commands, tasks
 
 from utils.var import Cid, Clr, Ems, Sid
@@ -10,6 +13,9 @@ from utils import pages
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from datetime import datetime, time, timedelta, timezone
+
+if TYPE_CHECKING:
+    from discord import Interaction, Member
 
 LAST_SEEN_TIMEOUT = 60
 
@@ -93,8 +99,8 @@ async def avatar_work(ctx, member):
     return embed
 
 
-async def avatar_usercmd(ntr: Interaction, member: Member):
-    embed = await avatar_work(ntr, member)
+async def avatar_usercmd(ntr: Interaction, mbr: Member):
+    embed = await avatar_work(ntr, mbr)
     await ntr.response.send_message(embed=embed, ephemeral=True)
 
 

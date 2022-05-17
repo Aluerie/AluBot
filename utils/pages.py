@@ -2,15 +2,18 @@
 Inspired by @krittick's `ext.pages` from `py-cord` library.
 Unfortunately I had to switch to `discord.py` so we need to bring pagination here as well
 """
-from typing import Dict, List, Optional, Union
+from __future__ import annotations
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
-from discord import (
-    ButtonStyle, Embed, Emoji, File, Interaction, Message, WebhookMessage, PartialEmoji
-)
+from discord import ButtonStyle, Embed, File, Interaction, Message, WebhookMessage
+from discord.ext.commands import Bot, BadArgument
 from discord.ui import Button, Modal, View, TextInput
-from discord.ext.commands import Context, Bot, BadArgument
 
+from utils.context import Context
 from utils.var import Ems
+
+if TYPE_CHECKING:
+    from discord import Emoji, PartialEmoji
 
 
 class PaginatorGotoModal(Modal):

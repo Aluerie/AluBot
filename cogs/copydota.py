@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from discord import Embed
 from discord.ext import commands, tasks
 from utils.var import Cid, Clr
@@ -12,6 +15,8 @@ import tweepy
 from github import Github
 from os import getenv
 
+if TYPE_CHECKING:
+    from discord import Message
 
 consumer_key = getenv('TWITTER_CONSUMER_KEY')
 consumer_secret = getenv('TWITTER_CONSUMER_SECRET')
@@ -76,7 +81,7 @@ class CopypasteDota(commands.Cog):
     ]
 
     @commands.Cog.listener()
-    async def on_message(self, msg):
+    async def on_message(self, msg: Message):
         try:
             if msg.channel.id == Cid.copydota_info:
                 if "https://steamdb.info" not in msg.content:

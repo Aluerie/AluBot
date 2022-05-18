@@ -2,15 +2,15 @@
 1. **Bootstrap Steam error EVERY TUESDAY**
    1. mb reload dota cog on error with `self.bot.reload_extension(''dotafeed')`
 
-2. Search functionalty
-3. research TypeVar stuff 
-4. TYPE_CHECKING
-5. nsfw functions
-6. several imaages embed
+2. Search in help paginator
+3. replace Home button with some new category
+4. research TypeVar stuff 
+5. TYPE_CHECKING
+6. nsfw functions
+7. 
 ### New Features
 8. ?tag umbras sync command
 9. umbra sync gist
-10. mute rewrite
 11. raise commands.BadArgument('invalid time provided')
 
 ### Probably Garbage

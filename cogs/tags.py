@@ -8,7 +8,7 @@ from discord.utils import format_dt, get
 from utils import database as db
 from utils.var import *
 from utils.dcordtools import scnf
-
+from utils.context import Context
 
 from datetime import datetime, timezone
 
@@ -35,14 +35,13 @@ async def tag_work(ctx, tag_name):
             elif isinstance(ctx, Interaction):
                 await ctx.response.send_message(content=tag_row.content)
         else:
-            embed = Embed(colour=Clr.error)
-            embed.description = 'Sorry! Tag under such name does not exist'
+            em = Embed(colour=Clr.error, description='Sorry! Tag under such name does not exist')
             prefix = getattr(ctx, 'clean_prefix', '/')
-            embed.set_footer(text=f'Consider making one with `{prefix}tags add`')
+            em.set_footer(text=f'Consider making one with `{prefix}tags add`')
             if isinstance(ctx, commands.Context):
-                await ctx.reply(embed=embed)
+                await ctx.reply(embed=em)
             elif isinstance(ctx, Interaction):
-                await ctx.response.send_message(embed=embed)
+                await ctx.response.send_message(embed=emb)
 
 
 class TagTextFlags(commands.FlagConverter, case_insensitive=True):
@@ -60,7 +59,8 @@ class Tags(commands.Cog):
         description='Use tag for copypaste message'
     )
     @app_commands.describe(tag_name="Summon tag under this name")
-    async def tag_slh(self, ctx, *, tag_name: str):
+    async def tag_slh(self, ntr: Interaction, *, tag_name: str):
+        ctx = Context.from_interaction(ntr)
         await tag_work(ctx, tag_name.lower())
 
     @commands.hybrid_group(

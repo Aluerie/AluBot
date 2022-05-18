@@ -26,6 +26,8 @@ def first_page(ctx):
                     value='Commands to get some useful info')
     embed.add_field(name=f'{Ems.Smartge} `Stats`', inline=False,
                     value='Commands to get some stats/infographics')
+    embed.add_field(name=f'{Ems.Lewd} `Lewd`', inline=False,
+                    value='NSFW tier commands')
     embed.add_field(name='📝 `Reminders and ToDo list`', inline=False,
                     value='Commands to organize yourself a little bit')
     embed.add_field(name=f'{Ems.peepoHappyDank} `Birthday`', inline=False,
@@ -101,23 +103,23 @@ class ViewHelp(View):
         super().__init__()
         self.paginator = paginator
 
-    @button(label="", style=ButtonStyle.primary, emoji='🏠')
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.FeelsDankMan)
     async def button0(self, ntr, btn):
         await self.paginator.goto_page(page_number=0, ntr=ntr)
 
-    @button(label="", style=ButtonStyle.primary, emoji=Ems.FeelsDankMan)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.DankFix)
     async def button3(self, ntr, btn):
         await self.paginator.goto_page(page_number=1, ntr=ntr)
 
-    @button(label="", style=ButtonStyle.primary, emoji=Ems.DankFix)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.PepoG)
     async def button4(self, ntr, btn):
         await self.paginator.goto_page(page_number=2, ntr=ntr)
 
-    @button(label="", style=ButtonStyle.primary, emoji=Ems.PepoG)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.Smartge)
     async def button2(self, ntr, btn):
         await self.paginator.goto_page(page_number=3, ntr=ntr)
 
-    @button(label="", style=ButtonStyle.primary, emoji=Ems.Smartge)
+    @button(label="", style=ButtonStyle.primary, emoji=Ems.Lewd)
     async def button1(self, ntr, btn):
         await self.paginator.goto_page(page_number=4, ntr=ntr)
 
@@ -146,7 +148,6 @@ def get_starting_embed(ctx):
     footer_text = f'With love, {ctx.bot.user.display_name}'
     thumb_url = ctx.bot.user.display_avatar.url
     embed_dict = {
-        '🏠': first_page(ctx),
         'Fun':
             Embed(
                 color=Clr.prpl, title="Fun commands",
@@ -166,6 +167,11 @@ def get_starting_embed(ctx):
             Embed(
                 color=Clr.prpl, title="Stats commands",
                 description=f'{Ems.Smartge} Commands to get some stats/infographics',
+            ).set_footer(text=footer_text).set_thumbnail(url=thumb_url),
+        'Lewd':
+            Embed(
+                color=Clr.prpl, title="Lewd",
+                description=f'{Ems.Lewd} NSFW tier commands',
             ).set_footer(text=footer_text).set_thumbnail(url=thumb_url),
         'Todo':
             Embed(

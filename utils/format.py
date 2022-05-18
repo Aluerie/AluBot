@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Literal, Union
 
 import re
 import difflib
-from pytimeparse import parse
 import datetime
 
 from datetime import timedelta

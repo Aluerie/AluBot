@@ -156,7 +156,7 @@ class Ems: #Emote strings
     bubuAyaya = '<:bubuAYAYA:764835239138164756>'
     slash = '<:slash:823159274954817566>'
     TwoBButt = '<:2BButt:853729747846168576>'
-
+    Lewd = '<:Lewd:976604430059331684>'
     # emote server ani
     # nothing for now
 

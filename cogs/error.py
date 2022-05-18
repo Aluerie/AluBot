@@ -1,10 +1,17 @@
-from discord import Embed, Interaction, app_commands
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import Embed, app_commands
 from discord.ext import commands
 
 from utils import database as db
+from utils.context import Context
 from utils.format import display_time
 from utils.var import Clr, rmntn
 from utils.dcordtools import send_traceback
+
+if TYPE_CHECKING:
+    from discord import Interaction
 
 
 class CommandErrorHandler(commands.Cog):
@@ -94,37 +101,26 @@ class CommandErrorHandler(commands.Cog):
                     f"Oups, some error but I already notified my dev about it. The original exception:\n" \
                     f"```py\n{error}```"
 
-                err_embed = Embed(colour=Clr.error)
-                prefix = getattr(ctx, 'clean_prefix', '/')
-                if isinstance(ctx, commands.Context):
-                    author = ctx.author
-                    ch = ctx.channel
-                    jump_url = ctx.message.jump_url
-                elif isinstance(ctx, Interaction):
-                    author = ctx.user
-                    ch = ctx.channel
-                    jump_url = (await ctx.original_message()).jump_url
-                else:
-                    author = 'unknown'
-                    ch = 'unknown'
-                    jump_url = ''
-
-                err_embed.description = \
-                    f'{author} [triggered error using]({jump_url}) ' \
-                    f'`{prefix}{ctx.command.qualified_name}` in {ch.mention}'
+                err_embed = Embed(
+                    colour=Clr.error,
+                    description=
+                    f'{ctx.author} [triggered error using]({ctx.message.jump_url}) '
+                    f'`{getattr(ctx, "clean_prefix", "/")}{ctx.command.qualified_name}` in {ctx.channel.mention}'
+                )
                 await send_traceback(error, self.bot, embed=err_embed)
         return em
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
+    async def on_command_error(self, ctx: Context, error):
         if not getattr(ctx, 'error_handled', False):
             embed = await self.command_error_work(ctx, error)
             return await ctx.reply(embed=embed, ephemeral=True)
 
     @commands.Cog.listener()
-    async def on_app_command_error(self, ntr, error):
+    async def on_app_command_error(self, ntr: Interaction, error):
         if not getattr(ntr, 'error_handled', False):
-            embed = await self.command_error_work(ntr, error)
+            ctx = await Context.from_interaction(ntr)
+            embed = await self.command_error_work(ctx, error)
             return await ntr.response.send_message(embed=embed, ephemeral=True)
 
 

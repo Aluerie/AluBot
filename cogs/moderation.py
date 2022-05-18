@@ -11,6 +11,7 @@ from utils.time import DTFromStr, arg_to_timetext
 from utils.context import Context
 
 from datetime import timedelta
+from sqlalchemy import func
 
 if TYPE_CHECKING:
     from discord import Message
@@ -75,9 +76,10 @@ class Moderation(commands.Cog):
     @staticmethod
     async def mute_work(ctx, member, duration, reason):
         await member.timeout(duration, reason=reason)
-        db.append_row(
-            db.w, key='mute', name='manual', dtime=ctx.message.created_at, userid=member.id, modid=ctx.author.id,
-            reason=reason
+        old_max_id = int(db.session.query(func.max(db.w.id)).scalar() or 0)
+        db.add_row(
+            db.w, 1 + old_max_id, key='mute', name='manual',
+            dtime=ctx.message.created_at, userid=member.id, modid=ctx.author.id, reason=reason
         )
         em = Embed(color=Clr.prpl, title="Mute member", description=f'mute for {duration}')
         em.set_author(name=member.display_name, icon_url=member.display_avatar.url)

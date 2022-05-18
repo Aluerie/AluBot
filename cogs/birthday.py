@@ -13,7 +13,7 @@ from numpy.random import choice
 from sqlalchemy import extract
 
 if TYPE_CHECKING:
-    pass
+    from utils.context import Context
 
 
 def get_congratulation_text():
@@ -77,7 +77,7 @@ class Birthday(commands.Cog):
         self.help_category = 'Birthday'
 
     @commands.hybrid_group()
-    async def birthday(self, ctx):
+    async def birthday(self, ctx: Context):
         """Group command about birthdays, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
@@ -88,7 +88,7 @@ class Birthday(commands.Cog):
         description='Set your birthday'
     )
     @app_commands.describe(date='Your birthday date in "DD/MM" or "DD/MM/YYYY" format')
-    async def set(self, ctx, *, date: str):
+    async def set(self, ctx: Context, *, date: str):
         """Set your birthday. Please send `*your_birthday*` in "DD/MM" or in "DD/MM/YYYY" format.\
         If you choose the latter format, the bot will mention your age in congratulation text too;"""
         def get_dtime(text):
@@ -111,7 +111,7 @@ class Birthday(commands.Cog):
         help=f'Delete your birthday and stop getting congratulations from the bot in {cmntn(Cid.bday_notifs)};',
         aliases=['del']
     )
-    async def delete(self, ctx):
+    async def delete(self, ctx: Context):
         """read above"""
         db.set_value(db.m, ctx.author.id, bdate=None)
         await ctx.reply("Your birthday is successfully deleted")
@@ -122,7 +122,7 @@ class Birthday(commands.Cog):
         description='Set your timezone for birthday'
     )
     @app_commands.describe(timezone='Timezone in `float` format, ie. `-5.5` GMT -5:30 timezone')
-    async def timezone(self, ctx, timezone: float):
+    async def timezone(self, ctx: Context, timezone: float):
         """
         By default the bot congratulates you when your bday comes live in GMT+0 timezone. \
         This subcommand is made for adjusting that. \
@@ -142,7 +142,7 @@ class Birthday(commands.Cog):
         description='Set your timezone for birthday'
     )
     @app_commands.describe(member='Member of the server or you if not specified')
-    async def check(self, ctx, member: Member = None):
+    async def check(self, ctx: Context, member: Member = None):
         """Check member's birthday in database"""
         member = member or ctx.message.author
         user = db.session.query(db.m).filter_by(id=member.id).first()
@@ -171,8 +171,10 @@ class Birthday(commands.Cog):
                     embed = Embed(color=bperson.color)
                     embed.title = 'CONGRATULATIONS !!! {0}{0}{0}'.format(Ems.peepoRose)
                     embed.set_footer(
-                        text=f'Today is {bdate_str(row.bdate)}; Timezone: GMT {row.timezone:+.1f}\n'
-                             f'Use `$help birthday` to set up your birthday\nWith love, {irene_server.me.display_name}')
+                        text=
+                        f'Today is {bdate_str(row.bdate)}; Timezone: GMT {row.timezone:+.1f}\n'
+                        f'Use `$help birthday` to set up your birthday\nWith love, {irene_server.me.display_name}'
+                    )
                     embed.set_image(url=bperson.display_avatar.url)
                     embed.add_field(name=f'Dear {bperson.display_name} !', inline=False,
                                     value=get_congratulation_text())
@@ -193,7 +195,7 @@ class BirthdayAdmin(commands.Cog):
 
     @commands.is_owner()
     @commands.command()
-    async def birthdaylist(self, ctx):
+    async def birthdaylist(self, ctx: Context):
         """Show list of birthdays in this server ;"""
         embed = Embed(color=Clr.prpl, title='Birthday list')
         irene_server = self.bot.get_guild(Sid.irene)

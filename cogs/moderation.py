@@ -90,7 +90,8 @@ class Moderation(commands.Cog):
         description="Mute+timeout member from chatting"
     )
     @app_commands.describe(member='Member to mute+timeout', duration='Duration of the mute', reason='Reason')
-    async def mute_slh(self, ctx: Interaction, member: Member, duration: DTFromStr, *, reason: str = "No reason"):
+    async def mute_slh(self, ctx: Interaction, member: Member, duration: str, *, reason: str = "No reason"):
+        duration = DTFromStr(duration)
         ctx = await Context.from_interaction(ctx)
         await self.mute_work(ctx, member, duration.delta, reason)
 

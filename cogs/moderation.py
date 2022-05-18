@@ -127,7 +127,7 @@ class Moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: Member, after: Member):
-        if before.is_timed_out() != after.is_timed_out() or after.guild.id != Sid.irene:  # member is not muted/unmuted
+        if before.is_timed_out() == after.is_timed_out() or after.guild.id != Sid.irene:  # member is not muted/unmuted
             return
 
         muted_rl = after.guild.get_role(Rid.muted)

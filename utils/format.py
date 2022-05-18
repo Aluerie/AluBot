@@ -1,10 +1,15 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Literal, Union
+
 import re
 import difflib
-from pytimeparse.timeparse import timeparse
+from pytimeparse import parse
 import datetime
 
 from datetime import timedelta
-from typing import Literal
+
+if TYPE_CHECKING:
+    pass
 
 
 def gettimefromhms(strtime):
@@ -47,9 +52,9 @@ def humanize_time(time: timedelta, full=True) -> str:
 
     if time.days > 365:
         years, days = divmod(time.days, 365)
-        return n(years, 'y') + ' ' + n(days, 'd')
+        return f"{n(years, 'y')} {n(days, 'd')}"
     if time.days > 1:
-        return n(time.days, 'd') + ' ' + humanize_time(timedelta(seconds=time.seconds))
+        return f"{n(time.days, 'd')} {humanize_time(timedelta(seconds=time.seconds))}"
     hours, seconds = divmod(time.seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
     if hours > 0:
@@ -98,7 +103,7 @@ def display_time(seconds, granularity=5):
     return answer
 
 
-def ordinal(n):
+def ordinal(n: Union[int, str]) -> str:
     """
     Convert an integer into its ordinal representation::
 
@@ -149,25 +154,6 @@ def inline_wordbyword_diff(a, b):  # a = old_string, b = new_string #
         assert False, "Unknown tag %r" % tag
 
     return ' '.join(process_tag(*t) for t in matcher.get_opcodes())
-
-
-def arg_to_timetext(arg):
-    """
-    Convert a string into its epoch_time + remaining string:
-        "1 hours hello"     => (3600, "hello")
-        "15m 3s where"      => (903, "where")
-    """
-    check_array, time_seconds, result = '', None, None
-    for word in arg.split():
-        check_array += word
-        if new_time := timeparse(check_array):
-            time_seconds = new_time
-            try:
-                result = arg.split(word + ' ')[1]
-            except IndexError:
-                result = 'Empty text'
-    return time_seconds, result
-
 
 # moscow_timezone = timezone('Europe/Moscow')
 # before.created_at.astimezone(moscow_timezone).strftime('%H:%M, %d/%m')

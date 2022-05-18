@@ -189,4 +189,3 @@ if __name__ == '__main__':
     GIT_PERSONAL_TOKEN = getenv('GIT_PERSONAL_TOKEN')
     loop.run_until_complete(gitmain(GIT_PERSONAL_TOKEN))
     #  loop.close()
-

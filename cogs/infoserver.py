@@ -75,13 +75,13 @@ class ModServerInfo(commands.Cog):
         self.bot = bot
         self.help_category = 'Rules'
 
-    @commands.has_permissions(manage_messages=True)
+    @commands.has_role(Rid.discord_mods)
     @commands.group()
     async def modrule(self, ctx):
         """Group command about rule modding, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    @commands.has_permissions(manage_messages=True)
+    @commands.has_role(Rid.discord_mods)
     @commands.group()
     async def modrealrule(self, ctx):
         """Group command about rule modding, for actual commands use it together with subcommands"""

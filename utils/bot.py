@@ -12,15 +12,16 @@ from dota2.client import Dota2Client
 from aiohttp import ClientSession
 from datetime import datetime, timezone
 from os import getenv, environ, listdir
-
-jsk = True
-test_list = [  # for yen bot
-    'wolfram',
-    'error'
-]
+import logging
 
 if TYPE_CHECKING:
     from discord import Interaction, Message
+
+jsk = True
+test_list = [  # for yen bot
+    'moderation',
+    'error'
+]
 
 
 class VioletBot(commands.Bot):
@@ -135,3 +136,19 @@ class VioletBot(commands.Bot):
 
     async def get_context(self, origin: Union[Interaction, Message], /, *, cls=Context) -> Context:
         return await super().get_context(origin, cls=cls)
+
+
+class LogHandler(logging.StreamHandler):
+
+    def __init__(self, papertrail=False):
+        logging.StreamHandler.__init__(self)
+        if papertrail:  # Yennifer Bot
+            fmt = '%(levelname)-5.5s| %(filename)-15s|%(lineno)-4d|%(asctime)s| %(message)s'
+            fmt_date = "%H:%M:%S"  # '%Y-%m-%dT%T%Z'
+            formatter = logging.Formatter(fmt, fmt_date)
+            self.setFormatter(formatter)
+        else:  # Violet Bot
+            fmt = '%(filename)-15s|%(lineno)-4d| %(message)s'
+            formatter = logging.Formatter(fmt)
+            self.setFormatter(formatter)
+            pass

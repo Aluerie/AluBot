@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 from discord.utils import sleep_until, format_dt
 from utils.var import Cid, Clr, Ems, Sid
 from utils import database as db
-from utils.format import arg_to_timetext
+from utils.time import arg_to_timetext
 from utils.dcordtools import scnf
 
 from datetime import datetime, timedelta, timezone

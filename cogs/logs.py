@@ -41,8 +41,7 @@ class Logging(commands.Cog):
         if before.author.bot is True:  # and before is not None and after is not None or after.edited_at is None:
             return
 
-        embed = Embed(colour=0x00BFFF)
-        embed.description = inline_wordbyword_diff(before.content, after.content)
+        embed = Embed(colour=0x00BFFF, description=inline_wordbyword_diff(before.content, after.content))
         embed.set_author(
             name=f'{after.author.display_name} edit in #{after.channel.name}',
             icon_url=after.author.display_avatar.url,
@@ -58,10 +57,9 @@ class Logging(commands.Cog):
         if msg.content.startswith('$'):
             return
 
-        embed = Embed(colour=0xB22222)
-        embed.description = msg.content
-        embed.set_author(
-            name=f'{msg.author.display_name}\'s del in #{msg.channel.name}', icon_url=msg.author.display_avatar.url)
+        embed = Embed(colour=0xB22222, description=msg.content).set_author(
+            name=f'{msg.author.display_name}\'s del in #{msg.channel.name}', icon_url=msg.author.display_avatar.url
+        )
         files = [await item.to_file() for item in msg.attachments]
         return await self.bot.get_channel(Cid.logs).send(embed=embed, files=files)
 

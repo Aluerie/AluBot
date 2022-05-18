@@ -1,4 +1,4 @@
-from utils.bot import VioletBot
+from utils.bot import VioletBot, LogHandler
 
 from os import getenv
 from dotenv import load_dotenv
@@ -9,7 +9,6 @@ parser = argparse.ArgumentParser(description="Irene Adler's personal bot, Violet
 parser.add_argument('-n', '--name', help='Bot name, can only be "yen" or "vio"', required=True)
 args = parser.parse_args()
 
-from utils import custom_logger
 import logging
 log = logging.getLogger('root')
 log.setLevel('INFO')
@@ -20,12 +19,12 @@ match args.name:
         from cogs.settings import get_pre
         prefix = get_pre
         yen = False
-        log.addHandler(custom_logger.MyHandler(trail=False))
+        log.addHandler(LogHandler(papertrail=False))
     case 'yen':
         token = getenv("DISCORD_YEN_TOKEN")
         prefix = '~'
         yen = True
-        log.addHandler(custom_logger.MyHandler(trail=True))
+        log.addHandler(LogHandler(papertrail=True))
     case _:
         raise Exception('Only names `vio` and `yen` are available')
 

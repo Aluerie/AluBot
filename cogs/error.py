@@ -70,6 +70,8 @@ class CommandErrorHandler(commands.Cog):
             case commands.BadLiteralArgument():
                 em.description = \
                     f'Only these choices are valid for parameter `{error.param.name}`:\n `{", ".join(error.literals)}`'
+            case commands.BadArgument():
+                em.description = f'```py\n{error}```'
             case commands.MissingPermissions():
                 em.description = f'Missing permissions: {error.missing_perms}'
             case commands.BotMissingPermissions():

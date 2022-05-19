@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 from discord.ext import commands
+from discord.utils import format_dt
 
 from datetime import datetime, timedelta, timezone
 from pytimeparse import parse
@@ -19,6 +20,7 @@ class DTFromStr:
         self.delta: timedelta = timedelta(seconds=seconds)
         now = now or datetime.now(timezone.utc)
         self.dt: datetime = now + self.delta
+        self.fdt_r = format_dt(self.dt, style='R')
 
     @classmethod
     async def convert(cls, ctx: Context, argument: str) -> Self:

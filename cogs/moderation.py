@@ -159,26 +159,27 @@ class PlebModeration(commands.Cog):
         description='Mute yourself for chosen duration'
     )
     @app_commands.describe(duration='Choose duration of the mute')
-    async def selfmute(self, ctx: Context, *, duration: str = '10 minutes'):
+    async def selfmute(self, ctx: Context, *, duration: str = '5 minutes'):
         duration = DTFromStr(duration)
-        if duration.delta < timedelta(minutes=10):
-            em = Embed(colour=Clr.red).set_author(name='BadArgumentValue')
-            em.description = 'Sorry! minimum allowed selfmute time is `10 minutes`'
+        if not timedelta(minutes=5) <= duration.delta <= timedelta(days=1):
+            em = Embed(colour=Clr.red).set_author(name='BadTimeArgument')
+            em.description = 'Sorry! Duration of selfmute should satisfy `10 minutes < duration < 24 hours`'
             return await ctx.reply(embed=em)
-        mute_dt = duration.dt + timedelta(seconds=6)
         selfmute_rl = ctx.guild.get_role(Rid.selfmuted)
 
-        em = Embed(colour=ctx.author.colour, title='Selfmute')
-        em.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-        em.description = \
-            f'You will be muted in {format_dt(datetime.now()+timedelta(seconds=6), style="R")}.\n' \
-            f'Selfmute will be lifted in {format_dt(mute_dt, style="R")}'
-        await ctx.reply(embed=em)
-        await asyncio.sleep(6)
+        if ctx.author._roles.has(Rid.selfmuted):
+            return await ctx.send(f'Somehow you are already muted {Ems.DankFix}')
+
+        warning = f'Are you sure you want to be muted until this time: {duration.fdt_r}?' \
+                  f'\n**Do not ask the moderators to undo this!**'
+        confirm = await ctx.prompt(warning)
+        if not confirm:
+            return await ctx.send('Aborting...', delete_after=5.0)
+
         await ctx.author.add_roles(selfmute_rl)
 
         em2 = Embed(colour=Clr.red).set_author(name=f'{ctx.author.display_name} is selfmuted until')
-        em2.description = format_dt(mute_dt, style="R")
+        em2.description = duration.fdt_r
         await ctx.guild.get_channel(Cid.logs).send(embed=em2)
 
         old_max_id = int(db.session.query(func.max(db.u.id)).scalar() or 0)
@@ -187,9 +188,12 @@ class PlebModeration(commands.Cog):
             1 + old_max_id,
             userid=ctx.author.id,
             channelid=ctx.channel.id,
-            dtime=mute_dt,
+            dtime=duration.dt,
             reason='Selfmute'
         )
+        em = Embed(colour=ctx.author.colour)
+        em.description = f'Muted until this time: {duration.fdt_r}. Be sure not to bother anyone about it.'
+        await ctx.send(embed=em)
         if duration.dt < self.check_mutes.next_iteration.replace(tzinfo=timezone.utc):
             self.bot.loop.create_task(self.fire_the_unmute(1 + old_max_id, ctx.author.id, duration.dt))
 

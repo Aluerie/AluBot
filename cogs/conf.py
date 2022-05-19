@@ -62,7 +62,7 @@ class ConfView(View):
         style=ButtonStyle.primary,
         emoji=Ems.bubuChrist
     )
-    async def button0_callback(self, btn, ntr):
+    async def button0_callback(self, ntr, btn):
         await ntr.response.send_modal(ConfModal(title=btn.label))
 
     @button(
@@ -71,7 +71,7 @@ class ConfView(View):
         style=ButtonStyle.primary,
         emoji=Ems.PepoBeliever
     )
-    async def button1_callback(self, btn, ntr):
+    async def button1_callback(self, ntr, btn):
         await ntr.response.send_modal(ConfModal(title=btn.label))
 
 

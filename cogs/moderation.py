@@ -163,7 +163,7 @@ class PlebModeration(commands.Cog):
         duration = DTFromStr(duration)
         if not timedelta(minutes=5) <= duration.delta <= timedelta(days=1):
             em = Embed(colour=Clr.red).set_author(name='BadTimeArgument')
-            em.description = 'Sorry! Duration of selfmute should satisfy `10 minutes < duration < 24 hours`'
+            em.description = 'Sorry! Duration of selfmute should satisfy `5 minutes < duration < 24 hours`'
             return await ctx.reply(embed=em)
         selfmute_rl = ctx.guild.get_role(Rid.selfmuted)
 
@@ -192,7 +192,8 @@ class PlebModeration(commands.Cog):
             reason='Selfmute'
         )
         em = Embed(colour=ctx.author.colour)
-        em.description = f'Muted until this time: {duration.fdt_r}. Be sure not to bother anyone about it.'
+        em.description = f'{ctx.author.mention} muted until this time: {duration.fdt_r}.\n' \
+                         f'Be sure not to bother anyone about it.'
         await ctx.send(embed=em)
         if duration.dt < self.check_mutes.next_iteration.replace(tzinfo=timezone.utc):
             self.bot.loop.create_task(self.fire_the_unmute(1 + old_max_id, ctx.author.id, duration.dt))

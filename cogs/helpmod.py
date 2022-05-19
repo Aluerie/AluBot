@@ -6,7 +6,8 @@ from discord.ext import commands
 from discord.ui import View, button
 
 from utils.var import *
-from utils.elpcmd import HelpCommand
+from utils.help import HelpCommand
+from utils.context import Context
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -89,7 +90,7 @@ class ModHelpCog(commands.Cog):
             ViewHelpMod,
             verify_checks=False
         )
-        myhelp.context = await commands.Context.from_interaction(ntr)
+        myhelp.context = await Context.from_interaction(ntr)
         await myhelp.command_callback(myhelp.context)
 
 

@@ -8,7 +8,7 @@ from utils import database as db
 from utils.context import Context
 from utils.format import display_time
 from utils.var import Clr, rmntn
-from utils.dcordtools import send_traceback
+from utils.discord import send_traceback
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -25,6 +25,8 @@ class CommandErrorHandler(commands.Cog):
         if isinstance(error, commands.HybridCommandError):
             error = error.original
         elif isinstance(error, commands.CommandInvokeError):
+            error = error.original
+        elif isinstance(error, app_commands.CommandInvokeError):
             error = error.original
         em.set_author(name=error.__class__.__name__)
 
@@ -101,12 +103,10 @@ class CommandErrorHandler(commands.Cog):
                     f"Oups, some error but I already notified my dev about it. The original exception:\n" \
                     f"```py\n{error}```"
 
-                err_embed = Embed(
-                    colour=Clr.error,
-                    description=
-                    f'{ctx.author} [triggered error using]({ctx.message.jump_url}) '
+                err_embed = Embed(colour=Clr.error)
+                err_embed.description = \
+                    f'{ctx.author} [triggered error using]({ctx.message.jump_url}) ' \
                     f'`{getattr(ctx, "clean_prefix", "/")}{ctx.command.qualified_name}` in {ctx.channel.mention}'
-                )
                 await send_traceback(error, self.bot, embed=err_embed)
         return em
 

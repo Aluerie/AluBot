@@ -4,7 +4,7 @@ from discord import FFmpegPCMAudio, Embed, app_commands
 from discord.ext import commands
 
 from utils.var import *
-from utils.dcordtools import scnf
+from utils.discord import scnf
 
 from gtts import gTTS
 
@@ -106,6 +106,24 @@ class TextToSpeech(commands.Cog):
                 embed = Embed(colour=Clr.error)
                 embed.description = "I don't think I was talking"
                 await ctx.reply(embed=embed, ephemeral=True)
+        except KeyError:
+            embed = Embed(colour=Clr.error)
+            embed.description = "I'm not in voice channel"
+            await ctx.reply(embed=embed, ephemeral=True)
+
+    @voice.command(
+        name='leave',
+        brief=Ems.slash,
+        description='Leave voice channel'
+    )
+    async def leave(self, ctx):
+        """Make bot leave voice channel. Bot autoleaves voicechannels but you can make it leave too ;"""
+        try:
+            vc = self.connections[ctx.guild.id]
+            print(type(vc))
+            await vc.disconnect()
+            embed = Embed(colour=ctx.author.colour, description=f'I left {vc.channel.mention}')
+            await ctx.reply(embed=embed)
         except KeyError:
             embed = Embed(colour=Clr.error)
             embed.description = "I'm not in voice channel"

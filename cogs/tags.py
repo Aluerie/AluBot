@@ -7,7 +7,7 @@ from discord.utils import format_dt, get
 
 from utils import database as db
 from utils.var import *
-from utils.dcordtools import scnf
+from utils.discord import scnf
 from utils.context import Context
 
 from datetime import datetime, timezone
@@ -31,7 +31,8 @@ async def tag_work(ctx, tag_name):
                 return None
 
             if isinstance(ctx, commands.Context):
-                await ctx.reply(content=tag_row.content, reference=replied_reference(ctx.message))
+                reference = replied_reference(ctx.message) or ctx.message
+                await ctx.send(content=tag_row.content, reference=reference)
             elif isinstance(ctx, Interaction):
                 await ctx.response.send_message(content=tag_row.content)
         else:
@@ -41,7 +42,7 @@ async def tag_work(ctx, tag_name):
             if isinstance(ctx, commands.Context):
                 await ctx.reply(embed=em)
             elif isinstance(ctx, Interaction):
-                await ctx.response.send_message(embed=emb)
+                await ctx.response.send_message(embed=em)
 
 
 class TagTextFlags(commands.FlagConverter, case_insensitive=True):

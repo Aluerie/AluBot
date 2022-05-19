@@ -148,7 +148,7 @@ class FunThings(commands.Cog):
                 text = text.replace(url, f'<{url}>')
             await channel.send(text)
             if ctx.interaction:
-                await ctx.reply(content=Ems.DankApprove, ephemeral=True)
+                await ctx.reply(content=f'I did it {Ems.DankApprove}', ephemeral=True)
         else:
             embed = Embed(colour=Clr.rspbrry).set_author(name='PermissionError')
             embed.description = f'Sorry, you don\'t have permissions to speak in {channel.mention}'

@@ -1,7 +1,12 @@
-from discord import Embed
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from aiohttp.client_exceptions import ClientConnectorError
 from utils.var import Rgx
 import re
+
+if TYPE_CHECKING:
+    from discord import Embed
 
 
 async def replace_tco_links(session, embed: Embed) -> Embed:

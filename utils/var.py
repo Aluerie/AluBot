@@ -103,6 +103,7 @@ class Rid:
     discord_mods = 855839522620047420
     twtv_mods = 855839453020422185
     muted = 728305872438296581
+    selfmuted = 971419220728508517
 
     level_zero = 852663921085251585
     category_roles_ids = [
@@ -136,6 +137,7 @@ class Ems: #Emote strings
     Smartge = '<:Smartge:869075184445956156>'
     peepoWave = '<:peepoHey:856262331217346571>'
     peepoBlushDank = '<:peepoBlushDank:853744336214032384>'
+    peepoPlsStepOnMe = '<:peepoStepOnMePls:761174324420935722>'
 
     peepoPolice = '<:BASEDPOLICE:960004884235690024>'
     Jebaited = '<:Jebaited:726450170769703015>'

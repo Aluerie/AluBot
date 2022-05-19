@@ -1,13 +1,20 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from discord import Embed, Interaction, Member, app_commands
 from discord.ext import commands, tasks
 from discord.utils import sleep_until, format_dt
-from utils.var import Cid, Clr, Ems, Sid
+
 from utils import database as db
+from utils.var import *
 from utils.time import arg_to_timetext
-from utils.dcordtools import scnf
+from utils.discord import scnf
 
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
+
+if TYPE_CHECKING:
+    from utils.context import Context
 
 
 class Remind(commands.Cog):
@@ -21,7 +28,7 @@ class Remind(commands.Cog):
         name='remind',
         description='Group command about reminders'
     )
-    async def remind(self, ctx):
+    async def remind(self, ctx: Context):
         """Group command about reminders, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
@@ -31,7 +38,7 @@ class Remind(commands.Cog):
         description='Remove reminder from your reminders list'
     )
     @app_commands.describe(id_='id of reminder')
-    async def remove(self, ctx, id_: int):
+    async def remove(self, ctx: Context, id_: int):
         """Removes reminder under id from your reminders list. \
         You can find *ids* of your reminders in `$remind list` command ;"""
         user = db.session.query(db.r).filter_by(userid=ctx.author.id, id=id_)
@@ -54,7 +61,7 @@ class Remind(commands.Cog):
         description='Show `@member`s reminders list',
         usage='[member=you]'
     )
-    async def list(self, ctx, member: Member = None):
+    async def list(self, ctx: Context, member: Member = None):
         """Shows `@member`'s reminders list ;"""
         member = member or ctx.author
         embed = Embed(colour=member.colour)
@@ -72,7 +79,7 @@ class Remind(commands.Cog):
         usage='<remind_time> <remind_text>',
         aliases=['add']
     )
-    async def me(self, ctx, *, remind_time_and_remind_text):
+    async def me(self, ctx: Context, *, remind_time_and_remind_text):
         """Makes bot remind you about `remind_text` in `remind_time` ;"""
         time_secs, remind_text = arg_to_timetext(remind_time_and_remind_text)
 
@@ -114,8 +121,7 @@ class Remind(commands.Cog):
         dtime = dtime.replace(tzinfo=timezone.utc)
         await sleep_until(dtime)
         answer = f"{self.bot.get_user(userid).mention}, remember?"
-        embed = Embed(color=Clr.prpl)
-        embed.description = name
+        embed = Embed(color=Clr.prpl, description=name)
         await self.bot.get_channel(channelid).send(content=answer, embed=embed)
         db.remove_row(db.r, id_)
         self.active_reminders.pop(id_, None)
@@ -130,37 +136,46 @@ class Todo(commands.Cog):
         self.bot = bot
         self.help_category = 'Todo'
 
-    @commands.group()
+    @commands.hybrid_group()
     async def todo(self, ctx):
         """Group command about ToDolists, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    async def todo_remove_work(self, ctx, id_):
-        if id_ is None:
-            embed = Embed(colour=Clr.rspbrry)
-            embed.set_author(name='Argument_Not_Found')
-            embed.description = 'Please, provide all arguments:\n`id`'
-            embed.set_footer(text='`$todo help` for more info')
-            return await ctx.reply(embed=embed)
-        user = db.session.query(db.t).filter_by(userid=ctx.author.id, id=id_)
+    @todo.command(
+        name='remove',
+        brief=Ems.slash,
+        description='Remove todo bullet from your todo list',
+        help='Removes tdo bullet under *bullet_id* from your ToDolist. '
+             'You can find *ids* of your To Do bullets in `$todo list` command'
+    )
+    @app_commands.describe(bullet_id='ToDo Bullet id in your list')
+    async def remove(self, ctx: Context, bullet_id: int):
+        """Read above"""
+        user = db.session.query(db.t).filter_by(userid=ctx.author.id, id=bullet_id)
         if user.first() is None:
             embed = Embed(colour=Clr.rspbrry)
-            embed.set_author(name='Database_Error')
+            embed.set_author(name='DatabaseError')
             embed.description = 'Double-check all arguments:\n`id`'
             embed.set_footer(text='Probably this `id` doesn\'t belong to you or doesn\'t exist')
             return await ctx.reply(embed=embed)
         else:
             with db.session_scope() as ses:
-                ses.query(db.t).filter_by(id=id_).delete()
-            await ctx.message.add_reaction(Ems.PepoG)
+                ses.query(db.t).filter_by(id=bullet_id).delete()
+            if ctx.interaction:
+                await ctx.reply(content=f'removed {Ems.PepoG}')
+            else:
+                await ctx.message.add_reaction(Ems.PepoG)
 
-    @todo.command()
-    async def remove(self, ctx, id_: int = None):
-        """Removes tdo bullet under *id* from your ToDolist. \
-        You can find *ids* of your To Do bullets in `$todo list` command"""
-        await self.todo_remove_work(ctx, id_)
-
-    async def todo_list_work(self, ctx, member):
+    @todo.command(
+        name='list',
+        brief=Ems.slash,
+        description="Show `@member` ToDo list ",
+        help="Show `@member` ToDo list ;",
+        usage='[member=you]'
+    )
+    @app_commands.describe(member='Member to check')
+    async def list(self, ctx: Context, member: Member = None):
+        """Read above"""
         member = member or ctx.author
         embed = Embed(colour=member.colour)
         embed.description = '\n'.join([
@@ -170,19 +185,20 @@ class Todo(commands.Cog):
         embed.set_author(name=f'{member.display_name}\'s ToDo list', icon_url=member.display_avatar.url)
         await ctx.reply(embed=embed)
 
-    @todo.command(usage='[member=you]')
-    async def list(self, ctx, member: Member = None):
-        """Shows `@member`'s ToDolist ;"""
-        await self.todo_list_work(ctx, member)
-
-    async def todo_add_work(self, ctx, todo_text):
-        db.append_row(db.t, name=todo_text, userid=ctx.author.id)
-        await ctx.message.add_reaction(Ems.PepoG)
-
-    @todo.command()
+    @todo.command(
+        name='add',
+        brief=Ems.slash,
+        description="Add new ToDo Bullet to your ToDo list",
+        help='Add new ToDo Bullet to your ToDo list ;'
+    )
+    @app_commands.describe(todo_text='Text for your ToDo bullet')
     async def add(self, ctx, *, todo_text: str):
-        """Adds a new ToDobullet to your ToDolist ;"""
-        await self.todo_add_work(ctx, todo_text)
+        """Read above"""
+        db.append_row(db.t, name=todo_text, userid=ctx.author.id)
+        if ctx.interaction:
+            ctx.reply(f'added {Ems.PepoG}')
+        else:
+            await ctx.message.add_reaction(Ems.PepoG)
 
 
 class Afk(commands.Cog):
@@ -192,7 +208,12 @@ class Afk(commands.Cog):
         self.active_afk = {}
         self.help_category = 'Todo'
 
-    @commands.command()
+    @commands.hybrid_command(
+        name='afk',
+        brief=Ems.slash,
+        description='Flag you as afk member'
+    )
+    @app_commands.describe(afk_text='Your custom afk note')
     async def afk(self, ctx, *, afk_text):
         """Flags you as afk with your custom afk note ;"""
         if db.session.query(db.a).filter_by(id=ctx.author.id).first() is None:
@@ -220,12 +241,10 @@ class Afk(commands.Cog):
 
         for key in self.active_afk:
             if key in message.raw_mentions:
-                embed = Embed(colour=Clr.prpl)
+                embed = Embed(colour=Clr.prpl, title='Afk note:', description=db.get_value(db.a, key, 'name'))
                 irene_server = self.bot.get_guild(Sid.irene)
                 member = irene_server.get_member(key)
                 embed.set_author(name=f'Sorry, but {member.display_name} is $afk !', icon_url=member.display_avatar.url)
-                embed.title = 'Afk note:'
-                embed.description = db.get_value(db.a, key, 'name')
                 embed.set_footer(text='PS. Please, consider deleting your ping-message (or just removing ping) '
                                       'if you think it will be irrelevant when they come back (I mean seriously)')
                 await message.channel.send(embed=embed)
@@ -233,7 +252,7 @@ class Afk(commands.Cog):
         if message.author.id in self.active_afk:
             embed = Embed(colour=Clr.prpl, title='Afk note:')
             embed.set_author(
-                name='{} is no longer afk !'.format(message.author.display_name[8:]),
+                name=f'{message.author.display_name[8:]} is no longer afk !',
                 icon_url=message.author.display_avatar.url
             )
             embed.description = db.get_value(db.a, message.author.id, 'name')

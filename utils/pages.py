@@ -99,7 +99,7 @@ class Page:
 
     def update_files(self) -> Optional[List[File]]:
         for file in self._files:
-            with open(file.fp.name, "rb") as fp:  # type: ignore #TODO:XD
+            with open(file.fp.name, "rb") as fp:  # type: ignore #TODO:copy my oq=wn commit
                 self._files[self._files.index(file)] = File(
                     fp,  # type: ignore
                     filename=file.filename,

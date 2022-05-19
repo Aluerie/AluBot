@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from discord import Embed, Member, utils, app_commands
 from discord.ext import commands, tasks
@@ -8,7 +8,7 @@ from utils.var import *
 from utils import database as db
 from utils.format import ordinal, humanize_time
 from utils.imgtools import url_to_img, img_to_file
-from utils.dcordtools import scnf, inout_to_10
+from utils.discord import scnf, inout_to_10
 from utils import pages
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -155,8 +155,8 @@ class ExperienceSystem(commands.Cog):
         aliases=['l'],
         description='View server leaderboard'
     )
-    @app_commands.describe(sort_by='Choose how to sort leaderboard')  # TODO choices=['rep', 'exp'], default='exp')
-    async def leaderboard(self, ctx, sort_by: str = 'exp'):
+    @app_commands.describe(sort_by='Choose how to sort leaderboard')
+    async def leaderboard(self, ctx, sort_by: Literal['exp', 'rep']):
         """View experience leaderboard for this server ;"""
         irene_server = self.bot.get_guild(Sid.irene)
         new_array = []

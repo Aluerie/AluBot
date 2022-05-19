@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from discord import Embed
 from discord.ext import commands
 
 from utils.var import *
@@ -18,7 +19,13 @@ class BetaTest(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command()
     async def allo(self, ctx: Context):
-        await ctx.reply(Ems.bubuAyaya)
+        images_url = ['https://i.imgur.com/X9v93uk.png',
+                      'https://i.imgur.com/X9v93uk.png',
+                      'https://i.imgur.com/X9v93uk.png',
+                      'https://i.imgur.com/X9v93uk.png']
+        embeds = [Embed(url='https://github.com/').set_image(url=url) for url in images_url]
+        embeds[0].colour = Clr.prpl
+        await ctx.reply(embeds=embeds)
 
 
 async def setup(bot):

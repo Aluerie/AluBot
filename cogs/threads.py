@@ -19,8 +19,8 @@ class ThreadsManaging(commands.Cog):
         self.unarchive_threads.start()
 
     @commands.Cog.listener()
-    async def on_thread_join(self, thread: Thread):
-        if thread.owner == self.bot.user:
+    async def on_thread_create(self, thread: Thread):
+        if thread.owner.bot:
             return
         await thread.join()
         await thread.send(content=f'De fok, using threads {Ems.peepoWTF}')

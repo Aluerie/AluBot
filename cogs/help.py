@@ -5,9 +5,9 @@ from discord import ButtonStyle, Embed, app_commands
 from discord.ext import commands
 from discord.ui import View, button
 
-from utils.elpcmd import HelpCommand
+from utils.help import HelpCommand
 from utils.var import *
-
+from utils.context import Context
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -26,7 +26,7 @@ def first_page(ctx):
                     value='Commands to get some useful info')
     embed.add_field(name=f'{Ems.Smartge} `Stats`', inline=False,
                     value='Commands to get some stats/infographics')
-    embed.add_field(name=f'{Ems.Lewd} `Lewd`', inline=False,
+    embed.add_field(name=f'{Ems.peepoPlsStepOnMe} `Lewd`', inline=False,
                     value='NSFW tier commands')
     embed.add_field(name='📝 `Reminders and ToDo list`', inline=False,
                     value='Commands to organize yourself a little bit')
@@ -148,9 +148,10 @@ def get_starting_embed(ctx):
     footer_text = f'With love, {ctx.bot.user.display_name}'
     thumb_url = ctx.bot.user.display_avatar.url
     embed_dict = {
+        '🏠': first_page(ctx),
         'Fun':
             Embed(
-                color=Clr.prpl, title="Fun commands",
+                color=Clr.prpl, title='Fun commands',
                 description=f'{Ems.FeelsDankMan} Commands to have some fun with',
             ).set_footer(text=footer_text).set_thumbnail(url=thumb_url),
         'Tools':
@@ -171,7 +172,7 @@ def get_starting_embed(ctx):
         'Lewd':
             Embed(
                 color=Clr.prpl, title="Lewd",
-                description=f'{Ems.Lewd} NSFW tier commands',
+                description=f'{Ems.peepoPlsStepOnMe} NSFW tier commands',
             ).set_footer(text=footer_text).set_thumbnail(url=thumb_url),
         'Todo':
             Embed(
@@ -231,7 +232,7 @@ class HelpCog(commands.Cog):
             ViewHelp,
             verify_checks=False
         )
-        myhelp.context = await commands.Context.from_interaction(ntr)
+        myhelp.context = await Context.from_interaction(ntr)
         await myhelp.command_callback(myhelp.context)
 
 

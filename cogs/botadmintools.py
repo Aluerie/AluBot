@@ -1,11 +1,14 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Literal
 
-from discord import Embed, Guild, Member, utils
+from discord import Embed, Guild, Member, Object, utils, HTTPException
 from discord.ext import commands, tasks
+from discord.ext.commands import Greedy
 
-from utils.var import *
 from utils import database as db
+from utils.var import *
+from utils.context import Context
+
 
 if TYPE_CHECKING:
     pass
@@ -113,6 +116,38 @@ class AdminTools(commands.Cog):
     @checkguilds.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
+
+    @commands.is_owner()
+    @commands.command()
+    async def sync(self, ctx: Context, guilds: Greedy[Object], spec: Optional[Literal["~", "*"]] = None) -> None:
+        """
+        `$sync` -> global sync
+        `$sync ~` -> sync current guild
+        `$sync *` -> copies all global app commands to current guild and syncs
+        `$sync id_1 id_2` -> syncs guilds with id 1 and 2
+        """
+        if not guilds:
+            if spec == "~":
+                fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+            elif spec == "*":
+                ctx.bot.tree.copy_global_to(guild=ctx.guild)
+                fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+            else:
+                fmt = await ctx.bot.tree.sync()
+
+            await ctx.send(f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}")
+            return
+
+        fmt = 0
+        for guild in guilds:
+            try:
+                await ctx.bot.tree.sync(guild=guild)
+            except HTTPException:
+                pass
+            else:
+                fmt += 1
+
+        await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
 
 
 async def setup(bot):

@@ -21,7 +21,7 @@ class Suggestions(commands.Cog):
     async def suggest(self, ctx, *, text: str):
         """Read above"""
         irene_server = self.bot.get_guild(Sid.irene)
-        patch_channel = irene_server.get_channel(Cid.patch_notes)
+        patch_channel = irene_server.get_channel(Cid.suggestions)
         number = db.inc_value(db.g, Sid.irene, 'suggestion_num')
         title = f'Suggestion #{number}'
         embed = Embed(color=Clr.prpl, title=title, description=text)
@@ -30,7 +30,7 @@ class Suggestions(commands.Cog):
         message = await patch_channel.send(embed=embed)
         await message.add_reaction('⬆️')
         await message.add_reaction('⬇️')
-        suggestion_thread = await message.create_thread(title)
+        suggestion_thread = await message.create_thread(name=title)
         await suggestion_thread.send(content='Here you can discuss current suggestion')
         res = f'{ctx.author.mention}, sent your suggestion under #{number} into {patch_channel.mention}'
         embed2 = Embed(color=Clr.prpl, description=res)

@@ -1,9 +1,10 @@
 from discord import Embed, app_commands
 from discord.ext import commands
+from discord.ext.commands import Range
 
 from utils import database as db
 from utils.var import *
-from utils.dcordtools import scnf
+from utils.discord import scnf
 
 
 class ServerInfo(commands.Cog):
@@ -25,8 +26,8 @@ class ServerInfo(commands.Cog):
         brief=Ems.slash,
         description="Show rule number `num`"
     )
-    @app_commands.describe(number="Enter a number") #min_value=0, max_value=99) #TODO: THIS
-    async def rule(self, ctx, number: int):  # db.session.query(func.max(db.sr.id)).scalar())
+    @app_commands.describe(number="Enter a number")
+    async def rule(self, ctx, number: Range[int, 1, 99]):
         """Show rule number `num`"""
         await self.rule_work(ctx, number, db.sr, 0)
 
@@ -35,8 +36,8 @@ class ServerInfo(commands.Cog):
         brief=Ems.slash,
         description="Show *real rule* number `num`"
     )
-    @app_commands.describe(number="Enter a number")#, min_value=1, max_value=99)#TODO: THIS
-    async def realrule(self, ctx,number: int):
+    @app_commands.describe(number="Enter a number")
+    async def realrule(self, ctx,number: Range[int, 1, 99]):
         """Show *real rule* number `num`"""
         await self.rule_work(ctx, number, db.rr, 1)
 

@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
-from discord import Embed
+from discord import Embed, app_commands
 from discord.ext import commands
 
 from utils.var import *
+from utils import time
 
 import asyncio
 
@@ -16,16 +17,16 @@ class BetaTest(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.is_owner()
     @commands.hybrid_command()
-    async def allo(self, ctx: Context):
-        images_url = ['https://i.imgur.com/X9v93uk.png',
-                      'https://i.imgur.com/X9v93uk.png',
-                      'https://i.imgur.com/X9v93uk.png',
-                      'https://i.imgur.com/X9v93uk.png']
-        embeds = [Embed(url='https://github.com/').set_image(url=url) for url in images_url]
-        embeds[0].colour = Clr.prpl
-        await ctx.reply(embeds=embeds)
+    @app_commands.default_permissions(manage_messages=True)
+    async def allo(
+            self,
+            ctx: Context,
+            *,
+            dt_str: Annotated[time.FriendlyTimeResult, time.UserFriendlyTime(commands.clean_content, default='…')]
+    ):
+        print(dt_str.dt, dt_str.arg)
+        await ctx.reply('allo')
 
 
 async def setup(bot):

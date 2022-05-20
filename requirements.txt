@@ -29,3 +29,4 @@ ffmpeg
 async-google-trans-new~=1.4.5
 unidiff~=0.7.3
 psutil~=5.9.0
+parsedatetime~=2.6

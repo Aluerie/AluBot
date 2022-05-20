@@ -30,11 +30,8 @@ async def tag_work(ctx, tag_name):
                     return ref.resolved.to_reference()
                 return None
 
-            if isinstance(ctx, commands.Context):
-                reference = replied_reference(ctx.message) or ctx.message
-                await ctx.send(content=tag_row.content, reference=reference)
-            elif isinstance(ctx, Interaction):
-                await ctx.response.send_message(content=tag_row.content)
+            reference = replied_reference(ctx.message) or ctx.message
+            await ctx.reply(content=tag_row.content, reference=reference)
         else:
             em = Embed(colour=Clr.error, description='Sorry! Tag under such name does not exist')
             prefix = getattr(ctx, 'clean_prefix', '/')
@@ -61,7 +58,7 @@ class Tags(commands.Cog):
     )
     @app_commands.describe(tag_name="Summon tag under this name")
     async def tag_slh(self, ntr: Interaction, *, tag_name: str):
-        ctx = Context.from_interaction(ntr)
+        ctx = await Context.from_interaction(ntr)
         await tag_work(ctx, tag_name.lower())
 
     @commands.hybrid_group(

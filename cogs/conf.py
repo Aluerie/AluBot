@@ -21,7 +21,7 @@ class ConfModal(Modal):
 
     conf = TextInput(
         label="Make confession to the server",
-        style=TextStyle.short,
+        style=TextStyle.long,
         placeholder='Type your confession text here',
         max_length=4000,
     )

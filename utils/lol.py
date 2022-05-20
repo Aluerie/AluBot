@@ -34,9 +34,7 @@ async def get_role_mini_list(session, all_players_champ_ids, destination: Messag
             champ_name = await champion.key_by_id(champ_id)
         except KeyError:
             champ_name = 'Unknown by Pyot'
-        embed = Embed(colour=Clr.prpl)
-        embed.title = 'Meraki Json problem'
-
+        embed = Embed(colour=Clr.prpl, title='Meraki Json problem')
         url_json = 'http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json'
         async with session.get(url_json) as resp:
             json_dict = await resp.json()

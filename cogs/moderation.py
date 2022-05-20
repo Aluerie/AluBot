@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from discord import Embed, Forbidden, Member, app_commands
 from discord.ext import commands, tasks
@@ -7,7 +7,7 @@ from discord.utils import format_dt, sleep_until
 
 from utils.var import *
 from utils import database as db
-from utils.time import DTFromStr, arg_to_timetext
+from utils import time
 from utils.context import Context
 
 import asyncio
@@ -95,9 +95,10 @@ class Moderation(commands.Cog):
     )
     @app_commands.describe(member='Member to mute+timeout', duration='Duration of the mute', reason='Reason')
     async def mute_slh(self, ctx: Interaction, member: Member, duration: str, *, reason: str = "No reason"):
-        duration = DTFromStr(duration)
+        dt = time.FutureTime(duration)
         ctx = await Context.from_interaction(ctx)
-        await self.mute_work(ctx, member, duration.delta, reason)
+        delta = dt.dt - datetime.now(timezone.utc)
+        await self.mute_work(ctx, member, delta, reason)
 
     @commands.has_role(Rid.discord_mods)
     @commands.command(
@@ -105,10 +106,16 @@ class Moderation(commands.Cog):
         brief=Ems.slash,
         usage='<time> [reason]'
     )
-    async def mute_ext(self, ctx: Context, member: Member, *, duration_reason: str = "5 min No reason"):
+    async def mute_ext(
+            self,
+            ctx: Context,
+            member: Member,
+            *,
+            when: Annotated[time.FriendlyTimeResult, time.UserFriendlyTime(commands.clean_content, default='…')]
+    ):
         """Mute+timeout member from chatting"""
-        duration, reason = arg_to_timetext(duration_reason)
-        await self.mute_work(ctx, member, timedelta(seconds=duration), reason)
+        delta = when.dt - datetime.now(timezone.utc)
+        await self.mute_work(ctx, member, delta, when.arg)
 
     @commands.has_role(Rid.discord_mods)
     @app_commands.default_permissions(manage_messages=True)
@@ -159,9 +166,8 @@ class PlebModeration(commands.Cog):
         description='Mute yourself for chosen duration'
     )
     @app_commands.describe(duration='Choose duration of the mute')
-    async def selfmute(self, ctx: Context, *, duration: str = '5 minutes'):
-        duration = DTFromStr(duration)
-        if not timedelta(minutes=5) <= duration.delta <= timedelta(days=1):
+    async def selfmute(self, ctx: Context, *, duration: time.FutureTime):
+        if not timedelta(minutes=5) <= duration.dt - datetime.now() <= timedelta(days=1):
             em = Embed(colour=Clr.red).set_author(name='BadTimeArgument')
             em.description = 'Sorry! Duration of selfmute should satisfy `5 minutes < duration < 24 hours`'
             return await ctx.reply(embed=em)
@@ -170,7 +176,8 @@ class PlebModeration(commands.Cog):
         if ctx.author._roles.has(Rid.selfmuted):
             return await ctx.send(f'Somehow you are already muted {Ems.DankFix}')
 
-        warning = f'Are you sure you want to be muted until this time: {duration.fdt_r}?' \
+        warning = f'Are you sure you want to be muted until this time: \n' \
+                  f'{time.format_tdR(duration.dt)}?' \
                   f'\n**Do not ask the moderators to undo this!**'
         confirm = await ctx.prompt(warning)
         if not confirm:
@@ -179,7 +186,7 @@ class PlebModeration(commands.Cog):
         await ctx.author.add_roles(selfmute_rl)
 
         em2 = Embed(colour=Clr.red).set_author(name=f'{ctx.author.display_name} is selfmuted until')
-        em2.description = duration.fdt_r
+        em2.description = time.format_tdR(duration.dt)
         await ctx.guild.get_channel(Cid.logs).send(embed=em2)
 
         old_max_id = int(db.session.query(func.max(db.u.id)).scalar() or 0)

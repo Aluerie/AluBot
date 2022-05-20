@@ -4,7 +4,7 @@ from discord import Embed
 from discord.abc import Messageable
 from pyot.utils.lol import champion
 from utils.var import Uid, Clr
-from utils.discord import umntn
+from utils.distools import umntn
 # if they again run into no money issue then we should but new champions into dict below
 # just copypaste playrates data from page like https://www.leagueofgraphs.com/champions/stats/zeri/master
 

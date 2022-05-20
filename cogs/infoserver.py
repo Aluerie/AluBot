@@ -4,7 +4,7 @@ from discord.ext.commands import Range
 
 from utils import database as db
 from utils.var import *
-from utils.discord import scnf
+from utils.distools import scnf
 
 
 class ServerInfo(commands.Cog):
@@ -12,7 +12,8 @@ class ServerInfo(commands.Cog):
         self.bot = bot
         self.help_category = 'Info'
 
-    async def rule_work(self, ctx, num, dtb, min_number):
+    @staticmethod
+    async def rule_work(ctx, num, dtb, min_number):
         try:
             my_row = db.session.query(dtb).order_by(dtb.id).limit(num + min_number)[num - min_number]
             embed = Embed(colour=Clr.prpl, title=f'Rule {num}')
@@ -37,11 +38,12 @@ class ServerInfo(commands.Cog):
         description="Show *real rule* number `num`"
     )
     @app_commands.describe(number="Enter a number")
-    async def realrule(self, ctx,number: Range[int, 1, 99]):
+    async def realrule(self, ctx, number: Range[int, 1, 99]):
         """Show *real rule* number `num`"""
         await self.rule_work(ctx, number, db.rr, 1)
 
-    async def rules_work(self, ctx, dtb, min_value):
+    @staticmethod
+    async def rules_work(ctx, dtb, min_value):
         with db.session_scope() as ses:
             # min_value = ses.query(func.min(dtb.id)).scalar() wont work fine when people delete 1 id
             list_rules = [
@@ -88,7 +90,8 @@ class ModServerInfo(commands.Cog):
         """Group command about rule modding, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    async def add_work(self, ctx, text, dtb):
+    @staticmethod
+    async def add_work(ctx, text, dtb):
         db.append_row(dtb, text=text)
         await ctx.reply(content='added')
 
@@ -102,7 +105,8 @@ class ModServerInfo(commands.Cog):
         """Add rule to *real rules*"""
         await self.add_work(ctx, text, db.rr)
 
-    async def remove_work(self, ctx, num, dtb, min_number):
+    @staticmethod
+    async def remove_work(ctx, num, dtb, min_number):
         with db.session_scope() as ses:
             my_row = ses.query(dtb).order_by(dtb.id).limit(num+min_number)[0]
             ses.query(dtb).filter_by(id=my_row.id).delete()

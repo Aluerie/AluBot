@@ -7,7 +7,7 @@ from discord.utils import format_dt, get
 
 from utils import database as db
 from utils.var import *
-from utils.discord import scnf
+from utils.distools import scnf
 from utils.context import Context
 
 from datetime import datetime, timezone

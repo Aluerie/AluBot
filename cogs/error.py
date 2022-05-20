@@ -8,7 +8,7 @@ from utils import database as db
 from utils.context import Context
 from utils.format import display_time
 from utils.var import Clr, rmntn
-from utils.discord import send_traceback
+from utils.distools import send_traceback
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -48,7 +48,7 @@ class CommandErrorHandler(commands.Cog):
             case commands.MessageNotFound():
                 em.description = f'Bad argument: {error.argument}'
             case commands.MemberNotFound():
-                em.description = f'Bad argument: {error.argument}'
+                em.description = f'This is not a valid member argument: `{error.argument}`'
             case commands.UserNotFound():
                 em.description = f'Bad argument: {error.argument}'
             case commands.ChannelNotFound():

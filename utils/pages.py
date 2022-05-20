@@ -372,3 +372,4 @@ class Paginator(View):
             self.message = await msg.original_message()
 
         return self.message
+

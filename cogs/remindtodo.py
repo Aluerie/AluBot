@@ -1,20 +1,22 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated, Union
 
 from discord import Embed, Interaction, Member, app_commands
 from discord.ext import commands, tasks
-from discord.utils import sleep_until, format_dt
+from discord.utils import sleep_until
 
 from utils import database as db
 from utils.var import *
-from utils.time import arg_to_timetext
-from utils.discord import scnf
+from utils import time
+from utils.distools import scnf, send_pages_list
+from utils.context import Context
+
 
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
 if TYPE_CHECKING:
-    from utils.context import Context
+    pass
 
 
 class Remind(commands.Cog):
@@ -24,88 +26,115 @@ class Remind(commands.Cog):
         self.active_reminders = {}
         self.help_category = 'Todo'
 
-    @commands.hybrid_group(
-        name='remind',
-        description='Group command about reminders'
-    )
+    slh_group = app_commands.Group(name="remind", description="Group command about reminders")
+
+    @commands.group()
     async def remind(self, ctx: Context):
         """Group command about reminders, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    @remind.command(
-        name='remove',
-        brief=Ems.slash,
-        description='Remove reminder from your reminders list'
-    )
-    @app_commands.describe(id_='id of reminder')
-    async def remove(self, ctx: Context, id_: int):
-        """Removes reminder under id from your reminders list. \
-        You can find *ids* of your reminders in `$remind list` command ;"""
-        user = db.session.query(db.r).filter_by(userid=ctx.author.id, id=id_)
-        if user.first() is None:
-            embed = Embed(colour=Clr.rspbrry).set_author(name='Database_Error')
-            embed.description = 'Double-check all arguments:\n`id`'
-            embed.set_footer(text='Probably this `id` doesn\'t belong to you or doesn\'t exist')
-            return await ctx.reply(embed=embed)
-        else:
-            with db.session_scope() as ses:
-                ses.query(db.r).filter_by(id=id_).delete()
-            if isinstance(ctx, commands.Context):
-                await ctx.message.add_reaction(Ems.PepoG)
-            elif isinstance(ctx, Interaction):
-                await ctx.response.send_message(content=Ems.DankApprove, ephemeral=True)
+    async def add_work(self, ctx: Union[Context, Interaction], member: Member, dt, remind_text):
+        with db.session_scope() as ses:
+            old_max_id = int(ses.query(func.max(db.r.id)).scalar() or 0)
+            new_row = db.r(
+                id=1 + old_max_id,
+                name=remind_text,
+                userid=member.id,
+                channelid=ctx.channel.id,
+                dtime=dt
+            )
+            ses.add(new_row)
+        embed = Embed(color=Clr.prpl)
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        embed.title = 'Reminder was made for you'
+        embed.description = remind_text
+        embed.add_field(inline=False, name='Reminder time', value=time.format_tdR(dt))
+        embed.set_footer(text=f'Reminder was added under `id #{1 + old_max_id}`')
+        if isinstance(ctx, Context):
+            await ctx.reply(embed=embed)
+        elif isinstance(ctx, Interaction):
+            await ctx.response.send_message(embed=embed)
+        #  self.check_reminders.restart()
+        if dt < self.check_reminders.next_iteration.replace(tzinfo=timezone.utc):
+            self.bot.loop.create_task(
+                self.fire_the_reminder(1 + old_max_id, remind_text, member.id, ctx.channel.id, dt)
+            )
+
+    @slh_group.command(description='Remind you about `remind_text` in `remind_time`')
+    @app_commands.describe(remind_time='When to remind', remind_text='What to remind about')
+    async def me(self, ntr: Interaction, remind_time: str, remind_text: str):
+        future_time = time.FutureTime(remind_time)
+        await self.add_work(ntr, ntr.user, future_time.dt, remind_text)
 
     @remind.command(
-        name='list',
         brief=Ems.slash,
-        description='Show `@member`s reminders list',
-        usage='[member=you]'
+        usage='<remind_time> <remind_text>',
+        aliases=['add'],
     )
+    async def me(
+            self,
+            ctx: Context,
+            *,
+            when: Annotated[time.FriendlyTimeResult, time.UserFriendlyTime(commands.clean_content, default='…')]
+    ):
+        """Makes bot remind you about `remind_text` in `remind_time`.
+        The bot tries to understand human language, so you can use it like
+        'tomorrow play PA', 'in 3 days uninstall dota';"""
+        await self.add_work(ctx, ctx.author, when.dt, when.arg)
+
+    @staticmethod
+    async def remove_work(ctx: Union[Context, Interaction], member: Member, reminder_id: int):
+        with db.session_scope() as ses:
+            try:
+                my_row = ses.query(db.r).filter_by(userid=member.id).order_by(db.r.id).limit(reminder_id)[0]
+            except Exception as e:
+                raise commands.BadArgument(
+                    'Invalid `reminder_id`: you probably do not have reminder under such `id` number'
+                )
+            else:
+                ses.query(db.r).filter_by(id=my_row.id).delete()
+                if isinstance(ctx, Interaction):
+                    await ctx.response.send_message(content=Ems.DankApprove, ephemeral=True)
+                elif isinstance(ctx, Context):
+                    await ctx.message.add_reaction(Ems.PepoG)
+
+    @slh_group.command(description='Remove reminder from your reminders list')
+    @app_commands.describe(reminder_id='Reminder id')
+    async def remove(self, ntr: Interaction, reminder_id: int): #todo: use range and think about dynamic change
+        await self.remove_work(ntr, ntr.user, reminder_id)
+
+    @remind.command(brief=Ems.slash)
+    async def remove(self, ctx: Context, reminder_id: int):
+        """Removes reminder under id from your reminders list. \
+        You can find *ids* of your reminders in `$remind list` command ;"""
+        await self.remove_work(ctx, ctx.author, reminder_id)
+
+    @staticmethod
+    async def list_work(ctx: Union[Context, Interaction], member: Member):
+        remind_list = [
+            f'{counter}. {time.format_tdR(row.dtime.replace(tzinfo=timezone.utc))}\n{row.name}'
+            for counter, row in enumerate(db.session.query(db.r).filter_by(userid=member.id))
+        ]
+        await send_pages_list(
+            ctx,
+            remind_list,
+            split_size=0,
+            author_name=f'{member.display_name}\'s Reminders list',
+            author_icon=member.display_avatar.url,
+            colour=member.colour
+        )
+
+    @slh_group.command(description='Show `@member`s reminders list')
+    @app_commands.describe(member='Member to check')
+    async def list(self, ntr: Interaction, member: Member = None):
+        member = member or ntr.user
+        await self.list_work(ntr, member)
+
+    @remind.command(brief=Ems.slash, usage='[member=you]')
     async def list(self, ctx: Context, member: Member = None):
         """Shows `@member`'s reminders list ;"""
         member = member or ctx.author
-        embed = Embed(colour=member.colour)
-        embed.description = '\n'.join([
-            f'{counter}. `id #{row.id}` Date: {format_dt(row.dtime.replace(tzinfo=timezone.utc))}\n{row.name}'
-            for counter, row in enumerate(db.session.query(db.r).filter_by(userid=member.id))
-        ])  # todo: this might be beyond 2000(?) limit
-        embed.set_author(name=f'{member.display_name}\'s Reminders list', icon_url=member.display_avatar.url)
-        await ctx.reply(embed=embed)
-
-    @remind.command(
-        name='me',
-        brief=Ems.slash,
-        description='Remind you about `remind_text` in `remind_time`',
-        usage='<remind_time> <remind_text>',
-        aliases=['add']
-    )
-    async def me(self, ctx: Context, *, remind_time_and_remind_text):
-        """Makes bot remind you about `remind_text` in `remind_time` ;"""
-        time_secs, remind_text = arg_to_timetext(remind_time_and_remind_text)
-
-        if time_secs is None:
-            embed = Embed(colour=Clr.rspbrry)
-            embed.set_author(name='TimeNotParsed')
-            embed.description = '`$remind me *remind_time* *remind text*` \n' \
-                                'where `remind_time` is amount of weeks, days, hours, minutes, seconds'
-            embed.set_footer(text='Exception raised when the bot couln\'t recognize time from given command arguments.')
-            return await ctx.reply(embed=embed)
-
-        with db.session_scope() as ses:
-            old_max_id = int(ses.query(func.max(db.r.id)).scalar() or 0)
-            delta_time = timedelta(seconds=time_secs)
-            dtime = datetime.now(timezone.utc) + delta_time
-            new_row = db.r(
-                id=1 + old_max_id, name=remind_text, userid=ctx.author.id, channelid=ctx.channel.id, dtime=dtime)
-            ses.add(new_row)
-        embed = Embed(color=Clr.prpl)
-        embed.description = f'{ctx.author.mention}, you will be reminded about it in {delta_time}'
-        embed.set_footer(text=f'Reminder was added under `id #{1 + old_max_id}`')
-        await ctx.reply(embed=embed)
-        #  self.check_reminders.restart()
-        if dtime < self.check_reminders.next_iteration.replace(tzinfo=timezone.utc):
-            self.bot.loop.create_task(
-                self.fire_the_reminder(1 + old_max_id, remind_text, ctx.author.id, ctx.channel.id, dtime))
+        await self.list_work(ctx, member)
 
     @tasks.loop(minutes=30)
     async def check_reminders(self):
@@ -121,7 +150,7 @@ class Remind(commands.Cog):
         dtime = dtime.replace(tzinfo=timezone.utc)
         await sleep_until(dtime)
         answer = f"{self.bot.get_user(userid).mention}, remember?"
-        embed = Embed(color=Clr.prpl, description=name)
+        embed = Embed(color=Clr.prpl, description=name).set_author(name='Reminder')
         await self.bot.get_channel(channelid).send(content=answer, embed=embed)
         db.remove_row(db.r, id_)
         self.active_reminders.pop(id_, None)
@@ -145,26 +174,25 @@ class Todo(commands.Cog):
         name='remove',
         brief=Ems.slash,
         description='Remove todo bullet from your todo list',
-        help='Removes tdo bullet under *bullet_id* from your ToDolist. '
+        help='Removes todo bullet under *bullet_id* from your ToDo list.'
              'You can find *ids* of your To Do bullets in `$todo list` command'
     )
     @app_commands.describe(bullet_id='ToDo Bullet id in your list')
     async def remove(self, ctx: Context, bullet_id: int):
         """Read above"""
-        user = db.session.query(db.t).filter_by(userid=ctx.author.id, id=bullet_id)
-        if user.first() is None:
-            embed = Embed(colour=Clr.rspbrry)
-            embed.set_author(name='DatabaseError')
-            embed.description = 'Double-check all arguments:\n`id`'
-            embed.set_footer(text='Probably this `id` doesn\'t belong to you or doesn\'t exist')
-            return await ctx.reply(embed=embed)
-        else:
-            with db.session_scope() as ses:
-                ses.query(db.t).filter_by(id=bullet_id).delete()
-            if ctx.interaction:
-                await ctx.reply(content=f'removed {Ems.PepoG}')
+        with db.session_scope() as ses:
+            try:
+                my_row = ses.query(db.t).filter_by(userid=ctx.author.id).order_by(db.t.id).limit(bullet_id)[0]
+            except Exception as e:
+                raise commands.BadArgument(
+                    'Invalid `bullet_id`: you probably do not have todo bullet_id under such `id` number'
+                )
             else:
-                await ctx.message.add_reaction(Ems.PepoG)
+                ses.query(db.t).filter_by(id=my_row.id).delete()
+                if ctx.interaction:
+                    await ctx.reply(content=f'removed {Ems.PepoG}')
+                else:
+                    await ctx.message.add_reaction(Ems.PepoG)
 
     @todo.command(
         name='list',
@@ -177,13 +205,18 @@ class Todo(commands.Cog):
     async def list(self, ctx: Context, member: Member = None):
         """Read above"""
         member = member or ctx.author
-        embed = Embed(colour=member.colour)
-        embed.description = '\n'.join([
-            f'{cnt} `id #{row.id}`\n{row.name} '
-            for cnt, row in enumerate(db.session.query(db.t).filter_by(userid=member.id))
-        ])  # todo: this might be beyond 2000(?) limit
-        embed.set_author(name=f'{member.display_name}\'s ToDo list', icon_url=member.display_avatar.url)
-        await ctx.reply(embed=embed)
+        todo_list = [
+            f'{cnt}. {row.name}'
+            for cnt, row in enumerate(db.session.query(db.t).filter_by(userid=member.id), start=1)
+        ]
+        await send_pages_list(
+            ctx,
+            todo_list,
+            split_size=0,
+            author_name=f'{member.display_name}\'s ToDo list',
+            author_icon=member.display_avatar.url,
+            colour=member.colour
+        )
 
     @todo.command(
         name='add',
@@ -196,7 +229,7 @@ class Todo(commands.Cog):
         """Read above"""
         db.append_row(db.t, name=todo_text, userid=ctx.author.id)
         if ctx.interaction:
-            ctx.reply(f'added {Ems.PepoG}')
+            await ctx.reply(f'added {Ems.PepoG}')
         else:
             await ctx.message.add_reaction(Ems.PepoG)
 

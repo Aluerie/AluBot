@@ -2,6 +2,7 @@ from discord import Embed, app_commands
 from discord.ext import commands, tasks
 
 from utils import pages
+from utils.distools import send_pages_list
 from utils.var import *
 from utils import database as db
 
@@ -45,33 +46,28 @@ def get_sorted_emote_dict(mode):
 async def topemotes_job(ctx, mode):
     sorted_emote_dict = get_sorted_emote_dict(mode)
     new_array = []
-    for key in sorted_emote_dict:
-        new_array.append([key, sorted_emote_dict[key]])
-
     splitedSize = 20
-    places_list = [new_array[x:x + splitedSize] for x in range(0, len(new_array), splitedSize)]
-    embeds_list = []
-    irene_server = ctx.bot.get_guild(Sid.irene)
     offset = 1
-    for item in places_list:
-        embed = Embed(colour=Clr.prpl)
-        embed.title = "Top emotes used last month"
-        embed.set_footer(text=f'With love, {irene_server.me.display_name}')
+    max_length = 18
 
-        def indent(symbol):
-            return str(symbol).ljust(len(str(offset - 1 + splitedSize)), " ")
+    def indent(counter):
+        return str(counter).ljust(len(str(((counter-offset)//splitedSize + 1) * splitedSize)), " ")
 
-        max_length = 18
-        field0 = f'`{"Emote".ljust(max_length + 4, " ")}Usages`\n'
-        field0 += '\n'.join(
-            f'`{indent(i)}` {v[0]}`{v[0].split(":")[1][:max_length].ljust(max_length, " ")}{v[1]}`'
-            for i, v in enumerate(item, start=offset)
+    for cnt, key in enumerate(sorted_emote_dict, start=offset):
+
+        new_array.append(
+            f'`{indent(cnt)}` '
+            f'{key}`{key.split(":")[1][:max_length].ljust(max_length, " ")}{sorted_emote_dict[key]}`'
         )
-        embed.description = field0
-        offset += splitedSize
-        embeds_list.append(embed)
-    paginator = pages.Paginator(pages=embeds_list)
-    await paginator.send(ctx)
+    await send_pages_list(
+        ctx,
+        new_array,
+        split_size=splitedSize,
+        colour=Clr.prpl,
+        title="Top emotes used last month",
+        footer_text=f'With love, {ctx.guild.me.display_name}',
+        description_prefix=f'`{"Emote".ljust(max_length + 4, " ")}Usages`',
+    )
 
 
 class EmoteAnalysis(commands.Cog):

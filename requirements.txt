@@ -17,7 +17,6 @@ sqlalchemy~=1.4.35
 psycopg2~=2.9.3
 pyot~=5.3.1
 git+https://github.com/meraki-analytics/role-identification.git
-pytimeparse~=1.1.8
 beautifulsoup4~=4.11.1
 urllib3~=1.26.9
 wordcloud~=1.8.1
@@ -30,3 +29,4 @@ async-google-trans-new~=1.4.5
 unidiff~=0.7.3
 psutil~=5.9.0
 parsedatetime~=2.6
+python-dateutil~=2.8.2

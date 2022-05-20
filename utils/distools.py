@@ -1,9 +1,70 @@
-from discord import abc, Embed
+from __future__ import annotations
+from typing import TYPE_CHECKING, Union, List, Optional
+
 from discord.ext import commands
-from utils.var import Uid, Cid, Clr, umntn
+from discord import Embed
+
+from utils.var import *
+from utils import pages
+from utils.context import Context
 
 import traceback
-from typing import Union
+
+if TYPE_CHECKING:
+    from discord import abc, Colour, Message, Interaction
+
+
+async def send_pages_list(
+        ctx: Union[Context, Interaction],
+        string_list: List[str],
+        *,
+        split_size: int,
+        title: str = None,
+        description_prefix: str = '',
+        colour: Optional[Union[int, Colour]] = None,
+        footer_text: str = None,
+        author_name: str = None,
+        author_icon: str = None,
+) -> Message:
+    """helper command to send possibly paginated strings"""
+    if split_size != 0:
+        places_list = [string_list[x:x + split_size] for x in range(0, len(string_list), split_size)]
+    else:
+        places_list = [string_list]
+
+    paginator = commands.Paginator(
+        prefix='',
+        suffix='',
+        max_size=Lmt.Embed.description,
+    )
+    for lines in places_list:
+        for line in lines:
+            paginator.add_line(line)
+        paginator.close_page()
+
+    embeds = [
+        Embed(
+            colour=colour,
+            title=title,
+            description=description_prefix + page
+        )
+        for page in paginator.pages
+    ]
+    if author_name:
+        for em in embeds:
+            em.set_author(name=author_name, icon_url=author_icon)
+    if footer_text:
+        for em in embeds:
+            em.set_footer(text=footer_text)
+
+    if len(embeds) == 1:
+        if isinstance(ctx, Context):
+            return await ctx.reply(embeds=embeds)
+        elif isinstance(ctx, Interaction):
+            return await ctx.response.send_message(embeds=embeds)
+    else:
+        pag = pages.Paginator(pages=embeds)
+        return await pag.send(ctx)
 
 
 async def send_traceback(
@@ -156,3 +217,5 @@ class Ansi:
             array_join.append(clr)
         final_format = ';'.join(list(map(str, array_join)))
         return f'\u001b[{final_format}m{string}\u001b[0m'
+
+

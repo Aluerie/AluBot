@@ -32,9 +32,9 @@ class Suggestions(commands.Cog):
         await message.add_reaction('⬇️')
         suggestion_thread = await message.create_thread(name=title)
         await suggestion_thread.send(content='Here you can discuss current suggestion')
-        res = f'{ctx.author.mention}, sent your suggestion under #{number} into {patch_channel.mention}'
-        embed2 = Embed(color=Clr.prpl, description=res)
-        await ctx.channel.send(embed=embed2)
+        em2 = Embed(color=Clr.prpl)
+        em2.description = f'{ctx.author.mention}, sent your suggestion under #{number} into {patch_channel.mention}'
+        await ctx.channel.send(embed=em2)
 
 
 async def setup(bot):

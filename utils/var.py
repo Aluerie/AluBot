@@ -191,3 +191,14 @@ class Img:
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
     dota2logo = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png"
     twitchtv = "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
+
+
+class Lmt:
+    class Embed:
+        sum_all = 6000
+        footer_text = 2048
+        title = 25
+        description = 4096
+        field_amount = 25
+        field_name = 256
+        field_value = 1024

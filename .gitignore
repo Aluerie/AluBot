@@ -151,3 +151,5 @@ dota2logs/adf.csv
 dota2logs/hdf.csv
 
 audio.mp3
+
+*.ipynb

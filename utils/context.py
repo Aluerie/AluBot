@@ -1,9 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-from discord import ButtonStyle
+from discord import ButtonStyle, Embed
 from discord.ext import commands
 from discord.ui import View, button
+
+from utils.var import Clr
 
 if TYPE_CHECKING:
     from utils.bot import VioletBot
@@ -24,7 +26,9 @@ class ConfirmationView(View):
         if interaction.user and interaction.user.id == self.author_id:
             return True
         else:
-            await interaction.response.send_message('This confirmation dialog is not for you.', ephemeral=True)
+            em = Embed(colour=Clr.prpl)
+            em.description = 'Sorry! This confirmation dialog is not for you.'
+            await interaction.response.send_message(embed=em, ephemeral=True)
             return False
 
     async def on_timeout(self) -> None:
@@ -66,8 +70,9 @@ class Context(commands.Context):
 
     async def prompt(
             self,
-            message: str,
             *,
+            content: str = None,
+            embed: Embed = None,
             timeout: float = 60.0,
             delete_after: bool = True,
             author_id: Optional[int] = None,
@@ -91,9 +96,11 @@ class Context(commands.Context):
             ``False`` if explicit deny,
             ``None`` if deny due to timeout
         """
+        if content is None and embed is None:
+            raise TypeError('Either content or embed should be provided')
 
         author_id = author_id or self.author.id
         view = ConfirmationView(timeout=timeout, delete_after=delete_after, ctx=self, author_id=author_id)
-        view.message = await self.send(message, view=view)
+        view.message = await self.send(content=content, embed=embed, view=view)
         await view.wait()
         return view.value

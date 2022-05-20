@@ -6,7 +6,7 @@ from discord.ext import commands, tasks
 
 from utils import database as db
 from utils.var import *
-from utils.discord import scnf
+from utils.distools import scnf
 
 from datetime import datetime, timedelta, timezone
 from numpy.random import choice

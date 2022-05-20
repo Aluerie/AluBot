@@ -13,7 +13,7 @@ from utils import dota as d2
 from utils.var import *
 from utils.imgtools import img_to_file, url_to_img
 from utils.format import display_relativehmstime
-from utils.discord import send_traceback, scnf, inout_to_10
+from utils.distools import send_traceback, scnf, inout_to_10
 from utils.mysteam import sd_login
 from cogs.twitch import TwitchStream, get_db_online_streams
 

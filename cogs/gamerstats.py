@@ -10,7 +10,7 @@ from utils import database as db
 
 from utils.var import *
 from utils.imgtools import plt_to_file
-from utils.discord import ansi, scnf
+from utils.distools import ansi, scnf
 from utils.mysteam import sd_login
 
 from datetime import datetime, timedelta, time, timezone

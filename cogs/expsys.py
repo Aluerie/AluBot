@@ -8,7 +8,7 @@ from utils.var import *
 from utils import database as db
 from utils.format import ordinal, humanize_time
 from utils.imgtools import url_to_img, img_to_file
-from utils.discord import scnf, inout_to_10
+from utils.distools import scnf, inout_to_10
 from utils import pages
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont

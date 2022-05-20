@@ -19,7 +19,8 @@ if TYPE_CHECKING:
 
 jsk = True
 test_list = [  # for yen bot
-    'tags',
+    'remindtodo',
+    'topemotes',
     'error'
 ]
 

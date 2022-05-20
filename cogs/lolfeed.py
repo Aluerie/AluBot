@@ -44,7 +44,7 @@ from discord.ext import commands, tasks
 from utils import database as db
 from utils.var import *
 from utils.lol import get_role_mini_list
-from utils.discord import send_traceback, scnf, inout_to_10
+from utils.distools import send_traceback, scnf, inout_to_10
 from utils.format import display_relativehmstime
 from utils.imgtools import img_to_file, url_to_img
 from cogs.twitch import TwitchStream, get_db_online_streams

@@ -204,7 +204,7 @@ def session_scope():
         ses.commit()
     except Exception as exc:
         ses.rollback()
-        print('Some Huge error happened in database.py', exc)
+        #  print('Some Huge error happened in database.py', exc)
         raise exc  # probably we should leave it here uncommented ;
     finally:
         ses.close()

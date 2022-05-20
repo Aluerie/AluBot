@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 from discord.ext import commands
 from discord.utils import format_dt
 
-from datetime import datetime, timedelta, timezone
-from pytimeparse import parse
+from datetime import datetime, timezone
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
 import re
@@ -15,34 +14,16 @@ if TYPE_CHECKING:
     from utils.context import Context
 
 
-class StringTime:
-    def __init__(self, argument: str, *, now: Optional[datetime] = None):
-        if (seconds := parse(argument)) is None:
-            raise commands.BadArgument('Invalid time provided')
-        self.seconds: int = seconds
-        try:
-            self.delta: timedelta = timedelta(seconds=seconds)
-        except OverflowError:
-            raise commands.BadArgument('Invalid time provided')
-        now = now or datetime.now(timezone.utc)
-        self.dt: datetime = now + self.delta
-        self.fdt_r = format_dt(self.dt, style='R')
-
-    @classmethod
-    async def convert(cls, ctx: Context, argument: str) -> Self:
-        return cls(argument, now=ctx.message.created_at)
-
-
 class ShortTime:
     compiled = re.compile(
         """
-           (?:(?P<years>[0-9])(?:years?|y))?             # e.g. 2y
-           (?:(?P<months>[0-9]{1,2})(?:months?|mo))?     # e.g. 2months
-           (?:(?P<weeks>[0-9]{1,4})(?:weeks?|w))?        # e.g. 10w
-           (?:(?P<days>[0-9]{1,5})(?:days?|d))?          # e.g. 14d
-           (?:(?P<hours>[0-9]{1,5})(?:hours?|h))?        # e.g. 12h
-           (?:(?P<minutes>[0-9]{1,5})(?:minutes?|m))?    # e.g. 10m
-           (?:(?P<seconds>[0-9]{1,5})(?:seconds?|s))?    # e.g. 15s
+        (?:(?P<years>[0-9])(?:years?|y))?             # e.g. 2y
+        (?:(?P<months>[0-9]{1,2})(?:months?|mo))?     # e.g. 2months
+        (?:(?P<weeks>[0-9]{1,4})(?:weeks?|w))?        # e.g. 10w
+        (?:(?P<days>[0-9]{1,5})(?:days?|d))?          # e.g. 14d
+        (?:(?P<hours>[0-9]{1,5})(?:hours?|h))?        # e.g. 12h
+        (?:(?P<minutes>[0-9]{1,5})(?:minutes?|m))?    # e.g. 10m
+        (?:(?P<seconds>[0-9]{1,5})(?:seconds?|s))?    # e.g. 15s
         """,
         re.VERBOSE,
     )
@@ -226,23 +207,5 @@ class UserFriendlyTime(commands.Converter):
             raise
 
 
-def arg_to_timetext(arg):  # TODO: rewrite this into a class and maybe better ideas
-    """
-    Convert a string into its epoch_time + remaining string:
-        "1 hours hello"     => (3600, "hello")
-        "15m 3s where"      => (903, "where")
-    """
-    check_array, time_seconds, result = '', None, None
-    for word in arg.split():
-        check_array += word
-        if new_time := parse(check_array):
-            time_seconds = new_time
-            try:
-                result = arg.split(word + ' ')[1]
-            except IndexError:
-                result = 'Empty text'
-    return time_seconds, result
-
-
 def format_tdR(dt: datetime) -> str:
-    return f"{format_dt(dt, 'd')}{format_dt(dt, 't')}({format_dt(dt, 'R')}"
+    return f"{format_dt(dt, 't')}{format_dt(dt, 'd')}({format_dt(dt, 'R')})"

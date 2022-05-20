@@ -4,7 +4,7 @@ from discord import FFmpegPCMAudio, Embed, app_commands
 from discord.ext import commands
 
 from utils.var import *
-from utils.discord import scnf
+from utils.distools import scnf
 
 from gtts import gTTS
 

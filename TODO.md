@@ -3,22 +3,19 @@
    1. mb reload dota cog on error with `self.bot.reload_extension(''dotafeed')`
 
 2. Search in help paginator
-3. research TypeVar stuff 
-4. TYPE_CHECKING
 5. nsfw functions
 6. async sqlalchemy
 7. sort out total garbage in utils folder
+8. maybe bring all your colours into a module
+9. look at every cog in robo danny/pycord manager
+11. think over several photos tweets
 
 ### New Features
-9. umbra sync gist
-11. raise commands.BadArgument('invalid time provided')
 
 
 ### Probably Garbage
-9. better $afk commands (datetime `$afk till 01.08` or `$afk for 2hours`) maybe check ifinstance > if date then one thing if timedelta then another
 7. edit dota and league messages after match ends to include some stats like KDA items victory-lose, RunesReforged, player names, proplayers etc
-8. change todo list db structure, so we don’t have this weird id_ thign | > relative to user Id thing so delete command is more intuitive
-
+8. 
 ### Steal feature
 12. My own starboard | CarlBot 
 13. My own polls | Poolmaker Bot
@@ -30,11 +27,12 @@
 ### IMPROVE
 16. `map` usages
 17. remove `regex` library in favour of `re`
-18. async sqlalchemy asyncsession ?
+18. async sqlalchemy asyncsession ? and also subclass your database like normal human being
 19. remember `a[start:stop:step]` so `a[::-1]` is reverse
 20. ?tag learn async
 21. remember `, default_permission=False)` in slash commands definitons
-23. learn collection lib
-24. ?tag eval
-26. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
-27. remember error.original in invoke command thing
+22. learn collection lib
+23. ?tag eval
+24. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
+25. remember error.original in invoke command thing
+26. research TypeVar stuff

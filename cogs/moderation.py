@@ -10,7 +10,6 @@ from utils import database as db
 from utils import time
 from utils.context import Context
 
-import asyncio
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
@@ -58,22 +57,6 @@ class Moderation(commands.Cog):
         em.set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         await ctx.reply(embed=em)
 
-    @commands.has_role(Rid.discord_mods)
-    @app_commands.default_permissions(manage_messages=True)
-    @app_commands.describe(member='Member to ban', reason='Reason')
-    @commands.hybrid_command(
-        name='ban',
-        brief=Ems.slash,
-        description='Ban member from the server'
-    )
-    async def ban(self, ctx, member: Member, *, reason: str = "No reason"):
-        """Ban member from the server"""
-        em = Embed(colour=Clr.red, title="Ban member")
-        em.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-        em.add_field(name='Reason', value=reason)
-        await member.ban(reason=reason)
-        await ctx.reply(embed=em)
-
     async def mute_work(self, ctx, member, duration: timedelta, reason):
         try:
             await member.timeout(duration, reason=reason)
@@ -89,24 +72,17 @@ class Moderation(commands.Cog):
         await ctx.reply(content=content, embed=em)
 
     @app_commands.default_permissions(manage_messages=True)
-    @app_commands.command(
-        name='mute',
-        description="Mute+timeout member from chatting"
-    )
+    @app_commands.command(description="Mute+timeout member from chatting")
     @app_commands.describe(member='Member to mute+timeout', duration='Duration of the mute', reason='Reason')
-    async def mute_slh(self, ctx: Interaction, member: Member, duration: str, *, reason: str = "No reason"):
+    async def mute(self, ctx: Interaction, member: Member, duration: str, *, reason: str = "No reason"):
         dt = time.FutureTime(duration)
         ctx = await Context.from_interaction(ctx)
         delta = dt.dt - datetime.now(timezone.utc)
         await self.mute_work(ctx, member, delta, reason)
 
     @commands.has_role(Rid.discord_mods)
-    @commands.command(
-        name='mute',
-        brief=Ems.slash,
-        usage='<time> [reason]'
-    )
-    async def mute_ext(
+    @commands.command(brief=Ems.slash, usage='<time> [reason]')
+    async def mute(
             self,
             ctx: Context,
             member: Member,
@@ -167,6 +143,12 @@ class PlebModeration(commands.Cog):
     )
     @app_commands.describe(duration='Choose duration of the mute')
     async def selfmute(self, ctx: Context, *, duration: time.FutureTime):
+        """
+        Anti-addiction feature.
+        If you want to detach from my server for some time -
+        use this command and you will not be able to chat for specified `<time_duration>`.
+        Duration should satisfy `5 minutes < duration < 24 hours`.
+        """
         if not timedelta(minutes=5) <= duration.dt - datetime.now() <= timedelta(days=1):
             em = Embed(colour=Clr.red).set_author(name='BadTimeArgument')
             em.description = 'Sorry! Duration of selfmute should satisfy `5 minutes < duration < 24 hours`'
@@ -176,10 +158,12 @@ class PlebModeration(commands.Cog):
         if ctx.author._roles.has(Rid.selfmuted):
             return await ctx.send(f'Somehow you are already muted {Ems.DankFix}')
 
-        warning = f'Are you sure you want to be muted until this time: \n' \
-                  f'{time.format_tdR(duration.dt)}?' \
-                  f'\n**Do not ask the moderators to undo this!**'
-        confirm = await ctx.prompt(warning)
+        warn_em = Embed(colour=Clr.prpl, title='Confirmation Prompt')
+        warn_em.description = \
+            f'Are you sure you want to be muted until this time:\n' \
+            f'{time.format_tdR(duration.dt)}?\n' \
+            f'**Do not ask the moderators to undo this!**'
+        confirm = await ctx.prompt(embed=warn_em)
         if not confirm:
             return await ctx.send('Aborting...', delete_after=5.0)
 
@@ -199,8 +183,7 @@ class PlebModeration(commands.Cog):
             reason='Selfmute'
         )
         em = Embed(colour=ctx.author.colour)
-        em.description = f'{ctx.author.mention} muted until this time: {duration.fdt_r}.\n' \
-                         f'Be sure not to bother anyone about it.'
+        em.description = f'{ctx.author.mention} is self-muted until this time:\n{time.format_tdR(duration.dt)}'
         await ctx.send(embed=em)
         if duration.dt < self.check_mutes.next_iteration.replace(tzinfo=timezone.utc):
             self.bot.loop.create_task(self.fire_the_unmute(1 + old_max_id, ctx.author.id, duration.dt))

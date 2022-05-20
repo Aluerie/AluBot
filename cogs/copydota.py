@@ -5,7 +5,7 @@ from discord import Embed
 from discord.ext import commands, tasks
 from utils.var import Cid, Clr
 from utils.format import block_function
-from utils.discord import send_traceback
+from utils.distools import send_traceback
 from utils.inettools import replace_tco_links, move_link_to_title, get_links_from_str
 from utils.github import human_commit
 from utils.imgtools import str_to_file

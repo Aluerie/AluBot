@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from PIL import Image, ImageColor
 import colorsys
 from async_google_trans_new import google_translator
+import re
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -140,6 +141,19 @@ class InfoTools(commands.Cog):
     async def colour(self, ctx, *, string: str):
         if string == 'prpl':
             string = '#9678B6'
+
+        m = re.match(
+            r"mu\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", string
+        )
+        if m:
+            string = hex(MP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
+
+        m = re.match(
+            r"mua\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", string
+        )
+        if m:
+            string = hex(MAP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
+
         rgb = ImageColor.getcolor(string, "RGB")
 
         def rgb2hex(r, g, b):
@@ -159,7 +173,10 @@ class InfoTools(commands.Cog):
 
     @colour.error
     async def colour_error(self, ctx, error):
-        if isinstance(error, ValueError):
+        if isinstance(error, commands.CommandInvokeError):
+            error = error.original
+
+        if isinstance(error, (ValueError, KeyError)):
             ctx.error_handled = True
             embed = Embed(colour=Clr.error)
             embed.set_author(name='WrongColourFormat')
@@ -171,7 +188,9 @@ class InfoTools(commands.Cog):
                 '● RGB: `rgb(red, green, blue)` where the colour values are integers or percentages\n' \
                 '● Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`\n' \
                 '● Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`\n' \
-                '● Common HTML color names: `red`, `Blue`' \
+                '● Common HTML color names: `red`, `Blue`\n' \
+                '● Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n' \
+                '● Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n' \
                 '● Also `prpl` for favourite Irene\'s colour '
             await ctx.reply(embed=embed)
 

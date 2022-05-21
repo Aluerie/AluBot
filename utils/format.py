@@ -179,3 +179,7 @@ def block_function(string, blocked_words, whitelist_words):
                     return 0  # allow
             return 1  # block
     return 0  # allow
+
+
+def indent(symbol, counter, offset, split_size):
+    return str(symbol).ljust(len(str(((counter-offset)//split_size + 1) * split_size)), " ")

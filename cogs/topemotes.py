@@ -1,7 +1,7 @@
-from discord import Embed, app_commands
+from discord import app_commands
 from discord.ext import commands, tasks
 
-from utils import pages
+from utils.format import indent
 from utils.distools import send_pages_list
 from utils.var import *
 from utils import database as db
@@ -46,23 +46,20 @@ def get_sorted_emote_dict(mode):
 async def topemotes_job(ctx, mode):
     sorted_emote_dict = get_sorted_emote_dict(mode)
     new_array = []
-    splitedSize = 20
+    split_size = 20
     offset = 1
     max_length = 18
-
-    def indent(counter):
-        return str(counter).ljust(len(str(((counter-offset)//splitedSize + 1) * splitedSize)), " ")
 
     for cnt, key in enumerate(sorted_emote_dict, start=offset):
 
         new_array.append(
-            f'`{indent(cnt)}` '
+            f'`{indent(cnt, cnt, offset, split_size)}` '
             f'{key}`{key.split(":")[1][:max_length].ljust(max_length, " ")}{sorted_emote_dict[key]}`'
         )
     await send_pages_list(
         ctx,
         new_array,
-        split_size=splitedSize,
+        split_size=split_size,
         colour=Clr.prpl,
         title="Top emotes used last month",
         footer_text=f'With love, {ctx.guild.me.display_name}',

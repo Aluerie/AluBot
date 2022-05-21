@@ -24,8 +24,8 @@ async def replace_tco_links(session, embed: Embed) -> Embed:
     return embed
 
 
-def move_link_to_title(link, embed: Embed) -> Embed:
-    embed.url = link
+def move_link_to_title(embed: Embed) -> Embed:
+    # embed.url = link
     embed.title = 'Twitter link'
     return embed
 

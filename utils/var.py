@@ -70,7 +70,10 @@ class Cid:
 
     blacklisted_array = [ ]
     # emote server
+    roses = 759916212842659853
     spam_me = 970823670702411810
+
+    coop = 966366521607745586
 
     copylol_ff20 = 791099728498130944
     copydota_info = 873430376033452053
@@ -173,20 +176,6 @@ class Ems: #Emote strings
     phone_numbers = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '*️⃣', '#️⃣']
 
 
-class Clr:
-    prpl = 0x9678b6
-    rspbrry = 0xC42C48
-    wht = 0xffffff
-    red = 0xff0000
-    neon = 0x4D4DFF
-    error = 0x800000
-    olive = 0x98BF64
-    dota_colour_map = {
-        0: "#3375FF", 1: "#66FFBF", 2: "#BF00BF", 3: "#F3F00B", 4: "#FF6B00",
-        5: "#FE86C2", 6: "#A1B447", 7: "#65D9F7", 8: "#008321", 9: "#A46900"
-    }
-
-
 class Img:
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
     dota2logo = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png"
@@ -202,3 +191,315 @@ class Lmt:
         field_amount = 25
         field_name = 256
         field_value = 1024
+
+
+class Clr:
+    prpl = 0x9678b6
+    rspbrry = 0xC42C48
+    wht = 0xffffff
+    red = 0xff0000
+    neon = 0x4D4DFF
+    error = 0x800000
+    olive = 0x98BF64
+    dota_colour_map = {
+        0: "#3375FF", 1: "#66FFBF", 2: "#BF00BF", 3: "#F3F00B", 4: "#FF6B00",
+        5: "#FE86C2", 6: "#A1B447", 7: "#65D9F7", 8: "#008321", 9: "#A46900"
+    }
+
+
+class MaterialPalette:
+    """
+    Material Design Color Palette
+    """
+    shades = [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
+    core = 500
+    colors = {
+        'red': [
+            0xb71c1c, 0xc62828, 0xd32f2f, 0xe53935, 0xf44336,
+            0xef5350, 0xe57373, 0xef9a9a, 0xffcdd2, 0xffebee
+        ],
+        'pink': [
+            0x880e4f, 0xad1457, 0xc2185b, 0xd81b60, 0xe91e63,
+            0xec407a, 0xf06292, 0xf48fb1, 0xf8bbd0, 0xfce4ec
+        ],
+        'purple': [
+            0x4a148c, 0x6a1b9a, 0x7b1fa2, 0x8e24aa, 0x9c27b0,
+            0xab47bc, 0xba68c8, 0xce93d8, 0xe1bee7, 0xf3e5f5
+        ],
+        'deep_purple': [
+            0x311b92, 0x4527a0, 0x512da8, 0x5e35b1, 0x673ab7,
+            0x7e57c2, 0x9575cd, 0xb39ddb, 0xd1c4e9, 0xede7f6
+        ],
+        'indigo': [
+            0x1a237e, 0x283593, 0x303f9f, 0x3949ab, 0x3f51b5,
+            0x5c6bc0, 0x7986cb, 0x9fa8da, 0xc5cae9, 0xe8eaf6
+        ],
+        'blue': [
+            0x0d47a1, 0x1565c0, 0x1976d2, 0x1e88e5, 0x2196f3,
+            0x42a5f5, 0x64b5f6, 0x90caf9, 0xbbdefb, 0xe3f2fd
+        ],
+        'light_blue': [
+            0x01579b, 0x0277bd, 0x0288d1, 0x039be5, 0x03a9f4,
+            0x29b6f6, 0x4fc3f7, 0x81d4fa, 0xb3e5fc, 0xe1f5fe
+        ],
+        'cyan': [
+            0x006064, 0x00838f, 0x0097a7, 0x00acc1, 0x00bcd4,
+            0x26c6da, 0x4dd0e1, 0x80deea, 0xb2ebf2, 0xe0f7fa
+        ],
+        'teal': [
+            0x004d40, 0x00695c, 0x00796b, 0x00897b, 0x009688,
+            0x26a69a, 0x4db6ac, 0x80cbc4, 0xb2dfdb, 0xe0f2f1
+        ],
+        'green': [
+            0x1b5e20, 0x2e7d32, 0x388e3c, 0x43a047, 0x4caf50,
+            0x66bb6a, 0x81c784, 0xa5d6a7, 0xc8e6c9, 0xe8f5e9
+        ],
+        'light_green': [
+            0x33691e, 0x558b2f, 0x689f38, 0x7cb342, 0x8bc34a,
+            0x9ccc65, 0xaed581, 0xc5e1a5, 0xdcedc8, 0xf1f8e9
+        ],
+        'lime': [
+            0x827717, 0x9e9d24, 0xafb42b, 0xc0ca33, 0xcddc39,
+            0xd4e157, 0xdce775, 0xe6ee9c, 0xf0f4c3, 0xf9fbe7
+        ],
+        'yellow': [
+            0xf57f17, 0xf9a825, 0xfbc02d, 0xfdd835, 0xffeb3b,
+            0xffee58, 0xfff176, 0xfff59d, 0xfff9c4, 0xfffde7
+        ],
+        'amber': [
+            0xff6f00, 0xff8f00, 0xffa000, 0xffb300, 0xffc107,
+            0xffca28, 0xffd54f, 0xffe082, 0xffecb3, 0xfff8e1
+        ],
+        'orange': [
+            0xe65100, 0xef6c00, 0xf57c00, 0xfb8c00, 0xff9800,
+            0xffa726, 0xffb74d, 0xffcc80, 0xffe0b2, 0xfff3e0
+        ],
+        'deep_orange': [
+            0xbf360c, 0xd84315, 0xe64a19, 0xf4511e, 0xff5722,
+            0xff7043, 0xff8a65, 0xffab91, 0xffccbc, 0xfbe9e7
+        ],
+        'brown': [
+            0x3e2723, 0x4e342e, 0x5d4037, 0x6d4c41, 0x795548,
+            0x8d6e63, 0xa1887f, 0xbcaaa4, 0xd7ccc8, 0xefebe9
+        ],
+        'gray': [
+            0x212121, 0x424242, 0x616161, 0x757575, 0x9e9e9e,
+            0xbdbdbd, 0xe0e0e0, 0xeeeeee, 0xf5f5f5, 0xfafafa
+        ],
+        'blue_gray': [
+            0x263238, 0x37474f, 0x455a64, 0x546e7a, 0x607d8b,
+            0x78909c, 0x90a4ae, 0xb0bec5, 0xcfd8dc, 0xeceff1
+        ],
+        'black': [
+            0x000000, 0x000000, 0x000000, 0x000000, 0x000000,
+            0x000000, 0x000000, 0x000000, 0x000000, 0x000000
+        ],
+        'white': [
+            0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
+            0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
+        ]
+    }
+
+    colors_dict = {}
+    for key, value in colors.items():
+        colors_dict[key] = {shade: clr for shade, clr in zip(shades, value)}
+
+    @classmethod
+    def red(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['red'][shade]
+
+    @classmethod
+    def pink(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['pink'][shade]
+
+    @classmethod
+    def purple(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['purple'][shade]
+
+    @classmethod
+    def deep_purple(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['deep_purple'][shade]
+
+    @classmethod
+    def indigo(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['indigo'][shade]
+
+    @classmethod
+    def blue(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['blue'][shade]
+
+    @classmethod
+    def light_blue(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['light_blue'][shade]
+
+    @classmethod
+    def cyan(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['cyan'][shade]
+
+    @classmethod
+    def teal(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['teal'][shade]
+
+    @classmethod
+    def green(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['green'][shade]
+
+    @classmethod
+    def light_green(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['light_green'][shade]
+
+    @classmethod
+    def lime(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['lime'][shade]
+
+    @classmethod
+    def yellow(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['yellow'][shade]
+
+    @classmethod
+    def amber(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['amber'][shade]
+
+    @classmethod
+    def orange(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['orange'][shade]
+
+    @classmethod
+    def deep_orange(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['deep_orange'][shade]
+
+
+class MaterialAccentPalette:
+    """
+    Material Design Color Palette with Accent Designs
+    """
+
+    shades = [700, 400, 200, 100]
+    core = 200
+    colors = {
+        'red': [
+            0xd50000, 0xff1744, 0xff5252, 0xff8a80
+        ],
+        'pink': [
+            0xc51162, 0xf50057, 0xff4081, 0xff80ab
+        ],
+        'purple': [
+            0xaa00ff, 0xd500f9, 0xe040fb, 0xea80fc
+        ],
+        'deep-purple': [
+            0x6200ea, 0x651fff, 0x7c4dff, 0xb388ff
+        ],
+        'indigo': [
+            0x304ffe, 0x3d5afe, 0x536dfe, 0x8c9eff
+        ],
+        'blue': [
+            0x2962ff, 0x2979ff, 0x448aff, 0x82b1ff
+        ],
+        'light-blue': [
+            0x0091ea, 0x00b0ff, 0x40c4ff, 0x80d8ff
+        ],
+        'cyan': [
+            0x00b8d4, 0x00e5ff, 0x18ffff, 0x84ffff
+        ],
+        'teal': [
+            0x00bfa5, 0x1de9b6, 0x64ffda, 0xa7ffeb
+        ],
+        'green': [
+            0x00c853, 0x00e676, 0x69f0ae, 0xb9f6ca
+        ],
+        'light-green': [
+            0x64dd17, 0x76ff03, 0xb2ff59, 0xccff90
+        ],
+        'lime': [
+            0xaeea00, 0xc6ff00, 0xeeff41, 0xf4ff81
+        ],
+        'yellow': [
+            0xffd600, 0xffea00, 0xffff00, 0xffff8d
+        ],
+        'amber': [
+            0xffab00, 0xffc400, 0xffd740, 0xffe57f
+        ],
+        'orange': [
+            0xff6d00, 0xff9100, 0xffab40, 0xffd180
+        ],
+        'deep-orange': [
+            0xdd2c00, 0xff3d00, 0xff6e40, 0xff9e80
+        ]
+    }
+
+    colors_dict = {}
+    for key, value in colors.items():
+        colors_dict[key] = {shade: clr for shade, clr in zip(shades, value)}
+
+    @classmethod
+    def red(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['red'][shade]
+
+    @classmethod
+    def pink(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['pink'][shade]
+
+    @classmethod
+    def purple(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['purple'][shade]
+
+    @classmethod
+    def deep_purple(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['deep_purple'][shade]
+
+    @classmethod
+    def indigo(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['indigo'][shade]
+
+    @classmethod
+    def blue(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['blue'][shade]
+
+    @classmethod
+    def light_blue(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['light_blue'][shade]
+
+    @classmethod
+    def cyan(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['cyan'][shade]
+
+    @classmethod
+    def teal(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['teal'][shade]
+
+    @classmethod
+    def green(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['green'][shade]
+
+    @classmethod
+    def light_green(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['light_green'][shade]
+
+    @classmethod
+    def lime(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['lime'][shade]
+
+    @classmethod
+    def yellow(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['yellow'][shade]
+
+    @classmethod
+    def amber(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['amber'][shade]
+
+    @classmethod
+    def orange(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['orange'][shade]
+
+    @classmethod
+    def deep_orange(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['deep_orange'][shade]
+
+
+# aliases
+MP = MaterialPalette
+MAP = MaterialAccentPalette
+
+if __name__ == '__main__':
+    mp = MaterialPalette
+    print(mp.red())

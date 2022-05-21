@@ -6,9 +6,9 @@ from discord.ext import commands, tasks
 
 from utils.var import *
 from utils import database as db
-from utils.format import ordinal, humanize_time
+from utils.format import ordinal, humanize_time, indent
 from utils.imgtools import url_to_img, img_to_file
-from utils.distools import scnf, inout_to_10
+from utils.distools import scnf, inout_to_10, send_pages_list
 from utils import pages
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -156,10 +156,9 @@ class ExperienceSystem(commands.Cog):
         description='View server leaderboard'
     )
     @app_commands.describe(sort_by='Choose how to sort leaderboard')
-    async def leaderboard(self, ctx, sort_by: Literal['exp', 'rep']):
+    async def leaderboard(self, ctx, sort_by: Literal['exp', 'rep'] = 'exp'):
         """View experience leaderboard for this server ;"""
         irene_server = self.bot.get_guild(Sid.irene)
-        new_array = []
 
         match sort_by:
             case 'rep':
@@ -169,30 +168,28 @@ class ExperienceSystem(commands.Cog):
             case _:
                 return ctx.reply('wrong sorting was given')
 
+        new_array = []
+        split_size = 10
+        offset = 1
+        cnt = offset
         for row in db.session.query(db.m).filter(db.m.inlvl == 1).order_by(db_col_desc):
             if (member := irene_server.get_member(row.id)) is None:
                 continue
-            new_array.append([member.mention, get_level(row.exp), row.exp, row.rep])
-
-        split_size = 10
-        places_list = [new_array[x:x+split_size] for x in range(0, len(new_array), split_size)]
-        embeds_list = []
-        offset = 1
-        for item in places_list:
-            embed = Embed(colour=Clr.prpl, title="Server Leaderboard")
-            embed.set_footer(text=f'With love, {irene_server.me.display_name}')
-
-            def indent(symbol):
-                return str(symbol).ljust(len(str(offset - 1 + split_size)), " ")
-            embed.description = '\n'.join(
-                f'`{indent(i)}` {v[0]}\n`'
-                f'{indent(" ")} level {v[1]}, {v[2]} exp| {v[3]} rep`'
-                for i, v in enumerate(item, start=offset)
+            new_array.append(
+                f'`{indent(cnt, cnt, offset, split_size)}` {member.mention}\n`'
+                f'{indent(" ", cnt, offset, split_size)} '
+                f'level {get_level(row.exp)}, {row.exp} exp| {row.rep} rep`'
             )
-            offset += split_size
-            embeds_list.append(embed)
-        paginator = pages.Paginator(pages=embeds_list)
-        await paginator.send(ctx)
+            cnt += 1
+
+        await send_pages_list(
+            ctx,
+            new_array,
+            split_size=split_size,
+            colour=Clr.prpl,
+            title="Server Leaderboard",
+            footer_text=f'With love, {irene_server.me.display_name}'
+        )
 
     @commands.Cog.listener()
     async def on_message(self, msg):

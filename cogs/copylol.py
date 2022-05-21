@@ -53,7 +53,7 @@ class CopypasteLeague(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
         try:
-            if msg.channel.id == Cid.copylol_ff20:
+            if msg.channel.id == Cid.copylol_ff20:  # todo CHANGE
                 if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
 
@@ -62,13 +62,12 @@ class CopypasteLeague(commands.Cog):
                 if "https://twitter.com" in msg.content:
                     await asyncio.sleep(2)
                     answer = await msg.channel.fetch_message(int(msg.id))
-                    for match in re.findall(r'status/(\d+)', answer.content):
+                    """for match in re.findall(r'status/(\d+)', answer.content):
                         status = client.get_tweet(int(match))
                         if block_function(status.data.text, self.blocked_words, self.whitelist_words):
-                            return
+                            return"""
                     embeds = [await replace_tco_links(self.bot.ses, item) for item in msg.embeds]
-                    links = get_links_from_str(answer.content)
-                    embeds = [move_link_to_title(link, embed) for link, embed in zip(links, embeds)]
+                    embeds = [move_link_to_title(embed) for embed in embeds]
                     content = ''
 
                 files = [await item.to_file() for item in msg.attachments]

@@ -3,15 +3,13 @@
    1. mb reload dota cog on error with `self.bot.reload_extension(''dotafeed')`
 
 2. Search in help paginator
-5. nsfw functions
 6. async sqlalchemy
 7. sort out total garbage in utils folder
 8. maybe bring all your colours into a module
 9. look at every cog in robo danny/pycord manager
-11. think over several photos tweets
 
 ### New Features
-
+5. nsfw functions
 
 ### Probably Garbage
 7. edit dota and league messages after match ends to include some stats like KDA items victory-lose, RunesReforged, player names, proplayers etc

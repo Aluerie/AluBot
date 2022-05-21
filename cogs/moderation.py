@@ -146,10 +146,10 @@ class PlebModeration(commands.Cog):
         """
         Anti-addiction feature.
         If you want to detach from my server for some time -
-        use this command and you will not be able to chat for specified `<time_duration>`.
+        use this command, and you will not be able to chat for specified `<time_duration>`.
         Duration should satisfy `5 minutes < duration < 24 hours`.
         """
-        if not timedelta(minutes=5) <= duration.dt - datetime.now(timezone.utc) <= timedelta(days=1):
+        if not timedelta(minutes=4, seconds=59) <= duration.dt - ctx.message.created_at <= timedelta(days=1, seconds=1):
             raise commands.BadArgument(
                 'Sorry! Duration of selfmute should satisfy `5 minutes < duration < 24 hours`'
             )

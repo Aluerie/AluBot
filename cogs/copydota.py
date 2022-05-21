@@ -105,8 +105,7 @@ class CopypasteDota(commands.Cog):
                 await asyncio.sleep(2)
                 answer = await msg.channel.fetch_message(int(msg.id))
                 embeds = [await replace_tco_links(self.bot.ses, item) for item in answer.embeds]
-                links = get_links_from_str(answer.content)
-                embeds = [move_link_to_title(link, embed) for link, embed in zip(links, embeds)]
+                embeds = [move_link_to_title(embed) for embed in embeds]
                 msg = await self.bot.get_channel(Cid.dota_news).send(embeds=embeds)
                 await msg.publish()
         except Exception as error:

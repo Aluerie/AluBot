@@ -149,10 +149,10 @@ class PlebModeration(commands.Cog):
         use this command and you will not be able to chat for specified `<time_duration>`.
         Duration should satisfy `5 minutes < duration < 24 hours`.
         """
-        if not timedelta(minutes=5) <= duration.dt - datetime.now() <= timedelta(days=1):
-            em = Embed(colour=Clr.red).set_author(name='BadTimeArgument')
-            em.description = 'Sorry! Duration of selfmute should satisfy `5 minutes < duration < 24 hours`'
-            return await ctx.reply(embed=em)
+        if not timedelta(minutes=5) <= duration.dt - datetime.now(timezone.utc) <= timedelta(days=1):
+            raise commands.BadArgument(
+                'Sorry! Duration of selfmute should satisfy `5 minutes < duration < 24 hours`'
+            )
         selfmute_rl = ctx.guild.get_role(Rid.selfmuted)
 
         if ctx.author._roles.has(Rid.selfmuted):

@@ -17,9 +17,7 @@ class BetaTest(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.hybrid_group(
-        name='lil-R12093[lol'
-    )
+    @commands.hybrid_group()
     async def remind(self, ctx):
         await ctx.reply('remind group')
 

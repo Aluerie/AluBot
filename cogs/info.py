@@ -7,12 +7,21 @@ from discord.ext import commands, tasks
 from utils.format import humanize_time
 from utils.var import *
 from utils.imgtools import img_to_file
+from utils.time import format_tdR
 
 from datetime import datetime, timezone
 from PIL import Image, ImageColor
 import colorsys
 from async_google_trans_new import google_translator
 import re
+from dateparser.search import search_dates
+
+import warnings
+# Ignore dateparser warnings regarding pytz
+warnings.filterwarnings(
+    "ignore",
+    message="The localize method is no longer necessary, as this time zone supports the fold attribute",
+)
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -35,6 +44,17 @@ class Info(commands.Cog):
 
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: Message):
+        pdates = search_dates(message.content)
+        if pdates is None:
+            return
+        for pdate in pdates:
+            if pdate[1].tzinfo is not None:
+                em = Embed(colour=Clr.prpl)
+                em.description = f'"{pdate[0]}" in your timezone:\n {format_tdR(pdate[1])}'
+                await message.channel.send(embed=em)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -191,7 +211,7 @@ class InfoTools(commands.Cog):
                 '● Common HTML color names: `red`, `Blue`\n' \
                 '● Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n' \
                 '● Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n' \
-                '● Also `prpl` for favourite Irene\'s colour '
+                '● Last but not least: `prpl` for favourite Irene\'s colour '
             await ctx.reply(embed=embed)
 
 

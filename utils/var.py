@@ -368,6 +368,26 @@ class MaterialPalette:
     def deep_orange(cls, *, shade: int = core) -> int:
         return cls.colors_dict['deep_orange'][shade]
 
+    @classmethod
+    def brown(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['brown'][shade]
+
+    @classmethod
+    def gray(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['gray'][shade]
+
+    @classmethod
+    def blue_gray(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['blue_gray'][shade]
+
+    @classmethod
+    def black(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['black'][shade]
+
+    @classmethod
+    def white(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['white'][shade]
+
 
 class MaterialAccentPalette:
     """
@@ -495,6 +515,25 @@ class MaterialAccentPalette:
     def deep_orange(cls, *, shade: int = core) -> int:
         return cls.colors_dict['deep_orange'][shade]
 
+    @classmethod
+    def brown(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['brown'][shade]
+
+    @classmethod
+    def gray(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['gray'][shade]
+
+    @classmethod
+    def blue_gray(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['blue_gray'][shade]
+
+    @classmethod
+    def black(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['black'][shade]
+
+    @classmethod
+    def white(cls, *, shade: int = core) -> int:
+        return cls.colors_dict['white'][shade]
 
 # aliases
 MP = MaterialPalette

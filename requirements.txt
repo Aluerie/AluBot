@@ -2,7 +2,7 @@ git+https://github.com/Rapptz/discord.py
 pillow~=9.1.0
 emoji~=1.7.0
 numpy~=1.22.3
-regex~=2022.3.15
+regex~=2022.3.2
 aiohttp~=3.8.1
 asyncpraw~=7.5.0
 tweepy~=4.6.0
@@ -30,3 +30,4 @@ unidiff~=0.7.3
 psutil~=5.9.0
 parsedatetime~=2.6
 python-dateutil~=2.8.2
+dateparser~=1.1.1

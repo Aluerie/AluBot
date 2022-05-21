@@ -106,11 +106,11 @@ async def avatar_usercmd(ntr: Interaction, mbr: Member):
 
 async def rank_work(ctx, member):
     member = member or getattr(ctx, 'author') or getattr(ctx, 'user')
+    if member.bot:
+        raise commands.BadArgument('Sorry! our system does not count experience for bots.')
     mrow = db.session.query(db.m).filter_by(id=member.id).first()
     if not mrow.inlvl:
         return await ctx.reply(content="You decided to opt out of the exp system before")
-    if member.bot:
-        await ctx.reply(content='Sorry, our system does not count experience for bots.')
     lvl = get_level(mrow.exp)
     next_lvl_exp, prev_lvl_exp = get_exp_for_next_level(lvl), get_exp_for_next_level(lvl-1)
 

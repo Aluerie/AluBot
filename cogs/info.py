@@ -210,12 +210,20 @@ class InfoTools(commands.Cog):
         return [
             app_commands.Choice(name=clr, value=clr)
             for clr in colours if current.lower() in clr.lower()
-        ]
+        ][:25]
 
     @colour.error
     async def colour_error(self, ctx, error):
-        if isinstance(error, commands.CommandInvokeError):
+        if isinstance(error, (
+                commands.HybridCommandError,
+                commands.CommandInvokeError,
+                app_commands.CommandInvokeError
+        )):
             error = error.original
+            if isinstance(error, (commands.CommandInvokeError,app_commands.CommandInvokeError)):
+                error = error.original
+
+        print('original', type(error))
 
         if isinstance(error, (ValueError, KeyError)):
             ctx.error_handled = True

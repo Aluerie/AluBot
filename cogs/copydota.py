@@ -106,8 +106,9 @@ class CopypasteDota(commands.Cog):
                 answer = await msg.channel.fetch_message(int(msg.id))
                 embeds = [await replace_tco_links(self.bot.ses, item) for item in answer.embeds]
                 embeds = [move_link_to_title(embed) for embed in embeds]
-                msg = await self.bot.get_channel(Cid.dota_news).send(embeds=embeds)
-                await msg.publish()
+                if embeds:
+                    msg = await self.bot.get_channel(Cid.dota_news).send(embeds=embeds)
+                    await msg.publish()
         except Exception as error:
             embed = Embed(colour=Clr.error)
             embed.title = 'Error in  #dota-news copypaste'

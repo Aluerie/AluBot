@@ -159,7 +159,7 @@ class InfoTools(commands.Cog):
         aliases=['color'],
         usage='<formatted colour string>'
     )
-    @app_commands.describe(string='Colour in any of supported formats')
+    @app_commands.describe(colour_arg='Colour in any of supported formats')
     async def colour(self, ctx, *, colour_arg: str):
         if colour_arg == 'prpl':
             colour_arg = '#9678B6'

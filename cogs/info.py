@@ -52,23 +52,25 @@ class Info(commands.Cog):
             return
         for pdate in pdates:
             if pdate[1].tzinfo is not None:
+                dt = pdate[1]
                 em = Embed(colour=Clr.prpl)
-                em.description = f'"{pdate[0]}" in your timezone:\n {format_tdR(pdate[1])}'
+                em.description = \
+                    f'"{pdate[0]}" in your timezone:\n {format_tdR(dt)}\n' \
+                    f'{dt.tzname()} is GMT {dt.utcoffset().seconds/3600:+.1f}, dls: {dt.dst()}'
                 await message.channel.send(embed=em)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         if before.guild.id != Sid.irene:
             return
-        irene_server = self.bot.get_guild(Sid.irene)
         added_role = list(set(after.roles) - set(before.roles))
         removed_role = list(set(before.roles) - set(after.roles))
 
         async def give_text_list(role_id, ch_id, msg_id):
             if (added_role and added_role[0].id == role_id) or (removed_role and removed_role[0].id == role_id):
-                channel = irene_server.get_channel(ch_id)
+                channel = before.guild.get_channel(ch_id)
                 msg = channel.get_partial_message(msg_id)
-                role = irene_server.get_role(role_id)
+                role = before.guild.get_role(role_id)
                 embed = Embed(colour=Clr.prpl, title=f'List of {role.name}')
                 embed.description = ''.join([f'{member.mention}\n' for member in role.members])
                 await msg.edit(content='', embed=embed)

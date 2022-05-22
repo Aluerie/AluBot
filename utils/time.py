@@ -208,4 +208,4 @@ class UserFriendlyTime(commands.Converter):
 
 
 def format_tdR(dt: datetime) -> str:
-    return f"{format_dt(dt, 't')} {format_dt(dt, 'd')}({format_dt(dt, 'R')})"
+    return f"{format_dt(dt, 't')} {format_dt(dt, 'd')} ({format_dt(dt, 'R')})"

@@ -17,7 +17,6 @@
 12. My own starboard | CarlBot 
 13. My own polls | Poolmaker Bot
 
-
 ### Future
 15. twitch stream live proper listener when twitch releases it
 

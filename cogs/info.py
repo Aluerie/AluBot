@@ -56,7 +56,8 @@ class Info(commands.Cog):
                 em = Embed(colour=Clr.prpl)
                 em.description = \
                     f'"{pdate[0]}" in your timezone:\n {format_tdR(dt)}\n' \
-                    f'{dt.tzname()} is GMT {dt.utcoffset().seconds/3600:+.1f}, dls: {dt.dst()}'
+                    f'{dt.tzname()} | {dt.tzinfo} ' \
+                    f'is GMT {dt.utcoffset().seconds/3600:+.1f}, dls: {dt.dst().seconds/3600:+.1f}'
                 await message.channel.send(embed=em)
 
     @commands.Cog.listener()

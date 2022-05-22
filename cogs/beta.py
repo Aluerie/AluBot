@@ -30,7 +30,7 @@ class BetaTest(commands.Cog):
                 value=f'{time.format_tdR(dt)}\n'
                       f'{dt.tzname()} is GMT {dt.utcoffset().seconds / 3600:+.1f} | dls: {dt.dst()}'
             )
-        except commands.BadArgument():
+        except:
             em.add_field(
                 inline=False,
                 name='time.HumanTime',

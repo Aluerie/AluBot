@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from discord import Colour, Embed,  Member, Message, Role, app_commands
 from discord.ext import commands, tasks
@@ -160,23 +160,23 @@ class InfoTools(commands.Cog):
         usage='<formatted colour string>'
     )
     @app_commands.describe(string='Colour in any of supported formats')
-    async def colour(self, ctx, *, string: str):
-        if string == 'prpl':
-            string = '#9678B6'
+    async def colour(self, ctx, *, colour_arg: str):
+        if colour_arg == 'prpl':
+            colour_arg = '#9678B6'
 
         m = re.match(
-            r"mu\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", string
+            r"mu\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour_arg
         )
         if m:
-            string = hex(MP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
+            colour_arg = hex(MP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
 
         m = re.match(
-            r"mua\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", string
+            r"mua\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour_arg
         )
         if m:
-            string = hex(MAP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
+            colour_arg = hex(MAP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
 
-        rgb = ImageColor.getcolor(string, "RGB")
+        rgb = ImageColor.getcolor(colour_arg, "RGB")
 
         def rgb2hex(r, g, b):
             return "#{:02x}{:02x}{:02x}".format(r, g, b)
@@ -192,6 +192,25 @@ class InfoTools(commands.Cog):
         file = img_to_file(img, filename='colour.png')
         embed.set_thumbnail(url=f'attachment://{file.filename}')
         await ctx.reply(embed=embed, file=file)
+
+    @colour.autocomplete('colour_arg')
+    async def colour_callback(
+            self,
+            ntr: Interaction,
+            current: str
+    ) -> List[app_commands.Choice[str]]:
+        colours = [
+            'prpl',
+            'rgb(',
+            'hsl(',
+            'hsv(',
+            'mu(',
+            'mua('
+            ] + list(ImageColor.colormap.keys())
+        return [
+            app_commands.Choice(name=clr, value=clr)
+            for clr in colours if current.lower() in clr.lower()
+        ]
 
     @colour.error
     async def colour_error(self, ctx, error):

@@ -38,7 +38,9 @@ class Logging(commands.Cog):
     async def on_message_edit(self, before, after):
         if after.guild is None or after.guild.id != Sid.irene:
             return
-        if before.author.bot is True:  # and before is not None and after is not None or after.edited_at is None:
+        if before.author.bot is True:
+            return
+        if before.content == after.content:  # most likely some link embed link action
             return
 
         embed = Embed(colour=0x00BFFF, description=inline_wordbyword_diff(before.content, after.content))
@@ -69,26 +71,25 @@ class Logging(commands.Cog):
             return
 
         if before.premium_since is None and after.premium_since is not None:
-            embed = Embed(colour=Clr.prpl)
-            embed.set_author(name=before.display_name, icon_url=before.display_avatar.url)
-            embed.set_thumbnail(url=before.display_avatar.url)
-            embed.title = f"{before.display_name} just boosted the server !"
-            embed.description = '{0} {0} {0}'.format(Ems.PogChampPepe)
-            await self.bot.get_channel(Cid.general).send(embed=embed)
+            em = Embed(colour=Clr.prpl, title=f"{before.display_name} just boosted the server !")
+            em.set_author(name=before.display_name, icon_url=before.display_avatar.url)
+            em.set_thumbnail(url=before.display_avatar.url)
+            em.description = '{0} {0} {0}'.format(Ems.PogChampPepe)
+            await self.bot.get_channel(Cid.general).send(embed=em)
 
         added_role = list(set(after.roles) - set(before.roles))
         if added_role and added_role[0].id not in Rid.ignored_for_logs:
-            embed = Embed(colour=0x00ff7f)
-            embed.description = f'**Role added:** {added_role[0].mention}'
-            embed.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
-            return await self.bot.get_channel(Cid.logs).send(embed=embed)
+            em = Embed(colour=0x00ff7f)
+            em.description = f'**Role added:** {added_role[0].mention}'
+            em.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
+            return await self.bot.get_channel(Cid.logs).send(embed=em)
 
         removed_role = list(set(before.roles) - set(after.roles))
         if removed_role and removed_role[0].id not in Rid.ignored_for_logs:
-            embed = Embed(colour=0x006400)
-            embed.description = f'**Role removed:** {removed_role[0].mention}'
-            embed.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
-            return await self.bot.get_channel(Cid.logs).send(embed=embed)
+            em = Embed(colour=0x006400)
+            em.description = f'**Role removed:** {removed_role[0].mention}'
+            em.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
+            return await self.bot.get_channel(Cid.logs).send(embed=em)
 
         if before.bot:
             return
@@ -98,18 +99,18 @@ class Logging(commands.Cog):
                     or (after.nick is not None and after.nick.startswith('[MUTED')):
                 return
             db.set_value(db.m, after.id, name=after.display_name)
-            embed = Embed(colour=after.color)
-            embed.title = f'User\'s server nickname was changed {Ems.PepoDetective}'
-            embed.description = f'**Before:** {before.nick}\n**After:** {after.nick}'
-            embed.set_author(name=before.name, icon_url=before.display_avatar.url)
-            await self.bot.get_channel(Cid.bot_spam).send(embed=embed)
+            em = Embed(colour=after.color)
+            em.title = f'User\'s server nickname was changed {Ems.PepoDetective}'
+            em.description = f'**Before:** {before.nick}\n**After:** {after.nick}'
+            em.set_author(name=before.name, icon_url=before.display_avatar.url)
+            await self.bot.get_channel(Cid.bot_spam).send(embed=em)
 
             irene_server = self.bot.get_guild(Sid.irene)
             stone_rl = irene_server.get_role(Rid.rolling_stone)
             if after.nick and 'Stone' in after.nick:
-                embed = Embed(colour=Clr.prpl)
-                embed.description = f'{after.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
-                await self.bot.get_channel(Cid.bot_spam).send(embed=embed)
+                em = Embed(colour=Clr.prpl)
+                em.description = f'{after.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
+                await self.bot.get_channel(Cid.bot_spam).send(embed=em)
                 await after.add_roles(stone_rl)
             else:
                 await after.remove_roles(stone_rl)

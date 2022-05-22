@@ -241,7 +241,7 @@ class InfoTools(commands.Cog):
                 '● Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n' \
                 '● Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n' \
                 '● Last but not least: `prpl` for favourite Irene\'s colour '
-            await ctx.reply(embed=embed)
+            await ctx.reply(embed=embed, ephemeral=True)
 
 
 async def setup(bot):

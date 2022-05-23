@@ -29,7 +29,7 @@ class WolframAlpha(commands.Cog):
     @app_commands.describe(query='Query for WolframAlpha')
     async def wolf(self, ctx: Context, *, query: str):
         """Get answer from WolframAlpha ;"""
-        await ctx.thinking()
+        await ctx.typing()
         questionurl = str(self.WABASICURL + str(urlparse.quote(query)))
         async with self.bot.ses.get(questionurl) as resp:
             if (content := await resp.read()) == "Error 1: Invalid appid":
@@ -50,7 +50,7 @@ class WolframAlpha(commands.Cog):
     @app_commands.describe(query='Query for WolframAlpha')
     async def wolfram_shorter(self, ctx: Context, *, query: str):
         """Get shorter answer from WolframAlpha ;"""
-        await ctx.thinking()
+        await ctx.typing()
         questionurl = str(self.WASHORTURL + str(urlparse.quote(query)))
         async with self.bot.ses.get(questionurl) as resp:
             if await resp.read() == "Error 1: Invalid appid":

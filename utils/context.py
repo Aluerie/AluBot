@@ -62,12 +62,6 @@ class Context(commands.Context):
     def ses(self) -> ClientSession:
         return self.bot.ses
 
-    async def thinking(self):
-        if self.interaction:
-            await self.defer()
-        else:
-            await self.typing()
-
     async def prompt(
             self,
             *,

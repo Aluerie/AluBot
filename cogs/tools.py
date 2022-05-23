@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from discord import Embed, app_commands
 from discord.ext import commands
 
@@ -5,6 +8,9 @@ from utils.imgtools import url_to_img, img_to_file
 from utils.var import *
 
 from PIL import Image
+
+if TYPE_CHECKING:
+    from utils.context import Context
 
 
 class ToolsCog(commands.Cog):
@@ -18,7 +24,7 @@ class ToolsCog(commands.Cog):
         description='Convert image from webp to png format',
     )
     @app_commands.describe(url='Url of image to convert')
-    async def convert(self, ctx, *, url: str):
+    async def convert(self, ctx: Context, *, url: str):
         """Convert image from webp to png format"""
         img = await url_to_img(self.bot.ses, url)
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags

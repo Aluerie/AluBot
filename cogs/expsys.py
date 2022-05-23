@@ -9,7 +9,6 @@ from utils import database as db
 from utils.format import ordinal, humanize_time, indent
 from utils.imgtools import url_to_img, img_to_file
 from utils.distools import scnf, inout_to_10, send_pages_list
-from utils import pages
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from datetime import datetime, time, timedelta, timezone
@@ -272,7 +271,7 @@ class ExperienceSystem(commands.Cog):
         else:
             rep = db.inc_value(db.m, member.id, 'rep')
             answer_text = f'Added +1 reputation to **{member.display_name}**: now {rep} reputation'
-            await ctx.reply(content=answer_text)
+            await ctx.reply(content=answer_text) 
 
     @tasks.loop(time=time(hour=13, minute=13, tzinfo=timezone.utc))
     async def remove_inactive(self):

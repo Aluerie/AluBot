@@ -153,3 +153,5 @@ dota2logs/hdf.csv
 audio.mp3
 
 *.ipynb
+
+.vscode

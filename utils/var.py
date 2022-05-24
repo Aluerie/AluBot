@@ -11,14 +11,14 @@ def rmntn(id_):
 
 
 class Rgx:
-    whitespaces = "\s"  # whitespaces
-    emote = "<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"  # emotes
-    nqn = ":(?P<name>[a-zA-Z0-9_]{2,32}):"  # standard emotes
+    whitespaces = r"\s"  # whitespaces
+    emote = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"  # emotes
+    nqn = r":(?P<name>[a-zA-Z0-9_]{2,32}):"  # standard emotes
     # emoji = get_emoji_regexp() # use from emoji import get_emoji_regexp for this
-    bug_check = ":.*:"
+    bug_check = r":.*:"
     emote_stats = r"<a?:[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>"
     emote_stats_ids = r"<a?:[a-zA-Z0-9_]{2,32}:([0-9]{18,22})>"
-    invis_symb = "[^!-~]+"  # idk might be huge question mark
+    invis_symb = "[^!-~]+"  # IDK might be huge question mark
 
     url_danny = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
     url_simple = r"(https?://\S+)"
@@ -538,7 +538,3 @@ class MaterialAccentPalette:
 # aliases
 MP = MaterialPalette
 MAP = MaterialAccentPalette
-
-if __name__ == '__main__':
-    mp = MaterialPalette
-    print(mp.red())

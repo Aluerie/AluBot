@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 def gettimefromhms(strtime):
     def regextime(letter):
-        pattern = '\d+(?={})'.format(letter)
+        pattern = r'\d+(?={})'.format(letter)
         hours = re.search(pattern, strtime)
         if hours:
             hours = int(hours.group(0))
@@ -123,13 +123,13 @@ def inline_diff(a, b):  # a = old_string, b = new_string
 
     def process_tag(tag, i1, i2, j1, j2):
         if tag == 'replace':
-            return '~~' + matcher.a[i1:i2] + ' ~~ __' + matcher.b[j1:j2] + '__'
+            return '~~' + matcher.a[i1:i2] + ' ~~ __' + matcher.b[j1:j2] + '__'  # type: ignore
         if tag == 'delete':
-            return '~~' + matcher.a[i1:i2] + '~~'
+            return '~~' + matcher.a[i1:i2] + '~~'  # type: ignore
         if tag == 'equal':
-            return matcher.a[i1:i2]
+            return matcher.a[i1:i2]  # type: ignore
         if tag == 'insert':
-            return '__' + matcher.b[j1:j2] + '__'
+            return '__' + matcher.b[j1:j2] + '__'  # type: ignore
         assert False, "Unknown tag %r" % tag
     return ''.join(process_tag(*t) for t in matcher.get_opcodes())
 
@@ -140,7 +140,7 @@ def inline_wordbyword_diff(a, b):  # a = old_string, b = new_string #
     matcher = difflib.SequenceMatcher(None, a, b)
 
     def process_tag(tag, i1, i2, j1, j2):
-        a_str, b_str = ' '.join(matcher.a[i1:i2]), ' '.join(matcher.b[j1:j2])
+        a_str, b_str = ' '.join(matcher.a[i1:i2]), ' '.join(matcher.b[j1:j2])  # type: ignore
         match tag:
             case 'replace':
                 return f'~~{a_str}~~ __{b_str}__'

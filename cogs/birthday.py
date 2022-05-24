@@ -22,7 +22,7 @@ def get_congratulation_text():
         'All things are sweet and bright. May you have a lovely birthday Night.',
         'Don’t ever change! Stay as amazing as you are, my friend',
         'Let’s light the candles and celebrate this special day of your life. Happy birthday.',
-        'Here’s to the sweetest and loveliest person I know. Happy birthday!',
+        'Here\'s to the sweetest and loveliest person I know. Happy birthday!',
         'Happy birthday to my best friend, the one I care about the most!',
         'Wherever your feet may take, whatever endeavor you lay hands on. It will always be successful. Happy birthday.',
         'May this special day bring you endless joy and tons of precious memories!',
@@ -45,7 +45,7 @@ def get_congratulation_text():
         'I wish you to enjoy your special day, relax and let yourself be spoiled, you deserve it!',
         'I wish you to have a wonderful time on your Day!',
         'I wish that life brings you a beautiful surprise for every candle on your bday cake!',
-        'Hugging you don’t need any reason but, if there is a reason, more than one hug is a norm. Happy Birthday!',
+        "Hugging you don't need any reason but, if there is a reason, more than one hug is a norm. Happy Birthday!",
         'I wish you a day filled with great fun and a year filled with true happiness!',
         'Let yourself do everything that you like most in life, may your Big Day be cheerful and happy!',
         'Wishing you the abundance of fun and glory, Happy Birthday!',
@@ -142,7 +142,7 @@ class Birthday(commands.Cog):
         description='Set your timezone for birthday'
     )
     @app_commands.describe(member='Member of the server or you if not specified')
-    async def check(self, ctx: Context, member: Member = None):
+    async def check(self, ctx: Context, member: Member = None):  # type: ignore
         """Check member's birthday in database"""
         member = member or ctx.message.author
         user = db.session.query(db.m).filter_by(id=member.id).first()
@@ -155,7 +155,7 @@ class Birthday(commands.Cog):
 
     @tasks.loop(hours=1)
     async def check_birthdays(self):
-        for row in db.session.query(db.m).filter(db.m.bdate.isnot(None)):
+        for row in db.session.query(db.m).filter(db.m.bdate.isnot(None)):  # type: ignore
             now_date = datetime.now(timezone.utc) + timedelta(hours=float(row.timezone))
             irene_server = self.bot.get_guild(Sid.irene)
             bperson = irene_server.get_member(row.id)
@@ -169,11 +169,10 @@ class Birthday(commands.Cog):
                     if row.bdate.year != 1900:
                         answer_text += f'{bperson.display_name} is now {now_date.year - row.bdate.year} years old !'
                     embed = Embed(color=bperson.color)
-                    embed.title = 'CONGRATULATIONS !!! {0}{0}{0}'.format(Ems.peepoRose)
+                    embed.title = f'CONGRATULATIONS !!! {Ems.peepoRose*3}'
                     embed.set_footer(
-                        text=
-                        f'Today is {bdate_str(row.bdate)}; Timezone: GMT {row.timezone:+.1f}\n'
-                        f'Use `$help birthday` to set up your birthday\nWith love, {irene_server.me.display_name}'
+                        text=f'Today is {bdate_str(row.bdate)}; Timezone: GMT {row.timezone:+.1f}\n'
+                             f'Use `$help birthday` to set up your birthday\nWith love, {irene_server.me.display_name}'
                     )
                     embed.set_image(url=bperson.display_avatar.url)
                     embed.add_field(name=f'Dear {bperson.display_name} !', inline=False,
@@ -201,8 +200,8 @@ class BirthdayAdmin(commands.Cog):
         irene_server = self.bot.get_guild(Sid.irene)
         embed.set_footer(text=f'With love, {irene_server.me.display_name}')
         text = ''
-        for row in db.session.query(db.m).filter(db.m.bdate.isnot(None))\
-                .order_by(extract('month', db.m.bdate), extract('day', db.m.bdate)):
+        for row in db.session.query(db.m).filter(db.m.bdate.isnot(None)).order_by(  # type: ignore
+                extract('month', db.m.bdate), extract('day', db.m.bdate)):
             bperson = irene_server.get_member(row.id)
             if bperson is not None:
                 text += f'{bdate_str(row.bdate, num_mod=True)}, GMT {row.timezone:+.1f} - **{bperson.mention}**\n'

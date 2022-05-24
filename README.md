@@ -1,6 +1,6 @@
 ## Irenesbot
 
-A personal Discord bot. 
+A personal Discord bot.
 
 ---
 
@@ -8,10 +8,10 @@ A personal Discord bot.
 Initial idea was to send me notifications 
 when my favourite Dota 2/ League of Legends [twitch.tv](https://www.twitch.tv/) streamers pick my favourite heroes/champions.
 
-However the whole process grew into making the ultimate multi-purpose bot 
+However, the whole process grew into making the ultimate multipurpose bot 
 with pretty much everything I ever needed ! 
 
-<img src="https://i.imgur.com/22HOobZ.png">
+<img src="https://i.imgur.com/22HOobZ.png" alt="image">
 
 ### Follow us
 

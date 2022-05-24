@@ -35,7 +35,7 @@ class ConfirmationView(View):
         if self.delete_after and self.message:
             await self.message.delete()
 
-    @button(label='Confirm', style=ButtonStyle.green)
+    @button(label='Confirm', style=ButtonStyle.green)  # type: ignore
     async def confirm(self, interaction: Interaction, btn: Button):
         self.value = True
         await interaction.response.defer()
@@ -43,7 +43,7 @@ class ConfirmationView(View):
             await interaction.delete_original_message()
         self.stop()
 
-    @button(label='Cancel', style=ButtonStyle.red)
+    @button(label='Cancel', style=ButtonStyle.red)  # type: ignore
     async def cancel(self, interaction: Interaction, btn: Button):
         self.value = False
         await interaction.response.defer()
@@ -65,8 +65,8 @@ class Context(commands.Context):
     async def prompt(
             self,
             *,
-            content: str = None,
-            embed: Embed = None,
+            content: str = None,  # type: ignore
+            embed: Embed = None,  # type: ignore
             timeout: float = 60.0,
             delete_after: bool = True,
             author_id: Optional[int] = None,
@@ -74,8 +74,10 @@ class Context(commands.Context):
         """An interactive reaction confirmation dialog.
         Parameters
         -----------
-        message: str
-            The message to show along with the prompt.
+        content: str
+            Text message to show along with the prompt.
+        embed:
+            Embed to show along with the prompt.
         timeout: float
             How long to wait before returning.
         delete_after: bool
@@ -95,6 +97,6 @@ class Context(commands.Context):
 
         author_id = author_id or self.author.id
         view = ConfirmationView(timeout=timeout, delete_after=delete_after, ctx=self, author_id=author_id)
-        view.message = await self.send(content=content, embed=embed, view=view)
+        view.message = await self.send(content=content, embed=embed, view=view, ephemeral=True)
         await view.wait()
         return view.value

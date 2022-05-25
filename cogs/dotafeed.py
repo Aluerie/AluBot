@@ -160,6 +160,8 @@ class DotaFeed(commands.Cog):
 
     @dotafeed.error
     async def dotafeed_error(self, error):
+        # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
+        #  probably declare your own error type
         await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in dotafeed'))
         self.dotafeed.restart()
 

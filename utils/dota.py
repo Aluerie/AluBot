@@ -29,6 +29,7 @@ class HeroKeyCache:
                 resp = await session.request("GET", url)
                 if not (resp and resp.status == 200):
                     raise RuntimeError(f'Dota constants failed with status {resp.status}')
+                    # return self.cached_data
                 dic = await resp.json()
             data = {
                 'id_by_npcname': {'': 0},
@@ -72,7 +73,7 @@ async def name_by_id(value: int) -> str:
 
 
 async def iconurl_by_id(value: int) -> str:
-    """ Get hero id by name ;
+    """ Get hero icon utl id by id ;
     example: 1 -> 'https://cdn.cloudflare.steamstatic.com//apps/dota2/images/dota_react/heroes/antimage.png?' """
     data = await hero_keys_cache.data
     return data['iconurl_by_id'][value]

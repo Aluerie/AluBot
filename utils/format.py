@@ -154,6 +154,7 @@ def inline_wordbyword_diff(a, b):  # a = old_string, b = new_string #
 
     return ' '.join(process_tag(*t) for t in matcher.get_opcodes())
 
+
 # moscow_timezone = timezone('Europe/Moscow')
 # before.created_at.astimezone(moscow_timezone).strftime('%H:%M, %d/%m')
 

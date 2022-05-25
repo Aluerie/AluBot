@@ -31,7 +31,7 @@ async def tag_work(ctx, tag_name):
                 return None
 
             reference = replied_reference(ctx.message) or ctx.message
-            await ctx.reply(content=tag_row.content, reference=reference)
+            await ctx.send(content=tag_row.content, reference=reference)
         else:
             em = Embed(colour=Clr.error, description='Sorry! Tag under such name does not exist')
             prefix = getattr(ctx, 'clean_prefix', '/')

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-from discord import Interaction, Embed, Member, app_commands
+from discord import Interaction, Embed, Member, Message, app_commands
 from discord.ext import commands
 from discord.utils import format_dt, get
 
@@ -13,7 +13,7 @@ from utils.context import Context
 from datetime import datetime, timezone
 
 if TYPE_CHECKING:
-    from discord import Message, MessageReference
+    from discord import MessageReference
 
 reserved_words = ['edit', 'add', 'create', 'info', 'delete', 'list', 'text', 'name', 'remove', 'ban']
 

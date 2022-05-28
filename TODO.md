@@ -2,9 +2,13 @@
 1. **Bootstrap Steam error EVERY TUESDAY**
    1. mb reload dota cog on error with `self.bot.reload_extension(''dotafeed')`
 
-6. async sqlalchemy
-7. sort out total garbage in utils folder
-9. look at every cog in robo danny/pycord manager
+2. async sqlalchemy
+3. sort out total garbage in utils folder
+4. look at every cog in robo danny/pycord manager/stella
+
+### Immediate fix 
+5. ?tag button cooldown
+9. ?tag emoji escapes 
 
 ### New Features
 5. nsfw functions
@@ -30,4 +34,5 @@
 22. learn collection lib
 23. ?tag eval
 24. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
-26. research TypeVar stuff
+25. research TypeVar stuff
+26. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>`

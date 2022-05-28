@@ -171,7 +171,7 @@ class ExperienceSystem(commands.Cog):
         split_size = 10
         offset = 1
         cnt = offset
-        for row in db.session.query(db.m).filter(db.m.inlvl == 1).order_by(db_col_desc):
+        for row in db.session.query(db.m).filter(db.m.inlvl == 1).order_by(db_col_desc):  # type: ignore
             if (member := irene_server.get_member(row.id)) is None:
                 continue
             new_array.append(

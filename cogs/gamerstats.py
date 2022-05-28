@@ -9,10 +9,12 @@ from utils import dota as d2
 from utils import database as db
 
 from utils.var import *
-from utils.imgtools import plt_to_file
-from utils.distools import ansi, scnf
+from utils.imgtools import plt_to_file, img_to_file, url_to_img
+from utils.distools import scnf, send_pages_list
+from utils.format import indent
 from utils.mysteam import sd_login
 
+from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timedelta, time, timezone
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,12 +40,12 @@ game_mode_dict = {
     21: '1v1Mid', 22: 'All Draft', 23: 'Turbo', 24: 'Mutation', 25: 'Coach'
 }
 both_dict = {
-    (7, 22): 'RR',  # Ranked
-    (0, 23): 'TU',  # Turbo
-    (0, 22): 'AP',  # Normal All Pick
-    (0, 19): 'EV',  # Event
-    (0, 12): 'LP',  # Low Priority
-    (0, 5): 'SD',   # SingleDraft
+    (7, 22): 'Ranked',  # Ranked
+    (0, 23): 'Turbo',  # Turbo
+    (0, 22): 'All Pick',  # Normal All Pick
+    (0, 19): 'Event',  # Event
+    (0, 12): 'LowPriority',  # Low Priority
+    (0, 5):  'SingleDraft',   # SingleDraft
 }
 
 
@@ -162,46 +164,139 @@ class GamerStats(commands.Cog):
         """Irene's Dota 2 Match History (shows last 100 matches)"""
         await ctx.typing()
 
-        def winlose(truefalse):
-            return ansi('Win', colour='green') if truefalse else ansi('Loss', colour='red')
+        async def create_dh_image(result, offset):
+            time_font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 25)
+            font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 40)
 
-        def timestamptostr(your_timestamp):
-            dtime = datetime.fromtimestamp(your_timestamp)
-            return dtime.strftime("%d/%m %H:%M")
+            img = Image.new("RGB", (1200, 1200), '#9678b6')
+            d = ImageDraw.Draw(img)
+            cell_h = img.height / 20
+            col0 = 80
+            col1 = 160
+            col2 = 210
+            h_width, h_height = 106, 60  # 62/35 ratio for dota hero icons
+            col3 = 464
+            col4 = 180
+            for c, x in enumerate(result):
+                counter_text = str(c + offset)
+                w0, h0 = d.textsize(counter_text, font=font)
+                d.text(
+                    (0 + (col0 - w0)/2, cell_h * c + (cell_h - h0) / 2),
+                    counter_text,
+                    fill=(255, 255, 255),
+                    font=font
+                )
+
+                time_text = datetime.fromtimestamp(x.start_time).strftime("%H:%M %d/%m")
+                w1, h1 = d.textsize(time_text, font=time_font)
+                d.text(
+                    (col0 + (col1 - w1)/2, cell_h * c + (cell_h - h1) / 2),
+                    time_text,
+                    fill=(255, 255, 255),
+                    font=time_font
+                )
+
+                mode_text = get_match_type_name(x.lobby_type, x.game_mode)
+                w2, h2 = d.textsize(mode_text, font=font)
+                d.text(
+                    (col0 + col1 + (col2 - w2)/2, cell_h * c + (cell_h - h2) / 2),
+                    mode_text,
+                    fill=(255, 255, 255),
+                    font=font
+                )
+
+                hero_img = await url_to_img(self.bot.ses, await d2.iconurl_by_id(x.hero_id))
+                hero_img = hero_img.resize((h_width, h_height))
+                img.paste(hero_img, (col0 + col1 + col2, int(cell_h * c)))
+
+                hero_text = await d2.name_by_id(x.hero_id)
+                w3, h3 = d.textsize(hero_text, font=font)
+                d.text(
+                    (col0 + col1 + col2 + h_width + (col3-w3)/2, cell_h * c + (cell_h - h3)/2),
+                    hero_text,
+                    fill=(255, 255, 255),
+                    font=font
+                )
+
+                wl_text = 'Win' if x.winner else 'Loss'
+                w4, h4 = d.textsize(wl_text, font=font)
+                d.text(
+                    (col0 + col1 + col2 + h_width + col3 + (col4-w4)/2, cell_h * c + (cell_h - h3)/2),
+                    wl_text,
+                    fill=f'#{MP.green(shade=800):x}' if x.winner else f'#{MP.red(shade=900):x}',  # Pil doesnt like ints
+                    font=font,
+                )
+            return img
 
         start_at_match_id = 0
-        answer = []
-        for _ in range(5):
+        files_list = []
+        offset = 1
+        for i in range(5):
             res = try_get_gamerstats(ctx.bot, start_at_match_id=start_at_match_id)
-            max_hero_len = max([len(await d2.name_by_id(x.hero_id)) for x in res])
-            answer.append([
-                ansi(timestamptostr(x.start_time), colour='pink') + " " +
-                ansi(x.match_id, colour='cyan') + " " +
-                ansi(get_match_type_name(x.lobby_type, x.game_mode), colour='blue') + " " +
-                ansi((await d2.name_by_id(x.hero_id)).ljust(max_hero_len, ' '), colour='yellow') + " " +
-                winlose(x.winner)
-                for x in res
-            ])
+            files_list.append(img_to_file(await create_dh_image(res, offset), filename=f'page_{i}.png'))
             start_at_match_id = res[-1].match_id
+            offset += 20
 
-        embeds_list = []
-        for item in answer:
+        pages_list = []
+        for item in files_list:
             embed = Embed(colour=Clr.prpl)
             embed.title = "Irene's Dota 2 match history"
-            ans = '```ansi\n'
-            ans += '\n'.join(item)
-            ans += '```'
-            embed.description = ans
-            embeds_list.append(embed)
-        paginator = pages.Paginator(pages=embeds_list)
+            embed.set_image(url=f'attachment://{item.filename}')
+            embed.set_footer(text='for copypastable match_ids use `$irene match_ids`')
+            pages_list.append(pages.Page(embeds=[embed], files=[item]))
+
+        paginator = pages.Paginator(pages=pages_list)
         await paginator.send(ctx)
+
+    @dh.error
+    async def dh_error(self, ctx, error):
+        if isinstance(error.original, IndexError):
+            ctx.error_handled = True
+            em = Embed(colour=Clr.error)
+            em.set_author(name='SteamLoginError')
+            em.description = 'Oups, logging into steam took too long, please retry in a bit ;'
+            em.set_footer(text='If this happens again, then @ irene, please')
+            await ctx.send(embed=em)
+
+    @irene.command(
+        name='match_ids',
+        brief=Ems.slash,
+        description="Copypastable match_ids"
+    )
+    async def match_ids(self, ctx: Context):
+        """Copypastable match_ids"""
+        await ctx.typing()
+        start_at_match_id = 0
+        string_list = []
+        split_size = 20
+        offset = 1
+        for i in range(5):
+            res = try_get_gamerstats(ctx.bot, start_at_match_id=start_at_match_id)
+            max_hero_len = max([len(await d2.name_by_id(x.hero_id)) for x in res])
+            for c, x in enumerate(res):
+                string_list.append(
+                    f'`{indent(c+offset, c+offset, offset, split_size)} '
+                    f'{x.match_id} '
+                    f'{(await d2.name_by_id(x.hero_id)).ljust(max_hero_len, " ")} '
+                    f'{"Win " if x.winner else "Loss"}`'
+                )
+            start_at_match_id = res[-1].match_id
+            offset += 20
+
+        await send_pages_list(
+            ctx,
+            string_list,
+            split_size=split_size,
+            colour=Clr.prpl,
+            title="Copypastable match ids",
+        )
 
     @irene.command(
         name='mmr',
         brief=Ems.slash,
         description="Irene's Dota 2 MMR Plot"
     ) 
-    async def mmr_slh(self, ctx: Context):
+    async def mmr(self, ctx: Context):
         """Irene's Dota 2 MMr Plot"""
         await ctx.typing()
         old_dict = db.get_value(db.s, DOTA_FRIENDID, 'match_history')

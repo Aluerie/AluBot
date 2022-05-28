@@ -12,6 +12,8 @@ from discord.ui import Button, Modal, View, TextInput
 from utils.context import Context
 from utils.var import Ems
 
+from io import BytesIO
+
 if TYPE_CHECKING:
     from discord import Emoji, PartialEmoji
 
@@ -98,14 +100,26 @@ class Page:
         pass
 
     def update_files(self) -> Optional[List[File]]:
+        """Updates the files associated with the page by re-uploading them.
+        Typically used when the page is changed."""
         for file in self._files:
-            with open(file.fp.name, "rb") as fp:  # type: ignore #TODO:copy my oq=wn commit
+            if isinstance(file.fp, BytesIO):  # BytesIO
+                fp = file.fp
+                fp.seek(0)
                 self._files[self._files.index(file)] = File(
-                    fp,  # type: ignore
+                    fp,
                     filename=file.filename,
                     description=file.description,
                     spoiler=file.spoiler,
                 )
+            else:  # local upload with `file.fp.name` str, bytes or os.PathLike object
+                with open(file.fp.name, "rb") as fp:  # type: ignore
+                    self._files[self._files.index(file)] = File(
+                        fp,  # type: ignore
+                        filename=file.filename,
+                        description=file.description,
+                        spoiler=file.spoiler,
+                    )
         return self._files
 
     @property

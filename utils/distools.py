@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Union, List, Optional
 
 from discord.ext import commands
-from discord import Embed
+from discord import Embed, Interaction
 
 from utils.var import *
 from utils import pages
@@ -11,7 +11,7 @@ from utils.context import Context
 import traceback
 
 if TYPE_CHECKING:
-    from discord import abc, Colour, Message, Interaction
+    from discord import abc, Colour, Message
 
 
 async def send_pages_list(

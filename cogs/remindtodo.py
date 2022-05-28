@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
 if TYPE_CHECKING:
-    pass
+    from discord import Message
 
 
 class Remind(commands.Cog):
@@ -247,14 +247,13 @@ class Afk(commands.Cog):
         description='Flag you as afk member'
     )
     @app_commands.describe(afk_text='Your custom afk note')
-    async def afk(self, ctx, *, afk_text):
+    async def afk(self, ctx: Context, *, afk_text: str):
         """Flags you as afk with your custom afk note ;"""
         if db.session.query(db.a).filter_by(id=ctx.author.id).first() is None:
             db.add_row(db.a, ctx.author.id, name=afk_text)
         else:
             db.set_value(db.a, ctx.author.id, name=afk_text)
         self.active_afk[ctx.author.id] = afk_text
-        await ctx.message.add_reaction(Ems.PepoG)
         embed = Embed(color=Clr.prpl)
         embed.description = f'{ctx.author.mention}, you are flagged as afk with `afk_text`:\n{afk_text}'
         await ctx.reply(embed=embed)
@@ -264,38 +263,44 @@ class Afk(commands.Cog):
             pass
 
     @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.guild is None or message.guild.id != Sid.irene:
+    async def on_message(self, msg: Message):
+        if msg.guild is None:  # message.guild.id != Sid.irene:
             return
-        if message.content.startswith('$afk'):
+        if msg.content.startswith('$afk') or msg.content.startswith('~afk'):
             return
-        if message.channel.id in [Cid.logs, Cid.spam_me]:
+        if msg.channel.id in [Cid.logs, Cid.spam_me]:
             return
 
         for key in self.active_afk:
-            if key in message.raw_mentions:
+            if key in msg.raw_mentions:
                 embed = Embed(colour=Clr.prpl, title='Afk note:', description=db.get_value(db.a, key, 'name'))
                 irene_server = self.bot.get_guild(Sid.irene)
                 member = irene_server.get_member(key)
                 embed.set_author(name=f'Sorry, but {member.display_name} is $afk !', icon_url=member.display_avatar.url)
                 embed.set_footer(text='PS. Please, consider deleting your ping-message (or just removing ping) '
                                       'if you think it will be irrelevant when they come back (I mean seriously)')
-                await message.channel.send(embed=embed)
+                await msg.channel.send(embed=embed)
 
-        if message.author.id in self.active_afk:
+        async def send_non_afk_em(author, channel):
             embed = Embed(colour=Clr.prpl, title='Afk note:')
             embed.set_author(
-                name=f'{message.author.display_name[8:]} is no longer afk !',
-                icon_url=message.author.display_avatar.url
+                name=f'{author.display_name} is no longer afk !',
+                icon_url=author.display_avatar.url
             )
-            embed.description = db.get_value(db.a, message.author.id, 'name')
-            db.remove_row(db.a, message.author.id)
-            self.active_afk.pop(message.author.id)
-            await message.channel.send(embed=embed)
+            embed.description = db.get_value(db.a, author.id, 'name')
+            db.remove_row(db.a, author.id)
+            self.active_afk.pop(author.id)
+            await channel.send(embed=embed)
             try:
-                await message.author.edit(nick=message.author.display_name[8:])
+                await author.edit(nick=db.get_value(db.m, author.id, 'name'))
             except:
                 pass
+
+        if msg.author.id in self.active_afk:
+            await send_non_afk_em(msg.author, msg.channel)
+
+        if msg.interaction is not None and msg.interaction.user.id in self.active_afk:
+            await send_non_afk_em(msg.interaction.user, msg.channel)
 
     @tasks.loop(minutes=30)
     async def check_afks(self):

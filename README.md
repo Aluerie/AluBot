@@ -16,7 +16,7 @@ with pretty much everything I ever needed !
 ### Follow us
 
 * The server with the bot: [Invite link](https://discord.gg/K8FuDeP)
-* The server is just a small community of [mine](https://www.twitch.tv/irene_adler__)
+* The server is just a small community of [mine](https://www.twitch.tv/Aluerie)
 
 ### Reporting Bugs and Making Suggestions
 
@@ -25,7 +25,7 @@ with pretty much everything I ever needed !
 ### Running
 
 This bot is written under assumption of it being **only on my servers** so neither inviting it/running 
-your instance of the bot will work well. Nevertheless, 
+your instance of the bot will work well. And I'm honestly not a very good programmer. Nevertheless, 
 1. Python `3.10` or higher is required
 2. Set up venv `python3.10 -m venv venv`
 3. Install dependencies `pip install -U -r requirements.txt`

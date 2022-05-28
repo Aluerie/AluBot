@@ -48,8 +48,16 @@ class Moderation(commands.Cog):
             return await ctx.reply(f"You can't do that to Irene {Ems.bubuGun}")
         if member.bot:
             return await ctx.reply("Don't bully bots, please")
-        db.append_row(
-            db.w, key='warn', name='manual', dtime=ctx.message.created_at, userid=member.id, modid=ctx.author.id,
+
+        old_max_id = int(db.session.query(func.max(db.w.id)).scalar() or 0)
+        db.add_row(
+            db.w,
+            old_max_id + 1,
+            key='warn',
+            name='manual',
+            dtime=ctx.message.created_at,
+            userid=member.id,
+            modid=ctx.author.id,
             reason=reason
         )
         em = Embed(colour=Clr.prpl, title="Manual warning by a mod", description=reason)

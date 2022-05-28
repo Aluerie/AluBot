@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-from discord import Embed, File, TextChannel, app_commands, errors, utils
+from discord import Embed, File, TextChannel, app_commands, errors, utils, InteractionType
 from discord.ext import commands
 
 from utils.var import *
@@ -45,7 +45,7 @@ class FunThings(commands.Cog):
             # i dont like == 2 usage bcs it should be something like == discord.InteractionType.application_command
             if msg.channel.id == Cid.general:
                 text = None
-                if msg.interaction is not None and msg.interaction.type == 2:
+                if msg.interaction is not None and msg.interaction.type == InteractionType.application_command:
                     text = 'Slash-commands'
                 if msg.author.bot and not msg.webhook_id:
                     text = 'Bots'

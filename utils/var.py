@@ -95,7 +95,7 @@ class Rid:
     bots = 724981475099017276
     nsfwbots = 959955573405777981
     plebs = 727492782196916275
-    subs = 706538741782675616
+    subs = 979723279491285012
     milestone = 745716947098009640
     bday = 748586533627363469
     voice = 761475276361826315
@@ -123,7 +123,7 @@ class Rid:
     ignored_for_logs = [voice, live_stream] + category_roles_ids
 
 
-class Ems: #Emote strings
+class Ems:  # Emote strings
     # irene server nonani
     DankApprove = '<:DankApprove:853015071042961468>'
     DankFix = '<:DankFix:924285577027784774>'
@@ -207,11 +207,15 @@ class Clr:
     }
 
 
+from typing import Literal
+
+
 class MaterialPalette:
     """
     Material Design Color Palette
     """
     shades = [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
+    type_hint = Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
     core = 500
     colors = {
         'red': [
@@ -305,7 +309,7 @@ class MaterialPalette:
         colors_dict[key] = {shade: clr for shade, clr in zip(shades, value)}
 
     @classmethod
-    def red(cls, *, shade: int = core) -> int:
+    def red(cls, *, shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = core) -> int:
         return cls.colors_dict['red'][shade]
 
     @classmethod
@@ -341,7 +345,7 @@ class MaterialPalette:
         return cls.colors_dict['teal'][shade]
 
     @classmethod
-    def green(cls, *, shade: int = core) -> int:
+    def green(cls, *, shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = core) -> int:
         return cls.colors_dict['green'][shade]
 
     @classmethod

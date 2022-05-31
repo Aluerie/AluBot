@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Union
 
-from discord import Embed, app_commands
+from discord import Embed, app_commands, Role, Member, Colour
 from discord.ext import commands
 
 from utils.var import *
@@ -11,7 +11,7 @@ from dateparser.search import search_dates
 import asyncio
 
 if TYPE_CHECKING:
-    from utils.context import Context
+    from utils.context import Context, Message
 
 
 class BetaTest(commands.Cog):
@@ -19,7 +19,13 @@ class BetaTest(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def zeta(self, ctx, *, when: str):
+    async def announce(self, ctx, tit: str = None, desc: str = None, obj: Union[Role, Member] = None):
+        if tit and desc:
+            if True:
+                await ctx.channel.send(content=obj.mention)
+
+    @commands.command()
+    async def timezeta(self, ctx, *, when: str):
         em = Embed(colour=Clr.prpl)
         try:
             my_time = time.Time(when)
@@ -54,14 +60,13 @@ class BetaTest(commands.Cog):
                 em.add_field(
                     inline=False,
                     name='search_dates',
-                    value=f'{time.format_tdR(dt)}\n' 
-                    f'{dt.tzname()} is GMT {tzone} | dls: {dt.dst()}'
+                    value=f'{time.format_tdR(dt)}\n'
+                          f'{dt.tzname()} is GMT {tzone} | dls: {dt.dst()}'
                 )
 
         await ctx.send(embed=em)
 
 
-
 async def setup(bot):
-    #if bot.yen:
+    # if bot.yen:
     await bot.add_cog(BetaTest(bot))

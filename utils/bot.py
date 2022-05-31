@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 jsk = True
 test_list = [  # for yen bot
-    'moderation',
+    'beta',
     'error'
 ]
 
@@ -30,7 +30,7 @@ class VioletBot(commands.Bot):
             command_prefix=prefix,
             activity=Streaming(
                 name="$help",
-                url='https://www.twitch.tv/irene_adler__'
+                url='https://www.twitch.tv/aluerie'
             ),
             intents=Intents.all(),
             allowed_mentions=AllowedMentions(replied_user=False, everyone=False)  # .none()

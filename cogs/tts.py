@@ -120,7 +120,6 @@ class TextToSpeech(commands.Cog):
         """Make bot leave voice channel. Bot autoleaves voicechannels but you can make it leave too ;"""
         try:
             vc = self.connections[ctx.guild.id]
-            print(type(vc))
             await vc.disconnect()
             embed = Embed(colour=ctx.author.colour, description=f'I left {vc.channel.mention}')
             await ctx.reply(embed=embed)

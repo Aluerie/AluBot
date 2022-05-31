@@ -24,7 +24,7 @@ def get_a_text():
         f'Hey chat, remember to check `$help` and {cmntn(Cid.patch_notes)}. We have a lot of cool features and '
         f'bot commands. Even more to come in future !',
         'Hey chat, follow me on twitch if you haven\'t done it yet: '
-        '[twitch.tv/irene_adler__](https://www.twitch.tv/irene_adler__) {0} {0} {0}\n'.format(Ems.peepoLove),
+        '[twitch.tv/aluerie](https://www.twitch.tv/aluerie) {0} {0} {0}\n'.format(Ems.peepoLove),
         f'Hey chat, you can get list of {rmntn(Rid.bots)} available to use in {cmntn(Cid.bot_spam)} and '
         f'{rmntn(Rid.nsfwbots)} in {cmntn(Cid.nsfw_bob_spam)} by respectively checking pins in those channels.'
     ]

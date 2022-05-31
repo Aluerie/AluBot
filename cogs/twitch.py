@@ -71,7 +71,7 @@ class TwitchStream:
             return None
 
 
-my_twitch_name = 'Irene_Adler__'
+my_twitch_name = 'Aluerie'
 
 
 class Twitch(commands.Cog):

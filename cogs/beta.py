@@ -19,12 +19,6 @@ class BetaTest(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def announce(self, ctx, tit: str = None, desc: str = None, obj: Union[Role, Member] = None):
-        if tit and desc:
-            if True:
-                await ctx.channel.send(content=obj.mention)
-
-    @commands.command()
     async def timezeta(self, ctx, *, when: str):
         em = Embed(colour=Clr.prpl)
         try:

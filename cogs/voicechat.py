@@ -16,17 +16,16 @@ class Voicechat(commands.Cog):
             return
         irene_server = self.bot.get_guild(Sid.irene)
         voice_role = irene_server.get_role(Rid.voice)
-        text_for_vc = irene_server.get_channel(Cid.text_for_vc)
         if before.channel is None and after.channel is not None:  # joined the voice channel
             await mbr.add_roles(voice_role)
             em = Embed(color=0x00ff7f)
             em.set_author(name=f'{mbr.display_name} entered {after.channel.name}', icon_url=mbr.display_avatar.url)
-            return await text_for_vc.send(embed=em)
+            return await after.channel.send(embed=em)
         if before.channel is not None and after.channel is None:  # quit the voice channel
             await mbr.remove_roles(voice_role)
             em = Embed(color=0x800000)
             em.set_author(name=f'{mbr.display_name} left {before.channel.name}', icon_url=mbr.display_avatar.url)
-            return await text_for_vc.send(embed=em)
+            return await before.channel.send(embed=em)
         if before.channel is not None and after.channel is not None:  # changed voice channels
             if before.channel.id != after.channel.id:
                 em = Embed(color=0x6495ed)
@@ -34,7 +33,8 @@ class Voicechat(commands.Cog):
                     name=f'{mbr.display_name} went from {before.channel.name} to {after.channel.name}',
                     icon_url=mbr.display_avatar.url
                 )
-                return await text_for_vc.send(embed=em)
+                await before.channel.send(embed=em)
+                return await after.channel.send(embed=em)
 
     @commands.has_role(Rid.voice)
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)

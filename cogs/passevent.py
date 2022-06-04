@@ -28,7 +28,7 @@ class PassEvent(commands.Cog):
             return
         if datetime.now(timezone.utc) - self.lastupdated > timedelta(minutes=70):
             await self.bot.get_channel(start_errors).send(
-                content=f'{umntn(Uid.irene)} I think the bot crashed but did not even send the message'
+                content=f'{umntn(Uid.alu)} I think the bot crashed but did not even send the message'
             )
 
     @botcheck.before_loop

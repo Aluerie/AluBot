@@ -69,12 +69,12 @@ class AdminTools(commands.Cog):
     @commands.guild_only()
     async def emotecredits(self, ctx):
         """emote credits"""
-        irene_server = self.bot.get_guild(Sid.irene)
-        rules_channel = irene_server.get_channel(Cid.rules)
+        guild = self.bot.get_guild(Sid.alu)
+        rules_channel = guild.get_channel(Cid.rules)
         msg = rules_channel.get_partial_message(866006902458679336)
         embed = Embed(color=Clr.prpl)
         emote_names = ['bubuChrist', 'bubuGunGun', 'PepoBeliever', 'cocoGunGun', 'iofibonksfast']
-        emote_array = [utils.get(irene_server.emojis, name=item) for item in emote_names]
+        emote_array = [utils.get(guild.emojis, name=item) for item in emote_names]
         embed.title = 'Credits for following emotes'
         embed.description = '''
         ● [twitch.tv/bububu](https://www.twitch.tv/bububu)
@@ -88,7 +88,7 @@ class AdminTools(commands.Cog):
         await ctx.reply(f"we did it {Ems.PogChampPepe}")
 
     async def guild_check_work(self, guild):
-        if guild.owner_id not in [Uid.irene, Uid.bot]:
+        if guild.owner_id not in [Uid.alu, Uid.bot]:
             def find_txt_channel():
                 if guild.system_channel.permissions_for(guild.me).send_messages:
                     return guild.system_channel

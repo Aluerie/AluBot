@@ -81,14 +81,14 @@ class Twitch(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if before.bot or before.activities == after.activities or before.id == Uid.irene:
+        if before.bot or before.activities == after.activities or before.id == Uid.alu:
             return
 
-        irene_server = self.bot.get_guild(Sid.irene)
-        if after.guild != irene_server:
+        guild = self.bot.get_guild(Sid.alu)
+        if after.guild != guild:
             return
 
-        stream_rl = irene_server.get_role(Rid.live_stream)
+        stream_rl = guild.get_role(Rid.live_stream)
 
         stream_after = None
         for item in after.activities:
@@ -106,14 +106,14 @@ class Twitch(commands.Cog):
     async def mystream(self):
         tw = TwitchStream(my_twitch_name)
         if not tw.online:
-            db.set_value(db.g, Sid.irene, irene_is_live=0)
+            db.set_value(db.g, Sid.alu, irene_is_live=0)
             return
-        elif db.get_value(db.g, Sid.irene, "irene_is_live"):
+        elif db.get_value(db.g, Sid.alu, "irene_is_live"):
             return
         else:
-            db.set_value(db.g, Sid.irene, irene_is_live=1)
-        irene_server = self.bot.get_guild(Sid.irene)
-        mention_role = irene_server.get_role(Rid.stream_lover)
+            db.set_value(db.g, Sid.alu, irene_is_live=1)
+        guild = self.bot.get_guild(Sid.alu)
+        mention_role = guild.get_role(Rid.stream_lover)
         content = f'{mention_role.mention} and chat, our Highness **@{my_twitch_name}** just went live !'
         embed = Embed(colour=0x9146FF)
         embed.title = f'{tw.title}'
@@ -123,8 +123,8 @@ class Twitch(commands.Cog):
         embed.set_thumbnail(url=tw.logo_url)
         file = await url_to_file(self.bot.ses, tw.preview_url, filename='twtvpreview.png')
         embed.set_image(url=f'attachment://{file.filename}')
-        embed.set_footer(text=f'Twitch.tv | With love, {irene_server.me.display_name}', icon_url=Img.twitchtv)
-        await irene_server.get_channel(Cid.stream_notifs).send(content=content, embed=embed, file=file)
+        embed.set_footer(text=f'Twitch.tv | With love, {guild.me.display_name}', icon_url=Img.twitchtv)
+        await guild.get_channel(Cid.stream_notifs).send(content=content, embed=embed, file=file)
 
     @mystream.before_loop
     async def before(self):
@@ -137,15 +137,15 @@ class TwitchThanks(commands.Cog):
 
     @commands.Cog.listener(name='on_member_update')
     async def twitch_sub_role_logs(self, before, after):
-        if after.guild.id != Sid.irene:
+        if after.guild.id != Sid.alu:
             return
 
-        irene_server = self.bot.get_guild(Sid.irene)
-        subs_role = irene_server.get_role(Rid.subs)
+        guild = self.bot.get_guild(Sid.alu)
+        subs_role = guild.get_role(Rid.subs)
 
         embed = Embed(color=0x9678b6)
         embed.set_thumbnail(url=after.display_avatar.url)
-        embed.set_footer(text=f'With love, {irene_server.me.display_name}')
+        embed.set_footer(text=f'With love, {guild.me.display_name}')
         if subs_role in after.roles and subs_role not in before.roles:
             embed.title = "User got Irene's tw.tv sub"
             embed.description = f'{after.mention} just got {subs_role.mention} role in this server !'
@@ -156,7 +156,7 @@ class TwitchThanks(commands.Cog):
             embed.add_field(name="{0}{0}{0}".format(Ems.FeelsRainMan), value="Sad news !")
         else:
             return
-        await irene_server.get_channel(Cid.stream_notifs).send(embed=embed)
+        await guild.get_channel(Cid.stream_notifs).send(embed=embed)
 
 
 async def setup(bot):

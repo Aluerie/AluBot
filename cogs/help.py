@@ -49,7 +49,7 @@ def features_page(ctx):
     embed.set_thumbnail(url=ctx.bot.user.display_avatar.url)
 
     embed.add_field(name='• Notifications about fav Irene\'s streamers picking her fav champs/heroes', inline=False,
-                    value=f'Just look into {cmntn(Cid.irene_bot)} !')
+                    value=f'Just look into {cmntn(Cid.alubot)} !')
     embed.add_field(name='• News feeds', inline=False,
                     value=f'Dota/League related news feed in {cmntn(Cid.dota_news)} and {cmntn(Cid.lol_news)} '
                           f'taken from all over the internet! '

@@ -15,8 +15,7 @@ class Logging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_user_update(self, before, after):
-        irene_server = self.bot.get_guild(Sid.irene)
-        member = irene_server.get_member(after.id)
+        member = self.bot.get_guild(Sid.alu).get_member(after.id)
         if member is None:
             return
         embed = Embed(colour=member.colour)
@@ -36,7 +35,7 @@ class Logging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
-        if after.guild is None or after.guild.id != Sid.irene:
+        if after.guild is None or after.guild.id != Sid.alu:
             return
         if before.author.bot is True:
             return
@@ -52,7 +51,7 @@ class Logging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, msg):
-        if msg.guild.id != Sid.irene or msg.author.bot:
+        if msg.guild.id != Sid.alu or msg.author.bot:
             return
         if regex.search(Rgx.bug_check, msg.content):
             return
@@ -67,7 +66,7 @@ class Logging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if before.guild.id != Sid.irene:
+        if before.guild.id != Sid.alu:
             return
 
         if before.premium_since is None and after.premium_since is not None:
@@ -105,8 +104,8 @@ class Logging(commands.Cog):
             em.set_author(name=before.name, icon_url=before.display_avatar.url)
             await self.bot.get_channel(Cid.bot_spam).send(embed=em)
 
-            irene_server = self.bot.get_guild(Sid.irene)
-            stone_rl = irene_server.get_role(Rid.rolling_stone)
+            guild = self.bot.get_guild(Sid.alu)
+            stone_rl = guild.get_role(Rid.rolling_stone)
             if after.nick and 'Stone' in after.nick:
                 em = Embed(colour=Clr.prpl)
                 em.description = f'{after.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
@@ -117,9 +116,9 @@ class Logging(commands.Cog):
 
     @tasks.loop(time=time(hour=12, minute=57, tzinfo=timezone.utc))
     async def stonerole_check(self):
-        irene_server = self.bot.get_guild(Sid.irene)
-        stone_rl = irene_server.get_role(Rid.rolling_stone)
-        async for entry in irene_server.audit_logs(action=AuditLogAction.member_update):
+        guild = self.bot.get_guild(Sid.alu)
+        stone_rl = guild.get_role(Rid.rolling_stone)
+        async for entry in guild.audit_logs(action=AuditLogAction.member_update):
             if stone_rl in entry.target.roles:
                 return
             if entry.target.nick and 'Stone' in entry.target.nick:
@@ -179,7 +178,7 @@ class EmoteLogging(commands.Cog):
         # Remove emote ###########################################################################
         if diff_after == [] and diff_before != []:
             for emote in diff_before:
-                if not emote.managed and guild.id == Sid.irene:
+                if not emote.managed and guild.id == Sid.alu:
                     db.remove_row(db.e, emote.id)
                 embed = Embed(colour=0xb22222)
                 embed.title = f'`:{emote.name}:` emote removed'
@@ -195,7 +194,7 @@ class EmoteLogging(commands.Cog):
                 embed.description = f'[Image link]({emote.url})'
                 embed.set_thumbnail(url=emote.url)
                 await channel.send(embed=embed)
-                if not emote.managed and guild.id == Sid.irene:
+                if not emote.managed and guild.id == Sid.alu:
                     db.add_row(db.e, emote.id, name=str(emote), animated=emote.animated)
                     msg = await channel.send('{0} {0} {0}'.format(str(emote)))
                     await msg.add_reaction(str(emote))
@@ -204,7 +203,7 @@ class EmoteLogging(commands.Cog):
             diff_after_name = [x for x in after if x.name not in [x.name for x in before]]
             diff_before_name = [x for x in before if x.name not in [x.name for x in after]]
             for emote_after, emote_before in zip(diff_after_name, diff_before_name):
-                if not emote_after.managed and guild.id == Sid.irene:
+                if not emote_after.managed and guild.id == Sid.alu:
                     db.set_value(db.e, emote_after.id, name=str(emote_after))
                 embed = Embed(colour=0x1e90ff)
                 word_for_action = 'replaced by' if emote_after.managed else 'renamed into'
@@ -219,7 +218,7 @@ class CommandLogging(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    ignored_users = [Uid.irene]
+    ignored_users = [Uid.alu]
 
     async def on_cmd_work(self, ctx):
         if ctx.author.id in self.ignored_users:

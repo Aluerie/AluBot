@@ -24,7 +24,7 @@ test_list = [  # for yen bot
 ]
 
 
-class VioletBot(commands.Bot):
+class AluBot(commands.Bot):
     def __init__(self, prefix, yen=False):
         super().__init__(
             command_prefix=prefix,

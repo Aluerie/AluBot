@@ -12,10 +12,10 @@ class ReactionRoles(commands.Cog):
     ########################################################################
 
     def get_all_colour_roles(self):
-        irene_server = self.bot.get_guild(Sid.irene)
+        guild = self.bot.get_guild(Sid.alu)
         count_role = 0
         colour_array = []
-        for item in irene_server.roles:
+        for item in guild.roles:
             if item.name == 'Colour: Black':
                 count_role = 1
 
@@ -30,7 +30,7 @@ class ReactionRoles(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def trigger(self, ctx, *, arg):
-        # irene_server = self.bot.get_guild(Sid.irene)
+        # guild = self.bot.get_guild(Sid.irene)
         colour_array = self.get_all_colour_roles()
 
         arg = arg.split(' ')
@@ -50,8 +50,8 @@ class ReactionRoles(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def edit_the_trigger(self, ctx):
-        irene_server = self.bot.get_guild(Sid.irene)
-        react_channel = irene_server.get_channel(Cid.roles)
+        guild = self.bot.get_guild(Sid.alu)
+        react_channel = guild.get_channel(Cid.roles)
         for msg_id in dict_reactions:
             if dict_reactions[msg_id] == 2:
                 msg = await react_channel.fetch_message(msg_id)
@@ -65,9 +65,9 @@ class ReactionRoles(commands.Cog):
     # ###### RANDOM ROLES###################################################
     ########################################################################
     def get_roles_by_mentions(self, roles_mentions):
-        irene_server = self.bot.get_guild(Sid.irene)
+        guild = self.bot.get_guild(Sid.alu)
         roles_array = []
-        for item in irene_server.roles:
+        for item in guild.roles:
             if item.mention in roles_mentions:
                 roles_array.append(item)
         roles_array.reverse()
@@ -76,7 +76,7 @@ class ReactionRoles(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def trigger_non(self, ctx, *, arg):
-        irene_server = self.bot.get_guild(Sid.irene)
+        guild = self.bot.get_guild(Sid.alu)
 
         arg = arg.split(' ')
         start = int(arg[0])
@@ -100,20 +100,20 @@ class ReactionRoles(commands.Cog):
     ########################################################################
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        irene_server = self.bot.get_guild(Sid.irene)
-        react_channel = irene_server.get_channel(Cid.roles)
+        guild = self.bot.get_guild(Sid.alu)
+        react_channel = guild.get_channel(Cid.roles)
         msg_id = payload.message_id
         if msg_id in dict_reactions.keys():
             unique = dict_reactions[msg_id]
 
-            async def work_wtf(msg_id, payload, irene_server, react_channel, unique):
+            async def work_wtf(msg_id, payload, guild, react_channel, unique):
                 msg = await react_channel.fetch_message(msg_id)
-                member = irene_server.get_member(payload.user_id)
+                member = guild.get_member(payload.user_id)
 
                 for counter in range(len(msg.reactions)):
                     reaction = msg.reactions[counter]
                     reaction_role_id = msg.raw_role_mentions[counter]
-                    reaction_role = utils.get(irene_server.roles, id=reaction_role_id)
+                    reaction_role = utils.get(guild.roles, id=reaction_role_id)
                     # print(member.name, reaction_role, reaction.emoji, payload.emoji)
                     if str(reaction.emoji) == str(payload.emoji) and reaction_role not in member.roles:
                         await member.add_roles(reaction_role)
@@ -122,25 +122,25 @@ class ReactionRoles(commands.Cog):
                         await msg.remove_reaction(reaction, member)
                         await member.remove_roles(reaction_role)
 
-            await work_wtf(msg_id, payload, irene_server, react_channel, unique)
+            await work_wtf(msg_id, payload, guild, react_channel, unique)
             if unique > 1:
                 for item in dict_reactions:
                     if dict_reactions[item] == unique:
-                        await work_wtf(item, payload, irene_server, react_channel, unique)
+                        await work_wtf(item, payload, guild, react_channel, unique)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
-        irene_server = self.bot.get_guild(Sid.irene)
-        react_channel = irene_server.get_channel(Cid.roles)
+        guild = self.bot.get_guild(Sid.alu)
+        react_channel = guild.get_channel(Cid.roles)
         msg_id = payload.message_id
         if msg_id in dict_reactions.keys():
             msg = await react_channel.fetch_message(msg_id)
-            member = irene_server.get_member(payload.user_id)
+            member = guild.get_member(payload.user_id)
 
             for counter in range(len(msg.reactions)):
                 reaction = msg.reactions[counter]
                 reaction_role_id = msg.raw_role_mentions[counter]
-                reaction_role = utils.get(irene_server.roles, id=reaction_role_id)
+                reaction_role = utils.get(guild.roles, id=reaction_role_id)
                 # print(reaction.emoji, payload.emoji.name)
                 if str(reaction.emoji) == str(payload.emoji) and reaction_role in member.roles:
                     await member.remove_roles(reaction_role)

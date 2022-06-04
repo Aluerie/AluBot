@@ -64,7 +64,7 @@ async def welcome_message(session, member, back=0):
 
     if not member.bot:
         description = \
-            f'**💜 {umntn(Uid.irene)} is our princess ' \
+            f'**💜 {umntn(Uid.alu)} is our princess ' \
             f'and I\'m her bot ! {Ems.peepoRose} {Ems.peepoRose} {Ems.peepoRose}**\n'\
             f'1️⃣ Read the rules and useful info in <#724996010169991198> {Ems.PepoG}\n'\
             f'2️⃣ Choose some fancy roles in <#725941486063190076> {Ems.peepoNiceDay}\n'\
@@ -93,10 +93,10 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        irene_server = self.bot.get_guild(Sid.irene)
-        if member.guild != irene_server:
+        guild = self.bot.get_guild(Sid.alu)
+        if member.guild != guild:
             return
-        bots_role = irene_server.get_role(Rid.bots)
+        bots_role = guild.get_role(Rid.bots)
         back = 0
         if member.bot:
             await member.add_roles(bots_role)
@@ -108,10 +108,10 @@ class Welcome(commands.Cog):
                 back = 1
                 db.set_value(db.m, member.id, name=member.name, lastseen=datetime.now(timezone.utc))
             for role_id in Rid.category_roles_ids:
-                role = irene_server.get_role(role_id)
+                role = guild.get_role(role_id)
                 await member.add_roles(role)
             if back == 0:
-                role = irene_server.get_role(Rid.level_zero)
+                role = guild.get_role(Rid.level_zero)
                 await member.add_roles(role)
 
         content_text, embed, image_file = await welcome_message(self.bot.ses, member, back=back)
@@ -119,7 +119,7 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: Member):
-        if member.guild.id != Sid.irene:
+        if member.guild.id != Sid.alu:
             return
         author_text = '{0} just left the server'.format(member.display_name)
         embed = Embed(color=0x000000).set_author(name=author_text, icon_url=member.display_avatar.url)
@@ -130,7 +130,7 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild, member: Member):
-        if guild.id != Sid.irene:
+        if guild.id != Sid.alu:
             return
         author_text = f'{member.display_name} was just banned from the server'
         em = Embed(color=0x800000).set_author(name=author_text, icon_url=member.display_avatar.url)
@@ -141,7 +141,7 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild, member):
-        if guild.id != Sid.irene:
+        if guild.id != Sid.alu:
             return
         author_text = f'{member.display_name} was just unbanned from the server'
         em = Embed(color=0x00ff7f).set_author(name=author_text, icon_url=member.display_avatar.url)
@@ -157,16 +157,15 @@ class Milestone(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        if member.guild.id != Sid.irene:
+        if member.guild.id != Sid.alu:
             return
-        irene_guild = member.guild
-        mile_rl = irene_guild.get_role(Rid.milestone)
-        milestone_achieved = db.get_value(db.g, Sid.irene, 'milestone_achieved')
-        amount_members = irene_guild.member_count
+        mile_rl = member.guild.get_role(Rid.milestone)
+        milestone_achieved = db.get_value(db.g, Sid.alu, 'milestone_achieved')
+        amount_members = member.guild.member_count
 
         if amount_members > milestone_achieved and amount_members % 50 == 0:
             milestone_achieved = amount_members
-            db.set_value(db.g, Sid.irene, milestone_achieved=milestone_achieved)
+            db.set_value(db.g, Sid.alu, milestone_achieved=milestone_achieved)
             await member.add_roles(mile_rl)
 
             em = Embed(color=Clr.prpl, title=f'{Ems.PogChampPepe} Milestone reached !')

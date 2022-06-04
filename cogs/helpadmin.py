@@ -64,12 +64,12 @@ def get_starting_embed(ctx):
         'Dota 2':
             Embed(
                 color=Clr.prpl, title="Dota 2 feed related commands",
-                description=f'{Ems.phone_numbers[1]} Commands to control Dota 2 feed in {cmntn(Cid.irene_bot)}',
+                description=f'{Ems.phone_numbers[1]} Commands to control Dota 2 feed in {cmntn(Cid.alubot)}',
             ).set_footer(text=footer_text).set_thumbnail(url=thumb_url),
         'LoL':
             Embed(
                 color=Clr.prpl, title="LoL feed related commands",
-                description=f'{Ems.phone_numbers[2]} Commands to control LoL feed in {cmntn(Cid.irene_bot)}',
+                description=f'{Ems.phone_numbers[2]} Commands to control LoL feed in {cmntn(Cid.alubot)}',
             ).set_footer(text=footer_text).set_thumbnail(url=thumb_url),
         'AdminInfo':
             Embed(

@@ -79,7 +79,7 @@ class FunThings(commands.Cog):
         await random_comfy_react(message)
 
         async def yourlife(msg):
-            if msg.guild.id != Sid.irene or randint(1, 200 + 1) >= 2:
+            if msg.guild.id != Sid.alu or randint(1, 200 + 1) >= 2:
                 return
             try:
                 sliced_text = msg.content.split()
@@ -113,9 +113,9 @@ class FunThings(commands.Cog):
     )
     async def apuband(self, ctx):
         """Send apuband emote combo ;"""
-        irene_server = self.bot.get_guild(Sid.irene)
+        guild = self.bot.get_guild(Sid.alu)
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
-        content = ' '.join([str(utils.get(irene_server.emojis, name=e)) for e in emote_names])
+        content = ' '.join([str(utils.get(guild.emojis, name=e)) for e in emote_names])
         await ctx.channel.send(content=content)
         if ctx.interaction:
             await ctx.reply(content=f'Nice {Ems.DankApprove}', ephemeral=True)

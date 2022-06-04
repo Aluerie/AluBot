@@ -90,10 +90,10 @@ class Stats(commands.Cog):
 
     @tasks.loop(hours=5)
     async def mymembers(self):
-        irene_server = self.bot.get_guild(Sid.irene)
-        bots_role = irene_server.get_role(Rid.bots)
-        new_name = f'🏡 Members: {irene_server.member_count-len(bots_role.members)}'
-        await irene_server.get_channel(795743012789551104).edit(name=new_name)
+        guild = self.bot.get_guild(Sid.alu)
+        bots_role = guild.get_role(Rid.bots)
+        new_name = f'🏡 Members: {guild.member_count-len(bots_role.members)}'
+        await guild.get_channel(795743012789551104).edit(name=new_name)
 
     @mymembers.before_loop
     async def before(self):
@@ -101,10 +101,10 @@ class Stats(commands.Cog):
 
     @tasks.loop(hours=5)
     async def mybots(self):
-        irene_server = self.bot.get_guild(Sid.irene)
-        bots_role = irene_server.get_role(Rid.bots)
+        guild = self.bot.get_guild(Sid.alu)
+        bots_role = guild.get_role(Rid.bots)
         new_name = f'🤖 Bots: {len(bots_role.members)}'
-        await irene_server.get_channel(795743065787990066).edit(name=new_name)
+        await guild.get_channel(795743065787990066).edit(name=new_name)
 
     @mybots.before_loop
     async def before(self):

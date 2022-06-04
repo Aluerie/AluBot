@@ -61,7 +61,7 @@ class Info(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if before.guild.id != Sid.irene:
+        if before.guild.id != Sid.alu:
             return
         added_role = list(set(after.roles) - set(before.roles))
         removed_role = list(set(before.roles) - set(after.roles))

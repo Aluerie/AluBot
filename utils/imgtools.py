@@ -20,8 +20,8 @@ def plt_to_file(fig, filename='plt.png') -> File:
     return File(fp=image_binary, filename=filename)
 
 
-def img_to_file(image, filename='fromireneserver.png', fmt='PNG') -> File:
-    image_binary = BytesIO() # image is prbably type PIL.PngImagePlugin.PngImageFile
+def img_to_file(image, filename='fromalubot.png', fmt='PNG') -> File:
+    image_binary = BytesIO()  # image is probably type PIL.PngImagePlugin.PngImageFile
     image.save(image_binary, fmt)
     image_binary.seek(0)
     return File(fp=image_binary, filename=filename)

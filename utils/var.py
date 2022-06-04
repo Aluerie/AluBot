@@ -26,17 +26,17 @@ class Rgx:
 
 
 class Sid:
-    irene = 702561315478044804
+    alu = 702561315478044804
     emote = 759916212842659850
 
     guild_ids = [
-        irene,
+        alu,
         emote,
     ]
 
 
 class Cid:
-    # irene server
+    # alu server
     rules = 724996010169991198
     roles = 725941486063190076
 
@@ -50,7 +50,7 @@ class Cid:
     comfy_spam = 727539910713671802
     pubs_talk = 731376390103892019
     logs = 731615128050598009
-    irene_bot = 724991054474117241
+    alubot = 724991054474117241
     saved = 709028718286340106
     confessions = 731703242597072896
     weebs = 731887442768166933
@@ -82,7 +82,7 @@ class Cid:
 
 
 class Uid:
-    irene = 312204139751014400
+    alu = 312204139751014400
     bot = 713124699663499274
     yen = 948934071432654929
     mandara = 812763204010246174
@@ -124,7 +124,7 @@ class Rid:
 
 
 class Ems:  # Emote strings
-    # irene server nonani
+    # alu server nonani
     DankApprove = '<:DankApprove:853015071042961468>'
     DankFix = '<:DankFix:924285577027784774>'
     Ree = '<:Ree:735905686910664797>'
@@ -150,7 +150,7 @@ class Ems:  # Emote strings
     MadgeThreat = '<:MadgeThreat:772398923300995082>'
     peepoWTF = '<:peepoWTF:730688500680097862>'
 
-    # irene server ani
+    # alu server ani
     FeelsRainMan = '<a:SmogeInTheRain:902254223851421796>'
 
     # emote server nonani

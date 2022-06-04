@@ -1,4 +1,4 @@
-from utils.bot import VioletBot, LogHandler
+from utils.bot import AluBot, LogHandler
 
 from os import getenv
 from dotenv import load_dotenv
@@ -28,5 +28,5 @@ match args.name:
     case _:
         raise Exception('Only names `vio` and `yen` are available')
 
-bot = VioletBot(prefix, yen)
+bot = AluBot(prefix, yen)
 bot.run(token)

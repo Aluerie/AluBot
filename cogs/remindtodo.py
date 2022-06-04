@@ -274,8 +274,8 @@ class Afk(commands.Cog):
         for key in self.active_afk:
             if key in msg.raw_mentions:
                 embed = Embed(colour=Clr.prpl, title='Afk note:', description=db.get_value(db.a, key, 'name'))
-                irene_server = self.bot.get_guild(Sid.irene)
-                member = irene_server.get_member(key)
+                guild = self.bot.get_guild(Sid.alu)
+                member = guild.get_member(key)
                 embed.set_author(name=f'Sorry, but {member.display_name} is $afk !', icon_url=member.display_avatar.url)
                 embed.set_footer(text='PS. Please, consider deleting your ping-message (or just removing ping) '
                                       'if you think it will be irrelevant when they come back (I mean seriously)')

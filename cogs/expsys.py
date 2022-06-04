@@ -157,7 +157,7 @@ class ExperienceSystem(commands.Cog):
     @app_commands.describe(sort_by='Choose how to sort leaderboard')
     async def leaderboard(self, ctx, sort_by: Literal['exp', 'rep'] = 'exp'):
         """View experience leaderboard for this server ;"""
-        irene_server = self.bot.get_guild(Sid.irene)
+        guild = self.bot.get_guild(Sid.alu)
 
         match sort_by:
             case 'rep':
@@ -172,7 +172,7 @@ class ExperienceSystem(commands.Cog):
         offset = 1
         cnt = offset
         for row in db.session.query(db.m).filter(db.m.inlvl == 1).order_by(db_col_desc):  # type: ignore
-            if (member := irene_server.get_member(row.id)) is None:
+            if (member := guild.get_member(row.id)) is None:
                 continue
             new_array.append(
                 f'`{indent(cnt, cnt, offset, split_size)}` {member.mention}\n`'
@@ -187,7 +187,7 @@ class ExperienceSystem(commands.Cog):
             split_size=split_size,
             colour=Clr.prpl,
             title="Server Leaderboard",
-            footer_text=f'With love, {irene_server.me.display_name}'
+            footer_text=f'With love, {server.me.display_name}'
         )
 
     @commands.Cog.listener()
@@ -277,14 +277,14 @@ class ExperienceSystem(commands.Cog):
     async def remove_inactive(self):
         with db.session_scope() as ses:
             for row in ses.query(db.m):
-                irene_server = self.bot.get_guild(Sid.irene)
-                person = irene_server.get_member(row.id)
+                guild = self.bot.get_guild(Sid.alu)
+                person = guild.get_member(row.id)
                 if person is None and datetime.now(timezone.utc) - row.lastseen > timedelta(days=30):
                     ses.delete(row)
                     embed = Embed(colour=0xE6D690)
                     embed.description = f'id = {row.id}'
                     embed.set_author(name=f'{row.name} was removed from datebase')
-                    await irene_server.get_channel(Cid.logs).send(embed=embed)
+                    await guild.get_channel(Cid.logs).send(embed=embed)
 
     @remove_inactive.before_loop
     async def before(self):

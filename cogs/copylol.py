@@ -76,7 +76,7 @@ class CopypasteLeague(commands.Cog):
         except Exception as e:
             error_message = traceback.format_exc()
             await self.bot.get_channel(Cid.spam_me).send(
-                f'{umntn(Uid.irene)} Something went wrong with #league-news copypaste\n'
+                f'{umntn(Uid.alu)} Something went wrong with #league-news copypaste\n'
                 f'```python\n{error_message}```')
 
 

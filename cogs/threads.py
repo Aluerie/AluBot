@@ -27,9 +27,9 @@ class ThreadsManaging(commands.Cog):
 
     @tasks.loop(time=time(hour=12))
     async def unarchive_threads(self):
-        irene_server = self.bot.get_guild(Sid.irene)
+        guild = self.bot.get_guild(Sid.alu)
         for _id in watched_threads_ids:
-            thread = irene_server.get_channel(_id)
+            thread = guild.get_channel(_id)
             await thread.archive()
             await thread.unarchive()
 

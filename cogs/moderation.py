@@ -44,8 +44,8 @@ class Moderation(commands.Cog):
     @app_commands.describe(member='Member to warn', reason='Reason')
     async def warn(self, ctx, member: Member, *, reason="No reason"):
         """Give member a warning"""
-        if member.id == Uid.irene:
-            return await ctx.reply(f"You can't do that to Irene {Ems.bubuGun}")
+        if member.id == Uid.alu:
+            return await ctx.reply(f"You can't do that to Aluerie {Ems.bubuGun}")
         if member.bot:
             return await ctx.reply("Don't bully bots, please")
 
@@ -121,7 +121,7 @@ class Moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: Member, after: Member):
-        if before.is_timed_out() == after.is_timed_out() or after.guild.id != Sid.irene:  # member is not muted/unmuted
+        if before.is_timed_out() == after.is_timed_out() or after.guild.id != Sid.alu:  # member is not muted/unmuted
             return
 
         if before.is_timed_out() is False and after.is_timed_out() is True:  # member is muted
@@ -208,9 +208,9 @@ class PlebModeration(commands.Cog):
     async def fire_the_unmute(self, id_, userid, dtime):
         dtime = dtime.replace(tzinfo=timezone.utc)
         await sleep_until(dtime)
-        irene_server = self.bot.get_guild(Sid.irene)
-        selfmute_rl = irene_server.get_role(Rid.selfmuted)
-        member = irene_server.get_member(userid)
+        guild = self.bot.get_guild(Sid.alu)
+        selfmute_rl = guild.get_role(Rid.selfmuted)
+        member = guild.get_member(userid)
         await member.remove_roles(selfmute_rl)
         db.remove_row(db.u, id_)
         self.active_mutes.pop(id_, None)

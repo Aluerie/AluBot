@@ -157,11 +157,11 @@ class Birthday(commands.Cog):
     async def check_birthdays(self):
         for row in db.session.query(db.m).filter(db.m.bdate.isnot(None)):  # type: ignore
             now_date = datetime.now(timezone.utc) + timedelta(hours=float(row.timezone))
-            irene_server = self.bot.get_guild(Sid.irene)
-            bperson = irene_server.get_member(row.id)
+            guild = self.bot.get_guild(Sid.alu)
+            bperson = guild.get_member(row.id)
             if bperson is None:
                 continue
-            bday_rl = irene_server.get_role(Rid.bday)
+            bday_rl = guild.get_role(Rid.bday)
             if now_date.month == row.bdate.month and now_date.day == row.bdate.day:
                 if bday_rl not in bperson.roles:
                     await bperson.add_roles(bday_rl)
@@ -172,12 +172,12 @@ class Birthday(commands.Cog):
                     embed.title = f'CONGRATULATIONS !!! {Ems.peepoRose*3}'
                     embed.set_footer(
                         text=f'Today is {bdate_str(row.bdate)}; Timezone: GMT {row.timezone:+.1f}\n'
-                             f'Use `$help birthday` to set up your birthday\nWith love, {irene_server.me.display_name}'
+                             f'Use `$help birthday` to set up your birthday\nWith love, {guild.me.display_name}'
                     )
                     embed.set_image(url=bperson.display_avatar.url)
                     embed.add_field(name=f'Dear {bperson.display_name} !', inline=False,
                                     value=get_congratulation_text())
-                    await irene_server.get_channel(Cid.bday_notifs).send(content=answer_text, embed=embed)
+                    await guild.get_channel(Cid.bday_notifs).send(content=answer_text, embed=embed)
             else:
                 if bday_rl in bperson.roles:
                     await bperson.remove_roles(bday_rl)
@@ -197,12 +197,12 @@ class BirthdayAdmin(commands.Cog):
     async def birthdaylist(self, ctx: Context):
         """Show list of birthdays in this server ;"""
         embed = Embed(color=Clr.prpl, title='Birthday list')
-        irene_server = self.bot.get_guild(Sid.irene)
-        embed.set_footer(text=f'With love, {irene_server.me.display_name}')
+        guild = self.bot.get_guild(Sid.alu)
+        embed.set_footer(text=f'With love, {guild.me.display_name}')
         text = ''
         for row in db.session.query(db.m).filter(db.m.bdate.isnot(None)).order_by(  # type: ignore
                 extract('month', db.m.bdate), extract('day', db.m.bdate)):
-            bperson = irene_server.get_member(row.id)
+            bperson = guild.get_member(row.id)
             if bperson is not None:
                 text += f'{bdate_str(row.bdate, num_mod=True)}, GMT {row.timezone:+.1f} - **{bperson.mention}**\n'
         embed.description = text

@@ -43,7 +43,7 @@ class MyStreamListener(tweepy.asynchronous.AsyncStream, commands.Cog):
 
     async def on_request_error(self, status_code):
         await self.bot.get_channel(Cid.spam_me).send(
-            content=f"{umntn(Uid.irene)} I'm stuck with twitter-stream {status_code}")
+            content=f"{umntn(Uid.alu)} I'm stuck with twitter-stream {status_code}")
         self.disconnect()
 
 

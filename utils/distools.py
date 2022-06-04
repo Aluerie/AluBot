@@ -92,7 +92,7 @@ async def send_traceback(
         paginator.add_line(line)
 
     if mention_dev or embed:
-        content = '' if not mention_dev else umntn(Uid.irene)
+        content = '' if not mention_dev else umntn(Uid.alu)
         await channel.send(content=content, embed=embed)
 
     message = None

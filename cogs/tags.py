@@ -185,7 +185,7 @@ class Tags(commands.Cog):
     @tags.command(
         name='list',
         brief=Ems.slash,
-        description='Get a list of all tags on the server'
+        description='Get a list of all tags on the guild'
     )
     async def list(self, ctx):
         """Show list of all tags in bot's database"""

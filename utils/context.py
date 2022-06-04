@@ -8,7 +8,7 @@ from discord.ui import View, button
 from utils.var import Clr
 
 if TYPE_CHECKING:
-    from utils.bot import VioletBot
+    from utils.bot import AluBot
     from aiohttp import ClientSession
     from discord import Button, Message, Interaction
 
@@ -53,7 +53,7 @@ class ConfirmationView(View):
 
 
 class Context(commands.Context):
-    bot: VioletBot
+    bot: AluBot
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

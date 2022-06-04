@@ -20,13 +20,13 @@ class Suggestions(commands.Cog):
     @app_commands.describe(text='Suggestion text')
     async def suggest(self, ctx, *, text: str):
         """Read above"""
-        irene_server = self.bot.get_guild(Sid.irene)
-        patch_channel = irene_server.get_channel(Cid.suggestions)
-        number = db.inc_value(db.g, Sid.irene, 'suggestion_num')
+        guild = self.bot.get_guild(Sid.alu)
+        patch_channel = guild.get_channel(Cid.suggestions)
+        number = db.inc_value(db.g, Sid.alu, 'suggestion_num')
         title = f'Suggestion #{number}'
         embed = Embed(color=Clr.prpl, title=title, description=text)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-        embed.set_footer(text=f'With love, {irene_server.me.display_name}')
+        embed.set_footer(text=f'With love, {guild.me.display_name}')
         message = await patch_channel.send(embed=embed)
         await message.add_reaction('⬆️')
         await message.add_reaction('⬇️')

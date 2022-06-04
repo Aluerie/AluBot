@@ -110,14 +110,14 @@ class LoLFeed(commands.Cog):
         champ = await lol.champion.Champion(key=champ_name).get()
         embed.set_thumbnail(url=cdragon.abs_url(champ.square_path))
         embed.set_author(name=f'{twitch.display_name} - {champ_name}', url=twitch.url, icon_url=twitch.logo_url)
-        msg = await self.bot.get_channel(Cid.irene_bot).send(embed=embed, file=file)
+        msg = await self.bot.get_channel(Cid.alubot).send(embed=embed, file=file)
         await msg.publish()
 
     @tasks.loop(seconds=59)
     async def lolfeed(self):
         log.info("league feed every 59 seconds")
         with db.session_scope() as ses:
-            fav_ch_ids = ses.query(db.g).filter_by(id=Sid.irene).first().lol_fav_champs
+            fav_ch_ids = ses.query(db.g).filter_by(id=Sid.alu).first().lol_fav_champs
             for row in ses.query(db.l).filter(db.l.name.in_(get_db_online_streams(db.l, session=ses))).all():
                 try:
                     live_game = await lol.spectator.CurrentGame(summoner_id=row.id, platform=row.region).get()
@@ -179,10 +179,10 @@ class LoLFeedTools(commands.Cog):
         if champnames is None:
             return await ctx.reply("Provide all arguments: `heroname`")
         try:
-            hero_array = set(db.get_value(db.g, Sid.irene, 'lol_fav_champs'))
+            hero_array = set(db.get_value(db.g, Sid.alu, 'lol_fav_champs'))
             for champ_str in re.split('; |, |,', champnames):
                 hero_array.add(await champion.id_by_key(champ_str))
-            db.set_value(db.g, Sid.irene, lol_fav_champs=list(hero_array))
+            db.set_value(db.g, Sid.alu, lol_fav_champs=list(hero_array))
             await ctx.message.add_reaction(Ems.PepoG)
         except:
             await ctx.reply('Something went wrong, double-check: `heroname`')
@@ -195,10 +195,10 @@ class LoLFeedTools(commands.Cog):
         if champnames is None:
             return await ctx.reply("Provide all arguments: `heroname`")
         try:
-            hero_array = set(db.get_value(db.g, Sid.irene, 'lol_fav_champs'))
+            hero_array = set(db.get_value(db.g, Sid.alu, 'lol_fav_champs'))
             for champ_str in re.split('; |, |,', champnames):
                 hero_array.remove(await champion.id_by_key(champ_str))
-            db.set_value(db.g, Sid.irene, lol_fav_champs=list(hero_array))
+            db.set_value(db.g, Sid.alu, lol_fav_champs=list(hero_array))
             await ctx.message.add_reaction(Ems.PepoG)
         except:
             await ctx.reply('Something went wrong, double-check: `heroname`')
@@ -209,7 +209,7 @@ class LoLFeedTools(commands.Cog):
         """Show current list of favourite champions ;"""
         embed = Embed(color=Clr.prpl)
         embed.title = 'List of fav lol heroes'
-        champ_array = db.get_value(db.g, Sid.irene, 'lol_fav_champs')
+        champ_array = db.get_value(db.g, Sid.alu, 'lol_fav_champs')
         answer = [f'`{await champion.key_by_id(c_id)} - {c_id}`' for c_id in champ_array]
         answer.sort()
         embed.description = '\n'.join(answer)
@@ -274,7 +274,7 @@ class LoLFeedTools(commands.Cog):
 
     @commands.is_owner()
     @streamer.command(
-        help=f'Opt the streamer `in` or `out` from {cmntn(Cid.irene_bot)} channel',
+        help=f'Opt the streamer `in` or `out` from {cmntn(Cid.alubot)} channel',
         usage='<twitch_name> in/out',
         aliases=['turn']
     )

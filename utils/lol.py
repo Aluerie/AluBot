@@ -44,5 +44,5 @@ async def get_role_mini_list(session, all_players_champ_ids, destination: Messag
             f'Meraki json was last updated on patch {json_dict["patch"]}\n' \
             f'• [Link to GitHub](https://github.com/meraki-analytics/role-identification)\n' \
             f'• [Link to Json](http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)'
-        await destination.send(content=umntn(Uid.irene), embed=embed)
+        await destination.send(content=umntn(Uid.alu), embed=embed)
         return all_players_champ_ids

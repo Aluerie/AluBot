@@ -20,16 +20,16 @@ class Prefix(commands.Cog):
 
     @commands.is_owner()
     @commands.group()
-    async def irenesbotprefix(self, ctx):
-        """Get a prefix for this server (xd) ;"""
+    async def alubotprefix(self, ctx):
+        """Get a prefix for this server ;"""
         if ctx.invoked_subcommand is None:
             prefix = db.get_value(db.g, ctx.guild.id, 'prefix')
             em = Embed(colour=Clr.prpl, description=f'This server current prefix is {prefix}')
-            em.set_footer(text='To change prefix use `irenebotprefix set` command')
+            em.set_footer(text='To change prefix use `alubotprefix set` command')
             await ctx.reply(embed=em)
 
     @commands.is_owner()
-    @irenesbotprefix.command()
+    @alubotprefix.command()
     async def set(self, ctx, *, arg):
         """Set new prefix for the server ;"""
         db.set_value(db.g, ctx.guild.id, prefix=arg)

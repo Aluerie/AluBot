@@ -36,7 +36,7 @@ async def try_to_find_games(bot, ses):
     global to_be_posted, lobbyids
     to_be_posted = {}
     lobbyids = set()
-    fav_hero_ids = ses.query(db.g).filter_by(id=Sid.irene).first().dota_fav_heroes
+    fav_hero_ids = ses.query(db.g).filter_by(id=Sid.alu).first().dota_fav_heroes
     sd_login(bot.steam, bot.dota, bot.steam_lgn, bot.steam_psw)
 
     # @dota.on('ready')
@@ -125,7 +125,7 @@ class DotaFeed(commands.Cog):
         long_ago = datetime.now(timezone.utc).timestamp() - tbp['st_time']
 
         twitch = TwitchStream(streamer)
-        embed = Embed(colour=Clr.prpl, title="Irene's fav streamer picked her fav hero !", url=twitch.url)
+        embed = Embed(colour=Clr.prpl, title="Aluerie's fav streamer picked her fav hero !", url=twitch.url)
         vod = f'[TwtvVOD]({link})' if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ''
         dotabuff = f'[Dotabuff](https://www.dotabuff.com/matches/{match_id})'
         opendota = f'[Opendota](https://www.opendota.com/matches/{match_id})'
@@ -140,7 +140,7 @@ class DotaFeed(commands.Cog):
         embed.set_image(url=f'attachment://{image_name}')
         embed.set_thumbnail(url=await d2.iconurl_by_id(heroid))
         embed.set_author(name=f'{twitch.display_name} - {heroname}', url=twitch.url, icon_url=twitch.logo_url)
-        msg = await self.bot.get_channel(Cid.irene_bot).send(embed=embed, file=img_file)
+        msg = await self.bot.get_channel(Cid.alubot).send(embed=embed, file=img_file)
         await msg.publish()
         for row in session.query(db.d).filter_by(name=streamer):
             row.lastposted = match_id
@@ -194,13 +194,13 @@ class DotaFeedTools(commands.Cog):
         if heronames is None:
             return await ctx.reply("Provide all arguments: `heroname`")
         try:
-            hero_array = set(db.get_value(db.g, Sid.irene, 'dota_fav_heroes'))
+            hero_array = set(db.get_value(db.g, Sid.alu, 'dota_fav_heroes'))
             for hero_str in re.split('; |, |,', heronames):
                 if (hero_id := await d2.id_by_name(hero_str)) is not None:
                     hero_array.add(hero_id)
                 else:
                     await ctx.reply('We got `None` somewhere, double-check: `heronames`')
-            db.set_value(db.g, Sid.irene, dota_fav_heroes=list(hero_array))
+            db.set_value(db.g, Sid.alu, dota_fav_heroes=list(hero_array))
             await ctx.message.add_reaction(Ems.PepoG)
         except:
             await ctx.reply('Something went wrong, double-check: `heronames`')
@@ -212,10 +212,10 @@ class DotaFeedTools(commands.Cog):
         if heronames is None:
             return await ctx.reply("Provide all arguments: `heroname`")
         try:
-            hero_array = set(db.get_value(db.g, Sid.irene, 'dota_fav_heroes'))
+            hero_array = set(db.get_value(db.g, Sid.alu, 'dota_fav_heroes'))
             for hero_str in re.split('; |, |,', heronames):
                 hero_array.remove(await d2.id_by_name(hero_str))
-                db.set_value(db.g, Sid.irene, dota_fav_heroes=list(hero_array))
+                db.set_value(db.g, Sid.alu, dota_fav_heroes=list(hero_array))
             await ctx.message.add_reaction(Ems.PepoG)
         except:
             await ctx.reply('Something went wrong, double-check: `heroname`')
@@ -225,7 +225,7 @@ class DotaFeedTools(commands.Cog):
     async def list(self, ctx):
         """Show current list of fav heroes ;"""
         embed = Embed(color=Clr.prpl, title='List of fav dota 2 heroes')
-        hero_array = db.get_value(db.g, Sid.irene, 'dota_fav_heroes')
+        hero_array = db.get_value(db.g, Sid.alu, 'dota_fav_heroes')
         answer = [f'`{await d2.name_by_id(h_id)} - {h_id}`' for h_id in hero_array]
         answer.sort()
         embed.description = '\n'.join(answer)
@@ -270,7 +270,7 @@ class DotaFeedTools(commands.Cog):
 
     @commands.is_owner()
     @streamer.command(
-        help=f'Opt the streamer `in` or `out` from {cmntn(Cid.irene_bot)} channel',
+        help=f'Opt the streamer `in` or `out` from {cmntn(Cid.alubot)} channel',
         usage='<twitch_name> in/out',
         aliases=['turn']
     )

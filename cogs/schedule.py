@@ -150,7 +150,7 @@ class MyView(View):
 
     async def interaction_check(self, ntr: Interaction) -> bool:
         """
-        if ntr.user and ntr.user.id in [self.author.id, Uid.irene]:
+        if ntr.user and ntr.user.id != self.author.id:
             return True
         await ntr.response.send_message(
             f'This menu cannot be controlled by you ! {Ems.peepoWTF}',

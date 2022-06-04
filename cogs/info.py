@@ -240,7 +240,7 @@ class InfoTools(commands.Cog):
                 '● Common HTML color names: `red`, `Blue`\n' \
                 '● Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n' \
                 '● Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n' \
-                '● Last but not least: `prpl` for favourite Irene\'s colour '
+                '● Last but not least: `prpl` for favourite Aluerie\'s colour '
             await ctx.reply(embed=embed, ephemeral=True)
 
 

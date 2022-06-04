@@ -147,11 +147,11 @@ class TwitchThanks(commands.Cog):
         embed.set_thumbnail(url=after.display_avatar.url)
         embed.set_footer(text=f'With love, {guild.me.display_name}')
         if subs_role in after.roles and subs_role not in before.roles:
-            embed.title = "User got Irene's tw.tv sub"
+            embed.title = "User got Aluerie's tw.tv sub"
             embed.description = f'{after.mention} just got {subs_role.mention} role in this server !'
             embed.add_field(name="{0}{0}{0}".format(Ems.peepoNiceDay), value="Thanks for the sub !")
         elif subs_role in before.roles and subs_role not in after.roles:
-            embed.title = "User lost Irene's tw.tv sub"
+            embed.title = "User lost Aluerie's tw.tv sub"
             embed.description = f'{after.mention} lost {subs_role.mention} role in this server !'
             embed.add_field(name="{0}{0}{0}".format(Ems.FeelsRainMan), value="Sad news !")
         else:

@@ -7,8 +7,9 @@
 4. look at every cog in robo danny/pycord manager/stella
 
 ### Immediate fix 
-5. ?tag button cooldown
-9. ?tag emoji escapes 
+2. make new png for readme file
+4. ?tag button cooldown
+5. ?tag emoji escapes 
 
 ### New Features
 5. nsfw functions
@@ -16,7 +17,7 @@
 
 ### Probably Garbage
 7. edit dota and league messages after match ends to include some stats like KDA items victory-lose, RunesReforged, player names, proplayers etc
-8. 
+
 ### Steal feature
 12. My own starboard | CarlBot 
 13. My own polls | Poolmaker Bot
@@ -30,7 +31,6 @@
 18. async sqlalchemy asyncsession ? and also subclass your database like normal human being
 19. remember `a[start:stop:step]` so `a[::-1]` is reverse
 20. ?tag learn async
-21. remember `, default_permission=False)` in slash commands definitons
 22. learn collection lib
 23. ?tag eval
 24. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes

@@ -81,7 +81,7 @@ class Stats(commands.Cog):
     @tasks.loop(time=[time(hour=x) for x in range(0, 24)])
     async def mytime(self):
         symbol = '#' if platform.system() == 'Windows' else '-'
-        new_name = f'⏰ {datetime.now(timezone(timedelta(hours=3))).strftime(f"%{symbol}I %p")}, MSK, Irene time'
+        new_name = f'⏰ {datetime.now(timezone(timedelta(hours=3))).strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
         await self.bot.get_channel(Cid.my_time).edit(name=new_name)
 
     @mytime.before_loop

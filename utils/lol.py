@@ -28,7 +28,7 @@ async def get_role_mini_list(session, all_players_champ_ids, destination: Messag
             list(get_roles(champion_roles, all_players_champ_ids[5:]).values())
         return role_mini_list
     except KeyError as e:
-        # notify irene that there is some champ who isn't in meraki json
+        # notify Aluerie that there is some champ who isn't in meraki json
         champ_id = e.args[0]
         try:
             champ_name = await champion.key_by_id(champ_id)

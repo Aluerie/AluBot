@@ -64,11 +64,17 @@ class TextToSpeech(commands.Cog):
         audio_name = "audio.mp3"
         tts.save(audio_name)
         vc.play(FFmpegPCMAudio(audio_name))
-        embed = Embed(colour=ctx.author.colour, title='Text-To-Speech request')
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-        embed.set_footer(text=f"{lang} Language: {lang_dict[lang]['locale']}")
-        embed.description = text
-        await ctx.reply(embed=embed)
+        em = Embed(
+            colour=ctx.author.colour,
+            title='Text-To-Speech request',
+            description=text
+        ).set_author(
+            name=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.url
+        ).set_footer(
+            text=f"{lang} Language: {lang_dict[lang]['locale']}"
+        )
+        await ctx.reply(embed=em)
 
     @voice.command(
         name='languages',

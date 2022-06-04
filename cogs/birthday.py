@@ -109,7 +109,8 @@ class Birthday(commands.Cog):
         name='delete',
         brief=Ems.slash,
         help=f'Delete your birthday and stop getting congratulations from the bot in {cmntn(Cid.bday_notifs)};',
-        aliases=['del']
+        aliases=['del'],
+        description='Delete your birthday data'
     )
     async def delete(self, ctx: Context):
         """read above"""

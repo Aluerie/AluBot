@@ -95,7 +95,7 @@ class LoLFeed(commands.Cog):
     async def send_the_embed(self, row, champ_ids, champ_name, long_ago, live_game_id):
         log.info("sending league embed")
         twitch = TwitchStream(row.name)
-        embed = Embed(color=Clr.rspbrry, title="Irene's fav streamer picked her fav champ!", url=twitch.url)
+        embed = Embed(color=Clr.rspbrry, title="Aluerie's fav streamer picked her fav champ!", url=twitch.url)
         twtvvod = f'[TwtvVOD]({link})' if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ''
         opggregion = ''.join(i for i in row.region if not i.isdigit())  # remove that 1/2 in the end !
         opgg = f'[Opgg](https://{opggregion}.op.gg/summoner/userName={row.accname.replace(" ", "+")})'
@@ -141,7 +141,7 @@ class LoLFeed(commands.Cog):
                     continue
                     # embed = Embed(colour=Clr.error)
                     # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.region} {row.accname}'
-                    # await self.bot.get_channel(Cid.spam_me).send(embed=embed)  # content=umntn(Uid.irene)
+                    # await self.bot.get_channel(Cid.spam_me).send(embed=embed)  # content=umntn(Uid.alu)
 
     @lolfeed.before_loop
     async def before(self):

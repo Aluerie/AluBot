@@ -85,37 +85,37 @@ class GamerStats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.daily_match_history_ctrlr.start()
-        self.help_category = 'Irene'
+        self.help_category = 'Aluerie'
 
-    @commands.hybrid_group(
-        name='irene'
-    )
-    async def irene(self, ctx: Context):
-        """Group command about Irene, for actual commands use it together with subcommands"""
+    @commands.hybrid_group()
+    async def stalk(self, ctx: Context):
+        """Group command about stalking Aluerie, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    @irene.command(
+    @stalk.command(
         name='lm',
         brief=Ems.slash,
-        description="View Irene's last played Dota 2 match",
+        description="View Aluerie's last played Dota 2 match",
         aliases=['lastmatch']
     )
     async def lm(self, ctx: Context):
-        """Irene's last played Dota 2 match id"""
+        """Aluerie's last played Dota 2 match id"""
         await ctx.typing()
         res = try_get_gamerstats(ctx.bot, start_at_match_id=0, matches_requested=1)
-        em = Embed(colour=Clr.prpl).set_author(name='Irene\'s last match id')
-        em.description = f'`{res[0].match_id}`'
+        em = Embed(
+            colour=Clr.prpl,
+            description=f'`{res[0].match_id}`'
+        ).set_author(name='Aluerie\'s last match id')
         return await ctx.reply(embed=em)
 
-    @irene.command(
+    @stalk.command(
         name='wl',
         brief=Ems.slash,
-        description="Irene's Win - Loss ratio in Dota 2 games for today",
+        description="Aluerie's Win - Loss ratio in Dota 2 games for today",
         aliases=['winrate']
     )
     async def wl(self, ctx: Context):
-        """Irene's Win - Loss ratio in Dota 2 games for today"""
+        """Aluerie's Win - Loss ratio in Dota 2 games for today"""
         await ctx.typing()
         res = try_get_gamerstats(ctx.bot, start_at_match_id=0)
 
@@ -133,7 +133,7 @@ class GamerStats(commands.Cog):
             for match in try_get_gamerstats(ctx.bot, start_at_match_id=start_at_match_id):
                 if match.start_time < morning_time:
                     embed = Embed(colour=Clr.prpl)
-                    embed.set_author(name='Irene\'s WL for today')
+                    embed.set_author(name='Aluerie\'s WL for today')
                     max_len = max([len(key) for key in dict_answer])
                     ans = [
                         f'`{key.ljust(max_len)} W {dict_answer[key]["W"]} - L {dict_answer[key]["L"]}`'
@@ -154,14 +154,14 @@ class GamerStats(commands.Cog):
                     dict_answer[mode]['L'] += 1
             start_at_match_id = res[-1].match_id
 
-    @irene.command(
+    @stalk.command(
         name='dh',
         brief=Ems.slash,
-        description="Irene's Dota 2 Match History (shows last 100 matches)",
+        description="Aluerie's Dota 2 Match History (shows last 100 matches)",
         aliases=['dotahistory']
     )
     async def dh(self, ctx: Context):
-        """Irene's Dota 2 Match History (shows last 100 matches)"""
+        """Aluerie's Dota 2 Match History (shows last 100 matches)"""
         await ctx.typing()
 
         async def create_dh_image(result, offset):
@@ -239,26 +239,33 @@ class GamerStats(commands.Cog):
 
         pages_list = []
         for item in files_list:
-            embed = Embed(colour=Clr.prpl)
-            embed.title = "Irene's Dota 2 match history"
-            embed.set_image(url=f'attachment://{item.filename}')
-            embed.set_footer(text='for copypastable match_ids use `$irene match_ids`')
-            pages_list.append(pages.Page(embeds=[embed], files=[item]))
+            em = Embed(
+                colour=Clr.prpl,
+                title="Aluerie's Dota 2 match history"
+            ).set_image(
+                url=f'attachment://{item.filename}'
+            ).set_footer(
+                text='for copypastable match_ids use `$stalk match_ids`'
+            )
+            pages_list.append(pages.Page(embeds=[em], files=[item]))
 
-        paginator = pages.Paginator(pages=pages_list)
-        await paginator.send(ctx)
+        await pages.Paginator(pages=pages_list).send(ctx)
 
     @dh.error
     async def dh_error(self, ctx, error):
         if isinstance(error.original, IndexError):
             ctx.error_handled = True
-            em = Embed(colour=Clr.error)
-            em.set_author(name='SteamLoginError')
-            em.description = 'Oups, logging into steam took too long, please retry in a bit ;'
-            em.set_footer(text='If this happens again, then @ irene, please')
+            em = Embed(
+                colour=Clr.error,
+                description='Oups, logging into steam took too long, please retry in a bit ;'
+            ).set_author(
+                name='SteamLoginError'
+            ).set_footer(
+                text='If this happens again, then @ Aluerie, please'
+            )
             await ctx.send(embed=em)
 
-    @irene.command(
+    @stalk.command(
         name='match_ids',
         brief=Ems.slash,
         description="Copypastable match_ids"
@@ -291,13 +298,13 @@ class GamerStats(commands.Cog):
             title="Copypastable match ids",
         )
 
-    @irene.command(
+    @stalk.command(
         name='mmr',
         brief=Ems.slash,
-        description="Irene's Dota 2 MMR Plot"
+        description="Aluerie's Dota 2 MMR Plot"
     ) 
     async def mmr(self, ctx: Context):
-        """Irene's Dota 2 MMr Plot"""
+        """Aluerie's Dota 2 MMr Plot"""
         await ctx.typing()
         old_dict = db.get_value(db.s, DOTA_FRIENDID, 'match_history')
         starting_mmr = 4340
@@ -311,7 +318,7 @@ class GamerStats(commands.Cog):
             mmr_array.append(mmr)
 
         plt.plot(mmr_array, label=f'MMR Plot', marker='o')
-        plt.title(f'Irene\'s MMR Plot - this plot gets updated twice a day (6:45am/pm)')
+        plt.title(f'Aluerie\'s MMR Plot - this plot gets updated twice a day (6:45am/pm)')
         axes = plt.gca()
         major_xticks = np.arange(0, len(mmr_array), 1)
         major_yticks = np.arange(min(mmr_array), max(mmr_array) + points_gain, points_gain)

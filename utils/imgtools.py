@@ -50,7 +50,7 @@ async def url_to_img(
 async def url_to_file(
         session,
         url: Union[str, Sequence[str]],
-        filename: str = 'fromireneserver.png',
+        filename: str = 'fromalubot.png',
         return_list: bool = False
 ) -> Union[File, Sequence[File]]:
     if isinstance(url, str):

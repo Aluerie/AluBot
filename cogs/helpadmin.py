@@ -14,20 +14,27 @@ if TYPE_CHECKING:
 
 
 def first_page(ctx):
-    bot_name = ctx.guild.me.display_name
-    embed = Embed(color=Clr.prpl, title=f'{bot_name} | $helpadmin Menu')
-    embed.description = f'🏠 {bot_name} is everything !'
-    embed.set_thumbnail(url=ctx.bot.user.display_avatar.url)
-    embed.set_footer(text=f'With love, {bot_name}')
-    embed.add_field(name=f'{Ems.phone_numbers[1]} `Page #1`', inline=False,
-                    value='Dota 2 related commands ;')
-    embed.add_field(name=f'{Ems.phone_numbers[2]} `Page #2`', inline=False,
-                    value='LoL related commands ;')
-    embed.add_field(name=f'{Ems.phone_numbers[3]} `Page #3`', inline=False,
-                    value='Info related commands ;')
-    embed.add_field(name=f'{Ems.phone_numbers[4]} `Page #4`', inline=False,
-                    value='Tools related commands ;')
-    return embed
+    return Embed(
+        color=Clr.prpl,
+        title=f'{ctx.guild.me.display_name} | $helpadmin Menu',
+        description=f'🏠 {ctx.guild.me.display_name} is everything !'
+    ).set_thumbnail(
+        url=ctx.bot.user.display_avatar.url
+    ).set_footer(
+        text=f'With love, {ctx.guild.me.display_name}'
+    ).add_field(
+        name=f'{Ems.phone_numbers[1]} `Page #1`', inline=False,
+        value='Dota 2 related commands ;'
+    ).add_field(
+        name=f'{Ems.phone_numbers[2]} `Page #2`', inline=False,
+        value='LoL related commands ;'
+    ).add_field(
+        name=f'{Ems.phone_numbers[3]} `Page #3`', inline=False,
+        value='Info related commands ;'
+    ).add_field(
+        name=f'{Ems.phone_numbers[4]} `Page #4`', inline=False,
+        value='Tools related commands ;'
+    )
 
 
 class ViewHelpAdmin(View):
@@ -36,23 +43,23 @@ class ViewHelpAdmin(View):
         self.paginator = paginator
 
     @button(label="", style=ButtonStyle.primary, emoji='🏠')
-    async def button0(self, ntr, btn):
+    async def button0(self, ntr, _):
         await self.paginator.goto_page(page_number=0, ntr=ntr)
 
     @button(label="Dota 2", style=ButtonStyle.primary, emoji=Ems.phone_numbers[1])
-    async def button1(self, ntr, btn):
+    async def button1(self, ntr, _):
         await self.paginator.goto_page(page_number=1, ntr=ntr)
 
     @button(label="LoL", style=ButtonStyle.primary, emoji=Ems.phone_numbers[2])
-    async def button2(self, ntr, btn):
+    async def button2(self, ntr, _):
         await self.paginator.goto_page(page_number=2, ntr=ntr)
 
     @button(label="Info", style=ButtonStyle.primary, emoji=Ems.phone_numbers[3])
-    async def button3(self, ntr, btn):
+    async def button3(self, ntr, _):
         await self.paginator.goto_page(page_number=3, ntr=ntr)
 
     @button(label="Tools", style=ButtonStyle.primary, emoji=Ems.phone_numbers[4])
-    async def button4(self, ntr, btn):
+    async def button4(self, ntr, _):
         await self.paginator.goto_page(page_number=4, ntr=ntr)
 
 

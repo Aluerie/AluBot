@@ -66,7 +66,7 @@ def get_fact_text():
         return str(qry[0].sum)
     daily_reminders_txt = [
         'Hey chat, this server was created on 22/04/2020.',
-        'Hey chat, Irene made these "interesting daily fact about this server" messages but has no ideas.',
+        'Hey chat, Aluerie made these "interesting daily fact about this server" messages but has no ideas.',
         f'Hey chat, {get_msg_count()} messages from people in total were sent in this server (which my bot tracked)',
         f'Hey chat, <@135119357008150529> was the very first person to join this server - holy poggers {Ems.PogChampPepe}'
         # idea to put there the most chatting person who has the most exp and stuff

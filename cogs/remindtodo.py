@@ -264,7 +264,7 @@ class Afk(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
-        if msg.guild is None:  # message.guild.id != Sid.irene:
+        if msg.guild is None:  # message.guild.id != Sid.alu:
             return
         if msg.content.startswith('$afk') or msg.content.startswith('~afk'):
             return

@@ -14,13 +14,21 @@ if TYPE_CHECKING:
 
 
 def first_page(ctx):
-    em = Embed(color=Clr.prpl, title=f'{ctx.bot.user.display_name} | $helpmod Menu')
-    em.description = f'🏠 {ctx.bot.user.display_name} is an ultimate multi-purpose bot !'
-    em.set_thumbnail(url=ctx.bot.user.display_avatar.url)
-    em.set_footer(text=f'With love, {ctx.bot.user.display_name}')
-    em.add_field(inline=False, name=f'{Ems.peepoPolice} `Mute`', value='Commands to moderate server with')
-    em.add_field(inline=False, name=f'{Ems.peepoWTF} `Rules`', value='Commands to edit rules with')
-    return em
+    return Embed(
+        color=Clr.prpl,
+        title=f'{ctx.bot.user.display_name} | $helpmod Menu',
+        description=f'🏠 {ctx.bot.user.display_name} is an ultimate multi-purpose bot !'
+    ).set_thumbnail(
+        url=ctx.bot.user.display_avatar.url
+    ).set_footer(
+        text=f'With love, {ctx.bot.user.display_name}'
+    ).add_field(
+        name=f'{Ems.peepoPolice} `Mute`', inline=False,
+        value='Commands to moderate server with'
+    ).add_field(
+        name=f'{Ems.peepoWTF} `Rules`', inline=False,
+        value='Commands to edit rules with'
+    )
 
 
 class ViewHelpMod(View):
@@ -29,15 +37,15 @@ class ViewHelpMod(View):
         self.paginator = paginator
 
     @button(label="", style=ButtonStyle.primary, emoji='🏠')
-    async def button0(self, ntr, btn):
+    async def button0(self, ntr, _):
         await self.paginator.goto_page(page_number=0, ntr=ntr)
 
     @button(label="Mute", style=ButtonStyle.primary, emoji=Ems.peepoPolice)
-    async def button1(self, ntr, btn):
+    async def button1(self, ntr, _):
         await self.paginator.goto_page(page_number=1, ntr=ntr)
 
     @button(label="Rules", style=ButtonStyle.primary, emoji=Ems.peepoWTF)
-    async def button2(self, ntr, btn):
+    async def button2(self, ntr, _):
         await self.paginator.goto_page(page_number=2, ntr=ntr)
 
 

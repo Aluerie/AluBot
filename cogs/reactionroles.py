@@ -30,7 +30,7 @@ class ReactionRoles(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def trigger(self, ctx, *, arg):
-        # guild = self.bot.get_guild(Sid.irene)
+        # guild = self.bot.get_guild(Sid.alu)
         colour_array = self.get_all_colour_roles()
 
         arg = arg.split(' ')

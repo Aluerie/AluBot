@@ -100,7 +100,7 @@ class AdminTools(commands.Cog):
             embed = Embed(colour=Clr.prpl)
             embed.title = 'Do not invite me to other guilds, please'
             embed.description = \
-                f"Sorry, I don't like being in guilds that aren't made by Irene.\n\nI'm leaving."
+                f"Sorry, I don't like being in guilds that aren't made by Aluerie.\n\nI'm leaving."
             await find_txt_channel().send(embed=embed)
             await guild.leave()
 

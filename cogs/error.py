@@ -85,7 +85,7 @@ class CommandErrorHandler(commands.Cog):
             case commands.BotMissingAnyRole():
                 em.description = f'Missing roles: {", ".join([rmntn(id_) for id_ in error.missing_roles])}'
             case commands.NSFWChannelRequired():
-                em.description = "Ask Irene to make that channel NSFW friendly"
+                em.description = "Ask Aluerie to make that channel NSFW friendly"
             case commands.CommandNotFound():
                 if not ctx.bot.yen and ctx.prefix != db.get_value(db.g, ctx.guild.id, 'prefix'):
                     return

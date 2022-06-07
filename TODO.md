@@ -7,9 +7,9 @@
 4. look at every cog in robo danny/pycord manager/stella
 
 ### Immediate fix 
-2. make new png for readme file
-4. ?tag button cooldown
-5. ?tag emoji escapes 
+1. make new png for readme file
+2. ?tag button cooldown
+3. ?tag emoji escapes 
 
 ### New Features
 5. nsfw functions

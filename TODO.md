@@ -5,6 +5,7 @@
 2. async sqlalchemy
 3. sort out total garbage in utils folder
 4. look at every cog in robo danny/pycord manager/stella
+5. rewrite purgw into something better
 
 ### Immediate fix 
 1. make new png for readme file

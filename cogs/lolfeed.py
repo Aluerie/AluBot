@@ -153,7 +153,7 @@ class LoLFeed(commands.Cog):
         embed = Embed(colour=Clr.error)
         embed.title = 'Error in leaguefeed'
         await send_traceback(error, self.bot, embed=embed)
-        self.lolfeed.restart()
+        # self.lolfeed.restart()
 
 
 class LoLFeedTools(commands.Cog):

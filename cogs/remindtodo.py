@@ -247,7 +247,7 @@ class Afk(commands.Cog):
         description='Flag you as afk member'
     )
     @app_commands.describe(afk_text='Your custom afk note')
-    async def afk(self, ctx: Context, *, afk_text: str):
+    async def afk(self, ctx: Context, *, afk_text: str = '...'):
         """Flags you as afk with your custom afk note ;"""
         if db.session.query(db.a).filter_by(id=ctx.author.id).first() is None:
             db.add_row(db.a, ctx.author.id, name=afk_text)
@@ -299,7 +299,7 @@ class Afk(commands.Cog):
         if msg.author.id in self.active_afk:
             await send_non_afk_em(msg.author, msg.channel)
 
-        if msg.interaction is not None and msg.interaction.user.id in self.active_afk:
+        if msg.interaction is not None and msg.interaction.user.id in self.active_afk and msg.interaction.name != 'afk':
             await send_non_afk_em(msg.interaction.user, msg.channel)
 
     @tasks.loop(minutes=30)

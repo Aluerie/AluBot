@@ -187,7 +187,7 @@ class ExperienceSystem(commands.Cog):
             split_size=split_size,
             colour=Clr.prpl,
             title="Server Leaderboard",
-            footer_text=f'With love, {server.me.display_name}'
+            footer_text=f'With love, {guild.me.display_name}'
         )
 
     @commands.Cog.listener()

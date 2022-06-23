@@ -65,7 +65,7 @@ class Moderation(commands.Cog):
         em.set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         await ctx.reply(embed=em)
 
-    async def mute_work(self, ctx, member, duration: timedelta, reason):
+    async def mute_work(self, ctx, member, dt: datetime, duration: timedelta, reason):
         try:
             await member.timeout(duration, reason=reason)
         except Forbidden:
@@ -73,7 +73,7 @@ class Moderation(commands.Cog):
             em.set_author(name='MissingPermissions')
             return await ctx.reply(embed=em, ephemeral=True)
 
-        em = Embed(color=Clr.prpl, title="Mute member", description=f'mute for {duration}')
+        em = Embed(color=Clr.prpl, title="Mute member", description=f'mute until {format_dt(dt, "R")}')
         em.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         em.add_field(name='Reason', value=reason)
         content = member.mention if ctx.interaction else ''
@@ -86,7 +86,7 @@ class Moderation(commands.Cog):
         dt = time.FutureTime(duration)
         ctx = await Context.from_interaction(ctx)
         delta = dt.dt - datetime.now(timezone.utc)
-        await self.mute_work(ctx, member, delta, reason)
+        await self.mute_work(ctx, member, dt.dt, delta, reason)
 
     @commands.has_role(Rid.discord_mods)
     @commands.command(brief=Ems.slash, usage='<time> [reason]')
@@ -99,7 +99,7 @@ class Moderation(commands.Cog):
     ):
         """Mute+timeout member from chatting"""
         delta = when.dt - datetime.now(timezone.utc)
-        await self.mute_work(ctx, member, delta, when.arg)
+        await self.mute_work(ctx, member, when.dt, delta, when.arg)
 
     @commands.has_role(Rid.discord_mods)
     @app_commands.default_permissions(manage_messages=True)

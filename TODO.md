@@ -6,11 +6,13 @@
 3. sort out total garbage in utils folder
 4. look at every cog in robo danny/pycord manager/stella
 5. rewrite purgw into something better
-
+6. abandon not scored games for match history
+ 
 ### Immediate fix 
 1. make new png for readme file
 2. ?tag button cooldown
 3. ?tag emoji escapes 
+4. add image name for convert thing (check resolution too 112)
 
 ### New Features
 5. nsfw functions

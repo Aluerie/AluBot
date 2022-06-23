@@ -94,8 +94,8 @@ class Logging(commands.Cog):
             return
 
         if before.nick != after.nick:  # Nickname changed
-            if (before.nick is not None and before.nick.startswith('[MUTED')) \
-                    or (after.nick is not None and after.nick.startswith('[MUTED')):
+            if (before.nick is not None and before.nick.startswith('[AFK')) \
+                    or (after.nick is not None and after.nick.startswith('[AFK')):
                 return
             db.set_value(db.m, after.id, name=after.display_name)
             em = Embed(colour=after.color)

@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from discord import Embed, Streaming
 from discord.ext import commands, tasks
 
@@ -9,6 +10,10 @@ from utils import database as db
 import re
 from twitchAPI import Twitch
 from os import getenv
+
+if TYPE_CHECKING:
+    from discord import Member
+
 client_id = getenv("TWITCH_CLIENT_ID")
 client_secret = getenv("TWITCH_CLIENT_SECRET")
 twitch = Twitch(client_id, client_secret)
@@ -80,7 +85,7 @@ class Twitch(commands.Cog):
         self.mystream.start()
 
     @commands.Cog.listener()
-    async def on_member_update(self, before, after):
+    async def on_presence_update(self, before: Member, after: Member):
         if before.bot or before.activities == after.activities or before.id == Uid.alu:
             return
 

@@ -28,7 +28,7 @@ class ServerInfo(commands.Cog):
         description="Show rule number `num`"
     )
     @app_commands.describe(number="Enter a number")
-    async def rule(self, ctx, number: Range[int, 1, 99]):
+    async def rule(self, ctx, number: Range[int, 0, 99]):
         """Show rule number `num`"""
         await self.rule_work(ctx, number, db.sr, 0)
 
@@ -38,7 +38,7 @@ class ServerInfo(commands.Cog):
         description="Show *real rule* number `num`"
     )
     @app_commands.describe(number="Enter a number")
-    async def realrule(self, ctx, number: Range[int, 1, 99]):
+    async def realrule(self, ctx, number: Range[int, 0, 99]):
         """Show *real rule* number `num`"""
         await self.rule_work(ctx, number, db.rr, 1)
 

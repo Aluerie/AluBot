@@ -29,20 +29,36 @@ async def get_role_mini_list(session, all_players_champ_ids, destination: Messag
         return role_mini_list
     except KeyError as e:
         # notify Aluerie that there is some champ who isn't in meraki json
-        champ_id = e.args[0]
-        try:
-            champ_name = await champion.key_by_id(champ_id)
-        except KeyError:
-            champ_name = 'Unknown by Pyot'
-        embed = Embed(colour=Clr.prpl, title='Meraki Json problem')
-        url_json = 'http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json'
-        async with session.get(url_json) as resp:
-            json_dict = await resp.json()
+        # and then assume 0.2 playrate in all roles
+        async def send_error_embed():
+            champ_id = e.args[0]
+            try:
+                champ_name = await champion.key_by_id(champ_id)
+            except KeyError:
+                champ_name = 'Unknown by Pyot'
+            embed = Embed(colour=Clr.prpl, title='Meraki Json problem')
+            url_json = 'http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json'
+            async with session.get(url_json) as resp:
+                json_dict = await resp.json()
 
-        embed.description = \
-            f'It seems like **{champ_name}** with id `{champ_id}` is missing from Meraki json\n ' \
-            f'Meraki json was last updated on patch {json_dict["patch"]}\n' \
-            f'• [Link to GitHub](https://github.com/meraki-analytics/role-identification)\n' \
-            f'• [Link to Json](http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)'
-        await destination.send(content=umntn(Uid.alu), embed=embed)
-        return all_players_champ_ids
+            embed.description = \
+                f'It seems like **{champ_name}** with id `{champ_id}` is missing from Meraki json\n ' \
+                f'Meraki json was last updated on patch {json_dict["patch"]}\n' \
+                f'• [Link to GitHub](https://github.com/meraki-analytics/role-identification)\n' \
+                f'• [Link to Json](http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)'
+            await destination.send(content=umntn(Uid.alu), embed=embed)
+        await send_error_embed()
+
+        extra_champ = {
+            e.args[0]: {
+                'TOP': 10 * 0.2,
+                'JUNGLE': 10 * 0.2,
+                'MIDDLE': 10 * 0.2,
+                'BOTTOM': 10 * 0.2,
+                'UTILITY': 10 * 0.2
+            },
+        }
+        role_mini_list = \
+            list(get_roles(extra_champ | champion_roles, all_players_champ_ids[:5]).values()) + \
+            list(get_roles(extra_champ | champion_roles, all_players_champ_ids[5:]).values())
+        return role_mini_list

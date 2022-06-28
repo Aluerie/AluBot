@@ -30,10 +30,16 @@ class Suggestions(commands.Cog):
         message = await patch_channel.send(embed=embed)
         await message.add_reaction('⬆️')
         await message.add_reaction('⬇️')
-        suggestion_thread = await message.create_thread(name=title)
-        await suggestion_thread.send(content='Here you can discuss current suggestion')
-        em2 = Embed(color=Clr.prpl)
-        em2.description = f'{ctx.author.mention}, sent your suggestion under #{number} into {patch_channel.mention}'
+        suggestion_thread = await message.create_thread(name=title, auto_archive_duration=7*24*60)
+        await suggestion_thread.send(
+            content=
+            'Here you can discuss current suggestion.\n '
+            'Don\'t forget to upvote/downvote initial suggestion message with ⬆️⬇️reactions.'
+        )
+        em2 = Embed(
+            color=Clr.prpl,
+            description=f'{ctx.author.mention}, sent your suggestion under #{number} into {patch_channel.mention}'
+        )
         await ctx.channel.send(embed=em2)
 
 

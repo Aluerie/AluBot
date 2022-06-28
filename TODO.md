@@ -7,7 +7,9 @@
 4. look at every cog in robo danny/pycord manager/stella
 5. rewrite purgw into something better
 6. abandon not scored games for match history
- 
+7. Stalk Jeff
+8. Stalk Git Repo
+9. 
 ### Immediate fix 
 1. make new png for readme file
 2. ?tag button cooldown

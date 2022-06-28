@@ -64,7 +64,7 @@ async def get_gitdiff_embed(test_num=0):
     )
     if len(robot_string):
         files.append(str_to_file(robot_string, filename="git.diff"))
-    return embeds, files
+    return embed.url, embeds, files
 
 
 class CopypasteDota(commands.Cog):
@@ -86,8 +86,12 @@ class CopypasteDota(commands.Cog):
             if msg.channel.id == Cid.copydota_info:
                 if "https://steamdb.info" not in msg.content:
                     return
-                embeds, files = await get_gitdiff_embed()
-                msg = await self.bot.get_channel(Cid.dota_news).send(embeds=embeds)
+
+                url, embeds, files = await get_gitdiff_embed()
+                msg = await self.bot.get_channel(Cid.dota_news).send(
+                    content=f'<{url}>',
+                    embeds=embeds
+                )
                 await msg.publish()
                 if len(files):
                     msg = await self.bot.get_channel(Cid.dota_news).send(files=files)

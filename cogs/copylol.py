@@ -43,7 +43,8 @@ class CopypasteLeague(commands.Cog):
         'prime gaming',
         'wildrift',
         'Wild Rift',
-        'entwuhoo'  # tft dev account
+        'entwuhoo',  # tft dev account
+        'RiotExis',  # legends of runeterra
     ]
 
     whitelist_words = [

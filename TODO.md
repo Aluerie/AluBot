@@ -9,7 +9,8 @@
 6. abandon not scored games for match history
 7. Stalk Jeff
 8. Stalk Git Repo
-9. 
+9. DPC ranking command, Dpc points too
+10. look into 5.3.2 pyot update - Change the Lock on ChampionKeysCache to SealLock, as the asyncio.Lock requires an event loop at the moment of instantiation, an issue that may be encountered by non-async "tasks explorers".
 ### Immediate fix 
 1. make new png for readme file
 2. ?tag button cooldown

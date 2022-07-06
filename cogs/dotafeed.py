@@ -131,7 +131,7 @@ class DotaFeed(commands.Cog):
         opendota = f'[Opendota](https://www.opendota.com/matches/{match_id})'
         stratz = f'[Stratz](https://stratz.com/matches/{match_id})'
         embed.description =\
-            f'`?match {match_id}` started {display_relativehmstime(long_ago)}\n' \
+            f'`/match {match_id}` started {display_relativehmstime(long_ago)}\n' \
             f'{vod}/{dotabuff}/{opendota}/{stratz}'
 
         heroname = await d2.name_by_id(heroid)

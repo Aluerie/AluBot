@@ -121,6 +121,10 @@ class LoLFeed(commands.Cog):
             for row in ses.query(db.l).filter(db.l.name.in_(get_db_online_streams(db.l, session=ses))).all():
                 try:
                     live_game = await lol.spectator.CurrentGame(summoner_id=row.id, platform=row.region).get()
+                    # https://static.developer.riotgames.com/docs/lol/queues.json
+                    # says 420 is 5v5 Ranked Solo games
+                    if live_game.queue_id != 420:
+                        continue
                     # print(row.name, row.lastposted, live_game.id)
                     if row.lastposted != live_game.id:
                         our_player = [player for player in live_game.participants if player.summoner_id == row.id][0]

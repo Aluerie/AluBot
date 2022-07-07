@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from discord import Embed
 from discord.ext import commands, tasks
 from utils.var import *
@@ -6,6 +9,9 @@ import asyncpraw
 import platform
 from functools import wraps
 from asyncio.proactor_events import _ProactorBasePipeTransport
+
+if TYPE_CHECKING:
+    from utils.bot import AluBot
 
 
 def silence_event_loop_closed(func):
@@ -107,29 +113,65 @@ async def process_submission(submission):
     return embeds
 
 
+async def process_comments(comment: asyncpraw.reddit.Comment):
+    await comment.submission.load()  # DO NOT FORGET TO LOAD
+    await comment.subreddit.load()  # DO NOT FORGET TO LOAD
+    await comment.author.load()  # DO NOT FORGET TO LOAD
+
+    paginator = commands.Paginator(
+        prefix='',
+        suffix='',
+        max_size=Lmt.Embed.description,
+    )
+    paginator.add_line(comment.body)
+
+    embeds = [
+        Embed(
+            colour=0xFF4500,
+            title=comment.submission.title,
+            url=comment.submission.shortlink,
+            description=page
+        )
+        for page in paginator.pages
+    ]
+    embeds[0].set_author(
+        name=f'{comment.author.name} commented in r/{comment.subreddit.display_name} post',
+        icon_url=comment.author.icon_img,
+        url=comment.permalink
+    )
+    return embeds
+
+
 class Reddit(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot = bot
         self.redditfeed.start()
+        self.userfeed.start()
 
     @tasks.loop(minutes=10)
     async def redditfeed(self):
-        # log.info("redditfeed every 10 minutes")
-        try:
-            subreddit = await reddit.subreddit(subreddits_array)
-        except Exception as e:
-            print("redditfeed error line 108 Sadge", e)
-            return
-
-        reddit_channel = self.bot.get_channel(Cid.dota_news)  # Cid.spam_me
-
+        subreddit = await reddit.subreddit(subreddits_array)
         async for submission in subreddit.stream.submissions(skip_existing=True):
             embeds = await process_submission(submission)
             for item in embeds:
-                msg = await reddit_channel.send(embed=item)
+                msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
                 await msg.publish()
 
     @redditfeed.before_loop
+    async def before(self):
+        # log.info("redditfeed before loop")
+        await self.bot.wait_until_ready()
+
+    @tasks.loop(minutes=10)
+    async def userfeed(self):
+        redditor = await reddit.redditor("jeffhill")
+        async for comment in redditor.stream.comments(skip_existing=True):
+            embeds = await process_comments(comment)
+            for item in embeds:
+                msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
+                await msg.publish()
+
+    @userfeed.before_loop
     async def before(self):
         # log.info("redditfeed before loop")
         await self.bot.wait_until_ready()

@@ -137,7 +137,7 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
     embeds[0].set_author(
         name=f'{comment.author.name} commented in r/{comment.subreddit.display_name} post',
         icon_url=comment.author.icon_img,
-        url=comment.permalink
+        url=f'https://www.reddit.com{comment.permalink}'
     )
     return embeds
 
@@ -148,7 +148,7 @@ class Reddit(commands.Cog):
         self.redditfeed.start()
         self.userfeed.start()
 
-    @tasks.loop(minutes=10)
+    @tasks.loop(minutes=11)
     async def redditfeed(self):
         subreddit = await reddit.subreddit(subreddits_array)
         async for submission in subreddit.stream.submissions(skip_existing=True):

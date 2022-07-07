@@ -189,3 +189,58 @@ if __name__ == '__main__':
     GIT_PERSONAL_TOKEN = getenv('GIT_PERSONAL_TOKEN')
     loop.run_until_complete(gitmain(GIT_PERSONAL_TOKEN))
     #  loop.close()
+
+
+
+
+
+
+#####################################3
+
+
+
+
+
+    @tasks.loop(minutes=10)
+    async def git_comments_checkTESTTEST(self):
+        repo = self.bot.git_gameplay
+        dt = datetime.now() - timedelta(days=8)
+
+
+
+        for e in [x for x in repo.get_issues_events()
+                  if x.created_at > dt and x.actor.login in VALVE_DEVS and x.event in ['closed', 'reopened']]:
+            def find_colour(string):
+                clr_dict = {
+                    'closed': 0x9B6CEA,
+                    'reopened': 0x238636
+                }
+                return clr_dict[string]
+            em = Embed(
+                colour=find_colour(e.event),
+                description=e.issue.title
+            ).set_author(
+                name=f'@{e.actor.login} {e.event} issue #{e.issue.number}',
+                icon_url=e.actor.avatar_url,
+                url=e.issue.html_url
+            )
+            await self.bot.get_channel(Cid.spam_me).send(embed=em)
+
+
+
+
+
+
+
+            for c in [x for x in i.get_comments(since=dt) if x.user.login in VALVE_DEVS]:
+                em = Embed(
+                    colour=0x4078c0,
+                    title=i.title,
+                    description=c.body,
+                    url=i.html_url,
+                ).set_author(
+                    name=f'@{c.user.login} commented in issue #{i.number}',
+                    icon_url=c.user.avatar_url,
+                    url=c.html_url
+                )
+                await self.bot.get_channel(Cid.spam_me).send(embed=em)

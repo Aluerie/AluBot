@@ -7,7 +7,7 @@ from utils.var import Cid, Clr
 from utils.format import block_function
 from utils.distools import send_traceback
 from utils.inettools import replace_tco_links, move_link_to_title, get_links_from_str
-from utils.github import human_commit
+from utils.gittools import human_commit
 from utils.imgtools import str_to_file
 
 import asyncio

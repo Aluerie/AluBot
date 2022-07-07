@@ -61,6 +61,7 @@ class DiscordGuilds(Base):
     current_rule_timer = Column(Integer, default=0)
     irene_is_live = Column(Integer, default=0)
     prefix = Column(String, default='$')
+    git_checked_dt = Column(DateTime)
 
 
 class LeagueAccount(Base):

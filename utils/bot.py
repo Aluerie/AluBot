@@ -10,7 +10,10 @@ from utils.mysteam import sd_login
 from steam.client import SteamClient
 from dota2.client import Dota2Client
 from aiohttp import ClientSession
+from github import Github
+
 from datetime import datetime, timezone
+
 from os import getenv, environ, listdir
 import logging
 
@@ -19,7 +22,7 @@ if TYPE_CHECKING:
 
 jsk = True
 test_list = [  # for yen bot
-    'lolfeed',
+    'dotacomments',
     'error'
 ]
 
@@ -56,6 +59,11 @@ class AluBot(commands.Bot):
             self.steam_lgn = getenv("STEAM_LGN")
             self.steam_psw = getenv("STEAM_PSW")
             sd_login(self.steam, self.dota, self.steam_lgn, self.steam_psw)
+
+        if not self.yen or any(item in test_list for item in ['dotacomments', 'copydota']):
+            self.github = Github(getenv('GIT_PERSONAL_TOKEN'))
+            self.git_gameplay = self.github.get_repo("ValveSoftware/Dota2-Gameplay")
+            self.git_tracker = self.github.get_repo("SteamDatabase/GameTracking-Dota2")
 
         if self.yen and len(test_list):
             if jsk:

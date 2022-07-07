@@ -64,7 +64,8 @@ class DotaComments(commands.Cog):
 
                 em = Embed(
                     colour=clr_dict[e.event]['clr'],
-                    description=f'[{e.issue.title}]({e.issue.html_url})'
+                    title =e.issue.title,
+                    url=e.issue.html_url
                 ).set_author(
                     name=f'@{e.actor.login} {e.event} bugtracker issue #{e.issue.number}',
                     icon_url=e.actor.avatar_url,

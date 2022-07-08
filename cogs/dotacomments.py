@@ -45,13 +45,24 @@ class DotaComments(commands.Cog):
             msg = await self.bot.get_channel(Cid.dota_news).send(embed=em)
             await msg.publish()
 
-        for i in repo.get_issues(sort='updated', state='all', since=dt):
-            clr_dict = {
-                'assigned': {'clr': 0x21262D, 'pic': './media/person.png'},
-                'closed': {'clr': 0x9B6CEA, 'pic': './media/check-circle.png'},
-                'reopened': {'clr': 0x238636, 'pic': './media/issue-reopened.png'}
+        clr_dict = {
+            'assigned': {
+                'clr': 0x21262D,
+                'pic': './media/person.png',
+                'word': 'self-assigned'
+            },
+            'closed': {
+                'clr': 0x9B6CEA,
+                'pic': './media/check-circle.png',
+                'word': 'closed'
+            },
+            'reopened': {
+                'clr': 0x238636,
+                'pic': './media/issue-reopened.png',
+                'word': 'reopened'
             }
-
+        }
+        for i in repo.get_issues(sort='updated', state='all', since=dt):
             events = [
                 x for x in i.get_events()
                 if x.created_at.replace(tzinfo=timezone.utc) > dt
@@ -64,10 +75,10 @@ class DotaComments(commands.Cog):
 
                 em = Embed(
                     colour=clr_dict[e.event]['clr'],
-                    title =e.issue.title,
+                    title=e.issue.title,
                     url=e.issue.html_url
                 ).set_author(
-                    name=f'@{e.actor.login} {e.event} bugtracker issue #{e.issue.number}',
+                    name=f'@{e.actor.login} {clr_dict[e.event]["word"]} bugtracker issue #{e.issue.number}',
                     icon_url=e.actor.avatar_url,
                     url=e.issue.html_url
                 ).set_thumbnail(

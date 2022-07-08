@@ -247,3 +247,4 @@ class InfoTools(commands.Cog):
 async def setup(bot):
     await bot.add_cog(Info(bot))
     await bot.add_cog(InfoTools(bot))
+

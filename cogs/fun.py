@@ -128,9 +128,9 @@ class FunThings(commands.Cog):
         description='Roll an integer from 1 to `max_roll_number`'
     )
     @app_commands.describe(max_roll_number="Max limit to roll")
-    async def roll(self, ctx, max_roll_number: Range[int, 0, 100]):
+    async def roll(self, ctx, max_roll_number: Range[int, 0, None]):
         """Roll an integer from 1 to `max_roll_number` ;"""
-        await ctx.reply(randint(1, int(max_roll_number) + 1))
+        await ctx.reply(randint(1, max_roll_number + 1))
 
     @commands.hybrid_command(
         brief=Ems.slash,

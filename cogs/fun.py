@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from discord import Embed, File, TextChannel, app_commands, errors, utils, InteractionType
 from discord.ext import commands
+from discord.ext.commands import Range
 
 from utils.var import *
 from utils.webhook import user_webhook, check_msg_react
@@ -127,7 +128,7 @@ class FunThings(commands.Cog):
         description='Roll an integer from 1 to `max_roll_number`'
     )
     @app_commands.describe(max_roll_number="Max limit to roll")
-    async def roll(self, ctx, max_roll_number: int = 100):
+    async def roll(self, ctx, max_roll_number: Range[int, 0, 100]):
         """Roll an integer from 1 to `max_roll_number` ;"""
         await ctx.reply(randint(1, int(max_roll_number) + 1))
 

@@ -14,7 +14,8 @@
 2. ?tag button cooldown
 3. ?tag emoji escapes 
 4. add image name for convert thing (check resolution too 112)
-
+maybe make error original for conversion error as well rom converters
+5. 
 ### New Features
 5. nsfw functions
 6. Search in help paginator

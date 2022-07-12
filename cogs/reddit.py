@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 from discord import Embed
 from discord.ext import commands, tasks
+
+from utils.distools import send_traceback
 from utils.var import *
 import asyncpraw
 
@@ -162,9 +164,15 @@ class Reddit(commands.Cog):
         # log.info("redditfeed before loop")
         await self.bot.wait_until_ready()
 
+    @redditfeed.error
+    async def redditfeed_error(self, error):
+        # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
+        #  probably declare your own error type
+        await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in subreddit feed'))
+
     @tasks.loop(minutes=10)
     async def userfeed(self):
-        redditor = await reddit.redditor("jeffhill")
+        redditor = await reddit.redditor("JeffHill")
         async for comment in redditor.stream.comments(skip_existing=True):
             embeds = await process_comments(comment)
             for item in embeds:
@@ -175,6 +183,12 @@ class Reddit(commands.Cog):
     async def before(self):
         # log.info("redditfeed before loop")
         await self.bot.wait_until_ready()
+
+    @userfeed.error
+    async def userfeed_error(self, error):
+        # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
+        #  probably declare your own error type
+        await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in reddit userfeed'))
 
 
 async def setup(bot):

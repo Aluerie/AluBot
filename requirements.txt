@@ -2,7 +2,7 @@ git+https://github.com/Rapptz/discord.py
 pillow~=9.2.0
 emoji~=1.7.0
 numpy~=1.23.1
-regex~=2022.7.9
+regex~=2022.3.2
 aiohttp~=3.8.1
 asyncpraw~=7.5.0
 tweepy~=4.6.0

@@ -48,7 +48,7 @@ reddit = asyncpraw.Reddit(
     username=getenv("REDDIT_USERNAME")
 )
 
-subreddits_array = "AskReddit"  # "AskReddit+DotaPatches" use '+' to connect them
+subreddits_array = "DotaPatches"  # "AskReddit+DotaPatches" use '+' to connect them
 
 
 async def process_submission(submission):
@@ -130,7 +130,7 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
     embeds = [
         Embed(
             colour=0xFF4500,
-            title=comment.submission.title,
+            title=comment.submission.title[:256],
             url=comment.submission.shortlink,
             description=page
         )
@@ -156,8 +156,8 @@ class Reddit(commands.Cog):
         async for submission in subreddit.stream.submissions(skip_existing=True):
             embeds = await process_submission(submission)
             for item in embeds:
-                msg = await self.bot.get_channel(Cid.spam_me).send(embed=item)
-                #await msg.publish()
+                msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
+                await msg.publish()
 
     @redditfeed.before_loop
     async def before(self):

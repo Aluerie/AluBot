@@ -176,6 +176,7 @@ class Reddit(commands.Cog):
         async for comment in redditor.stream.comments(skip_existing=True):
             embeds = await process_comments(comment)
             for item in embeds:
+                msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
                 await msg.publish()
 
     @userfeed.before_loop

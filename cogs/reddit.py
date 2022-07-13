@@ -153,7 +153,9 @@ class Reddit(commands.Cog):
     @tasks.loop(count=1)
     async def redditfeed(self):
         subreddit = await reddit.subreddit(subreddits_array)
-        async for submission in subreddit.stream.submissions(skip_existing=True):
+        async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
+            if submission is None:
+                continue
             embeds = await process_submission(submission)
             for item in embeds:
                 msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
@@ -173,7 +175,9 @@ class Reddit(commands.Cog):
     @tasks.loop(count=1)
     async def userfeed(self):
         redditor = await reddit.redditor("JeffHill")
-        async for comment in redditor.stream.comments(skip_existing=True):
+        async for comment in redditor.stream.comments(skip_existing=True, pause_after=0):
+            if comment is None:
+                continue
             embeds = await process_comments(comment)
             for item in embeds:
                 msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)

@@ -150,7 +150,7 @@ class Reddit(commands.Cog):
         self.redditfeed.start()
         self.userfeed.start()
 
-    @tasks.loop(minutes=11)
+    @tasks.loop(count=1)
     async def redditfeed(self):
         subreddit = await reddit.subreddit(subreddits_array)
         async for submission in subreddit.stream.submissions(skip_existing=True):
@@ -170,14 +170,13 @@ class Reddit(commands.Cog):
         #  probably declare your own error type
         await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in subreddit feed'))
 
-    @tasks.loop(minutes=10)
+    @tasks.loop(count=1)
     async def userfeed(self):
-        redditor = await reddit.redditor("Aluerie")
+        redditor = await reddit.redditor("JeffHill")
         async for comment in redditor.stream.comments(skip_existing=True):
             embeds = await process_comments(comment)
             for item in embeds:
-                msg = await self.bot.get_channel(Cid.spam_me).send(embed=item)
-                #await msg.publish()
+                await msg.publish()
 
     @userfeed.before_loop
     async def before(self):

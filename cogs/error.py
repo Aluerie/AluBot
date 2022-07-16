@@ -18,7 +18,6 @@ class CommandErrorHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         bot.tree.on_error = self.on_app_command_error
-        self.help_category = 'Info'
 
     async def command_error_work(self, ctx, error):
         if isinstance(error, commands.HybridCommandError):

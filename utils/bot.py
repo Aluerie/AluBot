@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from discord import Interaction, Message
 
 test_list = [  # for yen bot
-    'hbetterhelp',
+    'help',
     'fun',
     'suggestions',
     'error',
@@ -78,6 +78,8 @@ class AluBot(commands.Bot):
             self.twitch = Twitch(getenv("TWITCH_CLIENT_ID"), getenv("TWITCH_CLIENT_SECRET"))
             self.twitch.authenticate_app([])
 
+        environ["JISHAKU_NO_UNDERSCORE"] = "True"
+        environ["JISHAKU_HIDE"] = "True" # need to be before loading jsk
         if self.yen and len(test_list):
             if YEN_JSK:
                 await self.load_cog('jishaku')
@@ -88,8 +90,6 @@ class AluBot(commands.Bot):
             for filename in listdir('./cogs'):
                 if filename.endswith('.py'):
                     await self.load_cog(f'cogs.{filename[:-3]}')
-        environ["JISHAKU_NO_UNDERSCORE"] = "True"
-        environ["JISHAKU_HIDE"] = "True"
 
     async def load_cog(self, cog: str) -> None:
         try:
@@ -106,7 +106,6 @@ class AluBot(commands.Bot):
 
         self.launch_time = datetime.now(timezone.utc)
         print(f'Logged in as {self.user}')
-        environ["JISHAKU_NO_UNDERSCORE"] = "True"
 
     @property
     def ses(self):

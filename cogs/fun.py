@@ -19,11 +19,7 @@ class FunThings(commands.Cog):
     """Rofl"""
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'Fun'
-
-    @property
-    def display_emoji(self) -> PartialEmoji:
-        return PartialEmoji(name='\N{GAME DIE}')
+        self.help_emote = '\N{GAME DIE}'
 
     @commands.hybrid_command(
         aliases=['cf'],

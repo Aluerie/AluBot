@@ -127,7 +127,6 @@ class ExperienceSystem(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.remove_inactive.start()
-        self.help_category = 'Profile'
         self.ctx_menu1 = app_commands.ContextMenu(name="View User Avatar", callback=avatar_usercmd)
         self.bot.tree.add_command(self.ctx_menu1)
         self.ctx_menu2 = app_commands.ContextMenu(name="View User Server Rank", callback=rank_usercmd)

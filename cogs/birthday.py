@@ -74,7 +74,7 @@ class Birthday(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.check_birthdays.start()
-        self.help_category = 'Birthday'
+        self.help_emote = Ems.peepoHappyDank
 
     @commands.hybrid_group()
     async def birthday(self, ctx: Context):
@@ -169,15 +169,20 @@ class Birthday(commands.Cog):
                     answer_text = f'Chat, today is {bperson.mention}\'s birthday !'
                     if row.bdate.year != 1900:
                         answer_text += f'{bperson.display_name} is now {now_date.year - row.bdate.year} years old !'
-                    embed = Embed(color=bperson.color)
-                    embed.title = f'CONGRATULATIONS !!! {Ems.peepoRose*3}'
-                    embed.set_footer(
-                        text=f'Today is {bdate_str(row.bdate)}; Timezone: GMT {row.timezone:+.1f}\n'
-                             f'Use `$help birthday` to set up your birthday\nWith love, {guild.me.display_name}'
+                    embed = Embed(
+                        color=bperson.color,
+                        title=f'CONGRATULATIONS !!! {Ems.peepoRose * 3}'
+                    ).set_footer(
+                        text=
+                        f'Today is {bdate_str(row.bdate)}; Timezone: GMT {row.timezone:+.1f}\n'
+                        f'Use `$help birthday` to set up your birthday\nWith love, {guild.me.display_name}'
+                    ).set_image(
+                        url=bperson.display_avatar.url
+                    ).add_field(
+                        name=f'Dear {bperson.display_name} !',
+                        inline=False,
+                        value=get_congratulation_text()
                     )
-                    embed.set_image(url=bperson.display_avatar.url)
-                    embed.add_field(name=f'Dear {bperson.display_name} !', inline=False,
-                                    value=get_congratulation_text())
                     await guild.get_channel(Cid.bday_notifs).send(content=answer_text, embed=embed)
             else:
                 if bday_rl in bperson.roles:
@@ -187,29 +192,27 @@ class Birthday(commands.Cog):
     async def before(self):
         await self.bot.wait_until_ready()
 
-
-class BirthdayAdmin(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_category = 'AdminInfo'
-
     @commands.is_owner()
     @commands.command()
     async def birthdaylist(self, ctx: Context):
         """Show list of birthdays in this server ;"""
-        embed = Embed(color=Clr.prpl, title='Birthday list')
         guild = self.bot.get_guild(Sid.alu)
-        embed.set_footer(text=f'With love, {guild.me.display_name}')
         text = ''
         for row in db.session.query(db.m).filter(db.m.bdate.isnot(None)).order_by(  # type: ignore
                 extract('month', db.m.bdate), extract('day', db.m.bdate)):
             bperson = guild.get_member(row.id)
             if bperson is not None:
                 text += f'{bdate_str(row.bdate, num_mod=True)}, GMT {row.timezone:+.1f} - **{bperson.mention}**\n'
-        embed.description = text
+
+        embed = Embed(
+            color=Clr.prpl,
+            title='Birthday list',
+            description=text
+        ).set_footer(
+            text=f'With love, {guild.me.display_name}'
+        )
         await ctx.reply(embed=embed)
 
 
 async def setup(bot):
     await bot.add_cog(Birthday(bot))
-    await bot.add_cog(BirthdayAdmin(bot))

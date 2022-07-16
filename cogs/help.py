@@ -146,7 +146,7 @@ class MyHelp(commands.HelpCommand):
                     SelectOption(
                         label=cog_name,
                         description=cog_desc.split('\n', 1)[0],
-                        emoji=getattr(cog, 'display_emoji', None),
+                        emoji=getattr(cog, 'help_emote', None),
                         value=str(len(embed_list) - 1)
                     )
                 )

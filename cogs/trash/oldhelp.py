@@ -52,7 +52,7 @@ help_cat_dict = {
     },
     'Birthday': {
         'title': 'Birthday',
-        'emote': Ems.peepoHappyDank,
+        'emote':'',
         'drop': 'Set your birthday and get congratulations from the bot',
         'desc': f'There is a special {rmntn(Rid.bday)} role in Irene\'s server '
                 f'which on your birthday gives you a priority in the members list and makes the bot '

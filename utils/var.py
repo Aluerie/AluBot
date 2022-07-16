@@ -149,7 +149,7 @@ class Ems:  # Emote strings
     peepoNiceDay = '<:peepoNiceDay:857224123885158400>'
     DankLove = '<:DankLove:773614700700368927>'
 
-    MadgeThreat = '<:MadgeThreat:772398923300995082>'
+    MadgeThreat = '<:DankMadgeThreat:854318972102770728>'
     peepoWTF = '<:peepoWTF:730688500680097862>'
 
     # alu server ani

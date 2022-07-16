@@ -1,14 +1,26 @@
-from discord import Embed, app_commands
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from discord import Embed, PartialEmoji, app_commands
 from discord.ext import commands
 
 from utils import database as db
 from utils.var import *
 
+if TYPE_CHECKING:
+    pass
+
 
 class Suggestions(commands.Cog):
+    """Suggest something"""
+
     def __init__(self, bot):
         self.bot = bot
         self.help_category = 'Tools'
+
+    @property
+    def display_emoji(self) -> PartialEmoji:
+        return PartialEmoji(name='\N{MAPLE LEAF}')
 
     @commands.hybrid_command(
         name='suggest',

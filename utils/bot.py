@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Union, Optional
+from typing import TYPE_CHECKING, Union
 
 from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
@@ -22,8 +22,9 @@ if TYPE_CHECKING:
     from discord import Interaction, Message
 
 test_list = [  # for yen bot
-    'help',
+    'hbetterhelp',
     'fun',
+    'suggestions',
     'error',
 ]
 
@@ -50,8 +51,6 @@ class AluBot(commands.Bot):
             allowed_mentions=AllowedMentions(replied_user=False, everyone=False)  # .none()
         )
         self.on_ready_fired = False
-        self._help2_command = None
-        self._help3_command = None
         self.yen = yen
 
     async def setup_hook(self) -> None:
@@ -90,6 +89,7 @@ class AluBot(commands.Bot):
                 if filename.endswith('.py'):
                     await self.load_cog(f'cogs.{filename[:-3]}')
         environ["JISHAKU_NO_UNDERSCORE"] = "True"
+        environ["JISHAKU_HIDE"] = "True"
 
     async def load_cog(self, cog: str) -> None:
         try:
@@ -113,44 +113,6 @@ class AluBot(commands.Bot):
         if self.__session.closed:
             self.__session = ClientSession()
         return self.__session
-
-    @property
-    def help2_command(self) -> Optional[commands.HelpCommand]:
-        return self._help2_command
-
-    @help2_command.setter
-    def help2_command(self, value: Optional[commands.HelpCommand]) -> None:
-        if value is not None:
-            if not isinstance(value, commands.HelpCommand):
-                raise TypeError("help2_command must be a subclass of HelpCommand")
-            if self._help2_command is not None:
-                self._help2_command._remove_from_bot(self)
-            self._help2_command = value
-            value._add_to_bot(self)
-        elif self._help2_command is not None:
-            self._help2_command._remove_from_bot(self)
-            self._help2_command = None
-        else:
-            self._help2_command = None
-
-    @property
-    def help3_command(self) -> Optional[commands.HelpCommand]:
-        return self._help3_command
-
-    @help3_command.setter
-    def help3_command(self, value: Optional[commands.HelpCommand]) -> None:
-        if value is not None:
-            if not isinstance(value, commands.HelpCommand):
-                raise TypeError("help3_command must be a subclass of HelpCommand")
-            if self._help3_command is not None:
-                self._help3_command._remove_from_bot(self)
-            self._help3_command = value
-            value._add_to_bot(self)
-        elif self._help3_command is not None:
-            self._help3_command._remove_from_bot(self)
-            self._help3_command = None
-        else:
-            self._help3_command = None
 
     async def close(self) -> None:
         await super().close()

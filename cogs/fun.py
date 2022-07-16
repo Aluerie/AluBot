@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-from discord import Embed, File, TextChannel, app_commands, errors, utils, InteractionType
+from discord import Embed, File, TextChannel, app_commands, errors, utils, InteractionType, PartialEmoji
 from discord.ext import commands
 from discord.ext.commands import Range
 
@@ -16,9 +16,14 @@ if TYPE_CHECKING:
 
 
 class FunThings(commands.Cog):
+    """Rofl"""
     def __init__(self, bot):
         self.bot = bot
         self.help_category = 'Fun'
+
+    @property
+    def display_emoji(self) -> PartialEmoji:
+        return PartialEmoji(name='\N{GAME DIE}')
 
     @commands.hybrid_command(
         aliases=['cf'],

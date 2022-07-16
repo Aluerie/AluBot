@@ -135,7 +135,7 @@ class Birthday(commands.Cog):
         By default the bot congratulates you when your bday comes live in GMT+0 timezone. \
         This subcommand is made for adjusting that. \
         Timezone should be given as an integer or as a decimal fraction relative to GMT. \
-        Usage example: `$birthday timezone -5.5` for GMT -5:30 timezone. ;
+        Usage example: `$birthday timezone -5.5` for GMT -5:30 timezone
         """
         if -13 < timezone < 13:
             db.set_value(db.m, ctx.author.id, timezone=timezone)
@@ -202,7 +202,9 @@ class Birthday(commands.Cog):
     @commands.is_owner()
     @commands.command()
     async def birthdaylist(self, ctx: Context):
-        """Show list of birthdays in this server ;"""
+        """
+        Show list of birthdays in this server
+        """
         guild = self.bot.get_guild(Sid.alu)
         text = ''
         for row in db.session.query(db.m).filter(db.m.bdate.isnot(None)).order_by(  # type: ignore

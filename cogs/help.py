@@ -120,7 +120,7 @@ class MyHelp(commands.HelpCommand):
             if c.brief == Ems.slash:
                 answer += self.get_command_signature(c)
             for x in await self.filter_commands(c.commands, sort=True):
-                answer = await self.get_the_answer(x, answer=answer)
+                answer = await self.get_the_answer(x, answer=answer) + '\n'
         else:
             answer += self.get_command_signature(c)
         return answer
@@ -140,7 +140,7 @@ class MyHelp(commands.HelpCommand):
             extra_space = '' if o.signature == '' else ' '
             prefix = getattr(self.context, 'clean_prefix', '$')
             return f'{prefix}{o.qualified_name}{extra_space}{o.signature}'
-        return f'● {slash}`{get_sign(c)}`{aliases}{cd_str}\n{c.help}\n'
+        return f'● {slash}`{get_sign(c)}`{aliases}{cd_str}\n{c.help}'
 
     async def send_bot_help(self, mapping):
         embed_list = []

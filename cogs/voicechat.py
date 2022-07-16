@@ -36,7 +36,6 @@ class Voicechat(commands.Cog):
                 await before.channel.send(embed=em)
                 return await after.channel.send(embed=em)
 
-    @commands.has_role(Rid.voice)
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
     @commands.hybrid_command(
         name='settitle',

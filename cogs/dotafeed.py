@@ -229,6 +229,15 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     These commands allow you to choose streamers from our database as your favorite \
     (or you can request adding them if they are missing) and choose your favorite Dota 2 heroes. \
     The bot will send messages in a chosen channel when your fav streamer picks your fav hero.
+
+    **Tutorial**
+    1. `$dota channel set #channel`
+    2. Add/Remove fav streamers with `$dota stream add/remove`
+    3. Add/Request missing streamers to `$dota database list` with `$dota database add/request`
+    4. Add/Remove fav heroes with `$dota hero add/remove`
+    *Pro-Tip.* for multiple hero/stream add/remove commands - use commas to separate names i.e.\
+    `$dota hero add Ant-Mage, Mirana`
+    5. Ready ! More info below
     """
 
     def __init__(self, bot):
@@ -277,7 +286,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     async def channel_disable(self, ctx: commands.Context):
         """
         Sets Dota2Feed channel to `None` essentially disabling the feature. \
-        Data about fav heroes/streamers won't be affected
+        Data about fav heroes/streamers won't be affected.
         """
         ch_id = db.get_value(db.ga, ctx.guild.id, 'dotafeed_ch_id')
         ch = self.bot.get_channel(ch_id)
@@ -471,16 +480,14 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @stream.command(name='add')
     async def stream_add(self, ctx: commands.Context, *, twitch_names: str):
         """
-        Add twitch streamer(-s) to the list of your fav Dota 2 streamers. \
-        Separate names with commas if multiple.
+        Add twitch streamer(-s) to the list of your fav Dota 2 streamers.
         """
         await self.stream_add_remove(ctx, twitch_names, mode='add')
 
     @stream.command(name='remove')
     async def stream_remove(self, ctx: commands.Context, *, twitch_names: str):
         """
-        Remove twitch streamer(-s) from the list of your fav Dota 2 streamers. \
-        Separate names with commas if multiple.
+        Remove twitch streamer(-s) from the list of your fav Dota 2 streamers.
         """
         await self.stream_add_remove(ctx, twitch_names, mode='remov')
 
@@ -551,11 +558,10 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @hero.command(name='add')
     async def hero_add(self, ctx: commands.Context, *, hero_names: str = None):
         """Add hero(-es) to your favorite heroes list. \
-        Separate names with commas if multiple. \
-        Hero names are used from main Dota 2 hero grid. For example,
+        Use names from Dota 2 hero grid. For example,
         • `Anti-Mage` (letter case does not matter) and not `Magina`;
         • `Queen of Pain` and not `QoP`.
-        In total confusion you can find proper name [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
+        At last you can find proper name [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
         under one of `"localized_name"`
         """
         await self.hero_add_remove(ctx, hero_names, mode='add')
@@ -563,8 +569,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @hero.command(name='remove')
     async def hero_remove(self, ctx: commands.Context, *, hero_names: str = None):
         """
-        Remove hero(-es) to your favorite heroes list. \
-        Separate names with commas if multiple.
+        Remove hero(-es) to your favorite heroes list.
         """
         await self.hero_add_remove(ctx, hero_names, mode='remov')
 

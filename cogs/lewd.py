@@ -9,10 +9,16 @@ if TYPE_CHECKING:
     from utils.context import Context
 
 
-class LewdCog(commands.Cog):
+class LewdCog(commands.Cog, name='Lewd'):
+    """
+    NSFW tier commands
+
+    Horny, huh
+    """
+
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'Lewd'
+        self.help_emote = Ems.peepoPlsStepOnMe
 
     @commands.hybrid_command()
     async def lewd(self, ctx: Context):

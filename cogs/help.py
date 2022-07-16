@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord.ui import View, Select
 
 from utils import pages
+from utils.format import display_hmstime
 from utils.var import *
 
 if TYPE_CHECKING:
@@ -114,6 +115,33 @@ last_embed = Embed(
 
 
 class MyHelp(commands.HelpCommand):
+    async def get_the_answer(self, c, answer=''):
+        if getattr(c, 'commands', None) is not None:
+            if c.brief == Ems.slash:
+                answer += self.get_command_signature(c)
+            for x in await self.filter_commands(c.commands, sort=True):
+                answer = await self.get_the_answer(x, answer=answer)
+        else:
+            answer += self.get_command_signature(c)
+        return answer
+
+    def get_command_signature(self, c):
+        slash = c.brief or ''
+
+        aliases = ''
+        if len(c.aliases):
+            aliases = ' | aliases: ' + '; '.join([f'`{ali}`' for ali in c.aliases])
+
+        cd_str = ''
+        if c.cooldown is not None:
+            cd_str = f' | cd: rate {c.cooldown.rate} per {display_hmstime(c.cooldown.per)}'
+
+        def get_sign(o):
+            extra_space = '' if o.signature == '' else ' '
+            prefix = getattr(self.context, 'clean_prefix', '$')
+            return f'{prefix}{o.qualified_name}{extra_space}{o.signature}'
+        return f'● {slash}`{get_sign(c)}`{aliases}{cd_str}\n{c.help}\n'
+
     async def send_bot_help(self, mapping):
         embed_list = []
         drop_options = []
@@ -130,7 +158,7 @@ class MyHelp(commands.HelpCommand):
 
         for cog, cmds in mapping.items():
             filtered = await self.filter_commands(cmds, sort=True)
-            command_signatures = [self.get_command_signature(c) for c in filtered]
+            command_signatures = [await self.get_the_answer(c) for c in filtered]
 
             cog_name = getattr(cog, "qualified_name", "No Category")
             cog_desc = getattr(cog, "description", "No Description")
@@ -138,7 +166,9 @@ class MyHelp(commands.HelpCommand):
             if command_signatures:
                 em = Embed(
                     title=cog_name,
-                    description="\n".join(command_signatures)
+                    description=
+                    f'{cog_desc}\n\n'
+                    f'{chr(10).join(command_signatures)}'
                 )
 
                 embed_list.append(em)

@@ -4,6 +4,7 @@
 
 2. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
 3. copylol thing about removing twitter links
+4. note that you cant see commands that you cant use
 
 5. async sqlalchemy
 6. sort out total garbage in utils folder

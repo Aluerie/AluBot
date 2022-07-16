@@ -167,10 +167,18 @@ class LoLFeed(commands.Cog):
         # self.lolfeed.restart()
 
 
-class LoLFeedTools(commands.Cog):
+class LoLFeedTools(commands.Cog, name='LoL'):
+    """
+    Commands to set up fav champ + fav stream notifs.
+
+    These commands allow you to choose streamers from our database as your favorite \
+    (or you can request adding them if they are missing) and choose your favorite League of Legends champions \
+    The bot will send messages in a chosen channel when your fav streamer picks your fav champ.
+    """
+
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'LoL'
+        self.help_emote = Ems.PogChampPepe
 
     @commands.group(aliases=['league'])
     async def lol(self, ctx):

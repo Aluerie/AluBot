@@ -38,25 +38,11 @@ help_cat_dict = {
         'drop': 'Commands to get some stats/infographics',
         'desc': 'Commands to get some stats/infographics',
     },
-    'Lewd': {
-        'title': 'Lewd',
-        'emote': Ems.peepoPlsStepOnMe,
-        'drop': 'NSFW tier commands',
-        'desc': 'NSFW tier commands',
-    },
     'Todo': {
         'title': 'Reminders and ToDo list commands',
         'emote': '📝',
         'drop': 'Organize yourself with some reminders and todo lists',
         'desc': 'Organize yourself with some reminders and todo lists',
-    },
-    'Birthday': {
-        'title': 'Birthday',
-        'emote':'',
-        'drop': 'Set your birthday and get congratulations from the bot',
-        'desc': f'There is a special {rmntn(Rid.bday)} role in Irene\'s server '
-                f'which on your birthday gives you a priority in the members list and makes the bot '
-                f'congratulate you. This page covers commands related to this role.',
     },
     'Profile': {
         'title': 'Profile',
@@ -70,18 +56,6 @@ help_cat_dict = {
         'emote': Ems.TwoBButt,
         'drop': 'Commands to stalk Irene\'s progress in some things',
         'desc': f'There are some commands to see Aluerie\'s info such as dota 2 match history'
-    },
-    'Dota 2': {
-        'title': 'Dota 2',
-        'emote': Ems.DankLove,
-        'drop': 'Commands to set up fav hero fav stream notifs',
-        'desc': 'If you want to be notified when your fav streamer picks your fav hero use these commands'
-    },
-    'LoL': {
-        'title': 'LoL',
-        'emote': Ems.PogChampPepe,
-        'drop': 'Commands to set up fav hero fav stream notifs',
-        'desc': 'If you want to be notified when your fav streamer picks your fav champ use these commands'
     },
     'Mute': {
         'title': 'Mute',
@@ -158,10 +132,7 @@ class HelpCommand(commands.HelpCommand):
         self.start_embed_dict = start_embed
         self.view_class = view_class
 
-    def get_command_signature(self, command):
-        extra_space = '' if command.signature == '' else ' '
-        prefix = getattr(self.context, 'clean_prefix', '$')
-        return f'{prefix}{command.qualified_name}{extra_space}{command.signature}'
+
 
     async def send_bot_help(self, mapping):
         temp_dict = dict()

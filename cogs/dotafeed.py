@@ -222,10 +222,18 @@ def is_trusted_user():
     return commands.check(predicate)
 
 
-class DotaFeedTools(commands.Cog):
+class DotaFeedTools(commands.Cog, name='Dota 2'):
+    """
+    Commands to set up fav hero + fav stream notifs.
+
+    These commands allow you to choose streamers from our database as your favorite \
+    (or you can request adding them if they are missing) and choose your favorite Dota 2 heroes. \
+    The bot will send messages in a chosen channel when your fav streamer picks your fav hero.
+    """
+
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'Dota 2'
+        self.help_emote = Ems.DankLove
 
     @is_guild_owner()
     @commands.group()
@@ -238,14 +246,18 @@ class DotaFeedTools(commands.Cog):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    @channel.command(name='set')
+    @channel.command(
+        name='set',
+        usage='[channel=curr]'
+    )
     async def channel_set(
             self,
             ctx: commands.Context,
             ch: Optional[TextChannel] = None
     ):
-        """Sets channel to be the DotaFeed notifications channel.
-        Messages about favourite streamers picking favourite heroes will be sent here."""
+        """
+        Sets channel to be the Dota2Feed notifications channel.
+        """
         ch = ch or ctx.channel
         if not ch.permissions_for(ctx.guild.me).send_messages:
             em = Embed(
@@ -263,10 +275,10 @@ class DotaFeedTools(commands.Cog):
 
     @channel.command(name='disable')
     async def channel_disable(self, ctx: commands.Context):
-        """Disables DotaFeed functionality in this server.
-        Removes the channel info from bot's database.
-        Data about fav heroes/streamers won't be deleted in case you want to choose different channel.
-        You can kick the bot to achieve that """
+        """
+        Sets Dota2Feed channel to `None` essentially disabling the feature. \
+        Data about fav heroes/streamers won't be affected
+        """
         ch_id = db.get_value(db.ga, ctx.guild.id, 'dotafeed_ch_id')
         ch = self.bot.get_channel(ch_id)
         if ch is None:
@@ -307,8 +319,8 @@ class DotaFeedTools(commands.Cog):
 
     @database.command(name='list')
     async def database_list(self, ctx: commands.Context):
-        """Get list of all Dota streamers currently present in database
-        that are available for DotaFeed feature"""
+        """Get list of all Dota 2 streamers in database \
+        that are available for Dota2Feed feature"""
         ss_dict = dict()
         for row in db.session.query(db.d):
             key = f"● [**{row.name}**](https://www.twitch.tv/{row.name})"
@@ -333,9 +345,14 @@ class DotaFeedTools(commands.Cog):
         )
 
     @is_trusted_user()
-    @database.command(name='add')
+    @database.command(
+        name='add',
+        usage='twitch: <twitch_name> steamid: <steamid> friendid: <friendid>'
+    )
     async def database_add(self, ctx: Context, *, flags: AddStreamFlags):
-        """Add stream to the database"""
+        """
+        Add stream to the database.
+        """
         twtv_name = flags.twitch.lower()
         twtv_id = get_twtv_id(twtv_name)
         if twtv_id is None:
@@ -348,7 +365,10 @@ class DotaFeedTools(commands.Cog):
         await ctx.message.add_reaction(Ems.PepoG)
 
     @is_trusted_user()
-    @database.command(name='remove')
+    @database.command(
+        name='remove',
+        usage='twitch: <twitch_name> steamid: <steamid> friendid: <friendid>'
+    )
     async def database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
         """Remove stream from database"""
         map_dict = {
@@ -362,11 +382,15 @@ class DotaFeedTools(commands.Cog):
             ses.query(db.d).filter_by(**my_dict).delete()
         await ctx.message.add_reaction(Ems.PepoG)
 
-    @database.command(name='request')
+    @database.command(
+        name='request',
+        usage='twitch: <twitch_name> steamid: <steamid> friendid: <friendid>'
+    )
     async def database_request(self, ctx: Context, *, flags: AddStreamFlags):
-        """Request streamer to be added into a database.
-        This will send a message into Irene's personal logs channel and maybe one day it will be seen.
-        You can just DM Irene to speed up the process."""
+        """
+        Request streamer to be added into a database. \
+        This will send a request message into Irene's personal logs channel.
+        """
 
         info_str = \
             f'[**{flags.twitch}**](https://www.twitch.tv/{flags.twitch})\n' \
@@ -446,14 +470,18 @@ class DotaFeedTools(commands.Cog):
 
     @stream.command(name='add')
     async def stream_add(self, ctx: commands.Context, *, twitch_names: str):
-        """Add twitch streamer(-s) to the list of your favourite Dota 2 streamers.
-        You can say name of one streamer or list several streamers divided with commas"""
+        """
+        Add twitch streamer(-s) to the list of your fav Dota 2 streamers. \
+        Separate names with commas if multiple.
+        """
         await self.stream_add_remove(ctx, twitch_names, mode='add')
 
     @stream.command(name='remove')
     async def stream_remove(self, ctx: commands.Context, *, twitch_names: str):
-        """Remove twitch streamer(-s) from the list of your favourite Dota 2 streamers.
-        You can say name of one streamer or list several streamers divided with commas"""
+        """
+        Remove twitch streamer(-s) from the list of your fav Dota 2 streamers. \
+        Separate names with commas if multiple.
+        """
         await self.stream_add_remove(ctx, twitch_names, mode='remov')
 
     @stream.command(name='list')
@@ -522,11 +550,11 @@ class DotaFeedTools(commands.Cog):
 
     @hero.command(name='add')
     async def hero_add(self, ctx: commands.Context, *, hero_names: str = None):
-        """Add hero(-es) to your favorite heroes list.
-        You can specify multiple heroes separated by comma.
+        """Add hero(-es) to your favorite heroes list. \
+        Separate names with commas if multiple. \
         Hero names are used from main Dota 2 hero grid. For example,
-        ● `Anti-Mage` (letter case does not matter) and not `Magina`;
-        ● `Queen of Pain` and not `QoP`.
+        • `Anti-Mage` (letter case does not matter) and not `Magina`;
+        • `Queen of Pain` and not `QoP`.
         In total confusion you can find proper name [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
         under one of `"localized_name"`
         """
@@ -534,8 +562,10 @@ class DotaFeedTools(commands.Cog):
 
     @hero.command(name='remove')
     async def hero_remove(self, ctx: commands.Context, *, hero_names: str = None):
-        """Add hero(-es) to your favorite heroes list.
-        You can specify multiple heroes separated by comma"""
+        """
+        Remove hero(-es) to your favorite heroes list. \
+        Separate names with commas if multiple.
+        """
         await self.hero_add_remove(ctx, hero_names, mode='remov')
 
     @staticmethod
@@ -562,7 +592,9 @@ class DotaFeedTools(commands.Cog):
 
     @hero.command(name='list')
     async def hero_list(self, ctx: commands.Context):
-        """Show current list of fav heroes ;"""
+        """
+        Show current list of fav heroes.
+        """
         hero_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_hero_ids')
         answer = [f'`{await d2.name_by_id(h_id)} - {h_id}`' for h_id in hero_list]
         answer.sort()

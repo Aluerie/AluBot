@@ -3,15 +3,16 @@
    1. mb reload dota cog on error with `self.bot.reload_extension(''dotafeed')`
 
 2. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
-4. copylol thing about removing twitter links
+3. copylol thing about removing twitter links
+4. rework help into dropdown menu I guess
 
-6. async sqlalchemy
-7. sort out total garbage in utils folder
-8. look at every cog in robo danny/pycord manager/stella
-9. rewrite purgw into something better
-10. abandon not scored games for match history
-11. DPC ranking command, Dpc points too
-12. look into 5.3.2 pyot update - Change the Lock on ChampionKeysCache to SealLock, as the asyncio.Lock requires an event loop at the moment of instantiation, an issue that may be encountered by non-async "tasks explorers".
+5. async sqlalchemy
+6. sort out total garbage in utils folder
+7. look at every cog in robo danny/pycord manager/stella
+8. rewrite purgw into something better
+9. abandon not scored games for match history
+10. DPC ranking command, Dpc points too
+11. look into 5.3.2 pyot update - Change the Lock on ChampionKeysCache to SealLock, as the asyncio.Lock requires an event loop at the moment of instantiation, an issue that may be encountered by non-async "tasks explorers".
 ### Immediate fix 
 1. make new png for readme file
 2. ?tag button cooldown

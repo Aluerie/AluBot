@@ -406,28 +406,14 @@ class DotaFeedTools(commands.Cog):
 
     @staticmethod
     async def stream_add_remove(ctx, twitch_names, mode):
-        if twitch_names is None:
-            em = Embed(
-                colour=Clr.error,
-                description="Provide all arguments: `twitch_names`"
-            )
-            return await ctx.reply(embed=em)
-
         twitch_list = set(db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids'))
 
         success = []
+        fail = []
         for name in re.split('; |, |,', twitch_names):
             streamer = db.session.query(db.d).filter_by(name=name).first()
             if streamer is None:
-                em = Embed(
-                    colour=Clr.prpl,
-                    description=
-                    f'There is no streamer named {name} like that in bot\'s database. Check your argument or  '
-                    f'consider adding (for trusted janitors)/requesting such streamer with '
-                    f'`$dota stream add/request twitch: <twitch_tag> steamid: <steam_id> friendid: <friend_id>` command'
-                )
-                await ctx.send(embed=em)
-                continue
+                fail.append(name)
             else:
                 if mode == 'add':
                     twitch_list.add(streamer.twtv_id)
@@ -436,22 +422,32 @@ class DotaFeedTools(commands.Cog):
                 success.append(name)
         db.set_value(db.ga, ctx.guild.id, dotafeed_stream_ids=list(twitch_list))
 
-        em = Embed(
-            colour=Clr.prpl,
-            description=
-            f'Successfully {mode}ed following streamers: \n'
-            f'{", ".join(success)}'
-        )
+        em = Embed(colour=Clr.prpl)
+        if len(success):
+            em.add_field(
+                name=f'Successfully {mode}ed following streamers: \n',
+                value=", ".join(success)
+            )
+        if len(fail):
+            em.add_field(
+                name='Could not find streamers in the database from these names:',
+                value=", ".join(fail)
+            ).set_footer(
+                text=
+                'Check your argument or '
+                'consider adding (for trusted janitors)/requesting such streamer with '
+                '`$dota stream add/request twitch: <twitch_tag> steamid: <steam_id> friendid: <friend_id>`'
+            )
         await ctx.reply(embed=em)
 
     @stream.command(name='add')
-    async def stream_add(self, ctx: commands.Context, *, twitch_names: str = None):
+    async def stream_add(self, ctx: commands.Context, *, twitch_names: str):
         """Add twitch streamer(-s) to the list of your favourite Dota 2 streamers.
         You can say name of one streamer or list several streamers divided with commas"""
         await self.stream_add_remove(ctx, twitch_names, mode='add')
 
     @stream.command(name='remove')
-    async def stream_remove(self, ctx: commands.Context, *, twitch_names: str = None):
+    async def stream_remove(self, ctx: commands.Context, *, twitch_names: str):
         """Remove twitch streamer(-s) from the list of your favourite Dota 2 streamers.
         You can say name of one streamer or list several streamers divided with commas"""
         await self.stream_add_remove(ctx, twitch_names, mode='remov')
@@ -487,28 +483,45 @@ class DotaFeedTools(commands.Cog):
 
         hero_list = set(db.get_value(db.ga, ctx.guild.id, 'dotafeed_hero_ids'))
         success = []
+        fail = []
         for name in re.split('; |, |,', hero_names):
-            if (hero_id := await d2.id_by_name(name)) is not None:
-                if mode == 'add':
-                    hero_list.add(hero_id)
-                elif mode == 'remov':
-                    hero_list.remove(hero_id)
-                success.append(name)
+            try:
+                if (hero_id := await d2.id_by_name(name)) is not None:
+                    if mode == 'add':
+                        hero_list.add(hero_id)
+                    elif mode == 'remov':
+                        hero_list.remove(hero_id)
+                    success.append(await d2.name_by_id(hero_id))
+            except KeyError:
+                fail.append(name)
 
         db.set_value(db.ga, ctx.guild.id, dotafeed_hero_ids=list(hero_list))
 
-        em = Embed(
-            colour=Clr.prpl,
-            description=
-            f'Successfully {mode}ed following heroes: \n'
-            f'{", ".join(success)}'
-        )
+        em = Embed(colour=Clr.prpl)
+        if len(success):
+            em.add_field(
+                name=f'Successfully {mode}ed following heroes: \n',
+                value=", ".join(success)
+            )
+        if len(fail):
+            em.add_field(
+                name='Could not recognize Dota 2 heroes from these names:',
+                value=", ".join(success)
+            ).set_footer(
+                text='You can look in $help for help in hero names'
+            )
         await ctx.reply(embed=em)
 
     @hero.command(name='add')
     async def hero_add(self, ctx: commands.Context, *, hero_names: str = None):
         """Add hero(-es) to your favorite heroes list.
-        You can specify multiple heroes separated by comma"""
+        You can specify multiple heroes separated by comma.
+        Hero names are used from main Dota 2 hero grid. For example,
+        ● `Anti-Mage` (letter case does not matter) and not `Magina`;
+        ● `Queen of Pain` and not `QoP`.
+        In total confusion you can find proper name [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
+        under one of `"localized_name"`
+        """
         await self.hero_add_remove(ctx, hero_names, mode='add')
 
     @hero.command(name='remove')
@@ -525,11 +538,7 @@ class DotaFeedTools(commands.Cog):
                 colour=Clr.error,
                 description=
                 f'Looks like there is no hero with name `{error.original}`. '
-                f'Check spelling or usage of correct name from Dota 2 hero grid. '
-                f'For example,\n● `Anti-Mage` (letter case does not matter) and not `Magina`;\n'
-                f'● `Queen of Pain` and not `QoP`.\n'
-                f'In total confusion you can find proper name '
-                f'[here](https://api.opendota.com/api/constants/heroes) with Ctrl+F under one of `"localized_name"`'
+
             ).set_author(
                 name='HeroNameNotFound'
             )

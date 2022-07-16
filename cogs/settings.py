@@ -9,7 +9,7 @@ async def get_pre(bot, message):
     if message.guild is None:
         prefix = '$'
     else:
-        prefix = db.get_value(db.g, message.guild.id, 'prefix')
+        prefix = db.get_value(db.ga, message.guild.id, 'prefix')
     return commands.when_mentioned_or(prefix, "/")(bot, message)
 
 
@@ -23,18 +23,25 @@ class Prefix(commands.Cog):
     async def alubotprefix(self, ctx):
         """Get a prefix for this server ;"""
         if ctx.invoked_subcommand is None:
-            prefix = db.get_value(db.g, ctx.guild.id, 'prefix')
-            em = Embed(colour=Clr.prpl, description=f'This server current prefix is {prefix}')
-            em.set_footer(text='To change prefix use `alubotprefix set` command')
+            prefix = db.get_value(db.ga, ctx.guild.id, 'prefix')
+            em = Embed(
+                colour=Clr.prpl,
+                description=f'This server current prefix is {prefix}'
+            ).set_footer(
+                text='To change prefix use `alubotprefix set` command'
+            )
             await ctx.reply(embed=em)
 
     @commands.is_owner()
     @alubotprefix.command()
     async def set(self, ctx, *, arg):
         """Set new prefix for the server ;"""
-        db.set_value(db.g, ctx.guild.id, prefix=arg)
+        db.set_value(db.ga, ctx.guild.id, prefix=arg)
         self.bot.command_prefix = get_pre
-        em = Embed(colour=Clr.prpl, description=f'Changed this server prefix to {arg}')
+        em = Embed(
+            colour=Clr.prpl,
+            description=f'Changed this server prefix to {arg}'
+        )
         await ctx.reply(embed=em)
 
 

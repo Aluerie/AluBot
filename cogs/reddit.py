@@ -109,8 +109,7 @@ async def process_submission(submission):
     embeds = [embed]
     if len(selftext) > 1:
         for text in selftext[1:]:
-            embed = Embed(colour=0xFF4500)
-            embed.description = text
+            embed = Embed(colour=0xFF4500, description=text)
             embeds.append(embed)
     return embeds
 
@@ -151,7 +150,7 @@ class Reddit(commands.Cog):
         self.userfeed.start()
         self.testfeed.start()
 
-    @tasks.loop(count=1)
+    @tasks.loop(minutes=40)
     async def redditfeed(self):
         subreddit = await reddit.subreddit(subreddits_array)
         async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
@@ -173,7 +172,7 @@ class Reddit(commands.Cog):
         #  probably declare your own error type
         await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in subreddit feed'))
 
-    @tasks.loop(count=1)
+    @tasks.loop(minutes=40)
     async def userfeed(self):
         redditor = await reddit.redditor("JeffHill")
         async for comment in redditor.stream.comments(skip_existing=True, pause_after=0):

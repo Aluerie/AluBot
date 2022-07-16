@@ -43,12 +43,13 @@ from discord.ext import commands, tasks
 
 from utils import database as db
 from utils.var import *
-from utils.lol import get_role_mini_list
+from utils.lol import get_role_mini_list, get_diff_list
 from utils.distools import send_traceback, scnf, inout_to_10
 from utils.format import display_relativehmstime
 from utils.imgtools import img_to_file, url_to_img
 from cogs.twitch import TwitchStream, get_db_online_streams
 
+from roleidentification import pull_data
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, time
 import re
@@ -95,21 +96,29 @@ class LoLFeed(commands.Cog):
     async def send_the_embed(self, row, champ_ids, champ_name, long_ago, live_game_id):
         log.info("sending league embed")
         twitch = TwitchStream(row.name)
-        embed = Embed(color=Clr.rspbrry, title="Aluerie's fav streamer picked her fav champ!", url=twitch.url)
-        twtvvod = f'[TwtvVOD]({link})' if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ''
-        opggregion = ''.join(i for i in row.region if not i.isdigit())  # remove that 1/2 in the end !
-        opgg = f'[Opgg](https://{opggregion}.op.gg/summoner/userName={row.accname.replace(" ", "+")})'
-        ugg = f'[Ugg](https://u.gg/lol/profile/{row.region}/{row.accname.replace(" ", "+")})'
-        embed.description = \
-            f'Match `{live_game_id}` started {display_relativehmstime(long_ago)}\n'\
-            f'{twtvvod}/{opgg}/{ugg}'
-
+        opggregion = "".join(i for i in row.region if not i.isdigit())
         image_name = f'{twitch.display_name.replace("_", "")}-is-playing-{champ_name.replace(" ", "")}.png'
         file = img_to_file(await better_thumbnail(self.bot.ses, twitch, champ_ids, champ_name), filename=image_name)
-        embed.set_image(url=f'attachment://{image_name}')
         champ = await lol.champion.Champion(key=champ_name).get()
-        embed.set_thumbnail(url=cdragon.abs_url(champ.square_path))
-        embed.set_author(name=f'{twitch.display_name} - {champ_name}', url=twitch.url, icon_url=twitch.logo_url)
+
+        embed = Embed(
+            color=Clr.rspbrry,
+            title="Aluerie's fav streamer picked her fav champ!",
+            url=twitch.url,
+            description=
+            f'Match `{live_game_id}` started {display_relativehmstime(long_ago)}\n'
+            f'{f"[TwtvVOD]({link})" if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ""}'
+            f'/[Opgg](https://{opggregion}.op.gg/summoner/userName={row.accname.replace(" ", "+")})'       
+            f'/[Ugg](https://u.gg/lol/profile/{row.region}/{row.accname.replace(" ", "+")})'
+        ).set_image(
+            url=f'attachment://{image_name}'
+        ).set_thumbnail(
+            url=cdragon.abs_url(champ.square_path)
+        ).set_author(
+            name=f'{twitch.display_name} - {champ_name}',
+            url=twitch.url,
+            icon_url=twitch.logo_url
+        )
         msg = await self.bot.get_channel(Cid.alubot).send(embed=embed, file=file)
         await msg.publish()
 
@@ -130,9 +139,7 @@ class LoLFeed(commands.Cog):
                         our_player = [player for player in live_game.participants if player.summoner_id == row.id][0]
                         if our_player.champion_id in fav_ch_ids:
                             role_mini_list = await get_role_mini_list(
-                                self.bot.ses,
-                                [player.champion_id for player in live_game.participants],
-                                self.bot.get_channel(Cid.spam_me)
+                                [player.champion_id for player in live_game.participants]
                             )
                             if long_ago := round(live_game.start_time_millis / 1000):
                                 long_ago = int(datetime.now(timezone.utc).timestamp() - long_ago)
@@ -211,13 +218,43 @@ class LoLFeedTools(commands.Cog):
     @champ.command()
     async def list(self, ctx):
         """Show current list of favourite champions ;"""
-        embed = Embed(color=Clr.prpl)
-        embed.title = 'List of fav lol heroes'
         champ_array = db.get_value(db.g, Sid.alu, 'lol_fav_champs')
         answer = [f'`{await champion.key_by_id(c_id)} - {c_id}`' for c_id in champ_array]
         answer.sort()
-        embed.description = '\n'.join(answer)
-        await ctx.reply(embed=embed)
+        em = Embed(
+            color=Clr.rspbrry,
+            title='List of fav lol heroes',
+            description='\n'.join(answer)
+        )
+        await ctx.reply(embed=em)
+
+    @commands.is_owner()
+    @champ.command()
+    async def meraki(self, ctx: commands.Context):
+        """Show list of champions that are missing from Meraki Json"""
+        meraki_data = pull_data()
+        champ_ids = await get_diff_list(meraki_data)
+        champ_str = [f'● {await champion.key_by_id(i)} - `{i}`' for i in champ_ids]
+
+        url_json = 'http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json'
+        async with self.bot.ses.get(url_json) as resp:
+            json_dict = await resp.json()
+            meraki_patch = json_dict["patch"]
+
+        em = Embed(
+            colour=Clr.rspbrry,
+            title='List of champs missing from Meraki JSON',
+            description='\n'.join(champ_str)
+        ).add_field(
+            name='Links',
+            value=
+            f'• [GitHub](https://github.com/meraki-analytics/role-identification)\n'
+            f'• [Json]({url_json})'
+        ).add_field(
+            name='Meraki last updated',
+            value=f'Patch {meraki_patch}'
+        )
+        await ctx.reply(embed=em)
 
     @commands.is_owner()
     @lol.group()
@@ -229,8 +266,6 @@ class LoLFeedTools(commands.Cog):
     @streamer.command(name='list')
     async def list_streamer(self, ctx):
         """Show current list of fav streamers with optins ;"""
-        embed = Embed(color=Clr.prpl)
-        embed.title = 'List of fav lol streamers'
         ss_dict = dict()
         for row in db.session.query(db.l):
             key = f'[{row.name}](https://www.twitch.tv/{row.name}) {row.optin}'
@@ -245,8 +280,13 @@ class LoLFeedTools(commands.Cog):
         for key in ss_dict:
             for subkey in ss_dict[key]:
                 ans_dict[key].append(f' {subkey} `{", ".join(ss_dict[key][subkey])}`')
-        embed.description = "\n".join(sorted([f'{k}{" ".join(ans_dict[k])}' for k in ans_dict], key=str.casefold))
-        await ctx.reply(embed=embed)
+
+        em = Embed(
+            color=Clr.prpl,
+            title='List of fav lol streamers',
+            description="\n".join(sorted([f'{k}{" ".join(ans_dict[k])}' for k in ans_dict], key=str.casefold))
+        )
+        await ctx.reply(embed=em)
 
     @commands.is_owner()
     @streamer.command(name='add')

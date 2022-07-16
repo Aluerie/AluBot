@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Literal
+from typing import TYPE_CHECKING, Optional
 
 from discord import Embed, Guild, Member, Object, utils, HTTPException
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord.ext.commands import Greedy
 
 from utils import database as db
@@ -18,7 +18,6 @@ class AdminTools(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.help_category = 'AdminTools'
-        self.checkguilds.start()
 
     @commands.is_owner()
     @commands.command()
@@ -86,36 +85,6 @@ class AdminTools(commands.Cog):
         '''.format(*emote_array)
         await msg.edit(content='', embed=embed)
         await ctx.reply(f"we did it {Ems.PogChampPepe}")
-
-    async def guild_check_work(self, guild):
-        if guild.owner_id not in [Uid.alu, Uid.bot]:
-            def find_txt_channel():
-                if guild.system_channel.permissions_for(guild.me).send_messages:
-                    return guild.system_channel
-                else:
-                    for ch in guild.text_channels:
-                        perms = ch.permissions_for(guild.me)
-                        if perms.send_messages:
-                            return ch
-            embed = Embed(colour=Clr.prpl)
-            embed.title = 'Do not invite me to other guilds, please'
-            embed.description = \
-                f"Sorry, I don't like being in guilds that aren't made by Aluerie.\n\nI'm leaving."
-            await find_txt_channel().send(embed=embed)
-            await guild.leave()
-
-    @commands.Cog.listener()
-    async def on_guild_join(self, guild: Guild):
-        await self.guild_check_work(guild)
-
-    @tasks.loop(count=1)
-    async def checkguilds(self):
-        for guild in self.bot.guilds:
-            await self.guild_check_work(guild)
-
-    @checkguilds.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
 
     @commands.is_owner()
     @commands.command()

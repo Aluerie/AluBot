@@ -40,7 +40,7 @@ class HeroKeyCache:
             }
             for hero in dic:
                 data['id_by_npcname'][dic[hero]['name']] = dic[hero]['id']
-                data['id_by_name'][dic[hero]['localized_name']] = dic[hero]['id']
+                data['id_by_name'][dic[hero]['localized_name'].lower()] = dic[hero]['id']
                 data['name_by_id'][dic[hero]['id']] = dic[hero]['localized_name']
                 data['iconurl_by_id'][dic[hero]['id']] = f"https://cdn.cloudflare.steamstatic.com/{dic[hero]['img']}"
             self.cached_data = data
@@ -62,7 +62,7 @@ async def id_by_name(value: str) -> int:
     """ Get hero id by localized to english name ;
     example: 'Anti-Mage' -> 1 """
     data = await hero_keys_cache.data
-    return data['id_by_name'][value]
+    return data['id_by_name'][value.lower()]
 
 
 async def name_by_id(value: int) -> str:

@@ -2,13 +2,16 @@
 1. **Bootstrap Steam error EVERY TUESDAY**
    1. mb reload dota cog on error with `self.bot.reload_extension(''dotafeed')`
 
-2. async sqlalchemy
-3. sort out total garbage in utils folder
-4. look at every cog in robo danny/pycord manager/stella
-5. rewrite purgw into something better
-6. abandon not scored games for match history
-9. DPC ranking command, Dpc points too
-10. look into 5.3.2 pyot update - Change the Lock on ChampionKeysCache to SealLock, as the asyncio.Lock requires an event loop at the moment of instantiation, an issue that may be encountered by non-async "tasks explorers".
+2. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
+4. copylol thing about removing twitter links
+
+6. async sqlalchemy
+7. sort out total garbage in utils folder
+8. look at every cog in robo danny/pycord manager/stella
+9. rewrite purgw into something better
+10. abandon not scored games for match history
+11. DPC ranking command, Dpc points too
+12. look into 5.3.2 pyot update - Change the Lock on ChampionKeysCache to SealLock, as the asyncio.Lock requires an event loop at the moment of instantiation, an issue that may be encountered by non-async "tasks explorers".
 ### Immediate fix 
 1. make new png for readme file
 2. ?tag button cooldown
@@ -18,7 +21,6 @@ maybe make error original for conversion error as well rom converters
 5. 
 ### New Features
 5. nsfw functions
-6. Search in help paginator
 
 ### Probably Garbage
 7. edit dota and league messages after match ends to include some stats like KDA items victory-lose, RunesReforged, player names, proplayers etc

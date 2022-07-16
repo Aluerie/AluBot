@@ -279,12 +279,16 @@ class ExperienceSystem(commands.Cog):
             for row in ses.query(db.m):
                 guild = self.bot.get_guild(Sid.alu)
                 person = guild.get_member(row.id)
-                if person is None and datetime.now(timezone.utc) - row.lastseen > timedelta(days=30):
+                if person is None and \
+                        datetime.now(timezone.utc) - row.lastseen.replace(tzinfo=timezone.utc) > timedelta(days=30):
                     ses.delete(row)
-                    embed = Embed(colour=0xE6D690)
-                    embed.description = f'id = {row.id}'
-                    embed.set_author(name=f'{row.name} was removed from datebase')
-                    await guild.get_channel(Cid.logs).send(embed=embed)
+                    em = Embed(
+                        colour=0xE6D690,
+                        description=f'id = {row.id}'
+                    ).set_author(
+                        name=f'{row.name} was removed from the datebase'
+                    )
+                    await guild.get_channel(Cid.logs).send(embed=em)
 
     @remove_inactive.before_loop
     async def before(self):

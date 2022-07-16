@@ -7,10 +7,11 @@ from discord.ext import commands
 from utils.context import Context
 from utils.mysteam import sd_login
 
+from aiohttp import ClientSession
 from steam.client import SteamClient
 from dota2.client import Dota2Client
-from aiohttp import ClientSession
 from github import Github
+from twitchAPI import Twitch
 
 from datetime import datetime, timezone
 
@@ -20,11 +21,23 @@ import logging
 if TYPE_CHECKING:
     from discord import Interaction, Message
 
-jsk = True
 test_list = [  # for yen bot
-    'reddit',
-    'error'
+    'fun',
+    'expsys',
+    'logs',
+    'botadmintools',
+    'error',
 ]
+
+
+def cog_check(cog_list):
+    return any(item in test_list for item in cog_list)
+
+
+YEN_JSK = True
+YEN_GIT = cog_check(['dotacomments', 'copydota'])
+YEN_STE = cog_check(['dotafeed', 'gamerstats'])
+YEN_TWI = cog_check(['dotafeed', 'lolfeed', 'twitch'])
 
 
 class AluBot(commands.Bot):
@@ -45,14 +58,13 @@ class AluBot(commands.Bot):
 
     async def setup_hook(self) -> None:
         self.__session = ClientSession()
-        if self.yen and (not len(test_list) or any(item in test_list for item in ['dotafeed', 'gamerstats'])):
-            self.steam = SteamClient()
-            self.dota = Dota2Client(self.steam)
-            self.steam_lgn = getenv("STEAM_TEST_LGN")
-            self.steam_psw = getenv("STEAM_TEST_PSW")
-            sd_login(self.steam, self.dota, self.steam_lgn, self.steam_psw)
-        elif self.yen:
-            pass
+        if self.yen:
+            if YEN_STE:
+                self.steam = SteamClient()
+                self.dota = Dota2Client(self.steam)
+                self.steam_lgn = getenv("STEAM_TEST_LGN")
+                self.steam_psw = getenv("STEAM_TEST_PSW")
+                sd_login(self.steam, self.dota, self.steam_lgn, self.steam_psw)
         else:
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
@@ -60,13 +72,17 @@ class AluBot(commands.Bot):
             self.steam_psw = getenv("STEAM_PSW")
             sd_login(self.steam, self.dota, self.steam_lgn, self.steam_psw)
 
-        if not self.yen or any(item in test_list for item in ['dotacomments', 'copydota']):
+        if not self.yen or YEN_GIT:
             self.github = Github(getenv('GIT_PERSONAL_TOKEN'))
             self.git_gameplay = self.github.get_repo("ValveSoftware/Dota2-Gameplay")
             self.git_tracker = self.github.get_repo("SteamDatabase/GameTracking-Dota2")
 
+        if not self.yen or YEN_TWI:
+            self.twitch = Twitch(getenv("TWITCH_CLIENT_ID"), getenv("TWITCH_CLIENT_SECRET"))
+            self.twitch.authenticate_app([])
+
         if self.yen and len(test_list):
-            if jsk:
+            if YEN_JSK:
                 await self.load_cog('jishaku')
             for item in test_list:
                 await self.load_cog(f'cogs.{item}')

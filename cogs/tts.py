@@ -41,10 +41,11 @@ class TextToSpeech(commands.Cog):
     async def speak(
             self,
             ctx,
-            lang: Optional[Literal[tuple(list(lang_dict.keys()))]] = 'fr-FR',
+            lang: Optional[Literal['fr-FR', 'en-IE', 'ru-RU', 'es-ES', 'pt-PT', 'zh-CN']] = 'fr-FR',
             *,
             text: str = 'Allo'
             # honourable mention of exec to avoid the warning
+            # tuple(list(lang_dict.keys()))
             # exec('xd = typing.Literal["{0}"]'.format('","'.join(list(lang_dict.keys()))))
     ):
         """Bot will connect to voice-chat you're in and speak `text` using Google Text-To-Speech module. \

@@ -45,6 +45,22 @@ class DiscordEmote(Base):
     month_array = Column(PickleType, default=[0]*30)
 
 
+class botinfo(Base):
+    __tablename__ = 'botinfo'
+    __table_args__ = {'extend_existing': True}
+    id = Column(BigInteger, primary_key=True, default=1)
+    milestone_achieved = Column(Integer, default=100)
+    suggestion_num = Column(Integer, default=126)
+    curr_timer = Column(Integer, default=0)
+    curr_important_timer = Column(Integer, default=0)
+    curr_fact_timer = Column(Integer, default=0)
+    curr_gif_timer = Column(Integer, default=0)
+    curr_rule_timer = Column(Integer, default=0)
+    git_checked_dt = Column(DateTime, default=datetime.now(timezone.utc))
+    trusted_ids = Column(PickleType, default=[])
+    irene_is_live = Column(Integer, default=0)
+
+
 class DiscordGuilds(Base):
     __tablename__ = 'DiscordGuilds'
     __table_args__ = {'extend_existing': True}
@@ -62,6 +78,18 @@ class DiscordGuilds(Base):
     irene_is_live = Column(Integer, default=0)
     prefix = Column(String, default='$')
     git_checked_dt = Column(DateTime)
+
+
+class guildassignment(Base):
+    __tablename__ = 'guildassignment'
+    __table_args__ = {'extend_existing': True}
+    id = Column(BigInteger, primary_key=True)
+    name = Column(String, default='')
+    prefix = Column(String, default='$')
+    emote_logs_id = Column(BigInteger, default=None)
+    dotafeed_ch_id = Column(BigInteger, default=None)
+    dotafeed_hero_ids = Column(PickleType, default=[])
+    dotafeed_stream_ids = Column(PickleType, default=[])
 
 
 class LeagueAccount(Base):
@@ -83,6 +111,7 @@ class DotaAccount(Base):
     friendid = Column(BigInteger, default=1234)
     optin = Column(Integer, default=1)
     lastposted = Column(BigInteger, default=1234)
+    twtv_id = Column(BigInteger, default=None)
 
 
 class RemindersNote(Base):
@@ -132,15 +161,6 @@ class MuteData(Base):
     reason = Column(String, default='No reason provided')
 
 
-class ChannelsAssignmentData(Base):
-    __tablename__ = 'ChannelsAssignmentData'
-    __table_args__ = {'extend_existing': True}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, default='')
-    guildid = Column(BigInteger, default=1234)
-    channelid = Column(BigInteger, default=1234)
-
-
 class mygamerdata(Base):
     __tablename__ = 'mygamerdata'
     __table_args__ = {'extend_existing': True}
@@ -177,20 +197,22 @@ class tagsdb(Base):
 Base.metadata.create_all(engine)
 
 # biginteger type of id
+
 m = DiscordUser
 e = DiscordEmote
 g = DiscordGuilds
+b = botinfo
 l = LeagueAccount
 d = DotaAccount
 a = AFKNote
 s = mygamerdata
+ga = guildassignment
 
 # autoincrement type of id
 r = RemindersNote
 t = ToDoNote
 w = WarningData
 u = MuteData
-c = ChannelsAssignmentData
 sr = serverrules
 rr = realrules
 tg = tagsdb

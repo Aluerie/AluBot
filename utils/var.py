@@ -75,6 +75,8 @@ class Cid:
 
     coop = 966366521607745586
 
+    global_logs = 997149550324240465
+
     copylol_ff20 = 791099728498130944
     copydota_info = 873430376033452053
     copydota_steam = 881843565251141632

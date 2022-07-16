@@ -25,8 +25,8 @@ class DotaComments(commands.Cog):
 
         assignees = [x.login for x in repo.get_assignees()]
 
-        dt = db.get_value(db.g, Sid.alu, 'git_checked_dt').replace(tzinfo=timezone.utc)
-        db.set_value(db.g, Sid.alu, git_checked_dt=datetime.now(timezone.utc))
+        dt = db.get_value(db.b, Sid.alu, 'git_checked_dt').replace(tzinfo=timezone.utc)
+        db.set_value(db.b, Sid.alu, git_checked_dt=datetime.now(timezone.utc))
 
         # dt = datetime.now(timezone.utc) - timedelta(days=8) # testing
         for c in [x for x in repo.get_issues_comments(sort='updated', since=dt) if x.user.login in assignees]:

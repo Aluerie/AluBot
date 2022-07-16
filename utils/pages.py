@@ -4,6 +4,7 @@ Unfortunately I had to switch to `discord.py` so we need to bring pagination her
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from collections import defaultdict
 
 from discord import ButtonStyle, Embed, File, Interaction, Message, WebhookMessage
 from discord.ext.commands import Bot, BadArgument
@@ -16,6 +17,35 @@ from io import BytesIO
 
 if TYPE_CHECKING:
     from discord import Emoji, PartialEmoji
+
+
+class PaginatorSearchModal(Modal):
+    def __init__(self, paginator, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.paginator: Paginator = paginator
+        self.title = "Search Page by query"
+
+    search = TextInput(label="Search Query", required=True)
+
+    async def on_submit(self, ntr: Interaction):
+        a = self.search.value
+
+        found_page = None
+        for idx, page in enumerate(self.paginator.pages):
+            page_content = self.paginator.get_page_content(page)
+
+            b = '\n'.join(
+                [str(e.to_dict().values()) for e in page_content.embeds],
+            )
+
+            if a in b:
+                found_page = idx
+        if found_page is None:
+            return await ntr.response.send_message(
+                content=f"I found nothing with your search query {Ems.PepoBeliever}",
+                ephemeral=True
+            )
+        await self.paginator.goto_page(page_number=found_page, ntr=ntr)
 
 
 class PaginatorGotoModal(Modal):
@@ -61,8 +91,8 @@ class PaginatorButton(Button):
             modal = PaginatorGotoModal(self.paginator, title="Goto Page")
             return await ntr.response.send_modal(modal)
         elif self.button_type == "search":
-            modal = PaginatorGotoModal(self.paginator, title="Goto Page")
-            return await ntr.response.send_modal(modal)  # todo: SEARCH
+            modal = PaginatorSearchModal(self.paginator, title="Search Page by query")
+            return await ntr.response.send_modal(modal)
 
         if self.button_type == "home":
             self.paginator.current_page = 0

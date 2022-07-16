@@ -273,24 +273,34 @@ class Afk(commands.Cog):
 
         for key in self.active_afk:
             if key in msg.raw_mentions:
-                embed = Embed(colour=Clr.prpl, title='Afk note:', description=db.get_value(db.a, key, 'name'))
                 guild = self.bot.get_guild(Sid.alu)
                 member = guild.get_member(key)
-                embed.set_author(name=f'Sorry, but {member.display_name} is $afk !', icon_url=member.display_avatar.url)
-                embed.set_footer(text='PS. Please, consider deleting your ping-message (or just removing ping) '
-                                      'if you think it will be irrelevant when they come back (I mean seriously)')
-                await msg.channel.send(embed=embed)
+                em = Embed(
+                    colour=Clr.prpl,
+                    title='Afk note:',
+                    description=db.get_value(db.a, key, 'name')
+                ).set_author(
+                    name=f'Sorry, but {member.display_name} is $afk !',
+                    icon_url=member.display_avatar.url
+                ).set_footer(
+                    text=
+                    'PS. Please, consider deleting your ping-message (or just removing ping) '
+                    'if you think it will be irrelevant when they come back (I mean seriously)'
+                )
+                await msg.channel.send(embed=em)
 
         async def send_non_afk_em(author, channel):
-            embed = Embed(colour=Clr.prpl, title='Afk note:')
-            embed.set_author(
+            em = Embed(
+                colour=Clr.prpl,
+                title='Afk note:',
+                description=db.get_value(db.a, author.id, 'name')
+            ).set_author(
                 name=f'{author.display_name} is no longer afk !',
                 icon_url=author.display_avatar.url
             )
-            embed.description = db.get_value(db.a, author.id, 'name')
             db.remove_row(db.a, author.id)
             self.active_afk.pop(author.id)
-            await channel.send(embed=embed)
+            await channel.send(embed=em)
             try:
                 await author.edit(nick=db.get_value(db.m, author.id, 'name'))
             except:
@@ -319,4 +329,3 @@ async def setup(bot):
     await bot.add_cog(Remind(bot))
     await bot.add_cog(Todo(bot))
     await bot.add_cog(Afk(bot))
-

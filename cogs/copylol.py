@@ -45,6 +45,7 @@ class CopypasteLeague(commands.Cog):
         'Wild Rift',
         'entwuhoo',  # tft dev account
         'RiotExis',  # legends of runeterra
+        'RiotZephyreal',  # merch
     ]
 
     whitelist_words = [

@@ -21,6 +21,15 @@ twitch = Twitch(client_id, client_secret)
 twitch.authenticate_app([])
 
 
+def get_dota_streams(session=db.session):
+    fav_stream_ids = []
+    for row in session.query(db.ga):
+        fav_stream_ids += row.dotafeed_stream_ids
+    fav_stream_ids = [str(x) for x in list(set(fav_stream_ids))]
+    data = twitch.get_streams(user_id=fav_stream_ids, first=100)['data']
+    return [item['user_id'] for item in data]
+
+
 def get_db_online_streams(dbclass, session=db.session):
     streamer_list = list(set([row.name for row in session.query(dbclass).filter_by(optin=1)]))
     data = twitch.get_streams(user_login=streamer_list, first=100)['data']
@@ -33,6 +42,24 @@ def get_offline_data(user):
     except Exception as e:
         print(f"Error checking user: {e}, {user} is probably banned offline data")
         return False
+
+
+def get_twtv_id(user: str):
+    try:
+        data = twitch.get_users(logins=[user])['data'][0]
+        return data['id']
+    except Exception as e:
+        print(f"Error checking user: {e}, {user} is probably banned offline data")
+        return None
+
+
+def twitch_by_id(id_: int):
+    try:
+        data = twitch.get_users(user_ids=[str(id_)])['data'][0]
+        return data['display_name']
+    except Exception as e:
+        print(f"Error checking user: {e}, {id_} is probably banned offline data")
+        return None
 
 
 def check_user(user):  # returns true if online, false if not
@@ -112,25 +139,35 @@ class Twitch(commands.Cog):
     async def mystream(self):
         tw = TwitchStream(my_twitch_name)
         if not tw.online:
-            db.set_value(db.g, Sid.alu, irene_is_live=0)
+            db.set_value(db.b, Sid.alu, irene_is_live=0)
             return
-        elif db.get_value(db.g, Sid.alu, "irene_is_live"):
+        elif db.get_value(db.b, Sid.alu, "irene_is_live"):
             return
         else:
-            db.set_value(db.g, Sid.alu, irene_is_live=1)
+            db.set_value(db.b, Sid.alu, irene_is_live=1)
         guild = self.bot.get_guild(Sid.alu)
         mention_role = guild.get_role(Rid.stream_lover)
         content = f'{mention_role.mention} and chat, our Highness **@{my_twitch_name}** just went live !'
-        embed = Embed(colour=0x9146FF)
-        embed.title = f'{tw.title}'
-        embed.url = tw.url
-        embed.description = f'Playing {tw.game}\n[Watch Stream]({tw.url})\n[VOD link]({tw.last_vod_link()})'
-        embed.set_author(name=f'{my_twitch_name} just went live on Twitch!', icon_url=tw.logo_url, url=tw.url)
-        embed.set_thumbnail(url=tw.logo_url)
         file = await url_to_file(self.bot.ses, tw.preview_url, filename='twtvpreview.png')
-        embed.set_image(url=f'attachment://{file.filename}')
-        embed.set_footer(text=f'Twitch.tv | With love, {guild.me.display_name}', icon_url=Img.twitchtv)
-        await guild.get_channel(Cid.stream_notifs).send(content=content, embed=embed, file=file)
+        em = Embed(
+            colour=0x9146FF,
+            title=f'{tw.title}',
+            url=tw.url,
+            description=
+            f'Playing {tw.game}\n[Watch Stream]({tw.url})\n[VOD link]({tw.last_vod_link()})',
+        ).set_author(
+            name=f'{my_twitch_name} just went live on Twitch!',
+            icon_url=tw.logo_url,
+            url=tw.url
+        ).set_footer(
+            text=f'Twitch.tv | With love, {guild.me.display_name}',
+            icon_url=Img.twitchtv
+        ).set_thumbnail(
+            url=tw.logo_url
+        ).set_image(
+            url=f'attachment://{file.filename}'
+        )
+        await guild.get_channel(Cid.stream_notifs).send(content=content, embed=em, file=file)
 
     @mystream.before_loop
     async def before(self):
@@ -149,20 +186,20 @@ class TwitchThanks(commands.Cog):
         guild = self.bot.get_guild(Sid.alu)
         subs_role = guild.get_role(Rid.subs)
 
-        embed = Embed(color=0x9678b6)
-        embed.set_thumbnail(url=after.display_avatar.url)
-        embed.set_footer(text=f'With love, {guild.me.display_name}')
+        em = Embed(color=0x9678b6)
+        em.set_thumbnail(url=after.display_avatar.url)
+        em.set_footer(text=f'With love, {guild.me.display_name}')
         if subs_role in after.roles and subs_role not in before.roles:
-            embed.title = "User got Aluerie's tw.tv sub"
-            embed.description = f'{after.mention} just got {subs_role.mention} role in this server !'
-            embed.add_field(name="{0}{0}{0}".format(Ems.peepoNiceDay), value="Thanks for the sub !")
+            em.title = "User got Aluerie's tw.tv sub"
+            em.description = f'{after.mention} just got {subs_role.mention} role in this server !'
+            em.add_field(name="{0}{0}{0}".format(Ems.peepoNiceDay), value="Thanks for the sub !")
         elif subs_role in before.roles and subs_role not in after.roles:
-            embed.title = "User lost Aluerie's tw.tv sub"
-            embed.description = f'{after.mention} lost {subs_role.mention} role in this server !'
-            embed.add_field(name="{0}{0}{0}".format(Ems.FeelsRainMan), value="Sad news !")
+            em.title = "User lost Aluerie's tw.tv sub"
+            em.description = f'{after.mention} lost {subs_role.mention} role in this server !'
+            em.add_field(name="{0}{0}{0}".format(Ems.FeelsRainMan), value="Sad news !")
         else:
             return
-        await guild.get_channel(Cid.stream_notifs).send(embed=embed)
+        await guild.get_channel(Cid.stream_notifs).send(embed=em)
 
 
 async def setup(bot):

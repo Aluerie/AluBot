@@ -139,22 +139,27 @@ class FunThings(commands.Cog):
     )
     @app_commands.describe(channel="Channel to send to")
     @app_commands.describe(text="Enter text to speak")
-    async def echo(self, ctx, channel: Optional[TextChannel] = None, *, text: str = f'Allo'):
+    async def echo(
+            self,
+            ctx: commands.Context,
+            channel: Optional[TextChannel] = None,
+            *,
+            text: str = f'Allo'
+    ):
         """Send `text` to `#channel` and delete your invoking message, so it looks like \
         the bot is speaking on its own ;"""
-        channel = channel or ctx.message.channel
-        if channel.permissions_for(ctx.author).send_messages:
+        ch = channel or ctx.channel
+        if ch.permissions_for(ctx.author).send_messages:
             url_array = re.findall(Rgx.url_danny, str(text))
             for url in url_array:  # forbid embeds
                 text = text.replace(url, f'<{url}>')
-            await channel.send(text)
+            await ch.send(text)
             if ctx.interaction:
                 await ctx.reply(content=f'I did it {Ems.DankApprove}', ephemeral=True)
         else:
-            embed = Embed(colour=Clr.rspbrry).set_author(name='PermissionError')
-            embed.description = f'Sorry, you don\'t have permissions to speak in {channel.mention}'
-            embed.set_footer(text='Probably that channel is read-only mode for you')
-            return await ctx.reply(embed=embed)
+            raise commands.MissingPermissions(
+                [f'Sorry, you don\'t have permissions to speak in {ch.mention}']
+            )
         try:
             await ctx.message.delete()
         except:

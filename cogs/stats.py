@@ -48,11 +48,13 @@ class StatsCommands(commands.Cog):
         for ch in channels:
             text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
-        em = Embed(colour=Clr.prpl)
-        em.description = \
-            f"Members: {', '.join([m.mention for m in members])}\n" \
-            f"Channels: {', '.join([c.mention for c in channels])}\n" \
+        em = Embed(
+            colour=Clr.prpl,
+            description=
+            f"Members: {', '.join([m.mention for m in members])}\n"
+            f"Channels: {', '.join([c.mention for c in channels])}\n"
             f"Limit: {limit}"
+        )
         await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
 
     @commands.hybrid_command(
@@ -62,12 +64,24 @@ class StatsCommands(commands.Cog):
     )
     async def summary(self, ctx):
         """Summary stats for the bot ;"""
-        em = Embed(colour=Clr.prpl, title='Summary bot stats')
-        em.set_thumbnail(url=self.bot.user.avatar.url)
-        em.add_field(name="Server Count", value=str(len(self.bot.guilds)))
-        em.add_field(name="User Count", value=str(len(self.bot.users)))
-        em.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")
-        em.add_field(name='Uptime', value=humanize_time(datetime.now(timezone.utc) - self.bot.launch_time, full=False))
+        em = Embed(
+            colour=Clr.prpl,
+            title='Summary bot stats'
+        ).set_thumbnail(
+            url=self.bot.user.avatar.url
+        ).add_field(
+            name="Server Count",
+            value=str(len(self.bot.guilds))
+        ).add_field(
+            name="User Count",
+            value=str(len(self.bot.users))
+        ).add_field(
+            name="Ping",
+            value=f"{self.bot.latency * 1000:.2f}ms"
+        ).add_field(
+            name='Uptime',
+            value=humanize_time(datetime.now(timezone.utc) - self.bot.launch_time, full=False)
+        )
         await ctx.reply(embed=em)
 
 

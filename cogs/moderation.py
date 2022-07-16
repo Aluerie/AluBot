@@ -14,8 +14,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
 if TYPE_CHECKING:
-    from discord import Message
-    from discord import Interaction
+    from discord import Message, Interaction
 
 blocked_phrases = ['https://cdn.discordapp.com/emojis/831229578340859964.gif?v=1']
 

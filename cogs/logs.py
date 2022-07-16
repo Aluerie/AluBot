@@ -1,4 +1,7 @@
-from discord import AuditLogAction, Embed, Interaction
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional
+
+from discord import AuditLogAction, Embed, TextChannel
 from discord.ext import commands, tasks
 from utils.var import *
 from utils.format import inline_wordbyword_diff
@@ -6,6 +9,9 @@ from utils import database as db
 
 import regex
 from datetime import timezone, time
+
+if TYPE_CHECKING:
+    pass
 
 
 class Logging(commands.Cog):
@@ -58,11 +64,15 @@ class Logging(commands.Cog):
         if msg.content.startswith('$'):
             return
 
-        embed = Embed(colour=0xB22222, description=msg.content).set_author(
-            name=f'{msg.author.display_name}\'s del in #{msg.channel.name}', icon_url=msg.author.display_avatar.url
+        em = Embed(
+            colour=0xB22222,
+            description=msg.content
+        ).set_author(
+            name=f'{msg.author.display_name}\'s del in #{msg.channel.name}',
+            icon_url=msg.author.display_avatar.url
         )
         files = [await item.to_file() for item in msg.attachments]
-        return await self.bot.get_channel(Cid.logs).send(embed=embed, files=files)
+        return await self.bot.get_channel(Cid.logs).send(embed=em, files=files)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -142,23 +152,28 @@ class EmoteLogging(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_emojis=True)
     @commands.bot_has_permissions(view_audit_log=True)
-    async def turn_emote_logs(self, ctx):
+    async def turn_emote_logs(self, ctx: commands.Context, channel: Optional[TextChannel] = None):
         """Turn emote logs on in this channel for this guild ;"""
-        db.append_row(db.c, name='emote_logs', guildid=ctx.guild.id, channelid=ctx.channel.id)
-        embed = Embed(colour=Clr.prpl, title='Emote logging is turned on')
-        embed.description = 'Now I will log emote create/delete/rename actions in this channel. Go try it!'
-        embed.set_footer(text=f'With love, {ctx.bot.user.display_name}')
-        embed.set_thumbnail(url=ctx.bot.user.display_avatar.url)
+        ch = channel or ctx.channel
+        db.set_value(db.ga, ctx.guild.id, emote_logs_id=ch.id)
+
+        embed = Embed(
+            colour=Clr.prpl,
+            title='Emote logging is turned on',
+            description=f'Now I will log emote create/delete/rename actions in {ch.mention}. Go try it!'
+        ).set_footer(
+            text=f'With love, {ctx.guild.me.display_name}'
+        ).set_thumbnail(
+            url=ctx.guild.me.display_avatar.url
+        )
         await ctx.reply(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_emojis_update(self, guild, before, after):
         def find_channel():
             with db.session_scope() as ses:
-                for row in ses.query(db.c).filter_by(guildid=guild.id):
-                    if row.name == 'emote_logs':
-                        return self.bot.get_channel(row.channelid)
-                return None
+                row = ses.query(db.ga).filter_by(id=guild.id).first()
+                return self.bot.get_channel(row.emote_logs_id)
 
         if (channel := find_channel()) is None:
             return
@@ -180,24 +195,28 @@ class EmoteLogging(commands.Cog):
             for emote in diff_before:
                 if not emote.managed and guild.id == Sid.alu:
                     db.remove_row(db.e, emote.id)
-                embed = Embed(colour=0xb22222)
-                embed.title = f'`:{emote.name}:` emote removed'
+                embed = Embed(
+                    colour=0xb22222,
+                    title=f'`:{emote.name}:` emote removed',
+                    description=f'[Image link]({emote.url})'
+                ).set_thumbnail(url=emote.url)
                 await set_author(emote, embed, AuditLogAction.emoji_delete)
-                embed.description = f'[Image link]({emote.url})'
-                embed.set_thumbnail(url=emote.url)
                 await channel.send(embed=embed)
         # Add emote ###############################################################################
         elif diff_after != [] and diff_before == []:
             for emote in diff_after:
-                embed = Embed(colour=0x00ff7f, title=f'`:{emote.name}:` emote created')
+                embed = Embed(
+                    colour=0x00ff7f,
+                    title=f'`:{emote.name}:` emote created',
+                    description=f'[Image link]({emote.url})'
+                ).set_thumbnail(url=emote.url)
                 await set_author(emote, embed, AuditLogAction.emoji_create)
-                embed.description = f'[Image link]({emote.url})'
-                embed.set_thumbnail(url=emote.url)
                 await channel.send(embed=embed)
-                if not emote.managed and guild.id == Sid.alu:
-                    db.add_row(db.e, emote.id, name=str(emote), animated=emote.animated)
+                if not emote.managed:
                     msg = await channel.send('{0} {0} {0}'.format(str(emote)))
                     await msg.add_reaction(str(emote))
+                if guild.id == Sid.alu:
+                    db.add_row(db.e, emote.id, name=str(emote), animated=emote.animated)
         # Renamed emote ###########################################################################
         else:
             diff_after_name = [x for x in after if x.name not in [x.name for x in before]]
@@ -205,12 +224,15 @@ class EmoteLogging(commands.Cog):
             for emote_after, emote_before in zip(diff_after_name, diff_before_name):
                 if not emote_after.managed and guild.id == Sid.alu:
                     db.set_value(db.e, emote_after.id, name=str(emote_after))
-                embed = Embed(colour=0x1e90ff)
-                word_for_action = 'replaced by' if emote_after.managed else 'renamed into'
-                embed.title = f'`:{emote_before.name}:` emote {word_for_action} `:{emote_after.name}:`'
+                embed = Embed(
+                    colour=0x1e90ff,
+                    title=
+                    f'`:{emote_before.name}:` emote '
+                    f'{"replaced by" if emote_after.managed else "renamed into"} '
+                    f'`:{emote_after.name}:`',
+                    description=f'[Image link]({emote_after.url})',
+                ).set_thumbnail(url=emote_after.url)
                 await set_author(emote_after, embed, AuditLogAction.emoji_update)
-                embed.description = f'[Image link]({emote_after.url})'
-                embed.set_thumbnail(url=emote_after.url)
                 await channel.send(embed=embed)
 
 
@@ -219,39 +241,30 @@ class CommandLogging(commands.Cog):
         self.bot = bot
 
     ignored_users = [Uid.alu]
+    included_guilds = [Sid.alu]
 
-    async def on_cmd_work(self, ctx):
-        if ctx.author.id in self.ignored_users:
+    @commands.Cog.listener()
+    async def on_command(self, ctx: commands.Context):
+        if ctx.guild.id not in self.included_guilds or ctx.author.id in self.ignored_users:
             return
-        embed = Embed(colour=ctx.author.colour)
 
-        prefix = getattr(ctx, 'clean_prefix', '/')
-
-        if isinstance(ctx, commands.Context):
-            author = ctx.author
-            ch = ctx.channel
-            jump_url = ctx.message.jump_url
-        elif isinstance(ctx, Interaction):
-            author = ctx.user
-            ch = ctx.channel
-            jump_url = (await ctx.original_message()).jump_url
+        cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])
+        if ctx.interaction:
+            jump_url = (await ctx.interaction.original_message()).jump_url
+            cmd_text = f'/{ctx.command.qualified_name}'
         else:
-            author = False
-            ch = 'unknown'
-            jump_url = ''
+            jump_url = ctx.message.jump_url
+            cmd_text = ctx.message.content
 
-        embed.description = f'Used [{prefix}{ctx.command.qualified_name}]({jump_url}) in {ch.mention}'
-        if author:
-            embed.set_author(icon_url=author.display_avatar.url, name=author.display_name)
+        embed = Embed(
+            colour=ctx.author.colour,
+            description=f'{cmd_text}\n{cmd_kwargs}'
+        ).set_author(
+            icon_url=ctx.author.display_avatar.url,
+            name=f'{ctx.author.display_name} used command in {ctx.channel.name}',
+            url=jump_url
+        )
         await self.bot.get_channel(Cid.logs).send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_command(self, ctx):
-        await self.on_cmd_work(ctx)
-
-    @commands.Cog.listener()
-    async def on_application_command(self, ctx):
-        await self.on_cmd_work(ctx)
 
 
 async def setup(bot):

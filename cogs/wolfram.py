@@ -41,12 +41,12 @@ class WolframAlpha(commands.Cog):
         questionurl = str(self.wa_basic_url + str(urlparse.quote(query)))
         async with self.bot.ses.get(questionurl) as resp:
             if (content := await resp.read()) == "Error 1: Invalid appid":
-                result = "Sorry! The bot has wrong appid"
-                file = None
+                await ctx.reply("Sorry! The bot has wrong appid")
             else:
-                result = f"```py\n{query}```"
-                file = File(fp=BytesIO(content), filename="WolframAlpha.png")
-            await ctx.reply(content=result, file=file)
+                await ctx.reply(
+                    content=f"```py\n{query}```",
+                    file=File(fp=BytesIO(content), filename="WolframAlpha.png")
+                )
 
     @commands.hybrid_command(
         name="wolfram_short",

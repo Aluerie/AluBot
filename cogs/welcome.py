@@ -167,21 +167,26 @@ class Milestone(commands.Cog):
         if member.guild.id != Sid.alu:
             return
         mile_rl = member.guild.get_role(Rid.milestone)
-        milestone_achieved = db.get_value(db.g, Sid.alu, 'milestone_achieved')
+        milestone_achieved = db.get_value(db.b, Sid.alu, 'milestone_achieved')
         amount_members = member.guild.member_count
 
         if amount_members > milestone_achieved and amount_members % 50 == 0:
             milestone_achieved = amount_members
-            db.set_value(db.g, Sid.alu, milestone_achieved=milestone_achieved)
+            db.set_value(db.b, Sid.alu, milestone_achieved=milestone_achieved)
             await member.add_roles(mile_rl)
 
-            em = Embed(color=Clr.prpl, title=f'{Ems.PogChampPepe} Milestone reached !')
-            em.description = \
-                f'Our server reached {milestone_achieved} members ! ' \
-                f'{member.mention} is our latest milestone member '\
+            em = Embed(
+                color=Clr.prpl,
+                title=f'{Ems.PogChampPepe} Milestone reached !',
+                description=
+                f'Our server reached {milestone_achieved} members ! '
+                f'{member.mention} is our latest milestone member '
                 f'who gets a special lucky {mile_rl.mention} role. Congrats !'
-            em.set_thumbnail(url=member.guild.icon_url)
-            em.set_footer(text=f"With love, {member.guild.me.display_name}")
+            ).set_thumbnail(
+                url=member.guild.icon_url
+            ).set_footer(
+                text=f"With love, {member.guild.me.display_name}"
+            )
             await self.bot.get_channel(Cid.welcome).send(embed=em)
 
 

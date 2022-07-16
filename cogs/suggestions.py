@@ -22,15 +22,22 @@ class Suggestions(commands.Cog):
         """Read above"""
         guild = self.bot.get_guild(Sid.alu)
         patch_channel = guild.get_channel(Cid.suggestions)
-        number = db.inc_value(db.g, Sid.alu, 'suggestion_num')
+        number = db.inc_value(db.b, Sid.alu, 'suggestion_num')
         title = f'Suggestion #{number}'
-        embed = Embed(color=Clr.prpl, title=title, description=text)
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-        embed.set_footer(text=f'With love, {guild.me.display_name}')
-        message = await patch_channel.send(embed=embed)
-        await message.add_reaction('⬆️')
-        await message.add_reaction('⬇️')
-        suggestion_thread = await message.create_thread(name=title, auto_archive_duration=7*24*60)
+        em = Embed(
+            color=Clr.prpl,
+            title=title,
+            description=text
+        ).set_author(
+            name=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.url
+        ).set_footer(
+            text=f'With love, {guild.me.display_name}'
+        )
+        msg = await patch_channel.send(embed=em)
+        await msg.add_reaction('⬆️')
+        await msg.add_reaction('⬇️')
+        suggestion_thread = await msg.create_thread(name=title, auto_archive_duration=7*24*60)
         await suggestion_thread.send(
             content=
             'Here you can discuss current suggestion.\n '

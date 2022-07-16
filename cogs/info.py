@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, List
 from discord import Colour, Embed,  Member, Message, Role, app_commands
 from discord.ext import commands, tasks
 
+from utils import database as db
 from utils.format import humanize_time
 from utils.var import *
 from utils.imgtools import img_to_file
@@ -16,6 +17,9 @@ from async_google_trans_new import google_translator
 import re
 from dateparser.search import search_dates
 
+import platform, socket, psutil
+from os import getenv
+
 import warnings
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
@@ -24,7 +28,7 @@ warnings.filterwarnings(
 )
 
 if TYPE_CHECKING:
-    from discord import Interaction
+    from discord import Interaction, Guild
 
 
 async def account_age_ctx_menu(ntr: Interaction, member: Member):
@@ -47,6 +51,8 @@ class Info(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
+        if message.author.bot:
+            return
         pdates = search_dates(message.content)
         if pdates is None:
             return
@@ -244,7 +250,103 @@ class InfoTools(commands.Cog):
             await ctx.reply(embed=embed, ephemeral=True)
 
 
+class BotInfo(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.help_category = 'Info'
+
+    @commands.hybrid_command(
+        name='sysinfo',
+        brief=Ems.slash,
+        description='Get system info about machine currently hosting the bot',
+        aliases=['systeminfo']
+    )
+    async def sysinfo(self, ctx):
+        """Get system info about machine currently hosting the bot. Idk myself what machine it is being hosted on ;"""
+        embed = Embed(
+            colour=Clr.prpl,
+            title="Bot Host Machine System Info",
+            description=
+            f'Hostname: {socket.gethostname()}\n'
+            f'Machine: {platform.machine()}\n'
+            f'Platform: {platform.platform()}\n'
+            f'System: `{platform.system()}` release: `{platform.release()}`\n'
+            f'Version: `{platform.version()}`\n'
+            f'Processor: {platform.processor()}\n',
+        ).add_field(
+            name='Current % | max values',
+            value=
+            f'CPU usage: {psutil.cpu_percent()}% | {psutil.cpu_freq().current/1000:.1f}GHz\n'
+            f'RAM usage: {psutil.virtual_memory().percent}% | '
+            f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
+            f'Disk usage: {(du := psutil.disk_usage("/")).percent} % | '
+            f'{du.used / (1024 ** 3):.1f}GB /{du.total / (1024 ** 3):.1f}GB'
+        ).set_footer(
+            text='This is what they give me for free plan :D'
+        )
+        await ctx.reply(embed=embed)
+
+
+class BotAdminInfo(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.help_category = 'AdminInfo'
+
+    @commands.command(aliases=['invitelink'])
+    @commands.is_owner()
+    @commands.guild_only()
+    async def invite_link(self, ctx):
+        embed = Embed(color=Clr.prpl)
+        embed.description = getenv('DISCORD_BOT_INVLINK')
+        await ctx.reply(embed=embed)
+
+    @staticmethod
+    def guild_embed(guild: Guild, event: Literal['join', 'remove']):
+        e_dict = {
+            'join': {
+                'clr': MP.green(shade=500),
+                'word': 'joined'
+            },
+            'remove': {
+                'clr': MP.red(shade=500),
+                'word': 'was removed from'
+            }
+        }
+        return Embed(
+            colour=e_dict[event]['clr'],
+            title=guild.name,
+            description=guild.description
+        ).set_author(
+            icon_url=guild.owner.avatar.url,
+            name=f"The bot {e_dict[event]['word']} {str(guild.owner)}'s guild",
+        ).set_thumbnail(
+            url=guild.icon.url if guild.icon else None
+        ).add_field(
+            name='Members count',
+            value=guild.member_count
+        ).add_field(
+            name='Guild ID',
+            value=f'`{guild.id}`'
+        )
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: Guild):
+        await self.bot.get_channel(Cid.global_logs).send(
+            embed=self.guild_embed(guild, event='join')
+        )
+        db.add_row(db.ga, guild.id, name=guild.name)
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: Guild):
+        await self.bot.get_channel(Cid.global_logs).send(
+            embed=self.guild_embed(guild, event='remove')
+        )
+        db.remove_row(db.ga, guild.id)
+
+
 async def setup(bot):
     await bot.add_cog(Info(bot))
     await bot.add_cog(InfoTools(bot))
+    await bot.add_cog(BotInfo(bot))
+    await bot.add_cog(BotAdminInfo(bot))
 

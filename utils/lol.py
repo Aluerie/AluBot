@@ -1,64 +1,72 @@
 from roleidentification import get_roles, pull_data
-
-from discord import Embed
-from discord.abc import Messageable
 from pyot.utils.lol import champion
-from utils.var import Uid, Clr
-from utils.distools import umntn
-# if they again run into no money issue then we should but new champions into dict below
-# just copypaste playrates data from page like https://www.leagueofgraphs.com/champions/stats/zeri/master
-
-extra_data = {
-    888: {  # Renata (currently gets overwritren bcs they updated the table to 12.7 patch 21/04/22)
-        'TOP': 0.0,  # but still it is a nice example of what to do if things break
-        'JUNGLE': 0.0,
-        'MIDDLE': 0.0,
-        'BOTTOM': 12.2 * 0.001,
-        'UTILITY': 12.2 * 0.999  # global playrate * champ role apperance
-    },
-}
-
-champion_roles = extra_data | pull_data()
 
 
-async def get_role_mini_list(session, all_players_champ_ids, destination: Messageable):
-    try:
-        role_mini_list = \
-            list(get_roles(champion_roles, all_players_champ_ids[:5]).values()) + \
-            list(get_roles(champion_roles, all_players_champ_ids[5:]).values())
-        return role_mini_list
-    except KeyError as e:
-        # notify Aluerie that there is some champ who isn't in meraki json
-        # and then assume 0.2 playrate in all roles
-        async def send_error_embed():
-            champ_id = e.args[0]
-            try:
-                champ_name = await champion.key_by_id(champ_id)
-            except KeyError:
-                champ_name = 'Unknown by Pyot'
-            embed = Embed(colour=Clr.prpl, title='Meraki Json problem')
-            url_json = 'http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json'
-            async with session.get(url_json) as resp:
-                json_dict = await resp.json()
+async def get_diff_list(champ_roles):
+    data = await champion.champion_keys_cache.data
+    return set(data['id_by_name'].values()) - set(champ_roles.keys())
 
-            embed.description = \
-                f'It seems like **{champ_name}** with id `{champ_id}` is missing from Meraki json\n ' \
-                f'Meraki json was last updated on patch {json_dict["patch"]}\n' \
-                f'• [Link to GitHub](https://github.com/meraki-analytics/role-identification)\n' \
-                f'• [Link to Json](http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)'
-            await destination.send(embed=embed)
-        await send_error_embed()
 
-        extra_champ = {
-            e.args[0]: {
-                'TOP': 10 * 0.2,
-                'JUNGLE': 10 * 0.2,
-                'MIDDLE': 10 * 0.2,
-                'BOTTOM': 10 * 0.2,
-                'UTILITY': 10 * 0.2
-            },
+async def get_champion_roles():
+    """
+    Unfortunately, Meraki run out of money to support their Json
+    Thus sometimes it is behind a few patches ans
+    I need to add new champions myself with this function.
+
+    About Manual adding part:
+    For Example, as in 12.13 patch - Nilah is not in Meraki Json
+    Thus I can add it myself with the data from League of Graphs
+    https://www.leagueofgraphs.com/champions/stats/nilah/master
+    and it here for more precise data rather than 0.2 in all roles
+    """
+    champion_roles = pull_data()
+    diff_list = await get_diff_list(champion_roles)
+
+    manual_data = {
+        895: {  # Nilah (data was taken 16/07/2022)
+            'TOP': 9.0 * 0.043,
+            'JUNGLE': 9.0 * 0.035,
+            'MIDDLE': 9.0 * 0.058,
+            'BOTTOM': 9.0 * 0.861,
+            'UTILITY': 9.0 * 0.004  # global playrate in % * champ role appearance in decimal
+        },
+    }
+
+    champion_roles = manual_data | champion_roles
+
+    diff_dict = {
+        x: {
+            'TOP': 10 * 0.2,
+            'JUNGLE': 10 * 0.2,
+            'MIDDLE': 10 * 0.2,
+            'BOTTOM': 10 * 0.2,
+            'UTILITY': 10 * 0.2
         }
-        role_mini_list = \
-            list(get_roles(extra_champ | champion_roles, all_players_champ_ids[:5]).values()) + \
-            list(get_roles(extra_champ | champion_roles, all_players_champ_ids[5:]).values())
-        return role_mini_list
+        for x in diff_list if x not in manual_data
+    }
+    return diff_dict | champion_roles
+
+
+async def get_role_mini_list(all_players_champ_ids):
+    champion_roles = await get_champion_roles()
+    role_mini_list = \
+        list(get_roles(champion_roles, all_players_champ_ids[:5]).values()) + \
+        list(get_roles(champion_roles, all_players_champ_ids[5:]).values())
+    return role_mini_list
+
+
+async def lol_main():
+    blue_team = [895, 200, 888, 238, 92]  # ['Nilah', 'BelVeth', 'Renata', '', 'Zed', 'Riven']
+    red_team = [122, 69, 64, 201, 119]  # ['Darius', 'Cassiopeia', 'Lee Sin', 'Braum', 'Draven']
+
+    sorted_champ_ids = await get_role_mini_list(blue_team + red_team)
+
+    print([await champion.name_by_id(i) for i in sorted_champ_ids[:5]])
+    print([await champion.name_by_id(i) for i in sorted_champ_ids[5:]])
+
+
+if __name__ == '__main__':
+    import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(lol_main())

@@ -21,10 +21,16 @@ fav_teams = ['[A]', 'Bald', 'GS']
 async def schedule_work(session, arg, mod, only_today=0, favmode=0):
     async with session.get(my_url := 'https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches') as r:
         soup = BeautifulSoup(await r.read(), 'html.parser')
-    embed = Embed(colour=Clr.prpl)
-    embed.set_author(name='Info from Liquipedia.net', icon_url=Img.dota2logo, url=my_url)
-    embed.title = 'Dota 2 Pro Matches Schedule'
-    embed.url = my_url
+    embed = Embed(
+        colour=Clr.prpl,
+        title='Dota 2 Pro Matches Schedule',
+        url=my_url
+    ).set_author(
+        name='Info from Liquipedia.net',
+        icon_url=Img.dota2logo,
+        url=my_url
+    )
+
     dict_teams = {}
     symb_amount = 15
     dt_now = datetime.now(timezone.utc)

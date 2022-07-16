@@ -411,25 +411,29 @@ class DotaFeedTools(commands.Cog):
         success = []
         fail = []
         for name in re.split('; |, |,', twitch_names):
-            streamer = db.session.query(db.d).filter_by(name=name).first()
+            streamer = db.session.query(db.d).filter_by(name=name.lower()).first()
             if streamer is None:
-                fail.append(name)
+                fail.append(f'`{name}`')
             else:
                 if mode == 'add':
                     twitch_list.add(streamer.twtv_id)
                 elif mode == 'remov':
                     twitch_list.remove(streamer.twtv_id)
-                success.append(name)
+                success.append(f'`{name}`')
         db.set_value(db.ga, ctx.guild.id, dotafeed_stream_ids=list(twitch_list))
 
-        em = Embed(colour=Clr.prpl)
         if len(success):
-            em.add_field(
+            em = Embed(
+                colour=Clr.prpl
+            ).add_field(
                 name=f'Successfully {mode}ed following streamers: \n',
                 value=", ".join(success)
             )
+            await ctx.reply(embed=em)
         if len(fail):
-            em.add_field(
+            em = Embed(
+                colour=Clr.error
+            ).add_field(
                 name='Could not find streamers in the database from these names:',
                 value=", ".join(fail)
             ).set_footer(
@@ -438,7 +442,7 @@ class DotaFeedTools(commands.Cog):
                 'consider adding (for trusted janitors)/requesting such streamer with '
                 '`$dota stream add/request twitch: <twitch_tag> steamid: <steam_id> friendid: <friend_id>`'
             )
-        await ctx.reply(embed=em)
+            await ctx.reply(embed=em)
 
     @stream.command(name='add')
     async def stream_add(self, ctx: commands.Context, *, twitch_names: str):
@@ -491,26 +495,30 @@ class DotaFeedTools(commands.Cog):
                         hero_list.add(hero_id)
                     elif mode == 'remov':
                         hero_list.remove(hero_id)
-                    success.append(await d2.name_by_id(hero_id))
+                    success.append(f'`{await d2.name_by_id(hero_id)}`')
             except KeyError:
-                fail.append(name)
+                fail.append(f'`{name}`')
 
         db.set_value(db.ga, ctx.guild.id, dotafeed_hero_ids=list(hero_list))
 
-        em = Embed(colour=Clr.prpl)
         if len(success):
-            em.add_field(
+            em = Embed(
+                colour=Clr.prpl
+            ).add_field(
                 name=f'Successfully {mode}ed following heroes: \n',
                 value=", ".join(success)
             )
+            await ctx.reply(embed=em)
         if len(fail):
-            em.add_field(
+            em = Embed(
+                colour=Clr.error
+            ).add_field(
                 name='Could not recognize Dota 2 heroes from these names:',
                 value=", ".join(fail)
             ).set_footer(
                 text='You can look in $help for help in hero names'
             )
-        await ctx.reply(embed=em)
+            await ctx.reply(embed=em)
 
     @hero.command(name='add')
     async def hero_add(self, ctx: commands.Context, *, hero_names: str = None):

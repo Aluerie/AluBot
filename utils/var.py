@@ -147,7 +147,7 @@ class Ems:  # Emote strings
     peepoPolice = '<:BASEDPOLICE:960004884235690024>'
     Jebaited = '<:Jebaited:726450170769703015>'
     peepoNiceDay = '<:peepoNiceDay:857224123885158400>'
-    peepoLove = '<:DankLove:773614700700368927>'
+    DankLove = '<:DankLove:773614700700368927>'
 
     MadgeThreat = '<:MadgeThreat:772398923300995082>'
     peepoWTF = '<:peepoWTF:730688500680097862>'

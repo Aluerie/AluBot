@@ -60,7 +60,7 @@ async def welcome_message(session, member, back=0):
 
     if back:
         content_text = '**💜 Welcome BACK to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'.format(
-            member.mention, Ems.peepoLove)
+            member.mention, Ems.DankLove)
 
     if not member.bot:
         description = \

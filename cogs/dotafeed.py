@@ -506,7 +506,7 @@ class DotaFeedTools(commands.Cog):
         if len(fail):
             em.add_field(
                 name='Could not recognize Dota 2 heroes from these names:',
-                value=", ".join(success)
+                value=", ".join(fail)
             ).set_footer(
                 text='You can look in $help for help in hero names'
             )

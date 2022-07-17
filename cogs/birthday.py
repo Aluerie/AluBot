@@ -5,6 +5,7 @@ from discord import Embed, Member, app_commands
 from discord.ext import commands, tasks
 
 from utils import database as db
+from utils.checks import is_owner
 from utils.var import *
 
 from datetime import datetime, timedelta, timezone
@@ -198,7 +199,7 @@ class Birthday(commands.Cog):
     async def before(self):
         await self.bot.wait_until_ready()
 
-    @commands.is_owner()
+    @is_owner()
     @commands.command(hidden=True)
     async def birthdaylist(self, ctx: Context):
         """

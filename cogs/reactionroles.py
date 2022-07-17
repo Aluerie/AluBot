@@ -1,5 +1,7 @@
 from discord import Embed, utils
 from discord.ext import commands
+
+from utils.checks import is_owner
 from utils.var import *
 
 
@@ -27,8 +29,8 @@ class ReactionRoles(commands.Cog):
         colour_array.reverse()
         return colour_array
 
+    @is_owner()
     @commands.command(hidden=True)
-    @commands.is_owner()
     async def trigger(self, ctx, *, arg):
         # guild = self.bot.get_guild(Sid.alu)
         colour_array = self.get_all_colour_roles()
@@ -47,8 +49,8 @@ class ReactionRoles(commands.Cog):
         for emoji in emoji_array:
             await msg.add_reaction(emoji)
 
+    @is_owner()
     @commands.command(hidden=True)
-    @commands.is_owner()
     async def edit_the_trigger(self, ctx):
         guild = self.bot.get_guild(Sid.alu)
         react_channel = guild.get_channel(Cid.roles)
@@ -73,8 +75,8 @@ class ReactionRoles(commands.Cog):
         roles_array.reverse()
         return roles_array
 
+    @is_owner()
     @commands.command(hidden=True)
-    @commands.is_owner()
     async def trigger_non(self, ctx, *, arg):
         guild = self.bot.get_guild(Sid.alu)
 

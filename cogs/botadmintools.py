@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord.ext.commands import Greedy
 
 from utils import database as db
+from utils.checks import is_owner
 from utils.var import *
 from utils.context import Context
 
@@ -22,7 +23,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         self.bot = bot
         self.help_emote = Ems.Lewd
 
-    @commands.is_owner()
+    @is_owner()
     @commands.command()
     async def msgcount(self, ctx, member: Member, msg_count):
         db.set_value(db.m, member.id, msg_count=msg_count)
@@ -30,7 +31,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         embed.description = f'msgcount: {member.mention} (id=`{member.id}`) to `{msg_count}`! {Ems.bubuAyaya}'
         await ctx.channel.send(embed=embed)
 
-    @commands.is_owner()
+    @is_owner()
     @commands.command()
     async def leaveguild(self, ctx, guild: Guild):
         """'Make bot leave guild with named guild_id;"""
@@ -42,16 +43,19 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             embed.description = f'The bot is not in the guild with id `{guild}`'
         await ctx.reply(embed=embed)
 
-    @commands.is_owner()
+    @is_owner()
     @commands.command()
     async def guildlist(self, ctx):
         """Show list of guilds bot is in ;"""
-        embed = Embed(colour=Clr.prpl)
-        embed.description = "The bot is in these guilds\n"
-        embed.description += '• ' + '\n• '.join([f'{item.name} `{item.id}`' for item in self.bot.guilds])
+        embed = Embed(
+            colour=Clr.prpl,
+            description=
+            f"The bot is in these guilds\n"
+            f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"
+        )
         await ctx.reply(embed=embed)
 
-    @commands.has_permissions(administrator=True)
+    @is_owner()
     @commands.command()
     async def purgelist(self, ctx: commands.Context, msgid_last: int, msgid_first: int):
         """Delete messages between given ids in current channel ;"""
@@ -66,9 +70,8 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             await ctx.channel.delete_messages(item)
         await ctx.reply('Done', delete_after=10)
 
+    @is_owner()
     @commands.command()
-    @commands.is_owner()
-    @commands.guild_only()
     async def emotecredits(self, ctx):
         """emote credits"""
         guild = self.bot.get_guild(Sid.alu)
@@ -89,7 +92,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         await msg.edit(content='', embed=embed)
         await ctx.reply(f"we did it {Ems.PogChampPepe}")
 
-    @commands.is_owner()
+    @is_owner()
     @commands.command()
     async def sync(self, ctx: Context, guilds: Greedy[Object], spec: Optional[Literal["~", "*"]] = None) -> None:
         """

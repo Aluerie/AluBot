@@ -10,7 +10,7 @@ from discord.ext import commands, tasks
 
 from utils import database as db
 from utils import dota as d2
-from utils.checks import is_guild_owner, is_trusted_user
+from utils.checks import is_guild_owner, is_trustee
 from utils.var import *
 from utils.imgtools import img_to_file, url_to_img
 from utils.format import display_relativehmstime
@@ -213,7 +213,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     3. Add/Request missing streamers to `$dota database list` with `$dota database add/request`
     4. Add/Remove fav heroes with `$dota hero add/remove`
     *Pro-Tip.* for multiple hero/stream add/remove commands - use commas to separate names i.e.\
-    `$dota hero add Ant-Mage, Mirana`
+    `$dota hero add Anti-Mage, Mirana`
     5. Ready ! More info below
     """
 
@@ -282,7 +282,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @is_guild_owner()
     @channel.command(name='check')
     async def channel_check(self, ctx: Context):
-        """Check if a DotaFeed channel was set in this server"""
+        """Check if a Dota2Feed channel was set in this server"""
         ch_id = db.get_value(db.ga, ctx.guild.id, 'dotafeed_ch_id')
         ch = self.bot.get_channel(ch_id)
         if ch is None:
@@ -332,7 +332,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             footer_text=f'With love, {ctx.guild.me.display_name}'
         )
 
-    @is_trusted_user()
+    @is_trustee()
     @database.command(
         name='add',
         usage='twitch: <twitch_name> steamid: <steamid> friendid: <friendid>'
@@ -352,7 +352,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         db.add_row(db.d, flags.steamid, name=flags.twitch.lower(), friendid=flags.friendid, twtv_id=twtv_id)
         await ctx.message.add_reaction(Ems.PepoG)
 
-    @is_trusted_user()
+    @is_trustee()
     @database.command(
         name='remove',
         usage='twitch: <twitch_name> steamid: <steamid> friendid: <friendid>'

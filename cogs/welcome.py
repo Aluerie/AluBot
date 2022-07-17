@@ -5,6 +5,7 @@ from discord import Embed, Member
 from discord.ext import commands
 
 from utils import database as db
+from utils.checks import is_owner
 from utils.var import *
 from utils.imgtools import url_to_img, img_to_file
 
@@ -187,7 +188,7 @@ class Milestone(commands.Cog):
             )
             await self.bot.get_channel(Cid.welcome).send(embed=em)
 
-    @commands.is_owner()
+    @is_owner()
     @commands.command(hidden=True)
     async def welcome_preview(self, ctx, member: Member = None):
         """Get a rendered welcome message for a `{@user}`;"""

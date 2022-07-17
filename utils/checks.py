@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 def is_guild_owner():
-    def predicate(ctx: Context):
+    def predicate(ctx: Context) -> bool:
         """server owner only"""
         if ctx.author.id == ctx.guild.owner_id:
             return True
@@ -22,14 +22,25 @@ def is_guild_owner():
     return commands.check(predicate)
 
 
-def is_trusted_user():
-    def predicate(ctx: Context):
+def is_trustee():
+    def predicate(ctx: Context) -> bool:
         """trustees only"""
         trusted_ids = db.get_value(db.b, Sid.alu, 'trusted_ids')
         if ctx.author.id in trusted_ids:
             return True
         else:
             raise commands.CheckFailure(
-                message='Sorry, only trusted janitors can use this command'
+                message='Sorry, only trusted people can use this command'
             )
+    return commands.check(predicate)
+
+
+def is_owner():
+    async def predicate(ctx: Context) -> bool:
+        """Aluerie only"""
+        if not await ctx.bot.is_owner(ctx.author):
+            raise commands.NotOwner(
+                f'Only {ctx.bot.get_user(Sid.alu)} as the bot owner is allowed to use this command.'
+            )
+        return True
     return commands.check(predicate)

@@ -5,6 +5,7 @@ from discord import Colour, Embed,  Member, Message, Role, app_commands
 from discord.ext import commands, tasks
 
 from utils import database as db
+from utils.checks import is_owner
 from utils.format import humanize_time
 from utils.var import *
 from utils.imgtools import img_to_file
@@ -276,8 +277,8 @@ class Info(commands.Cog, name='Info'):
         )
         await ctx.reply(embed=embed)
 
+    @is_owner()
     @commands.command(aliases=['invitelink'])
-    @commands.is_owner()
     @commands.guild_only()
     async def invite_link(self, ctx):
         embed = Embed(color=Clr.prpl)

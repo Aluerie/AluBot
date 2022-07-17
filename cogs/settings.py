@@ -1,6 +1,7 @@
 from discord import Embed
 from discord.ext import commands
 
+from utils.checks import is_owner
 from utils.var import *
 from utils import database as db
 
@@ -23,7 +24,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
         self.bot = bot
         self.help_emote = Ems.PepoBeliever
 
-    @commands.is_owner()
+    @is_owner()
     @commands.group()
     async def alubotprefix(self, ctx):
         """Get a prefix for this server ;"""
@@ -37,7 +38,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
             )
             await ctx.reply(embed=em)
 
-    @commands.is_owner()
+    @is_owner()
     @alubotprefix.command()
     async def set(self, ctx, *, arg):
         """Set new prefix for the server ;"""

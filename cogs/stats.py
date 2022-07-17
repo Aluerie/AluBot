@@ -90,7 +90,7 @@ class StatsCommands(commands.Cog, name='Stats'):
         await ctx.reply(embed=em)
 
 
-class Stats(commands.Cog):
+class StatsChannels(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.mytime.start()
@@ -131,5 +131,5 @@ class Stats(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(Stats(bot))
+    await bot.add_cog(StatsChannels(bot))
     await bot.add_cog(StatsCommands(bot))

@@ -211,6 +211,28 @@ class MyHelp(commands.HelpCommand):
         paginator.custom_view = ViewHelp(paginator, options=drop_options)
         await paginator.send(self.context)
 
+    async def send_cog_help(self, cog):
+        filtered = await self.filter_commands(cog.get_commands(), sort=True)
+        command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
+
+        cog_name = getattr(cog, "qualified_name", "No Category")
+        cog_desc = getattr(cog, "description", "No Description")
+
+        em = Embed(
+            title=cog_name,
+            description=
+            f'{cog_desc}\n\n'
+            f'{chr(10).join(command_signatures)}'
+        )
+
+        await self.get_destination().send(embed=em)
+
+    async def send_error_message(self, error):
+        embed = Embed(title="Error", description=error, color=Clr.error)
+        channel = self.get_destination()
+
+        await channel.send(embed=embed)
+
 
 class HelpCog(commands.Cog, name='Help'):
     def __init__(self, bot):

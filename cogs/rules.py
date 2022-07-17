@@ -100,11 +100,13 @@ class ServerInfo(commands.Cog, name='Rules'):
         db.append_row(dtb, text=text)
         await ctx.reply(content='added')
 
+    @commands.has_role(Rid.discord_mods)
     @modrule.command()
     async def add(self, ctx, *, text: str):
         """Add rule to server rules"""
         await self.add_work(ctx, text, db.sr)
 
+    @commands.has_role(Rid.discord_mods)
     @modrealrule.command(name='add')
     async def add2(self, ctx, *, text: str):
         """Add rule to *real rules*"""
@@ -117,11 +119,13 @@ class ServerInfo(commands.Cog, name='Rules'):
             ses.query(dtb).filter_by(id=my_row.id).delete()
         await ctx.reply(content='removed')
 
+    @commands.has_role(Rid.discord_mods)
     @modrule.command()
     async def remove(self, ctx, num: int):
         """Remove rule under number `num` from server rules"""
         await self.remove_work(ctx, num, db.sr, 0)
 
+    @commands.has_role(Rid.discord_mods)
     @modrealrule.command(name='remove')
     async def remove2(self, ctx, num: int):
         """Remove rule under number `num` from *real rules*"""

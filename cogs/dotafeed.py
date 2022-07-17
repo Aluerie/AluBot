@@ -208,14 +208,18 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     The bot will send messages in a chosen channel when your fav streamer picks your fav hero.
 
     **Tutorial**
-    1. `$dota channel set #channel`
-    2. Add/Remove fav streamers with `$dota stream add/remove <twitch_name(-s)>`
-    3. Add/Request missing streamers to `$dota database list` with \
-    `$dota database add/request twitch: <twitch_name> steamid: <steamid> friendid: <friendid>`
-    4. Add/Remove fav heroes with `$dota hero add/remove <hero_name(-s)>`
-    *Pro-Tip.* for multiple hero/stream add/remove commands - use commas to separate names i.e.\
-    `$dota hero add Anti-Mage, Mirana`
-    5. Ready ! More info below
+    1. Set channel with
+    `$dota channel set #channel`
+    2. Add fav streams, i.e.
+    `$dota stream add gorgc, bububu
+    3. Add missing streams to `$dota database list`, i.e.
+    `$dota database add twitch: cr1tdota steamid: 765 friendid: 123`
+    Only trustees can use `database add`. Others should `$dota database request` their fav streams.
+    4. Add fav heroes, i.e.
+    `$dota hero add Dark Willow, Mirana, Anti-Mage
+    5. Use `remove` counterpart commands to `add` to edit out streams/heroes
+    *Pro-Tip.* As shown for multiple hero/stream add/remove commands - use commas to separate names
+    6. Ready ! More info below
     """
 
     def __init__(self, bot):
@@ -300,7 +304,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             return await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @dota.group()
+    @dota.group(aliases=['db'])
     async def database(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
@@ -352,6 +356,18 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             return await ctx.reply(embed=em)
         db.add_row(db.d, flags.steamid, name=flags.twitch.lower(), friendid=flags.friendid, twtv_id=twtv_id)
         await ctx.message.add_reaction(Ems.PepoG)
+        em2 = Embed(
+            colour=MP.green(shade=200),
+            description=
+            f"[**{flags.twitch.lower()}**](https://www.twitch.tv/{flags.twitch.lower()})"
+            f"`{flags.steamid}` - `{flags.friendid}`| "
+            f"[Steam](https://steamcommunity.com/profiles/{flags.steamid})"
+            f"/[Dotabuff](https://www.dotabuff.com/players/{flags.friendid})"
+        ).set_author(
+            name=f'{ctx.author} added stream into the database',
+            icon_url=ctx.author.avatar.url
+        )
+        await self.bot.get_channel(Cid.global_logs).send(embed=em2)
 
     @is_trustee()
     @database.command(
@@ -370,6 +386,15 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         with db.session_scope() as ses:
             ses.query(db.d).filter_by(**my_dict).delete()
         await ctx.message.add_reaction(Ems.PepoG)
+        em2 = Embed(
+            colour=MP.red(shade=200),
+            description=
+            f"[**{flags.twitch.lower()}**](https://www.twitch.tv/{flags.twitch.lower()})"
+        ).set_author(
+            name=f'{ctx.author} removed stream from the database',
+            icon_url=ctx.author.avatar.url
+        )
+        await self.bot.get_channel(Cid.global_logs).send(embed=em2)
 
     @is_guild_owner()
     @database.command(
@@ -401,7 +426,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             return await ctx.send('Aborting...', delete_after=5.0)
 
         em2 = Embed(
-            colour=Clr.prpl,
+            colour=MP.orange(shade=200),
             description=info_str,
             title='Request to add a streamer steam account into the database'
         ).set_author(
@@ -414,7 +439,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         await self.bot.get_channel(Cid.global_logs).send(embed=em2)
 
     @is_guild_owner()
-    @dota.group()
+    @dota.group(aliases=['streamer'])
     async def stream(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()

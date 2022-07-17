@@ -28,7 +28,7 @@ def get_a_text():
         f'Hey chat, you can get list of {rmntn(Rid.bots)} available to use in {cmntn(Cid.bot_spam)} and '
         f'{rmntn(Rid.nsfwbots)} in {cmntn(Cid.nsfw_bob_spam)} by respectively checking pins in those channels.'
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'current_timer') % len(daily_reminders_txt)]
+    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_timer') % len(daily_reminders_txt)]
 
 
 def get_important_text():
@@ -57,7 +57,7 @@ def get_important_text():
         f'Hey chat, if you have any problems then {rmntn(Rid.discord_mods)} can solve it! '
         f'Especially if it is about this server'
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'current_important_timer') % len(daily_reminders_txt)]
+    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_important_timer') % len(daily_reminders_txt)]
 
 
 def get_fact_text():
@@ -71,14 +71,14 @@ def get_fact_text():
         f'Hey chat, <@135119357008150529> was the very first person to join this server - holy poggers {Ems.PogChampPepe}'
         # idea to put there the most chatting person who has the most exp and stuff
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'current_fact_timer') % len(daily_reminders_txt)]
+    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_fact_timer') % len(daily_reminders_txt)]
 
 
 def get_gif_text():
     daily_reminders_txt = [
         'https://media.discordapp.net/attachments/702561315478044807/950421428732325958/peepoSitSlide.gif'
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'current_gif_timer') % len(daily_reminders_txt)]
+    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_gif_timer') % len(daily_reminders_txt)]
 
 
 def get_rule_text():
@@ -99,7 +99,7 @@ def get_rule_text():
         '(https://discord.com/terms) & follow their guidelines (https://discord.com/guidelines)',
         'Hey chat, remember the rule\n🔟 Don\'t encourage others to break these rules.'
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'current_timer') % len(daily_reminders_txt)]
+    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_timer') % len(daily_reminders_txt)]
 
 
 class Timers(commands.Cog):

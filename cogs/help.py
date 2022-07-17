@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import Embed, SelectOption
+from discord import Embed, SelectOption, app_commands
 from discord.ext import commands
 from discord.ui import View, Select
 
@@ -29,10 +29,24 @@ class ViewHelp(View):
         self.add_item(DropdownHelp(paginator, options=options))
 
 
-front_embed = Embed(
-    title='AluBot ❤\'s $help Menu',
-    description='AluBot ❤ is an ultimate multi-purpose bot !'
-)
+def front_embed(context):
+    return Embed(
+        title='AluBot ❤\'s $help Menu',
+        description=
+        'AluBot ❤ is an ultimate multi-purpose bot !\n\n'
+        'Use dropdown menu below to select a category. '
+        'Note that the bot does not show commands you can\'t use.'
+    ).add_field(
+        name='Aluerie\'s server',
+        value='[Link](https://discord.gg/K8FuDeP)',
+    ).add_field(
+        name='GitHub',
+        value='[Link](https://github.com/Aluerie/AluBot)'
+    ).add_field(
+        name='Bot Owner',
+        value=f'{context.bot.get_user(Uid.alu)}'
+    )
+
 
 last_embed = Embed(
     title='Other features $help page',
@@ -114,7 +128,7 @@ last_embed = Embed(
 )
 
 
-class MyHelp(commands.HelpCommand):
+class HelpCommand(commands.HelpCommand):
     async def get_the_answer(self, c, answer=None, deep=0):
         if answer is None:
             answer = []
@@ -150,7 +164,7 @@ class MyHelp(commands.HelpCommand):
         embed_list = []
         drop_options = []
 
-        embed_list.append(front_embed)
+        embed_list.append(front_embed(self.context))
         drop_options.append(
             SelectOption(
                 label='Home Page',
@@ -173,6 +187,7 @@ class MyHelp(commands.HelpCommand):
                 em = Embed(
                     title=cog_name,
                     description=
+                    f'{cog.help_emote} '
                     f'{cog_desc}\n\n'
                     f'{chr(10).join(command_signatures)}'
                 )
@@ -219,31 +234,79 @@ class MyHelp(commands.HelpCommand):
         cog_desc = getattr(cog, "description", "No Description")
 
         em = Embed(
+            colour=Clr.prpl,
             title=cog_name,
             description=
             f'{cog_desc}\n\n'
             f'{chr(10).join(command_signatures)}'
+        ).set_footer(
+            text=f'With love, {self.context.bot.user.display_name}'
+        ).set_thumbnail(
+            url=self.context.bot.user.display_avatar.url
         )
+        await self.context.reply(embed=em)
 
-        await self.get_destination().send(embed=em)
+    async def send_group_help(self, group):
+        filtered = await self.filter_commands(group.commands, sort=True)
+        command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
+        em = Embed(
+            color=Clr.prpl,
+            title=group.name,
+            description=
+            f'{chr(10).join(command_signatures)}'
+        )
+        await self.context.reply(embed=em)
+
+    async def send_command_help(self, command):
+        embed = Embed(
+            title=command.qualified_name,
+            color=Clr.prpl,
+            description=self.get_command_signature(command)
+        )
+        await self.context.reply(embed=embed)
 
     async def send_error_message(self, error):
-        embed = Embed(title="Error", description=error, color=Clr.error)
-        channel = self.get_destination()
-
-        await channel.send(embed=embed)
+        embed = Embed(
+            title="Help Command Error",
+            description=error,
+            color=Clr.error
+        ).set_footer(
+            text=
+            'Check the spelling of your desired command/category and '
+            'make sure you can use them because help command '
+            'does not show commands that you are not able to use'
+        )
+        await self.context.reply(embed=embed)
 
 
 class HelpCog(commands.Cog, name='Help'):
     def __init__(self, bot):
         self._original_help_command = bot.help_command
         self.bot = bot
-        bot.help_command = MyHelp(
+        bot.help_command = HelpCommand(
+            command_attrs={
+                'hidden': True,
+                'help':
+                    'Show `help` menu for common bot commands. '
+                    'Note that you can use `$help [command/group/cog]` to get a help on specific things',
+                'brief':
+                    f'{Ems.slash}'
+            }
+        )
+        bot.help_command.cog = self
+
+    @app_commands.command(
+        name='help',
+        description='Show help menu for the bot',
+    )
+    async def help_slash(self, ntr: Interaction, *, command: str = None):
+        myhelp = HelpCommand(
             command_attrs={
                 'hidden': True
             }
         )
-        bot.help_command.cog = self
+        myhelp.context = await commands.Context.from_interaction(ntr)
+        await myhelp.command_callback(myhelp.context, command=command)
 
 
 async def setup(bot):

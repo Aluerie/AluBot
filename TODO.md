@@ -3,8 +3,6 @@
    1. mb reload dota cog on error with `self.bot.reload_extension(''dotafeed')`
 
 2. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
-3. copylol thing about removing twitter links
-4. note that you cant see commands that you cant use
 
 6. async sqlalchemy
 7. sort out total garbage in utils folder

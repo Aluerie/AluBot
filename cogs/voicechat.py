@@ -4,7 +4,7 @@ from discord.ext import commands, tasks
 from utils.var import *
 
 
-class Voicechat(commands.Cog):
+class Voicechat(commands.Cog, name='Voice Chat'):
     """
     Change streaming room title
 

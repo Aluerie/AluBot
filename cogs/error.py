@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from discord import Interaction
 
 
+
 class CommandErrorHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

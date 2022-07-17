@@ -1,10 +1,15 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from discord import Embed, app_commands
 from discord.ext import commands
 from discord.ext.commands import Range
 
 from utils import database as db
 from utils.var import *
-from utils.distools import scnf
+
+if TYPE_CHECKING:
+    from utils.context import Context
 
 
 class ServerInfo(commands.Cog, name='Rules'):
@@ -80,15 +85,15 @@ class ServerInfo(commands.Cog, name='Rules'):
 
     @commands.has_role(Rid.discord_mods)
     @commands.group()
-    async def modrule(self, ctx):
+    async def modrule(self, ctx: Context):
         """Group command about rule modding, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @commands.has_role(Rid.discord_mods)
     @commands.group()
-    async def modrealrule(self, ctx):
+    async def modrealrule(self, ctx: Context):
         """Group command about rule modding, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @staticmethod
     async def add_work(ctx, text, dtb):

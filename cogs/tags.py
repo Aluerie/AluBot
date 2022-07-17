@@ -7,13 +7,12 @@ from discord.utils import format_dt, get
 
 from utils import database as db
 from utils.var import *
-from utils.distools import scnf
-from utils.context import Context
 
 from datetime import datetime, timezone
 
 if TYPE_CHECKING:
     from discord import MessageReference
+    from utils.context import Context
 
 reserved_words = ['edit', 'add', 'create', 'info', 'delete', 'list', 'text', 'name', 'remove', 'ban']
 
@@ -74,14 +73,14 @@ class Tags(commands.Cog):
         aliases=['tag'],
         invoke_without_command=True
     )
-    async def tags(self, ctx: commands.Context, *, tag_name: str):
+    async def tags(self, ctx: Context, *, tag_name: str):
         """Execute tag frombot database"""
         await tag_work(ctx, tag_name.lower())
 
     @tags.error
-    async def tags_error(self, ctx, error):
+    async def tags_error(self, ctx: Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await scnf(ctx)
+            await ctx.scnf()
 
     @tags.command(
         name='add',
@@ -201,15 +200,6 @@ class Tags(commands.Cog):
             em.description = ', '.join([f'`{row.name}`' for row in ses.query(db.tg).order_by(db.tg.name)])
             await ctx.reply(embed=em)
 
-
-async def tag_ban_work(ctx, member, mybool):
-    with db.session_scope() as ses:
-        user_row = ses.query(db.m).filter_by(id=member.id).first()
-        user_row.can_make_tags = mybool
-    embed = Embed(colour=Clr.red)
-    embed.description = f"{member.mention} is now {'un' if mybool else ''}banned from making new tags"
-    await ctx.reply(embed=embed)
-
     @commands.has_role(Rid.discord_mods)
     @commands.has_permissions(manage_messages=True)
     @app_commands.default_permissions(manage_messages=True)
@@ -218,10 +208,19 @@ async def tag_ban_work(ctx, member, mybool):
         aliases=['modtag'],
         invoke_without_command=True
     )
-    async def modtags(self, ctx: commands.Context):
+    async def modtags(self, ctx: Context):
         """Group command about ModTags, for actual commands use it together with subcommands"""
         if ctx.invoked_subcommand is None:
-            await scnf(ctx)
+            await ctx.scnf()
+
+    @staticmethod
+    async def tag_ban_work(ctx, member, mybool):
+        with db.session_scope() as ses:
+            user_row = ses.query(db.m).filter_by(id=member.id).first()
+            user_row.can_make_tags = mybool
+        embed = Embed(colour=Clr.red)
+        embed.description = f"{member.mention} is now {'un' if mybool else ''}banned from making new tags"
+        await ctx.reply(embed=embed)
 
     @modtags.command(
         name='ban',
@@ -230,7 +229,7 @@ async def tag_ban_work(ctx, member, mybool):
     )
     async def ban(self, ctx, member: Member):
         """Ban member from creating new tags"""
-        await tag_ban_work(ctx, member, False)
+        await self.tag_ban_work(ctx, member, False)
 
     @modtags.command(
         name='unban',
@@ -239,7 +238,7 @@ async def tag_ban_work(ctx, member, mybool):
     )
     async def unban(self, ctx, member: Member):
         """Unban member from creating new tags"""
-        await tag_ban_work(ctx, member, True)
+        await self.tag_ban_work(ctx, member, True)
 
 
 async def setup(bot):

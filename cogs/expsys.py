@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from discord import Embed, Member, utils, app_commands
 from discord.ext import commands, tasks
@@ -8,13 +8,14 @@ from utils.var import *
 from utils import database as db
 from utils.format import ordinal, humanize_time, indent
 from utils.imgtools import url_to_img, img_to_file
-from utils.distools import scnf, inout_to_10, send_pages_list
+from utils.distools import inout_to_10, send_pages_list
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from datetime import datetime, time, timedelta, timezone
 
 if TYPE_CHECKING:
     from discord import Interaction
+    from utils.context import Context
 
 LAST_SEEN_TIMEOUT = 60
 
@@ -252,9 +253,9 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         await ctx.reply(file=await rank_work(ctx, member))
 
     @commands.group()
-    async def levels(self, ctx):
+    async def levels(self, ctx: Context):
         """Group command about Levels, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @levels.command(usage='in/out')
     async def opt(self, ctx, in_or_out: inout_to_10):

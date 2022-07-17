@@ -100,3 +100,24 @@ class Context(commands.Context):
         view.message = await self.send(content=content, embed=embed, view=view, ephemeral=True)
         await view.wait()
         return view.value
+
+    async def scnf(self):
+        if self.invoked_subcommand is None:
+            prefix = getattr(self, 'clean_prefix', '/')
+
+            def get_command_signature(command):
+                extra_space = '' if command.signature == '' else ' '
+                return f'{prefix}{command.qualified_name}{extra_space}{command.signature}'
+
+            ans = 'This command is used only with subcommands. Please, provide one of them:\n'
+            ans += '\n'.join([f'`{get_command_signature(c)}`' for c in self.command.commands])
+
+            embed = Embed(
+                colour=Clr.error,
+                description=ans
+            ).set_author(
+                name='SubcommandNotFound'
+            ).set_footer(
+                text=f'`{prefix}help {self.command.name}` for more info'
+            )
+            return await self.reply(embed=embed, ephemeral=True)

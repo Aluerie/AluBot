@@ -8,15 +8,14 @@ from discord.utils import sleep_until
 from utils import database as db
 from utils.var import *
 from utils import time
-from utils.distools import scnf, send_pages_list
-from utils.context import Context
-
+from utils.distools import send_pages_list
 
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 
 if TYPE_CHECKING:
     from discord import Message
+    from utils.context import Context
 
 
 class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
@@ -36,7 +35,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
     @commands.group()
     async def remind(self, ctx: Context):
         """Group command about reminders, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     async def add_work(self, ctx: Union[Context, Interaction], member: Member, dt, remind_text):
         with db.session_scope() as ses:
@@ -171,7 +170,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
     @commands.hybrid_group()
     async def todo(self, ctx):
         """Group command about ToDolists, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @todo.command(
         name='remove',

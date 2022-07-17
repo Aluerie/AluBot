@@ -6,7 +6,6 @@ from discord.ext import commands, tasks
 
 from utils import database as db
 from utils.var import *
-from utils.distools import scnf
 
 from datetime import datetime, timedelta, timezone
 from numpy.random import choice
@@ -86,7 +85,7 @@ class Birthday(commands.Cog):
     @commands.hybrid_group()
     async def birthday(self, ctx: Context):
         """Group command about birthdays, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @birthday.command(
         name='set',

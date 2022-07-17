@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional
+
 from os import getenv
 from pyot.conf.model import activate_model, ModelConf
 from pyot.conf.pipeline import activate_pipeline, PipelineConf
@@ -44,7 +47,7 @@ from discord.ext import commands, tasks
 from utils import database as db
 from utils.var import *
 from utils.lol import get_role_mini_list, get_diff_list
-from utils.distools import send_traceback, scnf, inout_to_10
+from utils.distools import send_traceback, inout_to_10
 from utils.format import display_relativehmstime
 from utils.imgtools import img_to_file, url_to_img
 from cogs.twitch import TwitchStream, get_db_online_streams
@@ -54,11 +57,13 @@ from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, time
 import re
 import collections
-from typing import Optional
 
 import logging
 log = logging.getLogger("pyot")
 log.setLevel(logging.ERROR)
+
+if TYPE_CHECKING:
+    from utils.context import Context
 
 
 async def iconurl_by_id(champid):
@@ -182,14 +187,14 @@ class LoLFeedTools(commands.Cog, name='LoL'):
 
     @commands.is_owner()
     @commands.group(aliases=['league'])
-    async def lol(self, ctx):
+    async def lol(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @lol.group()
-    async def champ(self, ctx):
+    async def champ(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @champ.command()
     async def add(self, ctx, *, champnames=None):
@@ -207,7 +212,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
             await ctx.reply('Something went wrong, double-check: `heroname`')
 
     @champ.command()
-    async def remove(self, ctx, *, champnames=None):
+    async def remove(self, ctx: Context, *, champnames=None):
         """Remove champion(-s) with `champnames` (can be list of names separated with `;` or `,`) \
         from database"""
         if champnames is None:
@@ -264,12 +269,12 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await ctx.reply(embed=em)
 
     @lol.group()
-    async def streamer(self, ctx):
+    async def streamer(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @streamer.command(name='list')
-    async def list_streamer(self, ctx):
+    async def list_streamer(self, ctx: Context):
         """Show current list of fav streamers with optins ;"""
         ss_dict = dict()
         for row in db.session.query(db.l):

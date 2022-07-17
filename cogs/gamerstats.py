@@ -10,7 +10,7 @@ from utils import database as db
 
 from utils.var import *
 from utils.imgtools import plt_to_file, img_to_file, url_to_img
-from utils.distools import scnf, send_pages_list
+from utils.distools import send_pages_list
 from utils.format import indent
 from utils.mysteam import sd_login
 
@@ -95,7 +95,7 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
     @commands.hybrid_group()
     async def stalk(self, ctx: Context):
         """Group command about stalking Aluerie, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @stalk.command(
         name='lm',

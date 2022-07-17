@@ -101,22 +101,6 @@ async def send_traceback(
     return message
 
 
-async def scnf(ctx):
-    if ctx.invoked_subcommand is None:
-        prefix = getattr(ctx, 'clean_prefix', '/')
-
-        def get_command_signature(command):
-            extra_space = '' if command.signature == '' else ' '
-            return f'{prefix}{command.qualified_name}{extra_space}{command.signature}'
-
-        embed = Embed(colour=Clr.error).set_author(name='SubcommandNotFound')
-        ans = 'This command is used only with subcommands. Please, provide one of them:\n'
-        ans += '\n'.join([f'`{get_command_signature(c)}`' for c in ctx.command.commands])
-        embed.description = ans
-        embed.set_footer(text=f'`{prefix}help {ctx.command.name}` for more info')
-        return await ctx.reply(embed=embed, ephemeral=True)
-
-
 # just convert `keyword: inout_to_10`
 def inout_to_10(argument):
     lowered = argument.lower()

@@ -1,13 +1,15 @@
-from typing import Literal, Optional
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional
 
 from discord import FFmpegPCMAudio, Embed, app_commands
 from discord.ext import commands
 
 from utils.var import *
-from utils.distools import scnf
 
 from gtts import gTTS
 
+if TYPE_CHECKING:
+    from utils.context import Context
 
 lang_dict = {
     'fr-FR': {'locale': 'French (France)', 'lang': 'fr', 'tld': 'fr'},
@@ -32,9 +34,9 @@ class TextToSpeech(commands.Cog, name='TTS'):
         self.help_emote = Ems.Ree
 
     @commands.hybrid_group(name='voice')
-    async def voice(self, ctx):
+    async def voice(self, ctx: Context):
         """Group command about Voice commands, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @voice.command(
         name='speak',

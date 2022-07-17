@@ -13,17 +13,16 @@ from utils import dota as d2
 from utils.var import *
 from utils.imgtools import img_to_file, url_to_img
 from utils.format import display_relativehmstime
-from utils.distools import send_traceback, scnf, send_pages_list
+from utils.distools import send_traceback, send_pages_list
 from utils.mysteam import sd_login
 from cogs.twitch import TwitchStream, get_dota_streams, get_twtv_id, twitch_by_id
-from utils.context import Context
 
 import re
 from PIL import Image, ImageOps, ImageDraw, ImageFont
 from datetime import datetime, timezone, time
 
 if TYPE_CHECKING:
-    pass
+    from utils.context import Context
 
 
 import logging
@@ -200,7 +199,7 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
 
 
 def is_guild_owner():
-    def predicate(ctx: commands.Context):
+    def predicate(ctx: Context):
         if ctx.author.id == ctx.guild.owner_id:
             return True
         else:
@@ -211,7 +210,7 @@ def is_guild_owner():
 
 
 def is_trusted_user():
-    def predicate(ctx: commands.Context):
+    def predicate(ctx: Context):
         trusted_ids = db.get_value(db.b, Sid.alu, 'trusted_ids')
         if ctx.author.id in trusted_ids:
             return True
@@ -246,24 +245,20 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
 
     @is_guild_owner()
     @commands.group()
-    async def dota(self, ctx):
+    async def dota(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @dota.group()
-    async def channel(self, ctx: commands.Context):
+    async def channel(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @channel.command(
         name='set',
         usage='[channel=curr]'
     )
-    async def channel_set(
-            self,
-            ctx: commands.Context,
-            ch: Optional[TextChannel] = None
-    ):
+    async def channel_set(self, ctx: Context, ch: Optional[TextChannel] = None):
         """
         Sets channel to be the Dota2Feed notifications channel.
         """
@@ -283,7 +278,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         await ctx.reply(embed=em)
 
     @channel.command(name='disable')
-    async def channel_disable(self, ctx: commands.Context):
+    async def channel_disable(self, ctx: Context):
         """
         Sets Dota2Feed channel to `None` essentially disabling the feature. \
         Data about fav heroes/streamers won't be affected.
@@ -304,7 +299,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         await ctx.reply(embed=em)
 
     @channel.command(name='check')
-    async def channel_check(self, ctx: commands.Context):
+    async def channel_check(self, ctx: Context):
         """Check if a DotaFeed channel was set in this server"""
         ch_id = db.get_value(db.ga, ctx.guild.id, 'dotafeed_ch_id')
         ch = self.bot.get_channel(ch_id)
@@ -322,12 +317,12 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             return await ctx.reply(embed=em)
 
     @dota.group()
-    async def database(self, ctx: commands.Context):
+    async def database(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @database.command(name='list')
-    async def database_list(self, ctx: commands.Context):
+    async def database_list(self, ctx: Context):
         """Get list of all Dota 2 streamers in database \
         that are available for Dota2Feed feature"""
         ss_dict = dict()
@@ -433,9 +428,9 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         await self.bot.get_channel(Cid.global_logs).send(embed=em2)
 
     @dota.group()
-    async def stream(self, ctx: commands.Context):
+    async def stream(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @staticmethod
     async def stream_add_remove(ctx, twitch_names, mode):
@@ -478,21 +473,21 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             await ctx.reply(embed=em)
 
     @stream.command(name='add')
-    async def stream_add(self, ctx: commands.Context, *, twitch_names: str):
+    async def stream_add(self, ctx: Context, *, twitch_names: str):
         """
         Add twitch streamer(-s) to the list of your fav Dota 2 streamers.
         """
         await self.stream_add_remove(ctx, twitch_names, mode='add')
 
     @stream.command(name='remove')
-    async def stream_remove(self, ctx: commands.Context, *, twitch_names: str):
+    async def stream_remove(self, ctx: Context, *, twitch_names: str):
         """
         Remove twitch streamer(-s) from the list of your fav Dota 2 streamers.
         """
         await self.stream_add_remove(ctx, twitch_names, mode='remov')
 
     @stream.command(name='list')
-    async def stream_list(self, ctx: commands.Context):
+    async def stream_list(self, ctx: Context):
         """Show current list of fav streamers"""
         twtvid_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids')
         names_list = [row.name for row in db.session.query(db.d).filter(db.d.twtv_id.in_(twtvid_list)).all()]
@@ -507,9 +502,9 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         await ctx.reply(embed=embed)
 
     @dota.group()
-    async def hero(self, ctx: commands.Context):
+    async def hero(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
-        await scnf(ctx)
+        await ctx.scnf()
 
     @staticmethod
     async def hero_add_remove(ctx, hero_names, mode):
@@ -574,7 +569,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         await self.hero_add_remove(ctx, hero_names, mode='remov')
 
     @staticmethod
-    async def hero_add_remove_error(ctx: commands.Context, error):
+    async def hero_add_remove_error(ctx: Context, error):
         if isinstance(error.original, KeyError):
             ctx.error_handled = True
             em = Embed(
@@ -588,15 +583,15 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             await ctx.send(embed=em)
 
     @hero_add.error
-    async def hero_remove_error(self, ctx: commands.Context, error):
+    async def hero_remove_error(self, ctx: Context, error):
         await self.hero_add_remove_error(ctx, error)
 
     @hero_remove.error
-    async def hero_remove_error(self, ctx: commands.Context, error):
+    async def hero_remove_error(self, ctx: Context, error):
         await self.hero_add_remove_error(ctx, error)
 
     @hero.command(name='list')
-    async def hero_list(self, ctx: commands.Context):
+    async def hero_list(self, ctx: Context):
         """
         Show current list of fav heroes.
         """

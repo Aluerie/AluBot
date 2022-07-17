@@ -16,7 +16,7 @@ class Suggestions(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.help_emote = '\N{MAPLE LEAF}'
+        self.help_emote = Ems.peepoWTF
 
     @commands.hybrid_command(
         name='suggest',

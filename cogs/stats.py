@@ -17,10 +17,15 @@ if TYPE_CHECKING:
     pass
 
 
-class StatsCommands(commands.Cog):
+class StatsCommands(commands.Cog, name='Stats'):
+    """
+    Some stats/infographics/diagrams/info
+
+    More to come.
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'Stats'
+        self.help_category = Ems.Smartge
 
     @commands.hybrid_command(
         name='wordcloud',

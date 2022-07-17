@@ -167,10 +167,15 @@ class MyView(View):
         return True
 
 
-class DotaSchedule(commands.Cog):
+class DotaSchedule(commands.Cog, name='Dota 2 Schedule'):
+    """
+    Check Pro Matches schedule
+
+    Info is taken from Liquipedia.
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'Info'
+        self.help_emote = Ems.MadgeThreat
 
     @commands.hybrid_command(
         name='schedule',

@@ -13,28 +13,6 @@ if TYPE_CHECKING:
     from discord import Interaction
 
 
-help_cat_dict = {
-    'Stats': {
-        'title': 'Stats',
-        'emote': Ems.Smartge,
-        'drop': 'Commands to get some stats/infographics',
-        'desc': 'Commands to get some stats/infographics',
-    },
-    'AdminInfo': {
-        'title': 'AdminInfo',
-        'emote': Ems.peepoComfy,
-        'drop': 'Commands for admin info',
-        'desc': 'Commands for admin info'
-    },
-    'AdminTools': {
-        'title': 'AdminTools',
-        'emote': Ems.MadgeThreat,
-        'drop': 'Commands for admin tools',
-        'desc': 'Commands for admin tools'
-    },
-}
-
-
 class DropdownHelp(Select):
     def __init__(self, paginator):
         options = [

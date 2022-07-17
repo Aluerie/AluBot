@@ -1,7 +1,7 @@
 from discord import Embed
 from discord.ext import commands
 
-from utils.var import Clr
+from utils.var import *
 from utils import database as db
 
 
@@ -13,10 +13,15 @@ async def get_pre(bot, message):
     return commands.when_mentioned_or(prefix, "/")(bot, message)
 
 
-class Prefix(commands.Cog):
+class Prefix(commands.Cog, name='Settings for the bot'):
+    """
+    Change bot's config for the server
+
+    More to come.
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'AdminTools'
+        self.help_emote = Ems.PepoBeliever
 
     @commands.is_owner()
     @commands.group()

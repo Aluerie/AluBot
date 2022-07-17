@@ -67,11 +67,16 @@ async def topemotes_job(ctx, mode):
     )
 
 
-class EmoteAnalysis(commands.Cog):
+class EmoteAnalysis(commands.Cog, name='Emote stats'):
+    """
+    See stats on emote usage in Aluerie's server
+
+    The bot keeps data for one month.
+    """
     def __init__(self, bot):
         self.bot = bot
         self.daily_emote_shift.start()
-        self.help_category = 'Stats'
+        self.help_emote = Ems.peepoComfy
 
     @commands.Cog.listener()
     async def on_message(self, msg):

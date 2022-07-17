@@ -14,10 +14,13 @@ if TYPE_CHECKING:
     pass
 
 
-class AdminTools(commands.Cog):
+class AdminTools(commands.Cog, name='Tools for Bot Owner'):
+    """
+    Commands for admin tools
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'AdminTools'
+        self.help_emote = Ems.Lewd
 
     @commands.is_owner()
     @commands.command()

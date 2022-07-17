@@ -11,7 +11,7 @@ class Voicechat(commands.Cog):
     Get folks ready to watch your stream with a fancy title \
     so everybody knows what you are streaming.
     """
-    
+
     def __init__(self, bot):
         self.bot = bot
         self.check_voice_members.start()

@@ -16,7 +16,7 @@ class ServerInfo(commands.Cog, name='Rules'):
     """
     def __init__(self, bot):
         self.bot = bot
-        self.help_emote = Ems.peepoWTF
+        self.help_emote = Ems.PepoRules
 
     @staticmethod
     async def rule_work(ctx, num, dtb, min_number):

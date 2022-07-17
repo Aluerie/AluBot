@@ -145,9 +145,14 @@ class Logging(commands.Cog):
 
 
 class EmoteLogging(commands.Cog):
+    """
+    Set up emote logging
+
+    More to come
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'AdminTools'
+        self.help_emote = Ems.FeelsDankMan
 
     @commands.command()
     @commands.has_permissions(manage_emojis=True)

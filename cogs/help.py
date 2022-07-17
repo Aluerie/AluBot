@@ -160,7 +160,9 @@ class MyHelp(commands.HelpCommand):
             )
         )
 
-        for cog, cmds in mapping.items():
+        sorted_list_of_keys = sorted(mapping, key=lambda x: getattr(x, "qualified_name", "No Category"))
+        sorted_mapping = {k: mapping[k] for k in sorted_list_of_keys}
+        for cog, cmds in sorted_mapping.items():
             filtered = await self.filter_commands(cmds, sort=True)
             command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
 

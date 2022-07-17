@@ -211,12 +211,12 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     1. Set channel with
     `$dota channel set #channel`
     2. Add fav streams, i.e.
-    `$dota stream add gorgc, bububu
+    `$dota stream add gorgc, bububu`
     3. Add missing streams to `$dota database list`, i.e.
     `$dota database add twitch: cr1tdota steamid: 765 friendid: 123`
     Only trustees can use `database add`. Others should `$dota database request` their fav streams.
     4. Add fav heroes, i.e.
-    `$dota hero add Dark Willow, Mirana, Anti-Mage
+    `$dota hero add Dark Willow, Mirana, Anti-Mage`
     5. Use `remove` counterpart commands to `add` to edit out streams/heroes
     *Pro-Tip.* As shown for multiple hero/stream add/remove commands - use commas to separate names
     6. Ready ! More info below
@@ -359,7 +359,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         em2 = Embed(
             colour=MP.green(shade=200),
             description=
-            f"[**{flags.twitch.lower()}**](https://www.twitch.tv/{flags.twitch.lower()})"
+            f"[**{flags.twitch.lower()}**](https://www.twitch.tv/{flags.twitch.lower()})\n"
             f"`{flags.steamid}` - `{flags.friendid}`| "
             f"[Steam](https://steamcommunity.com/profiles/{flags.steamid})"
             f"/[Dotabuff](https://www.dotabuff.com/players/{flags.friendid})"

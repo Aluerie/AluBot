@@ -122,11 +122,16 @@ class Welcome(commands.Cog):
     async def on_member_remove(self, member: Member):
         if member.guild.id != Sid.alu:
             return
-        author_text = '{0} just left the server'.format(member.display_name)
-        embed = Embed(color=0x000000).set_author(name=author_text, icon_url=member.display_avatar.url)
-        embed.description = '{0} {0} {0}'.format(Ems.FeelsRainMan)
-        embed.set_footer(text=f"With love, {member.guild.me.display_name}")
-        msg = await self.bot.get_channel(Cid.welcome).send(embed=embed)
+        em = Embed(
+            color=0x000000,
+            description='{0} {0} {0}'.format(Ems.FeelsRainMan)
+        ).set_author(
+            name='{0} just left the server'.format(member.display_name),
+            icon_url=member.display_avatar.url
+        ).set_footer(
+            text=f"With love, {member.guild.me.display_name}"
+        )
+        msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
         await msg.add_reaction(Ems.FeelsRainMan)
 
     @commands.Cog.listener()

@@ -37,6 +37,16 @@ async def account_age_ctx_menu(ntr: Interaction, member: Member):
     await ntr.response.send_message(f"{member.mention} is {humanize_time(age)} old.", ephemeral=True)
 
 
+async def translate_msg_ctx_menu(ntr: Interaction, message: Message):
+    embed = Embed(colour=message.author.colour, title='Google Translate to English')
+    if len(message.content) == 0:
+        embed.description = "Sorry it seems this message doesn't have content"
+    else:
+        translator = google_translator()
+        embed.description = await translator.translate(message.content, lang_tgt='en')
+        embed.set_footer(text=f'Detected language: {(await translator.detect(message.content))[0]}')
+    await ntr.response.send_message(embed=embed, ephemeral=True)
+
 class Info(commands.Cog, name='Info'):
     """
     Commands to get some useful info
@@ -128,17 +138,6 @@ class Info(commands.Cog, name='Info'):
     @reload_info.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
-
-
-async def translate_msg_ctx_menu(ntr: Interaction, message: Message):
-    embed = Embed(colour=message.author.colour, title='Google Translate to English')
-    if len(message.content) == 0:
-        embed.description = "Sorry it seems this message doesn't have content"
-    else:
-        translator = google_translator()
-        embed.description = await translator.translate(message.content, lang_tgt='en')
-        embed.set_footer(text=f'Detected language: {(await translator.detect(message.content))[0]}')
-    await ntr.response.send_message(embed=embed, ephemeral=True)
 
     @commands.hybrid_command(
         name='translate',

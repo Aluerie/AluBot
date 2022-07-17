@@ -167,6 +167,7 @@ class Ems:  # Emote strings
     Lewd = '<:Lewd:976604430059331684>'
     DankG = '<:DankG:998012133948276857>'
     peepoBusiness = '<:peepoBusiness:998157352098340934>'
+    peepoMovie = '<:peepoMovie:998163742741246003>'
     # emote server ani
     # nothing for now
 

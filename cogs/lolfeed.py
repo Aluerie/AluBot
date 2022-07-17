@@ -180,6 +180,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         self.bot = bot
         self.help_emote = Ems.PogChampPepe
 
+    @commands.is_owner()
     @commands.group(aliases=['league'])
     async def lol(self, ctx):
         """Group command about LoL, for actual commands use it together with subcommands"""
@@ -190,7 +191,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    @commands.is_owner()
     @champ.command()
     async def add(self, ctx, *, champnames=None):
         """Add champion(-s) with `champnames` (can be list of names separated with `;` or `,`) \
@@ -206,7 +206,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         except:
             await ctx.reply('Something went wrong, double-check: `heroname`')
 
-    @commands.is_owner()
     @champ.command()
     async def remove(self, ctx, *, champnames=None):
         """Remove champion(-s) with `champnames` (can be list of names separated with `;` or `,`) \
@@ -222,7 +221,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         except:
             await ctx.reply('Something went wrong, double-check: `heroname`')
 
-    @commands.is_owner()
     @champ.command()
     async def list(self, ctx):
         """Show current list of favourite champions ;"""
@@ -236,7 +234,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         )
         await ctx.reply(embed=em)
 
-    @commands.is_owner()
     @champ.command()
     async def meraki(self, ctx: commands.Context):
         """
@@ -266,13 +263,11 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         )
         await ctx.reply(embed=em)
 
-    @commands.is_owner()
     @lol.group()
     async def streamer(self, ctx):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await scnf(ctx)
 
-    @commands.is_owner()
     @streamer.command(name='list')
     async def list_streamer(self, ctx):
         """Show current list of fav streamers with optins ;"""
@@ -298,7 +293,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         )
         await ctx.reply(embed=em)
 
-    @commands.is_owner()
     @streamer.command(name='add')
     async def add_streamer(self, ctx, name=None, region=None, *, accname=None):
         """Add streamer to database"""
@@ -317,7 +311,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         region: Optional[str]
         accname: Optional[str]
 
-    @commands.is_owner()
     @streamer.command(name='remove')
     async def remove_streamer(self, ctx, *, flags: StreamerFlags):
         """Remove streamer(-s) from database"""
@@ -326,7 +319,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
             ses.query(db.l).filter_by(**my_dict).delete()
         await ctx.message.add_reaction(Ems.PepoG)
 
-    @commands.is_owner()
     @streamer.command(
         help=f'Opt the streamer `in` or `out` from {cmntn(Cid.alubot)} channel',
         usage='<twitch_name> in/out',

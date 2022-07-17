@@ -14,24 +14,11 @@ if TYPE_CHECKING:
 
 
 help_cat_dict = {
-    'Tools': {
-        'title': 'Tools',
-        'emote': Ems.DankFix,
-        'drop': 'Commands providing useful tools',
-        'desc': 'Commands providing useful tools'
-    },
     'Stats': {
         'title': 'Stats',
         'emote': Ems.Smartge,
         'drop': 'Commands to get some stats/infographics',
         'desc': 'Commands to get some stats/infographics',
-    },
-    'Profile': {
-        'title': 'Profile',
-        'emote': Ems.bubuAyaya,
-        'drop': 'Commands about member profiles',
-        'desc': f'There is a profile system in Irene\'s server: levelling experience, '
-                f'currency, reputation, custom profile and many other things. ',
     },
     'AdminInfo': {
         'title': 'AdminInfo',

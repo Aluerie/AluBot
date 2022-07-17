@@ -123,7 +123,13 @@ async def rank_usercmd(ntr: Interaction, member: Member):
     await ntr.response.send_message(file=await rank_work(ntr, member), ephemeral=True)
 
 
-class ExperienceSystem(commands.Cog):
+class ExperienceSystem(commands.Cog, name='Profile'):
+    """
+    Commands about member profiles
+
+    There is a profile system in Irene\'s server: levelling experience,
+    reputation and many other things (currency, custom profile) to come
+    """
     def __init__(self, bot):
         self.bot = bot
         self.remove_inactive.start()
@@ -131,6 +137,7 @@ class ExperienceSystem(commands.Cog):
         self.bot.tree.add_command(self.ctx_menu1)
         self.ctx_menu2 = app_commands.ContextMenu(name="View User Server Rank", callback=rank_usercmd)
         self.bot.tree.add_command(self.ctx_menu2)
+        self.help_emote = Ems.bubuAyaya
 
     @commands.hybrid_command(
         brief=Ems.slash,

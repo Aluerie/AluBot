@@ -13,10 +13,15 @@ if TYPE_CHECKING:
     from utils.context import Context
 
 
-class ToolsCog(commands.Cog):
+class ToolsCog(commands.Cog, name='Tools'):
+    """
+    Some useful stuff
+
+    Maybe one day it gonna be helpful for somebody.
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.hepl_category = 'Tools'
+        self.help_emote = Ems.DankFix
 
     @commands.hybrid_command(
         name='convert',

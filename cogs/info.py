@@ -37,17 +37,24 @@ async def account_age_ctx_menu(ntr: Interaction, member: Member):
     await ntr.response.send_message(f"{member.mention} is {humanize_time(age)} old.", ephemeral=True)
 
 
-class Info(commands.Cog):
+class Info(commands.Cog, name='Info'):
+    """
+    Commands to get some useful info
+    """
     def __init__(self, bot):
         self.bot = bot
         self.reload_info.start()
-        self.help_category = 'Info'
+        self.help_emote = Ems.PepoG
 
-        self.ctx_menu = app_commands.ContextMenu(name='View Account Age', callback=account_age_ctx_menu)
-        self.bot.tree.add_command(self.ctx_menu)
+        self.ctx_menu1 = app_commands.ContextMenu(name='Translate to English', callback=translate_msg_ctx_menu)
+        self.bot.tree.add_command(self.ctx_menu1)
+
+        self.ctx_menu2 = app_commands.ContextMenu(name='View Account Age', callback=account_age_ctx_menu)
+        self.bot.tree.add_command(self.ctx_menu2)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
+        self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
+        self.bot.tree.remove_command(self.ctx_menu2.name, type=self.ctx_menu2.type)
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
@@ -132,17 +139,6 @@ async def translate_msg_ctx_menu(ntr: Interaction, message: Message):
         embed.description = await translator.translate(message.content, lang_tgt='en')
         embed.set_footer(text=f'Detected language: {(await translator.detect(message.content))[0]}')
     await ntr.response.send_message(embed=embed, ephemeral=True)
-
-
-class InfoTools(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_category = 'Tools'
-        self.ctx_menu = app_commands.ContextMenu(name='Translate to English', callback=translate_msg_ctx_menu)
-        self.bot.tree.add_command(self.ctx_menu)
-
-    async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
 
     @commands.hybrid_command(
         name='translate',
@@ -249,12 +245,6 @@ class InfoTools(commands.Cog):
                 '● Last but not least: `prpl` for favourite Aluerie\'s colour '
             await ctx.reply(embed=embed, ephemeral=True)
 
-
-class BotInfo(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_category = 'Info'
-
     @commands.hybrid_command(
         name='sysinfo',
         brief=Ems.slash,
@@ -285,12 +275,6 @@ class BotInfo(commands.Cog):
             text='This is what they give me for free plan :D'
         )
         await ctx.reply(embed=embed)
-
-
-class BotAdminInfo(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_category = 'AdminInfo'
 
     @commands.command(aliases=['invitelink'])
     @commands.is_owner()
@@ -346,7 +330,4 @@ class BotAdminInfo(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Info(bot))
-    await bot.add_cog(InfoTools(bot))
-    await bot.add_cog(BotInfo(bot))
-    await bot.add_cog(BotAdminInfo(bot))
 

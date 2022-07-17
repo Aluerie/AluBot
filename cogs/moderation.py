@@ -20,9 +20,14 @@ blocked_phrases = ['https://cdn.discordapp.com/emojis/831229578340859964.gif?v=1
 
 
 class Moderation(commands.Cog):
+    """
+    Commands to moderate server with
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'Mute'
+        self.help_emote = Ems.peepoPolice
+        self.active_mutes = {}
+        self.check_mutes.start()
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
@@ -136,13 +141,6 @@ class Moderation(commands.Cog):
             return  # apparently discord limitation > it doesnt ever happen
 
 
-class PlebModeration(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_category = 'Tools'
-        self.active_mutes = {}
-        self.check_mutes.start()
-
     @commands.hybrid_command(
         name='selfmute',
         brief=Ems.slash,
@@ -224,4 +222,3 @@ class PlebModeration(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Moderation(bot))
-    await bot.add_cog(PlebModeration(bot))

@@ -239,7 +239,9 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @commands.is_owner()
     @champ.command()
     async def meraki(self, ctx: commands.Context):
-        """Show list of champions that are missing from Meraki Json"""
+        """
+        Show list of champions that are missing from Meraki JSON
+        """
         meraki_data = pull_data()
         champ_ids = await get_diff_list(meraki_data)
         champ_str = [f'● {await champion.key_by_id(i)} - `{i}`' for i in champ_ids]

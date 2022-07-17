@@ -206,7 +206,7 @@ class MyHelp(commands.HelpCommand):
         paginator = pages.Paginator(
             pages=embed_list
         )
-        paginator.custom_view = ViewHelp(paginator, options=drop_options[:25])
+        paginator.custom_view = ViewHelp(paginator, options=drop_options)
         await paginator.send(self.context)
 
 

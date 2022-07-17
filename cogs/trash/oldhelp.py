@@ -20,12 +20,6 @@ help_cat_dict = {
         'drop': 'Commands providing useful tools',
         'desc': 'Commands providing useful tools'
     },
-    'Info': {
-        'title': 'Info',
-        'emote': Ems.PepoG,
-        'drop': 'Commands to get some useful info',
-        'desc': 'Commands to get some useful info',
-    },
     'Stats': {
         'title': 'Stats',
         'emote': Ems.Smartge,
@@ -44,12 +38,6 @@ help_cat_dict = {
         'emote': Ems.TwoBButt,
         'drop': 'Commands to stalk Irene\'s progress in some things',
         'desc': f'There are some commands to see Aluerie\'s info such as dota 2 match history'
-    },
-    'Mute': {
-        'title': 'Mute',
-        'emote': Ems.peepoPolice,
-        'drop': 'Commands to moderate server with',
-        'desc': 'Commands to moderate server with'
     },
     'Rules': {
         'title': 'Rules',

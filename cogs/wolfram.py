@@ -19,6 +19,12 @@ WOLFRAM_TOKEN = getenv("WOLFRAM_TOKEN")
 
 
 class WolframAlpha(commands.Cog):
+    """
+    Query Wolfram Alpha within the bot.
+
+    Probably the best computational intelligence service ever.
+    [wolframalpha.com](https://www.wolframalpha.com/)
+    """
     def __init__(self, bot):
         self.bot = bot
         self.wa_basic_url = \
@@ -36,7 +42,9 @@ class WolframAlpha(commands.Cog):
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
     async def wolf(self, ctx: Context, *, query: str):
-        """Get answer from WolframAlpha ;"""
+        """
+        Get answer from WolframAlpha
+        """
         await ctx.typing()
         questionurl = str(self.wa_basic_url + str(urlparse.quote(query)))
         async with self.bot.ses.get(questionurl) as resp:
@@ -57,7 +65,9 @@ class WolframAlpha(commands.Cog):
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
     async def wolfram_shorter(self, ctx: Context, *, query: str):
-        """Get shorter answer from WolframAlpha ;"""
+        """
+        Get shorter answer from WolframAlpha
+        """
         await ctx.typing()
         questionurl = str(self.wa_short_url + str(urlparse.quote(query)))
         async with self.bot.ses.get(questionurl) as resp:

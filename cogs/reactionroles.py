@@ -27,7 +27,7 @@ class ReactionRoles(commands.Cog):
         colour_array.reverse()
         return colour_array
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def trigger(self, ctx, *, arg):
         # guild = self.bot.get_guild(Sid.alu)
@@ -47,7 +47,7 @@ class ReactionRoles(commands.Cog):
         for emoji in emoji_array:
             await msg.add_reaction(emoji)
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def edit_the_trigger(self, ctx):
         guild = self.bot.get_guild(Sid.alu)
@@ -73,7 +73,7 @@ class ReactionRoles(commands.Cog):
         roles_array.reverse()
         return roles_array
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def trigger_non(self, ctx, *, arg):
         guild = self.bot.get_guild(Sid.alu)

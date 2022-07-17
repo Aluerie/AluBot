@@ -199,7 +199,7 @@ class Birthday(commands.Cog):
         await self.bot.wait_until_ready()
 
     @commands.is_owner()
-    @commands.command()
+    @commands.command(hidden=True)
     async def birthdaylist(self, ctx: Context):
         """
         Show list of birthdays in this server

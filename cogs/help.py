@@ -35,7 +35,6 @@ def front_embed(context):
         description=
         'AluBot ❤ is an ultimate multi-purpose bot !\n\n'
         'Use dropdown menu below to select a category. '
-        'Note that the bot does not show commands you can\'t use.'
     ).add_field(
         name='Aluerie\'s server',
         value='[Link](https://discord.gg/K8FuDeP)',
@@ -143,7 +142,11 @@ class HelpCommand(commands.HelpCommand):
             answer.append(self.get_command_signature(c))
         return answer
 
-    def get_command_signature(self, c):
+    def get_command_signature(self, c: commands.Command):
+        checks = ''
+        if c.checks:
+            checks = '**!** ' + ', '.join([f"*{i.__doc__}*" for i in c.checks]) + '\n'
+
         slash = c.brief or ''
 
         aliases = ''
@@ -152,13 +155,13 @@ class HelpCommand(commands.HelpCommand):
 
         cd_str = ''
         if c.cooldown is not None:
-            cd_str = f' | cd: rate {c.cooldown.rate} per {display_hmstime(c.cooldown.per)}'
+            cd_str = f' | cd: {c.cooldown.rate} per {display_hmstime(c.cooldown.per)}'
 
         def get_sign(o):
             extra_space = '' if o.signature == '' else ' '
             prefix = getattr(self.context, 'clean_prefix', '$')
             return f'{prefix}{o.qualified_name}{extra_space}{o.signature}'
-        return f'● {slash}`{get_sign(c)}`{aliases}{cd_str}\n{c.help}'
+        return f'● {slash}`{get_sign(c)}`{aliases}{cd_str}\n{checks}{c.help}'
 
     async def send_bot_help(self, mapping):
         embed_list = []
@@ -285,6 +288,7 @@ class HelpCog(commands.Cog, name='Help'):
         self._original_help_command = bot.help_command
         self.bot = bot
         bot.help_command = HelpCommand(
+            verify_checks=False,
             command_attrs={
                 'hidden': True,
                 'help':
@@ -302,6 +306,7 @@ class HelpCog(commands.Cog, name='Help'):
     )
     async def help_slash(self, ntr: Interaction, *, command: str = None):
         myhelp = HelpCommand(
+            verify_checks=False,
             command_attrs={
                 'hidden': True
             }

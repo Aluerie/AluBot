@@ -14,12 +14,6 @@ if TYPE_CHECKING:
 
 
 help_cat_dict = {
-    'Fun': {
-        'title': 'Fun',
-        'emote': Ems.FeelsDankMan,
-        'drop': 'Commands to have fun with',
-        'desc': 'Commands to have fun with'
-    },
     'Tools': {
         'title': 'Tools',
         'emote': Ems.DankFix,
@@ -37,12 +31,6 @@ help_cat_dict = {
         'emote': Ems.Smartge,
         'drop': 'Commands to get some stats/infographics',
         'desc': 'Commands to get some stats/infographics',
-    },
-    'Todo': {
-        'title': 'Reminders and ToDo list commands',
-        'emote': '📝',
-        'drop': 'Organize yourself with some reminders and todo lists',
-        'desc': 'Organize yourself with some reminders and todo lists',
     },
     'Profile': {
         'title': 'Profile',

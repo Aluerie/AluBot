@@ -115,14 +115,18 @@ last_embed = Embed(
 
 
 class MyHelp(commands.HelpCommand):
-    async def get_the_answer(self, c, answer=''):
+    async def get_the_answer(self, c, answer=None, deep=0):
+        if answer is None:
+            answer = []
         if getattr(c, 'commands', None) is not None:
             if c.brief == Ems.slash:
-                answer += self.get_command_signature(c)
+                answer.append(self.get_command_signature(c))
             for x in await self.filter_commands(c.commands, sort=True):
-                answer = await self.get_the_answer(x, answer=answer) + '\n'
+                await self.get_the_answer(x, answer=answer, deep=deep+1)
+            if deep > 0:
+                answer.append('')
         else:
-            answer += self.get_command_signature(c)
+            answer.append(self.get_command_signature(c))
         return answer
 
     def get_command_signature(self, c):
@@ -158,7 +162,7 @@ class MyHelp(commands.HelpCommand):
 
         for cog, cmds in mapping.items():
             filtered = await self.filter_commands(cmds, sort=True)
-            command_signatures = [await self.get_the_answer(c) for c in filtered]
+            command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
 
             cog_name = getattr(cog, "qualified_name", "No Category")
             cog_desc = getattr(cog, "description", "No Description")

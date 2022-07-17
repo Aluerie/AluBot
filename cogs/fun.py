@@ -15,11 +15,13 @@ if TYPE_CHECKING:
     from discord import Message
 
 
-class FunThings(commands.Cog):
-    """Rofl"""
+class FunThings(commands.Cog, name='Fun'):
+    """
+    Commands to have fun with
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.help_emote = '\N{GAME DIE}'
+        self.help_emote = Ems.FeelsDankMan
 
     @commands.hybrid_command(
         aliases=['cf'],

@@ -19,12 +19,17 @@ if TYPE_CHECKING:
     from discord import Message
 
 
-class Remind(commands.Cog):
+class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
+    """
+    Organize yourself with some instruments
+    """
     def __init__(self, bot):
         self.bot = bot
         self.check_reminders.start()
         self.active_reminders = {}
-        self.help_category = 'Todo'
+        self.check_afks.start()
+        self.active_afk = {}
+        self.help_emote = Ems.DankG
 
     slh_group = app_commands.Group(name="remind", description="Group command about reminders")
 
@@ -77,9 +82,11 @@ class Remind(commands.Cog):
             *,
             when: Annotated[time.FriendlyTimeResult, time.UserFriendlyTime(commands.clean_content, default='…')]
     ):
-        """Makes bot remind you about `remind_text` in `remind_time`.
-        The bot tries to understand human language, so you can use it like
-        'tomorrow play PA', 'in 3 days uninstall dota';"""
+        """
+        Makes bot remind you about `remind_text` in `remind_time`. \
+        The bot tries to understand human language, so you can use it like \
+        'tomorrow play PA', 'in 3 days uninstall dota'.
+        """
         await self.add_work(ctx, ctx.author, when.dt, when.arg)
 
     @staticmethod
@@ -105,8 +112,10 @@ class Remind(commands.Cog):
 
     @remind.command(brief=Ems.slash)
     async def remove(self, ctx: Context, reminder_id: int):
-        """Removes reminder under id from your reminders list. \
-        You can find *ids* of your reminders in `$remind list` command ;"""
+        """
+        Removes reminder under id from your reminders list. \
+        You can find *ids* of your reminders in `$remind list` command ;
+        """
         await self.remove_work(ctx, ctx.author, reminder_id)
 
     @staticmethod
@@ -159,12 +168,6 @@ class Remind(commands.Cog):
     async def before(self):
         await self.bot.wait_until_ready()
 
-
-class Todo(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_category = 'Todo'
-
     @commands.hybrid_group()
     async def todo(self, ctx):
         """Group command about ToDolists, for actual commands use it together with subcommands"""
@@ -174,8 +177,9 @@ class Todo(commands.Cog):
         name='remove',
         brief=Ems.slash,
         description='Remove todo bullet from your todo list',
-        help='Removes todo bullet under *bullet_id* from your ToDo list.'
-             'You can find *ids* of your To Do bullets in `$todo list` command'
+        help=
+        'Removes todo bullet under *bullet_id* from your ToDo list.'
+        'You can find *ids* of your To Do bullets in `$todo list` command'
     )
     @app_commands.describe(bullet_id='ToDo Bullet id in your list')
     async def remove(self, ctx: Context, bullet_id: int):
@@ -232,14 +236,6 @@ class Todo(commands.Cog):
             await ctx.reply(f'added {Ems.PepoG}')
         else:
             await ctx.message.add_reaction(Ems.PepoG)
-
-
-class Afk(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.check_afks.start()
-        self.active_afk = {}
-        self.help_category = 'Todo'
 
     @commands.hybrid_command(
         name='afk',
@@ -327,5 +323,3 @@ class Afk(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Remind(bot))
-    await bot.add_cog(Todo(bot))
-    await bot.add_cog(Afk(bot))

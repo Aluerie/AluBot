@@ -81,11 +81,16 @@ def try_get_gamerstats(bot, start_at_match_id=0, matches_requested=20):
     return send_matches
 
 
-class GamerStats(commands.Cog):
+class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
+    """
+    Stalk match history, mmr plot and more.
+
+    You can get various information about Aluerie's Dota 2 progress.
+    """
     def __init__(self, bot):
         self.bot = bot
         self.daily_match_history_ctrlr.start()
-        self.help_category = 'Aluerie'
+        self.help_emote = Ems.TwoBButt
 
     @commands.hybrid_group()
     async def stalk(self, ctx: Context):

@@ -127,6 +127,7 @@ class Rid:
 
 class Ems:  # Emote strings
     # alu server nonani
+    bedNerdge = '<:bedNerdge:855495407110586439>'
     DankApprove = '<:DankApprove:853015071042961468>'
     DankFix = '<:DankFix:924285577027784774>'
     Ree = '<:Ree:735905686910664797>'
@@ -165,6 +166,7 @@ class Ems:  # Emote strings
     TwoBButt = '<:2BButt:853729747846168576>'
     Lewd = '<:Lewd:976604430059331684>'
     DankG = '<:DankG:998012133948276857>'
+    peepoBusiness = '<:peepoBusiness:998157352098340934>'
     # emote server ani
     # nothing for now
 

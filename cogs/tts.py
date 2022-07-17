@@ -20,11 +20,16 @@ lang_dict = {
 }
 
 
-class TextToSpeech(commands.Cog):
+class TextToSpeech(commands.Cog, name='TTS'):
+    """
+    Text To Speech commands.
+
+    Make the bot talk in voice chat.
+    """
     def __init__(self, bot):
         self.bot = bot
         self.connections = {}
-        self.help_category = 'Tools'
+        self.help_emote = Ems.Ree
 
     @commands.hybrid_group(name='voice')
     async def voice(self, ctx):

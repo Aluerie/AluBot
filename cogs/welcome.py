@@ -85,13 +85,6 @@ class Welcome(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.is_owner()
-    @commands.command()
-    async def welcome_preview(self, ctx, member: Member = None):
-        mbr = member or ctx.message.author
-        content_text, embed, image_file = await welcome_message(self.bot.ses, mbr)
-        await ctx.reply(content=content_text, embed=embed, file=image_file)
-
     @commands.Cog.listener()
     async def on_member_join(self, member):
         guild = self.bot.get_guild(Sid.alu)
@@ -193,12 +186,6 @@ class Milestone(commands.Cog):
                 text=f"With love, {member.guild.me.display_name}"
             )
             await self.bot.get_channel(Cid.welcome).send(embed=em)
-
-
-class WelcomeAdmin(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_category = 'AdminTools'
 
     @commands.is_owner()
     @commands.command(hidden=True)

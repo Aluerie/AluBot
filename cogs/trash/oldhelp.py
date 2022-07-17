@@ -33,18 +33,6 @@ help_cat_dict = {
         'desc': f'There is a profile system in Irene\'s server: levelling experience, '
                 f'currency, reputation, custom profile and many other things. ',
     },
-    'Aluerie': {
-        'title': 'Aluerie',
-        'emote': Ems.TwoBButt,
-        'drop': 'Commands to stalk Irene\'s progress in some things',
-        'desc': f'There are some commands to see Aluerie\'s info such as dota 2 match history'
-    },
-    'Rules': {
-        'title': 'Rules',
-        'emote': Ems.peepoWTF,
-        'drop': 'Commands to edit rules with',
-        'desc': 'Commands to edit rules with'
-    },
     'AdminInfo': {
         'title': 'AdminInfo',
         'emote': Ems.peepoComfy,

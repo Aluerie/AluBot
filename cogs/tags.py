@@ -48,9 +48,16 @@ class TagTextFlags(commands.FlagConverter, case_insensitive=True):
 
 
 class Tags(commands.Cog):
+    """
+    Use prepared texts to answer repeating questions
+
+    Inspired by programming servers where a lot of questions get repeated daily. \
+    So in the end if somebody asks "How to learn Python?" - people just use \
+    `$tag learn python` and the bot gives well-prepared, well-detailed answer.
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'Tools'
+        self.help_emote = Ems.peepoBusiness
 
     @app_commands.command(
         name='tag',
@@ -203,12 +210,6 @@ async def tag_ban_work(ctx, member, mybool):
     embed.description = f"{member.mention} is now {'un' if mybool else ''}banned from making new tags"
     await ctx.reply(embed=embed)
 
-
-class TagsMod(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_category = 'Mute'
-
     @commands.has_role(Rid.discord_mods)
     @commands.has_permissions(manage_messages=True)
     @app_commands.default_permissions(manage_messages=True)
@@ -243,4 +244,3 @@ class TagsMod(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Tags(bot))
-    await bot.add_cog(TagsMod(bot))

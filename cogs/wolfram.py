@@ -31,7 +31,7 @@ class WolframAlpha(commands.Cog):
             f'https://api.wolframalpha.com/v1/simple?appid={WOLFRAM_TOKEN}' \
             f'&background=black&foreground=white&layout=labelbar&i='
         self.wa_short_url = f"https://api.wolframalpha.com/v1/result?appid={WOLFRAM_TOKEN}&i="
-        self.help_category = 'Tools'
+        self.help_emote = Ems.bedNerdge
 
     @commands.hybrid_command(
         name="wolfram_long",

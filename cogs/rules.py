@@ -7,10 +7,16 @@ from utils.var import *
 from utils.distools import scnf
 
 
-class ServerInfo(commands.Cog):
+class ServerInfo(commands.Cog, name='Rules'):
+    """
+    The Server has some strict rules
+
+    Here you can see commands to view the rules or \
+    edit them if you are a mod.
+    """
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = 'Info'
+        self.help_emote = Ems.peepoWTF
 
     @staticmethod
     async def rule_work(ctx, num, dtb, min_number):
@@ -72,12 +78,6 @@ class ServerInfo(commands.Cog):
         """Show all *real rules* of the server"""
         await self.rules_work(ctx, db.rr, 1)
 
-
-class ModServerInfo(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_category = 'Rules'
-
     @commands.has_role(Rid.discord_mods)
     @commands.group()
     async def modrule(self, ctx):
@@ -125,4 +125,3 @@ class ModServerInfo(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(ServerInfo(bot))
-    await bot.add_cog(ModServerInfo(bot))

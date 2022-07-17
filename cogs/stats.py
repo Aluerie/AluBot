@@ -25,7 +25,7 @@ class StatsCommands(commands.Cog, name='Stats'):
     """
     def __init__(self, bot):
         self.bot = bot
-        self.help_category = Ems.Smartge
+        self.help_emote = Ems.Smartge
 
     @commands.hybrid_command(
         name='wordcloud',

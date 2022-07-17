@@ -182,12 +182,13 @@ class HelpCommand(commands.HelpCommand):
 
             cog_name = getattr(cog, "qualified_name", "No Category")
             cog_desc = getattr(cog, "description", "No Description")
+            cog_emote = getattr(cog, "help_emote", None)
 
             if command_signatures:
                 em = Embed(
                     title=cog_name,
                     description=
-                    f'{cog.help_emote} '
+                    f'{cog_emote + " " if cog_emote else ""}'
                     f'{cog_desc}\n\n'
                     f'{chr(10).join(command_signatures)}'
                 )
@@ -197,7 +198,7 @@ class HelpCommand(commands.HelpCommand):
                     SelectOption(
                         label=cog_name,
                         description=cog_desc.split('\n', 1)[0],
-                        emoji=getattr(cog, 'help_emote', None),
+                        emoji=cog_emote,
                         value=str(len(embed_list) - 1)
                     )
                 )

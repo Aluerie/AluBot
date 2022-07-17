@@ -485,7 +485,10 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @stream.command(name='add')
+    @stream.command(
+        name='add',
+        usage='<twitch_name(-s)>'
+    )
     async def stream_add(self, ctx: Context, *, twitch_names: str):
         """
         Add twitch streamer(-s) to the list of your fav Dota 2 streamers.
@@ -493,7 +496,10 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         await self.stream_add_remove(ctx, twitch_names, mode='add')
 
     @is_guild_owner()
-    @stream.command(name='remove')
+    @stream.command(
+        name='remove',
+        usage='<twitch_name(-s)>'
+    )
     async def stream_remove(self, ctx: Context, *, twitch_names: str):
         """
         Remove twitch streamer(-s) from the list of your fav Dota 2 streamers.
@@ -524,13 +530,6 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
 
     @staticmethod
     async def hero_add_remove(ctx, hero_names, mode):
-        if hero_names is None:
-            em = Embed(
-                colour=Clr.error,
-                description="Provide all arguments: `hero_names`"
-            )
-            return await ctx.reply(embed=em)
-
         hero_list = set(db.get_value(db.ga, ctx.guild.id, 'dotafeed_hero_ids'))
         success = []
         fail = []
@@ -567,8 +566,11 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @hero.command(name='add')
-    async def hero_add(self, ctx: commands.Context, *, hero_names: str = None):
+    @hero.command(
+        name='add',
+        usage='<hero_name(-s)>'
+    )
+    async def hero_add(self, ctx: commands.Context, *, hero_names: str):
         """Add hero(-es) to your favorite heroes list. \
         Use names from Dota 2 hero grid. For example,
         • `Anti-Mage` (letter case does not matter) and not `Magina`;
@@ -579,8 +581,11 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         await self.hero_add_remove(ctx, hero_names, mode='add')
 
     @is_guild_owner()
-    @hero.command(name='remove')
-    async def hero_remove(self, ctx: commands.Context, *, hero_names: str = None):
+    @hero.command(
+        name='remove',
+        usage='<hero_name(-s)>'
+    )
+    async def hero_remove(self, ctx: commands.Context, *, hero_names: str):
         """
         Remove hero(-es) from your favorite heroes list.
         """

@@ -172,6 +172,12 @@ class LoLFeed(commands.Cog):
         # self.lolfeed.restart()
 
 
+class StreamerFlags(commands.FlagConverter, case_insensitive=True):
+    name: str
+    region: Optional[str]
+    accname: Optional[str]
+
+
 class LoLFeedTools(commands.Cog, name='LoL'):
     """
     Commands to set up fav champ + fav stream notifs.
@@ -310,11 +316,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
             await ctx.message.add_reaction(Ems.PepoG)
         except:
             await ctx.reply('Something went wrong, double-check: `streamer`, `region`, `accname`')
-
-    class StreamerFlags(commands.FlagConverter, case_insensitive=True):
-        name: str
-        region: Optional[str]
-        accname: Optional[str]
 
     @streamer.command(name='remove')
     async def remove_streamer(self, ctx, *, flags: StreamerFlags):

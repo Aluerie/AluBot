@@ -47,6 +47,7 @@ async def translate_msg_ctx_menu(ntr: Interaction, message: Message):
         embed.set_footer(text=f'Detected language: {(await translator.detect(message.content))[0]}')
     await ntr.response.send_message(embed=embed, ephemeral=True)
 
+
 class Info(commands.Cog, name='Info'):
     """
     Commands to get some useful info

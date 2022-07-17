@@ -209,9 +209,10 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
 
     **Tutorial**
     1. `$dota channel set #channel`
-    2. Add/Remove fav streamers with `$dota stream add/remove`
-    3. Add/Request missing streamers to `$dota database list` with `$dota database add/request`
-    4. Add/Remove fav heroes with `$dota hero add/remove`
+    2. Add/Remove fav streamers with `$dota stream add/remove <twitch_name(-s)>`
+    3. Add/Request missing streamers to `$dota database list` with \
+    `$dota database add/request twitch: <twitch_name> steamid: <steamid> friendid: <friendid>`
+    4. Add/Remove fav heroes with `$dota hero add/remove <hero_name(-s)>`
     *Pro-Tip.* for multiple hero/stream add/remove commands - use commas to separate names i.e.\
     `$dota hero add Anti-Mage, Mirana`
     5. Ready ! More info below
@@ -453,8 +454,8 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             ).set_footer(
                 text=
                 'Check your argument or '
-                'consider adding (for trusted janitors)/requesting such streamer with '
-                '`$dota stream add/request twitch: <twitch_tag> steamid: <steam_id> friendid: <friend_id>`'
+                'consider adding (for trustees)/requesting such streamer with '
+                '`$dota database add/request twitch: <twitch_tag> steamid: <steam_id> friendid: <friend_id>`'
             )
             await ctx.reply(embed=em)
 
@@ -556,7 +557,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @hero.command(name='remove')
     async def hero_remove(self, ctx: commands.Context, *, hero_names: str = None):
         """
-        Remove hero(-es) to your favorite heroes list.
+        Remove hero(-es) from your favorite heroes list.
         """
         await self.hero_add_remove(ctx, hero_names, mode='remov')
 

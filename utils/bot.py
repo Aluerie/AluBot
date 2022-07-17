@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
 test_list = [  # for yen bot
     'dotafeed',
-    'birthday',
     'help',
     'error',
 ]

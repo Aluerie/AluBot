@@ -196,7 +196,7 @@ class WelcomeAdmin(commands.Cog):
         self.help_category = 'AdminTools'
 
     @commands.is_owner()
-    @commands.command()
+    @commands.command(hidden=True)
     async def welcome_preview(self, ctx, member: Member = None):
         """Get a rendered welcome message for a `{@user}`;"""
         mbr = member or ctx.message.author

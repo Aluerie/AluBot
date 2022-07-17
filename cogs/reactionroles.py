@@ -146,7 +146,7 @@ class ReactionRoles(commands.Cog):
                     await member.remove_roles(reaction_role)
 
 
-# 0 - non unique, 1 - unique, 2+ means it is grouped msg reqctions and the number corresponds to that group
+# 0 - non unique, 1 - unique, 2+ means it is grouped msg reactions and the number corresponds to that group
 
 # 2 = colour roles
 dict_reactions = {

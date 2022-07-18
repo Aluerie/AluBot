@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-from discord import AuditLogAction, Embed, TextChannel
+from discord import AuditLogAction, Embed, TextChannel, NotFound
 from discord.ext import commands, tasks
 
 from utils.var import *
@@ -246,7 +246,7 @@ class CommandLogging(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    ignored_users = [Uid.alu]
+    ignored_users = []  # [Uid.alu]
     included_guilds = [Sid.alu]
 
     @commands.Cog.listener()
@@ -256,7 +256,10 @@ class CommandLogging(commands.Cog):
 
         cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])
         if ctx.interaction:
-            jump_url = (await ctx.interaction.original_message()).jump_url
+            try:
+                jump_url = (await ctx.interaction.original_message()).jump_url
+            except NotFound:
+                jump_url = None
             cmd_text = f'/{ctx.command.qualified_name}'
         else:
             jump_url = ctx.message.jump_url

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import Embed, app_commands
+from discord import Embed, app_commands, NotFound
 from discord.ext import commands
 
 from utils import database as db
@@ -108,7 +108,7 @@ class CommandErrorHandler(commands.Cog):
 
                 cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])
                 if ctx.interaction:
-                    jump_url = (await ctx.interaction.original_message()).jump_url
+                    jump_url = ''
                     cmd_text = f'/{ctx.command.qualified_name}'
                 else:
                     jump_url = ctx.message.jump_url

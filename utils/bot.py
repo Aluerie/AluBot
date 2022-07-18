@@ -22,9 +22,9 @@ if TYPE_CHECKING:
     from discord import Interaction, Message
 
 test_list = [  # for yen bot
-    'logs',
-    'help',
+    'beta',
     'error',
+    'logs'
 ]
 
 

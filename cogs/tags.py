@@ -5,6 +5,7 @@ from discord import Interaction, Embed, Member, Message, app_commands
 from discord.ext import commands
 from discord.utils import format_dt, get
 
+from utils.context import Context
 from utils import database as db
 from utils.var import *
 
@@ -12,7 +13,7 @@ from datetime import datetime, timezone
 
 if TYPE_CHECKING:
     from discord import MessageReference
-    from utils.context import Context
+
 
 reserved_words = ['edit', 'add', 'create', 'info', 'delete', 'list', 'text', 'name', 'remove', 'ban']
 

@@ -145,7 +145,9 @@ class HelpCommand(commands.HelpCommand):
     def get_command_signature(self, c: commands.Command):
         checks = ''
         if c.checks:
-            checks = f'**!** {", ".join([f"*{i.__doc__}*" for i in c.checks])}\n'
+            checks = set(getattr(i, '__doc__') or "mods only" for i in c.checks)
+            checks = [f"*{i}*" for i in checks]
+            checks = f"**!** {', '.join(checks)}\n"
 
         slash = c.brief or ''
 

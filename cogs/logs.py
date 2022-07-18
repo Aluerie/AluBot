@@ -153,7 +153,7 @@ class EmoteLogging(commands.Cog):
     """
     def __init__(self, bot):
         self.bot = bot
-        self.help_emote = Ems.FeelsDankMan
+        self.help_emote = Ems.peepoNiceDay
 
     @commands.command()
     @commands.has_permissions(manage_emojis=True)

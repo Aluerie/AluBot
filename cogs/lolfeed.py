@@ -43,7 +43,7 @@ from pyot.models import lol
 from pyot.utils.lol import champion, cdragon
 from pyot.core.exceptions import NotFound, ServerError
 
-from discord import Embed
+from discord import Embed, app_commands
 from discord.ext import commands, tasks
 
 from utils import database as db
@@ -174,9 +174,34 @@ class LoLFeed(commands.Cog):
         # self.lolfeed.restart()
 
 
-class StreamerFlags(commands.FlagConverter, case_insensitive=True):
-    name: str
-    region: Optional[str]
+def region_to_platform(
+        region: str
+):
+    the_dict = {
+        'br': 'br1',
+        'eun': 'eun1',
+        'euw': 'euw1',
+        'jp': 'jp1',
+        'kr': 'kr',
+        'lan': 'la1',
+        'las': 'la2',
+        'na': 'na1',
+        'oc': 'oc1',
+        'ru': 'ru',
+        'tr': 'tr1'
+    }
+    return the_dict[region.lower()]
+
+
+class AddStreamFlags(commands.FlagConverter, case_insensitive=True):
+    twitch: str
+    region: Literal['br', 'eun', 'euw', 'jp', 'kr', 'lan', 'las', 'na', 'oc', 'ru', 'tr']
+    accname: str
+
+
+class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
+    twitch: str
+    region: Optional[Literal['br', 'eun', 'euw', 'jp', 'kr', 'lan', 'las', 'na', 'oc', 'ru', 'tr']]
     accname: Optional[str]
 
 
@@ -194,68 +219,65 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         self.help_emote = Ems.PogChampPepe
 
     @is_owner()
-    @commands.group(aliases=['league'])
+    @commands.hybrid_group(aliases=['league'])
+    @app_commands.default_permissions(administrator=True)
     async def lol(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @is_owner()
-    @lol.group()
+    @lol.group(aliasses=['champion'])
     async def champ(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @is_owner()
     @champ.command()
-    async def add(self, ctx, *, champnames=None):
-        """Add champion(-s) with `champnames` (can be list of names separated with `;` or `,`) \
-        to database"""
-        if champnames is None:
-            return await ctx.reply("Provide all arguments: `heroname`")
-        try:
-            hero_array = set(db.get_value(db.g, Sid.alu, 'lol_fav_champs'))
-            for champ_str in re.split('; |, |,', champnames):
-                hero_array.add(await champion.id_by_key(champ_str))
-            db.set_value(db.g, Sid.alu, lol_fav_champs=list(hero_array))
-            await ctx.message.add_reaction(Ems.PepoG)
-        except:
-            await ctx.reply('Something went wrong, double-check: `heroname`')
+    @app_commands.describe(champ_names='Champion name(-s)')
+    async def add(self, ctx, *, champ_names: str):
+        """
+        Add champion(-s) into list of fav champs.
+        """
+        hero_array = set(db.get_value(db.g, Sid.alu, 'lol_fav_champs'))
+        for champ_str in re.split('; |, |,', champ_names):
+            hero_array.add(await champion.id_by_key(champ_str))
+        db.set_value(db.g, Sid.alu, lol_fav_champs=list(hero_array))
+        await ctx.reply(Ems.PepoG)
 
     @is_owner()
     @champ.command()
-    async def remove(self, ctx: Context, *, champnames=None):
-        """Remove champion(-s) with `champnames` (can be list of names separated with `;` or `,`) \
-        from database"""
-        if champnames is None:
-            return await ctx.reply("Provide all arguments: `heroname`")
-        try:
-            hero_array = set(db.get_value(db.g, Sid.alu, 'lol_fav_champs'))
-            for champ_str in re.split('; |, |,', champnames):
-                hero_array.remove(await champion.id_by_key(champ_str))
-            db.set_value(db.g, Sid.alu, lol_fav_champs=list(hero_array))
-            await ctx.message.add_reaction(Ems.PepoG)
-        except:
-            await ctx.reply('Something went wrong, double-check: `heroname`')
+    @app_commands.describe(champ_names='Champion name(-s)')
+    async def remove(self, ctx: Context, *, champ_names: str):
+        """
+        Remove champion(-s) from fav champs list.
+        """
+        hero_array = set(db.get_value(db.g, Sid.alu, 'lol_fav_champs'))
+        for champ_str in re.split('; |, |,', champ_names):
+            hero_array.remove(await champion.id_by_key(champ_str))
+        db.set_value(db.g, Sid.alu, lol_fav_champs=list(hero_array))
+        await ctx.reply(Ems.PepoG)
 
     @is_owner()
     @champ.command()
-    async def list(self, ctx):
-        """Show current list of favourite champions ;"""
+    async def list(self, ctx: Context):
+        """
+        Show current list of favourite champions.
+        """
         champ_array = db.get_value(db.g, Sid.alu, 'lol_fav_champs')
         answer = [f'`{await champion.key_by_id(c_id)} - {c_id}`' for c_id in champ_array]
         answer.sort()
         em = Embed(
             color=Clr.rspbrry,
-            title='List of fav lol heroes',
+            title='List of fav lol champs',
             description='\n'.join(answer)
         )
         await ctx.reply(embed=em)
 
     @is_owner()
     @champ.command()
-    async def meraki(self, ctx: commands.Context):
+    async def meraki(self, ctx: Context):
         """
-        Show list of champions that are missing from Meraki JSON
+        Show list of champions that are missing from Meraki JSON.
         """
         meraki_data = pull_data()
         champ_ids = await get_diff_list(meraki_data)
@@ -282,15 +304,17 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await ctx.reply(embed=em)
 
     @is_owner()
-    @lol.group()
-    async def streamer(self, ctx: Context):
+    @lol.group(aliases=['streamer'])
+    async def stream(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @is_owner()
-    @streamer.command(name='list')
-    async def list_streamer(self, ctx: Context):
-        """Show current list of fav streamers with optins ;"""
+    @stream.command(name='list')
+    async def list_stream(self, ctx: Context):
+        """
+        Show current list of fav streamers with optins
+        """
         ss_dict = dict()
         for row in db.session.query(db.l):
             key = f'[{row.name}](https://www.twitch.tv/{row.name}) {row.optin}'
@@ -314,41 +338,57 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await ctx.reply(embed=em)
 
     @is_owner()
-    @streamer.command(name='add')
-    async def add_streamer(self, ctx, name=None, region=None, *, accname=None):
-        """Add streamer to database"""
-        if name is None or region is None or accname is None:
-            return await ctx.reply("Provide all arguments: `streamer`, `region`, `accname`")
-        try:
-            summoner = await lol.summoner.Summoner(name=accname, platform=region).get()
-            if db.session.query(db.l).filter_by(id=summoner.id).first() is None:
-                db.add_row(db.l, summoner.id, name=name.lower(), region=region, accname=accname)
-            await ctx.message.add_reaction(Ems.PepoG)
-        except:
-            await ctx.reply('Something went wrong, double-check: `streamer`, `region`, `accname`')
+    @stream.command(name='add')
+    @app_commands.describe(
+        twitch='Twitch name',
+        region='League account region, i.e. `euw`, `na`',
+        accname='Summoner name for league account'
+    )
+    async def add_stream(self, ctx: Context, *, flags: AddStreamFlags):
+        """
+        Add account to the database
+        """
+        platform = region_to_platform(flags.region)
+        summoner = await lol.summoner.Summoner(name=flags.accname, platform=platform).get()
+        if db.session.query(db.l).filter_by(id=summoner.id).first() is None:
+            db.add_row(db.l, summoner.id, name=flags.twitch.lower(), region=platform, accname=flags.accname)
+        await ctx.reply(Ems.PepoG)
 
     @is_owner()
-    @streamer.command(name='remove')
-    async def remove_streamer(self, ctx, *, flags: StreamerFlags):
-        """Remove streamer(-s) from database"""
-        my_dict = {k: v for k, v in dict(flags).items() if v is not None}
+    @stream.command(name='remove')
+    @app_commands.describe(
+        twitch='Twitch name',
+        region='League account region, i.e. `euw`, `na`',
+        accname='Summoner name for league account'
+    )
+    async def remove_stream(self, ctx: Context, *, flags: RemoveStreamFlags):
+        """
+        Remove account(-s) of some streamer from the database
+        """
+        map_dict = {'name': flags.twitch.lower()}
+        if flags.region:
+            map_dict['region'] = region_to_platform(flags.region)
+        if flags.accname:
+            map_dict['accname'] = flags.accname
+
+        #my_dict = {k: v for k, v in dict(flags).items() if v is not None}
         with db.session_scope() as ses:
-            ses.query(db.l).filter_by(**my_dict).delete()
-        await ctx.message.add_reaction(Ems.PepoG)
+            ses.query(db.l).filter_by(**map_dict).delete()
+        await ctx.reply(Ems.PepoG)
 
     @is_owner()
-    @streamer.command(
+    @stream.command(
         help=f'Opt the streamer `in` or `out` from {cmntn(Cid.alubot)} channel',
         usage='<twitch_name> in/out',
         aliases=['turn']
     )
-    async def opt(self, ctx, in_or_out: inout_to_10, twitch_name):
+    @app_commands.describe(
+        twitch='Twitch name'
+    )
+    async def opt(self, ctx: Context, in_or_out: inout_to_10, twitch: str):
         """Read above"""
-        try:
-            db.set_value_by_name(db.l, twitch_name, optin=in_or_out)
-            await ctx.message.add_reaction(Ems.PepoG)
-        except:
-            await ctx.reply('Something went wrong, double-check: `streamer`')
+        db.set_value_by_name(db.l, twitch, optin=in_or_out)
+        await ctx.reply(Ems.PepoG)
 
 
 class LoLAccCheck(commands.Cog):

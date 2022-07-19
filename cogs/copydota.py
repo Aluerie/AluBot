@@ -84,24 +84,31 @@ class CopypasteDota(commands.Cog):
     async def on_message(self, msg: Message):
         try:
             if msg.channel.id == Cid.copydota_info:
-                if "https://steamdb.info" not in msg.content:
-                    return
-
-                url, embeds, files = await get_gitdiff_embed()
-                msg = await self.bot.get_channel(Cid.dota_news).send(
-                    content=f'<{url}>',
-                    embeds=embeds
-                )
-                await msg.publish()
-                if len(files):
-                    msg = await self.bot.get_channel(Cid.dota_news).send(files=files)
+                if "https://steamdb.info" in msg.content:
+                    url, embeds, files = await get_gitdiff_embed()
+                    msg = await self.bot.get_channel(Cid.dota_news).send(
+                        content=f'<{url}>',
+                        embeds=embeds
+                    )
+                    await msg.publish()
+                    if len(files):
+                        msg = await self.bot.get_channel(Cid.dota_news).send(files=files)
+                        await msg.publish()
+                if "https://steamcommunity.com" in msg.content:
+                    msg = await self.bot.get_channel(Cid.dota_news).send(
+                        content=msg.content,
+                        embeds=msg.embeds,
+                        files=msg.attachments
+                    )
                     await msg.publish()
 
             elif msg.channel.id == Cid.copydota_steam:
                 if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
-                embed = Embed(colour=0x171a21)
-                embed.description = msg.content
+                embed = Embed(
+                    colour=0x171a21,
+                    description=msg.content
+                )
                 msg = await self.bot.get_channel(Cid.dota_news).send(embed=embed)
                 await msg.publish()
 
@@ -114,8 +121,10 @@ class CopypasteDota(commands.Cog):
                     msg = await self.bot.get_channel(Cid.dota_news).send(embeds=embeds)
                     await msg.publish()
         except Exception as error:
-            embed = Embed(colour=Clr.error)
-            embed.title = 'Error in  #dota-news copypaste'
+            embed = Embed(
+                colour=Clr.error,
+                title='Error in  #dota-news copypaste'
+            )
             await send_traceback(error, self.bot, embed=embed)
 
 
@@ -126,10 +135,10 @@ class TestGitFeed(commands.Cog):
 
     @tasks.loop(count=1)
     async def testing(self):
-        test_num = 0
-        embeds, files = await get_gitdiff_embed(test_num=test_num)
+        num = 0
+        url, embeds, files = await get_gitdiff_embed(test_num=num)
         for embed in embeds:
-            await self.bot.get_channel(Cid.spam_me).send(embed=embed)
+            await self.bot.get_channel(Cid.spam_me).send(content=url, embed=embed)
         if len(files):
             await self.bot.get_channel(Cid.spam_me).send(files=files)
 

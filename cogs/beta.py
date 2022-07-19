@@ -21,8 +21,6 @@ class BetaTest(commands.Cog):
 
     @commands.hybrid_command(hidden=True)
     async def allu(self, ctx: Context):
-        """Execute tag frombot database"""
-        raise ValueError("woah")
         await ctx.reply('Allu')
 
 

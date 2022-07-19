@@ -12,13 +12,48 @@ if TYPE_CHECKING:
     from utils.context import Context
 
 lang_dict = {
-    'fr-FR': {'locale': 'French (France)', 'lang': 'fr', 'tld': 'fr'},
-    'en-IE': {'locale': 'English (Ireland)', 'lang': 'en', 'tld': 'ie'},
-    'ru-RU': {'locale': 'Russian (Russia)', 'lang': 'ru', 'tld': 'com'},
-    'es-ES': {'locale': 'Spanish (Spain)', 'lang': 'es', 'tld': 'es'},
-    'pt-PT': {'locale': 'Portuguese (Portugal)', 'lang': 'pt', 'tld': 'pt'},
-    'zh-CN': {'locale': 'Mandarin (China Mainland)', 'lang': 'zh-CN', 'tld': 'com'},
-    # 'uk-UA': {'locale': 'Ukrainian (Ukrain)', 'lang': 'uk', 'tld': 'com.ua'},
+    'fr': {
+        'code': 'fr-FR',
+        'locale': 'French (France)',
+        'lang': 'fr',
+        'tld': 'fr'
+    },
+    'en': {
+        'code': 'en-IE',
+        'locale': 'English (Ireland)',
+        'lang': 'en',
+        'tld': 'ie'
+    },
+    'ru': {
+        'code': 'ru-RU',
+        'locale': 'Russian (Russia)',
+        'lang': 'ru',
+        'tld': 'com'
+    },
+    'es': {
+        'code': 'es-ES',
+        'locale': 'Spanish (Spain)',
+        'lang': 'es',
+        'tld': 'es'
+    },
+    'pt': {
+        'code': 'pt-PT',
+        'locale': 'Portuguese (Portugal)',
+        'lang': 'pt',
+        'tld': 'pt'
+    },
+    'cn': {
+        'code': 'zh-CN',
+        'locale': 'Mandarin (China Mainland)',
+        'lang': 'zh-CN',
+        'tld': 'com'
+    },
+    'uk': {
+        'code': 'uk-UA',
+        'locale': 'Ukrainian (Ukrain)',
+        'lang': 'uk',
+        'tld': 'com.ua'
+    },
 }
 
 
@@ -48,19 +83,24 @@ class TextToSpeech(commands.Cog, name='TTS'):
     async def speak(
             self,
             ctx,
-            lang: Optional[Literal['fr-FR', 'en-IE', 'ru-RU', 'es-ES', 'pt-PT', 'zh-CN']] = 'fr-FR',
+            lang: Optional[Literal['fr', 'en', 'ru', 'es', 'pt', 'cn', 'uk']] = 'fr',
             *,
             text: str = 'Allo'
             # honourable mention of exec to avoid the warning
             # tuple(list(lang_dict.keys()))
             # exec('xd = typing.Literal["{0}"]'.format('","'.join(list(lang_dict.keys()))))
     ):
-        """Bot will connect to voice-chat you're in and speak `text` using Google Text-To-Speech module. \
-        For available language keywords check `(/ or $)voice languages` ;"""
+        """
+        Bot will connect to voice-chat you're in and speak `text` using Google Text-To-Speech module. \
+        For available language keywords check `(/ or $)voice languages`
+        """
         voice = ctx.author.voice
         if not voice:
-            embed = Embed(colour=Clr.error, description="You aren't in a voice channel!")
-            return await ctx.reply(embed=embed, ephemeral=True)
+            em = Embed(
+                colour=Clr.error,
+                description="You aren't in a voice channel!"
+            )
+            return await ctx.reply(embed=em, ephemeral=True)
         if ctx.voice_client is not None:
             vc = self.connections[ctx.guild.id]
             await ctx.voice_client.move_to(voice.channel)
@@ -80,7 +120,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
             name=ctx.author.display_name,
             icon_url=ctx.author.display_avatar.url
         ).set_footer(
-            text=f"{lang} Language: {lang_dict[lang]['locale']}"
+            text=f"{lang_dict[lang]['code']} Language: {lang_dict[lang]['locale']}"
         )
         await ctx.reply(embed=em)
 
@@ -91,39 +131,52 @@ class TextToSpeech(commands.Cog, name='TTS'):
         aliases=['langs']
     )
     async def languages(self, ctx):
-        """Show list of languages supported by `(/ or $)voice speak` command"""
-        embed = Embed(colour=Clr.prpl, description='List of languages')
+        """
+        Show list of languages supported by `(/ or $)voice speak` command.
+        """
         our_list = [f"{key}: {lang_dict[key]['locale']}" for key in lang_dict]
-        embed.description = \
-            f'Commands `$voice` and `/voice` support following languages.\n ' \
-            f'Example of usage for text-command: `$voice en-UK allo chat AYAYA`.\n ' \
-            f'When using slash-command choose language from available list in its options.' \
-            f'\n```\n' + \
+        em = Embed(
+            colour=Clr.prpl,
+            title='List of languages supported by the bot',
+            description=
+            f'Commands `$voice` and `/voice` support following languages.\n '
+            f'Example of usage for text-command: `$voice en-UK allo chat AYAYA`.\n '
+            f'When using slash-command choose language from available list in its options.'
+            f'\n```\n'
             '\n'.join(our_list) + '```'
-        await ctx.reply(embed=embed)
+        )
+        await ctx.reply(embed=em)
 
     @voice.command(
         name='stop',
         brief=Ems.slash,
         description='Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests'
     )
-    async def stop(self, ctx):
-        """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests ;"""
+    async def stop(self, ctx: Context):
+        """
+        Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests.
+        """
         try:
             vc = self.connections[ctx.guild.id]
             if vc.is_playing():
                 vc.stop()
-                embed = Embed(colour=ctx.author.colour)
-                embed.description = 'Stopped'
-                await ctx.reply(embed=embed)
+                em = Embed(
+                    colour=ctx.author.colour,
+                    description='Stopped'
+                )
+                await ctx.reply(embed=em)
             else:
-                embed = Embed(colour=Clr.error)
-                embed.description = "I don't think I was talking"
-                await ctx.reply(embed=embed, ephemeral=True)
+                em = Embed(
+                    colour=Clr.error,
+                    description="I don't think I was talking"
+                )
+                await ctx.reply(embed=em, ephemeral=True)
         except KeyError:
-            embed = Embed(colour=Clr.error)
-            embed.description = "I'm not in voice channel"
-            await ctx.reply(embed=embed, ephemeral=True)
+            em = Embed(
+                colour=Clr.error,
+                description="I'm not in voice channel"
+            )
+            await ctx.reply(embed=em, ephemeral=True)
 
     @voice.command(
         name='leave',
@@ -131,16 +184,23 @@ class TextToSpeech(commands.Cog, name='TTS'):
         description='Leave voice channel'
     )
     async def leave(self, ctx):
-        """Make bot leave voice channel. Bot autoleaves voicechannels but you can make it leave too ;"""
+        """
+        Make bot leave voice channel. Bot autoleaves voicechannels but you can make it leave too
+        """
         try:
             vc = self.connections[ctx.guild.id]
             await vc.disconnect()
-            embed = Embed(colour=ctx.author.colour, description=f'I left {vc.channel.mention}')
-            await ctx.reply(embed=embed)
+            em = Embed(
+                colour=ctx.author.colour,
+                description=f'I left {vc.channel.mention}'
+            )
+            await ctx.reply(embed=em)
         except KeyError:
-            embed = Embed(colour=Clr.error)
-            embed.description = "I'm not in voice channel"
-            await ctx.reply(embed=embed, ephemeral=True)
+            em = Embed(
+                colour=Clr.error,
+                description="I'm not in voice channel"
+            )
+            await ctx.reply(embed=em, ephemeral=True)
 
     @commands.hybrid_command(
         name='bonjour',
@@ -148,7 +208,9 @@ class TextToSpeech(commands.Cog, name='TTS'):
         description=f'`Bonjour !` into both text/voice chats',
     )
     async def bonjour(self, ctx):
-        """`Bonjour !` into both text/voice chats"""
+        """
+        `Bonjour !` into both text/voice chats
+        """
         voice = ctx.author.voice
         if not voice:
             content = f'Bonjour {Ems.bubuAyaya}'

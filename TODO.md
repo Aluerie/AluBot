@@ -1,14 +1,22 @@
-1. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
-2. Think about help command thing
-3. make muted by into logs
+### Current thoughts
 
-4. async sqlalchemy
-5. sort out total garbage in utils folder
-6. look at every cog in robo danny/pycord manager/stella
-7. rewrite purge into something better
-8. abandon not scored games for match history
-9. DPC ranking command, Dpc points too
-10. look into 5.3.2 pyot update - Change the Lock on ChampionKeysCache to SealLock, as the asyncio.Lock requires an event loop at the moment of instantiation, an issue that may be encountered by non-async "tasks explorers".
+1. write descriptions for commands and params for dota, league- commands
+2. flags for league accounts, literal for league regions
+4. 
+---
+---
+---
+3. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
+4. Think about help command thing "mods only"
+5. make muted by who into logs
+
+6. async sqlalchemy
+7. sort out total garbage in utils folder
+8. look at every cog in robo danny/pycord manager/stella
+9. rewrite purge into something better
+10. abandon not scored games for match history
+11. DPC ranking command, Dpc points too
+12. look into 5.3.2 pyot update - Change the Lock on ChampionKeysCache to SealLock, as the asyncio.Lock requires an event loop at the moment of instantiation, an issue that may be encountered by non-async "tasks explorers".
 
 ### Immediate fix
 2. ?tag button cooldown

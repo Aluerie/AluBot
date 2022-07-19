@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING, Optional
 
 from steam.core.msg import MsgProto
 from steam.enums import emsg
+from steam.steamid import SteamID, EType
 import vdf
 
-from discord import Embed, TextChannel
+from discord import Embed, TextChannel, app_commands
 from discord.ext import commands, tasks
 
 from utils import database as db
@@ -189,14 +190,12 @@ class DotaFeed(commands.Cog):
 
 class AddStreamFlags(commands.FlagConverter, case_insensitive=True):
     twitch: str
-    steamid: int
-    friendid: int
+    steam: str
 
 
 class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
     twitch: str
-    steamid: Optional[int]
-    friendid: Optional[int]
+    steam: Optional[str]
 
 
 class DotaFeedTools(commands.Cog, name='Dota 2'):
@@ -227,7 +226,8 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         self.help_emote = Ems.DankLove
 
     @is_guild_owner()
-    @commands.group()
+    @commands.hybrid_group()
+    @app_commands.default_permissions(administrator=True)
     async def dota(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
@@ -243,30 +243,34 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         name='set',
         usage='[channel=curr]'
     )
-    async def channel_set(self, ctx: Context, ch: Optional[TextChannel] = None):
+    @app_commands.describe(channel='Choose channel for Dota2Feed notifications')
+    async def channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
         """
-        Sets channel to be the Dota2Feed notifications channel.
+        Set channel to be the Dota2Feed notifications channel.
         """
-        ch = ch or ctx.channel
-        if not ch.permissions_for(ctx.guild.me).send_messages:
+        channel = channel or ctx.channel
+        if not channel.permissions_for(ctx.guild.me).send_messages:
             em = Embed(
                 colour=Clr.error,
                 description='I do not have permissions to send messages in that channel :('
             )
             return await ctx.reply(embed=em)
 
-        db.set_value(db.ga, ctx.guild.id, dotafeed_ch_id=ch.id)
+        db.set_value(db.ga, ctx.guild.id, dotafeed_ch_id=channel.id)
         em = Embed(
             colour=Clr.prpl,
-            description=f'Channel {ch.mention} is set to be the DotaFeed channel for this server'
+            description=f'Channel {channel.mention} is set to be the DotaFeed channel for this server'
         )
         await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @channel.command(name='disable')
+    @channel.command(
+        name='disable',
+        description='Disable Dota2Feed functionality.'
+    )
     async def channel_disable(self, ctx: Context):
         """
-        Sets Dota2Feed channel to `None` essentially disabling the feature. \
+        Stop getting Dota2Feed notifications. \
         Data about fav heroes/streamers won't be affected.
         """
         ch_id = db.get_value(db.ga, ctx.guild.id, 'dotafeed_ch_id')
@@ -280,26 +284,28 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         db.set_value(db.ga, ctx.guild.id, dotafeed_ch_id=None)
         em = Embed(
             colour=Clr.prpl,
-            description=f'Channel {ch.mention} is set to be the DotaFeed channel for this server'
+            description=f'Channel {ch.mention} is set to be the DotaFeed channel for this server.'
         )
         await ctx.reply(embed=em)
 
     @is_guild_owner()
     @channel.command(name='check')
     async def channel_check(self, ctx: Context):
-        """Check if a Dota2Feed channel was set in this server"""
+        """
+        Check if a Dota2Feed channel was set in this server.
+        """
         ch_id = db.get_value(db.ga, ctx.guild.id, 'dotafeed_ch_id')
         ch = self.bot.get_channel(ch_id)
         if ch is None:
             em = Embed(
                 colour=Clr.prpl,
-                description=f'DotaFeed channel is not currently set'
+                description=f'DotaFeed channel is not currently set.'
             )
             return await ctx.reply(embed=em)
         else:
             em = Embed(
                 colour=Clr.prpl,
-                description=f'DotaFeed channel is currently set to {ch.mention}'
+                description=f'DotaFeed channel is currently set to {ch.mention}.'
             )
             return await ctx.reply(embed=em)
 
@@ -312,8 +318,12 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @is_guild_owner()
     @database.command(name='list')
     async def database_list(self, ctx: Context):
-        """Get list of all Dota 2 streamers in database \
-        that are available for Dota2Feed feature"""
+        """
+        List of all streamers in database \
+        available for Dota2Feed feature.
+        """
+        await ctx.defer()
+
         ss_dict = dict()
         for row in db.session.query(db.d):
             key = f"● [**{row.name}**](https://www.twitch.tv/{row.name})"
@@ -337,106 +347,198 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             footer_text=f'With love, {ctx.guild.me.display_name}'
         )
 
+    @staticmethod
+    def field_info_str(twitch, steamid, friendid):
+        return  \
+            f"[**{twitch}**](https://www.twitch.tv/{twitch})\n" \
+            f"`{steamid}` - `{friendid}`| " \
+            f"[Steam](https://steamcommunity.com/profiles/{steamid})" \
+            f"/[Dotabuff](https://www.dotabuff.com/players/{friendid})"
+
+    @staticmethod
+    async def get_steam_id_and_64(ctx: Context, steam: str):
+        steam = SteamID(steam)
+        if steam.type != EType.Individual:
+            steam = SteamID.from_url(steam)
+
+        if steam is None or (hasattr(steam, 'type') and steam.type != EType.Individual):
+            em = Embed(
+                colour=Clr.error,
+                description=
+                f'Error checking steam profile for {steam}.\n '
+                f'Check if your `steam` flag is correct steam id in either 64/32/3/2/friendid representations '
+                f'or just give steam profile link to the bot.'
+            )
+            await ctx.reply(embed=em, ephemeral=True)
+            return None, None
+
+        return steam.as_64, steam.id
+
+    @staticmethod
+    async def get_check_twitch_id(ctx: Context, twitch: str):
+        twtv_id = get_twtv_id(twitch.lower())
+        if twtv_id is None:
+            em = Embed(
+                colour=Clr.error,
+                description=f'Error checking stream {twitch}.\n User either does not exist or is banned.'
+            )
+            await ctx.reply(embed=em, ephemeral=True)
+            return None
+
+        return twtv_id
+
     @is_trustee()
     @database.command(
         name='add',
-        usage='twitch: <twitch_name> steamid: <steamid> friendid: <friendid>'
+        usage='twitch: <twitch_name> steam: <steamid>',
+        description='Add stream to the database.'
+    )
+    @app_commands.describe(
+        twitch='twitch.tv stream name',
+        steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link'
     )
     async def database_add(self, ctx: Context, *, flags: AddStreamFlags):
         """
         Add stream to the database.
+        • <twitch_name> is twitch.tv stream name
+        • <steamid> is either steamid in any of 64/32/3/2 versions, friendid or just steam profile link.
         """
-        twtv_name = flags.twitch.lower()
-        twtv_id = get_twtv_id(twtv_name)
+        await ctx.defer()
+
+        twtv_id = await self.get_check_twitch_id(ctx, flags.twitch.lower())
         if twtv_id is None:
+            return
+
+        steamid, friendid = await self.get_steam_id_and_64(ctx, flags.steam)
+        if steamid is None:
+            return
+
+        if (user := db.session.query(db.d).filter_by(id=steamid).first()) is not None:
             em = Embed(
-                colour=Clr.error,
-                description=f'Error checking stream {twtv_name}.\n User either does not exist or is banned.'
+                colour=Clr.error
+                ).add_field(
+                name=f'This steam account is already in the database',
+                value=
+                f'It is marked as [{user.name}](https://www.twitch.tv/{user.name})\'s account.\n\n'
+                f'Did you mean to use `$dota stream add {user.name}` to add the stream into your fav list?'
             )
-            return await ctx.reply(embed=em)
-        db.add_row(db.d, flags.steamid, name=flags.twitch.lower(), friendid=flags.friendid, twtv_id=twtv_id)
-        await ctx.message.add_reaction(Ems.PepoG)
-        em2 = Embed(
-            colour=MP.green(shade=200),
-            description=
-            f"[**{flags.twitch.lower()}**](https://www.twitch.tv/{flags.twitch.lower()})\n"
-            f"`{flags.steamid}` - `{flags.friendid}`| "
-            f"[Steam](https://steamcommunity.com/profiles/{flags.steamid})"
-            f"/[Dotabuff](https://www.dotabuff.com/players/{flags.friendid})"
-        ).set_author(
-            name=f'{ctx.author} added stream into the database',
-            icon_url=ctx.author.avatar.url
+            return await ctx.reply(embed=em, ephemeral=True)
+
+        db.add_row(db.d, steamid, name=flags.twitch.lower(), friendid=friendid, twtv_id=twtv_id)
+        em = Embed(
+            colour=Clr.prpl
+        ).add_field(
+            name=f'Successfully added the account to the database',
+            value=self.field_info_str(flags.twitch.lower(), steamid, friendid)
         )
-        await self.bot.get_channel(Cid.global_logs).send(embed=em2)
+        await ctx.reply(embed=em)
+        em.colour = MP.green(shade=200)
+        em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        await self.bot.get_channel(Cid.global_logs).send(embed=em)
 
     @is_trustee()
     @database.command(
         name='remove',
-        usage='twitch: <twitch_name> steamid: <steamid> friendid: <friendid>'
+        usage='twitch: <twitch_name> steam: <steamid>'
+    )
+    @app_commands.describe(
+        twitch='twitch.tv stream name',
+        steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link'
     )
     async def database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
-        """Remove stream from database"""
-        map_dict = {
-            'twitch': 'name',
-            'steamid': 'id',
-            'friendid': 'friendid'
-        }
+        """
+        Remove stream from database.
+        """
+        await ctx.defer()
 
-        my_dict = {map_dict[k]: v for k, v in dict(flags).items() if v is not None}
+        map_dict = {'name': flags.twitch.lower()}
+        if flags.steam:
+            steamid, friendid = await self.get_steam_id_and_64(ctx, flags.steam)
+            if steamid is None:
+                return
+            map_dict['id'] = steamid
+
+        success = []
         with db.session_scope() as ses:
-            ses.query(db.d).filter_by(**my_dict).delete()
-        await ctx.message.add_reaction(Ems.PepoG)
-        em2 = Embed(
-            colour=MP.red(shade=200),
-            description=
-            f"[**{flags.twitch.lower()}**](https://www.twitch.tv/{flags.twitch.lower()})"
-        ).set_author(
-            name=f'{ctx.author} removed stream from the database',
-            icon_url=ctx.author.avatar.url
-        )
-        await self.bot.get_channel(Cid.global_logs).send(embed=em2)
+            query = ses.query(db.d).filter_by(**map_dict)
+            for row in query:
+                success.append(
+                    {
+                        'name': row.name,
+                        'id': row.id,
+                        'friendid': row.friendid
+                    }
+                )
+            query.delete()
+        if success:
+            em = Embed(
+                colour=Clr.prpl,
+            ).add_field(
+                name='Successfully removed account(-s) from the database',
+                value=
+                '\n'.join(self.field_info_str(x['name'], x['id'], x['friendid']) for x in success)
+            )
+            await ctx.reply(embed=em)
+
+            em.colour = MP.red(shade=200)
+            em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+            await self.bot.get_channel(Cid.global_logs).send(embed=em)
+        else:
+            em = Embed(
+                colour=Clr.error
+            ).add_field(
+                name='There is no account in the database like that',
+                value=', '.join([f'{k}: {v}' for k, v in flags.__dict__.items()])
+            )
+            await ctx.reply(embed=em)
 
     @is_guild_owner()
     @database.command(
         name='request',
-        usage='twitch: <twitch_name> steamid: <steamid> friendid: <friendid>'
+        usage='twitch: <twitch_name> steam: <steamid>',
+        description='Request streamer to be added into a database.'
+    )
+    @app_commands.describe(
+        twitch='twitch.tv stream name',
+        steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link'
     )
     async def database_request(self, ctx: Context, *, flags: AddStreamFlags):
         """
         Request streamer to be added into a database. \
-        This will send a request message into Irene's personal logs channel.
+        This will send a request message into Aluerie's personal logs channel.
         """
+        await ctx.defer()
 
-        info_str = \
-            f'[**{flags.twitch}**](https://www.twitch.tv/{flags.twitch})\n' \
-            f'`{flags.steamid}` - `{flags.friendid}`| ' \
-            f'[Steam](https://steamcommunity.com/profiles/{flags.steamid})' \
-            f'/[Dotabuff](https://www.dotabuff.com/players/{flags.friendid})'
+        twtv_id = await self.get_check_twitch_id(ctx, flags.twitch.lower())
+        if twtv_id is None:
+            return
+
+        steamid, friendid = self.get_steam_id_and_64(ctx, flags.steam)
+        if steamid is None:
+            return
 
         warn_em = Embed(
             colour=Clr.prpl,
             title='Confirmation Prompt',
             description=
             f'Are you sure you want to request this streamer steam account to be added into the database?\n'
-            f'This information will be sent to Irene. Please, double check before confirming.\n\n'
-            f'{info_str}'
+            f'This information will be sent to Aluerie. Please, double check before confirming.'
+        ).add_field(
+            name='Request to add an account into the database',
+            value=self.field_info_str(flags.twitch.lower(), steamid, friendid)
         )
         confirm = await ctx.prompt(embed=warn_em)
         if not confirm:
             return await ctx.send('Aborting...', delete_after=5.0)
 
-        em2 = Embed(
-            colour=MP.orange(shade=200),
-            description=info_str,
-            title='Request to add a streamer steam account into the database'
-        ).set_author(
-            name=ctx.author.name,
-            icon_url=ctx.author.avatar.url
-        ).add_field(
-            name='command',
-            value=f'`$dota stream add twitch: {flags.twitch} steamid: {flags.steamid} friendid: {flags.friendid}`'
+        warn_em.colour = MP.orange(shade=200)
+        warn_em.description = ''
+        warn_em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        warn_em.add_field(
+            name='Command',
+            value=f'`$dota stream add twitch: {flags.twitch.lower()} steam: {steamid}`'
         )
-        await self.bot.get_channel(Cid.global_logs).send(embed=em2)
+        await self.bot.get_channel(Cid.global_logs).send(embed=warn_em)
 
     @is_guild_owner()
     @dota.group(aliases=['streamer'])
@@ -450,16 +552,25 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
 
         success = []
         fail = []
+        already = []
+
         for name in re.split('; |, |,', twitch_names):
             streamer = db.session.query(db.d).filter_by(name=name.lower()).first()
             if streamer is None:
                 fail.append(f'`{name}`')
             else:
                 if mode == 'add':
-                    twitch_list.add(streamer.twtv_id)
+                    if streamer.twtv_id in twitch_list:
+                        already.append(f'`{name}`')
+                    else:
+                        twitch_list.add(streamer.twtv_id)
+                        success.append(f'`{name}`')
                 elif mode == 'remov':
-                    twitch_list.remove(streamer.twtv_id)
-                success.append(f'`{name}`')
+                    if streamer.twtv_id not in twitch_list:
+                        already.append(f'`{name}`')
+                    else:
+                        twitch_list.remove(streamer.twtv_id)
+                        success.append(f'`{name}`')
         db.set_value(db.ga, ctx.guild.id, dotafeed_stream_ids=list(twitch_list))
 
         if len(success):
@@ -468,6 +579,14 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             ).add_field(
                 name=f'Successfully {mode}ed following streamers: \n',
                 value=", ".join(success)
+            )
+            await ctx.reply(embed=em)
+        if len(already):
+            em = Embed(
+                colour=MP.orange(shade=500)
+            ).add_field(
+                name=f'Stream(-s) already {"not" if mode=="remov" else ""} in fav list',
+                value=", ".join(already)
             )
             await ctx.reply(embed=em)
         if len(fail):
@@ -480,7 +599,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
                 text=
                 'Check your argument or '
                 'consider adding (for trustees)/requesting such streamer with '
-                '`$dota database add/request twitch: <twitch_tag> steamid: <steam_id> friendid: <friend_id>`'
+                '`$dota database add/request twitch: <twitch_name> steam: <steamid>`'
             )
             await ctx.reply(embed=em)
 
@@ -489,9 +608,10 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         name='add',
         usage='<twitch_name(-s)>'
     )
+    @app_commands.describe(twitch_names='Name(-s) of twitch streams')
     async def stream_add(self, ctx: Context, *, twitch_names: str):
         """
-        Add twitch streamer(-s) to the list of your fav Dota 2 streamers.
+        Add twitch stream(-s) to the list of your fav Dota 2 streamers.
         """
         await self.stream_add_remove(ctx, twitch_names, mode='add')
 
@@ -500,16 +620,19 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         name='remove',
         usage='<twitch_name(-s)>'
     )
+    @app_commands.describe(twitch_names='Name(-s) of twitch streams')
     async def stream_remove(self, ctx: Context, *, twitch_names: str):
         """
-        Remove twitch streamer(-s) from the list of your fav Dota 2 streamers.
+        Remove twitch stream(-s) from the list of your fav Dota 2 streamers.
         """
         await self.stream_add_remove(ctx, twitch_names, mode='remov')
 
     @is_guild_owner()
     @stream.command(name='list')
     async def stream_list(self, ctx: Context):
-        """Show current list of fav streamers"""
+        """
+        Show current list of fav streams.
+        """
         twtvid_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids')
         names_list = [row.name for row in db.session.query(db.d).filter(db.d.twtv_id.in_(twtvid_list)).all()]
 
@@ -533,14 +656,24 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         hero_list = set(db.get_value(db.ga, ctx.guild.id, 'dotafeed_hero_ids'))
         success = []
         fail = []
+        already = []
         for name in re.split('; |, |,', hero_names):
             try:
                 if (hero_id := await d2.id_by_name(name)) is not None:
+                    hero_name = f'`{await d2.name_by_id(hero_id)}`'
                     if mode == 'add':
-                        hero_list.add(hero_id)
+                        if hero_id in hero_list:
+                            already.append(hero_name)
+                        else:
+                            hero_list.add(hero_id)
+                            success.append(hero_name)
                     elif mode == 'remov':
-                        hero_list.remove(hero_id)
-                    success.append(f'`{await d2.name_by_id(hero_id)}`')
+                        if hero_id not in hero_id:
+                            already.append(hero_name)
+                        else:
+                            hero_list.remove(hero_id)
+                            success.append(hero_name)
+
             except KeyError:
                 fail.append(f'`{name}`')
 
@@ -550,15 +683,22 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             em = Embed(
                 colour=Clr.prpl
             ).add_field(
-                name=f'Successfully {mode}ed following heroes: \n',
+                name=f'Successfully {mode}ed following heroes',
                 value=", ".join(success)
             )
             await ctx.reply(embed=em)
+        if len(already):
+            em = Embed(
+                colour=MP.orange(shade=500)
+            ).add_field(
+                name=f'Hero(-s) already {"not" if mode=="remov" else ""} in fav list',
+                value=", ".join(already)
+            )
         if len(fail):
             em = Embed(
                 colour=Clr.error
             ).add_field(
-                name='Could not recognize Dota 2 heroes from these names:',
+                name='Could not recognize Dota 2 heroes from these names',
                 value=", ".join(fail)
             ).set_footer(
                 text='You can look in $help for help in hero names'
@@ -568,10 +708,13 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @is_guild_owner()
     @hero.command(
         name='add',
-        usage='<hero_name(-s)>'
+        usage='<hero_name(-s)>',
+        description='Add hero(-es) to your fav heroes list.'
     )
+    @app_commands.describe(hero_names='Name(-s) from Dota 2 Hero grid')
     async def hero_add(self, ctx: commands.Context, *, hero_names: str):
-        """Add hero(-es) to your favorite heroes list. \
+        """
+        Add hero(-es) to your fav heroes list. \
         Use names from Dota 2 hero grid. For example,
         • `Anti-Mage` (letter case does not matter) and not `Magina`;
         • `Queen of Pain` and not `QoP`.
@@ -585,9 +728,10 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         name='remove',
         usage='<hero_name(-s)>'
     )
+    @app_commands.describe(hero_names='Name(-s) from Dota 2 Hero grid')
     async def hero_remove(self, ctx: commands.Context, *, hero_names: str):
         """
-        Remove hero(-es) from your favorite heroes list.
+        Remove hero(-es) from your fav heroes list.
         """
         await self.hero_add_remove(ctx, hero_names, mode='remov')
 

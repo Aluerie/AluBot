@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import asyncio
 from typing import TYPE_CHECKING
 
 from discord import Embed
@@ -215,6 +217,8 @@ class Reddit(commands.Cog):
         # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
         #  probably declare your own error type
         await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in reddit testfeed'))
+        await asyncio.sleep(60)
+        self.testfeed.restart()
 
 
 async def setup(bot):

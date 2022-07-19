@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord.ui import View, Select
 
 from utils import pages
+from utils.context import Context
 from utils.format import display_hmstime
 from utils.var import *
 
@@ -313,7 +314,7 @@ class HelpCog(commands.Cog, name='Help'):
                 'hidden': True
             }
         )
-        myhelp.context = await commands.Context.from_interaction(ntr)
+        myhelp.context = await Context.from_interaction(ntr)
         await myhelp.command_callback(myhelp.context, command=command)
 
 

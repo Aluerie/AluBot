@@ -401,7 +401,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         """
         Add stream to the database.
         • `<twitch_name>` is twitch.tv stream name
-        • `<steamid>` is either steamid in any of 64/32/3/2 versions, friendid or just steam profile link.
+        • `<steamid>` is either steamid in any of 64/32/3/2/friendid versions or just steam profile link.
         """
         await ctx.defer()
 

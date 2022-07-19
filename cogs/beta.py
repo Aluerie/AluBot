@@ -25,5 +25,5 @@ class BetaTest(commands.Cog):
 
 
 async def setup(bot):
-    # if bot.yen:
-    await bot.add_cog(BetaTest(bot))
+    if bot.yen:
+        await bot.add_cog(BetaTest(bot))

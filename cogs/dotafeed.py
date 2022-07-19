@@ -212,7 +212,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     2. Add fav streams, i.e.
     `$dota stream add gorgc, bububu`
     3. Add missing streams to `$dota database list`, i.e.
-    `$dota database add twitch: cr1tdota steamid: 765 friendid: 123`
+    `$dota database add twitch: cr1tdota steam: 76561197986172872`
     Only trustees can use `database add`. Others should `$dota database request` their fav streams.
     4. Add fav heroes, i.e.
     `$dota hero add Dark Willow, Mirana, Anti-Mage`
@@ -400,8 +400,8 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     async def database_add(self, ctx: Context, *, flags: AddStreamFlags):
         """
         Add stream to the database.
-        • <twitch_name> is twitch.tv stream name
-        • <steamid> is either steamid in any of 64/32/3/2 versions, friendid or just steam profile link.
+        • `<twitch_name>` is twitch.tv stream name
+        • `<steamid>` is either steamid in any of 64/32/3/2 versions, friendid or just steam profile link.
         """
         await ctx.defer()
 

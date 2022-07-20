@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
+from asyncprawcore import AsyncPrawcoreException
 from discord import Embed
 from discord.ext import commands, tasks
 
@@ -35,8 +36,8 @@ if platform.system() == 'Windows':
     _ProactorBasePipeTransport.__del__ = silence_event_loop_closed(_ProactorBasePipeTransport.__del__)
 
 
-# import logging
-# log = logging.getLogger('root')
+import logging
+log = logging.getLogger('root')
 
 from webpreview import web_preview
 
@@ -150,18 +151,24 @@ class Reddit(commands.Cog):
         self.bot = bot
         self.redditfeed.start()
         self.userfeed.start()
-        self.testfeed.start()
 
     @tasks.loop(minutes=40)
     async def redditfeed(self):
-        subreddit = await reddit.subreddit(subreddits_array)
-        async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
-            if submission is None:
-                continue
-            embeds = await process_submission(submission)
-            for item in embeds:
-                msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
-                await msg.publish()
+        log.info("Starting to stalk r/DotaPatches")
+        running = 1
+        while running:
+            try:
+                subreddit = await reddit.subreddit(subreddits_array)
+                async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
+                    if submission is None:
+                        continue
+                    embeds = await process_submission(submission)
+                    for item in embeds:
+                        msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
+                        await msg.publish()
+            except AsyncPrawcoreException:
+                await asyncio.sleep(60 * running)
+                running += 1
 
     @redditfeed.before_loop
     async def before(self):
@@ -173,17 +180,26 @@ class Reddit(commands.Cog):
         # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
         #  probably declare your own error type
         await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in subreddit feed'))
+        await asyncio.sleep(60)
+        self.redditfeed.restart()
 
     @tasks.loop(minutes=40)
     async def userfeed(self):
-        redditor = await reddit.redditor("JeffHill")
-        async for comment in redditor.stream.comments(skip_existing=True, pause_after=0):
-            if comment is None:
-                continue
-            embeds = await process_comments(comment)
-            for item in embeds:
-                msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
-                await msg.publish()
+        log.info("Starting to stalk u/JeffHill")
+        running = 1
+        while running:
+            try:
+                redditor = await reddit.redditor("JeffHill")
+                async for comment in redditor.stream.comments(skip_existing=True, pause_after=0):
+                    if comment is None:
+                        continue
+                    embeds = await process_comments(comment)
+                    for item in embeds:
+                        msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
+                        await msg.publish()
+            except AsyncPrawcoreException:
+                await asyncio.sleep(60 * running)
+                running += 1
 
     @userfeed.before_loop
     async def before(self):
@@ -195,30 +211,8 @@ class Reddit(commands.Cog):
         # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
         #  probably declare your own error type
         await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in reddit userfeed'))
-
-    @tasks.loop(count=1)
-    async def testfeed(self):
-        redditor = await reddit.redditor("__quack__quack__")
-        async for comment in redditor.stream.comments(skip_existing=True, pause_after=0):
-            if comment is None:
-                continue
-            embeds = await process_comments(comment)
-            for item in embeds:
-                msg = await self.bot.get_channel(Cid.spam_me).send(embed=item)
-                # await msg.publish()
-
-    @testfeed.before_loop
-    async def before(self):
-        # log.info("redditfeed before loop")
-        await self.bot.wait_until_ready()
-
-    @testfeed.error
-    async def userfeed_error(self, error):
-        # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
-        #  probably declare your own error type
-        await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in reddit testfeed'))
         await asyncio.sleep(60)
-        self.testfeed.restart()
+        self.userfeed.restart()
 
 
 async def setup(bot):

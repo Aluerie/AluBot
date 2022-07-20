@@ -1,3 +1,5 @@
+import re
+
 from utils.format import inline_wordbyword_diff
 
 from github import Github
@@ -52,6 +54,7 @@ async def human_commit(repo, commits, test_num=0):
         for name in crc_files:
             if name in filefilename:
                 crc_files.remove(name)
+
     for pfile in patch_set:
         if any([name in pfile.path for name in ignored_gennames + ignored_files + crc_checks]):
             remove_from_crc(pfile.path)
@@ -77,14 +80,26 @@ async def human_commit(repo, commits, test_num=0):
                     except IndexError:
                         pass
 
+            def remove_tri_bracket_content(string: str):
+                return re.sub(r"<.*?>", "", string)
+
             for key in add_dict:
                 if key in remove_dict:
-                    human.add(f'Changed string `{key}`: "{inline_wordbyword_diff(remove_dict[key], add_dict[key])}"')
+                    human.add(
+                        f'Changed string `{key}`: '
+                        f'"{remove_tri_bracket_content(inline_wordbyword_diff(remove_dict[key], add_dict[key]))}"'
+                    )
                 else:
-                    human.add(f'Created string `{key}`: "{add_dict[key]}"')
+                    human.add(
+                        f'Created string `{key}`: '
+                        f'"{remove_tri_bracket_content(add_dict[key])}"'
+                    )
             for key in remove_dict:
                 if key not in add_dict:
-                    human.add(f'Removed string `{key}`: "{remove_dict[key]}"')
+                    human.add(
+                        f'Removed string `{key}`: '
+                        f'"{remove_tri_bracket_content(remove_dict[key])}"'
+                    )
             remove_from_crc(pfile.path)
             continue
         elif pfile.path == 'game/dota/pak01_dir/scripts/items/items_game.txt':

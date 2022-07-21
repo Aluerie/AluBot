@@ -1,27 +1,28 @@
 from __future__ import annotations
+
+import colorsys
+import platform
+import psutil
+import re
+import socket
+import warnings
+from datetime import datetime, timezone
+from os import getenv
 from typing import TYPE_CHECKING, List
 
-from discord import Colour, Embed,  Member, Message, Role, app_commands
+from PIL import Image, ImageColor
+from async_google_trans_new import google_translator
+from dateparser.search import search_dates
+from discord import Colour, Embed, Member, Message, Role, app_commands
 from discord.ext import commands, tasks
 
 from utils import database as db
 from utils.checks import is_owner
 from utils.format import humanize_time
-from utils.var import *
 from utils.imgtools import img_to_file
 from utils.time import format_tdR
+from utils.var import *
 
-from datetime import datetime, timezone
-from PIL import Image, ImageColor
-import colorsys
-from async_google_trans_new import google_translator
-import re
-from dateparser.search import search_dates
-
-import platform, socket, psutil
-from os import getenv
-
-import warnings
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
     "ignore",
@@ -53,6 +54,7 @@ class Info(commands.Cog, name='Info'):
     """
     Commands to get some useful info
     """
+
     def __init__(self, bot):
         self.bot = bot
         self.reload_info.start()
@@ -81,7 +83,7 @@ class Info(commands.Cog, name='Info'):
                 em = Embed(colour=Clr.prpl)
                 em.description = \
                     f'"{pdate[0]}" in your timezone:\n {format_tdR(dt)}\n' \
-                    f'{dt.tzname()} is GMT {dt.utcoffset().seconds/3600:+.1f}, dls: {dt.dst().seconds/3600:+.1f}'
+                    f'{dt.tzname()} is GMT {dt.utcoffset().seconds / 3600:+.1f}, dls: {dt.dst().seconds / 3600:+.1f}'
                 await message.channel.send(embed=em)
 
     @commands.Cog.listener()
@@ -99,6 +101,7 @@ class Info(commands.Cog, name='Info'):
                 embed = Embed(colour=Clr.prpl, title=f'List of {role.name}')
                 embed.description = ''.join([f'{member.mention}\n' for member in role.members])
                 await msg.edit(content='', embed=embed)
+
         await give_text_list(Rid.bots, Cid.bot_spam, 959982214827892737)
         await give_text_list(Rid.nsfwbots, Cid.nsfw_bob_spam, 959982171492323388)
 
@@ -184,22 +187,25 @@ class Info(commands.Cog, name='Info'):
         def rgb2hex(r, g, b):
             return "#{:02x}{:02x}{:02x}".format(r, g, b)
 
-        embed = Embed(color=Colour.from_rgb(*rgb), title='Colour info')
-        embed.description = \
-            f'Hex triplet: `{rgb2hex(*rgb)}`\n' + \
-            'RGB: `({}, {}, {})`\n'.format(*rgb) + \
-            'HSV: `({:.2f}, {:.2f}, {})`\n'.format(*colorsys.rgb_to_hsv(*rgb)) + \
-            'HLS: `({:.2f}, {}, {:.2f})`\n'.format(*colorsys.rgb_to_hls(*rgb))
-
         img = Image.new('RGB', (300, 300), rgb)
         file = img_to_file(img, filename='colour.png')
-        embed.set_thumbnail(url=f'attachment://{file.filename}')
-        await ctx.reply(embed=embed, file=file)
+        em = Embed(
+            color=Colour.from_rgb(*rgb),
+            title='Colour info',
+            description=
+            f'Hex triplet: `{rgb2hex(*rgb)}`\n' +
+            'RGB: `({}, {}, {})`\n'.format(*rgb) +
+            'HSV: `({:.2f}, {:.2f}, {})`\n'.format(*colorsys.rgb_to_hsv(*rgb)) +
+            'HLS: `({:.2f}, {}, {:.2f})`\n'.format(*colorsys.rgb_to_hls(*rgb))
+        ).set_thumbnail(
+            url=f'attachment://{file.filename}'
+        )
+        await ctx.reply(embed=em, file=file)
 
     @colour.autocomplete('colour_arg')
     async def colour_callback(
             self,
-            ntr: Interaction,
+            _: Interaction,
             current: str
     ) -> List[app_commands.Choice[str]]:
         colours = [
@@ -209,7 +215,7 @@ class Info(commands.Cog, name='Info'):
             'hsv(',
             'mu(',
             'mua('
-            ] + list(ImageColor.colormap.keys())
+        ] + list(ImageColor.colormap.keys())
         return [
             app_commands.Choice(name=clr, value=clr)
             for clr in colours if current.lower() in clr.lower()
@@ -223,28 +229,29 @@ class Info(commands.Cog, name='Info'):
                 app_commands.CommandInvokeError
         )):
             error = error.original
-            if isinstance(error, (commands.CommandInvokeError,app_commands.CommandInvokeError)):
+            if isinstance(error, (commands.CommandInvokeError, app_commands.CommandInvokeError)):
                 error = error.original
-
-        print('original', type(error))
 
         if isinstance(error, (ValueError, KeyError)):
             ctx.error_handled = True
-            embed = Embed(colour=Clr.error)
-            embed.set_author(name='WrongColourFormat')
-            embed.url = 'https://pillow.readthedocs.io/en/stable/reference/ImageColor.html'
-            embed.title = 'Wrong colour format'
-            embed.description = \
-                'The bot supports the following string formats:\n' \
-                '● Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`\n' \
-                '● RGB: `rgb(red, green, blue)` where the colour values are integers or percentages\n' \
-                '● Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`\n' \
-                '● Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`\n' \
-                '● Common HTML color names: `red`, `Blue`\n' \
-                '● Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n' \
-                '● Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n' \
+            em = Embed(
+                colour=Clr.error,
+                title='Wrong colour format',
+                url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html',
+                description=
+                'The bot supports the following string formats:\n'
+                '● Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`\n'
+                '● RGB: `rgb(red, green, blue)` where the colour values are integers or percentages\n'
+                '● Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`\n'
+                '● Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`\n'
+                '● Common HTML color names: `red`, `Blue`\n'
+                '● Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n'
+                '● Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n'
                 '● Last but not least: `prpl` for favourite Aluerie\'s colour '
-            await ctx.reply(embed=embed, ephemeral=True)
+            ).set_author(
+                name='WrongColourFormat'
+            )
+            await ctx.reply(embed=em, ephemeral=True)
 
     @commands.hybrid_command(
         name='sysinfo',
@@ -267,7 +274,7 @@ class Info(commands.Cog, name='Info'):
         ).add_field(
             name='Current % | max values',
             value=
-            f'CPU usage: {psutil.cpu_percent()}% | {psutil.cpu_freq().current/1000:.1f}GHz\n'
+            f'CPU usage: {psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
             f'RAM usage: {psutil.virtual_memory().percent}% | '
             f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
             f'Disk usage: {(du := psutil.disk_usage("/")).percent} % | '
@@ -281,9 +288,11 @@ class Info(commands.Cog, name='Info'):
     @commands.command(aliases=['invitelink'])
     @commands.guild_only()
     async def invite_link(self, ctx):
-        embed = Embed(color=Clr.prpl)
-        embed.description = getenv('DISCORD_BOT_INVLINK')
-        await ctx.reply(embed=embed)
+        emb = Embed(
+            color=Clr.prpl,
+            description=getenv('DISCORD_BOT_INVLINK')
+        )
+        await ctx.reply(embed=em)
 
     @staticmethod
     def guild_embed(guild: Guild, event: Literal['join', 'remove']):
@@ -331,4 +340,3 @@ class Info(commands.Cog, name='Info'):
 
 async def setup(bot):
     await bot.add_cog(Info(bot))
-

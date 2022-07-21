@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
 from discord import Embed, Guild, Member, Object, utils, HTTPException
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ext.commands import Greedy
 
 from utils import database as db
@@ -12,7 +12,7 @@ from utils.context import Context
 
 
 if TYPE_CHECKING:
-    pass
+    from utils.bot import AluBot
 
 
 class AdminTools(commands.Cog, name='Tools for Bot Owner'):
@@ -20,8 +20,9 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     Commands for admin tools
     """
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.help_emote = Ems.Lewd
+        self.checkguilds.start()
 
     @is_owner()
     @commands.command()
@@ -46,7 +47,9 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     @is_owner()
     @commands.command()
     async def guildlist(self, ctx):
-        """Show list of guilds bot is in ;"""
+        """
+        Show list of guilds bot is in.
+        """
         embed = Embed(
             colour=Clr.prpl,
             description=
@@ -57,8 +60,10 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
 
     @is_owner()
     @commands.command()
-    async def purgelist(self, ctx: commands.Context, msgid_last: int, msgid_first: int):
-        """Delete messages between given ids in current channel ;"""
+    async def purgelist(self, ctx: Context, msgid_last: int, msgid_first: int):
+        """
+        Delete messages between given ids in current channel.
+        """
         temp_purge_list = []
         async for msg in ctx.channel.history(limit=2000):
             if msgid_first < msg.id < msgid_last:
@@ -72,29 +77,110 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
 
     @is_owner()
     @commands.command()
-    async def emotecredits(self, ctx):
+    async def emotecredits(self, ctx: Context):
         """emote credits"""
         guild = self.bot.get_guild(Sid.alu)
         rules_channel = guild.get_channel(Cid.rules)
         msg = rules_channel.get_partial_message(866006902458679336)
-        embed = Embed(color=Clr.prpl)
+
         emote_names = ['bubuChrist', 'bubuGunGun', 'PepoBeliever', 'cocoGunGun', 'iofibonksfast']
         emote_array = [utils.get(guild.emojis, name=item) for item in emote_names]
-        embed.title = 'Credits for following emotes'
-        embed.description = '''
-        ● [twitch.tv/bububu](https://www.twitch.tv/bububu)
-        {0} {1} {2}
-        ● [twitch.tv/khezu](https://www.twitch.tv/khezu)
-        {3}  
-        ● [chroneco.moe](https://www.chroneco.moe/)
-        {4} {5}
-        '''.format(*emote_array)
-        await msg.edit(content='', embed=embed)
+        em = Embed(
+            color=Clr.prpl,
+            title='Credits for following emotes',
+            description=
+            '''
+            ● [twitch.tv/bububu](https://www.twitch.tv/bububu)
+            {0} {1} {2}
+            ● [twitch.tv/khezu](https://www.twitch.tv/khezu)
+            {3}  
+            ● [chroneco.moe](https://www.chroneco.moe/)
+            {4} {5}
+            '''.format(*emote_array)
+        )
+        await msg.edit(content='', embed=em)
         await ctx.reply(f"we did it {Ems.PogChampPepe}")
+
+    async def guild_check_work(self, guild):
+        trusted_ids = db.get_value(db.b, Sid.alu, 'trusted_ids')
+        if guild.owner_id not in trusted_ids:
+            def find_txt_channel():
+                if guild.system_channel.permissions_for(guild.me).send_messages:
+                    return guild.system_channel
+                else:
+                    for ch in guild.text_channels:
+                        perms = ch.permissions_for(guild.me)
+                        if perms.send_messages:
+                            return ch
+            em = Embed(
+                colour=Clr.prpl,
+                title='Do not invite me to other guilds, please',
+                description=
+                f"Sorry, I don't like being in guilds that aren't made by Aluerie.\n\nI'm leaving."
+            ).set_footer(
+                text=
+                f'If you really want the bot in your server - '
+                f'then dm {self.bot.owner} with good reasoning',
+                icon_url=self.bot.owner.avatar.url
+            )
+            await find_txt_channel().send(embed=em)
+            await guild.leave()
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: Guild):
+        await self.guild_check_work(guild)
+
+    @tasks.loop(count=1)
+    async def checkguilds(self):
+        for guild in self.bot.guilds:
+            await self.guild_check_work(guild)
+
+    @checkguilds.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
+
+    @is_owner()
+    @commands.group()
+    async def trustee(self, ctx: Context):
+        await ctx.scnf()
+
+    @staticmethod
+    async def trustee_add_remove(
+            ctx: Context,
+            user_id: int,
+            mode: Literal['add', 'remov']
+    ):
+        trusted_ids: list = db.get_value(db.b, Sid.alu, 'trusted_ids')
+        if mode == 'add':
+            trusted_ids.append(user_id)
+        elif mode == 'remov':
+            trusted_ids.remove(user_id)
+        db.set_value(db.b, Sid.alu, trusted_ids=trusted_ids)
+        em = Embed(
+            colour=Clr.prpl,
+            description=
+            f'We {mode}ed user with id {user_id} to the list of trusted users'
+        )
+        await ctx.reply(embed=em)
 
     @is_owner()
     @commands.command()
-    async def sync(self, ctx: Context, guilds: Greedy[Object], spec: Optional[Literal["~", "*"]] = None) -> None:
+    async def add(self, ctx: Context, user_id: int):
+        await self.trustee_add_remove(ctx, user_id=user_id, mode='add')
+
+    @is_owner()
+    @commands.command()
+    async def add(self, ctx: Context, user_id: int):
+        await self.trustee_add_remove(ctx, user_id=user_id, mode='remov')
+
+    @is_owner()
+    @commands.command()
+    async def sync(
+            self,
+            ctx: Context,
+            guilds: Greedy[Object],
+            spec: Optional[Literal["~", "*"]] = None
+    ) -> None:
         """
         `$sync` -> global sync
         `$sync ~` -> sync current guild
@@ -110,7 +196,10 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             else:
                 fmt = await ctx.bot.tree.sync()
 
-            await ctx.send(f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}")
+            await ctx.send(
+                f"Synced {len(fmt)} commands "
+                f"{'globally' if spec is None else 'to the current guild.'}"
+            )
             return
 
         fmt = 0

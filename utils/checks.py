@@ -40,7 +40,7 @@ def is_owner():
         """Aluerie only"""
         if not await ctx.bot.is_owner(ctx.author):
             raise commands.NotOwner(
-                f'Only {ctx.bot.get_user(Sid.alu)} as the bot owner is allowed to use this command.'
+                f'Only {ctx.bot.owner} as the bot owner is allowed to use this command.'
             )
         return True
     return commands.check(predicate)

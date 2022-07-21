@@ -27,12 +27,19 @@ class ConfModal(Modal):
     )
 
     async def on_submit(self, ntr: Interaction):
-        embed = Embed(colour=Clr.prpl, title=self.title)
+        em = Embed(
+            colour=Clr.prpl,
+            title=self.title,
+            description=self.conf.value
+        ).set_footer(
+            text="Use buttons below to make a new confession in this channel"
+        )
         if self.title == "Non-anonymous confession":
-            embed.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
-        embed.description = self.conf.value
-        embed.set_footer(text="Use buttons below to make a new confession in this channel")
-        await ntr.channel.send(embeds=[embed])
+            em.set_author(
+                name=ntr.user.display_name,
+                icon_url=ntr.user.display_avatar.url
+            )
+        await ntr.channel.send(embeds=[em])
         sacred_string = '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Ems.bubuChrist, '⛪', Ems.PepoBeliever)
         await ntr.channel.send(sacred_string)
         await ntr.response.send_message(content=f"The Lord be with you {Ems.PepoBeliever}", ephemeral=True)

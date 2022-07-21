@@ -13,6 +13,7 @@ import re
 
 if TYPE_CHECKING:
     from discord import Message
+    from utils.bot import AluBot
 
 
 class FunThings(commands.Cog, name='Fun'):
@@ -20,7 +21,7 @@ class FunThings(commands.Cog, name='Fun'):
     Commands to have fun with
     """
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.help_emote = Ems.FeelsDankMan
 
     @commands.hybrid_command(

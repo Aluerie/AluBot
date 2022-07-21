@@ -546,6 +546,7 @@ class MaterialAccentPalette:
     def white(cls, *, shade: int = core) -> int:
         return cls.colors_dict['white'][shade]
 
+
 # aliases
 MP = MaterialPalette
 MAP = MaterialAccentPalette

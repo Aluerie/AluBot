@@ -288,7 +288,7 @@ class Info(commands.Cog, name='Info'):
     @commands.command(aliases=['invitelink'])
     @commands.guild_only()
     async def invite_link(self, ctx):
-        emb = Embed(
+        em = Embed(
             color=Clr.prpl,
             description=getenv('DISCORD_BOT_INVLINK')
         )

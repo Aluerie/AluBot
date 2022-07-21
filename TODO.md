@@ -2,8 +2,6 @@
 
 1. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
 2. make muted by who into logs
-3. add features into ReadMe 
-4. maybe make github.io site
 
 5. async sqlalchemy
 6. sort out total garbage in utils folder

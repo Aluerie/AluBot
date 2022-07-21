@@ -158,15 +158,32 @@ class Info(commands.Cog, name='Info'):
         embed.set_footer(text=f'Detected language: {(await translator.detect(text))[0]}')
         await ctx.reply(embed=embed)
 
+    colour_info = \
+        'The bot supports the following string formats:\n' \
+        '• Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`\n' \
+        '• RGB: `rgb(red, green, blue)` where the colour values are integers or percentages\n' \
+        '• Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`\n' \
+        '• Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`\n' \
+        '• Common HTML color names: `red`, `Blue`\n' \
+        '• Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n' \
+        '• Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n' \
+        '• Last but not least: `prpl` for favourite Aluerie\'s colour '
+
     @commands.hybrid_command(
         name='colour',
         brief=Ems.slash,
         description="Get info about colour",
         aliases=['color'],
-        usage='<formatted colour string>'
+        usage='<formatted_colour_string>',
+        help=
+        f'Get info about colour in specified <formatted_colour_string>.\n'
+        f'{colour_info}'
     )
     @app_commands.describe(colour_arg='Colour in any of supported formats')
     async def colour(self, ctx, *, colour_arg: str):
+        """
+        Read above.
+        """
         if colour_arg == 'prpl':
             colour_arg = '#9678B6'
 
@@ -238,16 +255,7 @@ class Info(commands.Cog, name='Info'):
                 colour=Clr.error,
                 title='Wrong colour format',
                 url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html',
-                description=
-                'The bot supports the following string formats:\n'
-                '● Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`\n'
-                '● RGB: `rgb(red, green, blue)` where the colour values are integers or percentages\n'
-                '● Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`\n'
-                '● Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`\n'
-                '● Common HTML color names: `red`, `Blue`\n'
-                '● Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n'
-                '● Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n'
-                '● Last but not least: `prpl` for favourite Aluerie\'s colour '
+                description=self.colour_info
             ).set_author(
                 name='WrongColourFormat'
             )
@@ -286,8 +294,10 @@ class Info(commands.Cog, name='Info'):
 
     @is_owner()
     @commands.command(aliases=['invitelink'])
-    @commands.guild_only()
     async def invite_link(self, ctx):
+        """
+        Show invite link for the bot.
+        """
         em = Embed(
             color=Clr.prpl,
             description=getenv('DISCORD_BOT_INVLINK')

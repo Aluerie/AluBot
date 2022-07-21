@@ -7,6 +7,7 @@ from utils.var import *
 
 if TYPE_CHECKING:
     from utils.context import Context
+    from utils.context import AluBot
 
 
 class LewdCog(commands.Cog, name='Lewd'):
@@ -17,11 +18,14 @@ class LewdCog(commands.Cog, name='Lewd'):
     """
 
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.help_emote = Ems.peepoPlsStepOnMe
 
     @commands.hybrid_command()
     async def lewd(self, ctx: Context):
+        """
+        [NSFW] Get a random horny picture.
+        """
         await ctx.reply(f'Coming soon {Ems.Jebaited}')
 
 

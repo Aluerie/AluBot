@@ -25,11 +25,13 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         self.checkguilds.start()
 
     @is_owner()
-    @commands.command()
+    @commands.command(hidden=True)
     async def msgcount(self, ctx, member: Member, msg_count):
         db.set_value(db.m, member.id, msg_count=msg_count)
-        embed = Embed(colour=member.colour)
-        embed.description = f'msgcount: {member.mention} (id=`{member.id}`) to `{msg_count}`! {Ems.bubuAyaya}'
+        embed = Embed(
+            colour=member.colour,
+            description=f'msgcount: {member.mention} (id=`{member.id}`) to `{msg_count}`! {Ems.bubuAyaya}'
+        )
         await ctx.channel.send(embed=embed)
 
     @is_owner()
@@ -164,13 +166,20 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         await ctx.reply(embed=em)
 
     @is_owner()
-    @commands.command()
+    @trustee.command()
     async def add(self, ctx: Context, user_id: int):
+        """
+        Grant trustee privilege to a user with `user_id`.
+        Trustees can add my bot to their servers and use commands that interact with the bot's database.
+        """
         await self.trustee_add_remove(ctx, user_id=user_id, mode='add')
 
     @is_owner()
-    @commands.command()
-    async def add(self, ctx: Context, user_id: int):
+    @trustee.command()
+    async def remove(self, ctx: Context, user_id: int):
+        """
+        Remove trustee privilege to a user with `user_id`.
+        """
         await self.trustee_add_remove(ctx, user_id=user_id, mode='remov')
 
     @is_owner()

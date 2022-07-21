@@ -160,11 +160,12 @@ class HelpCommand(commands.HelpCommand):
         if c.cooldown is not None:
             cd_str = f' | cd: {c.cooldown.rate} per {display_hmstime(c.cooldown.per)}'
 
+        help_str = c.help or 'No documentation'
         def get_sign(o):
             extra_space = '' if o.signature == '' else ' '
             prefix = getattr(self.context, 'clean_prefix', '$')
             return f'{prefix}{o.qualified_name}{extra_space}{o.signature}'
-        return f'● {slash}`{get_sign(c)}`{aliases}{cd_str}\n{checks}{c.help}'
+        return f'● {slash}`{get_sign(c)}`{aliases}{cd_str}\n{checks}{help_str}'
 
     async def send_bot_help(self, mapping):
         embed_list = []

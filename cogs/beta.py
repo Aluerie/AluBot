@@ -21,7 +21,17 @@ class BetaTest(commands.Cog):
 
     @commands.hybrid_command(hidden=True)
     async def allu(self, ctx: Context):
-        await ctx.reply('Allu')
+        em = Embed(
+            colour=Clr.prpl,
+            title='heh',
+            description='lol'
+        )
+        ch = self.bot.get_channel(Cid.logs)
+        msg = await ch.send(embed=em)
+        await msg.publish()
+
+        em.set_footer(text='kkek')
+        await msg.edit(embeds=[em])
 
 
 async def setup(bot):

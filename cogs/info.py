@@ -128,17 +128,26 @@ class Info(commands.Cog, name='Info'):
         aliases=['members', 'roleinfo'],
         description="View info about selected role"
     )
+    @app_commands.describe(role='Choose role to get info about')
     async def roleinfo(self, ctx, *, role: Role):
-        """View info about selected role"""
-        embed = Embed(colour=role.colour, title="Role information")  # TODO: this embed will be more than 6000 symbols
-        embed.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
-        await ctx.reply(embed=embed)
+        """
+        View info about selected role
+        """
+        em = Embed(
+            colour=role.colour,
+            title="Role information",
+            description='\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
+        )  # TODO: this embed will be more than 6000 symbols
+        await ctx.reply(embed=em)
 
     @tasks.loop(count=1)
     async def reload_info(self):
-        embed = Embed(colour=Clr.prpl, description=f'Logged in as {self.bot.user}')
-        for i in [Cid.spam_me, Cid.logs]:
-            await self.bot.get_channel(i).send(embed=embed)
+        em = Embed(
+            colour=Clr.prpl,
+            description=f'Logged in as {self.bot.user}'
+        )
+        for i in [Cid.spam_me, Cid.logs, Cid.bot_spam]:
+            await self.bot.get_channel(i).send(embed=em)
 
     @reload_info.before_loop
     async def before(self):
@@ -151,12 +160,18 @@ class Info(commands.Cog, name='Info'):
     )
     @app_commands.describe(text="Enter text to translate")
     async def translate(self, ctx, *, text: str):
-        """Translate text into English using Google Translate, auto-detects source language"""
+        """
+        Translate text into English using Google Translate, auto-detects source language.
+        """
         translator = google_translator()
-        embed = Embed(colour=ctx.author.colour, title='Google Translate to English')
-        embed.description = await translator.translate(text, lang_tgt='en')
-        embed.set_footer(text=f'Detected language: {(await translator.detect(text))[0]}')
-        await ctx.reply(embed=embed)
+        em = Embed(
+            colour=ctx.author.colour,
+            title='Google Translate to English',
+            description=await translator.translate(text, lang_tgt='en')
+        ).set_footer(
+            text=f'Detected language: {(await translator.detect(text))[0]}'
+        )
+        await ctx.reply(embed=em)
 
     colour_info = \
         'The bot supports the following string formats:\n' \

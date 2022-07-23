@@ -90,6 +90,7 @@ class guildassignment(Base):
     dotafeed_ch_id = Column(BigInteger, default=None)
     dotafeed_hero_ids = Column(PickleType, default=[])
     dotafeed_stream_ids = Column(PickleType, default=[])
+    dotafeed_spoils_on = Column(Boolean, default=True)
 
 
 class LeagueAccount(Base):
@@ -194,6 +195,15 @@ class tagsdb(Base):
     created_at = Column(DateTime)
 
 
+class dfmessage(Base):
+    __tablename__ = 'dfmessage'
+    __table_args__ = {'extend_existing': True}
+    id = Column(BigInteger, primary_key=True)  # message id
+    match_id = Column(BigInteger)
+    ch_id = Column(BigInteger)
+    hero_id = Column(Integer)
+
+
 Base.metadata.create_all(engine)
 
 # biginteger type of id
@@ -207,6 +217,7 @@ d = DotaAccount
 a = AFKNote
 s = mygamerdata
 ga = guildassignment
+em = dfmessage
 
 # autoincrement type of id
 r = RemindersNote
@@ -227,7 +238,7 @@ def session_scope():
         ses.commit()
     except Exception as exc:
         ses.rollback()
-        #  print('Some Huge error happened in database.py', exc)
+        print('database.py ;;;', exc)
         raise exc  # probably we should leave it here uncommented ;
     finally:
         ses.close()

@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
+from dota2.protobufs.dota_shared_enums_pb2 import k_EMatchOutcome_RadVictory, k_EMatchOutcome_DireVictory
+from pyot.utils.functools import async_property
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 from steam.steamid import SteamID, EType
@@ -25,155 +27,340 @@ from datetime import datetime, timezone, time
 
 if TYPE_CHECKING:
     from utils.context import Context
-
+    from utils.bot import AluBot
+    from dota2.protobufs.dota_gcmessages_common_pb2 import CMsgDOTAMatchMinimal
+    from aiohttp import ClientSession
 
 import logging
+
 log = logging.getLogger('root')
-lobbyids = set()
-to_be_posted = {}
 
 
-async def try_to_find_games(bot, ses):
-    log.info("TryToFindGames dota2info")
-    global to_be_posted, lobbyids
-    to_be_posted = {}
-    lobbyids = set()
-    fav_hero_ids = []
-    for row in ses.query(db.ga):
-        fav_hero_ids += row.dotafeed_hero_ids
-    fav_hero_ids = list(set(fav_hero_ids))
+class ActiveMatch:
 
-    sd_login(bot.steam, bot.dota, bot.steam_lgn, bot.steam_psw)
+    def __init__(
+            self,
+            *,
+            match_id: int = None,
+            start_time: int = None,
+            stream: str = None,
+            twtv_id: int = None,
+            hero_id: int = None,
+            hero_ids: List[int] = None,
+    ):
+        self.match_id = match_id
+        self.start_time = start_time
+        self.stream = stream
+        self.twtv_id = twtv_id
+        self.hero_id = hero_id
+        self.hero_ids = hero_ids
 
-    # @dota.on('ready')
-    def ready_function():
-        log.info("ready_function dota2info")
-        bot.dota.request_top_source_tv_games(lobby_ids=list(lobbyids))
+    @async_property
+    async def hero_name(self):
+        return await d2.name_by_id(self.hero_id)
 
-    # @dota.on('top_source_tv_games')
-    def response(result):
-        log.info(f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games}")
-        if result.specific_games:
-            friendids = [row.friendid for row in ses.query(db.d.friendid)]
-            for match in result.game_list:  # games
-                our_persons = [x for x in match.players if x.account_id in friendids and x.hero_id in fav_hero_ids]
-                for person in our_persons:
-                    user = ses.query(db.d).filter_by(friendid=person.account_id).first()
-                    if user.lastposted != match.match_id:
-                        to_be_posted[user.name] = {
-                            'matchid': match.match_id,
-                            'st_time': match.activate_time,
-                            'streamer': user.name,
-                            'twtv_id': user.twtv_id,
-                            'heroid': person.hero_id,
-                            'hero_ids': [x.hero_id for x in match.players],
-                        }
-            log.info(f'to_be_posted {to_be_posted}')
-        bot.dota.emit('top_games_response')
+    async def better_thumbnail(
+            self,
+            stream: TwitchStream,
+            session: ClientSession,
+    ):
+        img = await url_to_img(session, stream.preview_url)
+        width, height = img.size
+        rectangle = Image.new("RGB", (width, 70), '#9678b6')
+        ImageDraw.Draw(rectangle)
+        img.paste(rectangle)
 
-    proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
-    proto_msg.header.routing_appid = 570
-    steamids = [row.id for row in ses.query(db.d).filter(db.d.twtv_id.in_(get_dota_streams())).all()]
-    # print(steamids)
-    proto_msg.body.steamid_request.extend(steamids)
-    resp = bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
-    if resp is None:
-        print('resp is None, hopefully everything else will be fine tho;')
-        return
-    for item in resp.rich_presence:
-        if rp_bytes := item.rich_presence_kv:
-            # steamid = item.steamid_user
-            rp = vdf.binary_loads(rp_bytes)['RP']
-            # print(rp)
-            if lobby_id := int(rp.get('WatchableGameID', 0)):
-                if rp.get('param0', 0) == '#DOTA_lobby_type_name_ranked':
-                    if await d2.id_by_npcname(rp.get('param2', '#')[1:]) in fav_hero_ids:  # that's npcname
-                        lobbyids.add(lobby_id)
+        for count, heroId in enumerate(self.hero_ids):
+            hero_img = await url_to_img(session, await d2.iconurl_by_id(heroId))
+            # h_width, h_height = heroImg.size
+            hero_img = hero_img.resize((62, 35))
+            hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=Clr.dota_colour_map.get(count))
+            extra_space = 0 if count < 5 else 20
+            img.paste(hero_img, (count * 62 + extra_space, 0))
 
-    # print(lobbyids)
-    log.info(f'lobbyids {lobbyids}')
-    # dota.on('ready', ready_function)
-    bot.dota.once('top_source_tv_games', response)
-    ready_function()
-    bot.dota.wait_event('top_games_response', timeout=8)
+        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
+        draw = ImageDraw.Draw(img)
+        text = f'{stream.display_name} - {await self.hero_name}'
+        w2, h2 = draw.textsize(text, font=font)
+        draw.text(((width - w2) / 2, 35), text, font=font, align="center")
+        return img
 
+    async def notif_embed(
+            self,
+            session: ClientSession
+    ):
+        long_ago = datetime.now(timezone.utc).timestamp() - self.start_time
 
-async def better_thumbnail(session, stream, hero_ids, heroname):
-    img = await url_to_img(session, stream.preview_url)
-    width, height = img.size
-    rectangle = Image.new("RGB", (width, 70), '#9678b6')
-    ImageDraw.Draw(rectangle)
-    img.paste(rectangle)
-
-    for count, heroId in enumerate(hero_ids):
-        hero_img = await url_to_img(session, await d2.iconurl_by_id(heroId))
-        # h_width, h_height = heroImg.size
-        hero_img = hero_img.resize((62, 35))
-        hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=Clr.dota_colour_map.get(count))
-        extra_space = 0 if count < 5 else 20
-        img.paste(hero_img, (count * 62 + extra_space, 0))
-
-    font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
-    draw = ImageDraw.Draw(img)
-    text = f'{stream.display_name} - {heroname}'
-    w2, h2 = draw.textsize(text, font=font)
-    draw.text(((width - w2) / 2, 35), text, font=font, align="center")
-    return img
-
-
-class DotaFeed(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.dotafeed.start()
-
-    async def send_the_embed(self, tbp, session):
-        log.info("sending dota 2 embed")
-        match_id, streamer, heroid, hero_ids, twtv_id = \
-            tbp['matchid'], tbp['streamer'], tbp['heroid'], tbp['hero_ids'], tbp['twtv_id']
-        long_ago = datetime.now(timezone.utc).timestamp() - tbp['st_time']
-
-        twitch = TwitchStream(streamer)
-        heroname = await d2.name_by_id(heroid)
-        image_name = f'{streamer.replace("_", "")}-playing-{heroname.replace(" ", "")}.png'
-        img_file = img_to_file(await better_thumbnail(self.bot.ses, twitch, hero_ids, heroname), filename=image_name)
+        twitch = TwitchStream(self.stream)
+        image_name = \
+            f'{self.stream.replace("_", "")}-playing-' \
+            f'{(await self.hero_name).replace(" ", "")}.png'
+        img_file = img_to_file(
+            await self.better_thumbnail(twitch, session),
+            filename=image_name
+        )
 
         em = Embed(
             colour=Clr.prpl,
             url=twitch.url,
             description=
-            f'`/match {match_id}` started {display_relativehmstime(long_ago)}\n' 
+            f'`/match {self.match_id}` started {display_relativehmstime(long_ago)}\n'
             f'{f"[TwtvVOD]({link})" if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ""}'
-            f'/[Dotabuff](https://www.dotabuff.com/matches/{match_id})'
-            f'/[Opendota](https://www.opendota.com/matches/{match_id})'
-            f'/[Stratz](https://stratz.com/matches/{match_id})'
+            f'/[Dotabuff](https://www.dotabuff.com/matches/{self.match_id})'
+            f'/[Opendota](https://www.opendota.com/matches/{self.match_id})'
+            f'/[Stratz](https://stratz.com/matches/{self.match_id})'
         ).set_image(
             url=f'attachment://{image_name}'
         ).set_thumbnail(
-            url=await d2.iconurl_by_id(heroid)
+            url=await d2.iconurl_by_id(self.hero_id)
         ).set_author(
-            name=f'{twitch.display_name} - {heroname}',
+            name=f'{twitch.display_name} - {await self.hero_name}',
             url=twitch.url,
             icon_url=twitch.logo_url
         )
+        return em, img_file
 
-        for row in db.session.query(db.ga):
-            if heroid in row.dotafeed_hero_ids and twtv_id in row.dotafeed_stream_ids:
+
+class MatchToEdit:
+
+    def __init__(
+            self,
+            match: CMsgDOTAMatchMinimal  # i m not sure how to go about typehinting this
+    ):
+        self.match = match
+
+    def player_for_hero_id(self, hero_id):
+        return next((x for x in self.match.players if x.hero_id == hero_id), None)
+
+    def get_oucome(self, player_slot):
+        if self.match.match_outcome not in [k_EMatchOutcome_RadVictory, k_EMatchOutcome_DireVictory]:
+            result = 'Not Scored'
+        else:
+            if player_slot > 4:
+                check = k_EMatchOutcome_DireVictory
+            else:
+                check = k_EMatchOutcome_RadVictory
+
+            if self.match.match_outcome == check:
+                result = 'Win'
+            else:
+                result = 'Loss'
+        return result
+
+    async def edit_the_image(self, img_url, hero_id, session):
+        img = await url_to_img(session, img_url)
+        player = self.player_for_hero_id(hero_id)
+        result = self.get_oucome(player.player_slot)
+
+        width, height = img.size
+        rectangle = Image.new("RGB", (width, 62), '#9678b6')
+        ImageDraw.Draw(rectangle)
+        spoiler_h = height - 62
+        img.paste(rectangle, (0, spoiler_h))
+
+        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
+        draw = ImageDraw.Draw(img)
+        w2, h2 = draw.textsize(result, font=font)
+        colour_dict = {
+            'Win': f'#{MP.green(shade=800):x}',
+            'Loss': f'#{MP.red(shade=900):x}',
+            'No Scored': (255, 255, 255)
+        }
+        draw.text(
+            (0, spoiler_h),
+            result,
+            font=font,
+            align="center",
+            fill=colour_dict[result]
+        )
+
+        draw = ImageDraw.Draw(img)
+        text = f'{player.kills}/{player.deaths}/{player.assists}'
+        w3, h3 = draw.textsize(text, font=font)
+        draw.text(
+            (0, height - h3),
+            text,
+            font=font,
+            align="right"
+        )
+
+        for count, itemId in enumerate(player.items):
+            hero_img = await url_to_img(session, await d2.itemurl_by_id(itemId))
+            # h_width, h_height = heroImg.size
+            hero_img = hero_img.resize((85, 62))
+            left = width - 85 * 6
+            img.paste(hero_img, (left + count * 85, height - hero_img.height))
+
+        return img
+
+
+class DotaFeed(commands.Cog):
+    def __init__(self, bot):
+        self.bot: AluBot = bot
+        self.dotafeed.start()
+        self.lobby_ids = set()
+        self.active_matches = []
+        self.after_match = []
+
+    async def after_match_games(self, ses):
+        log.info("after match after match")
+        self.after_match = []
+        match_ids = list(set([row.match_id for row in ses.query(db.em)]))
+
+        sd_login(self.bot.steam, self.bot.dota, self.bot.steam_lgn, self.bot.steam_psw)
+
+        # @dota.on('ready')
+        def ready_function():
+            log.info("ready_function after match")
+            self.bot.dota.request_matches_minimal(match_ids=match_ids)
+
+        # @dota.on('matches_minimal')
+        def response_m(result: List[CMsgDOTAMatchMinimal]):
+            for match in result:
+                self.after_match.append(
+                    MatchToEdit(match=match)
+                )
+            self.bot.dota.emit('matches_minimal_response')
+
+        # dota.on('ready', ready_function)
+        self.bot.dota.once('matches_minimal', response_m)
+        ready_function()
+        self.bot.dota.wait_event('matches_minimal_response', timeout=8)
+
+    async def edit_the_embed(self, match_to_edit: MatchToEdit, ses):
+        query = ses.query(db.em).filter_by(match_id=match_to_edit.match.match_id)
+        for row in query:
+
+            ch = self.bot.get_channel(row.ch_id)
+            if ch is None:
+                continue  # wrong bot, I guess
+
+            msg = await ch.fetch_message(row.id)
+
+            em = msg.embeds[0]
+            image_name = 'edited.png'
+            img_file = img_to_file(
+                await match_to_edit.edit_the_image(
+                    em.image.url,
+                    row.hero_id,
+                    self.bot.ses
+                ),
+                filename=image_name
+            )
+            em.set_image(url=f'attachment://{image_name}')
+            await msg.edit(embed=em, attachments=[img_file])
+        query.delete()
+
+    async def try_to_find_games(self, ses):
+        log.info("TryToFindGames dota2info")
+
+        self.active_matches = []
+        self.lobby_ids = set()
+        fav_hero_ids = []
+        for row in ses.query(db.ga):
+            fav_hero_ids += row.dotafeed_hero_ids
+        fav_hero_ids = list(set(fav_hero_ids))
+
+        sd_login(self.bot.steam, self.bot.dota, self.bot.steam_lgn, self.bot.steam_psw)
+
+        # @dota.on('ready')
+        def ready_function():
+            log.info("ready_function dota2info")
+            self.bot.dota.request_top_source_tv_games(lobby_ids=list(self.lobby_ids))
+
+        # @dota.on('top_source_tv_games')
+        def response(result):
+            log.info(f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games}")
+            if result.specific_games:
+                friendids = [r.friendid for r in ses.query(db.d.friendid)]
+                for match in result.game_list:  # games
+                    our_persons = [x for x in match.players if x.account_id in friendids and x.hero_id in fav_hero_ids]
+                    for person in our_persons:
+                        user = ses.query(db.d).filter_by(friendid=person.account_id).first()
+                        self.active_matches.append(
+                            ActiveMatch(
+                                match_id=match.match_id,
+                                start_time=match.activate_time,
+                                stream=user.name,
+                                twtv_id=user.twtv_id,
+                                hero_id=person.hero_id,
+                                hero_ids=[x.hero_id for x in match.players],
+                            )
+                        )
+                log.info(f'to_be_posted {self.active_matches}')
+            self.bot.dota.emit('top_games_response')
+
+        proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
+        proto_msg.header.routing_appid = 570
+        steamids = [row.id for row in ses.query(db.d).filter(db.d.twtv_id.in_(get_dota_streams())).all()]
+        # print(steamids)
+        proto_msg.body.steamid_request.extend(steamids)
+        resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
+        if resp is None:
+            print('resp is None, hopefully everything else will be fine tho;')
+            return
+        for item in resp.rich_presence:
+            if rp_bytes := item.rich_presence_kv:
+                # steamid = item.steamid_user
+                rp = vdf.binary_loads(rp_bytes)['RP']
+                # print(rp)
+                if lobby_id := int(rp.get('WatchableGameID', 0)):
+                    if rp.get('param0', 0) == '#DOTA_lobby_type_name_ranked':
+                        if await d2.id_by_npcname(rp.get('param2', '#')[1:]) in fav_hero_ids:  # that's npcname
+                            self.lobby_ids.add(lobby_id)
+
+        # print(lobbyids)
+        log.info(f'lobbyids {self.lobby_ids}')
+        # dota.on('ready', ready_function)
+        self.bot.dota.once('top_source_tv_games', response)
+        ready_function()
+        self.bot.dota.wait_event('top_games_response', timeout=8)
+
+    async def send_the_embed(
+            self,
+            active_match: ActiveMatch,
+            db_ses
+    ):
+        log.info("sending dota 2 embed")
+
+        em, img_file = await active_match.notif_embed(self.bot.ses)
+
+        for row in db_ses.query(db.ga):
+            if active_match.hero_id in row.dotafeed_hero_ids and active_match.twtv_id in row.dotafeed_stream_ids:
                 ch: TextChannel = self.bot.get_channel(row.dotafeed_ch_id)
+                if ch is None:
+                    continue  # the bot does not have access to the said channel
+                elif db_ses.query(db.em).filter_by(
+                    ch_id=ch.id,
+                    match_id=active_match.match_id,
+                    hero_id=active_match.hero_id
+                ).first():
+                    continue  # the message was already sent
+
                 em.title = f"{ch.guild.owner.name}'s fav hero + fav stream spotted !"
                 msg = await ch.send(embed=em, file=img_file)
+                db.add_row(
+                    db.em,
+                    msg.id,
+                    match_id=active_match.match_id,
+                    ch_id=ch.id,
+                    hero_id=active_match.hero_id
+                )
                 if ch.is_news():
                     await msg.publish()
-
-        for row in session.query(db.d).filter_by(name=streamer):
-            row.lastposted = match_id
         return 1
 
     @tasks.loop(seconds=59)
     async def dotafeed(self):
-        with db.session_scope() as ses:
-            await try_to_find_games(self.bot, ses)
-            for key in to_be_posted:
-                await self.send_the_embed(to_be_posted[key], ses)
+        with db.session_scope() as db_ses:
+
+            await self.try_to_find_games(db_ses)
+            for match in self.active_matches:
+                await self.send_the_embed(match, db_ses)
+
+            await self.after_match_games(db_ses)
+            for match in self.after_match:
+                await self.edit_the_embed(match, db_ses)
 
     @dotafeed.before_loop
     async def before(self):
@@ -349,7 +536,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
 
     @staticmethod
     def field_info_str(twitch, steamid, friendid):
-        return  \
+        return \
             f"[**{twitch}**](https://www.twitch.tv/{twitch})\n" \
             f"`{steamid}` - `{friendid}`| " \
             f"[Steam](https://steamcommunity.com/profiles/{steamid})" \
@@ -416,7 +603,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         if (user := db.session.query(db.d).filter_by(id=steamid).first()) is not None:
             em = Embed(
                 colour=Clr.error
-                ).add_field(
+            ).add_field(
                 name=f'This steam account is already in the database',
                 value=
                 f'It is marked as [{user.name}](https://www.twitch.tv/{user.name})\'s account.\n\n'
@@ -585,7 +772,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             em = Embed(
                 colour=MP.orange(shade=500)
             ).add_field(
-                name=f'Stream(-s) already {"not" if mode=="remov" else ""} in fav list',
+                name=f'Stream(-s) already {"not" if mode == "remov" else ""} in fav list',
                 value=", ".join(already)
             )
             await ctx.reply(embed=em)
@@ -691,7 +878,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             em = Embed(
                 colour=MP.orange(shade=500)
             ).add_field(
-                name=f'Hero(-s) already {"not" if mode=="remov" else ""} in fav list',
+                name=f'Hero(-s) already {"not" if mode == "remov" else ""} in fav list',
                 value=", ".join(already)
             )
         if len(fail):
@@ -770,6 +957,26 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             color=Clr.prpl,
             title='List of fav dota 2 heroes',
             description='\n'.join(answer)
+        )
+        await ctx.reply(embed=em)
+
+    @is_guild_owner()
+    @dota.command(description='Turn on/off spoiling stats for matches. ')
+    @app_commands.describe(spoil='`Yes` to enable spoiling with stats, `No` for disable')
+    async def spoil(
+            self,
+            ctx: Context,
+            spoil: bool
+    ):
+        """
+        Turn on/off spoiling stats for matches.
+
+        It is "on" by default, so it can show items streamers finished with and KDA.
+        """
+        db.set_value(db.ga, ctx.guild.id, dotafeed_spoils_on=spoil)
+        em = Embed(
+            colour=Clr.prpl,
+            description=f"Changed spoil value to {spoil}"
         )
         await ctx.reply(embed=em)
 

@@ -139,7 +139,7 @@ class LoLFeed(commands.Cog):
                     live_game = await lol.spectator.CurrentGame(summoner_id=row.id, platform=row.region).get()
                     # https://static.developer.riotgames.com/docs/lol/queues.json
                     # says 420 is 5v5 Ranked Solo games
-                    if live_game.queue_id != 420:
+                    if not hasattr(live_game, 'queue_id') or live_game.queue_id != 420:
                         continue
                     # print(row.name, row.lastposted, live_game.id)
                     if row.lastposted != live_game.id:

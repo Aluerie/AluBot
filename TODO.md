@@ -1,5 +1,12 @@
 ### Current thoughts
 
+0. If the bot goes down then it wont remove matches from db.em
+1. last posted if somebody else does late
+2. 
+
+
+
+
 1. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
 2. make muted by who into logs
 

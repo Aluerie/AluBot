@@ -178,7 +178,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     @trustee.command()
     async def remove(self, ctx: Context, user_id: int):
         """
-        Remove trustee privilege to a user with `user_id`.
+        Remove trustee privilege from a user with `user_id`.
         """
         await self.trustee_add_remove(ctx, user_id=user_id, mode='remov')
 

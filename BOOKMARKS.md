@@ -1,5 +1,5 @@
 ### Docs
-1. [Py-cord Docs](https://docs.pycord.dev/en/master/)
+1. [Dpy Docs](https://discordpy.readthedocs.io/en/latest/)
 2. 
 ### Gists
 1. [Ansi Colour block gitst](https://gist.github.com/kkrypt0nn/a02506f3712ff2d1c8ca7c9e0aed7c06)

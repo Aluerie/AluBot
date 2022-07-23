@@ -46,8 +46,16 @@ class Moderation(commands.Cog):
         description='Warn member'
     )
     @app_commands.describe(member='Member to warn', reason='Reason')
-    async def warn(self, ctx, member: Member, *, reason="No reason"):
-        """Give member a warning"""
+    async def warn(
+            self,
+            ctx: Context,
+            member: Member,
+            *,
+            reason: str = "No reason"
+    ):
+        """
+        Give member a warning
+        """
         if member.id == Uid.alu:
             return await ctx.reply(f"You can't do that to Aluerie {Ems.bubuGun}")
         if member.bot:
@@ -64,9 +72,17 @@ class Moderation(commands.Cog):
             modid=ctx.author.id,
             reason=reason
         )
-        em = Embed(colour=Clr.prpl, title="Manual warning by a mod", description=reason)
-        em.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-        em.set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
+        em = Embed(
+            colour=Clr.prpl,
+            title="Manual warning by a mod",
+            description=reason
+        ).set_author(
+            name=member.display_name,
+            icon_url=member.display_avatar.url
+        ).set_footer(
+            text=f"Warned by {ctx.author.display_name}",
+            icon_url=ctx.author.display_avatar.url
+        )
         await ctx.reply(embed=em)
 
     async def mute_work(self, ctx, member, dt: datetime, duration: timedelta, reason):

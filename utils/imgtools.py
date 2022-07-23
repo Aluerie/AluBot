@@ -42,7 +42,7 @@ async def url_to_img(
     for url_item in url_array:
         async with session.get(url_item) as resp:
             if resp.status != 200:
-                print("imgtools.url_to_img: Oups; Could not download file..")
+                print(f"imgtools.url_to_img: Oups; Could not download file from {url_item}")
             images.append(Image.open(BytesIO(await resp.read())))
     return images if len(images) > 1 or len(images) == 0 else images[0]
 

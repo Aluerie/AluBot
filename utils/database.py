@@ -204,6 +204,15 @@ class dfmessage(Base):
     hero_id = Column(Integer)
 
 
+class lfmessage(Base):
+    __tablename__ = 'lfmessage'
+    __table_args__ = {'extend_existing': True}
+    id = Column(BigInteger, primary_key=True)  # message id
+    match_id = Column(BigInteger)
+    channel_id = Column(BigInteger)
+    champ_id = Column(Integer)
+
+
 Base.metadata.create_all(engine)
 
 # biginteger type of id
@@ -218,6 +227,7 @@ a = AFKNote
 s = mygamerdata
 ga = guildassignment
 em = dfmessage
+lf = lfmessage
 
 # autoincrement type of id
 r = RemindersNote

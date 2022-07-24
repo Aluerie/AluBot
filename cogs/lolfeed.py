@@ -126,8 +126,8 @@ class LoLFeed(commands.Cog):
             url=twitch.url,
             icon_url=twitch.logo_url
         )
-        msg = await self.bot.get_channel(Cid.alubot).send(embed=embed, file=file)
-        await msg.publish()
+        for ch_id in [Cid.alubot, Cid.repost]:
+            await self.bot.get_channel(ch_id).send(embed=embed, file=file)
 
     @tasks.loop(seconds=59)
     async def lolfeed(self):

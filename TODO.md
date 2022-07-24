@@ -2,6 +2,7 @@
 
 rewrite dota py into actual module(-s) i guess ?
 make variable for api connstatans and for cdn
+drop last posted column
 
 1. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
 2. make muted by who into logs

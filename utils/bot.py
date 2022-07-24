@@ -25,7 +25,8 @@ test_list = [  # for yen bot
     'dotafeed',
     'help',
     'error',
-    'expsys',
+    #'expsys',
+    #'beta'
 ]
 
 

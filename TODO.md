@@ -1,11 +1,10 @@
 ### Current thoughts
 
-0. If the bot goes down then it wont remove matches from db.em
-1. last posted if somebody else does late
-2. 
+add str thing for active games
+permanent buffs look for aghs + blessing thing
+rewrite dota py into actual classes
 
-
-
+make variable for api connstatans and for cdn
 
 1. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
 2. make muted by who into logs
@@ -37,13 +36,14 @@ maybe make error original for conversion error as well rom converters
 
 ### Future
 15. twitch stream live proper listener when twitch releases it
+16. add "all"  key into heroes so all heroes can be traced
 
 ### IMPROVE
-16. `map` usages
-17. remove `regex` library in favour of `re`
-18. async sqlalchemy asyncsession ? and also subclass your database like normal human being
-19. remember `a[start:stop:step]` so `a[::-1]` is reverse
-20. ?tag learn async
+17. `map` usages
+18. remove `regex` library in favour of `re`
+19. async sqlalchemy asyncsession ? and also subclass your database like normal human being
+20. remember `a[start:stop:step]` so `a[::-1]` is reverse
+21. ?tag learn async
 22. learn collection lib
 23. ?tag eval
 24. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes

@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List
 
-from dota2.protobufs.dota_shared_enums_pb2 import k_EMatchOutcome_RadVictory, k_EMatchOutcome_DireVictory
 from pyot.utils.functools import async_property
 from steam.core.msg import MsgProto
 from steam.enums import emsg
@@ -28,7 +27,6 @@ from datetime import datetime, timezone, time
 if TYPE_CHECKING:
     from utils.context import Context
     from utils.bot import AluBot
-    from dota2.protobufs.dota_gcmessages_common_pb2 import CMsgDOTAMatchMinimal
     from aiohttp import ClientSession
 
 import logging
@@ -125,32 +123,30 @@ class MatchToEdit:
 
     def __init__(
             self,
-            match: CMsgDOTAMatchMinimal  # i m not sure how to go about typehinting this
+            data: dict
     ):
-        self.match = match
+        self.match_id: int = data['match_id']
+        self.hero_id: int = data['hero_id']
+        self.outcome = "Win" if data['win'] else "Loss"
+        self.ability_upgrades_arr = data['ability_upgrades_arr']
+        self.items = [data[f'item_{i}'] for i in range(6)]
+        self.kda = f'{data["kills"]}/{data["deaths"]}/{data["assists"]}'
+        self.aghs_blessing = 'https://www.opendota.com/assets/images/dota2/scepter_0.png'
+        self.aghs_shard = 'https://www.opendota.com/assets/images/dota2/shard_0.png'
+        permanent_buffs = data['permanent_buffs']
+        for pb in permanent_buffs:
+            if pb['permanent_buff'] == 12:
+                self.aghs_shard = 'https://www.opendota.com/assets/images/dota2/shard_1.png'
+            if pb['permanent_buff'] == 2:
+                self.aghs_blessing = 'https://www.opendota.com/assets/images/dota2/scepter_1.png'
 
-    def player_for_hero_id(self, hero_id):
-        return next((x for x in self.match.players if x.hero_id == hero_id), None)
+    def __repr__(self) -> str:
+        pairs = ' '.join([f'{k}={v!r}' for k, v in self.__dict__.items()])
+        return f'<{self.__class__.__name__} {pairs}>'
 
-    def get_oucome(self, player_slot):
-        if self.match.match_outcome not in [k_EMatchOutcome_RadVictory, k_EMatchOutcome_DireVictory]:
-            result = 'Not Scored'
-        else:
-            if player_slot > 4:
-                check = k_EMatchOutcome_DireVictory
-            else:
-                check = k_EMatchOutcome_RadVictory
+    async def edit_the_image(self, img_url, session):
 
-            if self.match.match_outcome == check:
-                result = 'Win'
-            else:
-                result = 'Loss'
-        return result
-
-    async def edit_the_image(self, img_url, hero_id, session):
         img = await url_to_img(session, img_url)
-        player = self.player_for_hero_id(hero_id)
-        result = self.get_oucome(player.player_slot)
 
         width, height = img.size
         rectangle = Image.new("RGB", (width, 62), '#9678b6')
@@ -159,38 +155,67 @@ class MatchToEdit:
         img.paste(rectangle, (0, spoiler_h))
 
         font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
+
         draw = ImageDraw.Draw(img)
-        w2, h2 = draw.textsize(result, font=font)
+        w3, h3 = draw.textsize(self.kda, font=font)
+        draw.text(
+            (0, spoiler_h - 32 - h3),
+            self.kda,
+            font=font,
+            align="right"
+        )
+
+        draw = ImageDraw.Draw(img)
+        w2, h2 = draw.textsize(self.outcome, font=font)
         colour_dict = {
             'Win': f'#{MP.green(shade=800):x}',
             'Loss': f'#{MP.red(shade=900):x}',
             'No Scored': (255, 255, 255)
         }
         draw.text(
-            (0, spoiler_h),
-            result,
+            (0, spoiler_h - 32 - h3 - h2 - 5),
+            self.outcome,
             font=font,
             align="center",
-            fill=colour_dict[result]
+            fill=colour_dict[self.outcome]
         )
 
-        draw = ImageDraw.Draw(img)
-        text = f'{player.kills}/{player.deaths}/{player.assists}'
-        w3, h3 = draw.textsize(text, font=font)
-        draw.text(
-            (0, height - h3),
-            text,
-            font=font,
-            align="right"
-        )
-
-        for count, itemId in enumerate(player.items):
+        for count, itemId in enumerate(self.items):
             hero_img = await url_to_img(session, await d2.itemurl_by_id(itemId))
             # h_width, h_height = heroImg.size
             hero_img = hero_img.resize((85, 62))
             left = width - 85 * 6
             img.paste(hero_img, (left + count * 85, height - hero_img.height))
 
+        for count, abilityId in enumerate(self.ability_upgrades_arr):
+            abil_img = await url_to_img(session, await d2.ability_iconurl_by_id(abilityId))
+            abil_img = abil_img.resize((32, 32))
+            left = 0
+            img.paste(abil_img, (left + count * 32, spoiler_h - abil_img.height))
+
+        talent_strs = []
+        for x in self.ability_upgrades_arr:
+            if (dname := await d2.ability_dname_by_id(x)) is not None:
+                talent_strs.append(dname)
+
+        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 13)
+        for count, txt in enumerate(talent_strs):
+            draw = ImageDraw.Draw(img)
+            w4, h4 = draw.textsize(txt, font=font)
+            draw.text(
+                (width - w4, spoiler_h - 30 * 2 - 22 * count),
+                txt,
+                font=font,
+                align="right"
+            )
+
+        shard_img = await url_to_img(session, self.aghs_shard)
+        shard_img = shard_img.resize((40, 22))
+        img.paste(shard_img, (80, height - shard_img.height), shard_img)
+
+        bless_img = await url_to_img(session, self.aghs_blessing)
+        bless_img = bless_img.resize((40, 40))
+        img.paste(bless_img, (80, spoiler_h), bless_img)
         return img
 
 
@@ -205,30 +230,24 @@ class DotaFeed(commands.Cog):
     async def after_match_games(self, ses):
         log.info("after match after match")
         self.after_match = []
-        match_ids = list(set([row.match_id for row in ses.query(db.em)]))
+        row_dict = {}
+        for row in ses.query(db.em):
+            row_dict.setdefault(row.match_id, set()).add(row.hero_id)
 
-        sd_login(self.bot.steam, self.bot.dota, self.bot.steam_lgn, self.bot.steam_psw)
+        for m_id in row_dict:
+            url = f"https://api.opendota.com/api/matches/{m_id}"
+            async with self.bot.ses.get(url) as resp:
+                dic = await resp.json()
+                if dic == {"error": "Not Found"}:
+                    continue
 
-        # @dota.on('ready')
-        def ready_function():
-            log.info("ready_function after match")
-            self.bot.dota.request_matches_minimal(match_ids=match_ids)
+                for player in dic['players']:
+                    if player['hero_id'] in row_dict[m_id]:
+                        m = MatchToEdit(data=player)
+                        self.after_match.append(m)
 
-        # @dota.on('matches_minimal')
-        def response_m(result: List[CMsgDOTAMatchMinimal]):
-            for match in result:
-                self.after_match.append(
-                    MatchToEdit(match=match)
-                )
-            self.bot.dota.emit('matches_minimal_response')
-
-        # dota.on('ready', ready_function)
-        self.bot.dota.once('matches_minimal', response_m)
-        ready_function()
-        self.bot.dota.wait_event('matches_minimal_response', timeout=8)
-
-    async def edit_the_embed(self, match_to_edit: MatchToEdit, ses):
-        query = ses.query(db.em).filter_by(match_id=match_to_edit.match.match_id)
+    async def edit_the_embed(self, match: MatchToEdit, ses):
+        query = ses.query(db.em).filter_by(match_id=match.match_id)
         for row in query:
 
             ch = self.bot.get_channel(row.ch_id)
@@ -240,9 +259,8 @@ class DotaFeed(commands.Cog):
             em = msg.embeds[0]
             image_name = 'edited.png'
             img_file = img_to_file(
-                await match_to_edit.edit_the_image(
+                await match.edit_the_image(
                     em.image.url,
-                    row.hero_id,
                     self.bot.ses
                 ),
                 filename=image_name
@@ -346,17 +364,14 @@ class DotaFeed(commands.Cog):
                     ch_id=ch.id,
                     hero_id=active_match.hero_id
                 )
-                if ch.is_news():
-                    await msg.publish()
         return 1
 
     @tasks.loop(seconds=59)
     async def dotafeed(self):
         with db.session_scope() as db_ses:
-
-            await self.try_to_find_games(db_ses)
-            for match in self.active_matches:
-                await self.send_the_embed(match, db_ses)
+            #await self.try_to_find_games(db_ses)
+            #for match in self.active_matches:
+            #    await self.send_the_embed(match, db_ses)
 
             await self.after_match_games(db_ses)
             for match in self.after_match:
@@ -881,6 +896,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
                 name=f'Hero(-s) already {"not" if mode == "remov" else ""} in fav list',
                 value=", ".join(already)
             )
+            await ctx.reply(embed=em)
         if len(fail):
             em = Embed(
                 colour=Clr.error
@@ -961,7 +977,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @dota.command(description='Turn on/off spoiling stats for matches. ')
+    @dota.command(description='Turn on/off spoiling resulting stats for matches. ')
     @app_commands.describe(spoil='`Yes` to enable spoiling with stats, `No` for disable')
     async def spoil(
             self,
@@ -969,7 +985,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             spoil: bool
     ):
         """
-        Turn on/off spoiling stats for matches.
+        Turn on/off spoiling resulting stats for matches.
 
         It is "on" by default, so it can show items streamers finished with and KDA.
         """

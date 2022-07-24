@@ -1,9 +1,6 @@
 ### Current thoughts
 
-add str thing for active games
-permanent buffs look for aghs + blessing thing
-rewrite dota py into actual classes
-
+rewrite dota py into actual module(-s) i guess ?
 make variable for api connstatans and for cdn
 
 1. Rewrite all twitch stuff in a way we depend on twitch ids and not names,

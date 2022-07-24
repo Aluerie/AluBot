@@ -22,11 +22,11 @@ if TYPE_CHECKING:
     from discord import AppInfo, Interaction, Message, User
 
 test_list = [  # for yen bot
-    'dotafeed',
+    #'dotafeed',
     'help',
     'error',
-    #'expsys',
-    #'beta'
+    'expsys',
+    'beta'
 ]
 
 

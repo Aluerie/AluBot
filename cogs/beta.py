@@ -19,11 +19,12 @@ from utils import database as db
 
 if TYPE_CHECKING:
     from utils.context import Context
+    from utils.bot import AluBot
 
 
 class BetaTest(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
 
     @commands.hybrid_command()
     async def allu(self, ctx: Context):

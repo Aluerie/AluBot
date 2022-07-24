@@ -77,7 +77,7 @@ class EmoteSpam(commands.Cog):
     async def emote_spam(self):
         if randint(1, 100 + 1) < 2:
             while True:
-                guild_list = [i for i in self.bot.guilds if i.id != Sid.emote]
+                guild_list = self.bot.guilds
                 rand_guild = choice(guild_list)
                 rand_emoji = choice(rand_guild.emojis)
                 if rand_emoji.is_usable():

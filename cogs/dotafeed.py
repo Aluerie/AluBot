@@ -369,10 +369,14 @@ class DotaFeed(commands.Cog):
     @tasks.loop(seconds=59)
     async def dotafeed(self):
         with db.session_scope() as db_ses:
-            #await self.try_to_find_games(db_ses)
-            #for match in self.active_matches:
-            #    await self.send_the_embed(match, db_ses)
+            await self.try_to_find_games(db_ses)
+            for match in self.active_matches:
+                await self.send_the_embed(match, db_ses)
 
+    @dotafeed.after_loop
+    async def after(self):
+        log.info("dotafeed after loop wait")
+        with db.session_scope() as db_ses:
             await self.after_match_games(db_ses)
             for match in self.after_match:
                 await self.edit_the_embed(match, db_ses)

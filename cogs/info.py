@@ -146,7 +146,7 @@ class Info(commands.Cog, name='Info'):
             colour=Clr.prpl,
             description=f'Logged in as {self.bot.user}'
         )
-        for i in [Cid.spam_me, Cid.logs, Cid.bot_spam]:
+        for i in [Cid.spam_me, Cid.bot_spam]:
             await self.bot.get_channel(i).send(embed=em)
 
     @reload_info.before_loop

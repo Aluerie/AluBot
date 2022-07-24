@@ -874,7 +874,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
                             hero_list.add(hero_id)
                             success.append(hero_name)
                     elif mode == 'remov':
-                        if hero_id not in hero_id:
+                        if hero_id not in hero_list:
                             already.append(hero_name)
                         else:
                             hero_list.remove(hero_id)

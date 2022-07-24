@@ -91,6 +91,10 @@ class guildassignment(Base):
     dotafeed_hero_ids = Column(PickleType, default=[])
     dotafeed_stream_ids = Column(PickleType, default=[])
     dotafeed_spoils_on = Column(Boolean, default=True)
+    lolfeed_ch_id = Column(BigInteger, default=None)
+    lolfeed_champ_ids = Column(PickleType, default=[])
+    lolfeed_stream_ids = Column(PickleType, default=[])
+    lolfeed_spoils_on = Column(Boolean, default=True)
 
 
 class LeagueAccount(Base):

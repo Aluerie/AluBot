@@ -1,11 +1,12 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
 from os import getenv
 from pyot.conf.model import activate_model, ModelConf
 from pyot.conf.pipeline import activate_pipeline, PipelineConf
+from pyot.utils.functools import async_property
 
-from utils.checks import is_owner
+from utils.checks import is_owner, is_guild_owner
 
 
 @activate_model("lol")
@@ -43,13 +44,13 @@ from pyot.models import lol
 from pyot.utils.lol import champion, cdragon
 from pyot.core.exceptions import NotFound, ServerError
 
-from discord import Embed, app_commands
+from discord import Embed, app_commands, TextChannel
 from discord.ext import commands, tasks
 
 from utils import database as db
 from utils.var import *
 from utils.lol import get_role_mini_list, get_diff_list
-from utils.distools import send_traceback, inout_to_10
+from utils.distools import send_traceback, inout_to_10, send_pages_list
 from utils.format import display_relativehmstime
 from utils.imgtools import img_to_file, url_to_img
 from cogs.twitch import TwitchStream, get_db_online_streams
@@ -67,45 +68,96 @@ log.setLevel(logging.ERROR)
 if TYPE_CHECKING:
     from utils.context import Context
 
+region_to_platform_dict = {
+    'br': 'br1',
+    'eun': 'eun1',
+    'euw': 'euw1',
+    'jp': 'jp1',
+    'kr': 'kr',
+    'lan': 'la1',
+    'las': 'la2',
+    'na': 'na1',
+    'oc': 'oc1',
+    'ru': 'ru',
+    'tr': 'tr1'
+}
 
-async def iconurl_by_id(champid):
-    champ = await lol.champion.Champion(id=champid).get()
-    return cdragon.abs_url(champ.square_path)
-
-
-async def better_thumbnail(session, stream, champ_ids, champ_name):
-    img = await url_to_img(session, stream.preview_url)
-    width, height = img.size
-    rectangle = Image.new("RGB", (width, 100), '#9678b6')
-    ImageDraw.Draw(rectangle)
-    img.paste(rectangle)
-
-    champ_img_urls = [await iconurl_by_id(champ_id) for champ_id in champ_ids]
-    champ_imgs = await url_to_img(session, champ_img_urls)
-    for count, champ_img in enumerate(champ_imgs):
-        champ_img = champ_img.resize((62, 62))
-        extra_space = 0 if count < 5 else 20
-        img.paste(champ_img, (count * 62 + extra_space, 0))
-
-    font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
-    draw = ImageDraw.Draw(img)
-    text = f'{stream.display_name} - {champ_name}'
-    w2, h2 = draw.textsize(text, font=font)
-    draw.text(((width - w2) / 2, 65), text, font=font, align="center")
-    return img
+platform_to_region_dict = {
+    v: k
+    for k, v in region_to_platform_dict.items()
+}
 
 
-class LoLFeed(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.lolfeed.start()
+def region_to_platform(
+        region: str
+):
+    return region_to_platform_dict[region.lower()]
+
+
+def opgg_link(platform: str, accname: str):
+    region = region_to_platform_dict[platform]
+    return f'https://{region}.op.gg/summoner/{region}/{accname.replace(" ", "+")})'
+
+
+def ugg_link(platform: str, accname: str):
+    return f'/[Ugg](https://u.gg/lol/profile/{platform}/{accname.replace(" ", "+")})'
+
+
+class ActiveMatch:
+
+    def __init__(
+            self,
+            *,
+            match_id: int,
+            start_time: int,
+            stream: str,
+            twtv_id: int,
+            champ_id: int,
+            champ_ids: List[int]
+    ):
+        self.match_id = match_id,
+        self.start_time = start_time,
+        self.stream = stream,
+        self.twtv_id = twtv_id,
+        self.champ_id = champ_id,
+        self.champ_ids = champ_ids
+
+    @async_property
+    async def champ_name(self):
+        return await champion.key_by_id(self.champ_id)
+
+    @staticmethod
+    async def iconurl_by_id(champid):
+        champ = await lol.champion.Champion(id=champid).get()
+        return cdragon.abs_url(champ.square_path)
+
+    async def better_thumbnail(self, session, stream, champ_ids, champ_name):
+        img = await url_to_img(session, stream.preview_url)
+        width, height = img.size
+        rectangle = Image.new("RGB", (width, 100), '#9678b6')
+        ImageDraw.Draw(rectangle)
+        img.paste(rectangle)
+
+        champ_img_urls = [await self.iconurl_by_id(champ_id) for champ_id in champ_ids]
+        champ_imgs = await url_to_img(session, champ_img_urls)
+        for count, champ_img in enumerate(champ_imgs):
+            champ_img = champ_img.resize((62, 62))
+            extra_space = 0 if count < 5 else 20
+            img.paste(champ_img, (count * 62 + extra_space, 0))
+
+        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
+        draw = ImageDraw.Draw(img)
+        text = f'{stream.display_name} - {champ_name}'
+        w2, h2 = draw.textsize(text, font=font)
+        draw.text(((width - w2) / 2, 65), text, font=font, align="center")
+        return img
 
     async def send_the_embed(self, row, champ_ids, champ_name, long_ago, live_game_id):
         log.info("sending league embed")
         twitch = TwitchStream(row.name)
         opggregion = "".join(i for i in row.region if not i.isdigit())
         image_name = f'{twitch.display_name.replace("_", "")}-is-playing-{champ_name.replace(" ", "")}.png'
-        file = img_to_file(await better_thumbnail(self.bot.ses, twitch, champ_ids, champ_name), filename=image_name)
+        file = img_to_file(await self.better_thumbnail(self.bot.ses, twitch, champ_ids, champ_name), filename=image_name)
         champ = await lol.champion.Champion(key=champ_name).get()
 
         embed = Embed(
@@ -129,8 +181,24 @@ class LoLFeed(commands.Cog):
         for ch_id in [Cid.alubot, Cid.repost]:
             await self.bot.get_channel(ch_id).send(embed=embed, file=file)
 
+
+class LoLFeed(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.lolfeed.start()
+        self.active_matches = []
+
+    async def fill_active_matches(self, ses):
+        self.active_matches = []
+        fav_champ_ids = []
+        for row in ses.query(db.ga):
+            fav_champ_ids += row.lolfeed_champ_ids
+        fav_champ_ids = list(set(fav_champ_ids))
+
+
     @tasks.loop(seconds=59)
     async def lolfeed(self):
+        return
         log.info("league feed every 59 seconds")
         with db.session_scope() as ses:
             fav_ch_ids = ses.query(db.g).filter_by(id=Sid.alu).first().lol_fav_champs
@@ -141,6 +209,20 @@ class LoLFeed(commands.Cog):
                     # says 420 is 5v5 Ranked Solo games
                     if not hasattr(live_game, 'queue_id') or live_game.queue_id != 420:
                         continue
+
+                    our_player = next((x for x in live_game.participants if x.summoner_id == row.id), None)
+
+                    self.active_matches.append(
+                        ActiveMatch(
+                            match_id=live_game.id,
+                            start_time=round(live_game.start_time_millis / 1000),
+                            stream=row.name,
+                            twtv_id=row.twtv_id,
+                            champ_id=our_player.champion_id,
+                            champ_ids=[player.champion_id for player in live_game.participants]
+                        )
+                    )
+
                     # print(row.name, row.lastposted, live_game.id)
                     if row.lastposted != live_game.id:
                         our_player = [player for player in live_game.participants if player.summoner_id == row.id][0]
@@ -172,26 +254,6 @@ class LoLFeed(commands.Cog):
         embed.title = 'Error in leaguefeed'
         await send_traceback(error, self.bot, embed=embed)
         # self.lolfeed.restart()
-
-
-def region_to_platform(
-        region: str
-):
-    the_dict = {
-        'br': 'br1',
-        'eun': 'eun1',
-        'euw': 'euw1',
-        'jp': 'jp1',
-        'kr': 'kr',
-        'lan': 'la1',
-        'las': 'la2',
-        'na': 'na1',
-        'oc': 'oc1',
-        'ru': 'ru',
-        'tr': 'tr1'
-    }
-    return the_dict[region.lower()]
-
 
 class AddStreamFlags(commands.FlagConverter, case_insensitive=True):
     twitch: str
@@ -225,6 +287,120 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
+    @is_guild_owner()
+    @lol.group()
+    async def channel(self, ctx: Context):
+        """Group command about Dota 2, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    @is_guild_owner()
+    @channel.command(
+        name='set',
+        usage='[channel=curr]'
+    )
+    @app_commands.describe(channel='Choose channel for LoLFeed notifications')
+    async def channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
+        """
+        Set channel to be the LoLFeed notifications channel.
+        """
+        channel = channel or ctx.channel
+        if not channel.permissions_for(ctx.guild.me).send_messages:
+            em = Embed(
+                colour=Clr.error,
+                description='I do not have permissions to send messages in that channel :('
+            )
+            return await ctx.reply(embed=em) #todo: change this to raise BotMissingPerms
+
+        db.set_value(db.ga, ctx.guild.id, lolfeed_ch_id=channel.id)
+        em = Embed(
+            colour=Clr.prpl,
+            description=f'Channel {channel.mention} is set to be the LoLFeed channel for this server'
+        )
+        await ctx.reply(embed=em)
+
+    @is_guild_owner()
+    @channel.command(
+        name='disable',
+        description='Disable LoLFeed functionality.'
+    )
+    async def channel_disable(self, ctx: Context):
+        """
+        Stop getting LoLFeed notifications. \
+        Data about fav champs/streamers won't be affected.
+        """
+        ch_id = db.get_value(db.ga, ctx.guild.id, 'lolfeed_ch_id')
+        ch = self.bot.get_channel(ch_id)
+        if ch is None:
+            em = Embed(
+                colour=Clr.error,
+                description=f'LoLFeed channel is not set or already was reset'
+            )
+            return await ctx.reply(embed=em)
+        db.set_value(db.ga, ctx.guild.id, lolfeed_ch_id=None)
+        em = Embed(
+            colour=Clr.prpl,
+            description=f'Channel {ch.mention} is set to be the LoLFeed channel for this server.'
+        )
+        await ctx.reply(embed=em)
+
+    @is_guild_owner()
+    @lol.group(aliases=['db'])
+    async def database(self, ctx: Context):
+        """Group command about LoL, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    @is_guild_owner()
+    @database.command(name='list')
+    async def database_list(self, ctx: Context):
+        """
+        List of all streamers in database \
+        available for LoLFeed feature.
+        """
+        await ctx.defer()
+
+        ss_dict = dict()
+        for row in db.session.query(db.l):
+            key = f"● [**{row.name}**](https://www.twitch.tv/{row.name})"
+            if key not in ss_dict:
+                ss_dict[key] = []
+            ss_dict[key].append(
+                f"`{row.region}` - `{row.accname}`| "
+
+            )
+
+        ans_array = [f"{k}\n {chr(10).join(ss_dict[k])}" for k in ss_dict]
+        ans_array = sorted(list(set(ans_array)), key=str.casefold)
+
+        await send_pages_list(
+            ctx,
+            ans_array,
+            split_size=10,
+            colour=Clr.prpl,
+            title="List of LoL Streams in Database",
+            footer_text=f'With love, {ctx.guild.me.display_name}'
+        )
+
+    @is_guild_owner()
+    @channel.command(name='check')
+    async def channel_check(self, ctx: Context):
+        """
+        Check if a LoLFeed channel was set in this server.
+        """
+        ch_id = db.get_value(db.ga, ctx.guild.id, 'lolfeed_ch_id')
+        ch = self.bot.get_channel(ch_id)
+        if ch is None:
+            em = Embed(
+                colour=Clr.prpl,
+                description=f'LoLFeed channel is not currently set.'
+            )
+            return await ctx.reply(embed=em)
+        else:
+            em = Embed(
+                colour=Clr.prpl,
+                description=f'LoLFeed channel is currently set to {ch.mention}.'
+            )
+            return await ctx.reply(embed=em)
+
     @is_owner()
     @lol.group(aliasses=['champion'])
     async def champ(self, ctx: Context):
@@ -234,14 +410,14 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @is_owner()
     @champ.command()
     @app_commands.describe(champ_names='Champion name(-s)')
-    async def add(self, ctx, *, champ_names: str):
+    async def add(self, ctx: Context, *, champ_names: str):
         """
         Add champion(-s) into list of fav champs.
         """
-        hero_array = set(db.get_value(db.g, Sid.alu, 'lol_fav_champs'))
+        hero_array = set(db.get_value(db.ga, ctx.guild.id, 'lolfeed_champ_ids'))
         for champ_str in re.split('; |, |,', champ_names):
             hero_array.add(await champion.id_by_key(champ_str))
-        db.set_value(db.g, Sid.alu, lol_fav_champs=list(hero_array))
+        db.set_value(db.ga, ctx.guild.id, lolfeed_champ_ids=list(hero_array))
         await ctx.reply(Ems.PepoG)
 
     @is_owner()
@@ -251,10 +427,10 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         """
         Remove champion(-s) from fav champs list.
         """
-        hero_array = set(db.get_value(db.g, Sid.alu, 'lol_fav_champs'))
+        hero_array = set(db.get_value(db.ga, ctx.guild.id, 'lolfeed_champ_ids'))
         for champ_str in re.split('; |, |,', champ_names):
             hero_array.remove(await champion.id_by_key(champ_str))
-        db.set_value(db.g, Sid.alu, lol_fav_champs=list(hero_array))
+        db.set_value(db.ga, ctx.guild.id, lolfeed_champ_ids=list(hero_array))
         await ctx.reply(Ems.PepoG)
 
     @is_owner()
@@ -263,7 +439,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         """
         Show current list of favourite champions.
         """
-        champ_array = db.get_value(db.g, Sid.alu, 'lol_fav_champs')
+        champ_array = db.get_value(db.ga, ctx.guild.id, 'lolfeed_champ_ids')
         answer = [f'`{await champion.key_by_id(c_id)} - {c_id}`' for c_id in champ_array]
         answer.sort()
         em = Embed(

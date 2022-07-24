@@ -3,6 +3,9 @@
 rewrite dota py into actual module(-s) i guess ?
 make variable for api connstatans and for cdn
 drop last posted column
+clear up previous guild assignements thing
+remove stream name thing probably 
+change colour to rspb evreywhere in league
 
 1. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
 2. make muted by who into logs

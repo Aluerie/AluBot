@@ -133,7 +133,7 @@ class MatchToEdit:
         self.kda = f'{data["kills"]}/{data["deaths"]}/{data["assists"]}'
         self.aghs_blessing = 'https://www.opendota.com/assets/images/dota2/scepter_0.png'
         self.aghs_shard = 'https://www.opendota.com/assets/images/dota2/shard_0.png'
-        permanent_buffs = data['permanent_buffs']
+        permanent_buffs = data['permanent_buffs'] or []  # [] if it is None
         for pb in permanent_buffs:
             if pb['permanent_buff'] == 12:
                 self.aghs_shard = 'https://www.opendota.com/assets/images/dota2/shard_1.png'
@@ -461,7 +461,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         db.set_value(db.ga, ctx.guild.id, dotafeed_ch_id=channel.id)
         em = Embed(
             colour=Clr.prpl,
-            description=f'Channel {channel.mention} is set to be the DotaFeed channel for this server'
+            description=f'Channel {channel.mention} is set to be the Dota2Feed channel for this server'
         )
         await ctx.reply(embed=em)
 
@@ -480,7 +480,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         if ch is None:
             em = Embed(
                 colour=Clr.error,
-                description=f'DotaFeed channel is not set or already was reset'
+                description=f'Dota2Feed channel is not set or already was reset'
             )
             return await ctx.reply(embed=em)
         db.set_value(db.ga, ctx.guild.id, dotafeed_ch_id=None)
@@ -501,7 +501,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         if ch is None:
             em = Embed(
                 colour=Clr.prpl,
-                description=f'DotaFeed channel is not currently set.'
+                description=f'Dota2Feed channel is not currently set.'
             )
             return await ctx.reply(embed=em)
         else:

@@ -21,6 +21,15 @@ twitch = Twitch(client_id, client_secret)
 twitch.authenticate_app([])
 
 
+def get_lol_streams(session=db.session):
+    fav_stream_ids = []
+    for row in session.query(db.ga):
+        fav_stream_ids += row.lolfeed_stream_ids
+    fav_stream_ids = [str(x) for x in list(set(fav_stream_ids))]
+    data = twitch.get_streams(user_id=fav_stream_ids, first=100)['data']
+    return [item['user_id'] for item in data]
+
+
 def get_dota_streams(session=db.session):
     fav_stream_ids = []
     for row in session.query(db.ga):

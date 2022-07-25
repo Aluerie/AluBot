@@ -341,8 +341,6 @@ class DotaFeed(commands.Cog):
     ):
         log.info("sending dota 2 embed")
 
-        em, img_file = await active_match.notif_embed(self.bot.ses)
-
         for row in db_ses.query(db.ga):
             if active_match.hero_id in row.dotafeed_hero_ids and active_match.twtv_id in row.dotafeed_stream_ids:
                 ch: TextChannel = self.bot.get_channel(row.dotafeed_ch_id)
@@ -354,8 +352,8 @@ class DotaFeed(commands.Cog):
                     hero_id=active_match.hero_id
                 ).first():
                     continue  # the message was already sent
-
-                em.title = f"{ch.guild.owner.name}'s fav hero + fav stream spotted !"
+                em, img_file = await active_match.notif_embed(self.bot.ses)
+                em.title = f"{ch.guild.owner.name}'s fav hero + fav stream spotted"
                 msg = await ch.send(embed=em, file=img_file)
                 db.add_row(
                     db.em,
@@ -507,7 +505,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         else:
             em = Embed(
                 colour=Clr.prpl,
-                description=f'DotaFeed channel is currently set to {ch.mention}.'
+                description=f'Dota2Feed channel is currently set to {ch.mention}.'
             )
             return await ctx.reply(embed=em)
 
@@ -532,8 +530,8 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             if key not in ss_dict:
                 ss_dict[key] = []
             ss_dict[key].append(
-                f"`{row.id}` - `{row.friendid}`| "
-                f"[Steam](https://steamcommunity.com/profiles/{row.id})"
+                f"`{row.id}` - `{row.friendid}` "
+                f"/[Steam](https://steamcommunity.com/profiles/{row.id})"
                 f"/[Dotabuff](https://www.dotabuff.com/players/{row.friendid})"
             )
 
@@ -582,7 +580,9 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         if twtv_id is None:
             em = Embed(
                 colour=Clr.error,
-                description=f'Error checking stream {twitch}.\n User either does not exist or is banned.'
+                description=
+                f'Error checking stream {twitch}.\n '
+                f'User either does not exist or is banned.'
             )
             await ctx.reply(embed=em, ephemeral=True)
             return None
@@ -641,7 +641,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @is_trustee()
     @database.command(
         name='remove',
-        usage='twitch: <twitch_name> steam: <steamid>'
+        usage='twitch: <twitch_name> steam: [steamid]'
     )
     @app_commands.describe(
         twitch='twitch.tv stream name',
@@ -649,7 +649,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     )
     async def database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
         """
-        Remove stream from database.
+        Remove stream from the database.
         """
         await ctx.defer()
 
@@ -698,7 +698,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @database.command(
         name='request',
         usage='twitch: <twitch_name> steam: <steamid>',
-        description='Request streamer to be added into a database.'
+        description='Request steam account to be added into the database.'
     )
     @app_commands.describe(
         twitch='twitch.tv stream name',
@@ -706,7 +706,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     )
     async def database_request(self, ctx: Context, *, flags: AddStreamFlags):
         """
-        Request streamer to be added into a database. \
+        Request steam account to be added into the database. \
         This will send a request message into Aluerie's personal logs channel.
         """
         await ctx.defer()
@@ -953,7 +953,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
             await ctx.send(embed=em)
 
     @hero_add.error
-    async def hero_remove_error(self, ctx: Context, error):
+    async def hero_add_error(self, ctx: Context, error):
         await self.hero_add_remove_error(ctx, error)
 
     @hero_remove.error

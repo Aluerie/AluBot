@@ -102,10 +102,9 @@ class LeagueAccount(Base):
     __table_args__ = {'extend_existing': True}
     id = Column(String, primary_key=True, default=1234)
     name = Column(String, default='')
-    region = Column(String, default='')
+    platform = Column(String, default='')
     accname = Column(String, default='')
-    optin = Column(Integer, default=1)
-    lastposted = Column(BigInteger, default=1234)
+    twtv_id = Column(BigInteger, default=None)
 
 
 class DotaAccount(Base):
@@ -115,7 +114,6 @@ class DotaAccount(Base):
     name = Column(String, default='')
     friendid = Column(BigInteger, default=1234)
     optin = Column(Integer, default=1)
-    lastposted = Column(BigInteger, default=1234)
     twtv_id = Column(BigInteger, default=None)
 
 
@@ -212,9 +210,10 @@ class lfmessage(Base):
     __tablename__ = 'lfmessage'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True)  # message id
-    match_id = Column(BigInteger)
-    channel_id = Column(BigInteger)
+    match_id = Column(String)
+    ch_id = Column(BigInteger)
     champ_id = Column(Integer)
+    routing_region = Column(String)
 
 
 Base.metadata.create_all(engine)

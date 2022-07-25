@@ -2,11 +2,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List
 
 from os import getenv
+
 from pyot.conf.model import activate_model, ModelConf
 from pyot.conf.pipeline import activate_pipeline, PipelineConf
 from pyot.utils.functools import async_property
-
-from utils.checks import is_owner, is_guild_owner
 
 
 @activate_model("lol")
@@ -42,24 +41,25 @@ class LolPipeline(PipelineConf):
 
 from pyot.models import lol
 from pyot.utils.lol import champion, cdragon
+from pyot.models.lol import Spell, Rune, Match
 from pyot.core.exceptions import NotFound, ServerError
 
 from discord import Embed, app_commands, TextChannel
 from discord.ext import commands, tasks
 
 from utils import database as db
+from utils.checks import is_owner, is_guild_owner, is_trustee
 from utils.var import *
 from utils.lol import get_role_mini_list, get_diff_list
-from utils.distools import send_traceback, inout_to_10, send_pages_list
+from utils.distools import send_traceback, send_pages_list
 from utils.format import display_relativehmstime
 from utils.imgtools import img_to_file, url_to_img
-from cogs.twitch import TwitchStream, get_db_online_streams
+from cogs.twitch import TwitchStream, get_twtv_id, get_lol_streams
 
 from roleidentification import pull_data
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, time
 import re
-import collections
 
 import logging
 log = logging.getLogger("pyot")
@@ -67,6 +67,22 @@ log.setLevel(logging.ERROR)
 
 if TYPE_CHECKING:
     from utils.context import Context
+    from aiohttp import ClientSession
+    from pyot.models.lol.match import MatchParticipantData
+
+platform_to_routing_dict = {
+    'br1': 'americas',
+    'eun1': 'europe',
+    'euw1': 'europe',
+    'jp1': 'asia',
+    'kr': 'asia',
+    'la1': 'americas',
+    'la2': 'americas',
+    'na1': 'americas',
+    'oc1': 'asia',
+    'ru': 'europe',
+    'tr1': 'europe'
+}
 
 region_to_platform_dict = {
     'br': 'br1',
@@ -82,25 +98,31 @@ region_to_platform_dict = {
     'tr': 'tr1'
 }
 
+
+def region_to_platform(region: str):
+    """
+    Converter for the flag
+    """
+    return region_to_platform_dict[region.lower()]
+
+
 platform_to_region_dict = {
     v: k
     for k, v in region_to_platform_dict.items()
 }
 
 
-def region_to_platform(
-        region: str
-):
-    return region_to_platform_dict[region.lower()]
+def platform_to_region(platform: str):
+    return platform_to_region_dict[platform.lower()]
 
 
-def opgg_link(platform: str, accname: str):
-    region = region_to_platform_dict[platform]
-    return f'https://{region}.op.gg/summoner/{region}/{accname.replace(" ", "+")})'
+def opgg_link(platform: str, acc_name: str):
+    region = platform_to_region(platform)
+    return f'https://{region}.op.gg/summoners/{region}/{acc_name.replace(" ", "")}'
 
 
-def ugg_link(platform: str, accname: str):
-    return f'/[Ugg](https://u.gg/lol/profile/{platform}/{accname.replace(" ", "+")})'
+def ugg_link(platform: str, acc_name: str):
+    return f'https://u.gg/lol/profile/{platform}/{acc_name.replace(" ", "")}'
 
 
 class ActiveMatch:
@@ -113,14 +135,33 @@ class ActiveMatch:
             stream: str,
             twtv_id: int,
             champ_id: int,
-            champ_ids: List[int]
+            champ_ids: List[int],
+            platform: str,
+            accname: str,
+            spells: List[Spell],
+            runes: List[Rune]
     ):
-        self.match_id = match_id,
-        self.start_time = start_time,
-        self.stream = stream,
-        self.twtv_id = twtv_id,
-        self.champ_id = champ_id,
+        self.match_id = match_id
+        self.start_time = start_time
+        self.stream = stream
+        self.twtv_id = twtv_id
+        self.champ_id = champ_id
         self.champ_ids = champ_ids
+        self.platform = platform
+        self.accname = accname
+        self.spells = spells
+        self.runes = runes
+
+    @property
+    def long_ago(self):
+        if self.start_time:
+            return int(datetime.now(timezone.utc).timestamp() - self.start_time)
+        else:
+            return self.start_time
+
+    @async_property
+    async def roles_arr(self):
+        return await get_role_mini_list(self.champ_ids)
 
     @async_property
     async def champ_name(self):
@@ -131,14 +172,23 @@ class ActiveMatch:
         champ = await lol.champion.Champion(id=champid).get()
         return cdragon.abs_url(champ.square_path)
 
-    async def better_thumbnail(self, session, stream, champ_ids, champ_name):
+    @async_property
+    async def champ_icon(self):
+        return await self.iconurl_by_id(self.champ_id)
+
+    async def better_thumbnail(
+            self,
+            stream: TwitchStream,
+            session: ClientSession,
+    ):
         img = await url_to_img(session, stream.preview_url)
         width, height = img.size
-        rectangle = Image.new("RGB", (width, 100), '#9678b6')
+        rectangle = Image.new("RGB", (width, 100), "#C42C48")
         ImageDraw.Draw(rectangle)
         img.paste(rectangle)
+        img.paste(rectangle, (0, height - 64))
 
-        champ_img_urls = [await self.iconurl_by_id(champ_id) for champ_id in champ_ids]
+        champ_img_urls = [await self.iconurl_by_id(champ_id) for champ_id in await self.roles_arr]
         champ_imgs = await url_to_img(session, champ_img_urls)
         for count, champ_img in enumerate(champ_imgs):
             champ_img = champ_img.resize((62, 62))
@@ -147,39 +197,105 @@ class ActiveMatch:
 
         font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
         draw = ImageDraw.Draw(img)
-        text = f'{stream.display_name} - {champ_name}'
+        text = f'{stream.display_name} - {await self.champ_name}'
         w2, h2 = draw.textsize(text, font=font)
         draw.text(((width - w2) / 2, 65), text, font=font, align="center")
+
+        rune_img_urls = [(await r.get()).icon_abspath for r in self.runes]
+        rune_imgs = await url_to_img(session, rune_img_urls)
+        left = 0
+        for count, rune_img in enumerate(rune_imgs):
+            if count == 0:
+                rune_img = rune_img.resize((64, 64))
+            img.paste(rune_img, (left, height - rune_img.height), rune_img)
+            left += rune_img.height
+
+        spell_img_urls = [(await s.get()).icon_abspath for s in self.spells]
+        spell_imgs = await url_to_img(session, spell_img_urls)
+        left = width - 2 * spell_imgs[0].width
+        for count, spell_img in enumerate(spell_imgs):
+            img.paste(spell_img, (left + count * spell_img.width, height - spell_img.height))
+
         return img
 
-    async def send_the_embed(self, row, champ_ids, champ_name, long_ago, live_game_id):
+    async def notif_embed(self, session: ClientSession):
         log.info("sending league embed")
-        twitch = TwitchStream(row.name)
-        opggregion = "".join(i for i in row.region if not i.isdigit())
-        image_name = f'{twitch.display_name.replace("_", "")}-is-playing-{champ_name.replace(" ", "")}.png'
-        file = img_to_file(await self.better_thumbnail(self.bot.ses, twitch, champ_ids, champ_name), filename=image_name)
-        champ = await lol.champion.Champion(key=champ_name).get()
+        twitch = TwitchStream(self.stream)
+        image_name = \
+            f'{twitch.display_name.replace("_", "")}-is-playing-' \
+            f'{(await self.champ_name).replace(" ", "")}.png'
+        img_file = img_to_file(
+            await self.better_thumbnail(twitch, session),
+            filename=image_name
+        )
 
-        embed = Embed(
+        em = Embed(
             color=Clr.rspbrry,
-            title="Aluerie's fav streamer picked her fav champ!",
             url=twitch.url,
             description=
-            f'Match `{live_game_id}` started {display_relativehmstime(long_ago)}\n'
-            f'{f"[TwtvVOD]({link})" if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ""}'
-            f'/[Opgg](https://{opggregion}.op.gg/summoner/userName={row.accname.replace(" ", "+")})'       
-            f'/[Ugg](https://u.gg/lol/profile/{row.region}/{row.accname.replace(" ", "+")})'
+            f'Match `{self.match_id}` started {display_relativehmstime(self.long_ago)}\n'
+            f'{f"[TwtvVOD]({link})" if (link := twitch.last_vod_link(time_ago=self.long_ago)) is not None else ""}'
+            f'/[Opgg]({opgg_link(self.platform, self.accname)})'       
+            f'/[Ugg]({ugg_link(self.platform, self.accname)})'
         ).set_image(
             url=f'attachment://{image_name}'
         ).set_thumbnail(
-            url=cdragon.abs_url(champ.square_path)
+            url=await self.champ_icon
         ).set_author(
-            name=f'{twitch.display_name} - {champ_name}',
+            name=f'{twitch.display_name} - {await self.champ_name}',
             url=twitch.url,
             icon_url=twitch.logo_url
         )
-        for ch_id in [Cid.alubot, Cid.repost]:
-            await self.bot.get_channel(ch_id).send(embed=embed, file=file)
+        return em, img_file
+
+
+class MatchToEdit:
+
+    def __init__(
+            self,
+            match_id: str,
+            participant: MatchParticipantData
+    ):
+        self.match_id = match_id
+        self.kda = f'{participant.kills}/{participant.deaths}/{participant.assists}'
+        self.outcome = "Win" if participant.win else "Loss"
+        self.items = participant.items
+
+    async def edit_the_image(self, img_url, session):
+
+        img = await url_to_img(session, img_url)
+        width, height = img.size
+        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
+
+        draw = ImageDraw.Draw(img)
+        w3, h3 = draw.textsize(self.kda, font=font)
+        draw.text(
+            (0, height - 64 - h3),
+            self.kda,
+            font=font,
+            align="right"
+        )
+        draw = ImageDraw.Draw(img)
+        w2, h2 = draw.textsize(self.outcome, font=font)
+        colour_dict = {
+            'Win': f'#{MP.green(shade=800):x}',
+            'Loss': f'#{MP.red(shade=900):x}',
+            'No Scored': (255, 255, 255)
+        }
+        draw.text(
+            (0, height - 64 - h3 - h2 - 5),
+            self.outcome,
+            font=font,
+            align="center",
+            fill=colour_dict[self.outcome]
+        )
+
+        item_img_urls = [(await i.get()).icon_abspath for i in self.items]
+        item_imgs = await url_to_img(session, item_img_urls)
+        left = width - 6 * item_imgs[0].width
+        for count, item_img in enumerate(item_imgs):
+            img.paste(item_img, (left + count * item_img.width, height - 64 - item_img.height))
+        return img
 
 
 class LoLFeed(commands.Cog):
@@ -187,31 +303,74 @@ class LoLFeed(commands.Cog):
         self.bot = bot
         self.lolfeed.start()
         self.active_matches = []
+        self.after_match = []
 
-    async def fill_active_matches(self, ses):
+    async def after_match_games(self, db_ses):
+        self.after_match = []
+        row_dict = {}
+        for row in db_ses.query(db.lf):
+            if row.match_id in row_dict:
+                row_dict[row.match_id]['champ_ids'].append(row.champ_id)
+            else:
+                row_dict[row.match_id] = {
+                    'champ_ids': [row.champ_id],
+                    'routing_region': row.routing_region
+                }
+
+        for m_id in row_dict:
+            try:
+                match = await lol.Match(id=m_id, region=row_dict[m_id]['routing_region']).get()
+            except NotFound:
+                continue
+            for participant in match.info.participants:
+                if participant.champion_id in row_dict[m_id]['champ_ids']:
+                    self.after_match.append(
+                        MatchToEdit(
+                            participant=participant,
+                            match_id=match.id
+                        )
+                    )
+
+    async def edit_the_embed(self, match: MatchToEdit, ses):
+        query = ses.query(db.lf).filter_by(match_id=match.match_id)
+        for row in query:
+
+            ch = self.bot.get_channel(row.ch_id)
+            if ch is None:
+                continue  # wrong bot, I guess
+
+            msg = await ch.fetch_message(row.id)
+
+            em = msg.embeds[0]
+            image_name = 'edited.png'
+            img_file = img_to_file(
+                await match.edit_the_image(
+                    em.image.url,
+                    self.bot.ses
+                ),
+                filename=image_name
+            )
+            em.set_image(url=f'attachment://{image_name}')
+            await msg.edit(embed=em, attachments=[img_file])
+        query.delete()
+
+    async def fill_active_matches(self, db_ses):
         self.active_matches = []
         fav_champ_ids = []
-        for row in ses.query(db.ga):
+        for row in db_ses.query(db.ga):
             fav_champ_ids += row.lolfeed_champ_ids
         fav_champ_ids = list(set(fav_champ_ids))
 
+        for row in db_ses.query(db.l).filter(db.l.twtv_id.in_(get_lol_streams())):
+            try:
+                live_game = await lol.spectator.CurrentGame(summoner_id=row.id, platform=row.platform).get()
+                # https://static.developer.riotgames.com/docs/lol/queues.json
+                # says 420 is 5v5 Ranked Solo games
+                if not hasattr(live_game, 'queue_id') or live_game.queue_id != 420:
+                    continue
 
-    @tasks.loop(seconds=59)
-    async def lolfeed(self):
-        return
-        log.info("league feed every 59 seconds")
-        with db.session_scope() as ses:
-            fav_ch_ids = ses.query(db.g).filter_by(id=Sid.alu).first().lol_fav_champs
-            for row in ses.query(db.l).filter(db.l.name.in_(get_db_online_streams(db.l, session=ses))).all():
-                try:
-                    live_game = await lol.spectator.CurrentGame(summoner_id=row.id, platform=row.region).get()
-                    # https://static.developer.riotgames.com/docs/lol/queues.json
-                    # says 420 is 5v5 Ranked Solo games
-                    if not hasattr(live_game, 'queue_id') or live_game.queue_id != 420:
-                        continue
-
-                    our_player = next((x for x in live_game.participants if x.summoner_id == row.id), None)
-
+                our_player = next((x for x in live_game.participants if x.summoner_id == row.id), None)
+                if our_player.champion_id in fav_champ_ids:
                     self.active_matches.append(
                         ActiveMatch(
                             match_id=live_game.id,
@@ -219,29 +378,60 @@ class LoLFeed(commands.Cog):
                             stream=row.name,
                             twtv_id=row.twtv_id,
                             champ_id=our_player.champion_id,
-                            champ_ids=[player.champion_id for player in live_game.participants]
+                            champ_ids=[player.champion_id for player in live_game.participants],
+                            platform=our_player.platform,
+                            accname=our_player.summoner_name,
+                            spells=our_player.spells,
+                            runes=our_player.runes
                         )
                     )
+            except NotFound:
+                continue
+            except ServerError:
+                continue
+                # embed = Embed(colour=Clr.error)
+                # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.region} {row.accname}'
+                # await self.bot.get_channel(Cid.spam_me).send(embed=embed)  # content=umntn(Uid.alu)
 
-                    # print(row.name, row.lastposted, live_game.id)
-                    if row.lastposted != live_game.id:
-                        our_player = [player for player in live_game.participants if player.summoner_id == row.id][0]
-                        if our_player.champion_id in fav_ch_ids:
-                            role_mini_list = await get_role_mini_list(
-                                [player.champion_id for player in live_game.participants]
-                            )
-                            if long_ago := round(live_game.start_time_millis / 1000):
-                                long_ago = int(datetime.now(timezone.utc).timestamp() - long_ago)
-                            champ_name = await champion.key_by_id(our_player.champion_id)
-                            await self.send_the_embed(row, role_mini_list, champ_name, long_ago, live_game.id)
-                            row.lastposted = live_game.id
-                except NotFound:
-                    continue
-                except ServerError:
-                    continue
-                    # embed = Embed(colour=Clr.error)
-                    # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.region} {row.accname}'
-                    # await self.bot.get_channel(Cid.spam_me).send(embed=embed)  # content=umntn(Uid.alu)
+    async def send_the_embed(
+            self,
+            active_match: ActiveMatch,
+            db_ses
+    ):
+        for row in db_ses.query(db.ga):
+            if active_match.champ_id in row.lolfeed_champ_ids and active_match.twtv_id in row.lolfeed_stream_ids:
+                ch: TextChannel = self.bot.get_channel(row.lolfeed_ch_id)
+                if ch is None:
+                    continue  # the bot does not have access to the said channel
+                elif db_ses.query(db.lf).filter_by(
+                    ch_id=ch.id,
+                    match_id=f'{active_match.platform.upper()}_{active_match.match_id}',
+                    champ_id=active_match.champ_id
+                ).first():
+                    continue  # the message was already sent
+                em, img_file = await active_match.notif_embed(self.bot.ses)
+                em.title = f"{ch.guild.owner.name}'s fav champ + fav stream spotted"
+                msg = await ch.send(embed=em, file=img_file)
+                db.add_row(
+                    db.lf,
+                    msg.id,
+                    match_id=f'{active_match.platform.upper()}_{active_match.match_id}',
+                    ch_id=ch.id,
+                    champ_id=active_match.champ_id,
+                    routing_region=platform_to_routing_dict[active_match.platform]
+                )
+
+    @tasks.loop(seconds=59)
+    async def lolfeed(self):
+        log.info("league feed every 59 seconds")
+        with db.session_scope() as db_ses:
+            await self.fill_active_matches(db_ses)
+            for match in self.active_matches:
+                await self.send_the_embed(match, db_ses)
+
+            await self.after_match_games(db_ses)
+            for match in self.after_match:
+               await self.edit_the_embed(match, db_ses)
 
     @lolfeed.before_loop
     async def before(self):
@@ -254,6 +444,7 @@ class LoLFeed(commands.Cog):
         embed.title = 'Error in leaguefeed'
         await send_traceback(error, self.bot, embed=embed)
         # self.lolfeed.restart()
+
 
 class AddStreamFlags(commands.FlagConverter, case_insensitive=True):
     twitch: str
@@ -313,7 +504,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
 
         db.set_value(db.ga, ctx.guild.id, lolfeed_ch_id=channel.id)
         em = Embed(
-            colour=Clr.prpl,
+            colour=Clr.rspbrry,
             description=f'Channel {channel.mention} is set to be the LoLFeed channel for this server'
         )
         await ctx.reply(embed=em)
@@ -338,16 +529,54 @@ class LoLFeedTools(commands.Cog, name='LoL'):
             return await ctx.reply(embed=em)
         db.set_value(db.ga, ctx.guild.id, lolfeed_ch_id=None)
         em = Embed(
-            colour=Clr.prpl,
+            colour=Clr.rspbrry,
             description=f'Channel {ch.mention} is set to be the LoLFeed channel for this server.'
         )
         await ctx.reply(embed=em)
+
+    @is_guild_owner()
+    @channel.command(name='check')
+    async def channel_check(self, ctx: Context):
+        """
+        Check if a LoLFeed channel was set in this server.
+        """
+        ch_id = db.get_value(db.ga, ctx.guild.id, 'lolfeed_ch_id')
+        ch = self.bot.get_channel(ch_id)
+        if ch is None:
+            em = Embed(
+                colour=Clr.rspbrry,
+                description=f'LoLFeed channel is not currently set.'
+            )
+            return await ctx.reply(embed=em)
+        else:
+            em = Embed(
+                colour=Clr.rspbrry,
+                description=f'LoLFeed channel is currently set to {ch.mention}.'
+            )
+            return await ctx.reply(embed=em)
 
     @is_guild_owner()
     @lol.group(aliases=['db'])
     async def database(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
+
+    @staticmethod
+    def field_twitch_string(twitch: str):
+        return \
+            f"● [**{twitch}**](https://www.twitch.tv/{twitch})"
+
+    @staticmethod
+    def field_account_string(platform: str, accname: str):
+        return \
+            f"`{platform_to_region(platform)}`: `{accname}` " \
+            f"/[Opgg]({opgg_link(platform, accname)})" \
+            f"/[Ugg]({ugg_link(platform, accname)})"
+
+    def field_both(self, twitch, platform, accname):
+        return \
+            f"{self.field_twitch_string(twitch)}\n" \
+            f"{self.field_account_string(platform, accname)}"
 
     @is_guild_owner()
     @database.command(name='list')
@@ -360,12 +589,11 @@ class LoLFeedTools(commands.Cog, name='LoL'):
 
         ss_dict = dict()
         for row in db.session.query(db.l):
-            key = f"● [**{row.name}**](https://www.twitch.tv/{row.name})"
+            key = self.field_twitch_string(row.name)
             if key not in ss_dict:
                 ss_dict[key] = []
             ss_dict[key].append(
-                f"`{row.region}` - `{row.accname}`| "
-
+                self.field_account_string(row.platform, row.accname)
             )
 
         ans_array = [f"{k}\n {chr(10).join(ss_dict[k])}" for k in ss_dict]
@@ -375,77 +603,447 @@ class LoLFeedTools(commands.Cog, name='LoL'):
             ctx,
             ans_array,
             split_size=10,
-            colour=Clr.prpl,
+            colour=Clr.rspbrry,
             title="List of LoL Streams in Database",
             footer_text=f'With love, {ctx.guild.me.display_name}'
         )
 
-    @is_guild_owner()
-    @channel.command(name='check')
-    async def channel_check(self, ctx: Context):
-        """
-        Check if a LoLFeed channel was set in this server.
-        """
-        ch_id = db.get_value(db.ga, ctx.guild.id, 'lolfeed_ch_id')
-        ch = self.bot.get_channel(ch_id)
-        if ch is None:
+    @staticmethod
+    async def get_lol_id(ctx: Context, region: str, accname: str):
+        platform = region_to_platform(region)
+        try:
+            summoner = await lol.summoner.Summoner(name=accname, platform=platform).get()
+            return summoner.id, summoner.platform, summoner.name
+        except NotFound:
             em = Embed(
-                colour=Clr.prpl,
-                description=f'LoLFeed channel is not currently set.'
+                colour=Clr.error,
+                description=
+                f"Error checking account for \n"
+                f"`{region}` {accname}\n"
+                f"This account does not exist."
             )
-            return await ctx.reply(embed=em)
+            await ctx.reply(embed=em)
+            return None, None, None
+
+    @staticmethod  # todo: remove this
+    async def get_check_twitch_id(ctx: Context, twitch: str):
+        twtv_id = get_twtv_id(twitch.lower())
+        if twtv_id is None:
+            em = Embed(
+                colour=Clr.error,
+                description=
+                f'Error checking stream {twitch}.\n '
+                f'User either does not exist or is banned.'
+            )
+            await ctx.reply(embed=em, ephemeral=True)
+            return None
+
+        return twtv_id
+
+    @is_trustee()
+    @database.command(
+        name='add',
+        usage='twitch: <twitch_name> region: <region> accname: <accname>',
+        description='Add stream to the database.'
+    )
+    @app_commands.describe(
+        twitch='twitch.tv stream name',
+        region='Region of the account',
+        accname='Summoner name of the account'
+    )
+    async def database_add(self, ctx: Context, *, flags: AddStreamFlags):
+        """
+        Add stream to the database.
+        • `<twitch_name>` is twitch.tv stream name
+        • `<region>` is LoL region of the account
+        • `<accname>` is Summoner name of the account
+        """
+        await ctx.defer()
+        twitch = flags.twitch.lower()
+        twtv_id = await self.get_check_twitch_id(ctx, twitch)
+        if twtv_id is None:
+            return
+
+        lolid, platform, accname = await self.get_lol_id(ctx, flags.region, flags.accname)
+        if lolid is None:
+            return
+        if (user := db.session.query(db.l).filter_by(id=lolid).first()) is not None:
+            em = Embed(
+                colour=Clr.error
+            ).add_field(
+                name=f'This lol account is already in the database',
+                value=
+                f'It is marked as [{user.name}](https://www.twitch.tv/{user.name})\'s account.\n\n'
+                f'Did you mean to use `$lol stream add {user.name}` to add the stream into your fav list?'
+            )
+            return await ctx.reply(embed=em, ephemeral=True)
+
+        db.add_row(db.l, lolid, name=twitch, platform=platform, accname=accname, twtv_id=twtv_id)
+        em = Embed(
+            colour=Clr.rspbrry
+        ).add_field(
+            name=f'Successfully added the account to the database',
+            value=self.field_both(twitch, platform, accname)
+        )
+        await ctx.reply(embed=em)
+        em.colour = MP.green(shade=200)
+        em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        await self.bot.get_channel(Cid.global_logs).send(embed=em)
+
+    @is_trustee()
+    @database.command(
+        name='remove',
+        usage='twitch: <twitch_name> region: [region] accname: [accname]',
+    )
+    @app_commands.describe(
+        twitch='twitch.tv stream name',
+        region='Region of the account',
+        accname='Summoner name of the account'
+    )
+    async def database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
+        """
+        Remove stream from the database.
+        """
+        await ctx.defer()
+
+        map_dict = {
+            'name': flags.twitch.lower(),
+        }
+        if flags.region:
+            map_dict['platform'] = region_to_platform(flags.region)
+        if flags.accname:
+            map_dict['accname'] = flags.accname
+
+        success = []
+        with db.session_scope() as ses:
+            query = ses.query(db.l).filter_by(**map_dict)
+            for row in query:
+                success.append(
+                    {
+                        'name': row.name,
+                        'platform': row.platform,
+                        'accname': row.accname
+                    }
+                )
+            query.delete()
+        if success:
+            em = Embed(
+                colour=Clr.rspbrry,
+            ).add_field(
+                name='Successfully removed account(-s) from the database',
+                value=
+                '\n'.join(self.field_both(x['name'], x['platform'], x['accname']) for x in success)
+            )
+            await ctx.reply(embed=em)
+
+            em.colour = MP.red(shade=200)
+            em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+            await self.bot.get_channel(Cid.global_logs).send(embed=em)
         else:
             em = Embed(
-                colour=Clr.prpl,
-                description=f'LoLFeed channel is currently set to {ch.mention}.'
+                colour=Clr.error
+            ).add_field(
+                name='There is no account in the database like that',
+                value=', '.join([f'{k}: {v}' for k, v in flags.__dict__.items()])
             )
-            return await ctx.reply(embed=em)
+            await ctx.reply(embed=em)
 
-    @is_owner()
-    @lol.group(aliasses=['champion'])
+    @is_guild_owner()
+    @database.command(
+        name='request',
+        usage='twitch: <twitch_name> region: <region> accname: <accname>',
+        description='Request lol account to be added into the database.'
+    )
+    @app_commands.describe(
+        twitch='twitch.tv stream name',
+        region='Region of the account',
+        accname='Summoner name of the account'
+    )
+    async def database_request(self, ctx: Context, *, flags: AddStreamFlags):
+        """
+        Request lol account to be added into the database. \
+        This will send a request message into Aluerie's personal logs channel.
+        """
+        await ctx.defer()
+
+        twitch = flags.twitch.lower()
+        twtv_id = await self.get_check_twitch_id(ctx, twitch)
+        if twtv_id is None:
+            return
+
+        lolid, platform, accname = await self.get_lol_id(ctx, flags.region, flags.accname)
+        if lolid is None:
+            return
+
+        warn_em = Embed(
+            colour=Clr.prpl,
+            title='Confirmation Prompt',
+            description=
+            f'Are you sure you want to request this streamer steam account to be added into the database?\n'
+            f'This information will be sent to Aluerie. Please, double check before confirming.'
+        ).add_field(
+            name='Request to add an account into the database',
+            value=self.field_both(flags.twitch.lower(), platform, accname)
+        )
+        confirm = await ctx.prompt(embed=warn_em)
+        if not confirm:
+            return await ctx.send('Aborting...', delete_after=5.0)
+
+        warn_em.colour = MP.orange(shade=200)
+        warn_em.description = ''
+        warn_em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        warn_em.add_field(
+            name='Command',
+            value=f'`$lol stream add twitch: {flags.twitch.lower()} region: {flags.region} accname: {accname}`'
+        )
+        await self.bot.get_channel(Cid.global_logs).send(embed=warn_em)
+
+    @is_guild_owner()
+    @lol.group(aliases=['streamer'])
+    async def stream(self, ctx: Context):
+        """Group command about LoL, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    @staticmethod
+    async def stream_add_remove(ctx, twitch_names, mode):
+        twitch_list = set(db.get_value(db.ga, ctx.guild.id, 'lolfeed_stream_ids'))
+
+        success = []
+        fail = []
+        already = []
+
+        for name in re.split('; |, |,', twitch_names):
+            streamer = db.session.query(db.l).filter_by(name=name.lower()).first()
+            if streamer is None:
+                fail.append(f'`{name}`')
+            else:
+                if mode == 'add':
+                    if streamer.twtv_id in twitch_list:
+                        already.append(f'`{name}`')
+                    else:
+                        twitch_list.add(streamer.twtv_id)
+                        success.append(f'`{name}`')
+                elif mode == 'remov':
+                    if streamer.twtv_id not in twitch_list:
+                        already.append(f'`{name}`')
+                    else:
+                        twitch_list.remove(streamer.twtv_id)
+                        success.append(f'`{name}`')
+        db.set_value(db.ga, ctx.guild.id, lolfeed_stream_ids=list(twitch_list))
+
+        if len(success):
+            em = Embed(
+                colour=Clr.rspbrry
+            ).add_field(
+                name=f'Successfully {mode}ed following streamers: \n',
+                value=", ".join(success)
+            )
+            await ctx.reply(embed=em)
+        if len(already):
+            em = Embed(
+                colour=MP.orange(shade=500)
+            ).add_field(
+                name=f'Stream(-s) already {"not" if mode == "remov" else ""} in fav list',
+                value=", ".join(already)
+            )
+            await ctx.reply(embed=em)
+        if len(fail):
+            em = Embed(
+                colour=Clr.error
+            ).add_field(
+                name='Could not find streamers in the database from these names:',
+                value=", ".join(fail)
+            ).set_footer(
+                text=
+                'Check your argument or '
+                'consider adding (for trustees)/requesting such streamer with '
+                '`$lol database add/request twitch: <twitch_name> region: <region> accname: <accname>`'
+            )
+            await ctx.reply(embed=em)
+
+    @is_guild_owner()
+    @stream.command(
+        name='add',
+        usage='<twitch_name(-s)>'
+    )
+    @app_commands.describe(twitch_names='Name(-s) of twitch streams')
+    async def stream_add(self, ctx: Context, *, twitch_names: str):
+        """
+        Add twitch stream(-s) to the list of your fav LoL streamers.
+        """
+        await self.stream_add_remove(ctx, twitch_names, mode='add')
+
+    @is_guild_owner()
+    @stream.command(
+        name='remove',
+        usage='<twitch_name(-s)>'
+    )
+    @app_commands.describe(twitch_names='Name(-s) of twitch streams')
+    async def stream_remove(self, ctx: Context, *, twitch_names: str):
+        """
+        Remove twitch stream(-s) from the list of your fav LoL streamers.
+        """
+        await self.stream_add_remove(ctx, twitch_names, mode='remov')
+
+    @is_guild_owner()
+    @stream.command(name='list')
+    async def stream_list(self, ctx: Context):
+        """
+        Show current list of fav streams.
+        """
+        twtvid_list = db.get_value(db.ga, ctx.guild.id, 'lolfeed_stream_ids')
+        names_list = [row.name for row in db.session.query(db.l).filter(db.l.twtv_id.in_(twtvid_list)).all()]
+
+        ans_array = [f"[{name}](https://www.twitch.tv/{name})" for name in names_list]
+        ans_array = sorted(list(set(ans_array)), key=str.casefold)
+        embed = Embed(
+            color=Clr.prpl,
+            title='List of fav LoL streamers',
+            description="\n".join(ans_array)
+        )
+        await ctx.reply(embed=embed)
+
+    @is_guild_owner()
+    @lol.group()
     async def champ(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    @is_owner()
-    @champ.command()
-    @app_commands.describe(champ_names='Champion name(-s)')
-    async def add(self, ctx: Context, *, champ_names: str):
-        """
-        Add champion(-s) into list of fav champs.
-        """
-        hero_array = set(db.get_value(db.ga, ctx.guild.id, 'lolfeed_champ_ids'))
-        for champ_str in re.split('; |, |,', champ_names):
-            hero_array.add(await champion.id_by_key(champ_str))
-        db.set_value(db.ga, ctx.guild.id, lolfeed_champ_ids=list(hero_array))
-        await ctx.reply(Ems.PepoG)
+    @staticmethod
+    async def champ_add_remove(ctx, hero_names, mode):
+        hero_list = set(db.get_value(db.ga, ctx.guild.id, 'lolfeed_champ_ids'))
+        success = []
+        fail = []
+        already = []
+        for name in re.split('; |, |,', hero_names):
+            try:
+                if (hero_id := await champion.id_by_name(name)) is not None:
+                    hero_name = f'`{await champion.name_by_id(hero_id)}`'
+                    if mode == 'add':
+                        if hero_id in hero_list:
+                            already.append(hero_name)
+                        else:
+                            hero_list.add(hero_id)
+                            success.append(hero_name)
+                    elif mode == 'remov':
+                        if hero_id not in hero_list:
+                            already.append(hero_name)
+                        else:
+                            hero_list.remove(hero_id)
+                            success.append(hero_name)
 
-    @is_owner()
-    @champ.command()
-    @app_commands.describe(champ_names='Champion name(-s)')
-    async def remove(self, ctx: Context, *, champ_names: str):
-        """
-        Remove champion(-s) from fav champs list.
-        """
-        hero_array = set(db.get_value(db.ga, ctx.guild.id, 'lolfeed_champ_ids'))
-        for champ_str in re.split('; |, |,', champ_names):
-            hero_array.remove(await champion.id_by_key(champ_str))
-        db.set_value(db.ga, ctx.guild.id, lolfeed_champ_ids=list(hero_array))
-        await ctx.reply(Ems.PepoG)
+            except KeyError:
+                fail.append(f'`{name}`')
 
-    @is_owner()
-    @champ.command()
-    async def list(self, ctx: Context):
+        db.set_value(db.ga, ctx.guild.id, lolfeed_champ_ids=list(hero_list))
+
+        if len(success):
+            em = Embed(
+                colour=Clr.prpl
+            ).add_field(
+                name=f'Successfully {mode}ed following champs',
+                value=", ".join(success)
+            )
+            await ctx.reply(embed=em)
+        if len(already):
+            em = Embed(
+                colour=MP.orange(shade=500)
+            ).add_field(
+                name=f'Champ(-s) already {"not" if mode == "remov" else ""} in fav list',
+                value=", ".join(already)
+            )
+            await ctx.reply(embed=em)
+        if len(fail):
+            em = Embed(
+                colour=Clr.error
+            ).add_field(
+                name='Could not recognize LoL champs from these names',
+                value=", ".join(fail)
+            ).set_footer(
+                text='You can look in $help for help in champ names'
+            )
+            await ctx.reply(embed=em)
+
+    @is_guild_owner()
+    @champ.command(
+        name='add',
+        usage='<champ_name(-s)>',
+        description='Add champ(-es) to your fav champs list.'
+    )
+    @app_commands.describe(champ_names='Champ name(-s) from League of Legends')
+    async def champ_add(self, ctx: commands.Context, *, champ_names: str):
         """
-        Show current list of favourite champions.
+        Add champ(-es) to your fav champ list.
         """
-        champ_array = db.get_value(db.ga, ctx.guild.id, 'lolfeed_champ_ids')
-        answer = [f'`{await champion.key_by_id(c_id)} - {c_id}`' for c_id in champ_array]
+        await self.champ_add_remove(ctx, champ_names, mode='add')
+
+    @is_guild_owner()
+    @champ.command(
+        name='remove',
+        usage='<champ_name(-s)>'
+    )
+    @app_commands.describe(champ_names='Champ name(-s) from League of Legends')
+    async def champ_remove(self, ctx: commands.Context, *, champ_names: str):
+        """
+        Remove hero(-es) from your fav champs list.
+        """
+        await self.champ_add_remove(ctx, champ_names, mode='remov')
+
+    @staticmethod
+    async def champ_add_remove_error(ctx: Context, error):
+        if isinstance(error.original, KeyError):
+            ctx.error_handled = True
+            em = Embed(
+                colour=Clr.error,
+                description=
+                f'Looks like there is no hero with name `{error.original}`. '
+
+            ).set_author(
+                name='ChampNameNotFound'
+            )
+            await ctx.send(embed=em)
+
+    @champ_add.error
+    async def champ_add_error(self, ctx: Context, error):
+        await self.champ_add_remove_error(ctx, error)
+
+    @champ_remove.error
+    async def champ_remove_error(self, ctx: Context, error):
+        await self.champ_add_remove_error(ctx, error)
+
+    @is_guild_owner()
+    @champ.command(name='list')
+    async def champ_list(self, ctx: Context):
+        """
+        Show current list of fav champs.
+        """
+        hero_list = db.get_value(db.ga, ctx.guild.id, 'lolfeed_champ_ids')
+        answer = [f'`{await champion.name_by_id(h_id)} - {h_id}`' for h_id in hero_list]
         answer.sort()
         em = Embed(
             color=Clr.rspbrry,
-            title='List of fav lol champs',
+            title='List of fav LoL champs',
             description='\n'.join(answer)
+        )
+        await ctx.reply(embed=em)
+
+    @is_guild_owner()
+    @lol.command(description='Turn on/off spoiling resulting stats for matches. ')
+    @app_commands.describe(spoil='`Yes` to enable spoiling with stats, `No` for disable')
+    async def spoil(
+            self,
+            ctx: Context,
+            spoil: bool
+    ):
+        """
+        Turn on/off spoiling resulting stats for matches.
+
+        It is "on" by default, so it can show items streamers finished with and KDA.
+        """
+        db.set_value(db.ga, ctx.guild.id, lolfeed_spoils_on=spoil)
+        em = Embed(
+            colour=Clr.rspbrry,
+            description=f"Changed spoil value to {spoil}"
         )
         await ctx.reply(embed=em)
 
@@ -479,93 +1077,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         )
         await ctx.reply(embed=em)
 
-    @is_owner()
-    @lol.group(aliases=['streamer'])
-    async def stream(self, ctx: Context):
-        """Group command about LoL, for actual commands use it together with subcommands"""
-        await ctx.scnf()
-
-    @is_owner()
-    @stream.command(name='list')
-    async def list_stream(self, ctx: Context):
-        """
-        Show current list of fav streamers with optins
-        """
-        ss_dict = dict()
-        for row in db.session.query(db.l):
-            key = f'[{row.name}](https://www.twitch.tv/{row.name}) {row.optin}'
-            if key not in ss_dict:
-                ss_dict[key] = dict()
-            if row.region in ss_dict[key]:
-                ss_dict[key][row.region].append(row.accname)
-            else:
-                ss_dict[key][row.region] = [row.accname]
-
-        ans_dict = collections.defaultdict(list)
-        for key in ss_dict:
-            for subkey in ss_dict[key]:
-                ans_dict[key].append(f' {subkey} `{", ".join(ss_dict[key][subkey])}`')
-
-        em = Embed(
-            color=Clr.prpl,
-            title='List of fav lol streamers',
-            description="\n".join(sorted([f'{k}{" ".join(ans_dict[k])}' for k in ans_dict], key=str.casefold))
-        )
-        await ctx.reply(embed=em)
-
-    @is_owner()
-    @stream.command(name='add')
-    @app_commands.describe(
-        twitch='Twitch name',
-        region='League account region, i.e. `euw`, `na`',
-        accname='Summoner name for league account'
-    )
-    async def add_stream(self, ctx: Context, *, flags: AddStreamFlags):
-        """
-        Add account to the database
-        """
-        platform = region_to_platform(flags.region)
-        summoner = await lol.summoner.Summoner(name=flags.accname, platform=platform).get()
-        if db.session.query(db.l).filter_by(id=summoner.id).first() is None:
-            db.add_row(db.l, summoner.id, name=flags.twitch.lower(), region=platform, accname=flags.accname)
-        await ctx.reply(Ems.PepoG)
-
-    @is_owner()
-    @stream.command(name='remove')
-    @app_commands.describe(
-        twitch='Twitch name',
-        region='League account region, i.e. `euw`, `na`',
-        accname='Summoner name for league account'
-    )
-    async def remove_stream(self, ctx: Context, *, flags: RemoveStreamFlags):
-        """
-        Remove account(-s) of some streamer from the database
-        """
-        map_dict = {'name': flags.twitch.lower()}
-        if flags.region:
-            map_dict['region'] = region_to_platform(flags.region)
-        if flags.accname:
-            map_dict['accname'] = flags.accname
-
-        #my_dict = {k: v for k, v in dict(flags).items() if v is not None}
-        with db.session_scope() as ses:
-            ses.query(db.l).filter_by(**map_dict).delete()
-        await ctx.reply(Ems.PepoG)
-
-    @is_owner()
-    @stream.command(
-        help=f'Opt the streamer `in` or `out` from {cmntn(Cid.alubot)} channel',
-        usage='<twitch_name> in/out',
-        aliases=['turn']
-    )
-    @app_commands.describe(
-        twitch='Twitch name'
-    )
-    async def opt(self, ctx: Context, in_or_out: inout_to_10, twitch: str):
-        """Read above"""
-        db.set_value_by_name(db.l, twitch, optin=in_or_out)
-        await ctx.reply(Ems.PepoG)
-
 
 class LoLAccCheck(commands.Cog):
     def __init__(self, bot):
@@ -577,7 +1088,7 @@ class LoLAccCheck(commands.Cog):
         log.info("league checking acc renames every 24 hours")
         with db.session_scope() as ses:
             for row in ses.query(db.l):
-                person = await lol.summoner.Summoner(id=row.id, platform=row.region).get()
+                person = await lol.summoner.Summoner(id=row.id, platform=row.platform).get()
                 if person.name != row.accname:
                     row.accname = person.name
 

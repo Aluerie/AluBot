@@ -319,7 +319,7 @@ class LoLFeed(commands.Cog):
 
         for m_id in row_dict:
             try:
-                match = await lol.Match(id=m_id, region=row_dict[m_id]['routing_region']).get()
+                match = await Match(id=m_id, region=row_dict[m_id]['routing_region']).get()
             except NotFound:
                 continue
             for participant in match.info.participants:
@@ -776,7 +776,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
             return
 
         warn_em = Embed(
-            colour=Clr.prpl,
+            colour=Clr.rspbrry,
             title='Confirmation Prompt',
             description=
             f'Are you sure you want to request this streamer steam account to be added into the database?\n'
@@ -897,7 +897,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         ans_array = [f"[{name}](https://www.twitch.tv/{name})" for name in names_list]
         ans_array = sorted(list(set(ans_array)), key=str.casefold)
         embed = Embed(
-            color=Clr.prpl,
+            color=Clr.rspbrry,
             title='List of fav LoL streamers',
             description="\n".join(ans_array)
         )
@@ -939,7 +939,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
 
         if len(success):
             em = Embed(
-                colour=Clr.prpl
+                colour=Clr.rspbrry
             ).add_field(
                 name=f'Successfully {mode}ed following champs',
                 value=", ".join(success)

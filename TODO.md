@@ -2,11 +2,9 @@
 
 rewrite dota py into actual module(-s) i guess ?
 make variable for api connstatans and for cdn
-clear up previous guild assignements thing
-remove stream name thing probably 
-change colour to rspb evreywhere in league
+remove stream name thing probably
 add some difference between league and dota database add logs, icon i guess
-
+edge cases when people delete channels/guilds
 
 1. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
 2. make muted by who into logs

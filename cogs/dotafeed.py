@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from aiohttp import ClientSession
 
 import logging
-
 log = logging.getLogger('root')
+log.setLevel(logging.WARNING)
 
 
 class ActiveMatch:

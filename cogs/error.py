@@ -94,7 +94,7 @@ class CommandErrorHandler(commands.Cog):
             case commands.NSFWChannelRequired():
                 desc = "Ask Aluerie to make that channel NSFW friendly"
             case commands.CommandNotFound():
-                if not ctx.bot.yen and ctx.prefix != db.get_value(db.b, ctx.guild.id, 'prefix'):
+                if not ctx.bot.yen and ctx.prefix != db.get_value(db.ga, ctx.guild.id, 'prefix'):
                     return
                 desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.NotOwner():

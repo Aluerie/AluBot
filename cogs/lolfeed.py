@@ -205,8 +205,7 @@ class ActiveMatch:
         rune_imgs = await url_to_img(session, rune_img_urls)
         left = 0
         for count, rune_img in enumerate(rune_imgs):
-            if count == 0:
-                rune_img = rune_img.resize((64, 64))
+            rune_img = rune_img.resize((64, 64))
             img.paste(rune_img, (left, height - rune_img.height), rune_img)
             left += rune_img.height
 

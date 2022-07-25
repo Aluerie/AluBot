@@ -40,12 +40,13 @@ class ActiveMatch:
     def __init__(
             self,
             *,
-            match_id: int = None,
-            start_time: int = None,
-            stream: str = None,
-            twtv_id: int = None,
-            hero_id: int = None,
-            hero_ids: List[int] = None,
+            match_id: int,
+            start_time: int,
+            stream: str,
+            twtv_id: int,
+            hero_id: int,
+            hero_ids: List[int],
+            server_steam_id: int
     ):
         self.match_id = match_id
         self.start_time = start_time
@@ -53,6 +54,7 @@ class ActiveMatch:
         self.twtv_id = twtv_id
         self.hero_id = hero_id
         self.hero_ids = hero_ids
+        self.server_steam_id = server_steam_id
 
     @async_property
     async def hero_name(self):
@@ -107,7 +109,8 @@ class ActiveMatch:
             f'{f"[TwtvVOD]({link})" if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ""}'
             f'/[Dotabuff](https://www.dotabuff.com/matches/{self.match_id})'
             f'/[Opendota](https://www.opendota.com/matches/{self.match_id})'
-            f'/[Stratz](https://stratz.com/matches/{self.match_id})'
+            f'/[Stratz](https://stratz.com/matches/{self.match_id})\n'
+            f'Console: `watch_server {self.server_steam_id}`'
         ).set_image(
             url=f'attachment://{image_name}'
         ).set_thumbnail(
@@ -337,6 +340,7 @@ class DotaFeed(commands.Cog):
                                 twtv_id=user.twtv_id,
                                 hero_id=person.hero_id,
                                 hero_ids=[x.hero_id for x in match.players],
+                                server_steam_id=match.server_steam_id
                             )
                         )
                 log.info(f'to_be_posted {self.active_matches}')

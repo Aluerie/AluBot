@@ -1,5 +1,8 @@
 ### Current thoughts
 
+request_matchmaking_stats()
+league duplicate
+
 rewrite dota py into actual module(-s) i guess ?
 make variable for api connstatans and for cdn
 remove stream name thing probably

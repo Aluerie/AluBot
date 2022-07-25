@@ -110,7 +110,6 @@ class ActiveMatch:
             f'/[Dotabuff](https://www.dotabuff.com/matches/{self.match_id})'
             f'/[Opendota](https://www.opendota.com/matches/{self.match_id})'
             f'/[Stratz](https://stratz.com/matches/{self.match_id})\n'
-            f'Console: `watch_server {self.server_steam_id}`'
         ).set_image(
             url=f'attachment://{image_name}'
         ).set_thumbnail(
@@ -119,6 +118,8 @@ class ActiveMatch:
             name=f'{twitch.display_name} - {await self.hero_name}',
             url=twitch.url,
             icon_url=twitch.logo_url
+        ).set_footer(
+            text=f'Console: watch_server {self.server_steam_id}'
         )
         return em, img_file
 

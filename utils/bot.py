@@ -22,12 +22,10 @@ if TYPE_CHECKING:
     from discord import AppInfo, Interaction, Message, User
 
 test_list = [  # for yen bot
-    'dotafeed',
-    #'lolfeed',
     'help',
     'error',
     'beta',
-    #'tools'
+    'tools'
 ]
 
 
@@ -37,7 +35,7 @@ def cog_check(cog_list):
 
 YEN_JSK = True
 YEN_GIT = cog_check(['dotacomments', 'copydota'])
-YEN_STE = cog_check(['dotafeed', 'gamerstats'])
+YEN_STE = cog_check(['dotafeed', 'gamerstats', 'tools'])
 YEN_TWI = cog_check(['dotafeed', 'lolfeed', 'twitch'])
 
 

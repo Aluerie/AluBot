@@ -22,7 +22,8 @@ if TYPE_CHECKING:
     from discord import AppInfo, Interaction, Message, User
 
 test_list = [  # for yen bot
-    'twitter',
+    'dotafeed',
+    'lolfeed',
     'help',
     'error',
     'beta',

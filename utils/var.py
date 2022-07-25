@@ -163,7 +163,7 @@ class Ems:  # Emote strings
     bubuGun = '<:bubuGun:847805078543007755>'
     bubuChrist = '<:bubuChrist:847805078769631262>'
     bubuAyaya = '<:bubuAYAYA:764835239138164756>'
-    slash = '<:slash:823159274954817566>'
+    slash = '<:_:823159274954817566>'
     TwoBButt = '<:2BButt:853729747846168576>'
     Lewd = '<:Lewd:976604430059331684>'
     DankG = '<:DankG:998012133948276857>'

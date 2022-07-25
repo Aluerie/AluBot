@@ -402,7 +402,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     Commands to set up fav hero + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \
-    (or you can request adding them if they are missing) and choose your favorite Dota 2 heroes. \
+    (or you can request adding them if missing) and choose your favorite Dota 2 heroes. \
     The bot will send messages in a chosen channel when your fav streamer picks your fav hero.
 
     **Tutorial**
@@ -428,13 +428,13 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @commands.hybrid_group(brief=Ems.slash)
     @app_commands.default_permissions(administrator=True)
     async def dota(self, ctx: Context):
-        """Group command about Dota 2, for actual commands use it together with subcommands"""
+        """Group command about Dota, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @is_guild_owner()
     @dota.group(brief=Ems.slash)
     async def channel(self, ctx: Context):
-        """Group command about Dota 2, for actual commands use it together with subcommands"""
+        """Group command about Dota, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @is_guild_owner()
@@ -446,7 +446,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @app_commands.describe(channel='Choose channel for Dota2Feed notifications')
     async def channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
         """
-        Set channel to be the Dota2Feed notifications channel.
+        Set channel to be the DotaFeed notifications channel.
         """
         channel = channel or ctx.channel
         if not channel.permissions_for(ctx.guild.me).send_messages:
@@ -471,8 +471,8 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     )
     async def channel_disable(self, ctx: Context):
         """
-        Stop getting Dota2Feed notifications. \
-        Data about fav heroes/streamers won't be affected.
+        Stop getting DotaFeed notifs. \
+        Data about fav heroes/streams won't be affected.
         """
         ch_id = db.get_value(db.ga, ctx.guild.id, 'dotafeed_ch_id')
         ch = self.bot.get_channel(ch_id)
@@ -493,7 +493,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @channel.command(name='check', brief=Ems.slash)
     async def channel_check(self, ctx: Context):
         """
-        Check if a Dota2Feed channel was set in this server.
+        Check if DotaFeed channel is set in the server.
         """
         ch_id = db.get_value(db.ga, ctx.guild.id, 'dotafeed_ch_id')
         ch = self.bot.get_channel(ch_id)
@@ -520,8 +520,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @database.command(name='list', brief=Ems.slash)
     async def database_list(self, ctx: Context):
         """
-        List of all streamers in database \
-        available for Dota2Feed feature.
+        List of streams in the database available for DotaFeed feature.
         """
         await ctx.defer()
         twtvid_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids')
@@ -605,7 +604,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     async def database_add(self, ctx: Context, *, flags: AddStreamFlags):
         """
         Add stream to the database.
-        • `<twitch_name>` is twitch.tv stream name
+        • `<twitch_name>` is twitch.tv name
         • `<steamid>` is either steamid in any of 64/32/3/2/friendid versions or just steam profile link.
         """
         await ctx.defer()
@@ -819,7 +818,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @app_commands.describe(twitch_names='Name(-s) of twitch streams')
     async def stream_add(self, ctx: Context, *, twitch_names: str):
         """
-        Add twitch stream(-s) to the list of your fav Dota 2 streamers.
+        Add twitch stream(-s) to your fav Dota 2 streams.
         """
         await self.stream_add_remove(ctx, twitch_names, mode='add')
 
@@ -832,7 +831,7 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
     @app_commands.describe(twitch_names='Name(-s) of twitch streams')
     async def stream_remove(self, ctx: Context, *, twitch_names: str):
         """
-        Remove twitch stream(-s) from the list of your fav Dota 2 streamers.
+        Remove twitch stream(-s) from your fav Dota 2 streams.
         """
         await self.stream_add_remove(ctx, twitch_names, mode='remov')
 
@@ -929,9 +928,10 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         Use names from Dota 2 hero grid. For example,
         • `Anti-Mage` (letter case does not matter) and not `Magina`;
         • `Queen of Pain` and not `QoP`.
-        At last you can find proper name [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
-        under one of `"localized_name"`
         """
+        # At last you can find proper name
+        # [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
+        # under one of `"localized_name"`
         await self.hero_add_remove(ctx, hero_names, mode='add')
 
     @is_guild_owner()

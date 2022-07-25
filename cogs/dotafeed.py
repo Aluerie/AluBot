@@ -243,7 +243,7 @@ class MatchToEdit:
             img.paste(shard_img, (right - shard_img.width, height - shard_img.height))
             await item_timing_text(609, right - shard_img.width)
 
-        img.show()
+        #img.show()
         return img
 
 

@@ -29,7 +29,9 @@ def img_to_file(image, filename='fromalubot.png', fmt='PNG') -> File:
 
 async def url_to_img(
         session,
-        url: Union[str, Sequence[str]]
+        url: Union[str, Sequence[str]],
+        *,
+        return_list: bool = False
 ):
     if isinstance(url, str):
         url_array = [url]
@@ -44,13 +46,17 @@ async def url_to_img(
             if resp.status != 200:
                 print(f"imgtools.url_to_img: Oups; Could not download file from {url_item}")
             images.append(Image.open(BytesIO(await resp.read())))
-    return images if len(images) > 1 or len(images) == 0 else images[0]
+    if return_list:
+        return images
+    else:
+        return images if len(images) > 1 or len(images) == 0 else images[0]
 
 
 async def url_to_file(
         session,
         url: Union[str, Sequence[str]],
         filename: str = 'fromalubot.png',
+        *,
         return_list: bool = False
 ) -> Union[File, Sequence[File]]:
     if isinstance(url, str):

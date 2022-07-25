@@ -22,7 +22,6 @@ edge cases when people delete channels/guilds
 3. ?tag emoji escapes 
 4. add image name for convert thing (check resolution too 112)
 maybe make error original for conversion error as well rom converters
-5. Feature to download images From Twitter 
 
 ### New Features
 5. nsfw functions

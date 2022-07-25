@@ -472,14 +472,14 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         self.help_emote = Ems.PogChampPepe
 
     @is_owner()
-    @commands.hybrid_group(aliases=['league'])
+    @commands.hybrid_group(aliases=['league'], brief=Ems.slash)
     @app_commands.default_permissions(administrator=True)
     async def lol(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @is_guild_owner()
-    @lol.group()
+    @lol.group(brief=Ems.slash)
     async def channel(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
@@ -487,7 +487,8 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @is_guild_owner()
     @channel.command(
         name='set',
-        usage='[channel=curr]'
+        usage='[channel=curr]',
+        brief=Ems.slash
     )
     @app_commands.describe(channel='Choose channel for LoLFeed notifications')
     async def channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
@@ -512,7 +513,8 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @is_guild_owner()
     @channel.command(
         name='disable',
-        description='Disable LoLFeed functionality.'
+        description='Disable LoLFeed functionality.',
+        brief=Ems.slash
     )
     async def channel_disable(self, ctx: Context):
         """
@@ -535,7 +537,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @channel.command(name='check')
+    @channel.command(name='check', brief=Ems.slash)
     async def channel_check(self, ctx: Context):
         """
         Check if a LoLFeed channel was set in this server.
@@ -556,7 +558,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
             return await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @lol.group(aliases=['db'])
+    @lol.group(aliases=['db'], brief=Ems.slash)
     async def database(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
@@ -579,7 +581,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
             f"{self.field_account_string(platform, accname)}"
 
     @is_guild_owner()
-    @database.command(name='list')
+    @database.command(name='list', brief=Ems.slash)
     async def database_list(self, ctx: Context):
         """
         List of all streamers in database \
@@ -646,7 +648,8 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @database.command(
         name='add',
         usage='twitch: <twitch_name> region: <region> accname: <accname>',
-        description='Add stream to the database.'
+        description='Add stream to the database.',
+        brief=Ems.slash
     )
     @app_commands.describe(
         twitch='twitch.tv stream name',
@@ -696,6 +699,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @database.command(
         name='remove',
         usage='twitch: <twitch_name> region: [region] accname: [accname]',
+        brief=Ems.slash
     )
     @app_commands.describe(
         twitch='twitch.tv stream name',
@@ -754,7 +758,8 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @database.command(
         name='request',
         usage='twitch: <twitch_name> region: <region> accname: <accname>',
-        description='Request lol account to be added into the database.'
+        description='Request lol account to be added into the database.',
+        brief=Ems.slash
     )
     @app_commands.describe(
         twitch='twitch.tv stream name',
@@ -801,7 +806,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await self.bot.get_channel(Cid.global_logs).send(embed=warn_em)
 
     @is_guild_owner()
-    @lol.group(aliases=['streamer'])
+    @lol.group(aliases=['streamer'], brief=Ems.slash)
     async def stream(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
@@ -866,7 +871,8 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @is_guild_owner()
     @stream.command(
         name='add',
-        usage='<twitch_name(-s)>'
+        usage='<twitch_name(-s)>',
+        brief=Ems.slash
     )
     @app_commands.describe(twitch_names='Name(-s) of twitch streams')
     async def stream_add(self, ctx: Context, *, twitch_names: str):
@@ -878,7 +884,8 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @is_guild_owner()
     @stream.command(
         name='remove',
-        usage='<twitch_name(-s)>'
+        usage='<twitch_name(-s)>',
+        brief=Ems.slash
     )
     @app_commands.describe(twitch_names='Name(-s) of twitch streams')
     async def stream_remove(self, ctx: Context, *, twitch_names: str):
@@ -888,7 +895,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await self.stream_add_remove(ctx, twitch_names, mode='remov')
 
     @is_guild_owner()
-    @stream.command(name='list')
+    @stream.command(name='list', brief=Ems.slash)
     async def stream_list(self, ctx: Context):
         """
         Show current list of fav streams.
@@ -906,7 +913,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await ctx.reply(embed=embed)
 
     @is_guild_owner()
-    @lol.group()
+    @lol.group(brief=Ems.slash)
     async def champ(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
@@ -970,7 +977,8 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @champ.command(
         name='add',
         usage='<champ_name(-s)>',
-        description='Add champ(-es) to your fav champs list.'
+        description='Add champ(-es) to your fav champs list.',
+        brief=Ems.slash
     )
     @app_commands.describe(champ_names='Champ name(-s) from League of Legends')
     async def champ_add(self, ctx: commands.Context, *, champ_names: str):
@@ -982,7 +990,8 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     @is_guild_owner()
     @champ.command(
         name='remove',
-        usage='<champ_name(-s)>'
+        usage='<champ_name(-s)>',
+        brief=Ems.slash
     )
     @app_commands.describe(champ_names='Champ name(-s) from League of Legends')
     async def champ_remove(self, ctx: commands.Context, *, champ_names: str):
@@ -1014,7 +1023,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await self.champ_add_remove_error(ctx, error)
 
     @is_guild_owner()
-    @champ.command(name='list')
+    @champ.command(name='list', brief=Ems.slash)
     async def champ_list(self, ctx: Context):
         """
         Show current list of fav champs.
@@ -1030,7 +1039,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @lol.command(description='Turn on/off spoiling resulting stats for matches. ')
+    @lol.command(description='Turn on/off spoiling resulting stats for matches. ', brief=Ems.slash)
     @app_commands.describe(spoil='`Yes` to enable spoiling with stats, `No` for disable')
     async def spoil(
             self,
@@ -1050,7 +1059,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         await ctx.reply(embed=em)
 
     @is_owner()
-    @champ.command()
+    @champ.command(brief=Ems.slash)
     async def meraki(self, ctx: Context):
         """
         Show list of champions that are missing from Meraki JSON.

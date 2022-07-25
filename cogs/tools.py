@@ -40,13 +40,15 @@ class ToolsCog(commands.Cog, name='Tools'):
         em = Embed(colour=Clr.prpl, description='Image was converted to png format')
         await ctx.reply(embed=em, file=file)
 
-    @commands.hybrid_command()
+    @commands.hybrid_command(
+        brief=Ems.slash
+    )
     @app_commands.describe(tweet_ids='Number(-s) in the end of tweet link')
     async def twitter_image(self, ctx: Context, *, tweet_ids: str):
         """
         Download image from tweets. \
-        Useful for Aluerie bcs twitter is banned in Russia (NotLikeThis).
-        <tweet_ids> are tweet ids - it's just numbers in the end of tweet links.
+        Useful for Aluerie because Twitter is banned in Russia.
+        • `<tweet_ids>` are tweet ids - it's just numbers in the end of tweet links.
         """
         await download_twitter_images(self.bot.ses, ctx, tweet_ids=tweet_ids)
 

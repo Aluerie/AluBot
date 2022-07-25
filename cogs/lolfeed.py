@@ -587,9 +587,11 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         """
         await ctx.defer()
 
+        twtvid_list = db.get_value(db.ga, ctx.guild.id, 'lolfeed_stream_ids')
         ss_dict = dict()
         for row in db.session.query(db.l):
-            key = self.field_twitch_string(row.name)
+            followed = f' {Ems.DankLove}' if row.twtv_id in twtvid_list else ''
+            key = f'{self.field_twitch_string(row.name)}{followed}'
             if key not in ss_dict:
                 ss_dict[key] = []
             ss_dict[key].append(

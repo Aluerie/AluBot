@@ -5,7 +5,6 @@ from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
 
 from utils.context import Context
-from utils.mysteam import sd_login
 
 from aiohttp import ClientSession
 from steam.client import SteamClient
@@ -17,11 +16,13 @@ from datetime import datetime, timezone
 
 from os import getenv, environ, listdir
 import logging
+log = logging.getLogger('root')
 
 if TYPE_CHECKING:
     from discord import AppInfo, Interaction, Message, User
 
 test_list = [  # for yen bot
+    'dotafeed',
     'lolfeed',
     'help',
     'error',
@@ -63,15 +64,11 @@ class AluBot(commands.Bot):
             if YEN_STE:
                 self.steam = SteamClient()
                 self.dota = Dota2Client(self.steam)
-                self.steam_lgn = getenv("STEAM_TEST_LGN")
-                self.steam_psw = getenv("STEAM_TEST_PSW")
-                sd_login(self.steam, self.dota, self.steam_lgn, self.steam_psw)
+                self.steam_dota_login()
         else:
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
-            self.steam_lgn = getenv("STEAM_LGN")
-            self.steam_psw = getenv("STEAM_PSW")
-            sd_login(self.steam, self.dota, self.steam_lgn, self.steam_psw)
+            self.steam_dota_login()
 
         if not self.yen or YEN_GIT:
             self.github = Github(getenv('GIT_PERSONAL_TOKEN'))
@@ -127,6 +124,24 @@ class AluBot(commands.Bot):
     @property
     def owner(self) -> User:
         return self.bot_app_info.owner
+
+    def steam_dota_login(self):
+        if self.steam.connected is False:
+            log.info(f"dota2info: client.connected {self.steam.connected}")
+            if self.yen:
+                steam_login = getenv("STEAM_TEST_LGN")
+                steam_password = getenv("STEAM_TEST_PSW")
+            else:
+                steam_login = getenv("STEAM_LGN")
+                steam_password = getenv("STEAM_PSW")
+
+            if self.steam.login(username=steam_login, password=steam_password):
+                self.steam.change_status(persona_state=7)
+                log.info('We successfully logged invis mode into Steam')
+                self.dota.launch()
+            else:
+                log.info('Logging into Steam failed')
+                return
 
 
 class LogHandler(logging.StreamHandler):

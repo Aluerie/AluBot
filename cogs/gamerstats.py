@@ -12,15 +12,16 @@ from utils.var import *
 from utils.imgtools import plt_to_file, img_to_file, url_to_img
 from utils.distools import send_pages_list
 from utils.format import indent
-from utils.mysteam import sd_login
 
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timedelta, time, timezone
 import matplotlib.pyplot as plt
 import numpy as np
 from os import getenv
+
 import logging
 log = logging.getLogger('root')
+log.setLevel(logging.WARNING)
 
 if TYPE_CHECKING:
     from utils.context import Context
@@ -60,7 +61,7 @@ def get_match_type_name(lobby_type, game_mode):
 def try_get_gamerstats(bot, start_at_match_id=0, matches_requested=20):
     log.info("try_get_gamerstats dota2info")
     global send_matches
-    sd_login(bot.steam, bot.dota, bot.steam_lgn, bot.steam_psw)
+    bot.steam_dota_login()
 
     def ready_function():
         log.info("ready_function gamerstats")

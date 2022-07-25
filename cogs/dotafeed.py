@@ -17,7 +17,6 @@ from utils.var import *
 from utils.imgtools import img_to_file, url_to_img
 from utils.format import display_relativehmstime
 from utils.distools import send_traceback, send_pages_list
-from utils.mysteam import sd_login
 from cogs.twitch import TwitchStream, get_dota_streams, get_twtv_id, twitch_by_id
 
 import re
@@ -279,7 +278,7 @@ class DotaFeed(commands.Cog):
             fav_hero_ids += row.dotafeed_hero_ids
         fav_hero_ids = list(set(fav_hero_ids))
 
-        sd_login(self.bot.steam, self.bot.dota, self.bot.steam_lgn, self.bot.steam_psw)
+        self.bot.steam_dota_login()
 
         # @dota.on('ready')
         def ready_function():
@@ -523,10 +522,11 @@ class DotaFeedTools(commands.Cog, name='Dota 2'):
         available for Dota2Feed feature.
         """
         await ctx.defer()
-
+        twtvid_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids')
         ss_dict = dict()
         for row in db.session.query(db.d):
-            key = f"● [**{row.name}**](https://www.twitch.tv/{row.name})"
+            followed = f' {Ems.DankLove}' if row.twtv_id in twtvid_list else ''
+            key = f"● [**{row.name}**](https://www.twitch.tv/{row.name}){followed}"
             if key not in ss_dict:
                 ss_dict[key] = []
             ss_dict[key].append(

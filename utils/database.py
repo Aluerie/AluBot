@@ -61,25 +61,6 @@ class botinfo(Base):
     irene_is_live = Column(Integer, default=0)
 
 
-class DiscordGuilds(Base):
-    __tablename__ = 'DiscordGuilds'
-    __table_args__ = {'extend_existing': True}
-    id = Column(BigInteger, primary_key=True, default=1234)
-    name = Column(String, default='')
-    milestone_achieved = Column(Integer, default=0)
-    suggestion_num = Column(Integer, default=0)
-    dota_fav_heroes = Column(PickleType, default=[])
-    lol_fav_champs = Column(PickleType, default=[])
-    current_timer = Column(Integer, default=0)
-    current_important_timer = Column(Integer, default=0)
-    current_fact_timer = Column(Integer, default=0)
-    current_gif_timer = Column(Integer, default=0)
-    current_rule_timer = Column(Integer, default=0)
-    irene_is_live = Column(Integer, default=0)
-    prefix = Column(String, default='$')
-    git_checked_dt = Column(DateTime)
-
-
 class guildassignment(Base):
     __tablename__ = 'guildassignment'
     __table_args__ = {'extend_existing': True}
@@ -113,7 +94,6 @@ class DotaAccount(Base):
     id = Column(BigInteger, primary_key=True, default=1234)  # steamid
     name = Column(String, default='')
     friendid = Column(BigInteger, default=1234)
-    optin = Column(Integer, default=1)
     twtv_id = Column(BigInteger, default=None)
 
 
@@ -222,7 +202,6 @@ Base.metadata.create_all(engine)
 
 m = DiscordUser
 e = DiscordEmote
-g = DiscordGuilds
 b = botinfo
 l = LeagueAccount
 d = DotaAccount

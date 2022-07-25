@@ -39,12 +39,6 @@ def get_dota_streams(session=db.session):
     return [item['user_id'] for item in data]
 
 
-def get_db_online_streams(dbclass, session=db.session):
-    streamer_list = list(set([row.name for row in session.query(dbclass).filter_by(optin=1)]))
-    data = twitch.get_streams(user_login=streamer_list, first=100)['data']
-    return [item['user_login'] for item in data]
-
-
 def get_offline_data(user):
     try:
         return twitch.get_users(logins=[user])['data'][0]

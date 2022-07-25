@@ -115,7 +115,7 @@ class ItemKeyCache:
                 dic = await resp.json()
             data = {
                 'iconurl_by_id':
-                    {0: "https://static.wikia.nocookie.net/dota2_gamepedia/images/3/3d/Greater_Mango_icon.png"},
+                    {0: "https://i.imgur.com/TtOovu5.png"},  # black tile
             }
             for k, v in dic.items():
                 data['iconurl_by_id'][v['id']] = f"https://cdn.cloudflare.steamstatic.com/{v['img']}"

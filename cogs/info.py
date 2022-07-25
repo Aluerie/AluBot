@@ -146,8 +146,9 @@ class Info(commands.Cog, name='Info'):
             colour=Clr.prpl,
             description=f'Logged in as {self.bot.user}'
         )
-        for i in [Cid.spam_me, Cid.bot_spam]:
-            await self.bot.get_channel(i).send(embed=em)
+        await self.bot.get_channel(Cid.spam_me).send(embed=em)
+        em.set_author(name='Finished updating/rebooting')
+        await self.bot.get_channel(Cid.bot_spam).send(embed=em)
 
     @reload_info.before_loop
     async def before(self):

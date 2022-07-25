@@ -290,7 +290,7 @@ class MatchToEdit:
             fill=colour_dict[self.outcome]
         )
 
-        item_img_urls = [(await i.get()).icon_abspath for i in self.items]
+        item_img_urls = [(await i.get()).icon_abspath for i in self.items if i.id]
         item_imgs = await url_to_img(session, item_img_urls)
         left = width - 6 * item_imgs[0].width
         for count, item_img in enumerate(item_imgs):

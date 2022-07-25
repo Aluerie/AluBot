@@ -4,7 +4,7 @@ from pyot.utils.functools import async_property
 import asyncio
 from aiohttp import ClientSession
 
-CDN = 'https://cdn.cloudflare.steamstatic.com'
+CDN_URL = 'https://cdn.cloudflare.steamstatic.com'
 
 
 async def get_resp_json(*, url):
@@ -53,7 +53,7 @@ class HeroKeyCache:
                 data['id_by_npcname'][dic[hero]['name']] = dic[hero]['id']
                 data['id_by_name'][dic[hero]['localized_name'].lower()] = dic[hero]['id']
                 data['name_by_id'][dic[hero]['id']] = dic[hero]['localized_name']
-                data['iconurl_by_id'][dic[hero]['id']] = f"https://cdn.cloudflare.steamstatic.com{dic[hero]['img']}"
+                data['iconurl_by_id'][dic[hero]['id']] = f"{CDN_URL}{dic[hero]['img']}"
             self.cached_data = data
             self.last_updated = datetime.now(timezone.utc)
         return self.cached_data
@@ -95,6 +95,7 @@ class ItemKeyCache:
     def __init__(self) -> None:
         self.cached_data = {
             "iconurl_by_id": {},
+            "id_by_key": {}
         }
         self.lock = asyncio.Lock()
         self.last_updated = datetime.now(timezone.utc) - timedelta(days=1)
@@ -116,9 +117,12 @@ class ItemKeyCache:
             data = {
                 'iconurl_by_id':
                     {0: "https://i.imgur.com/TtOovu5.png"},  # black tile
+                'id_by_key':
+                    {}
             }
             for k, v in dic.items():
                 data['iconurl_by_id'][v['id']] = f"https://cdn.cloudflare.steamstatic.com/{v['img']}"
+                data['id_by_key'][k] = v['id']
             self.cached_data = data
             self.last_updated = datetime.now(timezone.utc)
         return self.cached_data
@@ -129,13 +133,23 @@ item_keys_cache = ItemKeyCache()
 
 async def itemurl_by_id(value: int) -> str:
     """
-    Get hero icon utl id by id.
+    Get item icon utl id by id.
 
     example: 2 ->
     'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/items/blades_of_attack_lg.png?t=1593393829403'
     """
     data = await item_keys_cache.data
     return data['iconurl_by_id'][value]
+
+
+async def item_id_by_key(value: str) -> int:
+    """
+    Get item id by provided key.
+
+    example: "infused_raindrop" -> 265
+    """
+    data = await item_keys_cache.data
+    return data['id_by_key'][value]
 
 
 class AbilityKeyCache:
@@ -171,7 +185,7 @@ class AbilityKeyCache:
             for k, v in dict_hab.items():
                 for npc_name in v['abilities']:
                     ability_id = revert_dict_ids[npc_name]
-                    data['iconurl_by_id'][ability_id] = f"{CDN}{dict_abs[npc_name].get('img', None)}"
+                    data['iconurl_by_id'][ability_id] = f"{CDN_URL}{dict_abs[npc_name].get('img', None)}"
                     data['dname_by_id'][ability_id] = None
                 for talent in v['talents']:
                     npc_name = talent['name']

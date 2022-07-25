@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import math
 from typing import TYPE_CHECKING, Optional, List
 
 from pyot.utils.functools import async_property
@@ -130,6 +132,7 @@ class MatchToEdit:
         self.ability_upgrades_arr = data['ability_upgrades_arr']
         self.items = [data[f'item_{i}'] for i in range(6)]
         self.kda = f'{data["kills"]}/{data["deaths"]}/{data["assists"]}'
+        self.purchase_log = data['purchase_log']
         self.aghs_blessing = 'https://www.opendota.com/assets/images/dota2/scepter_0.png'
         self.aghs_shard = 'https://www.opendota.com/assets/images/dota2/shard_0.png'
         permanent_buffs = data['permanent_buffs'] or []  # [] if it is None
@@ -148,17 +151,20 @@ class MatchToEdit:
         img = await url_to_img(session, img_url)
 
         width, height = img.size
-        rectangle = Image.new("RGB", (width, 62), '#9678b6')
-        ImageDraw.Draw(rectangle)
-        spoiler_h = height - 62
-        img.paste(rectangle, (0, spoiler_h))
+        last_row_h = 50
 
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
+        rectangle = Image.new("RGB", (width, last_row_h), '#9678b6')
+        ImageDraw.Draw(rectangle)
+
+        last_row_y = height - last_row_h
+        img.paste(rectangle, (0, last_row_y))
+
+        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 28)
 
         draw = ImageDraw.Draw(img)
         w3, h3 = draw.textsize(self.kda, font=font)
         draw.text(
-            (0, spoiler_h - 32 - h3),
+            (0, height - h3),
             self.kda,
             font=font,
             align="right"
@@ -172,49 +178,64 @@ class MatchToEdit:
             'No Scored': (255, 255, 255)
         }
         draw.text(
-            (0, spoiler_h - 32 - h3 - h2 - 5),
+            (0, last_row_y),
             self.outcome,
             font=font,
             align="center",
             fill=colour_dict[self.outcome]
         )
 
+        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 15)
         for count, itemId in enumerate(self.items):
             hero_img = await url_to_img(session, await d2.itemurl_by_id(itemId))
-            # h_width, h_height = heroImg.size
-            hero_img = hero_img.resize((85, 62))
-            left = width - 85 * 6
-            img.paste(hero_img, (left + count * 85, height - hero_img.height))
+            # h_width, h_height = heroImg.size # naturally in (85, 62)
+            hero_img = hero_img.resize((69, 50))  # 69/50 - to match 85/62
+            left = width - hero_img.width * 6
+            curr_left = left + count * hero_img.width
+            img.paste(hero_img, (curr_left, height - hero_img.height))
 
+            # item timing
+            for i in reversed(self.purchase_log):
+                if itemId == d2.item_id_by_key(i['key']):
+                    text = f"{math.ceil(i['time']/60)}m"
+                    w7, h7 = draw.textsize(self.outcome, font=font)
+                    draw.text(
+                        (curr_left, height-h7),
+                        text,
+                        font=font,
+                        align="left"
+                    )
+                    break
+
+        ability_h = 35
         for count, abilityId in enumerate(self.ability_upgrades_arr):
             abil_img = await url_to_img(session, await d2.ability_iconurl_by_id(abilityId))
-            abil_img = abil_img.resize((32, 32))
-            left = 0
-            img.paste(abil_img, (left + count * 32, spoiler_h - abil_img.height))
+            abil_img = abil_img.resize((ability_h, ability_h))
+            img.paste(abil_img, (count * ability_h, last_row_y - abil_img.height))
 
         talent_strs = []
         for x in self.ability_upgrades_arr:
             if (dname := await d2.ability_dname_by_id(x)) is not None:
                 talent_strs.append(dname)
 
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 13)
+        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 12)
         for count, txt in enumerate(talent_strs):
             draw = ImageDraw.Draw(img)
             w4, h4 = draw.textsize(txt, font=font)
             draw.text(
-                (width - w4, spoiler_h - 30 * 2 - 22 * count),
+                (width - w4, last_row_y - 30 * 2 - 22 * count),
                 txt,
                 font=font,
                 align="right"
             )
 
         shard_img = await url_to_img(session, self.aghs_shard)
-        shard_img = shard_img.resize((40, 22))
-        img.paste(shard_img, (80, height - shard_img.height), shard_img)
+        shard_img = shard_img.resize((36, 14))
+        img.paste(shard_img, (100, height - shard_img.height), shard_img)
 
         bless_img = await url_to_img(session, self.aghs_blessing)
-        bless_img = bless_img.resize((40, 40))
-        img.paste(bless_img, (80, spoiler_h), bless_img)
+        bless_img = bless_img.resize((36, 36))
+        img.paste(bless_img, (100, last_row_y), bless_img)
         return img
 
 
@@ -234,6 +255,9 @@ class DotaFeed(commands.Cog):
             row_dict.setdefault(row.match_id, set()).add(row.hero_id)
 
         for m_id in row_dict:
+            url = f"https://api.opendota.com/api/request/{m_id}"
+            async with self.bot.ses.post(url):
+                pass
             url = f"https://api.opendota.com/api/matches/{m_id}"
             async with self.bot.ses.get(url) as resp:
                 dic = await resp.json()

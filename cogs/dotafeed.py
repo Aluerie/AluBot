@@ -133,14 +133,14 @@ class MatchToEdit:
         self.items = [data[f'item_{i}'] for i in range(6)]
         self.kda = f'{data["kills"]}/{data["deaths"]}/{data["assists"]}'
         self.purchase_log = data['purchase_log']
-        self.aghs_blessing = 'https://www.opendota.com/assets/images/dota2/scepter_0.png'
-        self.aghs_shard = 'https://www.opendota.com/assets/images/dota2/shard_0.png'
+        self.aghs_blessing = False
+        self.aghs_shard = False
         permanent_buffs = data['permanent_buffs'] or []  # [] if it is None
         for pb in permanent_buffs:
             if pb['permanent_buff'] == 12:
-                self.aghs_shard = 'https://www.opendota.com/assets/images/dota2/shard_1.png'
+                self.aghs_shard = True
             if pb['permanent_buff'] == 2:
-                self.aghs_blessing = 'https://www.opendota.com/assets/images/dota2/scepter_1.png'
+                self.aghs_blessing = True
 
     def __repr__(self) -> str:
         pairs = ' '.join([f'{k}={v!r}' for k, v in self.__dict__.items()])
@@ -159,7 +159,7 @@ class MatchToEdit:
         last_row_y = height - last_row_h
         img.paste(rectangle, (0, last_row_y))
 
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 28)
+        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 26)
 
         draw = ImageDraw.Draw(img)
         w3, h3 = draw.textsize(self.kda, font=font)
@@ -178,34 +178,36 @@ class MatchToEdit:
             'No Scored': (255, 255, 255)
         }
         draw.text(
-            (0, last_row_y),
+            (0, height - h3 - h2),
             self.outcome,
             font=font,
             align="center",
             fill=colour_dict[self.outcome]
         )
 
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 15)
-        for count, itemId in enumerate(self.items):
-            hero_img = await url_to_img(session, await d2.itemurl_by_id(itemId))
-            # h_width, h_height = heroImg.size # naturally in (85, 62)
-            hero_img = hero_img.resize((69, 50))  # 69/50 - to match 85/62
-            left = width - hero_img.width * 6
-            curr_left = left + count * hero_img.width
-            img.paste(hero_img, (curr_left, height - hero_img.height))
+        font_m = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 19)
 
-            # item timing
+        async def item_timing_text(item_id, x_left):
             for i in reversed(self.purchase_log):
-                if itemId == await d2.item_id_by_key(i['key']):
+                if item_id == await d2.item_id_by_key(i['key']):
                     text = f"{math.ceil(i['time']/60)}m"
-                    w7, h7 = draw.textsize(self.outcome, font=font)
+                    w7, h7 = draw.textsize(self.outcome, font=font_m)
                     draw.text(
-                        (curr_left, height-h7),
+                        (x_left, height-h7),
                         text,
-                        font=font,
+                        font=font_m,
                         align="left"
                     )
-                    break
+                    return
+
+        left_i = width - 69 * 6
+        for count, itemId in enumerate(self.items):
+            hero_img = await url_to_img(session, await d2.itemurl_by_id(itemId))
+            # h_width, h_height = heroImg.size # naturally in (88, 64)
+            hero_img = hero_img.resize((69, 50))  # 69/50 - to match 88/64
+            curr_left = left_i + count * hero_img.width
+            img.paste(hero_img, (curr_left, height - hero_img.height))
+            await item_timing_text(itemId, curr_left)
 
         ability_h = 35
         for count, abilityId in enumerate(self.ability_upgrades_arr):
@@ -228,14 +230,20 @@ class MatchToEdit:
                 font=font,
                 align="right"
             )
+        right = left_i
+        if self.aghs_blessing:
+            bless_img = await url_to_img(session, d2.lazy_aghs_bless_url)
+            bless_img = bless_img.resize((48, 35))
+            img.paste(bless_img, (right - bless_img.width, height - bless_img.height))
+            await item_timing_text(271, right - bless_img.width)
+            right -= bless_img.width
+        if self.aghs_shard:
+            shard_img = await url_to_img(session, d2.lazy_aghs_shard_url)
+            shard_img = shard_img.resize((48, 35))
+            img.paste(shard_img, (right - shard_img.width, height - shard_img.height))
+            await item_timing_text(609, right - shard_img.width)
 
-        shard_img = await url_to_img(session, self.aghs_shard)
-        shard_img = shard_img.resize((36, 14))
-        img.paste(shard_img, (100, height - shard_img.height), shard_img)
-
-        bless_img = await url_to_img(session, self.aghs_blessing)
-        bless_img = bless_img.resize((36, 36))
-        img.paste(bless_img, (100, last_row_y), bless_img)
+        img.show()
         return img
 
 
@@ -266,10 +274,12 @@ class DotaFeed(commands.Cog):
 
                 for player in dic['players']:
                     if player['hero_id'] in row_dict[m_id]:
-                        m = MatchToEdit(data=player)
-                        self.after_match.append(m)
+                        if player['purchase_log'] is not None:
+                            m = MatchToEdit(data=player)
+                            self.after_match.append(m)
 
     async def edit_the_embed(self, match: MatchToEdit, ses):
+
         query = ses.query(db.em).filter_by(match_id=match.match_id)
         for row in query:
 
@@ -288,6 +298,7 @@ class DotaFeed(commands.Cog):
                 ),
                 filename=image_name
             )
+
             em.set_image(url=f'attachment://{image_name}')
             await msg.edit(embed=em, attachments=[img_file])
         query.delete()

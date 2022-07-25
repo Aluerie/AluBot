@@ -216,6 +216,9 @@ async def ability_dname_by_id(value: int) -> str:
     data = await ability_keys_cache.data
     return data['dname_by_id'][value]
 
+lazy_aghs_bless_url = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/ultimate_scepter_2.png"
+lazy_aghs_shard_url = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/aghanims_shard.png"
+
 
 async def test_main():
     print(await ability_iconurl_by_id(5195))

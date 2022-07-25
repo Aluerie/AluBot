@@ -196,7 +196,7 @@ class MatchToEdit:
 
             # item timing
             for i in reversed(self.purchase_log):
-                if itemId == d2.item_id_by_key(i['key']):
+                if itemId == await d2.item_id_by_key(i['key']):
                     text = f"{math.ceil(i['time']/60)}m"
                     w7, h7 = draw.textsize(self.outcome, font=font)
                     draw.text(

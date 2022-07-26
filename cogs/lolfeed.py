@@ -261,7 +261,7 @@ class MatchToEdit:
             participant: MatchParticipantData
     ):
         self.match_id = match_id
-        self.player_id = participant.id
+        self.player_id = participant.summoner_id
         self.kda = f'{participant.kills}/{participant.deaths}/{participant.assists}'
         self.outcome = "Win" if participant.win else "Loss"
         self.items = participant.items

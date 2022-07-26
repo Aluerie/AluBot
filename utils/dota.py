@@ -223,11 +223,14 @@ lazy_aghs_shard_url = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/
 async def test_main():
     m_id = 6678205280
     url = f"https://api.opendota.com/api/matches/{m_id}"
-    async with ClientSession().get(url) as resp:
+    session = ClientSession()
+    async with session.get(url) as resp:
         dic = await resp.json()
-    arr = dic['players'][4]['ability_upgrades_arr']
-    for i in arr:
-        print(await ability_dname_by_id(i))
+        arr = dic['players'][4]['ability_upgrades_arr']
+        for i in arr:
+            print(i)
+            print(await ability_dname_by_id(i))
+    await session.close()
 
 
 if __name__ == '__main__':

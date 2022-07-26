@@ -4,6 +4,31 @@ from pyot.utils.functools import async_property
 import asyncio
 from aiohttp import ClientSession
 
+def dbuff_match_url(match_id: int, md: bool = True) -> str:
+    """Dotabuff.com link for the match with `match_id`"""
+    url = f'https://www.dotabuff.com/matches/{match_id}'
+    return f'[Dbuff]({url})' if md else url
+
+
+def odota_match_url(match_id: int, md: bool = True) -> str:
+    """Opendota.com link for the match with `match_id`"""
+    url = f'https://www.opendota.com/matches/{match_id}'
+    return f'[ODota]({url})' if md else url
+
+
+def stratz_match_url(match_id: int, md: bool = True) -> str:
+    """Stratz.com link for `match_id`"""
+    url = f'https://www.stratz.com/matches/{match_id}'
+    return f'[Stratz]({url})' if md else url
+
+
+def stats_sites_match_urls(match_id: int, md: bool = True) -> str:
+    return \
+        f'/{dbuff_match_url(match_id, md)}' \
+        f'/{odota_match_url(match_id, md)}' \
+        f'/{stratz_match_url(match_id, md)}'
+
+
 STEAM_CDN_URL = 'https://cdn.cloudflare.steamstatic.com'
 ODOTA_API_URL = 'https://api.opendota.com/api'
 
@@ -178,8 +203,10 @@ class AbilityKeyCache:
             revert_dict_ids = {v: int(k) for k, v in dict_ids.items()}
 
             data = {
-                'iconurl_by_id':
-                    {0: "https://static.wikia.nocookie.net/dota2_gamepedia/images/3/3d/Greater_Mango_icon.png"},
+                'iconurl_by_id': {
+                        0: "https://static.wikia.nocookie.net/dota2_gamepedia/images/3/3d/Greater_Mango_icon.png",
+                        730: "https://static.wikia.nocookie.net/dota2_gamepedia/images/e/e2/Attribute_Bonus_icon.png"
+                    },
                 "dname_by_id":
                     {},
             }
@@ -229,7 +256,7 @@ async def test_main():
         dic = await resp.json()
         arr = dic['players'][4]['ability_upgrades_arr']
         for i in arr:
-            if i is None:
+            if i is not None:
                 print(i, await ability_dname_by_id(i))
     await session.close()
 

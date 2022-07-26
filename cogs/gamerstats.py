@@ -291,7 +291,8 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
                     f'`{indent(c+offset, c+offset, offset, split_size)} '
                     f'{x.match_id} '
                     f'{(await d2.name_by_id(x.hero_id)).ljust(max_hero_len, " ")} '
-                    f'{"Win " if x.winner else "Loss"}`'
+                    f'{"Win " if x.winner else "Loss"}` '
+                    f'{d2.stats_sites_match_urls(x.match_id)}'
                 )
             start_at_match_id = res[-1].match_id
             offset += 20

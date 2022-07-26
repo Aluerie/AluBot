@@ -28,10 +28,6 @@ class BetaTest(commands.Cog):
 
     @commands.hybrid_command()
     async def allu(self, ctx: Context):
-        role1 = ctx.guild.get_role(Rid.plebs)
-        role2 = ctx.guild.get_role(Rid.rolling_stone)
-        role_list = [role1, role2]
-        await ctx.author.add_roles(*role_list)
         await ctx.send('Allu')
 
 

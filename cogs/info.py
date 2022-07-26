@@ -148,8 +148,9 @@ class Info(commands.Cog, name='Info'):
             description=f'Logged in as {self.bot.user}'
         )
         await self.bot.get_channel(Cid.spam_me).send(embed=em)
-        em.set_author(name='Finished updating/rebooting')
-        await self.bot.get_channel(Cid.bot_spam).send(embed=em)
+        if not self.bot.yen:
+            em.set_author(name='Finished updating/rebooting')
+            await self.bot.get_channel(Cid.bot_spam).send(embed=em)
 
     @reload_info.before_loop
     async def before(self):

@@ -1,20 +1,22 @@
 ### Current thoughts
 
-0. do a research on star thing *roles
-1. request_matchmaking_stats()
-2. rewrite dota py into actual module(-s) i guess ?
-3. make variable for api connstatans and for cdn
-4. add some difference between league and dota database add logs, icon i guess
-5. edge cases when people delete channels/guilds
-6. async sqlalchemy
-7. sort out total garbage in utils folder
-8. look at every cog in robo danny/pycord manager/stella
-9. rewrite purge into something better
-10. abandon not scored games for match history
-11. DPC ranking command, Dpc points too
-12. look into Pyot updates on ChampionKeysCache
-13. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
-14. make muted by who into logs
+0. webscrap league patch notes
+
+1. do a research on star thing *roles
+2. request_matchmaking_stats()
+3. rewrite dota py into actual module(-s) i guess ?
+4. make variable for api connstatans and for cdn
+5. add some difference between league and dota database add logs, icon i guess
+6. edge cases when people delete channels/guilds
+7. async sqlalchemy
+8. sort out total garbage in utils folder
+9. look at every cog in robo danny/pycord manager/stella
+10. rewrite purge into something better
+11. abandon not scored games for match history
+12. DPC ranking command, Dpc points too
+13. look into Pyot updates on ChampionKeysCache
+14. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
+15. make muted by who into logs
 
 ### Immediate fix
 15. ?tag button cooldown

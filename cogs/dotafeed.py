@@ -107,9 +107,7 @@ class ActiveMatch:
             description=
             f'`/match {self.match_id}` started {display_relativehmstime(long_ago)}\n'
             f'{f"[TwtvVOD]({link})" if (link := twitch.last_vod_link(time_ago=long_ago)) is not None else ""}'
-            f'/[Dotabuff](https://www.dotabuff.com/matches/{self.match_id})'
-            f'/[Opendota](https://www.opendota.com/matches/{self.match_id})'
-            f'/[Stratz](https://stratz.com/matches/{self.match_id})\n'
+            f'{d2.stats_sites_match_urls(self.match_id)}'
         ).set_image(
             url=f'attachment://{image_name}'
         ).set_thumbnail(

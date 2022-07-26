@@ -428,7 +428,8 @@ class LoLFeed(commands.Cog):
                     msg.id,
                     match_id=match_id_str,
                     ch_id=ch.id,
-                    champ_id=match.champ_id
+                    champ_id=match.champ_id,
+                    routing_region=platform_to_routing_dict[match.platform]
                 )
 
     @tasks.loop(seconds=59)

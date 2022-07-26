@@ -226,8 +226,8 @@ async def test_main():
     async with ClientSession().get(url) as resp:
         dic = await resp.json()
     arr = dic['players'][4]['ability_upgrades_arr']
-    print(await ability_iconurl_by_id(5195))
-    print(await ability_dname_by_id(712))
+    for i in arr:
+        print(await ability_dname_by_id(i))
 
 
 if __name__ == '__main__':

@@ -4,7 +4,8 @@ from pyot.utils.functools import async_property
 import asyncio
 from aiohttp import ClientSession
 
-CDN_URL = 'https://cdn.cloudflare.steamstatic.com'
+STEAM_CDN_URL = 'https://cdn.cloudflare.steamstatic.com'
+ODOTA_API_URL = 'https://api.opendota.com/api'
 
 
 async def get_resp_json(*, url):
@@ -36,7 +37,7 @@ class HeroKeyCache:
             if datetime.now(timezone.utc) - self.last_updated < timedelta(hours=3):
                 return self.cached_data
             try:
-                dic = await get_resp_json(url='https://api.opendota.com/api/constants/heroes')
+                dic = await get_resp_json(url=f'{ODOTA_API_URL}/constants/heroes')
             except RuntimeError as exc:
                 if any(self.cached_data.values()):
                     return self.cached_data
@@ -53,7 +54,7 @@ class HeroKeyCache:
                 data['id_by_npcname'][dic[hero]['name']] = dic[hero]['id']
                 data['id_by_name'][dic[hero]['localized_name'].lower()] = dic[hero]['id']
                 data['name_by_id'][dic[hero]['id']] = dic[hero]['localized_name']
-                data['iconurl_by_id'][dic[hero]['id']] = f"{CDN_URL}{dic[hero]['img']}"
+                data['iconurl_by_id'][dic[hero]['id']] = f"{STEAM_CDN_URL}{dic[hero]['img']}"
             self.cached_data = data
             self.last_updated = datetime.now(timezone.utc)
         return self.cached_data
@@ -185,7 +186,7 @@ class AbilityKeyCache:
             for k, v in dict_hab.items():
                 for npc_name in v['abilities']:
                     ability_id = revert_dict_ids[npc_name]
-                    data['iconurl_by_id'][ability_id] = f"{CDN_URL}{dict_abs[npc_name].get('img', None)}"
+                    data['iconurl_by_id'][ability_id] = f"{STEAM_CDN_URL}{dict_abs[npc_name].get('img', None)}"
                     data['dname_by_id'][ability_id] = None
                 for talent in v['talents']:
                     npc_name = talent['name']
@@ -228,8 +229,8 @@ async def test_main():
         dic = await resp.json()
         arr = dic['players'][4]['ability_upgrades_arr']
         for i in arr:
-            print(i)
-            print(await ability_dname_by_id(i))
+            if i is None:
+                print(i, await ability_dname_by_id(i))
     await session.close()
 
 

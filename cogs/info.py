@@ -31,6 +31,7 @@ warnings.filterwarnings(
 
 if TYPE_CHECKING:
     from discord import Interaction, Guild
+    from utils.bot import AluBot
 
 
 async def account_age_ctx_menu(ntr: Interaction, member: Member):
@@ -56,7 +57,7 @@ class Info(commands.Cog, name='Info'):
     """
 
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.reload_info.start()
         self.help_emote = Ems.PepoG
 
@@ -285,6 +286,10 @@ class Info(commands.Cog, name='Info'):
     )
     async def sysinfo(self, ctx):
         """Get system info about machine currently hosting the bot. Idk myself what machine it is being hosted on ;"""
+        url = 'https://ipinfo.io/json'
+        async with self.bot.ses.get(url) as resp:
+            data = await resp.json()
+
         embed = Embed(
             colour=Clr.prpl,
             title="Bot Host Machine System Info",
@@ -306,6 +311,11 @@ class Info(commands.Cog, name='Info'):
         ).set_footer(
             text='This is what they give me for free plan :D'
         )
+        if not self.bot.yen:
+            embed.add_field(
+                name="Location judging by IP adress",
+                value=f"{data['country']} {data['region']} {data['city']}"
+            )
         await ctx.reply(embed=embed)
 
     @is_owner()

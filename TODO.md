@@ -1,53 +1,49 @@
 ### Current thoughts
 
-request_matchmaking_stats()
-league duplicate
-
-rewrite dota py into actual module(-s) i guess ?
-make variable for api connstatans and for cdn
-remove stream name thing probably
-add some difference between league and dota database add logs, icon i guess
-edge cases when people delete channels/guilds
-
-1. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
-2. make muted by who into logs
-
-5. async sqlalchemy
-6. sort out total garbage in utils folder
-7. look at every cog in robo danny/pycord manager/stella
-8. rewrite purge into something better
-9. abandon not scored games for match history
-10. DPC ranking command, Dpc points too
-11. look into 5.3.2 pyot update - Change the Lock on ChampionKeysCache to SealLock, as the asyncio.Lock requires an event loop at the moment of instantiation, an issue that may be encountered by non-async "tasks explorers".
+0. do a research on star thing *roles
+1. request_matchmaking_stats()
+2. rewrite dota py into actual module(-s) i guess ?
+3. make variable for api connstatans and for cdn
+4. add some difference between league and dota database add logs, icon i guess
+5. edge cases when people delete channels/guilds
+6. async sqlalchemy
+7. sort out total garbage in utils folder
+8. look at every cog in robo danny/pycord manager/stella
+9. rewrite purge into something better
+10. abandon not scored games for match history
+11. DPC ranking command, Dpc points too
+12. look into Pyot updates on ChampionKeysCache
+13. Rewrite all twitch stuff in a way we depend on twitch ids and not names,
+14. make muted by who into logs
 
 ### Immediate fix
-2. ?tag button cooldown
-3. ?tag emoji escapes 
-4. add image name for convert thing (check resolution too 112)
+15. ?tag button cooldown
+16. ?tag emoji escapes 
+17. add image name for convert thing (check resolution too 112)
 maybe make error original for conversion error as well rom converters
 
 ### New Features
-5. nsfw functions
+18. nsfw functions
 
 ### Probably Garbage
-7. edit dota and league messages after match ends to include some stats like KDA items victory-lose, RunesReforged, player names, proplayers etc
+19. edit dota and league messages after match ends to include some stats like KDA items victory-lose, RunesReforged, player names, proplayers etc
 
 ### Steal feature
-12. My own starboard | CarlBot 
-13. My own polls | Poolmaker Bot
+20. My own starboard | CarlBot 
+21. My own polls | Poolmaker Bot
 
 ### Future
-15. twitch stream live proper listener when twitch releases it
-16. add "all"  key into heroes so all heroes can be traced
+22. twitch stream live proper listener when twitch releases it
+23. add "all"  key into heroes so all heroes can be traced
 
 ### IMPROVE
-17. `map` usages
-18. remove `regex` library in favour of `re`
-19. async sqlalchemy asyncsession ? and also subclass your database like normal human being
-20. remember `a[start:stop:step]` so `a[::-1]` is reverse
-21. ?tag learn async
-22. learn collection lib
-23. ?tag eval
-24. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
-25. research TypeVar stuff
-26. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>`
+24. `map` usages
+25. remove `regex` library in favour of `re`
+26. async sqlalchemy asyncsession ? and also subclass your database like normal human being
+27. remember `a[start:stop:step]` so `a[::-1]` is reverse
+28. ?tag learn async
+29. learn collection lib
+30. ?tag eval
+31. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
+32. research TypeVar stuff
+33. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>`

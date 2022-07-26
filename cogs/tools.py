@@ -59,6 +59,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         self.bot.steam_dota_login()
         self.players_by_group = []
         # @dota.on('ready')
+
         def ready_function():
             self.bot.dota.request_matchmaking_stats()
 
@@ -82,10 +83,8 @@ class ToolsCog(commands.Cog, name='Tools'):
         Get Dota 2 matchmaking stats
         """
         await ctx.defer()
+
         players_by_group = self.dota_request_matchmaking_stats()
-
-        print(players_by_group)
-
         region_arr = [
             'Russia', 'Europe East', 'Europe West',
             'Dubai', 'India', 'SE Asia',
@@ -109,7 +108,7 @@ class ToolsCog(commands.Cog, name='Tools'):
             name='Ranked',
             value='\n'.join([f'{k}: {v}' for k, v in unranked_dict.items()])
         )
-        await ctx.reply(' '.join([str(x) for x in players_by_group]))
+        await ctx.reply("there:" + ' '.join([str(x) for x in players_by_group]))
 
 
 async def setup(bot):

@@ -274,7 +274,7 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
     @stalk.command(
         name='match_ids',
         brief=Ems.slash,
-        description="Copypastable match_ids"
+        description="Copypastable match ids"
     )
     async def match_ids(self, ctx: Context):
         """Copypastable match_ids"""

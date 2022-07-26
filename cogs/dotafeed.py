@@ -213,7 +213,7 @@ class MatchToEdit:
             img.paste(hero_img, (curr_left, height - hero_img.height))
             await item_timing_text(itemId, curr_left)
 
-        ability_h = 35
+        ability_h = 37
         for count, abilityId in enumerate(self.ability_upgrades_arr):
             abil_img = await url_to_img(session, await d2.ability_iconurl_by_id(abilityId))
             abil_img = abil_img.resize((ability_h, ability_h))

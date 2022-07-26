@@ -233,8 +233,9 @@ class TextToSpeech(commands.Cog, name='TTS'):
     async def on_voice_state_update(self, member, before, after):
         # disconnect
         if before.channel is not None and len([m for m in before.channel.members if not m.bot]) == 0:
-            vc = self.connections[member.guild.id]
-            await vc.disconnect()
+            vc = self.connections.get(member.guild.id, None)
+            if vc is not None:
+                await vc.disconnect()
 
 
 async def setup(bot):

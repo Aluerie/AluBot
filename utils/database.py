@@ -86,6 +86,7 @@ class LeagueAccount(Base):
     platform = Column(String, default='')
     accname = Column(String, default='')
     twtv_id = Column(BigInteger, default=None)
+    last_edited = Column(BigInteger, default=0)  # only exists bcs Riot API is not precise
 
 
 class DotaAccount(Base):
@@ -190,10 +191,10 @@ class lfmessage(Base):
     __tablename__ = 'lfmessage'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True)  # message id
+    platform = Column(String)
     match_id = Column(String)
     ch_id = Column(BigInteger)
     champ_id = Column(Integer)
-    routing_region = Column(String)
 
 
 Base.metadata.create_all(engine)

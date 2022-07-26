@@ -109,7 +109,7 @@ class ToolsCog(commands.Cog, name='Tools'):
             name='Ranked',
             value='\n'.join([f'{k}: {v}' for k, v in unranked_dict.items()])
         )
-        await ctx.reply(' '.join(players_by_group))
+        await ctx.reply(' '.join([str(x) for x in players_by_group]))
 
 
 async def setup(bot):

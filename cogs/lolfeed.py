@@ -205,7 +205,8 @@ class ActiveMatch:
         rune_imgs = await url_to_img(session, rune_img_urls)
         left = 0
         for count, rune_img in enumerate(rune_imgs):
-            rune_img = rune_img.resize((64, 64))
+            if count < 6:
+                rune_img = rune_img.resize((64, 64))
             img.paste(rune_img, (left, height - rune_img.height), rune_img)
             left += rune_img.height
 
@@ -252,10 +253,12 @@ class MatchToEdit:
 
     def __init__(
             self,
-            match_id: str,
+            match_id: int,
             participant: MatchParticipantData
     ):
         self.match_id = match_id
+        self.platform = participant.platform
+        self.player_id = participant.id
         self.kda = f'{participant.kills}/{participant.deaths}/{participant.assists}'
         self.outcome = "Win" if participant.win else "Loss"
         self.items = participant.items
@@ -308,12 +311,13 @@ class LoLFeed(commands.Cog):
         self.after_match = []
         row_dict = {}
         for row in db_ses.query(db.lf):
-            if row.match_id in row_dict:
-                row_dict[row.match_id]['champ_ids'].append(row.champ_id)
+            match_id = f'{row.platform.upper()}_{row.match_id}'
+            if match_id in row_dict:
+                row_dict[match_id]['champ_ids'].append(row.champ_id)
             else:
-                row_dict[row.match_id] = {
+                row_dict[match_id] = {
                     'champ_ids': [row.champ_id],
-                    'routing_region': row.routing_region
+                    'routing_region': platform_to_routing_dict[row.platform]
                 }
 
         for m_id in row_dict:
@@ -351,6 +355,7 @@ class LoLFeed(commands.Cog):
             )
             em.set_image(url=f'attachment://{image_name}')
             await msg.edit(embed=em, attachments=[img_file])
+            db.set_value(db.l, match.player_id, last_edited=match.match_id)
         query.delete()
 
     async def fill_active_matches(self, db_ses):
@@ -369,7 +374,7 @@ class LoLFeed(commands.Cog):
                     continue
 
                 our_player = next((x for x in live_game.participants if x.summoner_id == row.id), None)
-                if our_player.champion_id in fav_champ_ids:
+                if our_player.champion_id in fav_champ_ids and row.last_edited != live_game.id:
                     self.active_matches.append(
                         ActiveMatch(
                             match_id=live_game.id,
@@ -394,30 +399,31 @@ class LoLFeed(commands.Cog):
 
     async def send_the_embed(
             self,
-            active_match: ActiveMatch,
+            match: ActiveMatch,
             db_ses
     ):
         for row in db_ses.query(db.ga):
-            if active_match.champ_id in row.lolfeed_champ_ids and active_match.twtv_id in row.lolfeed_stream_ids:
+            if match.champ_id in row.lolfeed_champ_ids and match.twtv_id in row.lolfeed_stream_ids:
                 ch: TextChannel = self.bot.get_channel(row.lolfeed_ch_id)
                 if ch is None:
                     continue  # the bot does not have access to the said channel
                 elif db_ses.query(db.lf).filter_by(
                     ch_id=ch.id,
-                    match_id=f'{active_match.platform.upper()}_{active_match.match_id}',
-                    champ_id=active_match.champ_id
+                    platform=match.platform,
+                    match_id=match.match_id,
+                    champ_id=match.champ_id
                 ).first():
                     continue  # the message was already sent
-                em, img_file = await active_match.notif_embed(self.bot.ses)
+                em, img_file = await match.notif_embed(self.bot.ses)
                 em.title = f"{ch.guild.owner.name}'s fav champ + fav stream spotted"
                 msg = await ch.send(embed=em, file=img_file)
                 db.add_row(
                     db.lf,
                     msg.id,
-                    match_id=f'{active_match.platform.upper()}_{active_match.match_id}',
+                    platform=match.platform,
+                    match_id=match.match_id,
                     ch_id=ch.id,
-                    champ_id=active_match.champ_id,
-                    routing_region=platform_to_routing_dict[active_match.platform]
+                    champ_id=match.champ_id
                 )
 
     @tasks.loop(seconds=59)

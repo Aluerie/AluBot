@@ -208,7 +208,7 @@ class AbilityKeyCache:
                         730: "https://static.wikia.nocookie.net/dota2_gamepedia/images/e/e2/Attribute_Bonus_icon.png"
                     },
                 "dname_by_id":
-                    {},
+                    {730: None},
             }
             for k, v in dict_hab.items():
                 for npc_name in v['abilities']:

@@ -125,6 +125,10 @@ def ugg_link(platform: str, acc_name: str):
     return f'https://u.gg/lol/profile/{platform}/{acc_name.replace(" ", "")}'
 
 
+def get_str_match_id(platform: str, match_id: int) -> str:
+    return f'{platform.upper()}_{match_id}'
+
+
 class ActiveMatch:
 
     def __init__(
@@ -253,7 +257,7 @@ class MatchToEdit:
 
     def __init__(
             self,
-            match_id: int,
+            match_id: str,
             participant: MatchParticipantData
     ):
         self.match_id = match_id
@@ -310,18 +314,20 @@ class LoLFeed(commands.Cog):
         self.after_match = []
         row_dict = {}
         for row in db_ses.query(db.lf):
-            match_id = f'{row.platform.upper()}_{row.match_id}'
-            if match_id in row_dict:
-                row_dict[match_id]['champ_ids'].append(row.champ_id)
+            if row.match_id in row_dict:
+                row_dict[row.match_id]['champ_ids'].append(row.champ_id)
             else:
-                row_dict[match_id] = {
+                row_dict[row.match_id] = {
                     'champ_ids': [row.champ_id],
-                    'routing_region': platform_to_routing_dict[row.platform]
+                    'routing_region': row.routing_region
                 }
 
         for m_id in row_dict:
             try:
-                match = await Match(id=m_id, region=row_dict[m_id]['routing_region']).get()
+                match = await Match(
+                    id=m_id,
+                    region=row_dict[m_id]['routing_region']
+                ).get()
             except NotFound:
                 continue
             for participant in match.info.participants:
@@ -373,7 +379,8 @@ class LoLFeed(commands.Cog):
                     continue
 
                 our_player = next((x for x in live_game.participants if x.summoner_id == row.id), None)
-                if our_player.champion_id in fav_champ_ids and row.last_edited != live_game.id:
+                if our_player.champion_id in fav_champ_ids and \
+                        row.last_edited != get_str_match_id(live_game.platform, live_game.id):
                     self.active_matches.append(
                         ActiveMatch(
                             match_id=live_game.id,
@@ -406,10 +413,10 @@ class LoLFeed(commands.Cog):
                 ch: TextChannel = self.bot.get_channel(row.lolfeed_ch_id)
                 if ch is None:
                     continue  # the bot does not have access to the said channel
-                elif db_ses.query(db.lf).filter_by(
+                match_id_str = get_str_match_id(match.platform, match.match_id)
+                if db_ses.query(db.lf).filter_by(
                     ch_id=ch.id,
-                    platform=match.platform,
-                    match_id=match.match_id,
+                    match_id=match_id_str,
                     champ_id=match.champ_id
                 ).first():
                     continue  # the message was already sent
@@ -419,8 +426,7 @@ class LoLFeed(commands.Cog):
                 db.add_row(
                     db.lf,
                     msg.id,
-                    platform=match.platform,
-                    match_id=match.match_id,
+                    match_id=match_id_str,
                     ch_id=ch.id,
                     champ_id=match.champ_id
                 )
@@ -435,7 +441,7 @@ class LoLFeed(commands.Cog):
 
             await self.after_match_games(db_ses)
             for match in self.after_match:
-               await self.edit_the_embed(match, db_ses)
+                await self.edit_the_embed(match, db_ses)
 
     @lolfeed.before_loop
     async def before(self):

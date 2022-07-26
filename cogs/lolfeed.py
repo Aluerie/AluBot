@@ -257,7 +257,6 @@ class MatchToEdit:
             participant: MatchParticipantData
     ):
         self.match_id = match_id
-        self.platform = participant.platform
         self.player_id = participant.id
         self.kda = f'{participant.kills}/{participant.deaths}/{participant.assists}'
         self.outcome = "Win" if participant.win else "Loss"
@@ -336,7 +335,7 @@ class LoLFeed(commands.Cog):
 
     async def edit_the_embed(self, match: MatchToEdit, ses):
         query = ses.query(db.lf).filter_by(match_id=match.match_id)
-        for row in query:
+        for row in query:  # todo: huh what if there is same match id for different regions
 
             ch = self.bot.get_channel(row.ch_id)
             if ch is None:

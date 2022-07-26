@@ -192,7 +192,7 @@ class lfmessage(Base):
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True)  # message id
     platform = Column(String)
-    match_id = Column(String)
+    match_id = Column(BigInteger)
     ch_id = Column(BigInteger)
     champ_id = Column(Integer)
 

@@ -141,7 +141,6 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         self.help_emote = Ems.bubuAyaya
 
     @commands.hybrid_command(
-        brief=Ems.slash,
         aliases=['ls'],
         usage='[member=you]',
         description='Show when `@member` was last seen'
@@ -157,7 +156,6 @@ class ExperienceSystem(commands.Cog, name='Profile'):
 
     @commands.hybrid_command(
         name='leaderboard',
-        brief=Ems.slash,
         aliases=['l'],
         description='View server leaderboard'
     )
@@ -231,7 +229,6 @@ class ExperienceSystem(commands.Cog, name='Profile'):
                                 user.rep += 1
 
     @commands.hybrid_command(
-        brief=Ems.slash,
         name='avatar',
         description="View User Avatar",
         usage='[member=you]'
@@ -242,7 +239,6 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         await ctx.reply(embed=embed)
 
     @commands.hybrid_command(
-        brief=Ems.slash,
         aliases=['r'],
         name='rank',
         description="View User Server Rank",
@@ -266,7 +262,6 @@ class ExperienceSystem(commands.Cog, name='Profile'):
 
     @commands.hybrid_command(
         name='rep',
-        brief=Ems.slash,
         description='Give +1 to @member reputation'
     )
     @commands.cooldown(1, 60*60, commands.BucketType.user)

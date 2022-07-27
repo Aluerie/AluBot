@@ -24,7 +24,7 @@ Information, wolframalpha, Tags, Milestone members, Thanks to twitch subs, Googl
 Wordcloud, ToDo list, Reminders, Afk/Selfmute mode, Experience system, NSFW, Schedule for Dota 2 matches, 
 Stalking my Dota 2 profile, 
 
-Over 50 useful/fun commands.
+Over 100 useful/fun commands.
 
 And so much more to come.
 

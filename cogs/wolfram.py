@@ -35,7 +35,6 @@ class WolframAlpha(commands.Cog):
 
     @commands.hybrid_command(
         name="wolfram_long",
-        brief=Ems.slash,
         description="Get long answer from WolframAlpha.com",
         aliases=["wolfram", "wolf"],
     )
@@ -58,7 +57,6 @@ class WolframAlpha(commands.Cog):
 
     @commands.hybrid_command(
         name="wolfram_short",
-        brief=Ems.slash,
         description="Get short answer from WolframAlpha.com",
         aliases=['wa']
     )

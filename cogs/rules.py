@@ -35,7 +35,6 @@ class ServerInfo(commands.Cog, name='Rules'):
 
     @commands.hybrid_command(
         name='rule',
-        brief=Ems.slash,
         description="Show rule number `num`"
     )
     @app_commands.describe(number="Enter a number")
@@ -45,7 +44,6 @@ class ServerInfo(commands.Cog, name='Rules'):
 
     @commands.hybrid_command(
         name='realrule',
-        brief=Ems.slash,
         description="Show *real rule* number `num`"
     )
     @app_commands.describe(number="Enter a number")
@@ -67,7 +65,6 @@ class ServerInfo(commands.Cog, name='Rules'):
 
     @commands.hybrid_command(
         name='rules',
-        brief=Ems.slash,
         description="Show all rules of the server"
     )
     async def rules(self, ctx):
@@ -76,7 +73,6 @@ class ServerInfo(commands.Cog, name='Rules'):
 
     @commands.hybrid_command(
         name='realrules',
-        brief=Ems.slash,
         description="Show all *real rules* of the server"
     )
     async def realrules(self, ctx):

@@ -25,7 +25,11 @@ test_list = [  # for yen bot
     'help',
     'error',
     'info',
-    'tools'
+    'tools',
+    'lewd',
+    'fun',
+    'rules',
+    'settings'
 ]
 
 

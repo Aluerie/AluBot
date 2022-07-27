@@ -29,7 +29,6 @@ class StatsCommands(commands.Cog, name='Stats'):
 
     @commands.hybrid_command(
         name='wordcloud',
-        brief=Ems.slash,
         description='Get `@member wordcloud over last total `limit` messages in requested `#channel`',
         usage='[channel(s)=curr] [member(s)=you] [limit=2000]'
     )
@@ -64,7 +63,6 @@ class StatsCommands(commands.Cog, name='Stats'):
 
     @commands.hybrid_command(
         name='summary',
-        brief=Ems.slash,
         description='Summary stats for the bot'
     )
     async def summary(self, ctx):

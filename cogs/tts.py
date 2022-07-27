@@ -75,7 +75,6 @@ class TextToSpeech(commands.Cog, name='TTS'):
 
     @voice.command(
         name='speak',
-        brief=Ems.slash,
         description='Make Text-To-Speech request into voice-chat',
         usage="[language keyword=fr-FR] <text='Allo'>"
     )
@@ -126,7 +125,6 @@ class TextToSpeech(commands.Cog, name='TTS'):
 
     @voice.command(
         name='languages',
-        brief=Ems.slash,
         description='Show list of languages supported by `/voice speak` command',
         aliases=['langs']
     )
@@ -149,7 +147,6 @@ class TextToSpeech(commands.Cog, name='TTS'):
 
     @voice.command(
         name='stop',
-        brief=Ems.slash,
         description='Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests'
     )
     async def stop(self, ctx: Context):
@@ -180,7 +177,6 @@ class TextToSpeech(commands.Cog, name='TTS'):
 
     @voice.command(
         name='leave',
-        brief=Ems.slash,
         description='Leave voice channel'
     )
     async def leave(self, ctx):
@@ -204,7 +200,6 @@ class TextToSpeech(commands.Cog, name='TTS'):
 
     @commands.hybrid_command(
         name='bonjour',
-        brief=Ems.slash,
         description=f'`Bonjour !` into both text/voice chats',
     )
     async def bonjour(self, ctx):

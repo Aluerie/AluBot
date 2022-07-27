@@ -26,7 +26,6 @@ class FunThings(commands.Cog, name='Fun'):
 
     @commands.hybrid_command(
         aliases=['cf'],
-        brief=Ems.slash,
         description='Flip a coin: Heads or Tails?'
     )
     async def coinflip(self, ctx):
@@ -96,7 +95,6 @@ class FunThings(commands.Cog, name='Fun'):
         await yourlife(message)
 
     @commands.hybrid_command(
-        brief=Ems.slash,
         description='Send 3x random emote into #emote_spam channel',
         help=f'Send 3x random emote into {cmntn(Cid.emote_spam)} ;'
     )
@@ -113,7 +111,6 @@ class FunThings(commands.Cog, name='Fun'):
             await ctx.message.delete()
 
     @commands.hybrid_command(
-        brief=Ems.slash,
         description='Send apuband emote combo'
     )
     async def apuband(self, ctx):
@@ -128,7 +125,6 @@ class FunThings(commands.Cog, name='Fun'):
             await ctx.message.delete()
 
     @commands.hybrid_command(
-        brief=Ems.slash,
         description='Roll an integer from 1 to `max_roll_number`'
     )
     @app_commands.describe(max_roll_number="Max limit to roll")
@@ -137,7 +133,6 @@ class FunThings(commands.Cog, name='Fun'):
         await ctx.reply(randint(1, max_roll_number + 1))
 
     @commands.hybrid_command(
-        brief=Ems.slash,
         usage='[channel=curr] [text=Allo]',
         description='Echo something somewhere'
     )
@@ -171,7 +166,6 @@ class FunThings(commands.Cog, name='Fun'):
 
     @commands.hybrid_command(
         name='emoteit',
-        brief=Ems.slash,
         aliases=['emotialize'],
         description="Emotializes your text into standard emotes"
     )

@@ -21,7 +21,7 @@ class LewdCog(commands.Cog, name='Lewd'):
         self.bot: AluBot = bot
         self.help_emote = Ems.peepoPlsStepOnMe
 
-    @commands.hybrid_command(brief=Ems.slash)
+    @commands.hybrid_command()
     async def lewd(self, ctx: Context):
         """
         [NSFW] Get a random horny picture.

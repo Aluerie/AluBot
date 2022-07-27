@@ -150,7 +150,7 @@ class HelpCommand(commands.HelpCommand):
             checks = [f"*{i}*" for i in checks]
             checks = f"**!** {', '.join(checks)}\n"
 
-        slash = c.brief or ''
+        slash = Ems.slash if getattr(c, '__commands_is_hybrid__', False) else ''
 
         aliases = ''
         if len(c.aliases):

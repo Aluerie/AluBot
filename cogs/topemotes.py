@@ -98,7 +98,6 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
 
     @commands.hybrid_command(
         name='topemotes',
-        brief=Ems.slash,
         description='Show emotes usage stats'
     )
     @app_commands.describe(keyword='Possible keywords: `all`, `ani`, `nonani`')

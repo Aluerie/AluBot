@@ -20,7 +20,6 @@ class Suggestions(commands.Cog):
 
     @commands.hybrid_command(
         name='suggest',
-        brief=Ems.slash,
         description=f'Suggest something and people will vote on it in #patch_notes',
         help=f'Suggest something and people will vote on it in {cmntn(Cid.patch_notes)}',
         aliases=["suggestion"]

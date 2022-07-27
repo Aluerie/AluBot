@@ -100,7 +100,6 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
 
     @stalk.command(
         name='lm',
-        brief=Ems.slash,
         description="View Aluerie's last played Dota 2 match",
         aliases=['lastmatch']
     )
@@ -116,7 +115,6 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
 
     @stalk.command(
         name='wl',
-        brief=Ems.slash,
         description="Aluerie's Win - Loss ratio in Dota 2 games for today",
         aliases=['winrate']
     )
@@ -162,7 +160,6 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
 
     @stalk.command(
         name='dh',
-        brief=Ems.slash,
         description="Aluerie's Dota 2 Match History (shows last 100 matches)",
         aliases=['dotahistory']
     )
@@ -273,7 +270,6 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
 
     @stalk.command(
         name='match_ids',
-        brief=Ems.slash,
         description="Copypastable match ids"
     )
     async def match_ids(self, ctx: Context):
@@ -307,7 +303,6 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
 
     @stalk.command(
         name='mmr',
-        brief=Ems.slash,
         description="Aluerie's Dota 2 MMR Plot"
     ) 
     async def mmr(self, ctx: Context):

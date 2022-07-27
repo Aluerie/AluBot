@@ -90,7 +90,6 @@ class Birthday(commands.Cog):
 
     @birthday.command(
         name='set',
-        brief=Ems.slash,
         aliases=['edit'],
         description='Set your birthday'
     )
@@ -114,7 +113,6 @@ class Birthday(commands.Cog):
 
     @birthday.command(
         name='delete',
-        brief=Ems.slash,
         help=f'Delete your birthday and stop getting congratulations from the bot in {cmntn(Cid.bday_notifs)};',
         aliases=['del'],
         description='Delete your birthday data'
@@ -126,7 +124,6 @@ class Birthday(commands.Cog):
 
     @birthday.command(
         name='timezone',
-        brief=Ems.slash,
         description='Set your timezone for birthday'
     )
     @app_commands.describe(timezone='Timezone in `float` format, ie. `-5.5` GMT -5:30 timezone')
@@ -145,7 +142,6 @@ class Birthday(commands.Cog):
 
     @birthday.command(
         name='check',
-        brief=Ems.slash,
         usage='[member=you]',
         description='Set your timezone for birthday'
     )

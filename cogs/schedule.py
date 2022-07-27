@@ -179,7 +179,6 @@ class DotaSchedule(commands.Cog, name='Dota 2 Schedule'):
 
     @commands.hybrid_command(
         name='schedule',
-        brief=Ems.slash,
         description='Dota 2 Pro Matches Schedule',
         aliases=['sch'],
         default_permission=False,

@@ -108,7 +108,6 @@ class Info(commands.Cog, name='Info'):
 
     @commands.hybrid_command(
         name='gmt',
-        brief=Ems.slash,
         aliases=['utc'],
         description="Show GMT(UTC) time"
     )
@@ -124,7 +123,6 @@ class Info(commands.Cog, name='Info'):
         await ctx.reply(embed=embed)
 
     @commands.hybrid_command(
-        brief=Ems.slash,
         name='role',
         aliases=['members', 'roleinfo'],
         description="View info about selected role"
@@ -158,8 +156,7 @@ class Info(commands.Cog, name='Info'):
 
     @commands.hybrid_command(
         name='translate',
-        description='Translate text to English, auto-detects source language',
-        brief=Ems.slash
+        description='Translate text to English, auto-detects source language'
     )
     @app_commands.describe(text="Enter text to translate")
     async def translate(self, ctx, *, text: str):
@@ -189,7 +186,6 @@ class Info(commands.Cog, name='Info'):
 
     @commands.hybrid_command(
         name='colour',
-        brief=Ems.slash,
         description="Get info about colour",
         aliases=['color'],
         usage='<formatted_colour_string>',
@@ -281,7 +277,6 @@ class Info(commands.Cog, name='Info'):
 
     @commands.hybrid_command(
         name='sysinfo',
-        brief=Ems.slash,
         description='Get system info about machine currently hosting the bot',
         aliases=['systeminfo']
     )

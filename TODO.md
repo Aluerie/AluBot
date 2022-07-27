@@ -1,7 +1,7 @@
 ### Current thoughts
 
 0. webscrap league patch notes
-
+hasattr(command, '__commands_is_hybrid__')
 1. do a research on star thing *roles
 2. request_matchmaking_stats()
 3. rewrite dota py into actual module(-s) i guess ?

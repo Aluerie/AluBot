@@ -71,7 +71,6 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
         await self.add_work(ntr, ntr.user, future_time.dt, remind_text)
 
     @remind.command(
-        brief=Ems.slash,
         usage='<remind_time> <remind_text>',
         aliases=['add'],
     )
@@ -109,7 +108,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
     async def remove(self, ntr: Interaction, reminder_id: int): #todo: use range and think about dynamic change
         await self.remove_work(ntr, ntr.user, reminder_id)
 
-    @remind.command(brief=Ems.slash)
+    @remind.command()
     async def remove(self, ctx: Context, reminder_id: int):
         """
         Removes reminder under id from your reminders list. \
@@ -138,7 +137,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
         member = member or ntr.user
         await self.list_work(ntr, member)
 
-    @remind.command(brief=Ems.slash, usage='[member=you]')
+    @remind.command(usage='[member=you]')
     async def list(self, ctx: Context, member: Member = None):
         """Shows `@member`'s reminders list ;"""
         member = member or ctx.author
@@ -174,7 +173,6 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
 
     @todo.command(
         name='remove',
-        brief=Ems.slash,
         description='Remove todo bullet from your todo list',
         help=
         'Removes todo bullet under *bullet_id* from your ToDo list.'
@@ -199,7 +197,6 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
 
     @todo.command(
         name='list',
-        brief=Ems.slash,
         description="Show `@member` ToDo list ",
         help="Show `@member` ToDo list ;",
         usage='[member=you]'
@@ -223,7 +220,6 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
 
     @todo.command(
         name='add',
-        brief=Ems.slash,
         description="Add new ToDo Bullet to your ToDo list",
         help='Add new ToDo Bullet to your ToDo list ;'
     )
@@ -238,7 +234,6 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
 
     @commands.hybrid_command(
         name='afk',
-        brief=Ems.slash,
         description='Flag you as afk member'
     )
     @app_commands.describe(afk_text='Your custom afk note')

@@ -46,7 +46,6 @@ class Voicechat(commands.Cog, name='Voice Chat'):
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
     @commands.hybrid_command(
         name='settitle',
-        brief=Ems.slash,
         description='Set title for #🎦streaming room so people know what you are streaming'
     )
     @app_commands.describe(text='new title for #🎦streaming_room')
@@ -62,7 +61,6 @@ class Voicechat(commands.Cog, name='Voice Chat'):
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
     @commands.hybrid_command(
         name='resettitle',
-        brief=Ems.slash,
         description='Reset #🎦streaming_room title'
     )
     async def resettitle(self, ctx):

@@ -70,7 +70,6 @@ class Tags(commands.Cog):
 
     @commands.hybrid_group(
         name='tags',
-        brief=Ems.slash,
         aliases=['tag'],
         invoke_without_command=True
     )
@@ -85,7 +84,6 @@ class Tags(commands.Cog):
 
     @tags.command(
         name='add',
-        brief=Ems.slash,
         description='Add a new tag',
         aliases=['create'],
         usage='name: <tag_name> text: <tag_text>'
@@ -138,7 +136,6 @@ class Tags(commands.Cog):
 
     @tags.command(
         name='info',
-        brief=Ems.slash,
         description='Get info about specific tag'
     )
     @app_commands.describe(tag_name="Tag name")
@@ -163,7 +160,6 @@ class Tags(commands.Cog):
 
     @tags.command(
         name='delete',
-        brief=Ems.slash,
         description='Delete your tag from bot database',
         aliases=['remove']
     )
@@ -191,7 +187,6 @@ class Tags(commands.Cog):
 
     @tags.command(
         name='list',
-        brief=Ems.slash,
         description='Get a list of all tags on the guild'
     )
     async def list(self, ctx):
@@ -225,7 +220,6 @@ class Tags(commands.Cog):
 
     @modtags.command(
         name='ban',
-        brief=Ems.slash,
         description='Ban member from creating new tags'
     )
     async def ban(self, ctx, member: Member):
@@ -234,7 +228,6 @@ class Tags(commands.Cog):
 
     @modtags.command(
         name='unban',
-        brief=Ems.slash,
         description='Unban member from creating new tags'
     )
     async def unban(self, ctx, member: Member):

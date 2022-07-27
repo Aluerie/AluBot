@@ -42,7 +42,6 @@ class Moderation(commands.Cog):
     @app_commands.default_permissions(manage_messages=True)
     @commands.hybrid_command(
         name='warn',
-        brief=Ems.slash,
         description='Warn member'
     )
     @app_commands.describe(member='Member to warn', reason='Reason')
@@ -109,7 +108,7 @@ class Moderation(commands.Cog):
         await self.mute_work(ctx, member, dt.dt, delta, reason)
 
     @commands.has_role(Rid.discord_mods)
-    @commands.command(brief=Ems.slash, usage='<time> [reason]')
+    @commands.command(usage='<time> [reason]')
     async def mute(
             self,
             ctx: Context,
@@ -125,7 +124,6 @@ class Moderation(commands.Cog):
     @app_commands.default_permissions(manage_messages=True)
     @commands.hybrid_command(
         name='unmute',
-        brief=Ems.slash,
         description='Remove timeout+mute from member'
     )
     @app_commands.describe(member='Member to unmute', reason='Reason')
@@ -156,10 +154,8 @@ class Moderation(commands.Cog):
         elif before.is_timed_out() is True and after.is_timed_out() is False:  # member is unmuted
             return  # apparently discord limitation > it doesnt ever happen
 
-
     @commands.hybrid_command(
         name='selfmute',
-        brief=Ems.slash,
         description='Mute yourself for chosen duration'
     )
     @app_commands.describe(duration='Choose duration of the mute')

@@ -30,7 +30,6 @@ class ToolsCog(commands.Cog, name='Tools'):
 
     @commands.hybrid_command(
         name='convert',
-        brief=Ems.slash,
         description='Convert image from webp to png format',
     )
     @app_commands.describe(url='Url of image to convert')
@@ -43,9 +42,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         em = Embed(colour=Clr.prpl, description='Image was converted to png format')
         await ctx.reply(embed=em, file=file)
 
-    @commands.hybrid_command(
-        brief=Ems.slash
-    )
+    @commands.hybrid_command()
     @app_commands.describe(tweet_ids='Number(-s) in the end of tweet link')
     async def twitter_image(self, ctx: Context, *, tweet_ids: str):
         """
@@ -75,9 +72,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         self.bot.dota.wait_event('matchmaking_stats_response', timeout=20)
         return self.players_by_group
 
-    @commands.hybrid_command(
-        brief=Ems.slash
-    )
+    @commands.hybrid_command()
     async def matchmaking_stats(self, ctx: Context):
         """
         Get Dota 2 matchmaking stats

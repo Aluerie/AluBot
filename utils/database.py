@@ -59,6 +59,7 @@ class botinfo(Base):
     git_checked_dt = Column(DateTime, default=datetime.now(timezone.utc))
     trusted_ids = Column(PickleType, default=[])
     irene_is_live = Column(Integer, default=0)
+    lol_patch = Column(String, default='')
 
 
 class guildassignment(Base):

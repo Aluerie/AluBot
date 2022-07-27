@@ -273,7 +273,9 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
         description="Copypastable match ids"
     )
     async def match_ids(self, ctx: Context):
-        """Copypastable match_ids"""
+        """
+        Copypastable match ids
+        """
         await ctx.typing()
         start_at_match_id = 0
         string_list = []

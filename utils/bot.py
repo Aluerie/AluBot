@@ -24,12 +24,7 @@ if TYPE_CHECKING:
 test_list = [  # for yen bot
     'help',
     'error',
-    'info',
-    'tools',
-    'lewd',
-    'fun',
-    'rules',
-    'settings'
+    'copylol',
 ]
 
 

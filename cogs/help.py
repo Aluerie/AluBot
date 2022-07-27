@@ -144,6 +144,7 @@ class HelpCommand(commands.HelpCommand):
         return answer
 
     def get_command_signature(self, c: commands.Command):
+
         checks = ''
         if c.checks:
             checks = set(getattr(i, '__doc__') or "mods only" for i in c.checks)

@@ -36,11 +36,11 @@ class ConfirmationView(View):
             await self.message.delete()
 
     @button(label='Confirm', style=ButtonStyle.green)  # type: ignore
-    async def confirm(self, interaction: Interaction, btn: Button):
+    async def confirm(self, ntr: Interaction, _: Button):
         self.value = True
-        await interaction.response.defer()
+        await ntr.response.defer()
         if self.delete_after:
-            await interaction.delete_original_message()
+            await ntr.delete_original_message()
         self.stop()
 
     @button(label='Cancel', style=ButtonStyle.red)  # type: ignore

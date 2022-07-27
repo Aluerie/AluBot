@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw
 
 from dateparser.search import search_dates
 from discord import Embed, Message, app_commands, Role, Member, Colour, Interaction, NotFound, File
+from discord.app_commands import AppCommand
 from discord.ext import commands
 
 from cogs.expsys import avatar_work
@@ -26,9 +27,9 @@ class BetaTest(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
 
-    @commands.hybrid_command()
-    async def allu(self, ctx: Context):
-        await ctx.send('Allu')
+    @app_commands.command()
+    async def allu(self, ntr: Interaction):
+        await ntr.response.send_message(f'</{ntr.command.qualified_name}:{ntr.data["id"]}>')
 
 
 async def setup(bot):

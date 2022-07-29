@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 
 from utils.var import *
 from utils.format import block_function
-from utils.inettools import replace_tco_links, move_link_to_title, get_links_from_str
+from utils.inettools import replace_tco_links, move_link_to_title
 from utils import database as db
 
 import tweepy

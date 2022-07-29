@@ -188,7 +188,9 @@ class Img:
     github = 'https://pics.freeicons.io/uploads/icons/png/4381378511600029534-512.png'
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
     dota2logo = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png"
-    twitchtv = "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
+    twitchtv = \
+        "https://cdn3.iconfinder.com/data/icons/" \
+        "social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
 
 
 class Lmt:
@@ -202,30 +204,32 @@ class Lmt:
         field_value = 1024
 
 
-class Clr:
-    prpl = 0x9678b6
-    rspbrry = 0xC42C48
-    wht = 0xffffff
-    red = 0xff0000
-    neon = 0x4D4DFF
-    error = 0x800000
-    olive = 0x98BF64
-    dota_colour_map = {
-        0: "#3375FF", 1: "#66FFBF", 2: "#BF00BF", 3: "#F3F00B", 4: "#FF6B00",
-        5: "#FE86C2", 6: "#A1B447", 7: "#65D9F7", 8: "#008321", 9: "#A46900"
-    }
-
-
+from discord import Colour
 from typing import Literal
+from typing_extensions import Self
 
 
-class MaterialPalette:
+class Clr:
+    """
+    My chosen colours
+    """
+    prpl = Colour(0x9678b6)
+    rspbrry = Colour(0xC42C48)
+    red = Colour(0xff0000)
+    neon = Colour(0x4D4DFF)
+    error = Colour(0x800000)
+    olive = Colour(0x98BF64)
+    twitch = Colour(0x9146FF)
+
+
+class MaterialPalette(Colour):
     """
     Material Design Color Palette
     """
-    shades = [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
-    type_hint = Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
-    core = 500
+
+    def __init__(self, value: int):
+        super().__init__(value)
+
     colors = {
         'red': [
             0xb71c1c, 0xc62828, 0xd32f2f, 0xe53935, 0xf44336,
@@ -312,103 +316,106 @@ class MaterialPalette:
             0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
         ]
     }
-
+    shades = [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
+    core = 500
     colors_dict = {}
-    for key, value in colors.items():
-        colors_dict[key] = {shade: clr for shade, clr in zip(shades, value)}
+    for key, values in colors.items():
+        colors_dict[key] = {shade: clr for shade, clr in zip(shades, values)}
+
+    ShadeTypeHint = Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
 
     @classmethod
-    def red(cls, *, shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = core) -> int:
-        return cls.colors_dict['red'][shade]
+    def red(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['red'][shade])
 
     @classmethod
-    def pink(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['pink'][shade]
+    def pink(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['pink'][shade])
 
     @classmethod
-    def purple(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['purple'][shade]
+    def purple(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['purple'][shade])
 
     @classmethod
-    def deep_purple(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['deep_purple'][shade]
+    def deep_purple(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['deep_purple'][shade])
 
     @classmethod
-    def indigo(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['indigo'][shade]
+    def indigo(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['indigo'][shade])
 
     @classmethod
-    def blue(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['blue'][shade]
+    def blue(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['blue'][shade])
 
     @classmethod
-    def light_blue(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['light_blue'][shade]
+    def light_blue(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['light_blue'][shade])
 
     @classmethod
-    def cyan(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['cyan'][shade]
+    def cyan(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['cyan'][shade])
 
     @classmethod
-    def teal(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['teal'][shade]
+    def teal(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['teal'][shade])
 
     @classmethod
-    def green(cls, *, shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = core) -> int:
-        return cls.colors_dict['green'][shade]
+    def green(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['green'][shade])
 
     @classmethod
-    def light_green(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['light_green'][shade]
+    def light_green(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['light_green'][shade])
 
     @classmethod
-    def lime(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['lime'][shade]
+    def lime(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['lime'][shade])
 
     @classmethod
-    def yellow(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['yellow'][shade]
+    def yellow(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['yellow'][shade])
 
     @classmethod
-    def amber(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['amber'][shade]
+    def amber(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['amber'][shade])
 
     @classmethod
-    def orange(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['orange'][shade]
+    def orange(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['orange'][shade])
 
     @classmethod
-    def deep_orange(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['deep_orange'][shade]
+    def deep_orange(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['deep_orange'][shade])
 
     @classmethod
-    def brown(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['brown'][shade]
+    def brown(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['brown'][shade])
 
     @classmethod
-    def gray(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['gray'][shade]
+    def gray(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['gray'][shade])
 
     @classmethod
-    def blue_gray(cls, *, shade: int = core) -> int:
+    def blue_gray(cls, *, shade: ShadeTypeHint = core) -> Self:
         return cls.colors_dict['blue_gray'][shade]
 
     @classmethod
-    def black(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['black'][shade]
+    def black(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['black'][shade])
 
     @classmethod
-    def white(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['white'][shade]
+    def white(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['white'][shade])
 
 
-class MaterialAccentPalette:
+class MaterialAccentPalette(Colour):
     """
     Material Design Color Palette with Accent Designs
     """
+    def __init__(self, value: int):
+        super().__init__(value)
 
-    shades = [700, 400, 200, 100]
-    core = 200
     colors = {
         'red': [
             0xd50000, 0xff1744, 0xff5252, 0xff8a80
@@ -459,96 +466,106 @@ class MaterialAccentPalette:
             0xdd2c00, 0xff3d00, 0xff6e40, 0xff9e80
         ]
     }
+    shades = [700, 400, 200, 100]
+    core = 200
 
     colors_dict = {}
     for key, value in colors.items():
         colors_dict[key] = {shade: clr for shade, clr in zip(shades, value)}
 
-    @classmethod
-    def red(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['red'][shade]
+    ShadeTypeHint = Literal[700, 400, 200, 100]
 
     @classmethod
-    def pink(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['pink'][shade]
+    def red(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['red'][shade])
 
     @classmethod
-    def purple(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['purple'][shade]
+    def pink(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['pink'][shade])
 
     @classmethod
-    def deep_purple(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['deep_purple'][shade]
+    def purple(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['purple'][shade])
 
     @classmethod
-    def indigo(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['indigo'][shade]
+    def deep_purple(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['deep_purple'][shade])
 
     @classmethod
-    def blue(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['blue'][shade]
+    def indigo(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['indigo'][shade])
 
     @classmethod
-    def light_blue(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['light_blue'][shade]
+    def blue(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['blue'][shade])
 
     @classmethod
-    def cyan(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['cyan'][shade]
+    def light_blue(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['light_blue'][shade])
 
     @classmethod
-    def teal(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['teal'][shade]
+    def cyan(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['cyan'][shade])
 
     @classmethod
-    def green(cls, *, shade: int = core) -> int:
+    def teal(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['teal'][shade])
+
+    @classmethod
+    def green(cls, *, shade: ShadeTypeHint = core) -> Self:
         return cls.colors_dict['green'][shade]
 
     @classmethod
-    def light_green(cls, *, shade: int = core) -> int:
+    def light_green(cls, *, shade: ShadeTypeHint = core) -> Self:
         return cls.colors_dict['light_green'][shade]
 
     @classmethod
-    def lime(cls, *, shade: int = core) -> int:
+    def lime(cls, *, shade: ShadeTypeHint = core) -> Self:
         return cls.colors_dict['lime'][shade]
 
     @classmethod
-    def yellow(cls, *, shade: int = core) -> int:
+    def yellow(cls, *, shade: ShadeTypeHint = core) -> Self:
         return cls.colors_dict['yellow'][shade]
 
     @classmethod
-    def amber(cls, *, shade: int = core) -> int:
+    def amber(cls, *, shade: ShadeTypeHint = core) -> Self:
         return cls.colors_dict['amber'][shade]
 
     @classmethod
-    def orange(cls, *, shade: int = core) -> int:
+    def orange(cls, *, shade: ShadeTypeHint = core) -> Self:
         return cls.colors_dict['orange'][shade]
 
     @classmethod
-    def deep_orange(cls, *, shade: int = core) -> int:
+    def deep_orange(cls, *, shade: ShadeTypeHint = core) -> Self:
         return cls.colors_dict['deep_orange'][shade]
 
     @classmethod
-    def brown(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['brown'][shade]
+    def brown(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['brown'][shade])
 
     @classmethod
-    def gray(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['gray'][shade]
+    def gray(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['gray'][shade])
 
     @classmethod
-    def blue_gray(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['blue_gray'][shade]
+    def blue_gray(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['blue_gray'][shade])
 
     @classmethod
-    def black(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['black'][shade]
+    def black(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['black'][shade])
 
     @classmethod
-    def white(cls, *, shade: int = core) -> int:
-        return cls.colors_dict['white'][shade]
+    def white(cls, *, shade: ShadeTypeHint = core) -> Self:
+        return cls(cls.colors_dict['white'][shade])
 
 
 # aliases
 MP = MaterialPalette
 MAP = MaterialAccentPalette
+
+
+if __name__ == '__main__':
+    from PIL import Image
+    rectangle = Image.new("RGB", (600, 300), str(MP.purple()))
+    rectangle.show()

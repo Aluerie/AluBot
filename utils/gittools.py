@@ -198,7 +198,7 @@ async def gitmain(token):
 if __name__ == '__main__':
     from os import getenv
     from dotenv import load_dotenv
-    load_dotenv(dotenv_path='../env.env', verbose=True)
+    load_dotenv(dotenv_path='../.env', verbose=True)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     GIT_PERSONAL_TOKEN = getenv('GIT_PERSONAL_TOKEN')

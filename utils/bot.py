@@ -10,7 +10,7 @@ from aiohttp import ClientSession
 from steam.client import SteamClient
 from dota2.client import Dota2Client
 from github import Github
-from twitchAPI import Twitch
+#  from twitchAPI import Twitch
 
 from datetime import datetime, timezone
 
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 test_list = [  # for yen bot
     'help',
     'error',
-    'copylol',
+    'dotafeed',
 ]
 
 
@@ -35,7 +35,7 @@ def cog_check(cog_list):
 YEN_JSK = True
 YEN_GIT = cog_check(['dotacomments', 'copydota'])
 YEN_STE = cog_check(['dotafeed', 'gamerstats', 'tools'])
-YEN_TWI = cog_check(['dotafeed', 'lolfeed', 'twitch'])
+#YEN_TWITCH = cog_check(['dotafeed', 'lolfeed', 'twitch'])
 
 
 class AluBot(commands.Bot):
@@ -73,9 +73,14 @@ class AluBot(commands.Bot):
             self.git_gameplay = self.github.get_repo("ValveSoftware/Dota2-Gameplay")
             self.git_tracker = self.github.get_repo("SteamDatabase/GameTracking-Dota2")
 
-        if not self.yen or YEN_TWI:
-            self.twitch = Twitch(getenv("TWITCH_CLIENT_ID"), getenv("TWITCH_CLIENT_SECRET"))
+        """
+        if not self.yen or YEN_TWITCH:
+            self.twitch = Twitch(
+                getenv("TWITCH_CLIENT_ID"),
+                getenv("TWITCH_CLIENT_SECRET")
+            )
             self.twitch.authenticate_app([])
+        """
 
         environ["JISHAKU_NO_UNDERSCORE"] = "True"
         environ["JISHAKU_HIDE"] = "True" # need to be before loading jsk

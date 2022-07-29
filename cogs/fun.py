@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-from discord import Embed, File, TextChannel, app_commands, errors, utils, InteractionType, PartialEmoji
+from discord import Embed, File, TextChannel, app_commands, errors, utils, InteractionType
 from discord.ext import commands
 from discord.ext.commands import Range
 

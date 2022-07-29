@@ -1,5 +1,8 @@
 ### Current thoughts
 
+
+display name ?
+
 non twitch players for dota
 
 routing thing for league

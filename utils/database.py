@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 from os import getenv
 from dotenv import load_dotenv
-load_dotenv(dotenv_path='env.env', verbose=True)
+load_dotenv(dotenv_path='.env', verbose=True)
 # sql_url = 'postgresql://' + sql_username + ':' + sql_password + '@localhost:5432/postgres'
 DATABASE_URL = getenv("SQL_URL")
 
@@ -88,6 +88,7 @@ class LeagueAccount(Base):
     accname = Column(String, default='')
     twtv_id = Column(BigInteger, default=None)
     last_edited = Column(String, default='')  # only exists bcs Riot API is not precise
+    fav_id = Column(Integer)
 
 
 class DotaAccount(Base):
@@ -97,6 +98,8 @@ class DotaAccount(Base):
     name = Column(String, default='')
     friendid = Column(BigInteger, default=1234)
     twtv_id = Column(BigInteger, default=None)
+    fav_id = Column(Integer)
+    display_name = Column(String)
 
 
 class RemindersNote(Base):
@@ -186,6 +189,7 @@ class dfmessage(Base):
     match_id = Column(BigInteger)
     ch_id = Column(BigInteger)
     hero_id = Column(Integer)
+    twitch_status = Column(String)
 
 
 class lfmessage(Base):

@@ -40,15 +40,15 @@ class ConfirmationView(View):
         self.value = True
         await ntr.response.defer()
         if self.delete_after:
-            await ntr.delete_original_message()
+            await self.message.delete()
         self.stop()
 
     @button(label='Cancel', style=ButtonStyle.red)  # type: ignore
-    async def cancel(self, interaction: Interaction, btn: Button):
+    async def cancel(self, ntr: Interaction, _: Button):
         self.value = False
-        await interaction.response.defer()
+        await ntr.response.defer()
         if self.delete_after:
-            await interaction.delete_original_message()
+            await self.message.delete()
         self.stop()
 
 
@@ -97,7 +97,7 @@ class Context(commands.Context):
 
         author_id = author_id or self.author.id
         view = ConfirmationView(timeout=timeout, delete_after=delete_after, ctx=self, author_id=author_id)
-        view.message = await self.send(content=content, embed=embed, view=view, ephemeral=True)
+        view.message = await self.reply(content=content, embed=embed, view=view)
         await view.wait()
         return view.value
 

@@ -2,7 +2,7 @@ from utils.bot import AluBot, LogHandler
 
 from os import getenv
 from dotenv import load_dotenv
-load_dotenv(dotenv_path='env.env', verbose=True)
+load_dotenv(dotenv_path='.env', verbose=True)
 
 import argparse
 parser = argparse.ArgumentParser(description="Aluerie's personal bot, Alu or Yen (testing version)")

@@ -82,7 +82,7 @@ class CommandErrorHandler(commands.Cog):
             case commands.MissingPermissions():
                 desc = f'Missing permissions: {", ".join(error.missing_permissions)}'
             case commands.BotMissingPermissions():
-                desc = f'Missing permissions: {", ".join(error.missing_permissions)}'
+                desc = f'Bot is missing permissions: {", ".join(error.missing_permissions)}'
             case commands.MissingRole():
                 desc = f'Missing role: {rmntn(error.missing_role)}'
             case commands.BotMissingRole():
@@ -113,7 +113,7 @@ class CommandErrorHandler(commands.Cog):
                 desc = f'{error}'
             case _:
                 desc = \
-                    f"Oups, some error but I already notified my dev about it. The original exception:\n" \
+                    f"Oups, some error but I already notified my dev about it.\n The original exception:\n" \
                     f"```py\n{error}```"
 
                 cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])

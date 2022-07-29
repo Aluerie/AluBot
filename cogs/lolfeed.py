@@ -7,6 +7,9 @@ from pyot.conf.model import activate_model, ModelConf
 from pyot.conf.pipeline import activate_pipeline, PipelineConf
 from pyot.utils.functools import async_property
 
+from utils.feedtools import FeedTools
+from utils.twitch import get_lol_streams
+
 
 @activate_model("lol")
 class LolModel(ModelConf):
@@ -54,7 +57,7 @@ from utils.lol import get_role_mini_list, get_diff_list
 from utils.distools import send_traceback, send_pages_list
 from utils.format import display_relativehmstime
 from utils.imgtools import img_to_file, url_to_img
-from cogs.twitch import TwitchStream, get_twtv_id, get_lol_streams
+from cogs.twtv import TwitchStream
 
 from roleidentification import pull_data
 from PIL import Image, ImageDraw, ImageFont
@@ -189,7 +192,7 @@ class ActiveMatch:
         width, height = img.size
         last_row_h = 50
         last_row_y = height - last_row_h
-        rectangle = Image.new("RGB", (width, 100), "#C42C48")
+        rectangle = Image.new("RGB", (width, 100), str(Clr.rspbrry))
         ImageDraw.Draw(rectangle)
         img.paste(rectangle)
         img.paste(rectangle, (0, last_row_y))
@@ -212,7 +215,7 @@ class ActiveMatch:
         left = 0
         for count, rune_img in enumerate(rune_imgs):
             if count < 6:
-                rune_img = rune_img.resize((last_row_h, last_row_h ))
+                rune_img = rune_img.resize((last_row_h, last_row_h))
             img.paste(rune_img, (left, height - rune_img.height), rune_img)
             left += rune_img.height
 
@@ -227,7 +230,7 @@ class ActiveMatch:
 
     async def notif_embed(self, session: ClientSession):
         log.info("sending league embed")
-        twitch = TwitchStream(self.stream)
+        twitch = TwitchStream(self.twtv_id)
         image_name = \
             f'{twitch.display_name.replace("_", "")}-is-playing-' \
             f'{(await self.champ_name).replace(" ", "")}.png'
@@ -241,7 +244,7 @@ class ActiveMatch:
             url=twitch.url,
             description=
             f'Match `{self.match_id}` started {display_relativehmstime(self.long_ago)}\n'
-            f'{f"[TwtvVOD]({link})" if (link := twitch.last_vod_link(time_ago=self.long_ago)) is not None else ""}'
+            f'{twitch.last_vod_link(epoch_time_ago=self.long_ago)}'
             f'/[Opgg]({opgg_link(self.platform, self.accname)})'       
             f'/[Ugg]({ugg_link(self.platform, self.accname)})'
         ).set_image(
@@ -475,7 +478,7 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
     accname: Optional[str]
 
 
-class LoLFeedTools(commands.Cog, name='LoL'):
+class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
     """
     Commands to set up fav champ + fav stream notifs.
 
@@ -485,6 +488,13 @@ class LoLFeedTools(commands.Cog, name='LoL'):
     """
 
     def __init__(self, bot):
+        super().__init__(
+            display_name='LoLFeed',
+            db_name='lolfeed',
+            game_name='LoL',
+            db_acc_class=db.l,
+            clr=Clr.rspbrry
+        )
         self.bot = bot
         self.help_emote = Ems.PogChampPepe
 
@@ -517,7 +527,7 @@ class LoLFeedTools(commands.Cog, name='LoL'):
                 colour=Clr.error,
                 description='I do not have permissions to send messages in that channel :('
             )
-            return await ctx.reply(embed=em) #todo: change this to raise BotMissingPerms
+            return await ctx.reply(embed=em)  # todo: change this to raise BotMissingPerms
 
         db.set_value(db.ga, ctx.guild.id, lolfeed_ch_id=channel.id)
         em = Embed(
@@ -643,21 +653,6 @@ class LoLFeedTools(commands.Cog, name='LoL'):
             )
             await ctx.reply(embed=em)
             return None, None, None
-
-    @staticmethod  # todo: remove this
-    async def get_check_twitch_id(ctx: Context, twitch: str):
-        twtv_id = get_twtv_id(twitch.lower())
-        if twtv_id is None:
-            em = Embed(
-                colour=Clr.error,
-                description=
-                f'Error checking stream {twitch}.\n '
-                f'User either does not exist or is banned.'
-            )
-            await ctx.reply(embed=em, ephemeral=True)
-            return None
-
-        return twtv_id
 
     @is_trustee()
     @database.command(
@@ -911,7 +906,10 @@ class LoLFeedTools(commands.Cog, name='LoL'):
         Show current list of fav streams.
         """
         twtvid_list = db.get_value(db.ga, ctx.guild.id, 'lolfeed_stream_ids')
-        names_list = [row.name for row in db.session.query(db.l).filter(db.l.twtv_id.in_(twtvid_list)).all()]
+        names_list = [
+            row.name
+            for row in db.session.query(db.l).filter(db.l.twtv_id.in_(twtvid_list)).all() # type: ignore
+        ]
 
         ans_array = [f"[{name}](https://www.twitch.tv/{name})" for name in names_list]
         ans_array = sorted(list(set(ans_array)), key=str.casefold)

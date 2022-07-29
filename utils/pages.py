@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 from collections import defaultdict
 
-from discord import ButtonStyle, Embed, File, Interaction, Message, WebhookMessage
+from discord import ButtonStyle, Embed, File, Interaction, Message, WebhookMessage, NotFound
 from discord.ext.commands import Bot, BadArgument
 from discord.ui import Button, Modal, View, TextInput
 
@@ -234,7 +234,10 @@ class Paginator(View):
             page = self.pages[self.current_page]
             page = self.get_page_content(page)
             files = page.update_files()
-            await self.message.edit(view=self, attachments=files or [])
+            try:
+                await self.message.edit(view=self, attachments=files or [])
+            except NotFound:
+                pass  # message was already deleted or view was ephemeral or something
 
     async def goto_page(self, page_number: int = 0, *, ntr: Optional[Interaction] = None) -> None:
         self.current_page = page_number

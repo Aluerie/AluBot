@@ -1,34 +1,32 @@
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING
 
-from PIL import Image, ImageDraw
-
-from dateparser.search import search_dates
-from discord import Embed, Message, app_commands, Role, Member, Colour, Interaction, NotFound, File
-from discord.app_commands import AppCommand
+from discord import app_commands, Interaction, Embed
 from discord.ext import commands
 
-from cogs.expsys import avatar_work
-from utils.distools import send_traceback
-from utils.format import display_time
-from utils.imgtools import url_to_img, img_to_file
 from utils.var import *
-from utils import time
-from utils import database as db
 
 if TYPE_CHECKING:
     from utils.context import Context
     from utils.bot import AluBot
+
+from utils import dota
 
 
 class BetaTest(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
 
+    @commands.hybrid_command()
+    async def allu(self, ctx: Context):
+        em = Embed(
+            description=f'[Replay](https://dota2://matchid=668282480)'
+        )
+        await ctx.reply(embed=em)
+
     @app_commands.command()
-    async def allu(self, ntr: Interaction):
+    async def test_id(self, ntr: Interaction):
         await ntr.response.send_message(f'</{ntr.command.qualified_name}:{ntr.data["id"]}>')
 
 

@@ -200,7 +200,7 @@ class ActiveMatch(Match):
         if ch is None:
             pass
         em, img_file = await self.notif_embed(bot.ses)
-        em.title = f"{ch.guild.owner.name}'s fav hero + fav player spotted"
+        em.title = f"{ch.guild.owner.name}'s fav hero + player spotted"
         msg = await ch.send(embed=em, file=img_file)
         db.add_row(
             db.em,

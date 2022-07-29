@@ -186,19 +186,19 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
 
 class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     """
-    Commands to set up fav hero + fav stream notifs.
+    Commands to set up fav hero + player notifs.
 
-    These commands allow you to choose streamers from our database as your favorite \
+    These commands allow you to choose players from our database as your favorite \
     (or you can request adding them if missing) and choose your favorite Dota 2 heroes. \
-    The bot will send messages in a chosen channel when your fav streamer picks your fav hero.
+    The bot will send messages in a chosen channel when your fav player picks your fav hero.
 
     **Tutorial**
     1. Set channel with
     `$dota channel set #channel`
     2. Add players to your favourites, i.e.
     `$dota player add gorgc, bzm`
-    list of available players can be seen with `$dota database list`
-    3. Add missing streams to the database , i.e.
+    List of available players can be seen with `$dota database list`
+    3. Add missing players to the database , i.e.
     `$dota database add name: cr1tdota steam: 76561197986172872 twitch: yes`
     Only trustees can use `database add`. Others should `$dota database request` their fav streams.
     4. Add heroes to your favourites, i.e.
@@ -242,7 +242,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     @is_guild_owner()
     @channel_.command(name='disable', description='Disable DotaFeed functionality.')
     async def channel_disable(self, ctx: Context):
-        """Stop getting DotaFeed notifs. Data about fav heroes/streams won't be affected."""
+        """Stop getting DotaFeed notifs. Data about fav heroes/players won't be affected."""
         await self.channel_disable_base(ctx)
 
     @is_guild_owner()
@@ -272,7 +272,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     @is_guild_owner()
     @database.command(name='list')
     async def database_list(self, ctx: Context):
-        """List of streams in the database available for DotaFeed feature."""
+        """List of players in the database available for DotaFeed feature."""
         await ctx.defer()
         twtvid_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids')
         ss_dict = dict()
@@ -363,7 +363,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     )
     async def database_add(self, ctx: Context, *, flags: AddStreamFlags):
         """
-        Add stream to the database.
+        Add player to the database.
         • `<name>` is player name
         • `<steamid>` is either steamid in any of 64/32/3/2/friendid versions or just steam profile link.
         • `<twitch>` - yes/no indicating if player with name also streams under such name
@@ -395,9 +395,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link'
     )
     async def database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
-        """
-        Remove stream from the database.
-        """
+        """Remove player from the database."""
         await ctx.defer()
 
         map_dict = {'name': flags.name.lower()}
@@ -446,7 +444,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     @database.command(
         name='request',
         usage='name: <name> steam: <steamid> twitch: <yes/no>',
-        description='Request account to be added into the database.'
+        description='Request player to be added into the database.'
     )
     @app_commands.describe(
         name='player name',
@@ -455,7 +453,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     )
     async def database_request(self, ctx: Context, *, flags: AddStreamFlags):
         """
-        Request steam account to be added into the database. \
+        Request player to be added into the database. \
         This will send a request message into Aluerie's personal logs channel.
         """
         await ctx.defer()

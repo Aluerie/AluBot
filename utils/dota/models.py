@@ -127,7 +127,10 @@ class ActiveMatch(Match):
 
     @property
     def vod_link(self):
-        return '' if getattr(self.twtv, 'online', None) else self.twtv.last_vod_link(epoch_time_ago=self.long_ago)
+        if getattr(self.twtv, 'online', None):
+            return self.twtv.last_vod_link(epoch_time_ago=self.long_ago)
+        else:
+            return ''
 
     @async_property
     async def hero_name(self):

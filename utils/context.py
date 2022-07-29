@@ -110,7 +110,16 @@ class Context(commands.Context):
                 return f'{prefix}{command.qualified_name}{extra_space}{command.signature}'
 
             ans = 'This command is used only with subcommands. Please, provide one of them:\n'
-            ans += '\n'.join([f'`{get_command_signature(c)}`' for c in self.command.commands])
+
+            #for c in self.command.walk_commands():
+            #    print(get_command_signature(c))
+
+            self.command: commands.Group
+            for c in self.command.commands:
+                if getattr(c, 'commands', None):
+                    ans += '\n' + '\n'.join(f'`{get_command_signature(x)}`' for x in c.commands)  # type: ignore
+                else:
+                    ans += f'\n`{get_command_signature(c)}`'
 
             embed = Embed(
                 colour=Clr.error,

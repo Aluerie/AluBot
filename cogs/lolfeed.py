@@ -291,8 +291,8 @@ class MatchToEdit:
         draw = ImageDraw.Draw(img)
         w2, h2 = draw.textsize(self.outcome, font=font)
         colour_dict = {
-            'Win': f'#{MP.green(shade=800):x}',
-            'Loss': f'#{MP.red(shade=900):x}',
+            'Win': str(MP.green(shade=800)),
+            'Loss': str(MP.red(shade=900)),
             'No Scored': (255, 255, 255)
         }
         draw.text(

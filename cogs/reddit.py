@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 from asyncprawcore import AsyncPrawcoreException
@@ -193,10 +194,13 @@ class Reddit(commands.Cog):
                 async for comment in redditor.stream.comments(skip_existing=True, pause_after=0):
                     if comment is None:
                         continue
-                    embeds = await process_comments(comment)
-                    for item in embeds:
-                        msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
-                        await msg.publish()
+                    dtime = datetime.fromtimestamp(comment.created_utc)
+                    # idk there was some weird bug with sending old messages after 2 months
+                    if datetime.now(timezone.utc) - dtime.replace(tzinfo=timezone.utc) < timedelta(days=7):
+                        embeds = await process_comments(comment)
+                        for item in embeds:
+                            msg = await self.bot.get_channel(Cid.spam_me).send(embed=item)
+                            await msg.publish()
             except AsyncPrawcoreException:
                 await asyncio.sleep(60 * running)
                 running += 1

@@ -61,7 +61,7 @@ class TwitchStream:
             return data[0] if data else None
 
         offline_data = user_data(self.id)
-
+        print(offline_data)
         def stream_data(user_id: str):
             data = twitch.get_streams(user_id=[user_id])['data']
             return data[0] if data else None
@@ -84,7 +84,8 @@ class TwitchStream:
             if (name_to_cut := offline_data['offline_image_url']) == '':
                 self.preview_url = f'https://static-cdn.jtvnw.net/previews-ttv/live_user_{self.name}-640x360.jpg'
             else:
-                self.preview_url = f'{name_to_cut.split("offline_image-")[0]}offline_image-640x360.jpeg'
+                self.preview_url = \
+                    f'{name_to_cut.split("offline_image-")[0]}offline_image-640x360.{name_to_cut.split(".")[-1]}'
 
     def last_vod_link(self, epoch_time_ago: int = 0, md: bool = True) -> str:
         try:
@@ -94,3 +95,8 @@ class TwitchStream:
             return f'/[TwVOD]({vod_url})' if md else vod_url
         except IndexError:
             return ''
+
+
+if __name__ == '__main__':
+    re = TwitchStream(23364603)
+    print(re.preview_url)

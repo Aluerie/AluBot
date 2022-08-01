@@ -360,10 +360,20 @@ class ODotaAutoParse(commands.Cog):
     async def autoparse_task(self):
         await self.get_active_matches()
         for m_id in self.matches_to_parse:
+            #print(m_id)
             url = f"{ODOTA_API_URL}/request/{m_id}"
             async with self.bot.ses.post(url):
                 pass
-            self.active_matches.remove(m_id)
+
+            url = f"{ODOTA_API_URL}/matches/{m_id}"
+            async with self.bot.ses.get(url) as resp:
+                dic = await resp.json()
+                if dic == {"error": "Not Found"}:
+                    continue
+
+            if dic.get('players', None):
+                if dic['players'][0]['purchase_log'] is not None:
+                    self.active_matches.remove(m_id)
 
     @autoparse_task.before_loop
     async def before(self):

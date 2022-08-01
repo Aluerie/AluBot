@@ -8,6 +8,7 @@ from discord.utils import sleep_until
 from utils import database as db
 from utils.var import *
 from utils import time
+from utils.context import Context
 from utils.distools import send_pages_list
 
 from datetime import datetime, timedelta, timezone
@@ -15,7 +16,6 @@ from sqlalchemy import func
 
 if TYPE_CHECKING:
     from discord import Message
-    from utils.context import Context
 
 
 class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
@@ -48,12 +48,20 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
                 dtime=dt
             )
             ses.add(new_row)
-        embed = Embed(color=Clr.prpl)
-        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-        embed.title = 'Reminder was made for you'
-        embed.description = remind_text
-        embed.add_field(inline=False, name='Reminder time', value=time.format_tdR(dt))
-        embed.set_footer(text=f'Reminder was added under `id #{1 + old_max_id}`')
+        embed = Embed(
+            color=Clr.prpl,
+            title='Reminder was made for you',
+            description=remind_text
+        ).set_author(
+            name=member.display_name,
+            icon_url=member.display_avatar.url
+        ).add_field(
+            inline=False,
+            name='Reminder time',
+            value=time.format_tdR(dt)
+        ).set_footer(
+            text=f'Reminder was added under `id #{1 + old_max_id}`'
+        )
         if isinstance(ctx, Context):
             await ctx.reply(embed=embed)
         elif isinstance(ctx, Interaction):

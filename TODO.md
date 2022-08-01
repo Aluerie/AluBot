@@ -1,9 +1,13 @@
 ### Current thoughts
 
+ranked infographics 
+1) twice a day task to refresh the database
+2) sync command to refresh the database
+3) command to draw the infographics
+4) command to parse current patch number bcs there is no other way to get it
+5) dota hero minimap icons for cleaner plot
+6) command for custom note for the ranked infographics
 
-display name ?
-
-non twitch players for dota
 
 routing thing for league
 1. do a research on star thing *roles

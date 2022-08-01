@@ -202,6 +202,20 @@ class lfmessage(Base):
     routing_region = Column(String)
 
 
+class DotaHistory(Base):
+    __tablename__ = 'dotahistory'
+    __table_args__ = {'extend_existing': True}
+    id = Column(BigInteger, primary_key=True)
+    hero_id = Column(Integer)
+    winloss = Column(Boolean)
+    mmr = Column(Integer)
+    role = Column(Integer)
+    dtime = Column(DateTime)
+    patch = Column(String)
+    patch_letter = Column(String)
+    custom_note = Column(String)
+
+
 Base.metadata.create_all(engine)
 
 # biginteger type of id
@@ -216,6 +230,7 @@ s = mygamerdata
 ga = guildassignment
 em = dfmessage
 lf = lfmessage
+dh = DotaHistory
 
 # autoincrement type of id
 r = RemindersNote

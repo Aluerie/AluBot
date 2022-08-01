@@ -114,9 +114,9 @@ class ActiveMatch(Match):
             self.img_url = self.twtv.preview_url
             self.display_name = self.twtv.display_name
             self.logo_url = self.twtv.logo_url
-            self.url = self.twtv.url
             if self.twtv.online:
                 self.twitch_status = 'Live'
+                self.url = self.twtv.url
             else:
                 self.twitch_status = 'Offline'
         self.colour = colour_twitch_status_dict[self.twitch_status]
@@ -147,7 +147,7 @@ class ActiveMatch(Match):
         img.paste(rectangle)
 
         for count, hero_id in enumerate(self.hero_ids):
-            hero_img = await url_to_img(session, await hero.iconurl_by_id(hero_id))
+            hero_img = await url_to_img(session, await hero.imgurl_by_id(hero_id))
             # h_width, h_height = heroImg.size
             hero_img = hero_img.resize((62, 35))
             hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=dota_player_colour_map.get(count))
@@ -184,7 +184,7 @@ class ActiveMatch(Match):
         ).set_image(
             url=f'attachment://{img_file.filename}'
         ).set_thumbnail(
-            url=await hero.iconurl_by_id(self.hero_id)
+            url=await hero.imgurl_by_id(self.hero_id)
         ).set_author(
             name=f'{self.display_name} - {await self.hero_name}',
             url=self.url,
@@ -304,7 +304,7 @@ class PlayerAfterMatch:
 
         left_i = width - 69 * 6
         for count, itemId in enumerate(self.items):
-            hero_img = await url_to_img(session, await item.iconurl_by_id(itemId))
+            hero_img = await url_to_img(session, await item.imgurl_by_id(itemId))
             # h_width, h_height = heroImg.size # naturally in (88, 64)
             hero_img = hero_img.resize((69, 50))  # 69/50 - to match 88/64
             curr_left = left_i + count * hero_img.width
@@ -313,7 +313,7 @@ class PlayerAfterMatch:
 
         ability_h = 37
         for count, abilityId in enumerate(self.ability_upgrades_arr):
-            abil_img = await url_to_img(session, await ability.iconurl_by_id(abilityId))
+            abil_img = await url_to_img(session, await ability.imgurl_by_id(abilityId))
             abil_img = abil_img.resize((ability_h, ability_h))
             img.paste(abil_img, (count * ability_h, last_row_y - abil_img.height))
 

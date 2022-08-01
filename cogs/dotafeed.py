@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 import logging
 
 log = logging.getLogger('root')
-log.setLevel(logging.INFO)  # WARNING)
+log.setLevel(logging.WARNING)  # INFO) WARNING)
 
 
 class DotaFeed(commands.Cog):

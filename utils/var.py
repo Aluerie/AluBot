@@ -130,6 +130,7 @@ class Ems:  # Emote strings
     # alu server nonani
     bedNerdge = '<:bedNerdge:855495407110586439>'
     DankApprove = '<:DankApprove:853015071042961468>'
+    DankHatTooBig = '<:DankHatTooBig:855056297098215474>'
     DankFix = '<:DankFix:924285577027784774>'
     Ree = '<:Ree:735905686910664797>'
     PepoG = '<:PepoG:930335533970911262>'

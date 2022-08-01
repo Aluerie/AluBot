@@ -2,29 +2,30 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from discord import Embed
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 from utils import pages
-from utils import dota as d2
-from utils import database as db
+
+from utils.dota import hero
+from utils.dota.models import Match
 
 from utils.var import *
-from utils.imgtools import plt_to_file, img_to_file, url_to_img
+from utils.imgtools import img_to_file, url_to_img
 from utils.distools import send_pages_list
 from utils.format import indent
 
 from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime, timedelta, time, timezone
-import matplotlib.pyplot as plt
-import numpy as np
+from datetime import datetime, timedelta, timezone
 from os import getenv
 
 import logging
-log = logging.getLogger('root')
-log.setLevel(logging.WARNING)
 
 if TYPE_CHECKING:
     from utils.context import Context
+    from utils.bot import AluBot
+
+log = logging.getLogger('root')
+log.setLevel(logging.WARNING)
 
 DOTA_FRIENDID = int(getenv('DOTA_FRIENDID'))
 
@@ -73,6 +74,7 @@ def try_get_gamerstats(bot, start_at_match_id=0, matches_requested=20):
 
     def response(request_id, matches):
         global send_matches
+        print(1)
         send_matches = matches
         bot.dota.emit('player_match_history_response')
 
@@ -82,15 +84,14 @@ def try_get_gamerstats(bot, start_at_match_id=0, matches_requested=20):
     return send_matches
 
 
-class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
+class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     """
     Stalk match history, mmr plot and more.
 
     You can get various information about Aluerie's Dota 2 progress.
     """
     def __init__(self, bot):
-        self.bot = bot
-        self.daily_match_history_ctrlr.start()
+        self.bot: AluBot = bot
         self.help_emote = Ems.TwoBButt
 
     @commands.hybrid_group()
@@ -208,11 +209,11 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
                     font=font
                 )
 
-                hero_img = await url_to_img(self.bot.ses, await d2.iconurl_by_id(x.hero_id))
+                hero_img = await url_to_img(self.bot.ses, await hero.imgurl_by_id(x.hero_id))
                 hero_img = hero_img.resize((h_width, h_height))
                 img.paste(hero_img, (col0 + col1 + col2, int(cell_h * c)))
 
-                hero_text = await d2.name_by_id(x.hero_id)
+                hero_text = await hero.name_by_id(x.hero_id)
                 w3, h3 = d.textsize(hero_text, font=font)
                 d.text(
                     (col0 + col1 + col2 + h_width + (col3-w3)/2, cell_h * c + (cell_h - h3)/2),
@@ -226,7 +227,7 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
                 d.text(
                     (col0 + col1 + col2 + h_width + col3 + (col4-w4)/2, cell_h * c + (cell_h - h3)/2),
                     wl_text,
-                    fill=f'#{MP.green(shade=800):x}' if x.winner else f'#{MP.red(shade=900):x}',  # Pil doesnt like ints
+                    fill=str(MP.green(shade=800)) if x.winner else str(MP.red(shade=900)),
                     font=font,
                 )
             return img
@@ -273,24 +274,22 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
         description="Copypastable match ids"
     )
     async def match_ids(self, ctx: Context):
-        """
-        Copypastable match ids
-        """
-        await ctx.typing()
+        """Copypastable match ids"""
+        await ctx.defer()
         start_at_match_id = 0
         string_list = []
         split_size = 20
         offset = 1
         for i in range(5):
             res = try_get_gamerstats(ctx.bot, start_at_match_id=start_at_match_id)
-            max_hero_len = max([len(await d2.name_by_id(x.hero_id)) for x in res])
+            max_hero_len = max([len(await hero.name_by_id(x.hero_id)) for x in res])
             for c, x in enumerate(res):
                 string_list.append(
                     f'`{indent(c+offset, c+offset, offset, split_size)} '
                     f'{x.match_id} '
-                    f'{(await d2.name_by_id(x.hero_id)).ljust(max_hero_len, " ")} '
+                    f'{(await hero.name_by_id(x.hero_id)).ljust(max_hero_len, " ")} '
                     f'{"Win " if x.winner else "Loss"}` '
-                    f'{d2.stats_sites_match_urls(x.match_id)}'
+                    f'{Match(x.match_id).links()}'
                 )
             start_at_match_id = res[-1].match_id
             offset += 20
@@ -303,56 +302,6 @@ class GamerStats(commands.Cog, name='Aluerie\'s Gamer Stats'):
             title="Copypastable match ids",
         )
 
-    @stalk.command(
-        name='mmr',
-        description="Aluerie's Dota 2 MMR Plot"
-    ) 
-    async def mmr(self, ctx: Context):
-        """Aluerie's Dota 2 MMr Plot"""
-        await ctx.typing()
-        old_dict = db.get_value(db.s, DOTA_FRIENDID, 'match_history')
-        starting_mmr = 4340
-        points_gain = 30
-
-        fig = plt.figure()
-        mmr = starting_mmr
-        mmr_array = [mmr]
-        for k in reversed(list(old_dict.keys())):
-            mmr += points_gain if old_dict[k] else -points_gain
-            mmr_array.append(mmr)
-
-        plt.plot(mmr_array, label=f'MMR Plot', marker='o')
-        plt.title(f'Aluerie\'s MMR Plot - this plot gets updated twice a day (6:45am/pm)')
-        axes = plt.gca()
-        major_xticks = np.arange(0, len(mmr_array), 1)
-        major_yticks = np.arange(min(mmr_array), max(mmr_array) + points_gain, points_gain)
-        axes.set_xticks(major_xticks)
-        axes.set_yticks(major_yticks)
-        plt.grid()
-        plt.legend(fontsize='large'), plt.xlabel('Number of games'), plt.ylabel('MMR')
-        fig.patch.set_facecolor('#9678B6')
-        await ctx.reply(file=plt_to_file(fig, filename='mmr.png'))
-
-    @tasks.loop(time=[time(hour=3, minute=45), time(hour=15, minute=45)])  # minus 3 hours from contracts cause utc
-    async def daily_match_history_ctrlr(self):
-        with db.session_scope() as ses:
-            row = ses.query(db.s).filter_by(id=DOTA_FRIENDID).first()
-            dict_res = {}
-            for _ in range(5):
-                res = try_get_gamerstats(self.bot)
-                dict_res = {x.match_id: x.winner for x in res if x.lobby_type == 7} | dict_res
-                if row.last_match_id in dict_res:
-                    break
-            old_dict = db.get_value(db.s, DOTA_FRIENDID, 'match_history')
-            new_dict = dict_res | old_dict
-            last_match_id = 0 if len(new_dict) == 0 else list(new_dict)[0]  # next(iter(new_dict))
-            row.match_history = new_dict
-            row.last_match_id = last_match_id
-
-    @daily_match_history_ctrlr.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
-
-
 async def setup(bot):
     await bot.add_cog(GamerStats(bot))
+

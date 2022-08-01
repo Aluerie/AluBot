@@ -304,7 +304,7 @@ class PlayerAfterMatch:
 
         left_i = width - 69 * 6
         for count, itemId in enumerate(self.items):
-            hero_img = await url_to_img(session, await item.imgurl_by_id(itemId))
+            hero_img = await url_to_img(session, await item.iconurl_by_id(itemId))
             # h_width, h_height = heroImg.size # naturally in (88, 64)
             hero_img = hero_img.resize((69, 50))  # 69/50 - to match 88/64
             curr_left = left_i + count * hero_img.width
@@ -313,7 +313,7 @@ class PlayerAfterMatch:
 
         ability_h = 37
         for count, abilityId in enumerate(self.ability_upgrades_arr):
-            abil_img = await url_to_img(session, await ability.imgurl_by_id(abilityId))
+            abil_img = await url_to_img(session, await ability.iconurl_by_id(abilityId))
             abil_img = abil_img.resize((ability_h, ability_h))
             img.paste(abil_img, (count * ability_h, last_row_y - abil_img.height))
 

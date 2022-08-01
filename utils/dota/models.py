@@ -114,9 +114,9 @@ class ActiveMatch(Match):
             self.img_url = self.twtv.preview_url
             self.display_name = self.twtv.display_name
             self.logo_url = self.twtv.logo_url
+            self.url = self.twtv.url
             if self.twtv.online:
                 self.twitch_status = 'Live'
-                self.url = self.twtv.url
             else:
                 self.twitch_status = 'Offline'
         self.colour = colour_twitch_status_dict[self.twitch_status]

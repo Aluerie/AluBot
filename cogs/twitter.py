@@ -38,7 +38,7 @@ async def download_twitter_images(session, ctx: Context, *, tweet_ids: str):
     Useful for Aluerie bcs twitter is banned in Russia (NotLikeThis).
     <tweet_ids> are tweet ids - it's just numbers in the end of tweet links.
     """
-    await ctx.defer()
+    await ctx.typing()
 
     if not ctx.interaction:
         await ctx.message.edit(suppress=True)

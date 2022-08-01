@@ -162,6 +162,7 @@ class HelpCommand(commands.HelpCommand):
             cd_str = f' | cd: {c.cooldown.rate} per {display_hmstime(c.cooldown.per)}'
 
         help_str = c.help or 'No documentation'
+
         def get_sign(o):
             extra_space = '' if o.signature == '' else ' '
             prefix = getattr(self.context, 'clean_prefix', '$')
@@ -169,6 +170,7 @@ class HelpCommand(commands.HelpCommand):
         return f'● {slash}`{get_sign(c)}`{aliases}{cd_str}\n{checks}{help_str}'
 
     async def send_bot_help(self, mapping):
+        await self.context.typing()
         embed_list = []
         drop_options = []
 

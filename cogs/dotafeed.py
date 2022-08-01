@@ -273,7 +273,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     @database.command(name='list')
     async def database_list(self, ctx: Context):
         """List of players in the database available for DotaFeed feature."""
-        await ctx.defer()
+        await ctx.typing()
         twtvid_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids')
         ss_dict = dict()
         for row in db.session.query(db.d):
@@ -368,7 +368,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         • `<steamid>` is either steamid in any of 64/32/3/2/friendid versions or just steam profile link.
         • `<twitch>` - yes/no indicating if player with name also streams under such name
         """
-        await ctx.defer()
+        await ctx.typing()
 
         answer = await self.database_add_request_check(ctx, flags)
         if answer is False:
@@ -396,7 +396,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     )
     async def database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
         """Remove player from the database."""
-        await ctx.defer()
+        await ctx.typing()
 
         map_dict = {'name': flags.name.lower()}
         if flags.steam:
@@ -456,7 +456,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         Request player to be added into the database. \
         This will send a request message into Aluerie's personal logs channel.
         """
-        await ctx.defer()
+        await ctx.typing()
 
         answer = await self.database_add_request_check(ctx, flags)
         if answer is False:

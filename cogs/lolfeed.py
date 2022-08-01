@@ -612,7 +612,7 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         List of all streamers in database \
         available for LoLFeed feature.
         """
-        await ctx.defer()
+        await ctx.typing()
 
         twtvid_list = db.get_value(db.ga, ctx.guild.id, 'lolfeed_stream_ids')
         ss_dict = dict()
@@ -672,7 +672,7 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         • `<region>` is LoL region of the account
         • `<accname>` is Summoner name of the account
         """
-        await ctx.defer()
+        await ctx.typing()
         twitch = flags.twitch.lower()
         twtv_id = await self.get_check_twitch_id(ctx, twitch)
         if twtv_id is None:
@@ -715,10 +715,8 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         accname='Summoner name of the account'
     )
     async def database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
-        """
-        Remove stream from the database.
-        """
-        await ctx.defer()
+        """Remove stream from the database."""
+        await ctx.typing()
 
         map_dict = {
             'name': flags.twitch.lower(),
@@ -778,7 +776,7 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         Request lol account to be added into the database. \
         This will send a request message into Aluerie's personal logs channel.
         """
-        await ctx.defer()
+        await ctx.typing()
 
         twitch = flags.twitch.lower()
         twtv_id = await self.get_check_twitch_id(ctx, twitch)

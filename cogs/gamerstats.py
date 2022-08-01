@@ -275,7 +275,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     )
     async def match_ids(self, ctx: Context):
         """Copypastable match ids"""
-        await ctx.defer()
+        await ctx.typing()
         start_at_match_id = 0
         string_list = []
         split_size = 20

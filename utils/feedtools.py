@@ -104,7 +104,7 @@ class FeedTools:
         ...
 
     async def database_list_base(self, ctx: Context):
-        await ctx.defer()
+        await ctx.typing()
         fav_id_list = db.get_value(db.ga, ctx.guild.id, self.db_pl_col)
         ss_dict = dict()
         for row in db.session.query(self.db_acc_class):

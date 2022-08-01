@@ -74,10 +74,8 @@ class ToolsCog(commands.Cog, name='Tools'):
 
     @commands.hybrid_command()
     async def matchmaking_stats(self, ctx: Context):
-        """
-        Get Dota 2 matchmaking stats
-        """
-        await ctx.defer()
+        """Get Dota 2 matchmaking stats"""
+        await ctx.typing()
 
         players_by_group = self.dota_request_matchmaking_stats()
         region_arr = [

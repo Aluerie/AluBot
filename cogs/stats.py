@@ -14,7 +14,7 @@ from typing import Union
 from wordcloud import WordCloud
 
 if TYPE_CHECKING:
-    pass
+    from utils.context import Context
 
 
 class StatsCommands(commands.Cog, name='Stats'):
@@ -35,7 +35,7 @@ class StatsCommands(commands.Cog, name='Stats'):
     @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
     async def wordcloud(
             self,
-            ctx,
+            ctx: Context,
             channel_or_and_member: commands.Greedy[Union[Member, TextChannel]] = None,
             limit: int = 2000
     ):
@@ -44,10 +44,11 @@ class StatsCommands(commands.Cog, name='Stats'):
         Can accept multiple members/channels \
         Note that it's quite slow function or even infinitely slow with bigger limits ;
         """
+        await ctx.typing()
         cm = channel_or_and_member or []  # idk i don't like mutable default argument warning
         members = [x for x in cm if isinstance(x, Member)] or [ctx.author]
         channels = [x for x in cm if isinstance(x, TextChannel)] or [ctx.channel]
-        await ctx.defer()
+
         text = ''
         for ch in channels:
             text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])

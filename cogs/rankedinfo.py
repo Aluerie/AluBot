@@ -160,7 +160,7 @@ class RankedInfo(commands.Cog, name='Ranked Infographics for Aluerie'):
     @ranked.command()
     async def sync(self, ctx: Context):
         """Sync information for Irene's ranked infographics"""
-        await ctx.defer()
+        await ctx.typing()
         await self.sync_work()
         em = Embed(
             colour=Clr.prpl,
@@ -182,6 +182,14 @@ class RankedInfo(commands.Cog, name='Ranked Infographics for Aluerie'):
     @match_history_refresh.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
+
+    @staticmethod
+    def fancy_ax(ax):
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        return ax
 
     @staticmethod
     def generate_data():
@@ -243,64 +251,7 @@ class RankedInfo(commands.Cog, name='Ranked Infographics for Aluerie'):
         ax.autoscale(True)
         return line, im
 
-    @ranked.command(aliases=['infographics'])
-    async def info(self, ctx: Context):
-        """Infographics about Aluerie ranked adventure"""
-        await ctx.defer()
-        hero_stats_dict = {}
-
-        for row in db.session.query(db.dh):
-            def fill_the_dict():
-                if row.winloss:
-                    hero_stats_dict[row.hero_id]['wins'] += 1
-                else:
-                    hero_stats_dict[row.hero_id]['losses'] += 1
-
-            if row.hero_id not in hero_stats_dict:
-                hero_stats_dict[row.hero_id] = {'wins': 0, 'losses': 0}
-            fill_the_dict()
-
-        def winrate():
-            wins = sum(v['wins'] for v in hero_stats_dict.values())
-            losses = sum(v['losses'] for v in hero_stats_dict.values())
-            winrate = 100 * wins / (wins + losses)
-            return f'{winrate:2.2f}%'
-
-        def fancy_ax(ax):
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            ax.spines['bottom'].set_visible(False)
-            ax.spines['left'].set_visible(False)
-            return ax
-
-        # Set canvas background color the same as axes
-        plt.rc('figure', facecolor=str(MP.gray(shade=300)))
-
-        # set constrianed_layout as True to avoid axes overlap
-        fig = plt.figure(figsize=(10, 12), dpi=300, constrained_layout=True)
-
-        # Use GridSpec for customising layout
-        gs = fig.add_gridspec(nrows=7, ncols=12)
-
-        # Set up a empty axes that occupied 2 rows and 10 cols in the grid for text
-        axText = fig.add_subplot(gs[0, :])
-        axText.annotate(
-            'Aluerie\'s ranked grind', (0.5, 0.5),
-            xycoords='axes fraction', va='center', ha='center', fontsize=23, fontweight='black'
-        )
-        axText.get_xaxis().set_visible(False)
-        axText.get_yaxis().set_visible(False)
-        axText = fancy_ax(axText)
-
-        ax = fig.add_subplot(gs[1:4, 0:10])
-        self.gradient_fill(*self.generate_data(), color=str(Clr.twitch), ax=ax, linewidth=5.0, marker='o')
-        ax.set_title('MMR Plot', x=0.5, y=0.92)
-        ax.tick_params(axis="y", direction="in", pad=-42)
-        ax.tick_params(axis="x", direction="in", pad=-25)
-        ax = fancy_ax(ax)
-
-        ax = fig.add_subplot(gs[4:7, 0:5])
-
+    async def mmr_by_hero_bar(self, ax, hero_stats_dict: dict):
         hero_list = list(hero_stats_dict.keys())
         x_list = list(range(len(hero_stats_dict.keys())))
         y_list = [(v['wins'] - v['losses']) * 30 for v in hero_stats_dict.values()]
@@ -317,16 +268,16 @@ class RankedInfo(commands.Cog, name='Ranked Infographics for Aluerie'):
         ax.set_yticks(np.arange(min(y_list) - 60, max(y_list) + 60, 30.0))
         ax.set_xticks([])
         ax.set_aspect(1 / 30)
-        ax = fancy_ax(ax)
+        ax = self.fancy_ax(ax)
         ax.set_title('MMR by hero', x=0.5, y=0.92)
         ax.tick_params(axis="y", direction="in", pad=-22)
         ax.tick_params(axis="x", direction="in", pad=-15)
         ax.set_xlim(-1)
+        return ax
 
-        ax = fig.add_subplot(gs[4:7, 5:10])
+    async def heroes_played_bar(self, ax, sorted_dict):
+        hero_list = list(sorted_dict.keys())
 
-        hero_list = list(hero_stats_dict.keys())
-        sorted_dict = dict(sorted(hero_stats_dict.items(), key=lambda x: sum(x[1].values()), reverse=False))
         y_list = range(len(sorted_dict.keys()))
         w_list = [(v['wins']) for v in sorted_dict.values()]
         l_list = [(v['losses']) for v in sorted_dict.values()]
@@ -344,11 +295,63 @@ class RankedInfo(commands.Cog, name='Ranked Infographics for Aluerie'):
         ax.set_aspect(1 / 1)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
-        ax = fancy_ax(ax)
+        ax = self.fancy_ax(ax)
         ax.set_title('Heroes Played', x=0.5, y=0.9)
         plt.bar_label(ax.containers[1])
         ax.set_ylim(-2, max(y_list) + 3)
         ax.set_xlim(-1, max(sum_list) + 4)
+        return ax
+
+    @ranked.command(aliases=['infographics'])
+    async def info(self, ctx: Context):
+        """Infographics about Aluerie ranked adventure"""
+        await ctx.typing()
+        hero_stats_dict = {}
+
+        for row in db.session.query(db.dh):
+            def fill_the_dict():
+                if row.winloss:
+                    hero_stats_dict[row.hero_id]['wins'] += 1
+                else:
+                    hero_stats_dict[row.hero_id]['losses'] += 1
+
+            if row.hero_id not in hero_stats_dict:
+                hero_stats_dict[row.hero_id] = {'wins': 0, 'losses': 0}
+            fill_the_dict()
+
+        sorted_dict = dict(sorted(hero_stats_dict.items(), key=lambda x: sum(x[1].values()), reverse=False))
+
+        def winrate():
+            wins = sum(v['wins'] for v in hero_stats_dict.values())
+            losses = sum(v['losses'] for v in hero_stats_dict.values())
+            winrate = 100 * wins / (wins + losses)
+            return f'{winrate:2.2f}%'
+
+        plt.rc('figure', facecolor=str(MP.gray(shade=300)))
+        fig = plt.figure(figsize=(10, 12), dpi=300, constrained_layout=True)
+        gs = fig.add_gridspec(nrows=7, ncols=10)
+
+        axText = fig.add_subplot(gs[0, :])
+        axText.annotate(
+            'Aluerie\'s ranked grind', (0.5, 0.5),
+            xycoords='axes fraction', va='center', ha='center', fontsize=23, fontweight='black'
+        )
+        axText.get_xaxis().set_visible(False)
+        axText.get_yaxis().set_visible(False)
+        axText = self.fancy_ax(axText)
+
+        ax = fig.add_subplot(gs[2:5, 0:10])
+        self.gradient_fill(*self.generate_data(), color=str(Clr.twitch), ax=ax, linewidth=5.0, marker='o')
+        ax.set_title('MMR Plot', x=0.5, y=0.92)
+        ax.tick_params(axis="y", direction="in", pad=-42)
+        ax.tick_params(axis="x", direction="in", pad=-25)
+        ax = self.fancy_ax(ax)
+
+        ax = fig.add_subplot(gs[5:8, 0:6])
+        ax = await self.mmr_by_hero_bar(ax, sorted_dict)
+
+        ax = fig.add_subplot(gs[5:8, 6:10])
+        ax = await self.heroes_played_bar(ax, sorted_dict)
 
         data_info = {
             'Final MMR': db.session.query(db.dh.mmr).order_by(db.dh.id.desc()).limit(1).first().mmr,  # type: ignore
@@ -357,8 +360,9 @@ class RankedInfo(commands.Cog, name='Ranked Infographics for Aluerie'):
             'Heroes Played': len(sorted_dict)
         }
 
-        for i, (k, v) in enumerate(data_info.items(), start=1):
-            axRain = fig.add_subplot(gs[i, 10:12], ylim=(-30, 30))
+        for i, (k, v) in enumerate(data_info.items(), start=0):
+            left, right = i*2, i*2+2
+            axRain = fig.add_subplot(gs[1, left:right], ylim=(-30, 30))
             axRain.set_title(f'{k}', x=0.5, y=0.6)
             axRain.annotate(
                 f'{v}', (0.5, 0.4),
@@ -366,11 +370,11 @@ class RankedInfo(commands.Cog, name='Ranked Infographics for Aluerie'):
             )
             axRain.get_xaxis().set_visible(False)
             axRain.get_yaxis().set_visible(False)
-            axRain = fancy_ax(axRain)
+            axRain = self.fancy_ax(axRain)
 
         last_match = db.session.query(db.dh).order_by(db.dh.id.desc()).limit(1).first()  # type: ignore
 
-        axRain = fig.add_subplot(gs[6, 10:12], ylim=(-30, 30))
+        axRain = fig.add_subplot(gs[1, 8:10], ylim=(-30, 30))
         axRain.set_title(f'Last Match', x=0.5, y=0.6)
         axRain.annotate(
             'Win' if last_match.winloss else 'Loss', (0.5, 0.5),
@@ -380,7 +384,7 @@ class RankedInfo(commands.Cog, name='Ranked Infographics for Aluerie'):
             last_match.dtime.strftime("%m/%d, %H:%M"), (0.5, 0.2),
             xycoords='axes fraction', va='center', ha='center', fontsize=12
         )
-        axRain = fancy_ax(axRain)
+        axRain = self.fancy_ax(axRain)
         hero_icon = await url_to_img(self.bot.ses, url=await hero.imgurl_by_id(last_match.hero_id))
         hero_icon.putalpha(200)
 

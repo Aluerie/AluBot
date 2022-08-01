@@ -54,7 +54,7 @@ class DotaFeed(commands.Cog):
                 if dic == {"error": "Not Found"}:
                     continue
 
-                for player in dic['players']:
+                for player in dic.get('players', []):  # one day OD freaked out
                     if player['hero_id'] == row.hero_id:
                         if player['purchase_log'] is not None:
                             self.after_match.append(

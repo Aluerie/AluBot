@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 test_list = [  # for yen bot
     'help',
     'error',
-    #'gamerstats',
-    'reddit'
+    'gamerstats',
+    #'reddit'
 ]
 
 

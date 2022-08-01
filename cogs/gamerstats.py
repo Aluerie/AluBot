@@ -9,6 +9,7 @@ from steam.enums import emsg
 
 from utils import pages
 
+from utils import database as db
 from utils.dota import hero
 from utils.dota.const import ODOTA_API_URL
 from utils.dota.models import Match
@@ -311,7 +312,8 @@ class ODotaAutoParse(commands.Cog):
     """Automatic request to parse Dota 2 matches after its completion"""
     def __init__(self, bot):
         self.bot: AluBot = bot
-        self.matches_to_parse = set()
+        self.matches_to_parse = []
+        self.active_matches = []
         self.lobby_ids = set()
         self.autoparse_task.start()
 
@@ -320,18 +322,21 @@ class ODotaAutoParse(commands.Cog):
         self.bot.steam_dota_login()
 
         def ready_function():
-            log.info("ready_function dota2info")
             self.bot.dota.request_top_source_tv_games(lobby_ids=list(self.lobby_ids))
 
         def response(result):
             if result.specific_games:
-                for match in result.game_list:
-                    self.matches_to_parse.add(match.match_id)
+                m_ids = [m.match_id for m in result.game_list]
+                self.matches_to_parse = [m_id for m_id in self.active_matches if m_id not in m_ids]
+                self.active_matches += [m_id for m_id in m_ids if m_id not in self.active_matches]
+            else:
+                self.matches_to_parse = self.active_matches
+            #print(f'to parse {self.matches_to_parse} active {self.active_matches}')
             self.bot.dota.emit('top_games_response')
 
         proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
         proto_msg.header.routing_appid = 570
-        steamids = [76561198867412686]
+        steamids = [row.id for row in db.session.query(db.ap)]
         proto_msg.body.steamid_request.extend(steamids)
         resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
         if resp is None:
@@ -345,12 +350,7 @@ class ODotaAutoParse(commands.Cog):
                 if lobby_id := int(rp.get('WatchableGameID', 0)):
                     self.lobby_ids.add(lobby_id)
 
-        if not self.lobby_ids:
-            for match_id in self.matches_to_parse:
-                url = f"{ODOTA_API_URL}/request/{match_id}"
-                async with self.bot.ses.post(url):
-                    pass
-            self.matches_to_parse = set()
+        #print(self.lobby_ids)
         # dota.on('ready', ready_function)
         self.bot.dota.once('top_source_tv_games', response)
         ready_function()
@@ -359,6 +359,11 @@ class ODotaAutoParse(commands.Cog):
     @tasks.loop(seconds=59)
     async def autoparse_task(self):
         await self.get_active_matches()
+        for m_id in self.matches_to_parse:
+            url = f"{ODOTA_API_URL}/request/{m_id}"
+            async with self.bot.ses.post(url):
+                pass
+            self.active_matches.remove(m_id)
 
     @autoparse_task.before_loop
     async def before(self):

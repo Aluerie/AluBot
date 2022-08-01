@@ -216,6 +216,12 @@ class DotaHistory(Base):
     custom_note = Column(String)
 
 
+class AutoParse(Base):
+    __tablename__ = 'autoparse'
+    __table_args__ = {'extend_existing': True}
+    id = Column(BigInteger, primary_key=True)
+
+
 Base.metadata.create_all(engine)
 
 # biginteger type of id
@@ -231,6 +237,7 @@ ga = guildassignment
 em = dfmessage
 lf = lfmessage
 dh = DotaHistory
+ap = AutoParse
 
 # autoincrement type of id
 r = RemindersNote

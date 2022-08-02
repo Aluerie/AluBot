@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from os import listdir
 from typing import TYPE_CHECKING, Optional
 
 from discord import Embed, Guild, Member, Object, utils, HTTPException
@@ -8,8 +10,8 @@ from discord.ext.commands import Greedy
 from utils import database as db
 from utils.checks import is_owner
 from utils.var import *
+from utils.bot import test_list, YEN_JSK
 from utils.context import Context
-
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -221,6 +223,77 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
                 fmt += 1
 
         await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
+
+    async def load_unload_reload_job(
+            self,
+            ctx: Context,
+            module: str,
+            *,
+            mode: Literal['load', 'unload', 'reload']
+    ):
+        try:
+            filename = f'cogs.{module}'  # so we do `$unload beta` instead of `$unload beta.py`
+            match mode:
+                case 'load':
+                    await self.bot.load_extension(filename)
+                case 'unload':
+                    await self.bot.unload_extension(filename)
+                case 'reload':
+                    await self.bot.reload_extension(filename)
+        except commands.ExtensionError as e:
+            await ctx.send(f'{e.__class__.__name__}: {e}')
+        else:
+            await ctx.message.add_reaction(Ems.DankApprove)
+
+    @is_owner()
+    @commands.command(name='load', hidden=True)
+    async def load(self, ctx: Context, *, module: str):
+        """Loads a module."""
+        await self.load_unload_reload_job(ctx, module, mode='load')
+
+    @is_owner()
+    @commands.command(name='unload', hidden=True)
+    async def unload(self, ctx: Context, *, module: str):
+        """Unloads a module."""
+        await self.load_unload_reload_job(ctx, module, mode='unload')
+
+    @is_owner()
+    @commands.group(name='reload', hidden=True, invoke_without_command=True)
+    async def reload(self, ctx: Context, *, module: str):
+        """Reloads a module."""
+        await self.load_unload_reload_job(ctx, module, mode='reload')
+
+    async def reload_or_load_extension(self, module: str) -> None:
+        try:
+            await self.bot.reload_extension(module)
+        except commands.ExtensionNotLoaded:
+            await self.bot.load_extension(module)
+
+    @is_owner()
+    @reload.command(name='all', hidden=True)
+    async def reload_all(self, ctx: Context):
+        """Reloads all modules"""
+        cogs_to_reload = []
+        if self.bot.yen and len(test_list):
+            if YEN_JSK:
+                cogs_to_reload.append('jishaku')
+            for item in test_list:
+                cogs_to_reload.append(f'cogs.{item}')
+        else:
+            cogs_to_reload.append('jishaku')
+            for filename in listdir('./cogs'):
+                if filename.endswith('.py'):
+                    cogs_to_reload.append(f'cogs.{filename[:-3]}')
+
+        add_reaction = True
+        for cog in cogs_to_reload:
+            try:
+                await self.reload_or_load_extension(cog)
+            except commands.ExtensionError as e:
+                await ctx.send(f'{e.__class__.__name__}: {e}')
+                add_reaction = False
+        if add_reaction:
+            await ctx.message.add_reaction(Ems.DankApprove)
 
 
 async def setup(bot):

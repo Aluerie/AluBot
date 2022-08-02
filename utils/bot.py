@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 test_list = [  # for yen bot
     'help',
     'error',
-    'gamerstats',
-    #'reddit'
+    'beta',
+    'botadmintools'
 ]
 
 
@@ -84,7 +84,7 @@ class AluBot(commands.Bot):
         """
 
         environ["JISHAKU_NO_UNDERSCORE"] = "True"
-        environ["JISHAKU_HIDE"] = "True" # need to be before loading jsk
+        environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
         if self.yen and len(test_list):
             if YEN_JSK:
                 await self.load_cog('jishaku')

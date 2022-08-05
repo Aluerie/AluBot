@@ -339,6 +339,8 @@ class LoLFeed(commands.Cog):
                 ).get()
             except NotFound:
                 continue
+            except ValueError:  # gosu incident ValueError: '' is not a valid platform
+                continue  # TODO: remove message from the database
             for participant in match.info.participants:
                 if participant.champion_id in row_dict[m_id]['champ_ids']:
                     self.after_match.append(
@@ -386,7 +388,6 @@ class LoLFeed(commands.Cog):
                 # says 420 is 5v5 Ranked Solo games
                 if not hasattr(live_game, 'queue_id') or live_game.queue_id != 420:
                     continue
-
                 our_player = next((x for x in live_game.participants if x.summoner_id == row.id), None)
                 if our_player.champion_id in fav_champ_ids and \
                         row.last_edited != get_str_match_id(live_game.platform, live_game.id):

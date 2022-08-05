@@ -52,6 +52,7 @@ async def download_twitter_images(session, ctx: Context, *, tweet_ids: str):
         expansions="attachments.media_keys"
     )
     img_urls = [m.url for m in response.includes['media']]
+    print(img_urls)
     files = await url_to_file(session, img_urls, return_list=True)
     split_size = 10
     files_10 = [files[x:x + split_size] for x in range(0, len(files), split_size)]

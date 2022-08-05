@@ -1,6 +1,6 @@
 from discord import Embed
 from discord.ext import commands, tasks
-from utils.var import Cid, Clr, Ems, Rgx, Sid, Uid
+from utils.var import Cid, Clr, Ems, Rgx, Uid
 
 import regex
 from numpy.random import randint, choice
@@ -118,10 +118,17 @@ class ComfySpam(commands.Cog):
             for item in Ems.comfy_emotes:
                 text = text.replace(item, "")
             if text:
-                answer_text = "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! " \
-                              "{2} {2} {2}".format(msg.author.mention, msg.channel.mention, Ems.Ree)
-                embed = Embed(title="Deleted message", description=msg.content, color=Clr.prpl)
-                embed.set_author(name=msg.author.display_name, icon_url=msg.author.display_avatar.url)
+                answer_text = \
+                    "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! " \
+                    "{2} {2} {2}".format(msg.author.mention, msg.channel.mention, Ems.Ree)
+                embed = Embed(
+                    title="Deleted message",
+                    description=msg.content,
+                    color=Clr.prpl
+                ).set_author(
+                    name=msg.author.display_name,
+                    icon_url=msg.author.display_avatar.url
+                )
                 await self.bot.get_channel(Cid.bot_spam).send(answer_text, embed=embed)
                 await msg.delete()
                 return 1

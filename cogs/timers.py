@@ -123,23 +123,23 @@ class Timers(commands.Cog):
         embed = Embed(title=etitle, color=clr, description=dscr)
         return await self.bot.get_channel(Cid.general).send(embed=embed)
 
-    @tasks.loop(minutes=47)
+    @tasks.loop(minutes=87)
     async def daily_reminders(self):
         await self.timer_work('Daily Message', Clr.prpl, get_a_text())
 
-    @tasks.loop(minutes=49)
+    @tasks.loop(minutes=89)
     async def daily_important_reminders(self):
         await self.timer_work('Daily Important Message', Clr.rspbrry, get_important_text())
 
-    @tasks.loop(minutes=64)
+    @tasks.loop(minutes=104)
     async def daily_fact_reminders(self):
         await self.timer_work('Daily Fact Message', Clr.neon, get_fact_text())
 
-    @tasks.loop(minutes=96)
+    @tasks.loop(minutes=136)
     async def daily_rule_reminders(self):
         await self.timer_work('Daily Rule Message', 0x66FFBF, get_rule_text())
 
-    @tasks.loop(minutes=57)
+    @tasks.loop(minutes=97)
     async def daily_gif_reminders(self):
         if randint(1, 100 + 1) > 2 or await self.check_amount_messages():
             return

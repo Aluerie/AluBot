@@ -30,13 +30,18 @@ class Voicechat(commands.Cog, name='Voice Chat'):
             return await after.channel.send(embed=em)
         if before.channel is not None and after.channel is None:  # quit the voice channel
             await mbr.remove_roles(voice_role)
-            em = Embed(color=0x800000)
-            em.set_author(name=f'{mbr.display_name} left {before.channel.name}', icon_url=mbr.display_avatar.url)
+            em = Embed(
+                color=0x800000
+            ).set_author(
+                name=f'{mbr.display_name} left {before.channel.name}',
+                icon_url=mbr.display_avatar.url
+            )
             return await before.channel.send(embed=em)
         if before.channel is not None and after.channel is not None:  # changed voice channels
             if before.channel.id != after.channel.id:
-                em = Embed(color=0x6495ed)
-                em.set_author(
+                em = Embed(
+                    color=0x6495ed
+                ).set_author(
                     name=f'{mbr.display_name} went from {before.channel.name} to {after.channel.name}',
                     icon_url=mbr.display_avatar.url
                 )

@@ -304,7 +304,7 @@ class MatchToEdit:
         )
 
         item_img_urls = [(await i.get()).icon_abspath for i in self.items if i.id]
-        item_imgs = await url_to_img(session, item_img_urls)
+        item_imgs = await url_to_img(session, item_img_urls, return_list=True)
         left = width - len(item_imgs) * last_row_h
         for count, item_img in enumerate(item_imgs):
             item_img = item_img.resize((last_row_h, last_row_h))

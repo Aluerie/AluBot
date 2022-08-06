@@ -40,6 +40,9 @@ class DotaFeed(commands.Cog):
         self.active_matches = []
         self.after_match = []
 
+    def cog_unload(self) -> None:
+        self.dotafeed.cancel()
+
     async def after_match_games(self, ses):
         log.info("after match after match")
         self.after_match = []

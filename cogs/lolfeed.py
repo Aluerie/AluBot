@@ -318,6 +318,9 @@ class LoLFeed(commands.Cog):
         self.lolfeed.start()
         self.active_matches = []
         self.after_match = []
+    
+    def cog_unload(self) -> None:
+        self.lolfeed.cancel()
 
     async def after_match_games(self, db_ses):
         self.after_match = []

@@ -44,6 +44,7 @@ class KeyCache:
         async with self.lock:
             if datetime.now(timezone.utc) - self.last_updated < timedelta(hours=3):
                 return self.cached_data
+
             self.cached_data = await self.fill_data()
             self.last_updated = datetime.now(timezone.utc)
         return self.cached_data

@@ -61,7 +61,6 @@ class TwitchStream:
             return data[0] if data else None
 
         offline_data = user_data(self.id)
-        print(offline_data)
         def stream_data(user_id: str):
             data = twitch.get_streams(user_id=[user_id])['data']
             return data[0] if data else None

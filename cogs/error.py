@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import Embed, app_commands, NotFound
+from discord import Embed, app_commands
 from discord.ext import commands
 
 from utils import database as db
@@ -108,7 +108,7 @@ class CommandErrorHandler(commands.Cog):
                     f"The command is only for usage in server channels. " \
                     f"Please, go to a server where {self.bot.user.mention} is invited."
             case commands.CommandOnCooldown() | app_commands.CommandOnCooldown():
-                desc = f"Please retry in {display_time(error.retry_after, 3)}"
+                desc = f"Please retry in `{display_time(error.retry_after, 3)}`"
             case commands.CheckFailure():
                 desc = f'{error}'
             case _:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Union, List, Optional
 
+import discord
 from discord.ext import commands
 from discord import Embed, Interaction
 
@@ -69,13 +70,13 @@ async def send_pages_list(
 
 async def send_traceback(
         error: Exception,
-        dest: Union[commands.Bot, abc.Messageable],
+        dest: Union[commands.Bot, discord.Client, abc.Messageable],
         *,
         embed: Embed = None,
         mention_dev: bool = True,
         verbosity: int = 10,
 ):
-    if isinstance(dest, commands.Bot):
+    if isinstance(dest, (commands.Bot, discord.Client)):
         channel = dest.get_channel(Cid.spam_me)
     elif isinstance(dest, abc.Messageable):
         channel = dest

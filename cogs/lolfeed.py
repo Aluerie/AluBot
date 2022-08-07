@@ -318,7 +318,7 @@ class LoLFeed(commands.Cog):
         self.lolfeed.start()
         self.active_matches = []
         self.after_match = []
-    
+
     def cog_unload(self) -> None:
         self.lolfeed.cancel()
 

@@ -26,8 +26,10 @@ class ConfirmationView(View):
         if interaction.user and interaction.user.id == self.author_id:
             return True
         else:
-            em = Embed(colour=Clr.prpl)
-            em.description = 'Sorry! This confirmation dialog is not for you.'
+            em = Embed(
+                colour=Clr.error,
+                description='Sorry! This confirmation dialog is not for you.'
+            )
             await interaction.response.send_message(embed=em, ephemeral=True)
             return False
 
@@ -111,7 +113,7 @@ class Context(commands.Context):
 
             ans = 'This command is used only with subcommands. Please, provide one of them:\n'
 
-            #for c in self.command.walk_commands():
+            # for c in self.command.walk_commands():
             #    print(get_command_signature(c))
 
             self.command: commands.Group

@@ -173,7 +173,7 @@ class CommandLogging(commands.Cog):
         cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])
         if ctx.interaction:
             try:
-                jump_url = (await ctx.interaction.original_message()).jump_url
+                jump_url = (await ctx.interaction.original_response()).jump_url
             except NotFound:
                 jump_url = None
             cmd_text = f'/{ctx.command.qualified_name}'

@@ -12,11 +12,12 @@ from utils.distools import send_traceback
 
 if TYPE_CHECKING:
     from discord import Interaction
+    from utils.bot import AluBot
 
 
 class CommandErrorHandler(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         bot.tree.on_error = self.on_app_command_error
 
     async def command_error_work(self, ctx, error):

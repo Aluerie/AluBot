@@ -416,7 +416,7 @@ class Paginator(View):
         if isinstance(msg, (Message, WebhookMessage)):
             self.message = msg
         elif isinstance(msg, Interaction):
-            self.message = await msg.original_message()
+            self.message = await msg.original_response()
 
         return self.message
 

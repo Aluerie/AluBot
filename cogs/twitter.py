@@ -76,19 +76,18 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
         )
         self.bot: AluBot = bot
 
-    async def on_tweet(self, tweet: tweepy.Tweet):
-        if tweet.author_id not in followed_array:
-            return
+    async def on_response(self, response: tweepy.StreamResponse):
+        #  print('response', response)
+        tweet = response.data
+        username = response.includes['users'][0].username
+
+        #  print(tweet.id, tweet.author_id, tweet.in_reply_to_user_id)
+        #  print(tweet.data)
         if tweet.in_reply_to_user_id is not None:
             return
-        if tweet.conversation_id is not None:
-            return
-        channel_id = Cid.copydota_tweets
-        if tweet.author.id == 1272226371109031937:
-            channel_id = Cid.spam_me
 
-        await self.bot.get_channel(channel_id).send(
-            content=f"https://twitter.com/{tweet.author.screen_name}/status/{tweet.id}")
+        channel_id = Cid.spam_me if tweet.author_id == 1272226371109031937 else Cid.copydota_tweets
+        await self.bot.get_channel(channel_id).send(content=f"https://twitter.com/{username}/status/{tweet.id}")
 
     async def on_request_error(self, status_code):
         await self.bot.get_channel(Cid.spam_me).send(
@@ -110,7 +109,16 @@ class Twitter(commands.Cog):
         self.myStream = MyAsyncStreamingClient(self.bot, BEARER_TOKEN)
         my_rule = tweepy.StreamRule(' OR '.join([f"from:{x}" for x in followed_array]))
         await self.myStream.add_rules(my_rule)
-        self.myStream.filter()
+        self.myStream.filter(
+            expansions='author_id',
+            tweet_fields=[
+                'author_id',
+                'in_reply_to_user_id'
+            ],
+            user_fields=[
+                'created_at'
+            ]
+        )
 
     @start_stream.before_loop
     async def before(self):

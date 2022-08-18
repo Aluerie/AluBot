@@ -68,9 +68,12 @@ followed_array = [
 ]
 
 
-class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient, commands.Cog):
+class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
     def __init__(self, bot, bearer_token):
-        super().__init__(bearer_token)
+        super().__init__(
+            bearer_token,
+            #wait_on_rate_limit=True
+        )
         self.bot: AluBot = bot
 
     async def on_tweet(self, tweet: tweepy.Tweet):
@@ -90,7 +93,7 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient, commands.
     async def on_request_error(self, status_code):
         await self.bot.get_channel(Cid.spam_me).send(
             content=f"{umntn(Uid.alu)} I'm stuck with twitter-stream {status_code}")
-        #self.disconnect()
+        self.disconnect()
 
 
 class Twitter(commands.Cog):
@@ -105,7 +108,7 @@ class Twitter(commands.Cog):
     @tasks.loop(count=1)
     async def start_stream(self):
         self.myStream = MyAsyncStreamingClient(self.bot, BEARER_TOKEN)
-        my_rule = tweepy.StreamRule('OR '.join([f"from:{x}" for x in followed_array]))
+        my_rule = tweepy.StreamRule(' OR '.join([f"from:{x}" for x in followed_array]))
         await self.myStream.add_rules(my_rule)
         self.myStream.filter()
 
@@ -116,32 +119,3 @@ class Twitter(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Twitter(bot))
-
-
-
-
-###########33
-"""
-class MyStreamListener(tweepy.asynchronous.AsyncStream, commands.Cog):
-    def __init__(self, bot, consumer_key, consumer_secret, access_token, access_token_secret):
-        super().__init__(consumer_key, consumer_secret, access_token, access_token_secret)
-        self.bot = bot
-
-    async def on_status(self, tweet):
-        if tweet.author.id not in followed_array:
-            return
-        if tweet.in_reply_to_status_id is not None:
-            return
-        try:  # retweets between each other
-            if tweet.retweeted_status.user.id in followed_array:
-                return
-        except AttributeError:
-            pass
-        await self.bot.get_channel(Cid.copydota_tweets).send(
-            content=f"https://twitter.com/{tweet.author.screen_name}/status/{tweet.id}")
-
-    async def on_request_error(self, status_code):
-        await self.bot.get_channel(Cid.spam_me).send(
-            content=f"{umntn(Uid.alu)} I'm stuck with twitter-stream {status_code}")
-        self.disconnect()
-"""

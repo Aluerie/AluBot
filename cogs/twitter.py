@@ -6,7 +6,7 @@ import re
 
 import tweepy.asynchronous
 
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from utils.imgtools import url_to_file
 from utils.var import Cid, Uid, umntn
@@ -96,13 +96,22 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient, commands.
 class Twitter(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
-        self.myStream = MyAsyncStreamingClient(self.bot, BEARER_TOKEN)
-        my_rule = tweepy.StreamRule(' '.join([f"from:{x}" for x in followed_array]))
-        self.myStream.add_rules(my_rule)
-        self.myStream.filter()
+        self.myStream = None
+        self.start_stream.start()
 
     def cog_unload(self) -> None:
         self.myStream.disconnect()
+
+    @tasks.loop(count=1)
+    async def start_stream(self):
+        self.myStream = MyAsyncStreamingClient(self.bot, BEARER_TOKEN)
+        my_rule = tweepy.StreamRule(' '.join([f"from:{x}" for x in followed_array]))
+        await self.myStream.add_rules(my_rule)
+        self.myStream.filter()
+
+    @start_stream.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
 
 
 async def setup(bot):

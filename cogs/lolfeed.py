@@ -411,6 +411,7 @@ class LoLFeed(commands.Cog):
             except NotFound:
                 continue
             except ServerError:
+                print(f'ServerError `lolfeed.py`: {row.name} {row.region} {row.accname}')
                 continue
                 # embed = Embed(colour=Clr.error)
                 # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.region} {row.accname}'

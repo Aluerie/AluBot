@@ -68,7 +68,7 @@ followed_array = [
 ]
 
 
-class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
+class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient, commands.Cog):
     def __init__(self, bot, bearer_token):
         super().__init__(bearer_token)
         self.bot: AluBot = bot
@@ -97,7 +97,7 @@ class Twitter(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.myStream = MyAsyncStreamingClient(self.bot, BEARER_TOKEN)
-        self.myStream.filter(follow=followed_array)
+        #self.myStream.filter(follow=followed_array)
 
     def cog_unload(self) -> None:
         self.myStream.disconnect()

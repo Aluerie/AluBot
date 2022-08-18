@@ -74,15 +74,12 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
         self.bot: AluBot = bot
 
     async def on_tweet(self, tweet: tweepy.Tweet):
-        if tweet.author.id not in followed_array:
+        if tweet.author_id not in followed_array:
             return
-        if tweet.in_reply_to_status_id is not None:
+        if tweet.in_reply_to_user_id is not None:
             return
-        try:  # retweets between each other
-            if tweet.retweeted_status.user.id in followed_array:
-                return
-        except AttributeError:
-            pass
+        if tweet.conversation_id is not None:
+            return
         channel_id = Cid.copydota_tweets
         if tweet.author.id == 1272226371109031937:
             channel_id = Cid.spam_me

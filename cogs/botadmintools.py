@@ -224,6 +224,18 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
 
         await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
 
+    @is_owner()
+    @commands.command(name='extensions', hidden=True)
+    async def extensions(self, ctx: Context):
+        """Shows available extensions to load/reload/unload."""
+        cogs = [f'● {x[:-3]}' for x in listdir('./cogs') if x.endswith('.py')] + ['● jishaku']
+        em = Embed(
+            colour=Clr.prpl,
+            title='Available Extensions',
+            description='\n'.join(cogs)
+        )
+        await ctx.reply(embed=em)
+
     async def load_unload_reload_job(
             self,
             ctx: Context,
@@ -241,7 +253,13 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
                 case 'reload':
                     await self.bot.reload_extension(filename)
         except commands.ExtensionError as e:
-            await ctx.send(f'{e.__class__.__name__}: {e}')
+            em = Embed(
+                colour=Clr.error,
+                description=f'{e}'
+            ).set_author(
+                name=e.__class__.__name__
+            )
+            await ctx.send(embed=em)
         else:
             await ctx.message.add_reaction(Ems.DankApprove)
 

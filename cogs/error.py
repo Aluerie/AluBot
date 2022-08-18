@@ -21,11 +21,10 @@ class CommandErrorHandler(commands.Cog):
         bot.tree.on_error = self.on_app_command_error
 
     async def command_error_work(self, ctx, error):
-        if isinstance(error, commands.HybridCommandError):
-            error = error.original
-        if isinstance(error, commands.CommandInvokeError):
-            error = error.original
-        if isinstance(error, app_commands.CommandInvokeError):
+        if isinstance(
+                error,
+                (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError,)
+        ):
             error = error.original
 
         match error:

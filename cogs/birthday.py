@@ -120,7 +120,7 @@ class Birthday(commands.Cog):
     async def delete(self, ctx: Context):
         """read above"""
         db.set_value(db.m, ctx.author.id, bdate=None)
-        await ctx.reply("Your birthday is successfully deleted")
+        await ctx.reply("Your birthday is successfully deleted", ephemeral=True)
 
     @birthday.command(
         name='timezone',

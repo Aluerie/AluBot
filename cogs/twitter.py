@@ -26,10 +26,10 @@ consumer_key = getenv('TWITTER_CONSUMER_KEY')
 consumer_secret = getenv('TWITTER_CONSUMER_SECRET')
 access_token = getenv('TWITTER_ACCESS_TOKEN')
 access_token_secret = getenv('TWITTER_ACCESS_TOKEN_SECRET')
-bearer_token = getenv('TWITTER_BEARER_TOKEN')
+BEARER_TOKEN = getenv('TWITTER_BEARER_TOKEN')
 
 
-twitter_client = tweepy.asynchronous.AsyncClient(bearer_token)
+twitter_client = tweepy.asynchronous.AsyncClient(BEARER_TOKEN)
 
 
 async def download_twitter_images(session, ctx: Context, *, tweet_ids: str):
@@ -64,10 +64,56 @@ followed_array = [
     44680622,   # wykrhm
     176507184,  # dota2
     17388199,   # icefrog
-    #1272226371109031937,  # me
+    1272226371109031937,  # me
 ]
 
 
+class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
+    def __init__(self, bot, bearer_token):
+        super().__init__(bearer_token)
+        self.bot: AluBot = bot
+
+    async def on_tweet(self, tweet: tweepy.Tweet):
+        if tweet.author.id not in followed_array:
+            return
+        if tweet.in_reply_to_status_id is not None:
+            return
+        try:  # retweets between each other
+            if tweet.retweeted_status.user.id in followed_array:
+                return
+        except AttributeError:
+            pass
+        channel_id = Cid.copydota_tweets
+        if tweet.author.id == 1272226371109031937:
+            channel_id = Cid.spam_me
+
+        await self.bot.get_channel(channel_id).send(
+            content=f"https://twitter.com/{tweet.author.screen_name}/status/{tweet.id}")
+
+    async def on_request_error(self, status_code):
+        await self.bot.get_channel(Cid.spam_me).send(
+            content=f"{umntn(Uid.alu)} I'm stuck with twitter-stream {status_code}")
+        #self.disconnect()
+
+
+class Twitter(commands.Cog):
+    def __init__(self, bot):
+        self.bot: AluBot = bot
+        self.myStream = MyAsyncStreamingClient(self.bot, BEARER_TOKEN)
+        self.myStream.filter(follow=followed_array)
+
+    def cog_unload(self) -> None:
+        self.myStream.disconnect()
+
+
+async def setup(bot):
+    await bot.add_cog(Twitter(bot))
+
+
+
+
+###########33
+"""
 class MyStreamListener(tweepy.asynchronous.AsyncStream, commands.Cog):
     def __init__(self, bot, consumer_key, consumer_secret, access_token, access_token_secret):
         super().__init__(consumer_key, consumer_secret, access_token, access_token_secret)
@@ -90,14 +136,4 @@ class MyStreamListener(tweepy.asynchronous.AsyncStream, commands.Cog):
         await self.bot.get_channel(Cid.spam_me).send(
             content=f"{umntn(Uid.alu)} I'm stuck with twitter-stream {status_code}")
         self.disconnect()
-
-
-class Twitter(commands.Cog):
-    def __init__(self, bot):
-        self.bot: AluBot = bot
-        self.myStream = MyStreamListener(self.bot, consumer_key, consumer_secret, access_token, access_token_secret)
-        self.myStream.filter(follow=followed_array)
-
-
-async def setup(bot):
-    await bot.add_cog(Twitter(bot))
+"""

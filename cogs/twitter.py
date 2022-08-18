@@ -97,7 +97,9 @@ class Twitter(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.myStream = MyAsyncStreamingClient(self.bot, BEARER_TOKEN)
-        #self.myStream.filter(follow=followed_array)
+        my_rule = tweepy.StreamRule(' '.join([f"from:{x}" for x in followed_array]))
+        self.myStream.add_rules(my_rule)
+        self.myStream.filter()
 
     def cog_unload(self) -> None:
         self.myStream.disconnect()

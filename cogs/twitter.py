@@ -105,7 +105,7 @@ class Twitter(commands.Cog):
     @tasks.loop(count=1)
     async def start_stream(self):
         self.myStream = MyAsyncStreamingClient(self.bot, BEARER_TOKEN)
-        my_rule = tweepy.StreamRule(' '.join([f"from:{x}" for x in followed_array]))
+        my_rule = tweepy.StreamRule('OR '.join([f"from:{x}" for x in followed_array]))
         await self.myStream.add_rules(my_rule)
         self.myStream.filter()
 

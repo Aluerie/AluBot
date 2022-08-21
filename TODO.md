@@ -1,5 +1,5 @@
 ### Current thoughts
-
+https://www.dota2.com/datafeed/patchnoteslist
 1. don't forget to add unload_cog while editing for other stuff
 2. routing thing for league
 3. research star thing *roles

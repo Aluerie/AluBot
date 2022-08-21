@@ -211,17 +211,19 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
                 f"Synced {len(fmt)} commands "
                 f"{'globally' if spec is None else 'to the current guild.'}"
             )
+            await self.bot.update_app_commands_cache(commands=fmt)
             return
 
         fmt = 0
+        cmds = []
         for guild in guilds:
             try:
-                await ctx.bot.tree.sync(guild=guild)
+                cmds += await ctx.bot.tree.sync(guild=guild)
             except HTTPException:
                 pass
             else:
                 fmt += 1
-
+        await self.bot.update_app_commands_cache(commands=cmds)
         await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
 
     @is_owner()

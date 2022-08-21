@@ -12,6 +12,7 @@ from utils.var import *
 
 if TYPE_CHECKING:
     from discord import Interaction
+    from utils.bot import AluBot
 
 
 class DropdownHelp(Select):
@@ -129,6 +130,7 @@ last_embed = Embed(
 
 
 class HelpCommand(commands.HelpCommand):
+
     async def get_the_answer(self, c, answer=None, deep=0):
         if answer is None:
             answer = []
@@ -151,7 +153,7 @@ class HelpCommand(commands.HelpCommand):
             checks = [f"*{i}*" for i in checks]
             checks = f"**!** {', '.join(checks)}\n"
 
-        slash = Ems.slash if getattr(c, '__commands_is_hybrid__', False) else ''
+        # slash = Ems.slash if getattr(c, '__commands_is_hybrid__', False) else ''
 
         aliases = ''
         if len(c.aliases):
@@ -164,13 +166,22 @@ class HelpCommand(commands.HelpCommand):
         help_str = c.help or 'No documentation'
 
         def get_sign(o):
-            extra_space = '' if o.signature == '' else ' '
-            prefix = getattr(self.context, 'clean_prefix', '$')
-            return f'{prefix}{o.qualified_name}{extra_space}{o.signature}'
-        return f'● {slash}`{get_sign(c)}`{aliases}{cd_str}\n{checks}{help_str}'
+            signature = '' if o.signature == '' else f' `{o.signature}`'
+
+            app_command = self.context.bot.get_app_command(c.qualified_name)
+            if app_command:
+                cmd_name, cmd_id = app_command
+                cmd_mention = f"</{cmd_name}:{cmd_id}>"
+            else:
+                prefix = getattr(self.context, 'clean_prefix', '$')
+                cmd_mention = f'`{prefix}{o.qualified_name}`'
+            return f'{cmd_mention}{signature}'
+
+        return f'● {get_sign(c)}{aliases}{cd_str}\n{checks}{help_str}'
 
     async def send_bot_help(self, mapping):
         await self.context.typing()
+        await self.context.bot.update_app_commands_cache()
         embed_list = []
         drop_options = []
 

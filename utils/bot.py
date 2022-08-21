@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List
 
 from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
@@ -20,9 +20,12 @@ log = logging.getLogger('root')
 
 if TYPE_CHECKING:
     from discord import AppInfo, Interaction, Message, User
+    from discord.app_commands import AppCommand
+    from discord.abc import Snowflake
 
 test_list = [  # for yen bot
-    'lolfeed',
+    'fun',
+    'botadmintools',
     'error',
     'help'
 ]
@@ -53,6 +56,7 @@ class AluBot(commands.Bot):
         )
         self.on_ready_fired = False
         self.yen = yen
+        self.app_commands: Dict[str, int] = {}
 
     async def setup_hook(self) -> None:
         self.__session = ClientSession()
@@ -145,6 +149,27 @@ class AluBot(commands.Bot):
             else:
                 log.info('Logging into Steam failed')
                 return
+
+    def get_app_command(
+        self,
+        value: Union[str, int]
+    ) -> Optional[Tuple[str, int]]:
+
+        for cmd_name, cmd_id in self.app_commands.items():
+            if value == cmd_name or value.isdigit() and int(value) == cmd_id:
+                return cmd_name, cmd_id
+
+        return None
+
+    async def update_app_commands_cache(
+        self,
+        *,
+        commands: Optional[List[AppCommand]] = None,
+        guild: Optional[Snowflake] = None
+    ) -> None:
+        if not commands:
+            commands = await self.tree.fetch_commands(guild=guild.id if guild else None)
+        self.app_commands = {cmd.name: cmd.id for cmd in commands}
 
 
 class LogHandler(logging.StreamHandler):

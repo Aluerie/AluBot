@@ -24,8 +24,9 @@ if TYPE_CHECKING:
     from discord.abc import Snowflake
 
 test_list = [  # for yen bot
-    'fun',
+    'birthday',
     'botadmintools',
+    'fun',
     'error',
     'help'
 ]

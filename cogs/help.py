@@ -168,10 +168,15 @@ class HelpCommand(commands.HelpCommand):
         def get_sign(o):
             signature = '' if o.signature == '' else f' `{o.signature}`'
 
-            app_command = self.context.bot.get_app_command(c.qualified_name)
+            if getattr(c, 'root_parent'):
+                name = c.root_parent.name
+            else:
+                name = c.name
+
+            app_command = self.context.bot.get_app_command(name)
             if app_command:
                 cmd_name, cmd_id = app_command
-                cmd_mention = f"</{cmd_name}:{cmd_id}>"
+                cmd_mention = f"</{c.qualified_name}:{cmd_id}>"
             else:
                 prefix = getattr(self.context, 'clean_prefix', '$')
                 cmd_mention = f'`{prefix}{o.qualified_name}`'
@@ -250,6 +255,7 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_cog_help(self, cog):
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
+        await self.context.bot.update_app_commands_cache()
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
 
         cog_name = getattr(cog, "qualified_name", "No Category")
@@ -270,6 +276,7 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_group_help(self, group):
         filtered = await self.filter_commands(group.commands, sort=True)
+        await self.context.bot.update_app_commands_cache()
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
         em = Embed(
             color=Clr.prpl,
@@ -280,6 +287,7 @@ class HelpCommand(commands.HelpCommand):
         await self.context.reply(embed=em)
 
     async def send_command_help(self, command):
+        await self.context.bot.update_app_commands_cache()
         embed = Embed(
             title=command.qualified_name,
             color=Clr.prpl,

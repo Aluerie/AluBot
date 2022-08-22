@@ -12,7 +12,6 @@ from utils.var import *
 
 if TYPE_CHECKING:
     from discord import Interaction
-    from utils.bot import AluBot
 
 
 class DropdownHelp(Select):
@@ -130,6 +129,7 @@ last_embed = Embed(
 
 
 class HelpCommand(commands.HelpCommand):
+    context: Context
 
     async def get_the_answer(self, c, answer=None, deep=0):
         if answer is None:

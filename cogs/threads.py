@@ -20,7 +20,7 @@ class ThreadsManaging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_thread_create(self, thread: Thread):
-        if thread.owner.bot:
+        if thread.owner.bot or thread.guild.id == Sid.emote:
             return
         await thread.join()
         await thread.send(content=f'De fok, using threads {Ems.peepoWTF}')

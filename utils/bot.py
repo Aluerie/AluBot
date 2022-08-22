@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from discord import AppInfo, Interaction, Message, User
     from discord.app_commands import AppCommand
     from discord.abc import Snowflake
+    from github import Repository
 
 test_list = [  # for yen bot
     'birthday',
@@ -44,6 +45,13 @@ YEN_STE = cog_check(['dotafeed', 'gamerstats', 'tools', 'rankedinfo'])
 
 class AluBot(commands.Bot):
     bot_app_info: AppInfo
+    steam: SteamClient
+    dota: Dota2Client
+    github: Github
+    git_gameplay: Repository
+    git_tracker: Repository
+    __session: ClientSession
+    launch_time: datetime
 
     def __init__(self, prefix, yen=False):
         super().__init__(
@@ -63,12 +71,7 @@ class AluBot(commands.Bot):
         self.__session = ClientSession()
         self.bot_app_info = await self.application_info()
 
-        if self.yen:
-            if YEN_STE:
-                self.steam = SteamClient()
-                self.dota = Dota2Client(self.steam)
-                self.steam_dota_login()
-        else:
+        if not self.yen or YEN_STE:
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
             self.steam_dota_login()
@@ -87,18 +90,18 @@ class AluBot(commands.Bot):
             self.twitch.authenticate_app([])
         """
 
-        environ["JISHAKU_NO_UNDERSCORE"] = "True"
-        environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
-        if self.yen and len(test_list):
-            if YEN_JSK:
-                await self.load_cog('jishaku')
-            for item in test_list:
-                await self.load_cog(f'cogs.{item}')
-        else:
+        if not self.yen or YEN_JSK:
+            environ["JISHAKU_NO_UNDERSCORE"] = "True"
+            environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
             await self.load_cog('jishaku')
-            for filename in listdir('./cogs'):
-                if filename.endswith('.py'):
-                    await self.load_cog(f'cogs.{filename[:-3]}')
+
+        if self.yen and len(test_list):
+            extensions_list = test_list
+        else:
+            extensions_list = [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
+
+        for ext in extensions_list:
+            await self.load_cog(ext)
 
     async def load_cog(self, cog: str) -> None:
         try:

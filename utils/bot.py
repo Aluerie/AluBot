@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from github import Repository
 
 test_list = [  # for yen bot
-    'lolfeed',
+    'twitter',
     'fun',
     'error',
     'help'

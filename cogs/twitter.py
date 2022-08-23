@@ -1,15 +1,19 @@
 from __future__ import annotations
+
+import asyncio
 from typing import TYPE_CHECKING
 
 from os import getenv
 import re
 
 import tweepy.asynchronous
+from discord import Embed
 
 from discord.ext import commands, tasks
 
+from utils.distools import send_traceback
 from utils.imgtools import url_to_file
-from utils.var import Cid, Uid, umntn
+from utils.var import Cid, Uid, umntn, Clr
 
 if TYPE_CHECKING:
     from utils.context import Context
@@ -94,6 +98,35 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
             content=f"{umntn(Uid.alu)} I'm stuck with twitter-stream {status_code}")
         self.disconnect()
 
+    async def on_exception(self, exception):
+        logger.error("Twitter Stream encountered an exception")
+        await send_traceback(
+            exception,
+            self.bot,
+            embed=Embed(colour=Clr.error, title='Exception in Twitter Async Stream'),
+        )
+        await asyncio.sleep(60)  # TODO: do exponentional back-off for this probably
+        await new_stream(self.bot)
+
+    async def initiate_stream(self):
+        my_rule = tweepy.StreamRule(' OR '.join([f"from:{x}" for x in followed_array]))
+        await self.add_rules(my_rule)
+        self.filter(
+            expansions='author_id',
+            tweet_fields=[
+                'author_id',
+                'in_reply_to_user_id'
+            ],
+            user_fields=[
+                'created_at'
+            ]
+        )
+
+
+async def new_stream(bot: AluBot):
+    myStream = MyAsyncStreamingClient(bot, BEARER_TOKEN)
+    await myStream.initiate_stream()
+
 
 class Twitter(commands.Cog):
     def __init__(self, bot):
@@ -106,23 +139,15 @@ class Twitter(commands.Cog):
 
     @tasks.loop(count=1)
     async def start_stream(self):
-        self.myStream = MyAsyncStreamingClient(self.bot, BEARER_TOKEN)
-        my_rule = tweepy.StreamRule(' OR '.join([f"from:{x}" for x in followed_array]))
-        await self.myStream.add_rules(my_rule)
-        self.myStream.filter(
-            expansions='author_id',
-            tweet_fields=[
-                'author_id',
-                'in_reply_to_user_id'
-            ],
-            user_fields=[
-                'created_at'
-            ]
-        )
+        await new_stream(self.bot)
 
     @start_stream.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
+
+    @start_stream.error
+    async def start_stream_error(self, _error):
+        self.start_stream.restart()
 
 
 async def setup(bot):

@@ -84,7 +84,7 @@ class TwitchStream:
                 self.preview_url = f'https://static-cdn.jtvnw.net/previews-ttv/live_user_{self.name}-640x360.jpg'
             else:
                 self.preview_url = \
-                    f'{name_to_cut.split("offline_image-")[0]}offline_image-640x360.{name_to_cut.split(".")[-1]}'
+                    f'{"-".join(name_to_cut.split("-")[:-1])}-640x360.{name_to_cut.split(".")[-1]}'
 
     def last_vod_link(self, epoch_time_ago: int = 0, md: bool = True) -> str:
         try:
@@ -97,5 +97,6 @@ class TwitchStream:
 
 
 if __name__ == '__main__':
-    re = TwitchStream(23364603)
+    tw_id = twitchid_by_name('timado')
+    re = TwitchStream(tw_id)
     print(re.preview_url)

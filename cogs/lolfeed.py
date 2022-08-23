@@ -72,6 +72,7 @@ if TYPE_CHECKING:
     from utils.context import Context
     from aiohttp import ClientSession
     from pyot.models.lol.match import MatchParticipantData
+    from utils.bot import AluBot
 
 platform_to_routing_dict = {
     'br1': 'americas',
@@ -1011,7 +1012,7 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
 
     @staticmethod
     async def champ_add_remove_error(ctx: Context, error):
-        if isinstance(error.original, KeyError):
+        if getattr(error, 'original', None) and isinstance(error.original, KeyError):
             ctx.error_handled = True
             em = Embed(
                 colour=Clr.error,
@@ -1100,7 +1101,7 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
 
 class LoLAccCheck(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.check_acc_renames.start()
 
     @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))

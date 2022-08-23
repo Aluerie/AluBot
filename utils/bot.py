@@ -25,8 +25,7 @@ if TYPE_CHECKING:
     from github import Repository
 
 test_list = [  # for yen bot
-    'birthday',
-    'botadmintools',
+    'lolfeed',
     'fun',
     'error',
     'help'
@@ -96,7 +95,7 @@ class AluBot(commands.Bot):
             await self.load_cog('jishaku')
 
         if self.yen and len(test_list):
-            extensions_list = test_list
+            extensions_list = [f'cogs.{name}' for name in test_list]
         else:
             extensions_list = [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
 

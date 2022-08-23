@@ -131,6 +131,10 @@ last_embed = Embed(
 class HelpCommand(commands.HelpCommand):
     context: Context
 
+    """def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.bot = self.context.bot"""  # context is a missing sentinel on definiton huh :c
+
     async def get_the_answer(self, c, answer=None, deep=0):
         if answer is None:
             answer = []

@@ -1,5 +1,7 @@
 from __future__ import annotations
+import inspect
 from typing import TYPE_CHECKING
+
 
 from discord import Embed, app_commands
 from discord.ext import commands
@@ -43,7 +45,9 @@ class CommandErrorHandler(commands.Cog):
                     f'Please, provide this flag:\n`{error.flag.name}`'
             case commands.MissingRequiredArgument():
                 desc = f'Please, provide this argument:\n`{error.param.name}`'
-                if hasattr(error.param, 'converter') and issubclass(error.param.converter, commands.FlagConverter):
+                if getattr(error.param, 'converter', None) and \
+                        inspect.isclass(error.param.converter) and \
+                        issubclass(error.param.converter, commands.FlagConverter):
                     desc += \
                         '\n\nThis is flag based argument. ' \
                         'Remember, commands with those are used together with flag-keywords , i.e.\n' \

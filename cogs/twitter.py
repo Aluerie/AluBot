@@ -83,7 +83,10 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
     async def on_response(self, response: tweepy.StreamResponse):
         #  print('response', response)
         tweet = response.data
-        username = response.includes['users'][0].username
+        try:
+            username = response.includes['users'][0].username
+        except KeyError:  # lazy, we probably should do separate on_includes or separate on_errors
+            return
 
         #  print(tweet.id, tweet.author_id, tweet.in_reply_to_user_id)
         #  print(tweet.data)

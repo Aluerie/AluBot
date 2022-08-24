@@ -57,7 +57,7 @@ async def iconurl_by_id(value: int) -> str:
     Get ability icon url by id
     """
     data = await ability_keys_cache.data
-    return data['iconurl_by_id'][value]
+    return data['iconurl_by_id'].get(value, MANGO_ICON)
 
 
 async def name_by_id(value: int) -> str:

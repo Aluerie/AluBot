@@ -68,4 +68,4 @@ async def name_by_id(value: int) -> str:
     bcs we do not need anything else for now
     """
     data = await ability_keys_cache.data
-    return data['name_by_id'][value]
+    return data['name_by_id'].get(value, 'New Talent')

@@ -43,7 +43,9 @@ class AbilityKeyCache(KeyCache):
                 data['name_by_id'][ability_id] = None
             for talent in v['talents']:
                 npc_name = talent['name']
-                ability_id = revert_ab_ids_dict[npc_name]
+                ability_id = revert_ab_ids_dict.get(npc_name, None)
+                if ability_id is None:
+                    continue
                 data['iconurl_by_id'][ability_id] = TALENTS_ICON
                 data['name_by_id'][ability_id] = abs_dict[npc_name].get('dname', None)
         return data

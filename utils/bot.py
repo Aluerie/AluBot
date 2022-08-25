@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from github import Repository
 
 test_list = [  # for yen bot
-    'twitter',
+    'dotafeed',
     'fun',
     'error',
     'help'

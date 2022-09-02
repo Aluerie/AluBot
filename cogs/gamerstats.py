@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 import vdf
 from discord import Embed
 from discord.ext import commands, tasks
+from matplotlib import pyplot as plt
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
@@ -13,14 +14,22 @@ from utils import database as db
 from utils.dota import hero
 from utils.dota.const import ODOTA_API_URL
 from utils.dota.models import Match
+from utils.dota.stalk import (
+    MatchHistoryData,
+    fancy_ax,
+    generate_data,
+    gradient_fill,
+    mmr_by_hero_bar,
+    heroes_played_bar
+)
 
 from utils.var import *
-from utils.imgtools import img_to_file, url_to_img
+from utils.imgtools import img_to_file, url_to_img, plt_to_file
 from utils.distools import send_pages_list
 from utils.format import indent
 
 from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, time
 from os import getenv
 
 import logging
@@ -91,13 +100,16 @@ def try_get_gamerstats(bot, start_at_match_id=0, matches_requested=20):
 
 class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     """
-    Stalk match history, mmr plot and more.
+    Stalk match history, ranked infographics and much more.
 
     You can get various information about Aluerie's Dota 2 progress.
     """
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.help_emote = Ems.TwoBButt
+        self.current_match_data: MatchHistoryData = None  # type: ignore
+        self.new_matches_for_history = []
+        self.match_history_refresh.start()
 
     @commands.hybrid_group()
     async def stalk(self, ctx: Context):
@@ -306,6 +318,188 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
             colour=Clr.prpl,
             title="Copypastable match ids",
         )
+
+    def request_player_match_history(self, start_at_match_id=0, matches_requested=20):
+        log.info("try_get_gamerstats dota2info")
+        self.bot.steam_dota_login()
+
+        def ready_function():
+            log.info("ready_function gamerstats")
+            self.bot.dota.request_player_match_history(
+                account_id=DOTA_FRIENDID,
+                matches_requested=matches_requested,
+                start_at_match_id=start_at_match_id,
+            )
+
+        def response(_, matches):  # "_" is request_id
+            self.new_matches_for_history = matches
+            self.bot.dota.emit('player_match_history_response')
+
+        self.bot.dota.once('player_match_history', response)
+        ready_function()
+        self.bot.dota.wait_event('player_match_history_response', timeout=20)
+
+    def request_match_details(self, match_id=0, prev_mmr=0):
+        log.info("try_get_gamerstats dota2info")
+        self.current_match_data = None
+        self.bot.steam_dota_login()
+
+        def ready_function():
+            log.info("ready_function gamerstats")
+            self.bot.dota.request_match_details(
+                match_id=match_id
+            )
+
+        def response(_match_id, _eresult, match):
+            for p in match.players:
+                if p.account_id == DOTA_FRIENDID:
+                    self.current_match_data = MatchHistoryData(
+                        match_id=match.match_id,
+                        hero_id=p.hero_id,
+                        start_time=match.startTime,
+                        lane_selection_flags=getattr(p, 'lane_selection_flags', None),
+                        match_outcome=match.match_outcome,
+                        player_slot=p.player_slot
+                    )
+            self.bot.dota.emit('match_details_response')
+
+        self.bot.dota.once('match_details', response)
+        ready_function()
+        self.bot.dota.wait_event('match_details_response', timeout=20)
+
+    @commands.hybrid_group()
+    async def ranked(self, ctx: Context):
+        """Group command"""
+        await ctx.scnf()
+
+    async def sync_work(self):
+        self.request_player_match_history()
+        last_recorded_match = db.session.query(db.dh).order_by(db.dh.id.desc()).limit(1).first()  # type: ignore
+        for m in reversed(self.new_matches_for_history):
+            if m.match_id > last_recorded_match.id and m.lobby_type == 7:
+                self.request_match_details(m.match_id)
+                self.current_match_data.add_to_database()
+            else:
+                continue
+
+    @ranked.command()
+    async def sync(self, ctx: Context):
+        """Sync information for Irene's ranked infographics"""
+        await ctx.typing()
+        await self.sync_work()
+        em = Embed(
+            colour=Clr.prpl,
+            description='Sync was done'
+        )
+        await ctx.reply(embed=em)
+
+    @tasks.loop(time=[time(hour=3, minute=45, tzinfo=timezone.utc), time(hour=15, minute=45, tzinfo=timezone.utc)])
+    async def match_history_refresh(self):
+        """
+        url = "https://www.dota2.com/patches/"
+        async with self.bot.ses.get(url) as resp:
+            soup = BeautifulSoup(await resp.read(), 'html.parser')
+
+        print(soup)
+        """
+        await self.sync_work()
+
+    @match_history_refresh.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
+
+    @ranked.command(aliases=['infographics'])
+    async def info(self, ctx: Context):
+        """Infographics about Aluerie ranked adventure"""
+        await ctx.typing()
+        hero_stats_dict = {}
+
+        for row in db.session.query(db.dh):
+            def fill_the_dict():
+                if row.winloss:
+                    hero_stats_dict[row.hero_id]['wins'] += 1
+                else:
+                    hero_stats_dict[row.hero_id]['losses'] += 1
+
+            if row.hero_id not in hero_stats_dict:
+                hero_stats_dict[row.hero_id] = {'wins': 0, 'losses': 0}
+            fill_the_dict()
+
+        sorted_dict = dict(sorted(hero_stats_dict.items(), key=lambda x: sum(x[1].values()), reverse=False))
+
+        def winrate():
+            wins = sum(v['wins'] for v in hero_stats_dict.values())
+            losses = sum(v['losses'] for v in hero_stats_dict.values())
+            winrate = 100 * wins / (wins + losses)
+            return f'{winrate:2.2f}%'
+
+        plt.rc('figure', facecolor=str(MP.gray(shade=300)))
+        fig = plt.figure(figsize=(10, 12), dpi=300, constrained_layout=True)
+        gs = fig.add_gridspec(nrows=7, ncols=10)
+
+        axText = fig.add_subplot(gs[0, :])
+        axText.annotate(
+            'Aluerie\'s ranked grind', (0.5, 0.5),
+            xycoords='axes fraction', va='center', ha='center', fontsize=23, fontweight='black'
+        )
+        axText.get_xaxis().set_visible(False)
+        axText.get_yaxis().set_visible(False)
+        axText = fancy_ax(axText)
+
+        ax = fig.add_subplot(gs[2:5, 0:10])
+        gradient_fill(*generate_data(), color=str(Clr.twitch), ax=ax, linewidth=5.0, marker='o')
+        ax.set_title('MMR Plot', x=0.5, y=0.92)
+        ax.tick_params(axis="y", direction="in", pad=-42)
+        ax.tick_params(axis="x", direction="in", pad=-25)
+        ax = fancy_ax(ax)
+
+        ax = fig.add_subplot(gs[5:8, 0:6])
+        ax = await mmr_by_hero_bar(self.bot.ses, ax, sorted_dict)
+
+        ax = fig.add_subplot(gs[5:8, 6:10])
+        ax = await heroes_played_bar(self.bot.ses, ax, sorted_dict)
+
+        data_info = {
+            'Final MMR': db.session.query(db.dh.mmr).order_by(db.dh.id.desc()).limit(1).first().mmr,  # type: ignore
+            'Total Games': len([row for row in db.session.query(db.dh)]),
+            'Winrate': winrate(),
+            'Heroes Played': len(sorted_dict)
+        }
+
+        for i, (k, v) in enumerate(data_info.items(), start=0):
+            left, right = i*2, i*2+2
+            axRain = fig.add_subplot(gs[1, left:right], ylim=(-30, 30))
+            axRain.set_title(f'{k}', x=0.5, y=0.6)
+            axRain.annotate(
+                f'{v}', (0.5, 0.4),
+                xycoords='axes fraction', va='center', ha='center', fontsize=20, fontweight='black'
+            )
+            axRain.get_xaxis().set_visible(False)
+            axRain.get_yaxis().set_visible(False)
+            axRain = fancy_ax(axRain)
+
+        last_match = db.session.query(db.dh).order_by(db.dh.id.desc()).limit(1).first()  # type: ignore
+
+        axRain = fig.add_subplot(gs[1, 8:10], ylim=(-30, 30))
+        axRain.set_title(f'Last Match', x=0.5, y=0.6)
+        axRain.annotate(
+            'Win' if last_match.winloss else 'Loss', (0.5, 0.5),
+            xycoords='axes fraction', va='center', ha='center', fontsize=20, fontweight='black'
+        )
+        axRain.annotate(
+            last_match.dtime.strftime("%m/%d, %H:%M"), (0.5, 0.2),
+            xycoords='axes fraction', va='center', ha='center', fontsize=12
+        )
+        axRain = fancy_ax(axRain)
+        hero_icon = await url_to_img(self.bot.ses, url=await hero.imgurl_by_id(last_match.hero_id))
+        hero_icon.putalpha(200)
+
+        axRain.imshow(hero_icon, extent=[-30, 30, -20, 20], aspect='auto')
+        axRain.get_xaxis().set_visible(False)
+        axRain.get_yaxis().set_visible(False)
+        fig.patch.set_linewidth(4)
+        fig.patch.set_edgecolor(str(Clr.prpl))
+        await ctx.reply(file=plt_to_file(fig, filename='mmr.png'))
 
 
 class ODotaAutoParse(commands.Cog):

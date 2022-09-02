@@ -12,6 +12,10 @@ https://www.dota2.com/datafeed/patchnoteslist
 10. abandon not scored games for match history
 11. DPC ranking command, Dpc points too
 12. make muted by who into logs
+13. test out config.py instead of env.env 
+14. we might want to move image utils into `bot` subclass bcs of session weirdness
+15. context menu commands into help menu somehow idk
+16. 
 
 ### Fix Later
 1. ?tag emoji escapes 

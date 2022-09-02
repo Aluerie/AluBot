@@ -315,6 +315,14 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         if add_reaction:
             await ctx.message.add_reaction(Ems.DankApprove)
 
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        if member.guild.id != Sid.waste:
+            return
+        if member.bot:
+            bots_role = member.guild.get_role(Rid.waste_bots_role)
+            await member.add_roles(bots_role)
+
 
 async def setup(bot):
     await bot.add_cog(AdminTools(bot))

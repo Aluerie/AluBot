@@ -28,10 +28,12 @@ class Rgx:
 class Sid:
     alu = 702561315478044804
     emote = 759916212842659850
+    waste = 1015226252086476860
 
     guild_ids = [
         alu,
         emote,
+        waste
     ]
 
 
@@ -125,6 +127,8 @@ class Rid:
     level_roles = [] # maybe fill it later
     ignored_for_logs = [voice, live_stream] + category_roles_ids
 
+    waste_bots_role = 1015289532645642314
+
 
 class Ems:  # Emote strings
     # alu server nonani
@@ -154,6 +158,7 @@ class Ems:  # Emote strings
 
     MadgeThreat = '<:DankMadgeThreat:854318972102770728>'
     peepoWTF = '<:peepoWTF:730688500680097862>'
+    DankZzz = '<:DankZzz:732126852251910144>'
 
     # alu server ani
     FeelsRainMan = '<a:SmogeInTheRain:902254223851421796>'

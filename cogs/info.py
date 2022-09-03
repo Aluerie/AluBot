@@ -61,6 +61,8 @@ class Info(commands.Cog, name='Info'):
         self.reload_info.start()
         self.help_emote = Ems.PepoG
 
+        bot.help_command.cog = self  # show help command in there
+
         self.ctx_menu1 = app_commands.ContextMenu(name='Translate to English', callback=translate_msg_ctx_menu)
         self.bot.tree.add_command(self.ctx_menu1)
 

@@ -204,19 +204,6 @@ class HelpCommand(commands.HelpCommand):
             )
         )
 
-        """new_mapping = {}  # garbage strats
-        skipped_value, parent_cog = None, None
-        for k, v in mapping.items():
-            if hasattr(k, 'qualified_name') and k.qualified_name != 'Name to Skip':
-                new_mapping[k] = v
-            elif hasattr(k, 'qualified_name'):
-                skipped_value = v
-            if hasattr(k, 'qualified_name') and k.qualified_name == 'Fun':
-                parent_cog = k
-        if skipped_value and parent_cog:
-            new_mapping[parent_cog] += skipped_value
-        mapping = new_mapping"""
-
         sorted_list_of_keys = sorted(mapping, key=lambda x: getattr(x, "qualified_name", "No Category"))
         sorted_mapping = {k: mapping[k] for k in sorted_list_of_keys}
         # print(sorted_mapping)
@@ -334,7 +321,7 @@ class HelpCog(commands.Cog, name='Help'):
         bot.help_command = HelpCommand(
             verify_checks=False,
             command_attrs={
-                'hidden': True,
+                'hidden': False,  # change to True to hide from help menu
                 'help':
                     'Show `help` menu for common bot commands. '
                     'Note that you can use `$help [command/group/cog]` to get a help on specific things',
@@ -342,7 +329,6 @@ class HelpCog(commands.Cog, name='Help'):
                     f'{Ems.slash}'
             }
         )
-        bot.help_command.cog = self
 
     @app_commands.command(
         name='help',

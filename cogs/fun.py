@@ -39,7 +39,7 @@ class FunThings(commands.Cog, name='Fun'):
             return
 
         async def peepoblush(msg):
-            if msg.guild.me in msg.mentions:
+            if msg.guild and msg.guild.me in msg.mentions:
                 if any([item in msg.content.lower() for item in ['😊', "blush"]]):
                     await msg.channel.send(f'{msg.author.mention} {Ems.peepoBlushDank}')
         await peepoblush(message)
@@ -145,20 +145,26 @@ class FunThings(commands.Cog, name='Fun'):
             *,
             text: str = f'Allo'
     ):
-        """Send `text` to `#channel` and delete your invoking message, so it looks like \
-        the bot is speaking on its own ;"""
+        """
+        Send `text` to `#channel` and delete your invoking message, so it looks like \
+        the bot is speaking on its own ;
+        """
         ch = channel or ctx.channel
-        if ch.permissions_for(ctx.author).send_messages:
+        if ch.id in [Cid.emote_spam, Cid.comfy_spam]:
+            raise commands.MissingPermissions(
+                [f'Sorry, these channels are special so you can\'t use this command in {ch.mention}']
+            )
+        elif not ch.permissions_for(ctx.author).send_messages:
+            raise commands.MissingPermissions(
+                [f'Sorry, you don\'t have permissions to speak in {ch.mention}']
+            )
+        else:
             url_array = re.findall(Rgx.url_danny, str(text))
             for url in url_array:  # forbid embeds
                 text = text.replace(url, f'<{url}>')
             await ch.send(text)
             if ctx.interaction:
                 await ctx.reply(content=f'I did it {Ems.DankApprove}', ephemeral=True)
-        else:
-            raise commands.MissingPermissions(
-                [f'Sorry, you don\'t have permissions to speak in {ch.mention}']
-            )
         try:
             await ctx.message.delete()
         except:

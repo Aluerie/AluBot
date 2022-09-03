@@ -117,6 +117,7 @@ class Confession(commands.Cog):
         self.bot.add_view(ConfView())  # Registers a View for persistent listening
 
         # very silly testing way
+        # print('hello')
         # await self.bot.get_channel(Cid.spam_me).send(view=ConfView())
 
 

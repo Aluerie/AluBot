@@ -28,12 +28,16 @@ test_list = [  # for yen bot
     'embedbuilder',
     'fun',
     'error',
-    'help'
+    'help',
+    'info'
 ]
 
 
 def cog_check(cog_list):
-    return any(item in test_list for item in cog_list)
+    if not len(test_list):
+        return True
+    else:
+        return any(item in test_list for item in cog_list)
 
 
 YEN_JSK = True

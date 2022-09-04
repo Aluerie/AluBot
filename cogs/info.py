@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import colorsys
 import platform
+
+import discord
+import dota2
 import psutil
 import re
 import socket
@@ -10,10 +13,11 @@ from datetime import datetime, timezone
 from os import getenv
 from typing import TYPE_CHECKING, List
 
+import pyot
 from PIL import Image, ImageColor
 from async_google_trans_new import google_translator
 from dateparser.search import search_dates
-from discord import Colour, Embed, Member, Message, Role, app_commands
+from discord import Embed, Member, Message, Role, app_commands
 from discord.ext import commands, tasks
 
 from utils import database as db
@@ -129,9 +133,7 @@ class Info(commands.Cog, name='Info'):
     )
     @app_commands.describe(role='Choose role to get info about')
     async def roleinfo(self, ctx, *, role: Role):
-        """
-        View info about selected role
-        """
+        """View info about selected role"""
         em = Embed(
             colour=role.colour,
             title="Role information",
@@ -291,27 +293,34 @@ class Info(commands.Cog, name='Info'):
             colour=Clr.prpl,
             title="Bot Host Machine System Info",
             description=
-            f'Hostname: {socket.gethostname()}\n'
-            f'Machine: {platform.machine()}\n'
-            f'Platform: {platform.platform()}\n'
-            f'System: `{platform.system()}` release: `{platform.release()}`\n'
-            f'Version: `{platform.version()}`\n'
-            f'Processor: {platform.processor()}\n',
+            f'· Hostname: {socket.gethostname()}\n'
+            f'· Machine: {platform.machine()}\n'
+            f'· Platform: {platform.platform()}\n'
+            f'· System: `{platform.system()}` release: `{platform.release()}`\n'
+            f'· Version: `{platform.version()}`\n'
+            f'· Processor: {platform.processor()}\n',
         ).add_field(
             name='Current % | max values',
             value=
-            f'CPU usage: {psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
-            f'RAM usage: {psutil.virtual_memory().percent}% | '
+            f'· CPU usage: {psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
+            f'· RAM usage: {psutil.virtual_memory().percent}% | '
             f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
-            f'Disk usage: {(du := psutil.disk_usage("/")).percent} % | '
+            f'· Disk usage: {(du := psutil.disk_usage("/")).percent} % | '
             f'{du.used / (1024 ** 3):.1f}GB /{du.total / (1024 ** 3):.1f}GB'
+        ).add_field(
+            name='Python Versions',
+            value=
+            f'· Python: {platform.python_version()}'
+            f'· discord.py {discord.__version__}'
+            f'· dota2 {dota2.__version__}'
+            f'· Pyot {pyot.__version__}'
         ).set_footer(
-            text='This is what they give me for free plan :D'
+            text=f'AluBot is a copyright 2020-{datetime.now().year} of {self.bot.owner.name}'
         )
         if not self.bot.yen:
             embed.add_field(
                 name="Location judging by IP adress",
-                value=f"{data['country']} {data['region']} {data['city']}"
+                value=f"· {data['country']} {data['region']} {data['city']}"
             )
         await ctx.reply(embed=embed)
 

@@ -29,7 +29,7 @@ test_list = [  # for yen bot
     'fun',
     'error',
     'help',
-    'info',
+    'emcom_spam'
 ]
 
 

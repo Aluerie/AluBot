@@ -17,7 +17,7 @@ https://www.dota2.com/datafeed/patchnoteslist
 15. context menu commands into help menu somehow idk
 16. clips twitch check 
 17. test_list into ignore
-18. 
+18. summary + sysinfo command into info as group 
 
 ### Fix Later
 1. ?tag emoji escapes 

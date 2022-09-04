@@ -8,7 +8,7 @@ from utils.var import Cid, Clr, Ems, Rgx, Uid
 import regex
 from numpy.random import randint, choice
 import asyncio
-from emoji import get_emoji_regexp
+import emoji
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -26,8 +26,10 @@ class EmoteSpam(commands.Cog):
         if msg.channel.id == Cid.emote_spam:
             if len(msg.embeds):
                 return await msg.delete()
-            emoji_regex = get_emoji_regexp()
-            text = emoji_regex.sub('', msg.content)  # standard emotes
+            # emoji_regex = get_emoji_regexp()
+            # text = emoji_regex.sub('', msg.content)  # standard emotes
+
+            text = emoji.replace_emoji(msg.content, replace='')
             filters = [Rgx.whitespaces, Rgx.emote, Rgx.nqn, Rgx.invis_symb]
             if nqn_check == 0:
                 filters.remove(Rgx.nqn)

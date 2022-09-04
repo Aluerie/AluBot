@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import AuditLogAction, Embed, NotFound
+from discord import AuditLogAction, Embed, Member, NotFound
 from discord.ext import commands, tasks
 
 from utils.var import *
@@ -130,7 +130,7 @@ class Logging(commands.Cog):
         guild = self.bot.get_guild(Sid.alu)
         stone_rl = guild.get_role(Rid.rolling_stone)
         async for entry in guild.audit_logs(action=AuditLogAction.member_update):
-            if stone_rl in entry.target.roles:
+            if isinstance(entry.target, Member) and stone_rl in entry.target.roles:
                 return
             if entry.target.nick and 'Stone' in entry.target.nick:
                 embed = Embed(colour=stone_rl.colour)

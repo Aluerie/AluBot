@@ -7,6 +7,10 @@ from typing import Union
 from collections.abc import Sequence
 
 
+def get_wh(bbox):  # bbox is a tuple of four
+    return bbox[2] - bbox[0], bbox[3] - bbox[1]  # right - left, bot - top
+
+
 def str_to_file(string, filename="file.txt") -> File:
     fp = BytesIO(StringIO(string).read().encode('utf8'))
     fp.seek(0)

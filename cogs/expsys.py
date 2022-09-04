@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 from utils.var import *
 from utils import database as db
 from utils.format import ordinal, humanize_time, indent
-from utils.imgtools import url_to_img, img_to_file
+from utils.imgtools import url_to_img, img_to_file, get_wh
 from utils.distools import inout_to_10, send_pages_list
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -57,24 +57,13 @@ async def rank_image(session, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_s
                 fill=member.color.to_rgb())
 
     font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 60)
-    msg = member.display_name
-    #  w1, h1 = d.textsize(msg, font=font)
-    d.text((width / 4, 0), msg, fill=(255, 255, 255), font=font)
-
-    msg = f"{place_str} rank"
-    #  w2, h2 = d.textsize(msg, font=font)
-    d.text((width / 4, height * 2 / 6), msg, fill=(255, 255, 255), font=font)
-
-    msg = f"LVL {lvl}"
-    #  w3, h3 = d.textsize(msg, font=font)
-    d.text((width / 4, height * 3 / 6), msg, fill=(255, 255, 255), font=font)
-
-    msg = f"{rep} REP"
-    #  w4, h4 = d.textsize(msg, font=font)
-    d.text((width / 4, height * 4 / 6), msg, fill=(255, 255, 255), font=font)
+    d.text((width / 4, 0), member.display_name, fill=(255, 255, 255), font=font)
+    d.text((width / 4, height * 2 / 6), f"{place_str} rank", fill=(255, 255, 255), font=font)
+    d.text((width / 4, height * 3 / 6), f"LVL {lvl}", fill=(255, 255, 255), font=font)
+    d.text((width / 4, height * 4 / 6), f"{rep} REP", fill=(255, 255, 255), font=font)
 
     msg = f"{exp}/{next_lvl_exp} EXP"
-    w4, h4 = d.textsize(msg, font=font)
+    w4, h4 = get_wh(font.getbbox(msg))
     d.text((width - w4, height * 5 / 6), msg, fill=(255, 255, 255), font=font)
     return image
 

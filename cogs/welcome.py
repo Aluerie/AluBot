@@ -7,7 +7,7 @@ from discord.ext import commands
 from utils import database as db
 from utils.checks import is_owner
 from utils.var import *
-from utils.imgtools import url_to_img, img_to_file
+from utils.imgtools import url_to_img, img_to_file, get_wh
 
 from datetime import datetime, timezone
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -26,8 +26,6 @@ async def welcome_image(session, member):
 
     left = int((width - new_width) / 2)
     top = int((height - new_height) / 2)
-    # right = int((width + new_width) / 2)
-    # bottom = int((height + new_height) / 2)
 
     mask_im = Image.new("L", avatar.size, 0)
     draw = ImageDraw.Draw(mask_im)
@@ -42,13 +40,12 @@ async def welcome_image(session, member):
     font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 80)
     d = ImageDraw.Draw(image)
     msg = member.display_name
-    w1, h1 = d.textsize(msg, font=font)
+    w1, h1 = get_wh(font.getbbox(msg))
     d.text(((width - w1) / 1 - 10, (height - h1) / 1 - 10), msg, fill=(255, 255, 255), font=font)
 
     font = ImageFont.truetype('./media/MonsieurLaDoulaise-Regular.ttf', 90)
-    d = ImageDraw.Draw(image)
     msg = "Welcome !"
-    w2, h2 = d.textsize(msg, font=font)
+    w2, h2 = get_wh(font.getbbox(msg))
     d.text(((width - w2) / 1 - 10, (height - h2) / 1 - 10 - h1 - 10), msg, fill=(255, 255, 255), font=font)
     return image
 

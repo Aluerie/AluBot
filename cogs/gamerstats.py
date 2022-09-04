@@ -24,7 +24,7 @@ from utils.dota.stalk import (
 )
 
 from utils.var import *
-from utils.imgtools import img_to_file, url_to_img, plt_to_file
+from utils.imgtools import img_to_file, url_to_img, plt_to_file, get_wh
 from utils.distools import send_pages_list
 from utils.format import indent
 
@@ -200,7 +200,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
             col4 = 180
             for c, x in enumerate(result):
                 counter_text = str(c + offset)
-                w0, h0 = d.textsize(counter_text, font=font)
+                w0, h0 = get_wh(font.getbbox(counter_text))
                 d.text(
                     (0 + (col0 - w0)/2, cell_h * c + (cell_h - h0) / 2),
                     counter_text,
@@ -209,7 +209,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                 )
 
                 time_text = datetime.fromtimestamp(x.start_time).strftime("%H:%M %d/%m")
-                w1, h1 = d.textsize(time_text, font=time_font)
+                w1, h1 = get_wh(time_font.getbbox(time_text))
                 d.text(
                     (col0 + (col1 - w1)/2, cell_h * c + (cell_h - h1) / 2),
                     time_text,
@@ -218,7 +218,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                 )
 
                 mode_text = get_match_type_name(x.lobby_type, x.game_mode)
-                w2, h2 = d.textsize(mode_text, font=font)
+                w2, h2 = get_wh(font.getbbox(mode_text))
                 d.text(
                     (col0 + col1 + (col2 - w2)/2, cell_h * c + (cell_h - h2) / 2),
                     mode_text,
@@ -231,7 +231,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                 img.paste(hero_img, (col0 + col1 + col2, int(cell_h * c)))
 
                 hero_text = await hero.name_by_id(x.hero_id)
-                w3, h3 = d.textsize(hero_text, font=font)
+                w3, h3 = get_wh(font.getbbox(hero_text))
                 d.text(
                     (col0 + col1 + col2 + h_width + (col3-w3)/2, cell_h * c + (cell_h - h3)/2),
                     hero_text,
@@ -240,7 +240,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                 )
 
                 wl_text = 'Win' if x.winner else 'Loss'
-                w4, h4 = d.textsize(wl_text, font=font)
+                w4, h4 = get_wh(font.getbbox(wl_text))
                 d.text(
                     (col0 + col1 + col2 + h_width + col3 + (col4-w4)/2, cell_h * c + (cell_h - h3)/2),
                     wl_text,

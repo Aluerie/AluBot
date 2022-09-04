@@ -1,8 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
+
 from discord import Embed, File, TextChannel, app_commands, errors, utils, InteractionType
 from discord.ext import commands
+
 from utils.var import *
+from config import SOMETHING_NICE
 
 if TYPE_CHECKING:
     from discord import Message
@@ -18,8 +21,7 @@ class EmbedMaker(commands.Cog, name='Embed Maker'):
     @commands.hybrid_command()
     async def embedmake(self, ctx: Context):
         em = Embed(
-            description=f'allo',
-
+            description=f'{SOMETHING_NICE}',
         )
         await ctx.reply(embed=em)
 

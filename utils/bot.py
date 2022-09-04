@@ -5,6 +5,7 @@ from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
 
 from utils.context import Context
+from test import test_list
 
 from aiohttp import ClientSession
 from steam.client import SteamClient
@@ -23,14 +24,6 @@ if TYPE_CHECKING:
     from discord.app_commands import AppCommand
     from discord.abc import Snowflake
     from github import Repository
-
-test_list = [  # for yen bot
-    'embedbuilder',
-    'fun',
-    'error',
-    'help',
-    'emcom_spam'
-]
 
 
 def cog_check(cog_list):

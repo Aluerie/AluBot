@@ -302,24 +302,24 @@ class Info(commands.Cog, name='Info'):
         ).add_field(
             name='Current % | max values',
             value=
-            f'· CPU usage: {psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
-            f'· RAM usage: {psutil.virtual_memory().percent}% | '
+            f'· CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
+            f'· RAM usage: \n{psutil.virtual_memory().percent}% | '
             f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
-            f'· Disk usage: {(du := psutil.disk_usage("/")).percent} % | '
+            f'· Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
             f'{du.used / (1024 ** 3):.1f}GB /{du.total / (1024 ** 3):.1f}GB'
         ).add_field(
             name='Python Versions',
             value=
-            f'· Python: {platform.python_version()}'
-            f'· discord.py {discord.__version__}'
-            f'· dota2 {dota2.__version__}'
-            f'· Pyot {pyot.__version__}'
+            f'· Python: {platform.python_version()}\n'
+            f'· discord.py {discord.__version__}\n'
+            f'· dota2 {dota2.__version__}\n'
+            f'· Pyot {pyot.__version__}\n'
         ).set_footer(
             text=f'AluBot is a copyright 2020-{datetime.now().year} of {self.bot.owner.name}'
         )
         if not self.bot.yen:
             embed.add_field(
-                name="Location judging by IP adress",
+                name="Location judging by IP",
                 value=f"· {data['country']} {data['region']} {data['city']}"
             )
         await ctx.reply(embed=embed)
@@ -327,9 +327,7 @@ class Info(commands.Cog, name='Info'):
     @is_owner()
     @commands.command(aliases=['invitelink'])
     async def invite_link(self, ctx):
-        """
-        Show invite link for the bot.
-        """
+        """Show invite link for the bot."""
         em = Embed(
             color=Clr.prpl,
             description=getenv('DISCORD_BOT_INVLINK')

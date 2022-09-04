@@ -1,0 +1,1 @@
+SOMETHING_NICE = 'hello'

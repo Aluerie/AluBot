@@ -6,7 +6,6 @@ from discord.ext import commands
 
 from utils.context import Context
 
-
 from aiohttp import ClientSession
 from steam.client import SteamClient
 from dota2.client import Dota2Client

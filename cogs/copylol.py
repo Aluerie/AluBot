@@ -67,11 +67,7 @@ class CopypasteLeague(commands.Cog):
                 content = msg.content
                 if "https://twitter.com" in msg.content:
                     await asyncio.sleep(2)
-                    answer = await msg.channel.fetch_message(int(msg.id))
-                    """for match in re.findall(r'status/(\d+)', answer.content):
-                        status = client.get_tweet(int(match))
-                        if block_function(status.data.text, self.blocked_words, self.whitelist_words):
-                            return"""
+                    #  answer = await msg.channel.fetch_message(int(msg.id))
                     embeds = [await replace_tco_links(self.bot.ses, item) for item in msg.embeds]
                     embeds = [move_link_to_title(embed) for embed in embeds]
                     content = ''

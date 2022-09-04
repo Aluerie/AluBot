@@ -49,4 +49,4 @@ your instance of the bot will work well. And I'm honestly not a very good progra
 4. Rename `.env.example` to `.env` and fill out all needed config parameters and setup your PostgreSQL
 5. Replace variables in `./utils/var.py` with your own values
 6. Run the bot with `py main.py -n NAME` where NAME is `alu` for AluBot or `yen` for YenBot, test version of former
-7. if it is Yennifer then rename `test.py.example` to `test.py` and change `test_list` in there to include cogs you want to test
+7. if it is Yennifer then rename `tlist.py.example` to `tlist.py` and change `test_list` in there to include cogs you want to test

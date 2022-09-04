@@ -5,7 +5,7 @@ from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
 
 from utils.context import Context
-from test import test_list
+from tlist import test_list
 
 from aiohttp import ClientSession
 from steam.client import SteamClient

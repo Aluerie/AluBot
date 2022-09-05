@@ -14,8 +14,7 @@
 13. we might want to move image utils into `bot` subclass bcs of session weirdness
 14. context menu commands into help menu somehow idk
 15. clips twitch check
-16. summary + sysinfo command into info as group 
-17. embed builder - editor - context menu
+16. embed builder - editor - context menu
 
 ### Fix Later
 1. ?tag emoji escapes 

@@ -6,7 +6,6 @@ from discord.ext import commands, tasks
 
 from utils.var import *
 from utils.imgtools import img_to_file
-from utils.format import humanize_time
 
 from datetime import datetime, timezone, timedelta, time
 import platform
@@ -61,32 +60,6 @@ class StatsCommands(commands.Cog, name='Stats'):
             f"Limit: {limit}"
         )
         await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
-
-    @commands.hybrid_command(
-        name='summary',
-        description='Summary stats for the bot'
-    )
-    async def summary(self, ctx):
-        """Summary stats for the bot ;"""
-        em = Embed(
-            colour=Clr.prpl,
-            title='Summary bot stats'
-        ).set_thumbnail(
-            url=self.bot.user.avatar.url
-        ).add_field(
-            name="Server Count",
-            value=str(len(self.bot.guilds))
-        ).add_field(
-            name="User Count",
-            value=str(len(self.bot.users))
-        ).add_field(
-            name="Ping",
-            value=f"{self.bot.latency * 1000:.2f}ms"
-        ).add_field(
-            name='Uptime',
-            value=humanize_time(datetime.now(timezone.utc) - self.bot.launch_time, full=False)
-        )
-        await ctx.reply(embed=em)
 
 
 class StatsChannels(commands.Cog):

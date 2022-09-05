@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List
 
 import pyot
-from PIL import ImageColor
+from PIL import ImageColor, Image
 from async_google_trans_new import google_translator
 from dateparser.search import search_dates
 from discord import Embed, Member, Message, Role, app_commands
@@ -36,7 +36,7 @@ warnings.filterwarnings(
 
 if TYPE_CHECKING:
     from discord import Interaction, Guild
-    from utils.bot import AluBot
+    from utils.bot import AluBot, Context
 
 
 async def account_age_ctx_menu(ntr: Interaction, member: Member):
@@ -280,7 +280,12 @@ class Info(commands.Cog, name='Info'):
             )
             await ctx.reply(embed=em, ephemeral=True)
 
-    @commands.hybrid_command(
+    @commands.hybrid_group()
+    async def info(self, ctx: Context):
+        """Group command about Info, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    @info.command(
         name='sysinfo',
         description='Get system info about machine currently hosting the bot',
         aliases=['systeminfo']
@@ -326,9 +331,35 @@ class Info(commands.Cog, name='Info'):
             )
         await ctx.reply(embed=embed)
 
+    @info.command(
+        name='stats',
+        description='Summary stats for the bot'
+    )
+    async def stats(self, ctx):
+        """Summary stats for the bot ;"""
+        em = Embed(
+            colour=Clr.prpl,
+            title='Summary bot stats'
+        ).set_thumbnail(
+            url=self.bot.user.avatar.url
+        ).add_field(
+            name="Server Count",
+            value=str(len(self.bot.guilds))
+        ).add_field(
+            name="User Count",
+            value=str(len(self.bot.users))
+        ).add_field(
+            name="Ping",
+            value=f"{self.bot.latency * 1000:.2f}ms"
+        ).add_field(
+            name='Uptime',
+            value=humanize_time(datetime.now(timezone.utc) - self.bot.launch_time, full=False)
+        )
+        await ctx.reply(embed=em)
+
     @is_owner()
-    @commands.command(aliases=['invitelink'])
-    async def invite_link(self, ctx):
+    @commands.command(aliases=['invitelink', 'invite_link'], hidden=True)
+    async def invite(self, ctx):
         """Show invite link for the bot."""
         em = Embed(
             color=Clr.prpl,

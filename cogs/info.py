@@ -10,16 +10,17 @@ import re
 import socket
 import warnings
 from datetime import datetime, timezone
-from os import getenv
+
 from typing import TYPE_CHECKING, List
 
 import pyot
-from PIL import Image, ImageColor
+from PIL import ImageColor
 from async_google_trans_new import google_translator
 from dateparser.search import search_dates
 from discord import Embed, Member, Message, Role, app_commands
 from discord.ext import commands, tasks
 
+from config import DISCORD_BOT_INVLINK
 from utils import database as db
 from utils.checks import is_owner
 from utils.format import humanize_time
@@ -72,6 +73,7 @@ class Info(commands.Cog, name='Info'):
         self.bot.tree.add_command(self.ctx_menu2)
 
     async def cog_unload(self) -> None:
+        self.reload_info.cancel()
         self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
         self.bot.tree.remove_command(self.ctx_menu2.name, type=self.ctx_menu2.type)
 
@@ -330,7 +332,7 @@ class Info(commands.Cog, name='Info'):
         """Show invite link for the bot."""
         em = Embed(
             color=Clr.prpl,
-            description=getenv('DISCORD_BOT_INVLINK')
+            description=DISCORD_BOT_INVLINK
         )
         await ctx.reply(embed=em)
 

@@ -129,6 +129,9 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         self.bot.tree.add_command(self.ctx_menu2)
         self.help_emote = Ems.bubuAyaya
 
+    def cog_unload(self) -> None:
+        self.remove_inactive.cancel()
+
     @commands.hybrid_command(
         aliases=['ls'],
         usage='[member=you]',

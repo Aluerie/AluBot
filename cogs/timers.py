@@ -111,6 +111,13 @@ class Timers(commands.Cog):
         self.daily_gif_reminders.start()
         self.daily_rule_reminders.start()
 
+    def cog_unload(self) -> None:
+        self.daily_reminders.cancel()
+        self.daily_important_reminders.cancel()
+        self.daily_fact_reminders.cancel()
+        self.daily_gif_reminders.cancel()
+        self.daily_rule_reminders.cancel()
+
     async def check_amount_messages(self, msg_amount=10):
         async for msg in self.bot.get_channel(Cid.general).history(limit=msg_amount):
             if msg.author == self.bot.user:

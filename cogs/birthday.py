@@ -83,6 +83,9 @@ class Birthday(commands.Cog):
         self.check_birthdays.start()
         self.help_emote = Ems.peepoHappyDank
 
+    def cog_unload(self) -> None:
+        self.check_birthdays.cancel()
+
     @commands.hybrid_group()
     async def birthday(self, ctx: Context):
         """Group command about birthdays, for actual commands use it together with subcommands"""

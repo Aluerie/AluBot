@@ -2,9 +2,6 @@
 The MIT License (MIT)
 
 """
-from os import getenv
-
-from dota2.proto_enums import EGCItemMsg, DOTAGameVersion
 
 STEAM_CDN_URL = 'https://cdn.cloudflare.steamstatic.com'
 ODOTA_API_URL = 'https://api.opendota.com/api'

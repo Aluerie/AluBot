@@ -14,6 +14,9 @@ class PassEvent(commands.Cog):
         self.crashed = True
         self.botcheck.start()
 
+    def cog_unload(self) -> None:
+        self.botcheck.cancel()
+
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
         if msg.channel.id == game_feed:

@@ -21,6 +21,9 @@ class TwitchCog(commands.Cog):
         self.bot = bot
         self.mystream.start()
 
+    def cog_unload(self) -> None:
+        self.mystream.cancel()
+
     @commands.Cog.listener()
     async def on_presence_update(self, before: Member, after: Member):
         if before.bot or before.activities == after.activities or before.id == Uid.alu:

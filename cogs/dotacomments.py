@@ -15,9 +15,12 @@ if TYPE_CHECKING:
 
 
 class DotaComments(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot = bot
+    def __init__(self, bot):
+        self.bot: AluBot = bot
         self.git_comments_check.start()
+
+    def cog_unload(self) -> None:
+        self.git_comments_check.cancel()
 
     @tasks.loop(minutes=5)
     async def git_comments_check(self):

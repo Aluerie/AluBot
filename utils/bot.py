@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List
 from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
 
+from config import GIT_PERSONAL_TOKEN, STEAM_TEST_LGN, STEAM_TEST_PSW, STEAM_LGN, STEAM_PSW
 from utils.context import Context
 
 from aiohttp import ClientSession
@@ -14,7 +15,7 @@ from github import Github
 
 from datetime import datetime, timezone
 
-from os import getenv, environ, listdir
+from os import environ, listdir
 import logging
 log = logging.getLogger('root')
 
@@ -78,16 +79,13 @@ class AluBot(commands.Bot):
             self.steam_dota_login()
 
         if not self.yen or YEN_GIT:
-            self.github = Github(getenv('GIT_PERSONAL_TOKEN'))
+            self.github = Github(GIT_PERSONAL_TOKEN)
             self.git_gameplay = self.github.get_repo("ValveSoftware/Dota2-Gameplay")
             self.git_tracker = self.github.get_repo("SteamDatabase/GameTracking-Dota2")
 
         """
         if not self.yen or YEN_TWITCH:
-            self.twitch = Twitch(
-                getenv("TWITCH_CLIENT_ID"),
-                getenv("TWITCH_CLIENT_SECRET")
-            )
+            self.twitch = Twitch(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
             self.twitch.authenticate_app([])
         """
 
@@ -141,11 +139,11 @@ class AluBot(commands.Bot):
         if self.steam.connected is False:
             log.info(f"dota2info: client.connected {self.steam.connected}")
             if self.yen:
-                steam_login = getenv("STEAM_TEST_LGN")
-                steam_password = getenv("STEAM_TEST_PSW")
+                steam_login = STEAM_TEST_LGN
+                steam_password = STEAM_TEST_PSW
             else:
-                steam_login = getenv("STEAM_LGN")
-                steam_password = getenv("STEAM_PSW")
+                steam_login = STEAM_LGN
+                steam_password = STEAM_PSW
 
             if self.steam.login(username=steam_login, password=steam_password):
                 self.steam.change_status(persona_state=7)

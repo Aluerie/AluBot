@@ -30,6 +30,10 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
         self.active_afk = {}
         self.help_emote = Ems.DankG
 
+    def cog_unload(self) -> None:
+        self.check_reminders.cancel()
+        self.check_afks.cancel()
+
     slh_group = app_commands.Group(name="remind", description="Group command about reminders")
 
     @commands.group()

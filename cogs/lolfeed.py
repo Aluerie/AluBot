@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List
 
-from os import getenv
+from config import RIOT_API_KEY
 
 from pyot.conf.model import activate_model, ModelConf
 from pyot.conf.pipeline import activate_pipeline, PipelineConf
@@ -37,7 +37,7 @@ class LolPipeline(PipelineConf):
         },
         {
             "backend": "pyot.stores.riotapi.RiotAPI",
-            "api_key": getenv("RIOT_API_KEY"),
+            "api_key": RIOT_API_KEY,
         }
     ]
 
@@ -1102,6 +1102,9 @@ class LoLAccCheck(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.check_acc_renames.start()
+
+    def cog_unload(self) -> None:
+        self.check_acc_renames.cancel()
 
     @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
     async def check_acc_renames(self):

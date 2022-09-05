@@ -10,7 +10,6 @@ from utils.format import block_function
 from utils.inettools import replace_tco_links, move_link_to_title
 from utils import database as db
 
-import tweepy
 import traceback
 import asyncio
 
@@ -18,22 +17,14 @@ if TYPE_CHECKING:
     from discord import Message
     from utils.bot import AluBot
 
-from os import getenv
-GIT_KEY = getenv("GIT_KEY")
-
-
-consumer_key = getenv('TWITTER_CONSUMER_KEY')
-consumer_secret = getenv('TWITTER_CONSUMER_SECRET')
-access_token = getenv('TWITTER_ACCESS_TOKEN')
-access_token_secret = getenv('TWITTER_ACCESS_TOKEN_SECRET')
-bearer_token = getenv('TWITTER_BEARER_TOKEN')
-client = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret)
-
 
 class CopypasteLeague(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.patch_checker.start()
+
+    def cog_unload(self) -> None:
+        self.patch_checker.cancel()
 
     blocked_words = [
         'Free Champion Rotation',

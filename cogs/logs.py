@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from discord import AuditLogAction, Embed, Member, NotFound
+from discord import AuditLogAction, Embed, NotFound, User
 from discord.ext import commands, tasks
 
 from utils.var import *
@@ -12,33 +12,40 @@ import regex
 from datetime import timezone, time
 
 if TYPE_CHECKING:
-    pass
+    from utils.bot import AluBot
 
 
 class Logging(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.stonerole_check.start()
+
+    def cog_unload(self) -> None:
+        self.stonerole_check.cancel()
 
     @commands.Cog.listener()
     async def on_user_update(self, before, after):
         member = self.bot.get_guild(Sid.alu).get_member(after.id)
         if member is None:
             return
-        embed = Embed(colour=member.colour)
-        embed.set_author(name=member.display_name, icon_url=before.display_avatar.url)
+        em = Embed(
+            colour=member.colour
+        ).set_author(
+            name=member.display_name,
+            icon_url=before.display_avatar.url
+        )
         if before.avatar != after.avatar:
-            embed.title = f'User\'s avatar was changed {Ems.PepoDetective}'
-            embed.description = '**Before:**  thumbnail to the right\n**After:** image below'
-            embed.set_thumbnail(url=before.display_avatar.url)
-            embed.set_image(url=after.display_avatar.url)
+            em.title = f'User\'s avatar was changed {Ems.PepoDetective}'
+            em.description = '**Before:**  thumbnail to the right\n**After:** image below'
+            em.set_thumbnail(url=before.display_avatar.url)
+            em.set_image(url=after.display_avatar.url)
         elif before.name != after.name:
-            embed.title = f'User\'s global name was changed {Ems.PepoDetective}'
-            embed.description = f'**Before:** {before.name}\n**After:** {after.name}'
+            em.title = f'User\'s global name was changed {Ems.PepoDetective}'
+            em.description = f'**Before:** {before.name}\n**After:** {after.name}'
         elif before.discriminator != after.discriminator:
-            embed.title = f'User\'s discriminator was changed {Ems.PepoDetective}'
-            embed.description = f'**Before:** {before.discriminator}\n**After:** {after.discriminator}'
-        return await self.bot.get_channel(Cid.bot_spam).send(embed=embed)
+            em.title = f'User\'s discriminator was changed {Ems.PepoDetective}'
+            em.description = f'**Before:** {before.discriminator}\n**After:** {after.discriminator}'
+        return await self.bot.get_channel(Cid.bot_spam).send(embed=em)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
@@ -130,15 +137,15 @@ class Logging(commands.Cog):
         guild = self.bot.get_guild(Sid.alu)
         stone_rl = guild.get_role(Rid.rolling_stone)
         async for entry in guild.audit_logs(action=AuditLogAction.member_update):
-            if isinstance(entry.target, Member) and stone_rl in entry.target.roles:
+            if isinstance(entry.target, User) or stone_rl in entry.target.roles:
                 return
-            if entry.target.nick and 'Stone' in entry.target.nick:
-                embed = Embed(
+            if 'Stone' in entry.target.display_name:
+                em = Embed(
                     colour=stone_rl.colour,
                     description=
                     f'{entry.target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
                 )
-                await self.bot.get_channel(Cid.bot_spam).send(embed=embed)
+                await self.bot.get_channel(Cid.bot_spam).send(embed=em)
                 await entry.target.add_roles(stone_rl)
             else:
                 await entry.target.remove_roles(stone_rl)
@@ -150,7 +157,7 @@ class Logging(commands.Cog):
 
 class CommandLogging(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
 
     ignored_users = []  # [Uid.alu]
     included_guilds = [Sid.alu]

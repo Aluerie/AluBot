@@ -96,6 +96,11 @@ class StatsChannels(commands.Cog):
         self.mymembers.start()
         self.mybots.start()
 
+    def cog_unload(self) -> None:
+        self.mytime.cancel()
+        self.mymembers.cancel()
+        self.mybots.cancel()
+
     @tasks.loop(time=[time(hour=x) for x in range(0, 24)])
     async def mytime(self):
         symbol = '#' if platform.system() == 'Windows' else '-'

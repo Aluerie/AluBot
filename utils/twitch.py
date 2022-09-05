@@ -1,9 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from os import getenv
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(dotenv_path=find_dotenv(), verbose=True)
+from config import TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET
 
 from utils import database as db
 from utils.format import gettimefromhms, display_hmstime
@@ -14,10 +12,7 @@ if TYPE_CHECKING:
     pass
 
 
-twitch = Twitch(
-    getenv("TWITCH_CLIENT_ID"),
-    getenv("TWITCH_CLIENT_SECRET")
-)
+twitch = Twitch(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
 twitch.authenticate_app([])
 
 

@@ -1,22 +1,21 @@
 ### Current thoughts
 1. https://www.dota2.com/datafeed/patchnoteslist
-2. don't forget to add unload_cog while editing for other stuff
-3. routing thing for league
-4. research star thing *roles
-5. request_matchmaking_stats()
-6. add some difference between league and dota database add logs, icon I guess
-7. edge cases when people delete channels/guilds
-8. async sqlalchemy and idk research better code/approach - maybe subclass database classes ?
-9. look at every cog in robo danny/pycord manager/stella
-10. rewrite purge into something better
-11. abandon not scored games for match history
-12. DPC ranking command, Dpc points too
-13. make muted by who into logs
-14. we might want to move image utils into `bot` subclass bcs of session weirdness
-15. context menu commands into help menu somehow idk
-16. clips twitch check
-17. summary + sysinfo command into info as group 
-18. embed builder - editor - context menu
+2. routing thing for league
+3. research star thing *roles
+4. request_matchmaking_stats()
+5. add some difference between league and dota database add logs, icon I guess
+6. edge cases when people delete channels/guilds
+7. async sqlalchemy and idk research better code/approach - maybe subclass database classes ?
+8. look at every cog in robo danny/pycord manager/stella
+9. rewrite purge into something better
+10. abandon not scored games for match history
+11. DPC ranking command, Dpc points too
+12. make muted by who into logs
+13. we might want to move image utils into `bot` subclass bcs of session weirdness
+14. context menu commands into help menu somehow idk
+15. clips twitch check
+16. summary + sysinfo command into info as group 
+17. embed builder - editor - context menu
 
 ### Fix Later
 1. ?tag emoji escapes 

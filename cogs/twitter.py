@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import asyncio
 from typing import TYPE_CHECKING
-
-from os import getenv
 import re
 
 import tweepy.asynchronous
 from discord import Embed
 
 from discord.ext import commands, tasks
+
+from config import TWITTER_BEARER_TOKEN
 
 from utils.distools import send_traceback
 from utils.imgtools import url_to_file
@@ -23,17 +23,10 @@ if TYPE_CHECKING:
 # TODO: remove this when twitter is unbanned
 import logging
 logger = logging.getLogger('tweepy')
-#logger.setLevel(logging.CRITICAL)
+# logger.setLevel(logging.CRITICAL)
 # ############################################################################################
 
-consumer_key = getenv('TWITTER_CONSUMER_KEY')
-consumer_secret = getenv('TWITTER_CONSUMER_SECRET')
-access_token = getenv('TWITTER_ACCESS_TOKEN')
-access_token_secret = getenv('TWITTER_ACCESS_TOKEN_SECRET')
-BEARER_TOKEN = getenv('TWITTER_BEARER_TOKEN')
-
-
-twitter_client = tweepy.asynchronous.AsyncClient(BEARER_TOKEN)
+twitter_client = tweepy.asynchronous.AsyncClient(TWITTER_BEARER_TOKEN)
 
 
 async def download_twitter_images(session, ctx: Context, *, tweet_ids: str):
@@ -76,7 +69,7 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
     def __init__(self, bot, bearer_token):
         super().__init__(
             bearer_token,
-            #wait_on_rate_limit=True
+            #  wait_on_rate_limit=True
         )
         self.bot: AluBot = bot
 
@@ -127,7 +120,7 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
 
 
 async def new_stream(bot: AluBot):
-    myStream = MyAsyncStreamingClient(bot, BEARER_TOKEN)
+    myStream = MyAsyncStreamingClient(bot, TWITTER_BEARER_TOKEN)
     await myStream.initiate_stream()
 
 
@@ -139,6 +132,7 @@ class Twitter(commands.Cog):
 
     def cog_unload(self) -> None:
         self.myStream.disconnect()
+        self.start_stream.cancel()
 
     @tasks.loop(count=1)
     async def start_stream(self):

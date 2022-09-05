@@ -30,7 +30,8 @@ from utils.format import indent
 
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timedelta, timezone, time
-from os import getenv
+
+from config import DOTA_FRIENDID
 
 import logging
 
@@ -41,7 +42,6 @@ if TYPE_CHECKING:
 log = logging.getLogger('root')
 log.setLevel(logging.WARNING)
 
-DOTA_FRIENDID = int(getenv('DOTA_FRIENDID'))
 
 send_matches = []
 
@@ -110,6 +110,9 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         self.current_match_data: MatchHistoryData = None  # type: ignore
         self.new_matches_for_history = []
         self.match_history_refresh.start()
+
+    def cog_unload(self) -> None:
+        self.match_history_refresh.cancel()
 
     @commands.hybrid_group()
     async def stalk(self, ctx: Context):
@@ -510,6 +513,9 @@ class ODotaAutoParse(commands.Cog):
         self.active_matches = []
         self.lobby_ids = set()
         self.autoparse_task.start()
+
+    def cog_unload(self) -> None:
+        self.autoparse_task.cancel()
 
     async def get_active_matches(self):
         self.lobby_ids = set()

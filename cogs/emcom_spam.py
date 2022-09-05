@@ -21,6 +21,10 @@ class EmoteSpam(commands.Cog):
         self.emote_spam.start()
         self.offline_criminal_check.start()
 
+    def cog_unload(self) -> None:
+        self.emote_spam.cancel()
+        self.offline_criminal_check.cancel()
+
     async def emote_spam_control(self, msg: Message, nqn_check: int = 1):
 
         if msg.channel.id == Cid.emote_spam:
@@ -29,7 +33,7 @@ class EmoteSpam(commands.Cog):
             # emoji_regex = get_emoji_regexp()
             # text = emoji_regex.sub('', msg.content)  # standard emotes
 
-            text = emoji.replace_emoji(msg.content, replace='')
+            text = emoji.replace_emoji(msg.content, replace='')  # type: ignore # ???
             filters = [Rgx.whitespaces, Rgx.emote, Rgx.nqn, Rgx.invis_symb]
             if nqn_check == 0:
                 filters.remove(Rgx.nqn)
@@ -108,6 +112,10 @@ class ComfySpam(commands.Cog):
         self.bot: AluBot = bot
         self.comfy_spam.start()
         self.offline_criminal_check.start()
+
+    def cog_unload(self) -> None:
+        self.comfy_spam.cancel()
+        self.offline_criminal_check.cancel()
 
     async def comfy_chat_control(self, msg):
         if msg.channel.id == Cid.comfy_spam:

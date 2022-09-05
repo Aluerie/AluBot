@@ -7,11 +7,9 @@ from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
-from os import getenv
-from dotenv import load_dotenv
-load_dotenv(dotenv_path='.env', verbose=True)
+from config import DATABASE_URL
+
 # sql_url = 'postgresql://' + sql_username + ':' + sql_password + '@localhost:5432/postgres'
-DATABASE_URL = getenv("SQL_URL")
 
 engine = create_engine(DATABASE_URL, echo=False)  # connect to database,  echo = true to debug
 Session = sessionmaker()

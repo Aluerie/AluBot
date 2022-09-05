@@ -654,8 +654,11 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
 
 class DotaAccCheck(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.check_acc_renames.start()
+
+    def cog_unload(self) -> None:
+        self.check_acc_renames.cancel()
 
     @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
     async def check_acc_renames(self):

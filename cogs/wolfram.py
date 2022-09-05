@@ -3,19 +3,16 @@ from typing import TYPE_CHECKING
 
 from io import BytesIO
 from urllib import parse as urlparse
-from os import getenv
 
 from discord import app_commands, File
 from discord.ext import commands
 
+from config import WOLFRAM_TOKEN
 from utils.var import Ems
 
 
 if TYPE_CHECKING:
     from utils.context import Context
-
-
-WOLFRAM_TOKEN = getenv("WOLFRAM_TOKEN")
 
 
 class WolframAlpha(commands.Cog):

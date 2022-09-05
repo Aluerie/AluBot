@@ -8,6 +8,9 @@ from asyncprawcore import AsyncPrawcoreException
 from discord import Embed
 from discord.ext import commands, tasks
 
+from config import (
+    REDDIT_CLIENT_ID, REDDIT_PASSWORD, REDDIT_USER_AGENT, REDDIT_USERNAME, REDDIT_CLIENT_SECRET
+)
 from utils.distools import send_traceback
 from utils.var import *
 import asyncpraw
@@ -42,14 +45,13 @@ log = logging.getLogger('root')
 
 from webpreview import web_preview
 
-from os import getenv
 
 reddit = asyncpraw.Reddit(
-    client_id=getenv("REDDIT_CLIENT_ID"),
-    client_secret=getenv("REDDIT_CLIENT_SECRET"),
-    password=getenv("REDDIT_PASSWORD"),
-    user_agent=getenv("REDDIT_USER_AGENT"),
-    username=getenv("REDDIT_USERNAME")
+    client_id=REDDIT_CLIENT_ID,
+    client_secret=REDDIT_CLIENT_SECRET,
+    password=REDDIT_PASSWORD,
+    user_agent=REDDIT_USER_AGENT,
+    username=REDDIT_USERNAME
 )
 
 subreddits_array = "DotaPatches"  # "AskReddit+DotaPatches" use '+' to connect them
@@ -153,6 +155,10 @@ class Reddit(commands.Cog):
         self.redditfeed.start()
         self.userfeed.start()
 
+    def cog_unload(self) -> None:
+        self.redditfeed.cancel()
+        self.userfeed.cancel()
+
     @tasks.loop(minutes=40)
     async def redditfeed(self):
         log.info("Starting to stalk r/DotaPatches")
@@ -195,7 +201,7 @@ class Reddit(commands.Cog):
                     if comment is None:
                         continue
                     dtime = datetime.fromtimestamp(comment.created_utc)
-                    # idk there was some weird bug with sending old messages after 2 months
+                    # IDK there was some weird bug with sending old messages after 2 months
                     if datetime.now(timezone.utc) - dtime.replace(tzinfo=timezone.utc) < timedelta(days=7):
                         embeds = await process_comments(comment)
                         for item in embeds:

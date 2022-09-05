@@ -78,6 +78,9 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
         self.daily_emote_shift.start()
         self.help_emote = Ems.peepoComfy
 
+    def cog_unload(self) -> None:
+        self.daily_emote_shift.cancel()
+
     @commands.Cog.listener()
     async def on_message(self, msg):
         if self.bot.yen:

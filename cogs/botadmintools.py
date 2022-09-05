@@ -26,6 +26,9 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         self.help_emote = Ems.Lewd
         self.checkguilds.start()
 
+    def cog_unload(self) -> None:
+        self.checkguilds.cancel()
+
     @is_owner()
     @commands.command(hidden=True)
     async def msgcount(self, ctx, member: Member, msg_count):

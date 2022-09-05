@@ -9,14 +9,18 @@ from datetime import time
 
 if TYPE_CHECKING:
     from discord import Thread
+    from utils.bot import AluBot
 
 watched_threads_ids = []
 
 
 class ThreadsManaging(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.unarchive_threads.start()
+
+    def cog_unload(self) -> None:
+        self.unarchive_threads.cancel()
 
     @commands.Cog.listener()
     async def on_thread_create(self, thread: Thread):

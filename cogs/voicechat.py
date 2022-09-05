@@ -1,10 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from discord import Embed, Member, app_commands
 from discord.ext import commands, tasks
 
 from utils.var import *
 
+if TYPE_CHECKING:
+    from utils.bot import AluBot
 
-class Voicechat(commands.Cog, name='Voice Chat'):
+
+class VoiceChat(commands.Cog, name='Voice Chat'):
     """
     Change streaming room title
 
@@ -13,9 +20,12 @@ class Voicechat(commands.Cog, name='Voice Chat'):
     """
 
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.check_voice_members.start()
         self.help_emote = Ems.peepoMovie
+
+    def cog_unload(self) -> None:
+        self.check_voice_members.cancel()
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, mbr: Member, before, after):
@@ -90,4 +100,4 @@ class Voicechat(commands.Cog, name='Voice Chat'):
 
 
 async def setup(bot):
-    await bot.add_cog(Voicechat(bot))
+    await bot.add_cog(VoiceChat(bot))

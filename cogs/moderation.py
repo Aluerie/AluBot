@@ -29,6 +29,9 @@ class Moderation(commands.Cog):
         self.active_mutes = {}
         self.check_mutes.start()
 
+    def cog_unload(self) -> None:
+        self.check_mutes.cancel()
+
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
         if any(i in msg.content for i in blocked_phrases):

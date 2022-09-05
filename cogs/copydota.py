@@ -3,31 +3,24 @@ from typing import TYPE_CHECKING
 
 from discord import Embed
 from discord.ext import commands, tasks
+
+from config import GIT_PERSONAL_TOKEN
 from utils.var import Cid, Clr
 from utils.format import block_function
 from utils.distools import send_traceback
-from utils.inettools import replace_tco_links, move_link_to_title, get_links_from_str
+from utils.inettools import replace_tco_links, move_link_to_title
 from utils.gittools import human_commit
 from utils.imgtools import str_to_file
 
 import asyncio
-import tweepy
 from github import Github
-from os import getenv
 
 if TYPE_CHECKING:
     from discord import Message
 
-consumer_key = getenv('TWITTER_CONSUMER_KEY')
-consumer_secret = getenv('TWITTER_CONSUMER_SECRET')
-access_token = getenv('TWITTER_ACCESS_TOKEN')
-access_token_secret = getenv('TWITTER_ACCESS_TOKEN_SECRET')
-bearer_token = getenv('TWITTER_BEARER_TOKEN')
-client = tweepy.Client(bearer_token, consumer_key, consumer_secret, access_token, access_token_secret)
-
 
 async def get_gitdiff_embed(test_num=0):
-    g = Github(getenv('GIT_PERSONAL_TOKEN'))
+    g = Github(GIT_PERSONAL_TOKEN)
     repo = g.get_repo("SteamDatabase/GameTracking-Dota2")
     commits = repo.get_commits()
     embed = Embed(colour=0x26425A)
@@ -132,6 +125,9 @@ class TestGitFeed(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.testing.start()
+
+    def cog_unload(self) -> None:
+        self.testing.cancel()
 
     @tasks.loop(count=1)
     async def testing(self):

@@ -24,6 +24,10 @@ if TYPE_CHECKING:
 import logging
 logger = logging.getLogger('tweepy')
 # logger.setLevel(logging.CRITICAL)
+
+# TODO: remove this when they fix DeprecationWarning
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 # ############################################################################################
 
 twitter_client = tweepy.asynchronous.AsyncClient(TWITTER_BEARER_TOKEN)

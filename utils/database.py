@@ -7,11 +7,11 @@ from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
-from config import DATABASE_URL
+from config import SQL_URL
 
 # sql_url = 'postgresql://' + sql_username + ':' + sql_password + '@localhost:5432/postgres'
 
-engine = create_engine(DATABASE_URL, echo=False)  # connect to database,  echo = true to debug
+engine = create_engine(SQL_URL, echo=False)  # connect to database,  echo = true to debug
 Session = sessionmaker()
 Session.configure(bind=engine)
 session = Session()

@@ -293,27 +293,27 @@ class Info(commands.Cog, name='Info'):
             colour=Clr.prpl,
             title="Bot Host Machine System Info",
             description=
-            f'· Hostname: {socket.gethostname()}\n'
-            f'· Machine: {platform.machine()}\n'
-            f'· Platform: {platform.platform()}\n'
-            f'· System: `{platform.system()}` release: `{platform.release()}`\n'
-            f'· Version: `{platform.version()}`\n'
-            f'· Processor: {platform.processor()}\n',
+            f'● Hostname: {socket.gethostname()}\n'
+            f'● Machine: {platform.machine()}\n'
+            f'● Platform: {platform.platform()}\n'
+            f'● System: `{platform.system()}` release: `{platform.release()}`\n'
+            f'● Version: `{platform.version()}`\n'
+            f'● Processor: {platform.processor()}\n',
         ).add_field(
             name='Current % | max values',
             value=
-            f'· CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
-            f'· RAM usage: \n{psutil.virtual_memory().percent}% | '
+            f'● CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
+            f'● RAM usage: \n{psutil.virtual_memory().percent}% | '
             f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
-            f'· Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
-            f'{du.used / (1024 ** 3):.1f}GB /{du.total / (1024 ** 3):.1f}GB'
+            f'● Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
+            f'{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB'
         ).add_field(
             name='Python Versions',
             value=
-            f'· Python: {platform.python_version()}\n'
-            f'· discord.py {discord.__version__}\n'
-            f'· dota2 {dota2.__version__}\n'
-            f'· Pyot {pyot.__version__}\n'
+            f'● Python: {platform.python_version()}\n'
+            f'● discord.py {discord.__version__}\n'
+            f'● dota2 {dota2.__version__}\n'
+            f'● Pyot {pyot.__version__}\n'
         ).set_footer(
             text=f'AluBot is a copyright 2020-{datetime.now().year} of {self.bot.owner.name}'
         )

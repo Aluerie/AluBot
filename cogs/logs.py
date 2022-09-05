@@ -133,8 +133,11 @@ class Logging(commands.Cog):
             if isinstance(entry.target, Member) and stone_rl in entry.target.roles:
                 return
             if entry.target.nick and 'Stone' in entry.target.nick:
-                embed = Embed(colour=stone_rl.colour)
-                embed.description = f'{entry.target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
+                embed = Embed(
+                    colour=stone_rl.colour,
+                    description=
+                    f'{entry.target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
+                )
                 await self.bot.get_channel(Cid.bot_spam).send(embed=embed)
                 await entry.target.add_roles(stone_rl)
             else:
@@ -143,19 +146,6 @@ class Logging(commands.Cog):
     @stonerole_check.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
-
-
-class EmoteLogging(commands.Cog):
-    """
-    Set up emote logging
-
-    More to come
-    """
-    def __init__(self, bot):
-        self.bot = bot
-        self.help_emote = Ems.peepoNiceDay
-
-
 
 
 class CommandLogging(commands.Cog):
@@ -194,5 +184,4 @@ class CommandLogging(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Logging(bot))
-    await bot.add_cog(EmoteLogging(bot))
     await bot.add_cog(CommandLogging(bot))

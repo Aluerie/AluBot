@@ -26,7 +26,7 @@ class CopypasteLeague(commands.Cog):
     def cog_unload(self) -> None:
         self.patch_checker.cancel()
 
-    blocked_words = [
+    blocked_words = [  # todo: make this into rules from database type of thing
         'Free Champion Rotation',
         'PlayRuneterra',
         'RiotForge',
@@ -41,10 +41,12 @@ class CopypasteLeague(commands.Cog):
         'entwuhoo',  # tft dev account
         'RiotExis',  # legends of runeterra
         'RiotZephyreal',  # merch
+        'davetron',  # LoR
+        'infinitystudioc'  # merch
     ]
 
     whitelist_words = [
-        ' Notes',
+        # ' Notes',
     ]
 
     @commands.Cog.listener()

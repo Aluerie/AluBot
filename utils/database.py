@@ -58,6 +58,7 @@ class botinfo(Base):
     trusted_ids = Column(PickleType, default=[])
     irene_is_live = Column(Integer, default=0)
     lol_patch = Column(String, default='')
+    dota_patch = Column(String, default='')
 
 
 class guildassignment(Base):

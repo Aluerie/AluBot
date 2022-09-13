@@ -5,7 +5,8 @@ from discord import Embed
 from discord.ext import commands, tasks
 
 from config import GIT_PERSONAL_TOKEN
-from utils.var import Cid, Clr
+from utils import database as db
+from utils.var import Cid, Clr, Sid, Img
 from utils.format import block_function
 from utils.distools import send_traceback
 from utils.inettools import replace_tco_links, move_link_to_title
@@ -63,6 +64,10 @@ async def get_gitdiff_embed(test_num=0):
 class CopypasteDota(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.patch_checker.start()
+
+    def cog_unload(self) -> None:
+        self.patch_checker.cancel()
 
     blocked_words = [
         'Steam Community',
@@ -120,6 +125,37 @@ class CopypasteDota(commands.Cog):
             )
             await send_traceback(error, self.bot, embed=embed)
 
+    @tasks.loop(minutes=10)
+    async def patch_checker(self):
+        url = "https://www.dota2.com/datafeed/patchnoteslist"
+        async with self.bot.ses.get(url) as resp:
+            data = await resp.json()
+
+        db.set_value(db.b, Sid.alu, dota_patch='sadge')
+        last_patch = data['patches'][-1]
+
+        if last_patch['patch_number'] != db.get_value(db.b, Sid.alu, 'dota_patch'):  # New Patch is here
+            db.set_value(db.b, Sid.alu, dota_patch=last_patch['patch_number'])
+
+            em = Embed(
+                colour=Clr.prpl,
+                title=f'Patch {last_patch["patch_number"]} is out',
+                description=
+                f'Hey chot, I think new patch is out\n'
+                f'[Patch Notes]()'
+            ).set_footer(
+                icon_url=Img.dota2logo,
+                text='I\'m checking Valve\'s datafeed every 10 minutes, sorry if late'
+            ).set_author(
+                name=last_patch['patch_name']
+            )
+            msg = await self.bot.get_channel(Cid.spam_me).send(embed=em)
+            await msg.publish()
+
+    @patch_checker.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
+
 
 class TestGitFeed(commands.Cog):
     def __init__(self, bot):
@@ -145,5 +181,5 @@ class TestGitFeed(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(CopypasteDota(bot))
-    if bot.yen:
-        await bot.add_cog(TestGitFeed(bot))
+    # if bot.yen:
+    #     await bot.add_cog(TestGitFeed(bot))

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from typing import TYPE_CHECKING
 
 from discord import Embed, app_commands
@@ -16,13 +15,33 @@ if TYPE_CHECKING:
     from utils.context import Context
     from utils.bot import AluBot
 
+server_regions_order = [
+    'USWest', 'USEast', 'Europe', 'Korea', 'Singapore', 'Dubai', 'Australia', 'Stockholm', 'Austria', 'Brazil',
+    'SouthAfrica', 'PerfectWorldTelecom', 'PerfectWorldUnicom', 'Chile', 'Peru', 'India',
+    'PerfectWorldTelecomGuangdong', 'PerfectWorldTelecomZhejian', 'Japan', 'PerfectWorldTelecomWuhan',
+    'PerfectWorldUnicomTianjin',  # 'Taiwan
+]
+
+server_regions = [
+    'USWest', 'USEast', 'Europe', 'Korea', 'Singapore', 'Dubai', 'PerfectWorldTelecom', 'PerfectWorldTelecomGuangdong',
+    'PerfectWorldTelecomZhejian', 'PerfectWorldTelecomWuha', 'PerfectWorldUnicom', 'PerfectWorldUnicomTianjin',
+    'Stockholm', 'Brazil', 'Austria', 'Australia', 'SouthAfrica', 'Chile', 'Peru', 'India', 'Japan',  # 'Taiwan',
+]
+
+server_regions_video = [
+    'US West', 'US East', 'SE Asia', 'EU West', 'EU East', 'Russia', 'Australia', 'South Africa', 'Dubai',
+    'Brazil', 'Chile', 'Peru', 'Argentina', 'India', 'Japan', 'China TC Shanghai', 'China UC',
+    'China TC Guangdong', 'China TC Zhejiang', 'China TC Wuhan', '???'
+]
+
 
 class ToolsCog(commands.Cog, name='Tools'):
     """
     Some useful stuff
 
-    Maybe one day it gonna be helpful for somebody.
+    Maybe one day it's going to be helpful for somebody.
     """
+
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.help_emote = Ems.DankFix
@@ -55,6 +74,7 @@ class ToolsCog(commands.Cog, name='Tools'):
     def dota_request_matchmaking_stats(self):
         self.bot.steam_dota_login()
         self.players_by_group = []
+
         # @dota.on('ready')
 
         def ready_function():
@@ -62,7 +82,7 @@ class ToolsCog(commands.Cog, name='Tools'):
 
         # @dota.on('top_source_tv_games')
         def response(message):
-            print(message)
+            # print(message)
             self.players_by_group = message.legacy_searching_players_by_group_source2
             self.bot.dota.emit('matchmaking_stats_response')
 
@@ -78,30 +98,20 @@ class ToolsCog(commands.Cog, name='Tools'):
         await ctx.typing()
 
         players_by_group = self.dota_request_matchmaking_stats()
-        region_arr = [
-            'Russia', 'Europe East', 'Europe West',
-            'Dubai', 'India', 'SE Asia',
-            'Japan', 'US East', 'South Africa',
-            'US West',
-            'Brazil', 'Peru', 'Argentina'
-        ]
-        ranked_dict, unranked_dict = {}, {}
-        for count, i in enumerate(players_by_group):
-            if count < 13:
-                ranked_dict[region_arr[count]] = i
-            else:
-                unranked_dict[region_arr[count-13]] = i
+        players_by_group = [x for x in players_by_group if x]
 
         em = Embed(
             colour=Clr.prpl,
-        ).add_field(
-            name='Unranked',
-            value='\n'.join([f'{k}: {v}' for k, v in ranked_dict.items()])
-        ).add_field(
-            name='Ranked',
-            value='\n'.join([f'{k}: {v}' for k, v in unranked_dict.items()])
+            title='Dota 2 Matchmaking stats',
+            description=
+            '\n'.join([
+                f'{i}. {y}: {x}' for i, (x, y) in enumerate(zip(players_by_group, server_regions_order), start=1)]
+            ),
+        ).set_footer(
+            text='These regions are completely wrong. idk how to relate numbers from valve to actual regions'
         )
-        await ctx.reply("there:" + ' '.join([str(x) for x in players_by_group]))
+        print(len(players_by_group), len(server_regions_order))
+        await ctx.reply(embed=em)
 
 
 async def setup(bot):

@@ -666,8 +666,9 @@ class DotaAccCheck(commands.Cog):
             for row in ses.query(db.d):
                 if row.twtv_id is not None:
                     name = name_by_twitchid(row.twtv_id)
-                    if name != row.name:
-                        row.name = name
+                    if name != row.display_name:
+                        row.display_name = name
+                        row.name = name.lower()
 
     @check_acc_renames.before_loop
     async def before(self):

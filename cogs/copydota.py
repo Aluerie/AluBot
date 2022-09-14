@@ -131,25 +131,25 @@ class CopypasteDota(commands.Cog):
         async with self.bot.ses.get(url) as resp:
             data = await resp.json()
 
-        db.set_value(db.b, Sid.alu, dota_patch='sadge')
+        # db.set_value(db.b, Sid.alu, dota_patch='sadge')
         last_patch = data['patches'][-1]
+        patch_number, patch_name = last_patch['patch_number'], last_patch['patch_name']
 
-        if last_patch['patch_number'] != db.get_value(db.b, Sid.alu, 'dota_patch'):  # New Patch is here
-            db.set_value(db.b, Sid.alu, dota_patch=last_patch['patch_number'])
+        if patch_number != db.get_value(db.b, Sid.alu, 'dota_patch'):  # New Patch is here
+            db.set_value(db.b, Sid.alu, dota_patch=patch_number)
 
             em = Embed(
                 colour=Clr.prpl,
-                title=f'Patch {last_patch["patch_number"]} is out',
-                description=
-                f'Hey chot, I think new patch is out\n'
-                f'[Patch Notes]()'
+                url=f'https://www.dota2.com/patches/{patch_number}',
+                title='Patch Notes',
+                description='Hey chat, I think new patch is out!'
             ).set_footer(
-                icon_url=Img.dota2logo,
-                text='I\'m checking Valve\'s datafeed every 10 minutes, sorry if late'
+                text='I\'m checking Valve\'s datafeed every 10 minutes'
             ).set_author(
-                name=last_patch['patch_name']
+                icon_url=Img.dota2logo,
+                name=f'Patch {patch_number} is out'
             )
-            msg = await self.bot.get_channel(Cid.spam_me).send(embed=em)
+            msg = await self.bot.get_channel(Cid.dota_news).send(embed=em)
             await msg.publish()
 
     @patch_checker.before_loop

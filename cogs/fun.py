@@ -83,7 +83,7 @@ class FunThings(commands.Cog, name='Fun'):
         await random_comfy_react(message)
 
         async def yourlife(msg):
-            if msg.guild.id != Sid.alu or randint(1, 200 + 1) >= 2:
+            if msg.guild.id != Sid.alu or randint(1, 170 + 1) >= 2:
                 return
             try:
                 sliced_text = msg.content.split()

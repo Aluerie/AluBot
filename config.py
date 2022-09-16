@@ -33,7 +33,7 @@ STEAM_MY_PSW = getenv("STEAM_MY_PSW")
 
 # DOTA 2
 DOTA_STEAMID = getenv("DOTA_STEAMID")
-DOTA_FRIENDID = getenv("DOTA_FRIENDID")
+DOTA_FRIENDID = int(getenv("DOTA_FRIENDID"))  # the only Integer type in here
 
 # LEAGUE OF LEGENDS
 LOL_ID = getenv("LOL_ID")

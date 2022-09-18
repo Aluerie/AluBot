@@ -1,7 +1,9 @@
 """
-For heroku reasons I need to have `config.py` via `.env` environmental variables
+For heroku reasons I need to have `config.py`
+via `.env` environmental variables and use `os.getenv`
 
-I promise I will do everything properly when I'm not broke. :(
+But I promise I will do everything properly
+when I'm not broke. :(
 """
 
 import platform

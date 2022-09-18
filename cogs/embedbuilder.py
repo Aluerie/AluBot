@@ -17,10 +17,20 @@ class EmbedMaker(commands.Cog, name='Embed Maker'):
         self.bot: AluBot = bot
         self.help_emote = Ems.DankZzz
 
-    @commands.hybrid_command()
-    async def embedmake(self, ctx: Context):
+    @commands.hybrid_group(name='embed')
+    async def embed_(self, ctx: Context):
+        """Group command about Embed Build, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    @embed_.command()
+    async def make(self, ctx: Context):
+        """
+        Embed Builder command
+        @param ctx:
+        @return:
+        """
         em = Embed(
-            description=f'hello',
+            title='Hello'
         )
         await ctx.reply(embed=em)
 

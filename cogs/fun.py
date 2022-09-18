@@ -1,9 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
-from discord import Embed, File, TextChannel, app_commands, errors, utils, InteractionType
+from discord import (
+    ButtonStyle, Embed, File, InteractionType, Member, TextChannel,
+    app_commands, errors, utils,
+)
 from discord.ext import commands
 from discord.ext.commands import Range
+from discord.ui import Button, View, button
 
 from utils.var import *
 from utils.webhook import user_webhook, check_msg_react
@@ -12,8 +16,152 @@ from numpy.random import randint, choice
 import re
 
 if TYPE_CHECKING:
-    from discord import Message
-    from utils.bot import AluBot
+    from discord import Message, Interaction
+    from utils.bot import AluBot, Context
+
+
+class RPSView(View):
+    def __init__(
+            self,
+            *,
+            players: [Member, Member],
+            message: Optional[Message] = None,
+    ):
+        super().__init__()
+        self.players = players
+        self.message = message
+
+        self.choices = [None, None]
+
+    async def on_timeout(self) -> None:
+        embed = self.message.embeds[0]
+        embed.add_field(
+            name='Timeout',
+            value='Sorry, it is been too long, game is over in Draw due to timeout.'
+        )
+        await self.message.edit(embed=embed, view=None)
+
+    async def bot_choice_edit(self):
+        self.choices[1] = choice(self.all_choices)
+        await self.edit_embed_player_choice(1)
+
+    @staticmethod
+    def choice_name(btn_: Button):
+        return f'{btn_.emoji} {btn_.label}'
+
+    @property
+    def all_choices(self):
+        return [self.choice_name(b) for b in self.children if isinstance(b, Button)]
+
+    async def edit_embed_player_choice(
+            self,
+            player_index: Literal[0, 1]
+            ):
+        embed = self.message.embeds[0]
+        embed.set_field_at(
+            2,
+            name=embed.fields[2].name,
+            value=
+            embed.fields[2].value +
+            f'\n● Player {1 + player_index} {self.players[player_index].mention} has made their choice',
+            inline=False
+        )
+        await self.message.edit(embed=embed)
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        if interaction.user and interaction.user in self.players:
+            return True
+        else:
+            em = Embed(
+                colour=Clr.error,
+                description='Sorry! This game dialog is not for you.'
+            )
+            await interaction.response.send_message(embed=em, ephemeral=True)
+            return False
+
+    async def rps_button_callback(
+            self,
+            ntr: Interaction,
+            btn: Button
+    ):
+        outcome_list = ['Draw', f'{self.players[0].mention} wins', f'{self.players[1].mention} wins']
+
+        player_index = self.players.index(ntr.user)
+
+        if self.choices[player_index] is not None:
+            em = Embed(colour=Clr.error, description=f'You\'ve already chosen **{self.choices[player_index]}**')
+            await ntr.response.send_message(embed=em, ephemeral=True)
+        else:
+            self.choices[player_index] = self.choice_name(btn)
+            em = Embed(colour=Clr.prpl, description=f'You\'ve chosen **{self.choice_name(btn)}**')
+            await ntr.response.send_message(embed=em, ephemeral=True)
+            await self.edit_embed_player_choice(player_index)
+
+        if self.choices[1-player_index] is not None:
+            def winner_index(p1, p2):
+                if (p1 + 1) % 3 == p2:
+                    return 2  # Player 2 won because their move is one greater than player 1
+                if p1 == p2:
+                    return 0  # It's a draw because both players played the same move
+                else:
+                    return 1  # Player 1 wins because we know that it's not a draw and that player 2 didn't win
+
+            em_game = self.message.embeds[0]
+            player_choices = [self.all_choices.index(p) for p in self.choices]  # type: ignore
+            win_index = winner_index(*player_choices)
+
+            def winning_sentence():
+                verb_dict = {
+                    '🪨 Rock': 'smashes',
+                    '🗞️ Paper': 'covers',
+                    '✂ Scissors': 'cuts'
+                }
+                if win_index:
+                    return \
+                        f'{self.choices[win_index-1]} ' \
+                        f'{verb_dict[self.all_choices[win_index]]} ' \
+                        f'{self.choices[1-(win_index-1)]}'
+                else:
+                    return 'Both players chose the same !'
+
+            em_game.add_field(
+                name='Result',
+                value=
+                f'{chr(10).join([f"{x.mention}: {y}" for x, y in zip(self.players, self.choices)])}'
+                f'\n{winning_sentence()}'
+                f'\n\n**Good Game, Well Played {Ems.DankL}**'
+                f'\n**{outcome_list[win_index]}**',  # type: ignore
+                inline=False
+            )
+            if win_index:
+                em_game.set_thumbnail(
+                    url=self.players[win_index - 1].avatar.url
+                )
+            await self.message.edit(embed=em_game, view=None)
+
+    @button(
+        label='Rock',
+        style=ButtonStyle.red,
+        emoji='🪨'
+    )
+    async def rock_button(self, ntr: Interaction, btn: Button):
+        await self.rps_button_callback(ntr, btn)
+
+    @button(
+        label='Paper',
+        style=ButtonStyle.green,
+        emoji='🗞️'
+    )
+    async def paper_button(self, ntr: Interaction, btn: Button):
+        await self.rps_button_callback(ntr, btn)
+
+    @button(
+        label='Scissors',
+        style=ButtonStyle.blurple,
+        emoji='✂'
+    )
+    async def scissors_button(self, ntr: Interaction, btn: Button):
+        await self.rps_button_callback(ntr, btn)
 
 
 class FunThings(commands.Cog, name='Fun'):
@@ -23,6 +171,28 @@ class FunThings(commands.Cog, name='Fun'):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.help_emote = Ems.FeelsDankMan
+
+    @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps'])
+    async def rps(self, ctx: Context, member: Member):
+        players = [ctx.author, member]
+        em = Embed(
+            title='Rock Paper Scissors Game',
+            colour=Clr.prpl
+        ).add_field(
+            name='Player 1',
+            value=f'{players[0].mention}'
+        ).add_field(
+            name='Player 2',
+            value=f'{players[1].mention}'
+        ).add_field(
+            name='Game State Log',
+            value='● Both players need to choose their item',
+            inline=False
+        )
+        view = RPSView(players=players)
+        view.message = await ctx.reply(embed=em, view=view)
+        if member.bot:
+            await view.bot_choice_edit()
 
     @commands.hybrid_command(
         aliases=['cf'],
@@ -83,7 +253,7 @@ class FunThings(commands.Cog, name='Fun'):
         await random_comfy_react(message)
 
         async def yourlife(msg):
-            if msg.guild.id != Sid.alu or randint(1, 170 + 1) >= 2:
+            if msg.guild and msg.guild.id != Sid.alu or randint(1, 170 + 1) >= 2:
                 return
             try:
                 sliced_text = msg.content.split()

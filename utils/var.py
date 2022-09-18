@@ -162,6 +162,7 @@ class Ems:  # Emote strings
 
     # alu server ani
     FeelsRainMan = '<a:SmogeInTheRain:902254223851421796>'
+    DankL = '<a:DankL:1014616758470070353>'
 
     # emote server nonani
 

@@ -119,7 +119,7 @@ class RPSView(View):
                 if win_index:
                     return \
                         f'{self.choices[win_index-1]} ' \
-                        f'{verb_dict[self.all_choices[win_index]]} ' \
+                        f'{verb_dict[self.choices[win_index-1]]} ' \
                         f'{self.choices[1-(win_index-1)]}'
                 else:
                     return 'Both players chose the same !'

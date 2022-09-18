@@ -129,7 +129,7 @@ class RPSView(View):
                 value=
                 f'{chr(10).join([f"{x.mention}: {y}" for x, y in zip(self.players, self.choices)])}'
                 f'\n{winning_sentence()}'
-                f'\n\n**Good Game, Well Played {Ems.DankL}**'
+                f'\n\n**Good Game, Well Played {Ems.DankL} {Ems.DankL} {Ems.DankL}**'
                 f'\n**{outcome_list[win_index]}**',  # type: ignore
                 inline=False
             )

@@ -114,7 +114,7 @@ class RPSView(View):
                 verb_dict = {
                     '🪨 Rock': 'smashes',
                     '🗞️ Paper': 'covers',
-                    '✂ Scissors': 'cuts'
+                    '✂ Scissors': 'cut'
                 }
                 if win_index:
                     return \
@@ -176,6 +176,19 @@ class FunThings(commands.Cog, name='Fun'):
     @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps'])
     async def rps(self, ctx: Context, member: Member):
         """Rock Paper Scissors game with @member"""
+        if member == ctx.author:
+            em = Embed(
+                colour=Clr.error,
+                description='You cannot challenge yourself in a Rock Paper Scissors game'
+            )
+            return await ctx.reply(embed=em)
+        if member.bot and member != ctx.guild.me:
+            em = Embed(
+                colour=Clr.error,
+                description='I\'m afraid other bots do not know how to play this game'
+            )
+            return await ctx.reply(embed=em)
+
         players = [ctx.author, member]
         em = Embed(
             title='Rock Paper Scissors Game',

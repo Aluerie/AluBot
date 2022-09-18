@@ -138,6 +138,7 @@ class RPSView(View):
                     url=self.players[win_index - 1].avatar.url
                 )
             await self.message.edit(embed=em_game, view=None)
+            self.stop()
 
     @button(
         label='Rock',
@@ -174,6 +175,7 @@ class FunThings(commands.Cog, name='Fun'):
 
     @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps'])
     async def rps(self, ctx: Context, member: Member):
+        """Rock Paper Scissors game with @member"""
         players = [ctx.author, member]
         em = Embed(
             title='Rock Paper Scissors Game',

@@ -260,28 +260,28 @@ class PlayerAfterMatch:
         last_row_y = height - last_row_h
         img.paste(rectangle, (0, last_row_y))
 
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 26)
+        font_kda = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 26)
 
         draw = ImageDraw.Draw(img)
-        w3, h3 = get_wh(font.getbbox(self.kda))
+        w3, h3 = get_wh(font_kda.getbbox(self.kda))
         draw.text(
             (0, height - h3),
             self.kda,
-            font=font,
+            font=font_kda,
             align="right"
         )
 
         draw = ImageDraw.Draw(img)
-        w2, h2 = get_wh(font.getbbox(self.outcome))
+        w2, h2 = get_wh(font_kda.getbbox(self.outcome))
         colour_dict = {
             'Win': str(MP.green(shade=800)),
             'Loss': str(MP.red(shade=900)),
-            'No Scored': (255, 255, 255)
+            'Not Scored': (255, 255, 255)
         }
         draw.text(
             (0, height - h3 - h2),
             self.outcome,
-            font=font,
+            font=font_kda,
             align="center",
             fill=colour_dict[self.outcome]
         )
@@ -292,9 +292,9 @@ class PlayerAfterMatch:
             for i in reversed(self.purchase_log):
                 if item_id == await item.id_by_key(i['key']):
                     text = f"{math.ceil(i['time']/60)}m"
-                    w7, h7 = get_wh(font_m.getbbox(self.outcome))
+                    w7, h7 = get_wh(font_m.getbbox(text))
                     draw.text(
-                        (x_left, height-h7),
+                        (x_left, height - h7),
                         text,
                         font=font_m,
                         align="left"

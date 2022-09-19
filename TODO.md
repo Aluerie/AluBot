@@ -6,7 +6,6 @@
 
 ### Current thoughts
 1. routing thing for league
-2. research star thing *roles
 3. add some difference between league and dota database add logs, icon I guess
 4. edge cases when people delete channels/guilds
 5. async sqlalchemy and idk research better code/approach - maybe subclass database classes ?

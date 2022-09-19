@@ -8,7 +8,8 @@ from collections.abc import Sequence
 
 
 def get_wh(bbox):  # bbox is a tuple of four
-    return bbox[2] - bbox[0], bbox[3] - bbox[1]  # right - left, bot - top
+    return bbox[2] - bbox[0], bbox[3]  # - bbox[1]  # right - left, bot - top
+# very scetchy discussion - idk dude, why do they put extra space in stuff
 
 
 def str_to_file(string, filename="file.txt") -> File:

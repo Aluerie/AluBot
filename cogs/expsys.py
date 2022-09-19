@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 from utils.var import *
 from utils import database as db
 from utils.format import ordinal, humanize_time, indent
-from utils.imgtools import url_to_img, img_to_file, get_wh
+from utils.imgtools import url_to_img, img_to_file, get_text_wh
 from utils.distools import inout_to_10, send_pages_list
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -63,7 +63,7 @@ async def rank_image(session, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_s
     d.text((width / 4, height * 4 / 6), f"{rep} REP", fill=(255, 255, 255), font=font)
 
     msg = f"{exp}/{next_lvl_exp} EXP"
-    w4, h4 = get_wh(font.getbbox(msg))
+    w4, h4 = get_text_wh(msg, font)
     d.text((width - w4, height * 5 / 6), msg, fill=(255, 255, 255), font=font)
     return image
 

@@ -7,9 +7,15 @@ from typing import Union
 from collections.abc import Sequence
 
 
-def get_wh(bbox):  # bbox is a tuple of four
-    return bbox[2] - bbox[0], bbox[3]  # - bbox[1]  # right - left, bot - top
-# very scetchy discussion - idk dude, why do they put extra space in stuff
+def get_text_wh(text_string, font):  # wh for width, height = dimensions
+    # https://stackoverflow.com/a/46220683/9263761
+    # https://levelup.gitconnected.com/how-to-properly-calculate-text-size-in-pil-images-17a2cc6f51fd
+    ascent, descent = font.getmetrics()
+
+    text_width = font.getmask(text_string).getbbox()[2]
+    text_height = font.getmask(text_string).getbbox()[3] + descent
+
+    return text_width, text_height
 
 
 def str_to_file(string, filename="file.txt") -> File:

@@ -1,8 +1,8 @@
 ### TI pause time
 1. embed builder - editor - context menu
-2. text for dota lol embeds went down
 9. make muted by who into logs
 10. we might want to move image utils into `bot` subclass bcs of session weirdness
+11. autocomplete for dotafeed features like add remove hero, add remove streamre/player
 
 ### Current thoughts
 1. routing thing for league

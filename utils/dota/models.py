@@ -17,7 +17,7 @@ from pyot.utils.functools import async_property
 from utils import database as db
 from utils.dota import hero, item, ability
 from utils.format import display_relativehmstime
-from utils.imgtools import url_to_img, img_to_file, get_wh
+from utils.imgtools import url_to_img, img_to_file, get_text_wh
 from utils.twitch import TwitchStream
 from utils.var import Clr, MP, Img
 
@@ -157,10 +157,10 @@ class ActiveMatch(Match):
         font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
         draw = ImageDraw.Draw(img)
         text = f'{self.display_name} - {await self.hero_name}'
-        w2, h2 = get_wh(font.getbbox(text))
+        w2, h2 = get_text_wh(text, font)
         draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
-        w2, h2 = get_wh(font.getbbox(text))
+        w2, h2 = get_text_wh(text, font)
         draw.text((0, 35 + h2 + 10), self.twitch_status, font=font, align="center", fill=str(self.colour))
         return img
 
@@ -263,7 +263,7 @@ class PlayerAfterMatch:
         font_kda = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 26)
 
         draw = ImageDraw.Draw(img)
-        w3, h3 = get_wh(font_kda.getbbox(self.kda))
+        w3, h3 = get_text_wh(self.kda, font_kda)
         draw.text(
             (0, height - h3),
             self.kda,
@@ -272,7 +272,7 @@ class PlayerAfterMatch:
         )
 
         draw = ImageDraw.Draw(img)
-        w2, h2 = get_wh(font_kda.getbbox(self.outcome))
+        w2, h2 = get_text_wh(self.outcome, font_kda)
         colour_dict = {
             'Win': str(MP.green(shade=800)),
             'Loss': str(MP.red(shade=900)),
@@ -292,7 +292,7 @@ class PlayerAfterMatch:
             for i in reversed(self.purchase_log):
                 if item_id == await item.id_by_key(i['key']):
                     text = f"{math.ceil(i['time']/60)}m"
-                    w7, h7 = get_wh(font_m.getbbox(text))
+                    w7, h7 = get_text_wh(text, font_m)
                     draw.text(
                         (x_left, height - h7),
                         text,
@@ -324,7 +324,7 @@ class PlayerAfterMatch:
         font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 12)
         for count, txt in enumerate(talent_strs):
             draw = ImageDraw.Draw(img)
-            w4, h4 = get_wh(font.getbbox(txt))
+            w4, h4 = get_text_wh(txt, font)
             draw.text(
                 (width - w4, last_row_y - 30 * 2 - 22 * count),
                 txt,

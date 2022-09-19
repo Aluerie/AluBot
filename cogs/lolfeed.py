@@ -56,7 +56,7 @@ from utils.var import *
 from utils.lol import get_role_mini_list, get_diff_list
 from utils.distools import send_traceback, send_pages_list
 from utils.format import display_relativehmstime
-from utils.imgtools import img_to_file, url_to_img, get_wh
+from utils.imgtools import img_to_file, url_to_img, get_text_wh
 from cogs.twtv import TwitchStream
 
 from roleidentification import pull_data
@@ -208,7 +208,7 @@ class ActiveMatch:
         font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
         draw = ImageDraw.Draw(img)
         text = f'{stream.display_name} - {await self.champ_name}'
-        w2, h2 = get_wh(font.getbbox(text))
+        w2, h2 = get_text_wh(text, font)
         draw.text(((width - w2) / 2, 65), text, font=font, align="center")
 
         rune_img_urls = [(await r.get()).icon_abspath for r in self.runes]
@@ -282,14 +282,14 @@ class MatchToEdit:
         font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
 
         draw = ImageDraw.Draw(img)
-        w3, h3 = get_wh(font.getbbox(self.kda))
+        w3, h3 = get_text_wh(self.kda, font)
         draw.text(
             (0, height - last_row_h - h3),
             self.kda,
             font=font,
             align="right"
         )
-        w2, h2 = get_wh(font.getbbox(self.outcome))
+        w2, h2 = get_text_wh(self.outcome, font)
         colour_dict = {
             'Win': str(MP.green(shade=800)),
             'Loss': str(MP.red(shade=900)),

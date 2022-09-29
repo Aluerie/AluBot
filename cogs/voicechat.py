@@ -8,7 +8,9 @@ from discord.ext import commands, tasks
 from utils.var import *
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils.bot import AluBot, Context
+
+ORIGINAL_NAME = '🎦streaming_room'
 
 
 class VoiceChat(commands.Cog, name='Voice Chat'):
@@ -35,8 +37,12 @@ class VoiceChat(commands.Cog, name='Voice Chat'):
         voice_role = guild.get_role(Rid.voice)
         if before.channel is None and after.channel is not None:  # joined the voice channel
             await mbr.add_roles(voice_role)
-            em = Embed(color=0x00ff7f)
-            em.set_author(name=f'{mbr.display_name} entered {after.channel.name}', icon_url=mbr.display_avatar.url)
+            em = Embed(
+                color=0x00ff7f
+            ).set_author(
+                name=f'{mbr.display_name} entered {after.channel.name}',
+                icon_url=mbr.display_avatar.url
+            )
             return await after.channel.send(embed=em)
         if before.channel is not None and after.channel is None:  # quit the voice channel
             await mbr.remove_roles(voice_role)
@@ -58,32 +64,39 @@ class VoiceChat(commands.Cog, name='Voice Chat'):
                 await before.channel.send(embed=em)
                 return await after.channel.send(embed=em)
 
-    @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
-    @commands.hybrid_command(
-        name='settitle',
-        description='Set title for #🎦streaming room so people know what you are streaming'
+    @app_commands.guilds(Sid.alu)
+    @commands.hybrid_group(
+        name='streaming-room',
+        aliases=['stream']
     )
-    @app_commands.describe(text='new title for #🎦streaming_room')
-    async def settitle(self, ctx, *, text: str):
+    async def streaming_room(self, ctx: Context):
+        """Group command about Dota, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
+    @streaming_room.command(
+        name='title',
+        description=f'Set title for #{ORIGINAL_NAME} so people know what you are streaming'
+    )
+    @app_commands.describe(text=f'new title for #{ORIGINAL_NAME}')
+    async def title(self, ctx: Context, *, text: str):
         """Sets title for **#🎦streaming_room** so people know what you are streaming ;"""
         new_name = f'🎦{text}'
         guild = self.bot.get_guild(Sid.alu)
         await guild.get_channel(Cid.stream_room).edit(name=new_name)
-        em = Embed(colour=Clr.prpl)
-        em.description = f'Changed title of **#🎦streaming_room** to **#{new_name}**'
+        em = Embed(colour=Clr.prpl, description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**')
         await ctx.reply(embed=em)
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
     @commands.hybrid_command(
-        name='resettitle',
-        description='Reset #🎦streaming_room title'
+        name='reset',
+        description=f'Reset #{ORIGINAL_NAME} title'
     )
-    async def resettitle(self, ctx):
+    async def reset(self, ctx: Context):
         """Reset **#🎦streaming_room** title ;"""
         guild = self.bot.get_guild(Sid.alu)
-        original_name = '🎦streaming_room'
-        await guild.get_channel(Cid.stream_room).edit(name=original_name)
-        em = Embed(colour=Clr.prpl, description = f'Title of **#{original_name}** has been reset')
+        await guild.get_channel(Cid.stream_room).edit(name=ORIGINAL_NAME)
+        em = Embed(colour=Clr.prpl, description=f'Title of **#{ORIGINAL_NAME}** has been reset')
         await ctx.reply(embed=em)
 
     @tasks.loop(count=1)

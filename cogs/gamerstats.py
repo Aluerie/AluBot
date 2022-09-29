@@ -229,7 +229,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                     font=font
                 )
 
-                hero_img = await url_to_img(self.bot.ses, await hero.imgurl_by_id(x.hero_id))
+                hero_img = await self.bot.url_to_img(await hero.imgurl_by_id(x.hero_id))
                 hero_img = hero_img.resize((h_width, h_height))
                 img.paste(hero_img, (col0 + col1 + col2, int(cell_h * c)))
 

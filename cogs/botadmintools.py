@@ -249,7 +249,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             mode: Literal['load', 'unload', 'reload']
     ):
         try:
-            filename = f'cogs.{module}'  # so we do `$unload beta` instead of `$unload beta.py`
+            filename = f'cogs.{module.lower()}'  # so we do `$unload beta` instead of `$unload beta.py`
             match mode:
                 case 'load':
                     await self.bot.load_extension(filename)
@@ -320,7 +320,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        if member.guild.id != Sid.waste:
+        if member.guild.id != Sid.blush:
             return
         if member.bot:
             bots_role = member.guild.get_role(Rid.waste_bots_role)

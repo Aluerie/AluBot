@@ -1,18 +1,17 @@
 ### TI pause time
 1. embed builder - editor - context menu
 9. make muted by who into logs
-10. we might want to move image utils into `bot` subclass bcs of session weirdness
-11. autocomplete for dotafeed features like add remove hero, add remove streamre/player
+11. autocomplete for dotafeed features like add remove hero, add remove streamer/player
 
 ### Current thoughts
 1. routing thing for league
 3. add some difference between league and dota database add logs, icon I guess
 4. edge cases when people delete channels/guilds
-5. async sqlalchemy and idk research better code/approach - maybe subclass database classes ?
+5. async sqlalchemy and IDK research better code/approach - maybe subclass database classes ?
 6. look at every cog in robo danny/pycord manager/stella
 7. rewrite purge into something better
 8. abandon not scored games for match history
-11. context menu commands into help menu somehow idk
+11. context menu commands into help menu somehow IDK
 12. clips twitch check
 
 ### Later

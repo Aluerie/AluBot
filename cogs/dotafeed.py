@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone, time
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
 from sqlalchemy import func
 from steam.core.msg import MsgProto
@@ -23,6 +23,7 @@ from utils.var import *
 from utils.distools import send_traceback, send_pages_list
 
 if TYPE_CHECKING:
+    from discord import Interaction
     from utils.bot import AluBot
     from utils.context import Context
 
@@ -101,7 +102,7 @@ class DotaFeed(commands.Cog):
                     for person in our_persons:
                         user = db_ses.query(db.d).filter_by(friendid=person.account_id).first()
 
-                        #print(user.display_name, person.hero_id)
+                        # print(user.display_name, person.hero_id)
                         for row in db_ses.query(db.ga):
                             if db_ses.query(db.em).filter_by(
                                     match_id=match.match_id,
@@ -589,6 +590,16 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         for em in embed_list:
             await ctx.reply(embed=em)
 
+    @staticmethod
+    async def hero_add_remove_autocomplete_work(
+            current: str
+    ) -> List[app_commands.Choice[str]]:
+        all_hero_names_list = list(hero.hero_keys_cache.data['id_by_name'].keys())
+        return [
+            app_commands.Choice(name=clr, value=clr)
+            for clr in all_hero_names_list if current.lower() in clr.lower()
+        ][:25]
+
     @is_guild_owner()
     @hero.command(
         name='add',
@@ -603,10 +614,18 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         • `Anti-Mage` (letter case does not matter) and not `Magina`;
         • `Queen of Pain` and not `QoP`.
         """
-        # At last you can find proper name
+        # At last, you can find proper name
         # [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
         # under one of `"localized_name"`
         await self.hero_add_remove(ctx, hero_names, mode='add')
+
+    @hero_add.autocomplete('hero_names')
+    async def hero_add_autocomplete(
+            self,
+            _: Interaction,
+            current: str
+    ) -> List[app_commands.Choice[str]]:
+        return await self.hero_add_remove_autocomplete_work(current)
 
     @is_guild_owner()
     @hero.command(
@@ -617,6 +636,14 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     async def hero_remove(self, ctx: commands.Context, *, hero_names: str):
         """Remove hero(-es) from your fav heroes list."""
         await self.hero_add_remove(ctx, hero_names, mode='remov')
+
+    @hero_remove.autocomplete('hero_names')
+    async def hero_add_autocomplete(
+            self,
+            _: Interaction,
+            current: str
+    ) -> List[app_commands.Choice[str]]:
+        return await self.hero_add_remove_autocomplete_work(current)
 
     @is_guild_owner()
     @hero.command(name='list')

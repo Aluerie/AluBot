@@ -7,7 +7,7 @@ from typing import Union
 from collections.abc import Sequence
 
 
-def get_text_wh(text_string, font):  # wh for width, height = dimensions
+def get_text_wh(text_string: str, font):  # wh for width, height = dimensions
     # https://stackoverflow.com/a/46220683/9263761
     # https://levelup.gitconnected.com/how-to-properly-calculate-text-size-in-pil-images-17a2cc6f51fd
     ascent, descent = font.getmetrics()
@@ -18,20 +18,20 @@ def get_text_wh(text_string, font):  # wh for width, height = dimensions
     return text_width, text_height
 
 
-def str_to_file(string, filename="file.txt") -> File:
+def str_to_file(string, filename: str = "file.txt") -> File:
     fp = BytesIO(StringIO(string).read().encode('utf8'))
     fp.seek(0)
     return File(fp, filename=filename)
 
 
-def plt_to_file(fig, filename='plt.png') -> File:
+def plt_to_file(fig, filename: str = 'plt.png') -> File:
     image_binary = BytesIO()
     fig.savefig(image_binary)
     image_binary.seek(0)
     return File(fp=image_binary, filename=filename)
 
 
-def img_to_file(image, filename='fromalubot.png', fmt='PNG') -> File:
+def img_to_file(image, filename: str = 'FromAluBot.png', fmt: str = 'PNG') -> File:
     image_binary = BytesIO()  # image is probably type PIL.PngImagePlugin.PngImageFile
     image.save(image_binary, fmt)
     image_binary.seek(0)
@@ -66,7 +66,7 @@ async def url_to_img(
 async def url_to_file(
         session,
         url: Union[str, Sequence[str]],
-        filename: str = 'fromalubot.png',
+        filename: str = 'FromAluBot.png',
         *,
         return_list: bool = False
 ) -> Union[File, Sequence[File]]:

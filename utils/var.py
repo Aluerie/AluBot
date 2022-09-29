@@ -27,13 +27,13 @@ class Rgx:
 
 class Sid:
     alu = 702561315478044804
-    emote = 759916212842659850
-    waste = 1015226252086476860
+    wink = 759916212842659850
+    blush = 1015226252086476860
 
     guild_ids = [
         alu,
-        emote,
-        waste
+        wink,
+        blush
     ]
 
 
@@ -70,7 +70,7 @@ class Cid:
 
     my_time = 788915790543323156
 
-    blacklisted_array = [ ]
+    blacklisted_array = []
     # emote server
     roses = 759916212842659853
     spam_me = 970823670702411810
@@ -217,9 +217,7 @@ from typing_extensions import Self
 
 
 class Clr:
-    """
-    My chosen colours
-    """
+    """My chosen colours"""
     prpl = Colour(0x9678b6)
     rspbrry = Colour(0xC42C48)
     red = Colour(0xff0000)

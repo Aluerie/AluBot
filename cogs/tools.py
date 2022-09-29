@@ -1,19 +1,16 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from discord import Embed, app_commands
 from discord.ext import commands
 
 from cogs.twitter import download_twitter_images
-from utils.imgtools import url_to_img, img_to_file
 from utils.var import *
 
 from PIL import Image
 
 if TYPE_CHECKING:
-    from utils.context import Context
-    from utils.bot import AluBot
+    from utils.bot import AluBot, Context
 
 server_regions_order = [
     'USWest', 'USEast', 'Europe', 'Korea', 'Singapore', 'Dubai', 'Australia', 'Stockholm', 'Austria', 'Brazil',
@@ -54,11 +51,11 @@ class ToolsCog(commands.Cog, name='Tools'):
     @app_commands.describe(url='Url of image to convert')
     async def convert(self, ctx: Context, *, url: str):
         """Convert image from webp to png format"""
-        img = await url_to_img(self.bot.ses, url)
+        img = await self.bot.url_to_img(url)
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags
         img.thumbnail(maxsize, Image.ANTIALIAS)
-        file = img_to_file(img, filename='converted.png', fmt='PNG')
-        em = Embed(colour=Clr.prpl, description='Image was converted to png format')
+        file = self.bot.img_to_file(img, filename='converted.png', fmt='PNG')
+        em = Embed(colour=Clr.prpl, description='Image was converted to `.png` format')
         await ctx.reply(embed=em, file=file)
 
     @commands.hybrid_command()
@@ -110,7 +107,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         ).set_footer(
             text='These regions are completely wrong. idk how to relate numbers from valve to actual regions'
         )
-        print(len(players_by_group), len(server_regions_order))
+        # print(len(players_by_group), len(server_regions_order))
         await ctx.reply(embed=em)
 
 

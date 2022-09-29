@@ -1,11 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List
+from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
 
 from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
-
-from config import GIT_PERSONAL_TOKEN, STEAM_TEST_LGN, STEAM_TEST_PSW, STEAM_LGN, STEAM_PSW
-from utils.context import Context
 
 from aiohttp import ClientSession
 from steam.client import SteamClient
@@ -17,14 +14,19 @@ from datetime import datetime, timezone
 
 from os import environ, listdir
 import logging
+
+from config import GIT_PERSONAL_TOKEN, STEAM_TEST_LGN, STEAM_TEST_PSW, STEAM_LGN, STEAM_PSW
+from utils import imgtools
+from utils.context import Context
+from utils.var import Sid
+
 log = logging.getLogger('root')
 
 if TYPE_CHECKING:
-    from discord import AppInfo, Interaction, Message, User
+    from discord import AppInfo, File, Interaction, Message, User
     from discord.app_commands import AppCommand
     from discord.abc import Snowflake
     from github import Repository
-
 
 try:
     from tlist import test_list
@@ -42,7 +44,9 @@ def cog_check(cog_list):
 YEN_JSK = True
 YEN_GIT = cog_check(['dotacomments', 'copydota'])
 YEN_STE = cog_check(['dotafeed', 'gamerstats', 'tools', 'rankedinfo'])
-#YEN_TWITCH = cog_check(['dotafeed', 'lolfeed', 'twitch'])
+
+
+# YEN_TWITCH = cog_check(['dotafeed', 'lolfeed', 'twitch'])
 
 
 class AluBot(commands.Bot):
@@ -154,8 +158,8 @@ class AluBot(commands.Bot):
                 return
 
     def get_app_command(
-        self,
-        value: Union[str, int]
+            self,
+            value: Union[str, int]
     ) -> Optional[Tuple[str, int]]:
 
         for cmd_name, cmd_id in self.app_commands.items():
@@ -165,14 +169,68 @@ class AluBot(commands.Bot):
         return None
 
     async def update_app_commands_cache(
-        self,
-        *,
-        commands: Optional[List[AppCommand]] = None,
-        guild: Optional[Snowflake] = None
+            self,
+            *,
+            commands: Optional[List[AppCommand]] = None,
+            guild: Optional[Snowflake] = None
     ) -> None:
         if not commands:
             commands = await self.tree.fetch_commands(guild=guild.id if guild else None)
         self.app_commands = {cmd.name: cmd.id for cmd in commands}
+
+    # Shortcuts
+
+    @property
+    def alu_guild(self):
+        return self.get_guild(Sid.alu)
+
+    @property
+    def wink_guild(self):
+        return self.get_guild(Sid.wink)
+
+    @property
+    def blush_guild(self):
+        return self.get_guild(Sid.blush)
+
+    # Image Tools
+    @staticmethod
+    def str_to_file(
+            string: str,
+            filename: str = "FromAluBot.txt"
+    ) -> File:
+        return imgtools.str_to_file(string, filename)
+
+    @staticmethod
+    def plt_to_file(
+            fig,
+            filename: str = 'FromAluBot.png'
+    ) -> File:
+        return imgtools.plt_to_file(fig, filename)
+
+    @staticmethod
+    def img_to_file(
+            image,
+            filename: str = 'FromAluBot.png',
+            fmt: str = 'PNG'
+    ) -> File:
+        return imgtools.img_to_file(image, filename, fmt)
+
+    async def url_to_img(
+            self,
+            url: Union[str, Sequence[str]],
+            *,
+            return_list: bool = False
+    ):
+        return await imgtools.url_to_img(self.__session, url, return_list=return_list)
+
+    async def url_to_file(
+            self,
+            url: Union[str, Sequence[str]],
+            filename: str = 'FromAluBot.png',
+            *,
+            return_list: bool = False
+    ) -> Union[File, Sequence[File]]:
+        return await imgtools.url_to_file(self.__session, url, filename, return_list=return_list)
 
 
 class LogHandler(logging.StreamHandler):

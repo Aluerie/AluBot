@@ -496,8 +496,13 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    async def player_add_remove(self, ctx: Context, player_names: str, mode: Literal['add', 'remov']):
-
+    async def player_add_remove(
+            self,
+            ctx: Context,
+            player_names: str,
+            mode: Literal['add', 'remov']
+    ):
+        """Work function for player add remove"""
         async def get_player(name: str):
             player = db.session.query(db.d).filter_by(name=name.lower()).first()
             return getattr(player, 'display_name', name), getattr(player, 'fav_id', None)
@@ -522,6 +527,26 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         for em in embed_list:
             await ctx.reply(embed=em)
 
+    @staticmethod
+    async def player_add_remove_autocomplete(
+            ntr: Interaction,
+            current: str,
+            mode: Literal['add', 'remov']
+    ) -> List[app_commands.Choice[str]]:
+        my_fav_ids = db.get_value(db.ga, ntr.guild.id, 'dotafeed_stream_ids')
+        if mode == 'add':
+            all_player_names = [row.display_name for row in db.session.query(db.d) if row.fav_id not in my_fav_ids]
+        elif mode == 'remov':
+            all_player_names = [row.display_name for row in db.session.query(db.d) if row.fav_id in my_fav_ids]
+        else:
+            return []
+        all_player_names = list(set(all_player_names))
+        all_player_names.sort()
+        return [
+            app_commands.Choice(name=clr, value=clr)
+            for clr in all_player_names if current.lower() in clr.lower()
+        ][:25]
+
     @is_guild_owner()
     @player.command(name='add', usage='<player_name(-s)>')
     @app_commands.describe(player_names='Name(-s) of players')
@@ -529,12 +554,28 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         """Add player to your favourites."""
         await self.player_add_remove(ctx, player_names, mode='add')
 
+    @player_add.autocomplete('player_names')
+    async def player_add_autocomplete(
+            self,
+            ntr: Interaction,
+            current: str
+    ) -> List[app_commands.Choice[str]]:
+        return await self.player_add_remove_autocomplete(ntr, current, mode='add')
+
     @is_guild_owner()
     @player.command(name='remove', usage='<player_name(-s)>')
     @app_commands.describe(player_names='Name(-s) of players')
     async def player_remove(self, ctx: Context, *, player_names: str):
         """Remove player from your favourites."""
         await self.player_add_remove(ctx, player_names, mode='remov')
+
+    @player_remove.autocomplete('player_names')
+    async def player_remove_autocomplete(
+            self,
+            ntr: Interaction,
+            current: str
+    ) -> List[app_commands.Choice[str]]:
+        return await self.player_add_remove_autocomplete(ntr, current, mode='remov')
 
     @is_guild_owner()
     @player.command(name='list')
@@ -551,12 +592,12 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
             for name, tw in names_list.items()
         ]
         ans_array = sorted(list(set(ans_array)), key=str.casefold)
-        embed = Embed(
+        em = Embed(
             color=Clr.prpl,
             title='List of fav dota 2 players',
             description="\n".join(ans_array)
         )
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=em)
 
     @is_guild_owner()
     @dota.group()
@@ -592,12 +633,26 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
 
     @staticmethod
     async def hero_add_remove_autocomplete_work(
-            current: str
+            ntr: Interaction,
+            current: str,
+            mode: Literal['add', 'remov']
     ) -> List[app_commands.Choice[str]]:
-        all_hero_names_list = list(hero.hero_keys_cache.data['id_by_name'].keys())
+        fav_hero_ids = db.get_value(db.ga, ntr.guild.id, 'dotafeed_hero_ids')
+
+        data = await hero.hero_keys_cache.data
+        all_hero_dict = data['name_by_id']
+        all_hero_dict.pop(0, None)
+        if mode == 'add':
+            answer = [hid for hid, name in all_hero_dict.items() if hid not in fav_hero_ids]
+        elif mode == 'remov':
+            answer = [hid for hid, name in all_hero_dict.items() if hid in fav_hero_ids]
+        else:
+            return []
+        answer = [await hero.name_by_id(h_id) for h_id in answer]
+        answer.sort()
         return [
             app_commands.Choice(name=clr, value=clr)
-            for clr in all_hero_names_list if current.lower() in clr.lower()
+            for clr in answer if current.lower() in clr.lower()
         ][:25]
 
     @is_guild_owner()
@@ -606,8 +661,8 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         usage='<hero_name(-s)>',
         description='Add hero(-es) to your fav heroes list.'
     )
-    @app_commands.describe(hero_names='Name(-s) from Dota 2 Hero grid')
-    async def hero_add(self, ctx: commands.Context, *, hero_names: str):
+    @app_commands.describe(hero_names='Name(-s) from Dota 2 Hero Grid')
+    async def hero_add(self, ctx: Context, *, hero_names: str):
         """
         Add hero(-es) to your fav heroes list. \
         Use names from Dota 2 hero grid. For example,
@@ -622,28 +677,28 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     @hero_add.autocomplete('hero_names')
     async def hero_add_autocomplete(
             self,
-            _: Interaction,
+            ntr: Interaction,
             current: str
     ) -> List[app_commands.Choice[str]]:
-        return await self.hero_add_remove_autocomplete_work(current)
+        return await self.hero_add_remove_autocomplete_work(ntr, current, mode='add')
 
     @is_guild_owner()
     @hero.command(
         name='remove',
         usage='<hero_name(-s)>'
     )
-    @app_commands.describe(hero_names='Name(-s) from Dota 2 Hero grid')
-    async def hero_remove(self, ctx: commands.Context, *, hero_names: str):
+    @app_commands.describe(hero_names='Name(-s) from Dota 2 Hero Grid')
+    async def hero_remove(self, ctx: Context, *, hero_names: str):
         """Remove hero(-es) from your fav heroes list."""
         await self.hero_add_remove(ctx, hero_names, mode='remov')
 
     @hero_remove.autocomplete('hero_names')
     async def hero_add_autocomplete(
             self,
-            _: Interaction,
+            ntr: Interaction,
             current: str
     ) -> List[app_commands.Choice[str]]:
-        return await self.hero_add_remove_autocomplete_work(current)
+        return await self.hero_add_remove_autocomplete_work(ntr, current, mode='remov')
 
     @is_guild_owner()
     @hero.command(name='list')

@@ -1,7 +1,6 @@
 ### TI pause time
 1. embed builder - editor - context menu
 9. make muted by who into logs
-11. autocomplete for dotafeed features like add remove hero, add remove streamer/player
 
 ### Current thoughts
 1. routing thing for league

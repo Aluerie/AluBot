@@ -193,7 +193,7 @@ class ActiveMatch(Match):
         )
         return em, img_file
 
-    async def send_the_embed(self, bot, db_ses):
+    async def send_the_embed(self, bot, _):
         log.info("sending dota 2 embed")
         ch: TextChannel = bot.get_channel(self.channel_id)
         if ch is None:

@@ -11,7 +11,8 @@
 7. rewrite purge into something better
 8. abandon not scored games for match history
 11. context menu commands into help menu somehow IDK
-12. clips twitch check
+12. clips twitch check 
+13. slnt - rename to slant ;
 
 ### Later
 1. custom server name for dotafeed feature

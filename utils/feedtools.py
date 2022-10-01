@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Literal, Dict, Tuple, Callable, Coroutine, Optional, Union
-import re
-
-from discord import Embed
+from typing import (
+    TYPE_CHECKING,
+    List, Literal, Dict, Tuple, Callable, Coroutine, Optional, Union
+)
+from discord import Embed, app_commands
 
 from utils.distools import send_pages_list
 from utils.twitch import twitchid_by_name
@@ -112,7 +113,7 @@ class FeedTools:
             key = f"{self.field_player_name(row.name, row.twtv_id)}{followed}"
             if key not in ss_dict:
                 ss_dict[key] = []
-            ss_dict[key].append(self.field_player_data()) #todo: figure it out idk dude
+            ss_dict[key].append(self.field_player_data())  # todo: figure it out idk dude
 
         ans_array = [f"{k}\n {chr(10).join(ss_dict[k])}" for k in ss_dict]
         ans_array = sorted(list(set(ans_array)), key=str.casefold)
@@ -158,7 +159,7 @@ class FeedTools:
             for i in ['success', 'already', 'fail']
         }
 
-        for name in re.split('; |, |,', names):
+        for name in [x.strip() for x in names.split(',')]:
             proper_name, named_id = await get_proper_name_and_id(name)
             if named_id is None:
                 res_dict['fail']['names'].append(f'`{proper_name}`')
@@ -194,3 +195,41 @@ class FeedTools:
                     )
         embed_list = [v['embed'] for v in res_dict.values() if v['embed'] is not None]
         return list(initial_list), embed_list
+
+    @staticmethod
+    async def x_eq_x(x):
+        return x
+
+    @staticmethod
+    async def add_remove_autocomplete_work(
+            current: str,
+            mode: Literal['add', 'remov'],
+            *,
+            all_items: List[str],
+            fav_items: List[str],
+            func: Callable = x_eq_x,
+            reverse_func: Callable = x_eq_x
+    ) -> List[app_commands.Choice[str]]:
+
+        input_strs = [x.strip() for x in current.split(',')]
+        try:
+            input_items = [await reverse_func(i) for i in input_strs[:-1]]
+        except Exception:
+            x = 'ERROR: It looks like you already typed something wrong'
+            return [app_commands.Choice(name=x, value=x)]
+
+        if mode == 'add':
+            fav_items = fav_items + input_items
+        if mode == 'remov':
+            fav_items = [x for x in fav_items if x not in input_items]
+
+        old_input = [await func(y) for y in input_items]
+        answer = [
+            ", ".join(old_input + [await func(x)]) for x in all_items
+            if (mode == 'add' and x not in fav_items) or (mode == 'remov' and x in fav_items)
+        ]
+        answer.sort()
+        return [
+            app_commands.Choice(name=x, value=x)
+            for x in answer if current.lower() in x.lower()
+        ][:25]

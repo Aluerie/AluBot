@@ -527,25 +527,22 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         for em in embed_list:
             await ctx.reply(embed=em)
 
-    @staticmethod
     async def player_add_remove_autocomplete(
+            self,
             ntr: Interaction,
             current: str,
             mode: Literal['add', 'remov']
     ) -> List[app_commands.Choice[str]]:
-        my_fav_ids = db.get_value(db.ga, ntr.guild.id, 'dotafeed_stream_ids')
-        if mode == 'add':
-            all_player_names = [row.display_name for row in db.session.query(db.d) if row.fav_id not in my_fav_ids]
-        elif mode == 'remov':
-            all_player_names = [row.display_name for row in db.session.query(db.d) if row.fav_id in my_fav_ids]
-        else:
-            return []
-        all_player_names = list(set(all_player_names))
-        all_player_names.sort()
-        return [
-            app_commands.Choice(name=clr, value=clr)
-            for clr in all_player_names if current.lower() in clr.lower()
-        ][:25]
+        fav_ids = db.get_value(db.ga, ntr.guild.id, 'dotafeed_stream_ids')
+        fav_items = list(set([row.display_name for row in db.session.query(db.d) if row.fav_id in fav_ids]))
+        all_items = list(set([row.display_name for row in db.session.query(db.d)]))
+
+        return await self.add_remove_autocomplete_work(
+            current,
+            mode,
+            all_items=all_items,
+            fav_items=fav_items,
+        )
 
     @is_guild_owner()
     @player.command(name='add', usage='<player_name(-s)>')
@@ -631,8 +628,8 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         for em in embed_list:
             await ctx.reply(embed=em)
 
-    @staticmethod
     async def hero_add_remove_autocomplete_work(
+            self,
             ntr: Interaction,
             current: str,
             mode: Literal['add', 'remov']
@@ -642,18 +639,15 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         data = await hero.hero_keys_cache.data
         all_hero_dict = data['name_by_id']
         all_hero_dict.pop(0, None)
-        if mode == 'add':
-            answer = [hid for hid, name in all_hero_dict.items() if hid not in fav_hero_ids]
-        elif mode == 'remov':
-            answer = [hid for hid, name in all_hero_dict.items() if hid in fav_hero_ids]
-        else:
-            return []
-        answer = [await hero.name_by_id(h_id) for h_id in answer]
-        answer.sort()
-        return [
-            app_commands.Choice(name=clr, value=clr)
-            for clr in answer if current.lower() in clr.lower()
-        ][:25]
+
+        return await self.add_remove_autocomplete_work(
+            current,
+            mode,
+            all_items=list(all_hero_dict.keys()),
+            fav_items=fav_hero_ids,
+            func=hero.name_by_id,
+            reverse_func=hero.id_by_name
+        )
 
     @is_guild_owner()
     @hero.command(

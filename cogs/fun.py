@@ -140,27 +140,15 @@ class RPSView(View):
             await self.message.edit(embed=em_game, view=None)
             self.stop()
 
-    @button(
-        label='Rock',
-        style=ButtonStyle.red,
-        emoji='🪨'
-    )
+    @button(label='Rock', emoji='🪨', style=ButtonStyle.red)
     async def rock_button(self, ntr: Interaction, btn: Button):
         await self.rps_button_callback(ntr, btn)
 
-    @button(
-        label='Paper',
-        style=ButtonStyle.green,
-        emoji='🗞️'
-    )
+    @button(label='Paper', emoji='🗞️', style=ButtonStyle.green)
     async def paper_button(self, ntr: Interaction, btn: Button):
         await self.rps_button_callback(ntr, btn)
 
-    @button(
-        label='Scissors',
-        style=ButtonStyle.blurple,
-        emoji='✂'
-    )
+    @button(label='Scissors', emoji='✂', style=ButtonStyle.blurple)
     async def scissors_button(self, ntr: Interaction, btn: Button):
         await self.rps_button_callback(ntr, btn)
 

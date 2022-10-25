@@ -135,6 +135,7 @@ class DotaFeed(commands.Cog):
         if resp is None:
             print('resp is None, hopefully everything else will be fine tho;')
             return
+        #print(resp)
         for item in resp.rich_presence:
             if rp_bytes := item.rich_presence_kv:
                 # steamid = item.steamid_user
@@ -145,7 +146,6 @@ class DotaFeed(commands.Cog):
                         if await hero.id_by_npcname(rp.get('param2', '#')[1:]) in fav_hero_ids:  # that's npcname
                             self.lobby_ids.add(lobby_id)
 
-        # print(lobbyids)
         log.info(f'lobbyids {self.lobby_ids}')
         # dota.on('ready', ready_function)
         self.bot.dota.once('top_source_tv_games', response)

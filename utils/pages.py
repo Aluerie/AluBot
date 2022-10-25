@@ -1,10 +1,16 @@
 """
 Inspired by @krittick's `ext.pages` from `py-cord` library.
-Unfortunately I had to switch to `discord.py` so we need to bring pagination here as well
+https://github.com/Pycord-Development/pycord/blob/master/discord/ext/pages/pagination.py
+
+Unfortunately, @krittick had to leave py-cord team and nobody maintained/improved `ext.pages` since.
+By that time `discord.py` library came back to life
+and quickly became arguably the best python library for discord API wrapping.
+
+Thus, I decided to switch to `discord.py` and so to bring pagination code here as well.
 """
+
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
-from collections import defaultdict
 
 from discord import ButtonStyle, Embed, File, Interaction, Message, WebhookMessage, NotFound
 from discord.ext.commands import Bot, BadArgument

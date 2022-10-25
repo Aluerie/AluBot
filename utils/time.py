@@ -1,3 +1,10 @@
+"""
+Most code below is shameless copypaste from @Rapptz's RoboDanny utils
+https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
+but IDK it's just so good and smart. I really learn a lot from reading @Danny's code.
+I hope one day I'll rewrite this from the scratch with my own brains.
+"""
+
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Optional, Union
 

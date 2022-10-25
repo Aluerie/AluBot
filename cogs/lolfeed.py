@@ -411,10 +411,10 @@ class LoLFeed(commands.Cog):
             except NotFound:
                 continue
             except ServerError:
-                print(f'ServerError `lolfeed.py`: {row.name} {row.region} {row.accname}')
+                print(f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}')
                 continue
                 # embed = Embed(colour=Clr.error)
-                # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.region} {row.accname}'
+                # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
                 # await self.bot.get_channel(Cid.spam_me).send(embed=embed)  # content=umntn(Uid.alu)
 
     async def send_the_embed(

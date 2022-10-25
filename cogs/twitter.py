@@ -66,6 +66,7 @@ followed_array = [
     176507184,  # dota2
     17388199,   # icefrog
     1272226371109031937,  # YAluerie
+    1156653746702565382,  # dota2ti
 ]
 
 

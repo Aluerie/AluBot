@@ -28,10 +28,6 @@ class BetaTest(commands.Cog):
         )
         await ctx.reply(embed=em)
 
-    @app_commands.command()
-    async def test_id(self, ntr: Interaction):
-        await ntr.response.send_message(f'</{ntr.command.qualified_name}:{ntr.data["id"]}>')
-
 
 async def setup(bot):
     if bot.yen:

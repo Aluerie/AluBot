@@ -1,6 +1,18 @@
 ### TI pause time
-1. embed builder - editor - context menu
+1. embed builder
+* editor 
+* context menu usage 
+* find other embed makers
+2. find other embed makers
 9. make muted by who into logs
+3. make /birthday set into view modals 
+4. League patches find the pic that is patch summary
+4. GitHub thing issues into fewer posts
+5. Solve twitter somehow IDK fok ; Task for reload twitter i think
+
+20. think about this new Roles dropdown select menu
+21. Probably think about better TFT errors notifs
+22. 
 
 ### Current thoughts
 1. routing thing for league

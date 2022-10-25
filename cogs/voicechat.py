@@ -88,7 +88,7 @@ class VoiceChat(commands.Cog, name='Voice Chat'):
         await ctx.reply(embed=em)
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
-    @commands.hybrid_command(
+    @streaming_room.command(
         name='reset',
         description=f'Reset #{ORIGINAL_NAME} title'
     )

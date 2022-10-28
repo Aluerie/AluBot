@@ -1,16 +1,16 @@
 from __future__ import annotations
+
+from datetime import time
 from typing import TYPE_CHECKING
 
 from discord import ForumChannel
 from discord.ext import commands, tasks
 
-from utils.var import Sid, Ems
-
-from datetime import time
+from .utils.var import Sid, Ems
 
 if TYPE_CHECKING:
     from discord import Thread
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
 
 watched_threads_ids = []
 

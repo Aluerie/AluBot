@@ -1,20 +1,20 @@
 from __future__ import annotations
+
 import inspect
 from typing import TYPE_CHECKING
-
 
 from discord import Embed, app_commands
 from discord.ext import commands
 
-from utils import database as db
-from utils.context import Context
-from utils.format import display_time
-from utils.var import Clr, rmntn
-from utils.distools import send_traceback
+from .utils import database as db
+from .utils.context import Context
+from .utils.distools import send_traceback
+from .utils.format import display_time
+from .utils.var import Clr, rmntn
 
 if TYPE_CHECKING:
     from discord import Interaction
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
 
 
 class CommandErrorHandler(commands.Cog):

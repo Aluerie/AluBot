@@ -1,16 +1,17 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
+from PIL import Image
 from discord import Embed, app_commands
 from discord.ext import commands
 
-from cogs.twitter import download_twitter_images
-from utils.var import *
-
-from PIL import Image
+from .twitter import download_twitter_images
+from .utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot, Context
+    from .utils.bot import AluBot
+    from .utils.context import Context
 
 server_regions_order = [
     'USWest', 'USEast', 'Europe', 'Korea', 'Singapore', 'Dubai', 'Australia', 'Stockholm', 'Austria', 'Brazil',

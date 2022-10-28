@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 from discord import AuditLogAction, Embed, TextChannel
 from discord.ext import commands
 
-from utils.checks import is_owner
-from utils.var import *
-from utils import database as db
+from .utils import database as db
+from .utils.checks import is_owner
+from .utils.var import Clr, Ems, Sid, Img
 
 if TYPE_CHECKING:
     pass
@@ -49,7 +50,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
     async def set(self, ctx, *, arg):
         """Set new prefix for the server ;"""
         db.set_value(db.ga, ctx.guild.id, prefix=arg)
-        self.bot.command_prefix = get_pre
+        # self.bot.command_prefix = get_pre
         em = Embed(
             colour=Clr.prpl,
             description=f'Changed this server prefix to {arg}'

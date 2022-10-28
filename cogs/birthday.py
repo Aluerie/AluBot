@@ -1,19 +1,19 @@
 from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 from discord import Embed, Member, app_commands
 from discord.ext import commands, tasks
-
-from utils import database as db
-from utils.checks import is_owner
-from utils.var import *
-
-from datetime import datetime, timedelta, timezone
 from numpy.random import choice
 from sqlalchemy import extract
 
+from .utils import database as db
+from .utils.checks import is_owner
+from .utils.var import *
+
 if TYPE_CHECKING:
-    from utils.context import Context
+    from .utils.context import Context
 
 
 def get_congratulation_text():

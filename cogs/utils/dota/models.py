@@ -11,15 +11,14 @@ from typing import TYPE_CHECKING, List, Optional, Literal
 
 from PIL import Image, ImageOps, ImageDraw, ImageFont
 from discord import Embed, NotFound, Forbidden
-
 from pyot.utils.functools import async_property
 
-from utils import database as db
-from utils.dota import hero, item, ability
-from utils.format import display_relativehmstime
-from utils.imgtools import url_to_img, img_to_file, get_text_wh
-from utils.twitch import TwitchStream
-from utils.var import Clr, MP, Img
+from ..twitch import TwitchStream
+from .. import database as db
+from ..dota import hero, item, ability
+from ..format import display_relativehmstime
+from ..imgtools import url_to_img, img_to_file, get_text_wh
+from ..var import Clr, MP, Img
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession

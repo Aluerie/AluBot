@@ -1,23 +1,21 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
 import re
+from typing import TYPE_CHECKING
 
 import tweepy.asynchronous
 from discord import Embed
-
 from discord.ext import commands, tasks
 
 from config import TWITTER_BEARER_TOKEN
-
-from utils.distools import send_traceback
-from utils.imgtools import url_to_file
-from utils.var import Cid, Uid, umntn, Clr
+from .utils.distools import send_traceback
+from .utils.imgtools import url_to_file
+from .utils.var import Cid, Uid, umntn, Clr
 
 if TYPE_CHECKING:
-    from utils.context import Context
-    from utils.bot import AluBot
+    from .utils.context import Context
+    from .utils.bot import AluBot
 
 # #################### WHILE TWITTER IS BANNED IN RUSSIA #####################################
 # TODO: remove this when twitter is unbanned

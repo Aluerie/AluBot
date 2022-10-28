@@ -1,9 +1,11 @@
 from __future__ import annotations
+
+import re
 from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectorError
-from utils.var import Rgx
-import re
+
+from .var import Rgx
 
 if TYPE_CHECKING:
     from discord import Embed

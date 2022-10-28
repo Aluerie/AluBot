@@ -1,5 +1,5 @@
-from roleidentification import get_roles, pull_data
 from pyot.utils.lol import champion
+from roleidentification import get_roles, pull_data
 
 
 async def get_diff_list(champ_roles):

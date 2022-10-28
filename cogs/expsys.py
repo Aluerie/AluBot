@@ -1,21 +1,21 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
+from datetime import datetime, time, timedelta, timezone
+from typing import TYPE_CHECKING, Literal
+
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from discord import Embed, Member, utils, app_commands
 from discord.ext import commands, tasks
 
-from utils.var import *
-from utils import database as db
-from utils.format import ordinal, humanize_time, indent
-from utils.imgtools import url_to_img, img_to_file, get_text_wh
-from utils.distools import inout_to_10, send_pages_list
-
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
-from datetime import datetime, time, timedelta, timezone
+from .utils import database as db
+from .utils.distools import inout_to_10, send_pages_list
+from .utils.format import ordinal, humanize_time, indent
+from .utils.imgtools import url_to_img, img_to_file, get_text_wh
+from .utils.var import Ems, Sid, Cid, Clr
 
 if TYPE_CHECKING:
     from discord import Interaction
-    from utils.context import Context
+    from .utils.context import Context
 
 LAST_SEEN_TIMEOUT = 60
 

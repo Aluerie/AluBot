@@ -6,19 +6,19 @@ I hope one day I'll rewrite this from the scratch with my own brains.
 """
 
 from __future__ import annotations
+
+import re
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Optional, Union
 
+import parsedatetime as pdt
+from dateutil.relativedelta import relativedelta
 from discord.ext import commands
 from discord.utils import format_dt
 
-from datetime import datetime, timezone
-import parsedatetime as pdt
-from dateutil.relativedelta import relativedelta
-import re
-
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from utils.context import Context
+    from .context import Context
 
 
 class ShortTime:

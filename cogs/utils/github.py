@@ -1,13 +1,12 @@
+import asyncio
 import re
 
-from utils.format import inline_wordbyword_diff
-
-from github import Github
+import vdf
 from aiohttp import ClientSession
-import asyncio
+from github import Github
 from unidiff import PatchSet
 
-import vdf
+from .format import inline_wordbyword_diff
 
 
 async def human_commit(repo, commits, test_num=0):

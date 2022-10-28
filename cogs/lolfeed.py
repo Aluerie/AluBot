@@ -1,14 +1,15 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, List
 
-from config import RIOT_API_KEY
+from typing import TYPE_CHECKING, Optional, List, Literal
 
 from pyot.conf.model import activate_model, ModelConf
 from pyot.conf.pipeline import activate_pipeline, PipelineConf
 from pyot.utils.functools import async_property
 
-from utils.feedtools import FeedTools
-from utils.twitch import get_lol_streams
+from config import RIOT_API_KEY
+from .utils.feed import FeedTools
+from .utils.twitch import get_lol_streams
+from .utils.var import Clr, MP, Ems, Cid
 
 
 @activate_model("lol")
@@ -50,14 +51,13 @@ from pyot.core.exceptions import NotFound, ServerError
 from discord import Embed, app_commands, TextChannel
 from discord.ext import commands, tasks
 
-from utils import database as db
-from utils.checks import is_owner, is_guild_owner, is_trustee
-from utils.var import *
-from utils.lol import get_role_mini_list, get_diff_list
-from utils.distools import send_traceback, send_pages_list
-from utils.format import display_relativehmstime
-from utils.imgtools import img_to_file, url_to_img, get_text_wh
-from cogs.twtv import TwitchStream
+from .utils import database as db
+from .utils.checks import is_owner, is_guild_owner, is_trustee
+from .utils.lol import get_role_mini_list, get_diff_list
+from .utils.distools import send_traceback, send_pages_list
+from .utils.format import display_relativehmstime
+from .utils.imgtools import img_to_file, url_to_img, get_text_wh
+from .twtv import TwitchStream
 
 from roleidentification import pull_data
 from PIL import Image, ImageDraw, ImageFont
@@ -69,10 +69,10 @@ log = logging.getLogger("pyot")
 log.setLevel(logging.ERROR)
 
 if TYPE_CHECKING:
-    from utils.context import Context
+    from .utils.context import Context
     from aiohttp import ClientSession
     from pyot.models.lol.match import MatchParticipantData
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
 
 platform_to_routing_dict = {
     'br1': 'americas',

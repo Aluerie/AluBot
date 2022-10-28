@@ -1,14 +1,15 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from discord import Embed, SelectOption, app_commands
 from discord.ext import commands
 from discord.ui import View, Select
 
-from utils import pages
-from utils.context import Context
-from utils.format import display_hmstime
-from utils.var import *
+from .utils import pages
+from .utils.context import Context
+from .utils.format import display_hmstime
+from .utils.var import Ems, Cid, cmntn, rmntn, Rid, Uid, Clr
 
 if TYPE_CHECKING:
     from discord import Interaction

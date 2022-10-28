@@ -1,18 +1,20 @@
 from __future__ import annotations
+
 from typing import (
     TYPE_CHECKING,
     List, Literal, Dict, Tuple, Callable, Coroutine, Optional, Union
 )
+
 from discord import Embed, app_commands
 
-from utils.distools import send_pages_list
-from utils.twitch import twitchid_by_name
-from utils.var import Clr, MP, Ems
-from utils import database as db
+from . import database as db
+from .distools import send_pages_list
+from .twitch import twitchid_by_name
+from .var import Clr, MP, Ems
 
 if TYPE_CHECKING:
-    from utils.context import Context
-    from discord import TextChannel, Colour
+    from .context import Context
+    from discord import Colour, TextChannel
 
 
 class FeedTools:

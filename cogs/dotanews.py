@@ -1,20 +1,20 @@
 from __future__ import annotations
+
+import asyncio
 from typing import TYPE_CHECKING
 
 from discord import Embed
 from discord.ext import commands, tasks
+from github import Github
 
 from config import GIT_PERSONAL_TOKEN
-from utils import database as db
-from utils.var import Cid, Clr, Sid, Img
-from utils.format import block_function
-from utils.distools import send_traceback
-from utils.inettools import replace_tco_links, move_link_to_title
-from utils.gittools import human_commit
-from utils.imgtools import str_to_file
-
-import asyncio
-from github import Github
+from .utils import database as db
+from .utils.distools import send_traceback
+from .utils.format import block_function
+from .utils.github import human_commit
+from .utils.imgtools import str_to_file
+from .utils.links import replace_tco_links, move_link_to_title
+from .utils.var import Cid, Clr, Sid, Img
 
 if TYPE_CHECKING:
     from discord import Message

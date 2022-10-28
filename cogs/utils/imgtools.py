@@ -1,10 +1,9 @@
-from discord import File
+from collections.abc import Sequence
+from io import BytesIO, StringIO
+from typing import Union
 
 from PIL import Image, ImageOps
-from io import BytesIO, StringIO
-
-from typing import Union
-from collections.abc import Sequence
+from discord import File
 
 
 def get_text_wh(text_string: str, font):  # wh for width, height = dimensions

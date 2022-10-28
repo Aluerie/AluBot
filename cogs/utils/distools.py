@@ -1,15 +1,15 @@
 from __future__ import annotations
+
+import traceback
 from typing import TYPE_CHECKING, Union, List, Optional
 
 import discord
-from discord.ext import commands
 from discord import Embed, Interaction
+from discord.ext import commands
 
-from utils.var import *
-from utils import pages
-from utils.context import Context
-
-import traceback
+from . import pages
+from .context import Context
+from .var import Lmt, Cid, umntn, Uid
 
 if TYPE_CHECKING:
     from discord import abc, Colour, Message
@@ -124,7 +124,7 @@ def ansi(
         bold: bool = False,
         underline: bool = False
 ) -> str:
-    """Something something ansi function"""
+    """Something ansi function"""
     ansi_dict = {
         'colour': {
             'gray': 30,
@@ -202,5 +202,3 @@ class Ansi:
             array_join.append(clr)
         final_format = ';'.join(list(map(str, array_join)))
         return f'\u001b[{final_format}m{string}\u001b[0m'
-
-

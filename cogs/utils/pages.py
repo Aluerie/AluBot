@@ -10,16 +10,16 @@ Thus, I decided to switch to `discord.py` and so to bring pagination code here a
 """
 
 from __future__ import annotations
+
+from io import BytesIO
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from discord import ButtonStyle, Embed, File, Interaction, Message, WebhookMessage, NotFound
 from discord.ext.commands import Bot, BadArgument
 from discord.ui import Button, Modal, View, TextInput
 
-from utils.context import Context
-from utils.var import Ems
-
-from io import BytesIO
+from .context import Context
+from .var import Ems
 
 if TYPE_CHECKING:
     from discord import Emoji, PartialEmoji

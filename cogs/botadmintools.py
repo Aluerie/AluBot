@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 from os import listdir
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Literal
 
 from discord import Embed, Guild, Member, Object, utils, HTTPException
 from discord.ext import commands, tasks
 from discord.ext.commands import Greedy
 
-from utils import database as db
-from utils.checks import is_owner
-from utils.var import *
-from utils.bot import test_list, YEN_JSK
-from utils.context import Context
+from .utils import database as db
+from .utils.bot import test_list, YEN_JSK
+from .utils.checks import is_owner
+from .utils.context import Context
+from .utils.var import Ems, Clr, Sid, Cid, Rid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
 
 
 class AdminTools(commands.Cog, name='Tools for Bot Owner'):

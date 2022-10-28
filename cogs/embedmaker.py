@@ -7,22 +7,22 @@ Of course, code below is not a copypaste, but credit must be still given.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 from discord import (
     Embed,
-    ButtonStyle, File, TextChannel, InteractionType,
-    app_commands, errors, utils
+    ButtonStyle
 )
 from discord.ext import commands
 from discord.ui import View, button
 
-from utils.var import *
+from .utils.var import Ems, Clr
 
 if TYPE_CHECKING:
     from discord import Message, Interaction
     from discord.ui import Button
-    from utils.bot import AluBot, Context
+    from .utils.bot import AluBot, Context
 
 
 class StartView(View):

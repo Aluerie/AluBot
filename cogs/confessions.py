@@ -1,18 +1,19 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from discord import ButtonStyle, Embed, TextStyle
 from discord.ext import commands
 from discord.ui import Modal, TextInput, View, button
 
-from utils.distools import send_traceback
-from utils.var import *
-from utils.format import display_time
+from .utils.distools import send_traceback
+from .utils.format import display_time
+from .utils.var import Ems, Clr
 
 if TYPE_CHECKING:
     from discord import Interaction
     from discord.ui import Item, Button
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
 
 
 class ButtonOnCooldown(commands.CommandError):

@@ -1,17 +1,17 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-
-from discord.ext import commands, tasks
-from discord import Embed, File
-
-from utils.var import *
-from utils import database as db
 
 import re
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+
+from discord import Embed, File
+from discord.ext import commands, tasks
+
+from .utils import database as db
+from .utils.var import Sid, Cid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
 
 
 class DotaComments(commands.Cog):

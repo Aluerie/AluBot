@@ -1,11 +1,10 @@
-from sqlalchemy import Column, Integer, Boolean, String, Float, PickleType, BigInteger, DateTime
-from sqlalchemy import create_engine
-
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
 from contextlib import contextmanager
 from datetime import datetime, timezone
+
+from sqlalchemy import Column, Integer, Boolean, String, Float, PickleType, BigInteger, DateTime
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 from config import SQL_URL
 

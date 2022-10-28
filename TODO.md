@@ -1,18 +1,26 @@
 ### TI pause time
 1. embed builder
-* editor 
-* context menu usage 
-* find other embed makers
+   * editor 
+   * context menu usage 
+   * find other embed makers
 2. find other embed makers
 9. make muted by who into logs
 3. make /birthday set into view modals 
 4. League patches find the pic that is patch summary
 4. GitHub thing issues into fewer posts
-5. Solve twitter somehow IDK fok ; Task for reload twitter i think
-
+5. Solve twitter somehow IDK fok ; Task for reload twitter I think
+6. rewrite things from testing standpoint
+7. rewrite daily reminders into something more sophisticated 
+   * put texts into database
+   * generalize code creation - probably ask in discordpy (I mean 6 task creators are same code)
+8. start using asyncpg thing probably
+9. count command usage
+10. reaction roles with new selects I guess
+11. 
 20. think about this new Roles dropdown select menu
 21. Probably think about better TFT errors notifs
-22. 
+22. move utils into `./cogs`
+23. autocomplete for rules
 
 ### Current thoughts
 1. routing thing for league

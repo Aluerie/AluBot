@@ -2,8 +2,8 @@
 The MIT License (MIT)
 
 """
-from .const import *
 from .cache import KeyCache
+from .const import *
 
 __all__ = (
     # 'hero_keys_cache', # maybe

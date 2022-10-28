@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 from discord import Embed, Streaming
 from discord.ext import commands, tasks
 
-from utils.twitch import TwitchStream
-from utils.var import *
-from utils.imgtools import url_to_file
-from utils import database as db
+from .utils import database as db
+from .utils.imgtools import url_to_file
+from .utils.twitch import TwitchStream
+from .utils.var import Sid, Uid, Rid, Img, Cid, Ems
 
 if TYPE_CHECKING:
     from discord import Member

@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import platform
+from asyncio.proactor_events import _ProactorBasePipeTransport
 from datetime import datetime, timedelta, timezone
+from functools import wraps
 from typing import TYPE_CHECKING
 
+import asyncpraw
 from asyncprawcore import AsyncPrawcoreException
 from discord import Embed
 from discord.ext import commands, tasks
@@ -11,16 +15,11 @@ from discord.ext import commands, tasks
 from config import (
     REDDIT_CLIENT_ID, REDDIT_PASSWORD, REDDIT_USER_AGENT, REDDIT_USERNAME, REDDIT_CLIENT_SECRET
 )
-from utils.distools import send_traceback
-from utils.var import *
-import asyncpraw
-
-import platform
-from functools import wraps
-from asyncio.proactor_events import _ProactorBasePipeTransport
+from .utils.distools import send_traceback
+from .utils.var import Lmt, Cid, Clr
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
 
 
 def silence_event_loop_closed(func):

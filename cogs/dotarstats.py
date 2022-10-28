@@ -1,20 +1,24 @@
 from __future__ import annotations
+
+import logging
+from datetime import datetime, timedelta, timezone, time
 from typing import TYPE_CHECKING
 
 import vdf
+from PIL import Image, ImageDraw, ImageFont
 from discord import Embed
 from discord.ext import commands, tasks
 from matplotlib import pyplot as plt
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
-from utils import pages
-
-from utils import database as db
-from utils.dota import hero
-from utils.dota.const import ODOTA_API_URL
-from utils.dota.models import Match
-from utils.dota.stalk import (
+from config import DOTA_FRIENDID
+from .utils import pages, database as db
+from .utils.distools import send_pages_list
+from .utils.dota import hero
+from .utils.dota.const import ODOTA_API_URL
+from .utils.dota.models import Match
+from .utils.dota.stalk import (
     MatchHistoryData,
     fancy_ax,
     generate_data,
@@ -22,22 +26,13 @@ from utils.dota.stalk import (
     mmr_by_hero_bar,
     heroes_played_bar
 )
-
-from utils.var import *
-from utils.imgtools import img_to_file, url_to_img, plt_to_file, get_text_wh
-from utils.distools import send_pages_list
-from utils.format import indent
-
-from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime, timedelta, timezone, time
-
-from config import DOTA_FRIENDID
-
-import logging
+from .utils.format import indent
+from .utils.imgtools import img_to_file, url_to_img, plt_to_file, get_text_wh
+from .utils.var import Ems, Clr, MP
 
 if TYPE_CHECKING:
-    from utils.context import Context
-    from utils.bot import AluBot
+    from .utils.context import Context
+    from .utils.bot import AluBot
 
 log = logging.getLogger('root')
 log.setLevel(logging.WARNING)

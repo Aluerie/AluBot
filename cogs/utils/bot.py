@@ -1,32 +1,32 @@
 from __future__ import annotations
+
+import logging
+from datetime import datetime, timezone
+from os import environ, listdir
 from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
 
+from aiohttp import ClientSession
 from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
-
-from aiohttp import ClientSession
-from steam.client import SteamClient
 from dota2.client import Dota2Client
 from github import Github
-#  from twitchAPI import Twitch
-
-from datetime import datetime, timezone
-
-from os import environ, listdir
-import logging
+from steam.client import SteamClient
 
 from config import GIT_PERSONAL_TOKEN, STEAM_TEST_LGN, STEAM_TEST_PSW, STEAM_LGN, STEAM_PSW
-from utils import imgtools
-from utils.context import Context
-from utils.var import Sid
+from . import imgtools
+from .context import Context
+from .var import Sid
 
-log = logging.getLogger('root')
+#  from twitchAPI import Twitch
 
 if TYPE_CHECKING:
     from discord import AppInfo, File, Interaction, Message, User
     from discord.app_commands import AppCommand
     from discord.abc import Snowflake
+
     from github import Repository
+
+log = logging.getLogger('root')
 
 try:
     from tlist import test_list

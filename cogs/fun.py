@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+
+import re
+from typing import TYPE_CHECKING, Optional, Literal
 
 from discord import (
     ButtonStyle, Embed, File, InteractionType, Member, TextChannel,
@@ -8,16 +10,14 @@ from discord import (
 from discord.ext import commands
 from discord.ext.commands import Range
 from discord.ui import Button, View, button
-
-from utils.var import *
-from utils.webhook import user_webhook, check_msg_react
-
 from numpy.random import randint, choice
-import re
+
+from .utils.var import Clr, Ems, Uid, Cid, Sid, cmntn, Rgx
+from .utils.webhook import user_webhook, check_msg_react
 
 if TYPE_CHECKING:
     from discord import Message, Interaction
-    from utils.bot import AluBot, Context
+    from .utils.bot import AluBot, Context
 
 
 class RPSView(View):

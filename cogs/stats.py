@@ -1,19 +1,18 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
+import platform
+from datetime import datetime, timezone, timedelta, time
+from typing import TYPE_CHECKING, Union
 
 from discord import Embed, Member, TextChannel, app_commands
 from discord.ext import commands, tasks
-
-from utils.var import *
-from utils.imgtools import img_to_file
-
-from datetime import datetime, timezone, timedelta, time
-import platform
-from typing import Union
 from wordcloud import WordCloud
 
+from .utils.imgtools import img_to_file
+from .utils.var import Ems, Clr, Cid, Sid, Rid
+
 if TYPE_CHECKING:
-    from utils.context import Context
+    from .utils.context import Context
 
 
 class StatsCommands(commands.Cog, name='Stats'):

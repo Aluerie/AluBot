@@ -211,8 +211,9 @@ class Lmt:
         field_value = 1024
 
 
-from discord import Colour
 from typing import Literal
+
+from discord import Colour
 from typing_extensions import Self
 
 

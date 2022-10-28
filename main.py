@@ -2,7 +2,7 @@ import argparse
 import logging
 
 from config import DISCORD_BOT_TOKEN, DISCORD_YEN_TOKEN
-from utils.bot import AluBot, LogHandler
+from cogs.utils.bot import AluBot, LogHandler
 
 parser = argparse.ArgumentParser(description="Aluerie's personal bot, Alu or Yen (testing version)")
 parser.add_argument('-n', '--name', help='Bot name, can only be "alu" or "yen"', required=True)

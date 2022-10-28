@@ -2,16 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from discord import app_commands, Interaction, Embed
-from discord.ext import commands, tasks
-
-from utils.var import *
+from discord import Embed
+from discord.ext import commands
 
 if TYPE_CHECKING:
-    from utils.context import Context
-    from utils.bot import AluBot
-
-from utils import dota
+    from .utils.bot import AluBot, Context
 
 
 class BetaTest(commands.Cog):

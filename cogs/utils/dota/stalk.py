@@ -3,15 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import matplotlib.colors as mcolors
 import numpy as np
 from matplotlib import pyplot as plt
-import matplotlib.colors as mcolors
 from matplotlib.patches import Polygon
 
-from utils import database as db
-from utils.dota import hero
-from utils.imgtools import url_to_img
-from utils.var import MP, Clr
+from .. import database as db
+from ..dota import hero
+from ..imgtools import url_to_img
+from ..var import MP, Clr
 
 if TYPE_CHECKING:
     pass

@@ -1,13 +1,14 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from utils.var import *
+from .utils.var import Ems
 
 if TYPE_CHECKING:
-    from utils.context import Context
-    from utils.context import AluBot
+    from .utils.context import Context
+    from .utils.context import AluBot
 
 
 class LewdCog(commands.Cog, name='Lewd'):

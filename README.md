@@ -57,7 +57,7 @@ Just list of extensions from `./cogs` that are going to be tested with YenBot
 AluBot does not use this file at all, the bot just assumes the `test_list` empty
 """
 test_list = [  # for yen bot
-    'embedbuilder',  # just some cogs to test 
+    'embedmaker',  # just some cogs to test 
     'fun', 
     'error',  # error handler from there is handy
     'help',  # so you can look how the command looks in `$help` command

@@ -2,41 +2,39 @@ from __future__ import annotations
 
 import colorsys
 import platform
-
-import discord
-import dota2
-import psutil
 import re
 import socket
 import warnings
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING, List, Literal
 
-from typing import TYPE_CHECKING, List
-
+import discord
+import dota2
+import psutil
 import pyot
 from PIL import ImageColor, Image
 from async_google_trans_new import google_translator
 from dateparser.search import search_dates
-from discord import Embed, Member, Message, Role, app_commands
+from discord import Embed, Member, Message, Role, app_commands, Colour
 from discord.ext import commands, tasks
 
 from config import DISCORD_BOT_INVLINK
-from utils import database as db
-from utils.checks import is_owner
-from utils.format import humanize_time
-from utils.imgtools import img_to_file
-from utils.time import format_tdR
-from utils.var import *
+from .utils import database as db
+from .utils.checks import is_owner
+from .utils.format import humanize_time
+from .utils.imgtools import img_to_file
+from .utils.time import format_tdR
+from .utils.var import Cid, Clr, Ems, Sid, Rid, MP, MAP
+
+if TYPE_CHECKING:
+    from discord import Interaction, Guild
+    from .utils.bot import AluBot, Context
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
     "ignore",
     message="The localize method is no longer necessary, as this time zone supports the fold attribute",
 )
-
-if TYPE_CHECKING:
-    from discord import Interaction, Guild
-    from utils.bot import AluBot, Context
 
 
 async def account_age_ctx_menu(ntr: Interaction, member: Member):

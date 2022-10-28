@@ -1,13 +1,14 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from utils.var import *
-from utils import database as db
+from . import database as db
+from .var import *
 
 if TYPE_CHECKING:
-    from utils.context import Context
+    from context import Context
 
 
 def is_guild_owner():

@@ -1,21 +1,21 @@
 from __future__ import annotations
+
+import asyncio
+import traceback
 from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 from discord import Embed
 from discord.ext import commands, tasks
 
-from utils.var import *
-from utils.format import block_function
-from utils.inettools import replace_tco_links, move_link_to_title
-from utils import database as db
-
-import traceback
-import asyncio
+from .utils import database as db
+from .utils.format import block_function
+from .utils.links import replace_tco_links, move_link_to_title
+from .utils.var import Cid, umntn, Sid, Uid, Img, Clr
 
 if TYPE_CHECKING:
     from discord import Message
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
 
 
 class CopypasteLeague(commands.Cog):

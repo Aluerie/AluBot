@@ -1,8 +1,8 @@
 from discord import Embed, utils
 from discord.ext import commands
 
-from utils.checks import is_owner
-from utils.var import *
+from .utils.checks import is_owner
+from .utils.var import Sid, Cid
 
 
 class ReactionRoles(commands.Cog):

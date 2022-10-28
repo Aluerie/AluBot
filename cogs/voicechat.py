@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 from discord import Embed, Member, app_commands
 from discord.ext import commands, tasks
 
-from utils.var import *
+from .utils.var import Ems, Sid, Rid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot, Context
+    from .utils.bot import AluBot, Context
 
 ORIGINAL_NAME = '🎦streaming_room'
 

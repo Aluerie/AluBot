@@ -1,16 +1,17 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 from discord import ButtonStyle, Embed
 from discord.ext import commands
 from discord.ui import View, button
 
-from utils.var import Clr
+from .var import Clr
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
     from aiohttp import ClientSession
     from discord import Button, Message, Interaction
+    from .bot import AluBot
 
 
 class ConfirmationView(View):

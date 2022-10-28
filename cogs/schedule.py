@@ -1,16 +1,15 @@
 from __future__ import annotations
+
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
+from bs4 import BeautifulSoup
 from discord import Embed, SelectOption, app_commands
 from discord.ext import commands
 from discord.ui import Select, View
 from discord.utils import format_dt
 
-
-from utils.var import *
-
-from bs4 import BeautifulSoup
-from datetime import datetime, timezone
+from .utils.var import Clr, Img, Ems
 
 if TYPE_CHECKING:
     from discord import Interaction

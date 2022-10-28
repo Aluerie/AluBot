@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone, timedelta
 from typing import TYPE_CHECKING
 
 from discord import Message
 from discord.ext import commands, tasks
-from datetime import datetime, timezone, timedelta
-from utils.var import Uid, umntn
+
+from .utils.var import Uid, umntn
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
 
 start_errors = 948936198733328425
 game_feed = 966316773869772860

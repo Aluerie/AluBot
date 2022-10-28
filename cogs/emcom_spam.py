@@ -1,17 +1,18 @@
 from __future__ import annotations
+
+import asyncio
 from typing import TYPE_CHECKING
 
+import emoji
+import regex
 from discord import Embed, NotFound
 from discord.ext import commands, tasks
-from utils.var import Cid, Clr, Ems, Rgx, Uid
-
-import regex
 from numpy.random import randint, choice
-import asyncio
-import emoji
+
+from .utils.var import Cid, Clr, Ems, Rgx, Uid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from .utils.bot import AluBot
     from discord import Message
 
 

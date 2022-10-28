@@ -1,15 +1,15 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+
+from typing import TYPE_CHECKING, Optional, Literal
 
 from discord import FFmpegPCMAudio, Embed, app_commands
 from discord.ext import commands
-
-from utils.var import *
-
 from gtts import gTTS
 
+from .utils.var import Ems, Clr
+
 if TYPE_CHECKING:
-    from utils.context import Context
+    from .utils.context import Context
 
 lang_dict = {
     'fr': {

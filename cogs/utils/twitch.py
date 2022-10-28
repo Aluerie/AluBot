@@ -1,12 +1,12 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
-from config import TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET
-
-from utils import database as db
-from utils.format import gettimefromhms, display_hmstime
 from twitchAPI import Twitch
 
+from config import TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET
+from . import database as db
+from .format import gettimefromhms, display_hmstime
 
 if TYPE_CHECKING:
     pass

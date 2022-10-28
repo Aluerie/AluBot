@@ -13,14 +13,6 @@ if TYPE_CHECKING:
     pass
 
 
-async def get_pre(bot, message):
-    if message.guild is None:
-        prefix = '$'
-    else:
-        prefix = db.get_value(db.ga, message.guild.id, 'prefix')
-    return commands.when_mentioned_or(prefix, "/")(bot, message)
-
-
 class Prefix(commands.Cog, name='Settings for the bot'):
     """
     Change bot's config for the server
@@ -50,7 +42,6 @@ class Prefix(commands.Cog, name='Settings for the bot'):
     async def set(self, ctx, *, arg):
         """Set new prefix for the server ;"""
         db.set_value(db.ga, ctx.guild.id, prefix=arg)
-        # self.bot.command_prefix = get_pre
         em = Embed(
             colour=Clr.prpl,
             description=f'Changed this server prefix to {arg}'

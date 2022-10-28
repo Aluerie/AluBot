@@ -14,17 +14,14 @@ log.setLevel('INFO')
 match args.name:
     case 'alu':
         token = DISCORD_BOT_TOKEN
-        from cogs.settings import get_pre
-        prefix = get_pre
         yen = False
         log.addHandler(LogHandler(papertrail=True))
     case 'yen':
         token = DISCORD_YEN_TOKEN
-        prefix = '~'
         yen = True
         log.addHandler(LogHandler(papertrail=False))
     case _:
         raise Exception('Only names `alu` and `yen` are allowed')
 
-bot = AluBot(prefix, yen)
+bot = AluBot(yen)
 bot.run(token)

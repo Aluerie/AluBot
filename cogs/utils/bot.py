@@ -13,6 +13,7 @@ from github import Github
 from steam.client import SteamClient
 
 from config import GIT_PERSONAL_TOKEN, STEAM_TEST_LGN, STEAM_TEST_PSW, STEAM_LGN, STEAM_PSW
+from . import database as db
 from . import imgtools
 from .context import Context
 from .var import Sid
@@ -48,6 +49,13 @@ YEN_STE = cog_check(['dotafeed', 'gamerstats', 'tools', 'rankedinfo'])
 
 # YEN_TWITCH = cog_check(['dotafeed', 'lolfeed', 'twitch'])
 
+async def alubot_get_pre(bot: AluBot, message: Message):
+    if message.guild is None:
+        prefix = '$'
+    else:
+        prefix = db.get_value(db.ga, message.guild.id, 'prefix')
+    return commands.when_mentioned_or(prefix, "/")(bot, message)
+
 
 class AluBot(commands.Bot):
     bot_app_info: AppInfo
@@ -59,7 +67,8 @@ class AluBot(commands.Bot):
     __session: ClientSession
     launch_time: datetime
 
-    def __init__(self, prefix, yen=False):
+    def __init__(self, yen=False):
+        prefix = '~' if yen else alubot_get_pre
         super().__init__(
             command_prefix=prefix,
             activity=Streaming(

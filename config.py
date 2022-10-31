@@ -9,10 +9,9 @@ when I'm not broke. :(
 import platform
 from os import getenv
 
-if platform.system() == 'Windows':
-    from dotenv import load_dotenv, find_dotenv
-
-    load_dotenv(dotenv_path=find_dotenv(), verbose=True)
+#if platform.system() == 'Windows':
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(dotenv_path=find_dotenv(), verbose=True)
 
 # DISCORD
 DISCORD_BOT_TOKEN = getenv("DISCORD_BOT_TOKEN")

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .utils.bot import AluBot
 
 
-class DotaComments(commands.Cog):
+class DotaBugtracker(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.git_comments_check.start()
@@ -96,4 +96,4 @@ class DotaComments(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(DotaComments(bot))
+    await bot.add_cog(DotaBugtracker(bot))

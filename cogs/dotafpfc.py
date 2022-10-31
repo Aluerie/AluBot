@@ -17,7 +17,7 @@ from .utils.distools import send_traceback, send_pages_list
 from .utils.dota import hero
 from .utils.dota.const import ODOTA_API_URL
 from .utils.dota.models import PlayerAfterMatch, ActiveMatch
-from .utils.feed import FeedTools
+from .utils.fpfc import FeedTools
 from .utils.twitch import name_by_twitchid
 from .utils.var import Clr, Ems, MP, Cid
 

@@ -21,7 +21,7 @@
 21. Probably think about better TFT errors notifs
 22. move utils into `./cogs`
 23. autocomplete for rules
-
+24. rewrite timers i say (database loop.create_task which searches for the next closets timer)
 ### Current thoughts
 1. routing thing for league
 3. add some difference between league and dota database add logs, icon I guess

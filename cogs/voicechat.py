@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from discord import Embed, Member, app_commands
 from discord.ext import commands, tasks
 
-from .utils.var import Ems, Sid, Rid
+from .utils.var import Ems, Sid, Rid, Clr, Cid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot, Context

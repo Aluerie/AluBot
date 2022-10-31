@@ -7,7 +7,7 @@ from pyot.conf.pipeline import activate_pipeline, PipelineConf
 from pyot.utils.functools import async_property
 
 from config import RIOT_API_KEY
-from .utils.feed import FeedTools
+from .utils.fpfc import FeedTools
 from .utils.twitch import get_lol_streams
 from .utils.var import Clr, MP, Ems, Cid
 
@@ -414,7 +414,7 @@ class LoLFeed(commands.Cog):
                 print(f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}')
                 continue
                 # embed = Embed(colour=Clr.error)
-                # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
+                # embed.description = f'ServerError `lolfpfc.py`: {row.name} {row.platform} {row.accname}'
                 # await self.bot.get_channel(Cid.spam_me).send(embed=embed)  # content=umntn(Uid.alu)
 
     async def send_the_embed(

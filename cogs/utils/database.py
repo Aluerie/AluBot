@@ -1,3 +1,10 @@
+"""import sys
+import oracledb
+
+oracledb.version = "8.3.0"
+sys.modules["cx_Oracle"] = oracledb
+"""
+
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
@@ -8,9 +15,23 @@ from sqlalchemy.orm import sessionmaker
 
 from config import SQL_URL
 
-# sql_url = 'postgresql://' + sql_username + ':' + sql_password + '@localhost:5432/postgres'
+"""
+from config import (
+    ORACLE_UN, ORACLE_PW, ORACLE_CS, ORACLE_HOST, ORACLE_PORT, ORACLE_SERVICE_NAME
+)
+ORACLE_URL = f'oracle://{ORACLE_UN}:{ORACLE_PW}@{ORACLE_CS}'
+connect_args = {
+    'host': ORACLE_HOST,
+    'port': ORACLE_PORT,
+    'service_name': ORACLE_SERVICE_NAME
+}
+"""
 
-engine = create_engine(SQL_URL, echo=False)  # connect to database,  echo = true to debug
+engine = create_engine(
+    SQL_URL,  # ORACLE_URL
+    echo=False,
+    # connect_args=connect_args
+)  # connect to database,  echo = true to debug
 Session = sessionmaker()
 Session.configure(bind=engine)
 session = Session()
@@ -21,7 +42,7 @@ class DiscordUser(Base):
     __tablename__ = 'GuildMembers'
     __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, default=1234)
-    name = Column(String, default='')
+    name = Column(String(256), default='')
     lastseen = Column(DateTime, default=datetime.now(timezone.utc))
     inlvl = Column(Integer, default=1)
     exp = Column(Integer, default=0)
@@ -37,9 +58,9 @@ class DiscordEmote(Base):
     __tablename__ = 'GuildEmotes'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True, default=1234)
-    name = Column(String, default='')
+    name = Column(String(256), default='')
     animated = Column(Boolean, default=0)
-    month_array = Column(PickleType, default=[0]*30)
+    month_array = Column(PickleType, default=[0] * 30)
 
 
 class botinfo(Base):
@@ -93,11 +114,11 @@ class DotaAccount(Base):
     __tablename__ = 'DotaAccounts'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True, default=1234)  # steamid
-    name = Column(String, default='')
+    name = Column(String(256), default='')
     friendid = Column(BigInteger, default=1234)
     twtv_id = Column(BigInteger, default=None)
     fav_id = Column(Integer)
-    display_name = Column(String)
+    display_name = Column(String(256))
 
 
 class RemindersNote(Base):
@@ -265,6 +286,7 @@ def session_scope():
 def get_value(dbclass, userid, field):
     user = session.query(dbclass).filter_by(id=userid).first()
     return getattr(user, field)
+
 
 ##########################################################################
 

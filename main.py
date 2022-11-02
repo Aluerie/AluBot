@@ -13,12 +13,10 @@ log.setLevel('INFO')
 
 match args.name:
     case 'alu':
-        token = DISCORD_BOT_TOKEN
-        yen = False
+        yen, token = False, DISCORD_BOT_TOKEN
         log.addHandler(LogHandler(papertrail=True))
     case 'yen':
-        token = DISCORD_YEN_TOKEN
-        yen = True
+        yen, token = True, DISCORD_YEN_TOKEN
         log.addHandler(LogHandler(papertrail=False))
     case _:
         raise Exception('Only names `alu` and `yen` are allowed')

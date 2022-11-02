@@ -3,8 +3,9 @@
    * editor 
    * context menu usage 
    * find other embed makers
-2. find other embed makers
+   * 
 9. make muted by who into logs
+10. Warn command into logs channel rather than database 
 3. make /birthday set into view modals 
 4. League patches find the pic that is patch summary
 4. GitHub thing issues into fewer posts
@@ -13,17 +14,17 @@
 7. rewrite daily reminders into something more sophisticated 
    * put texts into database
    * generalize code creation - probably ask in discordpy (I mean 6 task creators are same code)
-8. start using asyncpg thing probably
+   * (database loop.create_task which searches for the next closets timer)
+9. start using asyncpg thing probably
 9. count command usage
 10. reaction roles with new selects I guess
-11. 
 20. think about this new Roles dropdown select menu
 21. Probably think about better TFT errors notifs
 22. move utils into `./cogs`
 23. autocomplete for rules
-24. rewrite timers i say (database loop.create_task which searches for the next closets timer)
-25. skip beta for help command
-26. 
+25. skip beta for help command or just limit view to 25:
+26. Depreceated cogs = 'tags' or something
+27. 
 ### Current thoughts
 1. routing thing for league
 3. add some difference between league and dota database add logs, icon I guess

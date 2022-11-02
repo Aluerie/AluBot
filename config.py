@@ -6,10 +6,10 @@ But I promise I will do everything properly
 when I'm not broke. :(
 """
 
-import platform
 from os import getenv
 
-#if platform.system() == 'Windows':
+# import platform
+# if platform.system() == 'Windows':
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(dotenv_path=find_dotenv(), verbose=True)
 
@@ -56,9 +56,19 @@ TWITCH_CLIENT_ID = getenv("TWITCH_CLIENT_ID")
 TWITCH_CLIENT_SECRET = getenv("TWITCH_CLIENT_SECRET")
 WEBHOOK_DISCORD_CHANNEL = getenv("WEBHOOK_DISCORD_CHANNEL")
 
+# ELEPHANT SQL
+ELE_URL = getenv("ELE_URL")
+
 # DATABASE
-DATABASE_URL = getenv("DATABASE_URL")
 SQL_URL = getenv("SQL_URL")
+
+# ORACLE DATABASE
+ORACLE_UN = getenv("ORACLE_UN")
+ORACLE_PW = getenv("ORACLE_PW")
+ORACLE_CS = getenv("ORACLE_CS")
+ORACLE_HOST = getenv("ORACLE_HOST")
+ORACLE_PORT = getenv("ORACLE_PORT")
+ORACLE_SERVICE_NAME = getenv("ORACLE_SERVICE_NAME")
 
 # WOLFRAM
 WOLFRAM_TOKEN = getenv("WOLFRAM_TOKEN")

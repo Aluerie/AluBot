@@ -44,7 +44,7 @@ def cog_check(cog_list):
 
 YEN_JSK = True
 YEN_GIT = cog_check(['dotacomments', 'copydota'])
-YEN_STE = cog_check(['dotafeed', 'gamerstats', 'tools', 'rankedinfo'])
+YEN_STE = cog_check(['dotafpfc', 'gamerstats', 'tools', 'rankedinfo'])
 
 
 # YEN_TWITCH = cog_check(['dotafeed', 'lolfeed', 'twitch'])

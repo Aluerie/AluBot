@@ -39,6 +39,7 @@ class DotaFeed(commands.Cog):
         self.lobby_ids = set()
         self.active_matches = []
         self.after_match = []
+        self.workaround_100matches = False
 
     def cog_unload(self) -> None:
         self.dotafeed.cancel()
@@ -71,6 +72,7 @@ class DotaFeed(commands.Cog):
 
     async def try_to_find_games(self, db_ses):
         log.info("TryToFindGames dota2info")
+        self.workaround_100matches = not self.workaround_100matches
 
         self.active_matches = []
         self.lobby_ids = set()
@@ -94,7 +96,7 @@ class DotaFeed(commands.Cog):
         # @dota.on('top_source_tv_games')
         def response(result):
             log.info(f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games}")
-            if result.specific_games:
+            if result.specific_games or self.workaround_100matches:
                 friendids = [r.friendid for r in db_ses.query(db.d.friendid)]
                 for match in result.game_list:  # games
                     our_persons = [x for x in match.players if x.account_id in friendids and x.hero_id in fav_hero_ids]
@@ -125,26 +127,30 @@ class DotaFeed(commands.Cog):
                 log.info(f'to_be_posted {self.active_matches}')
             self.bot.dota.emit('top_games_response')
 
-        proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
-        proto_msg.header.routing_appid = 570
+        if self.workaround_100matches:
+            self.lobby_ids = set()
+        else:
+            proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
+            proto_msg.header.routing_appid = 570
 
-        steamids = [row.id for row in db_ses.query(db.d).filter(db.d.fav_id.in_(fav_player_ids)).all()]
-        proto_msg.body.steamid_request.extend(steamids)
-        resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
-        if resp is None:
-            print('resp is None, hopefully everything else will be fine tho;')
-            return
-        #print(resp)
-        for item in resp.rich_presence:
-            if rp_bytes := item.rich_presence_kv:
-                # steamid = item.steamid_user
-                rp = vdf.binary_loads(rp_bytes)['RP']
-                # print(rp)
-                if lobby_id := int(rp.get('WatchableGameID', 0)):
-                    if rp.get('param0', 0) == '#DOTA_lobby_type_name_ranked':
-                        if await hero.id_by_npcname(rp.get('param2', '#')[1:]) in fav_hero_ids:  # that's npcname
-                            self.lobby_ids.add(lobby_id)
+            steamids = [row.id for row in db_ses.query(db.d).filter(db.d.fav_id.in_(fav_player_ids)).all()]
+            proto_msg.body.steamid_request.extend(steamids)
+            resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
+            if resp is None:
+                print('resp is None, hopefully everything else will be fine tho;')
+                return
+            #print(resp)
+            for item in resp.rich_presence:
+                if rp_bytes := item.rich_presence_kv:
+                    # steamid = item.steamid_user
+                    rp = vdf.binary_loads(rp_bytes)['RP']
+                    # print(rp)
+                    if lobby_id := int(rp.get('WatchableGameID', 0)):
+                        if rp.get('param0', 0) == '#DOTA_lobby_type_name_ranked':
+                            if await hero.id_by_npcname(rp.get('param2', '#')[1:]) in fav_hero_ids:  # that's npcname
+                                self.lobby_ids.add(lobby_id)
 
+        # print(f'lobbyids {self.lobby_ids}')
         log.info(f'lobbyids {self.lobby_ids}')
         # dota.on('ready', ready_function)
         self.bot.dota.once('top_source_tv_games', response)

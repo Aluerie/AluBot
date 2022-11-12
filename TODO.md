@@ -1,4 +1,6 @@
 ### TI pause time
+0. automatic github pull, push, requirements
+1. transfer database from heroku to oracle
 1. embed builder
    * editor 
    * context menu usage 
@@ -24,7 +26,11 @@
 23. autocomplete for rules
 25. skip beta for help command or just limit view to 25:
 26. Depreceated cogs = 'tags' or something
-27. 
+27. proper config.py
+28. make docstring comments to dotafpfc lolfpfc and config py
+29. create better testing tech - something like variable self.test = yes
+30. automatic twitch chat predictions at gorgc
+31. 
 ### Current thoughts
 1. routing thing for league
 3. add some difference between league and dota database add logs, icon I guess

@@ -13,7 +13,7 @@ async def get_resp_json(*, url: str) -> dict:
     async with ClientSession() as session:
         resp = await session.request("GET", url)
         if not (resp and resp.status == 200):
-            raise RuntimeError(f'Dota constants failed with status {resp.status}')
+            raise RuntimeError(f'Dota Cache: {resp.status}. {await resp.text()}')
             # return self.cached_data
         return await resp.json()  # abilities
 

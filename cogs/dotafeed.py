@@ -38,37 +38,10 @@ class DotaFeed(commands.Cog):
         self.dotafeed.start()
         self.lobby_ids = set()
         self.active_matches = []
-        self.after_match = []
         self.workaround_100matches = False
 
     def cog_unload(self) -> None:
         self.dotafeed.cancel()
-
-    async def after_match_games(self, ses):
-        log.info("after match after match")
-        self.after_match = []
-
-        for row in ses.query(db.em):
-            url = f"{ODOTA_API_URL}/request/{row.match_id}"
-            async with self.bot.ses.post(url):
-                pass
-            url = f"{ODOTA_API_URL}/matches/{row.match_id}"
-            async with self.bot.ses.get(url) as resp:
-                dic = await resp.json()
-                if dic == {"error": "Not Found"}:
-                    continue
-
-                for player in dic.get('players', []):  # one day OD freaked out
-                    if player['hero_id'] == row.hero_id:
-                        if player['purchase_log'] is not None:
-                            self.after_match.append(
-                                PlayerAfterMatch(
-                                    data=player,
-                                    channel_id=row.ch_id,
-                                    message_id=row.id,
-                                    twitch_status=row.twitch_status
-                                )
-                            )
 
     async def try_to_find_games(self, db_ses):
         log.info("TryToFindGames dota2info")
@@ -139,7 +112,7 @@ class DotaFeed(commands.Cog):
             if resp is None:
                 print('resp is None, hopefully everything else will be fine tho;')
                 return
-            #print(resp)
+            # print(resp)
             for item in resp.rich_presence:
                 if rp_bytes := item.rich_presence_kv:
                     # steamid = item.steamid_user
@@ -159,15 +132,11 @@ class DotaFeed(commands.Cog):
 
     @tasks.loop(seconds=59)
     async def dotafeed(self):
-        log.info('========================================')
+        log.info('===dota feed loop starts===')
         with db.session_scope() as db_ses:
             await self.try_to_find_games(db_ses)
             for match in self.active_matches:
                 await match.send_the_embed(self.bot, db_ses)
-
-            await self.after_match_games(db_ses)
-            for player in self.after_match:
-                await player.edit_the_embed(self.bot, db_ses)
 
     @dotafeed.before_loop
     async def before(self):
@@ -179,6 +148,62 @@ class DotaFeed(commands.Cog):
         # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
         #  probably declare your own error type
         await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in dotafeed'))
+        # self.dotafeed.restart()
+
+
+class AfterGameEdit(commands.Cog):
+    def __init__(self, bot):
+        self.bot: AluBot = bot
+        self.after_match = []
+        self.aftergame.start()
+
+    def cog_unload(self) -> None:
+        self.aftergame.cancel()
+
+    async def after_match_games(self, ses):
+        log.info("after match after match")
+        self.after_match = []
+
+        for row in ses.query(db.em):
+            url = f"{ODOTA_API_URL}/request/{row.match_id}"
+            async with self.bot.ses.post(url):
+                pass
+            url = f"{ODOTA_API_URL}/matches/{row.match_id}"
+            async with self.bot.ses.get(url) as resp:
+                dic = await resp.json()
+                if dic == {"error": "Not Found"}:
+                    continue
+
+                for player in dic.get('players', []):  # one day OD freaked out
+                    if player['hero_id'] == row.hero_id:
+                        if player['purchase_log'] is not None:
+                            self.after_match.append(
+                                PlayerAfterMatch(
+                                    data=player,
+                                    channel_id=row.ch_id,
+                                    message_id=row.id,
+                                    twitch_status=row.twitch_status
+                                )
+                            )
+
+    @tasks.loop(minutes=5)
+    async def aftergame(self):
+        log.info('===after game task starts now====')
+        with db.session_scope() as db_ses:
+            await self.after_match_games(db_ses)
+            for player in self.after_match:
+                await player.edit_the_embed(self.bot, db_ses)
+
+    @aftergame.before_loop
+    async def before(self):
+        log.info("dotafeed before loop wait")
+        await self.bot.wait_until_ready()
+
+    @aftergame.error
+    async def dotafeed_error(self, error):
+        # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
+        #  probably declare your own error type
+        await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in aftergame'))
         # self.dotafeed.restart()
 
 
@@ -366,9 +391,9 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         description='Add stream to the database.'
     )
     @app_commands.describe(
-        name='player name',
+        name='Player name. If it is a twitch tv streamer then provide their twitch handle',
         steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link',
-        twitch='is it a twitch.tv streamer? yes/no',
+        twitch='If you proved twitch handle for "name" then press `True` otherwise `False`',
     )
     async def database_add(self, ctx: Context, *, flags: AddStreamFlags):
         """
@@ -759,6 +784,7 @@ class DotaAccCheck(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(DotaFeed(bot))
+    await bot.add_cog(AfterGameEdit(bot))
     await bot.add_cog(DotaFeedTools(bot))
     if datetime.now(timezone.utc).day == 16:
         await bot.add_cog(DotaAccCheck(bot))

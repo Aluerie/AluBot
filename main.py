@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from config import DISCORD_BOT_TOKEN, DISCORD_YEN_TOKEN
+from config import DISCORD_ALU_TOKEN, DISCORD_YEN_TOKEN
 from cogs.utils.bot import AluBot, LogHandler
 
 parser = argparse.ArgumentParser(description="Aluerie's personal bot, Alu or Yen (testing version)")
@@ -13,7 +13,7 @@ log.setLevel('INFO')
 
 match args.name:
     case 'alu':
-        yen, token = False, DISCORD_BOT_TOKEN
+        yen, token = False, DISCORD_ALU_TOKEN
         log.addHandler(LogHandler(papertrail=True))
     case 'yen':
         yen, token = True, DISCORD_YEN_TOKEN

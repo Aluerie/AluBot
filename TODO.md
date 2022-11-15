@@ -1,4 +1,13 @@
+# CURRENT URGENCY
+* divide dotafeed.py main cog into separate cogs so when opendota fails - we dont.
+^^^ so it at least works somehow
+* transfer database from heroku to oracle
+* send_traceback into bot's methods
+
+
+
 ### TI pause time
+0. reduce opendota api calls
 0. automatic github pull, push, requirements
 1. transfer database from heroku to oracle
 1. embed builder

@@ -156,3 +156,5 @@ audio.mp3
 .vscode
 
 tlist.py
+config.py
+/cogs/template.py

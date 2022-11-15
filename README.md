@@ -46,7 +46,7 @@ your instance of the bot will work well. And I'm honestly not a very good progra
 1. Python `3.10` or higher is required
 2. Set up venv `python3.10 -m venv venv`
 3. Install dependencies `pip install -U -r requirements.txt`
-4. Edit `config.py` - either fill out all needed config parameters or make `.env` file with them and setup your PostgreSQL
+4. Rename `config.example.py` into `config.py` and fill out all needed config parameters
 5. Replace variables in `./utils/var.py` with your own values
 6. Run the bot with `py main.py -n NAME` where NAME is `alu` for AluBot or `yen` for YenBot, test version of former
 7. if you want to run Yennifer then create `tlist.py` file with following template: 

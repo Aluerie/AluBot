@@ -4,19 +4,15 @@ import logging
 from datetime import datetime, timedelta, timezone, time
 from typing import TYPE_CHECKING
 
-import vdf
 from PIL import Image, ImageDraw, ImageFont
 from discord import Embed
 from discord.ext import commands, tasks
 from matplotlib import pyplot as plt
-from steam.core.msg import MsgProto
-from steam.enums import emsg
 
 from config import DOTA_FRIENDID
 from .utils import pages, database as db
 from .utils.distools import send_pages_list
 from .utils.dota import hero
-from .utils.dota.const import ODOTA_API_URL
 from .utils.dota.models import Match
 from .utils.dota.stalk import (
     MatchHistoryData,
@@ -500,83 +496,6 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         await ctx.reply(file=plt_to_file(fig, filename='mmr.png'))
 
 
-class ODotaAutoParse(commands.Cog):
-    """Automatic request to parse Dota 2 matches after its completion"""
-    def __init__(self, bot):
-        self.bot: AluBot = bot
-        self.matches_to_parse = []
-        self.active_matches = []
-        self.lobby_ids = set()
-        self.autoparse_task.start()
-
-    def cog_unload(self) -> None:
-        self.autoparse_task.cancel()
-
-    async def get_active_matches(self):
-        self.lobby_ids = set()
-        self.bot.steam_dota_login()
-
-        def ready_function():
-            self.bot.dota.request_top_source_tv_games(lobby_ids=list(self.lobby_ids))
-
-        def response(result):
-            if result.specific_games:
-                m_ids = [m.match_id for m in result.game_list]
-                self.matches_to_parse = [m_id for m_id in self.active_matches if m_id not in m_ids]
-                self.active_matches += [m_id for m_id in m_ids if m_id not in self.active_matches]
-            else:
-                self.matches_to_parse = self.active_matches
-            #print(f'to parse {self.matches_to_parse} active {self.active_matches}')
-            self.bot.dota.emit('top_games_response')
-
-        proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
-        proto_msg.header.routing_appid = 570
-        steamids = [row.id for row in db.session.query(db.ap)]
-        proto_msg.body.steamid_request.extend(steamids)
-        resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
-        if resp is None:
-            print('resp is None, hopefully everything else will be fine tho;')
-            return
-        for item in resp.rich_presence:
-            if rp_bytes := item.rich_presence_kv:
-                # steamid = item.steamid_user
-                rp = vdf.binary_loads(rp_bytes)['RP']
-                # print(rp)
-                if lobby_id := int(rp.get('WatchableGameID', 0)):
-                    self.lobby_ids.add(lobby_id)
-
-        #print(self.lobby_ids)
-        # dota.on('ready', ready_function)
-        self.bot.dota.once('top_source_tv_games', response)
-        ready_function()
-        self.bot.dota.wait_event('top_games_response', timeout=8)
-
-    @tasks.loop(seconds=59)
-    async def autoparse_task(self):
-        await self.get_active_matches()
-        for m_id in self.matches_to_parse:
-            #print(m_id)
-            url = f"{ODOTA_API_URL}/request/{m_id}"
-            async with self.bot.ses.post(url):
-                pass
-
-            url = f"{ODOTA_API_URL}/matches/{m_id}"
-            async with self.bot.ses.get(url) as resp:
-                dic = await resp.json()
-                if dic == {"error": "Not Found"}:
-                    continue
-
-            if dic.get('players', None):
-                if dic['players'][0]['purchase_log'] is not None:
-                    self.active_matches.remove(m_id)
-
-    @autoparse_task.before_loop
-    async def before(self):
-        log.info("dotafeed before loop wait")
-        await self.bot.wait_until_ready()
-
-
 async def setup(bot):
     await bot.add_cog(GamerStats(bot))
-    await bot.add_cog(ODotaAutoParse(bot))
 

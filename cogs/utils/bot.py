@@ -12,7 +12,9 @@ from dota2.client import Dota2Client
 from github import Github
 from steam.client import SteamClient
 
-from config import GIT_PERSONAL_TOKEN, STEAM_TEST_LGN, STEAM_TEST_PSW, STEAM_LGN, STEAM_PSW
+from config import (
+    GIT_PERSONAL_TOKEN, STEAM_YEN_LGN, STEAM_YEN_PSW, STEAM_ALU_LGN, STEAM_ALU_PSW
+)
 from . import database as db
 from . import imgtools
 from .context import Context
@@ -24,7 +26,6 @@ if TYPE_CHECKING:
     from discord import AppInfo, File, Interaction, Message, User
     from discord.app_commands import AppCommand
     from discord.abc import Snowflake
-
     from github import Repository
 
 log = logging.getLogger('root')
@@ -39,15 +40,13 @@ def cog_check(cog_list):
     if not len(test_list):
         return True
     else:
-        return any(item in test_list for item in cog_list)
+        return any(item[:-3] in test_list for item in cog_list)
 
 
 YEN_JSK = True
-YEN_GIT = cog_check(['dotacomments', 'copydota'])
-YEN_STE = cog_check(['dotafpfc', 'gamerstats', 'tools', 'rankedinfo'])
-
-
-# YEN_TWITCH = cog_check(['dotafeed', 'lolfeed', 'twitch'])
+YEN_GIT = cog_check(['dotabugtracker.py', 'dotanews.py'])
+YEN_STE = cog_check(['dotafeed.py', 'dotastats.py', 'tools.py'])
+# YEN_TWI = cog_check(['dotafeed.py', 'lolfeed.py', 'twitch.py'])
 
 async def alubot_get_pre(bot: AluBot, message: Message):
     if message.guild is None:
@@ -97,7 +96,7 @@ class AluBot(commands.Bot):
             self.git_tracker = self.github.get_repo("SteamDatabase/GameTracking-Dota2")
 
         """
-        if not self.yen or YEN_TWITCH:
+        if not self.yen or YEN_TWI:
             self.twitch = Twitch(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
             self.twitch.authenticate_app([])
         """
@@ -152,11 +151,11 @@ class AluBot(commands.Bot):
         if self.steam.connected is False:
             log.info(f"dota2info: client.connected {self.steam.connected}")
             if self.yen:
-                steam_login = STEAM_TEST_LGN
-                steam_password = STEAM_TEST_PSW
+                steam_login = STEAM_YEN_LGN
+                steam_password = STEAM_YEN_PSW
             else:
-                steam_login = STEAM_LGN
-                steam_password = STEAM_PSW
+                steam_login = STEAM_ALU_LGN
+                steam_password = STEAM_ALU_PSW
 
             if self.steam.login(username=steam_login, password=steam_password):
                 self.steam.change_status(persona_state=7)

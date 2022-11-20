@@ -158,3 +158,4 @@ audio.mp3
 tlist.py
 config.py
 /cogs/template.py
+/db_backup

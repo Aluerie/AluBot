@@ -85,6 +85,10 @@ class AluBot(commands.Bot):
         self.__session = ClientSession()
         self.bot_app_info = await self.application_info()
 
+        # database
+        # await db.async_db_session.init()
+        # await db.async_db_session.create_all()
+
         if not self.yen or YEN_STE:
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)

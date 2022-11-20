@@ -32,4 +32,8 @@ parsedatetime~=2.6
 python-dateutil~=2.8.2
 dateparser==1.1.2
 oracledb~=1.1.1
+asyncpg~=0.27.0
+
+pandas~=1.5.1
+asyncprawcore~=2.3.0
 psycopg2~=2.9.3

@@ -1,87 +1,96 @@
+1. Remove Warnings / maybe mutes code
+
+
+# KEEP IN MIND
+1. `map` usages
+
 # CURRENT URGENCY
-* divide dotafeed.py main cog into separate cogs so when opendota fails - we dont.
-^^^ so it at least works somehow
-* transfer database from heroku to oracle
-* send_traceback into bot's methods
-
-
-
-### TI pause time
-0. reduce opendota api calls
-0. automatic github pull, push, requirements
-1. transfer database from heroku to oracle
-1. embed builder
-   * editor 
-   * context menu usage 
-   * find other embed makers
-   * 
-9. make muted by who into logs
-10. Warn command into logs channel rather than database 
-3. make /birthday set into view modals 
-4. League patches find the pic that is patch summary
+2. transfer database from Heroku to Oracle
+   * write code to reset/fill the database from the scratch where it's applicable
+   * write code to download/backup the database with the bot command
+   * read how it should be actually done.  - maybe subclass database classes ?
+   * async sqlalchemy
+   * https://ahmed-nafies.medium.com/sqlalchemy-async-orm-is-finally-here-d560dfaa335d
+   * https://github.com/nf1s/sqlalchemy_async_orm
+   * https://codereview.stackexchange.com/questions/261362/discord-bot-using-sqlalchemy
+   * https://discord.com/channels/336642139381301249/381965515721146390/976095655166631987
+2. Reduce OpenDota API requests 
+   * make bot.opendota_count and count amount of calls (??? maybe not) 
+   * ctrl f all opendota calls and reduce it
+   * divide dotafeed.py main cog into separate cogs so when opendota fails - we dont.
+3. automatic github pull, push, requirements
 4. GitHub thing issues into fewer posts
-5. Solve twitter somehow IDK fok ; Task for reload twitter I think
-6. rewrite things from testing standpoint
-7. rewrite daily reminders into something more sophisticated 
+5. splitlines error for patches
+6. make mandara bot alive
+    * copy service file for both bots while you are at it
+    * leave some tutorial for future self in your discord channel
+
+# SECOND IMPORTANT
+8. make muted by who into logs (info obtained from audit logs)
+2. Warn command into logs channel rather than database
+3. autocomplete for rules
+4. steam links in dota player list
+3. make /birthday set into view modals (? check that bot in cookies )
+4. League patches find the pic that is patch summary
+5. count command usage
+6. rewrite daily reminders into something more sophisticated 
    * put texts into database
    * generalize code creation - probably ask in discordpy (I mean 6 task creators are same code)
    * (database loop.create_task which searches for the next closets timer)
-9. start using asyncpg thing probably
-9. count command usage
-10. reaction roles with new selects I guess
-20. think about this new Roles dropdown select menu
-21. Probably think about better TFT errors notifs
-22. move utils into `./cogs`
-23. autocomplete for rules
 25. skip beta for help command or just limit view to 25:
-26. Depreceated cogs = 'tags' or something
-27. proper config.py
-28. make docstring comments to dotafpfc lolfpfc and config py
-29. create better testing tech - something like variable self.test = yes
-30. automatic twitch chat predictions at gorgc
-31. 
-### Current thoughts
-1. routing thing for league
-3. add some difference between league and dota database add logs, icon I guess
-4. edge cases when people delete channels/guilds
-5. async sqlalchemy and IDK research better code/approach - maybe subclass database classes ?
-6. look at every cog in robo danny/pycord manager/stella
-7. rewrite purge into something better
-8. abandon not scored games for match history
-11. context menu commands into help menu somehow IDK
-12. clips twitch check 
-13. slnt - rename to slant ;
-
-### Later
-1. custom server name for dotafeed feature
-2. add league account check to league after we rewrite it a bit better
 3. make blocked words league to be a command that takes/writes rules into dataabase
-4. request_matchmaking_stats()
+4. add NathanKell to reddit snipe
+4. research about how to do our dota thing (is there anything better than top100 games + public profiles)
 
-### Fix Later
+# NOT URGENT
+20. embed builder
+    * editor 
+    * context menu usage 
+    * find other embed makers
+18. make docstring comments to dotafeed lolfeed and config py
+3. add some difference between league and dota database add logs, icon I guess
+4. edge cases when people delete channels/guilds for dota/league thing
+11. context menu commands into help menu somehow IDK
+12. Discord py speedups
+
+# LAST BOX
+26. `send_pages` `send_traceback` from `distools` into bot or ctx methods (complexity: confessions has `ntr.client` doing this)
+2. Solve twitter somehow IDK fok ; Task for reload twitter I think 
+3. reaction roles with new selects I guess
+26. Depreceated cogs = 'tags' or something
+29. create better testing tech - something like variable self.test = yes (???)
 1. ?tag emoji escapes 
+2. ?tag pkgutil
+8. abandon not scored games for match history
+7. rewrite purge into something better
+1. routing thing for league (some lists exist natively in Pyot)
+6. look at every cog in robo danny/pycord manager/stella
+12. clips twitch check 
+1. custom server name for dotafeed feature
+2. add league twitch name account check to league after we rewrite it a bit better (like we have in dota; current check is for lol names)
+4. request_matchmaking_stats()
 2. add image name for convert thing (check resolution too 112)
-maybe make error original for conversion error as well rom converters
-
-
-### New Features
 1. nsfw functions
-
-### Steal feature
 1. My own starboard | CarlBot 
 2. My own polls | Poolmaker Bot
 
 ### Future
-1. twitch stream live proper listener when twitch releases it
 2. add "all" key into heroes so all heroes can be traced
+3. transfer emotes used in bot to 3rd server (todo while in q tier task)
+4. research 'setup.py' nor 'pyproject.toml'
+5. monka omega register on AWS if opendota fails again.
 
 ### IMPROVE
-1. `map` usages
-2. remove `regex` library in favour of `re`
+50. remove `regex` library in favour of `re`
 3. remember `a[start:stop:step]` so `a[::-1]` is reverse
 4. ?tag learn async
-5. learn collection lib
+5. learn collection lib; do research in discord abc
 6. ?tag eval
 7. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
 8. research TypeVar stuff
 9. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>` (need to check if it works)
+
+# Impossible Future 
+1. Wait for async support at oracle [Git Issue](https://github.com/oracle/python-oracledb/issues/6) 
+2. twitch stream live proper listener when twitch releases it
+3. 

@@ -1,47 +1,37 @@
-"""import sys
-import oracledb
-
-oracledb.version = "8.3.0"
-sys.modules["cx_Oracle"] = oracledb
-"""
-
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, Boolean, String, Float, PickleType, BigInteger, DateTime
+from sqlalchemy import (
+    Column, Integer, Boolean, String, Float, PickleType, BigInteger, DateTime
+)
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from config import SQL_URL
+from config import ELENON_URL
 
-"""
-from config import (
-    ORACLE_UN, ORACLE_PW, ORACLE_CS, ORACLE_HOST, ORACLE_PORT, ORACLE_SERVICE_NAME
-)
-ORACLE_URL = f'oracle://{ORACLE_UN}:{ORACLE_PW}@{ORACLE_CS}'
-connect_args = {
-    'host': ORACLE_HOST,
-    'port': ORACLE_PORT,
-    'service_name': ORACLE_SERVICE_NAME
-}
-"""
-
-engine = create_engine(
-    SQL_URL,  # ORACLE_URL
-    echo=False,
-    # connect_args=connect_args
-)  # connect to database,  echo = true to debug
+engine = create_engine(ELENON_URL, echo=False,)  # connect to database,  echo = true to debug
 Session = sessionmaker()
 Session.configure(bind=engine)
 session = Session()
 Base = declarative_base()
 
 
-class DiscordUser(Base):
-    __tablename__ = 'GuildMembers'
+class Tags(Base):
+    __tablename__ = 'tags'
     __table_args__ = {'extend_existing': True}
-    id = Column(Integer, primary_key=True, default=1234)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, default='')
+    owner_id = Column(BigInteger)
+    content = Column(String, default='')
+    uses = Column(Integer, default=0)
+    created_at = Column(DateTime)
+
+
+class Users(Base):
+    __tablename__ = 'users'
+    __table_args__ = {'extend_existing': True}
+    id = Column(BigInteger, primary_key=True, default=1234)
     name = Column(String(256), default='')
     lastseen = Column(DateTime, default=datetime.now(timezone.utc))
     inlvl = Column(Integer, default=1)
@@ -54,8 +44,8 @@ class DiscordUser(Base):
     can_make_tags = Column(Boolean, default=True)
 
 
-class DiscordEmote(Base):
-    __tablename__ = 'GuildEmotes'
+class Emotes(Base):
+    __tablename__ = 'emotes'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True, default=1234)
     name = Column(String(256), default='')
@@ -63,7 +53,7 @@ class DiscordEmote(Base):
     month_array = Column(PickleType, default=[0] * 30)
 
 
-class botinfo(Base):
+class BotInfo(Base):
     __tablename__ = 'botinfo'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True, default=1)
@@ -81,8 +71,8 @@ class botinfo(Base):
     dota_patch = Column(String, default='')
 
 
-class guildassignment(Base):
-    __tablename__ = 'guildassignment'
+class Guilds(Base):
+    __tablename__ = 'guilds'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True)
     name = Column(String, default='')
@@ -98,8 +88,8 @@ class guildassignment(Base):
     lolfeed_spoils_on = Column(Boolean, default=True)
 
 
-class LeagueAccount(Base):
-    __tablename__ = 'LoLAccounts'
+class LoLAccounts(Base):
+    __tablename__ = 'lolaccs'
     __table_args__ = {'extend_existing': True}
     id = Column(String, primary_key=True, default=1234)
     name = Column(String, default='')
@@ -110,8 +100,8 @@ class LeagueAccount(Base):
     fav_id = Column(Integer)
 
 
-class DotaAccount(Base):
-    __tablename__ = 'DotaAccounts'
+class DotaAccounts(Base):
+    __tablename__ = 'dotaaccs'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True, default=1234)  # steamid
     name = Column(String(256), default='')
@@ -121,8 +111,8 @@ class DotaAccount(Base):
     display_name = Column(String(256))
 
 
-class RemindersNote(Base):
-    __tablename__ = 'RemindersNotes'
+class Reminders(Base):
+    __tablename__ = 'reminders'
     __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, default='')
@@ -131,23 +121,23 @@ class RemindersNote(Base):
     dtime = Column(DateTime)
 
 
-class ToDoNote(Base):
-    __tablename__ = 'ToDoNotes'
+class ToDoNotes(Base):
+    __tablename__ = 'todonotes'
     __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, default='')
     userid = Column(BigInteger, default=1234)
 
 
-class AFKNote(Base):
-    __tablename__ = 'AFKNote'
+class AFKNotes(Base):
+    __tablename__ = 'afknotes'
     __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, default=1234)  # userid
     name = Column(String, default='')
 
 
-class WarningData(Base):
-    __tablename__ = 'WarningData'
+class Warnings(Base):
+    __tablename__ = 'warnings'
     __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, autoincrement=True)
     key = Column(String, default='')  # warn/mute/ban/etc
@@ -158,8 +148,8 @@ class WarningData(Base):
     reason = Column(String, default='')  # type of warning
 
 
-class MuteData(Base):
-    __tablename__ = 'MuteData'
+class Mutes(Base):
+    __tablename__ = 'mutes'
     __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, autoincrement=True)
     userid = Column(BigInteger, default=1234)
@@ -168,41 +158,22 @@ class MuteData(Base):
     reason = Column(String, default='No reason provided')
 
 
-class mygamerdata(Base):
-    __tablename__ = 'mygamerdata'
-    __table_args__ = {'extend_existing': True}
-    id = Column(Integer, primary_key=True)
-    last_match_id = Column(BigInteger, default=0)
-    match_history = Column(PickleType, default={})
-
-
-class serverrules(Base):
+class ServerRules(Base):
     __tablename__ = 'serverrules'
     __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, autoincrement=True)
     text = Column(String, default='')
 
 
-class realrules(Base):
+class RealRules(Base):
     __tablename__ = 'realrules'
     __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True, autoincrement=True)
     text = Column(String, default='')
 
 
-class tagsdb(Base):
-    __tablename__ = 'tagsdb'
-    __table_args__ = {'extend_existing': True}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, default='')
-    owner_id = Column(BigInteger)
-    content = Column(String, default='')
-    uses = Column(Integer, default=0)
-    created_at = Column(DateTime)
-
-
-class dfmessage(Base):
-    __tablename__ = 'dfmessage'
+class DFMatches(Base):
+    __tablename__ = 'dfmatches'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True)  # message id
     match_id = Column(BigInteger)
@@ -211,8 +182,8 @@ class dfmessage(Base):
     twitch_status = Column(String)
 
 
-class lfmessage(Base):
-    __tablename__ = 'lfmessage'
+class LFMatches(Base):
+    __tablename__ = 'lfmatches'
     __table_args__ = {'extend_existing': True}
     id = Column(BigInteger, primary_key=True)  # message id
     match_id = Column(String)
@@ -235,37 +206,29 @@ class DotaHistory(Base):
     custom_note = Column(String)
 
 
-class AutoParse(Base):
-    __tablename__ = 'autoparse'
-    __table_args__ = {'extend_existing': True}
-    id = Column(BigInteger, primary_key=True)
-
-
 Base.metadata.create_all(engine)
 
 # biginteger type of id
 
-m = DiscordUser
-e = DiscordEmote
-b = botinfo
-l = LeagueAccount
-d = DotaAccount
-a = AFKNote
-s = mygamerdata
-ga = guildassignment
-em = dfmessage
-lf = lfmessage
+m = Users
+e = Emotes
+b = BotInfo
+l = LoLAccounts
+d = DotaAccounts
+a = AFKNotes
+ga = Guilds
+em = DFMatches
+lf = LFMatches
 dh = DotaHistory
-ap = AutoParse
 
 # autoincrement type of id
-r = RemindersNote
-t = ToDoNote
-w = WarningData
-u = MuteData
-sr = serverrules
-rr = realrules
-tg = tagsdb
+r = Reminders
+t = ToDoNotes
+w = Warnings
+u = Mutes
+sr = ServerRules
+rr = RealRules
+tg = Tags
 
 
 @contextmanager

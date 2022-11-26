@@ -56,12 +56,15 @@ class Logging(commands.Cog):
         if before.content == after.content:  # most likely some link embed link action
             return
 
-        embed = Embed(colour=0x00BFFF, description=inline_wordbyword_diff(before.content, after.content))
-        embed.set_author(
+        em = Embed(
+            colour=0x00BFFF,
+            description=inline_wordbyword_diff(before.content, after.content)
+        ).set_author(
             name=f'{after.author.display_name} edit in #{after.channel.name}',
             icon_url=after.author.display_avatar.url,
-            url=after.jump_url)  # TODO: this link is not jumpable from mobile but we dont care, right ?
-        await self.bot.get_channel(Cid.logs).send(embed=embed)
+            url=after.jump_url  # TODO: this link is not jumpable from mobile but we dont care, right ?
+        )
+        await self.bot.get_channel(Cid.logs).send(embed=em)
 
     @commands.Cog.listener()
     async def on_message_delete(self, msg):
@@ -88,24 +91,39 @@ class Logging(commands.Cog):
             return
 
         if before.premium_since is None and after.premium_since is not None:
-            em = Embed(colour=Clr.prpl, title=f"{before.display_name} just boosted the server !")
-            em.set_author(name=before.display_name, icon_url=before.display_avatar.url)
-            em.set_thumbnail(url=before.display_avatar.url)
-            em.description = '{0} {0} {0}'.format(Ems.PogChampPepe)
-            await self.bot.get_channel(Cid.general).send(embed=em)
+            em = Embed(
+                colour=Clr.prpl,
+                title=f"{before.display_name} just boosted the server !",
+                description='{0} {0} {0}'.format(Ems.PogChampPepe)
+            ).set_author(
+                name=before.display_name,
+                icon_url=before.display_avatar.url
+            ).set_thumbnail(
+                url=before.display_avatar.url
+            )
+            for ch_id in [Cid.general, Cid.logs]:
+                await self.bot.get_channel(ch_id).send(embed=em)
 
         added_role = list(set(after.roles) - set(before.roles))
         if added_role and added_role[0].id not in Rid.ignored_for_logs:
-            em = Embed(colour=0x00ff7f)
-            em.description = f'**Role added:** {added_role[0].mention}'
-            em.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
+            em = Embed(
+                colour=0x00ff7f,
+                description=f'**Role added:** {added_role[0].mention}'
+            ).set_author(
+                name=f'{after.display_name}\'s roles changed',
+                icon_url=after.display_avatar.url
+            )
             return await self.bot.get_channel(Cid.logs).send(embed=em)
 
         removed_role = list(set(before.roles) - set(after.roles))
         if removed_role and removed_role[0].id not in Rid.ignored_for_logs:
-            em = Embed(colour=0x006400)
-            em.description = f'**Role removed:** {removed_role[0].mention}'
-            em.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
+            em = Embed(
+                colour=0x006400,
+                description=f'**Role removed:** {removed_role[0].mention}'
+            ).set_author(
+                name=f'{after.display_name}\'s roles changed',
+                icon_url=after.display_avatar.url
+            )
             return await self.bot.get_channel(Cid.logs).send(embed=em)
 
         if before.bot:
@@ -116,10 +134,14 @@ class Logging(commands.Cog):
                     or (after.nick is not None and after.nick.startswith('[AFK')):
                 return
             db.set_value(db.m, after.id, name=after.display_name)
-            em = Embed(colour=after.color)
-            em.title = f'User\'s server nickname was changed {Ems.PepoDetective}'
-            em.description = f'**Before:** {before.nick}\n**After:** {after.nick}'
-            em.set_author(name=before.name, icon_url=before.display_avatar.url)
+            em = Embed(
+                colour=after.color,
+                title=f'User\'s server nickname was changed {Ems.PepoDetective}',
+                description=f'**Before:** {before.nick}\n**After:** {after.nick}'
+            ).set_author(
+                name=before.name,
+                icon_url=before.display_avatar.url
+            )
             await self.bot.get_channel(Cid.bot_spam).send(embed=em)
 
             guild = self.bot.get_guild(Sid.alu)

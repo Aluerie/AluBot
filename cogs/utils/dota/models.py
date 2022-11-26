@@ -196,7 +196,7 @@ class ActiveMatch(Match):
         log.info("sending dota 2 embed")
         ch: TextChannel = bot.get_channel(self.channel_id)
         if ch is None:
-            pass
+            return
         em, img_file = await self.notif_embed(bot.ses)
         em.title = f"{ch.guild.owner.name}'s fav hero + player spotted"
         msg = await ch.send(embed=em, file=img_file)

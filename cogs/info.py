@@ -5,18 +5,22 @@ import platform
 import re
 import socket
 import warnings
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Literal
+from datetime import datetime, timezone, timedelta, time
+from typing import TYPE_CHECKING, List, Literal, Union
 
-import discord
-import dota2
+from dota2 import __version__ as dota2_version
 import psutil
-import pyot
+from pyot import __version__ as pyot_version
 from PIL import ImageColor, Image
 from async_google_trans_new import google_translator
 from dateparser.search import search_dates
-from discord import Embed, Member, Message, Role, app_commands, Colour
+from discord import __version__ as dpy_version
+from discord import (
+    Colour, Embed, Member, Message, Role, TextChannel,
+    app_commands
+)
 from discord.ext import commands, tasks
+from wordcloud import WordCloud
 
 from config import DISCORD_BOT_INVLINK
 from .utils import database as db
@@ -28,7 +32,8 @@ from .utils.var import Cid, Clr, Ems, Sid, Rid, MP, MAP
 
 if TYPE_CHECKING:
     from discord import Interaction, Guild
-    from .utils.bot import AluBot, Context
+    from .utils.bot import AluBot
+    from .utils.context import Context
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
@@ -103,9 +108,12 @@ class Info(commands.Cog, name='Info'):
                 channel = before.guild.get_channel(ch_id)
                 msg = channel.get_partial_message(msg_id)
                 role = before.guild.get_role(role_id)
-                embed = Embed(colour=Clr.prpl, title=f'List of {role.name}')
-                embed.description = ''.join([f'{member.mention}\n' for member in role.members])
-                await msg.edit(content='', embed=embed)
+                em = Embed(
+                    colour=Clr.prpl,
+                    title=f'List of {role.name}',
+                    description=''.join([f'{member.mention}\n' for member in role.members])
+                )
+                await msg.edit(content='', embed=em)
 
         await give_text_list(Rid.bots, Cid.bot_spam, 959982214827892737)
         await give_text_list(Rid.nsfwbots, Cid.nsfw_bob_spam, 959982171492323388)
@@ -149,9 +157,9 @@ class Info(commands.Cog, name='Info'):
         )
         await self.bot.get_channel(Cid.spam_me).send(embed=em)
         self.bot.help_command.cog = self  # show help command in there
-        if not self.bot.yen:
-            em.set_author(name='Finished updating/rebooting')
-            await self.bot.get_channel(Cid.bot_spam).send(embed=em)
+        # if not self.bot.yen:
+        #    em.set_author(name='Finished updating/rebooting')
+        #    await self.bot.get_channel(Cid.bot_spam).send(embed=em)
 
     @reload_info.before_loop
     async def before(self):
@@ -288,7 +296,7 @@ class Info(commands.Cog, name='Info'):
         description='Get system info about machine currently hosting the bot',
         aliases=['systeminfo']
     )
-    async def sysinfo(self, ctx):
+    async def sysinfo(self, ctx: Context):
         """Get system info about machine currently hosting the bot. Idk myself what machine it is being hosted on ;"""
         url = 'https://ipinfo.io/json'
         async with self.bot.ses.get(url) as resp:
@@ -316,9 +324,9 @@ class Info(commands.Cog, name='Info'):
             name='Python Versions',
             value=
             f'● Python: {platform.python_version()}\n'
-            f'● discord.py {discord.__version__}\n'
-            f'● dota2 {dota2.__version__}\n'
-            f'● Pyot {pyot.__version__}\n'
+            f'● discord.py {dpy_version}\n'
+            f'● dota2 {dota2_version}\n'
+            f'● Pyot {pyot_version}\n'
         ).set_footer(
             text=f'AluBot is a copyright 2020-{datetime.now().year} of {self.bot.owner.name}'
         )
@@ -409,5 +417,98 @@ class Info(commands.Cog, name='Info'):
         db.remove_row(db.ga, guild.id)
 
 
+class StatsCommands(commands.Cog, name='Stats'):
+    """
+    Some stats/infographics/diagrams/info
+
+    More to come.
+    """
+    def __init__(self, bot):
+        self.bot: AluBot = bot
+        self.help_emote = Ems.Smartge
+
+    @commands.hybrid_command(
+        name='wordcloud',
+        description='Get `@member wordcloud over last total `limit` messages in requested `#channel`',
+        usage='[channel(s)=curr] [member(s)=you] [limit=2000]'
+    )
+    @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
+    async def wordcloud(
+            self,
+            ctx: Context,
+            channel_or_and_member: commands.Greedy[Union[Member, TextChannel]] = None,
+            limit: int = 2000
+    ):
+        """
+        Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
+        Can accept multiple members/channels \
+        Note that it's quite slow function or even infinitely slow with bigger limits ;
+        """
+        await ctx.typing()
+        cm = channel_or_and_member or []  # idk i don't like mutable default argument warning
+        members = [x for x in cm if isinstance(x, Member)] or [ctx.author]
+        channels = [x for x in cm if isinstance(x, TextChannel)] or [ctx.channel]
+
+        text = ''
+        for ch in channels:
+            text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])
+        wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
+        em = Embed(
+            colour=Clr.prpl,
+            description=
+            f"Members: {', '.join([m.mention for m in members])}\n"
+            f"Channels: {', '.join([c.mention for c in channels])}\n"
+            f"Limit: {limit}"
+        )
+        await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
+
+
+class StatsChannels(commands.Cog):
+    def __init__(self, bot):
+        self.bot: AluBot = bot
+        self.mytime.start()
+        self.mymembers.start()
+        self.mybots.start()
+
+    def cog_unload(self) -> None:
+        self.mytime.cancel()
+        self.mymembers.cancel()
+        self.mybots.cancel()
+
+    @tasks.loop(time=[time(hour=x) for x in range(0, 24)])
+    async def mytime(self):
+        symbol = '#' if platform.system() == 'Windows' else '-'
+        new_name = f'⏰ {datetime.now(timezone(timedelta(hours=3))).strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
+        await self.bot.get_channel(Cid.my_time).edit(name=new_name)
+
+    @mytime.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
+
+    @tasks.loop(hours=12)
+    async def mymembers(self):
+        guild = self.bot.get_guild(Sid.alu)
+        bots_role = guild.get_role(Rid.bots)
+        new_name = f'🏡 Members: {guild.member_count-len(bots_role.members)}'
+        await guild.get_channel(795743012789551104).edit(name=new_name)
+
+    @mymembers.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
+
+    @tasks.loop(hours=5)
+    async def mybots(self):
+        guild = self.bot.get_guild(Sid.alu)
+        bots_role = guild.get_role(Rid.bots)
+        new_name = f'🤖 Bots: {len(bots_role.members)}'
+        await guild.get_channel(795743065787990066).edit(name=new_name)
+
+    @mybots.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
+
+
 async def setup(bot):
     await bot.add_cog(Info(bot))
+    await bot.add_cog(StatsChannels(bot))
+    await bot.add_cog(StatsCommands(bot))

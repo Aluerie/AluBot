@@ -84,7 +84,10 @@ class VoiceChat(commands.Cog, name='Voice Chat'):
         new_name = f'🎦{text}'
         guild = self.bot.get_guild(Sid.alu)
         await guild.get_channel(Cid.stream_room).edit(name=new_name)
-        em = Embed(colour=Clr.prpl, description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**')
+        em = Embed(
+            colour=Clr.prpl,
+            description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**'
+        )
         await ctx.reply(embed=em)
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
@@ -96,7 +99,10 @@ class VoiceChat(commands.Cog, name='Voice Chat'):
         """Reset **#🎦streaming_room** title ;"""
         guild = self.bot.get_guild(Sid.alu)
         await guild.get_channel(Cid.stream_room).edit(name=ORIGINAL_NAME)
-        em = Embed(colour=Clr.prpl, description=f'Title of **#{ORIGINAL_NAME}** has been reset')
+        em = Embed(
+            colour=Clr.prpl,
+            description=f'Title of **#{ORIGINAL_NAME}** has been reset'
+        )
         await ctx.reply(embed=em)
 
     @tasks.loop(count=1)

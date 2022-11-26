@@ -1,10 +1,18 @@
+   ## WORK ON IT RIGHT NOW.
 1. Remove Warnings / maybe mutes code
+   
+   ## KEEP IN MIND.
+2. `map` usages
+3. reduce amount of files
 
-
-# KEEP IN MIND
-1. `map` usages
-
-# CURRENT URGENCY
+   ## CURRENT URGENCY
+0. `asyncpg` tech
+   * have async sql alchemy as back up
+   * https://github.com/Rapptz/RoboDanny
+   * https://github.com/InterStella0/stella_bot
+   * https://paste.sr.ht/~vex/e07c6b284e7423d0ee17f3c899e3fde422cec539
+   * https://magicstack.github.io/asyncpg/current/
+   * https://gist.github.com/jegfish/cfc7b22e72426f5ced6f87caa6920fd6
 2. transfer database from Heroku to Oracle
    * write code to reset/fill the database from the scratch where it's applicable
    * write code to download/backup the database with the bot command
@@ -25,7 +33,7 @@
     * copy service file for both bots while you are at it
     * leave some tutorial for future self in your discord channel
 
-# SECOND IMPORTANT
+   # SECOND IMPORTANT.
 8. make muted by who into logs (info obtained from audit logs)
 2. Warn command into logs channel rather than database
 3. autocomplete for rules
@@ -41,8 +49,9 @@
 3. make blocked words league to be a command that takes/writes rules into dataabase
 4. add NathanKell to reddit snipe
 4. research about how to do our dota thing (is there anything better than top100 games + public profiles)
+9. probably put resp.json() from aiohhtp into bot methods
 
-# NOT URGENT
+   # NOT URGENT
 20. embed builder
     * editor 
     * context menu usage 
@@ -53,7 +62,7 @@
 11. context menu commands into help menu somehow IDK
 12. Discord py speedups
 
-# LAST BOX
+   ## LAST BOX
 26. `send_pages` `send_traceback` from `distools` into bot or ctx methods (complexity: confessions has `ntr.client` doing this)
 2. Solve twitter somehow IDK fok ; Task for reload twitter I think 
 3. reaction roles with new selects I guess
@@ -74,13 +83,13 @@
 1. My own starboard | CarlBot 
 2. My own polls | Poolmaker Bot
 
-### Future
+   ## Future
 2. add "all" key into heroes so all heroes can be traced
 3. transfer emotes used in bot to 3rd server (todo while in q tier task)
 4. research 'setup.py' nor 'pyproject.toml'
 5. monka omega register on AWS if opendota fails again.
 
-### IMPROVE
+   ## IMPROVE
 50. remove `regex` library in favour of `re`
 3. remember `a[start:stop:step]` so `a[::-1]` is reverse
 4. ?tag learn async
@@ -90,7 +99,7 @@
 8. research TypeVar stuff
 9. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>` (need to check if it works)
 
-# Impossible Future 
+   ## Impossible Future 
 1. Wait for async support at oracle [Git Issue](https://github.com/oracle/python-oracledb/issues/6) 
 2. twitch stream live proper listener when twitch releases it
 3. 

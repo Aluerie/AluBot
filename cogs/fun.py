@@ -17,7 +17,8 @@ from .utils.webhook import user_webhook, check_msg_react
 
 if TYPE_CHECKING:
     from discord import Message, Interaction
-    from .utils.bot import AluBot, Context
+    from .utils.bot import AluBot
+    from .utils.context import Context
 
 
 class RPSView(View):

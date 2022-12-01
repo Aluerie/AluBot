@@ -5,18 +5,17 @@ from typing import TYPE_CHECKING
 from discord import Embed, app_commands
 from discord.ext import commands
 
-from .utils import database as db
 from .utils.var import Ems, Sid, Cid, Clr, cmntn
 
 if TYPE_CHECKING:
-    pass
+    from .utils.bot import AluBot
 
 
 class Suggestions(commands.Cog):
     """Suggest something"""
 
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.help_emote = Ems.peepoWTF
 
     @commands.hybrid_command(
@@ -28,9 +27,15 @@ class Suggestions(commands.Cog):
     @app_commands.describe(text='Suggestion text')
     async def suggest(self, ctx, *, text: str):
         """Read above"""
-        guild = self.bot.get_guild(Sid.alu)
-        patch_channel = guild.get_channel(Cid.suggestions)
-        number = db.inc_value(db.b, Sid.alu, 'suggestion_num')
+        patch_channel = self.bot.get_channel(Cid.suggestions)
+
+        query = """ UPDATE botinfo 
+                    SET suggestion_num=botinfo.suggestion_num+1 
+                    WHERE id=$1 
+                    RETURNING suggestion_num;
+                """
+        number = await self.bot.pool.fetchval(query, Sid.alu)
+
         title = f'Suggestion #{number}'
         em = Embed(
             color=Clr.prpl,
@@ -40,7 +45,7 @@ class Suggestions(commands.Cog):
             name=ctx.author.display_name,
             icon_url=ctx.author.display_avatar.url
         ).set_footer(
-            text=f'With love, {guild.me.display_name}'
+            text=f'With love, {ctx.guild.me.display_name}'
         )
         msg = await patch_channel.send(embed=em)
         await msg.add_reaction('⬆️')
@@ -55,7 +60,7 @@ class Suggestions(commands.Cog):
             color=Clr.prpl,
             description=f'{ctx.author.mention}, sent your suggestion under #{number} into {patch_channel.mention}'
         )
-        await ctx.channel.send(embed=em2)
+        await ctx.send(embed=em2, ephemeral=True)
 
 
 async def setup(bot):

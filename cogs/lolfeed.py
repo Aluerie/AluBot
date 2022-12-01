@@ -7,9 +7,9 @@ from pyot.conf.pipeline import activate_pipeline, PipelineConf
 from pyot.utils.functools import async_property
 
 from config import RIOT_API_KEY
-from .utils.fpfc import FeedTools
-from .utils.twitch import get_lol_streams
-from .utils.var import Clr, MP, Ems, Cid
+from cogs.utils.fpfc import FeedTools
+from cogs.utils.twitch import get_lol_streams
+from cogs.utils.var import Clr, MP, Ems, Cid
 
 
 @activate_model("lol")
@@ -51,13 +51,12 @@ from pyot.core.exceptions import NotFound, ServerError
 from discord import Embed, app_commands, TextChannel
 from discord.ext import commands, tasks
 
-from .utils import database as db
-from .utils.checks import is_owner, is_guild_owner, is_trustee
-from .utils.lol import get_role_mini_list, get_diff_list
-from .utils.distools import send_traceback, send_pages_list
-from .utils.format import display_relativehmstime
-from .utils.imgtools import img_to_file, url_to_img, get_text_wh
-from .twtv import TwitchStream
+from cogs.utils.checks import is_owner, is_guild_owner, is_trustee
+from cogs.utils.lol import get_role_mini_list, get_diff_list
+from cogs.utils.distools import send_traceback, send_pages_list
+from cogs.utils.format import display_relativehmstime
+from cogs.utils.imgtools import img_to_file, url_to_img, get_text_wh
+from cogs.twtv import TwitchStream
 
 from roleidentification import pull_data
 from PIL import Image, ImageDraw, ImageFont
@@ -65,11 +64,10 @@ from datetime import datetime, timezone, time
 import re
 
 import logging
-log = logging.getLogger("pyot")
-log.setLevel(logging.ERROR)
+log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from .utils.context import Context
+    from cogs.utils.context import Context
     from aiohttp import ClientSession
     from pyot.models.lol.match import MatchParticipantData
     from .utils.bot import AluBot
@@ -314,18 +312,21 @@ class MatchToEdit:
 
 class LoLFeed(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.lolfeed.start()
+
         self.active_matches = []
         self.after_match = []
 
     def cog_unload(self) -> None:
         self.lolfeed.cancel()
 
-    async def after_match_games(self, db_ses):
+    async def after_match_games(self):
         self.after_match = []
         row_dict = {}
-        for row in db_ses.query(db.lf):
+        query = 'SELECT * FROM lfmatches'
+        rows = await self.bot.pool.fetch(query)
+        for row in rows: # TODO: rework this monstrocity with the dict - just query it properly
             if row.match_id in row_dict:
                 row_dict[row.match_id]['champ_ids'].append(row.champ_id)
             else:
@@ -353,10 +354,10 @@ class LoLFeed(commands.Cog):
                         )
                     )
 
-    async def edit_the_embed(self, match: MatchToEdit, ses):
-        query = ses.query(db.lf).filter_by(match_id=match.match_id)
-        for row in query:  # todo: huh what if there is same match id for different regions
-
+    async def edit_the_embed(self, match: MatchToEdit):
+        query = 'DELETE FROM lfmatches WHERE match_id=$1 RETURNING *'
+        rows = await self.bot.pool.fetch(query, match.match_id)
+        for row in rows:
             ch = self.bot.get_channel(row.ch_id)
             if ch is None:
                 continue  # wrong bot, I guess
@@ -374,17 +375,23 @@ class LoLFeed(commands.Cog):
             )
             em.set_image(url=f'attachment://{image_name}')
             await msg.edit(embed=em, attachments=[img_file])
-            db.set_value(db.l, match.player_id, last_edited=match.match_id)
-        query.delete()
+            query = 'UPDATE lolaccs SET last_edited=$1 WHERE id=$2'
+            await self.bot.pool.execute(query, match.match_id, match.match_id)
 
-    async def fill_active_matches(self, db_ses):
+    async def fill_active_matches(self):
         self.active_matches = []
-        fav_champ_ids = []
-        for row in db_ses.query(db.ga):
-            fav_champ_ids += row.lolfeed_champ_ids
-        fav_champ_ids = list(set(fav_champ_ids))
 
-        for row in db_ses.query(db.l).filter(db.l.twtv_id.in_(get_lol_streams())):
+        async def get_all_fav_ids(column_name: str):
+            query = f'SELECT DISTINCT(unnest({column_name})) FROM guilds'
+            rows = await self.bot.pool.fetch(query)
+            return [row.unnest for row in rows]
+        fav_champ_ids = await get_all_fav_ids('lolfeed_champ_ids')
+
+        twtv_ids = await get_lol_streams(self.bot.pool)
+
+        query = 'SELECT * FROM lolaccs WHERE twtv_id=ANY($1)'
+        rows = await self.bot.pool.fetch(query, twtv_ids)
+        for row in rows:
             try:
                 live_game = await lol.spectator.CurrentGame(summoner_id=row.id, platform=row.platform).get()
                 # https://static.developer.riotgames.com/docs/lol/queues.json
@@ -420,43 +427,46 @@ class LoLFeed(commands.Cog):
     async def send_the_embed(
             self,
             match: ActiveMatch,
-            db_ses
     ):
-        for row in db_ses.query(db.ga):
+        query = 'SELECT lolfeed_ch_id, lolfeed_champ_ids, lolfeed_stream_ids FROM guilds'
+        rows = await self.bot.pool.fetch(query )
+        for row in rows:
             if match.champ_id in row.lolfeed_champ_ids and match.twtv_id in row.lolfeed_stream_ids:
                 ch: TextChannel = self.bot.get_channel(row.lolfeed_ch_id)
                 if ch is None:
                     continue  # the bot does not have access to the said channel
                 match_id_str = get_str_match_id(match.platform, match.match_id)
-                if db_ses.query(db.lf).filter_by(
-                    ch_id=ch.id,
-                    match_id=match_id_str,
-                    champ_id=match.champ_id
-                ).first():
+
+                query = """ SELECT id
+                            FROM lfmatches
+                            WHERE ch_id=$1 AND match_id=$2 AND champ_id=$3
+                            LIMIT 1
+                        """
+                val = await self.bot.pool.fetchval(query, ch.id, match_id_str, match.champ_id)
+                if val:
                     continue  # the message was already sent
                 em, img_file = await match.notif_embed(self.bot.ses)
                 em.title = f"{ch.guild.owner.name}'s fav champ + fav stream spotted"
                 msg = await ch.send(embed=em, file=img_file)
-                db.add_row(
-                    db.lf,
-                    msg.id,
-                    match_id=match_id_str,
-                    ch_id=ch.id,
-                    champ_id=match.champ_id,
-                    routing_region=platform_to_routing_dict[match.platform]
+
+                query = """ INSERT INTO lfmatches 
+                            (id, match_id, ch_id, champ_id, routing_region)
+                            VALUES ($1, $2, $3, $4, $5)
+                        """
+                await self.bot.pool.execute(
+                    query, msg.id, match_id_str, ch.id, match.champ_id, platform_to_routing_dict[match.platform]
                 )
 
     @tasks.loop(seconds=59)
     async def lolfeed(self):
         log.info("league feed every 59 seconds")
-        with db.session_scope() as db_ses:
-            await self.fill_active_matches(db_ses)
-            for match in self.active_matches:
-                await self.send_the_embed(match, db_ses)
+        await self.fill_active_matches()
+        for match in self.active_matches:
+            await self.send_the_embed(match)
 
-            await self.after_match_games(db_ses)
-            for match in self.after_match:
-                await self.edit_the_embed(match, db_ses)
+        await self.after_match_games()
+        for match in self.after_match:
+            await self.edit_the_embed(match)
 
     @lolfeed.before_loop
     async def before(self):
@@ -465,8 +475,7 @@ class LoLFeed(commands.Cog):
 
     @lolfeed.error
     async def leaguefeed_error(self, error):
-        embed = Embed(colour=Clr.error)
-        embed.title = 'Error in leaguefeed'
+        embed = Embed(colour=Clr.error, title='Error in leaguefeed')
         await send_traceback(error, self.bot, embed=embed)
         # self.lolfeed.restart()
 
@@ -495,12 +504,13 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
     def __init__(self, bot):
         super().__init__(
             display_name='LoLFeed',
-            db_name='lolfeed',
+            db_name='lolaaccs',
             game_name='LoL',
-            db_acc_class=db.l,
-            clr=Clr.rspbrry
+            clr=Clr.rspbrry,
+            db_ch_col='lolfeed_ch_id',
+            db_pl_col='lolfeed_stream_ids',
         )
-        self.bot = bot
+        self.bot: AluBot = bot
         self.help_emote = Ems.PogChampPepe
 
     @is_owner()
@@ -517,15 +527,10 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         await ctx.scnf()
 
     @is_guild_owner()
-    @channel.command(
-        name='set',
-        usage='[channel=curr]'
-    )
+    @channel.command(name='set', usage='[channel=curr]')
     @app_commands.describe(channel='Choose channel for LoLFeed notifications')
     async def channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
-        """
-        Set channel to be the LoLFeed notifications channel.
-        """
+        """Set channel to be the LoLFeed notifications channel."""
         channel = channel or ctx.channel
         if not channel.permissions_for(ctx.guild.me).send_messages:
             em = Embed(
@@ -534,7 +539,9 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
             )
             return await ctx.reply(embed=em)  # todo: change this to raise BotMissingPerms
 
-        db.set_value(db.ga, ctx.guild.id, lolfeed_ch_id=channel.id)
+        query = 'UPDATE guilds SET lolfeed_ch_id=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, channel.id, ctx.guild.id)
+
         em = Embed(
             colour=Clr.rspbrry,
             description=f'Channel {channel.mention} is set to be the LoLFeed channel for this server'
@@ -542,16 +549,14 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @channel.command(
-        name='disable',
-        description='Disable LoLFeed functionality.'
-    )
+    @channel.command(name='disable', description='Disable LoLFeed functionality.')
     async def channel_disable(self, ctx: Context):
         """
         Stop getting LoLFeed notifications. \
         Data about fav champs/streamers won't be affected.
         """
-        ch_id = db.get_value(db.ga, ctx.guild.id, 'lolfeed_ch_id')
+        query = 'SELECT lolfeed_ch_id FROM guilds WHERE id=$1'
+        ch_id = await self.bot.pool.fetchval(query, ctx.guild.id)
         ch = self.bot.get_channel(ch_id)
         if ch is None:
             em = Embed(
@@ -559,7 +564,8 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
                 description=f'LoLFeed channel is not set or already was reset'
             )
             return await ctx.reply(embed=em)
-        db.set_value(db.ga, ctx.guild.id, lolfeed_ch_id=None)
+        query = 'UPDATE guilds SET lolfeed_ch_id=NULL WHERE id=$1'
+        await self.bot.pool.execute(query, ctx.guild.id)
         em = Embed(
             colour=Clr.rspbrry,
             description=f'Channel {ch.mention} is set to be the LoLFeed channel for this server.'
@@ -569,10 +575,9 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
     @is_guild_owner()
     @channel.command(name='check')
     async def channel_check(self, ctx: Context):
-        """
-        Check if a LoLFeed channel was set in this server.
-        """
-        ch_id = db.get_value(db.ga, ctx.guild.id, 'lolfeed_ch_id')
+        """Check if a LoLFeed channel was set in this server."""
+        query = 'SELECT lolfeed_ch_id FROM guilds WHERE id=$1'
+        ch_id = await self.bot.pool.fetchval(query, ctx.guild.id)
         ch = self.bot.get_channel(ch_id)
         if ch is None:
             em = Embed(
@@ -595,8 +600,7 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
 
     @staticmethod
     def field_twitch_string(twitch: str):
-        return \
-            f"● [**{twitch}**](https://www.twitch.tv/{twitch})"
+        return f"● [**{twitch}**](https://www.twitch.tv/{twitch})"
 
     @staticmethod
     def field_account_string(platform: str, accname: str):
@@ -619,9 +623,13 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         """
         await ctx.typing()
 
-        twtvid_list = db.get_value(db.ga, ctx.guild.id, 'lolfeed_stream_ids')
+        query = 'SELECT lolfeed_stream_ids FROM guilds WHERE id=$1'
+        twtvid_list = await self.bot.pool.fetchval(query, ctx.guild.id)
+
+        query = 'SELECT * FROM lolaccs'
+        rows = await self.bot.pool.fetch(query)
         ss_dict = dict()
-        for row in db.session.query(db.l):
+        for row in rows:
             followed = f' {Ems.DankLove}' if row.twtv_id in twtvid_list else ''
             key = f'{self.field_twitch_string(row.name)}{followed}'
             if key not in ss_dict:
@@ -686,7 +694,10 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         lolid, platform, accname = await self.get_lol_id(ctx, flags.region, flags.accname)
         if lolid is None:
             return
-        if (user := db.session.query(db.l).filter_by(id=lolid).first()) is not None:
+
+        query = 'SELECT * FROM lolaccs WHERE id=$1 LIMIT 1'
+        user = await self.bot.pool.fetchrow(query, lolid)
+        if user is not None:
             em = Embed(
                 colour=Clr.error
             ).add_field(
@@ -697,7 +708,11 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
             )
             return await ctx.reply(embed=em, ephemeral=True)
 
-        db.add_row(db.l, lolid, name=twitch, platform=platform, accname=accname, twtv_id=twtv_id)
+        query = """ INSERT INTO lolaccs 
+                    (id, name, platform, accname, twtv_id) 
+                    VALUES ($1, $2, $3, $4)
+                """
+        await self.bot.pool.execute(query, lolid, twitch, platform, accname, twtv_id)
         em = Embed(
             colour=Clr.rspbrry
         ).add_field(
@@ -885,9 +900,7 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
     )
     @app_commands.describe(twitch_names='Name(-s) of twitch streams')
     async def stream_add(self, ctx: Context, *, twitch_names: str):
-        """
-        Add twitch stream(-s) to the list of your fav LoL streamers.
-        """
+        """Add twitch stream(-s) to the list of your fav LoL streamers."""
         await self.stream_add_remove(ctx, twitch_names, mode='add')
 
     @is_guild_owner()
@@ -897,17 +910,14 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
     )
     @app_commands.describe(twitch_names='Name(-s) of twitch streams')
     async def stream_remove(self, ctx: Context, *, twitch_names: str):
-        """
-        Remove twitch stream(-s) from the list of your fav LoL streamers.
-        """
+        """Remove twitch stream(-s) from the list of your fav LoL streamers."""
         await self.stream_add_remove(ctx, twitch_names, mode='remov')
 
     @is_guild_owner()
     @stream.command(name='list')
     async def stream_list(self, ctx: Context):
-        """
-        Show current list of fav streams.
-        """
+        """Show current list of fav streams."""
+
         twtvid_list = db.get_value(db.ga, ctx.guild.id, 'lolfeed_stream_ids')
         names_list = [
             row.name
@@ -991,10 +1001,8 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         description='Add champ(-es) to your fav champs list.'
     )
     @app_commands.describe(champ_names='Champ name(-s) from League of Legends')
-    async def champ_add(self, ctx: commands.Context, *, champ_names: str):
-        """
-        Add champ(-es) to your fav champ list.
-        """
+    async def champ_add(self, ctx: Context, *, champ_names: str):
+        """Add champ(-es) to your fav champ list."""
         await self.champ_add_remove(ctx, champ_names, mode='add')
 
     @is_guild_owner()
@@ -1003,10 +1011,8 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
         usage='<champ_name(-s)>'
     )
     @app_commands.describe(champ_names='Champ name(-s) from League of Legends')
-    async def champ_remove(self, ctx: commands.Context, *, champ_names: str):
-        """
-        Remove hero(-es) from your fav champs list.
-        """
+    async def champ_remove(self, ctx: Context, *, champ_names: str):
+        """Remove hero(-es) from your fav champs list."""
         await self.champ_add_remove(ctx, champ_names, mode='remov')
 
     @staticmethod
@@ -1034,10 +1040,9 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
     @is_guild_owner()
     @champ.command(name='list')
     async def champ_list(self, ctx: Context):
-        """
-        Show current list of fav champs.
-        """
-        hero_list = db.get_value(db.ga, ctx.guild.id, 'lolfeed_champ_ids')
+        """Show current list of fav champs."""
+        query = 'SELECT lolfeed_champ_ids FROM guilds WHERE id=$1'
+        hero_list = await self.bot.pool.fetchval(query, ctx.guild.id)
         answer = [f'`{await champion.name_by_id(h_id)} - {h_id}`' for h_id in hero_list]
         answer.sort()
         em = Embed(
@@ -1060,7 +1065,8 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
 
         It is "on" by default, so it can show items streamers finished with and KDA.
         """
-        db.set_value(db.ga, ctx.guild.id, lolfeed_spoils_on=spoil)
+        query = 'UPDATE guilds SET lolfeed_spoils_on=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, spoil, ctx.guild.id)
         em = Embed(
             colour=Clr.rspbrry,
             description=f"Changed spoil value to {spoil}"
@@ -1070,9 +1076,7 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
     @is_owner()
     @champ.command()
     async def meraki(self, ctx: Context):
-        """
-        Show list of champions that are missing from Meraki JSON.
-        """
+        """Show list of champions that are missing from Meraki JSON."""
         meraki_data = pull_data()
         champ_ids = await get_diff_list(meraki_data)
         champ_str = [f'● {await champion.key_by_id(i)} - `{i}`' for i in champ_ids]
@@ -1109,11 +1113,14 @@ class LoLAccCheck(commands.Cog):
     @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
     async def check_acc_renames(self):
         log.info("league checking acc renames every 24 hours")
-        with db.session_scope() as ses:
-            for row in ses.query(db.l):
-                person = await lol.summoner.Summoner(id=row.id, platform=row.platform).get()
-                if person.name != row.accname:
-                    row.accname = person.name
+        query = 'SELECT id, platform, accname FROM lolaccs'
+        rows = await self.bot.pool.fetch(query)
+
+        for row in rows:
+            person = await lol.summoner.Summoner(id=row.id, platform=row.platform).get()
+            if person.name != row.accname:
+                query = 'UPDATE lolaccs SET accname=$1 WHERE id=$2'
+                await self.bot.pool.execute(query, person.name, row.id)
 
     @check_acc_renames.before_loop
     async def before(self):

@@ -1,50 +1,26 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
+import asyncpg
 from discord import Interaction, Embed, Member, Message, app_commands
 from discord.ext import commands
-from discord.utils import format_dt, get
+from discord.utils import format_dt
 
-from .utils import database as db
 from .utils.context import Context
-from .utils.var import Clr, Ems, Rid, umntn, rmntn
+from .utils.var import Clr, Ems, Rid
 
 if TYPE_CHECKING:
+    from .utils.bot import AluBot
     from discord import MessageReference
 
 
 reserved_words = ['edit', 'add', 'create', 'info', 'delete', 'list', 'text', 'name', 'remove', 'ban']
 
 
-async def tag_work(ctx, tag_name):
-    with db.session_scope() as ses:
-        tag_row = ses.query(db.tg).filter_by(name=tag_name).first()
-        if tag_row:
-            tag_row.uses += 1
-
-            def replied_reference(msg: Message) -> Optional[MessageReference]:
-                ref = msg.reference  # you might want to put this under Context subclass
-                if ref and isinstance(ref.resolved, Message):
-                    return ref.resolved.to_reference()
-                return None
-
-            reference = replied_reference(ctx.message) or ctx.message
-            await ctx.send(content=tag_row.content, reference=reference)
-        else:
-            em = Embed(colour=Clr.error, description='Sorry! Tag under such name does not exist')
-            prefix = getattr(ctx, 'clean_prefix', '/')
-            em.set_footer(text=f'Consider making one with `{prefix}tags add`')
-            if isinstance(ctx, commands.Context):
-                await ctx.reply(embed=em)
-            elif isinstance(ctx, Interaction):
-                await ctx.response.send_message(embed=em)
-
-
 class TagTextFlags(commands.FlagConverter, case_insensitive=True):
-    tag_name: str
-    tag_text: str
+    name: str
+    text: str
 
 
 class Tags(commands.Cog):
@@ -56,8 +32,50 @@ class Tags(commands.Cog):
     `$tag learn python` and the bot gives well-prepared, well-detailed answer.
     """
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.help_emote = Ems.peepoBusiness
+
+    async def tag_work(
+            self,
+            ctx: Context,
+            tag_name: str,
+            *,
+            pool: Optional[asyncpg.Pool] = None
+    ):
+        pool = pool or self.bot.pool
+
+        query = """SELECT tags.name, tags.content
+                   FROM tags
+                   WHERE LOWER(tags.name)=$1;
+                """
+
+        row = await pool.fetchrow(query, tag_name)
+
+        if row is None:
+            prefix = getattr(ctx, 'clean_prefix', '/')
+            em = Embed(
+                colour=Clr.error,
+                description='Sorry! Tag under such name does not exist'
+            ).set_footer(
+                text=f'Consider making one with `{prefix}tags add`'
+            )
+            if isinstance(ctx, commands.Context):
+                await ctx.reply(embed=em)
+            elif isinstance(ctx, Interaction):
+                await ctx.response.send_message(embed=em)
+        else:
+            def replied_reference(msg: Message) -> Optional[MessageReference]:
+                ref = msg.reference  # you might want to put this under Context subclass
+                if ref and isinstance(ref.resolved, Message):
+                    return ref.resolved.to_reference()
+                return None
+
+            reference = replied_reference(ctx.message) or ctx.message
+            await ctx.send(content=row.content, reference=reference)
+
+            # update the usage
+            query = "UPDATE tags SET uses = uses + 1 WHERE tags.name=$1;"
+            await pool.execute(query, row.name)
 
     @app_commands.command(
         name='tag',
@@ -66,7 +84,7 @@ class Tags(commands.Cog):
     @app_commands.describe(tag_name="Summon tag under this name")
     async def tag_slh(self, ntr: Interaction, *, tag_name: str):
         ctx = await Context.from_interaction(ntr)
-        await tag_work(ctx, tag_name.lower())
+        await self.tag_work(ctx, tag_name.lower())
 
     @commands.hybrid_group(
         name='tags',
@@ -74,8 +92,8 @@ class Tags(commands.Cog):
         invoke_without_command=True
     )
     async def tags(self, ctx: Context, *, tag_name: str):
-        """Execute tag frombot database"""
-        await tag_work(ctx, tag_name.lower())
+        """Execute tag from the database"""
+        await self.tag_work(ctx, tag_name.lower())
 
     @tags.error
     async def tags_error(self, ctx: Context, error):
@@ -88,40 +106,41 @@ class Tags(commands.Cog):
         aliases=['create'],
         usage='name: <tag_name> text: <tag_text>'
     )
-    @app_commands.describe(tag_name="Enter short name for your tag (<100 symbols)")
-    @app_commands.describe(tag_text="Enter content for your tag (<2000 symbols)")
+    @app_commands.describe(name="Enter short name for your tag (<100 symbols)")
+    @app_commands.describe(text="Enter content for your tag (<2000 symbols)")
     async def add(self, ctx, *, flags: TagTextFlags):
         """Add a new tag into bot's database. Tag name should be <100 symbols and tag text <2000 symbols"""
-        tag_name = flags.tag_name.lower()
+        tag_name = flags.name.lower()
         if tag_name.split(' ')[0] in reserved_words:
-            embed = Embed(colour=Clr.error)
-            embed.description = "Sorry! the first word of your proposed `tag_name` is reserved by system"
+            em = Embed(colour=Clr.error)
+            em.description = "Sorry! the first word of your proposed `tag_name` is reserved by system"
         elif len(tag_name) < 3:
-            embed = Embed(colour=Clr.error)
-            embed.description = "Sorry! `tag_name` should be more than 2 symbols"
+            em = Embed(colour=Clr.error)
+            em.description = "Sorry! `tag_name` should be more than 2 symbols"
         elif len(tag_name) > 100:
-            embed = Embed(colour=Clr.error)
-            embed.description = "Sorry! `tag_name` should be less than 100 symbols"
+            em = Embed(colour=Clr.error)
+            em.description = "Sorry! `tag_name` should be less than 100 symbols"
         elif len(tag_name) > 2000:
-            embed = Embed(colour=Clr.error)
-            embed.description = "Sorry! `tag_text` should be less than 2000 symbols"
+            em = Embed(colour=Clr.error)
+            em.description = "Sorry! `tag_text` should be less than 2000 symbols"
         else:
-            with db.session_scope() as ses:
-                user_row = ses.query(db.m).filter_by(id=ctx.author.id).first()
-                if not user_row.can_make_tags:
-                    embed = Embed(colour=Clr.red)
-                    embed.description = 'Sorry! You are banned from making new tags'
-                elif ses.query(db.tg).filter_by(name=tag_name).first():
-                    embed = Embed(colour=Clr.error)
-                    embed.description = 'Sorry! Tag under such name already exists'
+            query = 'SELECT users.can_make_tags FROM users WHERE users.id=$1;'
+            can_make_tags = await self.bot.pool.fetchval(query, ctx.author.id)
+            if not can_make_tags:
+                em = Embed(colour=Clr.red)
+                em.description = 'Sorry! You are banned from making new tags'
+            else:
+                query = 'SELECT tags.name FROM tags WHERE tags.name=$1;'
+                tag_exists = await self.bot.pool.fetchval(query, tag_name)
+                if tag_exists:
+                    em = Embed(colour=Clr.error)
+                    em.description = 'Sorry! Tag under such name already exists'
                 else:
-                    db.append_row(
-                        db.tg, name=tag_name, content=flags.tag_text, owner_id=ctx.author.id,
-                        created_at=datetime.now(timezone.utc)
-                    )
-                    embed = Embed(colour=Clr.prpl)
-                    embed.description = f"Tag under name `{tag_name}` was successfully added"
-        return await ctx.reply(embed=embed)
+                    query = "INSERT INTO tags (name, owner_id, content) VALUES ($1, $2, $3);"
+                    await self.bot.pool.execute(query, tag_name, ctx.author.id, flags.text)
+                    em = Embed(colour=Clr.prpl)
+                    em.description = f"Tag under name `{tag_name}` was successfully added"
+        return await ctx.reply(embed=em)
 
     @add.error
     async def add_error(self, ctx, error):
@@ -140,23 +159,22 @@ class Tags(commands.Cog):
     )
     @app_commands.describe(tag_name="Tag name")
     async def info(self, ctx, *, tag_name: str):
+        """Get info about specific tag"""
         tag_name = tag_name.lower()
-        with db.session_scope() as ses:
-            """Get info about specific tag"""
-            tag_row = ses.query(db.tg).filter_by(name=tag_name).first()
-            if tag_row:
-                em = Embed(colour=Clr.prpl, title='Tag info')
-                tag_owner = self.bot.get_user(tag_row.owner_id)
-                tag_dt: datetime = tag_row.created_at.replace(tzinfo=timezone.utc)
-                em.description = \
-                    f'Tag name: `{tag_row.name}`\n' \
-                    f'Tag owner: {tag_owner.mention}\n' \
-                    f'Tag was used {tag_row.uses} times\n' \
-                    f'Tag was created on {format_dt(tag_dt)}'
-            else:
-                em = Embed(colour=Clr.error)
-                em.description = 'Sorry! Tag under such name does not exist'
-            await ctx.reply(embed=em)
+        query = 'SELECT * FROM tags WHERE name=$1'
+        row = await self.bot.pool.fetchrow(query, tag_name)
+        if row:
+            em = Embed(colour=Clr.prpl, title='Tag info')
+            tag_owner = self.bot.get_user(row.owner_id)
+            em.description = \
+                f"Tag name: `{row.name}`\n" \
+                f"Tag owner: {tag_owner.mention}\n" \
+                f"Tag was used {row.uses} times\n" \
+                f"Tag was created on {format_dt(row.created_at)}"
+        else:
+            em = Embed(colour=Clr.error)
+            em.description = 'Sorry! Tag under such name does not exist'
+        await ctx.reply(embed=em)
 
     @tags.command(
         name='delete',
@@ -167,23 +185,27 @@ class Tags(commands.Cog):
     async def delete(self, ctx, *, tag_name: str):
         """Delete tag from bot database"""
         tag_name = tag_name.lower()
-        with db.session_scope() as ses:
-            tag_query = ses.query(db.tg).filter_by(name=tag_name)
-            if tag_row := tag_query.first():
-                print(get(ctx.author.roles, id=Rid.discord_mods))
-                if ctx.author.id == tag_row.owner_id or get(ctx.author.roles, id=Rid.discord_mods) is not None:
-                    tag_query.delete()
-                    embed = Embed(colour=Clr.prpl)
-                    embed.description = f'Successfully deleted tag under name `{tag_name}`'
-                else:
-                    embed = Embed(colour=Clr.error)
-                    embed.description = \
-                        f'Sorry! Only tag owner which is {umntn(tag_row.owner_id)} ' \
-                        f'or {rmntn(Rid.discord_mods)} can delete this tag'
-            else:
-                embed = Embed(colour=Clr.error)
-                embed.description = 'Sorry! Tag under such name does not exist'
-            await ctx.reply(embed=embed)
+
+        bypass_owner_check = ctx.author.id == self.bot.owner_id or ctx.author.guild_permissions.manage_messages
+        clause = 'tags.name=$1'
+        if bypass_owner_check:
+            args = [tag_name]
+        else:
+            args = [tag_name, ctx.author.id]
+            clause = f'{clause} and owner_id=$2'
+
+        query = f'DELETE FROM tags WHERE {clause} RETURNING name;'
+        val = await self.bot.pool.fetchrow(query, *args)
+
+        if val:
+            em = Embed(colour=Clr.prpl)
+            em.description = f'Successfully deleted tag under name `{tag_name}`'
+        else:
+            em = Embed(colour=Clr.error)
+            em.description = \
+                f'Sorry! Either the tag with such name does not exist or ' \
+                f'you do not have permissions to perform this action.'
+        await ctx.reply(embed=em)
 
     @tags.command(
         name='list',
@@ -191,10 +213,14 @@ class Tags(commands.Cog):
     )
     async def list(self, ctx):
         """Show list of all tags in bot's database"""
-        with db.session_scope() as ses:
-            em = Embed(colour=Clr.prpl, title='List of tags')
-            em.description = ', '.join([f'`{row.name}`' for row in ses.query(db.tg).order_by(db.tg.name)])
-            await ctx.reply(embed=em)
+        query = "SELECT name FROM tags;"
+        rows = await self.bot.pool.fetch(query)
+        em = Embed(
+            colour=Clr.prpl,
+            title='List of tags',
+            description=', '.join([f"`{row.name}`" for row in rows])
+        )
+        await ctx.reply(embed=em)
 
     @commands.has_role(Rid.discord_mods)
     @commands.has_permissions(manage_messages=True)
@@ -209,20 +235,19 @@ class Tags(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.scnf()
 
-    @staticmethod
-    async def tag_ban_work(ctx, member, mybool):
-        with db.session_scope() as ses:
-            user_row = ses.query(db.m).filter_by(id=member.id).first()
-            user_row.can_make_tags = mybool
-        embed = Embed(colour=Clr.red)
-        embed.description = f"{member.mention} is now {'un' if mybool else ''}banned from making new tags"
-        await ctx.reply(embed=embed)
+    async def tag_ban_work(self, ctx, member: Member, mybool):
+        query = 'UPDATE users SET can_make_tags=$1 WHERE users.id=$2;'
+        await self.bot.pool.execute(query, mybool, member.id)
+
+        em = Embed(colour=Clr.red)
+        em.description = f"{member.mention} is now {'un' if mybool else ''}banned from making new tags"
+        await ctx.reply(embed=em)
 
     @modtags.command(
         name='ban',
         description='Ban member from creating new tags'
     )
-    async def ban(self, ctx, member: Member):
+    async def ban(self, ctx: Context, member: Member):
         """Ban member from creating new tags"""
         await self.tag_ban_work(ctx, member, False)
 

@@ -1,22 +1,22 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone, time
+import logging
 from typing import TYPE_CHECKING, Optional, List, Literal
 
 import vdf
 from discord import Embed, TextChannel, app_commands
 from discord.ext import commands, tasks
-from sqlalchemy import func
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 from steam.steamid import SteamID, EType
 
-from .utils import database as db
+from .dota.const import ODOTA_API_URL
+from .dota.models import PlayerAfterMatch, ActiveMatch
+
 from .utils.checks import is_guild_owner, is_trustee
 from .utils.distools import send_traceback, send_pages_list
-from .utils.dota import hero
-from .utils.dota.const import ODOTA_API_URL
-from .utils.dota.models import PlayerAfterMatch, ActiveMatch
+from .dota import hero
 from .utils.fpfc import FeedTools
 from .utils.twitch import name_by_twitchid
 from .utils.var import Clr, Ems, MP, Cid
@@ -26,10 +26,8 @@ if TYPE_CHECKING:
     from .utils.bot import AluBot
     from .utils.context import Context
 
-import logging
-
-log = logging.getLogger('root')
-log.setLevel(logging.WARNING)  # INFO) WARNING)
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 class DotaFeed(commands.Cog):
@@ -38,81 +36,56 @@ class DotaFeed(commands.Cog):
         self.dotafeed.start()
         self.lobby_ids = set()
         self.active_matches = []
-        self.workaround_100matches = False
+
+        self.top_source_dict = {}
+        self.matches_to_send = []
+
+        self.hero_fav_ids = []
+        self.player_fav_ids = []
+
+        @self.bot.dota.on('top_source_tv_games')
+        def response(result):
+            # log.debug(
+            #    f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
+            #    f"{result.start_game, result.game_list_index, len(result.game_list)} "
+            #    f"{result.game_list[0].players[0].account_id}"
+            # )
+            for match in result.game_list:
+                self.top_source_dict[match.match_id] = match
+
+    def cog_load(self) -> None:
+        self.bot.ini_steam_dota()
 
     def cog_unload(self) -> None:
         self.dotafeed.cancel()
 
-    async def try_to_find_games(self, db_ses):
-        log.info("TryToFindGames dota2info")
-        self.workaround_100matches = not self.workaround_100matches
+    async def preliminary_queries(self):
+        async def get_all_fav_ids(column_name: str):
+            query = f'SELECT DISTINCT(unnest({column_name})) FROM guilds'
+            rows = await self.bot.pool.fetch(query)
+            return [row.unnest for row in rows]
 
-        self.active_matches = []
-        self.lobby_ids = set()
+        self.hero_fav_ids = await get_all_fav_ids('dotafeed_hero_ids')
+        self.player_fav_ids = await get_all_fav_ids('dotafeed_stream_ids')
 
-        def get_all_fav_ids(column_name: str):
-            ids = []
-            for r in db_ses.query(db.ga):
-                ids += getattr(r, column_name, [])
-            return list(set(ids))
-
-        fav_hero_ids = get_all_fav_ids('dotafeed_hero_ids')
-        fav_player_ids = get_all_fav_ids('dotafeed_stream_ids')
-
+    async def get_args_for_top_source(self, specific_games_flag):
         self.bot.steam_dota_login()
-
-        # @dota.on('ready')
-        def ready_function():
-            log.info("ready_function dota2info")
-            self.bot.dota.request_top_source_tv_games(lobby_ids=list(self.lobby_ids))
-
-        # @dota.on('top_source_tv_games')
-        def response(result):
-            log.info(f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games}")
-            if result.specific_games or self.workaround_100matches:
-                friendids = [r.friendid for r in db_ses.query(db.d.friendid)]
-                for match in result.game_list:  # games
-                    our_persons = [x for x in match.players if x.account_id in friendids and x.hero_id in fav_hero_ids]
-                    for person in our_persons:
-                        user = db_ses.query(db.d).filter_by(friendid=person.account_id).first()
-
-                        # print(user.display_name, person.hero_id)
-                        for row in db_ses.query(db.ga):
-                            if db_ses.query(db.em).filter_by(
-                                    match_id=match.match_id,
-                                    ch_id=row.dotafeed_ch_id,
-                                    hero_id=person.hero_id
-                            ).first() is None and \
-                                    person.hero_id in row.dotafeed_hero_ids and \
-                                    user.fav_id in row.dotafeed_stream_ids:
-                                self.active_matches.append(
-                                    ActiveMatch(
-                                        match_id=match.match_id,
-                                        start_time=match.activate_time,
-                                        player_name=user.display_name,
-                                        twitchtv_id=user.twtv_id,
-                                        hero_id=person.hero_id,
-                                        hero_ids=[x.hero_id for x in match.players],
-                                        server_steam_id=match.server_steam_id,
-                                        channel_id=row.dotafeed_ch_id
-                                    )
-                                )
-                log.info(f'to_be_posted {self.active_matches}')
-            self.bot.dota.emit('top_games_response')
-
-        if self.workaround_100matches:
-            self.lobby_ids = set()
-        else:
+        if specific_games_flag:
             proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
             proto_msg.header.routing_appid = 570
 
-            steamids = [row.id for row in db_ses.query(db.d).filter(db.d.fav_id.in_(fav_player_ids)).all()]
-            proto_msg.body.steamid_request.extend(steamids)
+            query = 'SELECT id FROM dotaaccs WHERE fav_id=ANY($1)'
+            rows = await self.bot.pool.fetch(query, self.player_fav_ids)
+
+            steam_ids = [row.id for row in rows]
+            proto_msg.body.steamid_request.extend(steam_ids)
             resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
             if resp is None:
                 print('resp is None, hopefully everything else will be fine tho;')
                 return
             # print(resp)
+
+            lobby_ids = set()
             for item in resp.rich_presence:
                 if rp_bytes := item.rich_presence_kv:
                     # steamid = item.steamid_user
@@ -120,27 +93,80 @@ class DotaFeed(commands.Cog):
                     # print(rp)
                     if lobby_id := int(rp.get('WatchableGameID', 0)):
                         if rp.get('param0', 0) == '#DOTA_lobby_type_name_ranked':
-                            if await hero.id_by_npcname(rp.get('param2', '#')[1:]) in fav_hero_ids:  # that's npcname
-                                self.lobby_ids.add(lobby_id)
+                            if await hero.id_by_npcname(rp.get('param2', '#')[1:]) in self.hero_fav_ids:
+                                lobby_ids.add(lobby_id)
 
-        # print(f'lobbyids {self.lobby_ids}')
-        log.info(f'lobbyids {self.lobby_ids}')
-        # dota.on('ready', ready_function)
-        self.bot.dota.once('top_source_tv_games', response)
-        ready_function()
-        self.bot.dota.wait_event('top_games_response', timeout=8)
+            return {'lobby_ids': list(lobby_ids)}
+        else:
+            return {'start_game': 90}
+
+    async def analyze_top_source_response(self):
+        query = 'SELECT friendid FROM dotaaccs WHERE fav_id=ANY($1)'
+        rows = await self.bot.pool.fetch(query, self.player_fav_ids)
+        friend_ids = [row.friendid for row in rows]
+
+        for match in self.top_source_dict.values():
+            our_persons = [x for x in match.players if x.account_id in friend_ids and x.hero_id in self.hero_fav_ids]
+            for person in our_persons:
+                query = 'SELECT fav_id, display_name, twtv_id FROM dotaaccs WHERE friendid=$1'
+                user = await self.bot.pool.fetchrow(query, person.account_id)
+                log.debug(f'Our person: {user.display_name} - {await hero.name_by_id(person.hero_id)}')
+
+                query = """ SELECT dotafeed_ch_id 
+                            FROM guilds
+                            WHERE $1=ANY(dotafeed_hero_ids) AND $2=ANY(dotafeed_stream_ids)
+                        """
+                rows = await self.bot.pool.fetch(query, person.hero_id, user.fav_id)
+
+                for row in rows:
+                    query = 'SELECT id FROM dfmatches WHERE match_id=$1'
+                    val = await self.bot.pool.fetchval(query, match.match_id)
+                    if val is None:
+                        self.matches_to_send.append(
+                            ActiveMatch(
+                                match_id=match.match_id,
+                                start_time=match.activate_time,
+                                player_name=user.display_name,
+                                twitchtv_id=user.twtv_id,
+                                hero_id=person.hero_id,
+                                hero_ids=[x.hero_id for x in match.players],
+                                server_steam_id=match.server_steam_id,
+                                channel_id=row.dotafeed_ch_id
+                            )
+                        )
+
+    async def declare_matches_finished(self):
+        query = """ UPDATE dfmatches 
+                    SET live=FALSE
+                    WHERE NOT match_id=ANY($1) 
+                    AND live IS DISTINCT FROM FALSE
+                """
+        await self.bot.pool.execute(
+            query, list(self.top_source_dict.keys())
+        )
+        log.debug(f'--- Dota Feed: Task is finished ---')
 
     @tasks.loop(seconds=59)
     async def dotafeed(self):
-        log.info('===dota feed loop starts===')
-        with db.session_scope() as db_ses:
-            await self.try_to_find_games(db_ses)
-            for match in self.active_matches:
-                await match.send_the_embed(self.bot, db_ses)
+        log.debug(f'--- Dota Feed: Task is starting now ---')
+
+        await self.preliminary_queries()
+        self.top_source_dict = {}
+        for specific_games_flag in [False, True]:
+            args = await self.get_args_for_top_source(specific_games_flag)
+            self.bot.dota.request_top_source_tv_games(**args)
+            self.bot.dota.wait_event('top_games_response', timeout=8)
+        log.debug(f'len top_source_dict = {len(self.top_source_dict)}')
+
+        self.matches_to_send = []
+        await self.analyze_top_source_response()
+        for match in self.matches_to_send:
+            await match.send_the_embed(self.bot)
+
+        await self.declare_matches_finished()
 
     @dotafeed.before_loop
     async def before(self):
-        log.info("dotafeed before loop wait")
         await self.bot.wait_until_ready()
 
     @dotafeed.error
@@ -160,16 +186,24 @@ class AfterGameEdit(commands.Cog):
     def cog_unload(self) -> None:
         self.aftergame.cancel()
 
-    async def after_match_games(self, ses):
-        log.info("after match after match")
+    async def after_match_games(self):
         self.after_match = []
 
-        for row in ses.query(db.em):
+        query = 'SELECT * FROM dfmatches WHERE live=FALSE'
+        rows = await self.bot.pool.fetch(query)
+
+        for row in rows:
             url = f"{ODOTA_API_URL}/request/{row.match_id}"
-            async with self.bot.ses.post(url):
-                pass
+            async with self.bot.ses.post(url) as resp:
+                # print(resp)
+                print(resp.ok)
+                print(resp.headers['X-Rate-Limit-Remaining-Month'], resp.headers['X-Rate-Limit-Remaining-Minute'])
+                print(await resp.json())
+
             url = f"{ODOTA_API_URL}/matches/{row.match_id}"
             async with self.bot.ses.get(url) as resp:
+
+                self.bot.update_odota_ratelimit(resp.headers)
                 dic = await resp.json()
                 if dic == {"error": "Not Found"}:
                     continue
@@ -177,6 +211,7 @@ class AfterGameEdit(commands.Cog):
                 for player in dic.get('players', []):  # one day OD freaked out
                     if player['hero_id'] == row.hero_id:
                         if player['purchase_log'] is not None:
+                            print('!!!!!!!!!!!!holy shiet!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                             self.after_match.append(
                                 PlayerAfterMatch(
                                     data=player,
@@ -186,17 +221,15 @@ class AfterGameEdit(commands.Cog):
                                 )
                             )
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(minutes=10)
     async def aftergame(self):
-        log.info('===after game task starts now====')
-        with db.session_scope() as db_ses:
-            await self.after_match_games(db_ses)
-            for player in self.after_match:
-                await player.edit_the_embed(self.bot, db_ses)
+        log.debug('--- after game task starts now ---')
+        await self.after_match_games()
+        for player in self.after_match:
+            await player.edit_the_embed(self.bot)
 
     @aftergame.before_loop
     async def before(self):
-        log.info("dotafeed before loop wait")
         await self.bot.wait_until_ready()
 
     @aftergame.error
@@ -245,12 +278,14 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     def __init__(self, bot):
         super().__init__(
             display_name='DotaFeed',
-            db_name='dotafeed',
+            db_name='dotaaccs',
             game_name='Dota 2',
-            db_acc_class=db.d,
-            clr=Clr.prpl
+            clr=Clr.prpl,
+            pool=bot.pool,
+            db_ch_col='dotafeed_ch_id',
+            db_pl_col='dotafeed_stream_ids',
         )
-        self.bot = bot
+        self.bot: AluBot = bot
         self.help_emote = Ems.DankLove
 
     @is_guild_owner()
@@ -308,9 +343,15 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     async def database_list(self, ctx: Context):
         """List of players in the database available for DotaFeed feature."""
         await ctx.typing()
-        twtvid_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids')
+
+        query = 'SELECT dotafeed_stream_ids FROM guilds WHERE id=$1'
+        twtvid_list = await self.bot.pool.fetchval(query, ctx.guild.id)
+
+        query = 'SELECT id, friendid, fav_id, display_name, twtv_id FROM dotaaccs'
+        rows = await self.bot.pool.fetch(query, twtvid_list)
+
         ss_dict = dict()
-        for row in db.session.query(db.d):
+        for row in rows:
             followed = f' {Ems.DankLove}' if row.fav_id in twtvid_list else ''
             key = f"{self.field_player_name(row.display_name, row.twtv_id)}{followed}"
             if key not in ss_dict:
@@ -360,7 +401,9 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         if steamid is None:
             return False
 
-        if (user := db.session.query(db.d).filter_by(id=steamid).first()) is not None:
+        query = 'SELECT * FROM dotaaccs WHERE id=$1'
+        user = await self.bot.pool.fetchrow(query, steamid)
+        if user is not None:
             em = Embed(
                 colour=Clr.error
             ).add_field(
@@ -372,15 +415,15 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
             await ctx.reply(embed=em, ephemeral=True)
             return False
 
-        old_max_fav_id = int(db.session.query(func.max(db.d.fav_id)).scalar() or 0)
-        db.append_row(
-            db.d,
-            name=flags.name.lower(),
-            display_name=flags.name,
-            id=steamid,
-            friendid=friendid,
-            twtv_id=twtv_id,
-            fav_id=old_max_fav_id + 1
+        query = 'SELECT fav_id FROM dotaaccs ORDER BY fav_id DESC LIMIT 1'
+        old_max_fav_id = await self.bot.pool.fetchval(query) or 0
+
+        query = """ INSERT INTO dotaaccs 
+                    (id, name, friendid, twtv_id, fav_id, display_name) 
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                """
+        await self.bot.pool.execute(
+            query, steamid, flags.name.lower(), friendid, twtv_id, old_max_fav_id + 1, flags.name
         )
         return self.field_both(flags.name, twtv_id, steamid, friendid)
 
@@ -432,26 +475,32 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         """Remove player from the database."""
         await ctx.typing()
 
-        map_dict = {'name': flags.name.lower()}
+        args = [flags.name.lower()]
+        clause = ''
         if flags.steam:
             steamid, friendid = await self.get_steam_id_and_64(ctx, flags.steam)
             if steamid is None:
                 return
-            map_dict['id'] = steamid
+            clause = 'AND id=$2'
+            args += steamid
 
         success = []
-        with db.session_scope() as ses:
-            query = ses.query(db.d).filter_by(**map_dict)
-            for row in query:
-                success.append(
-                    {
-                        'name': row.name,
-                        'id': row.id,
-                        'friendid': row.friendid,
-                        'twtv_id': row.twtv_id
-                    }
-                )
-            query.delete()
+        query = f"""DELETE 
+                    FROM dotaaccs 
+                    WHERE name=$1 {clause}
+                    RETURNING *
+                """
+        rows = await self.bot.pool.fetch(query, *args)
+
+        for row in rows:
+            success.append(
+                {
+                    'name': row.name,
+                    'id': row.id,
+                    'friendid': row.friendid,
+                    'twtv_id': row.twtv_id
+                }
+            )
         if success:
             em = Embed(
                 colour=Clr.prpl,
@@ -534,7 +583,8 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     ):
         """Work function for player add remove"""
         async def get_player(name: str):
-            player = db.session.query(db.d).filter_by(name=name.lower()).first()
+            query = 'SELECT * FROM dotaaccs WHERE name=$1 LIMIT 1'
+            player = await self.bot.pool.fetchrow(query, name.lower())
             return getattr(player, 'display_name', name), getattr(player, 'fav_id', None)
 
         data_dict = {
@@ -546,14 +596,13 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
                 'consider adding (for trustees)/requesting such streamer with '
                 '`$dota database add/request name: <name> steam: <steamid> twitch: <yes/no>`'
         }
+        query = 'SELECT dotafeed_stream_ids FROM guilds WHERE id=$1'
+        val = await self.bot.pool.fetchval(query, ctx.guild.id)
         new_ids, embed_list = await self.sort_out_names(
-            player_names,
-            db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids'),
-            mode,
-            data_dict,
-            get_player
+            player_names, val, mode, data_dict, get_player
         )
-        db.set_value(db.ga, ctx.guild.id, dotafeed_stream_ids=new_ids)
+        query = 'UPDATE guilds SET dotafeed_stream_ids=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, new_ids, ctx.guild.id)
         for em in embed_list:
             await ctx.reply(embed=em)
 
@@ -563,9 +612,13 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
             current: str,
             mode: Literal['add', 'remov']
     ) -> List[app_commands.Choice[str]]:
-        fav_ids = db.get_value(db.ga, ntr.guild.id, 'dotafeed_stream_ids')
-        fav_items = list(set([row.display_name for row in db.session.query(db.d) if row.fav_id in fav_ids]))
-        all_items = list(set([row.display_name for row in db.session.query(db.d)]))
+        query = 'SELECT dotafeed_stream_ids FROM guilds WHERE id=$1'
+        fav_ids = await self.bot.pool.fetchval(query, ntr.guild.id)
+
+        query = 'SELECT display_name, fav_id FROM dotaaccs'
+        rows = await self.bot.pool.fetch(query)
+        fav_items = list(set([row.display_name for row in rows if row.fav_id in fav_ids]))
+        all_items = list(set([row.display_name for row in rows]))
 
         return await self.add_remove_autocomplete_work(
             current,
@@ -608,11 +661,16 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     @player.command(name='list')
     async def player_list(self, ctx: Context):
         """Show current list of fav players."""
-        favid_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_stream_ids')
-        names_list = {
-            row.display_name: row.twtv_id
-            for row in db.session.query(db.d).filter(db.d.fav_id.in_(favid_list)).all()  # type: ignore
-        }
+        query = 'SELECT dotafeed_stream_ids FROM guilds WHERE id=$1'
+        favid_list = await self.bot.pool.fetchval(query, ctx.guild.id)
+
+        query = f""" SELECT display_name, twtv_id 
+                    FROM dotaaccs
+                    WHERE fav_id = ANY ($1)
+                    ORDER BY display_name
+                """
+        rows = await self.bot.pool.fetch(query, favid_list)
+        names_list = {row.display_name: row.twtv_id for row in rows}
 
         ans_array = [
             self.field_player_name(name, tw)
@@ -632,7 +690,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    async def hero_add_remove(self, ctx, hero_names, mode):
+    async def hero_add_remove(self, ctx: Context, hero_names, mode):
         async def get_proper_name_and_id(hero_name: str):
             try:
                 hero_id = await hero.id_by_name(hero_name)
@@ -647,14 +705,13 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
             'fail': 'Could not recognize Dota 2 heroes from these names',
             'fail_footer': 'You can look in $help for help in hero names'
         }
+        query = 'SELECT dotafeed_hero_ids FROM guilds WHERE id=$1'
+        val = await self.bot.pool.fetchval(query, ctx.guild.id)
         new_ids, embed_list = await self.sort_out_names(
-            hero_names,
-            db.get_value(db.ga, ctx.guild.id, 'dotafeed_hero_ids'),
-            mode,
-            data_dict,
-            get_proper_name_and_id
+            hero_names, val, mode, data_dict, get_proper_name_and_id
         )
-        db.set_value(db.ga, ctx.guild.id, dotafeed_hero_ids=new_ids)
+        query = 'UPDATE guilds SET dotafeed_hero_ids=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, new_ids, ctx.guild.id)
         for em in embed_list:
             await ctx.reply(embed=em)
 
@@ -664,7 +721,8 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
             current: str,
             mode: Literal['add', 'remov']
     ) -> List[app_commands.Choice[str]]:
-        fav_hero_ids = db.get_value(db.ga, ntr.guild.id, 'dotafeed_hero_ids')
+        query = 'SELECT dotafeed_hero_ids FROM guilds WHERE id=$1'
+        fav_hero_ids = await self.bot.pool.fetchval(query, ntr.guild.id)
 
         data = await hero.hero_keys_cache.data
         all_hero_dict = data['name_by_id']
@@ -728,7 +786,9 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     @hero.command(name='list')
     async def hero_list(self, ctx: Context):
         """Show current list of fav heroes."""
-        hero_list = db.get_value(db.ga, ctx.guild.id, 'dotafeed_hero_ids')
+        await ctx.typing()
+        query = 'SELECT dotafeed_hero_ids FROM guilds WHERE id=$1'
+        hero_list = await ctx.pool.fetchval(query, ctx.guild.id)
         answer = [f'`{await hero.name_by_id(h_id)} - {h_id}`' for h_id in hero_list]
         answer.sort()
         em = Embed(
@@ -750,7 +810,8 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         Turn on/off spoiling resulting stats for matches.
         It is "on" by default, so it can show what items players finished with and KDA.
         """
-        db.set_value(db.ga, ctx.guild.id, dotafeed_spoils_on=spoil)
+        query = 'UPDATE guilds SET dotafeed_spoils_on=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, spoil, ctx.guild.id)
         em = Embed(
             colour=Clr.prpl,
             description=f"Changed spoil value to {spoil}"
@@ -768,13 +829,14 @@ class DotaAccCheck(commands.Cog):
 
     @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
     async def check_acc_renames(self):
-        with db.session_scope() as ses:
-            for row in ses.query(db.d):
-                if row.twtv_id is not None:
-                    name = name_by_twitchid(row.twtv_id)
-                    if name != row.display_name:
-                        row.display_name = name
-                        row.name = name.lower()
+        query = 'SELECT id, twtv_id, display_name FROM dotaaccs WHERE twtv_id IS NOT NULL'
+        rows = await self.bot.pool.fetch(query)
+
+        for row in rows:
+            display_name: str = name_by_twitchid(row.twtv_id)
+            if display_name != row.display_name:
+                query = 'UPDATE dotaaccs SET display_name=$1, name=$2 WHERE id=$3'
+                await self.bot.pool.execute(query, display_name, display_name.lower(), row.id)
 
     @check_acc_renames.before_loop
     async def before(self):

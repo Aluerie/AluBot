@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 from discord import Embed, File
 from discord.ext import commands, tasks
 
-from .utils import database as db
 from .utils.var import Sid, Cid
 
 if TYPE_CHECKING:
@@ -19,6 +18,9 @@ class DotaBugtracker(commands.Cog):
         self.bot: AluBot = bot
         self.git_comments_check.start()
 
+    def cog_load(self) -> None:
+        self.bot.ini_github()
+
     def cog_unload(self) -> None:
         self.git_comments_check.cancel()
 
@@ -28,8 +30,8 @@ class DotaBugtracker(commands.Cog):
 
         assignees = [x.login for x in repo.get_assignees()]
 
-        dt = db.get_value(db.b, Sid.alu, 'git_checked_dt').replace(tzinfo=timezone.utc)
-        db.set_value(db.b, Sid.alu, git_checked_dt=datetime.now(timezone.utc))
+        query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
+        dt: datetime = await self.bot.pool.fetchval(query, Sid.alu)
 
         # dt = datetime.now(timezone.utc) - timedelta(days=8) # testing
         for c in [x for x in repo.get_issues_comments(sort='updated', since=dt) if x.user.login in assignees]:
@@ -89,6 +91,9 @@ class DotaBugtracker(commands.Cog):
                 )
                 msg = await self.bot.get_channel(Cid.dota_news).send(embed=em, file=img_file)
                 await msg.publish()
+
+        query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, datetime.now(timezone.utc), Sid.alu)
 
     @git_comments_check.before_loop
     async def before(self):

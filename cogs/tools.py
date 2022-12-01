@@ -6,7 +6,7 @@ from PIL import Image
 from discord import Embed, app_commands
 from discord.ext import commands
 
-from .twitter import download_twitter_images
+from cogs.twitter import download_twitter_images
 from .utils.var import Clr, Ems
 
 if TYPE_CHECKING:
@@ -43,7 +43,12 @@ class ToolsCog(commands.Cog, name='Tools'):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.help_emote = Ems.DankFix
+
         self.players_by_group = []
+
+    def cog_load(self) -> None:
+        self.bot.ini_steam_dota()
+        self.bot.ini_twitter()
 
     @commands.hybrid_command(
         name='convert',
@@ -113,4 +118,8 @@ class ToolsCog(commands.Cog, name='Tools'):
 
 
 async def setup(bot):
+    # while twitter is banned in russia # TODO: Remove this
+    import platform
+    if platform.system() == 'Windows':
+        return
     await bot.add_cog(ToolsCog(bot))

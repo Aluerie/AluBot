@@ -8,10 +8,10 @@ from discord.ext import commands, tasks
 from discord.utils import sleep_until
 from sqlalchemy import func
 
-from .utils import database as db, time
-from .utils.context import Context
-from .utils.distools import send_pages_list
-from .utils.var import Ems, Clr, Cid, Sid
+from cogs.utils import time
+from cogs.utils.context import Context
+from cogs.utils.distools import send_pages_list
+from cogs.utils.var import Ems, Clr, Cid, Sid
 
 if TYPE_CHECKING:
     from discord import Message

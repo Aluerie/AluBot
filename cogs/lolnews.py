@@ -8,7 +8,6 @@ from bs4 import BeautifulSoup
 from discord import Embed
 from discord.ext import commands, tasks
 
-from .utils import database as db
 from .utils.format import block_function
 from .utils.links import replace_tco_links, move_link_to_title
 from .utils.var import Cid, umntn, Sid, Uid, Img, Clr
@@ -76,7 +75,6 @@ class CopypasteLeague(commands.Cog):
 
     @tasks.loop(minutes=15)
     async def patch_checker(self):
-        curr_patch = db.get_value(db.b, Sid.alu, 'lol_patch')
 
         url = "https://www.leagueoflegends.com/en-us/news/tags/patch-notes/"
         async with self.bot.ses.get(url) as resp:
@@ -84,10 +82,16 @@ class CopypasteLeague(commands.Cog):
 
         new_patch_href = soup.find_all("li")[0].a.get('href')
 
-        if new_patch_href == curr_patch:
+        query = """ UPDATE botinfo 
+                    SET lol_patch=$1
+                    WHERE id=$2 
+                    AND lol_patch IS DISTINCT FROM $1
+                    RETURNING True
+                """
+        val = await self.bot.pool.fetchval(query, new_patch_href, Sid.alu)
+        if not val:
             return
 
-        db.set_value(db.b, Sid.alu, lol_patch=new_patch_href)
         patch_url = f'https://www.leagueoflegends.com{new_patch_href}'
         async with self.bot.ses.get(patch_url) as resp:
             patch_soup = BeautifulSoup(await resp.read(), 'html.parser')

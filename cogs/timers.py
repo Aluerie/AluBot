@@ -1,15 +1,28 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from discord import Embed
 from discord.ext import commands, tasks
 from numpy.random import randint, seed
-from sqlalchemy import func
 
-from .utils import database as db
 from .utils.var import Rid, Cid, cmntn, umntn, Uid, rmntn, Sid, Ems, Clr
+
+if TYPE_CHECKING:
+    from asyncpg import Pool
+    from .utils.bot import AluBot
+
 
 seed(None)
 
 
-def get_a_text():
+async def get_the_thing(txt_list, name, pool: Pool):
+    query = f'UPDATE botinfo SET {name} = {name} + 1 WHERE id=$1 RETURNING {name}'
+    val = await pool.fetchval(query, Sid.alu)
+    return txt_list[val % len(txt_list)]
+
+
+async def get_a_text(pool: Pool):
     daily_reminders_txt = [
         f'Hey chat, don\'t forget to spam some emotes in {cmntn(Cid.comfy_spam)} or {cmntn(Cid.emote_spam)}',
         f'Hey chat, if you see some high/elite MMR streamer pick PA/DW - '
@@ -27,10 +40,10 @@ def get_a_text():
         f'Hey chat, you can get list of {rmntn(Rid.bots)} available to use in {cmntn(Cid.bot_spam)} and '
         f'{rmntn(Rid.nsfwbots)} in {cmntn(Cid.nsfw_bob_spam)} by respectively checking pins in those channels.'
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_timer') % len(daily_reminders_txt)]
+    return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 
 
-def get_important_text():
+async def get_important_text(pool: Pool):
     daily_reminders_txt = [
         'Hey chat, check out rules in {0}. Follow them or {1} {1} {1}'.format(cmntn(Cid.rules), Ems.bubuGun),
         f'Hey chat, remember to grab some roles in {cmntn(Cid.roles)} including a custom colour from 140 available !',
@@ -56,31 +69,33 @@ def get_important_text():
         f'Hey chat, if you have any problems then {rmntn(Rid.discord_mods)} can solve it! '
         f'Especially if it is about this server'
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_important_timer') % len(daily_reminders_txt)]
+    return await get_the_thing(daily_reminders_txt, 'curr_important_timer', pool)
 
 
-def get_fact_text():
-    def get_msg_count():
-        qry = db.session.query(func.sum(db.m.msg_count).label("sum"))
-        return str(qry[0].sum)
+async def get_fact_text(pool: Pool):
+    async def get_msg_count(pool: Pool):
+        query = 'SELECT SUM(msg_count) FROM users'
+        val = await pool.fetchval(query)
+        return val
     daily_reminders_txt = [
         'Hey chat, this server was created on 22/04/2020.',
         'Hey chat, Aluerie made these "interesting daily fact about this server" messages but has no ideas.',
-        f'Hey chat, {get_msg_count()} messages from people in total were sent in this server (which my bot tracked)',
+        f'Hey chat, {await get_msg_count(pool)} messages from people in total were sent in this server '
+        f'(which my bot tracked)',
         f'Hey chat, <@135119357008150529> was the very first person to join this server - holy poggers {Ems.PogChampPepe}'
         # idea to put there the most chatting person who has the most exp and stuff
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_fact_timer') % len(daily_reminders_txt)]
+    return await get_the_thing(daily_reminders_txt, 'curr_fact_timer', pool)
 
 
-def get_gif_text():
+async def get_gif_text(pool: Pool):
     daily_reminders_txt = [
         'https://media.discordapp.net/attachments/702561315478044807/950421428732325958/peepoSitSlide.gif'
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_gif_timer') % len(daily_reminders_txt)]
+    return await get_the_thing(daily_reminders_txt, 'curr_gif_timer', pool)
 
 
-def get_rule_text():
+async def get_rule_text(pool: Pool):
     daily_reminders_txt = [
         'Hey chat, follow étiqueté.',
         'Hey chat, remember the rule\n1️⃣ Respect everybody in the server. Be polite.',
@@ -98,12 +113,12 @@ def get_rule_text():
         '(https://discord.com/terms) & follow their guidelines (https://discord.com/guidelines)',
         'Hey chat, remember the rule\n🔟 Don\'t encourage others to break these rules.'
     ]
-    return daily_reminders_txt[db.inc_value(db.b, Sid.alu, 'curr_timer') % len(daily_reminders_txt)]
+    return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 
 
 class Timers(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.daily_reminders.start()
         self.daily_important_reminders.start()
         self.daily_fact_reminders.start()
@@ -131,25 +146,25 @@ class Timers(commands.Cog):
 
     @tasks.loop(minutes=87)
     async def daily_reminders(self):
-        await self.timer_work('Daily Message', Clr.prpl, get_a_text())
+        await self.timer_work('Daily Message', Clr.prpl, await get_a_text(self.bot.pool))
 
     @tasks.loop(minutes=89)
     async def daily_important_reminders(self):
-        await self.timer_work('Daily Important Message', Clr.rspbrry, get_important_text())
+        await self.timer_work('Daily Important Message', Clr.rspbrry, await get_important_text(self.bot.pool))
 
-    @tasks.loop(minutes=104)
+    @tasks.loop(minutes=157)
     async def daily_fact_reminders(self):
-        await self.timer_work('Daily Fact Message', Clr.neon, get_fact_text())
+        await self.timer_work('Daily Fact Message', Clr.neon, await get_fact_text(self.bot.pool))
 
     @tasks.loop(minutes=136)
     async def daily_rule_reminders(self):
-        await self.timer_work('Daily Rule Message', 0x66FFBF, get_rule_text())
+        await self.timer_work('Daily Rule Message', 0x66FFBF, await get_rule_text(self.bot.pool))
 
     @tasks.loop(minutes=97)
     async def daily_gif_reminders(self):
         if randint(1, 100 + 1) > 2 or await self.check_amount_messages():
             return
-        await self.bot.get_channel(Cid.general).send(get_gif_text())
+        await self.bot.get_channel(Cid.general).send(await get_gif_text(self.bot.pool))
 
     @daily_reminders.before_loop
     async def before(self):

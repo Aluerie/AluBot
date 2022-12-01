@@ -6,11 +6,10 @@ from discord import Embed, app_commands
 from discord.ext import commands
 from discord.ext.commands import Range
 
-from .utils import database as db
-from .utils.var import Rid, Ems
+from cogs.utils.var import Clr, Rid, Ems
 
 if TYPE_CHECKING:
-    from .utils.context import Context
+    from cogs.utils.context import Context
 
 
 class ServerInfo(commands.Cog, name='Rules'):

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 from discord import Embed, app_commands
 from discord.ext import commands
 
-from .utils import database as db
 from .utils.context import Context
 from .utils.distools import send_traceback
 from .utils.format import display_time
@@ -98,8 +97,8 @@ class CommandErrorHandler(commands.Cog):
             case commands.NSFWChannelRequired():
                 desc = "Ask Aluerie to make that channel NSFW friendly"
             case commands.CommandNotFound():
-                if not ctx.bot.yen and ctx.prefix != db.get_value(db.ga, ctx.guild.id, 'prefix'):
-                    return
+                # if not ctx.bot.test_flag and ctx.prefix != db.get_value(db.ga, ctx.guild.id, 'prefix'):
+                #    return # TODO: I'm not sure what this code is supposed to do anymore.
                 desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.NotOwner():
                 desc = f"Sorry, only Bot Owner is allowed to use this command"

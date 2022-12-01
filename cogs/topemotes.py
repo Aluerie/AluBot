@@ -1,14 +1,19 @@
+from __future__ import annotations
 import re
 from datetime import time, timezone
-from typing import List, Literal
+from typing import TYPE_CHECKING, List, Literal
 
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from .utils import database as db
 from .utils.distools import send_pages_list
 from .utils.format import indent
 from .utils.var import Clr, Rgx, Ems
+
+if TYPE_CHECKING:
+    from asyncpg import Pool
+    from .utils.bot import AluBot
+    from .utils.context import Context
 
 
 def filter_emotes_condition(emote, mode):
@@ -22,8 +27,7 @@ def filter_emotes_condition(emote, mode):
         return 0
 
 
-def get_sorted_emote_dict(mode):
-    user = db.session.query(db.e)
+async def get_sorted_emote_dict(mode, pool: Pool):
     emote_dict = {}
 
     def filter_mode(mod, animated):
@@ -35,16 +39,17 @@ def get_sorted_emote_dict(mode):
             return True
         else:
             return False
-
-    for row in user:
+    query = 'SELECT * FROM emotes'
+    rows = await pool.fetch(query)
+    for row in rows:
         if filter_mode(mode, row.animated):
             emote_dict[row.name] = sum(row.month_array)
 
     return {k: v for k, v in sorted(emote_dict.items(), key=lambda item: item[1], reverse=True)}
 
 
-async def topemotes_job(ctx, mode):
-    sorted_emote_dict = get_sorted_emote_dict(mode)
+async def topemotes_job(ctx: Context, mode):
+    sorted_emote_dict = await get_sorted_emote_dict(mode, pool=ctx.pool)
     new_array = []
     split_size = 20
     offset = 1
@@ -74,7 +79,7 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
     The bot keeps data for one month.
     """
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.daily_emote_shift.start()
         self.help_emote = Ems.peepoComfy
 
@@ -83,21 +88,16 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
 
     @commands.Cog.listener()
     async def on_message(self, msg):
-        if self.bot.yen:
-            return
+        # if self.bot.test_flag:
+        #    return
 
         if not msg.author.bot or msg.webhook_id:
             custom_emojis_ids = re.findall(Rgx.emote_stats_ids, msg.content)  # they are in str tho
             custom_emojis_ids = set(list(map(int, custom_emojis_ids)))
 
-            for i in custom_emojis_ids:
-                try:
-                    emote_array = db.get_value(db.e, i, 'month_array')
-                    if emote_array is not None:
-                        emote_array[-1] += 1
-                        db.set_value(db.e, i, month_array=emote_array)
-                except AttributeError:  # emote is not in database
-                    pass
+            for emote_id in custom_emojis_ids:
+                query = 'UPDATE emotes SET month_array[30]=month_array[30]+1 WHERE id=$1;'
+                await self.bot.pool.execute(query, emote_id)
 
     @commands.hybrid_command(
         name='topemotes',
@@ -115,13 +115,13 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
             case 'nonani' | 'static' | 'nonanimated':
                 await topemotes_job(ctx, 3)
 
-    @tasks.loop(time=time(hour=17, minute=17, tzinfo=timezone.utc))
-    async def daily_emote_shift(self):
-        with db.session_scope() as session:
-            for row in session.query(db.e):
-                def shift_list(array: List):
-                    return array[1:] + [0]
-                row.month_array = shift_list(row.month_array)
+    @tasks.loop(time=time(hour=16, minute=43, tzinfo=timezone.utc))
+    async def daily_emote_shift(self): # TODO: REWRITE THIS FUNCTION PROPERLY (idk how)
+        query = 'SELECT id, month_array FROM emotes'
+        rows = await self.bot.pool.fetch(query)
+        for row in rows:
+            query = 'UPDATE emotes SET month_array=$1 WHERE id=$2'
+            await self.bot.pool.execute(query, row.month_array[1:] + [0], row.id)
 
     @daily_emote_shift.before_loop
     async def before(self):

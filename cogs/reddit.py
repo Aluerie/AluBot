@@ -5,6 +5,7 @@ import platform
 from asyncio.proactor_events import _ProactorBasePipeTransport
 from datetime import datetime, timedelta, timezone
 from functools import wraps
+import logging
 from typing import TYPE_CHECKING
 
 import asyncpraw
@@ -12,9 +13,6 @@ from asyncprawcore import AsyncPrawcoreException
 from discord import Embed
 from discord.ext import commands, tasks
 
-from config import (
-    REDDIT_CLIENT_ID, REDDIT_PASSWORD, REDDIT_USER_AGENT, REDDIT_USERNAME, REDDIT_CLIENT_SECRET
-)
 from .utils.distools import send_traceback
 from .utils.var import Lmt, Cid, Clr
 
@@ -38,25 +36,15 @@ if platform.system() == 'Windows':
     # Silence the exception here.
     _ProactorBasePipeTransport.__del__ = silence_event_loop_closed(_ProactorBasePipeTransport.__del__)
 
-
-import logging
-log = logging.getLogger('root')
+log = logging.getLogger(__name__)
 
 from webpreview import web_preview
 
 
-reddit = asyncpraw.Reddit(
-    client_id=REDDIT_CLIENT_ID,
-    client_secret=REDDIT_CLIENT_SECRET,
-    password=REDDIT_PASSWORD,
-    user_agent=REDDIT_USER_AGENT,
-    username=REDDIT_USERNAME
-)
-
 subreddits_array = "DotaPatches"  # "AskReddit+DotaPatches" use '+' to connect them
 
 
-async def process_submission(submission):
+async def process_submission(reddit, submission):
     # log.info("process submission reddit")
 
     def truncate(msg, num):
@@ -149,10 +137,13 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
 
 
 class Reddit(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot = bot
+    def __init__(self, bot):
+        self.bot: AluBot = bot
         self.redditfeed.start()
         self.userfeed.start()
+
+    def cog_load(self) -> None:
+        self.bot.ini_reddit()
 
     def cog_unload(self) -> None:
         self.redditfeed.cancel()
@@ -164,11 +155,11 @@ class Reddit(commands.Cog):
         running = 1
         while running:
             try:
-                subreddit = await reddit.subreddit(subreddits_array)
+                subreddit = await self.bot.reddit.subreddit(subreddits_array)
                 async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
                     if submission is None:
                         continue
-                    embeds = await process_submission(submission)
+                    embeds = await process_submission(self.bot.reddit, submission)
                     for item in embeds:
                         msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
                         await msg.publish()
@@ -195,7 +186,7 @@ class Reddit(commands.Cog):
         running = 1
         while running:
             try:
-                redditor = await reddit.redditor("JeffHill")
+                redditor = await self.bot.reddit.redditor("JeffHill")
                 async for comment in redditor.stream.comments(skip_existing=True, pause_after=0):
                     if comment is None:
                         continue

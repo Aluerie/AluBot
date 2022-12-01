@@ -23,7 +23,6 @@ from discord.ext import commands, tasks
 from wordcloud import WordCloud
 
 from config import DISCORD_BOT_INVLINK
-from .utils import database as db
 from .utils.checks import is_owner
 from .utils.format import humanize_time
 from .utils.imgtools import img_to_file
@@ -330,7 +329,7 @@ class Info(commands.Cog, name='Info'):
         ).set_footer(
             text=f'AluBot is a copyright 2020-{datetime.now().year} of {self.bot.owner.name}'
         )
-        if not self.bot.yen:
+        if not self.bot.test_flag:
             embed.add_field(
                 name="Location judging by IP",
                 value=f"· {data['country']} {data['region']} {data['city']}"
@@ -407,14 +406,16 @@ class Info(commands.Cog, name='Info'):
         await self.bot.get_channel(Cid.global_logs).send(
             embed=self.guild_embed(guild, event='join')
         )
-        db.add_row(db.ga, guild.id, name=guild.name)
+        query = 'INSERT INTO guilds (id, name) VALUES ($1, $2)'
+        await self.bot.pool.execute(query, guild.id, guild.name)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: Guild):
         await self.bot.get_channel(Cid.global_logs).send(
             embed=self.guild_embed(guild, event='remove')
         )
-        db.remove_row(db.ga, guild.id)
+        query = 'DELETE FROM guilds WHERE id=$1'
+        await self.bot.pool.execute(query, guild.id)
 
 
 class StatsCommands(commands.Cog, name='Stats'):

@@ -3,11 +3,10 @@ from __future__ import annotations
 from os import listdir
 from typing import TYPE_CHECKING, Optional, Literal
 
-from discord import Embed, Guild, Member, Object, utils, HTTPException
+from discord import Embed, Guild, Object, utils, HTTPException
 from discord.ext import commands, tasks
 from discord.ext.commands import Greedy
 
-from .utils import database as db
 from .utils.bot import test_list, YEN_JSK
 from .utils.checks import is_owner
 from .utils.context import Context
@@ -18,9 +17,7 @@ if TYPE_CHECKING:
 
 
 class AdminTools(commands.Cog, name='Tools for Bot Owner'):
-    """
-    Commands for admin tools
-    """
+    """Commands for admin tools"""
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.help_emote = Ems.Lewd
@@ -28,16 +25,6 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
 
     def cog_unload(self) -> None:
         self.checkguilds.cancel()
-
-    @is_owner()
-    @commands.command(hidden=True)
-    async def msgcount(self, ctx, member: Member, msg_count):
-        db.set_value(db.m, member.id, msg_count=msg_count)
-        embed = Embed(
-            colour=member.colour,
-            description=f'msgcount: {member.mention} (id=`{member.id}`) to `{msg_count}`! {Ems.bubuAyaya}'
-        )
-        await ctx.channel.send(embed=embed)
 
     @is_owner()
     @commands.command()
@@ -53,24 +40,20 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
 
     @is_owner()
     @commands.command()
-    async def guildlist(self, ctx):
-        """
-        Show list of guilds bot is in.
-        """
-        embed = Embed(
+    async def guildlist(self, ctx: Context):
+        """Show list of guilds bot is in."""
+        em = Embed(
             colour=Clr.prpl,
             description=
             f"The bot is in these guilds\n"
             f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"
         )
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=em)
 
     @is_owner()
     @commands.command()
     async def purgelist(self, ctx: Context, msgid_last: int, msgid_first: int):
-        """
-        Delete messages between given ids in current channel.
-        """
+        """Delete messages between given ids in current channel."""
         temp_purge_list = []
         async for msg in ctx.channel.history(limit=2000):
             if msgid_first < msg.id < msgid_last:
@@ -85,7 +68,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     @is_owner()
     @commands.command()
     async def emotecredits(self, ctx: Context):
-        """emote credits"""
+        """Emote credits"""
         guild = self.bot.get_guild(Sid.alu)
         rules_channel = guild.get_channel(Cid.rules)
         msg = rules_channel.get_partial_message(866006902458679336)
@@ -109,7 +92,9 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         await ctx.reply(f"we did it {Ems.PogChampPepe}")
 
     async def guild_check_work(self, guild):
-        trusted_ids = db.get_value(db.b, Sid.alu, 'trusted_ids')
+        query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
+        trusted_ids = await self.bot.pool.fetchval(query, Sid.alu)
+
         if guild.owner_id not in trusted_ids:
             def find_txt_channel():
                 if guild.system_channel.permissions_for(guild.me).send_messages:
@@ -151,18 +136,22 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     async def trustee(self, ctx: Context):
         await ctx.scnf()
 
-    @staticmethod
     async def trustee_add_remove(
+            self,
             ctx: Context,
             user_id: int,
             mode: Literal['add', 'remov']
     ):
-        trusted_ids: list = db.get_value(db.b, Sid.alu, 'trusted_ids')
+        query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
+        trusted_ids = await self.bot.pool.fetchval(query, Sid.alu)
+
         if mode == 'add':
             trusted_ids.append(user_id)
         elif mode == 'remov':
             trusted_ids.remove(user_id)
-        db.set_value(db.b, Sid.alu, trusted_ids=trusted_ids)
+
+        query = 'UPDATE botinfo SET trusted_ids=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, trusted_ids, Sid.alu)
         em = Embed(
             colour=Clr.prpl,
             description=
@@ -297,7 +286,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     async def reload_all(self, ctx: Context):
         """Reloads all modules"""
         cogs_to_reload = []
-        if self.bot.yen and len(test_list):
+        if self.bot.test_flag and len(test_list):
             if YEN_JSK:
                 cogs_to_reload.append('jishaku')
             for item in test_list:

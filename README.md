@@ -47,16 +47,19 @@ your instance of the bot will work well. And I'm honestly not a very good progra
 2. Set up venv `python3.10 -m venv venv`
 3. Install dependencies `pip install -U -r requirements.txt`
 4. Rename `config.example.py` into `config.py` and fill out all needed config parameters
-5. Replace variables in `./utils/var.py` with your own values
-6. Run the bot with `py main.py -n NAME` where NAME is `alu` for AluBot or `yen` for YenBot, test version of former
-7. if you want to run Yennifer then create `tlist.py` file with following template: 
+   * notable one is you will need to PostgreSQL 9.5 or higher to fill out `POSTGRES_URL` 
+5. Replace variables in `cogs/utils/var.py` with your own values
+6. To configure mentioned above PostgreSQL database and create all tables you need to run `py main.py db init`
+7. Run the bot with `py main.py` [^1]
+   * if you want to run test version of the bot then you need to create `tlist.py` file with following template below and run the bot with an extra flag `py main.py --test` 
+   
 ```python
 """
 Just list of extensions from `./cogs` that are going to be tested with YenBot 
 
 AluBot does not use this file at all, the bot just assumes the `test_list` empty
 """
-test_list = [  # for yen bot
+test_list = [  # for test bot
     'embedmaker',  # just some cogs to test 
     'fun', 
     'error',  # error handler from there is handy

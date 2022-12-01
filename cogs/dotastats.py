@@ -10,11 +10,11 @@ from discord.ext import commands, tasks
 from matplotlib import pyplot as plt
 
 from config import DOTA_FRIENDID
-from .utils import pages, database as db
+from .utils import pages
 from .utils.distools import send_pages_list
-from .utils.dota import hero
-from .utils.dota.models import Match
-from .utils.dota.stalk import (
+from .dota import hero
+from cogs.dota.models import Match
+from cogs.dota.stalk import (
     MatchHistoryData,
     fancy_ax,
     generate_data,
@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from .utils.context import Context
     from .utils.bot import AluBot
 
-log = logging.getLogger('root')
-log.setLevel(logging.WARNING)
+log = logging.getLogger(__name__)
+# log.setLevel(logging.WARNING)
 
 
 send_matches = []
@@ -98,9 +98,13 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.help_emote = Ems.TwoBButt
+
         self.current_match_data: MatchHistoryData = None  # type: ignore
         self.new_matches_for_history = []
         self.match_history_refresh.start()
+
+    def cog_load(self) -> None:
+        self.bot.ini_steam_dota()
 
     def cog_unload(self) -> None:
         self.match_history_refresh.cancel()
@@ -353,7 +357,8 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                         start_time=match.startTime,
                         lane_selection_flags=getattr(p, 'lane_selection_flags', None),
                         match_outcome=match.match_outcome,
-                        player_slot=p.player_slot
+                        player_slot=p.player_slot,
+                        pool=self.bot.pool
                     )
             self.bot.dota.emit('match_details_response')
 
@@ -372,7 +377,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         for m in reversed(self.new_matches_for_history):
             if m.match_id > last_recorded_match.id and m.lobby_type == 7:
                 self.request_match_details(m.match_id)
-                self.current_match_data.add_to_database()
+                await self.current_match_data.add_to_database()
             else:
                 continue
 
@@ -408,16 +413,17 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         await ctx.typing()
         hero_stats_dict = {}
 
-        for row in db.session.query(db.dh):
-            def fill_the_dict():
-                if row.winloss:
-                    hero_stats_dict[row.hero_id]['wins'] += 1
-                else:
-                    hero_stats_dict[row.hero_id]['losses'] += 1
-
+        query = 'SELECT winloss, hero_id FROM dotahistory'
+        rows = await self.bot.pool.fetch(query)
+        for row in rows:
+            # create if it does not exist
             if row.hero_id not in hero_stats_dict:
                 hero_stats_dict[row.hero_id] = {'wins': 0, 'losses': 0}
-            fill_the_dict()
+            # fill the dict
+            if row.winloss:
+                hero_stats_dict[row.hero_id]['wins'] += 1
+            else:
+                hero_stats_dict[row.hero_id]['losses'] += 1
 
         sorted_dict = dict(sorted(hero_stats_dict.items(), key=lambda x: sum(x[1].values()), reverse=False))
 
@@ -441,7 +447,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         axText = fancy_ax(axText)
 
         ax = fig.add_subplot(gs[2:5, 0:10])
-        gradient_fill(*generate_data(), color=str(Clr.twitch), ax=ax, linewidth=5.0, marker='o')
+        gradient_fill(*await generate_data(self.bot.pool), color=str(Clr.twitch), ax=ax, linewidth=5.0, marker='o')
         ax.set_title('MMR Plot', x=0.5, y=0.92)
         ax.tick_params(axis="y", direction="in", pad=-42)
         ax.tick_params(axis="x", direction="in", pad=-25)
@@ -453,9 +459,18 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         ax = fig.add_subplot(gs[5:8, 6:10])
         ax = await heroes_played_bar(self.bot.ses, ax, sorted_dict)
 
+        query = """ SELECT mmr 
+                    FROM dotahistory
+                    ORDER BY id DESC 
+                    LIMIT 1;
+                """
+        final_mmr = await self.bot.pool.fetchval(query)
+
+        query = 'SELECT count(*) FROM dotahistory'
+        total_games = await self.bot.pool.fetchval(query)
         data_info = {
-            'Final MMR': db.session.query(db.dh.mmr).order_by(db.dh.id.desc()).limit(1).first().mmr,  # type: ignore
-            'Total Games': len([row for row in db.session.query(db.dh)]),
+            'Final MMR': final_mmr,
+            'Total Games': total_games,
             'Winrate': winrate(),
             'Heroes Played': len(sorted_dict)
         }
@@ -472,20 +487,25 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
             axRain.get_yaxis().set_visible(False)
             axRain = fancy_ax(axRain)
 
-        last_match = db.session.query(db.dh).order_by(db.dh.id.desc()).limit(1).first()  # type: ignore
+        query = """ SELECT *
+                    FROM dotahistory
+                    ORDER BY id DESC 
+                    LIMIT 1
+                """
+        last_match = await self.bot.pool.fetchrow(query)
 
         axRain = fig.add_subplot(gs[1, 8:10], ylim=(-30, 30))
         axRain.set_title(f'Last Match', x=0.5, y=0.6)
         axRain.annotate(
-            'Win' if last_match.winloss else 'Loss', (0.5, 0.5),
+            'Win' if last_match['winloss'] else 'Loss', (0.5, 0.5),
             xycoords='axes fraction', va='center', ha='center', fontsize=20, fontweight='black'
         )
         axRain.annotate(
-            last_match.dtime.strftime("%m/%d, %H:%M"), (0.5, 0.2),
+            last_match['dtime'].strftime("%m/%d, %H:%M"), (0.5, 0.2),
             xycoords='axes fraction', va='center', ha='center', fontsize=12
         )
         axRain = fancy_ax(axRain)
-        hero_icon = await url_to_img(self.bot.ses, url=await hero.imgurl_by_id(last_match.hero_id))
+        hero_icon = await url_to_img(self.bot.ses, url=await hero.imgurl_by_id(last_match['hero_id']))
         hero_icon.putalpha(200)
 
         axRain.imshow(hero_icon, extent=[-30, 30, -20, 20], aspect='auto')
@@ -498,4 +518,3 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
 
 async def setup(bot):
     await bot.add_cog(GamerStats(bot))
-

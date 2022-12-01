@@ -95,23 +95,19 @@
 61. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>` (need to check if it works)
 
     ## 8.0 Impossible Future
-62. twitch stream live proper listener when twitch releases it
-63. My own starboard | CarlBot 
-64. My own polls | Poolmaker Bot
-65. nsfw functions
-66. unsovled mystery [0] * 30
+62. unsovled mystery [0] * 30
 
     ## 9.0 new ideas
-67. rewrite check birthdays into similar thing as timers where it just looks for next time to congraluate instead of ticking every hour
-68. rewrite borthday into embeds and also unite /birthday set and timezone commands into one 
-69. maybe move rules into timers too
-70. smurfs for dota/lol feed is a mess
-71. https://hasura.io/learn/database/postgresql/core-concepts/6-postgresql-relationships/
-72. put if condition in rows thing from the point of database view 
-73. make windows dev update scan similar to league/dota patches scan :D
-74. fav_id thing to make serial and the whole relation thing
-75. 
-75. ```typescript
+63. rewrite check birthdays into similar thing as timers where it just looks for next time to congraluate instead of ticking every hour
+64. rewrite borthday into embeds and also unite /birthday set and timezone commands into one 
+65. maybe move rules into timers too
+66. smurfs for dota/lol feed is a mess
+67. https://hasura.io/learn/database/postgresql/core-concepts/6-postgresql-relationships/
+68. put if condition in rows thing from the point of database view 
+69. make windows dev update scan similar to league/dota patches scan :D
+70. fav_id thing to make serial and the whole relation thing
+71. 
+72. ```typescript
     this.dota2.on('ready', () => {
       console.log('connected to dota game coordinator');
     });

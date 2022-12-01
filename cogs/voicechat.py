@@ -8,7 +8,8 @@ from discord.ext import commands, tasks
 from .utils.var import Ems, Sid, Rid, Clr, Cid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot, Context
+    from .utils.bot import AluBot
+    from .utils.context import Context
 
 ORIGINAL_NAME = '🎦streaming_room'
 

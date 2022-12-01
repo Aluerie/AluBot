@@ -7,9 +7,8 @@ import regex
 from discord import AuditLogAction, Embed, NotFound, User
 from discord.ext import commands, tasks
 
-from .utils import database as db
 from .utils.format import inline_wordbyword_diff
-from .utils.var import Sid, Ems, Cid, Rgx, Clr, Rid
+from .utils.var import Sid, Ems, Cid, Rgx, Clr, Rid, MP
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -133,7 +132,9 @@ class Logging(commands.Cog):
             if (before.nick is not None and before.nick.startswith('[AFK')) \
                     or (after.nick is not None and after.nick.startswith('[AFK')):
                 return
-            db.set_value(db.m, after.id, name=after.display_name)
+
+            query = 'UPDATE users SET name=$1 WHERE id=$2'
+            await self.bot.pool.execute(query, after.display_name, after.id)
             em = Embed(
                 colour=after.color,
                 title=f'User\'s server nickname was changed {Ems.PepoDetective}',
@@ -211,6 +212,26 @@ class CommandLogging(commands.Cog):
         await self.bot.get_channel(Cid.logs).send(embed=embed)
 
 
+class DailyReport(commands.Cog):
+    def __init__(self, bot):
+        self.bot: AluBot = bot
+        self.daily_report.start()
+
+    @tasks.loop(time=time(hour=2, minute=51, tzinfo=timezone.utc))
+    async def daily_report(self):
+        em = Embed(
+            colour=MP.black(),
+            title='Daily Report',
+            description=f'Odota limits: {self.bot.odota_ratelimit}'
+        )
+        await self.bot.get_channel(Cid.spam_me).send(embed=em)
+
+    @daily_report.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
+
+
 async def setup(bot):
     await bot.add_cog(Logging(bot))
     await bot.add_cog(CommandLogging(bot))
+    await bot.add_cog(DailyReport(bot))

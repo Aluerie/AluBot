@@ -5,7 +5,7 @@ numpy==1.23.4
 regex~=2022.1.18
 aiohttp~=3.8.1
 asyncpraw==7.6.0
-tweepy[async]==4.11.0
+tweepy[async]==4.12.1
 webpreview~=1.7.2
 lxml~=4.8.0
 steam~=1.4.3
@@ -14,7 +14,6 @@ dota2~=1.1.0
 twitchapi~=2.5.7.1
 python-dotenv~=0.21.0
 vdf~=3.3
-sqlalchemy~=1.4.42
 pyot~=6.0.5
 git+https://github.com/meraki-analytics/role-identification.git
 beautifulsoup4~=4.11.1
@@ -31,9 +30,7 @@ psutil==5.9.3
 parsedatetime~=2.6
 python-dateutil~=2.8.2
 dateparser==1.1.2
-oracledb~=1.1.1
 asyncpg~=0.27.0
-
 pandas~=1.5.1
 asyncprawcore~=2.3.0
-psycopg2~=2.9.3
+click~=8.1.3

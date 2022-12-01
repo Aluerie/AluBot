@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 from datetime import datetime, time, timedelta, timezone
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Union
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from discord import Embed, Member, utils, app_commands
 from discord.ext import commands, tasks
 
-from .utils import database as db
 from .utils.distools import inout_to_10, send_pages_list
 from .utils.format import ordinal, humanize_time, indent
 from .utils.imgtools import url_to_img, img_to_file, get_text_wh
 from .utils.var import Ems, Sid, Cid, Clr
 
 if TYPE_CHECKING:
-    from discord import Interaction
+    from discord import Interaction, Message
+    from .utils.bot import AluBot
     from .utils.context import Context
 
 LAST_SEEN_TIMEOUT = 60
@@ -93,19 +93,22 @@ async def avatar_usercmd(ntr: Interaction, mbr: Member):
     await ntr.response.send_message(embed=embed, ephemeral=True)
 
 
-async def rank_work(ctx, member):
+async def rank_work(ctx: Union[Context, Interaction], member: Member):
     member = member or getattr(ctx, 'author') or getattr(ctx, 'user')
     if member.bot:
         raise commands.BadArgument('Sorry! our system does not count experience for bots.')
-    mrow = db.session.query(db.m).filter_by(id=member.id).first()
-    if not mrow.inlvl:
+
+    query = 'SELECT inlvl, exp, rep FROM users WHERE id=$1'
+    row = await ctx.pool.fetchrow(query, member.id)
+    if not row.inlvl:
         return await ctx.reply(content="You decided to opt out of the exp system before")
-    lvl = get_level(mrow.exp)
+    lvl = get_level(row.exp)
     next_lvl_exp, prev_lvl_exp = get_exp_for_next_level(lvl), get_exp_for_next_level(lvl-1)
 
-    place = 1 + db.session.query(db.m).where(db.m.exp > mrow.exp).count()
+    query = 'SELECT count(*) FROM users WHERE exp > $1'
+    place = 1 + await ctx.pool.fetchval(query, row.exp)
     bot = getattr(ctx, 'bot') or getattr(ctx, 'client')
-    image = await rank_image(bot.ses, lvl, mrow.exp, mrow.rep, next_lvl_exp, prev_lvl_exp, ordinal(place), member)
+    image = await rank_image(bot.ses, lvl, row.exp, row.rep, next_lvl_exp, prev_lvl_exp, ordinal(place), member)
     return img_to_file(image, filename='rank.png')
 
 
@@ -121,13 +124,16 @@ class ExperienceSystem(commands.Cog, name='Profile'):
     reputation and many other things (currency, custom profile) to come
     """
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
+        self.help_emote = Ems.bubuAyaya
+
         self.remove_inactive.start()
+
         self.ctx_menu1 = app_commands.ContextMenu(name="View User Avatar", callback=avatar_usercmd)
         self.bot.tree.add_command(self.ctx_menu1)
+
         self.ctx_menu2 = app_commands.ContextMenu(name="View User Server Rank", callback=rank_usercmd)
         self.bot.tree.add_command(self.ctx_menu2)
-        self.help_emote = Ems.bubuAyaya
 
     def cog_unload(self) -> None:
         self.remove_inactive.cancel()
@@ -141,7 +147,8 @@ class ExperienceSystem(commands.Cog, name='Profile'):
     async def lastseen(self, ctx, member: Member = None):
         """Show when `@member` was last seen on this server ;"""
         member = member or ctx.author
-        lastseen = db.get_value(db.m, member.id, 'lastseen').replace(tzinfo=timezone.utc)
+        query = 'SELECT lastseen FROM users WHERE id=$1'
+        lastseen = await self.bot.pool.fetchval(query, member.id)
         dt_delta = datetime.now(timezone.utc) - lastseen
         answer_text = f'{member.mention} was last seen in this server {humanize_time(dt_delta)} ago'
         await ctx.reply(content=answer_text)
@@ -156,25 +163,24 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         """View experience leaderboard for this server ;"""
         guild = self.bot.get_guild(Sid.alu)
 
-        match sort_by:
-            case 'rep':
-                db_col_desc = db.m.rep.desc()
-            case 'exp':
-                db_col_desc = db.m.exp.desc()
-            case _:
-                return ctx.reply('wrong sorting was given')
-
         new_array = []
         split_size = 10
         offset = 1
         cnt = offset
-        for row in db.session.query(db.m).filter(db.m.inlvl == 1).order_by(db_col_desc):  # type: ignore
+
+        query = f"""SELECT id, exp, rep 
+                    FROM users 
+                    WHERE inlvl!=0
+                    ORDER BY {sort_by} DESC;
+                """
+        rows = await self.bot.pool.fetch(query)
+        for row in rows:  # type: ignore
             if (member := guild.get_member(row.id)) is None:
                 continue
             new_array.append(
-                f'`{indent(cnt, cnt, offset, split_size)}` {member.mention}\n`'
-                f'{indent(" ", cnt, offset, split_size)} '
-                f'level {get_level(row.exp)}, {row.exp} exp| {row.rep} rep`'
+                f"`{indent(cnt, cnt, offset, split_size)}` {member.mention}\n`"
+                f"{indent(' ', cnt, offset, split_size)} "
+                f"level {get_level(row.exp)}, {row.exp} exp| {row.rep} rep`"
             )
             cnt += 1
 
@@ -188,37 +194,49 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         )
 
     @commands.Cog.listener()
-    async def on_message(self, msg):
-        if self.bot.yen:
-            return  # let's not mess up with Yennifer
+    async def on_message(self, msg: Message):
+        #if self.bot.test_flag:
+        #    return  # let's not mess up with Yennifer
         if msg.author.bot or msg.channel.id in Cid.blacklisted_array:
             return
 
         if msg.guild is not None and msg.guild.id in Sid.guild_ids:
-            with db.session_scope() as ses:
-                user = ses.query(db.m).filter_by(id=msg.author.id).first()  # exp part
-                user.msg_count += 1
-                dt_now = datetime.now(timezone.utc)
-                if dt_now - user.lastseen.replace(tzinfo=timezone.utc) > timedelta(seconds=LAST_SEEN_TIMEOUT):
-                    user.exp += 1
-                    level = get_level(user.exp)
-                    user.lastseen = dt_now
-                    if user.exp == get_exp_for_next_level(get_level(user.exp) - 1):
-                        level_up_role = utils.get(msg.guild.roles, name=f"Level #{level}")
-                        previous_level_role = utils.get(msg.guild.roles, name=f"Level #{level - 1}")
-                        embed = Embed(colour=Clr.prpl)
-                        embed.description = '{0} just advanced to {1} ! {2} {2} {2}'\
-                            .format(msg.author.mention, level_up_role.mention, Ems.PepoG)
-                        await msg.channel.send(embed=embed)
-                        await msg.author.remove_roles(previous_level_role)
-                        await msg.author.add_roles(level_up_role)
 
-                for item in thanks_words:  # reputation part
-                    if item in msg.content.lower():
-                        for member in msg.mentions:
-                            if member != msg.author:
-                                user = ses.query(db.m).filter_by(id=member.id).first()
-                                user.rep += 1
+            query = """ WITH u AS (
+                            SELECT lastseen FROM users WHERE id=$1
+                        )           
+                        UPDATE users 
+                        SET msg_count=msg_count+1, lastseen=(now() at time zone 'utc')
+                        WHERE id=$1
+                        RETURNING (SELECT lastseen from u)
+                    """
+            lastseen = await self.bot.pool.fetchval(query, msg.author.id)
+
+            dt_now = datetime.now(timezone.utc)
+            if dt_now - lastseen > timedelta(seconds=LAST_SEEN_TIMEOUT):
+                query = 'UPDATE users SET exp=exp+1 WHERE id=$1 RETURNING exp'
+                exp = await self.bot.pool.fetchval(query, msg.author.id)
+                level = get_level(exp)
+
+                if exp == get_exp_for_next_level(get_level(exp) - 1):
+                    level_up_role = utils.get(msg.guild.roles, name=f"Level #{level}")
+                    previous_level_role = utils.get(msg.guild.roles, name=f"Level #{level - 1}")
+                    em = Embed(
+                        colour=Clr.prpl,
+                        description=
+                        '{0} just advanced to {1} ! '
+                        '{2} {2} {2}'.format(msg.author.mention, level_up_role.mention, Ems.PepoG)
+                    )
+                    await msg.channel.send(embed=em)
+                    await msg.author.remove_roles(previous_level_role)
+                    await msg.author.add_roles(level_up_role)
+
+            for item in thanks_words:  # reputation part
+                if item in msg.content.lower():
+                    for member in msg.mentions:
+                        if member != msg.author:
+                            query = 'UPDATE users SET rep=rep+1 WHERE id=$1'
+                            await self.bot.pool.execute(query, member.id)
 
     @commands.hybrid_command(
         name='avatar',
@@ -236,7 +254,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         description="View User Server Rank",
         usage='[member=you]'
     )
-    async def rank_bridge(self, ctx,  *, member: Member = None):
+    async def rank_bridge(self, ctx: Context,  *, member: Member = None):
         """Show `@member`'s rank, level and experience ;"""
         await ctx.reply(file=await rank_work(ctx, member))
 
@@ -246,9 +264,10 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         await ctx.scnf()
 
     @levels.command(usage='in/out')
-    async def opt(self, ctx, in_or_out: inout_to_10):
+    async def opt(self, ctx: Context, in_or_out: inout_to_10):
         """Opt `in/out` of exp system notifs and all leaderboard presence ;"""
-        db.set_value(db.m, ctx.author.id, inlvl=in_or_out)
+        query = f'UPDATE users SET inlvl={in_or_out} WHERE id=$1;'
+        await self.bot.pool.execute(query, ctx.author.id)
         ans = f'{ctx.author.display_name} is now opted {in_or_out} of exp-system notifications and being in leaderboards'
         await ctx.reply(content=ans)
 
@@ -263,26 +282,29 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         if member == ctx.author or member.bot:
             await ctx.reply(content='You can\'t give reputation to yourself or bots')
         else:
-            rep = db.inc_value(db.m, member.id, 'rep')
+            query = 'UPDATE users SET rep=rep+1 WHERE id=$1 RETURNING rep'
+            rep = await self.bot.pool.fetchval(query, member.id)
             answer_text = f'Added +1 reputation to **{member.display_name}**: now {rep} reputation'
             await ctx.reply(content=answer_text) 
 
     @tasks.loop(time=time(hour=13, minute=13, tzinfo=timezone.utc))
     async def remove_inactive(self):
-        with db.session_scope() as ses:
-            for row in ses.query(db.m):
-                guild = self.bot.get_guild(Sid.alu)
-                person = guild.get_member(row.id)
-                if person is None and \
-                        datetime.now(timezone.utc) - row.lastseen.replace(tzinfo=timezone.utc) > timedelta(days=30):
-                    ses.delete(row)
-                    em = Embed(
-                        colour=0xE6D690,
-                        description=f'id = {row.id}'
-                    ).set_author(
-                        name=f'{row.name} was removed from the datebase'
-                    )
-                    await guild.get_channel(Cid.logs).send(embed=em)
+        query = "SELECT id, lastseen, name FROM users"
+        rows = await self.bot.pool.fetch(query)
+
+        for row in rows:
+            guild = self.bot.get_guild(Sid.alu)
+            person = guild.get_member(row.id)
+            if person is None and datetime.now(timezone.utc) - row.lastseen > timedelta(days=30):
+                query = 'DELETE FROM users WHERE id=$1'
+                await self.bot.pool.execute(query, row.id)
+                em = Embed(
+                    colour=0xE6D690,
+                    description=f"id = {row.id}"
+                ).set_author(
+                    name=f"{row.name} was removed from the datebase"
+                )
+                await guild.get_channel(Cid.logs).send(embed=em)
 
     @remove_inactive.before_loop
     async def before(self):

@@ -17,18 +17,8 @@ if TYPE_CHECKING:
     from .utils.context import Context
     from .utils.bot import AluBot
 
-# #################### WHILE TWITTER IS BANNED IN RUSSIA #####################################
-# TODO: remove this when twitter is unbanned
 import logging
-logger = logging.getLogger('tweepy')
-# logger.setLevel(logging.CRITICAL)
-
-# TODO: remove this when they fix DeprecationWarning
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-# ############################################################################################
-
-twitter_client = tweepy.asynchronous.AsyncClient(TWITTER_BEARER_TOKEN)
+logger = logging.getLogger(__name__)
 
 
 async def download_twitter_images(session, ctx: Context, *, tweet_ids: str):
@@ -45,7 +35,7 @@ async def download_twitter_images(session, ctx: Context, *, tweet_ids: str):
     tweet_ids = re.split('; |, |,| ', tweet_ids)
     tweet_ids = [t.split('/')[-1].split('?')[0] for t in tweet_ids]
 
-    response = await twitter_client.get_tweets(
+    response = await ctx.bot.twitter.get_tweets(
         tweet_ids,
         media_fields=["url", "preview_image_url"],
         expansions="attachments.media_keys"
@@ -133,6 +123,9 @@ class Twitter(commands.Cog):
         self.myStream = None
         self.start_stream.start()
 
+    def cog_load(self) -> None:
+        self.bot.ini_twitter()
+
     def cog_unload(self) -> None:
         self.myStream.disconnect()
         self.start_stream.cancel()
@@ -151,4 +144,8 @@ class Twitter(commands.Cog):
 
 
 async def setup(bot):
+    # while twitter is banned in russia # TODO: Remove this
+    import platform
+    if platform.system() == 'Windows':
+        return
     await bot.add_cog(Twitter(bot))

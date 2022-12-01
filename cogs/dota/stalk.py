@@ -8,13 +8,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.patches import Polygon
 
-from .. import database as db
 from ..dota import hero
-from ..imgtools import url_to_img
-from ..var import MP, Clr
+from cogs.utils.imgtools import url_to_img
+from cogs.utils.var import MP, Clr
 
 if TYPE_CHECKING:
-    pass
+    from asyncpg import Pool
 
 
 class MatchHistoryData:
@@ -26,13 +25,15 @@ class MatchHistoryData:
             start_time: int,
             lane_selection_flags: int,
             match_outcome: int,
-            player_slot: int
+            player_slot: int,
+            pool: Pool
     ):
         self.id = match_id
         self.hero_id = hero_id
         self.start_time = start_time
         role_dict = {0: 0, 1: 1, 2: 3, 4: 2, 8: 4, 16: 5, }
         self.role = role_dict[lane_selection_flags]
+        self.pool = pool
 
         def winloss():
             # https://github.com/ValvePython/dota2/blob/3ca4c43331d8bb946145ffbf92130f52e8eb024a/protobufs/dota_shared_enums.proto#L360
@@ -48,7 +49,7 @@ class MatchHistoryData:
             return None
         self.winloss = winloss()
 
-    def add_to_database(self):
+    async def add_to_database(self):
         if self.winloss != -1:  # NotScored
             last_recorded_match = db.session.query(db.dh).order_by(db.dh.id.desc()).limit(1).first()  # type: ignore
 
@@ -56,17 +57,13 @@ class MatchHistoryData:
                 return prev_mmr + 30 if self.winloss else prev_mmr - 30
             mmr = new_mmr(last_recorded_match.mmr)
 
-            db.add_row(
-                db.dh,
-                self.id,
-                hero_id=self.hero_id,
-                winloss=self.winloss,
-                mmr=mmr,
-                role=self.role,
-                dtime=datetime.fromtimestamp(self.start_time),
-                patch=None,
-                patch_letter=None,
-                custom_note=None
+            query = """ INSERT INTO dotahistory 
+                        (hero_id, winloss, mmr, role, dtime)
+                        VALUES ($1, $2, $3, $4, $5)
+                    """
+            await self.pool.execute(
+                query,
+                self.id, self.hero_id, self.winloss, mmr, self.role, datetime.fromtimestamp(self.start_time)
             )
 
 
@@ -77,8 +74,15 @@ def fancy_ax(ax):
     ax.spines['left'].set_visible(False)
     return ax
 
-def generate_data():
-    mmrs = np.array([row.mmr for row in db.session.query(db.dh.mmr).order_by(db.dh.id.asc())])  # type: ignore
+
+async def generate_data(pool: Pool):
+    query = """ SELECT mmr
+                FROM dotahistory
+                ORDER BY id DESC 
+            """
+    rows = await pool.fetch(query)
+
+    mmrs = np.array([row.mmr for row in rows])
     x = np.array(range(0, len(mmrs)))
     y = mmrs
     return x, y

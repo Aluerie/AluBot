@@ -5,30 +5,24 @@ from typing import TYPE_CHECKING
 from twitchAPI import Twitch
 
 from config import TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET
-from . import database as db
 from .format import gettimefromhms, display_hmstime
 
 if TYPE_CHECKING:
-    pass
+    from asyncpg import Pool
 
 
 twitch = Twitch(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
 twitch.authenticate_app([])
 
 
-def get_lol_streams(session=db.session):
-    fav_stream_ids = []
-    for row in session.query(db.ga):
-        fav_stream_ids += row.lolfeed_stream_ids
-    fav_stream_ids = [str(x) for x in list(set(fav_stream_ids))]
-    data = twitch.get_streams(user_id=fav_stream_ids, first=100)['data']
-    return [item['user_id'] for item in data]
+async def get_lol_streams(pool: Pool):
+    async def get_all_fav_ids(column_name: str):
+        query = f'SELECT DISTINCT(unnest({column_name})) FROM guilds'
+        rows = await pool.fetch(query)
+        return [row.unnest for row in rows]
 
+    fav_stream_ids = await get_all_fav_ids('lolfeed_stream_ids')
 
-def get_dota_streams(session=db.session):
-    fav_stream_ids = []
-    for row in session.query(db.ga):
-        fav_stream_ids += row.dotafeed_stream_ids
     fav_stream_ids = [str(x) for x in list(set(fav_stream_ids))]
     data = twitch.get_streams(user_id=fav_stream_ids, first=100)['data']
     return [item['user_id'] for item in data]

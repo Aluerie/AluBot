@@ -7,13 +7,13 @@ from typing import (
 
 from discord import Embed, app_commands
 
-from . import database as db
 from .distools import send_pages_list
 from .twitch import twitchid_by_name
 from .var import Clr, MP, Ems
 
 if TYPE_CHECKING:
     from .context import Context
+    from asyncpg import Pool
     from discord import Colour, TextChannel
 
 
@@ -24,17 +24,19 @@ class FeedTools:
             display_name: str,
             db_name: str,
             game_name: str,
-            db_acc_class,
-            clr: Colour
+            clr: Colour,
+            pool: Pool,
+            db_ch_col,
+            db_pl_col
     ) -> None:
         self.display_name = display_name
         self.db_name = db_name
         self.game_name = game_name
-        self.db_acc_class = db_acc_class
         self.clr = clr
+        self.pool = pool
 
-        self.db_ch_col = f'{self.db_name}_ch_id'
-        self.db_pl_col = f'{self.db_name}_stream_ids'
+        self.db_ch_col = db_ch_col
+        self.db_pl_col = db_pl_col
 
     async def channel_set_base(
             self,
@@ -49,8 +51,8 @@ class FeedTools:
             )
             return await ctx.reply(embed=em)  # todo: change this to commands.BotMissingPermissions
 
-        kwargs = {self.db_ch_col: ch.id}
-        db.set_value(db.ga, ctx.guild.id, **kwargs)
+        query = f'UPDATE guilds SET {self.db_ch_col}=$1 WHERE id=$2'
+        await self.pool.execute(query, ch.id, ctx.guild.id)
         em = Embed(
             colour=self.clr,
             description=
@@ -62,7 +64,9 @@ class FeedTools:
             self,
             ctx: Context,
     ):
-        ch_id = db.get_value(db.ga, ctx.guild.id, self.db_ch_col)
+        query = f'SELECT {self.db_ch_col} FROM guilds WHERE id=$1'
+        ch_id = await self.pool.fetchval(query, ctx.guild.id)
+
         ch = ctx.bot.get_channel(ch_id)
         if ch is None:
             em = Embed(
@@ -70,9 +74,8 @@ class FeedTools:
                 description=f'{self.display_name} channel is not set or already was reset'
             )
             return await ctx.reply(embed=em)
-
-        kwargs = {self.db_ch_col: None}
-        db.set_value(db.ga, ctx.guild.id, **kwargs)
+        query = f'UPDATE guilds SET {self.db_ch_col}=NULL WHERE id=$1'
+        await self.pool.execute(query, ctx.guild.id)
         em = Embed(
             colour=self.clr,
             description=f'Channel {ch.mention} is no longer the {self.display_name} channel.'
@@ -83,7 +86,8 @@ class FeedTools:
             self,
             ctx: Context,
     ):
-        ch_id = db.get_value(db.ga, ctx.guild.id, self.db_ch_col)
+        query = f'SELECT {self.db_ch_col} FROM guilds WHERE id=$1'
+        ch_id = await self.pool.fetchval(query, ctx.guild.id)
         ch = ctx.bot.get_channel(ch_id)
         if ch is None:
             em = Embed(
@@ -108,9 +112,14 @@ class FeedTools:
 
     async def database_list_base(self, ctx: Context):
         await ctx.typing()
-        fav_id_list = db.get_value(db.ga, ctx.guild.id, self.db_pl_col)
+
+        query = f'SELECT {self.db_pl_col} FROM guilds WHERE id=$1'
+        fav_id_list = await self.pool.fetchval(query, ctx.guild.id)
         ss_dict = dict()
-        for row in db.session.query(self.db_acc_class):
+
+        query = f'SELECT * FROM {self.db_name}'
+        rows = await self.pool.fetch(query)
+        for row in rows:
             followed = f' {Ems.DankLove}' if row.fav_id in fav_id_list else ''
             key = f"{self.field_player_name(row.name, row.twtv_id)}{followed}"
             if key not in ss_dict:

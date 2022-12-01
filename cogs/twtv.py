@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 from discord import Embed, Streaming
 from discord.ext import commands, tasks
 
-from .utils import database as db
 from .utils.imgtools import url_to_file
 from .utils.twitch import TwitchStream
 from .utils.var import Sid, Uid, Rid, Img, Cid, Ems
 
 if TYPE_CHECKING:
     from discord import Member
+    from .utils.bot import AluBot
 
 
 MY_TWITCH_NAME = 'Aluerie'
@@ -20,7 +20,7 @@ MY_TWITCH_ID = 180499648
 
 class TwitchCog(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.mystream.start()
 
     def cog_unload(self) -> None:
@@ -52,13 +52,16 @@ class TwitchCog(commands.Cog):
     @tasks.loop(minutes=2)
     async def mystream(self):
         tw = TwitchStream(MY_TWITCH_ID)
-        if not tw.online:
-            db.set_value(db.b, Sid.alu, irene_is_live=0)
+        query = """ UPDATE botinfo SET irene_is_live=$1 
+                    WHERE id=$2 
+                    AND irene_is_live IS DISTINCT FROM $1
+                    RETURNING True;
+                """
+        val = await self.bot.pool.fetchval(query, tw.online, Sid.alu)
+
+        if not (val and tw.online):
             return
-        elif db.get_value(db.b, Sid.alu, "irene_is_live"):
-            return
-        else:
-            db.set_value(db.b, Sid.alu, irene_is_live=1)
+
         guild = self.bot.get_guild(Sid.alu)
         mention_role = guild.get_role(Rid.stream_lover)
         content = f'{mention_role.mention} and chat, our Highness **@{tw.display_name}** just went live !'

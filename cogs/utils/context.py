@@ -10,6 +10,7 @@ from .var import Clr
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
+    from asyncpg import Pool
     from discord import Button, Message, Interaction
     from .bot import AluBot
 
@@ -60,6 +61,7 @@ class Context(commands.Context):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.pool: Pool = self.bot.pool
 
     @property
     def ses(self) -> ClientSession:

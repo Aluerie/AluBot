@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from . import database as db
-from .var import *
+from .var import Sid
 
 if TYPE_CHECKING:
     from context import Context
@@ -24,9 +23,10 @@ def is_guild_owner():
 
 
 def is_trustee():
-    def predicate(ctx: Context) -> bool:
+    async def predicate(ctx: Context) -> bool:
         """trustees only"""
-        trusted_ids = db.get_value(db.b, Sid.alu, 'trusted_ids')
+        query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
+        trusted_ids = await ctx.pool.fetchval(query, Sid.alu)
         if ctx.author.id in trusted_ids:
             return True
         else:
@@ -45,4 +45,3 @@ def is_owner():
             )
         return True
     return commands.check(predicate)
-

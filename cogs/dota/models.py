@@ -13,16 +13,16 @@ from PIL import Image, ImageOps, ImageDraw, ImageFont
 from discord import Embed, NotFound, Forbidden
 from pyot.utils.functools import async_property
 
-from ..twitch import TwitchStream
-from .. import database as db
+from cogs.utils.twitch import TwitchStream
 from ..dota import hero, item, ability
-from ..format import display_relativehmstime
-from ..imgtools import url_to_img, img_to_file, get_text_wh
-from ..var import Clr, MP, Img
+from cogs.utils.format import display_relativehmstime
+from cogs.utils.imgtools import url_to_img, img_to_file, get_text_wh
+from cogs.utils.var import Clr, MP, Img
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
     from discord import TextChannel
+    from cogs.utils.bot import AluBot
 
 __all__ = (
     'Match',
@@ -30,7 +30,7 @@ __all__ = (
     'PlayerAfterMatch'
 )
 
-log = logging.getLogger('root')
+log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
@@ -192,7 +192,7 @@ class ActiveMatch(Match):
         )
         return em, img_file
 
-    async def send_the_embed(self, bot, _):
+    async def send_the_embed(self, bot: AluBot):
         log.info("sending dota 2 embed")
         ch: TextChannel = bot.get_channel(self.channel_id)
         if ch is None:
@@ -200,14 +200,10 @@ class ActiveMatch(Match):
         em, img_file = await self.notif_embed(bot.ses)
         em.title = f"{ch.guild.owner.name}'s fav hero + player spotted"
         msg = await ch.send(embed=em, file=img_file)
-        db.add_row(
-            db.em,
-            msg.id,
-            match_id=self.match_id,
-            ch_id=ch.id,
-            hero_id=self.hero_id,
-            twitch_status=self.twitch_status
-        )
+        query = """ INSERT INTO dfmatches (id, match_id, ch_id, hero_id, twitch_status) 
+                    VALUES ($1, $2, $3, $4, $5)
+                """
+        await bot.pool.execute(query, msg.id, self.match_id, ch.id, self.hero_id, self.twitch_status)
 
 
 class PlayerAfterMatch:
@@ -343,10 +339,10 @@ class PlayerAfterMatch:
             img.paste(shard_img, (right - shard_img.width, height - shard_img.height))
             await item_timing_text(609, right - shard_img.width)
 
-        #img.show()
+        # img.show()
         return img
 
-    async def edit_the_embed(self, bot, db_ses):
+    async def edit_the_embed(self, bot: AluBot):
         ch = bot.get_channel(self.channel_id)
         if ch is None:
             return  # wrong bot, I guess
@@ -372,7 +368,8 @@ class PlayerAfterMatch:
         except Forbidden:
             return
 
-        db_ses.query(db.em).filter_by(id=self.message_id).delete()
+        query = 'DELETE FROM dfmatches WHERE id=$1'
+        await bot.pool.execute(query, self.message_id)
 
 
 if __name__ == '__main__':
@@ -388,10 +385,3 @@ if __name__ == '__main__':
         channel_id=8888
     )
     print(xcali.__dict__)
-
-
-
-
-
-
-

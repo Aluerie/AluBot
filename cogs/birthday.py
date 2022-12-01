@@ -6,13 +6,12 @@ from typing import TYPE_CHECKING
 from discord import Embed, Member, app_commands
 from discord.ext import commands, tasks
 from numpy.random import choice
-from sqlalchemy import extract
 
-from .utils import database as db
 from .utils.checks import is_owner
 from .utils.var import *
 
 if TYPE_CHECKING:
+    from .utils.bot import AluBot
     from .utils.context import Context
 
 
@@ -79,7 +78,7 @@ class Birthday(commands.Cog):
     congratulate you.
     """
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.check_birthdays.start()
         self.help_emote = Ems.peepoHappyDank
 
@@ -98,8 +97,10 @@ class Birthday(commands.Cog):
     )
     @app_commands.describe(date='Your birthday date in "DD/MM" or "DD/MM/YYYY" format')
     async def set(self, ctx: Context, *, date: str):
-        """Set your birthday. Please send `*your_birthday*` in "DD/MM" or in "DD/MM/YYYY" format.\
-        If you choose the latter format, the bot will mention your age in congratulation text too;"""
+        """
+        Set your birthday. Please send `*your_birthday*` in "DD/MM" or in "DD/MM/YYYY" format.\
+        If you choose the latter format, the bot will mention your age in congratulation text too;
+        """
         def get_dtime(text):
             for fmt in ('%d/%m/%Y', '%d/%m'):
                 try:
@@ -108,11 +109,13 @@ class Birthday(commands.Cog):
                     pass
             return None
         if (dmy_dtime := get_dtime(date)) is not None:
-            db.set_value(db.m, ctx.author.id, bdate=dmy_dtime)
+            query = 'UPDATE users SET bdate=$1 WHERE users.id=$2;'
+            await self.bot.pool.execute(query, dmy_dtime, ctx.author.id)
             await ctx.reply(f"Your birthday is successfully set to {bdate_str(dmy_dtime)}")
         else:
             await ctx.reply(
-                "Invalid date format, please use dd/mm/YYYY or dd/mm date format, ie. `$birthday set 26/02/1802`")
+                "Invalid date format, please use dd/mm/YYYY or dd/mm date format, ie. `$birthday set 26/02/1802`"
+            )
 
     @birthday.command(
         name='delete',
@@ -122,7 +125,8 @@ class Birthday(commands.Cog):
     )
     async def delete(self, ctx: Context):
         """read above"""
-        db.set_value(db.m, ctx.author.id, bdate=None)
+        query = 'UPDATE users SET bdate=$1 WHERE users.id=$2;'
+        await self.bot.pool.execute(query, None, ctx.author.id)
         await ctx.reply("Your birthday is successfully deleted", ephemeral=True)
 
     @birthday.command(
@@ -138,7 +142,8 @@ class Birthday(commands.Cog):
         Usage example: `$birthday timezone -5.5` for GMT -5:30 timezone
         """
         if -13 < timezone < 13:
-            db.set_value(db.m, ctx.author.id, timezone=timezone)
+            query = 'UPDATE users SET tzone=$1 WHERE users.id=$2;'
+            await self.bot.pool.execute(query, timezone, ctx.author.id)
             await ctx.reply(f"Your timezone is successfully set to GMT {timezone:+.1f}")
         else:
             await ctx.reply("Invalid timezone value. Error id #6. Aborting...")
@@ -152,35 +157,44 @@ class Birthday(commands.Cog):
     async def check(self, ctx: Context, member: Member = None):  # type: ignore
         """Check member's birthday in database"""
         member = member or ctx.message.author
-        user = db.session.query(db.m).filter_by(id=member.id).first()
-        bdate, tzone = user.bdate, user.timezone
-        if bdate is None:
+        query = 'SELECT bdate, tzone FROM users WHERE users.id=$1'
+        row = await self.bot.pool.fetchrow(query, member.id)
+
+        if row.bdate is None:
             ans = f'It seems {member.display_name}\'s hasn\'t set birthday yet.'
         else:
-            ans = f'{member.display_name}\'s birthday is set to {bdate_str(bdate)} and timezone is GMT {tzone:+.1f}'
+            ans = f"{member.display_name}\'s birthday is set to {bdate_str(row.bdate)} " \
+                  f"and timezone is GMT {row.tzone:+.1f}"
         await ctx.reply(content=ans)
 
     @tasks.loop(hours=1)
     async def check_birthdays(self):
-        for row in db.session.query(db.m).filter(db.m.bdate.isnot(None)):  # type: ignore
-            now_date = datetime.now(timezone.utc) + timedelta(hours=float(row.timezone))
+        query = 'SELECT id, bdate, tzone FROM users WHERE bdate IS NOT NULL'
+        rows = await self.bot.pool.fetch(query)
+
+        for row in rows:
+            bdate: datetime = row.bdate
+            tzone: float = float(row.tzone)
+
+            now_date = datetime.now(timezone.utc) + timedelta(hours=tzone)
             guild = self.bot.get_guild(Sid.alu)
             bperson = guild.get_member(row.id)
             if bperson is None:
                 continue
+
             bday_rl = guild.get_role(Rid.bday)
-            if now_date.month == row.bdate.month and now_date.day == row.bdate.day:
+            if now_date.month == bdate.month and now_date.day == bdate.day:
                 if bday_rl not in bperson.roles:
                     await bperson.add_roles(bday_rl)
                     answer_text = f'Chat, today is {bperson.mention}\'s birthday !'
-                    if row.bdate.year != 1900:
-                        answer_text += f'{bperson.display_name} is now {now_date.year - row.bdate.year} years old !'
+                    if bdate.year != 1900:
+                        answer_text += f'{bperson.display_name} is now {now_date.year - bdate.year} years old !'
                     embed = Embed(
                         color=bperson.color,
                         title=f'CONGRATULATIONS !!! {Ems.peepoRose * 3}'
                     ).set_footer(
                         text=
-                        f'Today is {bdate_str(row.bdate)}; Timezone: GMT {row.timezone:+.1f}\n'
+                        f'Today is {bdate_str(bdate)}; Timezone: GMT {tzone:+.1f}\n'
                         f'Use `$help birthday` to set up your birthday\nWith love, {guild.me.display_name}'
                     ).set_image(
                         url=bperson.display_avatar.url
@@ -189,7 +203,7 @@ class Birthday(commands.Cog):
                         inline=False,
                         value=get_congratulation_text()
                     )
-                    await guild.get_channel(Cid.bday_notifs).send(content=answer_text, embed=embed)
+                    await self.bot.get_channel(Cid.bday_notifs).send(content=answer_text, embed=embed)
             else:
                 if bday_rl in bperson.roles:
                     await bperson.remove_roles(bday_rl)
@@ -201,16 +215,21 @@ class Birthday(commands.Cog):
     @is_owner()
     @commands.command(hidden=True)
     async def birthdaylist(self, ctx: Context):
-        """
-        Show list of birthdays in this server
-        """
+        """Show list of birthdays in this server"""
         guild = self.bot.get_guild(Sid.alu)
+
+        query = """SELECT id, bdate, tzone
+                   FROM users 
+                   WHERE bdate IS NOT NULL 
+                   ORDER BY extract(MONTH FROM bdate), extract(DAY FROM bdate);
+                """
+        rows = await self.bot.pool.fetch(query)
+
         text = ''
-        for row in db.session.query(db.m).filter(db.m.bdate.isnot(None)).order_by(  # type: ignore
-                extract('month', db.m.bdate), extract('day', db.m.bdate)):
+        for row in rows:
             bperson = guild.get_member(row.id)
             if bperson is not None:
-                text += f'{bdate_str(row.bdate, num_mod=True)}, GMT {row.timezone:+.1f} - **{bperson.mention}**\n'
+                text += f"{bdate_str(row.bdate, num_mod=True)}, GMT {row.tzone:+.1f} - **{bperson.mention}**\n"
 
         embed = Embed(
             color=Clr.prpl,

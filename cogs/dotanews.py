@@ -8,7 +8,6 @@ from discord.ext import commands, tasks
 from github import Github
 
 from config import GIT_PERSONAL_TOKEN
-from .utils import database as db
 from .utils.distools import send_traceback
 from .utils.format import block_function
 from .utils.github import human_commit
@@ -18,6 +17,7 @@ from .utils.var import Cid, Clr, Sid, Img
 
 if TYPE_CHECKING:
     from discord import Message
+    from .utils.bot import AluBot
 
 
 async def get_gitdiff_embed(test_num=0):
@@ -63,8 +63,11 @@ async def get_gitdiff_embed(test_num=0):
 
 class CopypasteDota(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
         self.patch_checker.start()
+
+    def cog_load(self) -> None:
+        self.bot.ini_github()
 
     def cog_unload(self) -> None:
         self.patch_checker.cancel()
@@ -135,22 +138,29 @@ class CopypasteDota(commands.Cog):
         last_patch = data['patches'][-1]
         patch_number, patch_name = last_patch['patch_number'], last_patch['patch_name']
 
-        if patch_number != db.get_value(db.b, Sid.alu, 'dota_patch'):  # New Patch is here
-            db.set_value(db.b, Sid.alu, dota_patch=patch_number)
+        query = """ UPDATE botinfo 
+                    SET dota_patch=$1
+                    WHERE id=$2 
+                    AND dota_patch IS DISTINCT FROM $1
+                    RETURNING True
+                """
+        val = await self.bot.pool.fetchval(query, patch_number, Sid.alu)
+        if not val:
+            return
 
-            em = Embed(
-                colour=Clr.prpl,
-                url=f'https://www.dota2.com/patches/{patch_number}',
-                title='Patch Notes',
-                description='Hey chat, I think new patch is out!'
-            ).set_footer(
-                text='I\'m checking Valve\'s datafeed every 10 minutes'
-            ).set_author(
-                icon_url=Img.dota2logo,
-                name=f'Patch {patch_number} is out'
-            )
-            msg = await self.bot.get_channel(Cid.dota_news).send(embed=em)
-            await msg.publish()
+        em = Embed(
+            colour=Clr.prpl,
+            url=f'https://www.dota2.com/patches/{patch_number}',
+            title='Patch Notes',
+            description='Hey chat, I think new patch is out!'
+        ).set_footer(
+            text='I\'m checking Valve\'s datafeed every 10 minutes'
+        ).set_author(
+            icon_url=Img.dota2logo,
+            name=f'Patch {patch_number} is out'
+        )
+        msg = await self.bot.get_channel(Cid.spam_me).send(embed=em)
+        await msg.publish()
 
     @patch_checker.before_loop
     async def before(self):

@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from discord import Embed, Member
 from discord.ext import commands
 
-from .utils import database as db
 from .utils.checks import is_owner
 from .utils.imgtools import url_to_img, img_to_file, get_text_wh
+from .utils.var import Cid, Clr, Ems, Rid, Sid, Uid, umntn
 
 if TYPE_CHECKING:
-    pass
+    from .utils.bot import AluBot
 
 
 async def welcome_image(session, member):
@@ -49,7 +48,7 @@ async def welcome_image(session, member):
     return image
 
 
-async def welcome_message(session, member, back=0):
+async def welcome_message(session, member: Member, back=0):
     image = await welcome_image(session, member)
 
     content_text = '**💜 Welcome to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'.format(
@@ -80,32 +79,35 @@ async def welcome_message(session, member, back=0):
 
 class Welcome(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: AluBot = bot
 
     @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_join(self, mbr: Member):
         guild = self.bot.get_guild(Sid.alu)
-        if member.guild != guild:
+        if mbr.guild != guild:
             return
         bots_role = guild.get_role(Rid.bots)
         back = 0
-        if member.bot:
-            await member.add_roles(bots_role)
-            await member.edit(nick=f"{member.display_name} | ")
+        if mbr.bot:
+            await mbr.add_roles(bots_role)
+            await mbr.edit(nick=f"{mbr.display_name} | ")
         else:
-            if db.session.query(db.m).filter_by(id=member.id).first() is None:
-                db.add_row(db.m, member.id, name=member.name, lastseen=datetime.now(timezone.utc))
-            else:
-                back = 1
-                db.set_value(db.m, member.id, name=member.name, lastseen=datetime.now(timezone.utc))
+            query = """ INSERT INTO users (id, name) 
+                        VALUES ($1, $2) 
+                        ON CONFLICT DO NOTHING
+                        RETURNING True;
+                    """
+            value = await self.bot.pool.fetchval(query, mbr.id, mbr.name)
+            back = 1 if value else 0
+
             for role_id in Rid.category_roles_ids:
                 role = guild.get_role(role_id)
-                await member.add_roles(role)
+                await mbr.add_roles(role)
             if back == 0:
                 role = guild.get_role(Rid.level_zero)
-                await member.add_roles(role)
+                await mbr.add_roles(role)
 
-        content_text, embed, image_file = await welcome_message(self.bot.ses, member, back=back)
+        content_text, embed, image_file = await welcome_message(self.bot.ses, mbr, back=back)
         await self.bot.get_channel(Cid.welcome).send(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
@@ -139,7 +141,7 @@ class Welcome(commands.Cog):
         await msg.add_reaction(Ems.peepoPolice)
 
     @commands.Cog.listener()
-    async def on_member_unban(self, guild, member):
+    async def on_member_unban(self, guild, member: Member):
         if guild.id != Sid.alu:
             return
         em = Embed(
@@ -152,38 +154,6 @@ class Welcome(commands.Cog):
         msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
         await msg.add_reaction(Ems.PogChampPepe)
 
-
-class Milestone(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        if member.guild.id != Sid.alu:
-            return
-        mile_rl = member.guild.get_role(Rid.milestone)
-        milestone_achieved = db.get_value(db.b, Sid.alu, 'milestone_achieved')
-        amount_members = member.guild.member_count
-
-        if amount_members > milestone_achieved and amount_members % 50 == 0:
-            milestone_achieved = amount_members
-            db.set_value(db.b, Sid.alu, milestone_achieved=milestone_achieved)
-            await member.add_roles(mile_rl)
-
-            em = Embed(
-                color=Clr.prpl,
-                title=f'{Ems.PogChampPepe} Milestone reached !',
-                description=
-                f'Our server reached {milestone_achieved} members ! '
-                f'{member.mention} is our latest milestone member '
-                f'who gets a special lucky {mile_rl.mention} role. Congrats !'
-            ).set_thumbnail(
-                url=member.guild.icon_url
-            ).set_footer(
-                text=f"With love, {member.guild.me.display_name}"
-            )
-            await self.bot.get_channel(Cid.welcome).send(embed=em)
-
     @is_owner()
     @commands.command(hidden=True)
     async def welcome_preview(self, ctx, member: Member = None):
@@ -195,4 +165,3 @@ class Milestone(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Welcome(bot))
-    await bot.add_cog(Milestone(bot))

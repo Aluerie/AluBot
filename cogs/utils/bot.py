@@ -5,22 +5,22 @@ from datetime import datetime, timezone
 from os import environ, listdir
 from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
 
+from asyncpg import Pool
 from aiohttp import ClientSession
+from asyncpraw import Reddit
 from discord import Streaming, Intents, AllowedMentions
 from discord.ext import commands
 from dota2.client import Dota2Client
 from github import Github
 from steam.client import SteamClient
+from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
+from twitchAPI import Twitch
 
-from config import (
-    GIT_PERSONAL_TOKEN, STEAM_YEN_LGN, STEAM_YEN_PSW, STEAM_ALU_LGN, STEAM_ALU_PSW
-)
-from . import database as db
+import config as cfg
 from . import imgtools
 from .context import Context
 from .var import Sid
 
-#  from twitchAPI import Twitch
 
 if TYPE_CHECKING:
     from discord import AppInfo, File, Interaction, Message, User
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from discord.abc import Snowflake
     from github import Repository
 
-log = logging.getLogger('root')
+log = logging.getLogger(__name__)
 
 try:
     from tlist import test_list
@@ -36,23 +36,12 @@ except ModuleNotFoundError:
     test_list = []
 
 
-def cog_check(cog_list):
-    if not len(test_list):
-        return True
-    else:
-        return any(item[:-3] in test_list for item in cog_list)
-
-
-YEN_JSK = True
-YEN_GIT = cog_check(['dotabugtracker.py', 'dotanews.py'])
-YEN_STE = cog_check(['dotafeed.py', 'dotastats.py', 'tools.py'])
-# YEN_TWI = cog_check(['dotafeed.py', 'lolfeed.py', 'twitch.py'])
-
 async def alubot_get_pre(bot: AluBot, message: Message):
     if message.guild is None:
         prefix = '$'
     else:
-        prefix = db.get_value(db.ga, message.guild.id, 'prefix')
+        query = 'SELECT prefix FROM guilds WHERE id=$1'
+        prefix = await bot.pool.fetchval(query, message.guild.id)
     return commands.when_mentioned_or(prefix, "/")(bot, message)
 
 
@@ -65,9 +54,13 @@ class AluBot(commands.Bot):
     git_tracker: Repository
     __session: ClientSession
     launch_time: datetime
+    pool: Pool
+    reddit: Reddit
+    twitch: Twitch
+    twitter: TwitterAsyncClient
 
-    def __init__(self, yen=False):
-        prefix = '~' if yen else alubot_get_pre
+    def __init__(self, test=False):
+        prefix = '~' if test else alubot_get_pre
         super().__init__(
             command_prefix=prefix,
             activity=Streaming(
@@ -75,42 +68,25 @@ class AluBot(commands.Bot):
                 url='https://www.twitch.tv/aluerie'
             ),
             intents=Intents.all(),
-            allowed_mentions=AllowedMentions(replied_user=False, everyone=False)  # .none()
+            allowed_mentions=AllowedMentions(
+                replied_user=False,
+                everyone=False
+            )  # .none()
         )
         self.on_ready_fired = False
-        self.yen = yen
+        self.test_flag = test
         self.app_commands: Dict[str, int] = {}
+        self.odota_ratelimit: str = 'was not received yet'
 
     async def setup_hook(self) -> None:
         self.__session = ClientSession()
         self.bot_app_info = await self.application_info()
 
-        # database
-        # await db.async_db_session.init()
-        # await db.async_db_session.create_all()
+        environ["JISHAKU_NO_UNDERSCORE"] = "True"
+        environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
+        await self.load_cog('jishaku')
 
-        if not self.yen or YEN_STE:
-            self.steam = SteamClient()
-            self.dota = Dota2Client(self.steam)
-            self.steam_dota_login()
-
-        if not self.yen or YEN_GIT:
-            self.github = Github(GIT_PERSONAL_TOKEN)
-            self.git_gameplay = self.github.get_repo("ValveSoftware/Dota2-Gameplay")
-            self.git_tracker = self.github.get_repo("SteamDatabase/GameTracking-Dota2")
-
-        """
-        if not self.yen or YEN_TWI:
-            self.twitch = Twitch(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
-            self.twitch.authenticate_app([])
-        """
-
-        if not self.yen or YEN_JSK:
-            environ["JISHAKU_NO_UNDERSCORE"] = "True"
-            environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
-            await self.load_cog('jishaku')
-
-        if self.yen and len(test_list):
+        if self.test_flag and len(test_list):
             extensions_list = [f'cogs.{name}' for name in test_list]
         else:
             extensions_list = [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
@@ -144,6 +120,10 @@ class AluBot(commands.Bot):
         await super().close()
         await self.__session.close()
 
+    async def start(self) -> None:
+        token = cfg.TEST_TOKEN if self.test_flag else cfg.MAIN_TOKEN
+        await super().start(token, reconnect=True)
+
     async def get_context(self, origin: Union[Interaction, Message], /, *, cls=Context) -> Context:
         return await super().get_context(origin, cls=cls)
 
@@ -151,23 +131,62 @@ class AluBot(commands.Bot):
     def owner(self) -> User:
         return self.bot_app_info.owner
 
+    def ini_steam_dota(self):
+        if hasattr(self, 'steam') and hasattr(self, 'dota'):
+            return
+        else:
+            self.steam = SteamClient()
+            self.dota = Dota2Client(self.steam)
+            self.steam_dota_login()
+
     def steam_dota_login(self):
         if self.steam.connected is False:
-            log.info(f"dota2info: client.connected {self.steam.connected}")
-            if self.yen:
-                steam_login = STEAM_YEN_LGN
-                steam_password = STEAM_YEN_PSW
+            log.debug(f"dota2info: client.connected {self.steam.connected}")
+            if self.test_flag:
+                steam_login, steam_password = (cfg.STEAM_TEST_LGN, cfg.STEAM_TEST_PSW,)
             else:
-                steam_login = STEAM_ALU_LGN
-                steam_password = STEAM_ALU_PSW
+                steam_login, steam_password = (cfg.STEAM_MAIN_LGN, cfg.STEAM_MAIN_PSW,)
 
             if self.steam.login(username=steam_login, password=steam_password):
                 self.steam.change_status(persona_state=7)
                 log.info('We successfully logged invis mode into Steam')
                 self.dota.launch()
             else:
-                log.info('Logging into Steam failed')
+                log.warning('Logging into Steam failed')
                 return
+
+    def ini_github(self):
+        if hasattr(self, 'github'):
+            return
+        else:
+            self.github = Github(cfg.GIT_PERSONAL_TOKEN)
+            self.git_gameplay = self.github.get_repo("ValveSoftware/Dota2-Gameplay")
+            self.git_tracker = self.github.get_repo("SteamDatabase/GameTracking-Dota2")
+
+    def ini_reddit(self):
+        if hasattr(self, 'reddit'):
+            return
+        else:
+            self.reddit = Reddit(
+                client_id=cfg.REDDIT_CLIENT_ID,
+                client_secret=cfg.REDDIT_CLIENT_SECRET,
+                password=cfg.REDDIT_PASSWORD,
+                user_agent=cfg.REDDIT_USER_AGENT,
+                username=cfg.REDDIT_USERNAME
+            )
+
+    def ini_twitch(self):
+        if hasattr(self, 'twitch'):
+            return
+        else:
+            self.twitch = Twitch(cfg.TWITCH_CLIENT_ID, cfg.TWITCH_CLIENT_SECRET)
+            self.twitch.authenticate_app([])
+
+    def ini_twitter(self):
+        if hasattr(self, 'twitter'):
+            return
+        else:
+            self.twitter = TwitterAsyncClient(cfg.TWITTER_BEARER_TOKEN)
 
     def get_app_command(
             self,
@@ -244,18 +263,105 @@ class AluBot(commands.Bot):
     ) -> Union[File, Sequence[File]]:
         return await imgtools.url_to_file(self.__session, url, filename, return_list=return_list)
 
+    def update_odota_ratelimit(self, headers: dict) -> None:
+        monthly = headers.get('X-Rate-Limit-Remaining-Month')
+        minutely = headers.get('X-Rate-Limit-Remaining-Minute')
+        if monthly is not None or minutely is not None:
+            self.odota_ratelimit = f'monthly: {monthly}, minutely: {minutely}'
 
-class LogHandler(logging.StreamHandler):
 
-    def __init__(self, papertrail=True):
-        logging.StreamHandler.__init__(self)
-        if papertrail:  # AluBot
-            fmt = '%(filename)-15s|%(lineno)-4d| %(message)s'
-            formatter = logging.Formatter(fmt)
-            self.setFormatter(formatter)
-            pass
-        else:  # YenBot
-            fmt = '%(levelname)-5.5s| %(filename)-15s|%(lineno)-4d|%(asctime)s| %(message)s'
-            fmt_date = "%H:%M:%S"  # '%Y-%m-%dT%T%Z'
-            formatter = logging.Formatter(fmt, fmt_date)
-            self.setFormatter(formatter)
+#########################################
+#      Logging magic starts here        #
+#########################################
+from contextlib import contextmanager
+from logging.handlers import RotatingFileHandler
+import discord.utils
+
+
+class MyColourFormatter(logging.Formatter):
+    # ANSI codes are a bit weird to decipher if you're unfamiliar with them, so here's a refresher
+    # It starts off with a format like \x1b[XXXm where XXX is a semicolon separated list of commands
+    # The important ones here relate to colour.
+    # 30-37 are black, red, green, yellow, blue, magenta, cyan and white in that order
+    # 40-47 are the same except for the background
+    # 90-97 are the same but "bright" foreground
+    # 100-107 are the same as the bright ones but for the background.
+    # 1 means bold, 2 means dim, 0 means reset, and 4 means underline.
+
+    LEVEL_COLOURS = [
+        (logging.DEBUG, '\x1b[40;1m'),
+        (logging.INFO, '\x1b[34;1m'),
+        (logging.WARNING, '\x1b[33;1m'),
+        (logging.ERROR, '\x1b[31m'),
+        (logging.CRITICAL, '\x1b[41m'),
+    ]
+
+    FORMATS = {
+        level: logging.Formatter(
+            f'\x1b[37;1m%(asctime)s\x1b[0m | {colour}%(levelname)-6s\x1b[0m | '
+            f'\x1b[35m%(name)-23s\x1b[0m | %(lineno)-4d | %(message)s',
+            '%H:%M:%S %d/%m',
+        )
+        for level, colour in LEVEL_COLOURS
+    }
+
+    def format(self, record):
+        formatter = self.FORMATS.get(record.levelno)
+        if formatter is None:
+            formatter = self.FORMATS[logging.DEBUG]
+
+        # Override the traceback to always print in red
+        if record.exc_info:
+            text = formatter.formatException(record.exc_info)
+            record.exc_text = f'\x1b[31m{text}\x1b[0m'
+
+        output = formatter.format(record)
+
+        # Remove the cache layer
+        record.exc_text = None
+        return output
+
+
+def get_log_fmt(
+        handler: logging.Handler
+):
+    if isinstance(handler, logging.StreamHandler) and discord.utils.stream_supports_colour(handler.stream)\
+            and not isinstance(handler, RotatingFileHandler):  # force file handler fmt into `else`
+        formatter = MyColourFormatter()
+    else:
+        formatter = logging.Formatter(
+            '{asctime} | {levelname:<6} | {name:<23} | {lineno:<4} | {message}',
+            '%H:%M:%S %d/%m', style='{'
+        )
+
+    return formatter
+
+
+@contextmanager
+def setup_logging(test: bool):
+    log = logging.getLogger()
+    log.setLevel(logging.INFO)
+
+    try:
+        # Stream Handler
+        handler = logging.StreamHandler()
+        handler.setFormatter(get_log_fmt(handler))
+        log.addHandler(handler)
+
+        # File Handler
+        file_handler = RotatingFileHandler(
+            filename='alubot.log' if not test else 'alubot_test.log',
+            encoding='utf-8',
+            mode='w',
+            maxBytes=32 * 1024 * 1024,  # 32 MiB
+            backupCount=5  # Rotate through 5 files
+        )
+        file_handler.setFormatter(get_log_fmt(file_handler))
+        log.addHandler(file_handler)
+
+        yield
+    finally:
+        handlers = log.handlers[:]
+        for hdlr in handlers:
+            hdlr.close()
+            log.removeHandler(hdlr)

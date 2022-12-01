@@ -31,7 +31,7 @@ def s(data) -> Literal["", "s"]:
     elif hasattr(data, "__len__"):
         data = len(data)
     check = data != 1
-    return "s" if check else ""
+    return "s" if check else ""  # type: ignore # why it does not understand :(
 
 
 def humanize_time(time: timedelta, full=True) -> str:

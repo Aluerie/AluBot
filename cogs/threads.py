@@ -35,8 +35,8 @@ class ThreadsManaging(commands.Cog):
         guild = self.bot.get_guild(Sid.alu)
         for _id in watched_threads_ids:
             thread = guild.get_channel(_id)
-            await thread.archive()
-            await thread.unarchive()
+            await thread.archive()  # type: ignore
+            await thread.unarchive()  # type: ignore
 
     @unarchive_threads.before_loop
     async def before(self):

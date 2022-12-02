@@ -1,5 +1,12 @@
-from pyot.utils.lol import champion
+from pyot.models import lol
+from pyot.utils.lol import champion, cdragon
 from roleidentification import get_roles, pull_data
+
+
+async def icon_url_by_champ_id(champ_id: int) -> str:
+    """Get champion icon url by their champ_id """
+    champ = await lol.champion.Champion(id=champ_id).get()
+    return cdragon.abs_url(champ.square_path)
 
 
 async def get_diff_list(champ_roles):

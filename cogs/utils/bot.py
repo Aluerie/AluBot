@@ -14,11 +14,11 @@ from dota2.client import Dota2Client
 from github import Github
 from steam.client import SteamClient
 from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
-from twitchAPI import Twitch
 
 import config as cfg
 from . import imgtools
 from .context import Context
+from .twitch import MyTwitchClient
 from .var import Sid
 
 
@@ -56,7 +56,7 @@ class AluBot(commands.Bot):
     launch_time: datetime
     pool: Pool
     reddit: Reddit
-    twitch: Twitch
+    twitch: MyTwitchClient
     twitter: TwitterAsyncClient
 
     def __init__(self, test=False):
@@ -64,16 +64,26 @@ class AluBot(commands.Bot):
         super().__init__(
             command_prefix=prefix,
             activity=Streaming(
-                name="$help",
+                name="$help or /help",
                 url='https://www.twitch.tv/aluerie'
             ),
-            intents=Intents.all(),
+            intents=Intents(  # if you ever struggle with it - try `Intents.all()`
+                guilds=True,
+                members=True,
+                bans=True,
+                emojis_and_stickers=True,
+                voice_states=True,
+                presences=True,
+                messages=True,
+                reactions=True,
+                message_content=True
+            ),
             allowed_mentions=AllowedMentions(
+                roles=True,
                 replied_user=False,
                 everyone=False
             )  # .none()
         )
-        self.on_ready_fired = False
         self.test_flag = test
         self.app_commands: Dict[str, int] = {}
         self.odota_ratelimit: str = 'was not received yet'
@@ -84,7 +94,7 @@ class AluBot(commands.Bot):
 
         environ["JISHAKU_NO_UNDERSCORE"] = "True"
         environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
-        await self.load_cog('jishaku')
+        await self.load_ext('jishaku')
 
         if self.test_flag and len(test_list):
             extensions_list = [f'cogs.{name}' for name in test_list]
@@ -92,26 +102,23 @@ class AluBot(commands.Bot):
             extensions_list = [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
 
         for ext in extensions_list:
-            await self.load_cog(ext)
+            await self.load_ext(ext)
 
-    async def load_cog(self, cog: str) -> None:
+    async def load_ext(self, ext: str) -> None:
         try:
-            await self.load_extension(cog)
+            await self.load_extension(ext)
         except Exception as e:
+            log.exception(f'Failed to load extension {ext}.')
             await self.__session.close()
             raise e
 
     async def on_ready(self):
-        if self.on_ready_fired:
-            return
-        else:
-            self.on_ready_fired = True
-
-        self.launch_time = datetime.now(timezone.utc)
-        print(f'Logged in as {self.user}')
+        if not hasattr(self, 'launch_time'):
+            self.launch_time = datetime.now(timezone.utc)
+        log.info(f'Logged in as {self.user}')
 
     @property
-    def ses(self):
+    def ses(self) -> ClientSession:
         if self.__session.closed:
             self.__session = ClientSession()
         return self.__session
@@ -131,15 +138,13 @@ class AluBot(commands.Bot):
     def owner(self) -> User:
         return self.bot_app_info.owner
 
-    def ini_steam_dota(self):
-        if hasattr(self, 'steam') and hasattr(self, 'dota'):
-            return
-        else:
+    def ini_steam_dota(self) -> None:
+        if not hasattr(self, 'steam') or not hasattr(self, 'dota'):
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
             self.steam_dota_login()
 
-    def steam_dota_login(self):
+    def steam_dota_login(self) -> None:
         if self.steam.connected is False:
             log.debug(f"dota2info: client.connected {self.steam.connected}")
             if self.test_flag:
@@ -155,18 +160,14 @@ class AluBot(commands.Bot):
                 log.warning('Logging into Steam failed')
                 return
 
-    def ini_github(self):
-        if hasattr(self, 'github'):
-            return
-        else:
+    def ini_github(self) -> None:
+        if not hasattr(self, 'github'):
             self.github = Github(cfg.GIT_PERSONAL_TOKEN)
             self.git_gameplay = self.github.get_repo("ValveSoftware/Dota2-Gameplay")
             self.git_tracker = self.github.get_repo("SteamDatabase/GameTracking-Dota2")
 
-    def ini_reddit(self):
-        if hasattr(self, 'reddit'):
-            return
-        else:
+    def ini_reddit(self) -> None:
+        if not hasattr(self, 'reddit'):
             self.reddit = Reddit(
                 client_id=cfg.REDDIT_CLIENT_ID,
                 client_secret=cfg.REDDIT_CLIENT_SECRET,
@@ -175,17 +176,13 @@ class AluBot(commands.Bot):
                 username=cfg.REDDIT_USERNAME
             )
 
-    def ini_twitch(self):
-        if hasattr(self, 'twitch'):
-            return
-        else:
-            self.twitch = Twitch(cfg.TWITCH_CLIENT_ID, cfg.TWITCH_CLIENT_SECRET)
+    def ini_twitch(self) -> None:
+        if not hasattr(self, 'twitch'):
+            self.twitch = MyTwitchClient(cfg.TWITCH_CLIENT_ID, cfg.TWITCH_CLIENT_SECRET)
             self.twitch.authenticate_app([])
 
-    def ini_twitter(self):
-        if hasattr(self, 'twitter'):
-            return
-        else:
+    def ini_twitter(self) -> None:
+        if not hasattr(self, 'twitter'):
             self.twitter = TwitterAsyncClient(cfg.TWITTER_BEARER_TOKEN)
 
     def get_app_command(
@@ -263,7 +260,7 @@ class AluBot(commands.Bot):
     ) -> Union[File, Sequence[File]]:
         return await imgtools.url_to_file(self.__session, url, filename, return_list=return_list)
 
-    def update_odota_ratelimit(self, headers: dict) -> None:
+    def update_odota_ratelimit(self, headers) -> None:
         monthly = headers.get('X-Rate-Limit-Remaining-Month')
         minutely = headers.get('X-Rate-Limit-Remaining-Minute')
         if monthly is not None or minutely is not None:
@@ -299,7 +296,7 @@ class MyColourFormatter(logging.Formatter):
     FORMATS = {
         level: logging.Formatter(
             f'\x1b[37;1m%(asctime)s\x1b[0m | {colour}%(levelname)-6s\x1b[0m | '
-            f'\x1b[35m%(name)-23s\x1b[0m | %(lineno)-4d | %(message)s',
+            f'\x1b[35m%(name)-23s\x1b[0m | %(lineno)-4d | %(funcName)-16s | %(message)s',
             '%H:%M:%S %d/%m',
         )
         for level, colour in LEVEL_COLOURS
@@ -330,7 +327,7 @@ def get_log_fmt(
         formatter = MyColourFormatter()
     else:
         formatter = logging.Formatter(
-            '{asctime} | {levelname:<6} | {name:<23} | {lineno:<4} | {message}',
+            '{asctime} | {levelname:<6} | {name:<23} | {lineno:<4} | {funcName:<16} | {message}',
             '%H:%M:%S %d/%m', style='{'
         )
 

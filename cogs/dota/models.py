@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional, Literal
 
 from PIL import Image, ImageOps, ImageDraw, ImageFont
-from discord import Embed, NotFound, Forbidden
+from discord import Embed, NotFound, Forbidden, File
 from pyot.utils.functools import async_property
 
 from cogs.utils.twitch import TwitchStream
@@ -20,14 +20,12 @@ from cogs.utils.imgtools import url_to_img, img_to_file, get_text_wh
 from cogs.utils.var import Clr, MP, Img
 
 if TYPE_CHECKING:
-    from aiohttp import ClientSession
-    from discord import TextChannel
-    from cogs.utils.bot import AluBot
+    from ..utils.bot import AluBot
 
 __all__ = (
     'Match',
     'ActiveMatch',
-    'PlayerAfterMatch'
+    'PostMatchPlayerData'
 )
 
 log = logging.getLogger(__name__)
@@ -47,29 +45,29 @@ class Match:
     ):
         self.match_id = match_id
 
-    def dbuff(self, md: bool = True) -> str:
+    @property
+    def dbuff(self) -> str:
         """Dotabuff.com link for the match with `match_id`"""
-        url = f'https://www.dotabuff.com/matches/{self.match_id}'
-        return f'/[Dbuff]({url})' if md else url
+        return f'https://www.dotabuff.com/matches/{self.match_id}'
 
-    def odota(self, md: bool = True) -> str:
+    @property
+    def odota(self) -> str:
         """Opendota.com link for the match with `match_id`"""
-        url = f'https://www.opendota.com/matches/{self.match_id}'
-        return f'/[ODota]({url})' if md else url
+        return f'https://www.opendota.com/matches/{self.match_id}'
 
-    def stratz(self, md: bool = True) -> str:
+    @property
+    def stratz(self) -> str:
         """Stratz.com link for `match_id`"""
-        url = f'https://www.stratz.com/matches/{self.match_id}'
-        return f'/[Stratz]({url})' if md else url
+        return f'https://www.stratz.com/matches/{self.match_id}'
 
-    def replay(self, matchtime: int = 0, md: bool = True) -> str:
+    def replay(self, matchtime: int = 0) -> str:
         """replay link which opens dota 2 client"""
-        url = f'dota2://matchid={self.match_id}&matchtime={matchtime}'
-        return f'/[Replay]({url})' if md else url
+        return f'dota2://matchid={self.match_id}&matchtime={matchtime}'
 
+    @property
     def links(self) -> str:
-        """all three links at once"""
-        return f'{self.dbuff()}{self.odota()}{self.stratz()}'  # {self.replay()}'
+        """all links at once"""
+        return f'/[Dbuff]({self.dbuff})/[ODota]({self.odota})/[Stratz]({self.stratz})'
 
 
 colour_twitch_status_dict = {
@@ -90,7 +88,7 @@ class ActiveMatch(Match):
             hero_ids: List[int],
             server_steam_id: int,
             twitchtv_id: Optional[int] = None,
-            channel_id: int,
+            channel_ids: List[int],
     ):
         super().__init__(match_id)
         self.start_time = start_time
@@ -99,7 +97,7 @@ class ActiveMatch(Match):
         self.hero_ids = hero_ids
         self.server_steam_id = server_steam_id
         self.twitchtv_id = twitchtv_id
-        self.channel_id = channel_id
+        self.channel_ids = channel_ids
 
         if self.twitchtv_id is None:
             self.twtv = None
@@ -137,16 +135,16 @@ class ActiveMatch(Match):
 
     async def better_thumbnail(
             self,
-            session: ClientSession,
-    ):
-        img = await url_to_img(session, self.img_url)
+            bot: AluBot,
+    ) -> Image:
+        img = await bot.url_to_img(self.img_url)
         width, height = img.size
         rectangle = Image.new("RGB", (width, 70), str(self.colour))
         ImageDraw.Draw(rectangle)
         img.paste(rectangle)
 
         for count, hero_id in enumerate(self.hero_ids):
-            hero_img = await url_to_img(session, await hero.imgurl_by_id(hero_id))
+            hero_img = await bot.url_to_img(await hero.imgurl_by_id(hero_id))
             # h_width, h_height = heroImg.size
             hero_img = hero_img.resize((62, 35))
             hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=dota_player_colour_map.get(count))
@@ -163,22 +161,22 @@ class ActiveMatch(Match):
         draw.text((0, 35 + h2 + 10), self.twitch_status, font=font, align="center", fill=str(self.colour))
         return img
 
-    async def notif_embed(
+    async def notif_embed_and_file(
             self,
-            session: ClientSession
-    ):
+            bot: AluBot
+    ) -> (Embed, File):
         image_name = \
             f'{self.twitch_status}-' \
             f'{self.display_name.replace("_", "")}-' \
             f'{(await self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
-        img_file = img_to_file(await self.better_thumbnail(session), filename=image_name)
+        img_file = img_to_file(await self.better_thumbnail(bot), filename=image_name)
 
         em = Embed(
             colour=self.colour,
             url=self.url,
             description=
             f'`/match {self.match_id}` started {display_relativehmstime(self.long_ago)}\n'
-            f'{self.vod_link}{self.links()}'
+            f'{self.vod_link}{self.links}'
         ).set_image(
             url=f'attachment://{img_file.filename}'
         ).set_thumbnail(
@@ -192,26 +190,13 @@ class ActiveMatch(Match):
         )
         return em, img_file
 
-    async def send_the_embed(self, bot: AluBot):
-        log.info("sending dota 2 embed")
-        ch: TextChannel = bot.get_channel(self.channel_id)
-        if ch is None:
-            return
-        em, img_file = await self.notif_embed(bot.ses)
-        em.title = f"{ch.guild.owner.name}'s fav hero + player spotted"
-        msg = await ch.send(embed=em, file=img_file)
-        query = """ INSERT INTO dfmatches (id, match_id, ch_id, hero_id, twitch_status) 
-                    VALUES ($1, $2, $3, $4, $5)
-                """
-        await bot.pool.execute(query, msg.id, self.match_id, ch.id, self.hero_id, self.twitch_status)
 
-
-class PlayerAfterMatch:
+class PostMatchPlayerData:
 
     def __init__(
             self,
             *,
-            data: dict,
+            player_data: dict,
             channel_id: int,
             message_id: int,
             twitch_status: Literal['NoTwitch', 'Offline', 'Online'],
@@ -222,16 +207,16 @@ class PlayerAfterMatch:
 
         self.colour = colour_twitch_status_dict[self.twitch_status]
 
-        self.match_id: int = data['match_id']
-        self.hero_id: int = data['hero_id']
-        self.outcome = "Win" if data['win'] else "Loss"
-        self.ability_upgrades_arr = data['ability_upgrades_arr']
-        self.items = [data[f'item_{i}'] for i in range(6)]
-        self.kda = f'{data["kills"]}/{data["deaths"]}/{data["assists"]}'
-        self.purchase_log = data['purchase_log']
+        self.match_id: int = player_data['match_id']
+        self.hero_id: int = player_data['hero_id']
+        self.outcome = "Win" if player_data['win'] else "Loss"
+        self.ability_upgrades_arr = player_data['ability_upgrades_arr']
+        self.items = [player_data[f'item_{i}'] for i in range(6)]
+        self.kda = f'{player_data["kills"]}/{player_data["deaths"]}/{player_data["assists"]}'
+        self.purchase_log = player_data['purchase_log']
         self.aghs_blessing = False
         self.aghs_shard = False
-        permanent_buffs = data['permanent_buffs'] or []  # [] if it is None
+        permanent_buffs = player_data['permanent_buffs'] or []  # [] if it is None
         for pb in permanent_buffs:
             if pb['permanent_buff'] == 12:
                 self.aghs_shard = True
@@ -382,6 +367,6 @@ if __name__ == '__main__':
         hero_ids=[3, 4, 5],
         server_steam_id=9999,
         twitchtv_id=7777,
-        channel_id=8888
+        channel_ids=[8888]
     )
     print(xcali.__dict__)

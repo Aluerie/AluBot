@@ -53,63 +53,65 @@
 
    # 4.0 NOT URGENT
 27. make docstring comments to dotafeed lolfeed and config py like since it most important cogs
-28. add thanks to discord.py community
-29. add some difference between league and dota database add logs, icon I guess
-30. edge cases when people delete channels/guilds for dota/league thing
-31. include context menu commands into help menu somehow IDK
-32. Discord py speedups
-33. make depreciated branch and put there an extra folder and put there some todo llist and things in the end of this todo
+28. add some difference between league and dota database add logs, icon I guess
+29. edge cases when people delete channels/guilds for dota/league thing
+30. include context menu commands into help menu somehow IDK
+31. Discord py speedups
 
    ## 5.0 LAST BOX
-34. `send_pages` `send_traceback` from `distools` into bot or ctx methods (complexity: confessions has `ntr.client` doing this)
-35. Solve twitter somehow IDK fok ; Task for reload twitter I think 
-36. reaction roles with new selects I guess
-37. Depreceated cogs = 'tags' or something
-38. create better testing tech - something like variable self.test = yes (???)
-39. ?tag emoji escapes 
-40. ?tag pkgutil
-41. abandon not scored games for match history
-42. rewrite purge into something better
-43. routing thing for league (some lists exist natively in Pyot)
-44. look at every cog in robo danny/pycord manager/stella
-45. clips twitch check 
-46. custom server name for dotafeed feature
-47. add league twitch name account check to league after we rewrite it a bit better (like we have in dota; current check is for lol names)
-48. request_matchmaking_stats()
-49. add image name for convert thing (check resolution too 112)
+32. `send_pages` `send_traceback` from `distools` into bot or ctx methods (complexity: confessions has `ntr.client` doing this)
+33. Solve twitter somehow IDK fok ; Task for reload twitter I think 
+34. reaction roles with new selects I guess
+35. Depreceated cogs = 'tags' or something
+36. create better testing tech - something like variable self.test = yes (???)
+37. ?tag emoji escapes 
+38. ?tag pkgutil
+39. abandon not scored games for match history
+40. rewrite purge into something better
+41. routing thing for league (some lists exist natively in Pyot)
+42. look at every cog in robo danny/pycord manager/stella
+43. clips twitch check 
+44. custom server name for dotafeed feature
+45. add league twitch name account check to league after we rewrite it a bit better (like we have in dota; current check is for lol names)
+46. request_matchmaking_stats()
+47. add image name for convert thing (check resolution too 112)
 
     ## 6.0 Future
-50. add "all" key into heroes so all heroes can be traced
-51. transfer emotes used in bot to 3rd server (todo while in q tier task)
-52. research 'setup.py' nor 'pyproject.toml'
-53. monka omega register on AWS if opendota fails again.
+48. add "all" key into heroes so all heroes can be traced
+49. transfer emotes used in bot to 3rd server (todo while in q tier task)
+50. research 'setup.py' nor 'pyproject.toml'
+51. monka omega register on AWS if opendota fails again.
 
     ## 7.0 IMPROVE
-54. remove `regex` library in favour of `re`
-55. remember `a[start:stop:step]` so `a[::-1]` is reverse
-56. ?tag learn async
-57. learn collection lib; do research in discord abc
-58. ?tag eval
-59. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
-60. research TypeVar stuff
-61. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>` (need to check if it works)
+52. remove `regex` library in favour of `re`
+53. remember `a[start:stop:step]` so `a[::-1]` is reverse
+54. ?tag learn async
+55. learn collection lib; do research in discord abc
+56. ?tag eval
+57. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
+58. research TypeVar stuff
+59. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>` (need to check if it works)
 
     ## 8.0 Impossible Future
-62. unsovled mystery [0] * 30
+60. unsovled mystery [0] * 30
 
     ## 9.0 new ideas
-63. rewrite check birthdays into similar thing as timers where it just looks for next time to congraluate instead of ticking every hour
-64. rewrite borthday into embeds and also unite /birthday set and timezone commands into one 
-65. maybe move rules into timers too
-66. smurfs for dota/lol feed is a mess
-67. https://hasura.io/learn/database/postgresql/core-concepts/6-postgresql-relationships/
-68. put if condition in rows thing from the point of database view 
-69. make windows dev update scan similar to league/dota patches scan :D
-70. fav_id thing to make serial and the whole relation thing
-71. 
-72. ```typescript
+61. rewrite check birthdays into similar thing as timers where it just looks for next time to congraluate instead of ticking every hour
+62. rewrite borthday into embeds and also unite /birthday set and timezone commands into one 
+63. maybe move rules into timers too
+64. smurfs for dota/lol feed is a mess
+65. https://hasura.io/learn/database/postgresql/core-concepts/6-postgresql-relationships/
+66. put if condition in rows thing from the point of database view 
+67. make windows dev update scan similar to league/dota patches scan :D
+68. fav_id thing to make serial and the whole relation thing
+69. in readme check list of features
+70. maybe create a help web page ^
+71. ```typescript
     this.dota2.on('ready', () => {
       console.log('connected to dota game coordinator');
     });
     this.dota2.on('unready', () => {});
     ```
+72. create channel with global logs for the bot as in all guilds commands usage, I guess.
+73. mess around with contributing and stuff
+74. move `send_pages_list(` to ctx. Problem - something is wrong when ctx is Interaction

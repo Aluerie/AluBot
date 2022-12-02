@@ -3,8 +3,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from discord import Embed
 from discord.ext import commands, tasks
 
+from .dota.const import ODOTA_API_URL
 from .utils.var import *
 
 if TYPE_CHECKING:
@@ -23,11 +25,41 @@ class BetaTest(commands.Cog):
 
     @commands.hybrid_command()
     async def allu(self, ctx: Context):
-        await ctx.send(f'Did we do it')
+        await ctx.send('help')
 
     @tasks.loop(count=1)
     async def reload_info(self):
-        log.info('hehe')
+        em = Embed(
+            colour=Clr.error,
+            description=(
+                "Error checking steam profile for {steam}.\n"
+                "Check if your `steam` flag is correct steam id in either 64/32/3/2/friendid representations "
+                "or just give steam profile link to the bot."
+            )
+        )
+        await self.bot.get_channel(Cid.spam_me).send(embed=em)
+        """match_id = 6893851829
+
+        url = f"{ODOTA_API_URL}/request/{match_id}"
+        async with self.bot.ses.post(url) as resp:
+            # print(resp)
+            print(resp.ok)
+            print(data := await resp.json())
+
+        url = f"{ODOTA_API_URL}/request/{data['job']['jobId']}"
+        async with self.bot.ses.get(url) as resp:
+            # print(resp)
+            print(resp.ok)
+            print(await resp.json())
+
+        jobid = 176580986
+
+        url = f"{ODOTA_API_URL}/request/{jobid}"
+        async with self.bot.ses.get(url) as resp:
+            # print(resp)
+            print(resp.ok)
+            print(await resp.json())"""
+
         return
         # print('Query is completed')
 
@@ -37,7 +69,7 @@ class BetaTest(commands.Cog):
 
 
 async def setup(bot):
-    #if bot.test_flag:
+    # if bot.test_flag:
     await bot.add_cog(BetaTest(bot))
 
 
@@ -62,4 +94,8 @@ RETURNING True;
 ALTER TABLE dfmatches
 ADD COLUMN live BOOLEAN DEFAULT TRUE;
 
+--- recipe to get all column names
+SELECT column_name
+FROM information_schema.columns
+WHERE table_name=$1;
 """

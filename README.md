@@ -1,12 +1,12 @@
 ## AluBot
 
-A personal Discord bot.
+🦢 Personal Discord bot.
 
 ---
 
 ### Description
 
-#### Notifications about Dota/League fav live stream + fav hero/champ combination
+#### Notifications about Dota/League favourite player + character combination
 
 Initial idea was to send me notifications 
 when my favourite Dota 2/ League of Legends [twitch.tv](https://www.twitch.tv/) streamers pick my favourite heroes/champions.
@@ -16,19 +16,39 @@ with pretty much everything I ever needed !
 
 <img src="./media/ReadMe/MainFeature.png" alt="alubot preview">
 
-#### And so much more
+#### List of features
 
-Dota 2 news and League news channels with info gathered all over the internet, TextToSpeech, Confessions, 
-Birthday role, Moderation, stream notificatons, timers, Welcome messages, Logging, Emote stats, 
-Information, wolframalpha, Tags, Milestone members, Thanks to twitch subs, Google translate messages, Suggestions, 
-Wordcloud, ToDo list, Reminders, Afk/Selfmute mode, Experience system, NSFW, Schedule for Dota 2 matches, 
-Stalking my Dota 2 profile, 
+ - [X] maintains #🍋dota2_news
+   * [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates - comments from Valve employees  
+   * Steam DB's [GameTracking-Dota2](https://github.com/SteamDatabase/GameTracking-Dota2) updates and its analysis
+   * Twitter, Reddit comments/posts from known accounts
+ - [X] #🔬lol_news announcement channel
+ - [X] TextToSpeech
+ - [X] Confessions
+ - [X] Birthday role and congratulations 
+ - [X] Moderation
+ - [X] Twitch starting stream notifications
+ - [X] Timers
+ - [X] Welcome messages
+ - [X] Logging
+ - [X] Emote stats
+ - [X] Info commands
+ - [X] WolframAlpha queries commands
+ - [X] Tags system 
+ - [X] Thanks to twitch subs/nitro boosters
+ - [X] Google translate messages
+ - [X] Suggestion commands
+ - [X] Wordcloud
+ - [X] ToDo list
+ - [X] Reminders 
+ - [X] AFK/Selfmute commands
+ - [X] NSFW 
+ - [X] Schedule for Dota 2 matches
+ - [X] Stalking my Dota 2 profile
+ - [X] So in total Over 100 useful/fun commands.
+ - [X] And so much more to come.
 
-Over 100 useful/fun commands.
-
-And so much more to come.
-
-All info in `$help` command of the bot. Join my server to use it and see features of the bot with your own eyes. 
+All info in `$help` or `/help` command of the bot. Join my server to use it and see features of the bot with your own eyes. 
 
 ### Follow us
 
@@ -37,7 +57,7 @@ All info in `$help` command of the bot. Join my server to use it and see feature
 
 ### Reporting Bugs and Making Suggestions
 
-* Feel free to make an issue [here](https://github.com/Aluerie/AluBot/issues/new) or write me on discord.
+* Feel free to make an Issue/Pull Request or write me on discord.
 
 ### Running
 
@@ -49,13 +69,16 @@ your instance of the bot will work well. And I'm honestly not a very good progra
 4. Rename `config.example.py` into `config.py` and fill out all needed config parameters
    * notable one is you will need to PostgreSQL 9.5 or higher to fill out `POSTGRES_URL` 
 5. Replace variables in `cogs/utils/var.py` with your own values
-6. To configure mentioned above PostgreSQL database and create all tables you need to run `py main.py db init`
-7. Run the bot with `py main.py` [^1]
-   * if you want to run test version of the bot then you need to create `tlist.py` file with following template below and run the bot with an extra flag `py main.py --test` 
+6. To configure mentioned above PostgreSQL database and create all tables you need to run `py main.py db create`
+7. Run the bot with `py main.py` 
+   * if you want to run test version of the bot then you need to create `tlist.py` file with 
+   following template below and run the bot with an extra flag `py main.py --test` 
    
 ```python
 """
 Just list of extensions from `./cogs` that are going to be tested with YenBot 
+
+-- List them without `.py`-ending as in 'confessions' and not 'confessions.py'
 
 AluBot does not use this file at all, the bot just assumes the `test_list` empty
 """
@@ -66,3 +89,7 @@ test_list = [  # for test bot
     'help',  # so you can look how the command looks in `$help` command
 ]
 ```
+### Thanks 
+Thanks to everybody who has ever helped me with the bot in any way or form. 
+
+Special thanks to the whole `discord.py` community for endless amount of educational value.

@@ -12,13 +12,12 @@ from steam.enums import emsg
 from steam.steamid import SteamID, EType
 
 from .dota.const import ODOTA_API_URL
-from .dota.models import PlayerAfterMatch, ActiveMatch
+from .dota.models import PostMatchPlayerData, ActiveMatch
 
-from .utils.checks import is_guild_owner, is_trustee
-from .utils.distools import send_traceback, send_pages_list
+from .utils.checks import is_guild_owner, is_trustee, is_owner
+from .utils.distools import send_traceback
 from .dota import hero
-from .utils.fpfc import FeedTools
-from .utils.twitch import name_by_twitchid
+from .utils.fpc import FPCBase
 from .utils.var import Clr, Ems, MP, Cid
 
 if TYPE_CHECKING:
@@ -31,9 +30,9 @@ log.setLevel(logging.DEBUG)
 
 
 class DotaFeed(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.dotafeed.start()
+        #self.dotafeed.start()
         self.lobby_ids = set()
         self.active_matches = []
 
@@ -42,6 +41,9 @@ class DotaFeed(commands.Cog):
 
         self.hero_fav_ids = []
         self.player_fav_ids = []
+
+    def cog_load(self) -> None:
+        self.bot.ini_steam_dota()
 
         @self.bot.dota.on('top_source_tv_games')
         def response(result):
@@ -52,9 +54,6 @@ class DotaFeed(commands.Cog):
             # )
             for match in result.game_list:
                 self.top_source_dict[match.match_id] = match
-
-    def cog_load(self) -> None:
-        self.bot.ini_steam_dota()
 
     def cog_unload(self) -> None:
         self.dotafeed.cancel()
@@ -85,16 +84,18 @@ class DotaFeed(commands.Cog):
                 return
             # print(resp)
 
-            lobby_ids = set()
-            for item in resp.rich_presence:
-                if rp_bytes := item.rich_presence_kv:
-                    # steamid = item.steamid_user
-                    rp = vdf.binary_loads(rp_bytes)['RP']
-                    # print(rp)
-                    if lobby_id := int(rp.get('WatchableGameID', 0)):
-                        if rp.get('param0', 0) == '#DOTA_lobby_type_name_ranked':
-                            if await hero.id_by_npcname(rp.get('param2', '#')[1:]) in self.hero_fav_ids:
-                                lobby_ids.add(lobby_id)
+            async def get_lobby_id_by_rich_presence_kv(rp_bytes):
+                rp = vdf.binary_loads(rp_bytes)['RP']
+                # print(rp)
+                if lobby_id := int(rp.get('WatchableGameID', 0)):
+                    if rp.get('param0', 0) == '#DOTA_lobby_type_name_ranked':
+                        if await hero.id_by_npcname(rp.get('param2', '#')[1:]) in self.hero_fav_ids:
+                            return lobby_id
+
+            lobby_ids = set(
+                await get_lobby_id_by_rich_presence_kv(item.rich_presence_kv)
+                for item in resp.rich_presence if item.rich_presence_kv
+            )
 
             return {'lobby_ids': list(lobby_ids)}
         else:
@@ -118,22 +119,40 @@ class DotaFeed(commands.Cog):
                         """
                 rows = await self.bot.pool.fetch(query, person.hero_id, user.fav_id)
 
-                for row in rows:
-                    query = 'SELECT id FROM dfmatches WHERE match_id=$1'
-                    val = await self.bot.pool.fetchval(query, match.match_id)
-                    if val is None:
-                        self.matches_to_send.append(
-                            ActiveMatch(
-                                match_id=match.match_id,
-                                start_time=match.activate_time,
-                                player_name=user.display_name,
-                                twitchtv_id=user.twtv_id,
-                                hero_id=person.hero_id,
-                                hero_ids=[x.hero_id for x in match.players],
-                                server_steam_id=match.server_steam_id,
-                                channel_id=row.dotafeed_ch_id
-                            )
+                channel_ids = [row.dotafeed_ch_id for row in rows]
+
+                query = 'SELECT id FROM dfmatches WHERE match_id=$1'
+                val = await self.bot.pool.fetchval(query, match.match_id)
+                if val is None:
+                    self.matches_to_send.append(
+                        ActiveMatch(
+                            match_id=match.match_id,
+                            start_time=match.activate_time,
+                            player_name=user.display_name,
+                            twitchtv_id=user.twtv_id,
+                            hero_id=person.hero_id,
+                            hero_ids=[x.hero_id for x in match.players],
+                            server_steam_id=match.server_steam_id,
+                            channel_ids=channel_ids
                         )
+                    )
+
+    async def send_notifications(self, match: ActiveMatch):
+        log.debug("Sending DotaFeed notification")
+        for ch_id in match.channel_ids:
+            ch = self.bot.get_channel(ch_id)
+            if ch is None:
+                continue
+
+            em, img_file = await match.notif_embed_and_file(self.bot)
+            em.title = f"{ch.guild.owner.name}'s fav hero + player spotted"
+            msg = await ch.send(embed=em, file=img_file)
+            query = """ INSERT INTO dfmatches (id, match_id, ch_id, hero_id, twitch_status) 
+                        VALUES ($1, $2, $3, $4, $5)
+                    """
+            await self.bot.pool.execute(
+                query, msg.id, match.match_id, ch.id, match.hero_id, match.twitch_status
+            )
 
     async def declare_matches_finished(self):
         query = """ UPDATE dfmatches 
@@ -161,7 +180,7 @@ class DotaFeed(commands.Cog):
         self.matches_to_send = []
         await self.analyze_top_source_response()
         for match in self.matches_to_send:
-            await match.send_the_embed(self.bot)
+            await self.send_notifications(match)
 
         await self.declare_matches_finished()
 
@@ -208,13 +227,13 @@ class AfterGameEdit(commands.Cog):
                 if dic == {"error": "Not Found"}:
                     continue
 
-                for player in dic.get('players', []):  # one day OD freaked out
+                for player in dic.get('players', []):  # one day OpenDota freaked out
                     if player['hero_id'] == row.hero_id:
                         if player['purchase_log'] is not None:
                             print('!!!!!!!!!!!!holy shiet!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                             self.after_match.append(
-                                PlayerAfterMatch(
-                                    data=player,
+                                PostMatchPlayerData(
+                                    player_data=player,
                                     channel_id=row.ch_id,
                                     message_id=row.id,
                                     twitch_status=row.twitch_status
@@ -240,7 +259,7 @@ class AfterGameEdit(commands.Cog):
         # self.dotafeed.restart()
 
 
-class AddStreamFlags(commands.FlagConverter, case_insensitive=True):
+class AddDotaPlayerFlags(commands.FlagConverter, case_insensitive=True):
     name: str
     steam: str
     twitch: bool
@@ -251,7 +270,7 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
     steam: Optional[str]
 
 
-class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
+class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     """
     Commands to set up fav hero + player notifs.
 
@@ -275,18 +294,23 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
     6. Ready ! More info below
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         super().__init__(
-            display_name='DotaFeed',
-            db_name='dotaaccs',
+            feature_name='DotaFeed',
             game_name='Dota 2',
-            clr=Clr.prpl,
-            pool=bot.pool,
-            db_ch_col='dotafeed_ch_id',
-            db_pl_col='dotafeed_stream_ids',
+            colour=Clr.prpl,
+            bot=bot,
+            players_table='dota_players',
+            accounts_table='dota_accounts',
+            channel_id_column='dotafeed_ch_id',
+            players_column='dotafeed_stream_ids',
+            acc_info_columns=['steam_id', 'friend_id']
         )
         self.bot: AluBot = bot
         self.help_emote = Ems.DankLove
+
+    def cog_load(self) -> None:
+        self.bot.ini_twitch()
 
     @is_guild_owner()
     @commands.hybrid_group()
@@ -297,138 +321,78 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
 
     @is_guild_owner()
     @dota.group(name='channel')
-    async def channel_(self, ctx: Context):
+    async def dota_channel(self, ctx: Context):
         """Group command about Dota, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @is_guild_owner()
-    @channel_.command(name='set', usage='[channel=curr]')
+    @dota_channel.command(name='set', usage='[channel=curr]')
     @app_commands.describe(channel='Choose channel for DotaFeed notifications')
-    async def channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
+    async def dota_channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
         """Set channel to be the DotaFeed notifications channel."""
-        await self.channel_set_base(ctx, channel)
+        await self.channel_set(ctx, channel)
 
     @is_guild_owner()
-    @channel_.command(name='disable', description='Disable DotaFeed functionality.')
-    async def channel_disable(self, ctx: Context):
+    @dota_channel.command(name='disable', description='Disable DotaFeed functionality.')
+    async def dota_channel_disable(self, ctx: Context):
         """Stop getting DotaFeed notifs. Data about fav heroes/players won't be affected."""
-        await self.channel_disable_base(ctx)
+        await self.channel_disable(ctx)
 
     @is_guild_owner()
-    @channel_.command(name='check')
-    async def channel_check(self, ctx: Context):
+    @dota_channel.command(name='check')
+    async def dota_channel_check(self, ctx: Context):
         """Check if DotaFeed channel is set in the server."""
-        await self.channel_check_base(ctx)
+        await self.channel_check(ctx)
 
     @is_guild_owner()
-    @dota.group(aliases=['db'])
-    async def database(self, ctx: Context):
+    @dota.group(name='database', aliases=['db'])
+    async def dota_database(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @staticmethod
-    def field_player_data(steamid, friendid):
-        return \
-            f"`{steamid}` - `{friendid}`| " \
-            f"[Steam](https://steamcommunity.com/profiles/{steamid})" \
-            f"/[Dotabuff](https://www.dotabuff.com/players/{friendid})"
-
-    def field_both(self, display_name, twitch, steamid, friendid):
-        return \
-            f'{self.field_player_name(display_name, twitch)}\n' \
-            f'{self.field_player_data(steamid, friendid)}'
+    def player_acc_string(**kwargs):
+        steam_id = kwargs.pop('steam_id')
+        friend_id = kwargs.pop('friend_id')
+        return (
+            f"`{steam_id}` - `{friend_id}`| " 
+            f"[Steam](https://steamcommunity.com/profiles/{steam_id})" 
+            f"/[Dotabuff](https://www.dotabuff.com/players/{friend_id})"
+        )
 
     @is_guild_owner()
-    @database.command(name='list')
-    async def database_list(self, ctx: Context):
+    @dota_database.command(name='list')
+    async def dota_database_list(self, ctx: Context):
         """List of players in the database available for DotaFeed feature."""
-        await ctx.typing()
-
-        query = 'SELECT dotafeed_stream_ids FROM guilds WHERE id=$1'
-        twtvid_list = await self.bot.pool.fetchval(query, ctx.guild.id)
-
-        query = 'SELECT id, friendid, fav_id, display_name, twtv_id FROM dotaaccs'
-        rows = await self.bot.pool.fetch(query, twtvid_list)
-
-        ss_dict = dict()
-        for row in rows:
-            followed = f' {Ems.DankLove}' if row.fav_id in twtvid_list else ''
-            key = f"{self.field_player_name(row.display_name, row.twtv_id)}{followed}"
-            if key not in ss_dict:
-                ss_dict[key] = []
-            ss_dict[key].append(self.field_player_data(row.id, row.friendid))
-
-        ans_array = [f"{k}\n {chr(10).join(ss_dict[k])}" for k in ss_dict]
-        ans_array = sorted(list(set(ans_array)), key=str.casefold)
-
-        await send_pages_list(
-            ctx,
-            ans_array,
-            split_size=10,
-            colour=Clr.prpl,
-            title="List of Dota 2 Streams in Database",
-            footer_text=f'With love, {ctx.guild.me.display_name}'
-        )
+        await self.database_list(ctx)
 
     @staticmethod
-    async def get_steam_id_and_64(ctx: Context, steam: str):
-        steam_acc = SteamID(steam)
+    def get_steam_id_and_64(steam_string: str):
+        steam_acc = SteamID(steam_string)
         if steam_acc.type != EType.Individual:
-            steam_acc = SteamID.from_url(steam)  # type: ignore # ValvePython does not care much about TypeHints
+            steam_acc = SteamID.from_url(steam_string)  # type: ignore # ValvePython does not care much about TypeHints
 
         if steam_acc is None or (hasattr(steam_acc, 'type') and steam_acc.type != EType.Individual):
-            em = Embed(
-                colour=Clr.error,
-                description=
-                f'Error checking steam profile for {steam}.\n '
-                f'Check if your `steam` flag is correct steam id in either 64/32/3/2/friendid representations '
-                f'or just give steam profile link to the bot.'
-            )
-            await ctx.reply(embed=em, ephemeral=True)
-            return None, None
-
+            raise commands.BadArgument(
+                    "Error checking steam profile for {steam}.\n"
+                    "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
+                    "or just give steam profile link to the bot."
+                )
         return steam_acc.as_64, steam_acc.id
 
-    async def database_add_request_check(self, ctx: Context, flags: AddStreamFlags):
-        if flags.twitch:
-            twtv_id = await self.get_check_twitch_id(ctx, flags.name.lower())
-            if twtv_id is None:
-                return False
-        else:
-            twtv_id = None
-
-        steamid, friendid = await self.get_steam_id_and_64(ctx, flags.steam)
-        if steamid is None:
-            return False
-
-        query = 'SELECT * FROM dotaaccs WHERE id=$1'
-        user = await self.bot.pool.fetchrow(query, steamid)
-        if user is not None:
-            em = Embed(
-                colour=Clr.error
-            ).add_field(
-                name=f'This steam account is already in the database',
-                value=
-                f'It is marked as {user.name}\'s account.\n\n'
-                f'Did you mean to use `$dota stream add {user.name}` to add the stream into your fav list?'
-            )
-            await ctx.reply(embed=em, ephemeral=True)
-            return False
-
-        query = 'SELECT fav_id FROM dotaaccs ORDER BY fav_id DESC LIMIT 1'
-        old_max_fav_id = await self.bot.pool.fetchval(query) or 0
-
-        query = """ INSERT INTO dotaaccs 
-                    (id, name, friendid, twtv_id, fav_id, display_name) 
-                    VALUES ($1, $2, $3, $4, $5, $6)
-                """
-        await self.bot.pool.execute(
-            query, steamid, flags.name.lower(), friendid, twtv_id, old_max_fav_id + 1, flags.name
-        )
-        return self.field_both(flags.name, twtv_id, steamid, friendid)
+    async def get_account_dict(
+            self,
+            *,
+            steam_flag: str
+    ) -> dict:
+        steam_id, friend_id = self.get_steam_id_and_64(steam_flag)
+        return {
+            'steam_id': steam_id,
+            'friend_id': friend_id
+        }
 
     @is_trustee()
-    @database.command(
+    @dota_database.command(
         name='add',
         usage='name: <name> steam: <steamid> twitch: <yes/no>',
         description='Add stream to the database.'
@@ -438,7 +402,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link',
         twitch='If you proved twitch handle for "name" then press `True` otherwise `False`',
     )
-    async def database_add(self, ctx: Context, *, flags: AddStreamFlags):
+    async def dota_database_add(self, ctx: Context, *, flags: AddDotaPlayerFlags):
         """
         Add player to the database.
         • `<name>` is player name
@@ -446,39 +410,27 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         • `<twitch>` - yes/no indicating if player with name also streams under such name
         """
         await ctx.typing()
+        player_dict = await self.get_player_dict(name_flag=flags.name, twitch_flag=flags.twitch)
+        account_dict = await self.get_account_dict(steam_flag=flags.steam)
+        await self.database_add(ctx, player_dict, account_dict)
 
-        answer = await self.database_add_request_check(ctx, flags)
-        if answer is False:
-            return
-
-        em = Embed(
-            colour=Clr.prpl
-        ).add_field(
-            name=f'Successfully added the account to the database',
-            value=answer
-        )
-        await ctx.reply(embed=em)
-        em.colour = MP.green(shade=200)
-        em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
-        await self.bot.get_channel(Cid.global_logs).send(embed=em)
-
-    @is_trustee()
-    @database.command(
+    @is_owner()
+    @dota_database.command(
         name='remove',
-        usage='name: <name> steam: [steamid]'
+        usage='name: <name> steam: [steam_id]'
     )
     @app_commands.describe(
         name='twitch.tv stream name',
-        steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link'
+        steam='either steam_id in any of 64/32/3/2 versions, friend_id or just steam profile link'
     )
-    async def database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
+    async def dota_database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
         """Remove player from the database."""
         await ctx.typing()
 
         args = [flags.name.lower()]
         clause = ''
         if flags.steam:
-            steamid, friendid = await self.get_steam_id_and_64(ctx, flags.steam)
+            steamid, friendid = self.get_steam_id_and_64(ctx, flags.steam)
             if steamid is None:
                 return
             clause = 'AND id=$2'
@@ -506,8 +458,9 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
                 colour=Clr.prpl,
             ).add_field(
                 name='Successfully removed account(-s) from the database',
-                value=
-                '\n'.join(self.field_both(x['name'], x['twtv_id'], x['id'], x['friendid']) for x in success)
+                value=(
+                    '\n'.join(self.field_both(x['name'], x['twtv_id'], x['id'], x['friendid']) for x in success)
+                )
             )
             await ctx.reply(embed=em)
 
@@ -524,7 +477,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
             await ctx.reply(embed=em)
 
     @is_guild_owner()
-    @database.command(
+    @dota_database.command(
         name='request',
         usage='name: <name> steam: <steamid> twitch: <yes/no>',
         description='Request player to be added into the database.'
@@ -534,7 +487,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link',
         twitch='is it a twitch.tv streamer? yes/no',
     )
-    async def database_request(self, ctx: Context, *, flags: AddStreamFlags):
+    async def database_request(self, ctx: Context, *, flags: AddDotaPlayerFlags):
         """
         Request player to be added into the database. \
         This will send a request message into Aluerie's personal logs channel.
@@ -548,9 +501,10 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         warn_em = Embed(
             colour=Clr.prpl,
             title='Confirmation Prompt',
-            description=
-            f'Are you sure you want to request this streamer steam account to be added into the database?\n'
-            f'This information will be sent to Aluerie. Please, double check before confirming.'
+            description=(
+                'Are you sure you want to request this streamer steam account to be added into the database?\n'
+                'This information will be sent to Aluerie. Please, double check before confirming.'
+            )
         ).add_field(
             name='Request to add an account into the database',
             value=answer
@@ -673,7 +627,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
         names_list = {row.display_name: row.twtv_id for row in rows}
 
         ans_array = [
-            self.field_player_name(name, tw)
+            self.player_name_string(name, tw)
             for name, tw in names_list.items()
         ]
         ans_array = sorted(list(set(ans_array)), key=str.casefold)
@@ -820,7 +774,7 @@ class DotaFeedTools(commands.Cog, FeedTools, name='Dota 2'):
 
 
 class DotaAccCheck(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.check_acc_renames.start()
 
@@ -833,7 +787,7 @@ class DotaAccCheck(commands.Cog):
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
-            display_name: str = name_by_twitchid(row.twtv_id)
+            display_name: str = self.bot.twitch.name_by_twitch_id(row.twtv_id)
             if display_name != row.display_name:
                 query = 'UPDATE dotaaccs SET display_name=$1, name=$2 WHERE id=$3'
                 await self.bot.pool.execute(query, display_name, display_name.lower(), row.id)

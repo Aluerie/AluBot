@@ -71,7 +71,8 @@ class Cid:
     my_time = 788915790543323156
 
     blacklisted_array = []
-    # emote server
+
+    # wink server
     roses = 759916212842659853
     spam_me = 970823670702411810
     repost = 971504469995049041
@@ -164,7 +165,7 @@ class Ems:  # Emote strings
     FeelsRainMan = '<a:SmogeInTheRain:902254223851421796>'
     DankL = '<a:DankL:1014616758470070353>'
 
-    # emote server nonani
+    # wink server nonani
 
     bubuSip = '<:bubuSip:865033396189921290>'
     bubuGun = '<:bubuGun:847805078543007755>'
@@ -176,7 +177,7 @@ class Ems:  # Emote strings
     DankG = '<:DankG:998012133948276857>'
     peepoBusiness = '<:peepoBusiness:998157352098340934>'
     peepoMovie = '<:peepoMovie:998163742741246003>'
-    # emote server ani
+    # wink server ani
     # nothing for now
 
     # general emotes
@@ -229,9 +230,7 @@ class Clr:
 
 
 class MaterialPalette(Colour):
-    """
-    Material Design Color Palette
-    """
+    """Material Design Color Palette"""
 
     def __init__(self, value: int):
         super().__init__(value)

@@ -1,313 +1,33 @@
 from __future__ import annotations
 
+import logging
+import re
+from datetime import datetime, timezone, time
 from typing import TYPE_CHECKING, Optional, List, Literal
 
-from pyot.conf.model import activate_model, ModelConf
-from pyot.conf.pipeline import activate_pipeline, PipelineConf
-from pyot.utils.functools import async_property
-
-from config import RIOT_API_KEY
-from cogs.utils.fpfc import FeedTools
-from cogs.utils.twitch import get_lol_streams
-from cogs.utils.var import Clr, MP, Ems, Cid
-
-
-@activate_model("lol")
-class LolModel(ModelConf):
-    default_platform = "na1"
-    default_region = "americas"
-    default_version = "latest"
-    default_locale = "en_us"
-
-
-@activate_pipeline("lol")
-class LolPipeline(PipelineConf):
-    name = "lol_main"
-    default = True
-    stores = [
-        {
-            "backend": "pyot.stores.omnistone.Omnistone",
-            "expirations": {
-                "summoner_v4_by_name": 100,
-                "match_v4_match": 600,
-                "match_v4_timeline": 600,
-            }
-        },
-        {
-            "backend": "pyot.stores.cdragon.CDragon",
-        },
-        {
-            "backend": "pyot.stores.riotapi.RiotAPI",
-            "api_key": RIOT_API_KEY,
-        }
-    ]
-
-
-from pyot.models import lol
-from pyot.utils.lol import champion, cdragon
-from pyot.models.lol import Spell, Rune, Match
-from pyot.core.exceptions import NotFound, ServerError
-
+from PIL import Image, ImageDraw, ImageFont
 from discord import Embed, app_commands, TextChannel
 from discord.ext import commands, tasks
-
-from cogs.utils.checks import is_owner, is_guild_owner, is_trustee
-from cogs.utils.lol import get_role_mini_list, get_diff_list
-from cogs.utils.distools import send_traceback, send_pages_list
-from cogs.utils.format import display_relativehmstime
-from cogs.utils.imgtools import img_to_file, url_to_img, get_text_wh
-from cogs.twtv import TwitchStream
+from pyot.core.exceptions import NotFound, ServerError
+from pyot.models import lol
 
 from roleidentification import pull_data
-from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime, timezone, time
-import re
 
-import logging
-log = logging.getLogger(__name__)
+from .utils.checks import is_owner, is_guild_owner, is_trustee
+from .utils.distools import send_traceback, send_pages_list
+from .utils.fpc import FPCBase
+from .utils.imgtools import img_to_file, url_to_img, get_text_wh
+from cogs.lol.utils import get_diff_list
+from .utils.twitch import get_lol_streams
+from .utils.var import Clr, MP, Ems, Cid
 
 if TYPE_CHECKING:
-    from cogs.utils.context import Context
-    from aiohttp import ClientSession
     from pyot.models.lol.match import MatchParticipantData
+    from .utils.context import Context
     from .utils.bot import AluBot
 
-platform_to_routing_dict = {
-    'br1': 'americas',
-    'eun1': 'europe',
-    'euw1': 'europe',
-    'jp1': 'asia',
-    'kr': 'asia',
-    'la1': 'americas',
-    'la2': 'americas',
-    'na1': 'americas',
-    'oc1': 'asia',
-    'ru': 'europe',
-    'tr1': 'europe'
-}
-
-region_to_platform_dict = {
-    'br': 'br1',
-    'eun': 'eun1',
-    'euw': 'euw1',
-    'jp': 'jp1',
-    'kr': 'kr',
-    'lan': 'la1',
-    'las': 'la2',
-    'na': 'na1',
-    'oc': 'oc1',
-    'ru': 'ru',
-    'tr': 'tr1'
-}
-
-
-def region_to_platform(region: str):
-    """
-    Converter for the flag
-    """
-    return region_to_platform_dict[region.lower()]
-
-
-platform_to_region_dict = {
-    v: k
-    for k, v in region_to_platform_dict.items()
-}
-
-
-def platform_to_region(platform: str):
-    return platform_to_region_dict[platform.lower()]
-
-
-def opgg_link(platform: str, acc_name: str):
-    region = platform_to_region(platform)
-    return f'https://{region}.op.gg/summoners/{region}/{acc_name.replace(" ", "")}'
-
-
-def ugg_link(platform: str, acc_name: str):
-    return f'https://u.gg/lol/profile/{platform}/{acc_name.replace(" ", "")}'
-
-
-def get_str_match_id(platform: str, match_id: int) -> str:
-    return f'{platform.upper()}_{match_id}'
-
-
-class ActiveMatch:
-
-    def __init__(
-            self,
-            *,
-            match_id: int,
-            start_time: int,
-            stream: str,
-            twtv_id: int,
-            champ_id: int,
-            champ_ids: List[int],
-            platform: str,
-            accname: str,
-            spells: List[Spell],
-            runes: List[Rune]
-    ):
-        self.match_id = match_id
-        self.start_time = start_time
-        self.stream = stream
-        self.twtv_id = twtv_id
-        self.champ_id = champ_id
-        self.champ_ids = champ_ids
-        self.platform = platform
-        self.accname = accname
-        self.spells = spells
-        self.runes = runes
-
-    @property
-    def long_ago(self):
-        if self.start_time:
-            return int(datetime.now(timezone.utc).timestamp() - self.start_time)
-        else:
-            return self.start_time
-
-    @async_property
-    async def roles_arr(self):
-        return await get_role_mini_list(self.champ_ids)
-
-    @async_property
-    async def champ_name(self):
-        return await champion.key_by_id(self.champ_id)
-
-    @staticmethod
-    async def iconurl_by_id(champid):
-        champ = await lol.champion.Champion(id=champid).get()
-        return cdragon.abs_url(champ.square_path)
-
-    @async_property
-    async def champ_icon(self):
-        return await self.iconurl_by_id(self.champ_id)
-
-    async def better_thumbnail(
-            self,
-            stream: TwitchStream,
-            session: ClientSession,
-    ):
-        img = await url_to_img(session, stream.preview_url)
-        width, height = img.size
-        last_row_h = 50
-        last_row_y = height - last_row_h
-        rectangle = Image.new("RGB", (width, 100), str(Clr.rspbrry))
-        ImageDraw.Draw(rectangle)
-        img.paste(rectangle)
-        img.paste(rectangle, (0, last_row_y))
-
-        champ_img_urls = [await self.iconurl_by_id(champ_id) for champ_id in await self.roles_arr]
-        champ_imgs = await url_to_img(session, champ_img_urls)
-        for count, champ_img in enumerate(champ_imgs):
-            champ_img = champ_img.resize((62, 62))
-            extra_space = 0 if count < 5 else 20
-            img.paste(champ_img, (count * 62 + extra_space, 0))
-
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
-        draw = ImageDraw.Draw(img)
-        text = f'{stream.display_name} - {await self.champ_name}'
-        w2, h2 = get_text_wh(text, font)
-        draw.text(((width - w2) / 2, 65), text, font=font, align="center")
-
-        rune_img_urls = [(await r.get()).icon_abspath for r in self.runes]
-        rune_imgs = await url_to_img(session, rune_img_urls)
-        left = 0
-        for count, rune_img in enumerate(rune_imgs):
-            if count < 6:
-                rune_img = rune_img.resize((last_row_h, last_row_h))
-            img.paste(rune_img, (left, height - rune_img.height), rune_img)
-            left += rune_img.height
-
-        spell_img_urls = [(await s.get()).icon_abspath for s in self.spells]
-        spell_imgs = await url_to_img(session, spell_img_urls)
-        left = width - 2 * last_row_h
-        for count, spell_img in enumerate(spell_imgs):
-            spell_img = spell_img.resize((last_row_h, last_row_h))
-            img.paste(spell_img, (left + count * spell_img.width, height - spell_img.height))
-
-        return img
-
-    async def notif_embed(self, session: ClientSession):
-        log.info("sending league embed")
-        twitch = TwitchStream(self.twtv_id)
-        image_name = \
-            f'{twitch.display_name.replace("_", "")}-is-playing-' \
-            f'{(await self.champ_name).replace(" ", "")}.png'
-        img_file = img_to_file(
-            await self.better_thumbnail(twitch, session),
-            filename=image_name
-        )
-
-        em = Embed(
-            color=Clr.rspbrry,
-            url=twitch.url,
-            description=
-            f'Match `{self.match_id}` started {display_relativehmstime(self.long_ago)}\n'
-            f'{twitch.last_vod_link(epoch_time_ago=self.long_ago)}'
-            f'/[Opgg]({opgg_link(self.platform, self.accname)})'       
-            f'/[Ugg]({ugg_link(self.platform, self.accname)})'
-        ).set_image(
-            url=f'attachment://{image_name}'
-        ).set_thumbnail(
-            url=await self.champ_icon
-        ).set_author(
-            name=f'{twitch.display_name} - {await self.champ_name}',
-            url=twitch.url,
-            icon_url=twitch.logo_url
-        )
-        return em, img_file
-
-
-class MatchToEdit:
-
-    def __init__(
-            self,
-            match_id: str,
-            participant: MatchParticipantData
-    ):
-        self.match_id = match_id
-        self.player_id = participant.summoner_id
-        self.kda = f'{participant.kills}/{participant.deaths}/{participant.assists}'
-        self.outcome = "Win" if participant.win else "Loss"
-        self.items = participant.items
-
-    async def edit_the_image(self, img_url, session):
-
-        img = await url_to_img(session, img_url)
-        width, height = img.size
-        last_row_h = 50
-        last_row_y = height - last_row_h
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
-
-        draw = ImageDraw.Draw(img)
-        w3, h3 = get_text_wh(self.kda, font)
-        draw.text(
-            (0, height - last_row_h - h3),
-            self.kda,
-            font=font,
-            align="right"
-        )
-        w2, h2 = get_text_wh(self.outcome, font)
-        colour_dict = {
-            'Win': str(MP.green(shade=800)),
-            'Loss': str(MP.red(shade=900)),
-            'No Scored': (255, 255, 255)
-        }
-        draw.text(
-            (0, height - last_row_h - h3 - h2 - 5),
-            self.outcome,
-            font=font,
-            align="center",
-            fill=colour_dict[self.outcome]
-        )
-
-        item_img_urls = [(await i.get()).icon_abspath for i in self.items if i.id]
-        item_imgs = await url_to_img(session, item_img_urls, return_list=True)
-        left = width - len(item_imgs) * last_row_h
-        for count, item_img in enumerate(item_imgs):
-            item_img = item_img.resize((last_row_h, last_row_h))
-            img.paste(item_img, (left + count * item_img.width, height - last_row_h - item_img.height))
-        return img
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 class LoLFeed(commands.Cog):
@@ -337,7 +57,7 @@ class LoLFeed(commands.Cog):
 
         for m_id in row_dict:
             try:
-                match = await Match(
+                match = await lol.Match(
                     id=m_id,
                     region=row_dict[m_id]['routing_region']
                 ).get()
@@ -492,7 +212,7 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
     accname: Optional[str]
 
 
-class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
+class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     """
     Commands to set up fav champ + fav stream notifs.
 
@@ -501,14 +221,15 @@ class LoLFeedTools(commands.Cog, FeedTools, name='LoL'):
     The bot will send messages in a chosen channel when your fav streamer picks your fav champ.
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         super().__init__(
-            display_name='LoLFeed',
+            feature_name='LoLFeed',
             db_name='lolaaccs',
             game_name='LoL',
             clr=Clr.rspbrry,
             db_ch_col='lolfeed_ch_id',
             db_pl_col='lolfeed_stream_ids',
+            pool=bot.pool
         )
         self.bot: AluBot = bot
         self.help_emote = Ems.PogChampPepe

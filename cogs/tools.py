@@ -72,7 +72,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         Useful for Aluerie because Twitter is banned in Russia.
         • `<tweet_ids>` are tweet ids - it's just numbers in the end of tweet links.
         """
-        await download_twitter_images(self.bot.ses, ctx, tweet_ids=tweet_ids)
+        await download_twitter_images(self.bot.session, ctx, tweet_ids=tweet_ids)
 
     def dota_request_matchmaking_stats(self):
         self.bot.steam_dota_login()
@@ -103,16 +103,12 @@ class ToolsCog(commands.Cog, name='Tools'):
         players_by_group = self.dota_request_matchmaking_stats()
         players_by_group = [x for x in players_by_group if x]
 
-        em = Embed(
-            colour=Clr.prpl,
-            title='Dota 2 Matchmaking stats',
-            description=
-            '\n'.join([
-                f'{i}. {y}: {x}' for i, (x, y) in enumerate(zip(players_by_group, server_regions_order), start=1)]
-            ),
-        ).set_footer(
-            text='These regions are completely wrong. idk how to relate numbers from valve to actual regions'
-        )
+        answer = '\n'.join([
+            f'{i}. {y}: {x}'
+            for i, (x, y) in enumerate(zip(players_by_group, server_regions_order), start=1)
+        ])
+        em = Embed(colour=Clr.prpl, title='Dota 2 Matchmaking stats', description=answer)
+        em.set_footer(text='These regions are completely wrong. idk how to relate numbers from valve to actual regions')
         # print(len(players_by_group), len(server_regions_order))
         await ctx.reply(embed=em)
 

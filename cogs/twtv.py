@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from discord import Embed, Streaming
 from discord.ext import commands, tasks
 
-from .utils.imgtools import url_to_file
 from .utils.twitch import TwitchStream
 from .utils.var import Sid, Uid, Rid, Img, Cid, Ems
 
@@ -51,7 +50,7 @@ class TwitchCog(commands.Cog):
 
     @tasks.loop(minutes=2)
     async def mystream(self):
-        tw = TwitchStream(MY_TWITCH_ID)
+        tw = TwitchStream(MY_TWITCH_ID, self.bot.twitch)
         query = """ UPDATE botinfo SET irene_is_live=$1 
                     WHERE id=$2 
                     AND irene_is_live IS DISTINCT FROM $1
@@ -65,26 +64,13 @@ class TwitchCog(commands.Cog):
         guild = self.bot.get_guild(Sid.alu)
         mention_role = guild.get_role(Rid.stream_lover)
         content = f'{mention_role.mention} and chat, our Highness **@{tw.display_name}** just went live !'
-        file = await url_to_file(self.bot.ses, tw.preview_url, filename='twtvpreview.png')
-        em = Embed(
-            colour=0x9146FF,
-            title=f'{tw.title}',
-            url=tw.url,
-            description=
-            f'Playing {tw.game}\n'
-            f'/[Watch Stream]({tw.url}){tw.last_vod_link()}',
-        ).set_author(
-            name=f'{tw.display_name} just went live on Twitch!',
-            icon_url=tw.logo_url,
-            url=tw.url
-        ).set_footer(
-            text=f'Twitch.tv | With love, {guild.me.display_name}',
-            icon_url=Img.twitchtv
-        ).set_thumbnail(
-            url=tw.logo_url
-        ).set_image(
-            url=f'attachment://{file.filename}'
-        )
+        file = await self.bot.url_to_file(tw.preview_url, filename='twtvpreview.png')
+        em = Embed(colour=0x9146FF, title=f'{tw.title}', url=tw.url)
+        em.description = f'Playing {tw.game}\n/[Watch Stream]({tw.url}){tw.last_vod_link()}'
+        em.set_author(name=f'{tw.display_name} just went live on Twitch!', icon_url=tw.logo_url, url=tw.url)
+        em.set_footer(text=f'Twitch.tv | With love, {guild.me.display_name}', icon_url=Img.twitchtv)
+        em.set_thumbnail(url=tw.logo_url)
+        em.set_image(url=f'attachment://{file.filename}')
         await guild.get_channel(Cid.stream_notifs).send(content=content, embed=em, file=file)
 
     @mystream.before_loop

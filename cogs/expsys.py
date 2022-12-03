@@ -195,7 +195,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
-        #if self.bot.test_flag:
+        # if self.bot.test_flag:
         #    return  # let's not mess up with Yennifer
         if msg.author.bot or msg.channel.id in Cid.blacklisted_array:
             return
@@ -221,9 +221,8 @@ class ExperienceSystem(commands.Cog, name='Profile'):
                 if exp == get_exp_for_next_level(get_level(exp) - 1):
                     level_up_role = utils.get(msg.guild.roles, name=f"Level #{level}")
                     previous_level_role = utils.get(msg.guild.roles, name=f"Level #{level - 1}")
-                    em = Embed(
-                        colour=Clr.prpl,
-                        description=
+                    em = Embed(colour=Clr.prpl)
+                    em.description = (
                         '{0} just advanced to {1} ! '
                         '{2} {2} {2}'.format(msg.author.mention, level_up_role.mention, Ems.PepoG)
                     )

@@ -107,7 +107,7 @@ class Welcome(commands.Cog):
                 role = guild.get_role(Rid.level_zero)
                 await mbr.add_roles(role)
 
-        content_text, embed, image_file = await welcome_message(self.bot.ses, mbr, back=back)
+        content_text, embed, image_file = await welcome_message(self.bot.session, mbr, back=back)
         await self.bot.get_channel(Cid.welcome).send(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
@@ -159,7 +159,7 @@ class Welcome(commands.Cog):
     async def welcome_preview(self, ctx, member: Member = None):
         """Get a rendered welcome message for a `{@user}`;"""
         mbr = member or ctx.message.author
-        content_text, embed, image_file = await welcome_message(self.bot.ses, mbr)
+        content_text, embed, image_file = await welcome_message(self.bot.session, mbr)
         await ctx.reply(content=content_text, embed=embed, file=image_file)
 
 

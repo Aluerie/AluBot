@@ -130,14 +130,10 @@ class Prefix(commands.Cog, name='Settings for the bot'):
                 if not emote_after.managed and guild.id == Sid.alu:
                     query = 'UPDATE emotes SET name=$1 WHERE id=$2'
                     await self.bot.pool.execute(query, emote_after.id, str(emote_after))
-                em = Embed(
-                    colour=0x1e90ff,
-                    title=
-                    f'`:{emote_before.name}:` emote '
-                    f'{"replaced by" if emote_after.managed else "renamed into"} '
-                    f'`:{emote_after.name}:`',
-                    description=f'[Image link]({emote_after.url})',
-                ).set_thumbnail(url=emote_after.url)
+                em = Embed(colour=0x1e90ff, description=f'[Image link]({emote_after.url})')
+                replaced_or_renamed_word = "replaced by" if emote_after.managed else "renamed into"
+                em.title = f'`:{emote_before.name}:` emote {replaced_or_renamed_word} `:{emote_after.name}:`'
+                em.set_thumbnail(url=emote_after.url)
                 await set_author(emote_after, em, AuditLogAction.emoji_update)
                 await ch.send(embed=em)
 

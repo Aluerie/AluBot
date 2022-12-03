@@ -149,7 +149,7 @@ class ComfySpam(commands.Cog):
         await self.comfy_chat_control(message)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, before, after):
+    async def on_message_edit(self, _before, after):
         await self.comfy_chat_control(after)
 
     @tasks.loop(minutes=60)

@@ -304,7 +304,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                     f'{x.match_id} '
                     f'{(await hero.name_by_id(x.hero_id)).ljust(max_hero_len, " ")} '
                     f'{"Win " if x.winner else "Loss"}` '
-                    f'{Match(x.match_id).links()}'
+                    f'{Match(x.match_id).links}'
                 )
             start_at_match_id = res[-1].match_id
             offset += 20
@@ -454,10 +454,10 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         ax = fancy_ax(ax)
 
         ax = fig.add_subplot(gs[5:8, 0:6])
-        ax = await mmr_by_hero_bar(self.bot.ses, ax, sorted_dict)
+        ax = await mmr_by_hero_bar(self.bot.session, ax, sorted_dict)
 
         ax = fig.add_subplot(gs[5:8, 6:10])
-        ax = await heroes_played_bar(self.bot.ses, ax, sorted_dict)
+        ax = await heroes_played_bar(self.bot.session, ax, sorted_dict)
 
         query = """ SELECT mmr 
                     FROM dotahistory
@@ -505,7 +505,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
             xycoords='axes fraction', va='center', ha='center', fontsize=12
         )
         axRain = fancy_ax(axRain)
-        hero_icon = await url_to_img(self.bot.ses, url=await hero.imgurl_by_id(last_match['hero_id']))
+        hero_icon = await url_to_img(self.bot.session, url=await hero.imgurl_by_id(last_match['hero_id']))
         hero_icon.putalpha(200)
 
         axRain.imshow(hero_icon, extent=[-30, 30, -20, 20], aspect='auto')

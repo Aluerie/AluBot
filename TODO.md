@@ -115,3 +115,8 @@
 72. create channel with global logs for the bot as in all guilds commands usage, I guess.
 73. mess around with contributing and stuff
 74. move `send_pages_list(` to ctx. Problem - something is wrong when ctx is Interaction
+75. rework prefix to remove constant db queries
+76. i do not like our concept for database request commands as in we are doing the same job twice
+77. app_commands.Transform for issues lke reminder
+78. explore twitch chat bot thing xd
+79. 

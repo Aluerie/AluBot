@@ -60,7 +60,7 @@ class CopypasteLeague(commands.Cog):
                 if "https://twitter.com" in msg.content:
                     await asyncio.sleep(2)
                     #  answer = await msg.channel.fetch_message(int(msg.id))
-                    embeds = [await replace_tco_links(self.bot.ses, item) for item in msg.embeds]
+                    embeds = [await replace_tco_links(self.bot.session, item) for item in msg.embeds]
                     embeds = [move_link_to_title(embed) for embed in embeds]
                     content = ''
 
@@ -77,7 +77,7 @@ class CopypasteLeague(commands.Cog):
     async def patch_checker(self):
 
         url = "https://www.leagueoflegends.com/en-us/news/tags/patch-notes/"
-        async with self.bot.ses.get(url) as resp:
+        async with self.bot.session.get(url) as resp:
             soup = BeautifulSoup(await resp.read(), 'html.parser')
 
         new_patch_href = soup.find_all("li")[0].a.get('href')
@@ -93,7 +93,7 @@ class CopypasteLeague(commands.Cog):
             return
 
         patch_url = f'https://www.leagueoflegends.com{new_patch_href}'
-        async with self.bot.ses.get(patch_url) as resp:
+        async with self.bot.session.get(patch_url) as resp:
             patch_soup = BeautifulSoup(await resp.read(), 'html.parser')
         metas = patch_soup.find_all('meta')
 

@@ -133,10 +133,8 @@ class TextToSpeech(commands.Cog, name='TTS'):
         Show list of languages supported by `(/ or $)voice speak` command.
         """
         our_list = [f"{key}: {lang_dict[key]['locale']}" for key in lang_dict]
-        em = Embed(
-            colour=Clr.prpl,
-            title='List of languages supported by the bot',
-            description=
+        em = Embed(colour=Clr.prpl, title='List of languages supported by the bot')
+        em.description = (
             f'Commands `$voice` and `/voice` support following languages.\n '
             f'Example of usage for text-command: `$voice en-UK allo chat AYAYA`.\n '
             f'When using slash-command choose language from available list in its options.'
@@ -225,7 +223,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
         await ctx.reply(content=content)
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
+    async def on_voice_state_update(self, member, before, _after):
         # disconnect
         if before.channel is not None and len([m for m in before.channel.members if not m.bot]) == 0:
             vc = self.connections.get(member.guild.id, None)
@@ -235,4 +233,3 @@ class TextToSpeech(commands.Cog, name='TTS'):
 
 async def setup(bot):
     await bot.add_cog(TextToSpeech(bot))
-

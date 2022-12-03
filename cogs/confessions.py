@@ -79,12 +79,9 @@ class ConfView(View):
 
     async def on_error(self, ntr: Interaction, error: Exception, item: Item):
         if isinstance(error, ButtonOnCooldown):
-            em = Embed(
-                colour=Clr.error,
-                description=
-                f"Sorry, you are on cooldown \n"
-                f"Time left `{display_time(error.retry_after, 3)}`"
-            ).set_author(name=error.__class__.__name__)
+            em = Embed(colour=Clr.error)
+            em.description = f"Sorry, you are on cooldown \nTime left `{display_time(error.retry_after, 3)}`"
+            em.set_author(name=error.__class__.__name__)
             await ntr.response.send_message(embed=em, ephemeral=True)
         else:
             # await super().on_error(ntr, error, item) # original on_error

@@ -116,7 +116,7 @@ class CopypasteDota(commands.Cog):
             elif msg.channel.id == Cid.copydota_tweets:
                 await asyncio.sleep(2)
                 answer = await msg.channel.fetch_message(int(msg.id))
-                embeds = [await replace_tco_links(self.bot.ses, item) for item in answer.embeds]
+                embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]
                 embeds = [move_link_to_title(embed) for embed in embeds]
                 if embeds:
                     msg = await self.bot.get_channel(Cid.dota_news).send(embeds=embeds)
@@ -131,7 +131,7 @@ class CopypasteDota(commands.Cog):
     @tasks.loop(minutes=10)
     async def patch_checker(self):
         url = "https://www.dota2.com/datafeed/patchnoteslist"
-        async with self.bot.ses.get(url) as resp:
+        async with self.bot.session.get(url) as resp:
             data = await resp.json()
 
         # db.set_value(db.b, Sid.alu, dota_patch='sadge')

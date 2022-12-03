@@ -165,8 +165,7 @@ class Logging(commands.Cog):
             if 'Stone' in entry.target.display_name:
                 em = Embed(
                     colour=stone_rl.colour,
-                    description=
-                    f'{entry.target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
+                    description=f'{entry.target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
                 )
                 await self.bot.get_channel(Cid.bot_spam).send(embed=em)
                 await entry.target.add_roles(stone_rl)

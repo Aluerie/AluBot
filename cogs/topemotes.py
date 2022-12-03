@@ -1,7 +1,7 @@
 from __future__ import annotations
 import re
 from datetime import time, timezone
-from typing import TYPE_CHECKING, List, Literal
+from typing import TYPE_CHECKING, Literal
 
 from discord import app_commands
 from discord.ext import commands, tasks
@@ -116,7 +116,7 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
                 await topemotes_job(ctx, 3)
 
     @tasks.loop(time=time(hour=16, minute=43, tzinfo=timezone.utc))
-    async def daily_emote_shift(self): # TODO: REWRITE THIS FUNCTION PROPERLY (idk how)
+    async def daily_emote_shift(self):  # TODO: REWRITE THIS FUNCTION PROPERLY (idk how)
         query = 'SELECT id, month_array FROM emotes'
         rows = await self.bot.pool.fetch(query)
         for row in rows:

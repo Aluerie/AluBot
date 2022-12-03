@@ -14,11 +14,11 @@ from steam.steamid import SteamID, EType
 from .dota.const import ODOTA_API_URL
 from .dota.models import PostMatchPlayerData, ActiveMatch
 
-from .utils.checks import is_guild_owner, is_trustee, is_owner
+from .utils.checks import is_guild_owner, is_trustee
 from .utils.distools import send_traceback
 from .dota import hero
 from .utils.fpc import FPCBase
-from .utils.var import Clr, Ems, MP, Cid
+from .utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -32,7 +32,8 @@ log.setLevel(logging.DEBUG)
 class DotaFeed(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        #self.dotafeed.start()
+
+        # self.dotafeed.start()
         self.lobby_ids = set()
         self.active_matches = []
 
@@ -213,14 +214,14 @@ class AfterGameEdit(commands.Cog):
 
         for row in rows:
             url = f"{ODOTA_API_URL}/request/{row.match_id}"
-            async with self.bot.ses.post(url) as resp:
+            async with self.bot.session.post(url) as resp:
                 # print(resp)
                 print(resp.ok)
                 print(resp.headers['X-Rate-Limit-Remaining-Month'], resp.headers['X-Rate-Limit-Remaining-Minute'])
                 print(await resp.json())
 
             url = f"{ODOTA_API_URL}/matches/{row.match_id}"
-            async with self.bot.ses.get(url) as resp:
+            async with self.bot.session.get(url) as resp:
 
                 self.bot.update_odota_ratelimit(resp.headers)
                 dic = await resp.json()
@@ -266,9 +267,19 @@ class AddDotaPlayerFlags(commands.FlagConverter, case_insensitive=True):
 
 
 class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
-    name: str
+    name: Optional[str]
     steam: Optional[str]
 
+
+async def hero_autocomplete(
+    _interaction: Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    fruits = ['Banana', 'Pineapple', 'Apple', 'Watermelon', 'Melon', 'Cherry']
+    return [
+        app_commands.Choice(name=fruit, value=fruit)
+        for fruit in fruits if current.lower() in fruit.lower()
+    ]
 
 class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     """
@@ -304,7 +315,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
             accounts_table='dota_accounts',
             channel_id_column='dotafeed_ch_id',
             players_column='dotafeed_stream_ids',
-            acc_info_columns=['steam_id', 'friend_id']
+            acc_info_columns=['friend_id']
         )
         self.bot: AluBot = bot
         self.help_emote = Ems.DankLove
@@ -352,7 +363,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
 
     @staticmethod
     def player_acc_string(**kwargs):
-        steam_id = kwargs.pop('steam_id')
+        steam_id = kwargs.pop('id')
         friend_id = kwargs.pop('friend_id')
         return (
             f"`{steam_id}` - `{friend_id}`| " 
@@ -387,14 +398,14 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     ) -> dict:
         steam_id, friend_id = self.get_steam_id_and_64(steam_flag)
         return {
-            'steam_id': steam_id,
+            'id': steam_id,
             'friend_id': friend_id
         }
 
     @is_trustee()
     @dota_database.command(
         name='add',
-        usage='name: <name> steam: <steamid> twitch: <yes/no>',
+        usage='name: <name> steam: <steam_id> twitch: <yes/no>',
         description='Add stream to the database.'
     )
     @app_commands.describe(
@@ -406,75 +417,13 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         """
         Add player to the database.
         • `<name>` is player name
-        • `<steamid>` is either steamid in any of 64/32/3/2/friendid versions or just steam profile link.
+        • `<steam_id>` is either steam_id in any of 64/32/3/2/friend_id versions or just Steam profile link.
         • `<twitch>` - yes/no indicating if player with name also streams under such name
         """
         await ctx.typing()
         player_dict = await self.get_player_dict(name_flag=flags.name, twitch_flag=flags.twitch)
         account_dict = await self.get_account_dict(steam_flag=flags.steam)
         await self.database_add(ctx, player_dict, account_dict)
-
-    @is_owner()
-    @dota_database.command(
-        name='remove',
-        usage='name: <name> steam: [steam_id]'
-    )
-    @app_commands.describe(
-        name='twitch.tv stream name',
-        steam='either steam_id in any of 64/32/3/2 versions, friend_id or just steam profile link'
-    )
-    async def dota_database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
-        """Remove player from the database."""
-        await ctx.typing()
-
-        args = [flags.name.lower()]
-        clause = ''
-        if flags.steam:
-            steamid, friendid = self.get_steam_id_and_64(ctx, flags.steam)
-            if steamid is None:
-                return
-            clause = 'AND id=$2'
-            args += steamid
-
-        success = []
-        query = f"""DELETE 
-                    FROM dotaaccs 
-                    WHERE name=$1 {clause}
-                    RETURNING *
-                """
-        rows = await self.bot.pool.fetch(query, *args)
-
-        for row in rows:
-            success.append(
-                {
-                    'name': row.name,
-                    'id': row.id,
-                    'friendid': row.friendid,
-                    'twtv_id': row.twtv_id
-                }
-            )
-        if success:
-            em = Embed(
-                colour=Clr.prpl,
-            ).add_field(
-                name='Successfully removed account(-s) from the database',
-                value=(
-                    '\n'.join(self.field_both(x['name'], x['twtv_id'], x['id'], x['friendid']) for x in success)
-                )
-            )
-            await ctx.reply(embed=em)
-
-            em.colour = MP.red(shade=200)
-            em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
-            await self.bot.get_channel(Cid.global_logs).send(embed=em)
-        else:
-            em = Embed(
-                colour=Clr.error
-            ).add_field(
-                name='There is no account in the database like that',
-                value=' '.join([f'{k}: {v}' for k, v in flags.__dict__.items()])
-            )
-            await ctx.reply(embed=em)
 
     @is_guild_owner()
     @dota_database.command(
@@ -484,50 +433,60 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     )
     @app_commands.describe(
         name='player name',
-        steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link',
+        steam='either steam_id in any of 64/32/3/2 versions, friend_id or just steam profile link',
         twitch='is it a twitch.tv streamer? yes/no',
     )
-    async def database_request(self, ctx: Context, *, flags: AddDotaPlayerFlags):
+    async def dota_database_request(self, ctx: Context, *, flags: AddDotaPlayerFlags):
         """
         Request player to be added into the database. \
         This will send a request message into Aluerie's personal logs channel.
         """
         await ctx.typing()
 
-        answer = await self.database_add_request_check(ctx, flags)
-        if answer is False:
-            return
+        player_dict = await self.get_player_dict(name_flag=flags.name, twitch_flag=flags.twitch)
+        account_dict = await self.get_account_dict(steam_flag=flags.steam)
+        await self.database_request(ctx, player_dict, account_dict, flags)
 
-        warn_em = Embed(
-            colour=Clr.prpl,
-            title='Confirmation Prompt',
-            description=(
-                'Are you sure you want to request this streamer steam account to be added into the database?\n'
-                'This information will be sent to Aluerie. Please, double check before confirming.'
-            )
-        ).add_field(
-            name='Request to add an account into the database',
-            value=answer
-        )
-        confirm = await ctx.prompt(embed=warn_em)
-        if not confirm:
-            return await ctx.send('Aborting...', delete_after=5.0)
-
-        warn_em.colour = MP.orange(shade=200)
-        warn_em.description = ''
-        warn_em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
-        cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
-        warn_em.add_field(
-            name='Command',
-            value=f'`$dota stream add {cmd_str}'
-        )
-        await self.bot.get_channel(Cid.global_logs).send(embed=warn_em)
+    @is_trustee()
+    @dota_database.command(
+        name='remove',
+        usage='name: <name> steam: [steam_id]'
+    )
+    @app_commands.describe(
+        name='twitch.tv stream name',
+        steam='either steam_id in any of 64/32/3/2 versions, friend_id or just Steam profile link'
+    )
+    async def dota_database_remove(self, ctx: Context, *, flags: RemoveStreamFlags):
+        """Remove player from the database."""
+        await ctx.typing()
+        if flags.steam:
+            steam_id, friend_id = self.get_steam_id_and_64(flags.steam)
+        else:
+            steam_id = None
+        await self.database_remove(ctx, flags.name.lower(), steam_id)
 
     @is_guild_owner()
     @dota.group(aliases=['streamer'])
     async def player(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
+
+    @is_guild_owner()
+    @player.command(with_app_command=False, name='add', usage='<player_name(-s)>')
+    async def dota_player_add_ext(self, ctx: Context, *player_names):
+        """Add player to your favourites."""
+
+        await ctx.reply(' '.join(player_names))
+
+    @is_guild_owner()
+    @player.app_command.command(name='add')
+    @app_commands.describe(player_names='Name(-s) of players')
+    async def dota_player_add_slh(self, ctx: Context, *, player_names: str):
+        """Add player to your favourites."""
+        await ctx.reply(player_names)
+        return
+        #await self.player_add_remove(ctx, player_names, mode='add')
+
 
     async def player_add_remove(
             self,
@@ -581,14 +540,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
             fav_items=fav_items,
         )
 
-    @is_guild_owner()
-    @player.command(name='add', usage='<player_name(-s)>')
-    @app_commands.describe(player_names='Name(-s) of players')
-    async def player_add(self, ctx: Context, *, player_names: str):
-        """Add player to your favourites."""
-        await self.player_add_remove(ctx, player_names, mode='add')
-
-    @player_add.autocomplete('player_names')
+    #@dota_player_add_slh.autocomplete('player_names')
     async def player_add_autocomplete(
             self,
             ntr: Interaction,
@@ -691,7 +643,33 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
             reverse_func=hero.id_by_name
         )
 
-    @is_guild_owner()
+
+
+
+
+
+    @hero.command(with_app_command=False, name='add')
+    async def hero_add_ctx(self, ctx: Context, *, hero_names: str):
+        await ctx.reply(hero_names)
+
+    @hero.app_command.command(name='add')
+    @app_commands.autocomplete(
+        hero_name1=hero_autocomplete,
+        hero_name2=hero_autocomplete,
+        hero_name3=hero_autocomplete
+    )
+    async def hero_add_ntr(self, ntr: Interaction, hero_name1: str, hero_name2: str, hero_name3: str):
+        hero_names = [hero_name1, hero_name2, hero_name3]
+        await ntr.response.send_message(', '.join(hero_names))
+
+
+
+
+
+
+
+
+    """@is_guild_owner()
     @hero.command(
         name='add',
         usage='<hero_name(-s)>',
@@ -699,18 +677,18 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     )
     @app_commands.describe(hero_names='Name(-s) from Dota 2 Hero Grid')
     async def hero_add(self, ctx: Context, *, hero_names: str):
-        """
+        
         Add hero(-es) to your fav heroes list. \
         Use names from Dota 2 hero grid. For example,
         • `Anti-Mage` (letter case does not matter) and not `Magina`;
         • `Queen of Pain` and not `QoP`.
-        """
+        
         # At last, you can find proper name
         # [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
         # under one of `"localized_name"`
-        await self.hero_add_remove(ctx, hero_names, mode='add')
+        await self.hero_add_remove(ctx, hero_names, mode='add')"""
 
-    @hero_add.autocomplete('hero_names')
+    #@hero_add.autocomplete('hero_names')
     async def hero_add_autocomplete(
             self,
             ntr: Interaction,

@@ -62,9 +62,10 @@ class RPSView(View):
         embed.set_field_at(
             2,
             name=embed.fields[2].name,
-            value=
-            embed.fields[2].value +
-            f'\n● Player {1 + player_index} {self.players[player_index].mention} has made their choice',
+            value=(
+                embed.fields[2].value +
+                f'\n● Player {1 + player_index} {self.players[player_index].mention} has made their choice'
+            ),
             inline=False
         )
         await self.message.edit(embed=embed)
@@ -127,11 +128,12 @@ class RPSView(View):
 
             em_game.add_field(
                 name='Result',
-                value=
-                f'{chr(10).join([f"{x.mention}: {y}" for x, y in zip(self.players, self.choices)])}'
-                f'\n{winning_sentence()}'
-                f'\n\n**Good Game, Well Played {Ems.DankL} {Ems.DankL} {Ems.DankL}**'
-                f'\n**{outcome_list[win_index]}**',  # type: ignore
+                value=(
+                    f'{chr(10).join([f"{x.mention}: {y}" for x, y in zip(self.players, self.choices)])}'
+                    f'\n{winning_sentence()}'
+                    f'\n\n**Good Game, Well Played {Ems.DankL} {Ems.DankL} {Ems.DankL}**'
+                    f'\n**{outcome_list[win_index]}**'
+                ),  # type: ignore
                 inline=False
             )
             if win_index:

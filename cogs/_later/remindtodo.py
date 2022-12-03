@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Annotated, Union
 from discord import Embed, Interaction, Member, app_commands
 from discord.ext import commands, tasks
 from discord.utils import sleep_until
-from sqlalchemy import func
 
 from cogs.utils import time
 from cogs.utils.context import Context

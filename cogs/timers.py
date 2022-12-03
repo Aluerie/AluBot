@@ -82,7 +82,8 @@ async def get_fact_text(pool: Pool):
         'Hey chat, Aluerie made these "interesting daily fact about this server" messages but has no ideas.',
         f'Hey chat, {await get_msg_count(pool)} messages from people in total were sent in this server '
         f'(which my bot tracked)',
-        f'Hey chat, <@135119357008150529> was the very first person to join this server - holy poggers {Ems.PogChampPepe}'
+        f'Hey chat, <@135119357008150529> was the very first person to join this server - holy poggers '
+        f'{Ems.PogChampPepe}'
         # idea to put there the most chatting person who has the most exp and stuff
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_fact_timer', pool)

@@ -199,9 +199,7 @@ class Info(commands.Cog, name='Info'):
         description="Get info about colour",
         aliases=['color'],
         usage='<formatted_colour_string>',
-        help=
-        f'Get info about colour in specified <formatted_colour_string>.\n'
-        f'{colour_info}'
+        help=f'Get info about colour in specified <formatted_colour_string>.\n{colour_info}'
     )
     @app_commands.describe(colour_arg='Colour in any of supported formats')
     async def colour(self, ctx, *, colour_arg: str):
@@ -230,17 +228,14 @@ class Info(commands.Cog, name='Info'):
 
         img = Image.new('RGB', (300, 300), rgb)
         file = img_to_file(img, filename='colour.png')
-        em = Embed(
-            color=Colour.from_rgb(*rgb),
-            title='Colour info',
-            description=
+        em = Embed(color=Colour.from_rgb(*rgb), title='Colour info')
+        em.description = (
             f'Hex triplet: `{rgb2hex(*rgb)}`\n' +
             'RGB: `({}, {}, {})`\n'.format(*rgb) +
             'HSV: `({:.2f}, {:.2f}, {})`\n'.format(*colorsys.rgb_to_hsv(*rgb)) +
             'HLS: `({:.2f}, {}, {:.2f})`\n'.format(*colorsys.rgb_to_hls(*rgb))
-        ).set_thumbnail(
-            url=f'attachment://{file.filename}'
         )
+        em.set_thumbnail(url=f'attachment://{file.filename}')
         await ctx.reply(embed=em, file=file)
 
     @colour.autocomplete('colour_arg')
@@ -296,36 +291,39 @@ class Info(commands.Cog, name='Info'):
         aliases=['systeminfo']
     )
     async def sysinfo(self, ctx: Context):
-        """Get system info about machine currently hosting the bot. Idk myself what machine it is being hosted on ;"""
+        """Get system info about machine currently hosting the bot"""
         url = 'https://ipinfo.io/json'
-        async with self.bot.ses.get(url) as resp:
+        async with self.bot.session.get(url) as resp:
             data = await resp.json()
 
         embed = Embed(
             colour=Clr.prpl,
             title="Bot Host Machine System Info",
-            description=
-            f'● Hostname: {socket.gethostname()}\n'
-            f'● Machine: {platform.machine()}\n'
-            f'● Platform: {platform.platform()}\n'
-            f'● System: `{platform.system()}` release: `{platform.release()}`\n'
-            f'● Version: `{platform.version()}`\n'
-            f'● Processor: {platform.processor()}\n',
+            description=(
+                f'● Hostname: {socket.gethostname()}\n'
+                f'● Machine: {platform.machine()}\n'
+                f'● Platform: {platform.platform()}\n'
+                f'● System: `{platform.system()}` release: `{platform.release()}`\n'
+                f'● Version: `{platform.version()}`\n'
+                f'● Processor: {platform.processor()}\n'
+            ),
         ).add_field(
             name='Current % | max values',
-            value=
-            f'● CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
-            f'● RAM usage: \n{psutil.virtual_memory().percent}% | '
-            f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
-            f'● Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
-            f'{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB'
+            value=(
+                f'● CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
+                f'● RAM usage: \n{psutil.virtual_memory().percent}% | '
+                f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
+                f'● Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
+                f'{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB'
+            )
         ).add_field(
             name='Python Versions',
-            value=
-            f'● Python: {platform.python_version()}\n'
-            f'● discord.py {dpy_version}\n'
-            f'● dota2 {dota2_version}\n'
-            f'● Pyot {pyot_version}\n'
+            value=(
+                f'● Python: {platform.python_version()}\n'
+                f'● discord.py {dpy_version}\n'
+                f'● dota2 {dota2_version}\n'
+                f'● Pyot {pyot_version}\n'
+            )
         ).set_footer(
             text=f'AluBot is a copyright 2020-{datetime.now().year} of {self.bot.owner.name}'
         )
@@ -456,10 +454,11 @@ class StatsCommands(commands.Cog, name='Stats'):
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
         em = Embed(
             colour=Clr.prpl,
-            description=
-            f"Members: {', '.join([m.mention for m in members])}\n"
-            f"Channels: {', '.join([c.mention for c in channels])}\n"
-            f"Limit: {limit}"
+            description=(
+                f"Members: {', '.join([m.mention for m in members])}\n"
+                f"Channels: {', '.join([c.mention for c in channels])}\n"
+                f"Limit: {limit}"
+            )
         )
         await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
 

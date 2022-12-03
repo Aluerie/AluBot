@@ -52,7 +52,7 @@ class AluBot(commands.Bot):
     github: Github
     git_gameplay: Repository
     git_tracker: Repository
-    __session: ClientSession
+    session: ClientSession
     launch_time: datetime
     pool: Pool
     reddit: Reddit
@@ -89,43 +89,32 @@ class AluBot(commands.Bot):
         self.odota_ratelimit: str = 'was not received yet'
 
     async def setup_hook(self) -> None:
-        self.__session = ClientSession()
+        self.session = ClientSession()
         self.bot_app_info = await self.application_info()
 
         environ["JISHAKU_NO_UNDERSCORE"] = "True"
         environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
-        await self.load_ext('jishaku')
-
+        extensions_list = ['jishaku']
         if self.test_flag and len(test_list):
-            extensions_list = [f'cogs.{name}' for name in test_list]
+            extensions_list += [f'cogs.{name}' for name in test_list]
         else:
-            extensions_list = [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
+            extensions_list += [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
 
         for ext in extensions_list:
-            await self.load_ext(ext)
-
-    async def load_ext(self, ext: str) -> None:
-        try:
-            await self.load_extension(ext)
-        except Exception as e:
-            log.exception(f'Failed to load extension {ext}.')
-            await self.__session.close()
-            raise e
+            try:
+                await self.load_extension(ext)
+            except Exception as e:
+                log.exception(f'Failed to load extension {ext}.')
+                raise e
 
     async def on_ready(self):
         if not hasattr(self, 'launch_time'):
             self.launch_time = datetime.now(timezone.utc)
         log.info(f'Logged in as {self.user}')
 
-    @property
-    def ses(self) -> ClientSession:
-        if self.__session.closed:
-            self.__session = ClientSession()
-        return self.__session
-
     async def close(self) -> None:
         await super().close()
-        await self.__session.close()
+        await self.session.close()
 
     async def start(self) -> None:
         token = cfg.TEST_TOKEN if self.test_flag else cfg.MAIN_TOKEN
@@ -249,7 +238,7 @@ class AluBot(commands.Bot):
             *,
             return_list: bool = False
     ):
-        return await imgtools.url_to_img(self.__session, url, return_list=return_list)
+        return await imgtools.url_to_img(self.session, url, return_list=return_list)
 
     async def url_to_file(
             self,
@@ -258,7 +247,7 @@ class AluBot(commands.Bot):
             *,
             return_list: bool = False
     ) -> Union[File, Sequence[File]]:
-        return await imgtools.url_to_file(self.__session, url, filename, return_list=return_list)
+        return await imgtools.url_to_file(self.session, url, filename, return_list=return_list)
 
     def update_odota_ratelimit(self, headers) -> None:
         monthly = headers.get('X-Rate-Limit-Remaining-Month')

@@ -136,12 +136,13 @@ class FPCBase:
             self,
             ctx: Context
     ) -> None:
+        """Base function for sending database list embed"""
         await ctx.typing()
 
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
         fav_player_id_list = await ctx.pool.fetchval(query, ctx.guild.id)
 
-        query = f"""SELECT {', '.join(['player_id', 'display_name', 'twitch_id'] + self.acc_info_columns)}
+        query = f"""SELECT {', '.join(['player_id', 'display_name', 'twitch_id', 'a.id'] + self.acc_info_columns)}
                     FROM {self.players_table} p
                     JOIN {self.accounts_table} a
                     ON p.id = a.player_id
@@ -158,7 +159,7 @@ class FPCBase:
                     'name': f"{self.player_name_string(row.display_name, row.twitch_id)}{followed}",
                     'info': []
                 }
-            kwargs = {col: row[col] for col in self.acc_info_columns}
+            kwargs = {col: row[col] for col in ['id'] + self.acc_info_columns}
             player_dict[row.player_id]['info'].append(self.player_acc_string(**kwargs))
 
         ans_array = [f"{v['name']}\n{chr(10).join(v['info'])}" for v in player_dict.values()]
@@ -195,26 +196,31 @@ class FPCBase:
             **kwargs
     ) -> dict:
         ...
-
-    async def database_add(
+    
+    async def check_if_already_in_database(
             self,
-            ctx: Context,
-            player_dict: dict,
             account_dict: dict
     ):
-        acc_key = list(account_dict.keys())[0]
-        query = f'SELECT * FROM {self.accounts_table} WHERE {list(account_dict.keys())[0]}=$1'
-        user = await self.bot.pool.fetchrow(query, account_dict[acc_key])
-
+        query = f'SELECT * FROM {self.accounts_table} WHERE id=$1'
+        user = await self.bot.pool.fetchrow(query, account_dict['id'])
         if user is not None:
             raise BadArgument(
                 'This steam account is already in the database.\n'
                 f'It is marked as {user.name}\'s account.\n\n'
                 f'Did you mean to use `/dota player add {user.name}` to add the stream into your fav list?'
             )
+        
+    async def database_add(
+            self,
+            ctx: Context,
+            player_dict: dict,
+            account_dict: dict
+    ):
+        """Base function for adding accounts into the database"""
+        await self.check_if_already_in_database(account_dict)
 
         query = f"""WITH e AS (
-                        INSERT INTO {self.players_table} 
+                        INSERT INTO {self.players_table}
                             (name_lower, display_name, twitch_id)
                                 VALUES ($1, $2, $3)
                             ON CONFLICT DO NOTHING
@@ -226,15 +232,15 @@ class FPCBase:
                 """
         player_id = await ctx.pool.fetchval(query, *player_dict.values())
 
+        dollars = [f'${i}' for i in range(1, len(self.acc_info_columns)+3)]  # [$1, $2, ... ]
         query = f"""INSERT INTO {self.accounts_table}
-                    (player_id, {', '.join(self.acc_info_columns)})
-                    VALUES {'('}{', '.join(['$' + str(i) for i in range(1, len(self.acc_info_columns)+2)])}{')'}
+                    (player_id, id, {', '.join(self.acc_info_columns)})
+                    VALUES {'('}{', '.join(dollars)}{')'}
                 """
         await ctx.pool.execute(query, player_id, *account_dict.values())
 
-        em = Embed(
-            colour=Clr.prpl
-        ).add_field(
+        em = Embed(colour=Clr.prpl)
+        em.add_field(
             name=f'Successfully added the account to the database',
             value=self.player_name_acc_string(
                 player_dict['display_name'], player_dict['twitch_id'], **account_dict
@@ -245,20 +251,109 @@ class FPCBase:
         em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
         await self.bot.get_channel(Cid.global_logs).send(embed=em)
 
+    async def database_request(
+            self,
+            ctx: Context,
+            player_dict: dict,
+            account_dict: dict,
+            flags
+    ) -> None:
+        await self.check_if_already_in_database(account_dict)
 
+        player_string = self.player_name_acc_string(
+            player_dict['display_name'], player_dict['twitch_id'], **account_dict
+        )
+        warn_em = Embed(colour=Clr.prpl, title='Confirmation Prompt')
+        warn_em.description = (
+            'Are you sure you want to request this streamer steam account to be added into the database?\n'
+            'This information will be sent to Aluerie. Please, double check before confirming.'
+        )
+        warn_em.add_field(name='Request to add an account into the database', value=player_string)
+        if not await ctx.prompt(embed=warn_em):
+            await ctx.reply('Aborting...', delete_after=5.0)
+            return
 
+        em = Embed(colour=self.colour)
+        em.add_field(name='Successfully made a request to add the account into the database', value=player_string)
+        await ctx.reply(embed=em)
 
+        warn_em.colour = MP.orange(shade=200)
+        warn_em.title = ''
+        warn_em.description = ''
+        warn_em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
+        warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
+        await self.bot.get_channel(Cid.global_logs).send(embed=warn_em)
 
+    async def database_remove(
+            self,
+            ctx: Context,
+            name_lower: str = None,
+            account_id: Union[str, int] = None  # steam_id for dota, something else for lol
+    ) -> None:
+        """Base function for removing accounts from the database"""
+        if name_lower is None and account_id is None:
+            raise BadArgument('You need to provide at least one of flags: `name`, `steam`')
 
+        if account_id:
+            if name_lower:  # check for both name_lower and account_id
+                query = f"""SELECT a.id 
+                            FROM {self.players_table} p
+                            JOIN {self.accounts_table} a
+                            ON p.id = a.player_id
+                            WHERE a.id=$1 AND p.name_lower=$2
+                        """
+                val = await ctx.pool.fetchval(query, account_id, name_lower)
+                if val is None:
+                    raise BadArgument(
+                        'This account either is not in the database '
+                        'or does not belong to the said player'
+                    )
 
+            # query for account only
+            query = f"""WITH del_child AS (
+                            DELETE FROM {self.accounts_table}
+                            WHERE  id = $1
+                            RETURNING player_id, id
+                            )
+                        DELETE FROM {self.players_table} p
+                        USING  del_child x
+                        WHERE  p.id = x.player_id
+                        AND    NOT EXISTS (
+                            SELECT 1
+                            FROM   {self.accounts_table} c
+                            WHERE  c.player_id = x.player_id
+                            AND    c.id <> x.id
+                            )
+                        RETURNING display_name
+                    """
+            ans_name = await ctx.pool.fetchval(query, account_id)
+            if ans_name is None:
+                raise BadArgument('There is no account with such account details')
+        else:
+            # query for name_lower only
+            query = f"""DELETE FROM {self.players_table}
+                        WHERE name_lower=$1
+                        RETURNING display_name
+                    """
+            ans_name = await ctx.pool.fetchval(query, name_lower)
+            if ans_name is None:
+                raise BadArgument('There is no account with such player name')
 
+        em = Embed(colour=self.colour)
+        em.add_field(
+            name='Successfully removed account(-s) from the database',
+            value=f'{ans_name}{" - " + str(account_id) if account_id else ""}'
+        )
+        await ctx.reply(embed=em)
 
-
-
-
-
-
-
+    async def player_add_remove(
+            self,
+            ctx: Context,
+            player_names: List[str],
+            mode: Literal['add', 'remov']
+    ):
+        return
 
 
     @staticmethod

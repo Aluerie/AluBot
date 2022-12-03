@@ -112,23 +112,20 @@ class CommandErrorHandler(commands.Cog):
                 desc = f'{error}'
             case _:
                 desc = \
-                    f"Oups, some error but I already notified my dev about it.\n The original exception:\n" \
+                    f"Oups, some error and I've just notified Irene about it.\n The original exception:\n" \
                     f"```py\n{error}```"
 
                 cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])
                 if ctx.interaction:
-                    jump_url = ''
-                    cmd_text = f'/{ctx.command.qualified_name}'
+                    jump_url, cmd_text = '', f'/{ctx.command.qualified_name}'
                 else:
-                    jump_url = ctx.message.jump_url
-                    cmd_text = ctx.message.content
+                    jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
 
                 err_embed = Embed(
                     colour=Clr.error,
                     description=f'{cmd_text}\n{cmd_kwargs}'
                 ).set_author(
-                    name=
-                    f'{ctx.author} triggered error in {ctx.channel}',
+                    name=f'{ctx.author} triggered error in {ctx.channel}',
                     url=jump_url,
                     icon_url=ctx.author.avatar.url
                 )

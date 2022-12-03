@@ -32,53 +32,48 @@ class ViewHelp(View):
 
 
 def front_embed(context):
-    return Embed(
-        title='AluBot ❤\'s $help Menu',
-        description=
-        'AluBot ❤ is an ultimate multi-purpose bot !\n\n'
-        'Use dropdown menu below to select a category. '
-    ).add_field(
-        name='Aluerie\'s server',
-        value='[Link](https://discord.gg/K8FuDeP)',
-    ).add_field(
-        name='GitHub',
-        value='[Link](https://github.com/Aluerie/AluBot)'
-    ).add_field(
-        name='Bot Owner',
-        value=f'{context.bot.get_user(Uid.alu)}'
-    )
+    em = Embed(title='AluBot ❤\'s $help Menu')
+    em.description = 'AluBot ❤ is an ultimate multi-purpose bot !\n\nUse dropdown menu below to select a category.'
+    em.add_field(name='Aluerie\'s server', value='[Link](https://discord.gg/K8FuDeP)')
+    em.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
+    em.add_field(name='Bot Owner', value=f'{context.bot.get_user(Uid.alu)}')
+    return em
 
 
 last_embed = Embed(
     title='Other features $help page',
-    description=
-    f'{Ems.PepoDetective} There is a list of not listed on other pages features. '
-    f'Maybe I even forgot something to write down',
+    description=(
+        f'{Ems.PepoDetective} There is a list of not listed on other pages features. '
+        f'Maybe I even forgot something to write down'
+    ),
 ).add_field(
     name='• Notifications about fav Aluerie\'s streamers picking her fav champs/heroes', inline=False,
     value=f'Just look into {cmntn(Cid.alubot)} !'
 ).add_field(
     name='• News feeds', inline=False,
-    value=
-    f'Dota/League related news feed in {cmntn(Cid.dota_news)} and {cmntn(Cid.lol_news)} '
-    f'taken from all over the internet! Even more, bot automatically parsed and analyses dota updates ;'
+    value=(
+        f'Dota/League related news feed in {cmntn(Cid.dota_news)} and {cmntn(Cid.lol_news)} '
+        f'taken from all over the internet! Even more, bot automatically parsed and analyses dota updates ;'
+    )
 ).add_field(
     name='• Context Menu Commands', inline=False,
     value='Right click any user/message and find some commands in `Apps` folder'
 ).add_field(
     name='• Confessions', inline=False,
-    value=
-    f'Just visit {cmntn(Cid.confessions)} and use buttons at the very bottom of the channel. '
-    f'There are two buttons: for anonymous and non-anonymous confessions. '
-    f'If you use the latter - your server nickname will be shown in confession message.'
+    value=(
+        f'Just visit {cmntn(Cid.confessions)} and use buttons at the very bottom of the channel. '
+        f'There are two buttons: for anonymous and non-anonymous confessions. '
+        f'If you use the latter - your server nickname will be shown in confession message.'
+    )
 ).add_field(
     name='• Some stats', inline=False,
     value='Scroll down channel list to see some stats like my local time ;'
 ).add_field(
     name='• Twitch.tv notifications', inline=False,
-    value=
-    f'Notifications for my own stream in {cmntn(Cid.stream_notifs)} and '
-    f'{rmntn(Rid.live_stream)} role for live streamers-members ;'
+    value=(
+        f'Notifications for my own stream in {cmntn(Cid.stream_notifs)} and '
+        f'{rmntn(Rid.live_stream)} role for live streamers-members ;'
+    )
 ).add_field(
     name='• Reaction roles', inline=False,
     value=f'Take some roles in {cmntn(Cid.roles)} ;'
@@ -90,39 +85,43 @@ last_embed = Embed(
     value=f'The bot welcomes new people in {cmntn(Cid.welcome)} ;'
 ).add_field(
     name='• Controlling emote spam channels', inline=False,
-    value=
-    f'The bots moderates {cmntn(Cid.comfy_spam)} and {cmntn(Cid.emote_spam)}, '
-    f'also sometimes spams these channels too ;'
+    value=(
+        f'The bots moderates {cmntn(Cid.comfy_spam)} and {cmntn(Cid.emote_spam)}, '
+        f'also sometimes spams these channels too ;'
+    )
 ).add_field(
     name="• Logging", inline=False,
-    value=
-    'The bot logs a lot of actions like message editing, new profile pics, emote change, etc '
-    'into different channels;'
+    value=(
+        'The bot logs a lot of actions like message editing, new profile pics, emote change, etc '
+        'into different channels;'
+    )
 ).add_field(
     name="• Milestone members", inline=False,
-    value=
-    f'Every 50th member of this server gets fancy {rmntn(Rid.milestone)} role and '
-    f'small congratulation text in {cmntn(Cid.welcome)} ;'
+    value=(
+        f'Every 50th member of this server gets fancy {rmntn(Rid.milestone)} role and '
+        f'small congratulation text in {cmntn(Cid.welcome)} ;'
+    )
 ).add_field(
     name="• Random comfy reactions", inline=False,
     value=f"Every message has a chance to get a comfy {Ems.peepoComfy} reaction on it ;"
 ).add_field(
     name='• Some important things', inline=False,
-    value=
-    f'For example, the bot doesn\'t like bots in {cmntn(Cid.general)} and '
-    f'weebs in {cmntn(Cid.weebs)} ;'
+    value=(
+        f'For example, the bot doesn\'t like bots in {cmntn(Cid.general)} and '
+        f'weebs in {cmntn(Cid.weebs)} ;'
+    )
 ).add_field(
     name='• Thanks to twitch subs', inline=False,
-    value=
-    f"The bot thanks people who get role {rmntn(Rid.subs)} via discord-twitch integration "
-    f"in {cmntn(Cid.stream_notifs)} ;"
+    value=(
+        f"The bot thanks people who get role {rmntn(Rid.subs)} via discord-twitch integration "
+        f"in {cmntn(Cid.stream_notifs)} ;"
+    )
 ).add_field(
     name='• Experience system', inline=False,
     value='We have our own special experience system ;'
 ).add_field(
     name='• Reputation system', inline=False,
-    value=
-    'Your "thanks", "ty" messages with mentions give people reputation or you can just use `$rep` command ;'
+    value='Your "thanks", "ty" messages with mentions give people reputation or you can just use `$rep` command ;'
 ).add_field(
     name='• Your life is...', inline=False,
     value='Just a joke !'
@@ -217,9 +216,8 @@ class HelpCommand(commands.HelpCommand):
             cog_emote = getattr(cog, "help_emote", None)
 
             if command_signatures:
-                em = Embed(
-                    title=cog_name,
-                    description=
+                em = Embed(title=cog_name)
+                em.description = (
                     f'{cog_emote + " " if cog_emote else ""}'
                     f'{cog_desc}\n\n'
                     f'{chr(10).join(command_signatures)}'
@@ -267,52 +265,34 @@ class HelpCommand(commands.HelpCommand):
         cog_name = getattr(cog, "qualified_name", "No Category")
         cog_desc = getattr(cog, "description", "No Description")
 
-        em = Embed(
-            colour=Clr.prpl,
-            title=cog_name,
-            description=
-            f'{cog_desc}\n\n'
-            f'{chr(10).join(command_signatures)}'
-        ).set_footer(
-            text=f'With love, {self.context.bot.user.display_name}'
-        ).set_thumbnail(
-            url=self.context.bot.user.display_avatar.url
-        )
+        em = Embed(colour=Clr.prpl, title=cog_name)
+        em.description = f'{cog_desc}\n\n{chr(10).join(command_signatures)}'
+        em.set_footer(text=f'With love, {self.context.bot.user.display_name}')
+        em.set_thumbnail(url=self.context.bot.user.display_avatar.url)
         await self.context.reply(embed=em)
 
     async def send_group_help(self, group):
         filtered = await self.filter_commands(group.commands, sort=True)
         await self.context.bot.update_app_commands_cache()
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
-        em = Embed(
-            color=Clr.prpl,
-            title=group.name,
-            description=
-            f'{chr(10).join(command_signatures)}'
-        )
+        em = Embed(color=Clr.prpl, title=group.name, description=f'{chr(10).join(command_signatures)}')
         await self.context.reply(embed=em)
 
     async def send_command_help(self, command):
         await self.context.bot.update_app_commands_cache()
-        embed = Embed(
-            title=command.qualified_name,
-            color=Clr.prpl,
-            description=self.get_command_signature(command)
-        )
-        await self.context.reply(embed=embed)
+        em = Embed(title=command.qualified_name, color=Clr.prpl, description=self.get_command_signature(command))
+        await self.context.reply(embed=em)
 
     async def send_error_message(self, error):
-        embed = Embed(
-            title="Help Command Error",
-            description=error,
-            color=Clr.error
-        ).set_footer(
-            text=
-            'Check the spelling of your desired command/category and '
-            'make sure you can use them because help command '
-            'does not show commands that you are not able to use'
+        em = Embed(title="Help Command Error", description=error, color=Clr.error)
+        em.set_footer(
+            text=(
+                'Check the spelling of your desired command/category and '
+                'make sure you can use them because help command '
+                'does not show commands that you are not able to use'
+            )
         )
-        await self.context.reply(embed=embed)
+        await self.context.reply(embed=em)
 
 
 class HelpCog(commands.Cog, name='Help'):

@@ -7,7 +7,7 @@ from discord import Embed, Guild, Object, utils, HTTPException
 from discord.ext import commands, tasks
 from discord.ext.commands import Greedy
 
-from .utils.bot import test_list, YEN_JSK
+from .utils.bot import test_list
 from .utils.checks import is_owner
 from .utils.context import Context
 from .utils.var import Ems, Clr, Sid, Cid, Rid
@@ -287,8 +287,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         """Reloads all modules"""
         cogs_to_reload = []
         if self.bot.test_flag and len(test_list):
-            if YEN_JSK:
-                cogs_to_reload.append('jishaku')
+            cogs_to_reload.append('jishaku')
             for item in test_list:
                 cogs_to_reload.append(f'cogs.{item}')
         else:

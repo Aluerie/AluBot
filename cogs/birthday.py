@@ -66,8 +66,7 @@ gratz_bank = [
 
 
 def get_congratulation_text():
-    congratulation_text = choice(gratz_bank)
-    return f'{congratulation_text} {Ems.peepoHappyDank}'
+    return f'{choice(gratz_bank)} {Ems.peepoHappyDank}'
 
 
 def bdate_str(bdate, num_mod=False):
@@ -85,7 +84,7 @@ class Birthday(commands.Cog):
     which on your birthday gives you a priority in the members list and makes the bot \
     congratulate you.
     """
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.check_birthdays.start()
         self.help_emote = Ems.peepoHappyDank
@@ -221,10 +220,10 @@ class Birthday(commands.Cog):
         """Show list of birthdays in this server"""
         guild = self.bot.get_guild(Sid.alu)
 
-        query = """SELECT id, bdate, tzone
-                   FROM users 
-                   WHERE bdate IS NOT NULL 
-                   ORDER BY extract(MONTH FROM bdate), extract(DAY FROM bdate);
+        query = """ SELECT id, bdate, tzone
+                    FROM users 
+                    WHERE bdate IS NOT NULL 
+                    ORDER BY extract(MONTH FROM bdate), extract(DAY FROM bdate);
                 """
         rows = await self.bot.pool.fetch(query)
 
@@ -234,14 +233,9 @@ class Birthday(commands.Cog):
             if bperson is not None:
                 text += f"{bdate_str(row.bdate, num_mod=True)}, GMT {row.tzone:+.1f} - **{bperson.mention}**\n"
 
-        embed = Embed(
-            color=Clr.prpl,
-            title='Birthday list',
-            description=text
-        ).set_footer(
-            text=f'With love, {guild.me.display_name}'
-        )
-        await ctx.reply(embed=embed)
+        em = Embed(title='Birthday list', color=Clr.prpl, description=text)
+        em.set_footer(text=f'With love, {guild.me.display_name}')
+        await ctx.reply(embed=em)
 
 
 async def setup(bot):

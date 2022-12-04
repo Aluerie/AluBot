@@ -5,7 +5,6 @@ import re
 from datetime import datetime, timezone, time
 from typing import TYPE_CHECKING, Optional, List, Literal
 
-from PIL import Image, ImageDraw, ImageFont
 from discord import Embed, app_commands, TextChannel
 from discord.ext import commands, tasks
 from pyot.core.exceptions import NotFound, ServerError
@@ -14,15 +13,14 @@ from pyot.models import lol
 from roleidentification import pull_data
 
 from .utils.checks import is_owner, is_guild_owner, is_trustee
-from .utils.distools import send_traceback, send_pages_list
+from .utils.distools import send_pages_list
 from .utils.fpc import FPCBase
-from .utils.imgtools import img_to_file, url_to_img, get_text_wh
+from .utils.imgtools import img_to_file
 from cogs.lol.utils import get_diff_list
 from .utils.twitch import get_lol_streams
 from .utils.var import Clr, MP, Ems, Cid
 
 if TYPE_CHECKING:
-    from pyot.models.lol.match import MatchParticipantData
     from .utils.context import Context
     from .utils.bot import AluBot
 
@@ -195,8 +193,7 @@ class LoLFeed(commands.Cog):
 
     @lolfeed.error
     async def leaguefeed_error(self, error):
-        embed = Embed(colour=Clr.error, title='Error in leaguefeed')
-        await send_traceback(error, self.bot, embed=embed)
+        await self.bot.send_traceback(error, where='LoLFeed Notifs')
         # self.lolfeed.restart()
 
 

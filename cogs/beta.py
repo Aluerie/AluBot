@@ -3,14 +3,16 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from discord import Embed
+from discord import Embed, app_commands, Interaction
 from discord.ext import commands, tasks
 
 from .dota.const import ODOTA_API_URL
 from .utils.var import *
 
+from .utils.context import Context
+
 if TYPE_CHECKING:
-    from .utils.bot import AluBot, Context
+    from .utils.bot import AluBot
 
 log = logging.getLogger(__name__)
 
@@ -23,21 +25,17 @@ class BetaTest(commands.Cog):
     def cog_unload(self):
         return
 
+    @app_commands.command()
+    async def xdxd(self, ntr: Interaction):
+        ctx = await Context.from_interaction(ntr)
+        await ctx.send_test()
+
     @commands.hybrid_command()
     async def allu(self, ctx: Context):
-        await ctx.send('help')
+        await ctx.send_test()
 
     @tasks.loop(count=1)
     async def reload_info(self):
-        em = Embed(
-            colour=Clr.error,
-            description=(
-                "Error checking steam profile for {steam}.\n"
-                "Check if your `steam` flag is correct steam id in either 64/32/3/2/friendid representations "
-                "or just give steam profile link to the bot."
-            )
-        )
-        await self.bot.get_channel(Cid.spam_me).send(embed=em)
         """match_id = 6893851829
 
         url = f"{ODOTA_API_URL}/request/{match_id}"

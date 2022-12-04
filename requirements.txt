@@ -1,4 +1,5 @@
-git+https://github.com/Rapptz/discord.py
+#git+https://github.com/Rapptz/discord.py#egg=speed
+discord.py[speed]==2.1.0
 pillow~=9.3.0
 emoji==2.2.0
 numpy==1.23.5

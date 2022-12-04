@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-import traceback
 from typing import TYPE_CHECKING, Union, List, Optional
 
-import discord
 from discord import Embed, Interaction
 from discord.ext import commands
 
 from . import pages
 from .context import Context
-from .var import Lmt, Cid, umntn, Uid
+from .var import Lmt
 
 if TYPE_CHECKING:
-    from discord import abc, Colour, Message
+    from discord import Colour, Message
 
 
 async def send_pages_list(
@@ -20,12 +18,12 @@ async def send_pages_list(
         string_list: List[str],
         *,
         split_size: int,
-        title: str = None,
-        description_prefix: str = '',
+        title: Optional[str] = None,
+        description_prefix: Optional[str] = '',
         colour: Optional[Union[int, Colour]] = None,
-        footer_text: str = None,
-        author_name: str = None,
-        author_icon: str = None,
+        footer_text: Optional[str] = None,
+        author_name: Optional[str] = None,
+        author_icon: Optional[str] = None,
 ) -> Message:
     """helper command to send possibly paginated strings"""
     if split_size != 0:
@@ -33,22 +31,14 @@ async def send_pages_list(
     else:
         places_list = [string_list]
 
-    paginator = commands.Paginator(
-        prefix='',
-        suffix='',
-        max_size=Lmt.Embed.description,
-    )
+    paginator = commands.Paginator(prefix='', suffix='', max_size=Lmt.Embed.description)
     for lines in places_list:
         for line in lines:
             paginator.add_line(line)
         paginator.close_page()
 
     embeds = [
-        Embed(
-            colour=colour,
-            title=title,
-            description=description_prefix + page
-        )
+        Embed(title=title, colour=colour, description=description_prefix + page)
         for page in paginator.pages
     ]
     if author_name:
@@ -66,40 +56,6 @@ async def send_pages_list(
     else:
         pag = pages.Paginator(pages=embeds)
         return await pag.send(ctx)
-
-
-async def send_traceback(
-        error: Exception,
-        dest: Union[commands.Bot, discord.Client, abc.Messageable],
-        *,
-        embed: Embed = None,
-        mention_dev: bool = True,
-        verbosity: int = 10,
-):
-    if isinstance(dest, (commands.Bot, discord.Client)):
-        channel = dest.get_channel(Cid.spam_me)
-    elif isinstance(dest, abc.Messageable):
-        channel = dest
-    else:
-        raise TypeError('Expected Union[Bot, abc.Messageable]')
-
-    etype, value, trace = type(error), error, error.__traceback__
-    traceback_content = "".join(
-        traceback.format_exception(etype, value, trace, verbosity)
-    ).replace("``", "`\u200b`")
-
-    paginator = commands.Paginator(prefix='```python')
-    for line in traceback_content.split('\n'):
-        paginator.add_line(line)
-
-    if mention_dev or embed:
-        content = '' if not mention_dev else umntn(Uid.alu)
-        await channel.send(content=content, embed=embed)
-
-    message = None
-    for page in paginator.pages:
-        message = await channel.send(page)
-    return message
 
 
 # just convert `keyword: inout_to_10`

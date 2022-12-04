@@ -8,7 +8,6 @@ from discord.ext import commands, tasks
 from github import Github
 
 from config import GIT_PERSONAL_TOKEN
-from .utils.distools import send_traceback
 from .utils.format import block_function
 from .utils.github import human_commit
 from .utils.imgtools import str_to_file
@@ -87,10 +86,7 @@ class CopypasteDota(commands.Cog):
             if msg.channel.id == Cid.copydota_info:
                 if "https://steamdb.info" in msg.content:
                     url, embeds, files = await get_gitdiff_embed()
-                    msg = await self.bot.get_channel(Cid.dota_news).send(
-                        content=f'<{url}>',
-                        embeds=embeds
-                    )
+                    msg = await self.bot.get_channel(Cid.dota_news).send(content=f'<{url}>', embeds=embeds)
                     await msg.publish()
                     if len(files):
                         msg = await self.bot.get_channel(Cid.dota_news).send(files=files)
@@ -106,11 +102,8 @@ class CopypasteDota(commands.Cog):
             elif msg.channel.id == Cid.copydota_steam:
                 if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
-                embed = Embed(
-                    colour=0x171a21,
-                    description=msg.content
-                )
-                msg = await self.bot.get_channel(Cid.dota_news).send(embed=embed)
+                em = Embed(colour=0x171a21, description=msg.content)
+                msg = await self.bot.get_channel(Cid.dota_news).send(embed=em)
                 await msg.publish()
 
             elif msg.channel.id == Cid.copydota_tweets:
@@ -122,11 +115,7 @@ class CopypasteDota(commands.Cog):
                     msg = await self.bot.get_channel(Cid.dota_news).send(embeds=embeds)
                     await msg.publish()
         except Exception as error:
-            embed = Embed(
-                colour=Clr.error,
-                title='Error in  #dota-news copypaste'
-            )
-            await send_traceback(error, self.bot, embed=embed)
+            await self.bot.send_traceback(error, where='#dota-news copypaste')
 
     @tasks.loop(minutes=10)
     async def patch_checker(self):

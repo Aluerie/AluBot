@@ -5,13 +5,11 @@ import re
 from typing import TYPE_CHECKING
 
 import tweepy.asynchronous
-from discord import Embed
 from discord.ext import commands, tasks
 
 from config import TWITTER_BEARER_TOKEN
-from .utils.distools import send_traceback
 from .utils.imgtools import url_to_file
-from .utils.var import Cid, Uid, umntn, Clr
+from .utils.var import Cid, Uid, umntn
 
 if TYPE_CHECKING:
     from .utils.context import Context
@@ -89,11 +87,7 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
 
     async def on_exception(self, exception):
         logger.error("Twitter Stream encountered an exception")
-        await send_traceback(
-            exception,
-            self.bot,
-            embed=Embed(colour=Clr.error, title='Exception in Twitter Async Stream'),
-        )
+        await self.bot.send_traceback(exception, where='Exception in Twitter Async Stream')
         await asyncio.sleep(60)  # TODO: do exponentional back-off for this probably
         await new_stream(self.bot)
 

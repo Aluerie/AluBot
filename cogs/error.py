@@ -7,7 +7,6 @@ from discord import Embed, app_commands
 from discord.ext import commands
 
 from .utils.context import Context
-from .utils.distools import send_traceback
 from .utils.format import display_time
 from .utils.var import Clr, rmntn
 
@@ -22,12 +21,13 @@ class CommandErrorHandler(commands.Cog):
         bot.tree.on_error = self.on_app_command_error
 
     async def command_error_work(self, ctx, error):
-        if isinstance(
+        while isinstance(
                 error,
                 (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError,)
-        ):
+        ):  # circle to the actual error throughout all the chains
             error = error.original
 
+        handled = True
         match error:
             case commands.BadFlagArgument():
                 desc = f'`{error.flag.name}: {error.argument}`\n\n{error.original}'
@@ -50,7 +50,7 @@ class CommandErrorHandler(commands.Cog):
                         'similarly how you type `from: @Eileen` in Discord Search feature'
                     )
             case commands.TooManyArguments():
-                desc = 'Please, double check your arguments to the command'
+                desc = 'Please, double check your arguments for the command'
             case commands.MessageNotFound():
                 desc = f'Bad argument: {error.argument}'
             case commands.MemberNotFound():
@@ -111,6 +111,8 @@ class CommandErrorHandler(commands.Cog):
             case commands.CheckFailure():
                 desc = f'{error}'
             case _:
+                handled = False
+
                 desc = \
                     f"Oups, some error and I've just notified Irene about it.\n The original exception:\n" \
                     f"```py\n{error}```"
@@ -121,32 +123,35 @@ class CommandErrorHandler(commands.Cog):
                 else:
                     jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
 
-                err_embed = Embed(
-                    colour=Clr.error,
-                    description=f'{cmd_text}\n{cmd_kwargs}'
-                ).set_author(
-                    name=f'{ctx.author} triggered error in {ctx.channel}',
-                    url=jump_url,
-                    icon_url=ctx.author.avatar.url
-                )
-                await send_traceback(error, self.bot, embed=err_embed)
-        return Embed(
-            color=Clr.error,
-            description=desc,
-        ).set_author(name=error.__class__.__name__)
+                err_em = Embed(colour=Clr.error, description=f'{cmd_text}\n{cmd_kwargs}')
+                if not self.bot.test_flag:
+                    err_em.set_author(
+                        name=f'{ctx.author} triggered error in {ctx.channel}',
+                        url=jump_url,
+                        icon_url=ctx.author.avatar.url
+                    )
+                await self.bot.send_traceback(error, embed=err_em)
+
+        # send the error
+        em = Embed(color=Clr.error, description=desc).set_author(name=error.__class__.__name__)
+        if not handled and self.bot.test_flag:
+            if ctx.interaction:  # they error out unanswered
+                await ctx.reply(':(', ephemeral=True)
+            else:
+                return
+        else:
+            await ctx.reply(embed=em, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: Context, error):
         if not getattr(ctx, 'error_handled', False):
-            embed = await self.command_error_work(ctx, error)
-            return await ctx.reply(embed=embed, ephemeral=True)
+            await self.command_error_work(ctx, error)
 
     @commands.Cog.listener()
     async def on_app_command_error(self, ntr: Interaction, error):
         if not getattr(ntr, 'error_handled', False):
             ctx = await Context.from_interaction(ntr)
-            embed = await self.command_error_work(ctx, error)
-            return await ntr.response.send_message(embed=embed, ephemeral=True)
+            await self.command_error_work(ctx, error)
 
 
 async def setup(bot):

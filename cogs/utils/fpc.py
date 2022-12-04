@@ -256,7 +256,6 @@ class FPCBase:
             ctx: Context,
             player_dict: dict,
             account_dict: dict,
-            flags
     ) -> None:
         await self.check_if_already_in_database(account_dict)
 
@@ -281,8 +280,8 @@ class FPCBase:
         warn_em.title = ''
         warn_em.description = ''
         warn_em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
-        cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
-        warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
+        # cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
+        # warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
         await self.bot.get_channel(Cid.global_logs).send(embed=warn_em)
 
     async def database_remove(

@@ -13,7 +13,6 @@ from asyncprawcore import AsyncPrawcoreException
 from discord import Embed
 from discord.ext import commands, tasks
 
-from .utils.distools import send_traceback
 from .utils.var import Lmt, Cid, Clr
 
 if TYPE_CHECKING:
@@ -174,9 +173,7 @@ class Reddit(commands.Cog):
 
     @redditfeed.error
     async def redditfeed_error(self, error):
-        # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
-        #  probably declare your own error type
-        await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in subreddit feed'))
+        await self.bot.send_traceback(error, where='Error in subreddit feed')
         await asyncio.sleep(60)
         self.redditfeed.restart()
 
@@ -208,9 +205,7 @@ class Reddit(commands.Cog):
 
     @userfeed.error
     async def userfeed_error(self, error):
-        # TODO: write if isinstance(RunTimeError): be silent else do send_traceback or something,
-        #  probably declare your own error type
-        await send_traceback(error, self.bot, embed=Embed(colour=Clr.error, title='Error in reddit userfeed'))
+        await self.bot.send_traceback(error, where='Error in reddit userfeed')
         await asyncio.sleep(60)
         self.userfeed.restart()
 

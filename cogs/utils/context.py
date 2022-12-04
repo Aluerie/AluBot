@@ -64,8 +64,8 @@ class Context(commands.Context):
         self.pool: Pool = self.bot.pool
 
     @property
-    def ses(self) -> ClientSession:
-        return self.bot.ses
+    def session(self) -> ClientSession:
+        return self.bot.session
 
     async def prompt(
             self,
@@ -126,12 +126,10 @@ class Context(commands.Context):
                 else:
                     ans += f'\n`{get_command_signature(c)}`'
 
-            embed = Embed(
-                colour=Clr.error,
-                description=ans
-            ).set_author(
-                name='SubcommandNotFound'
-            ).set_footer(
-                text=f'`{prefix}help {self.command.name}` for more info'
-            )
-            return await self.reply(embed=embed, ephemeral=True)
+            em = Embed(colour=Clr.error, description=ans)
+            em.set_author(name='SubcommandNotFound')
+            em.set_footer(text=f'`{prefix}help {self.command.name}` for more info')
+            return await self.reply(embed=em, ephemeral=True)
+
+    async def send_test(self):
+        await self.reply('test test')

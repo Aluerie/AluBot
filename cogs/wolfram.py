@@ -11,6 +11,7 @@ from config import WOLFRAM_TOKEN
 from .utils.var import Ems
 
 if TYPE_CHECKING:
+    from .utils.bot import AluBot
     from .utils.context import Context
 
 
@@ -21,8 +22,8 @@ class WolframAlpha(commands.Cog):
     Probably the best computational intelligence service ever.
     [wolframalpha.com](https://www.wolframalpha.com/)
     """
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: AluBot):
+        self.bot: AluBot = bot
         self.wa_basic_url = \
             f'https://api.wolframalpha.com/v1/simple?appid={WOLFRAM_TOKEN}' \
             f'&background=black&foreground=white&layout=labelbar&i='
@@ -37,19 +38,13 @@ class WolframAlpha(commands.Cog):
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
     async def wolf(self, ctx: Context, *, query: str):
-        """
-        Get answer from WolframAlpha
-        """
+        """Get answer from WolframAlpha"""
         await ctx.typing()
-        questionurl = str(self.wa_basic_url + str(urlparse.quote(query)))
-        async with self.bot.ses.get(questionurl) as resp:
-            if (content := await resp.read()) == "Error 1: Invalid appid":
-                await ctx.reply("Sorry! The bot has wrong appid")
-            else:
-                await ctx.reply(
-                    content=f"```py\n{query}```",
-                    file=File(fp=BytesIO(content), filename="WolframAlpha.png")
-                )
+        question_url = f'{self.wa_basic_url}{urlparse.quote(query)}'
+        async with self.bot.session.get(question_url) as resp:
+            await ctx.reply(
+                f"```py\n{query}```", file=File(fp=BytesIO(await resp.read()), filename="WolframAlpha.png")
+            )
 
     @commands.hybrid_command(
         name="wolfram_short",
@@ -59,18 +54,11 @@ class WolframAlpha(commands.Cog):
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
     async def wolfram_shorter(self, ctx: Context, *, query: str):
-        """
-        Get shorter answer from WolframAlpha
-        """
+        """Get shorter answer from WolframAlpha"""
         await ctx.typing()
-        questionurl = str(self.wa_short_url + str(urlparse.quote(query)))
-        async with self.bot.ses.get(questionurl) as resp:
-            if await resp.read() == "Error 1: Invalid appid":
-                result = "Sorry! The bot has wrong appid"
-            else:
-                result = f"```py\n{query}```"
-                result += await resp.text()
-            await ctx.reply(content=result)
+        question_url = f'{self.wa_short_url}{urlparse.quote(query)}'
+        async with self.bot.session.get(question_url) as resp:
+            await ctx.reply(f"```py\n{query}```{await resp.text()}")
 
 
 async def setup(bot):

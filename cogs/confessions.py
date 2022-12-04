@@ -6,7 +6,6 @@ from discord import ButtonStyle, Embed, TextStyle
 from discord.ext import commands
 from discord.ui import Modal, TextInput, View, button
 
-from .utils.distools import send_traceback
 from .utils.format import display_time
 from .utils.var import Ems, Clr
 
@@ -41,18 +40,10 @@ class ConfModal(Modal):
     )
 
     async def on_submit(self, ntr: Interaction):
-        em = Embed(
-            colour=Clr.prpl,
-            title=self.title,
-            description=self.conf.value
-        ).set_footer(
-            text="Use buttons below to make a new confession in this channel"
-        )
+        em = Embed(title=self.title, colour=Clr.prpl, description=self.conf.value)
+        em.set_footer(text="Use buttons below to make a new confession in this channel")
         if self.title == "Non-anonymous confession":
-            em.set_author(
-                name=ntr.user.display_name,
-                icon_url=ntr.user.display_avatar.url
-            )
+            em.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
         await ntr.channel.send(embeds=[em])
         await ntr.channel.send(
             '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Ems.bubuChrist, '⛪', Ems.PepoBeliever)
@@ -79,13 +70,12 @@ class ConfView(View):
 
     async def on_error(self, ntr: Interaction, error: Exception, item: Item):
         if isinstance(error, ButtonOnCooldown):
-            em = Embed(colour=Clr.error)
+            em = Embed(colour=Clr.error).set_author(name=error.__class__.__name__)
             em.description = f"Sorry, you are on cooldown \nTime left `{display_time(error.retry_after, 3)}`"
-            em.set_author(name=error.__class__.__name__)
             await ntr.response.send_message(embed=em, ephemeral=True)
         else:
             # await super().on_error(ntr, error, item) # original on_error
-            await send_traceback(error, ntr.client)
+            await ntr.client.send_traceback(error, where='Confessions')  # type: ignore
 
     @button(
         label="Anonymous confession",

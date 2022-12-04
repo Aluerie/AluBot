@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import traceback
 from datetime import datetime, timezone
 from os import environ, listdir
 from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
@@ -8,7 +9,7 @@ from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
 from asyncpg import Pool
 from aiohttp import ClientSession
 from asyncpraw import Reddit
-from discord import Streaming, Intents, AllowedMentions
+from discord import Streaming, Intents, AllowedMentions, Embed
 from discord.ext import commands
 from dota2.client import Dota2Client
 from github import Github
@@ -19,13 +20,12 @@ import config as cfg
 from . import imgtools
 from .context import Context
 from .twitch import MyTwitchClient
-from .var import Sid
-
+from .var import Sid, Cid, Clr, umntn, Uid
 
 if TYPE_CHECKING:
     from discord import AppInfo, File, Interaction, Message, User
     from discord.app_commands import AppCommand
-    from discord.abc import Snowflake
+    from discord.abc import Snowflake, Messageable
     from github import Repository
 
 log = logging.getLogger(__name__)
@@ -165,10 +165,10 @@ class AluBot(commands.Bot):
                 username=cfg.REDDIT_USERNAME
             )
 
-    def ini_twitch(self) -> None:
+    async def ini_twitch(self) -> None:
         if not hasattr(self, 'twitch'):
             self.twitch = MyTwitchClient(cfg.TWITCH_CLIENT_ID, cfg.TWITCH_CLIENT_SECRET)
-            self.twitch.authenticate_app([])
+            await self.twitch.authenticate_app([])
 
     def ini_twitter(self) -> None:
         if not hasattr(self, 'twitter'):
@@ -254,6 +254,45 @@ class AluBot(commands.Bot):
         minutely = headers.get('X-Rate-Limit-Remaining-Minute')
         if monthly is not None or minutely is not None:
             self.odota_ratelimit = f'monthly: {monthly}, minutely: {minutely}'
+
+    async def send_traceback(
+            self,
+            error: Exception,
+            destination: Messageable = None,
+            *,
+            where: str = 'not specified',
+            embed: Embed = None,
+            verbosity: int = 10,
+    ) -> None:
+        """
+        Function to send traceback into the discord channel.
+
+        It pings @Irene if non-testing version of the bot is running.
+        @param error:
+        @param destination:
+        @param where:
+        if `embed` is specified then this is ignored essentially
+        @param embed:
+        @param verbosity:
+        @return: None
+        """
+        ch = destination or self.get_channel(Cid.spam_me)
+
+        etype, value, trace = type(error), error, error.__traceback__
+        traceback_content = "".join(
+            traceback.format_exception(etype, value, trace, verbosity)
+        ).replace("``", "`\u200b`")
+
+        paginator = commands.Paginator(prefix='```python')
+        for line in traceback_content.split('\n'):
+            paginator.add_line(line)
+
+        embed = embed or Embed(colour=Clr.error).set_author(name=where)
+        content = '' if self.test_flag else umntn(Uid.alu)  # mention only if it is not testing
+        await ch.send(content=content, embed=embed)
+
+        for page in paginator.pages:
+            await ch.send(page)
 
 
 #########################################

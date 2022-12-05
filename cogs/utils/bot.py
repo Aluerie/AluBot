@@ -114,9 +114,10 @@ class AluBot(commands.Bot):
 
     async def close(self) -> None:
         await super().close()
-        await self.session.close()
+        if hasattr(self, 'session'):
+            await self.session.close()
 
-    async def start(self) -> None:
+    async def my_start(self) -> None:
         token = cfg.TEST_TOKEN if self.test_flag else cfg.MAIN_TOKEN
         await super().start(token, reconnect=True)
 

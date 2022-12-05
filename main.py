@@ -32,7 +32,7 @@ async def bot_run(test: bool):
 
     async with AluBot(test) as bot:
         bot.pool = pool
-        await bot.start()
+        await bot.my_start()
 
 
 @click.group(invoke_without_command=True, options_metavar='[options]')

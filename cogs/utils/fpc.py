@@ -12,9 +12,32 @@ from .distools import send_pages_list
 from .var import Clr, MP, Ems, Cid
 
 if TYPE_CHECKING:
+    from asyncpg import Pool
+    from discord import Colour, Interaction, TextChannel
     from .context import Context
     from .bot import AluBot
-    from discord import Colour, TextChannel
+    from main import DRecord
+
+
+class PlayerNamesCache:
+    # todo: delete this if we dont find any usage to it
+    def __init__(
+            self,
+            table_name: str,
+            pool: Pool
+    ):
+        self.table_name = table_name
+        self.pool = pool
+        self.cache: List[DRecord] = []
+        self.display_names: List[str] = []
+        self.name_lowers: List[str] = []
+
+    async def update_cache(self):
+        query = f"SELECT * FROM {self.table_name}"
+        rows = await self.pool.fetch(query)
+        self.cache = rows
+        self.display_names = [row.display_name for row in rows]
+        self.name_lowers = [row.name_lower for row in rows]
 
 
 class FPCBase:
@@ -181,7 +204,7 @@ class FPCBase:
     ) -> dict:
         name_lower = name_flag.lower()
         if twitch_flag:
-            twitch_id, display_name = self.bot.twitch.twitch_id_and_display_name_by_login(name_lower)
+            twitch_id, display_name = await self.bot.twitch.twitch_id_and_display_name_by_login(name_lower)
         else:
             twitch_id, display_name = None, name_flag
 
@@ -350,9 +373,91 @@ class FPCBase:
             self,
             ctx: Context,
             player_names: List[str],
-            mode: Literal['add', 'remov']
+            *,
+            mode_add: bool
     ):
-        return
+        """
+
+        @param ctx:
+        @param player_names:
+        @param mode_add:
+        @return: None
+
+        ---
+        in the code - for add. Note that for remove s and a are swapped.
+        s: success
+        a: already
+        f: fail
+        """
+        query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
+        fav_ids = await ctx.pool.fetchval(query, ctx.guild.id)
+
+        query = f"""SELECT id, name_lower, display_name 
+                    FROM {self.players_table}
+                    WHERE name_lower=ANY($1)
+                """  # AND NOT id=ANY($2)
+        sa_rows = await ctx.pool.fetch(query, [name.lower() for name in player_names])
+
+        s_ids = [row.id for row in sa_rows if row.id not in fav_ids]
+        s_names = [row.display_name for row in sa_rows if row.id not in fav_ids]
+        a_ids = [row.id for row in sa_rows if row.id in fav_ids]
+        a_names = [row.display_name for row in sa_rows if row.id in fav_ids]
+        f_names = [name for name in player_names if name.lower() not in [row.name_lower for row in sa_rows]]
+
+        query = f"UPDATE guilds SET {self.players_column}=$1 WHERE id=$2"
+        new_fav_ids = fav_ids + s_ids if mode_add else [i for i in fav_ids if i not in a_ids]
+        await ctx.pool.execute(query, new_fav_ids, ctx.guild.id)
+
+        def construct_the_embed(s_names: List[str], a_names: List[str], f_names: List[str], *, mode_add: bool) -> Embed:
+            em = Embed()
+            if s_names:
+                em.colour = MP.green(shade=500)
+                em.add_field(name=f"Success: These names were {'added to' if mode_add else 'removed from'} your list",
+                             value=f"`{', '.join(s_names)}`", inline=False)
+            if a_names:
+                em.colour = MP.orange(shade=500)
+                em.add_field(name=f'Already: These names are already {"" if mode_add else "not"} in your list',
+                             value=f"`{', '.join(a_names)}`", inline=False)
+            if f_names:
+                em.colour = MP.red(shade=500)
+                em.add_field(name='Fail: These names are not in the database',
+                             value=f"`{', '.join(f_names)}`", inline=False)
+                em.set_footer(text='Check your argument or consider adding (for trustees)/requesting such player with '
+                                   '`$ or /dota database add|request name: <name> steam: <steam_id> twitch: <yes/no>`')
+            return em
+
+        if mode_add:
+            em = construct_the_embed(s_names, a_names, f_names, mode_add=mode_add)
+        else:
+            em = construct_the_embed(a_names, s_names, f_names, mode_add=mode_add)
+        await ctx.reply(embed=em)
+
+    async def player_add_remove_autocomplete(
+            self,
+            ntr: Interaction,
+            current: str,
+            *,
+            mode_add: bool
+    ) -> List[app_commands.Choice[str]]:
+        query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
+        fav_ids = await self.bot.pool.fetch(query, ntr.guild.id)
+        clause = 'NOT' if mode_add else ''
+        query = f"""SELECT display_name
+                    FROM {self.players_table}
+                    WHERE {clause} id=ANY($1)
+                    ORDER BY similarity(display_name, $2) DESC
+                    LIMIT 6;
+                """
+        rows = await self.bot.pool.fetch(query, fav_ids, current)
+        namespace_list = [x.lower() for x in ntr.namespace.__dict__.values() if x != current]
+        choice_list = [x for x in [a for a, in rows] if x.lower() not in namespace_list]
+        return [app_commands.Choice(name=n, value=n) for n in choice_list if current.lower() in n.lower()]
+
+
+
+
+
+
 
 
     @staticmethod

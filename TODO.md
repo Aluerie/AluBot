@@ -48,70 +48,69 @@
 23. let's turn MandaraBot on as well and leave some tcl tutorial for future self in your discord channel
 
    # 4.0 NOT URGENT
-24. make docstring comments to dotafeed lolfeed and config py like since it most important cogs
-25. add some difference between league and dota database add logs, icon I guess
-26. edge cases when people delete channels/guilds for dota/league thing
-27. include context menu commands into help menu somehow IDK
-28. Discord py speedups
+24. add some difference between league and dota database add logs, icon I guess
+25. edge cases when people delete channels/guilds for dota/league thing
+26. include context menu commands into help menu somehow IDK
+27. Discord py speedups
 
    ## 5.0 LAST BOX
-29. Solve twitter somehow IDK fok ; Task for reload twitter I think 
-30. reaction roles with new selects I guess
-31. Depreceated cogs = 'tags' or something
-32. create better testing tech - something like variable self.test = yes (???)
-33. ?tag emoji escapes 
-34. ?tag pkgutil
-35. abandon not scored games for match history
-36. rewrite purge into something better
-37. routing thing for league (some lists exist natively in Pyot)
-38. look at every cog in robo danny/pycord manager/stella
-39. clips twitch check 
-40. custom server name for dotafeed feature
-41. add league twitch name account check to league after we rewrite it a bit better (like we have in dota; current check is for lol names)
-42. request_matchmaking_stats()
-43. add image name for convert thing (check resolution too 112)
+28. Solve twitter somehow IDK fok ; Task for reload twitter I think 
+29. reaction roles with new selects I guess
+30. Depreceated cogs = 'tags' or something
+31. create better testing tech - something like variable self.test = yes (???)
+32. ?tag emoji escapes 
+33. ?tag pkgutil
+34. abandon not scored games for match history
+35. rewrite purge into something better
+36. routing thing for league (some lists exist natively in Pyot)
+37. look at every cog in robo danny/pycord manager/stella
+38. clips twitch check 
+39. custom server name for dotafeed feature
+40. add league twitch name account check to league after we rewrite it a bit better (like we have in dota; current check is for lol names)
+41. request_matchmaking_stats()
+42. add image name for convert thing (check resolution too 112)
 
     ## 6.0 Future
-44. add "all" key into heroes so all heroes can be traced
-45. transfer emotes used in bot to 3rd server (todo while in q tier task)
-46. research 'setup.py' nor 'pyproject.toml'
-47. monka omega register on AWS if opendota fails again.
+43. add "all" key into heroes so all heroes can be traced
+44. transfer emotes used in bot to 3rd server (todo while in q tier task)
+45. research 'setup.py' nor 'pyproject.toml'
+46. monka omega register on AWS if opendota fails again.
 
     ## 7.0 IMPROVE
-48. remove `regex` library in favour of `re`
-49. remember `a[start:stop:step]` so `a[::-1]` is reverse
-50. ?tag learn async
-51. learn collection lib; do research in discord abc
-52. ?tag eval
-53. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
-54. research TypeVar stuff
-55. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>` (need to check if it works)
+47. remove `regex` library in favour of `re`
+48. remember `a[start:stop:step]` so `a[::-1]` is reverse
+49. ?tag learn async
+50. learn collection lib; do research in discord abc
+51. ?tag eval
+52. make a few server with emotes for more interesting #emotespam or maybe even code feature where bot make some guilds and populates them with emotes
+53. research TypeVar stuff
+54. remember if we ever have embed limit problems we can shorten emotes into `<:_:id> instead of <:name:id>` (need to check if it works)
 
     ## 8.0 Impossible Future
-56. unsovled mystery [0] * 30
+55. unsovled mystery [0] * 30
 
     ## 9.0 new ideas
-57. rewrite check birthdays into similar thing as timers where it just looks for next time to congraluate instead of ticking every hour
-58. rewrite borthday into embeds and also unite /birthday set and timezone commands into one 
-59. maybe move rules into timers too
-60. smurfs for dota/lol feed is a mess
-61. https://hasura.io/learn/database/postgresql/core-concepts/6-postgresql-relationships/
-62. put if condition in rows thing from the point of database view 
-63. make windows dev update scan similar to league/dota patches scan :D
-64. fav_id thing to make serial and the whole relation thing
-65. in readme check list of features
-66. maybe create a help web page ^
-67. ```typescript
+56. rewrite check birthdays into similar thing as timers where it just looks for next time to congraluate instead of ticking every hour
+57. rewrite borthday into embeds and also unite /birthday set and timezone commands into one 
+58. maybe move rules into timers too
+59. smurfs for dota/lol feed is a mess
+60. https://hasura.io/learn/database/postgresql/core-concepts/6-postgresql-relationships/
+61. put if condition in rows thing from the point of database view 
+62. make windows dev update scan similar to league/dota patches scan :D
+63. fav_id thing to make serial and the whole relation thing
+64. in readme check list of features
+65. maybe create a help web page ^
+66. ```typescript
     this.dota2.on('ready', () => {
       console.log('connected to dota game coordinator');
     });
     this.dota2.on('unready', () => {});
     ```
-68. create channel with global logs for the bot as in all guilds commands usage, I guess.
-69. mess around with contributing and stuff
-70. rework prefix to remove constant db queries
-71. i do not like our concept for database request commands as in we are doing the same job twice
-72. app_commands.Transform for issues lke reminder
-73. explore twitch chat bot thing xd
-74. hybrid check
-75. 
+67. create channel with global logs for the bot as in all guilds commands usage, I guess.
+68. mess around with contributing and stuff
+69. rework prefix to remove constant db queries
+70. i do not like our concept for database request commands as in we are doing the same job twice
+71. app_commands.Transform for issues lke reminder
+72. explore twitch chat bot thing xd
+73. hybrid check
+74. 

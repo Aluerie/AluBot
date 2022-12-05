@@ -4,6 +4,8 @@ TEST_TOKEN = ''
 DISCORD_BOT_INVLINK = ''
 
 # STEAM (MAIN account)
+# I have not yet implemented getting SteamGuard codes with super-secret thing
+# So both main and test accounts should be without 2FA from SteamGuard
 STEAM_MAIN_LGN = ''
 STEAM_MAIN_PSW = ''
 

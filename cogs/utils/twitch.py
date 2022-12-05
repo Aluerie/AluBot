@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from discord.ext.commands import BadArgument
-from twitchAPI import Twitch
+
+from twitchAPI.twitch import Twitch
+from twitchAPI.helper import first
 
 from .format import gettimefromhms, display_hmstime
 
@@ -29,27 +31,33 @@ class MyTwitchClient(Twitch):
     def __init__(self, client_id: str, client_secret):
         super().__init__(client_id, client_secret)
 
-    def twitch_id_by_name(
+    async def twitch_id_by_name(
             self,
             user_login: str
     ) -> int:
-        data = self.get_users(logins=[user_login])['data']
-        if data:
-            return int(data[0]['id'])
+        """Gets twitch_id by user_login"""
+        if user := await first(self.get_users(logins=[user_login])):
+            return int(user.id)
         else:
             raise BadArgument(f'Error checking stream `{user_login}`.\n User either does not exist or is banned.')
 
-    def name_by_twitch_id(self, user_id: int):
-        data = self.get_users(user_ids=[str(user_id)])['data']
-        return data[0]['display_name']
+    async def name_by_twitch_id(
+            self,
+            user_id: int
+    ) -> str:
+        """Gets display_name by twitch_id"""
+        if user := await first(self.get_users(user_ids=[str(user_id)])):
+            return user.display_name
+        else:
+            raise BadArgument(f'Error checking stream `{user_id}`.\n User either does not exist or is banned.')
 
-    def twitch_id_and_display_name_by_login(
+    async def twitch_id_and_display_name_by_login(
             self,
             user_login: str
     ) -> (int, str):
-        data = self.get_users(logins=[user_login])['data']
-        if data:
-            return int(data[0]['id']), data[0]['display_name']
+        """Gets tuple (twitch_id, display_name) by user_login from one call to twitch client"""
+        if user := await first(self.get_users(logins=[user_login])):
+            return int(user.id), user.display_name
         else:
             raise BadArgument(f'Error checking stream `{user_login}`.\n User either does not exist or is banned.')
 
@@ -105,13 +113,20 @@ class TwitchStream:
             return ''
 
 
-if __name__ == '__main__':
-    from twitchAPI import Twitch
+async def main():
     from config import TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET
 
-    twitch = MyTwitchClient(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
-    twitch.authenticate_app([])
+    twitch_client = MyTwitchClient(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
+    await twitch_client.authenticate_app([])
 
-    tw_id = twitch.twitch_id_by_name('timado')
-    re = TwitchStream(tw_id, twitch)
+    tw_id = await twitch_client.twitch_id_by_name('timado')
+    re = TwitchStream(tw_id, twitch_client)
     print(re.preview_url)
+
+
+if __name__ == '__main__':
+    import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main())
+    #  loop.close()

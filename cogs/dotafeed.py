@@ -5,7 +5,8 @@ import logging
 from typing import TYPE_CHECKING, Optional, List, Literal
 
 import vdf
-from discord import Embed, TextChannel, app_commands, Permissions
+from discord import Embed, Permissions, TextChannel, app_commands
+
 from discord.ext import commands, tasks
 from steam.core.msg import MsgProto
 from steam.enums import emsg
@@ -23,7 +24,6 @@ from .utils.var import Clr, Ems
 if TYPE_CHECKING:
     from discord import Interaction
     from .utils.bot import AluBot
-
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -83,6 +83,7 @@ class DotaFeed(commands.Cog):
             if resp is None:
                 print('resp is None, hopefully everything else will be fine tho;')
                 return
+
             # print(resp)
 
             async def get_lobby_id_by_rich_presence_kv(rp_bytes):
@@ -199,7 +200,7 @@ class AfterGameEdit(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.after_match = []
-        #self.aftergame.start()
+        # self.aftergame.start()
 
     def cog_load(self) -> None:
         self.bot.ini_steam_dota()
@@ -271,8 +272,8 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
 
 
 async def hero_autocomplete(
-    _interaction: Interaction,
-    current: str,
+        _interaction: Interaction,
+        current: str,
 ) -> List[app_commands.Choice[str]]:
     fruits = ['Banana', 'Pineapple', 'Apple', 'Watermelon', 'Melon', 'Cherry']
     return [
@@ -324,11 +325,11 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         await self.bot.ini_twitch()
 
     slh_dota = app_commands.Group(
-        name="dota", 
+        name="dota",
         description="Group command about DotaFeed",
         default_permissions=Permissions(administrator=True)
     )
-    
+
     @is_guild_owner()
     @commands.group(name='dota')
     async def ext_dota(self, ctx: Context):
@@ -414,8 +415,8 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         steam_id = kwargs.pop('id')
         friend_id = kwargs.pop('friend_id')
         return (
-            f"`{steam_id}` - `{friend_id}`| " 
-            f"[Steam](https://steamcommunity.com/profiles/{steam_id})" 
+            f"`{steam_id}` - `{friend_id}`| "
+            f"[Steam](https://steamcommunity.com/profiles/{steam_id})"
             f"/[Dotabuff](https://www.dotabuff.com/players/{friend_id})"
         )
 
@@ -440,10 +441,10 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
 
         if steam_acc is None or (hasattr(steam_acc, 'type') and steam_acc.type != EType.Individual):
             raise commands.BadArgument(
-                    "Error checking steam profile for {steam}.\n"
-                    "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
-                    "or just give steam profile link to the bot."
-                )
+                "Error checking steam profile for {steam}.\n"
+                "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
+                "or just give steam profile link to the bot."
+            )
         return steam_acc.as_64, steam_acc.id
 
     async def get_account_dict(self, *, steam_flag: str) -> dict:
@@ -559,101 +560,67 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     )
 
     @is_guild_owner()
-    @ext_dota.group(aliases=['streamer'])
+    @ext_dota.group(name='player', aliases=['streamer'])
     async def ext_dota_player(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
+    async def player_add_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+        return await self.player_add_remove_autocomplete(ntr, current, mode_add=True)
+
     @is_guild_owner()
     @slh_dota_player.command(name='add', description='Add player to your favourites')
-    @app_commands.describe(player_names='Name(-s) of players')
-    async def slh_dota_player_add(self, ntr: Interaction, player_names: str):
+    @app_commands.describe(**{f'name{i}': 'Name of a player' for i in range(1, 11)})
+    @app_commands.autocomplete(**{f'name{i}': player_add_autocomplete for i in range(1, 11)})
+    async def slh_dota_player_add(
+            self, ntr: Interaction,
+            name1: str, name2: str = None, name3: str = None, name4: str = None, name5: str = None,
+            name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
+    ):
         """Slash copy of ext_dota_player_add below"""
+        player_names = list(set([
+            name for name in list(locals().values())[2:] if name is not None
+        ]))
         ctx = await Context.from_interaction(ntr)
-        await ctx.reply(' '.join(player_names))
+        await self.player_add_remove(ctx, player_names, mode_add=True)
 
     @is_guild_owner()
     @ext_dota_player.command(name='add', usage='<player_name(-s)>')
     async def ext_dota_player_add(self, ctx: Context, *, player_names: str):
         """Add player to your favourites."""
-        await ctx.reply(player_names)
-        return
-        #await self.player_add_remove(ctx, player_names, mode='add')
+        player_names = [x.lstrip().rstrip() for x in player_names.split(',') if x]
+        await self.player_add_remove(ctx, player_names, mode_add=True)
 
-    async def player_add_remove(
-            self,
-            ctx: Context,
-            player_names: str,
-            mode: Literal['add', 'remov']
+    async def player_remove_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+        return await self.player_add_remove_autocomplete(ntr, current, mode_add=False)
+
+    @is_guild_owner()
+    @slh_dota_player.command(name='remove', description='Remove player from your favourites')
+    @app_commands.describe(**{f'name{i}': 'Name of a player' for i in range(1, 11)})
+    @app_commands.autocomplete(**{f'name{i}': player_remove_autocomplete for i in range(1, 11)})
+    async def slh_dota_player_remove(
+            self, ntr: Interaction,
+            name1: str, name2: str = None, name3: str = None, name4: str = None, name5: str = None,
+            name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
-        """Work function for player add remove"""
-        async def get_player(name: str):
-            query = 'SELECT * FROM dotaaccs WHERE name=$1 LIMIT 1'
-            player = await self.bot.pool.fetchrow(query, name.lower())
-            return getattr(player, 'display_name', name), getattr(player, 'fav_id', None)
-
-        data_dict = {
-            'success': f'Successfully {mode}ed following players',
-            'already': f'Stream(-s) already {"not" if mode == "remov" else ""} in fav list',
-            'fail': 'Could not find players in the database with these names:',
-            'fail_footer':
-                'Check your argument or '
-                'consider adding (for trustees)/requesting such streamer with '
-                '`$dota database add/request name: <name> steam: <steamid> twitch: <yes/no>`'
-        }
-        query = 'SELECT dotafeed_stream_ids FROM guilds WHERE id=$1'
-        val = await self.bot.pool.fetchval(query, ctx.guild.id)
-        new_ids, embed_list = await self.sort_out_names(
-            player_names, val, mode, data_dict, get_player
-        )
-        query = 'UPDATE guilds SET dotafeed_stream_ids=$1 WHERE id=$2'
-        await self.bot.pool.execute(query, new_ids, ctx.guild.id)
-        for em in embed_list:
-            await ctx.reply(embed=em)
-
-    async def player_add_remove_autocomplete(
-            self,
-            ntr: Interaction,
-            current: str,
-            mode: Literal['add', 'remov']
-    ) -> List[app_commands.Choice[str]]:
-        query = 'SELECT dotafeed_stream_ids FROM guilds WHERE id=$1'
-        fav_ids = await self.bot.pool.fetchval(query, ntr.guild.id)
-
-        query = 'SELECT display_name, fav_id FROM dotaaccs'
-        rows = await self.bot.pool.fetch(query)
-        fav_items = list(set([row.display_name for row in rows if row.fav_id in fav_ids]))
-        all_items = list(set([row.display_name for row in rows]))
-
-        return await self.add_remove_autocomplete_work(
-            current,
-            mode,
-            all_items=all_items,
-            fav_items=fav_items,
-        )
-
-    #@dota_player_add_slh.autocomplete('player_names')
-    async def player_add_autocomplete(
-            self,
-            ntr: Interaction,
-            current: str
-    ) -> List[app_commands.Choice[str]]:
-        return await self.player_add_remove_autocomplete(ntr, current, mode='add')
+        """Slash copy of ext_dota_player_remove below"""
+        player_names = list(set([
+            name for name in list(locals().values())[2:] if name is not None
+        ]))
+        ctx = await Context.from_interaction(ntr)
+        await self.player_add_remove(ctx, player_names, mode_add=False)
 
     @is_guild_owner()
     @ext_dota_player.command(name='remove', usage='<player_name(-s)>')
-    @app_commands.describe(player_names='Name(-s) of players')
-    async def player_remove(self, ctx: Context, *, player_names: str):
-        """Remove player from your favourites."""
-        await self.player_add_remove(ctx, player_names, mode='remov')
+    async def ext_dota_player_remove(self, ctx: Context, *, player_names: str):
+        """Add player to your favourites."""
+        player_names = [x.lstrip().rstrip() for x in player_names.split(',') if x]
+        await self.player_add_remove(ctx, player_names, mode_add=False)
 
-    #@player_remove.autocomplete('player_names')
-    async def player_remove_autocomplete(
-            self,
-            ntr: Interaction,
-            current: str
-    ) -> List[app_commands.Choice[str]]:
-        return await self.player_add_remove_autocomplete(ntr, current, mode='remov')
+
+
+
+##############################################################################
 
     @is_guild_owner()
     @ext_dota_player.command(name='list')
@@ -754,7 +721,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         # under one of `"localized_name"`
         await self.hero_add_remove(ctx, hero_names, mode='add')
 
-    #@hero_add.autocomplete('hero_names')
+    # @hero_add.autocomplete('hero_names')
     async def hero_add_autocomplete(
             self,
             ntr: Interaction,
@@ -771,14 +738,6 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     async def hero_remove(self, ctx: Context, *, hero_names: str):
         """Remove hero(-es) from your fav heroes list."""
         await self.hero_add_remove(ctx, hero_names, mode='remov')
-
-    #@hero_remove.autocomplete('hero_names')
-    async def hero_add_autocomplete(
-            self,
-            ntr: Interaction,
-            current: str
-    ) -> List[app_commands.Choice[str]]:
-        return await self.hero_add_remove_autocomplete_work(ntr, current, mode='remov')
 
     @is_guild_owner()
     @hero.command(name='list')
@@ -831,7 +790,7 @@ class DotaAccCheck(commands.Cog):
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
-            display_name: str = self.bot.twitch.name_by_twitch_id(row.twtv_id)
+            display_name: str = await self.bot.twitch.name_by_twitch_id(row.twtv_id)
             if display_name != row.display_name:
                 query = 'UPDATE dotaaccs SET display_name=$1, name=$2 WHERE id=$3'
                 await self.bot.pool.execute(query, display_name, display_name.lower(), row.id)

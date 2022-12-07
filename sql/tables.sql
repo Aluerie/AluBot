@@ -91,7 +91,8 @@ CREATE TABLE IF NOT EXISTS dota_accounts (
 CREATE TABLE IF NOT EXISTS dota_matches (
     id BIGINT PRIMARY KEY,
     is_finished BOOLEAN DEFAULT FALSE,
-    opendota_jobid BIGINT
+    opendota_jobid BIGINT,
+    fail_counter INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS dota_messages (

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from datetime import datetime, timezone, time
-from typing import TYPE_CHECKING, Optional, List, Literal
+from typing import TYPE_CHECKING, Optional, Literal
 
 from discord import Embed, app_commands, TextChannel
 from discord.ext import commands, tasks
@@ -12,11 +12,11 @@ from pyot.models import lol
 
 from roleidentification import pull_data
 
+from .lol.models import ActiveMatch, PostMatchPlayerData
+from .lol.utils import get_diff_list
 from .utils.checks import is_owner, is_guild_owner, is_trustee
 from .utils.distools import send_pages_list
 from .utils.fpc import FPCBase
-from .utils.imgtools import img_to_file
-from cogs.lol.utils import get_diff_list
 from .utils.twitch import get_lol_streams
 from .utils.var import Clr, MP, Ems, Cid
 
@@ -65,14 +65,9 @@ class LoLFeed(commands.Cog):
                 continue  # TODO: remove message from the database
             for participant in match.info.participants:
                 if participant.champion_id in row_dict[m_id]['champ_ids']:
-                    self.after_match.append(
-                        MatchToEdit(
-                            participant=participant,
-                            match_id=match.id
-                        )
-                    )
+                    self.after_match.append(PostMatchPlayerData(player_data=participant))
 
-    async def edit_the_embed(self, match: MatchToEdit):
+    async def edit_the_embed(self, match: PostMatchPlayerData):
         query = 'DELETE FROM lfmatches WHERE match_id=$1 RETURNING *'
         rows = await self.bot.pool.fetch(query, match.match_id)
         for row in rows:
@@ -122,13 +117,12 @@ class LoLFeed(commands.Cog):
                     self.active_matches.append(
                         ActiveMatch(
                             match_id=live_game.id,
-                            start_time=round(live_game.start_time_millis / 1000),
-                            stream=row.name,
-                            twtv_id=row.twtv_id,
-                            champ_id=our_player.champion_id,
-                            champ_ids=[player.champion_id for player in live_game.participants],
                             platform=our_player.platform,
-                            accname=our_player.summoner_name,
+                            acc_name=our_player.summoner_name,
+                            start_time=round(live_game.start_time_millis / 1000),
+                            champ_id=our_player.champion_id,
+                            all_champ_ids=[player.champion_id for player in live_game.participants],
+                            twitch_id=row.twtv_id,
                             spells=our_player.spells,
                             runes=our_player.runes
                         )
@@ -136,7 +130,7 @@ class LoLFeed(commands.Cog):
             except NotFound:
                 continue
             except ServerError:
-                print(f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}')
+                log.debug(f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}')
                 continue
                 # embed = Embed(colour=Clr.error)
                 # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
@@ -221,12 +215,21 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     def __init__(self, bot: AluBot):
         super().__init__(
             feature_name='LoLFeed',
-            db_name='lolaaccs',
             game_name='LoL',
-            clr=Clr.rspbrry,
-            db_ch_col='lolfeed_ch_id',
-            db_pl_col='lolfeed_stream_ids',
-            pool=bot.pool
+            game_codeword='lol',
+            colour=Clr.rspbrry,
+            bot=bot,
+            players_table='lol_players',
+            accounts_table='lol_accounts',
+            channel_id_column='lolfeed_ch_id',
+            players_column='lolfeed_stream_ids',
+            characters_column='lolfeed_champ_ids',
+            spoil_column='lolfeed_spoils_on',
+            acc_info_columns=[],
+            get_char_name_by_id=,
+            get_char_id_by_name=,
+            get_all_character_names=,
+            character_gather_word='champs'
         )
         self.bot: AluBot = bot
         self.help_emote = Ems.PogChampPepe

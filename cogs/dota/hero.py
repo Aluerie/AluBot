@@ -2,6 +2,8 @@
 The MIT License (MIT)
 
 """
+from typing import List
+
 from .cache import KeyCache
 from .const import *
 
@@ -87,3 +89,26 @@ async def iconurl_by_id(value: int) -> str:
     """
     data = await hero_keys_cache.data
     return data['iconurl_by_id'][value]
+
+
+async def get_all_hero_names() -> List[str]:
+    """
+    Get all hero names in Dota 2
+
+    @return: list of hero names in Dota 2
+    """
+    data = await hero_keys_cache.data
+    hero_dict = data['name_by_id']
+    hero_dict.pop(0, None)
+    return list(hero_dict.values())
+
+
+async def get_all_hero_ids() -> List[int]:
+    """
+    Get all hero ids in Dota 2
+    @return:
+    """
+    data = await hero_keys_cache.data
+    hero_dict = data['name_by_id']
+    hero_dict.pop(0, None)
+    return list(hero_dict.keys())

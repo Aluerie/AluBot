@@ -6,24 +6,21 @@ from typing import TYPE_CHECKING, Annotated
 from discord import Embed, Forbidden, Member, app_commands
 from discord.ext import commands, tasks
 from discord.utils import format_dt, sleep_until
-from sqlalchemy import func
 
 from cogs.utils import time
 from cogs.utils.context import Context
 from cogs.utils.var import Rid, Ems, Clr, Uid, Sid, Cid
 
 if TYPE_CHECKING:
-    from discord import Message, Interaction
+    from discord import Interaction
     from cogs.utils.bot import AluBot
-
-blocked_phrases = ['https://cdn.discordapp.com/emojis/831229578340859964.gif?v=1']
 
 
 class Moderation(commands.Cog):
     """
     Commands to moderate server with
     """
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.help_emote = Ems.peepoPolice
         self.active_mutes = {}
@@ -31,17 +28,6 @@ class Moderation(commands.Cog):
 
     def cog_unload(self) -> None:
         self.check_mutes.cancel()
-
-    @commands.Cog.listener()
-    async def on_message(self, msg: Message):
-        if any(i in msg.content for i in blocked_phrases):
-            content = '{0} not allowed {1} {1} {1}'.format(msg.author.mention, Ems.peepoPolice)
-            em = Embed(
-                colour=Clr.prpl,
-                description = 'Blocked phase. A warning for now !'
-            )
-            await msg.channel.send(content=content, embed=em)
-            await msg.delete()
 
     @commands.has_role(Rid.discord_mods)
     @app_commands.default_permissions(manage_messages=True)

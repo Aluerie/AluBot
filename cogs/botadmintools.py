@@ -182,28 +182,31 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             self,
             ctx: Context,
             guilds: Greedy[Object],
-            spec: Optional[Literal["~", "*"]] = None
+            spec: Optional[Literal["~", "*", "^"]] = None
     ) -> None:
         """
         `$sync` -> global sync
         `$sync ~` -> sync current guild
         `$sync *` -> copies all global app commands to current guild and syncs
+        `!sync ^` -> clears all commands from the current guild target and syncs (removes guild commands)
         `$sync id_1 id_2` -> syncs guilds with id 1 and 2
         """
         if not guilds:
             if spec == "~":
-                fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+                synced = await ctx.bot.tree.sync(guild=ctx.guild)
             elif spec == "*":
                 ctx.bot.tree.copy_global_to(guild=ctx.guild)
-                fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+                synced = await ctx.bot.tree.sync(guild=ctx.guild)
+            elif spec == "^":
+                ctx.bot.tree.clear_commands(guild=ctx.guild)
+                await ctx.bot.tree.sync(guild=ctx.guild)
+                synced = []
             else:
-                fmt = await ctx.bot.tree.sync()
+                synced = await ctx.bot.tree.sync()
 
             await ctx.send(
-                f"Synced {len(fmt)} commands "
-                f"{'globally' if spec is None else 'to the current guild.'}"
+                f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
             )
-            await self.bot.update_app_commands_cache(commands=fmt)
             return
 
         fmt = 0
@@ -223,11 +226,8 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     async def extensions(self, ctx: Context):
         """Shows available extensions to load/reload/unload."""
         cogs = [f'● {x[:-3]}' for x in listdir('./cogs') if x.endswith('.py')] + ['● jishaku']
-        em = Embed(
-            colour=Clr.prpl,
-            title='Available Extensions',
-            description='\n'.join(cogs)
-        )
+        em = Embed(title='Available Extensions', colour=Clr.prpl)
+        em.description ='\n'.join(cogs)
         await ctx.reply(embed=em)
 
     async def load_unload_reload_job(

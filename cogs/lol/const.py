@@ -26,16 +26,15 @@ region_to_platform_dict = {
     'tr': 'tr1'
 }
 
-
-def region_to_platform(region: str):
-    """Converter for the flag"""
-    return region_to_platform_dict[region.lower()]
-
-
 platform_to_region_dict = {
     v: k
     for k, v in region_to_platform_dict.items()
 }
+
+
+def region_to_platform(region: str):
+    """Converter for the flag"""
+    return region_to_platform_dict[region.lower()]
 
 
 def platform_to_region(platform: str):

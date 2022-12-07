@@ -353,7 +353,7 @@ class PostMatchPlayerData:
         except Forbidden:
             return
 
-        query = 'DELETE FROM dfmatches WHERE id=$1'
+        query = 'DELETE FROM dota_matches WHERE id=$1'
         await bot.pool.execute(query, self.message_id)
 
 

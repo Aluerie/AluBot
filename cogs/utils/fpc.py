@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from difflib import get_close_matches
 from typing import (
     TYPE_CHECKING,
-    List, Literal, Dict, Tuple, Callable, Coroutine, Optional, Union
+    List, Callable, Coroutine, Optional, Union
 )
 
 from discord import Embed, app_commands
@@ -54,23 +55,37 @@ class FPCBase:
             *,
             feature_name: str,
             game_name: str,
+            game_codeword: str,
             colour: Colour,
             bot: AluBot,
             players_table: str,
             accounts_table: str,
             channel_id_column: str,
             players_column: str,
-            acc_info_columns: List[str]
+            characters_column: str,
+            spoil_column: str,
+            acc_info_columns: List[str],
+            get_char_name_by_id: Callable[[int], Coroutine[str]],
+            get_char_id_by_name: Callable[[str], Coroutine[int]],
+            get_all_character_names: Callable[[], Coroutine[List[str]]],
+            character_gather_word: str
     ) -> None:
-        self.feature_name = feature_name
-        self.game_name = game_name
-        self.colour = colour
-        self.bot = bot
-        self.players_table = players_table
-        self.accounts_table = accounts_table
-        self.channel_id_column = channel_id_column
-        self.players_column = players_column
-        self.acc_info_columns = acc_info_columns
+        self.feature_name: str = feature_name
+        self.game_name: str = game_name
+        self.game_codeword: str = game_codeword
+        self.colour: Colour = colour
+        self.bot: AluBot = bot
+        self.players_table: str = players_table
+        self.accounts_table: str = accounts_table
+        self.channel_id_column: str = channel_id_column
+        self.players_column: str = players_column
+        self.characters_column: str = characters_column
+        self.spoil_column: str = spoil_column
+        self.acc_info_columns: List[str] = acc_info_columns
+        self.get_char_name_by_id: Callable[[int], Coroutine[str]] = get_char_name_by_id
+        self.get_char_id_by_name: Callable[[str], Coroutine[int]] = get_char_id_by_name
+        self.get_all_character_names: Callable[[], Coroutine[List[str]]] = get_all_character_names
+        self.character_gather_word: str = character_gather_word
 
     async def channel_set(
             self,
@@ -369,6 +384,30 @@ class FPCBase:
         )
         await ctx.reply(embed=em)
 
+    @staticmethod
+    def construct_the_embed(
+            s_names: List[str],
+            a_names: List[str],
+            f_names: List[str],
+            *,
+            gather_word: str,
+            mode_add: bool
+    ) -> Embed:
+        em = Embed()
+        if s_names:
+            em.colour = MP.green(shade=500)
+            em.add_field(name=f"Success: {gather_word} were {'added to' if mode_add else 'removed from'} your list",
+                         value=f"`{', '.join(s_names)}`", inline=False)
+        if a_names:
+            em.colour = MP.orange(shade=500)
+            em.add_field(name=f'Already: {gather_word} are already {"" if mode_add else "not"} in your list',
+                         value=f"`{', '.join(a_names)}`", inline=False)
+        if f_names:
+            em.colour = MP.red(shade=500)
+            em.add_field(name=f'Fail: These {gather_word} are not in the database',
+                         value=f"`{', '.join(f_names)}`", inline=False)
+        return em
+
     async def player_add_remove(
             self,
             ctx: Context,
@@ -408,28 +447,14 @@ class FPCBase:
         new_fav_ids = fav_ids + s_ids if mode_add else [i for i in fav_ids if i not in a_ids]
         await ctx.pool.execute(query, new_fav_ids, ctx.guild.id)
 
-        def construct_the_embed(s_names: List[str], a_names: List[str], f_names: List[str], *, mode_add: bool) -> Embed:
-            em = Embed()
-            if s_names:
-                em.colour = MP.green(shade=500)
-                em.add_field(name=f"Success: These names were {'added to' if mode_add else 'removed from'} your list",
-                             value=f"`{', '.join(s_names)}`", inline=False)
-            if a_names:
-                em.colour = MP.orange(shade=500)
-                em.add_field(name=f'Already: These names are already {"" if mode_add else "not"} in your list',
-                             value=f"`{', '.join(a_names)}`", inline=False)
-            if f_names:
-                em.colour = MP.red(shade=500)
-                em.add_field(name='Fail: These names are not in the database',
-                             value=f"`{', '.join(f_names)}`", inline=False)
-                em.set_footer(text='Check your argument or consider adding (for trustees)/requesting such player with '
-                                   '`$ or /dota database add|request name: <name> steam: <steam_id> twitch: <yes/no>`')
-            return em
-
         if mode_add:
-            em = construct_the_embed(s_names, a_names, f_names, mode_add=mode_add)
+            em = self.construct_the_embed(s_names, a_names, f_names, gather_word='players', mode_add=mode_add)
         else:
-            em = construct_the_embed(a_names, s_names, f_names, mode_add=mode_add)
+            em = self.construct_the_embed(a_names, s_names, f_names, gather_word='players', mode_add=mode_add)
+        if f_names:
+            em.set_footer(
+                text='Check your argument or consider adding (for trustees)/requesting such player with '
+                     '`$ or /dota database add|request name: <name> steam: <steam_id> twitch: <yes/no>`')
         await ctx.reply(embed=em)
 
     async def player_add_remove_autocomplete(
@@ -439,6 +464,7 @@ class FPCBase:
             *,
             mode_add: bool
     ) -> List[app_commands.Choice[str]]:
+        """Base function for player add/remove autocomplete"""
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
         fav_ids = await self.bot.pool.fetch(query, ntr.guild.id)
         clause = 'NOT' if mode_add else ''
@@ -453,98 +479,114 @@ class FPCBase:
         choice_list = [x for x in [a for a, in rows] if x.lower() not in namespace_list]
         return [app_commands.Choice(name=n, value=n) for n in choice_list if current.lower() in n.lower()]
 
+    async def player_list(
+            self,
+            ctx: Context
+    ):
+        """Base function for player list command"""
+        await ctx.typing()
+        query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
+        fav_ids = await self.bot.pool.fetchval(query, ctx.guild.id)
 
+        query = f"""SELECT display_name, twitch_id 
+                    FROM {self.players_table}
+                    WHERE id=ANY($1)
+                    ORDER BY display_name
+                """
+        rows = await self.bot.pool.fetch(query, fav_ids)
 
+        player_names = [self.player_name_string(row.display_name, row.twitch_id) for row in rows]
+        em = Embed(title=f'List of favourite {self.game_name} players', colour=self.colour)
+        em.description = '\n'.join(player_names)
+        await ctx.reply(embed=em)
 
-
-
-
-
-    @staticmethod
-    async def sort_out_names(
-            names: str,
-            initial_list: List[int],
-            mode: Literal['add', 'remov'],
-            data_dict: Dict[str, str],
-            get_proper_name_and_id: Callable[[str], Coroutine[str, str]]
-    ) -> Tuple[List, List[Embed]]:
-        initial_list = set(initial_list)
-        res_dict = {
-            i: {'names': [], 'embed': None}
-            for i in ['success', 'already', 'fail']
-        }
-
-        for name in [x.strip() for x in names.split(',')]:
-            proper_name, named_id = await get_proper_name_and_id(name)
-            if named_id is None:
-                res_dict['fail']['names'].append(f'`{proper_name}`')
-            else:
-                if mode == 'add':
-                    if named_id in initial_list:
-                        res_dict['already']['names'].append(f'`{proper_name}`')
-                    else:
-                        initial_list.add(named_id)
-                        res_dict['success']['names'].append(f'`{proper_name}`')
-                elif mode == 'remov':
-                    if named_id not in initial_list:
-                        res_dict['already']['names'].append(f'`{proper_name}`')
-                    else:
-                        initial_list.remove(named_id)
-                        res_dict['success']['names'].append(f'`{proper_name}`')
-
-        res_dict['success']['colour'] = MP.green()
-        res_dict['already']['colour'] = MP.orange()
-        res_dict['fail']['colour'] = Clr.error
-
-        for k, v in res_dict.items():
-            if len(v['names']):
-                v['embed'] = Embed(
-                    colour=v['colour']
-                ).add_field(
-                    name=data_dict[k],
-                    value=", ".join(v['names'])
-                )
-                if k == 'fail':
-                    v['embed'].set_footer(
-                        text=data_dict['fail_footer']
-                    )
-        embed_list = [v['embed'] for v in res_dict.values() if v['embed'] is not None]
-        return list(initial_list), embed_list
-
-    @staticmethod
-    async def x_eq_x(x):
-        return x
-
-    @staticmethod
-    async def add_remove_autocomplete_work(
-            current: str,
-            mode: Literal['add', 'remov'],
+    async def character_add_remove(
+            self,
+            ctx: Context,
+            character_names: List[str],
             *,
-            all_items: List[str],
-            fav_items: List[str],
-            func: Callable = x_eq_x,
-            reverse_func: Callable = x_eq_x
+            mode_add: bool
+    ):
+        """Base function for adding/removing characters such as heroes/champs from fav lists"""
+        query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
+        fav_ids = await ctx.pool.fetchval(query, ctx.guild.id)
+
+        f_names, sa_ids = [], []
+        for name in character_names:
+            try:
+                sa_ids.append(await self.get_char_id_by_name(name))
+            except KeyError:
+                f_names.append(name)
+
+        s_ids = [i for i in sa_ids if i not in fav_ids]
+        a_ids = [i for i in sa_ids if i in fav_ids]
+        s_names = [await self.get_char_name_by_id(i) for i in s_ids]
+        a_names = [await self.get_char_name_by_id(i) for i in a_ids]
+
+        query = f"UPDATE guilds SET {self.characters_column}=$1 WHERE id=$2"
+        new_fav_ids = fav_ids + s_ids if mode_add else [i for i in fav_ids if i not in a_ids]
+        await ctx.pool.execute(query, new_fav_ids, ctx.guild.id)
+
+        if mode_add:
+            em = self.construct_the_embed(
+                s_names, a_names, f_names, gather_word=self.character_gather_word, mode_add=mode_add
+            )
+        else:
+            em = self.construct_the_embed(
+                a_names, s_names, f_names, gather_word=self.character_gather_word, mode_add=mode_add
+            )
+        await ctx.reply(embed=em)
+
+    async def character_add_remove_autocomplete(
+            self,
+            ntr: Interaction,
+            current: str,
+            *,
+            mode_add: bool
     ) -> List[app_commands.Choice[str]]:
+        """Base function for character add/remove autocomplete"""
+        query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
+        fav_ids = await self.bot.pool.fetchval(query, ntr.guild.id)
 
-        input_strs = [x.strip() for x in current.split(',')]
-        try:
-            input_items = [await reverse_func(i) for i in input_strs[:-1]]
-        except Exception:
-            x = 'ERROR: It looks like you already typed something wrong'
-            return [app_commands.Choice(name=x, value=x)]
+        fav_names = [await self.get_char_name_by_id(i) for i in fav_ids]
 
-        if mode == 'add':
-            fav_items = fav_items + input_items
-        if mode == 'remov':
-            fav_items = [x for x in fav_items if x not in input_items]
+        if mode_add:
+            all_names = await self.get_all_character_names()
+            choice_names = [i for i in all_names if i not in fav_names]
+        else:
+            choice_names = fav_names
+        namespace_list = [x.lower() for x in ntr.namespace.__dict__.values() if x != current]
+        choice_names = [x for x in choice_names if x.lower() not in namespace_list]
 
-        old_input = [await func(y) for y in input_items]
-        answer = [
-            ", ".join(old_input + [await func(x)]) for x in all_items
-            if (mode == 'add' and x not in fav_items) or (mode == 'remov' and x in fav_items)
-        ]
-        answer.sort()
-        return [
-            app_commands.Choice(name=x, value=x)
-            for x in answer if current.lower() in x.lower()
-        ][:25]
+        precise_match = [x for x in choice_names if current.lower().startswith(x.lower())]
+        close_match = get_close_matches(current, choice_names, n=5, cutoff=0)
+
+        return_list = list(dict.fromkeys(precise_match + close_match))
+        return [app_commands.Choice(name=n, value=n) for n in return_list][:25]  # type: ignore
+
+    async def character_list(
+            self,
+            ctx: Context
+    ) -> None:
+        """Base function for character list commands"""
+        await ctx.typing()
+        query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
+        fav_ids = await self.bot.pool.fetchval(query, ctx.guild.id)
+
+        fav_names = [f'{await self.get_char_name_by_id(i)} - `{i}`' for i in fav_ids]
+
+        em = Embed(title=f'List of your favourite {self.character_gather_word}', colour=self.colour)
+        em.description = '\n'.join(fav_names)
+        await ctx.reply(embed=em)
+
+    async def spoil(
+            self,
+            ctx: Context,
+            spoil: bool
+    ):
+        """Base function for spoil commands"""
+        query = f'UPDATE guilds SET {self.spoil_column}=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, spoil, ctx.guild.id)
+        em = Embed(colour=self.colour)
+        em.description = f"Changed spoil value to {spoil}"
+        await ctx.reply(embed=em)

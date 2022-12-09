@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing_extensions import Self
 
 from discord.ext.commands import BadArgument
 
@@ -10,7 +11,6 @@ from twitchAPI.helper import first
 from .format import gettimefromhms, display_hmstime
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
     from asyncpg import Pool
 
 

@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING, Literal
+from typing_extensions import Self
 
 from discord import Colour
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    pass
 
 
 def cmntn(id_):

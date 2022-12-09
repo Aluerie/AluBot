@@ -52,12 +52,12 @@ CREATE TABLE IF NOT EXISTS guilds (
     prefix TEXT,
     emote_logs_id BIGINT,
     dotafeed_ch_id BIGINT,
-    dotafeed_hero_ids INTEGER ARRAY,
-    dotafeed_stream_ids INTEGER ARRAY,
+    dotafeed_hero_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
+    dotafeed_stream_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
     dotafeed_spoils_on BOOLEAN DEFAULT TRUE,
     lolfeed_ch_id BIGINT,
-    lolfeed_champ_ids INTEGER ARRAY,
-    lolfeed_stream_ids INTEGER ARRAY,
+    lolfeed_champ_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
+    lolfeed_stream_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
     lolfeed_spoils_on BOOLEAN DEFAULT TRUE
 );
 

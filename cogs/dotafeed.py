@@ -110,7 +110,7 @@ class DotaFeed(commands.Cog):
         else:
             return {'start_game': 90}
 
-    async def request_top_source(self, args):
+    def request_top_source(self, args):
         self.bot.dota.request_top_source_tv_games(**args)
         # there we are essentially blocking the bot which is bad
         self.bot.dota.wait_event('my_top_games_response', timeout=8)
@@ -206,7 +206,7 @@ class DotaFeed(commands.Cog):
             if args:  # check args value is not empty
                 start_time = epoch_time.time()
                 log.debug('DF | calling request_top_source NOW ---')
-                await self.request_top_source(args)
+                self.request_top_source(args)
                 # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
                 # await asyncio.to_thread(self.request_top_source, args)
                 log.debug(f"DF | top source request took {epoch_time.time() - start_time} secs")

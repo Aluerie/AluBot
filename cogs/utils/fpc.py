@@ -186,7 +186,7 @@ class FPCBase:
                     ON p.id = a.player_id
                     ORDER BY {'display_name'} 
                 """
-        rows = await ctx.pool.fetch(query)
+        rows = await ctx.pool.fetch(query) or []
 
         player_dict = dict()
 

@@ -1,3 +1,11 @@
+from typing import TYPE_CHECKING, Literal
+
+from discord import Colour
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+
 def cmntn(id_):
     return f'<#{id_}>'
 
@@ -210,12 +218,6 @@ class Lmt:
         field_amount = 25
         field_name = 256
         field_value = 1024
-
-
-from typing import Literal
-
-from discord import Colour
-from typing_extensions import Self
 
 
 class Clr:

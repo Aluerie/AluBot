@@ -1,25 +1,26 @@
 from __future__ import annotations
 
+import asyncio
+import time as epoch_time
 from datetime import datetime, timezone, time
 import logging
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Union
 
 import vdf
-from discord import Permissions, TextChannel, app_commands
+from discord import Permissions, TextChannel, app_commands, Embed
 
 from discord.ext import commands, tasks
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 from steam.steamid import SteamID, EType
 
-from .dota.const import ODOTA_API_URL
-from .dota.models import PostMatchPlayerData, ActiveMatch
+from .dota.models import PostMatchPlayerData, ActiveMatch, OpendotaRequestMatch
 
 from .utils.checks import is_guild_owner, is_trustee
 from .dota import hero
 from .utils.context import Context
 from .utils.fpc import FPCBase
-from .utils.var import Clr, Ems
+from .utils.var import Clr, Ems, MP, Cid
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -33,7 +34,7 @@ class DotaFeed(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
-        self.dotafeed.start()
+        self.dota_feed.start()
         self.lobby_ids = set()
         self.active_matches = []
 
@@ -43,21 +44,26 @@ class DotaFeed(commands.Cog):
         self.hero_fav_ids = []
         self.player_fav_ids = []
 
-    def cog_load(self) -> None:
+    async def cog_load(self) -> None:
         self.bot.ini_steam_dota()
+        await self.bot.ini_twitch()
 
         @self.bot.dota.on('top_source_tv_games')
         def response(result):
             # log.debug(
-            #    f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
-            #    f"{result.start_game, result.game_list_index, len(result.game_list)} "
-            #    f"{result.game_list[0].players[0].account_id}"
+            #     f"DF | top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
+            #     f"{result.start_game, result.game_list_index, len(result.game_list)} "
+            #     f"{result.game_list[0].players[0].account_id}"
             # )
             for match in result.game_list:
                 self.top_source_dict[match.match_id] = match
+            # not good: we have 10+ top_source_tv_events, but we send response on the very first one so it s not precise
+            self.bot.dota.emit('my_top_games_response')
+            # did not work
+            # self.bot.dispatch('my_top_games_response')
 
     def cog_unload(self) -> None:
-        self.dotafeed.cancel()
+        self.dota_feed.cancel()
 
     async def preliminary_queries(self):
         async def get_all_fav_ids(column_name: str):
@@ -68,8 +74,9 @@ class DotaFeed(commands.Cog):
         self.hero_fav_ids = await get_all_fav_ids('dotafeed_hero_ids')
         self.player_fav_ids = await get_all_fav_ids('dotafeed_stream_ids')
 
-    async def get_args_for_top_source(self, specific_games_flag):
+    async def get_args_for_top_source(self, specific_games_flag: bool) -> Union[None, dict]:
         self.bot.steam_dota_login()
+
         if specific_games_flag:
             proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
             proto_msg.header.routing_appid = 570
@@ -79,12 +86,12 @@ class DotaFeed(commands.Cog):
             proto_msg.body.steamid_request.extend(steam_ids)
             resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
             if resp is None:
-                print('resp is None, hopefully everything else will be fine tho;')
-                return
+                log.warning('resp is None, hopefully everything else will be fine tho;')
+                return None
 
             # print(resp)
 
-            async def get_lobby_id_by_rich_presence_kv(rp_bytes):
+            async def get_lobby_id_by_rp_kv(rp_bytes):
                 rp = vdf.binary_loads(rp_bytes)['RP']
                 # print(rp)
                 if lobby_id := int(rp.get('WatchableGameID', 0)):
@@ -93,15 +100,28 @@ class DotaFeed(commands.Cog):
                             return lobby_id
 
             lobby_ids = list(dict.fromkeys([
-                await get_lobby_id_by_rich_presence_kv(item.rich_presence_kv)
-                for item in resp.rich_presence if item.rich_presence_kv
+                y for x in resp.rich_presence
+                if (x.rich_presence_kv and (y := await get_lobby_id_by_rp_kv(x.rich_presence_kv)) is not None)
             ]))
-
-            return {'lobby_ids': list(lobby_ids)}
+            if lobby_ids:
+                return {'lobby_ids': lobby_ids}
+            else:
+                return None
         else:
             return {'start_game': 90}
 
+    async def request_top_source(self, args):
+        self.bot.dota.request_top_source_tv_games(**args)
+        # there we are essentially blocking the bot which is bad
+        self.bot.dota.wait_event('my_top_games_response', timeout=8)
+
+        # the hack that does not work
+        # await asyncio.sleep(4)
+        # await self.bot.wait_for('my_top_games_response', timeout=4)
+        # also idea with asyncio.Event() or checkin if top_source_dict is populated
+
     async def analyze_top_source_response(self):
+        self.matches_to_send = []
         query = 'SELECT friend_id FROM dota_accounts WHERE player_id=ANY($1)'
         friend_ids = [f for f, in await self.bot.pool.fetch(query, self.player_fav_ids)]
 
@@ -117,18 +137,20 @@ class DotaFeed(commands.Cog):
                             )
                         """
                 user = await self.bot.pool.fetchrow(query, person.account_id)
-                log.debug(f'Our person: {user.display_name} - {await hero.name_by_id(person.hero_id)}')
 
-                query = """ SELECT dotafeed_ch_id 
+                query = """ SELECT dotafeed_ch_id
                             FROM guilds
-                            WHERE $1=ANY(dotafeed_hero_ids) AND $2=ANY(dotafeed_stream_ids)
+                            WHERE $1=ANY(dotafeed_hero_ids)
+                                AND $2=ANY(dotafeed_stream_ids)
+                                AND NOT dotafeed_ch_id=ANY(
+                                    SELECT channel_id
+                                    FROM dota_messages
+                                    WHERE match_id=$3
+                                )          
                         """
-                channel_ids = [i for i, in await self.bot.pool.fetch(query, person.hero_id, user.id)]
-
-                query = 'SELECT channel_id FROM dota_messages WHERE match_id=$1 AND channel_id=ANY($2)'
-                sent_channel_ids = [c for c, in await self.bot.pool.fetchval(query, match.match_id, channel_ids)]
-                new_channel_ids = [i for i in channel_ids if i not in sent_channel_ids]
-                if new_channel_ids:
+                channel_ids = [i for i, in await self.bot.pool.fetch(query, person.hero_id, user.id, match.match_id)]
+                if channel_ids:
+                    log.debug(f'DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}')
                     self.matches_to_send.append(
                         ActiveMatch(
                             match_id=match.match_id,
@@ -138,12 +160,12 @@ class DotaFeed(commands.Cog):
                             hero_id=person.hero_id,
                             hero_ids=[x.hero_id for x in match.players],
                             server_steam_id=match.server_steam_id,
-                            channel_ids=new_channel_ids
+                            channel_ids=channel_ids
                         )
                     )
 
     async def send_notifications(self, match: ActiveMatch):
-        log.debug("Sending DotaFeed notification")
+        log.debug("DF | Sending DotaFeed notification")
         for ch_id in match.channel_ids:
             ch = self.bot.get_channel(ch_id)
             if ch is None:
@@ -152,7 +174,11 @@ class DotaFeed(commands.Cog):
             em, img_file = await match.notif_embed_and_file(self.bot)
             em.title = f"{ch.guild.owner.name}'s fav hero + player spotted"
             msg = await ch.send(embed=em, file=img_file)
-            # todo: we need to insert into dota_matches as well
+            query = """ INSERT INTO dota_matches (id) 
+                        VALUES ($1) 
+                        ON CONFLICT DO NOTHING
+                    """
+            await self.bot.pool.execute(query, match.match_id)
             query = """ INSERT INTO dota_messages 
                         (message_id, channel_id, match_id, hero_id, twitch_status) 
                         VALUES ($1, $2, $3, $4, $5)
@@ -167,102 +193,120 @@ class DotaFeed(commands.Cog):
                     WHERE NOT id=ANY($1) 
                     AND dota_matches.is_finished IS DISTINCT FROM TRUE
                 """
-        await self.bot.pool.execute(
-            query, list(self.top_source_dict.keys())
-        )
-        log.debug(f'--- Dota Feed: Task is finished ---')
+        await self.bot.pool.execute(query, list(self.top_source_dict.keys()))
 
     @tasks.loop(seconds=59)
-    async def dotafeed(self):
-        log.debug(f'--- Dota Feed: Task is starting now ---')
+    async def dota_feed(self):
+        log.debug(f'DF | --- Task is starting now ---')
 
         await self.preliminary_queries()
         self.top_source_dict = {}
         for specific_games_flag in [False, True]:
             args = await self.get_args_for_top_source(specific_games_flag)
-            self.bot.dota.request_top_source_tv_games(**args)
-            self.bot.dota.wait_event('top_games_response', timeout=8)
-        log.debug(f'len top_source_dict = {len(self.top_source_dict)}')
-
-        self.matches_to_send = []
+            if args:  # check args value is not empty
+                start_time = epoch_time.time()
+                log.debug('DF | calling request_top_source NOW ---')
+                await self.request_top_source(args)
+                # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
+                # await asyncio.to_thread(self.request_top_source, args)
+                log.debug(f"DF | top source request took {epoch_time.time() - start_time} secs")
+        log.debug(f'DF | len top_source_dict = {len(self.top_source_dict)}')
         await self.analyze_top_source_response()
         for match in self.matches_to_send:
             await self.send_notifications(match)
 
         await self.declare_matches_finished()
+        log.debug(f'DF | --- Task is finished ---')
 
-    @dotafeed.before_loop
+    @dota_feed.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
 
-    @dotafeed.error
+    @dota_feed.error
     async def dotafeed_error(self, error):
         await self.bot.send_traceback(error, where='DotaFeed Notifs')
         # self.dotafeed.restart()
 
 
 class AfterGameEdit(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.after_match = []
-        # self.aftergame.start()
+        self.opendota_req_cache = dict()
+        self.after_game.start()
 
     def cog_load(self) -> None:
         self.bot.ini_steam_dota()
 
     def cog_unload(self) -> None:
-        self.aftergame.cancel()
+        self.after_game.cancel()
 
     async def after_match_games(self):
         self.after_match = []
 
-        query = 'SELECT * FROM dota_matches WHERE is_finished=TRUE'
+        query = "SELECT * FROM dota_matches WHERE is_finished=TRUE"
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
-            url = f"{ODOTA_API_URL}/request/{row.match_id}"
-            async with self.bot.session.post(url) as resp:
-                # print(resp)
-                print(resp.ok)
-                print(resp.headers['X-Rate-Limit-Remaining-Month'], resp.headers['X-Rate-Limit-Remaining-Minute'])
-                print(await resp.json())
+            if row.id not in self.opendota_req_cache:
+                self.opendota_req_cache[row.id] = OpendotaRequestMatch(row.id)
 
-            url = f"{ODOTA_API_URL}/matches/{row.match_id}"
-            async with self.bot.session.get(url) as resp:
-
-                self.bot.update_odota_ratelimit(resp.headers)
-                dic = await resp.json()
-                if dic == {"error": "Not Found"}:
-                    continue
-
-                for player in dic.get('players', []):  # one day OpenDota freaked out
-                    if player['hero_id'] == row.hero_id:
-                        if player['purchase_log'] is not None:
-                            print('!!!!!!!!!!!!holy shiet!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-                            self.after_match.append(
-                                PostMatchPlayerData(
-                                    player_data=player,
-                                    channel_id=row.ch_id,
-                                    message_id=row.id,
-                                    twitch_status=row.twitch_status
+            cache_item: OpendotaRequestMatch = self.opendota_req_cache[row.id]
+            if not row.opendota_jobid:
+                if job_id := await cache_item.request(self.bot):
+                    query = "UPDATE dota_matches SET opendota_jobid=$1 WHERE id=$2"
+                    await self.bot.pool.execute(query, job_id, row.id)
+            else:
+                if pl_dict_list := await cache_item.matches(self.bot):
+                    query = 'SELECT * FROM dota_messages WHERE match_id=$1'
+                    for r in await self.bot.pool.fetch(query, row.id):
+                        for player in pl_dict_list:
+                            if player['hero_id'] == r.hero_id:
+                                self.after_match.append(
+                                    PostMatchPlayerData(
+                                        player_data=player,
+                                        channel_id=r.channel_id,
+                                        message_id=r.message_id,
+                                        twitch_status=r.twitch_status
+                                    )
                                 )
-                            )
+            if cache_item.dict_ready or cache_item.failed_flag:
+                self.opendota_req_cache.pop(row.id)
+                query = 'DELETE FROM dota_matches WHERE id=$1'
+                await self.bot.pool.execute(query, row.id)
 
-    @tasks.loop(minutes=10)
-    async def aftergame(self):
-        log.debug('--- after game task starts now ---')
+    @tasks.loop(minutes=1)
+    async def after_game(self):
+        # log.debug('AG: --- Task is starting now ---')
         await self.after_match_games()
         for player in self.after_match:
             await player.edit_the_embed(self.bot)
+        # log.debug('AG: --- Task is finished ---')
 
-    @aftergame.before_loop
+    @after_game.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
 
-    @aftergame.error
+    @after_game.error
     async def aftergame_error(self, error):
         await self.bot.send_traceback(error, where='DotaFeed Aftergame')
         # self.dotafeed.restart()
+
+    @commands.command(hidden=True, aliases=['odrl', 'od_rl', 'odota_ratelimit'])
+    async def opendota_ratelimit(self, ctx: Context):
+        """Send opendota rate limit numbers"""
+        em = Embed(colour=Clr.prpl, description=f'Odota limits: {self.bot.odota_ratelimit}')
+        await ctx.reply(embed=em)
+
+    @tasks.loop(time=time(hour=2, minute=51, tzinfo=timezone.utc))
+    async def daily_report(self):
+        em = Embed(title='Daily Report', colour=MP.black())
+        em.description = f'Odota limits: {self.bot.odota_ratelimit}'
+        await self.bot.get_channel(Cid.spam_me).send(embed=em)
+
+    @daily_report.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
 
 
 class AddDotaPlayerFlags(commands.FlagConverter, case_insensitive=True):
@@ -274,17 +318,6 @@ class AddDotaPlayerFlags(commands.FlagConverter, case_insensitive=True):
 class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
     name: Optional[str]
     steam: Optional[str]
-
-
-async def hero_autocomplete(
-        _interaction: Interaction,
-        current: str,
-) -> List[app_commands.Choice[str]]:
-    fruits = ['Banana', 'Pineapple', 'Apple', 'Watermelon', 'Melon', 'Cherry']
-    return [
-        app_commands.Choice(name=fruit, value=fruit)
-        for fruit in fruits if current.lower() in fruit.lower()
-    ]
 
 
 class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
@@ -470,7 +503,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     )
     @app_commands.describe(
         name='Player name. If it is a twitch tv streamer then provide their twitch handle',
-        steam='either steamid in any of 64/32/3/2 versions, friendid or just steam profile link',
+        steam='either steamid in any of 64/32/3/2 versions, friend_id or just steam profile link',
         twitch='If you proved twitch handle for "name" then press `True` otherwise `False`',
     )
     async def slh_dota_database_add(self, ntr: Interaction, name: str, steam: str, twitch: bool):
@@ -809,13 +842,13 @@ class DotaAccCheck(commands.Cog):
 
     @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
     async def check_acc_renames(self):
-        query = 'SELECT id, twtv_id, display_name FROM dotaaccs WHERE twtv_id IS NOT NULL'
+        query = 'SELECT id, twitch_id, display_name FROM dota_players WHERE twitch_id IS NOT NULL'
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
             display_name: str = await self.bot.twitch.name_by_twitch_id(row.twtv_id)
             if display_name != row.display_name:
-                query = 'UPDATE dotaaccs SET display_name=$1, name=$2 WHERE id=$3'
+                query = 'UPDATE dota_players SET display_name=$1, name=$2 WHERE id=$3'
                 await self.bot.pool.execute(query, display_name, display_name.lower(), row.id)
 
     @check_acc_renames.before_loop

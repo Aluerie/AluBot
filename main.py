@@ -21,9 +21,10 @@ async def bot_run(test: bool):
     try:
         pool = await asyncpg.create_pool(
             POSTGRES_URL,
-            min_size=0,
-            max_size=5,
-            record_class=DRecord
+            min_size=10,
+            max_size=10,
+            record_class=DRecord,
+            statement_cache_size=0
         )
     except Exception:
         click.echo('Could not set up PostgreSQL. Exiting.', file=sys.stderr)

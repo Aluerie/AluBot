@@ -99,6 +99,8 @@ class AluBot(commands.Bot):
             extensions_list += [f'cogs.{name}' for name in test_list]
         else:
             extensions_list += [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
+            # todo: remove after fix
+            extensions_list.remove('cogs.lolfeed')
 
         for ext in extensions_list:
             try:
@@ -168,8 +170,7 @@ class AluBot(commands.Bot):
 
     async def ini_twitch(self) -> None:
         if not hasattr(self, 'twitch'):
-            self.twitch = MyTwitchClient(cfg.TWITCH_CLIENT_ID, cfg.TWITCH_CLIENT_SECRET)
-            await self.twitch.authenticate_app([])
+            self.twitch = await MyTwitchClient(cfg.TWITCH_CLIENT_ID, cfg.TWITCH_CLIENT_SECRET)
 
     def ini_twitter(self) -> None:
         if not hasattr(self, 'twitter'):
@@ -324,8 +325,8 @@ class MyColourFormatter(logging.Formatter):
 
     FORMATS = {
         level: logging.Formatter(
-            f'\x1b[37;1m%(asctime)s\x1b[0m | {colour}%(levelname)-6s\x1b[0m | '
-            f'\x1b[35m%(name)-23s\x1b[0m | %(lineno)-4d | %(funcName)-16s | %(message)s',
+            f'\x1b[37;1m%(asctime)s\x1b[0m | {colour}%(levelname)-7s\x1b[0m | '
+            f'\x1b[35m%(name)-23s\x1b[0m | %(lineno)-4d | %(funcName)-30s | %(message)s',
             '%H:%M:%S %d/%m',
         )
         for level, colour in LEVEL_COLOURS
@@ -356,7 +357,7 @@ def get_log_fmt(
         formatter = MyColourFormatter()
     else:
         formatter = logging.Formatter(
-            '{asctime} | {levelname:<6} | {name:<23} | {lineno:<4} | {funcName:<16} | {message}',
+            '{asctime} | {levelname:<7} | {name:<23} | {lineno:<4} | {funcName:<30} | {message}',
             '%H:%M:%S %d/%m', style='{'
         )
 

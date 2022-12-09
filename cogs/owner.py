@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     """Commands for admin tools"""
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.help_emote = Ems.Lewd
         self.checkguilds.start()

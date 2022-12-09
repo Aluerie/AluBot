@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+import asyncio
 import logging
 from typing import TYPE_CHECKING, List
 
@@ -15,31 +17,14 @@ if TYPE_CHECKING:
     from .utils.bot import AluBot
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
-
-import string
 from discord.app_commands import AppCommandError, Transform, Transformer, Choice, command
 from discord import app_commands, Interaction
 
 
 class AlphabetTransformerError(AppCommandError):
     pass
-
-
-class AlphabetTransformer(Transformer):
-    # this could also be set in `__init__` to make this more generic
-    options = list(string.ascii_lowercase)
-
-    async def transform(self, interaction: Interaction, value: str, /) -> str:
-        if value in self.options:
-            # maybe convert this value to something else instead of using the raw value
-            return value
-        raise AlphabetTransformerError(f'"{value}" is not a valid option.\nValid options: {", ".join(self.options)}')
-
-    async def autocomplete(self, interaction: Interaction, value: str, /) -> list[Choice[str]]:
-        # build up to 25 choices
-        # optionally use `difflib.get_close_matches` or similar to determine which choices to show
-        return [Choice(name=letter, value=letter) for letter in self.options[:25]]
 
 
 class BetaTest(commands.Cog):
@@ -50,53 +35,26 @@ class BetaTest(commands.Cog):
     def cog_unload(self):
         return
 
-    @app_commands.command()
-    async def test(self, interaction: Interaction, letter: Transform[str, AlphabetTransformer]):
-        await interaction.response.send_message(letter)
+    def sleep_10(self):
+        time.sleep(10)
 
-    @test.error
-    async def test_error(self, interaction: Interaction, error: AppCommandError):
-        if isinstance(error, AlphabetTransformerError):
-            await interaction.response.send_message(str(error))
-        # if you don't have your own tree error handler, you must handle other errors
-        else:
-            logging.error(f'Error in command {interaction.command}', exc_info=error)
+    @tasks.loop(seconds=20)
+    async def reload_info(self):
+        log.debug('starting the task')
+        await self.bot.loop.run_in_executor(None, self.sleep_10)
+        log.debug('ending the task')
 
     @app_commands.command()
-    async def test_add_names(self, ntr: Interaction, name1: str, name2: str, name3: str):
-        names = list(set([name for name in list(locals().values())[2:] if name is not None]))
-        await ntr.response.send_message(', '.join(names))
+    async def welp(self, ntr: Interaction):
+        await ntr.response.defer()
+        await ntr.followup.send('allo')
+        # ctx = await Context.from_interaction(ntr)
+        # await ctx.typing()
+        # await ctx.reply()
 
     @commands.hybrid_command()
     async def allu(self, ctx: Context):
         await ctx.send_test()
-
-    @tasks.loop(count=1)
-    async def reload_info(self):
-        """match_id = 6893851829
-
-        url = f"{ODOTA_API_URL}/request/{match_id}"
-        async with self.bot.ses.post(url) as resp:
-            # print(resp)
-            print(resp.ok)
-            print(data := await resp.json())
-
-        url = f"{ODOTA_API_URL}/request/{data['job']['jobId']}"
-        async with self.bot.ses.get(url) as resp:
-            # print(resp)
-            print(resp.ok)
-            print(await resp.json())
-
-        jobid = 176580986
-
-        url = f"{ODOTA_API_URL}/request/{jobid}"
-        async with self.bot.ses.get(url) as resp:
-            # print(resp)
-            print(resp.ok)
-            print(await resp.json())"""
-
-        return
-        # print('Query is completed')
 
     @reload_info.before_loop
     async def before(self):
@@ -104,8 +62,8 @@ class BetaTest(commands.Cog):
 
 
 async def setup(bot):
-    # if bot.test_flag:
-    await bot.add_cog(BetaTest(bot))
+    if bot.test_flag:
+        await bot.add_cog(BetaTest(bot))
 
 
 # SQL RECIPES BCS I ALWAYS FORGET

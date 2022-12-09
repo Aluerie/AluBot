@@ -211,26 +211,6 @@ class CommandLogging(commands.Cog):
         await self.bot.get_channel(Cid.logs).send(embed=embed)
 
 
-class DailyReport(commands.Cog):
-    def __init__(self, bot):
-        self.bot: AluBot = bot
-        self.daily_report.start()
-
-    @tasks.loop(time=time(hour=2, minute=51, tzinfo=timezone.utc))
-    async def daily_report(self):
-        em = Embed(
-            colour=MP.black(),
-            title='Daily Report',
-            description=f'Odota limits: {self.bot.odota_ratelimit}'
-        )
-        await self.bot.get_channel(Cid.spam_me).send(embed=em)
-
-    @daily_report.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
-
-
 async def setup(bot):
     await bot.add_cog(Logging(bot))
     await bot.add_cog(CommandLogging(bot))
-    await bot.add_cog(DailyReport(bot))

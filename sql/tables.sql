@@ -79,20 +79,18 @@ CREATE TABLE IF NOT EXISTS dota_players (
 );
 
 CREATE TABLE IF NOT EXISTS dota_accounts (
-    steam_id BIGINT PRIMARY KEY,
+    id BIGINT PRIMARY KEY,
     friend_id BIGINT,
     player_id INT NOT NULL,
     CONSTRAINT fk_player
         FOREIGN KEY (player_id)
-        REFERENCES dota_players(id)
-            ON DELETE CASCADE
+        REFERENCES dota_players(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS dota_matches (
     id BIGINT PRIMARY KEY,
     is_finished BOOLEAN DEFAULT FALSE,
-    opendota_jobid BIGINT,
-    fail_counter INTEGER
+    opendota_jobid BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS dota_messages (
@@ -102,7 +100,9 @@ CREATE TABLE IF NOT EXISTS dota_messages (
     hero_id INTEGER NOT NULL,
     twitch_status TEXT NOT NULL,
 
-    CONSTRAINT fk_match FOREIGN KEY (match_id) REFERENCES dota_matches(id)
+    CONSTRAINT fk_match
+        FOREIGN KEY (match_id)
+            REFERENCES dota_matches(id) ON DELETE CASCADE
 );
 
 

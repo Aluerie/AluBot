@@ -79,7 +79,6 @@ def try_get_gamerstats(bot, start_at_match_id=0, matches_requested=20):
 
     def response(request_id, matches):
         global send_matches
-        print(1)
         send_matches = matches
         bot.dota.emit('player_match_history_response')
 

@@ -50,7 +50,7 @@ class TwitchCog(commands.Cog):
 
     @tasks.loop(minutes=2)
     async def mystream(self):
-        tw = TwitchStream(MY_TWITCH_ID, self.bot.twitch)
+        tw = await self.bot.twitch.get_twitch_stream(MY_TWITCH_ID)
         query = """ UPDATE botinfo SET irene_is_live=$1 
                     WHERE id=$2 
                     AND irene_is_live IS DISTINCT FROM $1
@@ -66,7 +66,7 @@ class TwitchCog(commands.Cog):
         content = f'{mention_role.mention} and chat, our Highness **@{tw.display_name}** just went live !'
         file = await self.bot.url_to_file(tw.preview_url, filename='twtvpreview.png')
         em = Embed(colour=0x9146FF, title=f'{tw.title}', url=tw.url)
-        em.description = f'Playing {tw.game}\n/[Watch Stream]({tw.url}){tw.last_vod_link()}'
+        em.description = f'Playing {tw.game}\n/[Watch Stream]({tw.url}){await tw.last_vod_link()}'
         em.set_author(name=f'{tw.display_name} just went live on Twitch!', icon_url=tw.logo_url, url=tw.url)
         em.set_footer(text=f'Twitch.tv | With love, {guild.me.display_name}', icon_url=Img.twitchtv)
         em.set_thumbnail(url=tw.logo_url)

@@ -108,3 +108,7 @@
 67. ?tag autocomplete transformer
 68. think of proper testing without this two accounts/tokens deal
 69. proper duplicates removal `list(dict.fromkeys(precise_match + close_match))`
+70. logic issue with those streamers who manually post vods - it takes their prelast vod as in [-1]. 
+    we probably need to check time of the video as well.
+71. fix cmlist error when logging into steam
+72. 

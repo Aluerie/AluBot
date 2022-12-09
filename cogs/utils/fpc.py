@@ -244,7 +244,7 @@ class FPCBase:
         if user is not None:
             raise BadArgument(
                 'This steam account is already in the database.\n'
-                f'It is marked as {user.name}\'s account.\n\n'
+                f'It is marked as {user.display_name}\'s account.\n\n'
                 f'Did you mean to use `/dota player add {user.name}` to add the stream into your fav list?'
             )
         
@@ -269,14 +269,12 @@ class FPCBase:
                         SELECT {'id'} FROM {self.players_table} WHERE {'name_lower'}=$1
                 """
         player_id = await ctx.pool.fetchval(query, *player_dict.values())
-
         dollars = [f'${i}' for i in range(1, len(self.acc_info_columns)+3)]  # [$1, $2, ... ]
         query = f"""INSERT INTO {self.accounts_table}
                     (player_id, id, {', '.join(self.acc_info_columns)})
                     VALUES {'('}{', '.join(dollars)}{')'}
                 """
         await ctx.pool.execute(query, player_id, *account_dict.values())
-
         em = Embed(colour=Clr.prpl)
         em.add_field(
             name=f'Successfully added the account to the database',
@@ -295,6 +293,7 @@ class FPCBase:
             player_dict: dict,
             account_dict: dict,
     ) -> None:
+        """Base function for requesting to add accounts into the database"""
         await self.check_if_already_in_database(account_dict)
 
         player_string = self.player_name_acc_string(
@@ -423,7 +422,7 @@ class FPCBase:
         @return: None
 
         ---
-        in the code - for add. Note that for remove s and a are swapped.
+        in the code - assumed logically for `add`. Note that for `remove` 's' and 'a' are swapped.
         s: success
         a: already
         f: fail
@@ -493,7 +492,7 @@ class FPCBase:
                     WHERE id=ANY($1)
                     ORDER BY display_name
                 """
-        rows = await self.bot.pool.fetch(query, fav_ids)
+        rows = await self.bot.pool.fetch(query, fav_ids) or []
 
         player_names = [self.player_name_string(row.display_name, row.twitch_id) for row in rows]
         em = Embed(title=f'List of favourite {self.game_name} players', colour=self.colour)
@@ -508,6 +507,7 @@ class FPCBase:
             mode_add: bool
     ):
         """Base function for adding/removing characters such as heroes/champs from fav lists"""
+        await ctx.typing()
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
         fav_ids = await ctx.pool.fetchval(query, ctx.guild.id)
 
@@ -571,8 +571,7 @@ class FPCBase:
         """Base function for character list commands"""
         await ctx.typing()
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
-        fav_ids = await self.bot.pool.fetchval(query, ctx.guild.id)
-
+        fav_ids = await self.bot.pool.fetchval(query, ctx.guild.id) or []
         fav_names = [f'{await self.get_char_name_by_id(i)} - `{i}`' for i in fav_ids]
 
         em = Embed(title=f'List of your favourite {self.character_gather_word}', colour=self.colour)

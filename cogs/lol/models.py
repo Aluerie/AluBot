@@ -4,7 +4,7 @@ The MIT License (MIT)
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone, time
+from datetime import datetime, timezone
 import logging
 from typing import TYPE_CHECKING, List
 
@@ -105,9 +105,8 @@ class ActiveMatch(Match):
     async def champ_icon_url(self):
         return await icon_url_by_champ_id(self.champ_id)
 
-    @property
-    def twitch_stream(self) -> TwitchStream:
-        return TwitchStream(self.twitch_id)
+    def twitch_stream(self, bot: AluBot) -> TwitchStream:
+        return TwitchStream(self.twitch_id, bot.twitch)
 
     async def better_thumbnail(
             self,
@@ -159,7 +158,7 @@ class ActiveMatch(Match):
             self,
             bot: AluBot
     ):
-        twitch_stream = self.twitch_stream
+        twitch_stream = self.twitch_stream(bot)
 
         image_name = \
             f'{twitch_stream.display_name.replace("_", "")}-is-playing-' \

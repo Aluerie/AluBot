@@ -7,25 +7,29 @@ from __future__ import annotations
 import logging
 import math
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Optional, Literal
+from typing import TYPE_CHECKING, List, Optional, Literal, Union
 
 from PIL import Image, ImageOps, ImageDraw, ImageFont
 from discord import Embed, NotFound, Forbidden, File
 from pyot.utils.functools import async_property
 
-from cogs.utils.twitch import TwitchStream
+from ..dota.const import ODOTA_API_URL
 from ..dota import hero, item, ability
 from cogs.utils.format import display_relativehmstime
 from cogs.utils.imgtools import url_to_img, img_to_file, get_text_wh
 from cogs.utils.var import Clr, MP, Img
 
 if TYPE_CHECKING:
+    from discord import Colour
     from ..utils.bot import AluBot
+    from ..utils.twitch import MyTwitchClient
+
 
 __all__ = (
     'Match',
     'ActiveMatch',
-    'PostMatchPlayerData'
+    'PostMatchPlayerData',
+    'OpendotaRequestMatch'
 )
 
 log = logging.getLogger(__name__)
@@ -78,6 +82,14 @@ colour_twitch_status_dict = {
 
 
 class ActiveMatch(Match):
+    img_url: str
+    display_name: str
+    url: str
+    logo_url: str
+    vod_link: str
+    colour: Colour
+    twitch_status: str
+
     def __init__(
             self,
             *,
@@ -99,39 +111,35 @@ class ActiveMatch(Match):
         self.twitchtv_id = twitchtv_id
         self.channel_ids = channel_ids
 
+    @property
+    def long_ago(self) -> int:
+        return int(datetime.now(timezone.utc).timestamp()) - self.start_time
+
+    @async_property
+    async def hero_name(self):
+        return await hero.name_by_id(self.hero_id)
+
+    async def get_twitch_data(self, twitch: MyTwitchClient):
         if self.twitchtv_id is None:
-            self.twtv = None
             self.img_url = 'https://i.imgur.com/kl0jDOu.png'  # lavender 640x360
             self.display_name = self.player_name
             self.url = ''
             self.logo_url = Img.dota2logo
             self.twitch_status = 'NoTwitch'
+            self.vod_link = ''
         else:
-            self.twtv = TwitchStream(self.twitchtv_id)
-            self.img_url = self.twtv.preview_url
-            self.display_name = self.twtv.display_name
-            self.logo_url = self.twtv.logo_url
-            self.url = self.twtv.url
-            if self.twtv.online:
+            ts = await twitch.get_twitch_stream(self.twitchtv_id)
+            self.img_url = ts.preview_url
+            self.display_name = ts.display_name
+            self.logo_url = ts.logo_url
+            self.url = ts.url
+            if ts.online:
                 self.twitch_status = 'Live'
+                self.vod_link = await twitch.last_vod_link(self.twitchtv_id, epoch_time_ago=self.long_ago)
             else:
                 self.twitch_status = 'Offline'
+                self.vod_link = ''
         self.colour = colour_twitch_status_dict[self.twitch_status]
-
-    @property
-    def long_ago(self) -> int:
-        return int(datetime.now(timezone.utc).timestamp()) - self.start_time
-
-    @property
-    def vod_link(self):
-        if getattr(self.twtv, 'online', None):
-            return self.twtv.last_vod_link(epoch_time_ago=self.long_ago)
-        else:
-            return ''
-
-    @async_property
-    async def hero_name(self):
-        return await hero.name_by_id(self.hero_id)
 
     async def better_thumbnail(
             self,
@@ -165,29 +173,23 @@ class ActiveMatch(Match):
             self,
             bot: AluBot
     ) -> (Embed, File):
-        image_name = \
-            f'{self.twitch_status}-' \
-            f'{self.display_name.replace("_", "")}-' \
-            f'{(await self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
-        img_file = img_to_file(await self.better_thumbnail(bot), filename=image_name)
-
-        em = Embed(
-            colour=self.colour,
-            url=self.url,
-            description=
+        await self.get_twitch_data(bot.twitch)
+        img_file = img_to_file(
+            await self.better_thumbnail(bot),
+            filename=(
+                f'{self.twitch_status}-{self.display_name.replace("_", "")}-'
+                f'{(await self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
+            )
+        )
+        em = Embed(colour=self.colour, url=self.url)
+        em.description = (
             f'`/match {self.match_id}` started {display_relativehmstime(self.long_ago)}\n'
             f'{self.vod_link}{self.links}'
-        ).set_image(
-            url=f'attachment://{img_file.filename}'
-        ).set_thumbnail(
-            url=await hero.imgurl_by_id(self.hero_id)
-        ).set_author(
-            name=f'{self.display_name} - {await self.hero_name}',
-            url=self.url,
-            icon_url=self.logo_url
-        ).set_footer(
-            text=f'Console: watch_server {self.server_steam_id}'
         )
+        em.set_image(url=f'attachment://{img_file.filename}')
+        em.set_thumbnail(url=await hero.imgurl_by_id(self.hero_id))
+        em.set_author(name=f'{self.display_name} - {await self.hero_name}', url=self.url, icon_url=self.logo_url)
+        em.set_footer(text=f'Console: watch_server {self.server_steam_id}')
         return em, img_file
 
 
@@ -338,23 +340,83 @@ class PostMatchPlayerData:
             return
 
         em = msg.embeds[0]
-        image_name = 'edited.png'
         img_file = img_to_file(
-            await self.edit_the_image(
-                em.image.url,
-                bot.ses
-            ),
-            filename=image_name
+            await self.edit_the_image(em.image.url, bot.session),
+            filename='edited.png'
         )
 
-        em.set_image(url=f'attachment://{image_name}')
+        em.set_image(url=f'attachment://{img_file.filename}')
         try:
             await msg.edit(embed=em, attachments=[img_file])
         except Forbidden:
             return
 
-        query = 'DELETE FROM dota_matches WHERE id=$1'
-        await bot.pool.execute(query, self.message_id)
+
+class OpendotaRequestMatch:
+
+    def __init__(
+            self,
+            match_id
+    ):
+        self.match_id = match_id
+
+        self.request_fails = 0
+        self.request_tries = 0
+        self.matches_fails = 0
+        self.matches_tries = 0
+
+        self.dict_ready = False
+
+    async def request(
+            self,
+            bot: AluBot
+    ) -> Union[None, int]:
+        """Make opendota request parsing API call"""
+        if self.request_tries >= pow(2, self.request_fails) - 1:
+            url = f'{ODOTA_API_URL}/request/{self.match_id}'
+            async with bot.session.post(url) as resp:
+                bot.update_odota_ratelimit(resp.headers)
+                if resp.ok:
+                    return (await resp.json())['job']['jobId']
+                else:
+                    self.request_fails += 1
+                    return None
+        else:
+            self.request_tries += 1
+            return None
+
+    async def matches(
+            self,
+            bot: AluBot
+    ) -> Union[None, dict]:
+        """Make opendota request match data API call"""
+        if self.matches_tries >= pow(2, self.matches_fails) - 1:
+            url = f'{ODOTA_API_URL}/matches/{self.match_id}'
+            async with bot.session.get(url) as resp:
+                bot.update_odota_ratelimit(resp.headers)
+                if resp.ok:
+                    d = await resp.json()
+                    if d['players'][0]['purchase_log']:
+                        self.dict_ready = True
+                        return d['players']
+                else:
+                    self.matches_fails += 1
+                    return None
+        else:
+            self.matches_tries += 1
+            return None
+
+    @property
+    def failed_flag(self) -> bool:
+        return self.request_fails > 5 or self.matches_fails > 5
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

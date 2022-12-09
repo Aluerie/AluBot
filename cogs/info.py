@@ -20,7 +20,7 @@ from discord import (
     app_commands
 )
 from discord.ext import commands, tasks
-from wordcloud import WordCloud
+# from wordcloud import WordCloud #todo: wait for a fix
 
 from config import DISCORD_BOT_INVLINK
 from .utils.checks import is_owner
@@ -451,7 +451,8 @@ class StatsCommands(commands.Cog, name='Stats'):
         text = ''
         for ch in channels:
             text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])
-        wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
+        # todo: remove this
+        # wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
         em = Embed(
             colour=Clr.prpl,
             description=(
@@ -460,7 +461,9 @@ class StatsCommands(commands.Cog, name='Stats'):
                 f"Limit: {limit}"
             )
         )
-        await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
+        # todo remove this
+        #await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
+        await ctx.reply('it does not work for now')
 
 
 class StatsChannels(commands.Cog):

@@ -265,6 +265,7 @@ class AluBot(commands.Bot):
             where: str = 'not specified',
             embed: Embed = None,
             verbosity: int = 10,
+            mention: bool = True
     ) -> None:
         """
         Function to send traceback into the discord channel.
@@ -276,6 +277,7 @@ class AluBot(commands.Bot):
         if `embed` is specified then this is ignored essentially
         @param embed:
         @param verbosity:
+        @param mention:
         @return: None
         """
         ch = destination or self.get_channel(Cid.spam_me)
@@ -290,7 +292,7 @@ class AluBot(commands.Bot):
             paginator.add_line(line)
 
         embed = embed or Embed(colour=Clr.error).set_author(name=where)
-        content = '' if self.test_flag else umntn(Uid.alu)  # mention only if it is not testing
+        content = '' if mention else umntn(Uid.alu)
         await ch.send(content=content, embed=embed)
 
         for page in paginator.pages:

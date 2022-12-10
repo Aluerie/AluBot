@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from .utils.bot import AluBot
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class DotaFeed(commands.Cog):
@@ -249,46 +249,42 @@ class AfterGameEdit(commands.Cog):
 
         for row in rows:
             if row.id not in self.opendota_req_cache:
-                self.opendota_req_cache[row.id] = OpendotaRequestMatch(row.id)
+                self.opendota_req_cache[row.id] = OpendotaRequestMatch(row.id, row.opendota_jobid)
 
             cache_item: OpendotaRequestMatch = self.opendota_req_cache[row.id]
-            if not row.opendota_jobid:
-                if job_id := await cache_item.request(self.bot):
-                    query = "UPDATE dota_matches SET opendota_jobid=$1 WHERE id=$2"
-                    await self.bot.pool.execute(query, job_id, row.id)
-            else:
-                if pl_dict_list := await cache_item.matches(self.bot):
-                    query = 'SELECT * FROM dota_messages WHERE match_id=$1'
-                    for r in await self.bot.pool.fetch(query, row.id):
-                        for player in pl_dict_list:
-                            if player['hero_id'] == r.hero_id:
-                                self.after_match.append(
-                                    PostMatchPlayerData(
-                                        player_data=player,
-                                        channel_id=r.channel_id,
-                                        message_id=r.message_id,
-                                        twitch_status=r.twitch_status
-                                    )
+
+            if pl_dict_list := await cache_item.workflow(self.bot):
+                query = 'SELECT * FROM dota_messages WHERE match_id=$1'
+                for r in await self.bot.pool.fetch(query, row.id):
+                    for player in pl_dict_list:
+                        if player['hero_id'] == r.hero_id:
+                            self.after_match.append(
+                                PostMatchPlayerData(
+                                    player_data=player,
+                                    channel_id=r.channel_id,
+                                    message_id=r.message_id,
+                                    twitch_status=r.twitch_status
                                 )
-            if cache_item.dict_ready or cache_item.failed_flag:
+                            )
+            if cache_item.dict_ready:
                 self.opendota_req_cache.pop(row.id)
                 query = 'DELETE FROM dota_matches WHERE id=$1'
                 await self.bot.pool.execute(query, row.id)
 
     @tasks.loop(minutes=1)
     async def after_game(self):
-        # log.debug('AG: --- Task is starting now ---')
+        log.debug('AG | --- Task is starting now ---')
         await self.after_match_games()
         for player in self.after_match:
             await player.edit_the_embed(self.bot)
-        # log.debug('AG: --- Task is finished ---')
+        log.debug('AG | --- Task is finished ---')
 
     @after_game.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
 
     @after_game.error
-    async def aftergame_error(self, error):
+    async def after_game_error(self, error):
         await self.bot.send_traceback(error, where='DotaFeed Aftergame')
         # self.dotafeed.restart()
 
@@ -848,7 +844,7 @@ class DotaAccCheck(commands.Cog):
         for row in rows:
             display_name: str = await self.bot.twitch.name_by_twitch_id(row.twtv_id)
             if display_name != row.display_name:
-                query = 'UPDATE dota_players SET display_name=$1, name=$2 WHERE id=$3'
+                query = 'UPDATE dota_players SET display_name=$1, name_lower=$2 WHERE id=$3'
                 await self.bot.pool.execute(query, display_name, display_name.lower(), row.id)
 
     @check_acc_renames.before_loop

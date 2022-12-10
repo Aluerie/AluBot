@@ -234,3 +234,4 @@ class PostMatchPlayerData:
             item_img = item_img.resize((last_row_h, last_row_h))
             img.paste(item_img, (left + count * item_img.width, height - last_row_h - item_img.height))
         return img
+

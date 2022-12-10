@@ -7,7 +7,7 @@ from typing import (
 )
 
 from discord import Embed, app_commands
-from discord.ext.commands import BadArgument
+from discord.ext.commands import BadArgument, BotMissingPermissions
 
 from .distools import send_pages_list
 from .var import Clr, MP, Ems, Cid
@@ -95,10 +95,7 @@ class FPCBase:
         """Base function for setting channel for FPC Feed feature"""
         ch = channel or ctx.channel
         if not ch.permissions_for(ctx.guild.me).send_messages:
-            em = Embed(colour=Clr.error)
-            em.description = 'I do not have permissions to send messages in that channel :('
-            await ctx.reply(embed=em)  # todo: change this to commands.BotMissingPermissions
-            return
+            raise BotMissingPermissions(['I do not have permission to `send_messages` in that channel'])
 
         query = f'UPDATE guilds SET {self.channel_id_column}=$1 WHERE id=$2'
         await ctx.pool.execute(query, ch.id, ctx.guild.id)
@@ -429,13 +426,11 @@ class FPCBase:
         """
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
         fav_ids = await ctx.pool.fetchval(query, ctx.guild.id)
-
         query = f"""SELECT id, name_lower, display_name 
                     FROM {self.players_table}
                     WHERE name_lower=ANY($1)
                 """  # AND NOT id=ANY($2)
         sa_rows = await ctx.pool.fetch(query, [name.lower() for name in player_names])
-
         s_ids = [row.id for row in sa_rows if row.id not in fav_ids]
         s_names = [row.display_name for row in sa_rows if row.id not in fav_ids]
         a_ids = [row.id for row in sa_rows if row.id in fav_ids]

@@ -35,14 +35,26 @@ class BetaTest(commands.Cog):
     def cog_unload(self):
         return
 
-    def sleep_10(self):
-        time.sleep(10)
-
-    @tasks.loop(seconds=20)
+    @tasks.loop(seconds=5)
     async def reload_info(self):
-        log.debug('starting the task')
-        await self.bot.loop.run_in_executor(None, self.sleep_10)
-        log.debug('ending the task')
+        job_id = 176684834
+
+        match_id = 6909186299
+        url = f'{ODOTA_API_URL}/request/{match_id}'
+        async with self.bot.session.post(url) as resp:
+            print(resp.ok)
+            j = (await resp.json())['job']['jobId']
+            print(j, type(j))
+            if j:
+                print('yes')
+
+        url = f'{ODOTA_API_URL}/request/{j}'
+        async with self.bot.session.get(url) as resp:
+            print(resp.ok)
+            j = await resp.json()
+            print(j, type(j))
+            if j:
+                print('yes')
 
     @app_commands.command()
     async def welp(self, ntr: Interaction):

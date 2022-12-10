@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timezone, time
 from typing import TYPE_CHECKING, Optional, Literal
 
-from discord import Embed, app_commands, TextChannel
+from discord import Embed, app_commands, TextChannel, Permissions
 from discord.ext import commands, tasks
 from pyot.core.exceptions import NotFound, ServerError
 from pyot.models import lol
@@ -23,13 +23,14 @@ from .utils.var import Clr, MP, Ems, Cid
 if TYPE_CHECKING:
     from .utils.context import Context
     from .utils.bot import AluBot
+    from discord import Interaction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
 class LoLFeed(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.lolfeed.start()
 
@@ -82,7 +83,7 @@ class LoLFeed(commands.Cog):
             img_file = img_to_file(
                 await match.edit_the_image(
                     em.image.url,
-                    self.bot.ses
+                    self.bot.session
                 ),
                 filename=image_name
             )
@@ -234,40 +235,50 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         self.bot: AluBot = bot
         self.help_emote = Ems.PogChampPepe
 
-    @is_owner()
-    @commands.hybrid_group(aliases=['league'])
-    @app_commands.default_permissions(administrator=True)
-    async def lol(self, ctx: Context):
+    async def cog_load(self) -> None:
+        await self.bot.ini_twitch()
+
+    slh_lol = app_commands.Group(
+        name="lol",
+        description="Group command about LolFeed",
+        default_permissions=Permissions(administrator=True)
+    )
+
+    @is_guild_owner()
+    @commands.group(name='lol', aliases=['league'])
+    async def ext_lol(self, ctx: Context):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
+    slh_lol_channel = app_commands.Group(
+        name='channel',
+        description='Group command about LoLFeed channel settings',
+        default_permissions=Permissions(administrator=True),
+        parent=slh_lol
+    )
+
     @is_guild_owner()
-    @lol.group()
-    async def channel(self, ctx: Context):
+    @ext_lol.group()
+    async def ext_lol_channel(self, ctx: Context):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @is_guild_owner()
-    @channel.command(name='set', usage='[channel=curr]')
-    @app_commands.describe(channel='Choose channel for LoLFeed notifications')
-    async def channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
+    @slh_lol_channel.command(
+        name='set',
+        description="Set channel to be the LoLFeed notifications channel"
+    )
+    @app_commands.describe(channel='Choose channel to set up LoLFeed notifications')
+    async def slh_lol_channel_set(self, ntr: Interaction, channel: Optional[TextChannel] = None):
+        """Slash copy of ext_lol_channel_set below"""
+        ctx = await Context.from_interaction(ntr)
+        await self.channel_set(ctx, channel)
+
+    @is_guild_owner()
+    @ext_lol_channel.command(name='set', usage='[channel=curr]')
+    async def ext_lol_channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
         """Set channel to be the LoLFeed notifications channel."""
-        channel = channel or ctx.channel
-        if not channel.permissions_for(ctx.guild.me).send_messages:
-            em = Embed(
-                colour=Clr.error,
-                description='I do not have permissions to send messages in that channel :('
-            )
-            return await ctx.reply(embed=em)  # todo: change this to raise BotMissingPerms
-
-        query = 'UPDATE guilds SET lolfeed_ch_id=$1 WHERE id=$2'
-        await self.bot.pool.execute(query, channel.id, ctx.guild.id)
-
-        em = Embed(
-            colour=Clr.rspbrry,
-            description=f'Channel {channel.mention} is set to be the LoLFeed channel for this server'
-        )
-        await ctx.reply(embed=em)
+        await self.channel_set(ctx, channel)
 
     @is_guild_owner()
     @channel.command(name='disable', description='Disable LoLFeed functionality.')

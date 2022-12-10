@@ -61,19 +61,9 @@ CREATE TABLE IF NOT EXISTS guilds (
     lolfeed_spoils_on BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE IF NOT EXISTS lolaccs (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    platform TEXT,
-    accname TEXT,
-    twtv_id BIGINT,
-    last_edited TEXT, -- this column is needed bcs Riot API is not precise
-    fav_id INTEGER
-);
-
 CREATE TABLE IF NOT EXISTS dota_players (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
+    name_lower TEXT NOT NULL UNIQUE,
     display_name TEXT NOT NULL,
     twitch_id BIGINT
 );
@@ -105,7 +95,40 @@ CREATE TABLE IF NOT EXISTS dota_messages (
             REFERENCES dota_matches(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS lol_players (
+    id SERIAL PRIMARY KEY,
+    name_lower TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    twitch_id BIGINT
+);
 
+CREATE TABLE IF NOT EXISTS lol_accounts (
+    id TEXT PRIMARY KEY,
+    platform TEXT NOT NULL,
+    account_name TEXT NOT NULL,
+    player_id INT NOT NULL,
+    last_edited TEXT, -- this column is needed bcs Riot API is not precise
+    CONSTRAINT fk_player
+        FOREIGN KEY (player_id)
+        REFERENCES lol_players(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS lol_matches (
+    id TEXT PRIMARY KEY,
+    is_finished BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS lol_messages (
+    message_id BIGINT PRIMARY KEY,
+    channel_id BIGINT NOT NULL,
+    match_id TEXT NOT NULL,
+    champ_id INTEGER NOT NULL,
+    twitch_status TEXT NOT NULL,
+
+    CONSTRAINT fk_match
+        FOREIGN KEY (match_id)
+            REFERENCES lol_matches(id) ON DELETE CASCADE
+);
 
 CREATE TABLE IF NOT EXISTS reminders (
     id SERIAL PRIMARY KEY,

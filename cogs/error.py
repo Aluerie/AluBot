@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from .utils.context import Context
 from .utils.format import display_time
-from .utils.var import Clr, rmntn
+from .utils.var import Clr, rmntn, Cid
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -27,7 +27,7 @@ class CommandErrorHandler(commands.Cog):
         ):  # circle to the actual error throughout all the chains
             error = error.original
 
-        handled = True
+        handled, mention = True, True
         match error:
             case commands.BadFlagArgument():
                 desc = f'`{error.flag.name}: {error.argument}`\n\n{error.original}'
@@ -111,6 +111,7 @@ class CommandErrorHandler(commands.Cog):
             case commands.CheckFailure():
                 desc = f'{error}'
             case _:
+                print('there')
                 handled = False
 
                 desc = \
@@ -130,11 +131,12 @@ class CommandErrorHandler(commands.Cog):
                         url=jump_url,
                         icon_url=ctx.author.avatar.url
                     )
-                await self.bot.send_traceback(error, embed=err_em)
+                mention = (ctx.channel != Cid.spam_me)
+                await self.bot.send_traceback(error, embed=err_em, mention=mention)
 
         # send the error
         em = Embed(color=Clr.error, description=desc).set_author(name=error.__class__.__name__)
-        if not handled and self.bot.test_flag:
+        if not handled and self.bot.test_flag and not mention:
             if ctx.interaction:  # they error out unanswered
                 await ctx.reply(':(', ephemeral=True)
             else:

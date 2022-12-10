@@ -13,7 +13,7 @@ from PIL import Image, ImageOps, ImageDraw, ImageFont
 from discord import Embed, NotFound, Forbidden, File
 from pyot.utils.functools import async_property
 
-from ..dota.const import ODOTA_API_URL
+from ..dota.const import ODOTA_API_URL, dota_player_colour_map
 from ..dota import hero, item, ability
 from cogs.utils.format import display_relativehmstime
 from cogs.utils.imgtools import url_to_img, img_to_file, get_text_wh
@@ -34,12 +34,6 @@ __all__ = (
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
-
-
-dota_player_colour_map = {
-    0: "#3375FF", 1: "#66FFBF", 2: "#BF00BF", 3: "#F3F00B", 4: "#FF6B00",
-    5: "#FE86C2", 6: "#A1B447", 7: "#65D9F7", 8: "#008321", 9: "#A46900"
-}
 
 
 class Match:
@@ -352,71 +346,132 @@ class PostMatchPlayerData:
             return
 
 
+class OpendotaNotOK(Exception):
+    pass
+
+
+class OpendotaMatchNotParsed(Exception):
+    pass
+
+
+class OpendotaTooManyFails(Exception):
+    pass
+
+
 class OpendotaRequestMatch:
 
     def __init__(
             self,
-            match_id
+            match_id: int,
+            job_id: int = None
     ):
         self.match_id = match_id
+        self.job_id: Union[int, None] = job_id
 
-        self.request_fails = 0
-        self.request_tries = 0
-        self.matches_fails = 0
-        self.matches_tries = 0
+        self.fails = 0
+        self.tries = 0
+        self.parse_attempts = 0
 
+        self.is_first_loop_skipped = False
         self.dict_ready = False
 
-    async def request(
+    async def post_request(
             self,
             bot: AluBot
-    ) -> Union[None, int]:
-        """Make opendota request parsing API call"""
-        if self.request_tries >= pow(2, self.request_fails) - 1:
-            url = f'{ODOTA_API_URL}/request/{self.match_id}'
-            async with bot.session.post(url) as resp:
-                bot.update_odota_ratelimit(resp.headers)
-                if resp.ok:
-                    return (await resp.json())['job']['jobId']
-                else:
-                    self.request_fails += 1
-                    return None
-        else:
-            self.request_tries += 1
-            return None
+    ) -> int:
+        """
+        Make opendota request parsing API call
+        @return job_id as integer or False in case of not ok response
+        """
+        async with bot.session.post(
+                f'{ODOTA_API_URL}/request/{self.match_id}'
+        ) as resp:
+            log.debug(
+                f'OK: {resp.ok} json: {await resp.json()} '
+                f'tries: {self.tries} fails: {self.fails}'
+            )
+            bot.update_odota_ratelimit(resp.headers)
+            if resp.ok:
+                return (await resp.json())['job']['jobId']
+            else:
+                raise OpendotaNotOK('POST /request response was not OK')
 
-    async def matches(
+    async def get_request(
             self,
             bot: AluBot
-    ) -> Union[None, dict]:
+    ) -> Union[dict, False]:
+        """
+        Make opendota request parsing API call
+        @return job_id as integer or False in case of not ok response
+        @raise OpendotaNotOK
+        """
+        async with bot.session.get(
+                f'{ODOTA_API_URL}/request/{self.job_id}'
+        ) as resp:
+            log.debug(
+                f'OK: {resp.ok} json: {await resp.json()} job_id: {self.job_id} '
+                f'tries: {self.tries} fails: {self.fails}'
+            )
+            bot.update_odota_ratelimit(resp.headers)
+            if resp.ok:
+                return await resp.json()
+            else:
+                raise OpendotaNotOK('GET /request response was not OK')
+
+    async def get_matches(
+            self,
+            bot: AluBot
+    ) -> dict:
         """Make opendota request match data API call"""
-        if self.matches_tries >= pow(2, self.matches_fails) - 1:
-            url = f'{ODOTA_API_URL}/matches/{self.match_id}'
-            async with bot.session.get(url) as resp:
-                bot.update_odota_ratelimit(resp.headers)
-                if resp.ok:
-                    d = await resp.json()
-                    if d['players'][0]['purchase_log']:
-                        self.dict_ready = True
-                        return d['players']
+        async with bot.session.get(
+                f'{ODOTA_API_URL}/matches/{self.match_id}'
+        ) as resp:
+            log.debug(
+                f'OK: {resp.ok} match_id: {self.match_id} job_id: {self.job_id} '
+                f'tries: {self.tries} fails: {self.fails}'
+            )
+            bot.update_odota_ratelimit(resp.headers)
+            if resp.ok:
+                d = await resp.json()
+                if d['players'][0]['purchase_log']:
+                    self.dict_ready = True
+                    return d['players']
                 else:
-                    self.matches_fails += 1
-                    return None
+                    raise OpendotaMatchNotParsed('GET /matches returned not fully parsed match')
+            else:
+                raise OpendotaNotOK('GET /matches response was not OK')
+
+    async def workflow(
+            self,
+            bot: AluBot
+    ) -> Union[dict, None]:
+        if self.fails > 5 or self.parse_attempts > 5:
+            raise OpendotaTooManyFails('We failed too many times')
+        elif not self.is_first_loop_skipped:
+            self.is_first_loop_skipped = True
+        elif not self.job_id:
+            if self.tries >= pow(3, self.fails) - 1:
+                try:
+                    self.job_id = await self.post_request(bot)
+                    query = "UPDATE dota_matches SET opendota_jobid=$1 WHERE id=$2"
+                    await bot.pool.execute(query, self.job_id, self.match_id)
+                    self.tries, self.fails = 0, 0
+                except OpendotaNotOK:
+                    self.fails += 1
+            else:
+                self.tries += 1
         else:
-            self.matches_tries += 1
-            return None
-
-    @property
-    def failed_flag(self) -> bool:
-        return self.request_fails > 5 or self.matches_fails > 5
-
-
-
-
-
-
-
-
+            if self.tries >= pow(3, self.fails) - 1:
+                try:
+                    return await self.get_matches(bot)
+                except OpendotaMatchNotParsed:
+                    self.job_id = None
+                    self.parse_attempts += 1
+                    self.tries, self.fails = 0, 0
+                except OpendotaNotOK:
+                    self.fails += 1
+            else:
+                self.tries += 1
 
 
 if __name__ == '__main__':

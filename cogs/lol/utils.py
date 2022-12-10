@@ -17,7 +17,7 @@ async def get_diff_list(champ_roles):
 async def get_champion_roles():
     """
     Unfortunately, Meraki run out of money to support their Json
-    Thus sometimes it is behind a few patches ans
+    Thus sometimes it is behind a few patches and
     I need to add new champions myself with this function.
 
     About Manual adding part:
@@ -26,6 +26,8 @@ async def get_champion_roles():
     https://www.leagueofgraphs.com/champions/stats/nilah/master
     and it here for more precise data rather than 0.2 in all roles
     """
+    # todo: first of all rewrite pull_data yourself bcs it uses requests = bad
+    # todo: second we need to cache it out probably, no need to pull it every league game
     champion_roles = pull_data()
     diff_list = await get_diff_list(champion_roles)
 
@@ -62,7 +64,7 @@ async def get_role_mini_list(all_players_champ_ids):
     return role_mini_list
 
 
-async def lol_main():
+async def utils_test_main():
     blue_team = [895, 200, 888, 238, 92]  # ['Nilah', 'BelVeth', 'Renata', '', 'Zed', 'Riven']
     red_team = [122, 69, 64, 201, 119]  # ['Darius', 'Cassiopeia', 'Lee Sin', 'Braum', 'Draven']
 
@@ -76,4 +78,4 @@ if __name__ == '__main__':
     import asyncio
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(lol_main())
+    loop.run_until_complete(utils_test_main())

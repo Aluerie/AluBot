@@ -58,7 +58,7 @@ def create():
         async def run_create():
             connection: asyncpg.Connection = await asyncpg.connect(POSTGRES_URL)  # type: ignore
             async with connection.transaction():
-                sql = Path('SQL/tables.sql').read_text('utf-8')
+                sql = Path('sql/tables.sql').read_text('utf-8')
                 await connection.execute(sql)
 
         asyncio.run(run_create())

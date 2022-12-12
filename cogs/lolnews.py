@@ -82,9 +82,9 @@ class CopypasteLeague(commands.Cog):
 
         new_patch_href = soup.find_all("li")[0].a.get('href')
 
-        query = """ UPDATE botinfo 
+        query = """ UPDATE botinfo
                     SET lol_patch=$1
-                    WHERE id=$2 
+                    WHERE id=$2
                     AND lol_patch IS DISTINCT FROM $1
                     RETURNING True
                 """
@@ -102,17 +102,14 @@ class CopypasteLeague(commands.Cog):
                 if meta.attrs.get('property', None) == html_property:
                     return meta.attrs.get('content', None)
             return None
-        em = Embed(
-            colour=Clr.rspbrry,
-            description=content_if_property("og:description"),
-            title=content_if_property('og:title'),
-            url=patch_url
-        ).set_image(
-            url=content_if_property('og:image')
-        ).set_author(
-            icon_url=Img.league,
-            name='League of Legends'
-        )
+
+        # maybe use ('a' ,{'class': 'skins cboxElement'})
+        img_url = patch_soup.find('h2', id='patch-patch-highlights').find_next('a').get('href')
+        em = Embed(title=content_if_property('og:title'), url=patch_url, colour=Clr.rspbrry)
+        em.description = content_if_property("og:description")
+        em.set_image(url=img_url)
+        em.set_thumbnail(url=content_if_property('og:image'))
+        em.set_author(name='League of Legends', icon_url=Img.league)
         msg = await self.bot.get_channel(Cid.lol_news).send(embed=em)
         await msg.publish()
 

@@ -43,9 +43,10 @@ async def human_commit(repo, commits, test_num=0):
         crcfiles = [x for x in commits[0 + test_num].files if x.filename in crc_checks]
         res_list = []
         for x in crcfiles:
-            for ln in iter(x.patch.splitlines()):
-                if ln.startswith('+'):
-                    res_list.append(ln[1:].split(' ')[0])
+            if x.patch:
+                for ln in iter(x.patch.splitlines()):
+                    if ln.startswith('+'):
+                        res_list.append(ln[1:].split(' ')[0])
         return res_list
     crc_files = get_crc_checked_files()
 

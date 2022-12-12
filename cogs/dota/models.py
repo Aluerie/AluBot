@@ -1,6 +1,5 @@
 """
 The MIT License (MIT)
-
 """
 from __future__ import annotations
 
@@ -17,7 +16,7 @@ from ..dota.const import ODOTA_API_URL, dota_player_colour_map
 from ..dota import hero, item, ability
 from cogs.utils.format import display_relativehmstime
 from cogs.utils.imgtools import img_to_file, get_text_wh
-from cogs.utils.var import Clr, MP, Img
+from cogs.utils.var import Clr, MP, Img, Cid
 
 if TYPE_CHECKING:
     from discord import Colour
@@ -180,7 +179,7 @@ class ActiveMatch(Match):
         em.set_image(url=f'attachment://{img_file.filename}')
         em.set_thumbnail(url=await hero.imgurl_by_id(self.hero_id))
         em.set_author(name=f'{self.display_name} - {await self.hero_name}', url=self.url, icon_url=self.logo_url)
-        em.set_footer(text=f'Console: watch_server {self.server_steam_id}')
+        em.set_footer(text=f'watch_server {self.server_steam_id}')
         return em, img_file
 
 
@@ -193,10 +192,12 @@ class PostMatchPlayerData:
             channel_id: int,
             message_id: int,
             twitch_status: Literal['NoTwitch', 'Offline', 'Online'],
+            api_calls_done: int
     ):
         self.channel_id = channel_id
         self.message_id = message_id
         self.twitch_status = twitch_status
+        self.api_calls_done = api_calls_done
 
         self.colour = colour_twitch_status_dict[self.twitch_status]
 
@@ -333,6 +334,8 @@ class PostMatchPlayerData:
         em = msg.embeds[0]
         img_file = bot.img_to_file(await self.edit_the_image(em.image.url, bot), filename='edited.png')
         em.set_image(url=f'attachment://{img_file.filename}')
+        if self.channel_id == Cid.repost:
+            em.set_footer(text=f'{em.footer.text or ""} | {self.api_calls_done}')
         try:
             await msg.edit(embed=em, attachments=[img_file])
         except Forbidden:
@@ -367,6 +370,7 @@ class OpendotaRequestMatch:
 
         self.is_first_loop_skipped = False
         self.dict_ready = False
+        self.api_calls_done = 0
 
     async def post_request(
             self,
@@ -384,6 +388,7 @@ class OpendotaRequestMatch:
                 f'tries: {self.tries} fails: {self.fails}'
             )
             bot.update_odota_ratelimit(resp.headers)
+            self.api_calls_done += 1
             if resp.ok:
                 return (await resp.json())['job']['jobId']
             else:
@@ -406,6 +411,7 @@ class OpendotaRequestMatch:
                 f'tries: {self.tries} fails: {self.fails}'
             )
             bot.update_odota_ratelimit(resp.headers)
+            self.api_calls_done += 1
             if resp.ok:
                 return await resp.json()
             else:
@@ -424,6 +430,7 @@ class OpendotaRequestMatch:
                 f'tries: {self.tries} fails: {self.fails}'
             )
             bot.update_odota_ratelimit(resp.headers)
+            self.api_calls_done += 1
             if resp.ok:
                 d = await resp.json()
                 if d['players'][0]['purchase_log']:

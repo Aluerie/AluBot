@@ -137,18 +137,11 @@ class CopypasteDota(commands.Cog):
         if not val:
             return
 
-        em = Embed(
-            colour=Clr.prpl,
-            url=f'https://www.dota2.com/patches/{patch_number}',
-            title='Patch Notes',
-            description='Hey chat, I think new patch is out!'
-        ).set_footer(
-            text='I\'m checking Valve\'s datafeed every 10 minutes'
-        ).set_author(
-            icon_url=Img.dota2logo,
-            name=f'Patch {patch_number} is out'
-        )
-        msg = await self.bot.get_channel(Cid.spam_me).send(embed=em)
+        em = Embed(title='Patch Notes', url=f'https://www.dota2.com/patches/{patch_number}', colour=Clr.prpl)
+        em.description = 'Hey chat, I think new patch is out!'
+        em.set_footer(text='I\'m checking Valve\'s datafeed every 10 minutes')
+        em.set_author(name=f'Patch {patch_number} is out', icon_url=Img.dota2logo)
+        msg = await self.bot.get_channel(Cid.dota_news).send(embed=em)
         await msg.publish()
 
     @patch_checker.before_loop
@@ -166,7 +159,7 @@ class TestGitFeed(commands.Cog):
 
     @tasks.loop(count=1)
     async def testing(self):
-        num = 0
+        num = 4
         url, embeds, files = await get_gitdiff_embed(test_num=num)
         for embed in embeds:
             await self.bot.get_channel(Cid.spam_me).send(content=url, embed=embed)
@@ -177,8 +170,12 @@ class TestGitFeed(commands.Cog):
     async def before(self):
         await self.bot.wait_until_ready()
 
+    @testing.error
+    async def testing_error(self, error):
+        await self.bot.send_traceback(error, where='Test Git dota-git')
+
 
 async def setup(bot):
     await bot.add_cog(CopypasteDota(bot))
-    # if bot.yen:
-    #     await bot.add_cog(TestGitFeed(bot))
+    if bot.test_flag:
+        await bot.add_cog(TestGitFeed(bot))

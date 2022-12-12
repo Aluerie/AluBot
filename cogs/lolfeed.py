@@ -70,8 +70,7 @@ class LoLFeedNotifications(commands.Cog):
                 continue
             self.all_live_match_ids.append(live_game.id)
             p = next((x for x in live_game.participants if x.summoner_id == r.id), None)
-            if p.champion_id in fav_champ_ids \
-                    and r.last_edited != f'{live_game.platform.upper()}_{live_game.id}':
+            if p.champion_id in fav_champ_ids and r.last_edited != live_game.id:
                 query = """ SELECT lolfeed_ch_id 
                             FROM guilds
                             WHERE $1=ANY(lolfeed_champ_ids) 
@@ -107,7 +106,8 @@ class LoLFeedNotifications(commands.Cog):
                             twitch_id=user.twitch_id,
                             spells=p.spells,
                             runes=p.runes,
-                            channel_ids=channel_ids
+                            channel_ids=channel_ids,
+                            account_id=user.id
                         )
                     )
 
@@ -133,6 +133,8 @@ class LoLFeedNotifications(commands.Cog):
                         VALUES ($1, $2, $3, $4)
                     """
             await self.bot.pool.execute(query, msg.id, ch.id, match.match_id, match.champ_id)
+            query = 'UPDATE lol_accounts SET last_edited=$1 WHERE id=$2'
+            await self.bot.pool.execute(query, match.match_id, match.account_id)
 
     async def declare_matches_finished(self):
         query = """ UPDATE lol_matches 
@@ -194,8 +196,6 @@ class LoLFeedPostMatchEdits(commands.Cog):
                                 message_id=r.message_id,
                             )
                         )
-                        query = 'UPDATE lol_accounts SET last_edited=$1 WHERE id=$2'
-                        await self.bot.pool.execute(query, match.id, participant.summoner_id)
             query = 'DELETE FROM lol_matches WHERE id=$1'
             await self.bot.pool.fetch(query, row.id)
 

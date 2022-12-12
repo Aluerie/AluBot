@@ -188,12 +188,12 @@ class AluBot(commands.Bot):
     async def update_app_commands_cache(
             self,
             *,
-            commands: Optional[List[AppCommand]] = None,
+            cmds: Optional[List[AppCommand]] = None,
             guild: Optional[Snowflake] = None
     ) -> None:
-        if not commands:
-            commands = await self.tree.fetch_commands(guild=guild.id if guild else None)
-        self.app_commands = {cmd.name: cmd.id for cmd in commands}
+        if not cmds:
+            cmds = await self.tree.fetch_commands(guild=guild.id if guild else None)
+        self.app_commands = {cmd.name: cmd.id for cmd in cmds}
 
     # Shortcuts
 

@@ -80,7 +80,8 @@ class LiveMatch(Match):
             twitch_id: int,
             spells: List[Spell],
             runes: List[Rune],
-            channel_ids: List[int]
+            channel_ids: List[int],
+            account_id: str
     ):
         super().__init__(match_id, platform, account_name)
         self.start_time = start_time
@@ -90,6 +91,7 @@ class LiveMatch(Match):
         self.spells = spells
         self.runes = runes
         self.channel_ids = channel_ids
+        self.account_id = account_id
 
     @property
     def long_ago(self):

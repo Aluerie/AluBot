@@ -258,7 +258,8 @@ class PostMatchEdits(commands.Cog):
                                     player_data=player,
                                     channel_id=r.channel_id,
                                     message_id=r.message_id,
-                                    twitch_status=r.twitch_status
+                                    twitch_status=r.twitch_status,
+                                    api_calls_done=cache_item.api_calls_done
                                 )
                             )
             if cache_item.dict_ready:

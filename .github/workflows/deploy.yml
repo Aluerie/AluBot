@@ -1,25 +1,51 @@
 name: Deploy
 
-on: [push]
+on: 
+  push:
+    branches:
+      - 'main'
 
 jobs:
   deploy:
-    name: Deploy
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Executing remote command
+    - uses: actions/checkout@v3  
+    
+    - shell: pwsh
+      id: check_file_changed
+      run: |
+        $diff = git diff --name-only HEAD^ HEAD
+        $SourceDiff = $diff | Where-Object { $_ -match 'requirements.txt'}
+        $HasDiff = $SourceDiff.Length -gt 0
+        Write-Host "::set-output name=file_changed::$HasDiff"
+    
+    - name: Restarting the bot
+      if: steps.check_file_changed.outputs.file_changed == 'True'
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
         USERNAME: ${{ secrets.USERNAME }}
         PORT: ${{ secrets.PORT }}
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        if: 1
+        script: |
+          cd ./AluBot
+          git pull
+          source venv/bin/activate
+          pip install -r ./requirements.txt
+          sudo systemctl restart alubot.service
+  
+    - name: Restarting the bot
+      if: steps.check_file_changed.outputs.file_changed == 'False'
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USERNAME }}
+        PORT: ${{ secrets.PORT }}
+        KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        if: 1
         script: |
           cd ./AluBot
           git pull
           sudo systemctl restart alubot.service
-        

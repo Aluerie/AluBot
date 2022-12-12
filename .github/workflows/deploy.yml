@@ -18,5 +18,7 @@ jobs:
         PORT: ${{ secrets.PORT }}
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
+          cd ./AluBot
+          git pull
           sudo systemctl restart alubot.service
         

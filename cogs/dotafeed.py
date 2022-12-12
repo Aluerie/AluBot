@@ -635,7 +635,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
         """Slash copy of ext_dota_player_add below"""
-        player_names = list(set([
+        player_names = list(dict.fromkeys([
             name for name in list(locals().values())[2:] if name is not None
         ]))
         ctx = await Context.from_interaction(ntr)
@@ -673,7 +673,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
         """Slash copy of ext_dota_player_remove below"""
-        player_names = list(set([
+        player_names = list(dict.fromkeys([
             name for name in list(locals().values())[2:] if name is not None
         ]))
         ctx = await Context.from_interaction(ntr)
@@ -737,7 +737,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
         """Slash copy of ext_dota_hero_add below"""
-        hero_names = list(set([
+        hero_names = list(dict.fromkeys([
             name for name in list(locals().values())[2:] if name is not None
         ]))
         ctx = await Context.from_interaction(ntr)
@@ -783,7 +783,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
         """Slash copy of ext_dota_hero_remove below"""
-        hero_names = list(set([
+        hero_names = list(dict.fromkeys([
             name for name in list(locals().values())[2:] if name is not None
         ]))
         ctx = await Context.from_interaction(ntr)

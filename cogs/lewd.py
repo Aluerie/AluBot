@@ -27,7 +27,7 @@ class LewdCog(commands.Cog, name='Lewd'):
         """
         [NSFW] Get a random horny picture.
         """
-        await ctx.reply(f'Coming soon {Ems.Jebaited}')
+        await ctx.reply('Coming soon {0} {0} {0}'.format(Ems.Jebaited))
 
 
 async def setup(bot):

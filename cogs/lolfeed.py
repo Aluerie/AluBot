@@ -541,7 +541,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
         """Slash copy of ext_lol_player_add below"""
-        player_names = list(set([
+        player_names = list(dict.fromkeys([
             name for name in list(locals().values())[2:] if name is not None
         ]))
         ctx = await Context.from_interaction(ntr)
@@ -579,7 +579,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
         """Slash copy of ext_lol_player_remove below"""
-        player_names = list(set([
+        player_names = list(dict.fromkeys([
             name for name in list(locals().values())[2:] if name is not None
         ]))
         ctx = await Context.from_interaction(ntr)
@@ -643,7 +643,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
         """Slash copy of ext_lol_champ_add below"""
-        champ_names = list(set([
+        champ_names = list(dict.fromkeys([
             name for name in list(locals().values())[2:] if name is not None
         ]))
         ctx = await Context.from_interaction(ntr)
@@ -681,7 +681,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
         """Slash copy of ext_lol_champ_remove below"""
-        champ_names = list(set([
+        champ_names = list(dict.fromkeys([
             name for name in list(locals().values())[2:] if name is not None
         ]))
         ctx = await Context.from_interaction(ntr)

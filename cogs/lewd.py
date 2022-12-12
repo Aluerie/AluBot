@@ -24,9 +24,7 @@ class LewdCog(commands.Cog, name='Lewd'):
 
     @commands.hybrid_command()
     async def lewd(self, ctx: Context):
-        """
-        [NSFW] Get a random horny picture.
-        """
+        """[NSFW] Get a random horny picture."""
         await ctx.reply('Coming soon {0} {0} {0}'.format(Ems.Jebaited))
 
 

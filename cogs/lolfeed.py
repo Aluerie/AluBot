@@ -107,7 +107,7 @@ class LoLFeedNotifications(commands.Cog):
                             spells=p.spells,
                             runes=p.runes,
                             channel_ids=channel_ids,
-                            account_id=user.id
+                            account_id=p.summoner_id
                         )
                     )
 

@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS lol_accounts (
     platform TEXT NOT NULL,
     account_name TEXT NOT NULL,
     player_id INT NOT NULL,
-    last_edited TEXT, -- this column is needed bcs Riot API is not precise
+    last_edited BIGINT, -- this column is needed bcs Riot API is not precise
     CONSTRAINT fk_player
         FOREIGN KEY (player_id)
         REFERENCES lol_players(id) ON DELETE CASCADE

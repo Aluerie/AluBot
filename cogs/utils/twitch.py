@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-from typing_extensions import Self
+from typing import TYPE_CHECKING, List
 
 from discord.ext.commands import BadArgument
 
@@ -12,19 +11,7 @@ from .format import gettimefromhms, display_hmstime
 
 if TYPE_CHECKING:
     from asyncpg import Pool
-
-
-async def get_lol_streams(pool: Pool, twitch: Twitch):
-    async def get_all_fav_ids(column_name: str):
-        query = f'SELECT DISTINCT(unnest({column_name})) FROM guilds'
-        rows = await pool.fetch(query)
-        return [row.unnest for row in rows]
-
-    fav_stream_ids = await get_all_fav_ids('lolfeed_stream_ids')
-
-    fav_stream_ids = [str(x) for x in list(set(fav_stream_ids))]
-    data = twitch.get_streams(user_id=fav_stream_ids, first=100)['data']
-    return [int(item['user_id']) for item in data]
+    from twitchAPI.object import TwitchUser, Stream
 
 
 class MyTwitchClient(Twitch):
@@ -37,10 +24,7 @@ class MyTwitchClient(Twitch):
             user_login: str
     ) -> int:
         """Gets twitch_id by user_login"""
-        user = None
-        async for i in self.get_users(logins=[user_login]):
-            user = i
-        if user:
+        if user := await first(self.get_users(logins=[user_login])):
             return int(user.id)
         else:
             raise BadArgument(f'Error checking stream `{user_login}`.\n User either does not exist or is banned.')
@@ -81,35 +65,59 @@ class MyTwitchClient(Twitch):
             return ''
 
     async def get_twitch_stream(self, twitch_id: int) -> TwitchStream:
-        tw = TwitchStream(twitch_id, self)
-        return await tw.populate()
+        user = await first(self.get_users(user_ids=[str(twitch_id)]))
+        stream = await first(self.get_streams(user_id=[str(twitch_id)]))
+        return TwitchStream(twitch_id, user, stream)
+
+    async def get_live_lol_player_ids(self, pool: Pool) -> List[int]:
+        """Get twitch ids for live League of Legends streams"""
+        query = f"""SELECT twitch_id, id
+                    FROM lol_players
+                    WHERE id=ANY(
+                        SELECT DISTINCT(unnest(lolfeed_stream_ids)) FROM guilds
+                    )
+                """
+        twitch_id_to_fav_id_dict = {r.twitch_id: r.id for r in await pool.fetch(query)}
+        live_twitch_ids = [  # todo: if our list grows beyond 100 then we need more
+            int(i.user_id)
+            async for i in self.get_streams(user_id=list(twitch_id_to_fav_id_dict.keys()), first=100)
+        ]
+        return [twitch_id_to_fav_id_dict[i] for i in live_twitch_ids]
 
 
 class TwitchStream:
-    display_name: str
-    name: str
-    game: str
-    url: str
-    logo_url: str
-    online: bool
-    title: str
-    preview_url: str
+    __slots__ = (
+        'twitch_id',
+        'display_name',
+        'name',
+        'game',
+        'url',
+        'logo_url',
+        'online',
+        'title',
+        'preview_url'
+    )
+
+    if TYPE_CHECKING:
+        display_name: str
+        name: str
+        game: str
+        url: str
+        logo_url: str
+        online: bool
+        title: str
+        preview_url: str
 
     def __init__(
             self,
             twitch_id: int,
-            twitch: MyTwitchClient
+            user: TwitchUser,
+            stream: Stream
     ):
         self.twitch_id = twitch_id
-        self.twitch = twitch
+        self._update(user, stream)
 
-    async def populate(self) -> Self:
-        user = await first(self.twitch.get_users(user_ids=[str(self.twitch_id)]))
-        # todo: user first when they remove this when new twitchAPI version fix it StopAsyncIteration:
-        stream = None
-        async for i in self.twitch.get_streams(user_id=[str(self.twitch_id)]):
-            stream = i
-
+    def _update(self, user: TwitchUser, stream: Stream):
         self.display_name = user.display_name
         self.name = user.login
         self.url = f'https://www.twitch.tv/{self.display_name}'
@@ -128,18 +136,6 @@ class TwitchStream:
                 self.preview_url = f'{"-".join(n.split("-")[:-1])}-640x360.{n.split(".")[-1]}'
             else:
                 self.preview_url = f'https://static-cdn.jtvnw.net/previews-ttv/live_user_{self.name}-640x360.jpg'
-        return self
-
-    async def last_vod_link(
-            self,
-            epoch_time_ago: int = 0,
-            md: bool = True
-    ) -> str:
-        return await self.twitch.last_vod_link(
-            self.twitch_id,
-            epoch_time_ago=epoch_time_ago,
-            md=md
-        )
 
 
 async def main():
@@ -147,9 +143,9 @@ async def main():
     # main starts here
     tc = await MyTwitchClient(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
 
-    tw_id = await tc.twitch_id_by_name('timado')
-    timado = await tc.get_twitch_stream(tw_id)
-    print(timado.preview_url)
+    tw_id = await tc.twitch_id_by_name('gorgc')
+    ts = await tc.get_twitch_stream(tw_id)
+    print(ts.preview_url)
 
     await tc.close()
 

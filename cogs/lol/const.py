@@ -1,4 +1,31 @@
-platform_to_routing_dict = {
+"""
+Glossary:
+* platform - RiotGames routing platform names with numbers like `na1`. Name matches PyOT docs.
+* region - RiotGames routing region names like `americas`. Name matches PyOT docs.
+* server - Normal regions like 'na' in lower case. Name does not exist in PyOT docs.
+"""
+from typing import Literal
+
+__all__ = (
+    'LiteralPlatform',
+    'LiteralRegion',
+    'LiteralServer',
+    'server_to_platform',
+    'platform_to_server',
+    'platform_to_region',
+    'SOLO_RANKED_5v5_QUEUE_ENUM'
+)
+
+LiteralPlatform = Literal['br1', 'eun1', 'euw1', 'jp1', 'kr', 'la1', 'la2', 'na1', 'oc1', 'ru', 'tr1']
+LiteralRegion = Literal['americas', 'asia', 'europe']
+LiteralServerUpper = Literal['BR', 'EUN', 'EUW', 'JP', 'KR', 'LAN', 'LAS', 'NA', 'OC', 'RU', 'TR']
+LiteralServer = Literal[
+    'BR', 'EUN', 'EUW', 'JP', 'KR', 'LAN', 'LAS', 'NA', 'OC', 'RU', 'TR',
+    'br', 'eun', 'euw', 'jp', 'kr', 'lan', 'las', 'na', 'oc', 'ru', 'tr'
+]
+
+
+platform_to_region_dict = {
     'br1': 'americas',
     'eun1': 'europe',
     'euw1': 'europe',
@@ -12,7 +39,7 @@ platform_to_routing_dict = {
     'tr1': 'europe'
 }
 
-region_to_platform_dict = {
+server_to_platform_dict = {
     'br': 'br1',
     'eun': 'eun1',
     'euw': 'euw1',
@@ -26,16 +53,28 @@ region_to_platform_dict = {
     'tr': 'tr1'
 }
 
-platform_to_region_dict = {
+platform_to_server_dict = {
     v: k
-    for k, v in region_to_platform_dict.items()
+    for k, v in server_to_platform_dict.items()
 }
 
 
-def region_to_platform(region: str):
-    """Converter for the flag"""
-    return region_to_platform_dict[region.lower()]
+def server_to_platform(server: LiteralServer) -> LiteralPlatform:
+    """Convert server to platform"""
+    return server_to_platform_dict[server.lower()]
 
 
-def platform_to_region(platform: str):
-    return platform_to_region_dict[platform.lower()]
+def platform_to_server(platform: LiteralPlatform) -> LiteralServer:
+    """Convert platform to server"""
+    return platform_to_server_dict[platform.lower()]
+
+
+def platform_to_region(platform: LiteralPlatform) -> LiteralRegion:
+    """Convert platform to routing"""
+    return platform_to_region_dict[platform]
+
+
+# https://static.developer.riotgames.com/docs/lol/queues.json
+# says 420 is 5v5 Ranked Solo games
+SOLO_RANKED_5v5_QUEUE_ENUM = 420
+

@@ -114,16 +114,17 @@ CREATE TABLE IF NOT EXISTS lol_accounts (
 );
 
 CREATE TABLE IF NOT EXISTS lol_matches (
-    id TEXT PRIMARY KEY,
+    id BIGINT PRIMARY KEY,
+    platform TEXT NOT NULL,
+    region TEXT NOT NULL,
     is_finished BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS lol_messages (
     message_id BIGINT PRIMARY KEY,
     channel_id BIGINT NOT NULL,
-    match_id TEXT NOT NULL,
+    match_id BIGINT NOT NULL,
     champ_id INTEGER NOT NULL,
-    twitch_status TEXT NOT NULL,
 
     CONSTRAINT fk_match
         FOREIGN KEY (match_id)

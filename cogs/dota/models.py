@@ -16,7 +16,7 @@ from pyot.utils.functools import async_property
 from ..dota.const import ODOTA_API_URL, dota_player_colour_map
 from ..dota import hero, item, ability
 from cogs.utils.format import display_relativehmstime
-from cogs.utils.imgtools import url_to_img, img_to_file, get_text_wh
+from cogs.utils.imgtools import img_to_file, get_text_wh
 from cogs.utils.var import Clr, MP, Img
 
 if TYPE_CHECKING:
@@ -163,10 +163,7 @@ class ActiveMatch(Match):
         draw.text((0, 35 + h2 + 10), self.twitch_status, font=font, align="center", fill=str(self.colour))
         return img
 
-    async def notif_embed_and_file(
-            self,
-            bot: AluBot
-    ) -> (Embed, File):
+    async def notif_embed_and_file(self, bot: AluBot) -> (Embed, File):
         await self.get_twitch_data(bot.twitch)
         img_file = img_to_file(
             await self.better_thumbnail(bot),
@@ -223,9 +220,9 @@ class PostMatchPlayerData:
         pairs = ' '.join([f'{k}={v!r}' for k, v in self.__dict__.items()])
         return f'<{self.__class__.__name__} {pairs}>'
 
-    async def edit_the_image(self, img_url, session):
+    async def edit_the_image(self, img_url, bot: AluBot):
 
-        img = await url_to_img(session, img_url)
+        img = await bot.url_to_img(img_url)
 
         width, height = img.size
         last_row_h = 50
@@ -279,7 +276,7 @@ class PostMatchPlayerData:
 
         left_i = width - 69 * 6
         for count, itemId in enumerate(self.items):
-            hero_img = await url_to_img(session, await item.iconurl_by_id(itemId))
+            hero_img = await bot.url_to_img(await item.iconurl_by_id(itemId))
             # h_width, h_height = heroImg.size # naturally in (88, 64)
             hero_img = hero_img.resize((69, 50))  # 69/50 - to match 88/64
             curr_left = left_i + count * hero_img.width
@@ -288,7 +285,7 @@ class PostMatchPlayerData:
 
         ability_h = 37
         for count, abilityId in enumerate(self.ability_upgrades_arr):
-            abil_img = await url_to_img(session, await ability.iconurl_by_id(abilityId))
+            abil_img = await bot.url_to_img(await ability.iconurl_by_id(abilityId))
             abil_img = abil_img.resize((ability_h, ability_h))
             img.paste(abil_img, (count * ability_h, last_row_y - abil_img.height))
 
@@ -309,13 +306,13 @@ class PostMatchPlayerData:
             )
         right = left_i
         if self.aghs_blessing:
-            bless_img = await url_to_img(session, ability.lazy_aghs_bless_url)
+            bless_img = await bot.url_to_img(ability.lazy_aghs_bless_url)
             bless_img = bless_img.resize((48, 35))
             img.paste(bless_img, (right - bless_img.width, height - bless_img.height))
             await item_timing_text(271, right - bless_img.width)
             right -= bless_img.width
         if self.aghs_shard:
-            shard_img = await url_to_img(session, ability.lazy_aghs_shard_url)
+            shard_img = await bot.url_to_img(ability.lazy_aghs_shard_url)
             shard_img = shard_img.resize((48, 35))
             img.paste(shard_img, (right - shard_img.width, height - shard_img.height))
             await item_timing_text(609, right - shard_img.width)
@@ -334,11 +331,7 @@ class PostMatchPlayerData:
             return
 
         em = msg.embeds[0]
-        img_file = img_to_file(
-            await self.edit_the_image(em.image.url, bot.session),
-            filename='edited.png'
-        )
-
+        img_file = bot.img_to_file(await self.edit_the_image(em.image.url, bot), filename='edited.png')
         em.set_image(url=f'attachment://{img_file.filename}')
         try:
             await msg.edit(embed=em, attachments=[img_file])

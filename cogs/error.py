@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class CommandErrorHandler(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         bot.tree.on_error = self.on_app_command_error
 
@@ -111,7 +111,6 @@ class CommandErrorHandler(commands.Cog):
             case commands.CheckFailure():
                 desc = f'{error}'
             case _:
-                print('there')
                 handled = False
 
                 desc = \
@@ -131,7 +130,7 @@ class CommandErrorHandler(commands.Cog):
                         url=jump_url,
                         icon_url=ctx.author.avatar.url
                     )
-                mention = (ctx.channel != Cid.spam_me)
+                mention = (ctx.channel.id != Cid.spam_me)
                 await self.bot.send_traceback(error, embed=err_em, mention=mention)
 
         # send the error
@@ -156,5 +155,5 @@ class CommandErrorHandler(commands.Cog):
             await self.command_error_work(ctx, error)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(CommandErrorHandler(bot))

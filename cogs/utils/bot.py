@@ -99,8 +99,6 @@ class AluBot(commands.Bot):
             extensions_list += [f'cogs.{name}' for name in test_list]
         else:
             extensions_list += [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
-            # todo: remove after fix
-            extensions_list.remove('cogs.lolfeed')
 
         for ext in extensions_list:
             try:
@@ -292,7 +290,7 @@ class AluBot(commands.Bot):
             paginator.add_line(line)
 
         embed = embed or Embed(colour=Clr.error).set_author(name=where)
-        content = '' if mention else umntn(Uid.alu)
+        content = umntn(Uid.alu) if mention else ''
         await ch.send(content=content, embed=embed)
 
         for page in paginator.pages:

@@ -207,6 +207,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             await ctx.send(
                 f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
             )
+            await self.bot.update_app_commands_cache(commands=synced)
             return
 
         fmt = 0

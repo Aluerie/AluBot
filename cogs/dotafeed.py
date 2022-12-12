@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import asyncio
 import time as epoch_time
 from datetime import datetime, timezone, time
 import logging
-from typing import TYPE_CHECKING, Optional, List, Union
+from typing import TYPE_CHECKING, Optional, List, Union, Set
 
 import vdf
 from discord import Permissions, TextChannel, app_commands, Embed
@@ -27,22 +26,18 @@ if TYPE_CHECKING:
     from .utils.bot import AluBot
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 
 class DotaFeed(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-
-        self.dota_feed.start()
-        self.lobby_ids = set()
-        self.active_matches = []
-
+        self.lobby_ids: Set[int] = set()
         self.top_source_dict = {}
-        self.matches_to_send = []
-
-        self.hero_fav_ids = []
-        self.player_fav_ids = []
+        self.live_matches: List[ActiveMatch] = []
+        self.hero_fav_ids: List[int]  = []
+        self.player_fav_ids: List[int] = []
+        self.dota_feed.start()
 
     async def cog_load(self) -> None:
         self.bot.ini_steam_dota()
@@ -121,7 +116,7 @@ class DotaFeed(commands.Cog):
         # also idea with asyncio.Event() or checkin if top_source_dict is populated
 
     async def analyze_top_source_response(self):
-        self.matches_to_send = []
+        self.live_matches = []
         query = 'SELECT friend_id FROM dota_accounts WHERE player_id=ANY($1)'
         friend_ids = [f for f, in await self.bot.pool.fetch(query, self.player_fav_ids)]
 
@@ -151,7 +146,7 @@ class DotaFeed(commands.Cog):
                 channel_ids = [i for i, in await self.bot.pool.fetch(query, person.hero_id, user.id, match.match_id)]
                 if channel_ids:
                     log.debug(f'DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}')
-                    self.matches_to_send.append(
+                    self.live_matches.append(
                         ActiveMatch(
                             match_id=match.match_id,
                             start_time=match.activate_time,
@@ -165,13 +160,14 @@ class DotaFeed(commands.Cog):
                     )
 
     async def send_notifications(self, match: ActiveMatch):
-        log.debug("DF | Sending DotaFeed notification")
+        log.debug("DF | Sending LoLFeed notification")
         for ch_id in match.channel_ids:
-            ch = self.bot.get_channel(ch_id)
-            if ch is None:
+            if (ch := self.bot.get_channel(ch_id)) is None:
+                log.debug("LF | The channel is None")
                 continue
 
             em, img_file = await match.notif_embed_and_file(self.bot)
+            log.debug('LF | Successfully made embed+file')
             em.title = f"{ch.guild.owner.name}'s fav hero + player spotted"
             msg = await ch.send(embed=em, file=img_file)
             query = """ INSERT INTO dota_matches (id) 
@@ -190,7 +186,7 @@ class DotaFeed(commands.Cog):
     async def declare_matches_finished(self):
         query = """ UPDATE dota_matches 
                     SET is_finished=TRUE
-                    WHERE NOT id=ANY($1) 
+                    WHERE NOT id=ANY($1)
                     AND dota_matches.is_finished IS DISTINCT FROM TRUE
                 """
         await self.bot.pool.execute(query, list(self.top_source_dict.keys()))
@@ -212,7 +208,7 @@ class DotaFeed(commands.Cog):
                 log.debug(f"DF | top source request took {epoch_time.time() - start_time} secs")
         log.debug(f'DF | len top_source_dict = {len(self.top_source_dict)}')
         await self.analyze_top_source_response()
-        for match in self.matches_to_send:
+        for match in self.live_matches:
             await self.send_notifications(match)
 
         await self.declare_matches_finished()
@@ -228,26 +224,25 @@ class DotaFeed(commands.Cog):
         # self.dotafeed.restart()
 
 
-class AfterGameEdit(commands.Cog):
+class PostMatchEdits(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.after_match = []
+        self.postmatch_players = []
         self.opendota_req_cache = dict()
-        self.after_game.start()
+        self.postmatch_edits.start()
+        self.daily_report.start()
 
     def cog_load(self) -> None:
         self.bot.ini_steam_dota()
 
     def cog_unload(self) -> None:
-        self.after_game.cancel()
+        self.postmatch_edits.cancel()
 
-    async def after_match_games(self):
-        self.after_match = []
+    async def fill_postmatch_players(self):
+        self.postmatch_players = []
 
         query = "SELECT * FROM dota_matches WHERE is_finished=TRUE"
-        rows = await self.bot.pool.fetch(query)
-
-        for row in rows:
+        for row in await self.bot.pool.fetch(query):
             if row.id not in self.opendota_req_cache:
                 self.opendota_req_cache[row.id] = OpendotaRequestMatch(row.id, row.opendota_jobid)
 
@@ -258,7 +253,7 @@ class AfterGameEdit(commands.Cog):
                 for r in await self.bot.pool.fetch(query, row.id):
                     for player in pl_dict_list:
                         if player['hero_id'] == r.hero_id:
-                            self.after_match.append(
+                            self.postmatch_players.append(
                                 PostMatchPlayerData(
                                     player_data=player,
                                     channel_id=r.channel_id,
@@ -272,19 +267,19 @@ class AfterGameEdit(commands.Cog):
                 await self.bot.pool.execute(query, row.id)
 
     @tasks.loop(minutes=1)
-    async def after_game(self):
+    async def postmatch_edits(self):
         log.debug('AG | --- Task is starting now ---')
-        await self.after_match_games()
-        for player in self.after_match:
+        await self.fill_postmatch_players()
+        for player in self.postmatch_players:
             await player.edit_the_embed(self.bot)
         log.debug('AG | --- Task is finished ---')
 
-    @after_game.before_loop
+    @postmatch_edits.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
 
-    @after_game.error
-    async def after_game_error(self, error):
+    @postmatch_edits.error
+    async def postmatch_edits_error(self, error):
         await self.bot.send_traceback(error, where='DotaFeed Aftergame')
         # self.dotafeed.restart()
 
@@ -448,7 +443,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     @is_guild_owner()
     @ext_dota.group(name='database', aliases=['db'])
     async def ext_dota_database(self, ctx: Context):
-        """Group command about Dota 2, for actual commands use it together with subcommands"""
+        """Group command about Dota 2 database, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @staticmethod
@@ -462,7 +457,10 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         )
 
     @is_guild_owner()
-    @slh_dota_database.command(name='list')
+    @slh_dota_database.command(
+        name='list',
+        description='List of players in the database available for DotaFeed feature'
+    )
     async def slh_dota_database_list(self, ntr: Interaction):
         """Slash copy of ext_dota_database_list below"""
         ctx = await Context.from_interaction(ntr)
@@ -495,7 +493,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     @is_trustee()
     @slh_dota_database.command(
         name='add',
-        description='Add stream to the database.'
+        description='Add player to the database.'
     )
     @app_commands.describe(
         name='Player name. If it is a twitch tv streamer then provide their twitch handle',
@@ -569,7 +567,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         name='twitch.tv stream name',
         steam='either steam_id in any of 64/32/3/2 versions, friend_id or just Steam profile link'
     )
-    async def slh_dota_database_remove(self, ntr: Interaction, name: str, steam: str):
+    async def slh_dota_database_remove(self, ntr: Interaction, name: str, steam: Optional[str]):
         """Slash copy of ext_dota_database_remove below"""
         ctx = await Context.from_interaction(ntr)
         await ctx.typing()
@@ -603,7 +601,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     @is_guild_owner()
     @ext_dota.group(name='player', aliases=['streamer'])
     async def ext_dota_player(self, ctx: Context):
-        """Group command about Dota 2, for actual commands use it together with subcommands"""
+        """Group command about Dota 2 player, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     async def player_add_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
@@ -689,14 +687,14 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
 
     @is_guild_owner()
     @slh_dota_player.command(name='list', description='Show list of your favourite players')
-    async def slh_player_list(self, ntr: Interaction):
+    async def slh_dota_player_list(self, ntr: Interaction):
         """Slash copy of ext_dota_player below"""
         ctx = await Context.from_interaction(ntr)
         await self.player_list(ctx)
 
     @is_guild_owner()
     @ext_dota_player.command(name='list')
-    async def ext_player_list(self, ctx: Context):
+    async def ext_dota_player_list(self, ctx: Context):
         """Show current list of fav players."""
         await self.player_list(ctx)
 
@@ -813,14 +811,14 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     @is_guild_owner()
     @slh_dota.command(name='spoil', description="Turn on/off spoiling resulting stats for matches")
     @app_commands.describe(spoil='`Yes` to enable spoiling with stats, `No` for disable')
-    async def slh_dota_hero_spoil(self, ntr: Interaction, spoil: bool):
+    async def slh_dota_spoil(self, ntr: Interaction, spoil: bool):
         """Slash copy of ext_dota_hero_spoil below"""
         ctx = await Context.from_interaction(ntr)
         await self.spoil(ctx, spoil)
 
     @is_guild_owner()
     @ext_dota.command(name='spoil')
-    async def ext_dota_hero_spoil(self, ctx: Context, spoil: bool):
+    async def ext_dota_spoil(self, ctx: Context, spoil: bool):
         """
         Turn on/off spoiling resulting stats for matches.
         It is "on" by default, so it can show what items players finished with and KDA.
@@ -855,7 +853,7 @@ class DotaAccCheck(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(DotaFeed(bot))
-    await bot.add_cog(AfterGameEdit(bot))
+    await bot.add_cog(PostMatchEdits(bot))
     await bot.add_cog(DotaFeedTools(bot))
     if datetime.now(timezone.utc).day == 16:
         await bot.add_cog(DotaAccCheck(bot))

@@ -40,7 +40,7 @@ async def send_pages_list(
     embeds = [
         Embed(title=title, colour=colour, description=description_prefix + page)
         for page in paginator.pages
-    ]
+    ] or [Embed(title=title, colour=colour, description=description_prefix)]
     if author_name:
         for em in embeds:
             em.set_author(name=author_name, icon_url=author_icon)
@@ -48,7 +48,7 @@ async def send_pages_list(
         for em in embeds:
             em.set_footer(text=footer_text)
 
-    if len(embeds) == 1:
+    if len(embeds) < 2:
         if isinstance(ctx, Context):
             return await ctx.reply(embeds=embeds)
         elif isinstance(ctx, Interaction):

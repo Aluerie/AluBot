@@ -10,35 +10,12 @@ from discord import Embed, app_commands
 from discord.ext.commands import BadArgument, BotMissingPermissions
 
 from .distools import send_pages_list
-from .var import Clr, MP, Ems, Cid
+from .var import MP, Ems, Cid
 
 if TYPE_CHECKING:
-    from asyncpg import Pool
     from discord import Colour, Interaction, TextChannel
     from .context import Context
     from .bot import AluBot
-    from main import DRecord
-
-
-class PlayerNamesCache:
-    # todo: delete this if we dont find any usage to it
-    def __init__(
-            self,
-            table_name: str,
-            pool: Pool
-    ):
-        self.table_name = table_name
-        self.pool = pool
-        self.cache: List[DRecord] = []
-        self.display_names: List[str] = []
-        self.name_lowers: List[str] = []
-
-    async def update_cache(self):
-        query = f"SELECT * FROM {self.table_name}"
-        rows = await self.pool.fetch(query)
-        self.cache = rows
-        self.display_names = [row.display_name for row in rows]
-        self.name_lowers = [row.name_lower for row in rows]
 
 
 class FPCBase:
@@ -113,10 +90,7 @@ class FPCBase:
         ch_id = await ctx.pool.fetchval(query, ctx.guild.id)
 
         if (ch := ctx.bot.get_channel(ch_id)) is None:
-            em = Embed(colour=Clr.error)
-            em.description = f'{self.feature_name} channel is not set or already was reset'
-            await ctx.reply(embed=em)
-            return
+            raise BadArgument(f'{self.feature_name} channel is not set or already was reset')
         query = f'UPDATE guilds SET {self.channel_id_column}=NULL WHERE id=$1'
         await ctx.pool.execute(query, ctx.guild.id)
         em = Embed(colour=self.colour)
@@ -203,7 +177,7 @@ class FPCBase:
             ctx,
             ans_array,
             split_size=10,
-            colour=Clr.prpl,
+            colour=self.colour,
             title=f"List of {self.game_name} players in Database",
             footer_text=f'With love, {ctx.guild.me.display_name}'
         )
@@ -236,13 +210,20 @@ class FPCBase:
             self,
             account_dict: dict
     ):
-        query = f'SELECT * FROM {self.accounts_table} WHERE id=$1'
+        query = f""" SELECT display_name, name_lower
+                    FROM {self.players_table} 
+                    WHERE id =(
+                        SELECT player_id
+                        FROM {self.accounts_table}
+                        WHERE id=$1
+                    )
+                """
         user = await self.bot.pool.fetchrow(query, account_dict['id'])
         if user is not None:
             raise BadArgument(
                 'This steam account is already in the database.\n'
                 f'It is marked as {user.display_name}\'s account.\n\n'
-                f'Did you mean to use `/dota player add {user.name}` to add the stream into your fav list?'
+                f'Did you mean to use `/dota player add {user.name_lower}` to add the stream into your fav list?'
             )
         
     async def database_add(
@@ -272,7 +253,7 @@ class FPCBase:
                     VALUES {'('}{', '.join(dollars)}{')'}
                 """
         await ctx.pool.execute(query, player_id, *account_dict.values())
-        em = Embed(colour=Clr.prpl)
+        em = Embed(colour=self.colour)
         em.add_field(
             name=f'Successfully added the account to the database',
             value=self.player_name_acc_string(
@@ -296,7 +277,7 @@ class FPCBase:
         player_string = self.player_name_acc_string(
             player_dict['display_name'], player_dict['twitch_id'], **account_dict
         )
-        warn_em = Embed(colour=Clr.prpl, title='Confirmation Prompt')
+        warn_em = Embed(colour=self.colour, title='Confirmation Prompt')
         warn_em.description = (
             'Are you sure you want to request this streamer steam account to be added into the database?\n'
             'This information will be sent to Aluerie. Please, double check before confirming.'

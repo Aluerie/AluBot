@@ -9,16 +9,14 @@ import logging
 from typing import TYPE_CHECKING, List
 
 from PIL import Image, ImageDraw, ImageFont
-from discord import Embed
+from discord import Embed, File, Forbidden, NotFound
 from pyot.utils.lol import champion
 from pyot.utils.functools import async_property
 
-from .const import platform_to_region
+from .const import LiteralPlatform, platform_to_server
 from .utils import get_role_mini_list, icon_url_by_champ_id
 from ..utils.format import display_relativehmstime
 from ..utils.imgtools import get_text_wh
-
-from ..utils.twitch import TwitchStream
 from ..utils.var import Clr, MP
 
 if TYPE_CHECKING:
@@ -29,62 +27,69 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class Match:
+class Account:
     def __init__(
             self,
-            match_id: int,
-            platform: str,
-            acc_name: str
+            platform: LiteralPlatform,
+            account_name: str
     ):
-        self.match_id = match_id
-        self.platform = platform
-        self.acc_name = acc_name
+        self.platform: LiteralPlatform = platform
+        self.account_name = account_name
 
-        self.stripped_acc_name = self.acc_name.replace(" ", "")
+        self._stripped_acc_name = self.account_name.replace(" ", "")
 
     @property
     def opgg(self) -> str:  # todo: rework these links into actual match links
         """op.gg link for the match"""
-        region = platform_to_region(self.platform)
-        return f'https://{region}.op.gg/summoners/{region}/{self.stripped_acc_name}'
+        server = platform_to_server(self.platform)
+        return f'https://{server}.op.gg/summoners/{server}/{self._stripped_acc_name}'
 
     @property
     def ugg(self) -> str:
         """u.gg link for the match"""
-        return f'https://u.gg/lol/profile/{self.platform}/{self.stripped_acc_name}'
+        return f'https://u.gg/lol/profile/{self.platform}/{self._stripped_acc_name}'
 
     @property
     def links(self) -> str:
         """all links at once"""
         return f'/[Opgg]({self.opgg})/[Ugg]({self.ugg})'
 
-    # todo: delete this
-    # def get_str_match_id(platform: str, match_id: int) -> str:
-    #    return f'{platform.upper()}_{match_id}'
+
+class Match(Account):
+    def __init__(
+            self,
+            match_id: int,
+            platform: LiteralPlatform,
+            account_name: str
+    ):
+        super().__init__(platform, account_name)
+        self.match_id: int = match_id
 
 
-class ActiveMatch(Match):
+class LiveMatch(Match):
 
     def __init__(
             self,
             *,
             match_id: int,
-            platform: str,
-            acc_name: str,
+            platform: LiteralPlatform,
+            account_name: str,
             start_time: int,
             champ_id: int,
             all_champ_ids: List[int],
             twitch_id: int,
             spells: List[Spell],
-            runes: List[Rune]
+            runes: List[Rune],
+            channel_ids: List[int]
     ):
-        super().__init__(match_id, platform, acc_name)
+        super().__init__(match_id, platform, account_name)
         self.start_time = start_time
         self.champ_id = champ_id
         self.all_champ_ids = all_champ_ids
         self.twitch_id = twitch_id
         self.spells = spells
         self.runes = runes
+        self.channel_ids = channel_ids
 
     @property
     def long_ago(self):
@@ -98,15 +103,8 @@ class ActiveMatch(Match):
         return await get_role_mini_list(self.all_champ_ids)
 
     @async_property
-    async def champ_name(self):
-        return await champion.key_by_id(self.champ_id)
-
-    @async_property
     async def champ_icon_url(self):
         return await icon_url_by_champ_id(self.champ_id)
-
-    def twitch_stream(self, bot: AluBot) -> TwitchStream:
-        return TwitchStream(self.twitch_id, bot.twitch)
 
     async def better_thumbnail(
             self,
@@ -132,7 +130,7 @@ class ActiveMatch(Match):
 
         font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
         draw = ImageDraw.Draw(img)
-        text = f'{display_name} - {await self.champ_name}'
+        text = f'{display_name} - {await champion.name_by_id(self.champ_id)}'
         w2, h2 = get_text_wh(text, font)
         draw.text(((width - w2) / 2, 65), text, font=font, align="center")
 
@@ -154,51 +152,43 @@ class ActiveMatch(Match):
 
         return img
 
-    async def notif_embed_and_file(
-            self,
-            bot: AluBot
-    ):
-        twitch_stream = self.twitch_stream(bot)
-
-        image_name = \
-            f'{twitch_stream.display_name.replace("_", "")}-is-playing-' \
-            f'{(await self.champ_name).replace(" ", "")}.png'
+    async def notif_embed_and_file(self, bot: AluBot) -> (Embed, File):
+        ts = await bot.twitch.get_twitch_stream(self.twitch_id)
         img_file = bot.img_to_file(
-            await self.better_thumbnail(twitch_stream.preview_url, twitch_stream.display_name, bot),
-            filename=image_name
+            await self.better_thumbnail(ts.preview_url, ts.display_name, bot),
+            filename=f'{ts.display_name.replace("_", "")}-is-playing-{await champion.key_by_id(self.champ_id)}.png'
         )
-
-        em = Embed(
-            color=Clr.rspbrry,
-            url=twitch_stream.url,
-            description=
+        log.debug('LF | made a better thumbnail')
+        em = Embed(color=Clr.rspbrry, url=ts.url)
+        em.description = (
             f'Match `{self.match_id}` started {display_relativehmstime(self.long_ago)}\n'
-            f'{twitch_stream.last_vod_link(epoch_time_ago=self.long_ago)}{self.links}'
-        ).set_image(
-            url=f'attachment://{image_name}'
-        ).set_thumbnail(
-            url=await self.champ_icon_url
-        ).set_author(
-            name=f'{twitch_stream.display_name} - {await self.champ_name}',
-            url=twitch_stream.url,
-            icon_url=twitch_stream.logo_url
+            f'{await bot.twitch.last_vod_link(ts.twitch_id, epoch_time_ago=self.long_ago)}{self.links}'
         )
+        em.set_image(url=f'attachment://{img_file.filename}')
+        em.set_thumbnail(url=await self.champ_icon_url)
+        em.set_author(name=f'{ts.display_name} - {await champion.name_by_id(self.champ_id)}',
+                      url=ts.url, icon_url=ts.logo_url)
         return em, img_file
 
 
-class PostMatchPlayerData:
+class PostMatchPlayer:
 
     def __init__(
             self,
-            player_data: MatchParticipantData
+            *,
+            player_data: MatchParticipantData,
+            channel_id: int,
+            message_id: int
     ):
+        self.channel_id = channel_id
+        self.message_id = message_id
+
         self.player_id = player_data.summoner_id
         self.kda = f'{player_data.kills}/{player_data.deaths}/{player_data.assists}'
         self.outcome = "Win" if player_data.win else "Loss"
         self.items = player_data.items
 
     async def edit_the_image(self, img_url: str, bot: AluBot):
-
         img = await bot.url_to_img(img_url)
         width, height = img.size
         last_row_h = 50
@@ -235,3 +225,20 @@ class PostMatchPlayerData:
             img.paste(item_img, (left + count * item_img.width, height - last_row_h - item_img.height))
         return img
 
+    async def edit_the_embed(self, bot: AluBot):
+        ch = bot.get_channel(self.channel_id)
+        if ch is None:
+            return  # wrong bot, I guess
+
+        try:
+            msg = await ch.fetch_message(self.message_id)
+        except NotFound:
+            return
+
+        em = msg.embeds[0]
+        img_file = bot.img_to_file(await self.edit_the_image(em.image.url, bot), filename='edited.png')
+        em.set_image(url=f'attachment://{img_file.filename}')
+        try:
+            await msg.edit(embed=em, attachments=[img_file])
+        except Forbidden:
+            return

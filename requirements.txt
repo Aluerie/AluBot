@@ -12,7 +12,7 @@ tweepy[async]==4.12.1
 steam~=1.4.3
 protobuf~=3.20.1
 dota2~=1.1.0
-twitchapi~=3.0.1
+twitchapi~=3.1.1
 python-dotenv~=0.21.0
 vdf~=3.3
 pyot~=6.0.5

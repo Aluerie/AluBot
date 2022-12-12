@@ -1,6 +1,38 @@
+from typing import List
+
 from pyot.models import lol
 from pyot.utils.lol import champion, cdragon
 from roleidentification import get_roles, pull_data
+
+
+async def my_pull_data():
+    """
+    Meraki's pull data is using requests which is blocking, so I have to copypaste it
+    @return:
+    """
+    import requests
+    r = requests.get("http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json")
+    j = r.json()
+    data = {}
+    for champion_id, positions in j["data"].items():
+        champion_id = int(champion_id)
+        play_rates = {}
+        for position, rates in positions.items():
+            play_rates[position.upper()] = rates["playRate"]
+        for position in ("TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"):
+            if position not in play_rates:
+                play_rates[position] = 0.0
+        data[champion_id] = play_rates
+    return data
+
+
+async def get_all_champ_names() -> List[str]:
+    """
+    Get all champion names in League of Legends
+    @return: list of champion names in LoL
+    """
+    data = await champion.champion_keys_cache.data
+    return list(data['name_by_id'].values())
 
 
 async def icon_url_by_champ_id(champ_id: int) -> str:

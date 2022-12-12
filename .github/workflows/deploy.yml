@@ -12,7 +12,6 @@ jobs:
     outputs:
       output1: ${{ steps.filter.outputs.workflows }}
     steps:
-    - uses: actions/checkout@v2
     - uses: dorny/paths-filter@v2
       id: filter
       with:

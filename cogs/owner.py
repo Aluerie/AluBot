@@ -207,7 +207,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             await ctx.send(
                 f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
             )
-            await self.bot.update_app_commands_cache(commands=synced)
+            await self.bot.update_app_commands_cache(cmds=synced)
             return
 
         fmt = 0
@@ -219,7 +219,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
                 pass
             else:
                 fmt += 1
-        await self.bot.update_app_commands_cache(commands=cmds)
+        await self.bot.update_app_commands_cache(cmds=cmds)
         await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
 
     @is_owner()
@@ -248,12 +248,8 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
                 case 'reload':
                     await self.bot.reload_extension(filename)
         except commands.ExtensionError as e:
-            em = Embed(
-                colour=Clr.error,
-                description=f'{e}'
-            ).set_author(
-                name=e.__class__.__name__
-            )
+            em = Embed(description=f'{e}', colour=Clr.error)
+            em.set_author(name=e.__class__.__name__)
             await ctx.send(embed=em)
         else:
             await ctx.message.add_reaction(Ems.DankApprove)

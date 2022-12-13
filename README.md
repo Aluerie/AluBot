@@ -1,22 +1,14 @@
-## AluBot
+## AluBot ❤
 
-🦢 Personal Discord bot.
+Initial idea was to send me notifications  when my favourite  Dota 2/ League of Legends 
+[twitch.tv](https://www.twitch.tv/) streamers pick my favourite heroes/champions.
 
----
-
-### Description
-
-#### Notifications about Dota/League favourite player + character combination
-
-Initial idea was to send me notifications 
-when my favourite Dota 2/ League of Legends [twitch.tv](https://www.twitch.tv/) streamers pick my favourite heroes/champions.
-
-However, the whole process grew into making the ultimate multipurpose bot 
-with pretty much everything I ever needed ! 
+However, the whole process grew into making *the ultimate multipurpose bot*
+with pretty much everything I ever needed ! Check List of features after the pic.
 
 <img src="./media/ReadMe/MainFeature.png" alt="alubot preview">
 
-#### List of features
+### List of features
 
  - [X] maintains #🍋dota2_news
    * [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates - comments from Valve employees  
@@ -35,7 +27,6 @@ with pretty much everything I ever needed !
  - [X] Info commands
  - [X] WolframAlpha queries commands
  - [X] Tags system 
- - [X] Thanks to twitch subs/nitro boosters
  - [X] Google translate messages
  - [X] Suggestion commands
  - [X] Wordcloud
@@ -57,7 +48,8 @@ All info in `$help` or `/help` command of the bot. Join my server to use it and 
 
 ### Reporting Bugs and Making Suggestions
 
-* Feel free to make an Issue/Pull Request or write me on discord.
+* There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/CONTRIBUTING.md)
+* TL;DR^: Feel free to make an Issue/Pull Request or write me (Aluerie ❤#6524) on discord.
 
 ### Running
 
@@ -69,7 +61,7 @@ your instance of the bot will work well. And I'm honestly not a very good progra
 4. Rename `config.example.py` into `config.py` and fill out all needed config parameters
    * notable one is you will need to PostgreSQL 9.5 or higher to fill out `POSTGRES_URL` 
 5. Replace variables in `cogs/utils/var.py` with your own values
-6. To configure mentioned above PostgreSQL database and create all tables you need to run `py main.py db create`
+6. Create SQL tables using `sql/tables.sql` definitions with console or run `py main.py db create`
 7. Run the bot with `py main.py` 
    * if you want to run test version of the bot then you need to create `tlist.py` file with 
    following template below and run the bot with an extra flag `py main.py --test` 

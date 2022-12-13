@@ -19,7 +19,7 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 import config as cfg
 from . import imgtools
 from .context import Context
-from .twitch import MyTwitchClient
+from .twitch import TwitchClient
 from .var import Sid, Cid, Clr, umntn, Uid
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ class AluBot(commands.Bot):
     launch_time: datetime
     pool: Pool
     reddit: Reddit
-    twitch: MyTwitchClient
+    twitch: TwitchClient
     twitter: TwitterAsyncClient
 
     def __init__(self, test=False):
@@ -116,6 +116,8 @@ class AluBot(commands.Bot):
         await super().close()
         if hasattr(self, 'session'):
             await self.session.close()
+        if hasattr(self, 'twitch'):
+            await self.twitch.close()
 
     async def my_start(self) -> None:
         token = cfg.TEST_TOKEN if self.test_flag else cfg.MAIN_TOKEN
@@ -168,7 +170,8 @@ class AluBot(commands.Bot):
 
     async def ini_twitch(self) -> None:
         if not hasattr(self, 'twitch'):
-            self.twitch = await MyTwitchClient(cfg.TWITCH_CLIENT_ID, cfg.TWITCH_CLIENT_SECRET)
+            self.twitch = TwitchClient(cfg.TWITCH_TOKEN)
+            await self.twitch.connect()
 
     def ini_twitter(self) -> None:
         if not hasattr(self, 'twitter'):

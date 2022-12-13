@@ -1,4 +1,4 @@
-## AluBot ❤
+## AluBot 💜
 
 Initial idea was to send me notifications  when my favourite  Dota 2/ League of Legends 
 [twitch.tv](https://www.twitch.tv/) streamers pick my favourite heroes/champions.

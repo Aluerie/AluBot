@@ -22,9 +22,8 @@ GIT_PERSONAL_TOKEN = ''
 # RIOT
 RIOT_API_KEY = ''
 
-# TWITCH
-TWITCH_CLIENT_ID = ''
-TWITCH_CLIENT_SECRET = ''
+# TWITCH # https://twitchtokengenerator.com/ for TOKEN
+TWITCH_TOKEN = ''
 
 # POSTGRES DATABASE
 POSTGRES_URL = 'postgresql://user:password@host:port/database'

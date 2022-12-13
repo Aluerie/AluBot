@@ -58,6 +58,7 @@ class LoLFeedNotifications(commands.Cog):
             try:
                 live_game = await lol.spectator.CurrentGame(summoner_id=r.id, platform=r.platform).get()
             except NotFound:
+                log.debug(f'Player {r.player_id} is not in the game')
                 continue
             except ServerError:
                 log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.player_id}')
@@ -112,7 +113,7 @@ class LoLFeedNotifications(commands.Cog):
                     )
 
     async def send_notifications(self, match: LiveMatch):
-        log.debug("LF | Sending DotaFeed notification")
+        log.debug("LF | Sending LoLFeed notification")
         for ch_id in match.channel_ids:
             if (ch := self.bot.get_channel(ch_id)) is None:
                 log.debug("LF | The channel is None")

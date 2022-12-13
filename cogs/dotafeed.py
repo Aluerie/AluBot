@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from .utils.bot import AluBot
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class DotaFeed(commands.Cog):
@@ -281,7 +281,7 @@ class PostMatchEdits(commands.Cog):
 
     @postmatch_edits.error
     async def postmatch_edits_error(self, error):
-        await self.bot.send_traceback(error, where='DotaFeed Aftergame')
+        await self.bot.send_traceback(error, where='DotaFeed PostGameEdit')
         # self.dotafeed.restart()
 
     @commands.command(hidden=True, aliases=['odrl', 'od_rl', 'odota_ratelimit'])

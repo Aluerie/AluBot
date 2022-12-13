@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-
 class TwitchClient(Client):
     def __init__(self, token: str):
         super().__init__(token)
@@ -73,7 +72,10 @@ class TwitchClient(Client):
 
     async def get_twitch_stream(self, twitch_id: int) -> TwitchStream:
         user = (await self.fetch_users(ids=[twitch_id]))[0]
-        stream = (await self.fetch_streams(user_ids=[twitch_id]))[0]
+        try:
+            stream = (await self.fetch_streams(user_ids=[twitch_id]))[0]
+        except IndexError:  # stream is offline
+            stream = None
         return TwitchStream(twitch_id, user, stream)
 
 
@@ -133,8 +135,9 @@ async def main():
     from config import TWITCH_TOKEN
     tc = TwitchClient(token=TWITCH_TOKEN)
     await tc.connect()
-    gorgc_id = await tc.twitch_id_by_name('gorgc')
-    v = await tc.get_twitch_stream(gorgc_id)
+    tw_id = await tc.twitch_id_by_name('aluerie')
+    print(tw_id)
+    v = await tc.get_twitch_stream(tw_id)
     print(v)
     await tc.close()
 

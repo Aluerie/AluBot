@@ -1,7 +1,7 @@
 name: Deploy
 run-name: Deploy
 
-on: 
+on:
   push:
     branches:
       - 'main'
@@ -21,7 +21,7 @@ jobs:
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           cd ./AluBot
+          git pull
           source venv/bin/activate
           pip install -r ./requirements.txt
-          git pull
           sudo systemctl restart alubot.service

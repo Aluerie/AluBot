@@ -53,15 +53,20 @@ class LoLFeedNotifications(commands.Cog):
 
         live_fav_player_ids = await self.bot.twitch.get_live_lol_player_ids(pool=self.bot.pool)
 
-        query = 'SELECT * FROM lol_accounts WHERE player_id=ANY($1)'
+        query = f""" SELECT a.id, account, platform, display_name, player_id, twitch_id
+                    FROM lol_accounts a
+                    JOIN lol_players p
+                    ON a.player_id = p.id
+                    WHERE player_id=ANY($1)
+                """
         for r in await self.bot.pool.fetch(query, live_fav_player_ids):
             try:
                 live_game = await lol.spectator.CurrentGame(summoner_id=r.id, platform=r.platform).get()
             except NotFound:
-                log.debug(f'Player {r.player_id} is not in the game')
+                log.debug(f'Player {r.display_name} is not in the game')
                 continue
             except ServerError:
-                log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.player_id}')
+                log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.display_name}')
                 continue
                 # embed = Embed(colour=Clr.error)
                 # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
@@ -86,16 +91,7 @@ class LoLFeedNotifications(commands.Cog):
                     i for i, in await self.bot.pool.fetch(query, p.champion_id, r.player_id, live_game.id)
                 ]
                 if channel_ids:
-                    query = """ SELECT id, display_name, twitch_id 
-                                FROM lol_players 
-                                WHERE id=(
-                                    SELECT player_id 
-                                    FROM lol_accounts 
-                                    WHERE lol_accounts.id=$1
-                                )
-                            """
-                    user = await self.bot.pool.fetchrow(query, p.summoner_id)
-                    log.debug(f'LF | {user.display_name} - {await champion.key_by_id(p.champion_id)}')
+                    log.debug(f'LF | {r.display_name} - {await champion.key_by_id(p.champion_id)}')
                     self.live_matches.append(
                         LiveMatch(
                             match_id=live_game.id,
@@ -104,7 +100,7 @@ class LoLFeedNotifications(commands.Cog):
                             start_time=round(live_game.start_time_millis / 1000),
                             champ_id=p.champion_id,
                             all_champ_ids=[player.champion_id for player in live_game.participants],
-                            twitch_id=user.twitch_id,
+                            twitch_id=r.twitch_id,
                             spells=p.spells,
                             runes=p.runes,
                             channel_ids=channel_ids,

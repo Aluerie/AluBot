@@ -94,13 +94,9 @@ class TwitchThanks(commands.Cog):
         guild = self.bot.get_guild(Sid.alu)
         subs_role = guild.get_role(Rid.subs)
 
-        em = Embed(
-            color=0x9678b6,
-        ).set_thumbnail(
-            url=after.display_avatar.url
-        ).set_footer(
-            text=f'With love, {guild.me.display_name}'
-        )
+        em = Embed(color=0x9678b6)
+        em.set_thumbnail(url=after.display_avatar.url)
+        em.set_footer(text=f'With love, {guild.me.display_name}')
         if subs_role in after.roles and subs_role not in before.roles:
             em.title = "User got Aluerie's tw.tv sub"
             em.description = f'{after.mention} just got {subs_role.mention} role in this server !'

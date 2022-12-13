@@ -107,11 +107,8 @@ class Info(commands.Cog, name='Info'):
                 channel = before.guild.get_channel(ch_id)
                 msg = channel.get_partial_message(msg_id)
                 role = before.guild.get_role(role_id)
-                em = Embed(
-                    colour=Clr.prpl,
-                    title=f'List of {role.name}',
-                    description=''.join([f'{member.mention}\n' for member in role.members])
-                )
+                em = Embed(title=f'List of {role.name}', colour=Clr.prpl)
+                em.description = ''.join([f'{member.mention}\n' for member in role.members])
                 await msg.edit(content='', embed=em)
 
         await give_text_list(Rid.bots, Cid.bot_spam, 959982214827892737)
@@ -126,12 +123,13 @@ class Info(commands.Cog, name='Info'):
         """Show GMT(UTC) time ;"""
         now_time = datetime.now(timezone.utc).strftime("%H:%M:%S")
         now_date = datetime.now(timezone.utc).strftime("%d/%m/%Y")
-        embed = Embed(colour=Clr.prpl, title='GMT(Greenwich Mean Time)')
-        embed.set_footer(
-            text=f'GMT is the same as UTC (Universal Time Coordinated)\nWith love, {ctx.guild.me.display_name}')
-        embed.add_field(name='Time:', value=now_time)
-        embed.add_field(name='Date:', value=now_date)
-        await ctx.reply(embed=embed)
+        em = Embed(colour=Clr.prpl, title='GMT(Greenwich Mean Time)')
+        em.set_footer(
+            text=f'GMT is the same as UTC (Universal Time Coordinated)\nWith love, {ctx.guild.me.display_name}'
+        )
+        em.add_field(name='Time:', value=now_time)
+        em.add_field(name='Date:', value=now_date)
+        await ctx.reply(embed=em)
 
     @commands.hybrid_command(
         name='role',
@@ -141,24 +139,19 @@ class Info(commands.Cog, name='Info'):
     @app_commands.describe(role='Choose role to get info about')
     async def roleinfo(self, ctx, *, role: Role):
         """View info about selected role"""
-        em = Embed(
-            colour=role.colour,
-            title="Role information",
-            description='\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
-        )  # TODO: this embed will be more than 6000 symbols
+        em = Embed(title="Role information", colour=role.colour)
+        em.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
+        # TODO: this embed will be more than 6000 symbols
         await ctx.reply(embed=em)
 
     @tasks.loop(count=1)
     async def reload_info(self):
-        em = Embed(
-            colour=Clr.prpl,
-            description=f'Logged in as {self.bot.user}'
-        )
+        em = Embed(colour=Clr.prpl, description=f'Logged in as {self.bot.user}')
         await self.bot.get_channel(Cid.spam_me).send(embed=em)
         self.bot.help_command.cog = self  # show help command in there
-        # if not self.bot.yen:
-        #    em.set_author(name='Finished updating/rebooting')
-        #    await self.bot.get_channel(Cid.bot_spam).send(embed=em)
+        if not self.bot.test_flag:
+            # em.set_author(name='Finished updating/rebooting')
+            await self.bot.get_channel(Cid.bot_spam).send(embed=em)
 
     @reload_info.before_loop
     async def before(self):

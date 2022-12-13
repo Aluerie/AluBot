@@ -53,7 +53,7 @@ class LoLFeedNotifications(commands.Cog):
 
         live_fav_player_ids = await self.bot.twitch.get_live_lol_player_ids(pool=self.bot.pool)
 
-        query = f""" SELECT a.id, account, platform, display_name, player_id, twitch_id
+        query = f""" SELECT a.id, account, platform, display_name, player_id, twitch_id, last_edited
                     FROM lol_accounts a
                     JOIN lol_players p
                     ON a.player_id = p.id

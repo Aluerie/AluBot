@@ -4,8 +4,8 @@ from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Annotated
 
 from discord import Embed, Forbidden, Member, app_commands
-from discord.ext import commands, tasks
-from discord.utils import format_dt, sleep_until
+from discord.ext import commands
+from discord.utils import format_dt
 
 from .utils import time
 from .utils.context import Context
@@ -24,10 +24,6 @@ class Moderation(commands.Cog):
         self.bot: AluBot = bot
         self.help_emote = Ems.peepoPolice
         self.active_mutes = {}
-        self.check_mutes.start()
-
-    def cog_unload(self) -> None:
-        self.check_mutes.cancel()
 
     @commands.has_role(Rid.discord_mods)
     @app_commands.default_permissions(manage_messages=True)

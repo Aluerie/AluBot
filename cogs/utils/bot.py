@@ -18,6 +18,7 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config as cfg
 from . import imgtools
+from .config import PrefixConfig
 from .context import Context
 from .twitch import TwitchClient
 from .var import Sid, Cid, Clr, umntn, Uid
@@ -36,13 +37,12 @@ except ModuleNotFoundError:
     test_list = []
 
 
-async def alubot_get_pre(bot: AluBot, message: Message):
-    if message.guild is None:
+def _alubot_prefix_callable(bot: AluBot, msg: Message):
+    if msg.guild is None:
         prefix = '$'
     else:
-        query = 'SELECT prefix FROM guilds WHERE id=$1'
-        prefix = await bot.pool.fetchval(query, message.guild.id)
-    return commands.when_mentioned_or(prefix, "/")(bot, message)
+        prefix = bot.prefixes.get(msg.guild.id, '$')
+    return commands.when_mentioned_or(prefix, "/")(bot, msg)
 
 
 class AluBot(commands.Bot):
@@ -55,16 +55,18 @@ class AluBot(commands.Bot):
     session: ClientSession
     launch_time: datetime
     pool: Pool
+    prefixes: PrefixConfig[int, str]
     reddit: Reddit
     twitch: TwitchClient
     twitter: TwitterAsyncClient
 
     def __init__(self, test=False):
-        prefix = '~' if test else alubot_get_pre
+        prefix = '~' if test else _alubot_prefix_callable
+        main_prefix = '~' if test else '$'
         super().__init__(
             command_prefix=prefix,
             activity=Streaming(
-                name="$help or /help",
+                name=f"{main_prefix}help or /help",
                 url='https://www.twitch.tv/aluerie'
             ),
             intents=Intents(  # if you ever struggle with it - try `Intents.all()`
@@ -84,18 +86,19 @@ class AluBot(commands.Bot):
                 everyone=False
             )  # .none()
         )
-        self.test_flag = test
+        self.test: bool = test
         self.app_commands: Dict[str, int] = {}
         self.odota_ratelimit: str = 'was not received yet'
 
     async def setup_hook(self) -> None:
         self.session = ClientSession()
+        self.prefixes = PrefixConfig(self.pool)
         self.bot_app_info = await self.application_info()
 
         environ["JISHAKU_NO_UNDERSCORE"] = "True"
         environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
         extensions_list = ['jishaku']
-        if self.test_flag and len(test_list):
+        if self.test and len(test_list):
             extensions_list += [f'cogs.{name}' for name in test_list]
         else:
             extensions_list += [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
@@ -120,7 +123,7 @@ class AluBot(commands.Bot):
             await self.twitch.close()
 
     async def my_start(self) -> None:
-        token = cfg.TEST_TOKEN if self.test_flag else cfg.MAIN_TOKEN
+        token = cfg.TEST_TOKEN if self.test else cfg.MAIN_TOKEN
         await super().start(token, reconnect=True)
 
     async def get_context(self, origin: Union[Interaction, Message], /, *, cls=Context) -> Context:
@@ -139,7 +142,7 @@ class AluBot(commands.Bot):
     def steam_dota_login(self) -> None:
         if self.steam.connected is False:
             log.debug(f"dota2info: client.connected {self.steam.connected}")
-            if self.test_flag:
+            if self.test:
                 steam_login, steam_password = (cfg.STEAM_TEST_LGN, cfg.STEAM_TEST_PSW,)
             else:
                 steam_login, steam_password = (cfg.STEAM_MAIN_LGN, cfg.STEAM_MAIN_PSW,)

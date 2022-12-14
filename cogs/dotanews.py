@@ -177,5 +177,5 @@ class TestGitFeed(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(CopypasteDota(bot))
-    if bot.test_flag:
+    if bot.test:
         await bot.add_cog(TestGitFeed(bot))

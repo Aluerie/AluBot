@@ -149,7 +149,7 @@ class Info(commands.Cog, name='Info'):
         em = Embed(colour=Clr.prpl, description=f'Logged in as {self.bot.user}')
         await self.bot.get_channel(Cid.spam_me).send(embed=em)
         self.bot.help_command.cog = self  # show help command in there
-        if not self.bot.test_flag:
+        if not self.bot.test:
             # em.set_author(name='Finished updating/rebooting')
             await self.bot.get_channel(Cid.bot_spam).send(embed=em)
 
@@ -320,7 +320,7 @@ class Info(commands.Cog, name='Info'):
         ).set_footer(
             text=f'AluBot is a copyright 2020-{datetime.now().year} of {self.bot.owner.name}'
         )
-        if not self.bot.test_flag:
+        if not self.bot.test:
             embed.add_field(
                 name="Location judging by IP",
                 value=f"· {data['country']} {data['region']} {data['city']}"

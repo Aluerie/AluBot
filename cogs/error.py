@@ -93,19 +93,21 @@ class CommandErrorHandler(commands.Cog):
             case commands.NSFWChannelRequired():
                 desc = "Ask Aluerie to make that channel NSFW friendly"
             case commands.CommandNotFound():
-                # if not ctx.bot.test_flag and ctx.prefix != db.get_value(db.ga, ctx.guild.id, 'prefix'):
-                #    return # TODO: I'm not sure what this code is supposed to do anymore.
+                if ctx.prefix == '/':  # our slash commands protection tech
+                    return
                 desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.NotOwner():
                 desc = f"Sorry, only Bot Owner is allowed to use this command"
             case commands.PrivateMessageOnly():
-                desc = \
-                    f"The command is only for usage in private messages with the bot. " \
+                desc = (
+                    f"The command is only for usage in private messages with the bot. " 
                     f"Please, send a dm to {self.bot.user.mention}"
+                )
             case commands.NoPrivateMessage():
-                desc = \
-                    f"The command is only for usage in server channels. " \
+                desc = (
+                    f"The command is only for usage in server channels. " 
                     f"Please, go to a server where {self.bot.user.mention} is invited."
+                )
             case commands.CommandOnCooldown() | app_commands.CommandOnCooldown():
                 desc = f"Please retry in `{display_time(error.retry_after, 3)}`"
             case commands.CheckFailure():
@@ -124,7 +126,7 @@ class CommandErrorHandler(commands.Cog):
                     jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
 
                 err_em = Embed(colour=Clr.error, description=f'{cmd_text}\n{cmd_kwargs}')
-                if not self.bot.test_flag:
+                if not self.bot.test:
                     err_em.set_author(
                         name=f'{ctx.author} triggered error in {ctx.channel}',
                         url=jump_url,
@@ -135,7 +137,7 @@ class CommandErrorHandler(commands.Cog):
 
         # send the error
         em = Embed(color=Clr.error, description=desc).set_author(name=error.__class__.__name__)
-        if not handled and self.bot.test_flag and not mention:
+        if not handled and self.bot.test and not mention:
             if ctx.interaction:  # they error out unanswered
                 await ctx.reply(':(', ephemeral=True)
             else:

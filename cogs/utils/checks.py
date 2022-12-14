@@ -17,7 +17,7 @@ def is_guild_owner():
             return True
         else:
             raise commands.CheckFailure(
-                message='Sorry, only guild owner is allowed to use this command'
+                message='Sorry, only server owner is allowed to use this command'
             )
     return commands.check(predicate)
 

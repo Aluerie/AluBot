@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, Sequence
 from discord import AuditLogAction, Embed, TextChannel
 from discord.ext import commands
 
-from .utils.checks import is_owner
+from .utils.checks import is_guild_owner
 from .utils.var import Clr, Ems, Sid, Img
 
 if TYPE_CHECKING:
@@ -20,35 +20,40 @@ class Prefix(commands.Cog, name='Settings for the bot'):
 
     More to come.
     """
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.help_emote = Ems.PepoBeliever
 
-    @is_owner()
-    @commands.group()
-    async def alubotprefix(self, ctx):
+    @is_guild_owner()
+    @commands.group(invoke_without_command=True)
+    async def prefix(self, ctx: Context):
         """Get a prefix for this server"""
-        if ctx.invoked_subcommand is None:
-            query = 'SELECT prefix FROM guilds WHERE id=$1'
-            val = await self.bot.pool.fetchval(query, ctx.guild.id)
-            em = Embed(
-                colour=Clr.prpl,
-                description=f'This server current prefix is {val}'
-            ).set_footer(
-                text='To change prefix use `alubotprefix set` command'
-            )
-            await ctx.reply(embed=em)
+        prefix = self.bot.prefixes.get(ctx.guild.id)
+        if prefix is None:
+            prefix = '$'
+        em = Embed(description=f'Currently, prefix for this server is `{prefix}`', colour=Clr.prpl)
+        em.set_footer(text='To change prefix use `@AluBot prefix set` command')
+        await ctx.reply(embed=em)
 
-    @is_owner()
-    @alubotprefix.command()
-    async def set(self, ctx, *, new_prefix):
-        """Set new prefix for the server"""
-        query = 'UPDATE guilds SET prefix=$1 WHERE id=$2'
-        await self.bot.pool.execute(query, new_prefix, ctx.guild.id)
-        em = Embed(
-            colour=Clr.prpl,
-            description=f'Changed this server prefix to {new_prefix}'
-        )
+    @is_guild_owner()
+    @prefix.command()
+    async def set(self, ctx: Context, *, new_prefix: str):
+        """
+        Set new prefix for the server.
+        If you have troubles to set a new prefix because other bots also answer it then \
+        just mention the bot with the command `@AluBot prefix set`.
+        Spaces are not allowed in the prefix.
+        """
+        if len(new_prefix.split()) > 1:
+            raise commands.BadArgument(
+                'Space usage is not allowed in `prefix set` command'
+            )
+        if new_prefix == '$':
+            await self.bot.prefixes.remove(ctx.guild.id)
+            em = Embed(description='Successfully reset prefix to our default `$` sign', colour=Clr.prpl)
+        else:
+            await self.bot.prefixes.put(ctx.guild.id, new_prefix)
+            em = Embed(description=f'Changed this server prefix to `{new_prefix}`', colour=Clr.prpl)
         await ctx.reply(embed=em)
 
     @commands.command()
@@ -61,16 +66,11 @@ class Prefix(commands.Cog, name='Settings for the bot'):
         query = 'UPDATE guilds SET emote_logs_id=$1 WHERE id=$2'
         await self.bot.pool.execute(query, ch.id, ctx.guild.id)
 
-        embed = Embed(
-            colour=Clr.prpl,
-            title='Emote logging is turned on',
-            description=f'Now I will log emote create/delete/rename actions in {ch.mention}. Go try it!'
-        ).set_footer(
-            text=f'With love, {ctx.guild.me.display_name}'
-        ).set_thumbnail(
-            url=ctx.guild.me.display_avatar.url
-        )
-        await ctx.reply(embed=embed)
+        em = Embed(title='Emote logging is turned on', colour=Clr.prpl)
+        em.description = f'Now I will log emote create/delete/rename actions in {ch.mention}. Go try it!'
+        em.set_footer(text=f'With love, {ctx.guild.me.display_name}')
+        em.set_thumbnail(url=ctx.guild.me.display_avatar.url)
+        await ctx.reply(embed=em)
 
     @commands.Cog.listener()
     async def on_guild_emojis_update(self, guild: Guild, before: Sequence[Emoji], after: Sequence[Emoji]):
@@ -83,7 +83,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
         diff_after = [x for x in after if x not in before]
         diff_before = [x for x in before if x not in after]
 
-        async def set_author(emotion, embedx, act):
+        async def set_author(emotion, embedx: Embed, act):
             if emotion.managed:
                 embedx.set_author(name='Tw.tv Sub integration', icon_url=Img.twitchtv)
                 return
@@ -99,21 +99,17 @@ class Prefix(commands.Cog, name='Settings for the bot'):
                 if not emote.managed and guild.id == Sid.alu:
                     query = 'DELETE FROM emotes WHERE id=$1'
                     await self.bot.pool.execute(query, emote.id)
-                em = Embed(
-                    colour=0xb22222,
-                    title=f'`:{emote.name}:` emote removed',
-                    description=f'[Image link]({emote.url})'
-                ).set_thumbnail(url=emote.url)
+                em = Embed(title=f'`:{emote.name}:` emote removed', colour=0xb22222)
+                em.description = f'[Image link]({emote.url})'
+                em.set_thumbnail(url=emote.url)
                 await set_author(emote, em, AuditLogAction.emoji_delete)
                 await ch.send(embed=em)
         # Add emote ###############################################################################
         elif diff_after != [] and diff_before == []:
             for emote in diff_after:
-                em = Embed(
-                    colour=0x00ff7f,
-                    title=f'`:{emote.name}:` emote created',
-                    description=f'[Image link]({emote.url})'
-                ).set_thumbnail(url=emote.url)
+                em = Embed(title=f'`:{emote.name}:` emote created', colour=0x00ff7f)
+                em.description = f'[Image link]({emote.url})'
+                em.set_thumbnail(url=emote.url)
                 await set_author(emote, em, AuditLogAction.emoji_create)
                 await ch.send(embed=em)
                 if not emote.managed:
@@ -138,5 +134,5 @@ class Prefix(commands.Cog, name='Settings for the bot'):
                 await ch.send(embed=em)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Prefix(bot))

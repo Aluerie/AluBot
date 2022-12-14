@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone  # , timedelta  # <- for testing
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Literal, List, Set
 
 from discord import Embed, File
@@ -134,6 +134,7 @@ class DotaBugtracker(commands.Cog):
         query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
         dt: datetime = await self.bot.pool.fetchval(query, Sid.alu)
 
+        # from datetime import timedelta  # <- for testing
         # dt = datetime.now(timezone.utc) - timedelta(days=2)  # <- for testing
 
         issue_dict = dict()
@@ -158,31 +159,30 @@ class DotaBugtracker(commands.Cog):
                 )
 
         for c in [x for x in repo.get_issues_comments(sort='updated', since=dt) if x.user.login in assignees]:
-
             # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
             issue_num = int(c.issue_url.split('/')[-1])
-            issue = repo.get_issue(issue_num)
-
-            if issue.number not in issue_dict:
+            if issue_num not in issue_dict:
+                issue = repo.get_issue(issue_num)
                 issue_dict[issue.number] = TimeLine(issue=issue)
-            issue_dict[issue.number].add_event(
+            issue_dict[issue_num].add_event(
                 TimeLinePoint(
                     event_type='commented',
                     created_at=c.created_at,
                     actor=c.user,
                     body=c.body,
                     html_url=c.html_url,
-                    issue_number=issue.number
+                    issue_number=issue_num
                 )
             )
 
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
         await self.bot.pool.execute(query, datetime.now(timezone.utc), Sid.alu)
 
-        for v in issue_dict.values():
-            em, file = v.embed_and_file
-            msg = await self.bot.get_channel(Cid.dota_news).send(embed=em, file=file)
-            await msg.publish()  # todo: this is very dangerous for rate-limit
+        efs = [v.embed_and_file for v in issue_dict.values()]
+        efs_10list = [efs[x: x + 10] for x in range(0, len(efs), 10)]
+        for i in efs_10list:
+            msg = await self.bot.get_channel(Cid.dota_news).send(embeds=[e for e, _ in i], files=[f for _, f in i])
+            await msg.publish()
 
     @git_comments_check.before_loop
     async def before(self):

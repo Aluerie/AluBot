@@ -283,7 +283,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     async def reload_all(self, ctx: Context):
         """Reloads all modules"""
         cogs_to_reload = []
-        if self.bot.test_flag and len(test_list):
+        if self.bot.test and len(test_list):
             cogs_to_reload.append('jishaku')
             for item in test_list:
                 cogs_to_reload.append(f'cogs.{item}')

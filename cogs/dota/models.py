@@ -21,7 +21,7 @@ from cogs.utils.var import Clr, MP, Img, Cid
 if TYPE_CHECKING:
     from discord import Colour
     from ..utils.bot import AluBot
-    from ..utils.twitch import MyTwitchClient
+    from ..utils.twitch import TwitchClient
 
 
 __all__ = (
@@ -112,7 +112,7 @@ class ActiveMatch(Match):
     async def hero_name(self):
         return await hero.name_by_id(self.hero_id)
 
-    async def get_twitch_data(self, twitch: MyTwitchClient):
+    async def get_twitch_data(self, twitch: TwitchClient):
         if self.twitchtv_id is None:
             self.img_url = 'https://i.imgur.com/kl0jDOu.png'  # lavender 640x360
             self.display_name = self.player_name
@@ -134,10 +134,7 @@ class ActiveMatch(Match):
                 self.vod_link = ''
         self.colour = colour_twitch_status_dict[self.twitch_status]
 
-    async def better_thumbnail(
-            self,
-            bot: AluBot,
-    ) -> Image:
+    async def better_thumbnail(self, bot: AluBot) -> Image:
         img = await bot.url_to_img(self.img_url)
         width, height = img.size
         rectangle = Image.new("RGB", (width, 70), str(self.colour))
@@ -445,7 +442,7 @@ class OpendotaRequestMatch:
             self,
             bot: AluBot
     ) -> Union[dict, None]:
-        if self.fails > 5 or self.parse_attempts > 5:
+        if self.fails > 10 or self.parse_attempts > 10:
             raise OpendotaTooManyFails('We failed too many times')
         elif not self.is_first_loop_skipped:
             self.is_first_loop_skipped = True

@@ -35,7 +35,7 @@ class DotaFeed(commands.Cog):
         self.lobby_ids: Set[int] = set()
         self.top_source_dict = {}
         self.live_matches: List[ActiveMatch] = []
-        self.hero_fav_ids: List[int]  = []
+        self.hero_fav_ids: List[int] = []
         self.player_fav_ids: List[int] = []
         self.dota_feed.start()
 
@@ -125,11 +125,7 @@ class DotaFeed(commands.Cog):
             for person in our_persons:
                 query = """ SELECT id, display_name, twitch_id 
                             FROM dota_players 
-                            WHERE id=(
-                                SELECT player_id 
-                                FROM dota_accounts 
-                                WHERE friend_id=$1
-                            )
+                            WHERE id=(SELECT player_id FROM dota_accounts WHERE friend_id=$1)
                         """
                 user = await self.bot.pool.fetchrow(query, person.account_id)
 
@@ -138,9 +134,7 @@ class DotaFeed(commands.Cog):
                             WHERE $1=ANY(dotafeed_hero_ids)
                                 AND $2=ANY(dotafeed_stream_ids)
                                 AND NOT dotafeed_ch_id=ANY(
-                                    SELECT channel_id
-                                    FROM dota_messages
-                                    WHERE match_id=$3
+                                    SELECT channel_id FROM dota_messages WHERE match_id=$3
                                 )          
                         """
                 channel_ids = [i for i, in await self.bot.pool.fetch(query, person.hero_id, user.id, match.match_id)]

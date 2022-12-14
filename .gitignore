@@ -10,7 +10,7 @@ venv/
 audio.mp3
 
 tlist.py
-config.py
+/config.py
 
 /db_backup
 *.json

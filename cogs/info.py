@@ -422,8 +422,8 @@ class StatsCommands(commands.Cog, name='Stats'):
     @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
     async def wordcloud(
             self,
-            ctx: Context,
-            channel_or_and_member: Optional[commands.Greedy[Union[Member, TextChannel]]],
+            ctx: Context,  # todo:  typing.Optional requires a single type. Got Greedy[Union].
+            channel_or_and_member: commands.Greedy[Union[Member, TextChannel]] = None,
             limit: int = 2000
     ):
         """

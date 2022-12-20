@@ -43,7 +43,8 @@ class Moderation(commands.Cog):
         em.url = msg.jump_url
         await self.bot.get_channel(Cid.logs).send(embed=em)
 
-    async def mute_work(self, ctx, member, dt: datetime, duration: timedelta, reason):
+    @staticmethod
+    async def mute_work(ctx, member, dt: datetime, duration: timedelta, reason):
         try:
             await member.timeout(duration, reason=reason)
         except Forbidden:
@@ -83,7 +84,7 @@ class Moderation(commands.Cog):
     @app_commands.default_permissions(manage_messages=True)
     @commands.hybrid_command(name='unmute', description='Remove timeout+mute from member')
     @app_commands.describe(member='Member to unmute', reason='Reason')
-    async def unmute(self, ctx, member: Member, *, reason: str = 'No reason'):
+    async def unmute(self, ctx: Context, member: Member, *, reason: str = 'No reason'):
         """Remove timeout+mute from member"""
         await member.timeout(None, reason=reason)
         em = Embed(color=Clr.prpl, title="Unmute member")
@@ -100,7 +101,7 @@ class Moderation(commands.Cog):
 
         if before.is_timed_out() is False and after.is_timed_out() is True:  # member is muted
             em = Embed(colour=Clr.red, description=format_dt(after.timed_out_until, style="R"))
-            em.set_author(name=f'{after.display_name} is muted until',icon_url=after.display_avatar.url)
+            em.set_author(name=f'{after.display_name} is muted until', icon_url=after.display_avatar.url)
             await self.bot.get_channel(Cid.logs).send(embed=em)
 
         elif before.is_timed_out() is True and after.is_timed_out() is False:  # member is unmuted

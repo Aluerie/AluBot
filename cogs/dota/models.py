@@ -181,7 +181,9 @@ class ActiveMatch(Match):
 
 
 class PostMatchPlayerData:
-
+    """
+    Class
+    """
     def __init__(
             self,
             *,

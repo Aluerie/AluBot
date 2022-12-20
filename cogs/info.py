@@ -6,7 +6,7 @@ import re
 import socket
 import warnings
 from datetime import datetime, timezone, timedelta, time
-from typing import TYPE_CHECKING, List, Literal, Union
+from typing import TYPE_CHECKING, List, Literal, Optional, Union
 
 from dota2 import __version__ as dota2_version
 import psutil
@@ -162,10 +162,8 @@ class Info(commands.Cog, name='Info'):
         description='Translate text to English, auto-detects source language'
     )
     @app_commands.describe(text="Enter text to translate")
-    async def translate(self, ctx, *, text: str):
-        """
-        Translate text into English using Google Translate, auto-detects source language.
-        """
+    async def translate(self, ctx: Context, *, text: str):
+        """Translate text into English using Google Translate, auto-detects source language."""
         translator = google_translator()
         em = Embed(
             colour=ctx.author.colour,
@@ -357,10 +355,7 @@ class Info(commands.Cog, name='Info'):
     @commands.command(aliases=['invitelink', 'invite_link'], hidden=True)
     async def invite(self, ctx):
         """Show invite link for the bot."""
-        em = Embed(
-            color=Clr.prpl,
-            description=DISCORD_BOT_INVLINK
-        )
+        em = Embed(description=DISCORD_BOT_INVLINK, color=Clr.prpl)
         await ctx.reply(embed=em)
 
     @staticmethod
@@ -428,7 +423,7 @@ class StatsCommands(commands.Cog, name='Stats'):
     async def wordcloud(
             self,
             ctx: Context,
-            channel_or_and_member: commands.Greedy[Union[Member, TextChannel]] = None,
+            channel_or_and_member: Optional[commands.Greedy[Union[Member, TextChannel]]],
             limit: int = 2000
     ):
         """
@@ -455,52 +450,52 @@ class StatsCommands(commands.Cog, name='Stats'):
             )
         )
         # todo remove this
-        #await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
+        # await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
         await ctx.reply('it does not work for now')
 
 
 class StatsChannels(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
-        self.mytime.start()
-        self.mymembers.start()
-        self.mybots.start()
+        self.my_time.start()
+        self.my_members.start()
+        self.my_bots.start()
 
     def cog_unload(self) -> None:
-        self.mytime.cancel()
-        self.mymembers.cancel()
-        self.mybots.cancel()
+        self.my_time.cancel()
+        self.my_members.cancel()
+        self.my_bots.cancel()
 
     @tasks.loop(time=[time(hour=x) for x in range(0, 24)])
-    async def mytime(self):
+    async def my_time(self):
         symbol = '#' if platform.system() == 'Windows' else '-'
         new_name = f'⏰ {datetime.now(timezone(timedelta(hours=3))).strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
         await self.bot.get_channel(Cid.my_time).edit(name=new_name)
 
-    @mytime.before_loop
-    async def before(self):
+    @my_time.before_loop
+    async def my_time_before(self):
         await self.bot.wait_until_ready()
 
     @tasks.loop(hours=12)
-    async def mymembers(self):
+    async def my_members(self):
         guild = self.bot.get_guild(Sid.alu)
         bots_role = guild.get_role(Rid.bots)
         new_name = f'🏡 Members: {guild.member_count-len(bots_role.members)}'
         await guild.get_channel(795743012789551104).edit(name=new_name)
 
-    @mymembers.before_loop
-    async def before(self):
+    @my_members.before_loop
+    async def my_members_before(self):
         await self.bot.wait_until_ready()
 
     @tasks.loop(hours=5)
-    async def mybots(self):
+    async def my_bots(self):
         guild = self.bot.get_guild(Sid.alu)
         bots_role = guild.get_role(Rid.bots)
         new_name = f'🤖 Bots: {len(bots_role.members)}'
         await guild.get_channel(795743065787990066).edit(name=new_name)
 
-    @mybots.before_loop
-    async def before(self):
+    @my_bots.before_loop
+    async def my_bots_before(self):
         await self.bot.wait_until_ready()
 
 

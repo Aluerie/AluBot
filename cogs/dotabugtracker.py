@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Literal, List, Set
 from discord import Embed, File
 from discord.ext import commands, tasks
 
-from .utils.var import Sid, Cid, Clr
+from .utils.var import Sid, Cid, Clr, Lmt
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -88,8 +88,8 @@ class TimeLine:
         return sorted(self.events + self.comments, key=lambda x: x.created_at, reverse=False)
 
     @property
-    def embed_and_file(self) -> (Embed, File):
-        em = Embed(title=self.issue.title, url=self.issue.html_url)
+    def embed_and_file(self) -> (Embed, File):  # todo: is there any better way than make your own constants?
+        em = Embed(title=self.issue.title[:Lmt.Embed.title], url=self.issue.html_url)
         if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
             # we just send a small embed
             # 1 author and 1 event with possible comment event to it

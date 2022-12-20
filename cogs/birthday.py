@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 from numpy.random import choice
 
 from .utils.checks import is_owner
-from .utils.var import *
+from .utils.var import Cid, Ems, Rid, Clr, cmntn, Sid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot

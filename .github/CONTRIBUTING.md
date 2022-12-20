@@ -2,10 +2,9 @@
 
 ### Do you want to contribute, but you do not have initial ideas what to code/help with
 
-* Check out either [TODO.md](https://github.com/Aluerie/AluBot/blob/main/TODO.md) or 
-[Project page](https://github.com/users/Aluerie/projects/7) to get some ideas what I want to work on 
+* Check out either [TODO.md](https://github.com/Aluerie/AluBot/blob/main/TODO.md) to get some ideas what I want to work on 
 and what I am currently working on. 
-* Currently, the bot is really just a one-person project so I'm apologizing in advance if those todo lists^ are messy 
+* Currently, the bot is really just a one-person project so I'm apologizing in advance if this todo list^ are messy 
 because I do not really expect any random help from random visitors.
 
 ### Did you find a bug?

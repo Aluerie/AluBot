@@ -50,12 +50,12 @@ class AluBot(commands.Bot):
     steam: SteamClient
     dota: Dota2Client
     github: Github
-    git_gameplay: Repository
-    git_tracker: Repository
+    git_gameplay: Repository.Repository
+    git_tracker: Repository.Repository
     session: ClientSession
     launch_time: datetime
     pool: Pool
-    prefixes: PrefixConfig[int, str]
+    prefixes: PrefixConfig
     reddit: Reddit
     twitch: TwitchClient
     twitter: TwitterAsyncClient
@@ -264,10 +264,10 @@ class AluBot(commands.Bot):
     async def send_traceback(
             self,
             error: Exception,
-            destination: Messageable = None,
+            destination: Optional[Messageable] = None,
             *,
             where: str = 'not specified',
-            embed: Embed = None,
+            embed: Optional[Embed] = None,
             verbosity: int = 10,
             mention: bool = True
     ) -> None:

@@ -44,7 +44,7 @@ class FPCBase:
             acc_info_columns: List[str],
             get_char_name_by_id: Callable[[int], Coroutine[str]],
             get_char_id_by_name: Callable[[str], Coroutine[int]],
-            get_all_character_names: Callable[[], Coroutine[List[str]]],
+            get_all_character_names: Callable[[], Coroutine[None, None, List[str]]],
             character_gather_word: str
     ) -> None:
         self.feature_name: str = feature_name
@@ -302,8 +302,8 @@ class FPCBase:
     async def database_remove(
             self,
             ctx: Context,
-            name_lower: str = None,
-            account_id: Union[str, int] = None  # steam_id for dota, something else for lol
+            name_lower: Optional[str],
+            account_id: Optional[Union[str, int]]  # steam_id for dota, something else for lol
     ) -> None:
         """Base function for removing accounts from the database"""
         if name_lower is None and account_id is None:

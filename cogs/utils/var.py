@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Optional
 from typing_extensions import Self
 
 from discord import Colour
@@ -33,12 +33,14 @@ class Rgx:
     url_simple = r"(https?://\S+)"
     url_search = r"\b((?:https?://)?(?:(?:www\.)?(?:[\da-z\.-]+)\.(?:[a-z]{2,6})|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|(?:(?:[0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?:(?::[0-9a-fA-F]{1,4}){1,6})|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(?::[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])|(?:[0-9a-fA-F]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])))(?::[0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])?(?:/[\w\.-]*)*/?)\b"
 
+# todo: make it a bit better with classes heritage and stuff
+
 
 class Sid:
     alu = 702561315478044804
     wink = 759916212842659850
     blush = 1015226252086476860
-
+    
     guild_ids = [
         alu,
         wink,
@@ -134,7 +136,7 @@ class Rid:
         852194400922632262,  # pronoun
         plebs,               # plebs
     ]
-    level_roles = [] # maybe fill it later
+    level_roles = []  # maybe fill it later
     ignored_for_logs = [voice, live_stream] + category_roles_ids
 
     waste_bots_role = 1015289532645642314
@@ -325,7 +327,7 @@ class MaterialPalette(Colour):
         ]
     }
     shades = [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
-    core = 500
+    core: Literal[500] = 500
     colors_dict = {}
     for key, values in colors.items():
         colors_dict[key] = {shade: clr for shade, clr in zip(shades, values)}
@@ -377,7 +379,7 @@ class MaterialPalette(Colour):
         return cls(cls.colors_dict['light_green'][shade])
 
     @classmethod
-    def lime(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def lime(cls, *, shade: Optional[ShadeTypeHint] = core) -> Self:
         return cls(cls.colors_dict['lime'][shade])
 
     @classmethod
@@ -418,9 +420,7 @@ class MaterialPalette(Colour):
 
 
 class MaterialAccentPalette(Colour):
-    """
-    Material Design Color Palette with Accent Designs
-    """
+    """Material Design Color Palette with Accent Designs"""
     def __init__(self, value: int):
         super().__init__(value)
 
@@ -475,11 +475,11 @@ class MaterialAccentPalette(Colour):
         ]
     }
     shades = [700, 400, 200, 100]
-    core = 200
+    core: Literal[200] = 200
 
     colors_dict = {}
-    for key, value in colors.items():
-        colors_dict[key] = {shade: clr for shade, clr in zip(shades, value)}
+    for k, v in colors.items():
+        colors_dict[k] = {shade: clr for shade, clr in zip(shades, v)}
 
     ShadeTypeHint = Literal[700, 400, 200, 100]
 

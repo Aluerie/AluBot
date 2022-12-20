@@ -35,7 +35,7 @@ with pretty much everything I ever needed ! Check List of features after the pic
  - [X] AFK/Selfmute commands
  - [X] NSFW 
  - [X] Schedule for Dota 2 matches
- - [X] Stalking my Dota 2 profile
+ - [X] Stalking my Dota 2 profile (despite my "Expose data" setting is off)
  - [X] So in total Over 100 useful/fun commands.
  - [X] And so much more to come.
 
@@ -48,8 +48,9 @@ All info in `$help` or `/help` command of the bot. Join my server to use it and 
 
 ### Reporting Bugs and Making Suggestions
 
-* There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/CONTRIBUTING.md)
-* TL;DR^: Feel free to make an Issue/Pull Request or write me (Aluerie ❤#6524) on discord.
+* There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/.github/CONTRIBUTING.md)
+* TL;DR^: Feel free to open a GitHub Issue/PR/Discussion or write me (Aluerie ❤#6524) on discord. You can 
+look my [TODO.md](https://github.com/Aluerie/AluBot/blob/main/TODO.md) for ideas even though the list is a bit messy.
 
 ### Running
 
@@ -68,11 +69,11 @@ your instance of the bot will work well. And I'm honestly not a very good progra
    
 ```python
 """
-Just list of extensions from `./cogs` that are going to be tested with YenBot 
+Just list of extensions from `./cogs` that are going to be tested with Testing version of the Bot 
 
 -- List them without `.py`-ending as in 'confessions' and not 'confessions.py'
 
-AluBot does not use this file at all, the bot just assumes the `test_list` empty
+Actual AluBot does not use this file at all, the bot just assumes the `test_list` empty
 """
 test_list = [  # for test bot
     'embedmaker',  # just some cogs to test 

@@ -52,8 +52,6 @@ async def get_important_text(pool: Pool):
         'Hey chat, you can set up your birthday date with `$birthday` command for some sweet congratulations '
         f'from us on that day and in {cmntn(Cid.bday_notifs)}.',
         'Hey chat, {0} exist {1} {1} {1}'.format(cmntn(Cid.confessions), Ems.PepoBeliever),
-        f'Hey chat, when you join any of voice channels - {cmntn(Cid.text_for_vc)} unlocks for you. '
-        f'Type there if you are muted, share voice-conversation related files, etc.',
         f'Hey chat, fix your posture {Ems.PepoBeliever}',
         'Hey chat, remember to smile 🙂',
         'Hey chat, feel free to invite new cool people to this server {0} {0} {0}'.format(Ems.peepoComfy),

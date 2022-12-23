@@ -61,12 +61,12 @@ class AluBot(commands.Bot):
     twitter: TwitterAsyncClient
 
     def __init__(self, test=False):
-        prefix = '~' if test else _alubot_prefix_callable
+        prefix = commands.when_mentioned_or('~') if test else _alubot_prefix_callable
         main_prefix = '~' if test else '$'
         super().__init__(
             command_prefix=prefix,
             activity=Streaming(
-                name=f"{main_prefix}help or /help",
+                name=f"/help or {main_prefix}help",
                 url='https://www.twitch.tv/aluerie'
             ),
             intents=Intents(  # if you ever struggle with it - try `Intents.all()`

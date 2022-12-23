@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import os
+from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, Dict, Generic, TypeVar, Union, Optional, Type
 import uuid
 import asyncio
@@ -44,6 +45,8 @@ class Config(Generic[_T]):
                 self._json = json.load(f)
                 return True
         except FileNotFoundError:
+            return False
+        except JSONDecodeError:
             return False
 
     async def load_from_database(self):

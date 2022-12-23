@@ -168,33 +168,15 @@ class FunThings(commands.Cog, name='Fun'):
     async def rps(self, ctx: Context, member: Member):
         """Rock Paper Scissors game with @member"""
         if member == ctx.author:
-            em = Embed(
-                colour=Clr.error,
-                description='You cannot challenge yourself in a Rock Paper Scissors game'
-            )
-            return await ctx.reply(embed=em)
+            raise commands.BadArgument('You cannot challenge yourself in a Rock Paper Scissors game')
         if member.bot and member != ctx.guild.me:
-            em = Embed(
-                colour=Clr.error,
-                description='I\'m afraid other bots do not know how to play this game'
-            )
-            return await ctx.reply(embed=em)
+            raise commands.BadArgument('I\'m afraid other bots do not know how to play this game')
 
         players = [ctx.author, member]
-        em = Embed(
-            title='Rock Paper Scissors Game',
-            colour=Clr.prpl
-        ).add_field(
-            name='Player 1',
-            value=f'{players[0].mention}'
-        ).add_field(
-            name='Player 2',
-            value=f'{players[1].mention}'
-        ).add_field(
-            name='Game State Log',
-            value='● Both players need to choose their item',
-            inline=False
-        )
+        em = Embed(title='Rock Paper Scissors Game', colour=Clr.prpl)
+        em.add_field(name='Player 1', value=f'{players[0].mention}')
+        em.add_field(name='Player 2', value=f'{players[1].mention}')
+        em.add_field(name='Game State Log', value='● Both players need to choose their item', inline=False)
         view = RPSView(players=players)
         view.message = await ctx.reply(embed=em, view=view)
         if member.bot:
@@ -205,7 +187,7 @@ class FunThings(commands.Cog, name='Fun'):
         description='Flip a coin: Heads or Tails?'
     )
     async def coinflip(self, ctx):
-        """Flip a coin ;"""
+        """Flip a coin """
         word = 'Heads' if randint(2) == 0 else 'Tails'
         return await ctx.reply(content=word, file=File(f'media/{word}.png'))
 
@@ -214,15 +196,22 @@ class FunThings(commands.Cog, name='Fun'):
         if message.author.id in [Uid.bot, Uid.yen]:
             return
 
-        async def peepoblush(msg):
+        async def work_non_command_mentions(msg: Message):
+            """for now there is only blush and question marks"""
+            # todo: maybe some chat AI or something
             if msg.guild and msg.guild.me in msg.mentions:
                 if any([item in msg.content.lower() for item in ['😊', "blush"]]):
                     await msg.channel.send(f'{msg.author.mention} {Ems.peepoBlushDank}')
-        await peepoblush(message)
+                else:
+                    ctx = await self.bot.get_context(msg)
+                    if ctx.command:
+                        return
+                    else:
+                        for r in ['❔', '❕', '🤔']:
+                            await msg.add_reaction(r)
+        await work_non_command_mentions(message)
 
-        async def bots_in_lobby(msg):
-            # https://docs.pycord.dev/en/master/api.html?highlight=interaction#discord.InteractionType
-            # i dont like == 2 usage bcs it should be something like == discord.InteractionType.application_command
+        async def bots_in_lobby(msg: Message):
             if msg.channel.id == Cid.general:
                 text = None
                 if msg.interaction is not None and msg.interaction.type == InteractionType.application_command:
@@ -233,15 +222,17 @@ class FunThings(commands.Cog, name='Fun'):
                     await msg.channel.send('{0} in {1} ! {2} {2} {2}'.format(text, msg.channel.mention, Ems.Ree))
         await bots_in_lobby(message)
 
-        async def weebs_out(msg):
+        async def weebs_out(msg: Message):
             if msg.channel.id == Cid.weebs and randint(1, 100 + 1) < 7:
                 await self.bot.get_channel(Cid.weebs).send(
                     '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
                         '<a:WeebsOutOut:730882034167185448>', '<:WeebsOut:856985447985315860>',
-                        '<a:peepoWeebSmash:728671752414167080>', '<:peepoRiot:730883102678974491>'))
+                        '<a:peepoWeebSmash:728671752414167080>', '<:peepoRiot:730883102678974491>'
+                    )
+                )
         await weebs_out(message)
 
-        async def ree_the_oof(msg):
+        async def ree_the_oof(msg: Message):
             if "Oof" in msg.content:
                 try:
                     await msg.add_reaction(Ems.Ree)
@@ -249,7 +240,7 @@ class FunThings(commands.Cog, name='Fun'):
                     await msg.delete()
         await ree_the_oof(message)
 
-        async def random_comfy_react(msg):
+        async def random_comfy_react(msg: Message):
             roll = randint(1, 300 + 1)
             if roll < 2:
                 try:
@@ -397,5 +388,5 @@ class FunThings(commands.Cog, name='Fun'):
                 await reaction.message.delete()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(FunThings(bot))

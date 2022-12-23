@@ -10,7 +10,7 @@ from discord.ext import commands, tasks
 from .utils.distools import inout_to_10, send_pages_list
 from .utils.format import ordinal, humanize_time, indent
 from .utils.imgtools import url_to_img, img_to_file, get_text_wh
-from .utils.var import Ems, Sid, Cid, Clr
+from .utils.var import Ems, Sid, Cid, Cids, Clr
 
 if TYPE_CHECKING:
     from discord import Interaction, Message
@@ -197,7 +197,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
     async def on_message(self, msg: Message):
         # if self.bot.test_flag:
         #    return  # let's not mess up with Yennifer
-        if msg.author.bot or msg.channel.id in Cid.blacklisted_array:
+        if msg.author.bot or msg.channel.id in Cids.blacklisted_array:
             return
 
         if msg.guild is not None and msg.guild.id in Sid.guild_ids:

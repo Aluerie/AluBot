@@ -9,7 +9,7 @@ from discord.ui import View, Select
 from .utils import pages
 from .utils.context import Context
 from .utils.format import display_hmstime
-from .utils.var import Ems, Cid, cmntn, rmntn, Rid, Uid, Clr
+from .utils.var import Ems, Cid, rmntn, Rid, Uid, Clr
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -48,11 +48,11 @@ last_embed = Embed(
     ),
 ).add_field(
     name='• Notifications about fav Aluerie\'s streamers picking her fav champs/heroes', inline=False,
-    value=f'Just look into {cmntn(Cid.alubot)} !'
+    value=f'Just look into {Cid.alubot.mention} !'
 ).add_field(
     name='• News feeds', inline=False,
     value=(
-        f'Dota/League related news feed in {cmntn(Cid.dota_news)} and {cmntn(Cid.lol_news)} '
+        f'Dota/League related news feed in {Cid.dota_news.mention} and {Cid.lol_news.mention} '
         f'taken from all over the internet! Even more, bot automatically parsed and analyses dota updates ;'
     )
 ).add_field(
@@ -61,7 +61,7 @@ last_embed = Embed(
 ).add_field(
     name='• Confessions', inline=False,
     value=(
-        f'Just visit {cmntn(Cid.confessions)} and use buttons at the very bottom of the channel. '
+        f'Just visit {Cid.confessions.mention} and use buttons at the very bottom of the channel. '
         f'There are two buttons: for anonymous and non-anonymous confessions. '
         f'If you use the latter - your server nickname will be shown in confession message.'
     )
@@ -71,22 +71,22 @@ last_embed = Embed(
 ).add_field(
     name='• Twitch.tv notifications', inline=False,
     value=(
-        f'Notifications for my own stream in {cmntn(Cid.stream_notifs)} and '
+        f'Notifications for my own stream in {Cid.stream_notifs.mention} and '
         f'{rmntn(Rid.live_stream)} role for live streamers-members ;'
     )
 ).add_field(
     name='• Reaction roles', inline=False,
-    value=f'Take some roles in {cmntn(Cid.roles)} ;'
+    value=f'Take some roles in {Cid.roles.mention} ;'
 ).add_field(
     name='• Timers', inline=False,
-    value=f'Bot sometimes posts daily reminders in {cmntn(Cid.general)} ;'
+    value=f'Bot sometimes posts daily reminders in {Cid.general.mention} ;'
 ).add_field(
     name='• Welcoming new people', inline=False,
-    value=f'The bot welcomes new people in {cmntn(Cid.welcome)} ;'
+    value=f'The bot welcomes new people in {Cid.welcome.mention} ;'
 ).add_field(
     name='• Controlling emote spam channels', inline=False,
     value=(
-        f'The bots moderates {cmntn(Cid.comfy_spam)} and {cmntn(Cid.emote_spam)}, '
+        f'The bots moderates {Cid.comfy_spam.mention} and {Cid.emote_spam.mention}, '
         f'also sometimes spams these channels too ;'
     )
 ).add_field(
@@ -99,7 +99,7 @@ last_embed = Embed(
     name="• Milestone members", inline=False,
     value=(
         f'Every 50th member of this server gets fancy {rmntn(Rid.milestone)} role and '
-        f'small congratulation text in {cmntn(Cid.welcome)} ;'
+        f'small congratulation text in {Cid.welcome.mention} ;'
     )
 ).add_field(
     name="• Random comfy reactions", inline=False,
@@ -107,14 +107,14 @@ last_embed = Embed(
 ).add_field(
     name='• Some important things', inline=False,
     value=(
-        f'For example, the bot doesn\'t like bots in {cmntn(Cid.general)} and '
-        f'weebs in {cmntn(Cid.weebs)} ;'
+        f'For example, the bot doesn\'t like bots in {Cid.general.mention} and '
+        f'weebs in {Cid.weebs.mention} ;'
     )
 ).add_field(
     name='• Thanks to twitch subs', inline=False,
     value=(
         f"The bot thanks people who get role {rmntn(Rid.subs)} via discord-twitch integration "
-        f"in {cmntn(Cid.stream_notifs)} ;"
+        f"in {Cid.stream_notifs.mention} ;"
     )
 ).add_field(
     name='• Experience system', inline=False,

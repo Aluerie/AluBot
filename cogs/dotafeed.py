@@ -3,7 +3,7 @@ from __future__ import annotations
 import time as epoch_time
 from datetime import datetime, timezone, time
 import logging
-from typing import TYPE_CHECKING, Optional, List, Union, Set
+from typing import TYPE_CHECKING, Optional, List, Union, Set, Dict
 
 import vdf
 from discord import Permissions, TextChannel, app_commands, Embed
@@ -223,16 +223,17 @@ class DotaFeed(commands.Cog):
 class PostMatchEdits(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.postmatch_players = []
-        self.opendota_req_cache = dict()
+        self.postmatch_players: List[PostMatchPlayerData] = []
+        self.opendota_req_cache: Dict[int, OpendotaRequestMatch] = dict()
+
+    async def cog_load(self) -> None:
+        self.bot.ini_steam_dota()
         self.postmatch_edits.start()
         self.daily_report.start()
 
-    def cog_load(self) -> None:
-        self.bot.ini_steam_dota()
-
-    def cog_unload(self) -> None:
-        self.postmatch_edits.cancel()
+    async def cog_unload(self) -> None:
+        self.postmatch_edits.stop()  # .cancel()
+        self.daily_report.stop()  # .cancel()
 
     async def fill_postmatch_players(self):
         self.postmatch_players = []

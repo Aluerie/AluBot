@@ -175,14 +175,14 @@ class DotaBugtracker(commands.Cog):
                 )
             )
 
-        query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
-        await self.bot.pool.execute(query, datetime.now(timezone.utc), Sid.alu)
-
         efs = [v.embed_and_file for v in issue_dict.values()]
         efs_10list = [efs[x: x + 10] for x in range(0, len(efs), 10)]
         for i in efs_10list:
             msg = await self.bot.get_channel(Cid.dota_news).send(embeds=[e for e, _ in i], files=[f for _, f in i])
             await msg.publish()
+        
+        query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, datetime.now(timezone.utc), Sid.alu)
 
     @git_comments_check.before_loop
     async def before(self):

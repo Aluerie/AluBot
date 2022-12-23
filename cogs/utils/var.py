@@ -33,6 +33,7 @@ class Rgx:
     url_simple = r"(https?://\S+)"
     url_search = r"\b((?:https?://)?(?:(?:www\.)?(?:[\da-z\.-]+)\.(?:[a-z]{2,6})|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|(?:(?:[0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?:(?::[0-9a-fA-F]{1,4}){1,6})|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(?::[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])|(?:[0-9a-fA-F]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])))(?::[0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])?(?:/[\w\.-]*)*/?)\b"
 
+
 # todo: make it a bit better with classes heritage and stuff
 
 
@@ -40,7 +41,7 @@ class Sid:
     alu = 702561315478044804
     wink = 759916212842659850
     blush = 1015226252086476860
-    
+
     guild_ids = [
         alu,
         wink,
@@ -48,54 +49,72 @@ class Sid:
     ]
 
 
-class Cid:
+class ChannelID(int):
+
+    @property
+    def mention(self):
+        return f'<#{self}>'
+
+
+class ChannelCollection:
+    def __init__(self, **kwargs: int):
+        self.kwargs = kwargs
+
+    def __getattr__(self, attr: str) -> int:
+        return ChannelID(self.kwargs.get(attr))
+
+    def __repr__(self) -> str:
+        return f"<Known Channels IDs {self.kwargs!r}"
+
+
+Cid = ChannelCollection(
     # alu server
-    rules = 724996010169991198
-    roles = 725941486063190076
+    rules=724996010169991198,
+    roles=725941486063190076,
+    welcome=725000501690630257,
+    stream_notifs=724420415199379557,
+    clips=770721052711845929,
+    bday_notifs=748604236190842881,
+    general=702561315478044807,
+    emote_spam=730838697443852430,
+    comfy_spam=727539910713671802,
+    pubs_talk=731376390103892019,
+    logs=731615128050598009,
+    alubot=724991054474117241,
+    saved=709028718286340106,
+    confessions=731703242597072896,
+    weebs=731887442768166933,
+    bot_spam=724986090632642653,
+    nsfw_bob_spam=731607736155897978,
 
-    welcome = 725000501690630257
-    stream_notifs = 724420415199379557
-    clips = 770721052711845929
-    bday_notifs = 748604236190842881
+    stream_room=766063288302698496,
 
-    general = 702561315478044807
-    emote_spam = 730838697443852430
-    comfy_spam = 727539910713671802
-    pubs_talk = 731376390103892019
-    logs = 731615128050598009
-    alubot = 724991054474117241
-    saved = 709028718286340106
-    confessions = 731703242597072896
-    weebs = 731887442768166933
-    bot_spam = 724986090632642653
-    nsfw_bob_spam = 731607736155897978
+    dota_news=724986688589267015,
+    lol_news=724993871662022766,
 
-    text_for_vc = 761473270641328130
-    stream_room = 766063288302698496
+    patch_notes=731759693113851975,
+    suggestions=724994495581782076,
 
-    dota_news = 724986688589267015
-    lol_news = 724993871662022766
-
-    patch_notes = 731759693113851975
-    suggestions = 724994495581782076
-
-    my_time = 788915790543323156
-
-    blacklisted_array = []
+    my_time=788915790543323156,
 
     # wink server
-    roses = 759916212842659853
-    spam_me = 970823670702411810
-    repost = 971504469995049041
+    roses=759916212842659853,
+    spam_me=970823670702411810,
+    repost=971504469995049041,
 
-    coop = 966366521607745586
+    coop=966366521607745586,
 
-    global_logs = 997149550324240465
+    global_logs=997149550324240465,
 
-    copylol_ff20 = 791099728498130944
-    copydota_info = 873430376033452053
-    copydota_steam = 881843565251141632
-    copydota_tweets = 963954743644934184
+    copylol_ff20=791099728498130944,
+    copydota_info=873430376033452053,
+    copydota_steam=881843565251141632,
+    copydota_tweets=963954743644934184,
+)
+
+
+class Cids:
+    blacklisted_array = []
 
 
 class Uid:
@@ -134,7 +153,7 @@ class Rid:
         851786344354938880,  # games
         852192240306618419,  # notification
         852194400922632262,  # pronoun
-        plebs,               # plebs
+        plebs,  # plebs
     ]
     level_roles = []  # maybe fill it later
     ignored_for_logs = [voice, live_stream] + category_roles_ids
@@ -421,6 +440,7 @@ class MaterialPalette(Colour):
 
 class MaterialAccentPalette(Colour):
     """Material Design Color Palette with Accent Designs"""
+
     def __init__(self, value: int):
         super().__init__(value)
 
@@ -572,8 +592,8 @@ class MaterialAccentPalette(Colour):
 MP = MaterialPalette
 MAP = MaterialAccentPalette
 
-
 if __name__ == '__main__':
     from PIL import Image
+
     rectangle = Image.new("RGB", (600, 300), str(MP.purple()))
     rectangle.show()

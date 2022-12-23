@@ -5,6 +5,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, List
 
+import discord
 from discord import Embed, app_commands, Interaction
 from discord.ext import commands, tasks
 
@@ -49,6 +50,7 @@ class BetaTest(commands.Cog):
 
     @commands.hybrid_command()
     async def allu(self, ctx: Context):
+        # print(ctx.prefix, ctx.clean_prefix)
         await ctx.send_test()
 
     @reload_info.before_loop

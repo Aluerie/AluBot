@@ -93,7 +93,7 @@ class CommandErrorHandler(commands.Cog):
             case commands.NSFWChannelRequired():
                 desc = "Ask Aluerie to make that channel NSFW friendly"
             case commands.CommandNotFound():
-                if ctx.prefix == '/':  # our slash commands protection tech
+                if ctx.prefix in ['/', f'<@{self.bot.user.id}> ', f'<@!{self.bot.user.id}> ']:
                     return
                 desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.NotOwner():

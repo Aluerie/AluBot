@@ -1,5 +1,7 @@
 ### TODO
 
+0. Check when Valve people make their own issues as well
+
 ### High Priority
 1. Rewrite daily reminders into something more sophisticated
     * put texts into database

@@ -102,18 +102,17 @@ def display_time(seconds, granularity=5):
 
 
 def ordinal(n: Union[int, str]) -> str:
-    """
-    Convert an integer into its ordinal representation::
-
-        make_ordinal(0)   => '0th'
-        make_ordinal(3)   => '3rd'
-        make_ordinal(122) => '122nd'
-        make_ordinal(213) => '213th'
-    """
+    """Convert an integer into its ordinal representation, i.e. 0->'0th', '3'->'3rd'"""
+    # Remember that there is always funny lambda possibility
+    # ```py
+    # ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])
+    # print([ordinal(n) for n in range(1,32)])
+    # ```
     n = int(n)
-    suffix = ['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]
     if 11 <= (n % 100) <= 13:
         suffix = 'th'
+    else:
+        suffix = ['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]
     return str(n) + suffix
 
 

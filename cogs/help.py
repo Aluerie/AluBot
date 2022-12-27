@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from discord import Embed, SelectOption, app_commands
 from discord.ext import commands
@@ -13,6 +13,7 @@ from .utils.var import Ems, Cid, rmntn, Rid, Uid, Clr
 
 if TYPE_CHECKING:
     from discord import Interaction
+    from .utils.bot import AluBot
 
 
 class DropdownHelp(Select):
@@ -296,9 +297,9 @@ class HelpCommand(commands.HelpCommand):
 
 
 class HelpCog(commands.Cog, name='Help'):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self._original_help_command = bot.help_command
-        self.bot = bot
+        self.bot: AluBot = bot
         bot.help_command = HelpCommand(
             verify_checks=False,
             command_attrs={
@@ -315,7 +316,7 @@ class HelpCog(commands.Cog, name='Help'):
         name='help',
         description='Show help menu for the bot',
     )
-    async def help_slash(self, ntr: Interaction, *, command: str = None):
+    async def help_slash(self, ntr: Interaction, *, command: Optional[str]):
         myhelp = HelpCommand(
             verify_checks=False,
             command_attrs={

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from bs4 import BeautifulSoup
 from discord import Embed, SelectOption, app_commands
@@ -12,23 +12,27 @@ from discord.utils import format_dt
 from .utils.var import Clr, Img, Ems
 
 if TYPE_CHECKING:
-    from discord import Interaction
+    from aiohttp import ClientSession
+    from discord import Interaction, User
+    from .utils.bot import AluBot
+    from .utils.context import Context
 
-fav_teams = ['[A]', 'Bald', 'GS']
+
+fav_teams = []
 
 
-async def schedule_work(session, arg, mod, only_today=0, favmode=0):
-    async with session.get(my_url := 'https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches') as r:
+async def schedule_work(
+        session: ClientSession,
+        arg,
+        mod,
+        only_today: bool = False,
+        favourite_mode: bool = False
+) -> Embed:
+    url = 'https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches'
+    async with session.get(url) as r:
         soup = BeautifulSoup(await r.read(), 'html.parser')
-    embed = Embed(
-        colour=Clr.prpl,
-        title='Dota 2 Pro Matches Schedule',
-        url=my_url
-    ).set_author(
-        name='Info from Liquipedia.net',
-        icon_url=Img.dota2logo,
-        url=my_url
-    )
+    em = Embed(title='Dota 2 Pro Matches Schedule', url=url, colour=Clr.prpl)
+    em.set_author(name='Info from Liquipedia.net', icon_url=Img.dota2logo, url=url)
 
     dict_teams = {}
     symb_amount = 15
@@ -73,44 +77,37 @@ async def schedule_work(session, arg, mod, only_today=0, favmode=0):
                 dict_teams[league].append(answer)
 
     work_func(mod, part=1)
-    if favmode == 1:
+    if favourite_mode == 1:
         work_func("1", part=2)
 
     answer_str = f'Applied filter: `{arg}`\n' if arg is not None else ''
     answer_str += \
         f'`{"Datetime now ".ljust(symb_amount, " ")}`{format_dt(dt_now, style="t")} {format_dt(dt_now, style="d")}\n\n'
-    for key in dict_teams:
-        answer_str += f"**{key}**\n"
-        answer_str += "\n".join(dict_teams[key])
-        answer_str += "\n"
-    embed.description = answer_str
-    return embed
+    for key, value in dict_teams.items():
+        answer_str += f"**{key}**\n{chr(10).join(value)}\n"
+    em.description = answer_str
+    return em
 
 
 options = [
     SelectOption(
-        emoji=Ems.PepoRules,
-        label="Next 24h: Featured + Favourite (Default)",
-        description="Featured games + some fav teams next 24 hours",
+        label="Next 24h: Featured + Favourite (Default)", emoji=Ems.PepoRules,
+        description="Featured games + some fav teams next 24 hours"
     ),
     SelectOption(
-        emoji=Ems.peepoHappyDank,
-        label="Next 24h: Featured",
-        description="Featured games next 24 hours",
+        label="Next 24h: Featured", emoji=Ems.peepoHappyDank,
+        description="Featured games next 24 hours"
     ),
     SelectOption(
-        emoji=Ems.bubuAyaya,
-        label="Featured",
-        description="Featured games by Liquidpedia",
+        label="Featured", emoji=Ems.bubuAyaya,
+        description="Featured games by Liquidpedia"
     ),
     SelectOption(
-        emoji=Ems.PepoG,
-        label="Full Schedule",
+        label="Full Schedule", emoji=Ems.PepoG,
         description="All pro games!"
     ),
     SelectOption(
-        emoji=Ems.PepoDetective,
-        label="Completed",
+        label="Completed", emoji=Ems.PepoDetective,
         description="Already finished games"
     )
 ]
@@ -120,17 +117,13 @@ class MySelect(Select):
     def __init__(self, options, placeholder=f"Next 24h: Featured + Favourite (Default)", arg=None, author=None):
         super().__init__(placeholder=placeholder, options=options)
         self.arg = arg
-        self.author = author
+        self.author: User = author
 
-    async def callback(self, ntr):
-        only_today = 0
-        mode = 0
-        favmode = 0
+    async def callback(self, ntr: Interaction):
+        mode, only_today, fav_mode = 0, False, False
         match self.values[0]:
             case "Next 24h: Featured + Favourite (Default)":
-                mode = 2
-                only_today = 1
-                favmode = 1
+                mode, only_today, fav_mode = 2, True, True
             case "Completed":
                 mode = 3
             case "Full Schedule":
@@ -138,20 +131,22 @@ class MySelect(Select):
             case "Featured":
                 mode = 2
             case "Next 24h: Featured":
-                mode = 2
-                only_today = 1
+                mode, only_today = 2, True
 
         self.view.clear_items()
         view = MyView(self.author)
         view.add_item(MySelect(options, placeholder=self.values[0], arg=self.arg))
-        embed = await schedule_work(ntr.client.ses, self.arg, str(mode), only_today=only_today, favmode=favmode)
+        embed = await schedule_work(
+            ntr.client.session,  # type: ignore
+            self.arg, str(mode), only_today=only_today, favourite_mode=fav_mode
+        )
         await ntr.response.edit_message(embed=embed, view=view)
 
 
 class MyView(View):
-    def __init__(self, author):
+    def __init__(self, author: User):
         super().__init__()
-        self.author = author
+        self.author: User = author
 
     async def interaction_check(self, ntr: Interaction) -> bool:
         """
@@ -172,8 +167,8 @@ class DotaSchedule(commands.Cog, name='Dota 2 Schedule'):
 
     Info is taken from Liquipedia.
     """
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: AluBot):
+        self.bot: AluBot = bot
         self.help_emote = Ems.MadgeThreat
 
     @commands.hybrid_command(
@@ -184,12 +179,15 @@ class DotaSchedule(commands.Cog, name='Dota 2 Schedule'):
         # guild_ids=Sid.guild_ids
     )
     @app_commands.describe(query="Enter search query, ie. `EG` (or any other team/tourney names)")
-    async def schedule(self, ctx, *, query: str = None):
+    async def schedule(self, ctx: Context, *, query: Optional[str]):
         """Get featured Dota 2 Pro Matches Schedule, use dropdown menu to view different types of schedule.\
         Use `query` to filter schedule by teams or tournaments, for example `$sch EG` will show only EG matches ;"""
         view = MyView(ctx.author)
         view.add_item(MySelect(options, arg=query, author=ctx.author))
-        await ctx.reply(embed=await schedule_work(self.bot.ses, query, "2", only_today=1, favmode=1), view=view)
+        await ctx.reply(
+            embed=await schedule_work(self.bot.session, query, "2", only_today=True, favourite_mode=True),
+            view=view
+        )
 
 
 async def setup(bot):

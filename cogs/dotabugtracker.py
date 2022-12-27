@@ -35,13 +35,13 @@ class TimeLinePoint:
             body: str = '',
             html_url: str = ''
     ):
-        self.event_type = event_type
-        self.comment_flag = True if event_type == 'commented' else False
-        self.created_at = created_at.replace(tzinfo=timezone.utc)
+        self.event_type: Literal['assigned', 'closed', 'reopened', 'commented'] = event_type
+        self.comment_flag: bool = True if event_type == 'commented' else False
+        self.created_at: datetime = created_at.replace(tzinfo=timezone.utc)
         self.actor: NamedUser = actor
-        self.body = body
-        self.html_url = html_url
-        self.issue_number = issue_number
+        self.issue_number: int = issue_number
+        self.body: str = body
+        self.html_url: str = html_url
 
     @property
     def colour(self):
@@ -115,15 +115,15 @@ class TimeLine:
 
 
 class DotaBugtracker(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.git_comments_check.start()
 
     def cog_load(self) -> None:
         self.bot.ini_github()
+        self.git_comments_check.start()
 
     def cog_unload(self) -> None:
-        self.git_comments_check.cancel()
+        self.git_comments_check.stop()  # .cancel()
 
     @tasks.loop(minutes=10)
     async def git_comments_check(self):
@@ -151,7 +151,7 @@ class DotaBugtracker(commands.Cog):
                     issue_dict[e.issue.number] = TimeLine(issue=e.issue)
                 issue_dict[e.issue.number].add_event(
                     TimeLinePoint(
-                        event_type=e.event,
+                        event_type=e.event,  # type: ignore
                         created_at=e.created_at,
                         actor=e.actor,
                         issue_number=e.issue.number

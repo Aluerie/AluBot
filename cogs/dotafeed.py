@@ -33,15 +33,15 @@ class DotaFeed(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.lobby_ids: Set[int] = set()
-        self.top_source_dict = {}
+        self.top_source_dict: Dict = {}
         self.live_matches: List[ActiveMatch] = []
         self.hero_fav_ids: List[int] = []
         self.player_fav_ids: List[int] = []
-        self.dota_feed.start()
 
     async def cog_load(self) -> None:
         self.bot.ini_steam_dota()
         await self.bot.ini_twitch()
+        self.dota_feed.start()
 
         @self.bot.dota.on('top_source_tv_games')
         def response(result):

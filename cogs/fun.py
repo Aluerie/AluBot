@@ -265,8 +265,8 @@ class FunThings(commands.Cog, name='Fun'):
         description='Send 3x random emote into #emote_spam channel',
         help=f'Send 3x random emote into {cmntn(Cid.emote_spam)} ;'
     )
-    async def doemotespam(self, ctx):
-        """ Read above ;"""
+    async def doemotespam(self, ctx: Context):
+        """Read above"""
         rand_guild = choice(self.bot.guilds)
         rand_emoji = choice(rand_guild.emojis)
         answer_text = f'{str(rand_emoji)} ' * 3
@@ -280,8 +280,8 @@ class FunThings(commands.Cog, name='Fun'):
     @commands.hybrid_command(
         description='Send apuband emote combo'
     )
-    async def apuband(self, ctx):
-        """Send apuband emote combo ;"""
+    async def apuband(self, ctx: Context):
+        """Send apuband emote combo"""
         guild = self.bot.get_guild(Sid.alu)
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
         content = ' '.join([str(utils.get(guild.emojis, name=e)) for e in emote_names])

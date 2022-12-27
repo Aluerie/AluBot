@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, List
 
 import discord
-from discord import Embed, app_commands, Interaction
+from discord import Embed, app_commands, Interaction, Member
 from discord.ext import commands, tasks
 
 from .dota.const import ODOTA_API_URL
@@ -49,9 +49,15 @@ class BetaTest(commands.Cog):
         # await ctx.reply()
 
     @commands.hybrid_command()
-    async def allu(self, ctx: Context):
-        # print(ctx.prefix, ctx.clean_prefix)
-        await ctx.send_test()
+    async def ban(self, ctx: Context, member: discord.Member):
+        await member.ban(reason='hehe')
+        await ctx.send(f'we banned {member.mention}!')
+
+    @ban.error
+    async def ban_error(self, ctx, error):
+        if isinstance(error.original, discord.Forbidden):
+            ctx.error_handled = True
+            await ctx.send('Missing permissions or role/perms hierarchy')
 
     @reload_info.before_loop
     async def before(self):

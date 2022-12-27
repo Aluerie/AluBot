@@ -37,13 +37,13 @@ class LoLFeedNotifications(commands.Cog):
         self.bot: AluBot = bot
         self.live_matches: List[LiveMatch] = []
         self.all_live_match_ids: List[int] = []
-        self.lolfeed_notifs.start()
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
+        self.lolfeed_notifs.start()
 
     def cog_unload(self) -> None:
-        self.lolfeed_notifs.cancel()
+        self.lolfeed_notifs.stop()  # .cancel()
 
     async def fill_live_matches(self):
         self.live_matches, self.all_live_match_ids = [], []

@@ -3,7 +3,7 @@ from __future__ import annotations
 from difflib import get_close_matches
 from typing import (
     TYPE_CHECKING,
-    List, Callable, Coroutine, Optional, Union
+    Awaitable, List, Callable, Coroutine, Optional, Union
 )
 
 from discord import Embed, app_commands
@@ -14,7 +14,7 @@ from .var import MP, Ems, Cid
 
 if TYPE_CHECKING:
     from discord import Colour, Interaction, TextChannel
-    from .context import Context
+    from .context import Context, GuildContext
     from .bot import AluBot
 
 
@@ -42,9 +42,9 @@ class FPCBase:
             characters_column: str,
             spoil_column: str,
             acc_info_columns: List[str],
-            get_char_name_by_id: Callable[[int], Coroutine[str]],
-            get_char_id_by_name: Callable[[str], Coroutine[int]],
-            get_all_character_names: Callable[[], Coroutine[None, None, List[str]]],
+            get_char_name_by_id: Callable[[int], Awaitable[str]],
+            get_char_id_by_name: Callable[[str], Awaitable[int]],
+            get_all_character_names: Callable[[], Awaitable[List[str]]],
             character_gather_word: str
     ) -> None:
         self.feature_name: str = feature_name
@@ -59,15 +59,15 @@ class FPCBase:
         self.characters_column: str = characters_column
         self.spoil_column: str = spoil_column
         self.acc_info_columns: List[str] = acc_info_columns
-        self.get_char_name_by_id: Callable[[int], Coroutine[str]] = get_char_name_by_id
-        self.get_char_id_by_name: Callable[[str], Coroutine[int]] = get_char_id_by_name
-        self.get_all_character_names: Callable[[], Coroutine[List[str]]] = get_all_character_names
+        self.get_char_name_by_id: Callable[[int], Awaitable[str]] = get_char_name_by_id
+        self.get_char_id_by_name: Callable[[str], Awaitable[int]] = get_char_id_by_name
+        self.get_all_character_names: Callable[[], Awaitable[List[str]]] = get_all_character_names
         self.character_gather_word: str = character_gather_word
 
     async def channel_set(
             self,
-            ctx: Context,
-            channel: Optional[TextChannel] = None,
+            ctx: GuildContext,
+            channel: Optional[TextChannel],
     ) -> None:
         """Base function for setting channel for FPC Feed feature"""
         ch = channel or ctx.channel
@@ -82,7 +82,7 @@ class FPCBase:
 
     async def channel_disable(
             self,
-            ctx: Context,
+            ctx: GuildContext,
     ) -> None:
         """Base function for disabling channel for FPC Feed feature"""
         # ToDo: add confirmation prompt "are you sure you want to disable the feature" alert here
@@ -477,7 +477,7 @@ class FPCBase:
 
     async def character_add_remove(
             self,
-            ctx: Context,
+            ctx: GuildContext,
             character_names: List[str],
             *,
             mode_add: bool
@@ -485,7 +485,7 @@ class FPCBase:
         """Base function for adding/removing characters such as heroes/champs from fav lists"""
         await ctx.typing()
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
-        fav_ids = await ctx.pool.fetchval(query, ctx.guild.id)
+        fav_ids = await ctx.db.fetchval(query, ctx.guild.id)
 
         f_names, sa_ids = [], []
         for name in character_names:

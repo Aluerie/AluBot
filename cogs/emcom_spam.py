@@ -109,16 +109,18 @@ class EmoteSpam(commands.Cog):
 
 
 class ComfySpam(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
+
+    async def cog_load(self) -> None:
         self.comfy_spam.start()
         self.offline_criminal_check.start()
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.comfy_spam.cancel()
         self.offline_criminal_check.cancel()
 
-    async def comfy_chat_control(self, msg):
+    async def comfy_chat_control(self, msg: Message):
         if msg.channel.id == Cid.comfy_spam:
             if len(msg.embeds):
                 return await msg.delete()
@@ -130,22 +132,16 @@ class ComfySpam(commands.Cog):
                 answer_text = \
                     "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! " \
                     "{2} {2} {2}".format(msg.author.mention, msg.channel.mention, Ems.Ree)
-                embed = Embed(
-                    title="Deleted message",
-                    description=msg.content,
-                    color=Clr.prpl
-                ).set_author(
-                    name=msg.author.display_name,
-                    icon_url=msg.author.display_avatar.url
-                )
-                await self.bot.get_channel(Cid.bot_spam).send(answer_text, embed=embed)
+                em = Embed(title="Deleted message", description=msg.content, color=Clr.prpl)
+                em.set_author(name=msg.author.display_name, icon_url=msg.author.display_avatar.url)
+                await self.bot.get_channel(Cid.bot_spam).send(answer_text, embed=em)
                 await msg.delete()
                 return 1
             else:
                 return 0
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: Message):
         await self.comfy_chat_control(message)
 
     @commands.Cog.listener()
@@ -176,6 +172,6 @@ class ComfySpam(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(EmoteSpam(bot))
     await bot.add_cog(ComfySpam(bot))

@@ -31,13 +31,10 @@ class AlphabetTransformerError(AppCommandError):
 class BetaTest(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.reload_info.start()
-
-    def cog_unload(self):
-        return
+        self.test_task.start()
 
     @tasks.loop(count=1)
-    async def reload_info(self):
+    async def test_task(self):
         return
 
     @app_commands.command()
@@ -59,7 +56,7 @@ class BetaTest(commands.Cog):
             ctx.error_handled = True
             await ctx.send('Missing permissions or role/perms hierarchy')
 
-    @reload_info.before_loop
+    @test_task.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
 

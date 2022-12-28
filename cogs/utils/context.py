@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from discord import ButtonStyle, Embed
 from discord.ext import commands
@@ -11,17 +11,19 @@ from .var import Clr
 if TYPE_CHECKING:
     from aiohttp import ClientSession
     from asyncpg import Pool
-    from discord import Button, Message, Interaction
-    from .bot import AluBot
+    from discord import (
+        Button, Guild, Member, Message, Interaction, TextChannel, Thread, VoiceChannel
+    )
+    from .bot import AluBot, DatabaseProtocol
 
 
 class ConfirmationView(View):
     def __init__(self, *, timeout: float, author_id: int, ctx: Context, delete_after: bool) -> None:
         super().__init__(timeout=timeout)
-        self.value: Optional[bool] = None
-        self.delete_after: bool = delete_after
-        self.author_id: int = author_id
-        self.ctx: Context = ctx
+        self.value: Optional[bool]
+        self.delete_after: Optional[bool] = delete_after
+        self.author_id: Optional[int] = author_id
+        self.ctx: Optional[Context] = ctx
         self.message: Optional[Message] = None
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -43,7 +45,7 @@ class ConfirmationView(View):
     async def confirm(self, ntr: Interaction, _: Button):
         self.value = True
         await ntr.response.defer()
-        if self.delete_after:
+        if self.delete_after and self.message:
             await self.message.delete()
         self.stop()
 
@@ -51,7 +53,7 @@ class ConfirmationView(View):
     async def cancel(self, ntr: Interaction, _: Button):
         self.value = False
         await ntr.response.defer()
-        if self.delete_after:
+        if self.delete_after  and self.message:
             await self.message.delete()
         self.stop()
 
@@ -66,6 +68,10 @@ class Context(commands.Context):
     @property
     def session(self) -> ClientSession:
         return self.bot.session
+    
+    @property
+    def db(self) -> DatabaseProtocol:
+        return self.pool  # type: ignore
 
     async def prompt(
             self,
@@ -133,3 +139,9 @@ class Context(commands.Context):
 
     async def send_test(self):
         await self.reply('test test')
+
+
+class GuildContext(Context):
+    author: Member
+    guild: Guild
+    channel: Union[VoiceChannel, TextChannel, Thread]

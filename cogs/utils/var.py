@@ -67,50 +67,49 @@ class ChannelCollection:
         return f"<Known Channels IDs {self.kwargs!r}"
 
 
-Cid = ChannelCollection(
+class Cid:
     # alu server
-    rules=724996010169991198,
-    roles=725941486063190076,
-    welcome=725000501690630257,
-    stream_notifs=724420415199379557,
-    clips=770721052711845929,
-    bday_notifs=748604236190842881,
-    general=702561315478044807,
-    emote_spam=730838697443852430,
-    comfy_spam=727539910713671802,
-    pubs_talk=731376390103892019,
-    logs=731615128050598009,
-    alubot=724991054474117241,
-    saved=709028718286340106,
-    confessions=731703242597072896,
-    weebs=731887442768166933,
-    bot_spam=724986090632642653,
-    nsfw_bob_spam=731607736155897978,
+    rules = ChannelID(724996010169991198)
+    roles = ChannelID(725941486063190076)
+    welcome = ChannelID(725000501690630257)
+    stream_notifs = ChannelID(724420415199379557)
+    clips = ChannelID(770721052711845929)
+    bday_notifs = ChannelID(748604236190842881)
+    general = ChannelID(702561315478044807)
+    emote_spam = ChannelID(730838697443852430)
+    comfy_spam = ChannelID(727539910713671802)
+    pubs_talk = ChannelID(731376390103892019)
+    logs = ChannelID(731615128050598009)
+    alubot = ChannelID(724991054474117241)
+    saved = ChannelID(709028718286340106)
+    confessions = ChannelID(731703242597072896)
+    weebs = ChannelID(731887442768166933)
+    bot_spam = ChannelID(724986090632642653)
+    nsfw_bob_spam = ChannelID(731607736155897978)
 
-    stream_room=766063288302698496,
+    stream_room = ChannelID(766063288302698496)
 
-    dota_news=724986688589267015,
-    lol_news=724993871662022766,
+    dota_news = ChannelID(724986688589267015)
+    lol_news = ChannelID(724993871662022766)
 
-    patch_notes=731759693113851975,
-    suggestions=724994495581782076,
+    patch_notes = ChannelID(731759693113851975)
+    suggestions = ChannelID(724994495581782076)
 
-    my_time=788915790543323156,
+    my_time = ChannelID(788915790543323156)
 
     # wink server
-    roses=759916212842659853,
-    spam_me=970823670702411810,
-    repost=971504469995049041,
+    roses = ChannelID(759916212842659853)
+    spam_me = ChannelID(970823670702411810)
+    repost = ChannelID(971504469995049041)
 
-    coop=966366521607745586,
+    coop = ChannelID(966366521607745586)
 
-    global_logs=997149550324240465,
+    global_logs = ChannelID(997149550324240465)
 
-    copylol_ff20=791099728498130944,
-    copydota_info=873430376033452053,
-    copydota_steam=881843565251141632,
-    copydota_tweets=963954743644934184,
-)
+    copylol_ff20 = ChannelID(791099728498130944)
+    copydota_info = ChannelID(873430376033452053)
+    copydota_steam = ChannelID(881843565251141632)
+    copydota_tweets = ChannelID(963954743644934184)
 
 
 class Cids:
@@ -163,50 +162,50 @@ class Rid:
 
 class Ems:  # Emote strings
     # alu server nonani
-    bedNerdge = '<:bedNerdge:855495407110586439>'
-    DankApprove = '<:DankApprove:853015071042961468>'
-    DankHatTooBig = '<:DankHatTooBig:855056297098215474>'
-    DankFix = '<:DankFix:924285577027784774>'
-    Ree = '<:Ree:735905686910664797>'
-    PepoG = '<:PepoG:930335533970911262>'
-    PepoBeliever = '<:PepoBeliever:730887642404618314>'
-    peepoComfy = '<:peepoComfy:726438781208756288>'
-    FeelsDankMan = '<:FeelsDankMan:726441255805911120>'
-    PogChampPepe = '<:PogChampPepe:785600902140526642>'
-    PepoDetective = '<:PepoDetective:743988423500628102>'
-    peepoHappyDank = '<:peepoHappyDank:852928248953831514>'
-    peepoRose = '<:peepoRose:856262331666923580>'
-    PepoRules = '<:PepoRules:772399483039907860>'
-    Smartge = '<:Smartge:869075184445956156>'
-    peepoWave = '<:peepoHey:856262331217346571>'
-    peepoBlushDank = '<:peepoBlushDank:853744336214032384>'
-    peepoPlsStepOnMe = '<:peepoStepOnMePls:761174324420935722>'
+    bedNerdge = '<:_:855495407110586439>'
+    DankApprove = '<:_:853015071042961468>'
+    DankHatTooBig = '<:_:855056297098215474>'
+    DankFix = '<:_:924285577027784774>'
+    Ree = '<:_:735905686910664797>'
+    PepoG = '<:_:930335533970911262>'
+    PepoBeliever = '<:_:730887642404618314>'
+    peepoComfy = '<:_:726438781208756288>'
+    FeelsDankMan = '<:_:726441255805911120>'
+    PogChampPepe = '<:_:785600902140526642>'
+    PepoDetective = '<:_:743988423500628102>'
+    peepoHappyDank = '<:_:852928248953831514>'
+    peepoRose = '<:_:856262331666923580>'
+    PepoRules = '<:_:772399483039907860>'
+    Smartge = '<:_:869075184445956156>'
+    peepoWave = '<:_:856262331217346571>'
+    peepoBlushDank = '<:_:853744336214032384>'
+    peepoPlsStepOnMe = '<:_:761174324420935722>'
 
-    peepoPolice = '<:BASEDPOLICE:960004884235690024>'
-    Jebaited = '<:Jebaited:726450170769703015>'
-    peepoNiceDay = '<:peepoNiceDay:857224123885158400>'
-    DankLove = '<:DankLove:773614700700368927>'
+    peepoPolice = '<:_:960004884235690024>'
+    Jebaited = '<:_:726450170769703015>'
+    peepoNiceDay = '<:_:857224123885158400>'
+    DankLove = '<:_:773614700700368927>'
 
-    MadgeThreat = '<:DankMadgeThreat:854318972102770728>'
-    peepoWTF = '<:peepoWTF:730688500680097862>'
-    DankZzz = '<:DankZzz:732126852251910144>'
+    MadgeThreat = '<:_:854318972102770728>'
+    peepoWTF = '<:_:730688500680097862>'
+    DankZzz = '<:_:732126852251910144>'
 
     # alu server ani
-    FeelsRainMan = '<a:SmogeInTheRain:902254223851421796>'
-    DankL = '<a:DankL:1014616758470070353>'
+    FeelsRainMan = '<a:_:902254223851421796>'
+    DankL = '<a:_:1014616758470070353>'
 
     # wink server nonani
 
-    bubuSip = '<:bubuSip:865033396189921290>'
-    bubuGun = '<:bubuGun:847805078543007755>'
-    bubuChrist = '<:bubuChrist:847805078769631262>'
-    bubuAyaya = '<:bubuAYAYA:764835239138164756>'
+    bubuSip = '<:_:865033396189921290>'
+    bubuGun = '<:_:847805078543007755>'
+    bubuChrist = '<:_:847805078769631262>'
+    bubuAyaya = '<:_:764835239138164756>'
     slash = '<:_:823159274954817566>'
-    TwoBButt = '<:2BButt:853729747846168576>'
-    Lewd = '<:Lewd:976604430059331684>'
-    DankG = '<:DankG:998012133948276857>'
-    peepoBusiness = '<:peepoBusiness:998157352098340934>'
-    peepoMovie = '<:peepoMovie:998163742741246003>'
+    TwoBButt = '<:_:853729747846168576>'
+    Lewd = '<:_:976604430059331684>'
+    DankG = '<:_:998012133948276857>'
+    peepoBusiness = '<:_:998157352098340934>'
+    peepoMovie = '<:_:998163742741246003>'
     # wink server ani
     # nothing for now
 
@@ -216,7 +215,9 @@ class Ems:  # Emote strings
     # emotes arrays
     comfy_emotes = [
         "<:peepoComfy:726438781208756288>",
-        "<:pepoblanket:595156413974577162>"
+        "<:_:726438781208756288>",
+        "<:pepoblanket:595156413974577162>",
+        "<:_:595156413974577162>"
     ]
     phone_numbers = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '*️⃣', '#️⃣']
 

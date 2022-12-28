@@ -11,6 +11,8 @@ from .utils.imgtools import url_to_img, img_to_file, get_text_wh
 from .utils.var import Cid, Clr, Ems, Rid, Sid, Uid, umntn
 
 if TYPE_CHECKING:
+    from aiohttp import ClientSession
+    from discord import File, Guild
     from .utils.bot import AluBot
 
 
@@ -48,37 +50,41 @@ async def welcome_image(session, member):
     return image
 
 
-async def welcome_message(session, member: Member, back=0):
+async def welcome_message(
+        session: ClientSession,
+        member: Member,
+        back: bool = False
+) -> (str, Embed, File):
     image = await welcome_image(session, member)
 
-    content_text = '**💜 Welcome to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'.format(
-        member.mention, Ems.peepoWave)
-
     if back:
-        content_text = '**💜 Welcome BACK to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'.format(
-            member.mention, Ems.DankLove)
+        wave_emote, the_word = Ems.DankLove, ''
+    else:
+        wave_emote, the_word = Ems.peepoWave, 'BACK'
+    content_text = '**💜 Welcome {2} to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'.format(
+        member.mention, wave_emote, the_word
+    )
 
     if not member.bot:
-        description = \
-            f'**💜 {umntn(Uid.alu)} is our princess ' \
-            f'and I\'m her bot ! {Ems.peepoRose} {Ems.peepoRose} {Ems.peepoRose}**\n'\
-            f'1️⃣ Read the rules and useful info in <#724996010169991198> {Ems.PepoG}\n'\
-            f'2️⃣ Choose some fancy roles in <#725941486063190076> {Ems.peepoNiceDay}\n'\
-            f'3️⃣ Go to <#702561315478044807> or any other channel and chat with us {Ems.peepoComfy}\n'\
-            f'4️⃣ Use `$help` in <#724986090632642653> to see insane Aluerie\'s coding skills {Ems.PogChampPepe}\n'\
+        description = (
+            f'**💜 {umntn(Uid.alu)} is our princess ' 
+            f'and I\'m her bot ! {Ems.peepoRose} {Ems.peepoRose} {Ems.peepoRose}**\n'
+            f'1️⃣ Read the rules and useful info in <#724996010169991198> {Ems.PepoG}\n'
+            f'2️⃣ Choose some fancy roles in <#725941486063190076> {Ems.peepoNiceDay}\n'
+            f'3️⃣ Go to <#702561315478044807> or any other channel and chat with us {Ems.peepoComfy}\n'
+            f'4️⃣ Use `$help` in <#724986090632642653> to see insane Aluerie\'s coding skills {Ems.PogChampPepe}\n'
             f'5️⃣ Have fun ! (but follow the rules {Ems.bubuGun} {Ems.bubuGun} {Ems.bubuGun} )'
+        )
     else:
         description = f'Chat, it\'s a new bot in our server. Use it wisely {Ems.peepoComfy}'
 
-    em = Embed(
-        color=Clr.prpl,
-        description=description
-    ).set_footer(text=f"With love, {member.guild.me.display_name}")
+    em = Embed(description=description, color=Clr.prpl)
+    em.set_footer(text=f"With love, {member.guild.me.display_name}")
     return content_text, em, img_to_file(image)
 
 
 class Welcome(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
     @commands.Cog.listener()
@@ -87,7 +93,7 @@ class Welcome(commands.Cog):
         if mbr.guild != guild:
             return
         bots_role = guild.get_role(Rid.bots)
-        back = 0
+        back = False
         if mbr.bot:
             await mbr.add_roles(bots_role)
             await mbr.edit(nick=f"{mbr.display_name} | ")
@@ -98,12 +104,12 @@ class Welcome(commands.Cog):
                         RETURNING True;
                     """
             value = await self.bot.pool.fetchval(query, mbr.id, mbr.name)
-            back = 1 if value else 0
+            back = value is not True
 
             for role_id in Rid.category_roles_ids:
                 role = guild.get_role(role_id)
                 await mbr.add_roles(role)
-            if back == 0:
+            if not back:
                 role = guild.get_role(Rid.level_zero)
                 await mbr.add_roles(role)
 
@@ -114,43 +120,29 @@ class Welcome(commands.Cog):
     async def on_member_remove(self, member: Member):
         if member.guild.id != Sid.alu:
             return
-        em = Embed(
-            color=0x000000,
-            description='{0} {0} {0}'.format(Ems.FeelsRainMan)
-        ).set_author(
-            name='{0} just left the server'.format(member.display_name),
-            icon_url=member.display_avatar.url
-        ).set_footer(
-            text=f"With love, {member.guild.me.display_name}"
-        )
+        em = Embed(description='{0} {0} {0}'.format(Ems.FeelsRainMan), colour=0x000000)
+        em.set_author(name='{0} just left the server'.format(member.display_name), icon_url=member.display_avatar.url)
+        em.set_footer(text=f"With love, {member.guild.me.display_name}")
         msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
         await msg.add_reaction(Ems.FeelsRainMan)
 
     @commands.Cog.listener()
-    async def on_member_ban(self, guild, member: Member):
+    async def on_member_ban(self, guild: Guild, member: Member):
         if guild.id != Sid.alu:
             return
-        em = Embed(
-            color=0x800000,
-            description='{0} {0} {0}'.format(Ems.peepoPolice)
-        ).set_author(
-            name=f'{member.display_name} was just banned from the server',
-            icon_url=member.display_avatar.url
-        ).set_footer(text=f"With love, {guild.me.display_name}")
+        em = Embed(description='{0} {0} {0}'.format(Ems.peepoPolice), color=0x800000)
+        em.set_author(name=f'{member.display_name} was just banned from the server', icon_url=member.display_avatar.url)
+        em.set_footer(text=f"With love, {guild.me.display_name}")
         msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
         await msg.add_reaction(Ems.peepoPolice)
 
     @commands.Cog.listener()
-    async def on_member_unban(self, guild, member: Member):
+    async def on_member_unban(self, guild: Guild, mbr: Member):
         if guild.id != Sid.alu:
             return
-        em = Embed(
-            color=0x00ff7f,
-            description='{0} {0} {0}'.format(Ems.PogChampPepe)
-        ).set_author(
-            name=f'{member.display_name} was just unbanned from the server',
-            icon_url=member.display_avatar.url
-        ).set_footer(text=f"With love, {guild.me.display_name}")
+        em = Embed(description='{0} {0} {0}'.format(Ems.PogChampPepe), color=0x00ff7f)
+        em.set_author(name=f'{mbr.display_name} was just unbanned from the server', icon_url=mbr.display_avatar.url)
+        em.set_footer(text=f"With love, {guild.me.display_name}")
         msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
         await msg.add_reaction(Ems.PogChampPepe)
 
@@ -163,5 +155,5 @@ class Welcome(commands.Cog):
         await ctx.reply(content=content_text, embed=embed, file=image_file)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Welcome(bot))

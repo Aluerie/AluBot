@@ -31,7 +31,7 @@ class Tags(commands.Cog):
     So in the end if somebody asks "How to learn Python?" - people just use \
     `$tag learn python` and the bot gives well-prepared, well-detailed answer.
     """
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.help_emote = Ems.peepoBusiness
 
@@ -112,29 +112,35 @@ class Tags(commands.Cog):
         """Add a new tag into bot's database. Tag name should be <100 symbols and tag text <2000 symbols"""
         tag_name = flags.name.lower()
         if tag_name.split(' ')[0] in reserved_words:
-            em = Embed(colour=Clr.error)
-            em.description = "Sorry! the first word of your proposed `tag_name` is reserved by system"
+            raise commands.BadArgument(
+                "Sorry! the first word of your proposed `tag_name` is reserved by system"
+            )
         elif len(tag_name) < 3:
-            em = Embed(colour=Clr.error)
-            em.description = "Sorry! `tag_name` should be more than 2 symbols"
+            raise commands.BadArgument(
+                "Sorry! `tag_name` should be more than 2 symbols"
+            )
         elif len(tag_name) > 100:
-            em = Embed(colour=Clr.error)
-            em.description = "Sorry! `tag_name` should be less than 100 symbols"
+            raise commands.BadArgument(
+                "Sorry! `tag_name` should be less than 100 symbols"
+            )
         elif len(tag_name) > 2000:
-            em = Embed(colour=Clr.error)
-            em.description = "Sorry! `tag_text` should be less than 2000 symbols"
+            raise commands.BadArgument(
+                "Sorry! `tag_text` should be less than 2000 symbols"
+            )
         else:
             query = 'SELECT users.can_make_tags FROM users WHERE users.id=$1;'
             can_make_tags = await self.bot.pool.fetchval(query, ctx.author.id)
             if not can_make_tags:
-                em = Embed(colour=Clr.red)
-                em.description = 'Sorry! You are banned from making new tags'
+                raise commands.BadArgument(
+                    'Sorry! You are banned from making new tags'
+                )
             else:
                 query = 'SELECT tags.name FROM tags WHERE tags.name=$1;'
                 tag_exists = await self.bot.pool.fetchval(query, tag_name)
                 if tag_exists:
-                    em = Embed(colour=Clr.error)
-                    em.description = 'Sorry! Tag under such name already exists'
+                    raise commands.BadArgument(
+                        'Sorry! Tag under such name already exists'
+                    )
                 else:
                     query = "INSERT INTO tags (name, owner_id, content) VALUES ($1, $2, $3);"
                     await self.bot.pool.execute(query, tag_name, ctx.author.id, flags.text)
@@ -147,10 +153,11 @@ class Tags(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.MissingRequiredFlag):
             ctx.error_handled = True
             em = Embed(colour=Clr.error).set_author(name='WrongCommandUsage')
-            em.description = \
-                'Sorry! Command usage is\n `$tag add name: <tag_name> text: <tag_text>`\n' \
-                'where `<tag_name>` is <100 symbols and `<tag_text>` is <2000 symbols. \n' \
+            em.description = (
+                'Sorry! Command usage is\n `$tag add name: <tag_name> text: <tag_text>`\n'
+                'where `<tag_name>` is <100 symbols and `<tag_text>` is <2000 symbols. \n'
                 'Flags `name` and `text` are **required**.'
+            )
             await ctx.reply(embed=em)
 
     @tags.command(
@@ -158,7 +165,7 @@ class Tags(commands.Cog):
         description='Get info about specific tag'
     )
     @app_commands.describe(tag_name="Tag name")
-    async def info(self, ctx, *, tag_name: str):
+    async def info(self, ctx: Context, *, tag_name: str):
         """Get info about specific tag"""
         tag_name = tag_name.lower()
         query = 'SELECT * FROM tags WHERE name=$1'
@@ -166,11 +173,12 @@ class Tags(commands.Cog):
         if row:
             em = Embed(colour=Clr.prpl, title='Tag info')
             tag_owner = self.bot.get_user(row.owner_id)
-            em.description = \
-                f"Tag name: `{row.name}`\n" \
-                f"Tag owner: {tag_owner.mention}\n" \
-                f"Tag was used {row.uses} times\n" \
+            em.description = (
+                f"Tag name: `{row.name}`\n"
+                f"Tag owner: {tag_owner.mention}\n"
+                f"Tag was used {row.uses} times\n"
                 f"Tag was created on {format_dt(row.created_at)}"
+            )
         else:
             em = Embed(colour=Clr.error)
             em.description = 'Sorry! Tag under such name does not exist'
@@ -182,7 +190,7 @@ class Tags(commands.Cog):
         aliases=['remove']
     )
     @app_commands.describe(tag_name="Tag name")
-    async def delete(self, ctx, *, tag_name: str):
+    async def delete(self, ctx: Context, *, tag_name: str):
         """Delete tag from bot database"""
         tag_name = tag_name.lower()
 

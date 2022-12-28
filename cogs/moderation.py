@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Annotated
 
-from discord import Embed, Forbidden, Member, app_commands
+from discord import Embed, Forbidden, Member, app_commands, AuditLogAction
 from discord.ext import commands
 from discord.utils import format_dt
 
@@ -101,8 +101,17 @@ class Moderation(commands.Cog):
 
         if before.is_timed_out() is False and after.is_timed_out() is True:  # member is muted
             em = Embed(colour=Clr.red, description=format_dt(after.timed_out_until, style="R"))
-            em.set_author(name=f'{after.display_name} is muted until', icon_url=after.display_avatar.url)
-            await self.bot.get_channel(Cid.logs).send(embed=em)
+
+            mute_actor_str = "Unknown"
+            async for entry in after.guild.audit_logs(action=AuditLogAction.member_update):
+                if entry.target.id == after.id and entry.after.timed_out_until == after.timed_out_until:
+                    mute_actor_str = entry.user.name
+
+            em.set_author(
+                name=f'{after.display_name} is muted by {mute_actor_str} until',
+                icon_url=after.display_avatar.url
+            )
+            return await self.bot.get_channel(Cid.logs).send(embed=em)
 
         elif before.is_timed_out() is True and after.is_timed_out() is False:  # member is unmuted
             return  # apparently discord limitation > it doesnt ever happen

@@ -18,11 +18,13 @@ if TYPE_CHECKING:
 
 
 class CopypasteLeague(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
+
+    async def cog_load(self) -> None:
         self.patch_checker.start()
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.patch_checker.cancel()
 
     blocked_words = [  # todo: make this into rules from database type of thing
@@ -118,5 +120,5 @@ class CopypasteLeague(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(CopypasteLeague(bot))

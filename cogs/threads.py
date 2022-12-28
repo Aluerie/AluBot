@@ -16,7 +16,7 @@ watched_threads_ids = []
 
 
 class ThreadsManaging(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.unarchive_threads.start()
 
@@ -43,5 +43,5 @@ class ThreadsManaging(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(ThreadsManaging(bot))

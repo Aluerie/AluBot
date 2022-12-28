@@ -246,12 +246,8 @@ class HelpCommand(commands.HelpCommand):
 
         for e in embed_list:
             e.colour = Clr.prpl
-            e.set_footer(
-                text=f'With love, {self.context.bot.user.display_name}'
-            )
-            e.set_thumbnail(
-                url=self.context.bot.user.display_avatar.url
-            )
+            e.set_footer(text=f'With love, {self.context.bot.user.display_name}')
+            e.set_thumbnail(url=self.context.bot.user.display_avatar.url)
         paginator = pages.Paginator(
             pages=embed_list
         )

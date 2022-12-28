@@ -75,10 +75,10 @@ class PaginatorButton(Button):
     def __init__(
         self,
         button_type: str,
-        label: str = None,
-        emoji: Union[str, Emoji, PartialEmoji] = None,
+        label: Optional[str],
+        emoji: Optional[Union[str, Emoji, PartialEmoji]],
         style: ButtonStyle = ButtonStyle.green,
-        loop_label: str = None,
+        loop_label: Optional[str] = None,
     ):
         super().__init__(
             label=label if label or emoji else button_type.capitalize(),

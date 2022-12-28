@@ -43,29 +43,28 @@
 20. add some difference between league and dota database add logs, icon I guess
 21. edge cases when people delete channels/guilds for dota/league thing
 22. create channel for global logs for the bot as in all guilds commands usage, I guess
-2*3. mess around with contributing and stuff
+23. mess around with contributing and stuff
 
     ### Question mark
-23. Bring back opendota autoparse for people
-24. explore twitch chat bot thing
-25. let's turn mandara bot on as well
-26. clips twitch check
-27. include context menu commands into help menu somehow idk
-28. add image name for convert thing (check resolution too 112)
-29. maybe create a help web page with github web pages
-30. in readme check list of features
+24. Bring back opendota autoparse for people
+25. explore twitch chat bot thing
+26. let's turn mandara bot on as well
+27. clips twitch check
+28. include context menu commands into help menu somehow idk
+29. add image name for convert thing (check resolution too 112)
+30. maybe create a help web page with github web pages
+31. in readme check list of features
 
     ### Last Box
-31. ?tag emoji escapes
-32. abandon not scored game for match history
-33. request_matchmakign_stats()
-34. research `setup.py` and `pyproject.toml`
-35. reaction roles with new selects
-36. clip twitch chek
-37. rewrite purge into something better
-38. custom server name for dotafeed feature
-39. solve twitter somehow idk fok - probably reload the whole extension
-40. ?tag pkgutil
+32. ?tag emoji escapes
+33. abandon not scored game for match history
+34. request_matchmakign_stats()
+35. research `setup.py` and `pyproject.toml`
+36. reaction roles with new selects
+37. clip twitch chek
+38. rewrite purge into something better
+39. custom server name for dotafeed feature
+40. solve twitter somehow idk fok - probably reload the whole extension
 41. ??? cmlist when signing in into steam
 42. unsolved mystery [0] x30
 43. async dota 2 client but really i only need async wait_for
@@ -76,4 +75,3 @@
 46. ?tag learn async
 47. learn collections lib, research discord abc, research TypeVar
 48. ?tag eval
-49. check if trick <:name:id> versis <:_:id> works for embed limits

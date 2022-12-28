@@ -40,7 +40,7 @@ class ToolsCog(commands.Cog, name='Tools'):
     Maybe one day it's going to be helpful for somebody.
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.help_emote = Ems.DankFix
 

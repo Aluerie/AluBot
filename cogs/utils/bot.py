@@ -4,7 +4,9 @@ import logging
 import traceback
 from datetime import datetime, timezone
 from os import environ, listdir
-from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
+from typing import (
+    TYPE_CHECKING, Any, Union, Dict, Optional, Tuple, List, Sequence, Protocol
+)
 
 from asyncpg import Pool
 from aiohttp import ClientSession
@@ -24,10 +26,12 @@ from .twitch import TwitchClient
 from .var import Sid, Cid, Clr, umntn, Uid
 
 if TYPE_CHECKING:
+    from asyncpg import Connection
     from discord import AppInfo, File, Interaction, Message, User
     from discord.app_commands import AppCommand
     from discord.abc import Snowflake, Messageable
     from github import Repository
+    from types import TracebackType
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +47,45 @@ def _alubot_prefix_callable(bot: AluBot, msg: Message):
     else:
         prefix = bot.prefixes.get(msg.guild.id, '$')
     return commands.when_mentioned_or(prefix, "/")(bot, msg)
+
+
+# For typing purposes, `AluBot.db` returns a Protocol type
+# that allows us to properly type the return values via narrowing
+# Right now, `asyncpg` is untyped so this is better than the current status quo
+# To actually receive the regular `Pool` type `AluBot.pool` can be used instead.
+
+
+class ConnectionContextManager(Protocol):
+    async def __aenter__(self) -> Connection:
+        ...
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
+        ...
+
+
+class DatabaseProtocol(Protocol):
+    async def execute(self, query: str, *args: Any, timeout: Optional[float] = None) -> str:
+        ...
+
+    async def fetch(self, query: str, *args: Any, timeout: Optional[float] = None) -> list[Any]:
+        ...
+
+    async def fetchrow(self, query: str, *args: Any, timeout: Optional[float] = None) -> Optional[Any]:
+        ...
+
+    async def fetchval(self, query: str, *args: Any, timeout: Optional[float] = None) -> Optional[Any]:
+        ...
+
+    def acquire(self, *, timeout: Optional[float] = None) -> ConnectionContextManager:
+        ...
+
+    def release(self, connection: Connection) -> None:
+        ...
 
 
 class AluBot(commands.Bot):
@@ -128,6 +171,10 @@ class AluBot(commands.Bot):
 
     async def get_context(self, origin: Union[Interaction, Message], /, *, cls=Context) -> Context:
         return await super().get_context(origin, cls=cls)
+
+    @property
+    def db(self) -> DatabaseProtocol:
+        return self.pool  # type: ignore
 
     @property
     def owner(self) -> User:

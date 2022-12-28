@@ -13,6 +13,7 @@ from .utils.context import Context
 from .utils.var import Ems, Clr, Sid, Cid, Rid
 
 if TYPE_CHECKING:
+    from discord import Member
     from .utils.bot import AluBot
 
 
@@ -21,6 +22,8 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.help_emote = Ems.Lewd
+
+    def cog_load(self) -> None:
         self.checkguilds.start()
 
     def cog_unload(self) -> None:
@@ -42,9 +45,8 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     @commands.command()
     async def guildlist(self, ctx: Context):
         """Show list of guilds bot is in."""
-        em = Embed(
-            colour=Clr.prpl,
-            description=
+        em = Embed(colour=Clr.prpl)
+        em.description = (
             f"The bot is in these guilds\n"
             f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"
         )
@@ -75,10 +77,8 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
 
         emote_names = ['bubuChrist', 'bubuGunGun', 'PepoBeliever', 'cocoGunGun', 'iofibonksfast']
         emote_array = [utils.get(guild.emojis, name=item) for item in emote_names]
-        em = Embed(
-            color=Clr.prpl,
-            title='Credits for following emotes',
-            description=
+        em = Embed(title='Credits for following emotes', color=Clr.prpl)
+        em.description = (
             '''
             ● [twitch.tv/bububu](https://www.twitch.tv/bububu)
             {0} {1} {2}
@@ -104,15 +104,13 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
                         perms = ch.permissions_for(guild.me)
                         if perms.send_messages:
                             return ch
-            em = Embed(
-                colour=Clr.prpl,
-                title='Do not invite me to other guilds, please',
-                description=
-                f"Sorry, I don't like being in guilds that aren't made by Aluerie.\n\nI'm leaving."
-            ).set_footer(
-                text=
-                f'If you really want the bot in your server - '
-                f'then dm {self.bot.owner} with good reasoning',
+            em = Embed(title='Do not invite me to other guilds, please', colour=Clr.prpl)
+            em.description = f"Sorry, I don't like being in guilds that aren't made by Aluerie.\n\nI'm leaving."
+            em.set_footer(
+                text=(
+                    f'If you really want the bot in your server - '
+                    f'then dm {self.bot.owner} with good reasoning'
+                ),
                 icon_url=self.bot.owner.avatar.url
             )
             await find_txt_channel().send(embed=em)
@@ -171,9 +169,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     @is_owner()
     @trustee.command()
     async def remove(self, ctx: Context, user_id: int):
-        """
-        Remove trustee privilege from a user with `user_id`.
-        """
+        """Remove trustee privilege from a user with `user_id`."""
         await self.trustee_add_remove(ctx, user_id=user_id, mode='remov')
 
     @is_owner()
@@ -304,7 +300,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             await ctx.message.add_reaction(Ems.DankApprove)
 
     @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_join(self, member: Member):
         if member.guild.id != Sid.blush:
             return
         if member.bot:

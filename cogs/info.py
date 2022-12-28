@@ -59,9 +59,7 @@ async def translate_msg_ctx_menu(ntr: Interaction, message: Message):
 
 
 class Info(commands.Cog, name='Info'):
-    """
-    Commands to get some useful info
-    """
+    """Commands to get some useful info"""
 
     def __init__(self, bot):
         self.bot: AluBot = bot
@@ -174,16 +172,17 @@ class Info(commands.Cog, name='Info'):
         )
         await ctx.reply(embed=em)
 
-    colour_info = \
-        'The bot supports the following string formats:\n' \
-        '• Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`\n' \
-        '• RGB: `rgb(red, green, blue)` where the colour values are integers or percentages\n' \
-        '• Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`\n' \
-        '• Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`\n' \
-        '• Common HTML color names: `red`, `Blue`\n' \
-        '• Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n' \
-        '• Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n' \
+    colour_info = (
+        'The bot supports the following string formats:\n' 
+        '• Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`\n'
+        '• RGB: `rgb(red, green, blue)` where the colour values are integers or percentages\n'
+        '• Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`\n'
+        '• Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`\n'
+        '• Common HTML color names: `red`, `Blue`\n' 
+        '• Extra: MaterialUI Google Palette: `mu(colour_name, shade)`\n'
+        '• Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`\n' 
         '• Last but not least: `prpl` for favourite Aluerie\'s colour '
+    )
 
     @commands.hybrid_command(
         name='colour',
@@ -329,26 +328,14 @@ class Info(commands.Cog, name='Info'):
         name='stats',
         description='Summary stats for the bot'
     )
-    async def stats(self, ctx):
-        """Summary stats for the bot ;"""
-        em = Embed(
-            colour=Clr.prpl,
-            title='Summary bot stats'
-        ).set_thumbnail(
-            url=self.bot.user.avatar.url
-        ).add_field(
-            name="Server Count",
-            value=str(len(self.bot.guilds))
-        ).add_field(
-            name="User Count",
-            value=str(len(self.bot.users))
-        ).add_field(
-            name="Ping",
-            value=f"{self.bot.latency * 1000:.2f}ms"
-        ).add_field(
-            name='Uptime',
-            value=humanize_time(datetime.now(timezone.utc) - self.bot.launch_time, full=False)
-        )
+    async def stats(self, ctx: Context):
+        """Summary stats for the bot"""
+        em = Embed(title='Summary bot stats', colour=Clr.prpl)
+        em.set_thumbnail(url=self.bot.user.avatar.url)
+        em.add_field(name="Server Count", value=str(len(self.bot.guilds)))
+        em.add_field(name="User Count", value=str(len(self.bot.users)))
+        em.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")
+        em.add_field(name='Uptime', value=humanize_time(datetime.now(timezone.utc) - self.bot.launch_time, full=False))
         await ctx.reply(embed=em)
 
     @is_owner()
@@ -359,7 +346,7 @@ class Info(commands.Cog, name='Info'):
         await ctx.reply(embed=em)
 
     @staticmethod
-    def guild_embed(guild: Guild, event: Literal['join', 'remove']):
+    def guild_embed(guild: Guild, event: Literal['join', 'remove']) -> Embed:
         e_dict = {
             'join': {
                 'clr': MP.green(shade=500),
@@ -370,22 +357,15 @@ class Info(commands.Cog, name='Info'):
                 'word': 'was removed from'
             }
         }
-        return Embed(
-            colour=e_dict[event]['clr'],
-            title=guild.name,
-            description=guild.description
-        ).set_author(
-            icon_url=guild.owner.avatar.url,
+        em = Embed( title=guild.name, description=guild.description, colour=e_dict[event]['clr'])
+        em.set_author(
             name=f"The bot {e_dict[event]['word']} {str(guild.owner)}'s guild",
-        ).set_thumbnail(
-            url=guild.icon.url if guild.icon else None
-        ).add_field(
-            name='Members count',
-            value=guild.member_count
-        ).add_field(
-            name='Guild ID',
-            value=f'`{guild.id}`'
+            icon_url=guild.owner.avatar.url
         )
+        em.set_thumbnail(url=guild.icon.url if guild.icon else None)
+        em.add_field(name='Members count', value=guild.member_count)
+        em.add_field(name='Guild ID', value=f'`{guild.id}`')
+        return em
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: Guild):
@@ -455,16 +435,18 @@ class StatsCommands(commands.Cog, name='Stats'):
 
 
 class StatsChannels(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
+
+    async def cog_load(self) -> None:
         self.my_time.start()
         self.my_members.start()
         self.my_bots.start()
 
-    def cog_unload(self) -> None:
-        self.my_time.cancel()
-        self.my_members.cancel()
-        self.my_bots.cancel()
+    async def cog_unload(self) -> None:
+        self.my_time.stop()
+        self.my_members.stop()
+        self.my_bots.stop()
 
     @tasks.loop(time=[time(hour=x) for x in range(0, 24)])
     async def my_time(self):
@@ -487,7 +469,7 @@ class StatsChannels(commands.Cog):
     async def my_members_before(self):
         await self.bot.wait_until_ready()
 
-    @tasks.loop(hours=5)
+    @tasks.loop(hours=15)
     async def my_bots(self):
         guild = self.bot.get_guild(Sid.alu)
         bots_role = guild.get_role(Rid.bots)
@@ -499,7 +481,7 @@ class StatsChannels(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Info(bot))
     await bot.add_cog(StatsChannels(bot))
     await bot.add_cog(StatsCommands(bot))

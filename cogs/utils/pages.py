@@ -7,6 +7,9 @@ By that time `discord.py` library came back to life
 and quickly became arguably the best python library for discord API wrapping.
 
 Thus, I decided to switch to `discord.py` and so to bring pagination code here as well.
+
+Myself, I think it needs some huge rewriting,
+but we should probably wait for discord.py to implement `.ext.pages`
 """
 
 from __future__ import annotations
@@ -75,8 +78,8 @@ class PaginatorButton(Button):
     def __init__(
         self,
         button_type: str,
-        label: Optional[str],
-        emoji: Optional[Union[str, Emoji, PartialEmoji]],
+        label: Optional[str] = None,
+        emoji: Optional[Union[str, Emoji, PartialEmoji]] = None,
         style: ButtonStyle = ButtonStyle.green,
         loop_label: Optional[str] = None,
     ):
@@ -425,4 +428,3 @@ class Paginator(View):
             self.message = await msg.original_response()
 
         return self.message
-

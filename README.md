@@ -57,8 +57,7 @@ and try all features yourself. But here is the full list:
 
 * There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/.github/CONTRIBUTING.md)
 * TL;DR^: Feel free to open a GitHub Issue/PR/Discussion or write me (Aluerie ❤#6524) on discord. You can 
-look my [Project](https://github.com/users/Aluerie/projects/8/views/1) and
-[TODO.md](https://github.com/Aluerie/AluBot/blob/main/TODO.md) for ideas.
+look my [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas.
 
 ### Running
 

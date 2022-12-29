@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from datetime import time, timezone
 from difflib import get_close_matches
 from typing import (
     TYPE_CHECKING,
-    Awaitable, List, Callable, Coroutine, Optional, Union
+    Awaitable, List, Callable, Optional, Union
 )
 
 from discord import Embed, app_commands
+from discord.ext import commands, tasks
 from discord.ext.commands import BadArgument, BotMissingPermissions
 
 from .distools import send_pages_list
@@ -565,3 +567,31 @@ class FPCBase:
         em = Embed(colour=self.colour)
         em.description = f"Changed spoil value to {spoil}"
         await ctx.reply(embed=em)
+
+
+class TwitchAccCheckCog(commands.Cog):
+    def __init__(self, bot: AluBot, table_name: str):
+        self.bot: AluBot = bot
+        self.table_name = table_name
+        self.__cog_name__ = f'TwitchAccCheckCog for {table_name}'
+
+    async def cog_load(self) -> None:
+        self.check_acc_renames.start()
+
+    async def cog_unload(self) -> None:
+        self.check_acc_renames.stop()
+
+    @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
+    async def check_acc_renames(self):
+        query = f'SELECT id, twitch_id, display_name FROM {self.table_name} WHERE twitch_id IS NOT NULL'
+        rows = await self.bot.pool.fetch(query)
+
+        for row in rows:
+            display_name = await self.bot.twitch.name_by_twitch_id(row.twitch_id)
+            if display_name != row.display_name:
+                query = f'UPDATE {self.table_name} SET display_name=$1, name_lower=$2 WHERE id=$3'
+                await self.bot.pool.execute(query, display_name, display_name.lower(), row.id)
+
+    @check_acc_renames.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()

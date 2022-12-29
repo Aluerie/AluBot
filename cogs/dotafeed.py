@@ -18,7 +18,7 @@ from .dota.models import PostMatchPlayerData, ActiveMatch, OpendotaRequestMatch
 from .utils.checks import is_guild_owner, is_trustee
 from .dota import hero
 from .utils.context import Context, GuildContext
-from .utils.fpc import FPCBase
+from .utils.fpc import FPCBase, TwitchAccCheckCog
 from .utils.var import Clr, Ems, MP, Cid
 
 if TYPE_CHECKING:
@@ -827,34 +827,9 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         await self.spoil(ctx, spoil)
 
 
-class DotaAccCheck(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-        self.check_acc_renames.start()
-
-    def cog_unload(self) -> None:
-        self.check_acc_renames.cancel()
-
-    @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
-    async def check_acc_renames(self):
-        query = 'SELECT id, twitch_id, display_name FROM dota_players WHERE twitch_id IS NOT NULL'
-        rows = await self.bot.pool.fetch(query)
-
-        for row in rows:
-            display_name: str = await self.bot.twitch.name_by_twitch_id(row.twtv_id)
-            if display_name != row.display_name:
-                query = 'UPDATE dota_players SET display_name=$1, name_lower=$2 WHERE id=$3'
-                await self.bot.pool.execute(query, display_name, display_name.lower(), row.id)
-
-    @check_acc_renames.before_loop
-    async def before(self):
-        log.info("check_acc_renames before the loop")
-        await self.bot.wait_until_ready()
-
-
 async def setup(bot):
     await bot.add_cog(DotaFeed(bot))
     await bot.add_cog(PostMatchEdits(bot))
     await bot.add_cog(DotaFeedTools(bot))
     if datetime.now(timezone.utc).day == 16:
-        await bot.add_cog(DotaAccCheck(bot))
+        await bot.add_cog(TwitchAccCheckCog(bot, 'dota_players'))

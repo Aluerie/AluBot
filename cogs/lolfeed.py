@@ -18,7 +18,7 @@ from .lol.models import LiveMatch, PostMatchPlayer, Account
 from .lol.utils import get_diff_list, get_all_champ_names
 from .utils.checks import is_owner, is_guild_owner, is_trustee
 from .utils.context import Context
-from .utils.fpc import FPCBase
+from .utils.fpc import FPCBase, TwitchAccCheckCog
 from .utils.var import Clr, Ems
 
 # need to import the last because in import above we activate 'lol' model
@@ -753,9 +753,11 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
 class LoLAccCheck(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
+
+    async def cog_load(self) -> None:
         self.check_acc_renames.start()
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.check_acc_renames.cancel()
 
     @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
@@ -782,3 +784,5 @@ async def setup(bot: AluBot):
     await bot.add_cog(LoLFeedTools(bot))
     if datetime.now(timezone.utc).day == 17:
         await bot.add_cog(LoLAccCheck(bot))
+    if datetime.now(timezone.utc).day == 18:
+        await bot.add_cog(TwitchAccCheckCog(bot, 'lol_players'))

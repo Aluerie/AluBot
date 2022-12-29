@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Literal, List, Set
 
+import github.GithubException
 from discord import Embed, File
 from discord.ext import commands, tasks
 
@@ -117,6 +119,7 @@ class TimeLine:
 class DotaBugtracker(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
+        self.retries = 0
 
     def cog_load(self) -> None:
         self.bot.ini_github()
@@ -183,6 +186,7 @@ class DotaBugtracker(commands.Cog):
         
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
         await self.bot.pool.execute(query, datetime.now(timezone.utc), Sid.alu)
+        self.retries = 0
 
     @git_comments_check.before_loop
     async def before(self):
@@ -190,6 +194,16 @@ class DotaBugtracker(commands.Cog):
 
     @git_comments_check.error
     async def git_comments_check_error(self, error):
+        if isinstance(error, github.GithubException):
+            if error.status == 502:
+                if self.retries == 0:
+                    em = Embed(description='DotaBugtracker: Server Error 502')
+                    await self.bot.get_channel(Cid.spam_me).send(embed=em)
+                await asyncio.sleep(60 * 10 * 2**self.retries)
+                self.retries += 1
+                self.git_comments_check.restart()
+                return
+
         await self.bot.send_traceback(error, where='dotabugtracker comments task')
         # self.git_comments_check.restart()
 

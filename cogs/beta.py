@@ -33,9 +33,12 @@ class BetaTest(commands.Cog):
         self.bot: AluBot = bot
         self.test_task.start()
 
-    @tasks.loop(count=1)
+    async def hey_print(self):
+        print('hey')
+
+    @tasks.loop(seconds=20)
     async def test_task(self):
-        return
+        self.bot.loop.create_task(self.hey_print())
 
     @app_commands.command()
     async def welp(self, ntr: Interaction):

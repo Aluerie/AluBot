@@ -434,7 +434,7 @@ def setup_logging(test: bool):
             filename='alubot.log' if not test else 'alubot_test.log',
             encoding='utf-8',
             mode='w',
-            maxBytes=32 * 1024 * 1024,  # 32 MiB
+            maxBytes=16 * 1024 * 1024,  # 16 MiB
             backupCount=5  # Rotate through 5 files
         )
         file_handler.setFormatter(get_log_fmt(file_handler))

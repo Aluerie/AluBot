@@ -13,7 +13,7 @@ from discord.ext import commands, tasks
 from discord.ext.commands import Range
 from numpy.random import choice
 
-from .utils.checks import is_owner
+from .utils.distools import send_pages_list
 from .utils.var import Cid, Ems, Rid, Clr, cmntn, Sid
 
 if TYPE_CHECKING:
@@ -270,7 +270,7 @@ class Birthday(commands.Cog):
                     )
                     em.set_image(url=bperson.display_avatar.url)
                     em.add_field(name=f'Dear {bperson.display_name} !', inline=False, value=get_congratulation_text())
-                    await self.bot.get_channel(Cid.spam_me).send(content=answer_text, embed=em)
+                    await self.bot.get_channel(Cid.bday_notifs).send(content=answer_text, embed=em)
             else:
                 if bday_rl in bperson.roles:
                     await bperson.remove_roles(bday_rl)
@@ -284,9 +284,8 @@ class Birthday(commands.Cog):
         await self.bot.send_traceback(error, where='Birthdays check')
         # self.dotafeed.restart()
 
-    @is_owner()
-    @commands.command(hidden=True)
-    async def birthdaylist(self, ctx: Context):
+    @birthday.command(name='list', hidden=True)
+    async def birthday_list(self, ctx: Context):
         """Show list of birthdays in this server"""
         guild = self.bot.get_guild(Sid.alu)
 
@@ -297,16 +296,25 @@ class Birthday(commands.Cog):
                 """
         rows = await self.bot.pool.fetch(query)
 
-        text = ''
+        string_list = []
         for row in rows:
             bperson = guild.get_member(row.id)
             if bperson is not None:
-                text += f"{bdate_str(row.bdate, num_mod=True)}, GMT {row.tzone:+.1f} - **{bperson.mention}**\n"
+                string_list.append(
+                    f"{bdate_str(row.bdate, num_mod=True)}"
+                    f"{f', {row.tzone}' if row.tzone else ''} -"
+                    f" **{bperson.mention}**"
+                )
 
-        em = Embed(title='Birthday list', color=Clr.prpl, description=text)
-        em.set_footer(text=f'With love, {guild.me.display_name}')
-        await ctx.reply(embed=em)
+        await send_pages_list(
+            ctx,
+            string_list=string_list,
+            split_size=20,
+            title='Birthday List',
+            colour=Clr.prpl,
+            footer_text=f'DD/MM/YYYY format | With love, {guild.me.display_name}'
+        )
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Birthday(bot))

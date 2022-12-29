@@ -46,15 +46,14 @@
 24. include context menu commands into help menu somehow idk
 25. add image name for convert thing (check resolution too 112)
 26. maybe create a help web page with github web pages
-27. in readme check list of features
 
     ### Last Box
-28. abandon not scored game for match history
-29. reaction roles with new selects
-30. clip twitch check
-31. rewrite purge into something better
-32. custom server name for dotafeed feature
-33. solve twitter somehow idk fok - probably reload the whole extension
-34. ??? cmlist when signing in into steam
-35. unsolved mystery [0] x30
-36. async dota 2 client but really i only need async wait_for
+27. abandon not scored game for match history
+28. reaction roles with new selects
+29. clip twitch check
+30. rewrite purge into something better
+31. custom server name for dotafeed feature
+32. solve twitter somehow idk fok - probably reload the whole extension
+33. ??? cmlist when signing in into steam
+34. unsolved mystery [0] x30
+35. async dota 2 client but really i only need async wait_for

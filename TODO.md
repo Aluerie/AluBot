@@ -50,13 +50,12 @@
 28. in readme check list of features
 
     ### Last Box
-29. 
-30. abandon not scored game for match history
-31. reaction roles with new selects
-32. clip twitch check
-33. rewrite purge into something better
-34. custom server name for dotafeed feature
-35. solve twitter somehow idk fok - probably reload the whole extension
-36. ??? cmlist when signing in into steam
-37. unsolved mystery [0] x30
-38. async dota 2 client but really i only need async wait_for
+29. abandon not scored game for match history
+30. reaction roles with new selects
+31. clip twitch check
+32. rewrite purge into something better
+33. custom server name for dotafeed feature
+34. solve twitter somehow idk fok - probably reload the whole extension
+35. ??? cmlist when signing in into steam
+36. unsolved mystery [0] x30
+37. async dota 2 client but really i only need async wait_for

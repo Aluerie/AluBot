@@ -1,8 +1,13 @@
 ## AluBot 💜
 
-![Lines of Code](https://img.shields.io/tokei/lines/github/Aluerie/AluBot?style=for-the-badge&logo=appveyor&color=blueviolet&label=Total%20Lines%20of%20Code&logo=none)
+[![Invite](https://img.shields.io/badge/Invite%20the%20bot-link-blueviolet?style=for-the-badge&logo=discord)](https://discord.com/api/oauth2/authorize?client_id=713124699663499274&scope=bot+applications.commands&permissions=2199023255551)
+![Servers](https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=blueviolet&logo=discord&label=total%20servers&query=%24.servers&url=https%3A%2F%2Faluerie.github.io%2FAluBot%2Fapi%2Fdata.json)
+![Users](https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=blueviolet&logo=discord&label=total%20users&query=%24.users&url=https%3A%2F%2Faluerie.github.io%2FAluBot%2Fapi%2Fdata.json)
+![Lines of Code](https://img.shields.io/tokei/lines/github/Aluerie/AluBot?style=for-the-badge&logo=github&color=blueviolet&label=Total%20Lines%20of%20Code)
+
 [![Discord](https://img.shields.io/discord/702561315478044804?style=for-the-badge&color=blueviolet&label=Chat%20On%20Discord&logo=discord)](https://discord.gg/K8FuDeP)
 [![Twitch](https://img.shields.io/twitch/status/aluerie?color=blueviolet&label=follow%20my%20twitch&logo=twitch&style=for-the-badge)](https://www.twitch.tv/Aluerie)
+[![Dashboard](https://img.shields.io/badge/bot's%20website-link-blueviolet?style=for-the-badge&logo=google)](https://aluerie.github.io/AluBot/)
 
 Initial idea was to send me notifications  when my favourite  Dota 2/ League of Legends 
 [twitch.tv](https://www.twitch.tv/) streamers pick my favourite heroes/champions.
@@ -14,6 +19,7 @@ with pretty much everything I ever needed ! Check List of features after the pic
 
 ### List of features
 
+All info in `$help` or `/help` command of the bot.
 You can invite the bot with 
 [this link](https://discord.com/api/oauth2/authorize?client_id=713124699663499274&scope=bot+applications.commands&permissions=2199023255551) 
 and try all features yourself. But here is the full list:
@@ -46,8 +52,6 @@ and try all features yourself. But here is the full list:
  - [X] So in total Over 100 useful/fun commands.
  - [X] And so much more to come.
 
-All info in `$help` or `/help` command of the bot. Join my server to use it and see features of the bot with your own eyes. 
-
 
 ### Reporting Bugs and Making Suggestions
 
@@ -58,8 +62,8 @@ look my [Project](https://github.com/users/Aluerie/projects/8/views/1) and
 
 ### Running
 
-I would probably prefer if you don't run an instance of my bot. You can invite the bot to your server with 
-[invite link](https://discord.com/api/oauth2/authorize?client_id=713124699663499274&scope=bot+applications.commands&permissions=2199023255551).
+I would probably prefer if you don't run an instance of my bot. You can invite the bot to your server with link above,
+discord native interface or `$invite` command.
 And I'm honestly not a very good programmer. Nevertheless, 
 1. Python `3.10` or higher is required
 2. Set up venv `python3.10 -m venv venv`

@@ -52,12 +52,11 @@
     ### Last Box
 29. 
 30. abandon not scored game for match history
-31. request_matchmakign_stats()
-32. reaction roles with new selects
-33. clip twitch chek
-34. rewrite purge into something better
-35. custom server name for dotafeed feature
-36. solve twitter somehow idk fok - probably reload the whole extension
-37. ??? cmlist when signing in into steam
-38. unsolved mystery [0] x30
-39. async dota 2 client but really i only need async wait_for
+31. reaction roles with new selects
+32. clip twitch check
+33. rewrite purge into something better
+34. custom server name for dotafeed feature
+35. solve twitter somehow idk fok - probably reload the whole extension
+36. ??? cmlist when signing in into steam
+37. unsolved mystery [0] x30
+38. async dota 2 client but really i only need async wait_for

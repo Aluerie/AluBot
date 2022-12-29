@@ -29,29 +29,28 @@
     ### Low Priority
 12. Try to involve Dota 2 cache class into using bot's session and bot's opendota limits
 13. make blocked words in league news to be in the database
-14. count command usage
-15. skip beta for help command or just limit the view to 25:
-16. add NathanKell to reddit snipe
-17. add some difference between league and dota database add logs, icon I guess
-18. edge cases when people delete channels/guilds for dota/league thing
-19. create channel for global logs for the bot as in all guilds commands usage, I guess
-20. mess around with contributing and stuff
+14. skip beta for help command or just limit the view to 25:
+15. add NathanKell to reddit snipe
+16. add some difference between league and dota database add logs, icon I guess
+17. edge cases when people delete channels/guilds for dota/league thing
+18. create channel for global logs for the bot as in all guilds commands usage, I guess
+19. mess around with contributing and stuff
 
     ### Question mark
-21. Bring back opendota autoparse for people
-22. explore twitch chat bot thing
-23. clips twitch check
-24. include context menu commands into help menu somehow idk
-25. add image name for convert thing (check resolution too 112)
-26. maybe create a help web page with github web pages
+20. Bring back opendota autoparse for people
+21. explore twitch chat bot thing
+22. clips twitch check
+23. include context menu commands into help menu somehow idk
+24. add image name for convert thing (check resolution too 112)
+25. maybe create a help web page with github web pages
 
     ### Last Box
-27. abandon not scored game for match history
-28. reaction roles with new selects
-29. clip twitch check
-30. rewrite purge into something better
-31. custom server name for dotafeed feature
-32. solve twitter somehow idk fok - probably reload the whole extension
-33. ??? cmlist when signing in into steam
-34. unsolved mystery [0] x30
-35. async dota 2 client but really i only need async wait_for
+26. abandon not scored game for match history
+27. reaction roles with new selects
+28. clip twitch check
+29. rewrite purge into something better
+30. custom server name for dotafeed feature
+31. solve twitter somehow idk fok - probably reload the whole extension
+32. ??? cmlist when signing in into steam
+33. unsolved mystery [0] x30
+34. async dota 2 client but really i only need async wait_for

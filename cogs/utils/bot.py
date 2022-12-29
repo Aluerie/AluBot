@@ -129,6 +129,7 @@ class AluBot(commands.Bot):
                 everyone=False
             )  # .none()
         )
+        self.client_id: str = cfg.TEST_DISCORD_CLIENT_ID if test else cfg.DISCORD_CLIENT_ID
         self.test: bool = test
         self.app_commands: Dict[str, int] = {}
         self.odota_ratelimit: str = 'was not received yet'

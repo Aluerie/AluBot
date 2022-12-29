@@ -6,7 +6,7 @@ import re
 import socket
 import warnings
 from datetime import datetime, timezone, timedelta, time
-from typing import TYPE_CHECKING, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, List, Literal, Union
 
 from dota2 import __version__ as dota2_version
 import psutil
@@ -22,8 +22,6 @@ from discord import (
 from discord.ext import commands, tasks
 # from wordcloud import WordCloud #todo: wait for a fix
 
-from config import DISCORD_BOT_INVLINK
-from .utils.checks import is_owner
 from .utils.format import humanize_time
 from .utils.imgtools import img_to_file
 from .utils.time import format_tdR
@@ -336,13 +334,6 @@ class Info(commands.Cog, name='Info'):
         em.add_field(name="User Count", value=str(len(self.bot.users)))
         em.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")
         em.add_field(name='Uptime', value=humanize_time(datetime.now(timezone.utc) - self.bot.launch_time, full=False))
-        await ctx.reply(embed=em)
-
-    @is_owner()
-    @commands.command(aliases=['invitelink', 'invite_link'], hidden=True)
-    async def invite(self, ctx):
-        """Show invite link for the bot."""
-        em = Embed(description=DISCORD_BOT_INVLINK, color=Clr.prpl)
         await ctx.reply(embed=em)
 
     @staticmethod

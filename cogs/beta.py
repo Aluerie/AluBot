@@ -39,22 +39,11 @@ class BetaTest(commands.Cog):
 
     @app_commands.command()
     async def welp(self, ntr: Interaction):
-        await ntr.response.defer()
         await ntr.followup.send('allo')
-        # ctx = await Context.from_interaction(ntr)
-        # await ctx.typing()
-        # await ctx.reply()
 
     @commands.hybrid_command()
-    async def ban(self, ctx: Context, member: discord.Member):
-        await member.ban(reason='hehe')
-        await ctx.send(f'we banned {member.mention}!')
-
-    @ban.error
-    async def ban_error(self, ctx, error):
-        if isinstance(error.original, discord.Forbidden):
-            ctx.error_handled = True
-            await ctx.send('Missing permissions or role/perms hierarchy')
+    async def allu(self, ctx: Context):
+        await ctx.send('allu')
 
     @test_task.before_loop
     async def before(self):

@@ -180,6 +180,7 @@ class Ems:  # Emote strings
     peepoWave = '<:_:856262331217346571>'
     peepoBlushDank = '<:_:853744336214032384>'
     peepoPlsStepOnMe = '<:_:761174324420935722>'
+    FeelsDankManLostHisHat = '<:_:852976573929095198>'
 
     peepoPolice = '<:_:960004884235690024>'
     Jebaited = '<:_:726450170769703015>'

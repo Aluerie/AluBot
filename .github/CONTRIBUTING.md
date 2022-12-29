@@ -2,7 +2,8 @@
 
 ### Do you want to contribute, but you do not have initial ideas what to code/help with
 
-* Check out either [TODO.md](https://github.com/Aluerie/AluBot/blob/main/TODO.md) to get some ideas what I want to work on 
+* Check out [Project](https://github.com/users/Aluerie/projects/8/views/1) and 
+* [TODO.md](https://github.com/Aluerie/AluBot/blob/main/TODO.md) to get some ideas what I want to work on 
 and what I am currently working on. 
 * Currently, the bot is really just a one-person project so I'm apologizing in advance if this todo list^ are messy 
 because I do not really expect any random help from random visitors.
@@ -38,7 +39,7 @@ Once again, do not forget to include all relevant information.
 ### Do you have questions about the source code?
 
 * Ask me any question about AluBot - contact me using info below. 
-If you do not have a discord account or want the question to be public then you can create new discussion in
+If you do not feel like contacting me directly or want the question to be public then you can create new discussion in
 [this repository discussions](https://github.com/Aluerie/AluBot/discussions) 
 under "Q&A" category.
 

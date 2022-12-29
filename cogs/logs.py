@@ -27,12 +27,8 @@ class Logging(commands.Cog):
         member = self.bot.get_guild(Sid.alu).get_member(after.id)
         if member is None:
             return
-        em = Embed(
-            colour=member.colour
-        ).set_author(
-            name=member.display_name,
-            icon_url=before.display_avatar.url
-        )
+        em = Embed(colour=member.colour)
+        em.set_author(name=member.display_name, icon_url=before.display_avatar.url)
         if before.avatar != after.avatar:
             em.title = f'User\'s avatar was changed {Ems.PepoDetective}'
             em.description = '**Before:**  thumbnail to the right\n**After:** image below'

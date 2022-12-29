@@ -1,5 +1,9 @@
 ## AluBot 💜
 
+![Lines of Code](https://img.shields.io/tokei/lines/github/Aluerie/AluBot?style=for-the-badge&logo=appveyor&color=blueviolet&label=Total%20Lines%20of%20Code&logo=none)
+[![Discord](https://img.shields.io/discord/702561315478044804?style=for-the-badge&color=blueviolet&label=Chat%20On%20Discord&logo=discord)](https://discord.gg/K8FuDeP)
+[![Twitch](https://img.shields.io/twitch/status/aluerie?color=blueviolet&label=follow%20my%20twitch&logo=twitch&style=for-the-badge)](https://www.twitch.tv/Aluerie)
+
 Initial idea was to send me notifications  when my favourite  Dota 2/ League of Legends 
 [twitch.tv](https://www.twitch.tv/) streamers pick my favourite heroes/champions.
 
@@ -10,6 +14,9 @@ with pretty much everything I ever needed ! Check List of features after the pic
 
 ### List of features
 
+You can invite the bot with 
+[this link](https://discord.com/api/oauth2/authorize?client_id=713124699663499274&scope=bot+applications.commands&permissions=2199023255551) 
+and try all features yourself. But here is the full list:
  - [X] maintains #🍋dota2_news
    * [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates - comments from Valve employees  
    * Steam DB's [GameTracking-Dota2](https://github.com/SteamDatabase/GameTracking-Dota2) updates and its analysis
@@ -41,21 +48,19 @@ with pretty much everything I ever needed ! Check List of features after the pic
 
 All info in `$help` or `/help` command of the bot. Join my server to use it and see features of the bot with your own eyes. 
 
-### Follow us
-
-* The server with the bot: [Invite link](https://discord.gg/K8FuDeP)
-* The server is just a small community of [mine](https://www.twitch.tv/Aluerie)
 
 ### Reporting Bugs and Making Suggestions
 
 * There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/.github/CONTRIBUTING.md)
 * TL;DR^: Feel free to open a GitHub Issue/PR/Discussion or write me (Aluerie ❤#6524) on discord. You can 
-look my [TODO.md](https://github.com/Aluerie/AluBot/blob/main/TODO.md) for ideas even though the list is a bit messy.
+look my [Project](https://github.com/users/Aluerie/projects/8/views/1) and
+[TODO.md](https://github.com/Aluerie/AluBot/blob/main/TODO.md) for ideas.
 
 ### Running
 
-This bot is written under assumption of it being **only on my servers** so neither inviting it/running 
-your instance of the bot will work well. And I'm honestly not a very good programmer. Nevertheless, 
+I would probably prefer if you don't run an instance of my bot. You can invite the bot to your server with 
+[invite link](https://discord.com/api/oauth2/authorize?client_id=713124699663499274&scope=bot+applications.commands&permissions=2199023255551).
+And I'm honestly not a very good programmer. Nevertheless, 
 1. Python `3.10` or higher is required
 2. Set up venv `python3.10 -m venv venv`
 3. Install dependencies `pip install -U -r requirements.txt`
@@ -86,3 +91,10 @@ test_list = [  # for test bot
 Thanks to everybody who has ever helped me with the bot in any way or form. 
 
 Special thanks to the whole `discord.py` community for endless amount of educational value.
+
+### Privacy Policy and Terms of Service
+
+Some personal data is stored with a consent of the user.
+ 
+Example of such commands is `/birthday set`. 
+If you are using the command - you are giving me consent to store your birthday data and work with it.

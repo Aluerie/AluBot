@@ -17,9 +17,7 @@ if TYPE_CHECKING:
 
 
 class Moderation(commands.Cog):
-    """
-    Commands to moderate server with
-    """
+    """Commands to moderate server with"""
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.help_emote = Ems.peepoPolice

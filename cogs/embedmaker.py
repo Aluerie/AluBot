@@ -59,9 +59,7 @@ class EmbedMaker(commands.Cog, name='Embed Maker'):
 
     @embed_.command()
     async def make(self, ctx: Context):
-        """
-        Embed Maker command. Opens a menu for making/editing/importing embed messages.
-        """
+        """Embed Maker command. Opens a menu for making/editing/importing embed messages."""
         view = StartView()
         view.message = await ctx.reply(embeds=view.embeds, view=view)
 

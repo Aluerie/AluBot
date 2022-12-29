@@ -1,7 +1,9 @@
 # DISCORD
 MAIN_TOKEN = ''
+DISCORD_CLIENT_ID = 123
+
 TEST_TOKEN = ''
-DISCORD_BOT_INVLINK = ''
+TEST_DISCORD_CLIENT_ID = 123
 
 # STEAM (MAIN account)
 # I have not yet implemented getting SteamGuard codes with super-secret thing

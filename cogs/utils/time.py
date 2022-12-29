@@ -1,4 +1,6 @@
 """
+# This code is licensed MPL v2 from Rapptz/RoboDanny
+
 Most code below is shameless copypaste from @Rapptz's RoboDanny utils
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 but IDK it's just so good and smart. I really learn a lot from reading @Danny's code.

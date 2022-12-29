@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import time, timezone
+from datetime import time, timezone, datetime
 from difflib import get_close_matches
 from typing import (
     TYPE_CHECKING,
@@ -570,9 +570,10 @@ class FPCBase:
 
 
 class TwitchAccCheckCog(commands.Cog):
-    def __init__(self, bot: AluBot, table_name: str):
+    def __init__(self, bot: AluBot, table_name: str, day: int):
         self.bot: AluBot = bot
         self.table_name = table_name
+        self.day = day
         self.__cog_name__ = f'TwitchAccCheckCog for {table_name}'
 
     async def cog_load(self) -> None:
@@ -583,6 +584,9 @@ class TwitchAccCheckCog(commands.Cog):
 
     @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
     async def check_acc_renames(self):
+        if datetime.now(timezone.utc).day != self.day:
+            return
+
         query = f'SELECT id, twitch_id, display_name FROM {self.table_name} WHERE twitch_id IS NOT NULL'
         rows = await self.bot.pool.fetch(query)
 

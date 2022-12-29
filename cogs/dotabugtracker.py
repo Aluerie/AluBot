@@ -208,5 +208,5 @@ class DotaBugtracker(commands.Cog):
         # self.git_comments_check.restart()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(DotaBugtracker(bot))

@@ -762,6 +762,9 @@ class LoLAccCheck(commands.Cog):
 
     @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
     async def check_acc_renames(self):
+        if datetime.now(timezone.utc).day != 17:
+            return
+
         log.info("league checking acc renames every 24 hours")
         query = 'SELECT id, platform, accname FROM lolaccs'
         rows = await self.bot.pool.fetch(query)
@@ -782,7 +785,5 @@ async def setup(bot: AluBot):
     await bot.add_cog(LoLFeedNotifications(bot))
     await bot.add_cog(LoLFeedPostMatchEdits(bot))
     await bot.add_cog(LoLFeedTools(bot))
-    if datetime.now(timezone.utc).day == 17:
-        await bot.add_cog(LoLAccCheck(bot))
-    if datetime.now(timezone.utc).day == 18:
-        await bot.add_cog(TwitchAccCheckCog(bot, 'lol_players'))
+    await bot.add_cog(LoLAccCheck(bot))
+    await bot.add_cog(TwitchAccCheckCog(bot, 'lol_players', 18))

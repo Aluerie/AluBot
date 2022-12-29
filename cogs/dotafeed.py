@@ -831,5 +831,4 @@ async def setup(bot):
     await bot.add_cog(DotaFeed(bot))
     await bot.add_cog(PostMatchEdits(bot))
     await bot.add_cog(DotaFeedTools(bot))
-    if datetime.now(timezone.utc).day == 16:
-        await bot.add_cog(TwitchAccCheckCog(bot, 'dota_players'))
+    await bot.add_cog(TwitchAccCheckCog(bot, 'dota_players', 16))

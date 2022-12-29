@@ -55,7 +55,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         await download_twitter_images(self.bot.session, ctx, tweet_ids=tweet_ids)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     # while twitter is banned in russia # TODO: Remove this
     import platform
     if platform.system() == 'Windows':

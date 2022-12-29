@@ -10,6 +10,7 @@ __all__ = (
     'LiteralPlatform',
     'LiteralRegion',
     'LiteralServer',
+    'LiteralServerUpper',
     'server_to_platform',
     'platform_to_server',
     'platform_to_region',

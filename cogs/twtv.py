@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from discord import Embed, Streaming
 from discord.ext import commands, tasks
 
-from .utils.var import Sid, Uid, Rid, Img, Cid, Ems
+from .utils.var import Sid, Uid, Rid, Img, Cid
 
 if TYPE_CHECKING:
     from discord import Member
@@ -82,34 +82,5 @@ class TwitchCog(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-class TwitchThanks(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.Cog.listener(name='on_member_update')
-    async def twitch_sub_role_logs(self, before, after):
-        if after.guild.id != Sid.alu:
-            return
-
-        guild = self.bot.get_guild(Sid.alu)
-        subs_role = guild.get_role(Rid.subs)
-
-        em = Embed(color=0x9678b6)
-        em.set_thumbnail(url=after.display_avatar.url)
-        em.set_footer(text=f'With love, {guild.me.display_name}')
-        if subs_role in after.roles and subs_role not in before.roles:
-            em.title = "User got Aluerie's tw.tv sub"
-            em.description = f'{after.mention} just got {subs_role.mention} role in this server !'
-            em.add_field(name="{0}{0}{0}".format(Ems.peepoNiceDay), value="Thanks for the sub !")
-        elif subs_role in before.roles and subs_role not in after.roles:
-            em.title = "User lost Aluerie's tw.tv sub"
-            em.description = f'{after.mention} lost {subs_role.mention} role in this server !'
-            em.add_field(name="{0}{0}{0}".format(Ems.FeelsRainMan), value="Sad news !")
-        else:
-            return
-        await guild.get_channel(Cid.stream_notifs).send(embed=em)
-
-
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(TwitchCog(bot))
-    await bot.add_cog(TwitchThanks(bot))

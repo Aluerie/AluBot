@@ -128,5 +128,5 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(EmoteAnalysis(bot))

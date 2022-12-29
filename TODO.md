@@ -53,4 +53,3 @@
 31. solve twitter somehow idk fok - probably reload the whole extension
 32. ??? cmlist when signing in into steam
 33. unsolved mystery [0] x30
-34. async dota 2 client but really i only need async wait_for

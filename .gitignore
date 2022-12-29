@@ -13,7 +13,7 @@ tlist.py
 /config.py
 
 /db_backup
-*.json
+prefixes.json
 
 # Temporary ignore
 /cogs/template.py

@@ -23,39 +23,38 @@
     * timestamp with time zone for time-aware > tags.created and others
 6. autocomplete for tags
 7. add twitch name account check into league same way as it is in dota
-8. transfer emotes into 3rd server (todo in q tier task)
-9. dota client maybe do something on ready/unready events
-10. app_commands.Transform for issues like reminders
-11. hybrid check
-12. ?tag autocomplete transformer
+8. dota client maybe do something on ready/unready events
+9. app_commands.Transform for issues like reminders
+10. hybrid check
+11. ?tag autocomplete transformer
 
     ### Low Priority
-13. Try to involve Dota 2 cache class into using bot's session and bot's opendota limits
-14. make blocked words in league news to be in the database
-15. count command usage
-16. skip beta for help command or just limit the view to 25:
-17. add NathanKell to reddit snipe
-18. add some difference between league and dota database add logs, icon I guess
-19. edge cases when people delete channels/guilds for dota/league thing
-20. create channel for global logs for the bot as in all guilds commands usage, I guess
-21. mess around with contributing and stuff
+12. Try to involve Dota 2 cache class into using bot's session and bot's opendota limits
+13. make blocked words in league news to be in the database
+14. count command usage
+15. skip beta for help command or just limit the view to 25:
+16. add NathanKell to reddit snipe
+17. add some difference between league and dota database add logs, icon I guess
+18. edge cases when people delete channels/guilds for dota/league thing
+19. create channel for global logs for the bot as in all guilds commands usage, I guess
+20. mess around with contributing and stuff
 
     ### Question mark
-22. Bring back opendota autoparse for people
-23. explore twitch chat bot thing
-24. clips twitch check
-25. include context menu commands into help menu somehow idk
-26. add image name for convert thing (check resolution too 112)
-27. maybe create a help web page with github web pages
-28. in readme check list of features
+21. Bring back opendota autoparse for people
+22. explore twitch chat bot thing
+23. clips twitch check
+24. include context menu commands into help menu somehow idk
+25. add image name for convert thing (check resolution too 112)
+26. maybe create a help web page with github web pages
+27. in readme check list of features
 
     ### Last Box
-29. abandon not scored game for match history
-30. reaction roles with new selects
-31. clip twitch check
-32. rewrite purge into something better
-33. custom server name for dotafeed feature
-34. solve twitter somehow idk fok - probably reload the whole extension
-35. ??? cmlist when signing in into steam
-36. unsolved mystery [0] x30
-37. async dota 2 client but really i only need async wait_for
+28. abandon not scored game for match history
+29. reaction roles with new selects
+30. clip twitch check
+31. rewrite purge into something better
+32. custom server name for dotafeed feature
+33. solve twitter somehow idk fok - probably reload the whole extension
+34. ??? cmlist when signing in into steam
+35. unsolved mystery [0] x30
+36. async dota 2 client but really i only need async wait_for

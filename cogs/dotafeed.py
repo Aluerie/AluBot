@@ -17,7 +17,7 @@ from .dota.models import PostMatchPlayerData, ActiveMatch, OpendotaRequestMatch
 
 from .utils.checks import is_guild_owner, is_trustee
 from .dota import hero
-from .utils.context import Context
+from .utils.context import Context, GuildContext
 from .utils.fpc import FPCBase
 from .utils.var import Clr, Ems, MP, Cid
 
@@ -406,12 +406,12 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     )
     async def slh_dota_channel_disable(self, ntr: Interaction):
         """Slash copy of ext_dota_channel_disable below"""
-        ctx = await Context.from_interaction(ntr)
+        ctx = await GuildContext.from_interaction(ntr)
         await self.channel_disable(ctx)
 
     @is_guild_owner()
     @ext_dota_channel.command(name='disable')
-    async def ext_dota_channel_disable(self, ctx: Context):
+    async def ext_dota_channel_disable(self, ctx: GuildContext):
         """Stop getting DotaFeed notifs. Data about fav heroes/players won't be affected."""
         await self.channel_disable(ctx)
 

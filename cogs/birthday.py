@@ -1,18 +1,31 @@
 from __future__ import annotations
 
+import itertools
+import re
+from difflib import get_close_matches
+from functools import lru_cache
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, Optional, List
+from zoneinfo import available_timezones, ZoneInfo, ZoneInfoNotFoundError
 
 from discord import Embed, Member, app_commands
 from discord.ext import commands, tasks
+from discord.ext.commands import Range
 from numpy.random import choice
 
 from .utils.checks import is_owner
 from .utils.var import Cid, Ems, Rid, Clr, cmntn, Sid
 
 if TYPE_CHECKING:
+    from discord import Interaction
     from .utils.bot import AluBot
     from .utils.context import Context
+
+
+@lru_cache(maxsize=None)
+def get_timezones():
+    return available_timezones()
+
 
 gratz_bank = [
     'I hope your special day will bring you lots of happiness, love, and fun. You deserve them a lot. Enjoy!',
@@ -76,6 +89,16 @@ def bdate_str(bdate, num_mod=False):
     return bdate.strftime(fmt)
 
 
+class SetBirthdayFlags(commands.FlagConverter, case_insensitive=True):
+    day: Range[int, 1, 31]
+    month: Literal[
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+    year: Optional[Range[int, 1970]]
+    timezone: Optional[str]
+
+
 class Birthday(commands.Cog):
     """
     Set your birthday and get congratulations from the bot.
@@ -86,8 +109,10 @@ class Birthday(commands.Cog):
     """
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.check_birthdays.start()
         self.help_emote = Ems.peepoHappyDank
+
+    def cog_load(self) -> None:
+        self.check_birthdays.start()
 
     def cog_unload(self) -> None:
         self.check_birthdays.cancel()
@@ -97,32 +122,81 @@ class Birthday(commands.Cog):
         """Group command about birthdays, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
+    async def timezone_autocomplete(self, _ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+        all_timezones = list(get_timezones())
+        all_timezones += [f'GMT{sign}{h}:00' for sign, h in itertools.product(['-', '+'], range(0, 13))]
+        # lazy monkey patch
+        all_timezones += [
+            f'GMT{i}'
+            for i in [
+                '+13:00', '+14:00', '+12:45', '+9:30', '+5:30', '-3:30', '+5:45', '+6:30', '+8:45', '+10:30', '+3:30',
+                '-9:30',
+            ]
+        ]
+
+        precise_match = [x for x in all_timezones if current.lower().startswith(x.lower())]
+        close_match = get_close_matches(current, all_timezones, n=25, cutoff=0)
+
+        return_list = list(dict.fromkeys(precise_match + close_match))
+        return [app_commands.Choice(name=n, value=n) for n in return_list][:25]
+
     @birthday.command(
         name='set',
         aliases=['edit'],
-        description='Set your birthday'
+        description='Set your birthday',
+        usage='day: <day> month: <month as word> year: [year] timezone: [timezone]'
     )
-    @app_commands.describe(date='Your birthday date in "DD/MM" or "DD/MM/YYYY" format')
-    async def set(self, ctx: Context, *, date: str):
+    @app_commands.describe(
+        day='Day', month='Month', year='Year',
+        timezone='formats: `GMT+1:00`, `Europe/Paris` or `Etc/GMT-1` (sign is inverted for Etc/GMT).'
+    )
+    @app_commands.autocomplete(timezone=timezone_autocomplete)  # type: ignore
+    async def set(self, ctx: Context, *, bdate_flags: SetBirthdayFlags):
         """
-        Set your birthday. Please send `*your_birthday*` in "DD/MM" or in "DD/MM/YYYY" format.\
-        If you choose the latter format, the bot will mention your age in congratulation text too;
+        Set your birthday. \
+        Timezone can be set in `GMT+-H:MM` format or standard IANA name like
+        `Europe/Paris` or `Etc/GMT-1` (remember sign is inverted for Etc).
         """
-        def get_dtime(text):
-            for fmt in ('%d/%m/%Y', '%d/%m'):
-                try:
-                    return datetime.strptime(text, fmt)
-                except ValueError:
-                    pass
-            return None
-        if (dmy_dtime := get_dtime(date)) is not None:
-            query = 'UPDATE users SET bdate=$1 WHERE users.id=$2;'
-            await self.bot.pool.execute(query, dmy_dtime, ctx.author.id)
-            await ctx.reply(f"Your birthday is successfully set to {bdate_str(dmy_dtime)}")
-        else:
-            await ctx.reply(
-                "Invalid date format, please use dd/mm/YYYY or dd/mm date format, ie. `$birthday set 26/02/1802`"
-            )
+        def get_dtime() -> datetime:
+            if bdate_flags.year:
+                fmt, string = '%d/%B/%Y', f'{bdate_flags.day}/{bdate_flags.month}/{bdate_flags.year}'
+            else:
+                fmt, string = '%d/%B', f'{bdate_flags.day}/{bdate_flags.month}'
+            try:
+                return datetime.strptime(string, fmt)
+            except ValueError:
+                raise commands.BadArgument(
+                    "Invalid date given, please recheck the date."
+                )
+
+        dmy_dtime = get_dtime()
+
+        def get_str_timezone(str_tzone: str) -> str:
+            if re_zone := re.match(r'^GMT([-+]\d+:\d+)$', str_tzone, re.IGNORECASE):
+                return re_zone.group(0)
+            try:
+                return ZoneInfo(str_tzone).key
+            except ZoneInfoNotFoundError:
+                raise commands.BadArgument(
+                    'Could not recognize `timezone` from the input. \n\n'
+                    'Please, use `GMT+H:MM` format or standard IANA format, i.e. `Europe/Paris` or '
+                    '`Etc/GMT-1` (remember sign is inverted for `Etc/GMT-+` timezones!).\n\n'
+                    'I insist that you should be using suggestions from autocomplete for `timezone` argument in '
+                    '`/birthday set` slash command to ease your choice. '
+                    'You can also check [TimeZonePicker](https://kevinnovak.github.io/Time-Zone-Picker/) or '
+                    '[WikiPage](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) `TZ database name` column'
+                )
+
+        tz_for_db = None
+        if bdate_flags.timezone:
+            tz_for_db = get_str_timezone(bdate_flags.timezone)
+
+        query = 'UPDATE users SET bdate=$1, tzone=$2 WHERE users.id=$3;'
+        await self.bot.pool.execute(query, dmy_dtime, tz_for_db, ctx.author.id)
+        em = Embed(colour=Clr.prpl, title='Your birthday is successfully set')
+        em.description = f'Date: {bdate_str(dmy_dtime)}\nTimezone: {tz_for_db}'
+        em.set_footer(text='Important! By submitting this information you agree it can be shown to anyone.')
+        await ctx.reply(embed=em)
 
     @birthday.command(
         name='delete',
@@ -137,53 +211,44 @@ class Birthday(commands.Cog):
         await ctx.reply("Your birthday is successfully deleted", ephemeral=True)
 
     @birthday.command(
-        name='timezone',
-        description='Set your timezone for birthday'
-    )
-    @app_commands.describe(timezone='Timezone in `float` format, ie. `-5.5` GMT -5:30 timezone')
-    async def timezone(self, ctx: Context, timezone: float):
-        """
-        By default, the bot congratulates you when your bday comes live in GMT+0 timezone. \
-        This subcommand is made for adjusting that. \
-        Timezone should be given as an integer or as a decimal fraction relative to GMT. \
-        Usage example: `$birthday timezone -5.5` for GMT -5:30 timezone
-        """
-        if -13 < timezone < 13:
-            query = 'UPDATE users SET tzone=$1 WHERE users.id=$2;'
-            await self.bot.pool.execute(query, timezone, ctx.author.id)
-            await ctx.reply(f"Your timezone is successfully set to GMT {timezone:+.1f}")
-        else:
-            await ctx.reply("Invalid timezone value. Error id #6. Aborting...")
-
-    @birthday.command(
         name='check',
         usage='[member=you]',
-        description='Set your timezone for birthday'
+        description='Check your birthday'
     )
     @app_commands.describe(member='Member of the server or you if not specified')
-    async def check(self, ctx: Context, member: Member = None):  # type: ignore
+    async def check(self, ctx: Context, member: Optional[Member]):
         """Check member's birthday in database"""
         member = member or ctx.message.author
         query = 'SELECT bdate, tzone FROM users WHERE users.id=$1'
         row = await self.bot.pool.fetchrow(query, member.id)
 
+        em = Embed(colour=Clr.prpl)
+        em.set_author(name=f'{member.display_name}\'s birthday status', icon_url=member.display_avatar.url)
         if row.bdate is None:
-            ans = f'It seems {member.display_name}\'s hasn\'t set birthday yet.'
+            em.description = f'It\'s not set yet.'
         else:
-            ans = f"{member.display_name}\'s birthday is set to {bdate_str(row.bdate)} " \
-                  f"and timezone is GMT {row.tzone:+.1f}"
-        await ctx.reply(content=ans)
+            em.description = f"Date: {bdate_str(row.bdate)}\nTimezone: {row.tzone}"
+        await ctx.reply(embed=em)
 
     @tasks.loop(hours=1)
-    async def check_birthdays(self):
+    async def check_birthdays(self):  # todo: rework this into sleeping till next bday
         query = 'SELECT id, bdate, tzone FROM users WHERE bdate IS NOT NULL'
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
             bdate: datetime = row.bdate
-            tzone: float = float(row.tzone)
 
-            now_date = datetime.now(timezone.utc) + timedelta(hours=tzone)
+            if row.tzone:
+                if re_zone := re.match(r'^GMT([-+]\d+:\d+)$', row.tzone, re.IGNORECASE):
+                    split = re_zone.group(1).split(':')
+                    tzone_seconds = 3600 * int(split[0]) + 60 * int(split[1])
+                    tzone_offset = timedelta(seconds=tzone_seconds)
+                else:
+                    tzone_offset = datetime.now(ZoneInfo(row.tzone)).utcoffset()
+            else:
+                tzone_offset = timedelta(seconds=0)
+
+            now_date = datetime.now(timezone.utc) + tzone_offset
             guild = self.bot.get_guild(Sid.alu)
             bperson = guild.get_member(row.id)
             if bperson is None:
@@ -199,13 +264,13 @@ class Birthday(commands.Cog):
                     em = Embed(title=f'CONGRATULATIONS !!! {Ems.peepoRose * 3}', color=bperson.color)
                     em.set_footer(
                         text=(
-                            f'Today is {bdate_str(bdate)}; Timezone: GMT {tzone:+.1f}\n'
+                            f'Today is {bdate_str(bdate)}; Timezone: {row.tzone}\n'
                             f'Use `$help birthday` to set up your birthday\nWith love, {guild.me.display_name}'
                         )
                     )
                     em.set_image(url=bperson.display_avatar.url)
                     em.add_field(name=f'Dear {bperson.display_name} !', inline=False, value=get_congratulation_text())
-                    await self.bot.get_channel(Cid.bday_notifs).send(content=answer_text, embed=em)
+                    await self.bot.get_channel(Cid.spam_me).send(content=answer_text, embed=em)
             else:
                 if bday_rl in bperson.roles:
                     await bperson.remove_roles(bday_rl)
@@ -213,6 +278,11 @@ class Birthday(commands.Cog):
     @check_birthdays.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
+
+    @check_birthdays.error
+    async def check_birthdays_error(self, error):
+        await self.bot.send_traceback(error, where='Birthdays check')
+        # self.dotafeed.restart()
 
     @is_owner()
     @commands.command(hidden=True)

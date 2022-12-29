@@ -20,7 +20,7 @@ class CommandErrorHandler(commands.Cog):
         self.bot: AluBot = bot
         bot.tree.on_error = self.on_app_command_error
 
-    async def command_error_work(self, ctx, error):
+    async def command_error_work(self, ctx: Context, error):
         while isinstance(
                 error,
                 (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError,)

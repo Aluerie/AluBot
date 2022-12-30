@@ -1,13 +1,15 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, Callable, TypeVar
 
-from typing import TYPE_CHECKING
-
+from discord import app_commands
 from discord.ext import commands
 
 from .var import Sid
 
 if TYPE_CHECKING:
-    from context import Context
+    from .context import GuildContext, Context
+
+T = TypeVar('T')
 
 
 def is_guild_owner():
@@ -40,8 +42,11 @@ def is_owner():
     async def predicate(ctx: Context) -> bool:
         """Aluerie only"""
         if not await ctx.bot.is_owner(ctx.author):
-            raise commands.NotOwner(
-                f'Only {ctx.bot.owner} as the bot owner is allowed to use this command.'
-            )
+            raise commands.NotOwner()
         return True
-    return commands.check(predicate)
+
+    def decorator(func: T) -> T:
+        commands.check(predicate)(func)
+        return func
+
+    return decorator

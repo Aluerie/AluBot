@@ -17,12 +17,14 @@ if TYPE_CHECKING:
 
 
 class EmoteSpam(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
+
+    async def cog_load(self) -> None:
         self.emote_spam.start()
         self.offline_criminal_check.start()
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.emote_spam.cancel()
         self.offline_criminal_check.cancel()
 

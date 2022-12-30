@@ -18,7 +18,7 @@ class LewdCog(commands.Cog, name='Lewd'):
     Horny, huh
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.help_emote = Ems.peepoPlsStepOnMe
 
@@ -28,5 +28,5 @@ class LewdCog(commands.Cog, name='Lewd'):
         await ctx.reply('Coming soon {0} {0} {0}'.format(Ems.Jebaited))
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(LewdCog(bot))

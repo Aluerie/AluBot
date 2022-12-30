@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from .utils.context import Context
 from .utils.format import display_time
-from .utils.var import Clr, rmntn, Cid
+from .utils.var import Clr, rmntn, Cid, Ems
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -20,13 +20,14 @@ class CommandErrorHandler(commands.Cog):
         self.bot: AluBot = bot
         bot.tree.on_error = self.on_app_command_error
 
-    async def command_error_work(self, ctx: Context, error):
+    async def command_error_work(self, ctx: Context, error) -> None:
         while isinstance(
                 error,
                 (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError,)
         ):  # circle to the actual error throughout all the chains
             error = error.original
 
+        error_type = error.__class__.__name__
         handled, mention = True, True
         match error:
             case commands.BadFlagArgument():
@@ -97,7 +98,7 @@ class CommandErrorHandler(commands.Cog):
                     return
                 desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.NotOwner():
-                desc = f"Sorry, only Bot Owner is allowed to use this command"
+                desc = f'Sorry, only {ctx.bot.owner} as the bot owner is allowed to use this command.'
             case commands.PrivateMessageOnly():
                 desc = (
                     f"The command is only for usage in private messages with the bot. " 
@@ -115,9 +116,11 @@ class CommandErrorHandler(commands.Cog):
             case _:
                 handled = False
 
-                desc = \
-                    f"Oups, some error and I've just notified Irene about it.\n The original exception:\n" \
-                    f"```py\n{error}```"
+                desc = (
+                    "I've notified my creator and we'll hopefully get it fixed soon. \n"
+                    "Sorry for the inconvenience! {0} {0} {0}".format(Ems.DankL)
+                )
+                error_type = 'Oups...Unexpected error!'
 
                 cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])
                 if ctx.interaction:
@@ -136,13 +139,13 @@ class CommandErrorHandler(commands.Cog):
                 await self.bot.send_traceback(error, embed=err_em, mention=mention)
 
         # send the error
-        em = Embed(color=Clr.error, description=desc).set_author(name=error.__class__.__name__)
         if not handled and self.bot.test and not mention:
             if ctx.interaction:  # they error out unanswered
                 await ctx.reply(':(', ephemeral=True)
             else:
                 return
         else:
+            em = Embed(color=Clr.error, description=desc).set_author(name=error_type)
             await ctx.reply(embed=em, ephemeral=True)
 
     @commands.Cog.listener()

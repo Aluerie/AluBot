@@ -827,7 +827,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         await self.spoil(ctx, spoil)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(DotaFeed(bot))
     await bot.add_cog(PostMatchEdits(bot))
     await bot.add_cog(DotaFeedTools(bot))

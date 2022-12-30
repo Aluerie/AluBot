@@ -268,5 +268,5 @@ class Tags(commands.Cog):
         await self.tag_ban_work(ctx, member, True)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Tags(bot))

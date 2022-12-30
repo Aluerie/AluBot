@@ -38,15 +38,15 @@ class BetaTest(commands.Cog):
 
     @tasks.loop(seconds=20)
     async def test_task(self):
-        self.bot.loop.create_task(self.hey_print())
+        return
 
     @app_commands.command()
     async def welp(self, ntr: Interaction):
         await ntr.followup.send('allo')
 
     @commands.hybrid_command()
-    async def allu(self, ctx: Context):
-        await ctx.send('allu')
+    async def allu(self, ctx: Context, member: Member):
+        raise ValueError
 
     @test_task.before_loop
     async def before(self):

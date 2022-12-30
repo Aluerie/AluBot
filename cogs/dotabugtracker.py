@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import re
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Literal, List, Set
+from typing import TYPE_CHECKING, List, Set, Optional
 
 import github.GithubException
 from discord import Embed, File
@@ -15,14 +15,36 @@ if TYPE_CHECKING:
     from .utils.bot import AluBot
     from github import Issue, NamedUser
 
-# fancy dictionary with all actions
 
-clr_dict = {
-    'assigned': {'clr': 0x21262D, 'pic': './media/person.png', 'word': 'self-assigned'},
-    'closed': {'clr': 0x9B6CEA, 'pic': './media/check-circle.png', 'word': 'closed'},
-    'reopened': {'clr': 0x238636, 'pic': './media/issue-reopened.png', 'word': 'reopened'},
-    'commented': {'clr': 0x4078c0, 'pic': './media/person.png', 'word': 'commented'}  # todo: make a new picture
-}
+class BaseEvent:
+    def __init__(
+            self,
+            name: str,
+            *,
+            colour: int,
+            picture: str,
+            word: str,
+            text_flag: Optional[bool] = False
+    ) -> None:
+        self.name: str = name
+        self.colour: int = colour
+        self._picture = picture
+        self.word: str = word
+        self.text_flag: bool = text_flag
+
+    @property
+    def file(self) -> File:
+        return File(f'./media/{self._picture}', filename=self._picture)
+
+
+class EventType:
+    assigned = BaseEvent('assigned', colour=0x21262D, picture='assigned.png', word='self-assigned')
+    closed = BaseEvent('closed', colour=0x9B6CEA, picture='closed.png', word='closed')
+    reopened = BaseEvent('reopened', colour=0x238636, picture='reopened.png', word='reopened')
+    commented = BaseEvent('commented', colour=0x4078c0, picture='assigned.png', word='commented', text_flag=True)
+    opened = BaseEvent('opened', colour=0x789001, picture='assigned.png', word='opened', text_flag=True)
+
+    issue_events = ['assigned', 'closed', 'reopened']
 
 
 class TimeLinePoint:
@@ -30,15 +52,14 @@ class TimeLinePoint:
     def __init__(
             self,
             *,
-            event_type: Literal['assigned', 'closed', 'reopened', 'commented'],
+            event_type: BaseEvent,
             created_at: datetime,
             actor: NamedUser,
             issue_number: int,
             body: str = '',
             html_url: str = ''
     ):
-        self.event_type: Literal['assigned', 'closed', 'reopened', 'commented'] = event_type
-        self.comment_flag: bool = True if event_type == 'commented' else False
+        self.event_type: BaseEvent = event_type
         self.created_at: datetime = created_at.replace(tzinfo=timezone.utc)
         self.actor: NamedUser = actor
         self.issue_number: int = issue_number
@@ -46,16 +67,8 @@ class TimeLinePoint:
         self.html_url: str = html_url
 
     @property
-    def colour(self):
-        return clr_dict[self.event_type]['clr']
-
-    @property
-    def file(self):
-        return File(clr_dict[self.event_type]['pic'], filename='gitcheck.png')
-
-    @property
     def author_str(self) -> str:
-        return f'@{self.actor.login} {clr_dict[self.event_type]["word"]} bugtracker issue #{self.issue_number}'
+        return f'@{self.actor.login} {self.event_type.word} bugtracker issue #{self.issue_number}'
 
     @property
     def markdown_body(self) -> str:
@@ -80,7 +93,7 @@ class TimeLine:
         self.authors: Set[str] = set()
 
     def add_event(self, event: TimeLinePoint):
-        if event.comment_flag:
+        if event.event_type.text_flag:
             self.comments.append(event)
         else:
             self.events.append(event)
@@ -90,7 +103,7 @@ class TimeLine:
         return sorted(self.events + self.comments, key=lambda x: x.created_at, reverse=False)
 
     @property
-    def embed_and_file(self) -> (Embed, File):  # todo: is there any better way than make your own constants?
+    def embed_and_file(self) -> (Embed, File):
         em = Embed(title=self.issue.title[:Lmt.Embed.title], url=self.issue.html_url)
         if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
             # we just send a small embed
@@ -102,15 +115,18 @@ class TimeLine:
             if l is None:
                 raise RuntimeError('Somehow lead_event is None')
 
-            em.colour = l.colour
+            em.colour = l.event_type.colour
             em.set_author(name=l.author_str, icon_url=l.actor.avatar_url, url=l.html_url)
             em.description = c.markdown_body if c else ''
-            file = l.file
+            file = l.event_type.file
             em.set_thumbnail(url=f'attachment://{file.filename}')
         else:
             em.colour = Clr.prpl
             for p in (sorted_points := self.sorted_points_list()):
-                em.add_field(name=p.author_str, value=p.markdown_body)  # todo: this might go beyond 6k symbols
+                chunks, chunk_size = len(p.markdown_body), Lmt.Embed.field_value
+                fields = [p.markdown_body[i:i+chunk_size] for i in range(0, chunks, chunk_size)]
+                for x in fields:
+                    em.add_field(name=p.author_str, value=x, inline=False)
             em.set_author(name=f'bugtracker issue #{self.issue.number} update', url=sorted_points[-1].html_url)
             file = None
         return em, file
@@ -121,11 +137,11 @@ class DotaBugtracker(commands.Cog):
         self.bot: AluBot = bot
         self.retries = 0
 
-    def cog_load(self) -> None:
+    async def cog_load(self) -> None:
         self.bot.ini_github()
         self.git_comments_check.start()
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.git_comments_check.stop()  # .cancel()
 
     @tasks.loop(minutes=10)
@@ -138,7 +154,7 @@ class DotaBugtracker(commands.Cog):
         dt: datetime = await self.bot.pool.fetchval(query, Sid.alu)
 
         # from datetime import timedelta  # <- for testing
-        # dt = datetime.now(timezone.utc) - timedelta(days=2)  # <- for testing
+        # dt = datetime.now(timezone.utc) - timedelta(hours=9)  # <- for testing
 
         issue_dict = dict()
 
@@ -147,17 +163,33 @@ class DotaBugtracker(commands.Cog):
                 x for x in i.get_events()
                 if x.created_at.replace(tzinfo=timezone.utc) > dt
                 and x.actor.login in assignees
-                and x.event in clr_dict
+                and x.event in EventType.issue_events
             ]
             for e in events:
                 if e.issue.number not in issue_dict:
                     issue_dict[e.issue.number] = TimeLine(issue=e.issue)
                 issue_dict[e.issue.number].add_event(
                     TimeLinePoint(
-                        event_type=e.event,  # type: ignore
+                        event_type=getattr(EventType, e.event),
                         created_at=e.created_at,
                         actor=e.actor,
                         issue_number=e.issue.number
+                    )
+                )
+
+        # now about opened by Valve assignees issues
+        for i in repo.get_issues(sort='created', state='open', since=dt):
+            if i.user.login in assignees:
+                if i.number not in issue_dict:
+                    issue_dict[i.number] = TimeLine(issue=i)
+                issue_dict[i.number].add_event(
+                    TimeLinePoint(
+                        event_type=EventType.opened,
+                        created_at=i.created_at,
+                        actor=i.user,
+                        body=i.body,
+                        html_url=i.html_url,
+                        issue_number=i.number
                     )
                 )
 
@@ -169,7 +201,7 @@ class DotaBugtracker(commands.Cog):
                 issue_dict[issue.number] = TimeLine(issue=issue)
             issue_dict[issue_num].add_event(
                 TimeLinePoint(
-                    event_type='commented',
+                    event_type=EventType.commented,
                     created_at=c.created_at,
                     actor=c.user,
                     body=c.body,
@@ -179,10 +211,26 @@ class DotaBugtracker(commands.Cog):
             )
 
         efs = [v.embed_and_file for v in issue_dict.values()]
-        efs_10list = [efs[x: x + 10] for x in range(0, len(efs), 10)]
-        for i in efs_10list:
-            msg = await self.bot.get_channel(Cid.dota_news).send(embeds=[e for e, _ in i], files=[f for _, f in i])
-            await msg.publish()
+
+        batches_to_send, character_counter, embed_counter = [], 0, 0
+        for em, file in efs:
+            character_counter += len(em)
+            embed_counter += 1
+            if character_counter < Lmt.Embed.sum_all and embed_counter < 10 + 1:
+                try:
+                    batches_to_send[-1].append((em, file))
+                except IndexError:
+                    batches_to_send.append([(em, file)])
+            else:
+                character_counter, embed_counter = len(em), 1
+                batches_to_send.append([(em, file)])
+
+        for i in batches_to_send:
+            msg = await self.bot.get_channel(Cid.dota_news).send(
+                embeds=[e for e, _ in i], files=[f for _, f in i if f]
+            )
+            if msg.channel.id == Cid.dota_news:
+                await msg.publish()
         
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
         await self.bot.pool.execute(query, datetime.now(timezone.utc), Sid.alu)

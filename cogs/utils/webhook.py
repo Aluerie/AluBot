@@ -11,8 +11,8 @@ webhookdict = {}
 
 async def user_webhook(
         ctx: Context, 
-        content: Optional[str], 
-        embed: Optional[Embed]
+        content: Optional[str] = '',
+        embed: Optional[Embed] = None
 ):
     found = 0
     webhook = None
@@ -23,7 +23,7 @@ async def user_webhook(
             found = 1
             break
     if not found:
-        webhook = await ctx.channel.create_webhook(name="{}-1".format(ctx.channel.name))
+        webhook = await ctx.channel.create_webhook(name=f"{ctx.channel.name}-1")
     msg = await webhook.send(
         content=content,
         embed=embed,

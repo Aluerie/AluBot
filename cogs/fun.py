@@ -54,10 +54,7 @@ class RPSView(View):
     def all_choices(self):
         return [self.choice_name(b) for b in self.children if isinstance(b, Button)]
 
-    async def edit_embed_player_choice(
-            self,
-            player_index: Literal[0, 1]
-            ):
+    async def edit_embed_player_choice(self, player_index: Literal[0, 1]):
         embed = self.message.embeds[0]
         embed.set_field_at(
             2,
@@ -70,22 +67,15 @@ class RPSView(View):
         )
         await self.message.edit(embed=embed)
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        if interaction.user and interaction.user in self.players:
+    async def interaction_check(self, ntr: Interaction) -> bool:
+        if ntr.user and ntr.user in self.players:
             return True
         else:
-            em = Embed(
-                colour=Clr.error,
-                description='Sorry! This game dialog is not for you.'
-            )
-            await interaction.response.send_message(embed=em, ephemeral=True)
+            em = Embed(description='Sorry! This game dialog is not for you.', colour=Clr.error)
+            await ntr.response.send_message(embed=em, ephemeral=True)
             return False
 
-    async def rps_button_callback(
-            self,
-            ntr: Interaction,
-            btn: Button
-    ):
+    async def rps_button_callback(self, ntr: Interaction, btn: Button):
         outcome_list = ['Draw', f'{self.players[0].mention} wins', f'{self.players[1].mention} wins']
 
         player_index = self.players.index(ntr.user)
@@ -133,13 +123,11 @@ class RPSView(View):
                     f'\n{winning_sentence()}'
                     f'\n\n**Good Game, Well Played {Ems.DankL} {Ems.DankL} {Ems.DankL}**'
                     f'\n**{outcome_list[win_index]}**'
-                ),  # type: ignore
+                ),
                 inline=False
             )
             if win_index:
-                em_game.set_thumbnail(
-                    url=self.players[win_index - 1].avatar.url
-                )
+                em_game.set_thumbnail(url=self.players[win_index - 1].avatar.url)
             await self.message.edit(embed=em_game, view=None)
             self.stop()
 

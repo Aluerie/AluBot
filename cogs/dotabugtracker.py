@@ -38,11 +38,13 @@ class BaseEvent:
 
 
 class EventType:
+    # pictures are taken from 16px versions here https://primer.style/octicons/
+    # and background circles are added with simple online editor https://iconscout.com/color-editor
     assigned = BaseEvent('assigned', colour=0x21262D, picture='assigned.png', word='self-assigned')
     closed = BaseEvent('closed', colour=0x9B6CEA, picture='closed.png', word='closed')
     reopened = BaseEvent('reopened', colour=0x238636, picture='reopened.png', word='reopened')
-    commented = BaseEvent('commented', colour=0x4078c0, picture='assigned.png', word='commented', text_flag=True)
-    opened = BaseEvent('opened', colour=0x789001, picture='assigned.png', word='opened', text_flag=True)
+    commented = BaseEvent('commented', colour=0x4078c0, picture='commented.png', word='commented', text_flag=True)
+    opened = BaseEvent('opened', colour=0x52CC99, picture='opened.png', word='opened', text_flag=True)
 
     issue_events = ['assigned', 'closed', 'reopened']
 

@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class ConfirmationView(View):
     def __init__(self, *, timeout: float, author_id: int, ctx: Context, delete_after: bool) -> None:
         super().__init__(timeout=timeout)
-        self.value: Optional[bool]
+        self.value: Optional[bool] = None
         self.delete_after: Optional[bool] = delete_after
         self.author_id: Optional[int] = author_id
         self.ctx: Optional[Context] = ctx
@@ -30,10 +30,7 @@ class ConfirmationView(View):
         if interaction.user and interaction.user.id == self.author_id:
             return True
         else:
-            em = Embed(
-                colour=Clr.error,
-                description='Sorry! This confirmation dialog is not for you.'
-            )
+            em = Embed(description='Sorry! This confirmation dialog is not for you.', colour=Clr.error)
             await interaction.response.send_message(embed=em, ephemeral=True)
             return False
 
@@ -53,7 +50,7 @@ class ConfirmationView(View):
     async def cancel(self, ntr: Interaction, _: Button):
         self.value = False
         await ntr.response.defer()
-        if self.delete_after  and self.message:
+        if self.delete_after and self.message:
             await self.message.delete()
         self.stop()
 

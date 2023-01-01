@@ -8,8 +8,8 @@ from discord.ui import View, Select
 
 from .utils import pages
 from .utils.context import Context
-from .utils.format import display_hmstime
-from .utils.var import Ems, Cid, rmntn, Rid, Uid, Clr
+from .utils.formats import human_timedelta
+from .utils.var import Ems, Cid, Rid, Uid, Clr
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -49,11 +49,11 @@ last_embed = Embed(
     ),
 ).add_field(
     name='• Notifications about fav Aluerie\'s streamers picking her fav champs/heroes', inline=False,
-    value=f'Just look into {Cid.alubot.mention} !'
+    value=f'Just look into <#{Cid.alubot}> !'
 ).add_field(
     name='• News feeds', inline=False,
     value=(
-        f'Dota/League related news feed in {Cid.dota_news.mention} and {Cid.lol_news.mention} '
+        f'Dota/League related news feed in <#{Cid.dota_news}> and <#{Cid.lol_news}> '
         f'taken from all over the internet! Even more, bot automatically parsed and analyses dota updates ;'
     )
 ).add_field(
@@ -62,7 +62,7 @@ last_embed = Embed(
 ).add_field(
     name='• Confessions', inline=False,
     value=(
-        f'Just visit {Cid.confessions.mention} and use buttons at the very bottom of the channel. '
+        f'Just visit <#{Cid.confessions}> and use buttons at the very bottom of the channel. '
         f'There are two buttons: for anonymous and non-anonymous confessions. '
         f'If you use the latter - your server nickname will be shown in confession message.'
     )
@@ -72,22 +72,22 @@ last_embed = Embed(
 ).add_field(
     name='• Twitch.tv notifications', inline=False,
     value=(
-        f'Notifications for my own stream in {Cid.stream_notifs.mention} and '
-        f'{rmntn(Rid.live_stream)} role for live streamers-members ;'
+        f'Notifications for my own stream in <#{Cid.stream_notifs}> and '
+        f'<@&{Rid.live_stream}> role for live streamers-members'
     )
 ).add_field(
     name='• Reaction roles', inline=False,
-    value=f'Take some roles in {Cid.roles.mention} ;'
+    value=f'Take some roles in <#{Cid.roles}>'
 ).add_field(
     name='• Timers', inline=False,
-    value=f'Bot sometimes posts daily reminders in {Cid.general.mention} ;'
+    value=f'Bot sometimes posts daily reminders in <#{Cid.general}>'
 ).add_field(
     name='• Welcoming new people', inline=False,
-    value=f'The bot welcomes new people in {Cid.welcome.mention} ;'
+    value=f'The bot welcomes new people in <#{Cid.welcome}>'
 ).add_field(
     name='• Controlling emote spam channels', inline=False,
     value=(
-        f'The bots moderates {Cid.comfy_spam.mention} and {Cid.emote_spam.mention}, '
+        f'The bots moderates <#{Cid.comfy_spam}> and <#{Cid.emote_spam}>, '
         f'also sometimes spams these channels too ;'
     )
 ).add_field(
@@ -99,8 +99,8 @@ last_embed = Embed(
 ).add_field(
     name="• Milestone members", inline=False,
     value=(
-        f'Every 50th member of this server gets fancy {rmntn(Rid.milestone)} role and '
-        f'small congratulation text in {Cid.welcome.mention} ;'
+        f'Every 50th member of this server gets fancy <@&{Rid.milestone}> role and '
+        f'small congratulation text in <#{Cid.welcome}>'
     )
 ).add_field(
     name="• Random comfy reactions", inline=False,
@@ -108,18 +108,17 @@ last_embed = Embed(
 ).add_field(
     name='• Some important things', inline=False,
     value=(
-        f'For example, the bot doesn\'t like bots in {Cid.general.mention} and '
-        f'weebs in {Cid.weebs.mention} ;'
+        f'For example, the bot doesn\'t like bots in <#{Cid.general}> and weebs in <#{Cid.weebs}> ;'
     )
 ).add_field(
     name='• Thanks to twitch subs', inline=False,
     value=(
-        f"The bot thanks people who get role {rmntn(Rid.subs)} via discord-twitch integration "
-        f"in {Cid.stream_notifs.mention} ;"
+        f"The bot thanks people who get role <@&{Rid.subs}> via discord-twitch integration "
+        f"in <#{Cid.stream_notifs}> ;"
     )
 ).add_field(
     name='• Experience system', inline=False,
-    value='We have our own special experience system ;'
+    value='We have our own special experience system'
 ).add_field(
     name='• Reputation system', inline=False,
     value='Your "thanks", "ty" messages with mentions give people reputation or you can just use `$rep` command ;'
@@ -166,7 +165,7 @@ class HelpCommand(commands.HelpCommand):
 
         cd_str = ''
         if c.cooldown is not None:
-            cd_str = f' | cd: {c.cooldown.rate} per {display_hmstime(c.cooldown.per)}'
+            cd_str = f' | cd: {c.cooldown.rate} per {human_timedelta(c.cooldown.per, strip=True)}'
 
         help_str = c.help or 'No documentation'
 

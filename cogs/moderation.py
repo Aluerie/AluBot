@@ -7,7 +7,7 @@ from discord import Embed, Forbidden, Member, app_commands, AuditLogAction
 from discord.ext import commands
 from discord.utils import format_dt
 
-from .utils import time
+from .utils import times
 from .utils.context import Context
 from .utils.var import Rid, Ems, Clr, Uid, Sid, Cid
 
@@ -60,7 +60,7 @@ class Moderation(commands.Cog):
     @app_commands.command(description="Mute+timeout member from chatting")
     @app_commands.describe(member='Member to mute+timeout', duration='Duration of the mute', reason='Reason')
     async def mute(self, ctx: Interaction, member: Member, duration: str, *, reason: str = "No reason"):
-        dt = time.FutureTime(duration)
+        dt = times.FutureTime(duration)
         ctx = await Context.from_interaction(ctx)
         delta = dt.dt - datetime.now(timezone.utc)
         await self.mute_work(ctx, member, dt.dt, delta, reason)
@@ -72,7 +72,7 @@ class Moderation(commands.Cog):
             ctx: Context,
             member: Member,
             *,
-            when: Annotated[time.FriendlyTimeResult, time.UserFriendlyTime(commands.clean_content, default='…')]
+            when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='…')]
     ):
         """Mute+timeout member from chatting"""
         delta = when.dt - datetime.now(timezone.utc)

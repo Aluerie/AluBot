@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 from github import Github
 
 from config import GIT_PERSONAL_TOKEN
-from .utils.format import block_function
+from .utils.formats import block_function
 from .utils.github import human_commit
 from .utils.imgtools import str_to_file
 from .utils.links import replace_tco_links, move_link_to_title

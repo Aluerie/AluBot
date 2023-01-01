@@ -7,7 +7,7 @@ import regex
 from discord import AuditLogAction, Embed, NotFound, User
 from discord.ext import commands, tasks
 
-from .utils.format import inline_wordbyword_diff
+from .utils.formats import inline_wordbyword_diff
 from .utils.var import Sid, Ems, Cid, Rgx, Clr, Rid
 
 if TYPE_CHECKING:

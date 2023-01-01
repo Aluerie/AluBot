@@ -7,7 +7,7 @@ from discord import Embed, Interaction, Member, app_commands
 from discord.ext import commands, tasks
 from discord.utils import sleep_until
 
-from cogs.utils import time
+from cogs.utils import times
 from cogs.utils.context import Context
 from cogs.utils.distools import send_pages_list
 from cogs.utils.var import Ems, Clr, Cid, Sid
@@ -60,7 +60,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
         ).add_field(
             inline=False,
             name='Reminder time',
-            value=time.format_tdR(dt)
+            value=times.format_tdR(dt)
         ).set_footer(
             text=f'Reminder was added under `id #{1 + old_max_id}`'
         )
@@ -77,7 +77,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
     @slh_group.command(description='Remind you about `remind_text` in `remind_time`')
     @app_commands.describe(remind_time='When to remind', remind_text='What to remind about')
     async def me(self, ntr: Interaction, remind_time: str, remind_text: str):
-        future_time = time.FutureTime(remind_time)
+        future_time = times.FutureTime(remind_time)
         await self.add_work(ntr, ntr.user, future_time.dt, remind_text)
 
     @remind.command(
@@ -88,7 +88,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
             self,
             ctx: Context,
             *,
-            when: Annotated[time.FriendlyTimeResult, time.UserFriendlyTime(commands.clean_content, default='…')]
+            when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='…')]
     ):
         """
         Makes bot remind you about `remind_text` in `remind_time`. \
@@ -129,7 +129,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
     @staticmethod
     async def list_work(ctx: Union[Context, Interaction], member: Member):
         remind_list = [
-            f'{counter}. {time.format_tdR(row.dtime.replace(tzinfo=timezone.utc))}\n{row.name}'
+            f'{counter}. {times.format_tdR(row.dtime.replace(tzinfo=timezone.utc))}\n{row.name}'
             for counter, row in enumerate(db.session.query(db.r).filter_by(userid=member.id))
         ]
         await send_pages_list(

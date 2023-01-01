@@ -9,7 +9,7 @@ from discord.ext import commands, tasks
 
 from config import TWITTER_BEARER_TOKEN
 from .utils.imgtools import url_to_file
-from .utils.var import Cid, Uid, umntn
+from .utils.var import Cid, Uid
 
 if TYPE_CHECKING:
     from .utils.context import Context
@@ -82,7 +82,7 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
 
     async def on_request_error(self, status_code):
         await self.bot.get_channel(Cid.spam_me).send(
-            content=f"{umntn(Uid.alu)} I'm stuck with twitter-stream {status_code}")
+            content=f"{self.bot.owner.mention} I'm stuck with twitter-stream {status_code}")
         self.disconnect()
 
     async def on_exception(self, exception):

@@ -5,28 +5,27 @@ from typing import TYPE_CHECKING
 from discord import Embed, app_commands
 from discord.ext import commands
 
-from .utils.var import Ems, Sid, Cid, Clr, cmntn
+from .utils.var import Ems, Sid, Cid, Clr
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
 
 
 class Suggestions(commands.Cog):
-    """Suggest something"""
+    """Commands related to suggestions such as
 
-    def __init__(self, bot):
+    * setting up suggestion channel
+    * making said suggestions
+    """
+
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.help_emote = Ems.peepoWTF
 
-    @commands.hybrid_command(
-        name='suggest',
-        description=f'Suggest something and people will vote on it in #patch_notes',
-        help=f'Suggest something and people will vote on it in {cmntn(Cid.patch_notes)}',
-        aliases=["suggestion"]
-    )
+    @commands.hybrid_command(aliases=["suggestion"])
     @app_commands.describe(text='Suggestion text')
     async def suggest(self, ctx, *, text: str):
-        """Read above"""
+        """Suggest something for people to vote on in suggestion channel"""
         patch_channel = self.bot.get_channel(Cid.suggestions)
 
         query = """ UPDATE botinfo 
@@ -53,5 +52,5 @@ class Suggestions(commands.Cog):
         await ctx.send(embed=em2, ephemeral=True)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Suggestions(bot))

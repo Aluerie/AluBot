@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from .utils.checks import is_owner
 from .utils.imgtools import url_to_img, img_to_file, get_text_wh
-from .utils.var import Cid, Clr, Ems, Rid, Sid, Uid, umntn
+from .utils.var import Cid, Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -67,7 +67,7 @@ async def welcome_message(
 
     if not member.bot:
         description = (
-            f'**💜 {umntn(Uid.alu)} is our princess ' 
+            f'**💜 <@{Uid.alu}> is our princess ' 
             f'and I\'m her bot ! {Ems.peepoRose} {Ems.peepoRose} {Ems.peepoRose}**\n'
             f'1️⃣ Read the rules and useful info in <#724996010169991198> {Ems.PepoG}\n'
             f'2️⃣ Choose some fancy roles in <#725941486063190076> {Ems.peepoNiceDay}\n'

@@ -5,7 +5,7 @@ import traceback
 from datetime import datetime, timezone
 from os import environ, listdir
 from typing import (
-    TYPE_CHECKING, Any, Union, Dict, Optional, Tuple, List, Sequence, Protocol
+    TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
 )
 
 from asyncpg import Pool
@@ -20,18 +20,16 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config as cfg
 from . import imgtools
-from .config import PrefixConfig
+from .jsonconfig import PrefixConfig
 from .context import Context
 from .twitch import TwitchClient
-from .var import Sid, Cid, Clr, umntn, Uid
+from .var import Cid, Clr
 
 if TYPE_CHECKING:
-    from asyncpg import Connection
     from discord import AppInfo, File, Interaction, Message, User
     from discord.app_commands import AppCommand
     from discord.abc import Snowflake, Messageable
     from github import Repository
-    from types import TracebackType
 
 log = logging.getLogger(__name__)
 
@@ -47,45 +45,6 @@ def _alubot_prefix_callable(bot: AluBot, msg: Message):
     else:
         prefix = bot.prefixes.get(msg.guild.id, '$')
     return commands.when_mentioned_or(prefix, "/")(bot, msg)
-
-
-# For typing purposes, `AluBot.db` returns a Protocol type
-# that allows us to properly type the return values via narrowing
-# Right now, `asyncpg` is untyped so this is better than the current status quo
-# To actually receive the regular `Pool` type `AluBot.pool` can be used instead.
-
-
-class ConnectionContextManager(Protocol):
-    async def __aenter__(self) -> Connection:
-        ...
-
-    async def __aexit__(
-        self,
-        exc_type: Optional[type[BaseException]],
-        exc_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
-    ) -> None:
-        ...
-
-
-class DatabaseProtocol(Protocol):
-    async def execute(self, query: str, *args: Any, timeout: Optional[float] = None) -> str:
-        ...
-
-    async def fetch(self, query: str, *args: Any, timeout: Optional[float] = None) -> list[Any]:
-        ...
-
-    async def fetchrow(self, query: str, *args: Any, timeout: Optional[float] = None) -> Optional[Any]:
-        ...
-
-    async def fetchval(self, query: str, *args: Any, timeout: Optional[float] = None) -> Optional[Any]:
-        ...
-
-    def acquire(self, *, timeout: Optional[float] = None) -> ConnectionContextManager:
-        ...
-
-    def release(self, connection: Connection) -> None:
-        ...
 
 
 class AluBot(commands.Bot):
@@ -129,7 +88,7 @@ class AluBot(commands.Bot):
                 everyone=False
             )  # .none()
         )
-        self.client_id: str = cfg.TEST_DISCORD_CLIENT_ID if test else cfg.DISCORD_CLIENT_ID
+        self.client_id: int = cfg.TEST_DISCORD_CLIENT_ID if test else cfg.DISCORD_CLIENT_ID
         self.test: bool = test
         self.app_commands: Dict[str, int] = {}
         self.odota_ratelimit: str = 'was not received yet'
@@ -172,10 +131,6 @@ class AluBot(commands.Bot):
 
     async def get_context(self, origin: Union[Interaction, Message], /, *, cls=Context) -> Context:
         return await super().get_context(origin, cls=cls)
-
-    @property
-    def db(self) -> DatabaseProtocol:
-        return self.pool  # type: ignore
 
     @property
     def owner(self) -> User:
@@ -249,20 +204,6 @@ class AluBot(commands.Bot):
             cmds = await self.tree.fetch_commands(guild=guild.id if guild else None)
         self.app_commands = {cmd.name: cmd.id for cmd in cmds}
 
-    # Shortcuts
-
-    @property
-    def alu_guild(self):
-        return self.get_guild(Sid.alu)
-
-    @property
-    def wink_guild(self):
-        return self.get_guild(Sid.wink)
-
-    @property
-    def blush_guild(self):
-        return self.get_guild(Sid.blush)
-
     # Image Tools
     @staticmethod
     def str_to_file(
@@ -319,18 +260,25 @@ class AluBot(commands.Bot):
             verbosity: int = 10,
             mention: bool = True
     ) -> None:
-        """
-        Function to send traceback into the discord channel.
-
-        It pings @Irene if non-testing version of the bot is running.
-        @param error:
-        @param destination:
-        @param where:
-        if `embed` is specified then this is ignored essentially
-        @param embed:
-        @param verbosity:
-        @param mention:
-        @return: None
+        """Function to send traceback into the discord channel.
+        Parameters
+        -----------
+        error: :class: Exception
+            Exception that is going to be sent to the `destination`
+        destination:
+            where to send the traceback message
+        where:
+            text prompt about where exactly error happened
+            if `embed` is specified then this is ignored essentially
+        embed:
+            heh
+        verbosity:
+            hah
+        mention: bool
+            if True then the message will mention the bot owner
+        Returns
+        --------
+        None
         """
         ch = destination or self.get_channel(Cid.spam_me)
 
@@ -344,7 +292,7 @@ class AluBot(commands.Bot):
             paginator.add_line(line)
 
         embed = embed or Embed(colour=Clr.error).set_author(name=where)
-        content = umntn(Uid.alu) if mention else ''
+        content = self.owner.mention if mention else ''
         await ch.send(content=content, embed=embed)
 
         for page in paginator.pages:

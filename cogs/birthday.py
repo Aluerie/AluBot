@@ -14,7 +14,7 @@ from discord.ext.commands import Range
 from numpy.random import choice
 
 from .utils.distools import send_pages_list
-from .utils.var import Cid, Ems, Rid, Clr, cmntn, Sid
+from .utils.var import Cid, Ems, Rid, Clr, Sid
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -198,26 +198,17 @@ class Birthday(commands.Cog):
         em.set_footer(text='Important! By submitting this information you agree it can be shown to anyone.')
         await ctx.reply(embed=em)
 
-    @birthday.command(
-        name='delete',
-        help=f'Delete your birthday and stop getting congratulations from the bot in {cmntn(Cid.bday_notifs)};',
-        aliases=['del'],
-        description='Delete your birthday data'
-    )
+    @birthday.command(aliases=['del'])
     async def delete(self, ctx: Context):
-        """read above"""
+        """Delete your birthday data and stop getting congratulations"""
         query = 'UPDATE users SET bdate=$1 WHERE users.id=$2;'
         await self.bot.pool.execute(query, None, ctx.author.id)
         await ctx.reply("Your birthday is successfully deleted", ephemeral=True)
 
-    @birthday.command(
-        name='check',
-        usage='[member=you]',
-        description='Check your birthday'
-    )
+    @birthday.command(usage='[member=you]')
     @app_commands.describe(member='Member of the server or you if not specified')
     async def check(self, ctx: Context, member: Optional[Member]):
-        """Check member's birthday in database"""
+        """Check your or somebody's birthday in database"""
         member = member or ctx.message.author
         query = 'SELECT bdate, tzone FROM users WHERE users.id=$1'
         row = await self.bot.pool.fetchrow(query, member.id)

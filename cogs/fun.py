@@ -12,7 +12,7 @@ from discord.ext.commands import Range
 from discord.ui import Button, View, button
 from numpy.random import randint, choice
 
-from .utils.var import Clr, Ems, Uid, Cid, Sid, cmntn, Rgx
+from .utils.var import Clr, Ems, Uid, Cid, Sid, Rgx
 from .utils.webhook import user_webhook, check_msg_react
 
 if TYPE_CHECKING:
@@ -249,12 +249,9 @@ class FunThings(commands.Cog, name='Fun'):
                 return
         await yourlife(message)
 
-    @commands.hybrid_command(
-        description='Send 3x random emote into #emote_spam channel',
-        help=f'Send 3x random emote into {cmntn(Cid.emote_spam)} ;'
-    )
+    @commands.hybrid_command()
     async def doemotespam(self, ctx: Context):
-        """Read above"""
+        """Send 3x random emote into emote spam channel"""
         rand_guild = choice(self.bot.guilds)
         rand_emoji = choice(rand_guild.emojis)
         answer_text = f'{str(rand_emoji)} ' * 3

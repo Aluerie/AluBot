@@ -8,9 +8,9 @@ from bs4 import BeautifulSoup
 from discord import Embed
 from discord.ext import commands, tasks
 
-from .utils.format import block_function
+from .utils.formats import block_function
 from .utils.links import replace_tco_links, move_link_to_title
-from .utils.var import Cid, umntn, Sid, Uid, Img, Clr
+from .utils.var import Cid, Sid, Uid, Img, Clr
 
 if TYPE_CHECKING:
     from discord import Message
@@ -70,10 +70,7 @@ class CopypasteLeague(commands.Cog):
                 msg = await self.bot.get_channel(Cid.lol_news).send(content=content, embeds=embeds, files=files)
                 await msg.publish()
         except Exception as e:
-            error_message = traceback.format_exc()
-            await self.bot.get_channel(Cid.spam_me).send(
-                f'{umntn(Uid.alu)} Something went wrong with #league-news copypaste\n'
-                f'```python\n{error_message}```')
+            await self.bot.send_traceback(e, where='LoL news copypaste')
 
     @tasks.loop(minutes=15)
     async def patch_checker(self):

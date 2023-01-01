@@ -1,6 +1,6 @@
 # DISCORD
-MAIN_TOKEN = ''
-DISCORD_CLIENT_ID = 123
+MAIN_TOKEN = ''  # your bot's token
+DISCORD_CLIENT_ID = 123  # your bot's client id from oath page
 
 TEST_TOKEN = ''
 TEST_DISCORD_CLIENT_ID = 123

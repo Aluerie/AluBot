@@ -14,7 +14,7 @@ from pyot.utils.functools import async_property
 
 from ..dota.const import ODOTA_API_URL, dota_player_colour_map
 from ..dota import hero, item, ability
-from cogs.utils.format import display_relativehmstime
+from cogs.utils.formats import human_timedelta
 from cogs.utils.imgtools import img_to_file, get_text_wh
 from cogs.utils.var import Clr, MP, Img, Cid
 
@@ -128,7 +128,7 @@ class ActiveMatch(Match):
             self.url = ts.url
             if ts.online:
                 self.twitch_status = 'Live'
-                self.vod_link = await twitch.last_vod_link(self.twitchtv_id, epoch_time_ago=self.long_ago)
+                self.vod_link = await twitch.last_vod_link(self.twitchtv_id, seconds_ago=self.long_ago)
             else:
                 self.twitch_status = 'Offline'
                 self.vod_link = ''
@@ -170,7 +170,7 @@ class ActiveMatch(Match):
         )
         em = Embed(colour=self.colour, url=self.url)
         em.description = (
-            f'`/match {self.match_id}` started {display_relativehmstime(self.long_ago)}\n'
+            f'`/match {self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n'
             f'{self.vod_link}{self.links}'
         )
         em.set_image(url=f'attachment://{img_file.filename}')

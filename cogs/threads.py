@@ -18,9 +18,11 @@ watched_threads_ids = []
 class ThreadsManaging(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
+
+    async def cog_load(self) -> None:
         self.unarchive_threads.start()
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.unarchive_threads.cancel()
 
     @commands.Cog.listener()

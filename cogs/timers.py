@@ -6,7 +6,7 @@ from discord import Embed
 from discord.ext import commands, tasks
 from numpy.random import randint, seed
 
-from .utils.var import Rid, Cid, cmntn, umntn, Uid, rmntn, Sid, Ems, Clr
+from .utils.var import Rid, Cid, Uid, Sid, Ems, Clr
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -118,6 +118,8 @@ async def get_rule_text(pool: Pool):
 class Timers(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
+
+    async def cog_load(self) -> None:
         self.daily_reminders.start()
         self.daily_important_reminders.start()
         self.daily_fact_reminders.start()

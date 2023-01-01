@@ -25,7 +25,20 @@ async def send_pages_list(
         author_name: Optional[str] = None,
         author_icon: Optional[str] = None,
 ) -> Message:
-    """helper command to send possibly paginated strings"""
+    """
+    Parameters
+    ----------
+    ctx :
+    string_list :
+    split_size :
+    title :
+    description_prefix :
+    colour :
+    footer_text :
+    author_name :
+    author_icon :
+
+    """
     if split_size != 0:
         places_list = [string_list[x:x + split_size] for x in range(0, len(string_list), split_size)]
     else:

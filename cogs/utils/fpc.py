@@ -393,19 +393,15 @@ class FPCBase:
             player_names: List[str],
             *,
             mode_add: bool
-    ):
+    ) -> None:
         """
+        Base function to add/remove players from user's favourite list.
 
-        @param ctx:
-        @param player_names:
-        @param mode_add:
-        @return: None
-
-        ---
-        in the code - assumed logically for `add`. Note that for `remove` 's' and 'a' are swapped.
-        s: success
-        a: already
-        f: fail
+        Parameters
+        ----------
+        ctx :
+        player_names :
+        mode_add :
         """
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
         fav_ids = await ctx.pool.fetchval(query, ctx.guild.id)
@@ -414,6 +410,16 @@ class FPCBase:
                     WHERE name_lower=ANY($1)
                 """  # AND NOT id=ANY($2)
         sa_rows = await ctx.pool.fetch(query, [name.lower() for name in player_names])
+        # The following notations are assumed logically for mode_add being `True`.
+        # +-----------------+-----------------------+-----------------------+
+        # | variable_name   | `mode_add = True`     | `mode_add = False`    |
+        # +=================+=======================+=======================+
+        # | s               | successfully added    | already removed       |
+        # +-----------------+-----------------------+-----------------------+
+        # | a               | already added         | successfully removed  |
+        # +-----------------+-----------------------+-----------------------+
+        # | f               | failed to add         | failed to remove      |
+        # +-----------------+-----------------------+-----------------------+
         s_ids = [row.id for row in sa_rows if row.id not in fav_ids]
         s_names = [row.display_name for row in sa_rows if row.id not in fav_ids]
         a_ids = [row.id for row in sa_rows if row.id in fav_ids]
@@ -487,7 +493,7 @@ class FPCBase:
         """Base function for adding/removing characters such as heroes/champs from fav lists"""
         await ctx.typing()
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
-        fav_ids = await ctx.db.fetchval(query, ctx.guild.id)
+        fav_ids = await ctx.pool.fetchval(query, ctx.guild.id)
 
         f_names, sa_ids = [], []
         for name in character_names:

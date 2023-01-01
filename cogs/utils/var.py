@@ -1,22 +1,10 @@
 from typing import TYPE_CHECKING, Literal, Optional
 from typing_extensions import Self
 
-from discord import Colour
+import discord
 
 if TYPE_CHECKING:
     pass
-
-
-def cmntn(id_):
-    return f'<#{id_}>'
-
-
-def umntn(id_):
-    return f'<@!{id_}>'
-
-
-def rmntn(id_):
-    return f'<@&{id_}>'
 
 
 class Rgx:
@@ -31,13 +19,10 @@ class Rgx:
 
     url_danny = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
     url_simple = r"(https?://\S+)"
-    url_search = r"\b((?:https?://)?(?:(?:www\.)?(?:[\da-z\.-]+)\.(?:[a-z]{2,6})|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|(?:(?:[0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?:(?::[0-9a-fA-F]{1,4}){1,6})|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(?::[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])|(?:[0-9a-fA-F]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])))(?::[0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])?(?:/[\w\.-]*)*/?)\b"
-
-
-# todo: make it a bit better with classes heritage and stuff
 
 
 class Sid:
+    """Autocomplete-friendly stash for server ids"""
     alu = 702561315478044804
     wink = 759916212842659850
     blush = 1015226252086476860
@@ -49,67 +34,55 @@ class Sid:
     ]
 
 
-class ChannelID(int):
-
-    @property
-    def mention(self):
-        return f'<#{self}>'
-
-
-class ChannelCollection:
-    def __init__(self, **kwargs: int):
-        self.kwargs = kwargs
-
-    def __getattr__(self, attr: str) -> int:
-        return ChannelID(self.kwargs.get(attr))
-
-    def __repr__(self) -> str:
-        return f"<Known Channels IDs {self.kwargs!r}"
-
-
 class Cid:
-    # alu server
-    rules = ChannelID(724996010169991198)
-    roles = ChannelID(725941486063190076)
-    welcome = ChannelID(725000501690630257)
-    stream_notifs = ChannelID(724420415199379557)
-    clips = ChannelID(770721052711845929)
-    bday_notifs = ChannelID(748604236190842881)
-    general = ChannelID(702561315478044807)
-    emote_spam = ChannelID(730838697443852430)
-    comfy_spam = ChannelID(727539910713671802)
-    pubs_talk = ChannelID(731376390103892019)
-    logs = ChannelID(731615128050598009)
-    alubot = ChannelID(724991054474117241)
-    saved = ChannelID(709028718286340106)
-    confessions = ChannelID(731703242597072896)
-    weebs = ChannelID(731887442768166933)
-    bot_spam = ChannelID(724986090632642653)
-    nsfw_bob_spam = ChannelID(731607736155897978)
+    """Autocomplete-friendly stash for channel ids
 
-    stream_room = ChannelID(766063288302698496)
+    Example Usage: ::
 
-    dota_news = ChannelID(724986688589267015)
-    lol_news = ChannelID(724993871662022766)
+        # Remember that channel mentions are
+        channel_mention = f'<#{Cid.channel_id}>'
+    """
+    rules = 724996010169991198
+    roles = 725941486063190076
+    welcome = 725000501690630257
+    stream_notifs = 724420415199379557
+    clips = 770721052711845929
+    bday_notifs = 748604236190842881
+    general = 702561315478044807
+    emote_spam = 730838697443852430
+    comfy_spam = 727539910713671802
+    pubs_talk = 731376390103892019
+    logs = 731615128050598009
+    alubot = 724991054474117241
+    saved = 709028718286340106
+    confessions = 731703242597072896
+    weebs = 731887442768166933
+    bot_spam = 724986090632642653
+    nsfw_bob_spam = 731607736155897978
 
-    patch_notes = ChannelID(731759693113851975)
-    suggestions = ChannelID(724994495581782076)
+    stream_room = 766063288302698496
 
-    my_time = ChannelID(788915790543323156)
+    dota_news = 724986688589267015
+    lol_news = 724993871662022766
+
+    patch_notes = 731759693113851975
+    suggestions = 724994495581782076
+
+    my_time = 788915790543323156
 
     # wink server
-    roses = ChannelID(759916212842659853)
-    spam_me = ChannelID(970823670702411810)
-    repost = ChannelID(971504469995049041)
+    roses = 759916212842659853
+    spam_me = 970823670702411810
+    repost = 971504469995049041
 
-    coop = ChannelID(966366521607745586)
+    coop = 966366521607745586
 
-    global_logs = ChannelID(997149550324240465)
+    global_logs = 997149550324240465
 
-    copylol_ff20 = ChannelID(791099728498130944)
-    copydota_info = ChannelID(873430376033452053)
-    copydota_steam = ChannelID(881843565251141632)
-    copydota_tweets = ChannelID(963954743644934184)
+    copylol_ff20 = 791099728498130944
+    copydota_info = 873430376033452053
+    copydota_steam = 881843565251141632
+    copydota_tweets = 963954743644934184
 
 
 class Cids:
@@ -117,6 +90,14 @@ class Cids:
 
 
 class Uid:
+    """Autocomplete-friendly stash for User ids
+
+    Example Usage: ::
+
+        # Remember that user mentions are
+        user_mention = f'<@{Uid.user_id}>'
+    """
+
     alu = 312204139751014400
     bot = 713124699663499274
     yen = 948934071432654929
@@ -126,6 +107,13 @@ class Uid:
 
 
 class Rid:
+    """Autocomplete-friendly stash for Role ids
+
+    Example Usage: ::
+
+        # Remember that role mentions are
+        role_mention = f'<@&{Rid.role_id}>'
+    """
     bot_admins = (743509859894558731, 837052934919028746)
     bots = 724981475099017276
     nsfwbots = 959955573405777981
@@ -246,16 +234,16 @@ class Lmt:
 
 class Clr:
     """My chosen colours"""
-    prpl = Colour(0x9678b6)
-    rspbrry = Colour(0xC42C48)
-    red = Colour(0xff0000)
-    neon = Colour(0x4D4DFF)
-    error = Colour(0x800000)
-    olive = Colour(0x98BF64)
-    twitch = Colour(0x9146FF)
+    prpl = discord.Colour(0x9678b6)
+    rspbrry = discord.Colour(0xC42C48)
+    red = discord.Colour(0xff0000)
+    neon = discord.Colour(0x4D4DFF)
+    error = discord.Colour(0x800000)
+    olive = discord.Colour(0x98BF64)
+    twitch = discord.Colour(0x9146FF)
 
 
-class MaterialPalette(Colour):
+class MaterialPalette(discord.Colour):
     """Material Design Color Palette"""
 
     def __init__(self, value: int):
@@ -440,7 +428,7 @@ class MaterialPalette(Colour):
         return cls(cls.colors_dict['white'][shade])
 
 
-class MaterialAccentPalette(Colour):
+class MaterialAccentPalette(discord.Colour):
     """Material Design Color Palette with Accent Designs"""
 
     def __init__(self, value: int):
@@ -498,12 +486,11 @@ class MaterialAccentPalette(Colour):
     }
     shades = [700, 400, 200, 100]
     core: Literal[200] = 200
+    ShadeTypeHint = Literal[700, 400, 200, 100]
 
     colors_dict = {}
     for k, v in colors.items():
         colors_dict[k] = {shade: clr for shade, clr in zip(shades, v)}
-
-    ShadeTypeHint = Literal[700, 400, 200, 100]
 
     @classmethod
     def red(cls, *, shade: ShadeTypeHint = core) -> Self:

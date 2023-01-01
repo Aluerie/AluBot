@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import TYPE_CHECKING, List
 
 from discord.ext.commands import BadArgument
 
 from twitchio import Client
 
-from cogs.utils.format import gettimefromhms, display_hmstime
+from cogs.utils.formats import human_timedelta
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -44,12 +45,32 @@ class TwitchClient(Client):
         except IndexError:
             raise BadArgument(f'Error checking stream `{user_login}`.\n User either does not exist or is banned.')
 
-    async def last_vod_link(self, user_id: int, epoch_time_ago: int = 0, md: bool = True) -> str:
+    async def last_vod_link(
+            self,
+            user_id: int,
+            seconds_ago: int = 0,
+            md: bool = True
+    ) -> str:
         """Get last vod link for user with `user_id` with timestamp as well"""
         try:
             video: Video = (await self.fetch_videos(user_id=user_id, period='day'))[0]  # type: ignore
-            duration = gettimefromhms(video.duration)
-            vod_url = f'{video.url}?t={display_hmstime(duration - epoch_time_ago)}'
+
+            def get_time_from_hms(hms_time: str):
+                """Convert time after `?t=` in vod link into amount of seconds
+
+                03h51m08s -> 3 * 3600 + 51 * 60 + 8 = 13868
+                """
+                def regex_time(letter: str) -> int:
+                    """h -> 3, m -> 51, s -> 8 for above example"""
+                    pattern = r'\d+(?={})'.format(letter)
+                    units = re.search(pattern, hms_time)
+                    return int(units.group(0)) if units else 0
+
+                timeunit_dict = {'h': 3600, 'm': 60, 's': 1}
+                return sum([v * regex_time(letter) for letter, v in timeunit_dict.items()])
+
+            duration = get_time_from_hms(video.duration)
+            vod_url = f'{video.url}?t={human_timedelta(duration - seconds_ago, strip=True, suffix=False)}'
             return f'/[TwVOD]({vod_url})' if md else vod_url
         except IndexError:
             return ''
@@ -135,10 +156,10 @@ async def main():
     from config import TWITCH_TOKEN
     tc = TwitchClient(token=TWITCH_TOKEN)
     await tc.connect()
-    tw_id = await tc.twitch_id_by_name('aluerie')
+    tw_id = await tc.twitch_id_by_name('gorgc')
     print(tw_id)
-    v = await tc.get_twitch_stream(tw_id)
-    print(v)
+    print(await tc.last_vod_link(tw_id, 0))
+
     await tc.close()
 
 

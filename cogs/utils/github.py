@@ -6,7 +6,7 @@ from aiohttp import ClientSession
 from github import Github
 from unidiff import PatchSet
 
-from .format import inline_wordbyword_diff
+from .formats import inline_wordbyword_diff
 
 
 async def human_commit(repo, commits, test_num=0):

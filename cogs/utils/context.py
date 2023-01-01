@@ -14,9 +14,10 @@ if TYPE_CHECKING:
     from discord import (
         Button, Guild, Member, Message, Interaction, TextChannel, Thread, VoiceChannel
     )
-    from .bot import AluBot, DatabaseProtocol
+    from .bot import AluBot
 
 
+# Todo rewrite this to please SolsticeShard
 class ConfirmationView(View):
     def __init__(self, *, timeout: float, author_id: int, ctx: Context, delete_after: bool) -> None:
         super().__init__(timeout=timeout)
@@ -65,10 +66,6 @@ class Context(commands.Context):
     @property
     def session(self) -> ClientSession:
         return self.bot.session
-    
-    @property
-    def db(self) -> DatabaseProtocol:
-        return self.pool  # type: ignore
 
     async def prompt(
             self,
@@ -79,7 +76,8 @@ class Context(commands.Context):
             delete_after: bool = True,
             author_id: Optional[int] = None,
     ) -> Optional[bool]:
-        """An interactive reaction confirmation dialog.
+        """
+        An interactive reaction confirmation dialog.
         Parameters
         -----------
         content: str
@@ -99,6 +97,7 @@ class Context(commands.Context):
             ``True`` if explicit confirm,
             ``False`` if explicit deny,
             ``None`` if deny due to timeout
+        ----
         """
         if content is None and embed is None:
             raise TypeError('Either content or embed should be provided')

@@ -9,11 +9,7 @@ import click
 
 from config import POSTGRES_URL
 from cogs.utils.bot import AluBot, setup_logging
-
-
-class DRecord(asyncpg.Record):  # Dot Record - allows dot-notations
-    def __getattr__(self, name):
-        return self[name]
+from cogs.utils.database import DRecord
 
 
 async def bot_run(test: bool):

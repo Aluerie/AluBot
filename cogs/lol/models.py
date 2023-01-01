@@ -15,7 +15,7 @@ from pyot.utils.functools import async_property
 
 from .const import LiteralPlatform, platform_to_server
 from .utils import get_role_mini_list, icon_url_by_champ_id
-from ..utils.format import display_relativehmstime
+from ..utils.formats import human_timedelta
 from ..utils.imgtools import get_text_wh
 from ..utils.var import Clr, MP
 
@@ -168,8 +168,8 @@ class LiveMatch(Match):
         log.debug('LF | made a better thumbnail')
         em = Embed(color=Clr.rspbrry, url=ts.url)
         em.description = (
-            f'Match `{self.match_id}` started {display_relativehmstime(self.long_ago)}\n'
-            f'{await bot.twitch.last_vod_link(ts.twitch_id, epoch_time_ago=self.long_ago)}{self.links}'
+            f'Match `{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n'
+            f'{await bot.twitch.last_vod_link(ts.twitch_id, seconds_ago=self.long_ago)}{self.links}'
         )
         em.set_image(url=f'attachment://{img_file.filename}')
         em.set_thumbnail(url=await self.champ_icon_url)

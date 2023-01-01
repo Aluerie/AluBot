@@ -7,8 +7,8 @@ from discord import Embed, app_commands
 from discord.ext import commands
 
 from .utils.context import Context
-from .utils.format import display_time
-from .utils.var import Clr, rmntn, Cid, Ems
+from .utils.formats import human_timedelta
+from .utils.var import Clr, Cid, Ems
 
 if TYPE_CHECKING:
     from discord import Interaction
@@ -84,13 +84,13 @@ class CommandErrorHandler(commands.Cog):
             case commands.BotMissingPermissions():
                 desc = f'Bot is missing permissions: {", ".join(error.missing_permissions)}'
             case commands.MissingRole():
-                desc = f'Missing role: {rmntn(error.missing_role)}'
+                desc = f'Missing role: <@&{error.missing_role}>'
             case commands.BotMissingRole():
-                desc = f'Missing role: {rmntn(error.missing_role)}'
+                desc = f'Missing role: <@&{error.missing_role}'
             case commands.MissingAnyRole():
-                desc = f'Missing roles: {", ".join([rmntn(id_) for id_ in error.missing_roles])}'
+                desc = f'Missing roles: {", ".join([f"<@&{id_}>" for id_ in error.missing_roles])}'
             case commands.BotMissingAnyRole():
-                desc = f'Missing roles: {", ".join([rmntn(id_) for id_ in error.missing_roles])}'
+                desc = f'Missing roles: {", ".join([f"<@&{id_}>" for id_ in error.missing_roles])}'
             case commands.NSFWChannelRequired():
                 desc = "Ask Aluerie to make that channel NSFW friendly"
             case commands.CommandNotFound():
@@ -110,7 +110,7 @@ class CommandErrorHandler(commands.Cog):
                     f"Please, go to a server where {self.bot.user.mention} is invited."
                 )
             case commands.CommandOnCooldown() | app_commands.CommandOnCooldown():
-                desc = f"Please retry in `{display_time(error.retry_after, 3)}`"
+                desc = f"Please retry in `{human_timedelta(error.retry_after, brief=True)}`"
             case commands.CheckFailure():
                 desc = f'{error}'
             case _:

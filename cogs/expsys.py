@@ -1,14 +1,14 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from datetime import datetime, time, timedelta, timezone
-from typing import TYPE_CHECKING, Literal, Union
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from discord import Embed, Member, utils, app_commands
 from discord.ext import commands, tasks
 
 from .utils.distools import inout_to_10, send_pages_list
-from .utils.format import ordinal, humanize_time, indent
+from .utils.formats import ordinal, human_timedelta, indent
 from .utils.imgtools import url_to_img, img_to_file, get_text_wh
 from .utils.var import Ems, Sid, Cid, Cids, Clr
 
@@ -144,13 +144,13 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         description='Show when `@member` was last seen'
     )
     @app_commands.describe(member='Member to check')
-    async def lastseen(self, ctx, member: Member = None):
+    async def lastseen(self, ctx, member: Optional[Member] = None):
         """Show when `@member` was last seen on this server ;"""
         member = member or ctx.author
         query = 'SELECT lastseen FROM users WHERE id=$1'
         lastseen = await self.bot.pool.fetchval(query, member.id)
         dt_delta = datetime.now(timezone.utc) - lastseen
-        answer_text = f'{member.mention} was last seen in this server {humanize_time(dt_delta)} ago'
+        answer_text = f'{member.mention} was last seen in this server {human_timedelta(dt_delta)}'
         await ctx.reply(content=answer_text)
 
     @commands.hybrid_command(

@@ -43,7 +43,7 @@ class EventType:
     assigned = BaseEvent('assigned', colour=0x21262D, picture='assigned.png', word='self-assigned')
     closed = BaseEvent('closed', colour=0x9B6CEA, picture='closed.png', word='closed')
     reopened = BaseEvent('reopened', colour=0x238636, picture='reopened.png', word='reopened')
-    commented = BaseEvent('commented', colour=0x4078c0, picture='commented.png', word='commented', text_flag=True)
+    commented = BaseEvent('commented', colour=0x4285F4, picture='commented.png', word='commented', text_flag=True)
     opened = BaseEvent('opened', colour=0x52CC99, picture='opened.png', word='opened', text_flag=True)
 
     issue_events = ['assigned', 'closed', 'reopened']
@@ -113,14 +113,14 @@ class TimeLine:
             e = next(iter(self.events), None)  # first element in self.events or None if not exist
             c = next(iter(self.comments), None)  # first element in self.comments or None if not exist
 
-            l = e or c  # lead_event
-            if l is None:
+            le = e or c  # lead_event
+            if le is None:
                 raise RuntimeError('Somehow lead_event is None')
 
-            em.colour = l.event_type.colour
-            em.set_author(name=l.author_str, icon_url=l.actor.avatar_url, url=l.html_url)
+            em.colour = le.event_type.colour
+            em.set_author(name=le.author_str, icon_url=le.actor.avatar_url, url=le.html_url)
             em.description = c.markdown_body if c else ''
-            file = l.event_type.file
+            file = le.event_type.file
             em.set_thumbnail(url=f'attachment://{file.filename}')
         else:
             em.colour = Clr.prpl
@@ -254,7 +254,7 @@ class DotaBugtracker(commands.Cog):
                 self.git_comments_check.restart()
                 return
 
-        await self.bot.send_traceback(error, where='dotabugtracker comments task')
+        await self.bot.send_traceback(error, where='Dota2 BugTracker comments task')
         # self.git_comments_check.restart()
 
 

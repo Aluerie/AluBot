@@ -1,10 +1,9 @@
 """
-# This code is licensed MPL v2 from Rapptz/RoboDanny
-
-Most code below is shameless copypaste from @Rapptz's RoboDanny utils
+This code is licensed MPL v2 from Rapptz/RoboDanny
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
+
+Most of the code below is a shameless copypaste from @Rapptz's RoboDanny utils
 but IDK it's just so good and smart. I really learn a lot from reading @Danny's code.
-I hope one day I'll rewrite this from the scratch with my own brains.
 """
 
 from __future__ import annotations
@@ -16,7 +15,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
 from discord.ext import commands
-from discord.utils import format_dt
+
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -216,5 +215,4 @@ class UserFriendlyTime(commands.Converter):
             raise
 
 
-def format_tdR(dt: datetime) -> str:
-    return f"{format_dt(dt, 't')} {format_dt(dt, 'd')} ({format_dt(dt, 'R')})"
+

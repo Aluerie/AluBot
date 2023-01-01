@@ -22,7 +22,7 @@ from cogs.dota.stalk import (
     mmr_by_hero_bar,
     heroes_played_bar
 )
-from .utils.format import indent
+from .utils.formats import indent
 from .utils.imgtools import img_to_file, url_to_img, plt_to_file, get_text_wh
 from .utils.var import Ems, Clr, MP
 

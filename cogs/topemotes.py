@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 
 from .utils.distools import send_pages_list
-from .utils.format import indent
+from .utils.formats import indent
 from .utils.var import Clr, Rgx, Ems
 
 if TYPE_CHECKING:

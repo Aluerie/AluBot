@@ -6,7 +6,7 @@ from discord import ButtonStyle, Embed, TextStyle
 from discord.ext import commands
 from discord.ui import Modal, TextInput, View, button
 
-from .utils.format import display_time
+from .utils.formats import human_timedelta
 from .utils.var import Ems, Clr
 
 if TYPE_CHECKING:
@@ -71,7 +71,10 @@ class ConfView(View):
     async def on_error(self, ntr: Interaction, error: Exception, item: Item):
         if isinstance(error, ButtonOnCooldown):
             em = Embed(colour=Clr.error).set_author(name=error.__class__.__name__)
-            em.description = f"Sorry, you are on cooldown \nTime left `{display_time(error.retry_after, 3)}`"
+            em.description = (
+                "Sorry, you are on cooldown \n"
+                f"Time left `{human_timedelta(error.retry_after, brief=True)}`"
+            )
             await ntr.response.send_message(embed=em, ephemeral=True)
         else:
             # await super().on_error(ntr, error, item) # original on_error

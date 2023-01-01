@@ -1,28 +1,22 @@
 from __future__ import annotations
 
-import time
-import asyncio
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 import discord
-from discord import Embed, app_commands, Interaction, Member
 from discord.ext import commands, tasks
+from discord import app_commands
 
-from .dota.const import ODOTA_API_URL
-from .utils.var import *
+from .utils.var import Uid
 
 from .utils.context import Context
+from .utils.database import DRecord
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
-    from main import DRecord
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-
-from discord.app_commands import AppCommandError, Transform, Transformer, Choice, command
-from discord import app_commands, Interaction
 
 
 class UserRecord(DRecord):
@@ -44,11 +38,11 @@ class BetaTest(commands.Cog):
         return
 
     @app_commands.command()
-    async def welp(self, ntr: Interaction):
+    async def welp(self, ntr: discord.Interaction):
         await ntr.followup.send('allo')
 
     @commands.hybrid_command()
-    async def allu(self, ctx: Context, member: Member):
+    async def allu(self, ctx: Context, member: discord.Member):
         raise ValueError
 
     @test_task.before_loop

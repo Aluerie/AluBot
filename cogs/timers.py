@@ -24,47 +24,47 @@ async def get_the_thing(txt_list, name, pool: Pool):
 
 async def get_a_text(pool: Pool):
     daily_reminders_txt = [
-        f'Hey chat, don\'t forget to spam some emotes in {cmntn(Cid.comfy_spam)} or {cmntn(Cid.emote_spam)}',
+        f'Hey chat, don\'t forget to spam some emotes in <#{Cid.comfy_spam}> or <#{Cid.emote_spam}>',
         f'Hey chat, if you see some high/elite MMR streamer pick PA/DW - '
-        f'don\'t hesitate to ping {umntn(Uid.alu)} about it pretty please !',
+        f'don\'t hesitate to ping <@{Uid.alu}> about it pretty please !',
         'Hey chat, please use channels according to their description',
-        f'Hey chat, please use {rmntn(Rid.bots)} strictly in {cmntn(Cid.bot_spam)} '
-        f'(and {rmntn(Rid.nsfwbots)} in {cmntn(Cid.nsfw_bob_spam)}) with exceptions of \n'
-        f'0️⃣ feel free to use {umntn(Uid.bot)} everywhere\n'
-        f'1️⃣ {umntn(Uid.mango)} in {cmntn(Cid.pubs_talk)}\n'
-        f'2️⃣ {umntn(Uid.nqn)}\'s in-built "free-nitro" functions everywhere',
-        f'Hey chat, remember to check `$help` and {cmntn(Cid.patch_notes)}. We have a lot of cool features and '
+        f'Hey chat, please use <@&{Rid.bots}> strictly in <#{Cid.bot_spam} '
+        f'(and <@&{Rid.nsfwbots}> in <#{Cid.nsfw_bob_spam}> with exceptions of \n'
+        f'0️⃣ feel free to use <@{Uid.bot}> everywhere\n'
+        f'1️⃣ <@{Uid.mango}> in <#{Cid.pubs_talk}>\n'
+        f'2️⃣ <@{Uid.nqn}>\'s in-built "free-nitro" functions everywhere',
+        f'Hey chat, remember to check `$help` and <#{Cid.patch_notes}>. We have a lot of cool features and '
         f'bot commands. Even more to come in future !',
         'Hey chat, follow me on twitch if you haven\'t done it yet: '
         '[twitch.tv/aluerie](https://www.twitch.tv/aluerie) {0} {0} {0}\n'.format(Ems.DankLove),
-        f'Hey chat, you can get list of {rmntn(Rid.bots)} available to use in {cmntn(Cid.bot_spam)} and '
-        f'{rmntn(Rid.nsfwbots)} in {cmntn(Cid.nsfw_bob_spam)} by respectively checking pins in those channels.'
+        f'Hey chat, you can get list of <@&{Rid.bots}> available to use in <#{Cid.bot_spam}> and '
+        f'<@&{Rid.nsfwbots}> in <#{Cid.nsfw_bob_spam}> by respectively checking pins in those channels.'
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 
 
 async def get_important_text(pool: Pool):
     daily_reminders_txt = [
-        'Hey chat, check out rules in {0}. Follow them or {1} {1} {1}'.format(cmntn(Cid.rules), Ems.bubuGun),
-        f'Hey chat, remember to grab some roles in {cmntn(Cid.roles)} including a custom colour from 140 available !',
+        'Hey chat, check out rules in <#{0}>. Follow them or {1} {1} {1}'.format(Cid.rules, Ems.bubuGun),
+        f'Hey chat, remember to grab some roles in <#{Cid.roles}> including a custom colour from 140 available !',
         'Hey chat, if you have any suggestions about server/stream/emotes/anything - '
-        f'suggest them in {cmntn(Cid.suggestions)} with `$suggest ***` command and discuss them there !',
+        f'suggest them in <#{Cid.suggestions}> with `$suggest ***` command and discuss them there !',
         'Hey chat, you can set up your birthday date with `$birthday` command for some sweet congratulations '
-        f'from us on that day and in {cmntn(Cid.bday_notifs)}.',
-        'Hey chat, {0} exist {1} {1} {1}'.format(cmntn(Cid.confessions), Ems.PepoBeliever),
+        f'from us on that day and in <#{Cid.bday_notifs}>.',
+        'Hey chat, <#{0}> exist {1} {1} {1}'.format(Cid.confessions, Ems.PepoBeliever),
         f'Hey chat, fix your posture {Ems.PepoBeliever}',
         'Hey chat, remember to smile 🙂',
         'Hey chat, feel free to invite new cool people to this server {0} {0} {0}'.format(Ems.peepoComfy),
         'Hey chat, follow étiquette.',
         f'Hey chat, if you ever forget what prefix/help-command bot you want to use have - just look at its nickname, '
-        f'for example, {umntn(Uid.nqn)} - means its help command is `++help` and its prefix is `++`',
-        'Hey chat, if you ever see {} offline (it should be always at the top of the members list online) - '
-        'immediately ping me'.format(umntn(Uid.bot)),
-        f'Hey chat, if while watching my stream you see some cool moment - clip it and post to {cmntn(Cid.clips)}',
+        f'for example, <@{Uid.nqn}> - means its help command is `++help` and its prefix is `++`',
+        f'Hey chat, if you ever see <@{Uid.bot}> offline (it should be always at the top of the members list online) - '
+        'immediately ping me',
+        f'Hey chat, if while watching my stream you see some cool moment - clip it and post to <#{Cid.clips}>',
         'Hey chat, remember to stay hydrated ! {0} {0} {0}'.format(Ems.bubuSip),
         'Hey chat, please react with all kind of hearts on '
         '[this message](https://discord.com/channels/702561315478044804/724996010169991198/866012642627420210)',
-        f'Hey chat, if you have any problems then {rmntn(Rid.discord_mods)} can solve it! '
+        f'Hey chat, if you have any problems then <@&{Rid.discord_mods}> can solve it! '
         f'Especially if it is about this server'
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_important_timer', pool)

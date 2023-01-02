@@ -1,8 +1,8 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from discord import Embed, app_commands
+import discord
+from discord import app_commands
 from discord.ext import commands
 
 from .utils.var import Ems, Sid, Cid, Clr
@@ -20,7 +20,10 @@ class Suggestions(commands.Cog):
 
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.peepoWTF
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.peepoWTF)
 
     @commands.hybrid_command(aliases=["suggestion"])
     @app_commands.describe(text='Suggestion text')
@@ -36,20 +39,21 @@ class Suggestions(commands.Cog):
         number = await self.bot.pool.fetchval(query, Sid.alu)
 
         title = f'Suggestion #{number}'
-        em = Embed(color=Clr.prpl, title=title, description=text)
-        em.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-        em.set_footer(text=f'With love, {ctx.guild.me.display_name}')
-        msg = await patch_channel.send(embed=em)
-        await msg.add_reaction('⬆️')
-        await msg.add_reaction('⬇️')
+        e = discord.Embed(color=Clr.prpl, title=title, description=text)
+        e.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+        e.set_footer(text=f'With love, {ctx.guild.me.display_name}')
+        msg = await patch_channel.send(embed=e)
+        await msg.add_reaction('\N{UPWARDS BLACK ARROW}')
+        await msg.add_reaction('\N{DOWNWARDS BLACK ARROW}')
         suggestion_thread = await msg.create_thread(name=title, auto_archive_duration=7*24*60)
         await suggestion_thread.send(
             'Here you can discuss current suggestion.\n '
-            'Don\'t forget to upvote/downvote initial suggestion message with ⬆️⬇️reactions.'
+            'Don\'t forget to upvote/downvote initial suggestion message with '
+            '\N{UPWARDS BLACK ARROW} \N{DOWNWARDS BLACK ARROW} reactions.'
         )
-        em2 = Embed(color=Clr.prpl)
-        em2.description = f'{ctx.author.mention}, sent your suggestion under #{number} into {patch_channel.mention}'
-        await ctx.send(embed=em2, ephemeral=True)
+        e2 = discord.Embed(color=Clr.prpl)
+        e2.description = f'{ctx.author.mention}, sent your suggestion under #{number} into {patch_channel.mention}'
+        await ctx.reply(embed=e2, ephemeral=True)
 
 
 async def setup(bot: AluBot):

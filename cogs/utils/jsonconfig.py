@@ -3,11 +3,12 @@ Inspired by RoboDanny's `config.py`. So all credit to Danny.
 Very educational though.
 """
 from __future__ import annotations
+from typing import TYPE_CHECKING, Any, Dict, Generic, TypeVar, Union, Optional, Type
 
 import json
 import os
 from json import JSONDecodeError
-from typing import TYPE_CHECKING, Any, Dict, Generic, TypeVar, Union, Optional, Type
+
 import uuid
 import asyncio
 

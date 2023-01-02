@@ -7,50 +7,43 @@ Of course, code below is not a copypaste, but credit must be still given.
 """
 
 from __future__ import annotations
-
 from typing import TYPE_CHECKING, Optional
 
-from discord import (
-    Embed,
-    ButtonStyle
-)
+import discord
 from discord.ext import commands
-from discord.ui import View, button
 
 from .utils.var import Ems, Clr
 
 if TYPE_CHECKING:
-    from discord import Message, Interaction
-    from discord.ui import Button
-    from .utils.bot import AluBot, Context
+    from .utils.bot import AluBot
+    from .utils.context import Context
 
 
-class StartView(View):
+class StartView(discord.ui.View):
     def __init__(
             self,
             *,
-            message: Optional[Message] = None,
+            message: Optional[discord.Message] = None,
     ):
         super().__init__()
 
-        self.starting_embed = Embed(
-            colour=Clr.prpl,
-            title='Embed Maker'
-        )
-
+        self.starting_embed = discord.Embed(title='Embed Maker', colour=Clr.prpl)
         self.embeds = [self.starting_embed]
         self.message = message
 
-    @button(label='Author', emoji='🖋️', style=ButtonStyle.blurple)
-    async def author_btn(self, ntr: Interaction, btn: Button):
+    @discord.ui.button(label='Author', emoji='🖋️', style=discord.ButtonStyle.blurple)
+    async def author_btn(self, ntr: discord.Interaction, btn: discord.Button):
 
         return 1
 
 
 class EmbedMaker(commands.Cog, name='Embed Maker'):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.DankZzz
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.DankZzz)
 
     @commands.hybrid_group(name='embed')
     async def embed_(self, ctx: Context):
@@ -64,5 +57,5 @@ class EmbedMaker(commands.Cog, name='Embed Maker'):
         view.message = await ctx.reply(embeds=view.embeds, view=view)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(EmbedMaker(bot))

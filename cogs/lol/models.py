@@ -1,15 +1,11 @@
-"""
-The MIT License (MIT)
-
-"""
 from __future__ import annotations
 
 from datetime import datetime, timezone
 import logging
 from typing import TYPE_CHECKING, List
 
+import discord
 from PIL import Image, ImageDraw, ImageFont
-from discord import Embed, File, Forbidden, NotFound
 from pyot.utils.lol import champion
 from pyot.utils.functools import async_property
 
@@ -159,23 +155,24 @@ class LiveMatch(Match):
         log.debug('I m here #6')
         return img
 
-    async def notif_embed_and_file(self, bot: AluBot) -> (Embed, File):
+    async def notif_embed_and_file(self, bot: AluBot) -> (discord.Embed, discord.File):
         ts = await bot.twitch.get_twitch_stream(self.twitch_id)
         img_file = bot.img_to_file(
             await self.better_thumbnail(ts.preview_url, ts.display_name, bot),
             filename=f'{ts.display_name.replace("_", "")}-is-playing-{await champion.key_by_id(self.champ_id)}.png'
         )
         log.debug('LF | made a better thumbnail')
-        em = Embed(color=Clr.rspbrry, url=ts.url)
-        em.description = (
+        e = discord.Embed(color=Clr.rspbrry, url=ts.url)
+        e.description = (
             f'Match `{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n'
             f'{await bot.twitch.last_vod_link(ts.twitch_id, seconds_ago=self.long_ago)}{self.links}'
         )
-        em.set_image(url=f'attachment://{img_file.filename}')
-        em.set_thumbnail(url=await self.champ_icon_url)
-        em.set_author(name=f'{ts.display_name} - {await champion.name_by_id(self.champ_id)}',
-                      url=ts.url, icon_url=ts.logo_url)
-        return em, img_file
+        e.set_image(url=f'attachment://{img_file.filename}')
+        e.set_thumbnail(url=await self.champ_icon_url)
+        e.set_author(
+            name=f'{ts.display_name} - {await champion.name_by_id(self.champ_id)}', url=ts.url, icon_url=ts.logo_url
+        )
+        return e, img_file
 
 
 class PostMatchPlayer:
@@ -199,7 +196,7 @@ class PostMatchPlayer:
         img = await bot.url_to_img(img_url)
         width, height = img.size
         last_row_h = 50
-        last_row_y = height - last_row_h
+        _last_row_y = height - last_row_h
         font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
 
         draw = ImageDraw.Draw(img)
@@ -239,13 +236,13 @@ class PostMatchPlayer:
 
         try:
             msg = await ch.fetch_message(self.message_id)
-        except NotFound:
+        except discord.NotFound:
             return
 
-        em = msg.embeds[0]
-        img_file = bot.img_to_file(await self.edit_the_image(em.image.url, bot), filename='edited.png')
-        em.set_image(url=f'attachment://{img_file.filename}')
+        e = msg.embeds[0]
+        img_file = bot.img_to_file(await self.edit_the_image(e.image.url, bot), filename='edited.png')
+        e.set_image(url=f'attachment://{img_file.filename}')
         try:
-            await msg.edit(embed=em, attachments=[img_file])
-        except Forbidden:
+            await msg.edit(embed=e, attachments=[img_file])
+        except discord.Forbidden:
             return

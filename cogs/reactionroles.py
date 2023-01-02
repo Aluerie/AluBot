@@ -1,13 +1,19 @@
-from discord import Embed, utils
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+import discord
 from discord.ext import commands
 
 from .utils.checks import is_owner
 from .utils.var import Sid, Cid
 
+if TYPE_CHECKING:
+    from .utils.bot import AluBot
+
 
 class ReactionRoles(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: AluBot):
+        self.bot: AluBot = bot
 
     ########################################################################
     # ######COLOUR ROLES####################################################
@@ -43,9 +49,8 @@ class ReactionRoles(commands.Cog):
         for i, (emoji, role) in enumerate(zip(emoji_array, colour_array[start:start + amount]), start=start+1):
             text += f'{i}. {emoji} - {role.mention}\n'
 
-        embed = Embed(colour=0x9678b6)
-        embed.title = f'Colour roles №{start + 1}-{start + amount}'
-        msg = await ctx.reply(content=text, embed=embed)
+        e = discord.Embed(title=f'Colour roles №{start + 1}-{start + amount}', colour=0x9678b6)
+        msg = await ctx.reply(content=text, embed=e)
         for emoji in emoji_array:
             await msg.add_reaction(emoji)
 
@@ -60,8 +65,8 @@ class ReactionRoles(commands.Cog):
                 array = [f'{counter}. {item}' for counter, item in enumerate(msg.content.split('\n'), start=1)]
                 answer = '\n'.join(array)
                 #  print(answer)
-                embed = msg.embeds[0]
-                await msg.edit(content=answer, embed=embed)
+                e = msg.embeds[0]
+                await msg.edit(content=answer, embed=e)
 
     ########################################################################
     # ###### RANDOM ROLES###################################################
@@ -91,9 +96,8 @@ class ReactionRoles(commands.Cog):
         for emoji, role in zip(emoji_array, roles_array[start:start + amount]):
             text += '{} - {}\n'.format(emoji, role.mention)
 
-        embed = Embed(colour=0x9678b6)
-        embed.title = ' '.join(arg[2 + 2 * amount:])
-        msg = await ctx.reply(content=text, embed=embed)
+        e = discord.Embed(title=' '.join(arg[2 + 2 * amount:]), colour=0x9678b6)
+        msg = await ctx.reply(content=text, embed=e)
         for emoji in emoji_array:
             await msg.add_reaction(emoji)
 
@@ -115,7 +119,7 @@ class ReactionRoles(commands.Cog):
                 for counter in range(len(msg.reactions)):
                     reaction = msg.reactions[counter]
                     reaction_role_id = msg.raw_role_mentions[counter]
-                    reaction_role = utils.get(guild.roles, id=reaction_role_id)
+                    reaction_role = discord.utils.get(guild.roles, id=reaction_role_id)
                     # print(member.name, reaction_role, reaction.emoji, payload.emoji)
                     if str(reaction.emoji) == str(payload.emoji) and reaction_role not in member.roles:
                         await member.add_roles(reaction_role)
@@ -142,7 +146,7 @@ class ReactionRoles(commands.Cog):
             for counter in range(len(msg.reactions)):
                 reaction = msg.reactions[counter]
                 reaction_role_id = msg.raw_role_mentions[counter]
-                reaction_role = utils.get(guild.roles, id=reaction_role_id)
+                reaction_role = discord.utils.get(guild.roles, id=reaction_role_id)
                 # print(reaction.emoji, payload.emoji.name)
                 if str(reaction.emoji) == str(payload.emoji) and reaction_role in member.roles:
                     await member.remove_roles(reaction_role)
@@ -165,5 +169,5 @@ dict_reactions = {
 }  # msg_id: unique reactions
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(ReactionRoles(bot))

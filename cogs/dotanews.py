@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-from discord import Embed
+import discord
 from discord.ext import commands, tasks
 from github import Github
 
@@ -15,7 +15,6 @@ from .utils.links import replace_tco_links, move_link_to_title
 from .utils.var import Cid, Clr, Sid, Img
 
 if TYPE_CHECKING:
-    from discord import Message
     from .utils.bot import AluBot
 
 
@@ -23,33 +22,33 @@ async def get_gitdiff_embed(test_num=0):
     g = Github(GIT_PERSONAL_TOKEN)
     repo = g.get_repo("SteamDatabase/GameTracking-Dota2")
     commits = repo.get_commits()
-    embed = Embed(colour=0x26425A)
-    embed.set_author(
+    e = discord.Embed(colour=0x26425A)
+    e.set_author(
         name='GameTracking-Dota2 GitHub',
         icon_url='https://icon-library.com/images/github-icon-white/github-icon-white-5.jpg',
         url=commits[test_num].html_url
     )
     try:
-        embed.title = commits[test_num].get_statuses()[0].description
-        embed.url = commits[test_num].get_statuses()[0].target_url
+        e.title = commits[test_num].get_statuses()[0].description
+        e.url = commits[test_num].get_statuses()[0].target_url
     except IndexError:
         pass
-    # embed.set_thumbnail(url='https://steamdb.info/static/logos/512px.png')
+    # e.set_thumbnail(url='https://steamdb.info/static/logos/512px.png')
 
-    embeds = [embed]
+    embeds = [e]
     files = []
     human, robot_string = await human_commit(repo, commits, test_num=test_num)
     if len(human) > 4000:  # currently only one embed; #12000:
-        embed.description = \
+        e.description = \
             'Humanized patch notes are too big to put into several embeds ' \
             'thus I attach them into `human_patch_notes.txt` file'
         files.append(str_to_file(human, filename="human_patch_notes.txt"))
     else:
         split_size = 4095
         human_list = [human[x:x + split_size] for x in range(0, len(human), split_size)]
-        embed.description = human_list[0] if len(human_list) else ''
+        e.description = human_list[0] if len(human_list) else ''
         for i in human_list[1:]:
-            embeds.append(Embed(colour=0x26425A, description=i))
+            embeds.append(discord.Embed(colour=0x26425A, description=i))
 
     embeds[-1].set_footer(
         text='Unparsed changes are in file below if any',
@@ -57,16 +56,16 @@ async def get_gitdiff_embed(test_num=0):
     )
     if len(robot_string):
         files.append(str_to_file(robot_string, filename="git.diff"))
-    return embed.url, embeds, files
+    return e.url, embeds, files
 
 
 class CopypasteDota(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.patch_checker.start()
 
     def cog_load(self) -> None:
         self.bot.ini_github()
+        self.patch_checker.start()
 
     def cog_unload(self) -> None:
         self.patch_checker.cancel()
@@ -81,7 +80,7 @@ class CopypasteDota(commands.Cog):
     ]
 
     @commands.Cog.listener()
-    async def on_message(self, msg: Message):
+    async def on_message(self, msg: discord.Message):
         try:
             if msg.channel.id == Cid.copydota_info:
                 if "https://steamdb.info" in msg.content:
@@ -102,8 +101,8 @@ class CopypasteDota(commands.Cog):
             elif msg.channel.id == Cid.copydota_steam:
                 if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
-                em = Embed(colour=0x171a21, description=msg.content)
-                msg = await self.bot.get_channel(Cid.dota_news).send(embed=em)
+                e = discord.Embed(colour=0x171a21, description=msg.content)
+                msg = await self.bot.get_channel(Cid.dota_news).send(embed=e)
                 await msg.publish()
 
             elif msg.channel.id == Cid.copydota_tweets:
@@ -137,11 +136,11 @@ class CopypasteDota(commands.Cog):
         if not val:
             return
 
-        em = Embed(title='Patch Notes', url=f'https://www.dota2.com/patches/{patch_number}', colour=Clr.prpl)
-        em.description = 'Hey chat, I think new patch is out!'
-        em.set_footer(text='I\'m checking Valve\'s datafeed every 10 minutes')
-        em.set_author(name=f'Patch {patch_number} is out', icon_url=Img.dota2logo)
-        msg = await self.bot.get_channel(Cid.dota_news).send(embed=em)
+        e = discord.Embed(title='Patch Notes', url=f'https://www.dota2.com/patches/{patch_number}', colour=Clr.prpl)
+        e.description = 'Hey chat, I think new patch is out!'
+        e.set_footer(text='I\'m checking Valve\'s datafeed every 10 minutes')
+        e.set_author(name=f'Patch {patch_number} is out', icon_url=Img.dota2logo)
+        msg = await self.bot.get_channel(Cid.dota_news).send(embed=e)
         await msg.publish()
 
     @patch_checker.before_loop
@@ -150,8 +149,8 @@ class CopypasteDota(commands.Cog):
 
 
 class TestGitFeed(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: AluBot):
+        self.bot: AluBot = bot
         self.testing.start()
 
     def cog_unload(self) -> None:
@@ -175,7 +174,7 @@ class TestGitFeed(commands.Cog):
         await self.bot.send_traceback(error, where='Test Git dota-git')
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(CopypasteDota(bot))
     if bot.test:
         await bot.add_cog(TestGitFeed(bot))

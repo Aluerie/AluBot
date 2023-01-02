@@ -1,8 +1,7 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING, Union, List, Optional
 
-from discord import Embed, Interaction
+import discord
 from discord.ext import commands
 
 from . import pages
@@ -10,21 +9,21 @@ from .context import Context
 from .var import Lmt
 
 if TYPE_CHECKING:
-    from discord import Colour, Message
+    pass
 
 
 async def send_pages_list(
-        ctx: Union[Context, Interaction],
+        ctx: Union[Context, discord.Interaction],
         string_list: List[str],
         *,
         split_size: int,
         title: Optional[str] = None,
         description_prefix: Optional[str] = '',
-        colour: Optional[Union[int, Colour]] = None,
+        colour: Optional[Union[int, discord.Colour]] = None,
         footer_text: Optional[str] = None,
         author_name: Optional[str] = None,
         author_icon: Optional[str] = None,
-) -> Message:
+) -> discord.Message:
     """
     Parameters
     ----------
@@ -51,9 +50,9 @@ async def send_pages_list(
         paginator.close_page()
 
     embeds = [
-        Embed(title=title, colour=colour, description=description_prefix + page)
+        discord.Embed(title=title, colour=colour, description=description_prefix + page)
         for page in paginator.pages
-    ] or [Embed(title=title, colour=colour, description=description_prefix)]
+    ] or [discord.Embed(title=title, colour=colour, description=description_prefix)]
     if author_name:
         for em in embeds:
             em.set_author(name=author_name, icon_url=author_icon)
@@ -64,7 +63,7 @@ async def send_pages_list(
     if len(embeds) < 2:
         if isinstance(ctx, Context):
             return await ctx.reply(embeds=embeds)
-        elif isinstance(ctx, Interaction):
+        elif isinstance(ctx, discord.Interaction):
             return await ctx.response.send_message(embeds=embeds)
     else:
         pag = pages.Paginator(pages=embeds)

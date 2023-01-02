@@ -1,19 +1,20 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, List, Set, Optional
 
 import asyncio
 import re
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Set, Optional
+import datetime
+import textwrap
 
-import github.GithubException
-from discord import Embed, File
+import discord
 from discord.ext import commands, tasks
+import github.GithubException
 
 from .utils.var import Sid, Cid, Clr, Lmt
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
     from github import Issue, NamedUser
+    from .utils.bot import AluBot
 
 
 class BaseEvent:
@@ -33,8 +34,8 @@ class BaseEvent:
         self.text_flag: bool = text_flag
 
     @property
-    def file(self) -> File:
-        return File(f'./media/{self._picture}', filename=self._picture)
+    def file(self) -> discord.File:
+        return discord.File(f'./media/{self._picture}', filename=self._picture)
 
 
 class EventType:
@@ -62,7 +63,7 @@ class TimeLinePoint:
             html_url: str = ''
     ):
         self.event_type: BaseEvent = event_type
-        self.created_at: datetime = created_at.replace(tzinfo=timezone.utc)
+        self.created_at: datetime = created_at.replace(tzinfo=datetime.timezone.utc)
         self.actor: NamedUser = actor
         self.issue_number: int = issue_number
         self.body: str = body
@@ -105,33 +106,33 @@ class TimeLine:
         return sorted(self.events + self.comments, key=lambda x: x.created_at, reverse=False)
 
     @property
-    def embed_and_file(self) -> (Embed, File):
-        em = Embed(title=self.issue.title[:Lmt.Embed.title], url=self.issue.html_url)
+    def embed_and_file(self) -> (discord.Embed, discord.File):
+        e = discord.Embed(title=textwrap.shorten(self.issue.title, width=Lmt.Embed.title), url=self.issue.html_url)
         if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
             # we just send a small embed
             # 1 author and 1 event with possible comment event to it
-            e = next(iter(self.events), None)  # first element in self.events or None if not exist
-            c = next(iter(self.comments), None)  # first element in self.comments or None if not exist
+            ev = next(iter(self.events), None)  # first element in self.events or None if not exist
+            co = next(iter(self.comments), None)  # first element in self.comments or None if not exist
 
-            le = e or c  # lead_event
+            le = ev or co  # lead_event
             if le is None:
                 raise RuntimeError('Somehow lead_event is None')
 
-            em.colour = le.event_type.colour
-            em.set_author(name=le.author_str, icon_url=le.actor.avatar_url, url=le.html_url)
-            em.description = c.markdown_body if c else ''
+            e.colour = le.event_type.colour
+            e.set_author(name=le.author_str, icon_url=le.actor.avatar_url, url=le.html_url)
+            e.description = co.markdown_body if co else ''
             file = le.event_type.file
-            em.set_thumbnail(url=f'attachment://{file.filename}')
+            e.set_thumbnail(url=f'attachment://{file.filename}')
         else:
-            em.colour = Clr.prpl
+            e.colour = Clr.prpl
             for p in (sorted_points := self.sorted_points_list()):
                 chunks, chunk_size = len(p.markdown_body), Lmt.Embed.field_value
                 fields = [p.markdown_body[i:i+chunk_size] for i in range(0, chunks, chunk_size)]
                 for x in fields:
-                    em.add_field(name=p.author_str, value=x, inline=False)
-            em.set_author(name=f'bugtracker issue #{self.issue.number} update', url=sorted_points[-1].html_url)
+                    e.add_field(name=p.author_str, value=x, inline=False)
+            e.set_author(name=f'bugtracker issue #{self.issue.number} update', url=sorted_points[-1].html_url)
             file = None
-        return em, file
+        return e, file
 
 
 class DotaBugtracker(commands.Cog):
@@ -163,7 +164,7 @@ class DotaBugtracker(commands.Cog):
         for i in repo.get_issues(sort='updated', state='all', since=dt):
             events = [
                 x for x in i.get_events()
-                if x.created_at.replace(tzinfo=timezone.utc) > dt
+                if x.created_at.replace(tzinfo=datetime.timezone.utc) > dt
                 and x.actor.login in assignees
                 and x.event in EventType.issue_events
             ]
@@ -235,7 +236,7 @@ class DotaBugtracker(commands.Cog):
                 await msg.publish()
         
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
-        await self.bot.pool.execute(query, datetime.now(timezone.utc), Sid.alu)
+        await self.bot.pool.execute(query, discord.utils.utcnow(), Sid.alu)
         self.retries = 0
 
     @git_comments_check.before_loop
@@ -247,8 +248,8 @@ class DotaBugtracker(commands.Cog):
         if isinstance(error, github.GithubException):
             if error.status == 502:
                 if self.retries == 0:
-                    em = Embed(description='DotaBugtracker: Server Error 502')
-                    await self.bot.get_channel(Cid.spam_me).send(embed=em)
+                    e = discord.Embed(description='DotaBugtracker: Server Error 502')
+                    await self.bot.get_channel(Cid.spam_me).send(embed=e)
                 await asyncio.sleep(60 * 10 * 2**self.retries)
                 self.retries += 1
                 self.git_comments_check.restart()

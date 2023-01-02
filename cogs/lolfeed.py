@@ -1,16 +1,16 @@
 from __future__ import annotations
-
-import logging
-from datetime import datetime, timezone, time
 from typing import TYPE_CHECKING, Optional, List
 
-from discord import Embed, app_commands, TextChannel, Permissions
+import datetime
+import logging
+
+import discord
+from discord import app_commands
 from discord.ext import commands, tasks
 
 from pyot.core.exceptions import NotFound, ServerError
 from pyot.utils.lol import champion
 from roleidentification import pull_data
-
 
 from .lol.const import *
 from .lol.const import LiteralServerUpper
@@ -26,7 +26,6 @@ from pyot.models import lol
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
-    from discord import Interaction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -68,9 +67,9 @@ class LoLFeedNotifications(commands.Cog):
             except ServerError:
                 log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.display_name}')
                 continue
-                # embed = Embed(colour=Clr.error)
-                # embed.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
-                # await self.bot.get_channel(Cid.spam_me).send(embed=embed)  # content=umntn(Uid.alu)
+                # e = Embed(colour=Clr.error)
+                # e.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
+                # await self.bot.get_channel(Cid.spam_me).send(embed=e)  # content=umntn(Uid.alu)
 
             if not hasattr(live_game, 'queue_id') or live_game.queue_id != SOLO_RANKED_5v5_QUEUE_ENUM:
                 continue
@@ -198,11 +197,11 @@ class LoLFeedPostMatchEdits(commands.Cog):
 
     @tasks.loop(seconds=59)
     async def postmatch_edits(self):
-        #log.debug(f'LE | --- Task is starting now ---')
+        # log.debug(f'LE | --- Task is starting now ---')
         await self.fill_postmatch_players()
         for player in self.postmatch_players:
             await player.edit_the_embed(self.bot)
-        #log.debug(f'LE | --- Task is finished ---')
+        # log.debug(f'LE | --- Task is finished ---')
 
     @postmatch_edits.before_loop
     async def before(self):
@@ -227,8 +226,7 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
 
 
 class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
-    """
-    Commands to set up fav champ + fav stream notifs.
+    """Commands to set up fav champ + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \
     (or you can request adding them if they are missing) and choose your favorite League of Legends champions \
@@ -255,7 +253,10 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
             character_gather_word='champs'
         )
         self.bot: AluBot = bot
-        self.help_emote = Ems.PogChampPepe
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.PogChampPepe)
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
@@ -263,7 +264,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     slh_lol = app_commands.Group(
         name="lol",
         description="Group command about LolFeed",
-        default_permissions=Permissions(administrator=True)
+        default_permissions=discord.Permissions(administrator=True)
     )
 
     @is_guild_owner()
@@ -275,7 +276,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     slh_lol_channel = app_commands.Group(
         name='channel',
         description='Group command about LoLFeed channel settings',
-        default_permissions=Permissions(administrator=True),
+        default_permissions=discord.Permissions(administrator=True),
         parent=slh_lol
     )
 
@@ -291,14 +292,14 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         description="Set channel to be the LoLFeed notifications channel"
     )
     @app_commands.describe(channel='Choose channel to set up LoLFeed notifications')
-    async def slh_lol_channel_set(self, ntr: Interaction, channel: Optional[TextChannel] = None):
+    async def slh_lol_channel_set(self, ntr: discord.Interaction, channel: Optional[discord.TextChannel] = None):
         """Slash copy of ext_lol_channel_set below"""
         ctx = await Context.from_interaction(ntr)
         await self.channel_set(ctx, channel)
 
     @is_guild_owner()
     @ext_lol_channel.command(name='set', usage='[channel=curr]')
-    async def ext_lol_channel_set(self, ctx: Context, channel: Optional[TextChannel] = None):
+    async def ext_lol_channel_set(self, ctx: Context, channel: Optional[discord.TextChannel] = None):
         """Set channel to be the LoLFeed notifications channel."""
         await self.channel_set(ctx, channel)
 
@@ -306,7 +307,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         name='disable',
         description="Disable LoLFeed notifications channel"
     )
-    async def slh_lol_channel_disable(self, ntr: Interaction):
+    async def slh_lol_channel_disable(self, ntr: discord.Interaction):
         """Slash copy of ext_lol_channel_disable below"""
         ctx = await Context.from_interaction(ntr)
         await self.channel_disable(ctx)
@@ -322,7 +323,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         name='check',
         description="Check if LoLFeed channel is set up"
     )
-    async def slh_lol_channel_check(self, ntr: Interaction):
+    async def slh_lol_channel_check(self, ntr: discord.Interaction):
         """Slash copy of ext_lol_channel_check below"""
         ctx = await Context.from_interaction(ntr)
         await self.channel_check(ctx)
@@ -336,7 +337,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     slh_lol_database = app_commands.Group(
         name='database',
         description='Group command about LoLFeed database',
-        default_permissions=Permissions(administrator=True),
+        default_permissions=discord.Permissions(administrator=True),
         parent=slh_lol
     )
 
@@ -357,7 +358,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         name='list',
         description='List of players in the database available for LoLFeed feature'
     )
-    async def slh_lol_database_list(self, ntr: Interaction):
+    async def slh_lol_database_list(self, ntr: discord.Interaction):
         """Slash copy of ext_lol_database_list below"""
         ctx = await Context.from_interaction(ntr)
         await self.database_list(ctx)
@@ -394,7 +395,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         server='Server of the account, i.e. "NA", "EUW"',
         account='Summoner name of the account'
     )
-    async def slh_lol_database_add(self, ntr: Interaction, name: str, server: LiteralServerUpper, account: str):
+    async def slh_lol_database_add(self, ntr: discord.Interaction, name: str, server: LiteralServerUpper, account: str):
         """Slash copy of ext_lol_database_list below"""
         ctx = await Context.from_interaction(ntr)
         await ctx.typing()
@@ -408,8 +409,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         usage='name: <twitch_name> server: <server-region> account: <account_name>',
     )
     async def ext_lol_database_add(self, ctx: Context, *, flags: AddStreamFlags):
-        """
-        Add stream to the database.
+        """Add stream to the database.
         • `<name>` is twitch.tv stream name
         • `<server>` is LoL server/region of the account like NA, EUW
         • `<account>` is Summoner name of the account
@@ -429,7 +429,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         server='Server of the account, i.e. "NA", "EUW"',
         account='Summoner name of the account'
     )
-    async def slh_lol_database_request(self, ntr: Interaction, name: str, server: LiteralServerUpper, account: str):
+    async def slh_lol_database_request(self, ntr: discord.Interaction, name: str, server: LiteralServerUpper, account: str):
         """Slash copy of ext_lol_database_request below"""
         ctx = await Context.from_interaction(ntr)
         await ctx.typing()
@@ -443,8 +443,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         usage='name: <twitch_name> server: <server-region> account: <account_name>',
     )
     async def ext_lol_database_request(self, ctx: Context, *, flags: AddStreamFlags):
-        """
-        Request player to be added into the database. \
+        """Request player to be added into the database.
         This will send a request message into Aluerie's personal logs channel.
         """
         await ctx.typing()
@@ -464,7 +463,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     )
     async def slh_lol_database_remove(
             self,
-            ntr: Interaction,
+            ntr: discord.Interaction,
             name: str,
             server: Optional[LiteralServerUpper],
             account: Optional[str]):
@@ -498,7 +497,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     slh_lol_player = app_commands.Group(
         name='player',
         description='Group command about LoLFeed player',
-        default_permissions=Permissions(administrator=True),
+        default_permissions=discord.Permissions(administrator=True),
         parent=slh_lol
     )
 
@@ -508,7 +507,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         """Group command about LoL player, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    async def lol_player_add_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def lol_player_add_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=True)
 
     @is_guild_owner()
@@ -533,7 +532,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     )
     # @app_commands.autocomplete(**{f'name{i}': player_add_autocomplete for i in range(1, 11)})
     async def slh_lol_player_add(
-            self, ntr: Interaction,
+            self, ntr: discord.Interaction,
             name1: str, name2: str = None, name3: str = None, name4: str = None, name5: str = None,
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
@@ -551,7 +550,11 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         player_names = [x.lstrip().rstrip() for x in player_names.split(',') if x]
         await self.player_add_remove(ctx, player_names, mode_add=True)
 
-    async def player_remove_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def player_remove_autocomplete(
+            self,
+            ntr: discord.Interaction,
+            current: str
+    ) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=False)
 
     @is_guild_owner()
@@ -571,7 +574,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     )
     # @app_commands.autocomplete(**{f'name{i}': player_remove_autocomplete for i in range(1, 11)})
     async def slh_lol_player_remove(
-            self, ntr: Interaction,
+            self, ntr: discord.Interaction,
             name1: str, name2: str = None, name3: str = None, name4: str = None, name5: str = None,
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
@@ -591,7 +594,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
 
     @is_guild_owner()
     @slh_lol_player.command(name='list', description='Show list of your favourite players')
-    async def slh_lol_player_list(self, ntr: Interaction):
+    async def slh_lol_player_list(self, ntr: discord.Interaction):
         """Slash copy of ext_lol_player below"""
         ctx = await Context.from_interaction(ntr)
         await self.player_list(ctx)
@@ -605,7 +608,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     slh_lol_champ = app_commands.Group(
         name='champ',
         description='Group command about LoLFeed champs',
-        default_permissions=Permissions(administrator=True),
+        default_permissions=discord.Permissions(administrator=True),
         parent=slh_lol
     )
 
@@ -615,7 +618,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         """Group command about LoL champs, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    async def lol_champ_add_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def lol_champ_add_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=True)
 
     @is_guild_owner()
@@ -635,7 +638,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     )
     # @app_commands.autocomplete(**{f'name{i}': lol_champ_add_autocomplete for i in range(1, 11)})
     async def slh_lol_champ_add(
-            self, ntr: Interaction,
+            self, ntr: discord.Interaction,
             name1: str, name2: str = None, name3: str = None, name4: str = None, name5: str = None,
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
@@ -653,7 +656,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         champ_names = [x.lstrip().rstrip() for x in champ_names.split(',') if x]
         await self.character_add_remove(ctx, champ_names, mode_add=True)
 
-    async def lol_champ_remove_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def lol_champ_remove_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=False)
 
     @is_guild_owner()
@@ -673,7 +676,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     )
     # @app_commands.autocomplete(**{f'name{i}': lol_champ_add_autocomplete for i in range(1, 11)})
     async def slh_lol_champ_remove(
-            self, ntr: Interaction,
+            self, ntr: discord.Interaction,
             name1: str, name2: str = None, name3: str = None, name4: str = None, name5: str = None,
             name6: str = None, name7: str = None, name8: str = None, name9: str = None, name10: str = None
     ):
@@ -693,7 +696,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
 
     @is_guild_owner()
     @slh_lol_champ.command(name='list', description="Show your favourite champs list")
-    async def slh_lol_champ_list(self, ntr: Interaction):
+    async def slh_lol_champ_list(self, ntr: discord.Interaction):
         """Slash copy of ext_lol_champ_list below"""
         ctx = await Context.from_interaction(ntr)
         await self.character_list(ctx)
@@ -707,7 +710,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     @is_guild_owner()
     @slh_lol.command(name='spoil', description="Turn on/off spoiling resulting stats for matches")
     @app_commands.describe(spoil='`Yes` to enable spoiling with stats, `No` for disable')
-    async def slh_lol_spoil(self, ntr: Interaction, spoil: bool):
+    async def slh_lol_spoil(self, ntr: discord.Interaction, spoil: bool):
         """Slash copy of ext_lol_spoil below"""
         ctx = await Context.from_interaction(ntr)
         await self.spoil(ctx, spoil)
@@ -715,8 +718,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     @is_guild_owner()
     @ext_lol.command(name='spoil')
     async def ext_lol_spoil(self, ctx: Context, spoil: bool):
-        """
-        Turn on/off spoiling resulting stats for matches.
+        """Turn on/off spoiling resulting stats for matches.
         It is "on" by default, so it can show what items players finished with and KDA.
         """
         await self.spoil(ctx, spoil)
@@ -737,17 +739,17 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
             json_dict = await resp.json()
             meraki_patch = json_dict["patch"]
 
-        em = Embed(title='List of champs missing from Meraki JSON', colour=Clr.rspbrry)
-        em.description = '\n'.join(champ_str)
-        em.add_field(
+        e = discord.Embed(title='List of champs missing from Meraki JSON', colour=Clr.rspbrry)
+        e.description = '\n'.join(champ_str)
+        e.add_field(
             name='Links',
             value=(
                 f'• [GitHub](https://github.com/meraki-analytics/role-identification)\n'
                 f'• [Json]({url_json})'
             )
         )
-        em.add_field(name='Meraki last updated', value=f'Patch {meraki_patch}')
-        await ctx.reply(embed=em)
+        e.add_field(name='Meraki last updated', value=f'Patch {meraki_patch}')
+        await ctx.reply(embed=e)
 
 
 class LoLAccCheck(commands.Cog):
@@ -760,9 +762,9 @@ class LoLAccCheck(commands.Cog):
     async def cog_unload(self) -> None:
         self.check_acc_renames.cancel()
 
-    @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
+    @tasks.loop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.timezone.utc))
     async def check_acc_renames(self):
-        if datetime.now(timezone.utc).day != 17:
+        if datetime.datetime.now(datetime.timezone.utc).day != 17:
             return
 
         log.info("league checking acc renames every 24 hours")

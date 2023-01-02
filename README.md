@@ -1,9 +1,12 @@
 ## AluBot 💜
 
 [![Invite](https://img.shields.io/badge/Invite%20the%20bot-link-blueviolet?style=for-the-badge&logo=discord)](https://discord.com/api/oauth2/authorize?client_id=713124699663499274&scope=bot+applications.commands&permissions=2199023255551)
+![Lines of Code](https://img.shields.io/tokei/lines/github/Aluerie/AluBot?style=for-the-badge&logo=github&color=blueviolet&label=Total%20Lines%20of%20Code)
+
+
 ![Servers](https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=blueviolet&logo=discord&label=total%20servers&query=%24.servers&url=https%3A%2F%2Faluerie.github.io%2FAluBot%2Fapi%2Fdata.json)
 ![Users](https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=blueviolet&logo=discord&label=total%20users&query=%24.users&url=https%3A%2F%2Faluerie.github.io%2FAluBot%2Fapi%2Fdata.json)
-![Lines of Code](https://img.shields.io/tokei/lines/github/Aluerie/AluBot?style=for-the-badge&logo=github&color=blueviolet&label=Total%20Lines%20of%20Code)
+![Updated](https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=blueviolet&logo=none&label=<-%20Info%20updated&query=%24.updated&url=https%3A%2F%2Faluerie.github.io%2FAluBot%2Fapi%2Fdata.json)
 
 [![Discord](https://img.shields.io/discord/702561315478044804?style=for-the-badge&color=blueviolet&label=Chat%20On%20Discord&logo=discord)](https://discord.gg/K8FuDeP)
 [![Twitch](https://img.shields.io/twitch/status/aluerie?color=blueviolet&label=follow%20my%20twitch&logo=twitch&style=for-the-badge)](https://www.twitch.tv/Aluerie)
@@ -17,12 +20,9 @@ with pretty much everything I ever needed ! Check List of features after the pic
 
 <img src="./media/ReadMe/MainFeature.png" alt="alubot preview">
 
-### List of features
+### 📖 List of features
 
-All info in `$help` or `/help` command of the bot.
-You can invite the bot with 
-[this link](https://discord.com/api/oauth2/authorize?client_id=713124699663499274&scope=bot+applications.commands&permissions=2199023255551) 
-and try all features yourself. But here is the full list:
+All info in `$help` or `/help` command of the bot. But here is list that is probably not full:
  - [X] maintains #🍋dota2_news
    * [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates - comments from Valve employees  
    * Steam DB's [GameTracking-Dota2](https://github.com/SteamDatabase/GameTracking-Dota2) updates and its analysis
@@ -53,13 +53,13 @@ and try all features yourself. But here is the full list:
  - [X] And so much more to come.
 
 
-### Reporting Bugs and Making Suggestions
+### 🤝 Reporting Bugs, Making Suggestions and Contributing
 
 * There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/.github/CONTRIBUTING.md)
 * TL;DR^: Feel free to open a GitHub Issue/PR/Discussion or write me (Aluerie ❤#6524) on discord. You can 
 look my [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas.
 
-### Running
+### 🛠️Running
 
 I would probably prefer if you don't run an instance of my bot. You can invite the bot to your server with link above,
 discord native interface or `$invite` command.
@@ -90,14 +90,15 @@ test_list = [  # for test bot
     'help',  # so you can look how the command looks in `$help` command
 ]
 ```
-### Thanks 
+### 🤗Thanks 
 Thanks to everybody who has ever helped me with the bot in any way or form. 
 
 Special thanks to the whole `discord.py` community for endless amount of educational value.
 
-### Privacy Policy and Terms of Service
+### 🕵️ Privacy Policy and Terms of Service
 
 Some personal data is stored with a consent of the user.
  
 Example of such commands is `/birthday set`. 
-If you are using the command - you are giving me consent to store your birthday data and work with it.
+If you are using the command - you are giving me consent to store your birthday data, 
+work with it and show to other people.

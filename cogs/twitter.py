@@ -9,19 +9,18 @@ from discord.ext import commands, tasks
 
 from config import TWITTER_BEARER_TOKEN
 from .utils.imgtools import url_to_file
-from .utils.var import Cid, Uid
+from .utils.var import Cid
 
 if TYPE_CHECKING:
-    from .utils.context import Context
     from .utils.bot import AluBot
+    from .utils.context import Context
 
 import logging
 logger = logging.getLogger(__name__)
 
 
 async def download_twitter_images(session, ctx: Context, *, tweet_ids: str):
-    """
-    Download image from tweets. \
+    """Download image from tweets.
     Useful for Aluerie bcs twitter is banned in Russia (NotLikeThis).
     <tweet_ids> are tweet ids - it's just numbers in the end of tweet links.
     """
@@ -115,10 +114,10 @@ class Twitter(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
         self.myStream = None
-        self.start_stream.start()
 
     def cog_load(self) -> None:
         self.bot.ini_twitter()
+        self.start_stream.start()
 
     def cog_unload(self) -> None:
         self.myStream.disconnect()
@@ -137,7 +136,7 @@ class Twitter(commands.Cog):
         self.start_stream.restart()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     # while twitter is banned in russia # TODO: Remove this
     import platform
     if platform.system() == 'Windows':

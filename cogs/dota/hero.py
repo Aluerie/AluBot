@@ -1,7 +1,3 @@
-"""
-The MIT License (MIT)
-
-"""
 from typing import List
 
 from .cache import KeyCache
@@ -42,8 +38,7 @@ hero_keys_cache = HeroKeyCache()
 
 
 async def id_by_npcname(value: str) -> int:
-    """
-    Get hero id by npc_name.
+    """Get hero id by npc_name.
 
     example: 'npc_dota_hero_antimage' -> 1
     """
@@ -52,8 +47,7 @@ async def id_by_npcname(value: str) -> int:
 
 
 async def id_by_name(value: str) -> int:
-    """
-    Get hero id by localized to english name.
+    """Get hero id by localized to english name.
 
     Example: 'Anti-Mage' -> 1
     """
@@ -62,8 +56,7 @@ async def id_by_name(value: str) -> int:
 
 
 async def name_by_id(value: int) -> str:
-    """
-    Get hero id by name.
+    """Get hero id by name.
 
     Example: 1 -> 'Anti-Mage'
     """
@@ -72,8 +65,7 @@ async def name_by_id(value: int) -> str:
 
 
 async def imgurl_by_id(value: int) -> str:
-    """
-    Get hero icon utl id by id.
+    """Get hero icon utl id by id.
 
     Example: 1 -> 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png?'
     """
@@ -82,8 +74,7 @@ async def imgurl_by_id(value: int) -> str:
 
 
 async def iconurl_by_id(value: int) -> str:
-    """
-    Get hero icon utl id by id.
+    """Get hero icon utl id by id.
 
     Example: 1 -> 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/icons/antimage.png?'
     """
@@ -92,11 +83,7 @@ async def iconurl_by_id(value: int) -> str:
 
 
 async def get_all_hero_names() -> List[str]:
-    """
-    Get all hero names in Dota 2
-
-    @return: list of hero names in Dota 2
-    """
+    """Get all hero names in Dota 2"""
     data = await hero_keys_cache.data
     hero_dict = data['name_by_id']
     hero_dict.pop(0, None)
@@ -104,10 +91,7 @@ async def get_all_hero_names() -> List[str]:
 
 
 async def get_all_hero_ids() -> List[int]:
-    """
-    Get all hero ids in Dota 2
-    @return:
-    """
+    """Get all hero ids in Dota 2"""
     data = await hero_keys_cache.data
     hero_dict = data['name_by_id']
     hero_dict.pop(0, None)

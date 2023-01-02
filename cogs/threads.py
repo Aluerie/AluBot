@@ -1,15 +1,14 @@
 from __future__ import annotations
-
-from datetime import time
 from typing import TYPE_CHECKING
 
-from discord import ForumChannel
+import datetime
+
+import discord
 from discord.ext import commands, tasks
 
 from .utils.var import Sid, Ems
 
 if TYPE_CHECKING:
-    from discord import Thread
     from .utils.bot import AluBot
 
 watched_threads_ids = []
@@ -26,13 +25,13 @@ class ThreadsManaging(commands.Cog):
         self.unarchive_threads.cancel()
 
     @commands.Cog.listener()
-    async def on_thread_create(self, thread: Thread):
-        if thread.owner.bot or isinstance(thread.parent, ForumChannel):
+    async def on_thread_create(self, thread: discord.Thread):
+        if thread.owner.bot or isinstance(thread.parent, discord.ForumChannel):
             return
         await thread.join()
         await thread.send(content=f'De fok, using threads {Ems.peepoWTF}')
 
-    @tasks.loop(time=time(hour=12))
+    @tasks.loop(time=datetime.time(hour=12))
     async def unarchive_threads(self):
         guild = self.bot.get_guild(Sid.alu)
         for _id in watched_threads_ids:

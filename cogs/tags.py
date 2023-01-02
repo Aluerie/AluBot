@@ -1,18 +1,16 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING, Optional
 
 import asyncpg
-from discord import Interaction, Embed, Member, Message, app_commands
+import discord
+from discord import app_commands
 from discord.ext import commands
-from discord.utils import format_dt
 
 from .utils.context import Context
 from .utils.var import Clr, Ems, Rid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
-    from discord import MessageReference
 
 
 reserved_words = ['edit', 'add', 'create', 'info', 'delete', 'list', 'text', 'name', 'remove', 'ban']
@@ -24,8 +22,7 @@ class TagTextFlags(commands.FlagConverter, case_insensitive=True):
 
 
 class Tags(commands.Cog):
-    """
-    Use prepared texts to answer repeating questions
+    """Use prepared texts to answer repeating questions
 
     Inspired by programming servers where a lot of questions get repeated daily. \
     So in the end if somebody asks "How to learn Python?" - people just use \
@@ -33,7 +30,10 @@ class Tags(commands.Cog):
     """
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.peepoBusiness
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.PepoBeliever)
 
     async def tag_work(
             self,
@@ -44,29 +44,25 @@ class Tags(commands.Cog):
     ):
         pool = pool or self.bot.pool
 
-        query = """SELECT tags.name, tags.content
-                   FROM tags
-                   WHERE LOWER(tags.name)=$1;
+        query = """ SELECT tags.name, tags.content
+                    FROM tags
+                    WHERE LOWER(tags.name)=$1;
                 """
 
         row = await pool.fetchrow(query, tag_name)
 
         if row is None:
             prefix = getattr(ctx, 'clean_prefix', '/')
-            em = Embed(
-                colour=Clr.error,
-                description='Sorry! Tag under such name does not exist'
-            ).set_footer(
-                text=f'Consider making one with `{prefix}tags add`'
-            )
+            e = discord.Embed(description='Sorry! Tag under such name does not exist', colour=Clr.error)
+            e.set_footer(text=f'Consider making one with `{prefix}tags add`')
             if isinstance(ctx, commands.Context):
-                await ctx.reply(embed=em)
-            elif isinstance(ctx, Interaction):
-                await ctx.response.send_message(embed=em)
+                await ctx.reply(embed=e)
+            elif isinstance(ctx, discord.Interaction):
+                await ctx.response.send_message(embed=e)
         else:
-            def replied_reference(msg: Message) -> Optional[MessageReference]:
+            def replied_reference(msg: discord.Message) -> Optional[discord.MessageReference]:
                 ref = msg.reference  # you might want to put this under Context subclass
-                if ref and isinstance(ref.resolved, Message):
+                if ref and isinstance(ref.resolved, discord.Message):
                     return ref.resolved.to_reference()
                 return None
 
@@ -82,7 +78,7 @@ class Tags(commands.Cog):
         description='Use tag for copypaste message'
     )
     @app_commands.describe(tag_name="Summon tag under this name")
-    async def tag_slh(self, ntr: Interaction, *, tag_name: str):
+    async def tag_slh(self, ntr: discord.Interaction, *, tag_name: str):
         ctx = await Context.from_interaction(ntr)
         await self.tag_work(ctx, tag_name.lower())
 
@@ -144,21 +140,21 @@ class Tags(commands.Cog):
                 else:
                     query = "INSERT INTO tags (name, owner_id, content) VALUES ($1, $2, $3);"
                     await self.bot.pool.execute(query, tag_name, ctx.author.id, flags.text)
-                    em = Embed(colour=Clr.prpl)
-                    em.description = f"Tag under name `{tag_name}` was successfully added"
-        return await ctx.reply(embed=em)
+                    e = discord.Embed(colour=Clr.prpl)
+                    e.description = f"Tag under name `{tag_name}` was successfully added"
+        return await ctx.reply(embed=e)
 
     @add.error
     async def add_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.MissingRequiredFlag):
             ctx.error_handled = True
-            em = Embed(colour=Clr.error).set_author(name='WrongCommandUsage')
-            em.description = (
+            e = discord.Embed(colour=Clr.error).set_author(name='WrongCommandUsage')
+            e.description = (
                 'Sorry! Command usage is\n `$tag add name: <tag_name> text: <tag_text>`\n'
                 'where `<tag_name>` is <100 symbols and `<tag_text>` is <2000 symbols. \n'
                 'Flags `name` and `text` are **required**.'
             )
-            await ctx.reply(embed=em)
+            await ctx.reply(embed=e)
 
     @tags.command(
         name='info',
@@ -166,23 +162,22 @@ class Tags(commands.Cog):
     )
     @app_commands.describe(tag_name="Tag name")
     async def info(self, ctx: Context, *, tag_name: str):
-        """Get info about specific tag"""
+        """Get info about the specific tag."""
         tag_name = tag_name.lower()
         query = 'SELECT * FROM tags WHERE name=$1'
         row = await self.bot.pool.fetchrow(query, tag_name)
         if row:
-            em = Embed(colour=Clr.prpl, title='Tag info')
+            e = discord.Embed(colour=Clr.prpl, title='Tag info')
             tag_owner = self.bot.get_user(row.owner_id)
-            em.description = (
+            e.description = (
                 f"Tag name: `{row.name}`\n"
                 f"Tag owner: {tag_owner.mention}\n"
                 f"Tag was used {row.uses} times\n"
-                f"Tag was created on {format_dt(row.created_at)}"
+                f"Tag was created on {discord.utils.format_dt(row.created_at)}"
             )
         else:
-            em = Embed(colour=Clr.error)
-            em.description = 'Sorry! Tag under such name does not exist'
-        await ctx.reply(embed=em)
+            e = discord.Embed(description='Sorry! Tag under such name does not exist', colour=Clr.error)
+        await ctx.reply(embed=e)
 
     @tags.command(
         name='delete',
@@ -206,14 +201,14 @@ class Tags(commands.Cog):
         val = await self.bot.pool.fetchrow(query, *args)
 
         if val:
-            em = Embed(colour=Clr.prpl)
-            em.description = f'Successfully deleted tag under name `{tag_name}`'
+            e = discord.Embed(colour=Clr.prpl)
+            e.description = f'Successfully deleted tag under name `{tag_name}`'
         else:
-            em = Embed(colour=Clr.error)
-            em.description = \
+            e = discord.Embed(colour=Clr.error)
+            e.description = \
                 f'Sorry! Either the tag with such name does not exist or ' \
                 f'you do not have permissions to perform this action.'
-        await ctx.reply(embed=em)
+        await ctx.reply(embed=e)
 
     @tags.command(
         name='list',
@@ -223,12 +218,9 @@ class Tags(commands.Cog):
         """Show list of all tags in bot's database"""
         query = "SELECT name FROM tags;"
         rows = await self.bot.pool.fetch(query)
-        em = Embed(
-            colour=Clr.prpl,
-            title='List of tags',
-            description=', '.join([f"`{row.name}`" for row in rows])
-        )
-        await ctx.reply(embed=em)
+        e = discord.Embed(title='List of tags', colour=Clr.prpl)
+        e.description = ', '.join([f"`{row.name}`" for row in rows])
+        await ctx.reply(embed=e)
 
     @commands.has_role(Rid.discord_mods)
     @commands.has_permissions(manage_messages=True)
@@ -243,19 +235,19 @@ class Tags(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.scnf()
 
-    async def tag_ban_work(self, ctx, member: Member, mybool):
+    async def tag_ban_work(self, ctx, member: discord.Member, mybool):
         query = 'UPDATE users SET can_make_tags=$1 WHERE users.id=$2;'
         await self.bot.pool.execute(query, mybool, member.id)
 
-        em = Embed(colour=Clr.red)
-        em.description = f"{member.mention} is now {'un' if mybool else ''}banned from making new tags"
-        await ctx.reply(embed=em)
+        e = discord.Embed(colour=Clr.red)
+        e.description = f"{member.mention} is now {'un' if mybool else ''}banned from making new tags"
+        await ctx.reply(embed=e)
 
     @modtags.command(
         name='ban',
         description='Ban member from creating new tags'
     )
-    async def ban(self, ctx: Context, member: Member):
+    async def ban(self, ctx: Context, member: discord.Member):
         """Ban member from creating new tags"""
         await self.tag_ban_work(ctx, member, False)
 
@@ -263,7 +255,7 @@ class Tags(commands.Cog):
         name='unban',
         description='Unban member from creating new tags'
     )
-    async def unban(self, ctx, member: Member):
+    async def unban(self, ctx, member: discord.Member):
         """Unban member from creating new tags"""
         await self.tag_ban_work(ctx, member, True)
 

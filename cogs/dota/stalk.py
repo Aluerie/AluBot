@@ -89,8 +89,7 @@ async def generate_data(pool: Pool):
 
 
 def gradient_fill(x, y, fill_color=None, ax=None, **kwargs):
-    """
-    Plot a line with a linear alpha gradient filled beneath it.
+    """Plot a line with a linear alpha gradient filled beneath it.
 
     Parameters
     ----------

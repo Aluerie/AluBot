@@ -9,13 +9,13 @@ but IDK it's just so good and smart. I really learn a lot from reading @Danny's 
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+import datetime
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
 from discord.ext import commands
-
+from discord import app_commands
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -36,14 +36,14 @@ class ShortTime:
         re.VERBOSE,
     )
 
-    def __init__(self, argument: str, *, now: Optional[datetime] = None):
+    def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
         match = self.compiled.fullmatch(argument)
         if match is None or not match.group(0):
             raise commands.BadArgument('invalid time provided')
 
         data = {k: int(v) for k, v in match.groupdict(default=0).items()}
-        now = now or datetime.now(timezone.utc)
-        self.dt: datetime = now + relativedelta(**data)
+        now = now or datetime.datetime.now(datetime.timezone.utc)
+        self.dt: datetime.datetime = now + relativedelta(**data)
 
     @classmethod
     async def convert(cls, ctx: Context, argument: str) -> Self:
@@ -53,10 +53,10 @@ class ShortTime:
 class HumanTime:
     calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE)
 
-    def __init__(self, argument: str, *, now: Optional[datetime] = None):
-        now = now or datetime.now(timezone.utc)
+    def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
+        now = now or datetime.datetime.now(datetime.timezone.utc)
         dt, status = self.calendar.parseDT(argument, sourceTime=now)
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
         if not status.hasDateOrTime:
             raise commands.BadArgument('invalid time provided, try e.g. "tomorrow" or "3 days"')
 
@@ -64,7 +64,7 @@ class HumanTime:
             # replace it with the current time
             dt = dt.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
 
-        self.dt: datetime = dt
+        self.dt: datetime.datetime = dt
         self._past: bool = dt < now
 
     @classmethod
@@ -73,7 +73,7 @@ class HumanTime:
 
 
 class Time(HumanTime):
-    def __init__(self, argument: str, *, now: Optional[datetime] = None):
+    def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
         try:
             o = ShortTime(argument, now=now)
         except Exception as e:
@@ -84,24 +84,50 @@ class Time(HumanTime):
 
 
 class FutureTime(HumanTime):
-    def __init__(self, argument: str, *, now: Optional[datetime] = None):
+    def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
         super().__init__(argument, now=now)
 
         if self._past:
             raise commands.BadArgument('this time is in the past')
 
 
+class BadTimeTransform(app_commands.AppCommandError):
+    pass
+
+
+class TimeTransformer(app_commands.Transformer):
+    async def transform(self, interaction, value: str) -> datetime.datetime:
+        now = interaction.created_at.replace(tzinfo=None)
+        try:
+            short = ShortTime(value, now=now)
+        except commands.BadArgument:
+            try:
+                human = FutureTime(value, now=now)
+            except commands.BadArgument as e:
+                raise BadTimeTransform(str(e)) from None
+            else:
+                return human.dt
+        else:
+            return short.dt
+
+
 class FriendlyTimeResult:
-    dt: datetime
+    dt: datetime.datetime
     arg: str
 
     __slots__ = ('dt', 'arg')
 
-    def __init__(self, dt: datetime):
+    def __init__(self, dt: datetime.datetime):
         self.dt = dt
         self.arg = ''
 
-    async def ensure_constraints(self, ctx: Context, uft: UserFriendlyTime, now: datetime, remaining: str) -> None:
+    async def ensure_constraints(
+            self,
+            ctx: Context,
+            uft: UserFriendlyTime,
+            now: datetime.datetime,
+            remaining: str
+    ) -> None:
         if self.dt < now:
             raise commands.BadArgument('This time is in the past.')
 
@@ -188,7 +214,7 @@ class UserFriendlyTime(commands.Converter):
             if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
                 dt = dt.replace(day=now.day + 1)
 
-            result = FriendlyTimeResult(dt.replace(tzinfo=timezone.utc))
+            result = FriendlyTimeResult(dt.replace(tzinfo=datetime.timezone.utc))
             remaining = ''
 
             if begin in (0, 1):
@@ -200,7 +226,7 @@ class UserFriendlyTime(commands.Converter):
                     if not (end < len(argument) and argument[end] == '"'):
                         raise commands.BadArgument('If the time is quoted, you must unquote it.')
 
-                    remaining = argument[end + 1 :].lstrip(' ,.!')
+                    remaining = argument[end + 1:].lstrip(' ,.!')
                 else:
                     remaining = argument[end:].lstrip(' ,.!')
             elif len(argument) == end:
@@ -213,6 +239,3 @@ class UserFriendlyTime(commands.Converter):
 
             traceback.print_exc()
             raise
-
-
-

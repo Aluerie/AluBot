@@ -1,48 +1,47 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, List
 
 import logging
 import re
-from typing import TYPE_CHECKING, List
 
 from discord.ext.commands import BadArgument
+import twitchio
 
-from twitchio import Client
-
+from cogs.lol.const import LOL_GAME_CATEGORY_TWITCH_ID
 from cogs.utils.formats import human_timedelta
 
 if TYPE_CHECKING:
     from asyncpg import Pool
-    from twitchio import User, Video, Stream
 
 log = logging.getLogger(__name__)
 
 
-class TwitchClient(Client):
+class TwitchClient(twitchio.Client):
     def __init__(self, token: str):
         super().__init__(token)
 
     async def twitch_id_by_name(self, user_name: str) -> int:
         """Gets twitch_id by user_login"""
-        try:
-            user: User = (await self.fetch_users(names=[user_name]))[0]
+        user: twitchio.User = next(iter(await self.fetch_users(names=[user_name])), None)
+        if user:
             return user.id
-        except IndexError:
+        else:
             raise BadArgument(f'Error checking stream `{user_name}`.\n User either does not exist or is banned.')
 
     async def name_by_twitch_id(self, user_id: int) -> str:
         """Gets display_name by twitch_id"""
-        try:
-            user: User = (await self.fetch_users(ids=[user_id]))[0]
+        user: twitchio.User = next(iter(await self.fetch_users(ids=[user_id])), None)
+        if user:
             return user.display_name
-        except IndexError:
+        else:
             raise BadArgument(f'Error checking stream `{user_id}`.\n User either does not exist or is banned.')
 
     async def twitch_id_and_display_name_by_login(self, user_login: str) -> (int, str):
         """Gets tuple (twitch_id, display_name) by user_login from one call to twitch client"""
-        try:
-            user: User = (await self.fetch_users(names=[user_login]))[0]
+        user: twitchio.User = next(iter(await self.fetch_users(names=[user_login])), None)
+        if user:
             return user.id, user.display_name
-        except IndexError:
+        else:
             raise BadArgument(f'Error checking stream `{user_login}`.\n User either does not exist or is banned.')
 
     async def last_vod_link(
@@ -53,7 +52,9 @@ class TwitchClient(Client):
     ) -> str:
         """Get last vod link for user with `user_id` with timestamp as well"""
         try:
-            video: Video = (await self.fetch_videos(user_id=user_id, period='day'))[0]  # type: ignore
+            video: twitchio.Video = next(iter(
+                await self.fetch_videos(user_id=user_id, period='day')  # type: ignore # ???
+            ), None)
 
             def get_time_from_hms(hms_time: str):
                 """Convert time after `?t=` in vod link into amount of seconds
@@ -88,15 +89,13 @@ class TwitchClient(Client):
         live_twitch_ids = [
             i.user.id
             for i in await self.fetch_streams(user_ids=list(twitch_id_to_fav_id_dict.keys()))
+            if i.game_id == LOL_GAME_CATEGORY_TWITCH_ID
         ]
         return [twitch_id_to_fav_id_dict[i] for i in live_twitch_ids]
 
     async def get_twitch_stream(self, twitch_id: int) -> TwitchStream:
-        user = (await self.fetch_users(ids=[twitch_id]))[0]
-        try:
-            stream = (await self.fetch_streams(user_ids=[twitch_id]))[0]
-        except IndexError:  # stream is offline
-            stream = None
+        user = next(iter(await self.fetch_users(ids=[twitch_id])))
+        stream = next(iter(await self.fetch_streams(user_ids=[twitch_id])), None)  # None if offline
         return TwitchStream(twitch_id, user, stream)
 
 
@@ -124,14 +123,14 @@ class TwitchStream:
         title: str
         preview_url: str
 
-    def __init__(self, twitch_id: int, user: User, stream: Stream):
+    def __init__(self, twitch_id: int, user: twitchio.User, stream: twitchio.Stream):
         self.twitch_id = twitch_id
         self._update(user, stream)
 
     def __repr__(self):
         return f"<Stream id={self.twitch_id} name={self.name} online={self.online} title={self.title}>"
 
-    def _update(self, user: User, stream: Stream):
+    def _update(self, user: twitchio.User, stream: twitchio.Stream):
         self.display_name = user.display_name
         self.name = user.name
         self.url = f'https://www.twitch.tv/{self.display_name}'
@@ -157,8 +156,7 @@ async def main():
     tc = TwitchClient(token=TWITCH_TOKEN)
     await tc.connect()
     tw_id = await tc.twitch_id_by_name('gorgc')
-    print(tw_id)
-    print(await tc.last_vod_link(tw_id, 0))
+    print(await tc.get_twitch_stream(tw_id))
 
     await tc.close()
 

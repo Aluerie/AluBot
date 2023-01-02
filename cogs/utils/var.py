@@ -54,7 +54,6 @@ class Cid:
     pubs_talk = 731376390103892019
     logs = 731615128050598009
     alubot = 724991054474117241
-    saved = 709028718286340106
     confessions = 731703242597072896
     weebs = 731887442768166933
     bot_spam = 724986090632642653
@@ -199,8 +198,8 @@ class Ems:  # Emote strings
     # nothing for now
 
     # general emotes
-    Offline = '🔴'
-    Online = '🟢'
+    Offline = '\N{LARGE RED CIRCLE}'
+    Online = '\N{LARGE GREEN CIRCLE}'
     # emotes arrays
     comfy_emotes = [
         "<:peepoComfy:726438781208756288>",
@@ -208,7 +207,10 @@ class Ems:  # Emote strings
         "<:pepoblanket:595156413974577162>",
         "<:_:595156413974577162>"
     ]
-    phone_numbers = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '*️⃣', '#️⃣']
+    phone_numbers = [
+        '\N{DIGIT ZERO}', '\N{DIGIT ONE}', '\N{DIGIT TWO}', '\N{DIGIT THREE}', '\N{DIGIT FOUR}',
+        '\N{DIGIT FIVE}', '\N{DIGIT SIX}', '\N{DIGIT SEVEN}', '\N{DIGIT EIGHT}', '\N{DIGIT NINE}'
+    ]
 
 
 class Img:
@@ -240,6 +242,7 @@ class Clr:
     neon = discord.Colour(0x4D4DFF)
     error = discord.Colour(0x800000)
     olive = discord.Colour(0x98BF64)
+    reddit = discord.Colour(0xFF4500)
     twitch = discord.Colour(0x9146FF)
 
 

@@ -1,10 +1,10 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from PIL import Image
-from discord import Embed, app_commands
+import discord
+from discord import app_commands
 from discord.ext import commands
+from PIL import Image
 
 from cogs.twitter import download_twitter_images
 from .utils.var import Clr, Ems
@@ -15,17 +15,18 @@ if TYPE_CHECKING:
 
 
 class ToolsCog(commands.Cog, name='Tools'):
-    """
-    Some useful stuff
+    """Some useful stuff
 
     Maybe one day it's going to be helpful for somebody.
     """
 
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.DankFix
-
         self.players_by_group = []
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.DankFix)
 
     def cog_load(self) -> None:
         self.bot.ini_twitter()
@@ -41,8 +42,8 @@ class ToolsCog(commands.Cog, name='Tools'):
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags
         img.thumbnail(maxsize, Image.ANTIALIAS)
         file = self.bot.img_to_file(img, filename='converted.png', fmt='PNG')
-        em = Embed(colour=Clr.prpl, description='Image was converted to `.png` format')
-        await ctx.reply(embed=em, file=file)
+        e = discord.Embed(colour=Clr.prpl, description='Image was converted to `.png` format')
+        await ctx.reply(embed=e, file=file)
 
     @commands.hybrid_command()
     @app_commands.describe(tweet_ids='Number(-s) in the end of tweet link')

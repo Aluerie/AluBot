@@ -2,8 +2,8 @@ from collections.abc import Sequence
 from io import BytesIO, StringIO
 from typing import Union
 
+import discord
 from PIL import Image, ImageOps
-from discord import File
 
 
 def get_text_wh(text_string: str, font):  # wh for width, height = dimensions
@@ -17,24 +17,24 @@ def get_text_wh(text_string: str, font):  # wh for width, height = dimensions
     return text_width, text_height
 
 
-def str_to_file(string, filename: str = "file.txt") -> File:
+def str_to_file(string, filename: str = "file.txt") -> discord.File:
     fp = BytesIO(StringIO(string).read().encode('utf8'))
     fp.seek(0)
-    return File(fp, filename=filename)
+    return discord.File(fp, filename=filename)
 
 
-def plt_to_file(fig, filename: str = 'plt.png') -> File:
+def plt_to_file(fig, filename: str = 'plt.png') -> discord.File:
     image_binary = BytesIO()
     fig.savefig(image_binary)
     image_binary.seek(0)
-    return File(fp=image_binary, filename=filename)
+    return discord.File(fp=image_binary, filename=filename)
 
 
-def img_to_file(image, filename: str = 'FromAluBot.png', fmt: str = 'PNG') -> File:
+def img_to_file(image, filename: str = 'FromAluBot.png', fmt: str = 'PNG') -> discord.File:
     image_binary = BytesIO()  # image is probably type PIL.PngImagePlugin.PngImageFile
     image.save(image_binary, fmt)
     image_binary.seek(0)
-    return File(fp=image_binary, filename=filename)
+    return discord.File(fp=image_binary, filename=filename)
 
 
 async def url_to_img(
@@ -68,7 +68,7 @@ async def url_to_file(
         filename: str = 'FromAluBot.png',
         *,
         return_list: bool = False
-) -> Union[File, Sequence[File]]:
+) -> Union[discord.File, Sequence[discord.File]]:
     if isinstance(url, str):
         url_array = [url]
     elif isinstance(url, Sequence):
@@ -80,7 +80,7 @@ async def url_to_file(
     for counter, url_item in enumerate(url_array):
         async with session.get(url_item) as resp:
             data = BytesIO(await resp.read())
-            files.append(File(data, f'{counter}{filename}'))
+            files.append(discord.File(data, f'{counter}{filename}'))
     if return_list:
         return files
     else:

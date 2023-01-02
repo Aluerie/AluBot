@@ -14,7 +14,8 @@ __all__ = (
     'server_to_platform',
     'platform_to_server',
     'platform_to_region',
-    'SOLO_RANKED_5v5_QUEUE_ENUM'
+    'SOLO_RANKED_5v5_QUEUE_ENUM',
+    'LOL_GAME_CATEGORY_TWITCH_ID'
 )
 
 LiteralPlatform = Literal['br1', 'eun1', 'euw1', 'jp1', 'kr', 'la1', 'la2', 'na1', 'oc1', 'ru', 'tr1']
@@ -79,3 +80,5 @@ def platform_to_region(platform: LiteralPlatform) -> LiteralRegion:
 # says 420 is 5v5 Ranked Solo games
 SOLO_RANKED_5v5_QUEUE_ENUM = 420
 
+# just manually figured out
+LOL_GAME_CATEGORY_TWITCH_ID = 21779

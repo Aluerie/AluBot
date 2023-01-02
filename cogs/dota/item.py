@@ -1,7 +1,3 @@
-"""
-The MIT License (MIT)
-
-"""
 from .cache import KeyCache
 from .const import *
 
@@ -31,8 +27,7 @@ item_keys_cache = ItemKeyCache()
 
 
 async def iconurl_by_id(value: int) -> str:
-    """
-    Get item icon url id by item id.
+    """Get item icon url id by item id.
 
     example: 2 ->
     'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/items/blades_of_attack_lg.png'
@@ -42,8 +37,7 @@ async def iconurl_by_id(value: int) -> str:
 
 
 async def id_by_key(value: str) -> int:
-    """
-    Get item id by provided key.
+    """Get item id by provided key.
 
     example: "infused_raindrop" -> 265
     """

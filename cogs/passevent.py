@@ -1,7 +1,7 @@
 from __future__ import annotations
-
-from datetime import datetime, timezone, timedelta
 from typing import TYPE_CHECKING
+
+import datetime
 
 import discord
 from discord.ext import commands, tasks
@@ -18,17 +18,19 @@ game_feed = 966316773869772860
 class PassEvent(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.lastupdated = datetime.now(timezone.utc)
-        self.crashed = True
+        self.lastupdated = datetime.datetime.now(datetime.timezone.utc)
+        self.crashed: bool = True
+
+    async def cog_load(self) -> None:
         self.botcheck.start()
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.botcheck.cancel()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.channel.id == game_feed:
-            self.lastupdated = datetime.now(timezone.utc)
+            self.lastupdated = datetime.datetime.now(datetime.timezone.utc)
             self.crashed = False
         if message.channel.id == start_errors:
             self.crashed = True
@@ -37,7 +39,7 @@ class PassEvent(commands.Cog):
     async def botcheck(self):
         if self.crashed:
             return
-        if datetime.now(timezone.utc) - self.lastupdated > timedelta(minutes=70):
+        if datetime.datetime.now(datetime.timezone.utc) - self.lastupdated > datetime.timedelta(minutes=70):
             await self.bot.get_channel(start_errors).send(
                 content=f'<@{Uid.alu}> I think the bot crashed but did not even send the message'
             )
@@ -47,5 +49,5 @@ class PassEvent(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(PassEvent(bot))

@@ -1,12 +1,12 @@
 from __future__ import annotations
-
-import logging
-from datetime import datetime, timedelta, timezone, time
 from typing import TYPE_CHECKING
 
-from PIL import Image, ImageDraw, ImageFont
-from discord import Embed
+import datetime
+import logging
+
+import discord
 from discord.ext import commands, tasks
+from PIL import Image, ImageDraw, ImageFont
 from matplotlib import pyplot as plt
 
 from config import DOTA_FRIENDID
@@ -94,18 +94,21 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
 
     You can get various information about Aluerie's Dota 2 progress.
     """
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.TwoBButt
 
         self.current_match_data: MatchHistoryData = None  # type: ignore
         self.new_matches_for_history = []
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.TwoBButt)
+
+    async def cog_load(self) -> None:
+        self.bot.ini_steam_dota()
         self.match_history_refresh.start()
 
-    def cog_load(self) -> None:
-        self.bot.ini_steam_dota()
-
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.match_history_refresh.cancel()
 
     @commands.hybrid_group()
@@ -122,11 +125,9 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         """Aluerie's last played Dota 2 match id"""
         await ctx.typing()
         res = try_get_gamerstats(ctx.bot, start_at_match_id=0, matches_requested=1)
-        em = Embed(
-            colour=Clr.prpl,
-            description=f'`{res[0].match_id}`'
-        ).set_author(name='Aluerie\'s last match id')
-        return await ctx.reply(embed=em)
+        e = discord.Embed(description=f'`{res[0].match_id}`', colour=Clr.prpl)
+        e.set_author(name='Aluerie\'s last match id')
+        return await ctx.reply(embed=e)
 
     @stalk.command(
         name='wl',
@@ -139,10 +140,10 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         res = try_get_gamerstats(ctx.bot, start_at_match_id=0)
 
         def get_morning_time():
-            now = datetime.now(timezone.utc)
+            now = datetime.datetime.now(datetime.timezone.utc)
             morning = now.replace(hour=3, minute=45, second=0)
             if now < morning:
-                morning -= timedelta(days=1)
+                morning -= datetime.timedelta(days=1)
             return int(morning.timestamp())
 
         morning_time = get_morning_time()
@@ -151,15 +152,15 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         for _ in range(5):
             for match in try_get_gamerstats(ctx.bot, start_at_match_id=start_at_match_id):
                 if match.start_time < morning_time:
-                    embed = Embed(colour=Clr.prpl)
-                    embed.set_author(name='Aluerie\'s WL for today')
+                    e = discord.Embed(colour=Clr.prpl)
+                    e.set_author(name='Aluerie\'s WL for today')
                     max_len = max([len(key) for key in dict_answer])
                     ans = [
                         f'`{key.ljust(max_len)} W {dict_answer[key]["W"]} - L {dict_answer[key]["L"]}`'
                         for key in dict_answer
                     ]
-                    embed.description = '\n'.join(ans)
-                    return await ctx.reply(embed=embed)
+                    e.description = '\n'.join(ans)
+                    return await ctx.reply(embed=e)
 
                 match match.lobby_type:
                     case 7:
@@ -205,7 +206,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                     font=font
                 )
 
-                time_text = datetime.fromtimestamp(x.start_time).strftime("%H:%M %d/%m")
+                time_text = datetime.datetime.fromtimestamp(x.start_time).strftime("%H:%M %d/%m")
                 w1, h1 = get_text_wh(time_text, time_font)
                 d.text(
                     (col0 + (col1 - w1)/2, cell_h * c + (cell_h - h1) / 2),
@@ -257,36 +258,24 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
 
         pages_list = []
         for item in files_list:
-            em = Embed(
-                colour=Clr.prpl,
-                title="Aluerie's Dota 2 match history"
-            ).set_image(
-                url=f'attachment://{item.filename}'
-            ).set_footer(
-                text='for copypastable match_ids use `$stalk match_ids`'
-            )
-            pages_list.append(pages.Page(embeds=[em], files=[item]))
+            e = discord.Embed(title="Aluerie's Dota 2 match history", colour=Clr.prpl)
+            e.set_image(url=f'attachment://{item.filename}')
+            e.set_footer(text='for copypastable match_ids use `$stalk match_ids`')
+            pages_list.append(pages.Page(embeds=[e], files=[item]))
 
         await pages.Paginator(pages=pages_list).send(ctx)
 
     @dh.error
-    async def dh_error(self, ctx, error):
+    async def dh_error(self, ctx: Context, error):
         if isinstance(error.original, IndexError):
             ctx.error_handled = True
-            em = Embed(
-                colour=Clr.error,
-                description='Oups, logging into steam took too long, please retry in a bit ;'
-            ).set_author(
-                name='SteamLoginError'
-            ).set_footer(
-                text='If this happens again, then @ Aluerie, please'
-            )
-            await ctx.send(embed=em)
+            e = discord.Embed(colour=Clr.error)
+            e.description = 'Oups, logging into steam took too long, please retry in a bit'
+            e.set_author(name='SteamLoginError')
+            e.set_footer(text='If this happens again, then @ Aluerie, please')
+            await ctx.reply(embed=e, ephemeral=True)
 
-    @stalk.command(
-        name='match_ids',
-        description="Copypastable match ids"
-    )
+    @stalk.command(name='match_ids')
     async def match_ids(self, ctx: Context):
         """Copypastable match ids"""
         await ctx.typing()
@@ -385,13 +374,13 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         """Sync information for Irene's ranked infographics"""
         await ctx.typing()
         await self.sync_work()
-        em = Embed(
-            colour=Clr.prpl,
-            description='Sync was done'
-        )
-        await ctx.reply(embed=em)
+        e = discord.Embed(description='Sync was done', colour=Clr.prpl)
+        await ctx.reply(embed=e)
 
-    @tasks.loop(time=[time(hour=3, minute=45, tzinfo=timezone.utc), time(hour=15, minute=45, tzinfo=timezone.utc)])
+    @tasks.loop(time=[
+        datetime.time(hour=3, minute=45, tzinfo=datetime.timezone.utc),
+        datetime.time(hour=15, minute=45, tzinfo=datetime.timezone.utc)]
+    )
     async def match_history_refresh(self):
         """
         url = "https://www.dota2.com/patches/"
@@ -515,5 +504,5 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         await ctx.reply(file=plt_to_file(fig, filename='mmr.png'))
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(GamerStats(bot))

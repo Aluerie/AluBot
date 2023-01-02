@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, List, Union
 
 import colorsys
 import datetime
@@ -6,23 +7,22 @@ import platform
 import re
 import socket
 import warnings
-from typing import TYPE_CHECKING, List, Literal, Union
 
 import discord
-from discord.ext import commands, tasks
 from discord import app_commands
-
-from dota2 import __version__ as dota2_version
+from discord.ext import commands, tasks
 import psutil
-from pyot import __version__ as pyot_version
 from PIL import ImageColor, Image
 from async_google_trans_new import google_translator
 from dateparser.search import search_dates
-# from wordcloud import WordCloud #todo: wait for a fix
+from dota2 import __version__ as dota2__version__
+from pyot import __version__ as pyot__version__
 
 from .utils.formats import human_timedelta, format_dt_tdR
 from .utils.imgtools import img_to_file
 from .utils.var import Cid, Clr, Ems, Sid, Rid, MP, MAP
+
+# from wordcloud import WordCloud #todo: wait for a fix
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -42,14 +42,14 @@ async def account_age_ctx_menu(ntr: discord.Interaction, member: discord.Member)
 
 
 async def translate_msg_ctx_menu(ntr: discord.Interaction, message: discord.Message):
-    embed = discord.Embed(colour=message.author.colour, title='Google Translate to English')
+    e = discord.Embed(colour=message.author.colour, title='Google Translate to English')
     if len(message.content) == 0:
-        embed.description = "Sorry it seems this message doesn't have content"
+        e.description = "Sorry it seems this message doesn't have content"
     else:
         translator = google_translator()
-        embed.description = await translator.translate(message.content, lang_tgt='en')
-        embed.set_footer(text=f'Detected language: {(await translator.detect(message.content))[0]}')
-    await ntr.response.send_message(embed=embed, ephemeral=True)
+        e.description = await translator.translate(message.content, lang_tgt='en')
+        e.set_footer(text=f'Detected language: {(await translator.detect(message.content))[0]}')
+    await ntr.response.send_message(embed=e, ephemeral=True)
 
 
 class Info(commands.Cog, name='Info'):
@@ -57,13 +57,17 @@ class Info(commands.Cog, name='Info'):
 
     def __init__(self, bot):
         self.bot: AluBot = bot
-        self.reload_info.start()
-        self.help_emote = Ems.PepoG
 
         self.ctx_menu1 = app_commands.ContextMenu(name='Translate to English', callback=translate_msg_ctx_menu)
-        self.bot.tree.add_command(self.ctx_menu1)
-
         self.ctx_menu2 = app_commands.ContextMenu(name='View Account Age', callback=account_age_ctx_menu)
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.PepoG)
+
+    async def cog_load(self) -> None:
+        self.reload_info.start()
+        self.bot.tree.add_command(self.ctx_menu1)
         self.bot.tree.add_command(self.ctx_menu2)
 
     async def cog_unload(self) -> None:
@@ -81,11 +85,11 @@ class Info(commands.Cog, name='Info'):
         for pdate in pdates:
             if pdate[1].tzinfo is not None:
                 dt = pdate[1]
-                em = discord.Embed(colour=Clr.prpl)
-                em.description = \
+                e = discord.Embed(colour=Clr.prpl)
+                e.description = \
                     f'"{pdate[0]}" in your timezone:\n {format_dt_tdR(dt)}\n' \
                     f'{dt.tzname()} is GMT {dt.utcoffset().seconds / 3600:+.1f}, dls: {dt.dst().seconds / 3600:+.1f}'
-                await message.channel.send(embed=em)
+                await message.channel.send(embed=e)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -99,9 +103,9 @@ class Info(commands.Cog, name='Info'):
                 channel = before.guild.get_channel(ch_id)
                 msg = channel.get_partial_message(msg_id)
                 role = before.guild.get_role(role_id)
-                em = discord.Embed(title=f'List of {role.name}', colour=Clr.prpl)
-                em.description = ''.join([f'{member.mention}\n' for member in role.members])
-                await msg.edit(content='', embed=em)
+                e = discord.Embed(title=f'List of {role.name}', colour=Clr.prpl)
+                e.description = ''.join([f'{member.mention}\n' for member in role.members])
+                await msg.edit(content='', embed=e)
 
         await give_text_list(Rid.bots, Cid.bot_spam, 959982214827892737)
         await give_text_list(Rid.nsfwbots, Cid.nsfw_bob_spam, 959982171492323388)
@@ -115,13 +119,13 @@ class Info(commands.Cog, name='Info'):
         """Show GMT (UTC) time ;"""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
-        em = discord.Embed(colour=Clr.prpl, title='GMT(Greenwich Mean Time)')
-        em.set_footer(
+        e = discord.Embed(colour=Clr.prpl, title='GMT(Greenwich Mean Time)')
+        e.set_footer(
             text=f'GMT is the same as UTC (Universal Time Coordinated)\nWith love, {ctx.guild.me.display_name}'
         )
-        em.add_field(name='Time:', value=now_time)
-        em.add_field(name='Date:', value=now_date)
-        await ctx.reply(embed=em)
+        e.add_field(name='Time:', value=now_time)
+        e.add_field(name='Date:', value=now_date)
+        await ctx.reply(embed=e)
 
     @commands.hybrid_command(
         name='role',
@@ -131,19 +135,19 @@ class Info(commands.Cog, name='Info'):
     @app_commands.describe(role='Choose role to get info about')
     async def roleinfo(self, ctx, *, role: discord.Role):
         """View info about selected role"""
-        em = discord.Embed(title="Role information", colour=role.colour)
-        em.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
+        e = discord.Embed(title="Role information", colour=role.colour)
+        e.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
         # TODO: this embed will be more than 6000 symbols
-        await ctx.reply(embed=em)
+        await ctx.reply(embed=e)
 
     @tasks.loop(count=1)
     async def reload_info(self):
-        em = discord.Embed(colour=Clr.prpl, description=f'Logged in as {self.bot.user}')
-        await self.bot.get_channel(Cid.spam_me).send(embed=em)
+        e = discord.Embed(colour=Clr.prpl, description=f'Logged in as {self.bot.user}')
+        await self.bot.get_channel(Cid.spam_me).send(embed=e)
         self.bot.help_command.cog = self  # show help command in there
         if not self.bot.test:
             # em.set_author(name='Finished updating/rebooting')
-            await self.bot.get_channel(Cid.bot_spam).send(embed=em)
+            await self.bot.get_channel(Cid.bot_spam).send(embed=e)
 
     @reload_info.before_loop
     async def before(self):
@@ -154,10 +158,10 @@ class Info(commands.Cog, name='Info'):
     async def translate(self, ctx: Context, *, text: str):
         """Translate text into English using Google Translate, auto-detects source language."""
         translator = google_translator()
-        em = discord.Embed(title='Google Translate to English', colour=ctx.author.colour)
-        em.description = await translator.translate(text, lang_tgt='en')
-        em.set_footer(text=f'Detected language: {(await translator.detect(text))[0]}')
-        await ctx.reply(embed=em)
+        e = discord.Embed(title='Google Translate to English', colour=ctx.author.colour)
+        e.description = await translator.translate(text, lang_tgt='en')
+        e.set_footer(text=f'Detected language: {(await translator.detect(text))[0]}')
+        await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=['color'], usage='<formatted_colour_string>',)
     @app_commands.describe(colour_arg='Colour in any of supported formats')
@@ -173,7 +177,7 @@ class Info(commands.Cog, name='Info'):
         • Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`
         • Common HTML color names: `red`, `Blue`
         • Extra: MaterialUI Google Palette: `mu(colour_name, shade)`
-        • Extra: MateriaAccentlUI Google Palette: `mu(colour_name, shade)`
+        • Extra: MateriaAccentUI Google Palette: `mu(colour_name, shade)`
         • Last but not least: `prpl` for favourite Aluerie\'s colour
         """
         if colour_arg == 'prpl':
@@ -198,15 +202,15 @@ class Info(commands.Cog, name='Info'):
 
         img = Image.new('RGB', (300, 300), rgb)
         file = img_to_file(img, filename='colour.png')
-        em = discord.Embed(color=discord.Colour.from_rgb(*rgb), title='Colour info')
-        em.description = (
+        e = discord.Embed(color=discord.Colour.from_rgb(*rgb), title='Colour info')
+        e.description = (
             f'Hex triplet: `{rgb2hex(*rgb)}`\n' +
             'RGB: `({}, {}, {})`\n'.format(*rgb) +
             'HSV: `({:.2f}, {:.2f}, {})`\n'.format(*colorsys.rgb_to_hsv(*rgb)) +
             'HLS: `({:.2f}, {}, {:.2f})`\n'.format(*colorsys.rgb_to_hls(*rgb))
         )
-        em.set_thumbnail(url=f'attachment://{file.filename}')
-        await ctx.reply(embed=em, file=file)
+        e.set_thumbnail(url=f'attachment://{file.filename}')
+        await ctx.reply(embed=e, file=file)
 
     @colour.autocomplete('colour_arg')
     async def colour_callback(
@@ -239,12 +243,12 @@ class Info(commands.Cog, name='Info'):
 
         if isinstance(error, (ValueError, KeyError)):
             ctx.error_handled = True
-            em = discord.Embed(description=self.colour.callback.__doc__, colour=Clr.error)
-            em.set_author(
+            e = discord.Embed(description=self.colour.callback.__doc__, colour=Clr.error)
+            e.set_author(
                 name='WrongColourFormat',
                 url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html'
             )
-            await ctx.reply(embed=em, ephemeral=True)
+            await ctx.reply(embed=e, ephemeral=True)
 
     @commands.hybrid_group()
     async def info(self, ctx: Context):
@@ -262,8 +266,8 @@ class Info(commands.Cog, name='Info'):
         async with self.bot.session.get(url) as resp:
             data = await resp.json()
 
-        em = discord.Embed(title="Bot Host Machine System Info", colour=Clr.prpl)
-        em.description = (
+        e = discord.Embed(title="Bot Host Machine System Info", colour=Clr.prpl)
+        e.description = (
             f'● Hostname: {socket.gethostname()}\n'
             f'● Machine: {platform.machine()}\n'
             f'● Platform: {platform.platform()}\n'
@@ -271,7 +275,7 @@ class Info(commands.Cog, name='Info'):
             f'● Version: `{platform.version()}`\n'
             f'● Processor: {platform.processor()}\n'
         )
-        em.add_field(
+        e.add_field(
             name='Current % | max values',
             value=(
                 f'● CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
@@ -281,22 +285,22 @@ class Info(commands.Cog, name='Info'):
                 f'{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB'
             )
         )
-        em.add_field(
+        e.add_field(
             name='Python Versions',
             value=(
                 f'● Python: {platform.python_version()}\n'
                 f'● discord.py {discord.__version__}\n'
-                f'● dota2 {dota2_version}\n'
-                f'● Pyot {pyot_version}\n'
+                f'● dota2 {dota2__version__}\n'
+                f'● Pyot {pyot__version__}\n'
             )
         )
-        em.set_footer(text=f'AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}')
+        e.set_footer(text=f'AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}')
         if not self.bot.test:
-            em.add_field(
+            e.add_field(
                 name="Bot\'s Location judging by IP",
                 value=f"· {data['country']} {data['region']} {data['city']}"
             )
-        await ctx.reply(embed=em)
+        await ctx.reply(embed=e)
 
     @info.command(
         name='stats',
@@ -304,62 +308,26 @@ class Info(commands.Cog, name='Info'):
     )
     async def stats(self, ctx: Context):
         """Summary stats for the bot"""
-        em = discord.Embed(title='Summary bot stats', colour=Clr.prpl)
-        em.set_thumbnail(url=self.bot.user.avatar.url)
-        em.add_field(name="Server Count", value=str(len(self.bot.guilds)))
-        em.add_field(name="User Count", value=str(len(self.bot.users)))
-        em.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")
-        em.add_field(name='Uptime', value=human_timedelta(discord.utils.utcnow() - self.bot.launch_time, brief=True))
-        await ctx.reply(embed=em)
-
-    @staticmethod
-    def guild_embed(guild: discord.Guild, event: Literal['join', 'remove']) -> discord.Embed:
-        e_dict = {
-            'join': {
-                'clr': MP.green(shade=500),
-                'word': 'joined'
-            },
-            'remove': {
-                'clr': MP.red(shade=500),
-                'word': 'was removed from'
-            }
-        }
-        em = discord.Embed(title=guild.name, description=guild.description, colour=e_dict[event]['clr'])
-        em.set_author(
-            name=f"The bot {e_dict[event]['word']} {str(guild.owner)}'s guild",
-            icon_url=guild.owner.avatar.url
-        )
-        em.set_thumbnail(url=guild.icon.url if guild.icon else None)
-        em.add_field(name='Members count', value=guild.member_count)
-        em.add_field(name='Guild ID', value=f'`{guild.id}`')
-        return em
-
-    @commands.Cog.listener()
-    async def on_guild_join(self, guild: discord.Guild):
-        await self.bot.get_channel(Cid.global_logs).send(
-            embed=self.guild_embed(guild, event='join')
-        )
-        query = 'INSERT INTO guilds (id, name) VALUES ($1, $2)'
-        await self.bot.pool.execute(query, guild.id, guild.name)
-
-    @commands.Cog.listener()
-    async def on_guild_remove(self, guild: discord.Guild):
-        await self.bot.get_channel(Cid.global_logs).send(
-            embed=self.guild_embed(guild, event='remove')
-        )
-        query = 'DELETE FROM guilds WHERE id=$1'
-        await self.bot.pool.execute(query, guild.id)
+        e = discord.Embed(title='Summary bot stats', colour=Clr.prpl)
+        e.set_thumbnail(url=self.bot.user.avatar.url)
+        e.add_field(name="Server Count", value=str(len(self.bot.guilds)))
+        e.add_field(name="User Count", value=str(len(self.bot.users)))
+        e.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")
+        e.add_field(name='Uptime', value=human_timedelta(discord.utils.utcnow() - self.bot.launch_time, brief=True))
+        await ctx.reply(embed=e)
 
 
 class StatsCommands(commands.Cog, name='Stats'):
-    """
-    Some stats/infographics/diagrams/info
+    """Some stats/infographics/diagrams/info
 
     More to come.
     """
     def __init__(self, bot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.Smartge
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.Smartge)
 
     @commands.hybrid_command(
         name='wordcloud',
@@ -373,8 +341,8 @@ class StatsCommands(commands.Cog, name='Stats'):
             channel_or_and_member: commands.Greedy[Union[discord.Member, discord.TextChannel]] = None,
             limit: int = 2000
     ):
-        """
-        Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
+        """Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
+
         Can accept multiple members/channels \
         Note that it's quite slow function or even infinitely slow with bigger limits ;
         """
@@ -388,14 +356,14 @@ class StatsCommands(commands.Cog, name='Stats'):
             text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])
         # todo: remove this
         # wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
-        em = discord.Embed(colour=Clr.prpl)
-        em.description = (
+        e = discord.Embed(colour=Clr.prpl)
+        e.description = (
             f"Members: {', '.join([m.mention for m in members])}\n"
             f"Channels: {', '.join([c.mention for c in channels])}\n"
             f"Limit: {limit}"
         )
         # todo remove this
-        # await ctx.reply(embed=em, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
+        # await ctx.reply(embed=e, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
         await ctx.reply('it does not work for now, waiting those guys to fix it')
 
 
@@ -417,7 +385,7 @@ class StatsChannels(commands.Cog):
     async def my_time(self):
         symbol = '#' if platform.system() == 'Windows' else '-'
         msk_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3)))
-        new_name = f'⏰ {msk_now.strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
+        new_name = f'\N{ALARM CLOCK} {msk_now.strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
         await self.bot.get_channel(Cid.my_time).edit(name=new_name)
 
     @my_time.before_loop
@@ -428,7 +396,7 @@ class StatsChannels(commands.Cog):
     async def my_members(self):
         guild = self.bot.get_guild(Sid.alu)
         bots_role = guild.get_role(Rid.bots)
-        new_name = f'🏡 Members: {guild.member_count-len(bots_role.members)}'
+        new_name = f'\N{HOUSE WITH GARDEN} Members: {guild.member_count-len(bots_role.members)}'
         await guild.get_channel(795743012789551104).edit(name=new_name)
 
     @my_members.before_loop
@@ -439,7 +407,7 @@ class StatsChannels(commands.Cog):
     async def my_bots(self):
         guild = self.bot.get_guild(Sid.alu)
         bots_role = guild.get_role(Rid.bots)
-        new_name = f'🤖 Bots: {len(bots_role.members)}'
+        new_name = f'\N{ROBOT FACE} Bots: {len(bots_role.members)}'
         await guild.get_channel(795743065787990066).edit(name=new_name)
 
     @my_bots.before_loop

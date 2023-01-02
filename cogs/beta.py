@@ -1,16 +1,14 @@
 from __future__ import annotations
-
-import logging
 from typing import TYPE_CHECKING
 
-import discord
-from discord.ext import commands, tasks
-from discord import app_commands
+import logging
 
-from .utils.var import Uid
+import discord
+from discord import app_commands
+from discord.ext import commands, tasks
 
 from .utils.context import Context
-from .utils.database import DRecord
+from .utils.var import Cid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -19,22 +17,15 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class UserRecord(DRecord):
-    id: int
-    name: str
-
-
 class BetaTest(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.test_task.start()
 
-    @tasks.loop(seconds=20)
+    @tasks.loop(count=1)
     async def test_task(self):
-        query = 'SELECT id, name FROM users WHERE id=$1'
-        record: UserRecord = await self.bot.pool.fetchrow(query, Uid.alu)
-        print(record)
-
+        content = '\N{UPWARDS BLACK ARROW}'
+        await self.bot.get_channel(Cid.spam_me).send(content)
         return
 
     @app_commands.command()

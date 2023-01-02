@@ -1,8 +1,10 @@
 from __future__ import annotations
-import re
-from datetime import time, timezone
 from typing import TYPE_CHECKING, Literal
 
+import datetime
+import re
+
+import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
@@ -73,21 +75,25 @@ async def topemotes_job(ctx: Context, mode):
 
 
 class EmoteAnalysis(commands.Cog, name='Emote stats'):
-    """
-    See stats on emote usage in Aluerie's server
+    """See stats on emote usage in Aluerie's server
 
     The bot keeps data for one month.
     """
     def __init__(self, bot):
         self.bot: AluBot = bot
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.peepoComfy)
+
+    def cog_load(self) -> None:
         self.daily_emote_shift.start()
-        self.help_emote = Ems.peepoComfy
 
     def cog_unload(self) -> None:
         self.daily_emote_shift.cancel()
 
     @commands.Cog.listener()
-    async def on_message(self, msg):
+    async def on_message(self, msg: discord.Message):
         # if self.bot.test_flag:
         #    return
 
@@ -115,7 +121,7 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
             case 'nonani' | 'static' | 'nonanimated':
                 await topemotes_job(ctx, 3)
 
-    @tasks.loop(time=time(hour=16, minute=43, tzinfo=timezone.utc))
+    @tasks.loop(time=datetime.time(hour=16, minute=43, tzinfo=datetime.timezone.utc))
     async def daily_emote_shift(self):  # TODO: REWRITE THIS FUNCTION PROPERLY (idk how)
         query = 'SELECT id, month_array FROM emotes'
         rows = await self.bot.pool.fetch(query)

@@ -4,16 +4,15 @@ import asyncio
 from typing import TYPE_CHECKING
 
 import emoji
-import regex
-from discord import Embed, NotFound
+import discord
 from discord.ext import commands, tasks
+import regex
 from numpy.random import randint, choice
 
 from .utils.var import Cid, Clr, Ems, Rgx, Uid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
-    from discord import Message
 
 
 class EmoteSpam(commands.Cog):
@@ -28,15 +27,15 @@ class EmoteSpam(commands.Cog):
         self.emote_spam.cancel()
         self.offline_criminal_check.cancel()
 
-    async def emote_spam_control(self, msg: Message, nqn_check: int = 1):
+    async def emote_spam_control(self, message: discord.Message, nqn_check: int = 1):
 
-        if msg.channel.id == Cid.emote_spam:
-            if len(msg.embeds):
-                return await msg.delete()
+        if message.channel.id == Cid.emote_spam:
+            if len(message.embeds):
+                return await message.delete()
             # emoji_regex = get_emoji_regexp()
             # text = emoji_regex.sub('', msg.content)  # standard emotes
 
-            text = emoji.replace_emoji(msg.content, replace='')  # type: ignore # ???
+            text = emoji.replace_emoji(message.content, replace='')  # type: ignore # ???
             filters = [Rgx.whitespaces, Rgx.emote, Rgx.nqn, Rgx.invis_symb]
             if nqn_check == 0:
                 filters.remove(Rgx.nqn)
@@ -49,20 +48,14 @@ class EmoteSpam(commands.Cog):
 
             if text:
                 try:
-                    await msg.delete()
-                except NotFound:
+                    await message.delete()
+                except discord.NotFound:
                     return
                 answer_text = "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}"\
-                    .format(msg.author.mention, msg.channel.mention, Ems.Ree)
-                embed = Embed(
-                    title="Deleted message",
-                    description=msg.content,
-                    color=Clr.prpl
-                ).set_author(
-                    name=msg.author.display_name,
-                    icon_url=msg.author.display_avatar.url
-                )
-                await self.bot.get_channel(Cid.bot_spam).send(answer_text, embed=embed)
+                    .format(message.author.mention, message.channel.mention, Ems.Ree)
+                e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl)
+                e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+                await self.bot.get_channel(Cid.bot_spam).send(answer_text, embed=e)
                 return 1
             else:
                 return 0
@@ -122,32 +115,32 @@ class ComfySpam(commands.Cog):
         self.comfy_spam.cancel()
         self.offline_criminal_check.cancel()
 
-    async def comfy_chat_control(self, msg: Message):
-        if msg.channel.id == Cid.comfy_spam:
-            if len(msg.embeds):
-                return await msg.delete()
-            text = str(msg.content)
+    async def comfy_chat_control(self, message: discord.Message):
+        if message.channel.id == Cid.comfy_spam:
+            if len(message.embeds):
+                return await message.delete()
+            text = str(message.content)
             text = regex.sub(Rgx.whitespaces, '', text)
             for item in Ems.comfy_emotes:
                 text = text.replace(item, "")
             if text:
                 answer_text = \
                     "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! " \
-                    "{2} {2} {2}".format(msg.author.mention, msg.channel.mention, Ems.Ree)
-                em = Embed(title="Deleted message", description=msg.content, color=Clr.prpl)
-                em.set_author(name=msg.author.display_name, icon_url=msg.author.display_avatar.url)
-                await self.bot.get_channel(Cid.bot_spam).send(answer_text, embed=em)
-                await msg.delete()
+                    "{2} {2} {2}".format(message.author.mention, message.channel.mention, Ems.Ree)
+                e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl)
+                e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+                await self.bot.get_channel(Cid.bot_spam).send(answer_text, embed=e)
+                await message.delete()
                 return 1
             else:
                 return 0
 
     @commands.Cog.listener()
-    async def on_message(self, message: Message):
+    async def on_message(self, message: discord.Message):
         await self.comfy_chat_control(message)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, _before, after):
+    async def on_message_edit(self, _before: discord.Message, after: discord.Message):
         await self.comfy_chat_control(after)
 
     @tasks.loop(minutes=60)

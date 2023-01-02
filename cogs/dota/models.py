@@ -1,15 +1,11 @@
-"""
-The MIT License (MIT)
-"""
 from __future__ import annotations
+from typing import TYPE_CHECKING, List, Optional, Literal, Union
 
 import logging
 import math
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Optional, Literal, Union
 
+import discord
 from PIL import Image, ImageOps, ImageDraw, ImageFont
-from discord import Embed, NotFound, Forbidden, File
 from pyot.utils.functools import async_property
 
 from ..dota.const import ODOTA_API_URL, dota_player_colour_map
@@ -19,7 +15,6 @@ from cogs.utils.imgtools import img_to_file, get_text_wh
 from cogs.utils.var import Clr, MP, Img, Cid
 
 if TYPE_CHECKING:
-    from discord import Colour
     from ..utils.bot import AluBot
     from ..utils.twitch import TwitchClient
 
@@ -80,7 +75,7 @@ class ActiveMatch(Match):
     url: str
     logo_url: str
     vod_link: str
-    colour: Colour
+    colour: discord.Colour
     twitch_status: str
 
     def __init__(
@@ -106,7 +101,7 @@ class ActiveMatch(Match):
 
     @property
     def long_ago(self) -> int:
-        return int(datetime.now(timezone.utc).timestamp()) - self.start_time
+        return int(discord.utils.utcnow().timestamp()) - self.start_time
 
     @async_property
     async def hero_name(self):
@@ -159,7 +154,7 @@ class ActiveMatch(Match):
         draw.text((0, 35 + h2 + 10), self.twitch_status, font=font, align="center", fill=str(self.colour))
         return img
 
-    async def notif_embed_and_file(self, bot: AluBot) -> (Embed, File):
+    async def notif_embed_and_file(self, bot: AluBot) -> (discord.Embed, discord.File):
         await self.get_twitch_data(bot.twitch)
         img_file = img_to_file(
             await self.better_thumbnail(bot),
@@ -168,16 +163,16 @@ class ActiveMatch(Match):
                 f'{(await self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
             )
         )
-        em = Embed(colour=self.colour, url=self.url)
-        em.description = (
+        e = discord.Embed(colour=self.colour, url=self.url)
+        e.description = (
             f'`/match {self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n'
             f'{self.vod_link}{self.links}'
         )
-        em.set_image(url=f'attachment://{img_file.filename}')
-        em.set_thumbnail(url=await hero.imgurl_by_id(self.hero_id))
-        em.set_author(name=f'{self.display_name} - {await self.hero_name}', url=self.url, icon_url=self.logo_url)
-        em.set_footer(text=f'watch_server {self.server_steam_id}')
-        return em, img_file
+        e.set_image(url=f'attachment://{img_file.filename}')
+        e.set_thumbnail(url=await hero.imgurl_by_id(self.hero_id))
+        e.set_author(name=f'{self.display_name} - {await self.hero_name}', url=self.url, icon_url=self.logo_url)
+        e.set_footer(text=f'watch_server {self.server_steam_id}')
+        return e, img_file
 
 
 class PostMatchPlayerData:
@@ -327,17 +322,17 @@ class PostMatchPlayerData:
 
         try:
             msg = await ch.fetch_message(self.message_id)
-        except NotFound:
+        except discord.NotFound:
             return
 
-        em = msg.embeds[0]
-        img_file = bot.img_to_file(await self.edit_the_image(em.image.url, bot), filename='edited.png')
-        em.set_image(url=f'attachment://{img_file.filename}')
+        e = msg.embeds[0]
+        img_file = bot.img_to_file(await self.edit_the_image(e.image.url, bot), filename='edited.png')
+        e.set_image(url=f'attachment://{img_file.filename}')
         if self.channel_id == Cid.repost:
-            em.set_footer(text=f'{em.footer.text or ""} | {self.api_calls_done}')
+            e.set_footer(text=f'{e.footer.text or ""} | {self.api_calls_done}')
         try:
-            await msg.edit(embed=em, attachments=[img_file])
-        except Forbidden:
+            await msg.edit(embed=e, attachments=[img_file])
+        except discord.Forbidden:
             return
 
 

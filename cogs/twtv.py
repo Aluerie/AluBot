@@ -1,14 +1,12 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from discord import Embed, Streaming
+import discord
 from discord.ext import commands, tasks
 
 from .utils.var import Sid, Uid, Rid, Img, Cid
 
 if TYPE_CHECKING:
-    from discord import Member
     from .utils.bot import AluBot
 
 
@@ -19,16 +17,16 @@ MY_TWITCH_ID = 180499648
 class TwitchCog(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.mystream.start()
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
+        self.mystream.start()
 
     def cog_unload(self) -> None:
         self.mystream.cancel()
 
     @commands.Cog.listener()
-    async def on_presence_update(self, before: Member, after: Member):
+    async def on_presence_update(self, before: discord.Member, after: discord.Member):
         if before.bot or before.activities == after.activities or before.id == Uid.alu:
             return
 
@@ -40,7 +38,7 @@ class TwitchCog(commands.Cog):
 
         stream_after = None
         for item in after.activities:
-            if isinstance(item, Streaming):
+            if isinstance(item, discord.Streaming):
                 stream_after = item
 
         if stream_rl not in after.roles and stream_after is not None:  # friend started the stream
@@ -67,15 +65,15 @@ class TwitchCog(commands.Cog):
         mention_role = guild.get_role(Rid.stream_lover)
         content = f'{mention_role.mention} and chat, our Highness **@{tw.display_name}** just went live !'
         file = await self.bot.url_to_file(tw.preview_url, filename='twtvpreview.png')
-        em = Embed(colour=0x9146FF, title=f'{tw.title}', url=tw.url)
-        em.description = (
+        e = discord.Embed(colour=0x9146FF, title=f'{tw.title}', url=tw.url)
+        e.description = (
             f'Playing {tw.game}\n/[Watch Stream]({tw.url}){await self.bot.twitch.last_vod_link(MY_TWITCH_ID)}'
         )
-        em.set_author(name=f'{tw.display_name} just went live on Twitch!', icon_url=tw.logo_url, url=tw.url)
-        em.set_footer(text=f'Twitch.tv | With love, {guild.me.display_name}', icon_url=Img.twitchtv)
-        em.set_thumbnail(url=tw.logo_url)
-        em.set_image(url=f'attachment://{file.filename}')
-        await guild.get_channel(Cid.stream_notifs).send(content=content, embed=em, file=file)
+        e.set_author(name=f'{tw.display_name} just went live on Twitch!', icon_url=tw.logo_url, url=tw.url)
+        e.set_footer(text=f'Twitch.tv | With love, {guild.me.display_name}', icon_url=Img.twitchtv)
+        e.set_thumbnail(url=tw.logo_url)
+        e.set_image(url=f'attachment://{file.filename}')
+        await guild.get_channel(Cid.stream_notifs).send(content=content, embed=e, file=file)
 
     @mystream.before_loop
     async def before(self):

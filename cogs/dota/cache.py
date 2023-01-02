@@ -1,7 +1,3 @@
-"""
-The MIT License (MIT)
-
-"""
 import asyncio
 from datetime import datetime, timedelta, timezone
 

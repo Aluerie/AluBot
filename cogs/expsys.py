@@ -1,10 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
-from datetime import datetime, time, timedelta, timezone
+import datetime
 
+import discord
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
-from discord import Embed, Member, utils, app_commands
+from discord import app_commands
 from discord.ext import commands, tasks
 
 from .utils.distools import inout_to_10, send_pages_list
@@ -13,7 +14,6 @@ from .utils.imgtools import url_to_img, img_to_file, get_text_wh
 from .utils.var import Ems, Sid, Cid, Cids, Clr
 
 if TYPE_CHECKING:
-    from discord import Interaction, Message
     from .utils.bot import AluBot
     from .utils.context import Context
 
@@ -80,20 +80,19 @@ def get_exp_for_next_level(lvl):
     return exp_lvl_table[lvl]
 
 
-async def avatar_work(ctx, member):
-    member = member or getattr(ctx, 'author') or getattr(ctx, 'user')
-    embed = Embed(colour=member.colour, title=f'Avatar for {member.display_name}')
-    embed.set_image(url=member.display_avatar.url)
-    embed.set_footer(text=f'With love, {ctx.guild.me.display_name}')
-    return embed
+async def avatar_work(ctx, user: discord.User):
+    user = user or getattr(ctx, 'author') or getattr(ctx, 'user')
+    e = discord.Embed(colour=user.colour, title=f'Avatar for {user.display_name}')
+    e.set_image(url=user.display_avatar.url)
+    return e
 
 
-async def avatar_usercmd(ntr: Interaction, mbr: Member):
-    embed = await avatar_work(ntr, mbr)
-    await ntr.response.send_message(embed=embed, ephemeral=True)
+async def avatar_usercmd(ntr: discord.Interaction, user: discord.User):
+    e = await avatar_work(ntr, user)
+    await ntr.response.send_message(embed=e, ephemeral=True)
 
 
-async def rank_work(ctx: Union[Context, Interaction], member: Member):
+async def rank_work(ctx: Union[Context, discord.Interaction], member: discord.Member):
     member = member or getattr(ctx, 'author') or getattr(ctx, 'user')
     if member.bot:
         raise commands.BadArgument('Sorry! our system does not count experience for bots.')
@@ -112,30 +111,32 @@ async def rank_work(ctx: Union[Context, Interaction], member: Member):
     return img_to_file(image, filename='rank.png')
 
 
-async def rank_usercmd(ntr: Interaction, member: Member):
+async def rank_usercmd(ntr: discord.Interaction, member: discord.Member):
     await ntr.response.send_message(file=await rank_work(ntr, member), ephemeral=True)
 
 
 class ExperienceSystem(commands.Cog, name='Profile'):
-    """
-    Commands about member profiles
+    """Commands about member profiles
 
     There is a profile system in Irene\'s server: levelling experience,
     reputation and many other things (currency, custom profile) to come
     """
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.bubuAyaya
-
-        self.remove_inactive.start()
 
         self.ctx_menu1 = app_commands.ContextMenu(name="View User Avatar", callback=avatar_usercmd)
-        self.bot.tree.add_command(self.ctx_menu1)
-
         self.ctx_menu2 = app_commands.ContextMenu(name="View User Server Rank", callback=rank_usercmd)
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.bubuAyaya)
+
+    async def cog_load(self) -> None:
+        self.remove_inactive.start()
+        self.bot.tree.add_command(self.ctx_menu1)
         self.bot.tree.add_command(self.ctx_menu2)
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.remove_inactive.cancel()
 
     @commands.hybrid_command(
@@ -144,12 +145,12 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         description='Show when `@member` was last seen'
     )
     @app_commands.describe(member='Member to check')
-    async def lastseen(self, ctx, member: Optional[Member] = None):
+    async def lastseen(self, ctx: Context, member: Optional[discord.Member] = None):
         """Show when `@member` was last seen on this server ;"""
         member = member or ctx.author
         query = 'SELECT lastseen FROM users WHERE id=$1'
         lastseen = await self.bot.pool.fetchval(query, member.id)
-        dt_delta = datetime.now(timezone.utc) - lastseen
+        dt_delta = discord.utils.utcnow() - lastseen
         answer_text = f'{member.mention} was last seen in this server {human_timedelta(dt_delta)}'
         await ctx.reply(content=answer_text)
 
@@ -194,13 +195,13 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         )
 
     @commands.Cog.listener()
-    async def on_message(self, msg: Message):
+    async def on_message(self, message: discord.Message):
         # if self.bot.test_flag:
         #    return  # let's not mess up with Yennifer
-        if msg.author.bot or msg.channel.id in Cids.blacklisted_array:
+        if message.author.bot or message.channel.id in Cids.blacklisted_array:
             return
 
-        if msg.guild is not None and msg.guild.id in Sid.guild_ids:
+        if message.guild is not None and message.guild.id in Sid.guild_ids:
 
             query = """ WITH u AS (
                             SELECT lastseen FROM users WHERE id=$1
@@ -210,30 +211,30 @@ class ExperienceSystem(commands.Cog, name='Profile'):
                         WHERE id=$1
                         RETURNING (SELECT lastseen from u)
                     """
-            lastseen = await self.bot.pool.fetchval(query, msg.author.id)
+            lastseen = await self.bot.pool.fetchval(query, message.author.id)
 
-            dt_now = datetime.now(timezone.utc)
-            if dt_now - lastseen > timedelta(seconds=LAST_SEEN_TIMEOUT):
+            dt_now = discord.utils.utcnow()
+            if dt_now - lastseen > datetime.timedelta(seconds=LAST_SEEN_TIMEOUT):
                 query = 'UPDATE users SET exp=exp+1 WHERE id=$1 RETURNING exp'
-                exp = await self.bot.pool.fetchval(query, msg.author.id)
+                exp = await self.bot.pool.fetchval(query, message.author.id)
                 level = get_level(exp)
 
                 if exp == get_exp_for_next_level(get_level(exp) - 1):
-                    level_up_role = utils.get(msg.guild.roles, name=f"Level #{level}")
-                    previous_level_role = utils.get(msg.guild.roles, name=f"Level #{level - 1}")
-                    em = Embed(colour=Clr.prpl)
-                    em.description = (
+                    level_up_role = discord.utils.get(message.guild.roles, name=f"Level #{level}")
+                    previous_level_role = discord.utils.get(message.guild.roles, name=f"Level #{level - 1}")
+                    e = discord.Embed(colour=Clr.prpl)
+                    e.description = (
                         '{0} just advanced to {1} ! '
-                        '{2} {2} {2}'.format(msg.author.mention, level_up_role.mention, Ems.PepoG)
+                        '{2} {2} {2}'.format(message.author.mention, level_up_role.mention, Ems.PepoG)
                     )
-                    await msg.channel.send(embed=em)
-                    await msg.author.remove_roles(previous_level_role)
-                    await msg.author.add_roles(level_up_role)
+                    await message.channel.send(embed=e)
+                    await message.author.remove_roles(previous_level_role)
+                    await message.author.add_roles(level_up_role)
 
             for item in thanks_words:  # reputation part
-                if item in msg.content.lower():
-                    for member in msg.mentions:
-                        if member != msg.author:
+                if item in message.content.lower():
+                    for member in message.mentions:
+                        if member != message.author:
                             query = 'UPDATE users SET rep=rep+1 WHERE id=$1'
                             await self.bot.pool.execute(query, member.id)
 
@@ -242,10 +243,10 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         description="View User Avatar",
         usage='[member=you]'
     )
-    async def avatar_bridge(self, ctx, member: Member = None):
-        """Show avatar for `@member` ;"""
-        embed = await avatar_work(ctx, member)
-        await ctx.reply(embed=embed)
+    async def avatar_bridge(self, ctx: Context, user: discord.User = None):
+        """Show avatar for `@user`"""
+        e = await avatar_work(ctx, user)
+        await ctx.reply(embed=e)
 
     @commands.hybrid_command(
         aliases=['r'],
@@ -253,8 +254,8 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         description="View User Server Rank",
         usage='[member=you]'
     )
-    async def rank_bridge(self, ctx: Context,  *, member: Member = None):
-        """Show `@member`'s rank, level and experience ;"""
+    async def rank_bridge(self, ctx: Context,  *, member: discord.Member = None):
+        """Show `@member`'s rank, level and experience"""
         await ctx.reply(file=await rank_work(ctx, member))
 
     @commands.group()
@@ -267,7 +268,9 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         """Opt `in/out` of exp system notifs and all leaderboard presence ;"""
         query = f'UPDATE users SET inlvl={in_or_out} WHERE id=$1;'
         await self.bot.pool.execute(query, ctx.author.id)
-        ans = f'{ctx.author.display_name} is now opted {in_or_out} of exp-system notifications and being in leaderboards'
+        ans = (
+            f'{ctx.author.display_name} is now opted {in_or_out} of exp-system notifications and being in leaderboards'
+        )
         await ctx.reply(content=ans)
 
     @commands.hybrid_command(
@@ -276,7 +279,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
     )
     @commands.cooldown(1, 60*60, commands.BucketType.user)
     @app_commands.describe(member='Member to give rep to')
-    async def rep(self, ctx, member: Member):
+    async def rep(self, ctx, member: discord.Member):
         """Give +1 to `@member`'s reputation ;"""
         if member == ctx.author or member.bot:
             await ctx.reply(content='You can\'t give reputation to yourself or bots')
@@ -286,7 +289,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
             answer_text = f'Added +1 reputation to **{member.display_name}**: now {rep} reputation'
             await ctx.reply(content=answer_text) 
 
-    @tasks.loop(time=time(hour=13, minute=13, tzinfo=timezone.utc))
+    @tasks.loop(time=datetime.time(hour=13, minute=13, tzinfo=datetime.timezone.utc))
     async def remove_inactive(self):
         query = "SELECT id, lastseen, name FROM users"
         rows = await self.bot.pool.fetch(query)
@@ -294,21 +297,17 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         for row in rows:
             guild = self.bot.get_guild(Sid.alu)
             person = guild.get_member(row.id)
-            if person is None and datetime.now(timezone.utc) - row.lastseen > timedelta(days=30):
+            if person is None and discord.utils.utcnow() - row.lastseen > datetime.timedelta(days=30):
                 query = 'DELETE FROM users WHERE id=$1'
                 await self.bot.pool.execute(query, row.id)
-                em = Embed(
-                    colour=0xE6D690,
-                    description=f"id = {row.id}"
-                ).set_author(
-                    name=f"{row.name} was removed from the datebase"
-                )
-                await guild.get_channel(Cid.logs).send(embed=em)
+                e = discord.Embed(description=f"id = {row.id}", colour=0xE6D690,)
+                e.set_author(name=f"{row.name} was removed from the datebase")
+                await guild.get_channel(Cid.logs).send(embed=e)
 
     @remove_inactive.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(ExperienceSystem(bot))

@@ -6,10 +6,7 @@ from roleidentification import get_roles, pull_data
 
 
 async def my_pull_data():
-    """
-    Meraki's pull data is using requests which is blocking, so I have to copypaste it
-    @return:
-    """
+    """Meraki's pull data is using requests which is blocking, so I have to copypaste it"""
     import requests
     r = requests.get("http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json")
     j = r.json()
@@ -27,16 +24,13 @@ async def my_pull_data():
 
 
 async def get_all_champ_names() -> List[str]:
-    """
-    Get all champion names in League of Legends
-    @return: list of champion names in LoL
-    """
+    """Get all champion names in League of Legends"""
     data = await champion.champion_keys_cache.data
     return list(data['name_by_id'].values())
 
 
 async def icon_url_by_champ_id(champ_id: int) -> str:
-    """Get champion icon url by their champ_id """
+    """Get champion icon url by their champ_id"""
     champ = await lol.champion.Champion(id=champ_id).get()
     return cdragon.abs_url(champ.square_path)
 
@@ -47,7 +41,8 @@ async def get_diff_list(champ_roles):
 
 
 async def get_champion_roles():
-    """
+    """Improvement to meraki's `get_roles()`
+
     Unfortunately, Meraki run out of money to support their Json
     Thus sometimes it is behind a few patches and
     I need to add new champions myself with this function.

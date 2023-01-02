@@ -1,10 +1,9 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING, Optional
 
-from discord import Embed, SelectOption, app_commands
+import discord
+from discord import app_commands
 from discord.ext import commands
-from discord.ui import View, Select
 
 from .utils import pages
 from .utils.context import Context
@@ -12,36 +11,38 @@ from .utils.formats import human_timedelta
 from .utils.var import Ems, Cid, Rid, Uid, Clr
 
 if TYPE_CHECKING:
-    from discord import Interaction
     from .utils.bot import AluBot
 
 
-class DropdownHelp(Select):
+class DropdownHelp(discord.ui.Select):
     def __init__(self, paginator, options):
         super().__init__(placeholder='Choose help category', min_values=1, max_values=1, options=options)
         self.paginator = paginator
 
-    async def callback(self, ntr: Interaction):
+    async def callback(self, ntr: discord.Interaction):
         await self.paginator.goto_page(page_number=int(self.values[0]), ntr=ntr)
 
 
-class ViewHelp(View):
+class ViewHelp(discord.ui.View):
     def __init__(self, paginator, options):
         super().__init__()
         self.paginator = paginator
         self.add_item(DropdownHelp(paginator, options=options))
 
 
-def front_embed(context):
-    em = Embed(title='AluBot ❤\'s $help Menu')
-    em.description = 'AluBot ❤ is an ultimate multi-purpose bot !\n\nUse dropdown menu below to select a category.'
-    em.add_field(name='Aluerie\'s server', value='[Link](https://discord.gg/K8FuDeP)')
-    em.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
-    em.add_field(name='Bot Owner', value=f'{context.bot.get_user(Uid.alu)}')
-    return em
+def front_embed(ctx: Context):
+    e = discord.Embed(title=f'{ctx.bot.user.name}\'s $help Menu')
+    e.description = (
+        f'{ctx.bot.user.name} is an ultimate multi-purpose bot !\n\n'
+        'Use dropdown menu below to select a category.'
+    )
+    e.add_field(name=f'{ctx.bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
+    e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
+    e.add_field(name='Bot Owner', value=f'{ctx.bot.owner.name}')
+    return e
 
 
-last_embed = Embed(
+last_embed = discord.Embed(
     title='Other features $help page',
     description=(
         f'{Ems.PepoDetective} There is a list of not listed on other pages features. '
@@ -107,14 +108,12 @@ last_embed = Embed(
     value=f"Every message has a chance to get a comfy {Ems.peepoComfy} reaction on it ;"
 ).add_field(
     name='• Some important things', inline=False,
-    value=(
-        f'For example, the bot doesn\'t like bots in <#{Cid.general}> and weebs in <#{Cid.weebs}> ;'
-    )
+    value=f'For example, the bot does not like bots in <#{Cid.general}> and weebs in <#{Cid.weebs}>'
 ).add_field(
     name='• Thanks to twitch subs', inline=False,
     value=(
         f"The bot thanks people who get role <@&{Rid.subs}> via discord-twitch integration "
-        f"in <#{Cid.stream_notifs}> ;"
+        f"in <#{Cid.stream_notifs}>"
     )
 ).add_field(
     name='• Experience system', inline=False,
@@ -133,7 +132,7 @@ class HelpCommand(commands.HelpCommand):
 
     """def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.bot = self.context.bot"""  # context is a missing sentinel on definiton huh :c
+        self.bot = self.context.bot"""  # context is a missing sentinel on definition huh :c
 
     async def get_the_answer(self, c, answer=None, deep=0):
         if answer is None:
@@ -196,10 +195,10 @@ class HelpCommand(commands.HelpCommand):
 
         embed_list.append(front_embed(self.context))
         drop_options.append(
-            SelectOption(
+            discord.SelectOption(
                 label='Home Page',
                 description='Index Page of the $help menu',
-                emoji='🏠',
+                emoji='\N{HOUSE BUILDING}',
                 value=str(0),
             )
         )
@@ -216,16 +215,15 @@ class HelpCommand(commands.HelpCommand):
             cog_emote = getattr(cog, "help_emote", None)
 
             if command_signatures:
-                em = Embed(title=cog_name)
-                em.description = (
-                    f'{cog_emote + " " if cog_emote else ""}'
-                    f'{cog_desc}\n\n'
+                e = discord.Embed(title=cog_name)
+                e.description = (
+                    f'{str(cog_emote) + " " if cog_emote else ""}{cog_desc}\n\n'
                     f'{chr(10).join(command_signatures)}'
                 )
 
-                embed_list.append(em)
+                embed_list.append(e)
                 drop_options.append(
-                    SelectOption(
+                    discord.SelectOption(
                         label=cog_name,
                         description=cog_desc.split('\n', 1)[0],
                         emoji=cog_emote,
@@ -235,7 +233,7 @@ class HelpCommand(commands.HelpCommand):
 
         embed_list.append(last_embed)
         drop_options.append(
-            SelectOption(
+            discord.SelectOption(
                 label='Other Features',
                 description='Things that bot does without commands',
                 emoji=Ems.PepoDetective,
@@ -261,34 +259,34 @@ class HelpCommand(commands.HelpCommand):
         cog_name = getattr(cog, "qualified_name", "No Category")
         cog_desc = getattr(cog, "description", "No Description")
 
-        em = Embed(colour=Clr.prpl, title=cog_name)
-        em.description = f'{cog_desc}\n\n{chr(10).join(command_signatures)}'
-        em.set_footer(text=f'With love, {self.context.bot.user.display_name}')
-        em.set_thumbnail(url=self.context.bot.user.display_avatar.url)
-        await self.context.reply(embed=em)
+        e = discord.Embed(colour=Clr.prpl, title=cog_name)
+        e.description = f'{cog_desc}\n\n{chr(10).join(command_signatures)}'
+        e.set_footer(text=f'With love, {self.context.bot.user.display_name}')
+        e.set_thumbnail(url=self.context.bot.user.display_avatar.url)
+        await self.context.reply(embed=e)
 
     async def send_group_help(self, group):
         filtered = await self.filter_commands(group.commands, sort=True)
         await self.context.bot.update_app_commands_cache()
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
-        em = Embed(color=Clr.prpl, title=group.name, description=f'{chr(10).join(command_signatures)}')
-        await self.context.reply(embed=em)
+        e = discord.Embed(color=Clr.prpl, title=group.name, description=f'{chr(10).join(command_signatures)}')
+        await self.context.reply(embed=e)
 
     async def send_command_help(self, command):
         await self.context.bot.update_app_commands_cache()
-        em = Embed(title=command.qualified_name, color=Clr.prpl, description=self.get_command_signature(command))
-        await self.context.reply(embed=em)
+        e = discord.Embed(title=command.qualified_name, color=Clr.prpl, description=self.get_command_signature(command))
+        await self.context.reply(embed=e)
 
     async def send_error_message(self, error):
-        em = Embed(title="Help Command Error", description=error, color=Clr.error)
-        em.set_footer(
+        e = discord.Embed(title="Help Command Error", description=error, color=Clr.error)
+        e.set_footer(
             text=(
                 'Check the spelling of your desired command/category and '
                 'make sure you can use them because help command '
                 'does not show commands that you are not able to use'
             )
         )
-        await self.context.reply(embed=em)
+        await self.context.reply(embed=e)
 
 
 class HelpCog(commands.Cog, name='Help'):
@@ -307,20 +305,14 @@ class HelpCog(commands.Cog, name='Help'):
             }
         )
 
-    @app_commands.command(
-        name='help',
-        description='Show help menu for the bot',
-    )
-    async def help_slash(self, ntr: Interaction, *, command: Optional[str]):
-        myhelp = HelpCommand(
-            verify_checks=False,
-            command_attrs={
-                'hidden': True
-            }
-        )
+    @app_commands.command(name='help')
+    @app_commands.describe(command='Command name to get help about')
+    async def help_slash(self, ntr: discord.Interaction, *, command: Optional[str]):
+        """Show help menu for the bot"""
+        myhelp = HelpCommand(verify_checks=False, command_attrs={'hidden': True})
         myhelp.context = await Context.from_interaction(ntr)
         await myhelp.command_callback(myhelp.context, command=command)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(HelpCog(bot))

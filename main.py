@@ -1,27 +1,55 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import asyncio
-import sys
+import json
 import logging
-from pathlib import Path
+import sys
 import traceback
+from pathlib import Path
 
 import asyncpg
 import click
 
-from config import POSTGRES_URL
 from cogs.utils.bot import AluBot, setup_logging
 from cogs.utils.database import DRecord
+from config import POSTGRES_URL
+
+if TYPE_CHECKING:
+    pass
 
 
-async def bot_run(test: bool):
-    log = logging.getLogger()
-    try:
-        pool = await asyncpg.create_pool(
+async def create_pool() -> asyncpg.Pool:
+    def _encode_jsonb(value):
+        return json.dumps(value)
+
+    def _decode_jsonb(value):
+        return json.loads(value)
+
+    async def init(con):
+        await con.set_type_codec(
+            'jsonb',
+            schema='pg_catalog',
+            encoder=_encode_jsonb,
+            decoder=_decode_jsonb,
+            format='text',
+        )
+
+    return await asyncpg.create_pool(
             POSTGRES_URL,
+            init=init,
+            command_timeout=60,
             min_size=10,
             max_size=10,
             record_class=DRecord,
             statement_cache_size=0
         )
+
+
+async def bot_run(test: bool):
+    log = logging.getLogger()
+    try:
+        pool = await create_pool()
     except Exception:
         click.echo('Could not set up PostgreSQL. Exiting.', file=sys.stderr)
         log.exception('Could not set up PostgreSQL. Exiting.')

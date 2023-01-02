@@ -1,19 +1,17 @@
 from __future__ import annotations
-
-import asyncio
-import traceback
 from typing import TYPE_CHECKING
 
-from bs4 import BeautifulSoup
-from discord import Embed
+import asyncio
+
+import discord
 from discord.ext import commands, tasks
+from bs4 import BeautifulSoup
 
 from .utils.formats import block_function
 from .utils.links import replace_tco_links, move_link_to_title
-from .utils.var import Cid, Sid, Uid, Img, Clr
+from .utils.var import Cid, Sid, Img, Clr
 
 if TYPE_CHECKING:
-    from discord import Message
     from .utils.bot import AluBot
 
 
@@ -51,26 +49,26 @@ class CopypasteLeague(commands.Cog):
     ]
 
     @commands.Cog.listener()
-    async def on_message(self, msg: Message):
+    async def on_message(self, message: discord.Message):
         try:
-            if msg.channel.id == Cid.copylol_ff20:  # todo CHANGE
-                if block_function(msg.content, self.blocked_words, self.whitelist_words):
+            if message.channel.id == Cid.copylol_ff20:  # todo CHANGE
+                if block_function(message.content, self.blocked_words, self.whitelist_words):
                     return
 
                 embeds = None  # TODO: if they start using actual bots then this wont work
-                content = msg.content
-                if "https://twitter.com" in msg.content:
+                content = message.content
+                if "https://twitter.com" in message.content:
                     await asyncio.sleep(2)
                     #  answer = await msg.channel.fetch_message(int(msg.id))
-                    embeds = [await replace_tco_links(self.bot.session, item) for item in msg.embeds]
+                    embeds = [await replace_tco_links(self.bot.session, item) for item in message.embeds]
                     embeds = [move_link_to_title(embed) for embed in embeds]
                     content = ''
 
-                files = [await item.to_file() for item in msg.attachments]
-                msg = await self.bot.get_channel(Cid.lol_news).send(content=content, embeds=embeds, files=files)
-                await msg.publish()
-        except Exception as e:
-            await self.bot.send_traceback(e, where='LoL news copypaste')
+                files = [await item.to_file() for item in message.attachments]
+                message = await self.bot.get_channel(Cid.lol_news).send(content=content, embeds=embeds, files=files)
+                await message.publish()
+        except Exception as error:
+            await self.bot.send_traceback(error, where='LoL news copypaste')
 
     @tasks.loop(minutes=15)
     async def patch_checker(self):
@@ -104,12 +102,12 @@ class CopypasteLeague(commands.Cog):
 
         # maybe use ('a' ,{'class': 'skins cboxElement'})
         img_url = patch_soup.find('h2', id='patch-patch-highlights').find_next('a').get('href')
-        em = Embed(title=content_if_property('og:title'), url=patch_url, colour=Clr.rspbrry)
-        em.description = content_if_property("og:description")
-        em.set_image(url=img_url)
-        em.set_thumbnail(url=content_if_property('og:image'))
-        em.set_author(name='League of Legends', icon_url=Img.league)
-        msg = await self.bot.get_channel(Cid.lol_news).send(embed=em)
+        e = discord.Embed(title=content_if_property('og:title'), url=patch_url, colour=Clr.rspbrry)
+        e.description = content_if_property("og:description")
+        e.set_image(url=img_url)
+        e.set_thumbnail(url=content_if_property('og:image'))
+        e.set_author(name='League of Legends', icon_url=Img.league)
+        msg = await self.bot.get_channel(Cid.lol_news).send(embed=e)
         await msg.publish()
 
     @patch_checker.before_loop

@@ -1,9 +1,10 @@
 from __future__ import annotations
-
-import inspect
 from typing import TYPE_CHECKING
 
-from discord import Embed, app_commands
+import inspect
+
+import discord
+from discord import app_commands
 from discord.ext import commands
 
 from .utils.context import Context
@@ -11,7 +12,6 @@ from .utils.formats import human_timedelta
 from .utils.var import Clr, Cid, Ems
 
 if TYPE_CHECKING:
-    from discord import Interaction
     from .utils.bot import AluBot
 
 
@@ -128,15 +128,15 @@ class CommandErrorHandler(commands.Cog):
                 else:
                     jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
 
-                err_em = Embed(colour=Clr.error, description=f'{cmd_text}\n{cmd_kwargs}')
+                error_e = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=Clr.error)
                 if not self.bot.test:
-                    err_em.set_author(
+                    error_e.set_author(
                         name=f'{ctx.author} triggered error in {ctx.channel}',
                         url=jump_url,
                         icon_url=ctx.author.avatar.url
                     )
                 mention = (ctx.channel.id != Cid.spam_me)
-                await self.bot.send_traceback(error, embed=err_em, mention=mention)
+                await self.bot.send_traceback(error, embed=error_e, mention=mention)
 
         # send the error
         if not handled and self.bot.test and not mention:
@@ -145,8 +145,8 @@ class CommandErrorHandler(commands.Cog):
             else:
                 return
         else:
-            em = Embed(color=Clr.error, description=desc).set_author(name=error_type)
-            await ctx.reply(embed=em, ephemeral=True)
+            e = discord.Embed(color=Clr.error, description=desc).set_author(name=error_type)
+            await ctx.reply(embed=e, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: Context, error):
@@ -154,7 +154,7 @@ class CommandErrorHandler(commands.Cog):
             await self.command_error_work(ctx, error)
 
     @commands.Cog.listener()
-    async def on_app_command_error(self, ntr: Interaction, error):
+    async def on_app_command_error(self, ntr: discord.Interaction, error):
         if not getattr(ntr, 'error_handled', False):
             ctx = await Context.from_interaction(ntr)
             await self.command_error_work(ctx, error)

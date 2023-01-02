@@ -1,18 +1,20 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
 
+import datetime
 import logging
+from logging.handlers import RotatingFileHandler
 import traceback
-from datetime import datetime, timezone
+from contextlib import contextmanager
 from os import environ, listdir
-from typing import (
-    TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
-)
 
+import discord
+from discord import app_commands
+from discord.ext import commands
 from asyncpg import Pool
 from aiohttp import ClientSession
 from asyncpraw import Reddit
-from discord import Streaming, Intents, AllowedMentions, Embed
-from discord.ext import commands
+
 from dota2.client import Dota2Client
 from github import Github
 from steam.client import SteamClient
@@ -26,9 +28,6 @@ from .twitch import TwitchClient
 from .var import Cid, Clr
 
 if TYPE_CHECKING:
-    from discord import AppInfo, File, Interaction, Message, User
-    from discord.app_commands import AppCommand
-    from discord.abc import Snowflake, Messageable
     from github import Repository
 
 log = logging.getLogger(__name__)
@@ -39,16 +38,16 @@ except ModuleNotFoundError:
     test_list = []
 
 
-def _alubot_prefix_callable(bot: AluBot, msg: Message):
-    if msg.guild is None:
+def _alubot_prefix_callable(bot: AluBot, message: discord.Message):
+    if message.guild is None:
         prefix = '$'
     else:
-        prefix = bot.prefixes.get(msg.guild.id, '$')
-    return commands.when_mentioned_or(prefix, "/")(bot, msg)
+        prefix = bot.prefixes.get(message.guild.id, '$')
+    return commands.when_mentioned_or(prefix, "/")(bot, message)
 
 
 class AluBot(commands.Bot):
-    bot_app_info: AppInfo
+    bot_app_info: discord.AppInfo
     steam: SteamClient
     dota: Dota2Client
     github: Github
@@ -67,11 +66,11 @@ class AluBot(commands.Bot):
         main_prefix = '~' if test else '$'
         super().__init__(
             command_prefix=prefix,
-            activity=Streaming(
+            activity=discord.Streaming(
                 name=f"/help or {main_prefix}help",
                 url='https://www.twitch.tv/aluerie'
             ),
-            intents=Intents(  # if you ever struggle with it - try `Intents.all()`
+            intents=discord.Intents(  # if you ever struggle with it - try `Intents.all()`
                 guilds=True,
                 members=True,
                 bans=True,
@@ -82,7 +81,7 @@ class AluBot(commands.Bot):
                 reactions=True,
                 message_content=True
             ),
-            allowed_mentions=AllowedMentions(
+            allowed_mentions=discord.AllowedMentions(
                 roles=True,
                 replied_user=False,
                 everyone=False
@@ -115,7 +114,7 @@ class AluBot(commands.Bot):
 
     async def on_ready(self):
         if not hasattr(self, 'launch_time'):
-            self.launch_time = datetime.now(timezone.utc)
+            self.launch_time = discord.utils.utcnow()
         log.info(f'Logged in as {self.user}')
 
     async def close(self) -> None:
@@ -129,11 +128,17 @@ class AluBot(commands.Bot):
         token = cfg.TEST_TOKEN if self.test else cfg.MAIN_TOKEN
         await super().start(token, reconnect=True)
 
-    async def get_context(self, origin: Union[Interaction, Message], /, *, cls=Context) -> Context:
+    async def get_context(
+            self,
+            origin: Union[discord.Interaction, discord.Message],
+            /,
+            *,
+            cls=Context
+    ) -> Context:
         return await super().get_context(origin, cls=cls)
 
     @property
-    def owner(self) -> User:
+    def owner(self) -> discord.User:
         return self.bot_app_info.owner
 
     def ini_steam_dota(self) -> None:
@@ -197,8 +202,8 @@ class AluBot(commands.Bot):
     async def update_app_commands_cache(
             self,
             *,
-            cmds: Optional[List[AppCommand]] = None,
-            guild: Optional[Snowflake] = None
+            cmds: Optional[List[app_commands.AppCommand]] = None,
+            guild: Optional[discord.abc.Snowflake] = None
     ) -> None:
         if not cmds:
             cmds = await self.tree.fetch_commands(guild=guild.id if guild else None)
@@ -209,14 +214,14 @@ class AluBot(commands.Bot):
     def str_to_file(
             string: str,
             filename: str = "FromAluBot.txt"
-    ) -> File:
+    ) -> discord.File:
         return imgtools.str_to_file(string, filename)
 
     @staticmethod
     def plt_to_file(
             fig,
             filename: str = 'FromAluBot.png'
-    ) -> File:
+    ) -> discord.File:
         return imgtools.plt_to_file(fig, filename)
 
     @staticmethod
@@ -224,7 +229,7 @@ class AluBot(commands.Bot):
             image,
             filename: str = 'FromAluBot.png',
             fmt: str = 'PNG'
-    ) -> File:
+    ) -> discord.File:
         return imgtools.img_to_file(image, filename, fmt)
 
     async def url_to_img(
@@ -241,7 +246,7 @@ class AluBot(commands.Bot):
             filename: str = 'FromAluBot.png',
             *,
             return_list: bool = False
-    ) -> Union[File, Sequence[File]]:
+    ) -> Union[discord.File, Sequence[discord.File]]:
         return await imgtools.url_to_file(self.session, url, filename, return_list=return_list)
 
     def update_odota_ratelimit(self, headers) -> None:
@@ -253,10 +258,10 @@ class AluBot(commands.Bot):
     async def send_traceback(
             self,
             error: Exception,
-            destination: Optional[Messageable] = None,
+            destination: Optional[discord.abc.Messageable] = None,
             *,
             where: str = 'not specified',
-            embed: Optional[Embed] = None,
+            embed: Optional[discord.Embed] = None,
             verbosity: int = 10,
             mention: bool = True
     ) -> None:
@@ -291,20 +296,12 @@ class AluBot(commands.Bot):
         for line in traceback_content.split('\n'):
             paginator.add_line(line)
 
-        embed = embed or Embed(colour=Clr.error).set_author(name=where)
+        e = embed or discord.Embed(colour=Clr.error).set_author(name=where)
         content = self.owner.mention if mention else ''
-        await ch.send(content=content, embed=embed)
+        await ch.send(content=content, embed=e)
 
         for page in paginator.pages:
             await ch.send(page)
-
-
-#########################################
-#      Logging magic starts here        #
-#########################################
-from contextlib import contextmanager
-from logging.handlers import RotatingFileHandler
-import discord.utils
 
 
 class MyColourFormatter(logging.Formatter):

@@ -1,9 +1,9 @@
 #git+https://github.com/Rapptz/discord.py#egg=speed
 discord.py[speed]==2.1.0
-pillow~=9.3.0
+pillow==9.4.0
 emoji==2.2.0
-numpy==1.23.5
-regex~=2022.1.18
+numpy==1.24.1
+regex==2022.10.31
 aiohttp~=3.8.1
 asyncpraw==7.6.1
 tweepy[async]==4.12.1
@@ -29,7 +29,7 @@ unidiff~=0.7.4
 psutil==5.9.4
 parsedatetime~=2.6
 python-dateutil~=2.8.2
-dateparser==1.1.4
+dateparser==1.1.5
 asyncpg~=0.27.0
 pandas~=1.5.1
 asyncprawcore~=2.3.0

@@ -1,26 +1,28 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
+import discord
 from discord.ext import commands
 
 from .utils.var import Ems
 
 if TYPE_CHECKING:
+    from .utils.bot import AluBot
     from .utils.context import Context
-    from .utils.context import AluBot
 
 
 class LewdCog(commands.Cog, name='Lewd'):
-    """
-    NSFW tier commands
+    """NSFW tier commands
 
     Horny, huh
     """
 
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.peepoPlsStepOnMe
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.peepoPlsStepOnMe)
 
     @commands.hybrid_command()
     async def lewd(self, ctx: Context):

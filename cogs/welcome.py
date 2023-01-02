@@ -1,10 +1,9 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
-from discord import Embed, Member
+import discord
 from discord.ext import commands
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from .utils.checks import is_owner
 from .utils.imgtools import url_to_img, img_to_file, get_text_wh
@@ -12,11 +11,11 @@ from .utils.var import Cid, Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
-    from discord import File, Guild
     from .utils.bot import AluBot
+    from .utils.context import Context
 
 
-async def welcome_image(session, member):
+async def welcome_image(session, member: discord.Member):
     image = Image.open('./media/welcome.png', mode='r')
     avatar = await url_to_img(session, member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
@@ -52,9 +51,9 @@ async def welcome_image(session, member):
 
 async def welcome_message(
         session: ClientSession,
-        member: Member,
+        member: discord.Member,
         back: bool = False
-) -> (str, Embed, File):
+) -> (str, discord.Embed, discord.File):
     image = await welcome_image(session, member)
 
     if back:
@@ -78,9 +77,9 @@ async def welcome_message(
     else:
         description = f'Chat, it\'s a new bot in our server. Use it wisely {Ems.peepoComfy}'
 
-    em = Embed(description=description, color=Clr.prpl)
-    em.set_footer(text=f"With love, {member.guild.me.display_name}")
-    return content_text, em, img_to_file(image)
+    e = discord.Embed(description=description, color=Clr.prpl)
+    e.set_footer(text=f"With love, {member.guild.me.display_name}")
+    return content_text, e, img_to_file(image)
 
 
 class Welcome(commands.Cog):
@@ -88,67 +87,70 @@ class Welcome(commands.Cog):
         self.bot: AluBot = bot
 
     @commands.Cog.listener()
-    async def on_member_join(self, mbr: Member):
+    async def on_member_join(self, member: discord.Member):
         guild = self.bot.get_guild(Sid.alu)
-        if mbr.guild != guild:
+        if member.guild != guild:
             return
         bots_role = guild.get_role(Rid.bots)
         back = False
-        if mbr.bot:
-            await mbr.add_roles(bots_role)
-            await mbr.edit(nick=f"{mbr.display_name} | ")
+        if member.bot:
+            await member.add_roles(bots_role)
+            await member.edit(nick=f"{member.display_name} | ")
         else:
             query = """ INSERT INTO users (id, name) 
                         VALUES ($1, $2) 
                         ON CONFLICT DO NOTHING
                         RETURNING True;
                     """
-            value = await self.bot.pool.fetchval(query, mbr.id, mbr.name)
+            value = await self.bot.pool.fetchval(query, member.id, member.name)
             back = value is not True
 
             for role_id in Rid.category_roles_ids:
                 role = guild.get_role(role_id)
-                await mbr.add_roles(role)
+                await member.add_roles(role)
             if not back:
                 role = guild.get_role(Rid.level_zero)
-                await mbr.add_roles(role)
+                await member.add_roles(role)
 
-        content_text, embed, image_file = await welcome_message(self.bot.session, mbr, back=back)
+        content_text, embed, image_file = await welcome_message(self.bot.session, member, back=back)
         await self.bot.get_channel(Cid.welcome).send(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
-    async def on_member_remove(self, member: Member):
+    async def on_member_remove(self, member: discord.Member):
         if member.guild.id != Sid.alu:
             return
-        em = Embed(description='{0} {0} {0}'.format(Ems.FeelsRainMan), colour=0x000000)
-        em.set_author(name='{0} just left the server'.format(member.display_name), icon_url=member.display_avatar.url)
-        em.set_footer(text=f"With love, {member.guild.me.display_name}")
-        msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
+        e = discord.Embed(description='{0} {0} {0}'.format(Ems.FeelsRainMan), colour=0x000000)
+        e.set_author(name='{0} just left the server'.format(member.display_name), icon_url=member.display_avatar.url)
+        e.set_footer(text=f"With love, {member.guild.me.display_name}")
+        msg = await self.bot.get_channel(Cid.welcome).send(embed=e)
         await msg.add_reaction(Ems.FeelsRainMan)
 
     @commands.Cog.listener()
-    async def on_member_ban(self, guild: Guild, member: Member):
+    async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
         if guild.id != Sid.alu:
             return
-        em = Embed(description='{0} {0} {0}'.format(Ems.peepoPolice), color=0x800000)
-        em.set_author(name=f'{member.display_name} was just banned from the server', icon_url=member.display_avatar.url)
-        em.set_footer(text=f"With love, {guild.me.display_name}")
-        msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
+        e = discord.Embed(description='{0} {0} {0}'.format(Ems.peepoPolice), color=0x800000)
+        e.set_author(name=f'{member.display_name} was just banned from the server', icon_url=member.display_avatar.url)
+        e.set_footer(text=f"With love, {guild.me.display_name}")
+        msg = await self.bot.get_channel(Cid.welcome).send(embed=e)
         await msg.add_reaction(Ems.peepoPolice)
 
     @commands.Cog.listener()
-    async def on_member_unban(self, guild: Guild, mbr: Member):
+    async def on_member_unban(self, guild: discord.Guild, member: discord.Member):
         if guild.id != Sid.alu:
             return
-        em = Embed(description='{0} {0} {0}'.format(Ems.PogChampPepe), color=0x00ff7f)
-        em.set_author(name=f'{mbr.display_name} was just unbanned from the server', icon_url=mbr.display_avatar.url)
-        em.set_footer(text=f"With love, {guild.me.display_name}")
-        msg = await self.bot.get_channel(Cid.welcome).send(embed=em)
+        e = discord.Embed(description='{0} {0} {0}'.format(Ems.PogChampPepe), color=0x00ff7f)
+        e.set_author(
+            name=f'{member.display_name} was just unbanned from the server',
+            icon_url=member.display_avatar.url
+        )
+        e.set_footer(text=f"With love, {guild.me.display_name}")
+        msg = await self.bot.get_channel(Cid.welcome).send(embed=e)
         await msg.add_reaction(Ems.PogChampPepe)
 
     @is_owner()
     @commands.command(hidden=True)
-    async def welcome_preview(self, ctx, member: Member = None):
+    async def welcome_preview(self, ctx: Context, member: discord.Member = None):
         """Get a rendered welcome message for a `{@user}`;"""
         mbr = member or ctx.message.author
         content_text, embed, image_file = await welcome_message(self.bot.session, mbr)

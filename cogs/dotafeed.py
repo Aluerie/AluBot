@@ -1,28 +1,26 @@
 from __future__ import annotations
-
-import time as epoch_time
-from datetime import datetime, timezone, time
-import logging
 from typing import TYPE_CHECKING, Optional, List, Union, Set, Dict
 
-import vdf
-from discord import Permissions, TextChannel, app_commands, Embed
+import datetime
+import time
+import logging
 
+import discord
+from discord import app_commands
 from discord.ext import commands, tasks
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 from steam.steamid import SteamID, EType
+import vdf
 
-from .dota.models import PostMatchPlayerData, ActiveMatch, OpendotaRequestMatch
-
-from .utils.checks import is_guild_owner, is_trustee
 from .dota import hero
+from .dota.models import PostMatchPlayerData, ActiveMatch, OpendotaRequestMatch
+from .utils.checks import is_guild_owner, is_trustee
 from .utils.context import Context, GuildContext
 from .utils.fpc import FPCBase, TwitchAccCheckCog
 from .utils.var import Clr, Ems, MP, Cid
 
 if TYPE_CHECKING:
-    from discord import Interaction
     from .utils.bot import AluBot
 
 log = logging.getLogger(__name__)
@@ -196,12 +194,12 @@ class DotaFeed(commands.Cog):
         for specific_games_flag in [False, True]:
             args = await self.get_args_for_top_source(specific_games_flag)
             if args:  # check args value is not empty
-                start_time = epoch_time.time()
+                start_time = time.perf_counter()
                 log.debug('DF | calling request_top_source NOW ---')
                 self.request_top_source(args)
                 # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
                 # await asyncio.to_thread(self.request_top_source, args)
-                log.debug(f"DF | top source request took {epoch_time.time() - start_time} secs")
+                log.debug(f"DF | top source request took {time.perf_counter() - start_time} secs")
         log.debug(f'DF | len top_source_dict = {len(self.top_source_dict)}')
         await self.analyze_top_source_response()
         for match in self.live_matches:
@@ -284,14 +282,14 @@ class PostMatchEdits(commands.Cog):
     @commands.command(hidden=True, aliases=['odrl', 'od_rl', 'odota_ratelimit'])
     async def opendota_ratelimit(self, ctx: Context):
         """Send opendota rate limit numbers"""
-        em = Embed(colour=Clr.prpl, description=f'Odota limits: {self.bot.odota_ratelimit}')
-        await ctx.reply(embed=em)
+        e = discord.Embed(colour=Clr.prpl, description=f'Odota limits: {self.bot.odota_ratelimit}')
+        await ctx.reply(embed=e)
 
-    @tasks.loop(time=time(hour=2, minute=51, tzinfo=timezone.utc))
+    @tasks.loop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
     async def daily_report(self):
-        em = Embed(title='Daily Report', colour=MP.black())
-        em.description = f'Odota limits: {self.bot.odota_ratelimit}'
-        await self.bot.get_channel(Cid.spam_me).send(embed=em)
+        e = discord.Embed(title='Daily Report', colour=MP.black())
+        e.description = f'Odota limits: {self.bot.odota_ratelimit}'
+        await self.bot.get_channel(Cid.spam_me).send(embed=e)
 
     @daily_report.before_loop
     async def before(self):
@@ -310,8 +308,7 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
 
 
 class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
-    """
-    Commands to set up fav hero + player notifs.
+    """Commands to set up fav hero + player notifs.
 
     These commands allow you to choose players from our database as your favorite \
     (or you can request adding them if missing) and choose your favorite Dota 2 heroes. \
@@ -353,7 +350,10 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
             character_gather_word='heroes'
         )
         self.bot: AluBot = bot
-        self.help_emote = Ems.DankLove
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.DankLove)
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
@@ -361,7 +361,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     slh_dota = app_commands.Group(
         name="dota",
         description="Group command about DotaFeed",
-        default_permissions=Permissions(administrator=True)
+        default_permissions=discord.Permissions(administrator=True)
     )
 
     @is_guild_owner()
@@ -373,7 +373,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     slh_dota_channel = app_commands.Group(
         name='channel',
         description='Group command about DotaFeed channel settings',
-        default_permissions=Permissions(administrator=True),
+        default_permissions=discord.Permissions(administrator=True),
         parent=slh_dota
     )
 
@@ -389,14 +389,14 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         description="Set channel to be the DotaFeed notifications channel"
     )
     @app_commands.describe(channel='Choose channel to set up DotaFeed notifications')
-    async def slh_dota_channel_set(self, ntr: Interaction, channel: Optional[TextChannel]):
+    async def slh_dota_channel_set(self, ntr: discord.Interaction, channel: Optional[discord.TextChannel]):
         """Slash copy of ext_dota_channel_set below"""
         ctx = await Context.from_interaction(ntr)
         await self.channel_set(ctx, channel)
 
     @is_guild_owner()
     @ext_dota_channel.command(name='set', usage='[channel=curr]')
-    async def ext_dota_channel_set(self, ctx: Context, channel: Optional[TextChannel]):
+    async def ext_dota_channel_set(self, ctx: Context, channel: Optional[discord.TextChannel]):
         """Set channel to be the DotaFeed notifications channel."""
         await self.channel_set(ctx, channel)
 
@@ -404,7 +404,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         name='disable',
         description="Disable DotaFeed notifications channel"
     )
-    async def slh_dota_channel_disable(self, ntr: Interaction):
+    async def slh_dota_channel_disable(self, ntr: discord.Interaction):
         """Slash copy of ext_dota_channel_disable below"""
         ctx = await GuildContext.from_interaction(ntr)
         await self.channel_disable(ctx)
@@ -420,7 +420,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         name='check',
         description="Check if DotaFeed channel is set up"
     )
-    async def slh_dota_channel_check(self, ntr: Interaction):
+    async def slh_dota_channel_check(self, ntr: discord.Interaction):
         """Slash copy of ext_dota_channel_check below"""
         ctx = await Context.from_interaction(ntr)
         await self.channel_check(ctx)
@@ -434,7 +434,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     slh_dota_database = app_commands.Group(
         name='database',
         description='Group command about DotaFeed database',
-        default_permissions=Permissions(administrator=True),
+        default_permissions=discord.Permissions(administrator=True),
         parent=slh_dota
     )
 
@@ -459,7 +459,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         name='list',
         description='List of players in the database available for DotaFeed feature'
     )
-    async def slh_dota_database_list(self, ntr: Interaction):
+    async def slh_dota_database_list(self, ntr: discord.Interaction):
         """Slash copy of ext_dota_database_list below"""
         ctx = await Context.from_interaction(ntr)
         await self.database_list(ctx)
@@ -498,7 +498,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         steam='either steamid in any of 64/32/3/2 versions, friend_id or just steam profile link',
         twitch='If you proved twitch handle for "name" then press `True` otherwise `False`',
     )
-    async def slh_dota_database_add(self, ntr: Interaction, name: str, steam: str, twitch: bool):
+    async def slh_dota_database_add(self, ntr: discord.Interaction, name: str, steam: str, twitch: bool):
         """Slash copy of ext_dota_database_list below"""
         ctx = await Context.from_interaction(ntr)
         await ctx.typing()
@@ -512,8 +512,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         usage='name: <name> steam: <steam_id> twitch: <yes/no>'
     )
     async def ext_dota_database_add(self, ctx: Context, *, flags: AddDotaPlayerFlags):
-        """
-        Add player to the database.
+        """Add player to the database.
         • `<name>` is player name
         • `<steam_id>` is either steam_id in any of 64/32/3/2/friend_id versions or just Steam profile link.
         • `<twitch>` - yes/no indicating if player with name also streams under such name
@@ -533,7 +532,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         steam='either steam_id in any of 64/32/3/2 versions, friend_id or just steam profile link',
         twitch='is it a twitch.tv streamer? yes/no',
     )
-    async def slh_dota_database_request(self, ntr: Interaction, name: str, steam: str, twitch: bool):
+    async def slh_dota_database_request(self, ntr: discord.Interaction, name: str, steam: str, twitch: bool):
         """Slash copy of ext_dota_database_request below"""
         ctx = await Context.from_interaction(ntr)
         await ctx.typing()
@@ -565,7 +564,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         name='twitch.tv stream name',
         steam='either steam_id in any of 64/32/3/2 versions, friend_id or just Steam profile link'
     )
-    async def slh_dota_database_remove(self, ntr: Interaction, name: str, steam: Optional[str]):
+    async def slh_dota_database_remove(self, ntr: discord.Interaction, name: str, steam: Optional[str]):
         """Slash copy of ext_dota_database_remove below"""
         ctx = await Context.from_interaction(ntr)
         await ctx.typing()
@@ -592,7 +591,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     slh_dota_player = app_commands.Group(
         name='player',
         description='Group command about DotaFeed player',
-        default_permissions=Permissions(administrator=True),
+        default_permissions=discord.Permissions(administrator=True),
         parent=slh_dota
     )
 
@@ -602,7 +601,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         """Group command about Dota 2 player, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    async def player_add_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def player_add_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=True)
 
     @is_guild_owner()
@@ -627,7 +626,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     )
     # @app_commands.autocomplete(**{f'name{i}': player_add_autocomplete for i in range(1, 11)})
     async def slh_dota_player_add(
-            self, ntr: Interaction,
+            self, ntr: discord.Interaction,
             name1: str, name2: Optional[str], name3: Optional[str], name4: Optional[str], 
             name5: Optional[str], name6: Optional[str], name7: Optional[str], 
             name8: Optional[str], name9: Optional[str], name10: Optional[str]
@@ -646,7 +645,11 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         player_names_list = [x.lstrip().rstrip() for x in player_names.split(',') if x]
         await self.player_add_remove(ctx, player_names_list, mode_add=True)
 
-    async def player_remove_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def player_remove_autocomplete(
+            self,
+            ntr: discord.Interaction,
+            current: str
+    ) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=False)
 
     @is_guild_owner()
@@ -666,7 +669,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     )
     # @app_commands.autocomplete(**{f'name{i}': player_remove_autocomplete for i in range(1, 11)})
     async def slh_dota_player_remove(
-            self, ntr: Interaction, name1: str, 
+            self, ntr: discord.Interaction, name1: str,
             name2: Optional[str], name3: Optional[str], name4: Optional[str],
             name5: Optional[str], name6: Optional[str], name7: Optional[str], 
             name8: Optional[str], name9: Optional[str], name10: Optional[str]
@@ -687,7 +690,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
 
     @is_guild_owner()
     @slh_dota_player.command(name='list', description='Show list of your favourite players')
-    async def slh_dota_player_list(self, ntr: Interaction):
+    async def slh_dota_player_list(self, ntr: discord.Interaction):
         """Slash copy of ext_dota_player below"""
         ctx = await Context.from_interaction(ntr)
         await self.player_list(ctx)
@@ -701,7 +704,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     slh_dota_hero = app_commands.Group(
         name='hero',
         description='Group command about DotaFeed hero',
-        default_permissions=Permissions(administrator=True),
+        default_permissions=discord.Permissions(administrator=True),
         parent=slh_dota
     )
 
@@ -711,7 +714,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    async def hero_add_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def hero_add_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=True)
 
     @is_guild_owner()
@@ -731,7 +734,8 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     )
     # @app_commands.autocomplete(**{f'name{i}': hero_add_autocomplete for i in range(1, 11)})
     async def slh_dota_hero_add(
-            self, ntr: Interaction, name1: str, name2: Optional[str], name3: Optional[str],
+            self, ntr: discord.Interaction,
+            name1: str, name2: Optional[str], name3: Optional[str],
             name4: Optional[str], name5: Optional[str], name6: Optional[str], name7: Optional[str],
             name8: Optional[str], name9: Optional[str], name10: Optional[str]
     ):
@@ -745,8 +749,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     @is_guild_owner()
     @ext_dota_hero.command(name='add', usage='<hero_name(-s)>',)
     async def ext_dota_hero_add(self, ctx: Context, *, hero_names: str):
-        """
-        Add hero(-es) to your fav heroes list. \
+        """Add hero(-es) to your fav heroes list. \
         Use names from Dota 2 hero grid. For example,
         • `Anti-Mage` (letter case does not matter) and not `Magina`;
         • `Queen of Pain` and not `QoP`.
@@ -757,7 +760,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         hero_names_list = [x.lstrip().rstrip() for x in hero_names.split(',') if x]
         await self.character_add_remove(ctx, hero_names_list, mode_add=True)
 
-    async def hero_remove_autocomplete(self, ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def hero_remove_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=False)
 
     @is_guild_owner()
@@ -777,7 +780,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     )
     # @app_commands.autocomplete(**{f'name{i}': hero_add_autocomplete for i in range(1, 11)})
     async def slh_dota_hero_remove(
-            self, ntr: Interaction,
+            self, ntr: discord.Interaction,
             name1: str, name2: Optional[str], name3: Optional[str], name4: Optional[str],
             name5: Optional[str], name6: Optional[str], name7: Optional[str],
             name8: Optional[str], name9: Optional[str], name10: Optional[str]
@@ -798,7 +801,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
 
     @is_guild_owner()
     @slh_dota_hero.command(name='list', description="Show your favourite heroes list")
-    async def slh_dota_hero_list(self, ntr: Interaction):
+    async def slh_dota_hero_list(self, ntr: discord.Interaction):
         """Slash copy of ext_dota_hero_list below"""
         ctx = await Context.from_interaction(ntr)
         await self.character_list(ctx)
@@ -812,7 +815,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     @is_guild_owner()
     @slh_dota.command(name='spoil', description="Turn on/off spoiling resulting stats for matches")
     @app_commands.describe(spoil='`Yes` to enable spoiling with stats, `No` for disable')
-    async def slh_dota_spoil(self, ntr: Interaction, spoil: bool):
+    async def slh_dota_spoil(self, ntr: discord.Interaction, spoil: bool):
         """Slash copy of ext_dota_hero_spoil below"""
         ctx = await Context.from_interaction(ntr)
         await self.spoil(ctx, spoil)
@@ -820,8 +823,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     @is_guild_owner()
     @ext_dota.command(name='spoil')
     async def ext_dota_spoil(self, ctx: Context, spoil: bool):
-        """
-        Turn on/off spoiling resulting stats for matches.
+        """Turn on/off spoiling resulting stats for matches.
         It is "on" by default, so it can show what items players finished with and KDA.
         """
         await self.spoil(ctx, spoil)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import discord
 from discord import Embed, app_commands
 from discord.ext import commands
 from discord.ext.commands import Range
@@ -21,15 +22,18 @@ class ServerInfo(commands.Cog, name='Rules'):
     """
     def __init__(self, bot):
         self.bot = bot
-        self.help_emote = Ems.PepoRules
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.PepoRules)
 
     @staticmethod
     async def rule_work(ctx, num, dtb, min_number):
         try:
             my_row = db.session.query(dtb).order_by(dtb.id).limit(num + min_number)[num - min_number]
-            embed = Embed(colour=Clr.prpl, title=f'Rule {num}')
-            embed.description = f'{num}. {my_row.text}'
-            await ctx.reply(embed=embed)
+            e = Embed(colour=Clr.prpl, title=f'Rule {num}')
+            e.description = f'{num}. {my_row.text}'
+            await ctx.reply(embed=e)
         except:
             await ctx.reply(content='there is no such rule')
 
@@ -58,10 +62,10 @@ class ServerInfo(commands.Cog, name='Rules'):
             list_rules = [
                 f'{counter}. {row.text}' for counter, row in enumerate(ses.query(dtb).order_by(dtb.id), start=min_value)
             ]
-        embed = Embed(colour=Clr.prpl)
-        embed.title = 'Server rules'
-        embed.description = f'\n'.join(list_rules)
-        await ctx.reply(embed=embed)
+        e = Embed(colour=Clr.prpl)
+        e.title = 'Server rules'
+        e.description = f'\n'.join(list_rules)
+        await ctx.reply(embed=e)
 
     @commands.hybrid_command(
         name='rules',

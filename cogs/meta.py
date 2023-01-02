@@ -1,10 +1,8 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from discord import Embed, Permissions
+import discord
 from discord.ext import commands
-from discord.utils import oauth_url
 
 from .utils.var import Clr, Ems
 
@@ -18,21 +16,23 @@ class Meta(commands.Cog):
 
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.FeelsDankManLostHisHat
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.FeelsDankManLostHisHat)
 
     @commands.command(aliases=['join'])
     async def invite(self, ctx: Context):
-        """
-        Show my invite link so you can invite me.
+        """Show my invite link so you can invite me.
         You can also press discord-native button "Add to Server" in my profile.
         """
-        perms = Permissions.all()
+        perms = discord.Permissions.all()
         # perms.read_messages = True
         # todo: add all ours properly
-        url = oauth_url(self.bot.client_id, permissions=perms)
-        em = Embed(title='Invite link for the bot', url=url, description=url, color=Clr.prpl)
-        em.set_thumbnail(url=self.bot.user.display_avatar.url)
-        await ctx.send(embed=em)
+        url = discord.utils.oauth_url(self.bot.client_id, permissions=perms)
+        e = discord.Embed(title='Invite link for the bot', url=url, description=url, color=Clr.prpl)
+        e.set_thumbnail(url=self.bot.user.display_avatar.url)
+        await ctx.reply(embed=e)
 
 
 async def setup(bot: AluBot):

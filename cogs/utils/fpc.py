@@ -1,29 +1,28 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, Awaitable, List, Callable, Optional, Union
 
-from datetime import time, timezone, datetime
+import datetime
 from difflib import get_close_matches
-from typing import (
-    TYPE_CHECKING,
-    Awaitable, List, Callable, Optional, Union
-)
 
-from discord import Embed, app_commands
+import discord
+from discord import app_commands
 from discord.ext import commands, tasks
-from discord.ext.commands import BadArgument, BotMissingPermissions
 
 from .distools import send_pages_list
 from .var import MP, Ems, Cid
 
 if TYPE_CHECKING:
-    from discord import Colour, Interaction, TextChannel
-    from .context import Context, GuildContext
     from .bot import AluBot
+    from .context import Context, GuildContext
 
 
 class FPCBase:
-    """
-    Base class for cogs representing FPC (Favourite Player+Character) feature
-    for different games: Dota 2, League of Legends and probably more to come.
+    """Base class for cogs representing FPC (Favourite Player+Character) feature
+    for different games:
+
+    * Dota 2
+    * League of Legends
+    * and probably more to come.
 
     Since many base features can be generalized -
     here is the base class containing base methods.
@@ -35,7 +34,7 @@ class FPCBase:
             feature_name: str,
             game_name: str,
             game_codeword: str,
-            colour: Colour,
+            colour: discord.Colour,
             bot: AluBot,
             players_table: str,
             accounts_table: str,
@@ -52,7 +51,7 @@ class FPCBase:
         self.feature_name: str = feature_name
         self.game_name: str = game_name
         self.game_codeword: str = game_codeword
-        self.colour: Colour = colour
+        self.colour: discord.Colour = colour
         self.bot: AluBot = bot
         self.players_table: str = players_table
         self.accounts_table: str = accounts_table
@@ -69,18 +68,18 @@ class FPCBase:
     async def channel_set(
             self,
             ctx: GuildContext,
-            channel: Optional[TextChannel],
+            channel: Optional[discord.TextChannel],
     ) -> None:
         """Base function for setting channel for FPC Feed feature"""
         ch = channel or ctx.channel
         if not ch.permissions_for(ctx.guild.me).send_messages:
-            raise BotMissingPermissions(['I do not have permission to `send_messages` in that channel'])
+            raise commands.BotMissingPermissions(['I do not have permission to `send_messages` in that channel'])
 
         query = f'UPDATE guilds SET {self.channel_id_column}=$1 WHERE id=$2'
         await ctx.pool.execute(query, ch.id, ctx.guild.id)
-        em = Embed(colour=self.colour)
-        em.description = f'Channel {ch.mention} is set to be the {self.feature_name} channel for this server'
-        await ctx.reply(embed=em)
+        e = discord.Embed(colour=self.colour)
+        e.description = f'Channel {ch.mention} is set to be the {self.feature_name} channel for this server'
+        await ctx.reply(embed=e)
 
     async def channel_disable(
             self,
@@ -92,12 +91,12 @@ class FPCBase:
         ch_id = await ctx.pool.fetchval(query, ctx.guild.id)
 
         if (ch := ctx.bot.get_channel(ch_id)) is None:
-            raise BadArgument(f'{self.feature_name} channel is not set or already was reset')
+            raise commands.BadArgument(f'{self.feature_name} channel is not set or already was reset')
         query = f'UPDATE guilds SET {self.channel_id_column}=NULL WHERE id=$1'
         await ctx.pool.execute(query, ctx.guild.id)
-        em = Embed(colour=self.colour)
-        em.description = f'Channel {ch.mention} is no longer the {self.feature_name} channel.'
-        await ctx.reply(embed=em)
+        e = discord.Embed(colour=self.colour)
+        e.description = f'Channel {ch.mention} is no longer the {self.feature_name} channel.'
+        await ctx.reply(embed=e)
 
     async def channel_check(
             self,
@@ -108,13 +107,13 @@ class FPCBase:
         ch_id = await ctx.pool.fetchval(query, ctx.guild.id)
 
         if (ch := ctx.bot.get_channel(ch_id)) is None:
-            em = Embed(colour=self.colour)
-            em.description = f'{self.feature_name} channel is not currently set.'
-            await ctx.reply(embed=em)
+            e = discord.Embed(colour=self.colour)
+            e.description = f'{self.feature_name} channel is not currently set.'
+            await ctx.reply(embed=e)
         else:
-            em = Embed(colour=self.colour)
-            em.description = f'{self.feature_name} channel is currently set to {ch.mention}.'
-            await ctx.reply(embed=em)
+            e = discord.Embed(colour=self.colour)
+            e.description = f'{self.feature_name} channel is currently set to {ch.mention}.'
+            await ctx.reply(embed=e)
 
     @staticmethod
     def player_name_string(
@@ -222,7 +221,7 @@ class FPCBase:
                 """
         user = await self.bot.pool.fetchrow(query, account_dict['id'])
         if user is not None:
-            raise BadArgument(
+            raise commands.BadArgument(
                 'This steam account is already in the database.\n'
                 f'It is marked as {user.display_name}\'s account.\n\n'
                 f'Did you mean to use `/dota player add {user.name_lower}` to add the stream into your fav list?'
@@ -255,17 +254,17 @@ class FPCBase:
                     VALUES {'('}{', '.join(dollars)}{')'}
                 """
         await ctx.pool.execute(query, player_id, *account_dict.values())
-        em = Embed(colour=self.colour)
-        em.add_field(
+        e = discord.Embed(colour=self.colour)
+        e.add_field(
             name=f'Successfully added the account to the database',
             value=self.player_name_acc_string(
                 player_dict['display_name'], player_dict['twitch_id'], **account_dict
             )
         )
-        await ctx.reply(embed=em)
-        em.colour = MP.green(shade=200)
-        em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
-        await self.bot.get_channel(Cid.global_logs).send(embed=em)
+        await ctx.reply(embed=e)
+        e.colour = MP.green(shade=200)
+        e.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        await self.bot.get_channel(Cid.global_logs).send(embed=e)
 
     async def database_request(
             self,
@@ -279,27 +278,27 @@ class FPCBase:
         player_string = self.player_name_acc_string(
             player_dict['display_name'], player_dict['twitch_id'], **account_dict
         )
-        warn_em = Embed(colour=self.colour, title='Confirmation Prompt')
-        warn_em.description = (
+        warn_e = discord.Embed(colour=self.colour, title='Confirmation Prompt')
+        warn_e.description = (
             'Are you sure you want to request this streamer steam account to be added into the database?\n'
             'This information will be sent to Aluerie. Please, double check before confirming.'
         )
-        warn_em.add_field(name='Request to add an account into the database', value=player_string)
-        if not await ctx.prompt(embed=warn_em):
+        warn_e.add_field(name='Request to add an account into the database', value=player_string)
+        if not await ctx.prompt(embed=warn_e):
             await ctx.reply('Aborting...', delete_after=5.0)
             return
 
-        em = Embed(colour=self.colour)
-        em.add_field(name='Successfully made a request to add the account into the database', value=player_string)
-        await ctx.reply(embed=em)
+        e = discord.Embed(colour=self.colour)
+        e.add_field(name='Successfully made a request to add the account into the database', value=player_string)
+        await ctx.reply(embed=e)
 
-        warn_em.colour = MP.orange(shade=200)
-        warn_em.title = ''
-        warn_em.description = ''
-        warn_em.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        warn_e.colour = MP.orange(shade=200)
+        warn_e.title = ''
+        warn_e.description = ''
+        warn_e.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
         # cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
         # warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
-        await self.bot.get_channel(Cid.global_logs).send(embed=warn_em)
+        await self.bot.get_channel(Cid.global_logs).send(embed=warn_e)
 
     async def database_remove(
             self,
@@ -309,7 +308,7 @@ class FPCBase:
     ) -> None:
         """Base function for removing accounts from the database"""
         if name_lower is None and account_id is None:
-            raise BadArgument('You need to provide at least one of flags: `name`, `steam`')
+            raise commands.BadArgument('You need to provide at least one of flags: `name`, `steam`')
 
         if account_id:
             if name_lower:  # check for both name_lower and account_id
@@ -321,7 +320,7 @@ class FPCBase:
                         """
                 val = await ctx.pool.fetchval(query, account_id, name_lower)
                 if val is None:
-                    raise BadArgument(
+                    raise commands.BadArgument(
                         'This account either is not in the database '
                         'or does not belong to the said player'
                     )
@@ -345,7 +344,7 @@ class FPCBase:
                     """
             ans_name = await ctx.pool.fetchval(query, account_id)
             if ans_name is None:
-                raise BadArgument('There is no account with such account details')
+                raise commands.BadArgument('There is no account with such account details')
         else:
             # query for name_lower only
             query = f"""DELETE FROM {self.players_table}
@@ -354,14 +353,14 @@ class FPCBase:
                     """
             ans_name = await ctx.pool.fetchval(query, name_lower)
             if ans_name is None:
-                raise BadArgument('There is no account with such player name')
+                raise commands.BadArgument('There is no account with such player name')
 
-        em = Embed(colour=self.colour)
-        em.add_field(
+        e = discord.Embed(colour=self.colour)
+        e.add_field(
             name='Successfully removed account(-s) from the database',
             value=f'{ans_name}{" - " + str(account_id) if account_id else ""}'
         )
-        await ctx.reply(embed=em)
+        await ctx.reply(embed=e)
 
     @staticmethod
     def construct_the_embed(
@@ -371,21 +370,27 @@ class FPCBase:
             *,
             gather_word: str,
             mode_add: bool
-    ) -> Embed:
-        em = Embed()
+    ) -> discord.Embed:
+        e = discord.Embed()
         if s_names:
-            em.colour = MP.green(shade=500)
-            em.add_field(name=f"Success: {gather_word} were {'added to' if mode_add else 'removed from'} your list",
-                         value=f"`{', '.join(s_names)}`", inline=False)
+            e.colour = MP.green(shade=500)
+            e.add_field(
+                name=f"Success: {gather_word} were {'added to' if mode_add else 'removed from'} your list",
+                value=f"`{', '.join(s_names)}`", inline=False
+            )
         if a_names:
-            em.colour = MP.orange(shade=500)
-            em.add_field(name=f'Already: {gather_word} are already {"" if mode_add else "not"} in your list',
-                         value=f"`{', '.join(a_names)}`", inline=False)
+            e.colour = MP.orange(shade=500)
+            e.add_field(
+                name=f'Already: {gather_word} are already {"" if mode_add else "not"} in your list',
+                value=f"`{', '.join(a_names)}`", inline=False
+            )
         if f_names:
-            em.colour = MP.red(shade=500)
-            em.add_field(name=f'Fail: These {gather_word} are not in the database',
-                         value=f"`{', '.join(f_names)}`", inline=False)
-        return em
+            e.colour = MP.red(shade=500)
+            e.add_field(
+                name=f'Fail: These {gather_word} are not in the database',
+                value=f"`{', '.join(f_names)}`", inline=False
+            )
+        return e
 
     async def player_add_remove(
             self,
@@ -431,18 +436,21 @@ class FPCBase:
         await ctx.pool.execute(query, new_fav_ids, ctx.guild.id)
 
         if mode_add:
-            em = self.construct_the_embed(s_names, a_names, f_names, gather_word='players', mode_add=mode_add)
+            e = self.construct_the_embed(s_names, a_names, f_names, gather_word='players', mode_add=mode_add)
         else:
-            em = self.construct_the_embed(a_names, s_names, f_names, gather_word='players', mode_add=mode_add)
+            e = self.construct_the_embed(a_names, s_names, f_names, gather_word='players', mode_add=mode_add)
         if f_names:
-            em.set_footer(
-                text='Check your argument or consider adding (for trustees)/requesting such player with '
-                     '`$ or /dota database add|request name: <name> steam: <steam_id> twitch: <yes/no>`')
-        await ctx.reply(embed=em)
+            e.set_footer(
+                text=(
+                    'Check your argument or consider adding (for trustees)/requesting such player with '
+                    '`$ or /dota database add|request name: <name> steam: <steam_id> twitch: <yes/no>`'
+                )
+            )
+        await ctx.reply(embed=e)
 
     async def player_add_remove_autocomplete(
             self,
-            ntr: Interaction,
+            ntr: discord.Interaction,
             current: str,
             *,
             mode_add: bool
@@ -479,9 +487,9 @@ class FPCBase:
         rows = await self.bot.pool.fetch(query, fav_ids) or []
 
         player_names = [self.player_name_string(row.display_name, row.twitch_id) for row in rows]
-        em = Embed(title=f'List of favourite {self.game_name} players', colour=self.colour)
-        em.description = '\n'.join(player_names)
-        await ctx.reply(embed=em)
+        e = discord.Embed(title=f'List of favourite {self.game_name} players', colour=self.colour)
+        e.description = '\n'.join(player_names)
+        await ctx.reply(embed=e)
 
     async def character_add_remove(
             self,
@@ -512,18 +520,18 @@ class FPCBase:
         await ctx.pool.execute(query, new_fav_ids, ctx.guild.id)
 
         if mode_add:
-            em = self.construct_the_embed(
+            e = self.construct_the_embed(
                 s_names, a_names, f_names, gather_word=self.character_gather_word, mode_add=mode_add
             )
         else:
-            em = self.construct_the_embed(
+            e = self.construct_the_embed(
                 a_names, s_names, f_names, gather_word=self.character_gather_word, mode_add=mode_add
             )
-        await ctx.reply(embed=em)
+        await ctx.reply(embed=e)
 
     async def character_add_remove_autocomplete(
             self,
-            ntr: Interaction,
+            ntr: discord.Interaction,
             current: str,
             *,
             mode_add: bool
@@ -558,9 +566,9 @@ class FPCBase:
         fav_ids = await self.bot.pool.fetchval(query, ctx.guild.id) or []
         fav_names = [f'{await self.get_char_name_by_id(i)} - `{i}`' for i in fav_ids]
 
-        em = Embed(title=f'List of your favourite {self.character_gather_word}', colour=self.colour)
-        em.description = '\n'.join(fav_names)
-        await ctx.reply(embed=em)
+        e = discord.Embed(title=f'List of your favourite {self.character_gather_word}', colour=self.colour)
+        e.description = '\n'.join(fav_names)
+        await ctx.reply(embed=e)
 
     async def spoil(
             self,
@@ -570,16 +578,15 @@ class FPCBase:
         """Base function for spoil commands"""
         query = f'UPDATE guilds SET {self.spoil_column}=$1 WHERE id=$2'
         await self.bot.pool.execute(query, spoil, ctx.guild.id)
-        em = Embed(colour=self.colour)
-        em.description = f"Changed spoil value to {spoil}"
-        await ctx.reply(embed=em)
+        e = discord.Embed(description=f"Changed spoil value to {spoil}", colour=self.colour)
+        await ctx.reply(embed=e)
 
 
 class TwitchAccCheckCog(commands.Cog):
     def __init__(self, bot: AluBot, table_name: str, day: int):
         self.bot: AluBot = bot
-        self.table_name = table_name
-        self.day = day
+        self.table_name: str = table_name
+        self.day: int = day
         self.__cog_name__ = f'TwitchAccCheckCog for {table_name}'
 
     async def cog_load(self) -> None:
@@ -588,9 +595,9 @@ class TwitchAccCheckCog(commands.Cog):
     async def cog_unload(self) -> None:
         self.check_acc_renames.stop()
 
-    @tasks.loop(time=time(hour=12, minute=11, tzinfo=timezone.utc))
+    @tasks.loop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.timezone.utc))
     async def check_acc_renames(self):
-        if datetime.now(timezone.utc).day != self.day:
+        if datetime.datetime.now(datetime.timezone.utc).day != self.day:
             return
 
         query = f'SELECT id, twitch_id, display_name FROM {self.table_name} WHERE twitch_id IS NOT NULL'

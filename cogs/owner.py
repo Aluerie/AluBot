@@ -1,92 +1,28 @@
 from __future__ import annotations
-
-from os import listdir
 from typing import TYPE_CHECKING, Optional, Literal
 
-from discord import Embed, Guild, Object, utils, HTTPException
+from os import listdir
+
+import discord
 from discord.ext import commands
-from discord.ext.commands import Greedy
+import json
 
 from .utils.bot import test_list
 from .utils.checks import is_owner
 from .utils.context import Context
-from .utils.var import Ems, Clr, Sid, Cid, Rid
+from .utils.var import Ems, Clr, Sid, Cid, Rid, MP
 
 if TYPE_CHECKING:
-    from discord import Member
     from .utils.bot import AluBot
 
 
 class AdminTools(commands.Cog, name='Tools for Bot Owner'):
-    """Commands for admin tools"""
+    """Bot owner tools"""
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.Lewd
 
     @is_owner()
-    @commands.command()
-    async def leaveguild(self, ctx: Context, guild: Guild):
-        """'Make bot leave guild with named guild_id;"""
-        embed = Embed(colour=Clr.prpl)
-        if guild is not None:
-            await guild.leave()
-            embed.description = f'Just left guild {guild.name} with id `{guild.id}`\n'
-        else:
-            embed.description = f'The bot is not in the guild with id `{guild}`'
-        await ctx.reply(embed=embed)
-
-    @is_owner()
-    @commands.command()
-    async def guildlist(self, ctx: Context):
-        """Show list of guilds bot is in."""
-        em = Embed(colour=Clr.prpl)
-        em.description = (
-            f"The bot is in these guilds\n"
-            f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"
-        )
-        await ctx.reply(embed=em)
-
-    @is_owner()
-    @commands.command()
-    async def purgelist(self, ctx: Context, msgid_last: int, msgid_first: int):
-        """Delete messages between given ids in current channel."""
-        temp_purge_list = []
-        async for msg in ctx.channel.history(limit=2000):
-            if msgid_first < msg.id < msgid_last:
-                temp_purge_list.append(msg)
-
-        split_size = 90
-        msg_split_list = [temp_purge_list[x:x + split_size] for x in range(0, len(temp_purge_list), split_size)]
-        for item in msg_split_list:
-            await ctx.channel.delete_messages(item)
-        await ctx.reply('Done', delete_after=10)
-
-    @is_owner()
-    @commands.command()
-    async def emotecredits(self, ctx: Context):
-        """Emote credits"""
-        guild = self.bot.get_guild(Sid.alu)
-        rules_channel = guild.get_channel(Cid.rules)
-        msg = rules_channel.get_partial_message(866006902458679336)
-
-        emote_names = ['bubuChrist', 'bubuGunGun', 'PepoBeliever', 'cocoGunGun', 'iofibonksfast']
-        emote_array = [utils.get(guild.emojis, name=item) for item in emote_names]
-        em = Embed(title='Credits for following emotes', color=Clr.prpl)
-        em.description = (
-            '''
-            ● [twitch.tv/bububu](https://www.twitch.tv/bububu)
-            {0} {1} {2}
-            ● [twitch.tv/khezu](https://www.twitch.tv/khezu)
-            {3}  
-            ● [chroneco.moe](https://www.chroneco.moe/)
-            {4} {5}
-            '''.format(*emote_array)
-        )
-        await msg.edit(content='', embed=em)
-        await ctx.reply(f"we did it {Ems.PogChampPepe}")
-
-    @is_owner()
-    @commands.group()
+    @commands.group(hidden=True)
     async def trustee(self, ctx: Context):
         await ctx.scnf()
 
@@ -106,15 +42,12 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
 
         query = 'UPDATE botinfo SET trusted_ids=$1 WHERE id=$2'
         await self.bot.pool.execute(query, trusted_ids, Sid.alu)
-        em = Embed(
-            colour=Clr.prpl,
-            description=
-            f'We {mode}ed user with id {user_id} to the list of trusted users'
-        )
-        await ctx.reply(embed=em)
+        e = discord.Embed(colour=Clr.prpl)
+        e.description = f'We {mode}ed user with id {user_id} to the list of trusted users'
+        await ctx.reply(embed=e)
 
     @is_owner()
-    @trustee.command()
+    @trustee.command(hidden=True)
     async def add(self, ctx: Context, user_id: int):
         """
         Grant trustee privilege to a user with `user_id`.
@@ -123,17 +56,17 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         await self.trustee_add_remove(ctx, user_id=user_id, mode='add')
 
     @is_owner()
-    @trustee.command()
+    @trustee.command(hidden=True)
     async def remove(self, ctx: Context, user_id: int):
         """Remove trustee privilege from a user with `user_id`."""
         await self.trustee_add_remove(ctx, user_id=user_id, mode='remov')
 
     @is_owner()
-    @commands.command()
+    @commands.command(hidden=True)
     async def sync(
             self,
             ctx: Context,
-            guilds: Greedy[Object],
+            guilds: commands.Greedy[discord.Object],
             spec: Optional[Literal["~", "*", "^"]] = None
     ) -> None:
         """
@@ -156,7 +89,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             else:
                 synced = await ctx.bot.tree.sync()
 
-            await ctx.send(
+            await ctx.reply(
                 f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
             )
             await self.bot.update_app_commands_cache(cmds=synced)
@@ -167,21 +100,20 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         for guild in guilds:
             try:
                 cmds += await ctx.bot.tree.sync(guild=guild)
-            except HTTPException:
+            except discord.HTTPException:
                 pass
             else:
                 fmt += 1
         await self.bot.update_app_commands_cache(cmds=cmds)
-        await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
+        await ctx.reply(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
 
     @is_owner()
     @commands.command(name='extensions', hidden=True)
     async def extensions(self, ctx: Context):
         """Shows available extensions to load/reload/unload."""
         cogs = [f'● {x[:-3]}' for x in listdir('./cogs') if x.endswith('.py')] + ['● jishaku']
-        em = Embed(title='Available Extensions', colour=Clr.prpl)
-        em.description ='\n'.join(cogs)
-        await ctx.reply(embed=em)
+        e = discord.Embed(title='Available Extensions', description='\n'.join(cogs), colour=Clr.prpl)
+        await ctx.reply(embed=e)
 
     async def load_unload_reload_job(
             self,
@@ -198,11 +130,11 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
                 case 'unload':
                     await self.bot.unload_extension(filename)
                 case 'reload':
-                    await self.bot.reload_extension(filename)
-        except commands.ExtensionError as e:
-            em = Embed(description=f'{e}', colour=Clr.error)
-            em.set_author(name=e.__class__.__name__)
-            await ctx.send(embed=em)
+                    await self.reload_or_load_extension(filename)
+        except commands.ExtensionError as error:
+            e = discord.Embed(description=f'{error}', colour=Clr.error)
+            e.set_author(name=error.__class__.__name__)
+            await ctx.reply(embed=e)
         else:
             await ctx.message.add_reaction(Ems.DankApprove)
 
@@ -249,19 +181,85 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         for cog in cogs_to_reload:
             try:
                 await self.reload_or_load_extension(cog)
-            except commands.ExtensionError as e:
-                await ctx.send(f'{e.__class__.__name__}: {e}')
+            except commands.ExtensionError as error:
+                await ctx.reply(f'{error.__class__.__name__}: {error}')
                 add_reaction = False
         if add_reaction:
             await ctx.message.add_reaction(Ems.DankApprove)
 
     @commands.Cog.listener()
-    async def on_member_join(self, member: Member):
+    async def on_member_join(self, member: discord.Member):
         if member.guild.id != Sid.blush:
             return
         if member.bot:
             bots_role = member.guild.get_role(Rid.waste_bots_role)
             await member.add_roles(bots_role)
+
+    @staticmethod
+    def guild_embed(guild: discord.Guild, join: bool) -> discord.Embed:
+        if join:
+            word, colour = 'joined', MP.green(shade=500)
+        else:
+            word, colour = 'was removed from', MP.red(shade=500)
+        e = discord.Embed(title=guild.name, description=guild.description, colour=colour)
+        e.set_author(name=f"The bot {word} {str(guild.owner)}'s guild", icon_url=guild.owner.avatar.url)
+        e.set_thumbnail(url=guild.icon.url if guild.icon else None)
+        e.add_field(name='Members count', value=guild.member_count)
+        e.add_field(name='Guild ID', value=f'`{guild.id}`')
+        return e
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild):
+        await self.bot.get_channel(Cid.global_logs).send(embed=self.guild_embed(guild, join=True))
+        query = 'INSERT INTO guilds (id, name) VALUES ($1, $2)'
+        await self.bot.pool.execute(query, guild.id, guild.name)
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild):
+        await self.bot.get_channel(Cid.global_logs).send(embed=self.guild_embed(guild, join=False))
+        query = 'DELETE FROM guilds WHERE id=$1'
+        await self.bot.pool.execute(query, guild.id)
+
+    @is_owner()
+    @commands.group(name='guild', hidden=True)
+    async def guild_group(self, ctx: Context):
+        """Group for guild commands. Use it together with subcommands"""
+        await ctx.scnf()
+
+    @is_owner()
+    @guild_group.command(hidden=True)
+    async def leave(self, ctx: Context, guild: discord.Guild):
+        """'Make bot leave guild with named guild_id;"""
+        if guild is not None:
+            await guild.leave()
+            e = discord.Embed(colour=Clr.prpl)
+            e.description = f'Just left guild {guild.name} with id `{guild.id}`\n'
+            await ctx.reply(embed=e)
+        else:
+            raise commands.BadArgument(f'The bot is not in the guild with id `{guild}`')
+
+    @is_owner()
+    @guild_group.command(hidden=True)
+    async def list(self, ctx: Context):
+        """Show list of guilds the bot is in."""
+        e = discord.Embed(colour=Clr.prpl)
+        e.description = (
+            f"The bot is in these guilds\n"
+            f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"
+        )
+        await ctx.reply(embed=e)
+
+    @is_owner()
+    @guild_group.command(hidden=True)
+    async def api(self, ctx: Context):
+        """Lazy way to update GitHub ReadMe badges until I figure out more continuous one"""
+        json_dict = {
+            "servers": len(self.bot.guilds),
+            "users": len(self.bot.users),  # [x for x in self.bot.users if not x.bot]
+            "updated": discord.utils.utcnow().strftime('%d/%b/%y')
+        }
+        json_object = json.dumps(json_dict, indent=4)
+        await ctx.reply(content=f'```json\n{json_object}```')
 
 
 async def setup(bot: AluBot):

@@ -1,30 +1,29 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, Literal, Optional, List
 
+import datetime
 import itertools
 import re
+import zoneinfo
 from difflib import get_close_matches
 from functools import lru_cache
-from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING, Literal, Optional, List
-from zoneinfo import available_timezones, ZoneInfo, ZoneInfoNotFoundError
 
-from discord import Embed, Member, app_commands
+import discord
+from discord import app_commands
 from discord.ext import commands, tasks
-from discord.ext.commands import Range
 from numpy.random import choice
 
 from .utils.distools import send_pages_list
 from .utils.var import Cid, Ems, Rid, Clr, Sid
 
 if TYPE_CHECKING:
-    from discord import Interaction
     from .utils.bot import AluBot
     from .utils.context import Context
 
 
 @lru_cache(maxsize=None)
 def get_timezones():
-    return available_timezones()
+    return zoneinfo.available_timezones()
 
 
 gratz_bank = [
@@ -90,18 +89,17 @@ def bdate_str(bdate, num_mod=False):
 
 
 class SetBirthdayFlags(commands.FlagConverter, case_insensitive=True):
-    day: Range[int, 1, 31]
+    day: commands.Range[int, 1, 31]
     month: Literal[
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ]
-    year: Optional[Range[int, 1970]]
+    year: Optional[commands.Range[int, 1970]]
     timezone: Optional[str]
 
 
 class Birthday(commands.Cog):
-    """
-    Set your birthday and get congratulations from the bot.
+    """Set your birthday and get congratulations from the bot.
 
     There is a special role in Irene's server \
     which on your birthday gives you a priority in the members list and makes the bot \
@@ -109,7 +107,10 @@ class Birthday(commands.Cog):
     """
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.peepoHappyDank
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.peepoHappyDank)
 
     def cog_load(self) -> None:
         self.check_birthdays.start()
@@ -122,7 +123,7 @@ class Birthday(commands.Cog):
         """Group command about birthdays, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    async def timezone_autocomplete(self, _ntr: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def timezone_autocomplete(self, _ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         all_timezones = list(get_timezones())
         all_timezones += [f'GMT{sign}{h}:00' for sign, h in itertools.product(['-', '+'], range(0, 13))]
         # lazy monkey patch
@@ -152,8 +153,8 @@ class Birthday(commands.Cog):
     )
     @app_commands.autocomplete(timezone=timezone_autocomplete)  # type: ignore
     async def set(self, ctx: Context, *, bdate_flags: SetBirthdayFlags):
-        """
-        Set your birthday. \
+        """Set your birthday.
+
         Timezone can be set in `GMT+-H:MM` format or standard IANA name like
         `Europe/Paris` or `Etc/GMT-1` (remember sign is inverted for Etc).
         """
@@ -163,7 +164,7 @@ class Birthday(commands.Cog):
             else:
                 fmt, string = '%d/%B', f'{bdate_flags.day}/{bdate_flags.month}'
             try:
-                return datetime.strptime(string, fmt)
+                return datetime.datetime.strptime(string, fmt)
             except ValueError:
                 raise commands.BadArgument(
                     "Invalid date given, please recheck the date."
@@ -175,8 +176,8 @@ class Birthday(commands.Cog):
             if re_zone := re.match(r'^GMT([-+]\d+:\d+)$', str_tzone, re.IGNORECASE):
                 return re_zone.group(0)
             try:
-                return ZoneInfo(str_tzone).key
-            except ZoneInfoNotFoundError:
+                return zoneinfo.ZoneInfo(str_tzone).key
+            except zoneinfo.ZoneInfoNotFoundError:
                 raise commands.BadArgument(
                     'Could not recognize `timezone` from the input. \n\n'
                     'Please, use `GMT+H:MM` format or standard IANA format, i.e. `Europe/Paris` or '
@@ -193,10 +194,10 @@ class Birthday(commands.Cog):
 
         query = 'UPDATE users SET bdate=$1, tzone=$2 WHERE users.id=$3;'
         await self.bot.pool.execute(query, dmy_dtime, tz_for_db, ctx.author.id)
-        em = Embed(colour=Clr.prpl, title='Your birthday is successfully set')
-        em.description = f'Date: {bdate_str(dmy_dtime)}\nTimezone: {tz_for_db}'
-        em.set_footer(text='Important! By submitting this information you agree it can be shown to anyone.')
-        await ctx.reply(embed=em)
+        e = discord.Embed(colour=Clr.prpl, title='Your birthday is successfully set')
+        e.description = f'Date: {bdate_str(dmy_dtime)}\nTimezone: {tz_for_db}'
+        e.set_footer(text='Important! By submitting this information you agree it can be shown to anyone.')
+        await ctx.reply(embed=e)
 
     @birthday.command(aliases=['del'])
     async def delete(self, ctx: Context):
@@ -207,19 +208,19 @@ class Birthday(commands.Cog):
 
     @birthday.command(usage='[member=you]')
     @app_commands.describe(member='Member of the server or you if not specified')
-    async def check(self, ctx: Context, member: Optional[Member]):
+    async def check(self, ctx: Context, member: Optional[discord.Member]):
         """Check your or somebody's birthday in database"""
         member = member or ctx.message.author
         query = 'SELECT bdate, tzone FROM users WHERE users.id=$1'
         row = await self.bot.pool.fetchrow(query, member.id)
 
-        em = Embed(colour=Clr.prpl)
-        em.set_author(name=f'{member.display_name}\'s birthday status', icon_url=member.display_avatar.url)
+        e = discord.Embed(colour=Clr.prpl)
+        e.set_author(name=f'{member.display_name}\'s birthday status', icon_url=member.display_avatar.url)
         if row.bdate is None:
-            em.description = f'It\'s not set yet.'
+            e.description = f'It\'s not set yet.'
         else:
-            em.description = f"Date: {bdate_str(row.bdate)}\nTimezone: {row.tzone}"
-        await ctx.reply(embed=em)
+            e.description = f"Date: {bdate_str(row.bdate)}\nTimezone: {row.tzone}"
+        await ctx.reply(embed=e)
 
     @tasks.loop(hours=1)
     async def check_birthdays(self):  # todo: rework this into sleeping till next bday
@@ -233,13 +234,13 @@ class Birthday(commands.Cog):
                 if re_zone := re.match(r'^GMT([-+]\d+:\d+)$', row.tzone, re.IGNORECASE):
                     split = re_zone.group(1).split(':')
                     tzone_seconds = 3600 * int(split[0]) + 60 * int(split[1])
-                    tzone_offset = timedelta(seconds=tzone_seconds)
+                    tzone_offset = datetime.timedelta(seconds=tzone_seconds)
                 else:
-                    tzone_offset = datetime.now(ZoneInfo(row.tzone)).utcoffset()
+                    tzone_offset = datetime.datetime.now(zoneinfo.ZoneInfo(row.tzone)).utcoffset()
             else:
-                tzone_offset = timedelta(seconds=0)
+                tzone_offset = datetime.timedelta(seconds=0)
 
-            now_date = datetime.now(timezone.utc) + tzone_offset
+            now_date = datetime.datetime.now(datetime.timezone.utc) + tzone_offset
             guild = self.bot.get_guild(Sid.alu)
             bperson = guild.get_member(row.id)
             if bperson is None:
@@ -252,16 +253,16 @@ class Birthday(commands.Cog):
                     answer_text = f'Chat, today is {bperson.mention}\'s birthday !'
                     if bdate.year != 1900:
                         answer_text += f'{bperson.display_name} is now {now_date.year - bdate.year} years old !'
-                    em = Embed(title=f'CONGRATULATIONS !!! {Ems.peepoRose * 3}', color=bperson.color)
-                    em.set_footer(
+                    e = discord.Embed(title=f'CONGRATULATIONS !!! {Ems.peepoRose * 3}', color=bperson.color)
+                    e.set_footer(
                         text=(
                             f'Today is {bdate_str(bdate)}; Timezone: {row.tzone}\n'
                             f'Use `$help birthday` to set up your birthday\nWith love, {guild.me.display_name}'
                         )
                     )
-                    em.set_image(url=bperson.display_avatar.url)
-                    em.add_field(name=f'Dear {bperson.display_name} !', inline=False, value=get_congratulation_text())
-                    await self.bot.get_channel(Cid.bday_notifs).send(content=answer_text, embed=em)
+                    e.set_image(url=bperson.display_avatar.url)
+                    e.add_field(name=f'Dear {bperson.display_name} !', inline=False, value=get_congratulation_text())
+                    await self.bot.get_channel(Cid.bday_notifs).send(content=answer_text, embed=e)
             else:
                 if bday_rl in bperson.roles:
                     await bperson.remove_roles(bday_rl)

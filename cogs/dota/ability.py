@@ -1,7 +1,3 @@
-"""
-The MIT License (MIT)
-
-"""
 from .cache import KeyCache
 from .const import *
 
@@ -55,16 +51,13 @@ ability_keys_cache = AbilityKeyCache()
 
 
 async def iconurl_by_id(value: int) -> str:
-    """
-    Get ability icon url by id
-    """
+    """Get ability icon url by id"""
     data = await ability_keys_cache.data
     return data['iconurl_by_id'].get(value, MANGO_ICON)
 
 
 async def name_by_id(value: int) -> str:
-    """
-    Get ability name by its id
+    """Get ability name by its id
 
     Currently only return data on talents and None for everything else,
     bcs we do not need anything else for now

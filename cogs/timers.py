@@ -1,8 +1,7 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from discord import Embed
+import discord
 from discord.ext import commands, tasks
 from numpy.random import randint, seed
 
@@ -116,7 +115,7 @@ async def get_rule_text(pool: Pool):
 
 
 class Timers(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
     async def cog_load(self) -> None:
@@ -142,8 +141,8 @@ class Timers(commands.Cog):
     async def timer_work(self, etitle, clr, dscr, rlimit=2, msg_num=10):
         if randint(1, 100 + 1) > rlimit or await self.check_amount_messages(msg_amount=msg_num):
             return
-        embed = Embed(title=etitle, color=clr, description=dscr)
-        return await self.bot.get_channel(Cid.general).send(embed=embed)
+        e = discord.Embed(title=etitle, color=clr, description=dscr)
+        return await self.bot.get_channel(Cid.general).send(embed=e)
 
     @tasks.loop(minutes=87)
     async def daily_reminders(self):
@@ -188,5 +187,5 @@ class Timers(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Timers(bot))

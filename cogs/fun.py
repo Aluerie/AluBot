@@ -1,92 +1,87 @@
 from __future__ import annotations
-
-import re
 from typing import TYPE_CHECKING, Optional, Literal
 
-from discord import (
-    ButtonStyle, Embed, File, InteractionType, Member, TextChannel,
-    app_commands, errors, utils,
-)
+import re
+
+import discord
+from discord import app_commands
 from discord.ext import commands
-from discord.ext.commands import Range
-from discord.ui import Button, View, button
 from numpy.random import randint, choice
 
 from .utils.var import Clr, Ems, Uid, Cid, Sid, Rgx
 from .utils.webhook import user_webhook, check_msg_react
 
 if TYPE_CHECKING:
-    from discord import Message, Interaction
     from .utils.bot import AluBot
     from .utils.context import Context
 
 
-class RPSView(View):
+class RPSView(discord.ui.View):
     def __init__(
             self,
             *,
-            players: [Member, Member],
-            message: Optional[Message] = None,
+            players: [discord.Member, discord.Member],
+            message: Optional[discord.Message] = None,
     ):
         super().__init__()
-        self.players = players
-        self.message = message
+        self.players: [discord.Member, discord.Member] = players
+        self.message: Optional[discord.Message] = message
 
         self.choices = [None, None]
 
     async def on_timeout(self) -> None:
-        embed = self.message.embeds[0]
-        embed.add_field(
+        e = self.message.embeds[0]
+        e.add_field(
             name='Timeout',
             value='Sorry, it is been too long, game is over in Draw due to timeout.'
         )
-        await self.message.edit(embed=embed, view=None)
+        await self.message.edit(embed=e, view=None)
 
     async def bot_choice_edit(self):
         self.choices[1] = choice(self.all_choices)
         await self.edit_embed_player_choice(1)
 
     @staticmethod
-    def choice_name(btn_: Button):
+    def choice_name(btn_: discord.ui.Button):
         return f'{btn_.emoji} {btn_.label}'
 
     @property
     def all_choices(self):
-        return [self.choice_name(b) for b in self.children if isinstance(b, Button)]
+        return [self.choice_name(b) for b in self.children if isinstance(b, discord.ui.Button)]
 
     async def edit_embed_player_choice(self, player_index: Literal[0, 1]):
-        embed = self.message.embeds[0]
-        embed.set_field_at(
+        e = self.message.embeds[0]
+        e.set_field_at(
             2,
-            name=embed.fields[2].name,
+            name=e.fields[2].name,
             value=(
-                embed.fields[2].value +
+                e.fields[2].value +
                 f'\n● Player {1 + player_index} {self.players[player_index].mention} has made their choice'
             ),
             inline=False
         )
-        await self.message.edit(embed=embed)
+        await self.message.edit(embed=e)
 
-    async def interaction_check(self, ntr: Interaction) -> bool:
+    async def interaction_check(self, ntr: discord.Interaction) -> bool:
         if ntr.user and ntr.user in self.players:
             return True
         else:
-            em = Embed(description='Sorry! This game dialog is not for you.', colour=Clr.error)
-            await ntr.response.send_message(embed=em, ephemeral=True)
+            e = discord.Embed(description='Sorry! This game dialog is not for you.', colour=Clr.error)
+            await ntr.response.send_message(embed=e, ephemeral=True)
             return False
 
-    async def rps_button_callback(self, ntr: Interaction, btn: Button):
+    async def rps_button_callback(self, ntr: discord.Interaction, btn: discord.ui.Button):
         outcome_list = ['Draw', f'{self.players[0].mention} wins', f'{self.players[1].mention} wins']
 
         player_index = self.players.index(ntr.user)
 
         if self.choices[player_index] is not None:
-            em = Embed(colour=Clr.error, description=f'You\'ve already chosen **{self.choices[player_index]}**')
-            await ntr.response.send_message(embed=em, ephemeral=True)
+            e = discord.Embed(colour=Clr.error, description=f'You\'ve already chosen **{self.choices[player_index]}**')
+            await ntr.response.send_message(embed=e, ephemeral=True)
         else:
             self.choices[player_index] = self.choice_name(btn)
-            em = Embed(colour=Clr.prpl, description=f'You\'ve chosen **{self.choice_name(btn)}**')
-            await ntr.response.send_message(embed=em, ephemeral=True)
+            e = discord.Embed(colour=Clr.prpl, description=f'You\'ve chosen **{self.choice_name(btn)}**')
+            await ntr.response.send_message(embed=e, ephemeral=True)
             await self.edit_embed_player_choice(player_index)
 
         if self.choices[1-player_index] is not None:
@@ -131,29 +126,30 @@ class RPSView(View):
             await self.message.edit(embed=em_game, view=None)
             self.stop()
 
-    @button(label='Rock', emoji='🪨', style=ButtonStyle.red)
-    async def rock_button(self, ntr: Interaction, btn: Button):
+    @discord.ui.button(label='Rock', emoji='🪨', style=discord.ButtonStyle.red)
+    async def rock_button(self, ntr: discord.Interaction, btn: discord.ui.Button):
         await self.rps_button_callback(ntr, btn)
 
-    @button(label='Paper', emoji='🗞️', style=ButtonStyle.green)
-    async def paper_button(self, ntr: Interaction, btn: Button):
+    @discord.ui.button(label='Paper', emoji='🗞️', style=discord.ButtonStyle.green)
+    async def paper_button(self, ntr: discord.Interaction, btn: discord.ui.Button):
         await self.rps_button_callback(ntr, btn)
 
-    @button(label='Scissors', emoji='✂', style=ButtonStyle.blurple)
-    async def scissors_button(self, ntr: Interaction, btn: Button):
+    @discord.ui.button(label='Scissors', emoji='✂', style=discord.ButtonStyle.blurple)
+    async def scissors_button(self, ntr: discord.Interaction, btn: discord.ui.Button):
         await self.rps_button_callback(ntr, btn)
 
 
 class FunThings(commands.Cog, name='Fun'):
-    """
-    Commands to have fun with
-    """
-    def __init__(self, bot):
+    """Commands to have fun with"""
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.help_emote = Ems.FeelsDankMan
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.FeelsDankMan)
 
     @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps'])
-    async def rps(self, ctx: Context, member: Member):
+    async def rps(self, ctx: Context, member: discord.Member):
         """Rock Paper Scissors game with @member"""
         if member == ctx.author:
             raise commands.BadArgument('You cannot challenge yourself in a Rock Paper Scissors game')
@@ -161,12 +157,12 @@ class FunThings(commands.Cog, name='Fun'):
             raise commands.BadArgument('I\'m afraid other bots do not know how to play this game')
 
         players = [ctx.author, member]
-        em = Embed(title='Rock Paper Scissors Game', colour=Clr.prpl)
-        em.add_field(name='Player 1', value=f'{players[0].mention}')
-        em.add_field(name='Player 2', value=f'{players[1].mention}')
-        em.add_field(name='Game State Log', value='● Both players need to choose their item', inline=False)
+        e = discord.Embed(title='Rock Paper Scissors Game', colour=Clr.prpl)
+        e.add_field(name='Player 1', value=f'{players[0].mention}')
+        e.add_field(name='Player 2', value=f'{players[1].mention}')
+        e.add_field(name='Game State Log', value='● Both players need to choose their item', inline=False)
         view = RPSView(players=players)
-        view.message = await ctx.reply(embed=em, view=view)
+        view.message = await ctx.reply(embed=e, view=view)
         if member.bot:
             await view.bot_choice_edit()
 
@@ -177,14 +173,14 @@ class FunThings(commands.Cog, name='Fun'):
     async def coinflip(self, ctx):
         """Flip a coin """
         word = 'Heads' if randint(2) == 0 else 'Tails'
-        return await ctx.reply(content=word, file=File(f'media/{word}.png'))
+        return await ctx.reply(content=word, file=discord.File(f'media/{word}.png'))
 
     @commands.Cog.listener()
-    async def on_message(self, message: Message):
+    async def on_message(self, message: discord.Message):
         if message.author.id in [Uid.bot, Uid.yen]:
             return
 
-        async def work_non_command_mentions(msg: Message):
+        async def work_non_command_mentions(msg: discord.Message):
             """for now there is only blush and question marks"""
             # todo: maybe some chat AI or something
             if msg.guild and msg.guild.me in msg.mentions:
@@ -199,10 +195,10 @@ class FunThings(commands.Cog, name='Fun'):
                             await msg.add_reaction(r)
         await work_non_command_mentions(message)
 
-        async def bots_in_lobby(msg: Message):
+        async def bots_in_lobby(msg: discord.Message):
             if msg.channel.id == Cid.general:
                 text = None
-                if msg.interaction is not None and msg.interaction.type == InteractionType.application_command:
+                if msg.interaction is not None and msg.interaction.type == discord.InteractionType.application_command:
                     text = 'Slash-commands'
                 if msg.author.bot and not msg.webhook_id:
                     text = 'Bots'
@@ -210,7 +206,7 @@ class FunThings(commands.Cog, name='Fun'):
                     await msg.channel.send('{0} in {1} ! {2} {2} {2}'.format(text, msg.channel.mention, Ems.Ree))
         await bots_in_lobby(message)
 
-        async def weebs_out(msg: Message):
+        async def weebs_out(msg: discord.Message):
             if msg.channel.id == Cid.weebs and randint(1, 100 + 1) < 7:
                 await self.bot.get_channel(Cid.weebs).send(
                     '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
@@ -220,15 +216,15 @@ class FunThings(commands.Cog, name='Fun'):
                 )
         await weebs_out(message)
 
-        async def ree_the_oof(msg: Message):
+        async def ree_the_oof(msg: discord.Message):
             if "Oof" in msg.content:
                 try:
                     await msg.add_reaction(Ems.Ree)
-                except errors.Forbidden:
+                except discord.errors.Forbidden:
                     await msg.delete()
         await ree_the_oof(message)
 
-        async def random_comfy_react(msg: Message):
+        async def random_comfy_react(msg: discord.Message):
             roll = randint(1, 300 + 1)
             if roll < 2:
                 try:
@@ -257,8 +253,8 @@ class FunThings(commands.Cog, name='Fun'):
         answer_text = f'{str(rand_emoji)} ' * 3
         emot_ch = self.bot.get_channel(Cid.emote_spam)
         await emot_ch.send(answer_text)
-        em = Embed(colour=Clr.prpl, description=f'I sent {answer_text} into {emot_ch.mention}')
-        await ctx.reply(embed=em, ephemeral=True, delete_after=10)
+        e = discord.Embed(colour=Clr.prpl, description=f'I sent {answer_text} into {emot_ch.mention}')
+        await ctx.reply(embed=e, ephemeral=True, delete_after=10)
         if not ctx.interaction:
             await ctx.message.delete()
 
@@ -269,7 +265,7 @@ class FunThings(commands.Cog, name='Fun'):
         """Send apuband emote combo"""
         guild = self.bot.get_guild(Sid.alu)
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
-        content = ' '.join([str(utils.get(guild.emojis, name=e)) for e in emote_names])
+        content = ' '.join([str(discord.utils.get(guild.emojis, name=e)) for e in emote_names])
         await ctx.channel.send(content=content)
         if ctx.interaction:
             await ctx.reply(content=f'Nice {Ems.DankApprove}', ephemeral=True)
@@ -280,7 +276,7 @@ class FunThings(commands.Cog, name='Fun'):
         description='Roll an integer from 1 to `max_roll_number`'
     )
     @app_commands.describe(max_roll_number="Max limit to roll")
-    async def roll(self, ctx, max_roll_number: Range[int, 1, None]):
+    async def roll(self, ctx, max_roll_number: commands.Range[int, 1, None]):
         """Roll an integer from 1 to `max_roll_number` ;"""
         await ctx.reply(randint(1, max_roll_number + 1))
 
@@ -292,14 +288,13 @@ class FunThings(commands.Cog, name='Fun'):
     @app_commands.describe(text="Enter text to speak")
     async def echo(
             self,
-            ctx: commands.Context,
-            channel: Optional[TextChannel] = None,
+            ctx: Context,
+            channel: Optional[discord.TextChannel] = None,
             *,
-            text: str = f'Allo'
+            text: Optional[str] = 'Allo'
     ):
-        """
-        Send `text` to `#channel` and delete your invoking message, so it looks like \
-        the bot is speaking on its own ;
+        """Send `text` to `#channel` and delete your invoking message,
+        so it looks like the bot is speaking on its own.
         """
         ch = channel or ctx.channel
         if ch.id in [Cid.emote_spam, Cid.comfy_spam]:
@@ -328,7 +323,7 @@ class FunThings(commands.Cog, name='Fun'):
         description="Emotializes your text into standard emotes"
     )
     @app_commands.describe(text="Text that will be converted into emotes")
-    async def emoteit(self, ctx, *, text: str):
+    async def emoteit(self, ctx: Context, *, text: str):
         """Emotializes your text into standard emotes"""
         answer = ''
         skip_mode = 0
@@ -345,10 +340,10 @@ class FunThings(commands.Cog, name='Fun'):
                 answer += letter
                 continue
 
-            emotialize_dict = {  # [f'{chr(0x30 + i)}{chr(0x20E3)}' for i in range(10)] < also numbers but from chars
-                ' ': ' ', '!': ':grey_exclamation:', '?': ':grey_question:', '0': '0️⃣', '1': '1️⃣',
-                '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '5️⃣', '6': '6️⃣', '7': '7️⃣', '8': '8️⃣', '9': '9️⃣'
-            }
+            # [f'{chr(0x30 + i)}{chr(0x20E3)}' for i in range(10)] < also numbers but from chars
+            emotialize_dict = {
+                ' ': ' ', '!': '\N{WHITE EXCLAMATION MARK ORNAMENT}', '?': '\N{WHITE QUESTION MARK ORNAMENT}'
+            } | {str(i): n for i, n in enumerate(Ems.phone_numbers)}
             alphabet = [  # maybe make char one as well one day
                 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
                 'u', 'v', 'w', 'x', 'y', 'z'

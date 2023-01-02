@@ -133,16 +133,10 @@ CREATE TABLE IF NOT EXISTS lol_messages (
 
 CREATE TABLE IF NOT EXISTS reminders (
     id SERIAL PRIMARY KEY,
-    name TEXT,
-    userid BIGINT,
-    channelid BIGINT,
-    dtime TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS todonotes (
-    id SERIAL PRIMARY KEY,
-    name TEXT,
-    userid BIGINT
+    event TEXT,
+    expires TIMESTAMP,
+    created TIMESTAMP DEFAULT (now() at time zone 'utc'),
+    extra JSONB DEFAULT ('{}'::jsonb)
 );
 
 CREATE TABLE IF NOT EXISTS afknotes (

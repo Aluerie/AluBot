@@ -1,11 +1,11 @@
 from __future__ import annotations
-
-from datetime import timezone, time
 from typing import TYPE_CHECKING
 
-import regex
-from discord import AuditLogAction, Embed, NotFound, User
+import datetime
+
+import discord
 from discord.ext import commands, tasks
+import regex
 
 from .utils.formats import inline_wordbyword_diff
 from .utils.var import Sid, Ems, Cid, Rgx, Clr, Rid
@@ -15,11 +15,13 @@ if TYPE_CHECKING:
 
 
 class Logging(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
+
+    async def cog_load(self) -> None:
         self.stonerole_check.start()
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.stonerole_check.cancel()
 
     @commands.Cog.listener()
@@ -27,20 +29,20 @@ class Logging(commands.Cog):
         member = self.bot.get_guild(Sid.alu).get_member(after.id)
         if member is None:
             return
-        em = Embed(colour=member.colour)
-        em.set_author(name=member.display_name, icon_url=before.display_avatar.url)
+        e = discord.Embed(colour=member.colour)
+        e.set_author(name=member.display_name, icon_url=before.display_avatar.url)
         if before.avatar != after.avatar:
-            em.title = f'User\'s avatar was changed {Ems.PepoDetective}'
-            em.description = '**Before:**  thumbnail to the right\n**After:** image below'
-            em.set_thumbnail(url=before.display_avatar.url)
-            em.set_image(url=after.display_avatar.url)
+            e.title = f'User\'s avatar was changed {Ems.PepoDetective}'
+            e.description = '**Before:**  thumbnail to the right\n**After:** image below'
+            e.set_thumbnail(url=before.display_avatar.url)
+            e.set_image(url=after.display_avatar.url)
         elif before.name != after.name:
-            em.title = f'User\'s global name was changed {Ems.PepoDetective}'
-            em.description = f'**Before:** {before.name}\n**After:** {after.name}'
+            e.title = f'User\'s global name was changed {Ems.PepoDetective}'
+            e.description = f'**Before:** {before.name}\n**After:** {after.name}'
         elif before.discriminator != after.discriminator:
-            em.title = f'User\'s discriminator was changed {Ems.PepoDetective}'
-            em.description = f'**Before:** {before.discriminator}\n**After:** {after.discriminator}'
-        return await self.bot.get_channel(Cid.bot_spam).send(embed=em)
+            e.title = f'User\'s discriminator was changed {Ems.PepoDetective}'
+            e.description = f'**Before:** {before.discriminator}\n**After:** {after.discriminator}'
+        return await self.bot.get_channel(Cid.bot_spam).send(embed=e)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
@@ -51,15 +53,13 @@ class Logging(commands.Cog):
         if before.content == after.content:  # most likely some link embed link action
             return
 
-        em = Embed(
-            colour=0x00BFFF,
-            description=inline_wordbyword_diff(before.content, after.content)
-        ).set_author(
+        e = discord.Embed(description=inline_wordbyword_diff(before.content, after.content), colour=0x00BFFF)
+        e.set_author(
             name=f'{after.author.display_name} edit in #{after.channel.name}',
             icon_url=after.author.display_avatar.url,
             url=after.jump_url  # TODO: this link is not jumpable from mobile but we dont care, right ?
         )
-        await self.bot.get_channel(Cid.logs).send(embed=em)
+        await self.bot.get_channel(Cid.logs).send(embed=e)
 
     @commands.Cog.listener()
     async def on_message_delete(self, msg):
@@ -70,15 +70,13 @@ class Logging(commands.Cog):
         if msg.content.startswith('$'):
             return
 
-        em = Embed(
-            colour=0xB22222,
-            description=msg.content
-        ).set_author(
+        e = discord.Embed(description=msg.content, colour=0xB22222)
+        e.set_author(
             name=f'{msg.author.display_name}\'s del in #{msg.channel.name}',
             icon_url=msg.author.display_avatar.url
         )
         files = [await item.to_file() for item in msg.attachments]
-        return await self.bot.get_channel(Cid.logs).send(embed=em, files=files)
+        return await self.bot.get_channel(Cid.logs).send(embed=e, files=files)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -86,40 +84,24 @@ class Logging(commands.Cog):
             return
 
         if before.premium_since is None and after.premium_since is not None:
-            em = Embed(
-                colour=Clr.prpl,
-                title=f"{before.display_name} just boosted the server !",
-                description='{0} {0} {0}'.format(Ems.PogChampPepe)
-            ).set_author(
-                name=before.display_name,
-                icon_url=before.display_avatar.url
-            ).set_thumbnail(
-                url=before.display_avatar.url
-            )
+            e = discord.Embed(title=f"{before.display_name} just boosted the server !", colour=Clr.prpl)
+            e. description = '{0} {0} {0}'.format(Ems.PogChampPepe)
+            e.set_author(name=before.display_name, icon_url=before.display_avatar.url)
+            e.set_thumbnail(url=before.display_avatar.url)
             for ch_id in [Cid.general, Cid.logs]:
-                await self.bot.get_channel(ch_id).send(embed=em)
+                await self.bot.get_channel(ch_id).send(embed=e)
 
         added_role = list(set(after.roles) - set(before.roles))
         if added_role and added_role[0].id not in Rid.ignored_for_logs:
-            em = Embed(
-                colour=0x00ff7f,
-                description=f'**Role added:** {added_role[0].mention}'
-            ).set_author(
-                name=f'{after.display_name}\'s roles changed',
-                icon_url=after.display_avatar.url
-            )
-            return await self.bot.get_channel(Cid.logs).send(embed=em)
+            e = discord.Embed(description=f'**Role added:** {added_role[0].mention}', colour=0x00ff7f)
+            e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
+            return await self.bot.get_channel(Cid.logs).send(embed=e)
 
         removed_role = list(set(before.roles) - set(after.roles))
         if removed_role and removed_role[0].id not in Rid.ignored_for_logs:
-            em = Embed(
-                colour=0x006400,
-                description=f'**Role removed:** {removed_role[0].mention}'
-            ).set_author(
-                name=f'{after.display_name}\'s roles changed',
-                icon_url=after.display_avatar.url
-            )
-            return await self.bot.get_channel(Cid.logs).send(embed=em)
+            e = discord.Embed(description=f'**Role removed:** {removed_role[0].mention}', colour=0x006400)
+            e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
+            return await self.bot.get_channel(Cid.logs).send(embed=e)
 
         if before.bot:
             return
@@ -131,39 +113,34 @@ class Logging(commands.Cog):
 
             query = 'UPDATE users SET name=$1 WHERE id=$2'
             await self.bot.pool.execute(query, after.display_name, after.id)
-            em = Embed(
-                colour=after.color,
-                title=f'User\'s server nickname was changed {Ems.PepoDetective}',
-                description=f'**Before:** {before.nick}\n**After:** {after.nick}'
-            ).set_author(
-                name=before.name,
-                icon_url=before.display_avatar.url
-            )
-            await self.bot.get_channel(Cid.bot_spam).send(embed=em)
+            e = discord.Embed(title=f'User\'s server nickname was changed {Ems.PepoDetective}', colour=after.color)
+            e.description = f'**Before:** {before.nick}\n**After:** {after.nick}'
+            e.set_author(name=before.name, icon_url=before.display_avatar.url)
+            await self.bot.get_channel(Cid.bot_spam).send(embed=e)
 
             guild = self.bot.get_guild(Sid.alu)
             stone_rl = guild.get_role(Rid.rolling_stone)
             if after.nick and 'Stone' in after.nick:
-                em = Embed(colour=Clr.prpl)
-                em.description = f'{after.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
-                await self.bot.get_channel(Cid.bot_spam).send(embed=em)
+                e = discord.Embed(colour=Clr.prpl)
+                e.description = f'{after.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
+                await self.bot.get_channel(Cid.bot_spam).send(embed=e)
                 await after.add_roles(stone_rl)
             else:
                 await after.remove_roles(stone_rl)
 
-    @tasks.loop(time=time(hour=12, minute=57, tzinfo=timezone.utc))
+    @tasks.loop(time=datetime.time(hour=12, minute=57, tzinfo=datetime.timezone.utc))
     async def stonerole_check(self):
         guild = self.bot.get_guild(Sid.alu)
         stone_rl = guild.get_role(Rid.rolling_stone)
-        async for entry in guild.audit_logs(action=AuditLogAction.member_update):
-            if isinstance(entry.target, User) or stone_rl in entry.target.roles:
+        async for entry in guild.audit_logs(action=discord.AuditLogAction.member_update):
+            if isinstance(entry.target, discord.User) or stone_rl in entry.target.roles:
                 return
             if 'Stone' in entry.target.display_name:
-                em = Embed(
+                e = discord.Embed(
                     colour=stone_rl.colour,
                     description=f'{entry.target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
                 )
-                await self.bot.get_channel(Cid.bot_spam).send(embed=em)
+                await self.bot.get_channel(Cid.bot_spam).send(embed=e)
                 await entry.target.add_roles(stone_rl)
             else:
                 await entry.target.remove_roles(stone_rl)
@@ -189,24 +166,22 @@ class CommandLogging(commands.Cog):
         if ctx.interaction:
             try:
                 jump_url = (await ctx.interaction.original_response()).jump_url
-            except NotFound:
+            except discord.NotFound:
                 jump_url = None
             cmd_text = f'/{ctx.command.qualified_name}'
         else:
             jump_url = ctx.message.jump_url
             cmd_text = ctx.message.content
 
-        embed = Embed(
-            colour=ctx.author.colour,
-            description=f'{cmd_text}\n{cmd_kwargs}'
-        ).set_author(
+        e = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=ctx.author.colour)
+        e.set_author(
             icon_url=ctx.author.display_avatar.url,
             name=f'{ctx.author.display_name} used command in {ctx.channel.name}',
             url=jump_url
         )
-        await self.bot.get_channel(Cid.logs).send(embed=embed)
+        await self.bot.get_channel(Cid.logs).send(embed=e)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Logging(bot))
     await bot.add_cog(CommandLogging(bot))

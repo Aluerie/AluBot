@@ -27,6 +27,7 @@ class Plural:
 
         >>> format(Plural(1), 'child|children')  # '1 child'
         >>> format(Plural(8), 'week|weeks')  # '8 weeks'
+        >>>> f'{Plural(3):reminder}' # 3 reminders
     """
     def __init__(self, value: int):
         self.value: int = value
@@ -131,6 +132,9 @@ def human_timedelta(
     # accurate once you go over 1 week in terms of accuracy since you have to
     # hardcode a month as 30 or 31 days.
     # A query like "11 months" can be interpreted as "11 months and 6 days"
+    # ---------------------------------------------------------------------
+    # if you ever need probably (?)slightly faster and more obvious `divmod` implementation,
+    # then `?tag format timedelta` in dpy guild
     if dt > now:
         delta = relativedelta(dt, now)
         output_suffix = ''
@@ -190,6 +194,8 @@ def format_dt_tdR(dt: datetime.datetime) -> str:
 
     "22:57 17/05/2015 5 Years Ago"
     """
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
     return f"{format_dt(dt, 't')} {format_dt(dt, 'd')} ({format_dt(dt, 'R')})"
 
 

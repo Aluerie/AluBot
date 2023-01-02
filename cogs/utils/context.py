@@ -2,53 +2,49 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional, Union
 
-from discord import ButtonStyle, Embed
+import discord
 from discord.ext import commands
-from discord.ui import View, button
 
 from .var import Clr
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
     from asyncpg import Pool
-    from discord import (
-        Button, Guild, Member, Message, Interaction, TextChannel, Thread, VoiceChannel
-    )
     from .bot import AluBot
 
 
 # Todo rewrite this to please SolsticeShard
-class ConfirmationView(View):
+class ConfirmationView(discord.ui.View):
     def __init__(self, *, timeout: float, author_id: int, ctx: Context, delete_after: bool) -> None:
         super().__init__(timeout=timeout)
         self.value: Optional[bool] = None
         self.delete_after: Optional[bool] = delete_after
         self.author_id: Optional[int] = author_id
         self.ctx: Optional[Context] = ctx
-        self.message: Optional[Message] = None
+        self.message: Optional[discord.Message] = None
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user and interaction.user.id == self.author_id:
             return True
         else:
-            em = Embed(description='Sorry! This confirmation dialog is not for you.', colour=Clr.error)
-            await interaction.response.send_message(embed=em, ephemeral=True)
+            e = discord.Embed(description='Sorry! This confirmation dialog is not for you.', colour=Clr.error)
+            await interaction.response.send_message(embed=e, ephemeral=True)
             return False
 
     async def on_timeout(self) -> None:
         if self.delete_after and self.message:
             await self.message.delete()
 
-    @button(label='Confirm', style=ButtonStyle.green)  # type: ignore
-    async def confirm(self, ntr: Interaction, _: Button):
+    @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
+    async def confirm(self, ntr: discord.Interaction, _: discord.ui.Button):
         self.value = True
         await ntr.response.defer()
         if self.delete_after and self.message:
             await self.message.delete()
         self.stop()
 
-    @button(label='Cancel', style=ButtonStyle.red)  # type: ignore
-    async def cancel(self, ntr: Interaction, _: Button):
+    @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
+    async def cancel(self, ntr: discord.Interaction, _: discord.ui.Button):
         self.value = False
         await ntr.response.defer()
         if self.delete_after and self.message:
@@ -70,10 +66,10 @@ class Context(commands.Context):
     async def prompt(
             self,
             *,
-            content: str = None,  # type: ignore
-            embed: Embed = None,  # type: ignore
-            timeout: float = 60.0,
-            delete_after: bool = True,
+            content: Optional[str] = None,
+            embed: Optional[discord.Embed] = None,
+            timeout: Optional[float] = 60.0,
+            delete_after: Optional[bool] = True,
             author_id: Optional[int] = None,
     ) -> Optional[bool]:
         """
@@ -128,16 +124,16 @@ class Context(commands.Context):
                 else:
                     ans += f'\n`{get_command_signature(c)}`'
 
-            em = Embed(colour=Clr.error, description=ans)
-            em.set_author(name='SubcommandNotFound')
-            em.set_footer(text=f'`{prefix}help {self.command.name}` for more info')
-            return await self.reply(embed=em, ephemeral=True)
+            e = discord.Embed(colour=Clr.error, description=ans)
+            e.set_author(name='SubcommandNotFound')
+            e.set_footer(text=f'`{prefix}help {self.command.name}` for more info')
+            return await self.reply(embed=e, ephemeral=True)
 
     async def send_test(self):
         await self.reply('test test')
 
 
 class GuildContext(Context):
-    author: Member
-    guild: Guild
-    channel: Union[VoiceChannel, TextChannel, Thread]
+    author: discord.Member
+    guild: discord.Guild
+    channel: Union[discord.VoiceChannel, discord.TextChannel, discord.Thread]

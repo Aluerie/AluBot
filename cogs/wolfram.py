@@ -1,10 +1,11 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from io import BytesIO
-from typing import TYPE_CHECKING
 from urllib import parse as urlparse
 
-from discord import app_commands, File
+import discord
+from discord import app_commands
 from discord.ext import commands
 
 from config import WOLFRAM_TOKEN
@@ -16,19 +17,22 @@ if TYPE_CHECKING:
 
 
 class WolframAlpha(commands.Cog):
-    """
-    Query Wolfram Alpha within the bot.
+    """Query Wolfram Alpha within the bot.
 
     Probably the best computational intelligence service ever.
     [wolframalpha.com](https://www.wolframalpha.com/)
     """
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.wa_basic_url = \
-            f'https://api.wolframalpha.com/v1/simple?appid={WOLFRAM_TOKEN}' \
+        self.wa_basic_url = (
+            f'https://api.wolframalpha.com/v1/simple?appid={WOLFRAM_TOKEN}' 
             f'&background=black&foreground=white&layout=labelbar&i='
+        )
         self.wa_short_url = f"https://api.wolframalpha.com/v1/result?appid={WOLFRAM_TOKEN}&i="
-        self.help_emote = Ems.bedNerdge
+
+    @property
+    def help_emote(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji.from_str(Ems.bedNerdge)
 
     @commands.hybrid_command(
         name="wolfram_long",
@@ -43,7 +47,7 @@ class WolframAlpha(commands.Cog):
         question_url = f'{self.wa_basic_url}{urlparse.quote(query)}'
         async with self.bot.session.get(question_url) as resp:
             await ctx.reply(
-                f"```py\n{query}```", file=File(fp=BytesIO(await resp.read()), filename="WolframAlpha.png")
+                f"```py\n{query}```", file=discord.File(fp=BytesIO(await resp.read()), filename="WolframAlpha.png")
             )
 
     @commands.hybrid_command(
@@ -61,5 +65,5 @@ class WolframAlpha(commands.Cog):
             await ctx.reply(f"```py\n{query}```{await resp.text()}")
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(WolframAlpha(bot))

@@ -1,19 +1,19 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 import asyncio
-import platform
 from asyncio.proactor_events import _ProactorBasePipeTransport
-from datetime import datetime, timedelta, timezone
+import datetime
 from functools import wraps
 import logging
-from typing import TYPE_CHECKING
+import platform
 
 import asyncpraw
 from asyncprawcore import AsyncPrawcoreException
-from discord import Embed
+import discord
 from discord.ext import commands, tasks
 
-from .utils.var import Lmt, Cid, Clr
+from .utils.var import Cid, Clr, Lmt
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -43,19 +43,15 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
     await comment.subreddit.load()  # DO NOT FORGET TO LOAD
     await comment.author.load()  # DO NOT FORGET TO LOAD
 
-    paginator = commands.Paginator(
-        prefix='',
-        suffix='',
-        max_size=Lmt.Embed.description,
-    )
+    paginator = commands.Paginator(max_size=Lmt.Embed.description, prefix='', suffix='')
     paginator.add_line(comment.body)
 
     embeds = [
-        Embed(
-            colour=0xFF4500,
+        discord.Embed(
             title=comment.submission.title[:256],
+            description=page,
             url=comment.submission.shortlink,
-            description=page
+            colour=Clr.reddit
         )
         for page in paginator.pages
     ]
@@ -68,12 +64,12 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
 
 
 class Reddit(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.userfeed.start()
 
     def cog_load(self) -> None:
         self.bot.ini_reddit()
+        self.userfeed.start()
 
     def cog_unload(self) -> None:
         self.userfeed.cancel()
@@ -88,9 +84,10 @@ class Reddit(commands.Cog):
                 async for comment in redditor.stream.comments(skip_existing=True, pause_after=0):
                     if comment is None:
                         continue
-                    dtime = datetime.fromtimestamp(comment.created_utc)
+                    dtime = datetime.datetime.fromtimestamp(comment.created_utc)
                     # IDK there was some weird bug with sending old messages after 2 months
-                    if datetime.now(timezone.utc) - dtime.replace(tzinfo=timezone.utc) < timedelta(days=7):
+                    if discord.utils.utcnow() - dtime.replace(tzinfo=datetime.timezone.utc) \
+                            < datetime.timedelta(days=7):
                         embeds = await process_comments(comment)
                         for item in embeds:
                             msg = await self.bot.get_channel(Cid.spam_me).send(embed=item)
@@ -111,5 +108,5 @@ class Reddit(commands.Cog):
         self.userfeed.restart()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Reddit(bot))

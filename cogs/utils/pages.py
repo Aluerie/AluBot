@@ -8,18 +8,17 @@ and quickly became arguably the best python library for discord API wrapping.
 
 Thus, I decided to switch to `discord.py` and so to bring pagination code here as well.
 
-Myself, I think it needs some huge rewriting,
+Even though... Myself, I think it needs some huge rewriting,
 but we should probably wait for discord.py to implement `.ext.pages`
 """
 
 from __future__ import annotations
-
-from io import BytesIO
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
-from discord import ButtonStyle, Embed, File, Interaction, Message, WebhookMessage, NotFound
-from discord.ext.commands import Bot, BadArgument
-from discord.ui import Button, Modal, View, TextInput
+from io import BytesIO
+
+import discord
+from discord.ext import commands
 
 from .context import Context
 from .var import Ems
@@ -28,15 +27,15 @@ if TYPE_CHECKING:
     from discord import Emoji, PartialEmoji
 
 
-class PaginatorSearchModal(Modal):
+class PaginatorSearchModal(discord.ui.Modal):
     def __init__(self, paginator, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.paginator: Paginator = paginator
         self.title = "Search Page by query"
 
-    search = TextInput(label="Search Query", required=True)
+    search = discord.ui.TextInput(label="Search Query", required=True)
 
-    async def on_submit(self, ntr: Interaction):
+    async def on_submit(self, ntr: discord.Interaction):
         a = self.search.value
 
         found_page = None
@@ -57,15 +56,15 @@ class PaginatorSearchModal(Modal):
         await self.paginator.goto_page(page_number=found_page, ntr=ntr)
 
 
-class PaginatorGotoModal(Modal):
+class PaginatorGotoModal(discord.ui.Modal):
     def __init__(self, paginator, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.paginator: Paginator = paginator
         self.title = "Goto Page"
 
-    goto = TextInput(label="Page Number", required=True)
+    goto = discord.ui.TextInput(label="Page Number", required=True)
 
-    async def on_submit(self, interaction: Interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         new_page = int(self.goto.value) - 1
         if new_page > self.paginator.page_count:
             new_page = self.paginator.page_count
@@ -74,13 +73,13 @@ class PaginatorGotoModal(Modal):
         await self.paginator.goto_page(page_number=new_page, ntr=interaction)
 
 
-class PaginatorButton(Button):
+class PaginatorButton(discord.ui.Button):
     def __init__(
         self,
         button_type: str,
         label: Optional[str] = None,
         emoji: Optional[Union[str, Emoji, PartialEmoji]] = None,
-        style: ButtonStyle = ButtonStyle.green,
+        style: discord.ButtonStyle = discord.ButtonStyle.green,
         loop_label: Optional[str] = None,
     ):
         super().__init__(
@@ -95,7 +94,7 @@ class PaginatorButton(Button):
         self.loop_label = self.label if not loop_label else loop_label
         self.paginator = None
 
-    async def callback(self, ntr: Interaction):
+    async def callback(self, ntr: discord.Interaction):
         if self.button_type == "index":
             modal = PaginatorGotoModal(self.paginator, title="Goto Page")
             return await ntr.response.send_modal(modal)
@@ -122,30 +121,30 @@ class Page:
     def __init__(
         self,
         content: Optional[str] = None,
-        embeds: Optional[List[Union[List[Embed], Embed]]] = None,
-        custom_view: Optional[View] = None,
-        files: Optional[List[File]] = None,
+        embeds: Optional[List[Union[List[discord.Embed], discord.Embed]]] = None,
+        custom_view: Optional[discord.ui.View] = None,
+        files: Optional[List[discord.File]] = None,
         title: Optional[str] = None
     ):
         if content is None and embeds is None:
-            raise BadArgument("A page cannot have both content and embeds equal to None.")
+            raise commands.BadArgument("A page cannot have both content and embeds equal to None.")
         self._content = content
         self._embeds = embeds or []
         self._custom_view = custom_view
         self._files = files or []
         self._title = title
 
-    async def callback(self, interaction: Optional[Interaction] = None):
+    async def callback(self, interaction: Optional[discord.Interaction] = None):
         pass
 
-    def update_files(self) -> Optional[List[File]]:
+    def update_files(self) -> Optional[List[discord.File]]:
         """Updates the files associated with the page by re-uploading them.
         Typically used when the page is changed."""
         for file in self._files:
             if isinstance(file.fp, BytesIO):  # BytesIO
                 fp = file.fp
                 fp.seek(0)
-                self._files[self._files.index(file)] = File(
+                self._files[self._files.index(file)] = discord.File(
                     fp,
                     filename=file.filename,
                     description=file.description,
@@ -153,7 +152,7 @@ class Page:
                 )
             else:  # local upload with `file.fp.name` str, bytes or os.PathLike object
                 with open(file.fp.name, "rb") as fp:  # type: ignore
-                    self._files[self._files.index(file)] = File(
+                    self._files[self._files.index(file)] = discord.File(
                         fp,  # type: ignore
                         filename=file.filename,
                         description=file.description,
@@ -170,27 +169,27 @@ class Page:
         self._content = value
 
     @property
-    def embeds(self) -> Optional[List[Union[List[Embed], Embed]]]:
+    def embeds(self) -> Optional[List[Union[List[discord.Embed], discord.Embed]]]:
         return self._embeds
 
     @embeds.setter
-    def embeds(self, value: Optional[List[Union[List[Embed], Embed]]]):
+    def embeds(self, value: Optional[List[Union[List[discord.Embed], discord.Embed]]]):
         self._embeds = value
 
     @property
-    def custom_view(self) -> Optional[View]:
+    def custom_view(self) -> Optional[discord.ui.View]:
         return self._custom_view
 
     @custom_view.setter
-    def custom_view(self, value: Optional[View]):
+    def custom_view(self, value: Optional[discord.ui.View]):
         self._custom_view = value
 
     @property
-    def files(self) -> Optional[List[File]]:
+    def files(self) -> Optional[List[discord.File]]:
         return self._files
 
     @files.setter
-    def files(self, value: Optional[List[File]]):
+    def files(self, value: Optional[List[discord.File]]):
         self._files = value
 
     @property
@@ -202,20 +201,20 @@ class Page:
         self._title = value
 
 
-class Paginator(View):
+class Paginator(discord.ui.View):
     def __init__(
         self,
-        pages: Union[List[Page], List[str], List[Union[List[Embed], Embed]]],
+        pages: Union[List[Page], List[str], List[Union[List[discord.Embed], discord.Embed]]],
         author_check=True,
         disable_on_timeout=True,
         loop_pages=True,
-        custom_view: Optional[View] = None,
+        custom_view: Optional[discord.ui.View] = None,
         timeout: Optional[float] = 180.0,
-        bot: Optional[Bot] = None,
+        bot: Optional[commands.Bot] = None,
     ) -> None:
         super().__init__(timeout=timeout)
         self.timeout: float = timeout
-        self.pages: Union[List[str], List[Page], List[Union[List[Embed], Embed]]] = pages
+        self.pages: Union[List[str], List[Page], List[Union[List[discord.Embed], discord.Embed]]] = pages
         self.current_page = 0
         self._page_number = self.current_page + 1
 
@@ -223,9 +222,9 @@ class Paginator(View):
         self.nav_buttons = {}
         self.disable_on_timeout = disable_on_timeout
         self.loop_pages = loop_pages
-        self.custom_view: View = custom_view
+        self.custom_view: discord.ui.View = custom_view
         self.bot = bot
-        self.message: Union[Message, WebhookMessage, None] = None
+        self.message: Union[discord.Message, discord.WebhookMessage, None] = None
 
         self.add_default_nav_buttons()
 
@@ -245,10 +244,10 @@ class Paginator(View):
             files = page.update_files()
             try:
                 await self.message.edit(view=self, attachments=files or [])
-            except NotFound:
+            except discord.NotFound:
                 pass  # message was already deleted or view was ephemeral or something
 
-    async def goto_page(self, page_number: int = 0, *, ntr: Optional[Interaction] = None) -> None:
+    async def goto_page(self, page_number: int = 0, *, ntr: Optional[discord.Interaction] = None) -> None:
         self.current_page = page_number
 
         self.update_nav_buttons()
@@ -271,7 +270,7 @@ class Paginator(View):
         else:
             await self.message.edit(content=page.content, embeds=page.embeds, attachments=files, view=self)
 
-    async def interaction_check(self, ntr: Interaction) -> bool:
+    async def interaction_check(self, ntr: discord.Interaction) -> bool:
         if self.usercheck:
             if self.user == ntr.user:
                 return True
@@ -285,18 +284,22 @@ class Paginator(View):
 
     def add_default_nav_buttons(self):
         default_nav_buttons = [
-            PaginatorButton("home", emoji="🏠", style=ButtonStyle.blurple),
-            PaginatorButton("prev", label="<", style=ButtonStyle.red, loop_label="↪"),
-            PaginatorButton("index", style=ButtonStyle.gray),
-            PaginatorButton("next", label=">", style=ButtonStyle.green, loop_label="↩"),
-            PaginatorButton("search", emoji="🔎", style=ButtonStyle.blurple),
+            PaginatorButton("home", emoji="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple),
+            PaginatorButton(
+                "prev", label="<", style=discord.ButtonStyle.red, loop_label="\N{RIGHTWARDS ARROW WITH HOOK}"
+            ),
+            PaginatorButton("index", style=discord.ButtonStyle.gray),
+            PaginatorButton(
+                "next", label=">", style=discord.ButtonStyle.green, loop_label="\N{LEFTWARDS ARROW WITH HOOK}"
+            ),
+            PaginatorButton("search", emoji="\N{RIGHT-POINTING MAGNIFYING GLASS}", style=discord.ButtonStyle.blurple),
         ]
         for button in default_nav_buttons:
             self.add_nav_button(button)
 
     def add_nav_button(self, button: PaginatorButton):
         self.nav_buttons[button.button_type] = {
-            "object": Button(
+            "object": discord.ui.Button(
                 style=button.style,
                 label=button.label
                 if button.label or button.emoji
@@ -336,27 +339,27 @@ class Paginator(View):
 
         return self.nav_buttons
 
-    def update_custom_view(self, custom_view: View):
-        if isinstance(self.custom_view, View):
+    def update_custom_view(self, custom_view: discord.ui.View):
+        if isinstance(self.custom_view, discord.ui.View):
             for item in self.custom_view.children:
                 self.remove_item(item)
         for item in custom_view.children:
             self.add_item(item)
 
     @staticmethod
-    def get_page_content(page: Union[Page, str, Embed, List[Embed]]) -> Page:
+    def get_page_content(page: Union[Page, str, discord.Embed, List[discord.Embed]]) -> Page:
         if isinstance(page, Page):
             return page
         elif isinstance(page, str):
             return Page(content=page, embeds=[], files=[])
-        elif isinstance(page, Embed):
+        elif isinstance(page, discord.Embed):
             return Page(content=None, embeds=[page], files=[])
-        elif isinstance(page, File):
+        elif isinstance(page, discord.File):
             return Page(content=None, embeds=[], files=[page])
         elif isinstance(page, List):
-            if all(isinstance(x, Embed) for x in page):
+            if all(isinstance(x, discord.Embed) for x in page):
                 return Page(content=None, embeds=page, files=[])
-            if all(isinstance(x, File) for x in page):
+            if all(isinstance(x, discord.File) for x in page):
                 return Page(content=None, embeds=[], files=page)
             else:
                 raise TypeError("All list items must be embeds or files.")
@@ -367,11 +370,11 @@ class Paginator(View):
 
     async def send(
         self,
-        ctx: Union[Interaction, Context],
+        ctx: Union[discord.Interaction, Context],
         ephemeral: bool = False,
-    ) -> Union[Message, WebhookMessage]:
-        if not isinstance(ctx, (Context, Interaction)):
-            raise TypeError(f"expected Interaction, Context not {ctx.__class__!r}")
+    ) -> Union[discord.Message, discord.WebhookMessage]:
+        if not isinstance(ctx, (Context, discord.Interaction)):
+            raise TypeError(f"Expected Interaction, Context not {ctx.__class__!r}")
 
         if ephemeral and (self.timeout >= 900 or self.timeout is None):
             raise ValueError(
@@ -389,7 +392,7 @@ class Paginator(View):
         if page_content.custom_view:
             self.update_custom_view(page_content.custom_view)
 
-        if isinstance(ctx, Interaction):
+        if isinstance(ctx, discord.Interaction):
             self.user = ctx.user
 
             if ctx.response.is_done():
@@ -422,9 +425,9 @@ class Paginator(View):
                 view=self
             )
 
-        if isinstance(msg, (Message, WebhookMessage)):
+        if isinstance(msg, (discord.Message, discord.WebhookMessage)):
             self.message = msg
-        elif isinstance(msg, Interaction):
+        elif isinstance(msg, discord.Interaction):
             self.message = await msg.original_response()
 
         return self.message

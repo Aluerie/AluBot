@@ -4,7 +4,7 @@
 Most of the code below is inspired/looked/learnt from @Rapptz\'s RoboDanny
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/reminder.py
 It's too good not to learn from for a pleb programmer like me.
-I had to rewrite half of the bot after reading Danny's `reminder.py` :D
+I had to rewrite half of the bot after reading @Danny's `reminder.py` :D
 """
 from __future__ import annotations
 

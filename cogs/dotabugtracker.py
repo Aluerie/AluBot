@@ -138,7 +138,7 @@ class TimeLine:
 class DotaBugtracker(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.retries = 0
+        self.retries: int = 0
 
     async def cog_load(self) -> None:
         self.bot.ini_github()
@@ -182,7 +182,7 @@ class DotaBugtracker(commands.Cog):
 
         # now about opened by Valve assignees issues
         for i in repo.get_issues(sort='created', state='open', since=dt):
-            if i.created_at < dt:
+            if i.created_at.replace(tzinfo=datetime.timezone.utc) < dt:
                 continue
             if i.user.login in assignees:
                 if i.number not in issue_dict:

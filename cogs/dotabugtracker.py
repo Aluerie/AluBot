@@ -182,6 +182,8 @@ class DotaBugtracker(commands.Cog):
 
         # now about opened by Valve assignees issues
         for i in repo.get_issues(sort='created', state='open', since=dt):
+            if i.created_at < dt:
+                continue
             if i.user.login in assignees:
                 if i.number not in issue_dict:
                     issue_dict[i.number] = TimeLine(issue=i)

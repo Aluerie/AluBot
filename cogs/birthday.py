@@ -101,7 +101,7 @@ class SetBirthdayFlags(commands.FlagConverter, case_insensitive=True):
 class Birthday(commands.Cog):
     """Set your birthday and get congratulations from the bot.
 
-    There is a special role in Irene's server \
+    There is a special role in Eileen's server \
     which on your birthday gives you a priority in the members list and makes the bot \
     congratulate you.
     """

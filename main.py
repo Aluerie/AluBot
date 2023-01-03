@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import asyncio
-import json
 import logging
 import sys
 import traceback
@@ -11,39 +10,11 @@ from pathlib import Path
 import asyncpg
 import click
 
+from cogs.utils.database import create_pool
 from cogs.utils.bot import AluBot, setup_logging
-from cogs.utils.database import DRecord
-from config import POSTGRES_URL
 
 if TYPE_CHECKING:
     pass
-
-
-async def create_pool() -> asyncpg.Pool:
-    def _encode_jsonb(value):
-        return json.dumps(value)
-
-    def _decode_jsonb(value):
-        return json.loads(value)
-
-    async def init(con):
-        await con.set_type_codec(
-            'jsonb',
-            schema='pg_catalog',
-            encoder=_encode_jsonb,
-            decoder=_decode_jsonb,
-            format='text',
-        )
-
-    return await asyncpg.create_pool(
-            POSTGRES_URL,
-            init=init,
-            command_timeout=60,
-            min_size=10,
-            max_size=10,
-            record_class=DRecord,
-            statement_cache_size=0
-        )
 
 
 async def bot_run(test: bool):
@@ -63,7 +34,7 @@ async def bot_run(test: bool):
 @click.group(invoke_without_command=True, options_metavar='[options]')
 @click.pass_context
 @click.option('--test', '-t', is_flag=True)
-def main(click_ctx, test):
+def main(click_ctx: click.Context, test: bool):
     """Launches the bot."""
     if click_ctx.invoked_subcommand is None:
         with setup_logging(test):

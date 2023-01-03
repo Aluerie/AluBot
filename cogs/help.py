@@ -38,7 +38,7 @@ def front_embed(ctx: Context):
     )
     e.add_field(name=f'{ctx.bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
     e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
-    e.add_field(name='Bot Owner', value=f'{ctx.bot.owner.name}')
+    e.add_field(name='Bot Owner', value=f'{ctx.bot.owner}')
     return e
 
 

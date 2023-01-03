@@ -227,7 +227,7 @@ class Lmt:
     class Embed:
         sum_all = 6000
         footer_text = 2048
-        title = 25
+        title = 256
         description = 4096
         field_amount = 25
         field_name = 256

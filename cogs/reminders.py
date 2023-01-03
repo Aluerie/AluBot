@@ -190,7 +190,7 @@ class Reminder(commands.Cog):
 
     async def cog_command_error(self, ctx: Context, error: commands.CommandError):
         print(error)
-        pass  # todo: here
+        pass
 
     async def get_active_timer(self, *, days: int = 7) -> Optional[Timer]:
         query = 'SELECT * FROM reminders WHERE expires < (CURRENT_DATE + $1::interval) ORDER BY expires LIMIT 1;'
@@ -393,7 +393,7 @@ class Reminder(commands.Cog):
         string_list = []
         for _id, expires, message in records:
             shorten = textwrap.shorten(message, width=512)
-            string_list.append(f'● {_id}: {formats.format_dt_tdR(expires)}\n{shorten}')
+            string_list.append(f'\N{BLACK CIRCLE} {_id}: {formats.format_dt_tdR(expires)}\n{shorten}')
 
         await send_pages_list(
             ctx,

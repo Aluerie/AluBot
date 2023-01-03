@@ -86,7 +86,6 @@ class FPCBase:
             ctx: GuildContext,
     ) -> None:
         """Base function for disabling channel for FPC Feed feature"""
-        # ToDo: add confirmation prompt "are you sure you want to disable the feature" alert here
         query = f'SELECT {self.channel_id_column} FROM guilds WHERE id=$1'
         ch_id = await ctx.pool.fetchval(query, ctx.guild.id)
 
@@ -121,9 +120,9 @@ class FPCBase:
             twitch: Union[int, None]
     ) -> str:
         if twitch:
-            return f"● [{display_name}](https://www.twitch.tv/{display_name})"
+            return f"\N{BLACK CIRCLE} [{display_name}](https://www.twitch.tv/{display_name})"
         else:
-            return f"● {display_name}"
+            return f"\N{BLACK CIRCLE} {display_name}"
 
     @staticmethod
     def player_acc_string(

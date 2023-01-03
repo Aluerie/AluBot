@@ -1,4 +1,4 @@
-from .cache import KeyCache
+from cogs.utils.cache import KeyCache
 from .const import *
 
 __all__ = (

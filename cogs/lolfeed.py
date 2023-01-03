@@ -15,7 +15,7 @@ from roleidentification import pull_data
 from .lol.const import *
 from .lol.const import LiteralServerUpper
 from .lol.models import LiveMatch, PostMatchPlayer, Account
-from .lol.utils import get_diff_list, get_all_champ_names
+from .lol.utils import get_pyot_meraki_champ_diff_list, get_all_champ_names, champion_roles_cache
 from .utils.checks import is_owner, is_guild_owner, is_trustee
 from .utils.context import Context
 from .utils.fpc import FPCBase, TwitchAccCheckCog
@@ -177,9 +177,9 @@ class LoLFeedPostMatchEdits(commands.Cog):
                 ).get()
             except NotFound:
                 continue
-            except ValueError as e:  # gosu incident ValueError: '' is not a valid platform
-                print(e)
-                continue  # TODO: remove message from the database
+            except ValueError as error:  # gosu incident ValueError: '' is not a valid platform
+                raise error
+                # continue
 
             query = 'SELECT * FROM lol_messages WHERE match_id=$1'
             for r in await self.bot.pool.fetch(query, row.id):
@@ -724,17 +724,17 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
         await self.spoil(ctx, spoil)
 
     @is_owner()
-    @ext_lol_champ.command()
+    @ext_lol_champ.command(hidden=True)
     async def meraki(self, ctx: Context):
         """Show list of champions that are missing from Meraki JSON."""
-        meraki_data = pull_data()
-        champ_ids = await get_diff_list(meraki_data)
+        meraki_data = await champion_roles_cache.data
+        champ_ids = await get_pyot_meraki_champ_diff_list(meraki_data)
         champ_str = [
-            f'● {await champion.key_by_id(i)} - `{i}`'
+            f'\N{BLACK CIRCLE} {await champion.key_by_id(i)} - `{i}`'
             for i in champ_ids
         ] or ['None missing']
 
-        url_json = 'http://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json'
+        url_json = 'https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json'
         async with self.bot.session.get(url_json) as resp:
             json_dict = await resp.json()
             meraki_patch = json_dict["patch"]

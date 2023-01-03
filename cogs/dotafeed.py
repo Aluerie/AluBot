@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, List, Union, Set, Dict
+from typing import TYPE_CHECKING, Optional, List, Union, Set, Dict, Literal
 
 import datetime
 import time
@@ -107,7 +107,6 @@ class DotaFeed(commands.Cog):
         self.bot.dota.request_top_source_tv_games(**args)
         # there we are essentially blocking the bot which is bad
         # import asyncio
-        # todo: look into wait_event definition
         self.bot.dota.wait_event('my_top_games_response', timeout=8)
 
         # the hack that does not work
@@ -818,7 +817,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
     async def slh_dota_spoil(self, ntr: discord.Interaction, spoil: bool):
         """Slash copy of ext_dota_hero_spoil below"""
         ctx = await Context.from_interaction(ntr)
-        await self.spoil(ctx, spoil)
+        await self.spoil(ctx, bool(spoil))
 
     @is_guild_owner()
     @ext_dota.command(name='spoil')

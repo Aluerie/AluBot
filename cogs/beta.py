@@ -24,8 +24,6 @@ class BetaTest(commands.Cog):
 
     @tasks.loop(count=1)
     async def test_task(self):
-        content = '\N{UPWARDS BLACK ARROW}'
-        await self.bot.get_channel(Cid.spam_me).send(content)
         return
 
     @app_commands.command()

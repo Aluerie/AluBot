@@ -223,7 +223,7 @@ class Birthday(commands.Cog):
         await ctx.reply(embed=e)
 
     @tasks.loop(hours=1)
-    async def check_birthdays(self):  # todo: rework this into sleeping till next bday
+    async def check_birthdays(self):
         query = 'SELECT id, bdate, tzone FROM users WHERE bdate IS NOT NULL'
         rows = await self.bot.pool.fetch(query)
 

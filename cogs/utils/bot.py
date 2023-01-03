@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Union, Dict, Optional, Tuple, List, Sequence
+from typing import TYPE_CHECKING, Dict, List, Optional, Union, Sequence
 
 import datetime
 import logging
@@ -22,13 +22,16 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config as cfg
 from . import imgtools
-from .jsonconfig import PrefixConfig
 from .context import Context
+from .jsonconfig import PrefixConfig
 from .twitch import TwitchClient
 from .var import Cid, Clr
 
 if TYPE_CHECKING:
+    from discord.abc import Snowflake
     from github import Repository
+
+    AppCommandStore = Dict[str, app_commands.AppCommand]  # name: AppCommand
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +49,7 @@ def _alubot_prefix_callable(bot: AluBot, message: discord.Message):
     return commands.when_mentioned_or(prefix, "/")(bot, message)
 
 
-class AluBot(commands.Bot):
+class AluBot(commands.Bot,):
     bot_app_info: discord.AppInfo
     steam: SteamClient
     dota: Dota2Client
@@ -54,10 +57,11 @@ class AluBot(commands.Bot):
     git_gameplay: Repository.Repository
     git_tracker: Repository.Repository
     session: ClientSession
-    launch_time: datetime
+    launch_time: datetime.datetime
     pool: Pool
     prefixes: PrefixConfig
     reddit: Reddit
+    tree: MyCommandTree
     twitch: TwitchClient
     twitter: TwitterAsyncClient
 
@@ -85,7 +89,8 @@ class AluBot(commands.Bot):
                 roles=True,
                 replied_user=False,
                 everyone=False
-            )  # .none()
+            ),  # .none()
+            tree_cls=MyCommandTree
         )
         self.client_id: int = cfg.TEST_DISCORD_CLIENT_ID if test else cfg.DISCORD_CLIENT_ID
         self.test: bool = test
@@ -188,27 +193,6 @@ class AluBot(commands.Bot):
         if not hasattr(self, 'twitter'):
             self.twitter = TwitterAsyncClient(cfg.TWITTER_BEARER_TOKEN)
 
-    def get_app_command(
-            self,
-            value: Union[str, int]
-    ) -> Optional[Tuple[str, int]]:
-
-        for cmd_name, cmd_id in self.app_commands.items():
-            if value == cmd_name or value.isdigit() and int(value) == cmd_id:
-                return cmd_name, cmd_id
-
-        return None
-
-    async def update_app_commands_cache(
-            self,
-            *,
-            cmds: Optional[List[app_commands.AppCommand]] = None,
-            guild: Optional[discord.abc.Snowflake] = None
-    ) -> None:
-        if not cmds:
-            cmds = await self.tree.fetch_commands(guild=guild.id if guild else None)
-        self.app_commands = {cmd.name: cmd.id for cmd in cmds}
-
     # Image Tools
     @staticmethod
     def str_to_file(
@@ -258,7 +242,7 @@ class AluBot(commands.Bot):
     async def send_traceback(
             self,
             error: Exception,
-            destination: Optional[discord.abc.Messageable] = None,
+            destination: Optional[discord.TextChannel] = None,
             *,
             where: str = 'not specified',
             embed: Optional[discord.Embed] = None,
@@ -285,7 +269,7 @@ class AluBot(commands.Bot):
         --------
         None
         """
-        ch = destination or self.get_channel(Cid.spam_me)
+        ch: discord.TextChannel = destination or self.get_channel(Cid.spam_me)
 
         etype, value, trace = type(error), error, error.__traceback__
         traceback_content = "".join(
@@ -302,6 +286,144 @@ class AluBot(commands.Bot):
 
         for page in paginator.pages:
             await ch.send(page)
+
+
+# ######################################################################################################################
+# ########################################### MY COMMAND APP TREE ######################################################
+# ######################################################################################################################
+
+
+# Credits to @Soheab
+# https://gist.github.com/Soheab/fed903c25b1aae1f11a8ca8c33243131#file-bot_subclass
+class MyCommandTree(app_commands.CommandTree):
+    """ Custom Command tree class to set up slash cmds mentions
+
+    The class makes the tree store app_commands.AppCommand
+    to access later for mentioning or anything
+    """
+    def __init__(self, client: AluBot):
+        super().__init__(client=client)  # (**kwargs)
+        self._global_app_commands: AppCommandStore = {}
+        # guild_id: AppCommandStore # :thinking: ?
+        self._guild_app_commands: Dict[int, AppCommandStore] = {}
+
+    def find_app_command_by_names(
+            self,
+            *qualified_name: str,
+            guild: Optional[Union[Snowflake, int]] = None
+    ) -> Optional[app_commands.AppCommand]:
+        cmds = self._global_app_commands
+        if guild:
+            guild_id = guild.id if not isinstance(guild, int) else guild
+            guild_cmds = self._guild_app_commands.get(guild_id, {})
+            if not guild_cmds and self.fallback_to_global:
+                cmds = self._global_app_commands
+            else:
+                cmds = guild_cmds
+
+        for cmd_name, cmd in cmds.items():
+            if any(name in qualified_name for name in cmd_name.split()):
+                return cmd
+
+        return None
+
+    def get_app_command(
+            self,
+            value: Union[str, int],
+            guild: Optional[Union[Snowflake, int]] = None
+    ) -> Optional[app_commands.AppCommand]:
+        def search_dict(d: AppCommandStore) -> Optional[app_commands.AppCommand]:
+            for cmd_name, cmd in d.items():
+                if value == cmd_name or (str(value).isdigit() and int(value) == cmd.id):
+                    return cmd
+            return None
+
+        if guild:
+            guild_id = guild.id if not isinstance(guild, int) else guild
+            guild_commands = self._guild_app_commands.get(guild_id, {})
+            if not self.fallback_to_global:
+                return search_dict(guild_commands)
+            else:
+                return search_dict(guild_commands) or search_dict(self._global_app_commands)
+        else:
+            return search_dict(self._global_app_commands)
+
+    @staticmethod
+    def _unpack_app_commands(commands: List[app_commands.AppCommand]) -> AppCommandStore:
+        ret: AppCommandStore = {}
+
+        def unpack_options(
+                options: List[Union[app_commands.AppCommand, app_commands.AppCommandGroup, app_commands.Argument]]
+        ):
+            for option in options:
+                if isinstance(option, app_commands.AppCommandGroup):
+                    ret[option.qualified_name] = option  # type: ignore
+                    unpack_options(option.options)  # type: ignore
+
+        for cmd in commands:
+            ret[cmd.name] = cmd
+            unpack_options(cmd.options)  # type: ignore
+
+        return ret
+
+    async def _update_cache(
+            self,
+            commands: Optional[List[app_commands.AppCommand]] = None,
+            guild: Optional[Union[Snowflake, int]] = None
+    ) -> None:
+        # because we support both int and Snowflake
+        # we need to convert it to a Snowflake like object if it's an int
+        _guild: Optional[Snowflake] = None
+        if guild is not None:
+            if isinstance(guild, int):
+                _guild = discord.Object(guild)
+            else:
+                _guild = guild
+
+        if not commands:
+            commands = await self.fetch_commands(guild=_guild)
+
+        if _guild:
+            self._guild_app_commands[_guild.id] = self._unpack_app_commands(commands)
+        else:
+            self._global_app_commands = self._unpack_app_commands(commands)
+
+    async def fetch_command(self, command_id: int, /, *, guild: Optional[Snowflake] = None) -> app_commands.AppCommand:
+        res = await super().fetch_command(command_id, guild=guild)
+        await self._update_cache([res], guild=guild)
+        return res
+
+    async def fetch_commands(self, *, guild: Optional[Snowflake] = None) -> List[app_commands.AppCommand]:
+        res = await super().fetch_commands(guild=guild)
+        await self._update_cache(res, guild=guild)
+        return res
+
+    def clear_app_commands_cache(self, *, guild: Optional[Snowflake]) -> None:
+        if guild:
+            self._guild_app_commands.pop(guild.id, None)
+        else:
+            self._global_app_commands = {}
+
+    def clear_commands(
+            self,
+            *,
+            guild: Optional[Snowflake],
+            type: Optional[discord.AppCommandType] = None,
+            clear_app_commands_cache: bool = True
+    ) -> None:
+        super().clear_commands(guild=guild)
+        if clear_app_commands_cache:
+            self.clear_app_commands_cache(guild=guild)
+
+    async def sync(self, *, guild: Optional[Snowflake] = None) -> List[app_commands.AppCommand]:
+        res = await super().sync(guild=guild)
+        await self._update_cache(res, guild=guild)
+        return res
+
+
+# ######################################################################################################################
+# ############################################# LOGGING MAGIC ##########################################################
+# ######################################################################################################################
 
 
 class MyColourFormatter(logging.Formatter):

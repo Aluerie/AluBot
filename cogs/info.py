@@ -22,7 +22,7 @@ from .utils.formats import human_timedelta, format_dt_tdR
 from .utils.imgtools import img_to_file
 from .utils.var import Cid, Clr, Ems, Sid, Rid, MP, MAP
 
-# from wordcloud import WordCloud #todo: wait for a fix
+# from wordcloud import WordCloud
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -66,12 +66,10 @@ class Info(commands.Cog, name='Info'):
         return discord.PartialEmoji.from_str(Ems.PepoG)
 
     async def cog_load(self) -> None:
-        self.reload_info.start()
         self.bot.tree.add_command(self.ctx_menu1)
         self.bot.tree.add_command(self.ctx_menu2)
 
     async def cog_unload(self) -> None:
-        self.reload_info.cancel()
         self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
         self.bot.tree.remove_command(self.ctx_menu2.name, type=self.ctx_menu2.type)
 
@@ -137,21 +135,7 @@ class Info(commands.Cog, name='Info'):
         """View info about selected role"""
         e = discord.Embed(title="Role information", colour=role.colour)
         e.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
-        # TODO: this embed will be more than 6000 symbols
         await ctx.reply(embed=e)
-
-    @tasks.loop(count=1)
-    async def reload_info(self):
-        e = discord.Embed(colour=Clr.prpl, description=f'Logged in as {self.bot.user}')
-        await self.bot.get_channel(Cid.spam_me).send(embed=e)
-        self.bot.help_command.cog = self  # show help command in there
-        if not self.bot.test:
-            # em.set_author(name='Finished updating/rebooting')
-            await self.bot.get_channel(Cid.bot_spam).send(embed=e)
-
-    @reload_info.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
 
     @commands.hybrid_command()
     @app_commands.describe(text="Enter text to translate")
@@ -268,30 +252,30 @@ class Info(commands.Cog, name='Info'):
 
         e = discord.Embed(title="Bot Host Machine System Info", colour=Clr.prpl)
         e.description = (
-            f'● Hostname: {socket.gethostname()}\n'
-            f'● Machine: {platform.machine()}\n'
-            f'● Platform: {platform.platform()}\n'
-            f'● System: `{platform.system()}` release: `{platform.release()}`\n'
-            f'● Version: `{platform.version()}`\n'
-            f'● Processor: {platform.processor()}\n'
+            f'\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n'
+            f'\N{BLACK CIRCLE} Machine: {platform.machine()}\n'
+            f'\N{BLACK CIRCLE} Platform: {platform.platform()}\n'
+            f'\N{BLACK CIRCLE} System: `{platform.system()}` release: `{platform.release()}`\n'
+            f'\N{BLACK CIRCLE} Version: `{platform.version()}`\n'
+            f'\N{BLACK CIRCLE} Processor: {platform.processor()}\n'
         )
         e.add_field(
             name='Current % | max values',
             value=(
-                f'● CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
-                f'● RAM usage: \n{psutil.virtual_memory().percent}% | '
+                f'\N{BLACK CIRCLE} CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
+                f'\N{BLACK CIRCLE} RAM usage: \n{psutil.virtual_memory().percent}% | '
                 f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
-                f'● Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
+                f'\N{BLACK CIRCLE} Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
                 f'{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB'
             )
         )
         e.add_field(
             name='Python Versions',
             value=(
-                f'● Python: {platform.python_version()}\n'
-                f'● discord.py {discord.__version__}\n'
-                f'● dota2 {dota2__version__}\n'
-                f'● Pyot {pyot__version__}\n'
+                f'\N{BLACK CIRCLE} Python: {platform.python_version()}\n'
+                f'\N{BLACK CIRCLE} discord.py {discord.__version__}\n'
+                f'\N{BLACK CIRCLE} dota2 {dota2__version__}\n'
+                f'\N{BLACK CIRCLE} Pyot {pyot__version__}\n'
             )
         )
         e.set_footer(text=f'AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}')
@@ -337,7 +321,7 @@ class StatsCommands(commands.Cog, name='Stats'):
     @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
     async def wordcloud(
             self,
-            ctx: Context,  # todo:  typing.Optional requires a single type. Got Greedy[Union].
+            ctx: Context,
             channel_or_and_member: commands.Greedy[Union[discord.Member, discord.TextChannel]] = None,
             limit: int = 2000
     ):
@@ -354,7 +338,6 @@ class StatsCommands(commands.Cog, name='Stats'):
         text = ''
         for ch in channels:
             text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])
-        # todo: remove this
         # wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
         e = discord.Embed(colour=Clr.prpl)
         e.description = (
@@ -362,7 +345,6 @@ class StatsCommands(commands.Cog, name='Stats'):
             f"Channels: {', '.join([c.mention for c in channels])}\n"
             f"Limit: {limit}"
         )
-        # todo remove this
         # await ctx.reply(embed=e, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
         await ctx.reply('it does not work for now, waiting those guys to fix it')
 

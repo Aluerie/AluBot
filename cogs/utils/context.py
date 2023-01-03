@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from .bot import AluBot
 
 
-# Todo rewrite this to please SolsticeShard
 class ConfirmationView(discord.ui.View):
     def __init__(self, *, timeout: float, author_id: int, ctx: Context, delete_after: bool) -> None:
         super().__init__(timeout=timeout)

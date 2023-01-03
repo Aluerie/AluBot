@@ -25,7 +25,7 @@ class CopypasteLeague(commands.Cog):
     async def cog_unload(self) -> None:
         self.patch_checker.cancel()
 
-    blocked_words = [  # todo: make this into rules from database type of thing
+    blocked_words = [
         'Free Champion Rotation',
         'PlayRuneterra',
         'RiotForge',
@@ -51,11 +51,11 @@ class CopypasteLeague(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         try:
-            if message.channel.id == Cid.copylol_ff20:  # todo CHANGE
+            if message.channel.id == Cid.copylol_ff20:
                 if block_function(message.content, self.blocked_words, self.whitelist_words):
                     return
 
-                embeds = None  # TODO: if they start using actual bots then this wont work
+                embeds = None
                 content = message.content
                 if "https://twitter.com" in message.content:
                     await asyncio.sleep(2)

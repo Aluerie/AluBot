@@ -122,7 +122,7 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
                 await topemotes_job(ctx, 3)
 
     @tasks.loop(time=datetime.time(hour=16, minute=43, tzinfo=datetime.timezone.utc))
-    async def daily_emote_shift(self):  # TODO: REWRITE THIS FUNCTION PROPERLY (idk how)
+    async def daily_emote_shift(self):
         query = 'SELECT id, month_array FROM emotes'
         rows = await self.bot.pool.fetch(query)
         for row in rows:

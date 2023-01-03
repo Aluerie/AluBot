@@ -56,7 +56,7 @@ class RPSView(discord.ui.View):
             name=e.fields[2].name,
             value=(
                 e.fields[2].value +
-                f'\n● Player {1 + player_index} {self.players[player_index].mention} has made their choice'
+                f'\n\N{BLACK CIRCLE} Player {1 + player_index} {self.players[player_index].mention} has made their choice'
             ),
             inline=False
         )
@@ -160,7 +160,7 @@ class FunThings(commands.Cog, name='Fun'):
         e = discord.Embed(title='Rock Paper Scissors Game', colour=Clr.prpl)
         e.add_field(name='Player 1', value=f'{players[0].mention}')
         e.add_field(name='Player 2', value=f'{players[1].mention}')
-        e.add_field(name='Game State Log', value='● Both players need to choose their item', inline=False)
+        e.add_field(name='Game State Log', value='\N{BLACK CIRCLE} Both players need to choose their item', inline=False)
         view = RPSView(players=players)
         view.message = await ctx.reply(embed=e, view=view)
         if member.bot:
@@ -182,7 +182,6 @@ class FunThings(commands.Cog, name='Fun'):
 
         async def work_non_command_mentions(msg: discord.Message):
             """for now there is only blush and question marks"""
-            # todo: maybe some chat AI or something
             if msg.guild and msg.guild.me in msg.mentions:
                 if any([item in msg.content.lower() for item in ['😊', "blush"]]):
                     await msg.channel.send(f'{msg.author.mention} {Ems.peepoBlushDank}')

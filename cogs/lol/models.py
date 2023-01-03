@@ -36,7 +36,7 @@ class Account:
         self._stripped_acc_name = self.account_name.replace(" ", "")
 
     @property
-    def opgg(self) -> str:  # todo: rework these links into actual match links
+    def opgg(self) -> str:
         """op.gg link for the match"""
         server = platform_to_server(self.platform)
         return f'https://{server}.op.gg/summoners/{server}/{self._stripped_acc_name}'

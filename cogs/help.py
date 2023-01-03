@@ -3,12 +3,12 @@ from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from .utils import pages
 from .utils.context import Context
 from .utils.formats import human_timedelta
-from .utils.var import Ems, Cid, Rid, Uid, Clr
+from .utils.var import Ems, Cid, Rid, Clr
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -176,7 +176,7 @@ class HelpCommand(commands.HelpCommand):
             else:
                 name = c.name
 
-            app_command = self.context.bot.get_app_command(name)
+            app_command = self.context.bot.tree.get_app_command(name)
             if app_command:
                 cmd_name, cmd_id = app_command
                 cmd_mention = f"</{c.qualified_name}:{cmd_id}>"
@@ -185,11 +185,10 @@ class HelpCommand(commands.HelpCommand):
                 cmd_mention = f'`{prefix}{o.qualified_name}`'
             return f'{cmd_mention}{signature}'
 
-        return f'● {get_sign(c)}{aliases}{cd_str}\n{checks}{help_str}'
+        return f'\N{BLACK CIRCLE} {get_sign(c)}{aliases}{cd_str}\n{checks}{help_str}'
 
     async def send_bot_help(self, mapping):
         await self.context.typing()
-        await self.context.bot.update_app_commands_cache()
         embed_list = []
         drop_options = []
 
@@ -253,7 +252,6 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_cog_help(self, cog):
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
-        await self.context.bot.update_app_commands_cache()
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
 
         cog_name = getattr(cog, "qualified_name", "No Category")
@@ -267,13 +265,11 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_group_help(self, group):
         filtered = await self.filter_commands(group.commands, sort=True)
-        await self.context.bot.update_app_commands_cache()
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
         e = discord.Embed(color=Clr.prpl, title=group.name, description=f'{chr(10).join(command_signatures)}')
         await self.context.reply(embed=e)
 
     async def send_command_help(self, command):
-        await self.context.bot.update_app_commands_cache()
         e = discord.Embed(title=command.qualified_name, color=Clr.prpl, description=self.get_command_signature(command))
         await self.context.reply(embed=e)
 
@@ -305,6 +301,12 @@ class HelpCog(commands.Cog, name='Help'):
             }
         )
 
+    async def cog_load(self) -> None:
+        self.task_fetch_commands.start()
+
+    async def cog_unload(self) -> None:
+        self.task_fetch_commands.cancel()
+
     @app_commands.command(name='help')
     @app_commands.describe(command='Command name to get help about')
     async def help_slash(self, ntr: discord.Interaction, *, command: Optional[str]):
@@ -312,6 +314,15 @@ class HelpCog(commands.Cog, name='Help'):
         myhelp = HelpCommand(verify_checks=False, command_attrs={'hidden': True})
         myhelp.context = await Context.from_interaction(ntr)
         await myhelp.command_callback(myhelp.context, command=command)
+
+    @tasks.loop(count=1)
+    async def task_fetch_commands(self):
+        """Hmm, auto-syncing is bad, but is auto-fetching bad :thinking:"""
+        await self.bot.tree.fetch_commands()
+
+    @task_fetch_commands.before_loop
+    async def before(self):
+        await self.bot.wait_until_ready()
 
 
 async def setup(bot: AluBot):

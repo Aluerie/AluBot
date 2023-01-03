@@ -56,7 +56,7 @@ followed_array = [
 
 
 class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
-    def __init__(self, bot, bearer_token):
+    def __init__(self, bot: AluBot, bearer_token):
         super().__init__(
             bearer_token,
             #  wait_on_rate_limit=True
@@ -87,7 +87,7 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
     async def on_exception(self, exception):
         logger.error("Twitter Stream encountered an exception")
         await self.bot.send_traceback(exception, where='Exception in Twitter Async Stream')
-        await asyncio.sleep(60)  # TODO: do exponentional back-off for this probably
+        await asyncio.sleep(60)
         await new_stream(self.bot)
 
     async def initiate_stream(self):
@@ -111,7 +111,7 @@ async def new_stream(bot: AluBot):
 
 
 class Twitter(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.myStream = None
 
@@ -137,7 +137,6 @@ class Twitter(commands.Cog):
 
 
 async def setup(bot: AluBot):
-    # while twitter is banned in russia # TODO: Remove this
     import platform
     if platform.system() == 'Windows':
         return

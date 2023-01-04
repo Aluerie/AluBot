@@ -7,7 +7,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from .utils.checks import test_if_work
 from .utils.context import Context
 from .utils.var import Cid
 

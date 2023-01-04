@@ -382,8 +382,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         datetime.time(hour=15, minute=45, tzinfo=datetime.timezone.utc)]
     )
     async def match_history_refresh(self):
-        """
-        url = "https://www.dota2.com/patches/"
+        """url = "https://www.dota2.com/patches/"
         async with self.bot.ses.get(url) as resp:
             soup = BeautifulSoup(await resp.read(), 'html.parser')
 

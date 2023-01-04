@@ -81,4 +81,4 @@ def platform_to_region(platform: LiteralPlatform) -> LiteralRegion:
 SOLO_RANKED_5v5_QUEUE_ENUM = 420
 
 # just manually figured out
-LOL_GAME_CATEGORY_TWITCH_ID = 21779
+LOL_GAME_CATEGORY_TWITCH_ID = '21779'  # for some reason it's a string

@@ -49,8 +49,7 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
     @is_owner()
     @trustee.command(hidden=True)
     async def add(self, ctx: Context, user_id: int):
-        """
-        Grant trustee privilege to a user with `user_id`.
+        """Grant trustee privilege to a user with `user_id`.
         Trustees can use commands that interact with the bot database.
         """
         await self.trustee_add_remove(ctx, user_id=user_id, mode='add')

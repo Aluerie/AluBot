@@ -9,7 +9,7 @@ I had to rewrite half of the bot after reading @Danny's `reminder.py` :D
 from __future__ import annotations
 
 import textwrap
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Optional, Sequence, Union, List
 from typing_extensions import Annotated
 
 import asyncio
@@ -162,7 +162,9 @@ class Timer:
 
     @property
     def format_dt_R(self) -> str:
-        return discord.utils.format_dt(self.created_at, style='R')
+        return discord.utils.format_dt(
+            self.created_at.replace(tzinfo=datetime.timezone.utc), style='R'
+        )
 
     @property
     def author_id(self) -> Optional[int]:
@@ -404,7 +406,29 @@ class Reminder(commands.Cog):
             colour=ctx.author.colour
         )
 
+    # async def remind_delete_id_autocomplete(
+    #         self,
+    #         ntr: discord.Interaction,
+    #         current: str
+    # ) -> List[app_commands.Choice[str]]:
+    #     """idk if it is a good idea"""
+    #     query = """ SELECT id, expires, extra #>> '{args,2}'
+    #                 FROM reminders
+    #                 WHERE event = 'reminder'
+    #                 AND extra #>> '{args,0}' = $1
+    #                 ORDER BY similarity(extra #>> '{args, 2}', $2) DESC
+    #                 LIMIT 10
+    #             """
+    #     records = await self.bot.pool.fetch(query, str(ntr.user.id), current)
+    #     choice_list = [
+    #         (_id, f"{_id}: ({expires.strftime('%d/%b/%y')}) {textwrap.shorten(message, width=100)}")
+    #         for _id, expires, message in records
+    #     ]
+    #     return [app_commands.Choice(name=m, value=n) for n, m in choice_list if current.lower() in m.lower()]
+
     @remind.command(name='delete', aliases=['remove', 'cancel'], ignore_extra=True)
+    # @app_commands.autocomplete(id=remind_delete_id_autocomplete)  # type: ignore
+    # @app_commands.describe(id='either input a number of reminder id or choose it from suggestion^')
     async def remind_delete(self, ctx: Context, *, id: int):
         """Deletes a reminder by its ID.
 

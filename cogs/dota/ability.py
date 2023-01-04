@@ -26,7 +26,7 @@ class AbilityKeyCache(KeyCache):
 
         data = {
             'iconurl_by_id': {
-                0: MANGO_ICON,
+                0: DISCONNECT_ICON,
                 730: ATTR_BONUS_ICON
             },
             "name_by_id":
@@ -53,7 +53,7 @@ ability_keys_cache = AbilityKeyCache()
 async def iconurl_by_id(value: int) -> str:
     """Get ability icon url by id"""
     data = await ability_keys_cache.data
-    return data['iconurl_by_id'].get(value, MANGO_ICON)
+    return data['iconurl_by_id'].get(value, DISCONNECT_ICON)
 
 
 async def name_by_id(value: int) -> str:

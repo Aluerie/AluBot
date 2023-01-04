@@ -7,6 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
+from .utils.checks import test_if_work
 from .utils.context import Context
 from .utils.var import Cid
 
@@ -26,13 +27,15 @@ class BetaTest(commands.Cog):
     async def test_task(self):
         return
 
+    @test_if_work()
     @app_commands.command()
     async def welp(self, ntr: discord.Interaction):
-        await ntr.followup.send('allo')
+        await ntr.response.send_message('allo')
 
+    @test_if_work()
     @commands.hybrid_command()
     async def allu(self, ctx: Context, member: discord.Member):
-        raise ValueError
+        await ctx.reply('PepeLaugh')
 
     @test_task.before_loop
     async def before(self):

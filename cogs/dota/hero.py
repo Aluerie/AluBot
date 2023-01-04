@@ -22,8 +22,8 @@ class HeroKeyCache(KeyCache):
             'id_by_npcname': {'': 0},
             'id_by_name': {'bot_game': 0},
             'name_by_id': {0: 'bot_game'},
-            'imgurl_by_id': {0: MANGO_ICON},
-            'iconurl_by_id': {0: MANGO_ICON},
+            'imgurl_by_id': {0: DISCONNECT_ICON},
+            'iconurl_by_id': {0: DISCONNECT_ICON},
         }
         for id_, hero in hero_dict.items():
             data['id_by_npcname'][hero['name']] = hero['id']

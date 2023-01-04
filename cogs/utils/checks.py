@@ -50,3 +50,36 @@ def is_owner():
         return func
 
     return decorator
+
+
+#####################################
+
+async def check_guild_permissions(ctx: GuildContext, perms: dict[str, bool], *, check=all):
+    if await ctx.bot.is_owner(ctx.author):  # type: ignore
+        return True
+
+    if ctx.guild is None:
+        return False
+
+    resolved = ctx.author.guild_permissions
+    return check(getattr(resolved, name, None) == value for name, value in perms.items())
+
+
+def hybrid_permissions_check(**perms: bool) -> Callable[[T], T]:
+    async def pred(ctx: GuildContext):
+        return await check_guild_permissions(ctx, perms)
+
+    def decorator(func: T) -> T:
+        commands.check(pred)(func)
+        app_commands.default_permissions(**perms)(func)
+        return func
+
+    return decorator
+
+
+def is_mod():
+    return hybrid_permissions_check(ban_members=True, manage_messages=True)
+
+
+def is_admin():
+    return hybrid_permissions_check(administrator=True)

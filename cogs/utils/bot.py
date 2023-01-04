@@ -30,6 +30,7 @@ from .var import Cid, Clr
 if TYPE_CHECKING:
     from discord.abc import Snowflake
     from github import Repository
+    from cogs.reminders import Reminder
 
     AppCommandStore = Dict[str, app_commands.AppCommand]  # name: AppCommand
 
@@ -238,6 +239,10 @@ class AluBot(commands.Bot,):
         minutely = headers.get('X-Rate-Limit-Remaining-Minute')
         if monthly is not None or minutely is not None:
             self.odota_ratelimit = f'monthly: {monthly}, minutely: {minutely}'
+
+    @property
+    def reminder(self) -> Optional[Reminder]:
+        return self.get_cog('Reminder')  # type: ignore
 
     async def send_traceback(
             self,

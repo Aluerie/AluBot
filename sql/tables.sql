@@ -172,21 +172,23 @@ CREATE TABLE IF NOT EXISTS realrules (
     text TEXT
 );
 
-CREATE TABLE IF NOT EXISTS dfmatches (
-    id BIGINT PRIMARY KEY,
-    match_id BIGINT,
-    ch_id BIGINT,
-    hero_id INTEGER,
-    twitch_status TEXT,
-    live BOOLEAN DEFAULT TRUE
+CREATE TABLE IF NOT EXISTS timer_categories (
+    id SERIAL PRIMARY KEY,
+    name TEXT,
+    frequency INTERVAL,
+    probability FLOAT CHECK ( 0 < probability <= 1 ),
+    start_dt TIMESTAMP DEFAULT (now() at time zone 'utc'),
+    channel_id BIGINT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS lfmatches (
-    id BIGINT PRIMARY KEY,
-    match_id TEXT,
-    ch_id BIGINT,
-    champ_id INTEGER,
-    routing_region TEXT
+CREATE TABLE IF NOT EXISTS timer_texts (
+    id SERIAL PRIMARY KEY,
+    category_id INTEGER,
+    text TEXT,
+
+    CONSTRAINT fk_match
+        FOREIGN KEY (category_id)
+            REFERENCES timer_categories(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS dotahistory (

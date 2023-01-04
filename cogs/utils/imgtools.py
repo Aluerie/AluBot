@@ -1,9 +1,15 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from collections.abc import Sequence
 from io import BytesIO, StringIO
 from typing import Union
 
 import discord
 from PIL import Image, ImageOps
+
+if TYPE_CHECKING:
+    from aiohttp import ClientSession
 
 
 def get_text_wh(text_string: str, font):  # wh for width, height = dimensions

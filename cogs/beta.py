@@ -26,12 +26,10 @@ class BetaTest(commands.Cog):
     async def test_task(self):
         return
 
-    @test_if_work()
     @app_commands.command()
     async def welp(self, ntr: discord.Interaction):
         await ntr.response.send_message('allo')
 
-    @test_if_work()
     @commands.hybrid_command()
     async def allu(self, ctx: Context, member: discord.Member):
         await ctx.reply('PepeLaugh')

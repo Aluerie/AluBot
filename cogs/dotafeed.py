@@ -497,7 +497,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         steam='either steamid in any of 64/32/3/2 versions, friend_id or just steam profile link',
         twitch='If you proved twitch handle for "name" then press `True` otherwise `False`',
     )
-    @app_commands.guilds(Sid.wink)
+    # @app_commands.guilds(Sid.wink)
     async def slh_dota_database_add(self, ntr: discord.Interaction, name: str, steam: str, twitch: bool):
         """Slash copy of ext_dota_database_list below"""
         ctx = await Context.from_interaction(ntr)

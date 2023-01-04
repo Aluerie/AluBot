@@ -22,3 +22,7 @@ class Timers(commands.Cog):
     async def on_timer_timer_complete(self):
         pass
 
+
+async def setup(bot: AluBot):
+    await bot.add_cog(Timers(bot))
+

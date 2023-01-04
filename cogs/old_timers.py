@@ -114,7 +114,7 @@ async def get_rule_text(pool: Pool):
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 
 
-class Timers(commands.Cog):
+class OldTimers(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
@@ -188,4 +188,4 @@ class Timers(commands.Cog):
 
 
 async def setup(bot: AluBot):
-    await bot.add_cog(Timers(bot))
+    await bot.add_cog(OldTimers(bot))

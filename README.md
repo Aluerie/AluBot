@@ -87,7 +87,7 @@ test_list = [  # for test bot
     'embedmaker',  # just some cogs to test 
     'fun', 
     'error',  # error handler from there is handy
-    'help',  # so you can look how the command looks in `$help` command
+    'meta',  # it has $help so you can look how your new commands looks here
 ]
 ```
 ### 🤗Thanks 

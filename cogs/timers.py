@@ -18,9 +18,26 @@ class Timers(commands.Cog):
     async def cog_unload(self) -> None:
         pass
 
+    @commands.hybrid_group()
+    async def timer(self, ctx: Context):
+        await ctx.scnf()
+
+    @timer.group()
+    async def create(
+            self,
+            ctx: Context,
+            category: str,
+            frequency: str,
+            probability: float
+    ):
+        pass
+
+
     @commands.Cog.listener()  # Yep, that's the best name I came up with.
     async def on_timer_timer_complete(self):
         pass
+
+
 
 
 async def setup(bot: AluBot):

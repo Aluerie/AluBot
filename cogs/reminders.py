@@ -273,10 +273,6 @@ class Reminder(commands.Cog):
 
         now = kwargs.pop('created', discord.utils.utcnow())
 
-        # database error: can't subtract offset-naive and offset-aware datetimes, maybe rework it
-        when = when.astimezone(datetime.timezone.utc).replace(tzinfo=None)
-        now = now.astimezone(datetime.timezone.utc).replace(tzinfo=None)
-
         timer = Timer.temporary(event=event, args=args, kwargs=kwargs, expires=when, created=now)
         delta = (when - now).total_seconds()
         if delta <= 60:

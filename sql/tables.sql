@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     cur INTEGER DEFAULT (0),
     rep INTEGER DEFAULT (0),
     tzone TEXT,
-    bdate TIMESTAMP,
+    bdate TIMESTAMPTZ,
     msg_count BIGINT DEFAULT (0),
     can_make_tags BOOLEAN DEFAULT TRUE
 );
@@ -58,7 +58,9 @@ CREATE TABLE IF NOT EXISTS guilds (
     lolfeed_ch_id BIGINT,
     lolfeed_champ_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
     lolfeed_stream_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
-    lolfeed_spoils_on BOOLEAN DEFAULT TRUE
+    lolfeed_spoils_on BOOLEAN DEFAULT TRUE,
+    birthday_channel BIGINT,
+    birthday_role BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS dota_players (
@@ -134,8 +136,8 @@ CREATE TABLE IF NOT EXISTS lol_messages (
 CREATE TABLE IF NOT EXISTS reminders (
     id SERIAL PRIMARY KEY,
     event TEXT,
-    expires TIMESTAMP,
-    created TIMESTAMP DEFAULT (now() at time zone 'utc'),
+    expires TIMESTAMPTZ,
+    created TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
     extra JSONB DEFAULT ('{}'::jsonb)
 );
 
@@ -183,6 +185,7 @@ CREATE TABLE IF NOT EXISTS timer_categories (
 
 CREATE TABLE IF NOT EXISTS timer_texts (
     id SERIAL PRIMARY KEY,
+    author_id BIGINT NOT NULL,
     category_id INTEGER,
     text TEXT,
 

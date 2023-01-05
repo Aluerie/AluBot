@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, List, Union, Set, Dict, Literal
+from typing import TYPE_CHECKING, Optional, List, Union, Set, Dict
 
 import datetime
 import time
@@ -18,7 +18,7 @@ from .dota.models import PostMatchPlayerData, ActiveMatch, OpendotaRequestMatch
 from .utils.checks import is_guild_owner, is_trustee
 from .utils.context import Context, GuildContext
 from .utils.fpc import FPCBase, TwitchAccCheckCog
-from .utils.var import Clr, Ems, MP, Cid, Sid
+from .utils.var import Clr, Ems, MP, Cid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -42,11 +42,11 @@ class DotaFeed(commands.Cog):
 
         @self.bot.dota.on('top_source_tv_games')
         def response(result):
-            log.debug(
-                f"DF | top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
-                f"{result.start_game, result.game_list_index, len(result.game_list)} "
-                f"{result.game_list[0].players[0].account_id}"
-            )
+            # log.debug(
+            #     f"DF | top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
+            #     f"{result.start_game, result.game_list_index, len(result.game_list)} "
+            #     f"{result.game_list[0].players[0].account_id}"
+            # )
             for match in result.game_list:
                 self.top_source_dict[match.match_id] = match
             # not good: we have 10+ top_source_tv_events, but we send response on the very first one so it s not precise

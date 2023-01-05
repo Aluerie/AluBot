@@ -416,7 +416,8 @@ class Meta(commands.Cog):
             # announce to people that we logged in
             e = discord.Embed(colour=Clr.prpl)
             e.description = f'Finished updating/rebooting. Logged in as {self.bot.user.name}.'
-            await self.bot.get_channel(Cid.bot_spam).send(embed=e)
+            for id_ in [Cid.bot_spam, Cid.spam_me]:
+                await self.bot.get_channel(id_).send(embed=e)
 
     @load_help_info.before_loop
     async def before(self):

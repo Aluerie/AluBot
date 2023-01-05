@@ -61,51 +61,6 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
         await self.trustee_add_remove(ctx, user_id=user_id, mode='remov')
 
     @is_owner()
-    @commands.command(hidden=True)
-    async def sync(
-            self,
-            ctx: Context,
-            guilds: commands.Greedy[discord.Object],
-            spec: Optional[Literal["~", "*", "^"]] = None
-    ) -> None:
-        """ Sync command. Usage examples:
-
-        * `$sync` -> global sync
-        * `$sync ~` -> sync current guild
-        * `$sync *` -> copies all global app commands to current guild and syncs
-        * `!sync ^` -> clears all commands from the current guild target and syncs (removes guild commands)
-        * `$sync id_1 id_2` -> syncs guilds with id 1 and 2
-        """
-        if not guilds:
-            if spec == "~":
-                synced = await ctx.bot.tree.sync(guild=ctx.guild)
-            elif spec == "*":
-                ctx.bot.tree.copy_global_to(guild=ctx.guild)
-                synced = await ctx.bot.tree.sync(guild=ctx.guild)
-            elif spec == "^":
-                ctx.bot.tree.clear_commands(guild=ctx.guild)
-                await ctx.bot.tree.sync(guild=ctx.guild)
-                synced = []
-            else:
-                synced = await ctx.bot.tree.sync()
-
-            await ctx.reply(
-                f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
-            )
-            return
-
-        fmt = 0
-        cmds = []
-        for guild in guilds:
-            try:
-                cmds += await ctx.bot.tree.sync(guild=guild)
-            except discord.HTTPException:
-                pass
-            else:
-                fmt += 1
-        await ctx.reply(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
-
-    @is_owner()
     @commands.command(name='extensions', hidden=True)
     async def extensions(self, ctx: Context):
         """Shows available extensions to load/reload/unload."""

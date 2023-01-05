@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from .utils.bot import AluBot
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 
 class DotaFeed(commands.Cog):
@@ -37,23 +37,29 @@ class DotaFeed(commands.Cog):
         self.player_fav_ids: List[int] = []
 
     async def cog_load(self) -> None:
-        self.bot.ini_steam_dota()
         await self.bot.ini_twitch()
-        self.dota_feed.start()
+        self.bot.ini_steam_dota()
 
         @self.bot.dota.on('top_source_tv_games')
         def response(result):
-            # log.debug(
-            #     f"DF | top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
-            #     f"{result.start_game, result.game_list_index, len(Presult.game_list)} "
-            #     f"{result.game_list[0].players[0].account_id}"
-            # )
+            log.debug(
+                f"DF | top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
+                f"{result.start_game, result.game_list_index, len(result.game_list)} "
+                f"{result.game_list[0].players[0].account_id}"
+            )
             for match in result.game_list:
                 self.top_source_dict[match.match_id] = match
             # not good: we have 10+ top_source_tv_events, but we send response on the very first one so it s not precise
             self.bot.dota.emit('my_top_games_response')
             # did not work
             # self.bot.dispatch('my_top_games_response')
+
+        # self.bot.dota.on('top_source_tv_games', response)
+        self.dota_feed.start()
+
+    @commands.Cog.listener()
+    async def on_my_top_games_response(self):
+        log.debug('double u tea ef ef')
 
     async def cog_unload(self) -> None:
         self.dota_feed.cancel()
@@ -263,11 +269,11 @@ class PostMatchEdits(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def postmatch_edits(self):
-        log.debug('AG | --- Task is starting now ---')
+        # log.debug('AG | --- Task is starting now ---')
         await self.fill_postmatch_players()
         for player in self.postmatch_players:
             await player.edit_the_embed(self.bot)
-        log.debug('AG | --- Task is finished ---')
+        # log.debug('AG | --- Task is finished ---')
 
     @postmatch_edits.before_loop
     async def postmatch_edits_before(self):

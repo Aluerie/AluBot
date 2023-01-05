@@ -362,7 +362,7 @@ class FunThings(commands.Cog, name='Fun'):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
-        if str(reaction) == '❌':
+        if str(reaction) == '\N{CROSS MARK}':
             if check_msg_react(user.id, reaction.message.id):
                 await reaction.message.delete()
 

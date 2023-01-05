@@ -351,7 +351,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     def player_acc_string(**kwargs):
         platform = kwargs.pop('platform')
         account = kwargs.pop('account')
-        return f"`{platform_to_server(platform).upper()}` - `{account}`| {Account(platform, account).links}"
+        return f"`{platform_to_server(platform).upper()}` - `{account}` {Account(platform, account).links}"
 
     @is_guild_owner()
     @slh_lol_database.command(

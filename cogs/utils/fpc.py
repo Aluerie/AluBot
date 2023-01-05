@@ -592,7 +592,7 @@ class TwitchAccCheckCog(commands.Cog):
         self.check_acc_renames.start()
 
     async def cog_unload(self) -> None:
-        self.check_acc_renames.stop()
+        self.check_acc_renames.cancel()
 
     @tasks.loop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.timezone.utc))
     async def check_acc_renames(self):

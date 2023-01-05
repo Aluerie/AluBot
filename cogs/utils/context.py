@@ -22,12 +22,12 @@ class ConfirmationView(discord.ui.View):
         self.ctx: Optional[Context] = ctx
         self.message: Optional[discord.Message] = None
 
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if interaction.user and interaction.user.id == self.author_id:
+    async def interaction_check(self, ntr: discord.Interaction) -> bool:
+        if ntr.user and ntr.user.id == self.author_id:
             return True
         else:
             e = discord.Embed(description='Sorry! This confirmation dialog is not for you.', colour=Clr.error)
-            await interaction.response.send_message(embed=e, ephemeral=True)
+            await ntr.response.send_message(embed=e, ephemeral=True)
             return False
 
     async def on_timeout(self) -> None:

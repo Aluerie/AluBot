@@ -323,7 +323,7 @@ class Reminder(commands.Cog):
         e.description = f'in {delta} — {formats.format_dt_tdR(dt)}\n{text}'
         await ctx.reply(embed=e)
 
-    @commands.hybrid_group(aliases=['timer', 'reminder', 'remindme'], usage='<when>')
+    @commands.hybrid_group(aliases=['reminder', 'remindme'], usage='<when>')
     async def remind(
             self,
             ctx: Context,

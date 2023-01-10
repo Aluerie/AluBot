@@ -60,7 +60,7 @@ class TimeLinePoint:
             actor: NamedUser,
             issue_number: int,
             body: str = '',
-            html_url: str = ''
+            html_url: Optional[str] = None
     ):
         self.event_type: BaseEvent = event_type
         self.created_at: datetime = created_at.replace(tzinfo=datetime.timezone.utc)
@@ -161,6 +161,7 @@ class DotaBugtracker(commands.Cog):
 
         issue_dict = dict()
 
+        # Closed / Self-assigned / Reopened
         for i in repo.get_issues(sort='updated', state='all', since=dt):
             events = [
                 x for x in i.get_events()
@@ -180,7 +181,7 @@ class DotaBugtracker(commands.Cog):
                     )
                 )
 
-        # now about opened by Valve assignees issues
+        # Issues opened by Valve devs
         for i in repo.get_issues(sort='created', state='open', since=dt):
             if i.created_at.replace(tzinfo=datetime.timezone.utc) < dt:
                 continue
@@ -198,6 +199,7 @@ class DotaBugtracker(commands.Cog):
                     )
                 )
 
+        # Comments left by Valve devs
         for c in [x for x in repo.get_issues_comments(sort='updated', since=dt) if x.user.login in assignees]:
             # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
             issue_num = int(c.issue_url.split('/')[-1])

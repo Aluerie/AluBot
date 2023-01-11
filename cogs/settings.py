@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Optional, Sequence
 import discord
 from discord.ext import commands
 
-from .utils.checks import is_guild_owner
 from .utils.var import Clr, Ems, Sid, Img
 
 if TYPE_CHECKING:
@@ -23,38 +22,6 @@ class Prefix(commands.Cog, name='Settings for the bot'):
     @property
     def help_emote(self) -> discord.PartialEmoji:
         return discord.PartialEmoji.from_str(Ems.PepoBeliever)
-
-    @is_guild_owner()
-    @commands.group(invoke_without_command=True)
-    async def prefix(self, ctx: Context):
-        """Get a prefix for this server"""
-        prefix = self.bot.prefixes.get(ctx.guild.id)
-        if prefix is None:
-            prefix = '$'
-        e = discord.Embed(description=f'Currently, prefix for this server is `{prefix}`', colour=Clr.prpl)
-        e.set_footer(text='To change prefix use `@AluBot prefix set` command')
-        await ctx.reply(embed=e)
-
-    @is_guild_owner()
-    @prefix.command()
-    async def set(self, ctx: Context, *, new_prefix: str):
-        """
-        Set new prefix for the server.
-        If you have troubles to set a new prefix because other bots also answer it then \
-        just mention the bot with the command `@AluBot prefix set`.
-        Spaces are not allowed in the prefix.
-        """
-        if len(new_prefix.split()) > 1:
-            raise commands.BadArgument(
-                'Space usage is not allowed in `prefix set` command'
-            )
-        if new_prefix == '$':
-            await self.bot.prefixes.remove(ctx.guild.id)
-            e = discord.Embed(description='Successfully reset prefix to our default `$` sign', colour=Clr.prpl)
-        else:
-            await self.bot.prefixes.put(ctx.guild.id, new_prefix)
-            e = discord.Embed(description=f'Changed this server prefix to `{new_prefix}`', colour=Clr.prpl)
-        await ctx.reply(embed=e)
 
     @commands.command()
     @commands.has_permissions(manage_emojis=True)

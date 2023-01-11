@@ -9,6 +9,8 @@ https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py - human_time
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Sequence, Union
 
+from enum import Enum
+
 import datetime
 import difflib
 
@@ -264,3 +266,57 @@ def block_function(string, blocked_words, whitelist_words):
 
 def indent(symbol, counter, offset, split_size):
     return str(symbol).ljust(len(str(((counter - offset) // split_size + 1) * split_size)), " ")
+
+
+class AnsiFG(Enum):
+    gray = 30
+    red = 31
+    green = 32
+    yellow = 33
+    blue = 34
+    pink = 35
+    cyan = 36,
+    white = 37
+
+    def __int__(self) -> int:
+        return self.value
+
+
+class AnsiBG(Enum):
+    firefly_dark_blue = 40
+    orange = 41
+    marble_blue = 42
+    greyish_turquoise = 43
+    gray = 44
+    indigo = 45
+    light_gray = 46
+    white = 47
+
+    def __int__(self) -> int:
+        return self.value
+
+
+def ansi(
+        text: str,
+        foreground: AnsiFG = None,
+        background: AnsiBG = None,
+        bold: bool = False,
+        underline: bool = False
+) -> str:
+    """Something ansi function"""
+    # todo: make better docs
+    # todo: what s the point of ansi function if mobile doesnt support it
+    # todo: check ansi gist for more
+    # todo: check if stuff from docs in MyColourFormatting in bot.py works.
+    # i think discord ansi is a bit halved
+    array_join = [0]
+    if bold:
+        array_join.append(1)
+    if underline:
+        array_join.append(4)
+    if background:
+        array_join.append(background.value)
+    if foreground:
+        array_join.append(foreground.value)
+    final_format = ';'.join(list(map(str, array_join)))
+    return f'\u001b[{final_format}m{text}\u001b[0m'

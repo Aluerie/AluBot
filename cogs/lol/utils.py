@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     'get_pyot_meraki_champ_diff_list',
+    'get_meraki_patch',
     'get_all_champ_names',
     'icon_url_by_champ_id',
     'get_role_mini_list'
@@ -19,6 +20,9 @@ __all__ = (
 
 
 class ChampionRolesCache(KeyCache):
+    def __init__(self):
+        super().__init__()
+        self.meraki_patch: str = ''
 
     async def fill_data(self) -> dict:
         """My own analogy to `from roleidentification import pull_data`
@@ -32,6 +36,7 @@ class ChampionRolesCache(KeyCache):
 
         url = "https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json"
         champion_roles_json = await self.get_resp_json(url=url)
+        self.meraki_patch = champion_roles_json["patch"]
         data = {}
         for champion_id, positions in champion_roles_json["data"].items():
             champion_id = int(champion_id)
@@ -55,10 +60,10 @@ class ChampionRolesCache(KeyCache):
         I need to add new champions myself with this function.
 
         About Manual adding part:
-        For Example, as in 12.13 patch - Nilah is not in Meraki Json
-        Thus I can add it myself with the data from League of Graphs
+        For Example, when 12.13 patch was live - Nilah was not in Meraki Json.
+        Thus, I can add it myself with the data from League of Graphs
         https://www.leagueofgraphs.com/champions/stats/nilah/master
-        and it here for more precise data rather than 0.2 in all roles
+        and it here for more precise data rather than 0.2 in all roles.
         """
         diff_list = await get_pyot_meraki_champ_diff_list(champion_roles)
 
@@ -105,9 +110,15 @@ async def icon_url_by_champ_id(champ_id: int) -> str:
     return cdragon.abs_url(champ.square_path)
 
 
-async def get_pyot_meraki_champ_diff_list(champ_roles: dict):
-    data = await champion.champion_keys_cache.data
-    return set(data['id_by_name'].values()) - set(champ_roles.keys())
+async def get_pyot_meraki_champ_diff_list(data_meraki: dict = None):
+    data_pyot = await champion.champion_keys_cache.data
+    data_meraki = data_meraki or await champion_roles_cache.data
+    return set(data_pyot['id_by_name'].values()) - set(data_meraki.keys())
+
+
+async def get_meraki_patch():
+    _ = await champion_roles_cache.data  # just so it triggers updating the cache, if needed.
+    return champion_roles_cache.meraki_patch
 
 
 async def get_role_mini_list(all_players_champ_ids) -> List[int]:

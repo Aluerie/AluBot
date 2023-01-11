@@ -8,8 +8,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from .utils.distools import send_pages_list
 from .utils.formats import indent
+from .utils.pagination import EnumeratedPages
 from .utils.var import Clr, Rgx, Ems
 
 if TYPE_CHECKING:
@@ -63,15 +63,17 @@ async def topemotes_job(ctx: Context, mode):
             f'`{indent(cnt, cnt, offset, split_size)}` '
             f'{key}`{key.split(":")[1][:max_length].ljust(max_length, " ")}{sorted_emote_dict[key]}`'
         )
-    await send_pages_list(
+    pgs = EnumeratedPages(
         ctx,
         new_array,
-        split_size=split_size,
+        per_page=split_size,
+        no_enumeration=True,
         colour=Clr.prpl,
         title="Top emotes used last month",
         footer_text=f'With love, {ctx.guild.me.display_name}',
         description_prefix=f'`{"Emote".ljust(max_length + 4, " ")}Usages`',
     )
+    await pgs.start()
 
 
 class EmoteAnalysis(commands.Cog, name='Emote stats'):

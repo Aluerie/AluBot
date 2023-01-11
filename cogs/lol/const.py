@@ -7,6 +7,7 @@ Glossary:
 from typing import Literal
 
 __all__ = (
+    'LOL_LOGO',
     'LiteralPlatform',
     'LiteralRegion',
     'LiteralServer',
@@ -18,6 +19,10 @@ __all__ = (
     'LOL_GAME_CATEGORY_TWITCH_ID'
 )
 
+LOL_LOGO = 'https://i.imgur.com/1DJa07b.png'
+_LOL_LOGO_OLD = 'https://i.imgur.com/MtT6oKS.png'
+
+# Literals
 LiteralPlatform = Literal['br1', 'eun1', 'euw1', 'jp1', 'kr', 'la1', 'la2', 'na1', 'oc1', 'ru', 'tr1']
 LiteralRegion = Literal['americas', 'asia', 'europe']
 LiteralServerUpper = Literal['BR', 'EUN', 'EUW', 'JP', 'KR', 'LAN', 'LAS', 'NA', 'OC', 'RU', 'TR']
@@ -62,7 +67,7 @@ platform_to_server_dict = {
 
 
 def server_to_platform(server: LiteralServer) -> LiteralPlatform:
-    """Convert server to platform"""
+    """Convert server to platform."""
     return server_to_platform_dict[server.lower()]
 
 

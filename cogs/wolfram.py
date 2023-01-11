@@ -47,7 +47,11 @@ class WolframAlpha(commands.Cog):
         question_url = f'{self.wa_basic_url}{urlparse.quote(query)}'
         async with self.bot.session.get(question_url) as resp:
             await ctx.reply(
-                f"```py\n{query}```", file=discord.File(fp=BytesIO(await resp.read()), filename="WolframAlpha.png")
+                content=f"```py\n{query}```",
+                file=discord.File(
+                    fp=BytesIO(await resp.read()),
+                    filename="WolframAlpha.png"
+                )
             )
 
     @commands.hybrid_command(

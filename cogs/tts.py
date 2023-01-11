@@ -1,6 +1,6 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, Dict, Optional, Literal, NamedTuple
 import typing
-from typing import TYPE_CHECKING, Optional, Literal
 
 import discord
 from discord import app_commands
@@ -14,19 +14,11 @@ if TYPE_CHECKING:
     from .utils.context import Context
 
 
-class LanguageData:
-    def __init__(
-            self,
-            *,
-            code: str,
-            locale: str,
-            lang: str,
-            tld: str
-    ):
-        self.code: str = code
-        self.locale: str = locale
-        self.lang: str = lang
-        self.tld: str = tld
+class LanguageData(NamedTuple):
+    code: str
+    locale: str
+    lang: str
+    tld: str
 
 
 class LanguageCollection:
@@ -48,7 +40,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
     """
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.connections = {}
+        self.connections: Dict[int, discord.VoiceProtocol] = {}  # guild.id to Voice we are connected to
 
     @property
     def help_emote(self) -> discord.PartialEmoji:

@@ -2,7 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import asyncio
+from contextlib import contextmanager
 import logging
+from logging.handlers import RotatingFileHandler
 import sys
 import traceback
 from pathlib import Path
@@ -11,10 +13,48 @@ import asyncpg
 import click
 
 from cogs.utils.database import create_pool
-from cogs.utils.bot import AluBot, setup_logging
+from cogs.utils.bot import AluBot, get_log_fmt
 
 if TYPE_CHECKING:
     pass
+
+try:
+    import uvloop  # type: ignore
+except ImportError:
+    pass
+else:
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
+
+@contextmanager
+def setup_logging(test: bool):
+    log = logging.getLogger()
+    log.setLevel(logging.INFO)
+
+    try:
+        # Stream Handler
+        handler = logging.StreamHandler()
+        handler.setFormatter(get_log_fmt(handler))
+        log.addHandler(handler)
+
+        # File Handler
+        file_handler = RotatingFileHandler(
+            filename='alubot.log' if not test else 'alubot_test.log',
+            encoding='utf-8',
+            mode='w',
+            maxBytes=16 * 1024 * 1024,  # 16 MiB
+            backupCount=5  # Rotate through 5 files
+        )
+        file_handler.setFormatter(get_log_fmt(file_handler))
+        log.addHandler(file_handler)
+
+        yield
+    finally:
+        # __exit__
+        handlers = log.handlers[:]
+        for hdlr in handlers:
+            hdlr.close()
+            log.removeHandler(hdlr)
 
 
 async def bot_run(test: bool):

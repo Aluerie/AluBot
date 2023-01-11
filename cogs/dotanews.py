@@ -8,11 +8,12 @@ from discord.ext import commands, tasks
 from github import Github
 
 from config import GIT_PERSONAL_TOKEN
+from .dota.const import DOTA_LOGO
 from .utils.formats import block_function
 from .utils.github import human_commit
 from .utils.imgtools import str_to_file
 from .utils.links import replace_tco_links, move_link_to_title
-from .utils.var import Cid, Clr, Sid, Img
+from .utils.var import Cid, Clr, Sid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -139,7 +140,7 @@ class CopypasteDota(commands.Cog):
         e = discord.Embed(title='Patch Notes', url=f'https://www.dota2.com/patches/{patch_number}', colour=Clr.prpl)
         e.description = 'Hey chat, I think new patch is out!'
         e.set_footer(text='I\'m checking Valve\'s datafeed every 10 minutes')
-        e.set_author(name=f'Patch {patch_number} is out', icon_url=Img.dota2logo)
+        e.set_author(name=f'Patch {patch_number} is out', icon_url=DOTA_LOGO)
         msg = await self.bot.get_channel(Cid.dota_news).send(embed=e)
         await msg.publish()
 

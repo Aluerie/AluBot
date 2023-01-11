@@ -33,7 +33,7 @@ class Config(Generic[_T]):
         self.encoder = encoder
         self.loop = asyncio.get_running_loop()
         self.lock = asyncio.Lock()
-        self._json: Dict[int, Union[Any]] = {}
+        self._json: Dict[str, Union[Any]] = {}
         if self.load_from_file():
             pass
         elif pool:
@@ -66,14 +66,14 @@ class Config(Generic[_T]):
 
     def get(self, key: Any, default: Any = None):
         """Retrieves a config entry"""
-        return self._json.get(key, default)
+        return self._json.get(str(key), default)
 
     async def put_into_database(self, key: Any, value: Union[_T, Any]):
         ...
 
     async def put(self, key: Any, value: Union[_T, Any]) -> None:
         """Edits a config entry"""
-        self._json[key] = value
+        self._json[str(key)] = value
         await self.put_into_database(key, value)
         await self.save()
 
@@ -82,7 +82,7 @@ class Config(Generic[_T]):
 
     async def remove(self, key: Any) -> None:
         """Removes a config entry."""
-        del self._json[key]
+        del self._json[str(key)]
         await self.remove_from_database(key)
         await self.save()
 
@@ -90,7 +90,7 @@ class Config(Generic[_T]):
         return str(item) in self._json
 
     def __getitem__(self, item: Any) -> Union[_T, Any]:
-        return self._json[item]
+        return self._json[str(item)]
 
     def __len__(self) -> int:
         return len(self._json)

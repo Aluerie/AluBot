@@ -8,7 +8,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from .distools import send_pages_list
+from .pagination import EnumeratedPages
 from .var import MP, Ems, Cid
 
 if TYPE_CHECKING:
@@ -34,6 +34,7 @@ class FPCBase:
             feature_name: str,
             game_name: str,
             game_codeword: str,
+            game_logo: str,
             colour: discord.Colour,
             bot: AluBot,
             players_table: str,
@@ -51,6 +52,7 @@ class FPCBase:
         self.feature_name: str = feature_name
         self.game_name: str = game_name
         self.game_codeword: str = game_codeword
+        self.game_logo: str = game_logo
         self.colour: discord.Colour = colour
         self.bot: AluBot = bot
         self.players_table: str = players_table
@@ -125,10 +127,14 @@ class FPCBase:
             return f"\N{BLACK CIRCLE} {display_name}"
 
     @staticmethod
+    def cmd_usage_str(**kwargs):
+        raise NotImplementedError
+
+    @staticmethod
     def player_acc_string(
             **kwargs
     ) -> str:
-        ...
+        raise NotImplementedError
 
     def player_name_acc_string(
             self,
@@ -173,14 +179,16 @@ class FPCBase:
 
         ans_array = [f"{v['name']}\n{chr(10).join(v['info'])}" for v in player_dict.values()]
 
-        await send_pages_list(
+        pgs = EnumeratedPages(
             ctx,
             ans_array,
-            split_size=10,
+            per_page=10,
+            no_enumeration=True,
             colour=self.colour,
             title=f"List of {self.game_name} players in Database",
             footer_text=f'With love, {ctx.guild.me.display_name}'
         )
+        await pgs.start()
 
     async def get_player_dict(
             self,
@@ -260,6 +268,7 @@ class FPCBase:
                 player_dict['display_name'], player_dict['twitch_id'], **account_dict
             )
         )
+        e.set_footer(text=self.game_name, icon_url=self.game_logo)
         await ctx.reply(embed=e)
         e.colour = MP.green(shade=200)
         e.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
@@ -283,6 +292,7 @@ class FPCBase:
             'This information will be sent to Aluerie. Please, double check before confirming.'
         )
         warn_e.add_field(name='Request to add an account into the database', value=player_string)
+        warn_e.set_footer(text=self.game_name, icon_url=self.game_logo)
         if not await ctx.prompt(embed=warn_e):
             await ctx.reply('Aborting...', delete_after=5.0)
             return
@@ -297,6 +307,11 @@ class FPCBase:
         warn_e.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
         # cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
         # warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
+        cmd_usage_str = f"name: {player_dict['display_name']} {self.cmd_usage_str(**account_dict)}"
+        warn_e.add_field(
+            name='Command',
+            value=f'{self.game_codeword} player add {cmd_usage_str}'
+        )
         await self.bot.get_channel(Cid.global_logs).send(embed=warn_e)
 
     async def database_remove(
@@ -359,6 +374,7 @@ class FPCBase:
             name='Successfully removed account(-s) from the database',
             value=f'{ans_name}{" - " + str(account_id) if account_id else ""}'
         )
+        e.set_footer(text=self.game_name, icon_url=self.game_logo)
         await ctx.reply(embed=e)
 
     @staticmethod

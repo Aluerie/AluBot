@@ -24,7 +24,7 @@ from discord.ext import commands
 from .utils import formats, times
 from .utils.context import Context
 from .utils.database import DRecord
-from .utils.distools import send_pages_list
+from .utils.pagination import EnumeratedPages
 from .utils.var import Ems, Clr
 
 if TYPE_CHECKING:
@@ -393,14 +393,15 @@ class Reminder(commands.Cog):
             shorten = textwrap.shorten(message, width=512)
             string_list.append(f'\N{BLACK CIRCLE} {_id}: {formats.format_dt_tdR(expires)}\n{shorten}')
 
-        await send_pages_list(
+        pgs = EnumeratedPages(
             ctx,
             string_list,
-            split_size=10,
+            per_page=10,
             author_name=f'{ctx.author.display_name}\'s Reminders list',
             author_icon=ctx.author.display_avatar.url,
             colour=ctx.author.colour
         )
+        await pgs.start()
 
     # async def remind_delete_id_autocomplete(
     #         self,

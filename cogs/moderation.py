@@ -118,7 +118,7 @@ class Moderation(commands.Cog):
             return await self.bot.get_channel(Cid.logs).send(embed=e)
 
         elif before.is_timed_out() is True and after.is_timed_out() is False:  # member is unmuted
-            return  # apparently discord limitation > it doesnt ever happen
+            return  # apparently discord limitation -> it doesnt ever happen
 
 
 async def setup(bot: AluBot):

@@ -14,6 +14,7 @@ from steam.steamid import SteamID, EType
 import vdf
 
 from .dota import hero
+from .dota.const import DOTA_LOGO
 from .dota.models import PostMatchPlayerData, ActiveMatch, OpendotaRequestMatch
 from .utils.checks import is_guild_owner, is_trustee
 from .utils.context import Context, GuildContext
@@ -340,6 +341,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
             feature_name='DotaFeed',
             game_name='Dota 2',
             game_codeword='dota',
+            game_logo=DOTA_LOGO,
             colour=Clr.prpl,
             bot=bot,
             players_table='dota_players',
@@ -450,6 +452,12 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         await ctx.scnf()
 
     @staticmethod
+    def cmd_usage_str(**kwargs):
+        friend_id = kwargs.pop('friend_id')
+        twitch = bool(kwargs.pop('twitch_id'))
+        return f'steam: {friend_id} twitch: {twitch}'
+
+    @staticmethod
     def player_acc_string(**kwargs):
         steam_id = kwargs.pop('id')
         friend_id = kwargs.pop('friend_id')
@@ -552,8 +560,7 @@ class DotaFeedTools(commands.Cog, FPCBase, name='Dota 2'):
         usage='name: <name> steam: <steamid> twitch: <yes/no>',
     )
     async def ext_dota_database_request(self, ctx: Context, *, flags: AddDotaPlayerFlags):
-        """
-        Request player to be added into the database. \
+        """Request player to be added into the database.
         This will send a request message into Aluerie's personal logs channel.
         """
         await ctx.typing()

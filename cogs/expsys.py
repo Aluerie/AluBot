@@ -8,9 +8,10 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from .utils.distools import inout_to_10, send_pages_list
+from .utils.converters import my_bool
 from .utils.formats import ordinal, human_timedelta, indent
 from .utils.imgtools import url_to_img, img_to_file, get_text_wh
+from .utils.pagination import EnumeratedPages
 from .utils.var import Ems, Sid, Cid, Cids, Clr
 
 if TYPE_CHECKING:
@@ -179,20 +180,21 @@ class ExperienceSystem(commands.Cog, name='Profile'):
             if (member := guild.get_member(row.id)) is None:
                 continue
             new_array.append(
-                f"`{indent(cnt, cnt, offset, split_size)}` {member.mention}\n`"
+                f"{member.mention}\n`"
                 f"{indent(' ', cnt, offset, split_size)} "
                 f"level {get_level(row.exp)}, {row.exp} exp| {row.rep} rep`"
             )
             cnt += 1
 
-        await send_pages_list(
+        pgs = EnumeratedPages(
             ctx,
             new_array,
-            split_size=split_size,
+            per_page=split_size,
             colour=Clr.prpl,
             title="Server Leaderboard",
             footer_text=f'With love, {guild.me.display_name}'
         )
+        await pgs.start()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -263,8 +265,8 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         """Group command about Levels, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    @levels.command(usage='in/out')
-    async def opt(self, ctx: Context, in_or_out: inout_to_10):
+    @levels.command(usage='yes/no')
+    async def notifs(self, ctx: Context, in_or_out: my_bool):
         """Opt `in/out` of exp system notifs and all leaderboard presence ;"""
         query = f'UPDATE users SET inlvl={in_or_out} WHERE id=$1;'
         await self.bot.pool.execute(query, ctx.author.id)

@@ -214,10 +214,8 @@ class Ems:  # Emote strings
 
 
 class Img:
-    league = 'https://i.imgur.com/MtT6oKS.png'
     github = 'https://pics.freeicons.io/uploads/icons/png/4381378511600029534-512.png'
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
-    dota2logo = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png"
     twitchtv = \
         "https://cdn3.iconfinder.com/data/icons/" \
         "social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"

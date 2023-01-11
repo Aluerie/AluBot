@@ -52,7 +52,9 @@ def is_owner():
     return decorator
 
 
-#####################################
+# ######################################################################################################################
+# ################################# Hybrid checks ######################################################################
+# ######################################################################################################################
 
 async def check_guild_permissions(ctx: GuildContext, perms: dict[str, bool], *, check=all):
     if await ctx.bot.is_owner(ctx.author):  # type: ignore
@@ -77,9 +79,60 @@ def hybrid_permissions_check(**perms: bool) -> Callable[[T], T]:
     return decorator
 
 
+# for following `is_manager`, `is_mod`, `is_admin check` we could use `hybrid_permissions_check`
+# but I need to manually define docstring so /help command can catch it
+# Unfortunately, I don't know any other way
+# ToDo: figure a way to get docs to decorators instead of to predicates
+
+# def is_manager():
+#     """managers only"""
+#     return hybrid_permissions_check(manage_guild=True)
+def is_manager():
+    perms = {'manage_guild': True}
+
+    async def pred(ctx: GuildContext):
+        """managers only"""
+        return await check_guild_permissions(ctx, perms)
+
+    def decorator(func: T) -> T:
+        commands.check(pred)(func)
+        app_commands.default_permissions(**perms)(func)
+        return func
+
+    return decorator
+
+
+# def is_mod():
+#     """mods only"""
+#     return hybrid_permissions_check(ban_members=True, manage_messages=True)
 def is_mod():
-    return hybrid_permissions_check(ban_members=True, manage_messages=True)
+    perms = {'ban_members': True, 'manage_messages': True}
+
+    async def pred(ctx: GuildContext):
+        """mods only"""
+        return await check_guild_permissions(ctx, perms)
+
+    def decorator(func: T) -> T:
+        commands.check(pred)(func)
+        app_commands.default_permissions(**perms)(func)
+        return func
+
+    return decorator
 
 
+# def is_admin():
+#     """admins only"""
+#     return hybrid_permissions_check(administrator=True)
 def is_admin():
-    return hybrid_permissions_check(administrator=True)
+    perms = {'administrator': True}
+
+    async def pred(ctx: GuildContext):
+        """admins only"""
+        return await check_guild_permissions(ctx, perms)
+
+    def decorator(func: T) -> T:
+        commands.check(pred)(func)
+        app_commands.default_permissions(**perms)(func)
+        return func
+
+    return decorator

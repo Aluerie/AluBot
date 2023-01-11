@@ -13,7 +13,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from numpy.random import choice
 
-from .utils.distools import send_pages_list
+from .utils.pagination import EnumeratedPages
 from .utils.var import Cid, Ems, Rid, Clr, Sid
 
 if TYPE_CHECKING:
@@ -298,14 +298,15 @@ class Birthday(commands.Cog):
                     f" **{bperson.mention}**"
                 )
 
-        await send_pages_list(
+        pgs = EnumeratedPages(
             ctx,
-            string_list=string_list,
-            split_size=20,
+            entries=string_list,
+            per_page=20,
             title='Birthday List',
             colour=Clr.prpl,
             footer_text=f'DD/MM/YYYY format | With love, {guild.me.display_name}'
         )
+        await pgs.start()
 
 
 async def setup(bot: AluBot):

@@ -131,6 +131,22 @@ class Context(commands.Context):
     async def send_test(self):
         await self.reply('test test')
 
+    @staticmethod
+    def checkmark(semi_bool: bool | None):
+        emoji_dict = {
+            True: '\N{WHITE HEAVY CHECK MARK}',
+            False: '\N{CROSS MARK}',
+            None: '\N{BLACK LARGE SQUARE}'
+        }
+        return emoji_dict[semi_bool]
+        # match semi_bool:
+        #     case True:
+        #         return '\N{WHITE HEAVY CHECK MARK}'
+        #     case False:
+        #         return '\N{CROSS MARK}'
+        #     case _:
+        #         return '\N{BLACK LARGE SQUARE}'
+
 
 class GuildContext(Context):
     author: discord.Member

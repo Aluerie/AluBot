@@ -10,12 +10,18 @@ from discord.ext import commands, tasks
 
 from pyot.core.exceptions import NotFound, ServerError
 from pyot.utils.lol import champion
-from roleidentification import pull_data
 
-from .lol.const import *
-from .lol.const import LiteralServerUpper
+from .lol.const import (
+    platform_to_region,
+    platform_to_server,
+    server_to_platform,
+    LOL_LOGO,
+    LiteralServerUpper,
+    LiteralServer,
+    SOLO_RANKED_5v5_QUEUE_ENUM,
+)
 from .lol.models import LiveMatch, PostMatchPlayer, Account
-from .lol.utils import get_pyot_meraki_champ_diff_list, get_all_champ_names, champion_roles_cache
+from .lol.utils import get_pyot_meraki_champ_diff_list, get_all_champ_names, get_meraki_patch
 from .utils.checks import is_owner, is_guild_owner, is_trustee
 from .utils.context import Context
 from .utils.fpc import FPCBase, TwitchAccCheckCog
@@ -238,6 +244,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
             feature_name='LoLFeed',
             game_name='LoL',
             game_codeword='lol',
+            game_logo=LOL_LOGO,
             colour=Clr.rspbrry,
             bot=bot,
             players_table='lol_players',
@@ -346,6 +353,12 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     async def ext_lol_database(self, ctx: Context):
         """Group command about LoL database, for actual commands use it together with subcommands"""
         await ctx.scnf()
+
+    @staticmethod
+    def cmd_usage_str(**kwargs):
+        platform = kwargs.pop('platform')
+        account = kwargs.pop('account')
+        return f'server: {platform_to_server(platform).upper()} account: {account}'
 
     @staticmethod
     def player_acc_string(**kwargs):
@@ -727,17 +740,13 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
     @ext_lol_champ.command(hidden=True)
     async def meraki(self, ctx: Context):
         """Show list of champions that are missing from Meraki JSON."""
-        meraki_data = await champion_roles_cache.data
-        champ_ids = await get_pyot_meraki_champ_diff_list(meraki_data)
+        champ_ids = await get_pyot_meraki_champ_diff_list()
         champ_str = [
             f'\N{BLACK CIRCLE} {await champion.key_by_id(i)} - `{i}`'
             for i in champ_ids
         ] or ['None missing']
 
-        url_json = 'https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json'
-        async with self.bot.session.get(url_json) as resp:
-            json_dict = await resp.json()
-            meraki_patch = json_dict["patch"]
+        meraki_patch = await get_meraki_patch()
 
         e = discord.Embed(title='List of champs missing from Meraki JSON', colour=Clr.rspbrry)
         e.description = '\n'.join(champ_str)
@@ -745,7 +754,7 @@ class LoLFeedTools(commands.Cog, FPCBase, name='LoL'):
             name='Links',
             value=(
                 f'• [GitHub](https://github.com/meraki-analytics/role-identification)\n'
-                f'• [Json]({url_json})'
+                f'• [Json](https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)'
             )
         )
         e.add_field(name='Meraki last updated', value=f'Patch {meraki_patch}')

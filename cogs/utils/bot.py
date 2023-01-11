@@ -5,7 +5,6 @@ import datetime
 import logging
 from logging.handlers import RotatingFileHandler
 import traceback
-from contextlib import contextmanager
 from os import environ, listdir
 
 import discord
@@ -42,11 +41,11 @@ except ModuleNotFoundError:
     test_list = []
 
 
-def _alubot_prefix_callable(bot: AluBot, message: discord.Message):
+def _prefix_callable(bot: AluBot, message: discord.Message):
     if message.guild is None:
-        prefix = '$'
+        prefix = bot.main_prefix
     else:
-        prefix = bot.prefixes.get(message.guild.id, '$')
+        prefix = bot.prefixes.get(message.guild.id, bot.main_prefix)
     return commands.when_mentioned_or(prefix, "/")(bot, message)
 
 
@@ -65,14 +64,15 @@ class AluBot(commands.Bot,):
     tree: MyCommandTree
     twitch: TwitchClient
     twitter: TwitterAsyncClient
+    user: discord.ClientUser
 
     def __init__(self, test=False):
-        prefix = commands.when_mentioned_or('~') if test else _alubot_prefix_callable
         main_prefix = '~' if test else '$'
+        self.main_prefix = main_prefix
         super().__init__(
-            command_prefix=prefix,
+            command_prefix=_prefix_callable,
             activity=discord.Streaming(
-                name=f"/help or {main_prefix}help",
+                name=f"/help /setup",
                 url='https://www.twitch.tv/aluerie'
             ),
             intents=discord.Intents(  # if you ever struggle with it - try `Intents.all()`
@@ -262,12 +262,14 @@ class AluBot(commands.Bot,):
         destination:
             where to send the traceback message
         where:
-            text prompt about where exactly error happened
+            Just a text prompt to include into the default embed
+            about where exactly error happened
             if `embed` is specified then this is ignored essentially
         embed:
-            heh
+            When specifying `where` is not enough
+            you can make the whole embed instead of using default embed `where`
         verbosity:
-            hah
+            A parameter for `traceback.format_exception()`
         mention: bool
             if True then the message will mention the bot owner
         Returns
@@ -488,33 +490,3 @@ def get_log_fmt(
         )
 
     return formatter
-
-
-@contextmanager
-def setup_logging(test: bool):
-    log = logging.getLogger()
-    log.setLevel(logging.INFO)
-
-    try:
-        # Stream Handler
-        handler = logging.StreamHandler()
-        handler.setFormatter(get_log_fmt(handler))
-        log.addHandler(handler)
-
-        # File Handler
-        file_handler = RotatingFileHandler(
-            filename='alubot.log' if not test else 'alubot_test.log',
-            encoding='utf-8',
-            mode='w',
-            maxBytes=16 * 1024 * 1024,  # 16 MiB
-            backupCount=5  # Rotate through 5 files
-        )
-        file_handler.setFormatter(get_log_fmt(file_handler))
-        log.addHandler(file_handler)
-
-        yield
-    finally:
-        handlers = log.handlers[:]
-        for hdlr in handlers:
-            hdlr.close()
-            log.removeHandler(hdlr)

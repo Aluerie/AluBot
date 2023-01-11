@@ -60,14 +60,14 @@ class TimeLinePoint:
             actor: NamedUser,
             issue_number: int,
             body: str = '',
-            html_url: Optional[str] = None
+            comment_url: Optional[str] = None
     ):
         self.event_type: BaseEvent = event_type
         self.created_at: datetime = created_at.replace(tzinfo=datetime.timezone.utc)
         self.actor: NamedUser = actor
         self.issue_number: int = issue_number
         self.body: str = body
-        self.html_url: str = html_url
+        self.comment_url: str = comment_url
 
     @property
     def author_str(self) -> str:
@@ -119,7 +119,11 @@ class TimeLine:
                 raise RuntimeError('Somehow lead_event is None')
 
             e.colour = le.event_type.colour
-            e.set_author(name=le.author_str, icon_url=le.actor.avatar_url, url=le.html_url)
+            e.set_author(
+                name=le.author_str,
+                icon_url=le.actor.avatar_url,
+                url=co.comment_url if co else None
+            )
             e.description = co.markdown_body if co else ''
             file = le.event_type.file
             e.set_thumbnail(url=f'attachment://{file.filename}')
@@ -130,7 +134,7 @@ class TimeLine:
                 fields = [p.markdown_body[i:i+chunk_size] for i in range(0, chunks, chunk_size)]
                 for x in fields:
                     e.add_field(name=p.author_str, value=x, inline=False)
-            e.set_author(name=f'bugtracker issue #{self.issue.number} update', url=sorted_points[-1].html_url)
+            e.set_author(name=f'bugtracker issue #{self.issue.number} update', url=sorted_points[-1].comment_url)
             file = None
         return e, file
 
@@ -194,7 +198,6 @@ class DotaBugtracker(commands.Cog):
                         created_at=i.created_at,
                         actor=i.user,
                         body=i.body,
-                        html_url=i.html_url,
                         issue_number=i.number
                     )
                 )
@@ -212,7 +215,7 @@ class DotaBugtracker(commands.Cog):
                     created_at=c.created_at,
                     actor=c.user,
                     body=c.body,
-                    html_url=c.html_url,
+                    comment_url=c.html_url,
                     issue_number=issue_num
                 )
             )

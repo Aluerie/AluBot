@@ -7,9 +7,10 @@ import discord
 from discord.ext import commands, tasks
 from bs4 import BeautifulSoup
 
+from .lol.const import LOL_LOGO
 from .utils.formats import block_function
 from .utils.links import replace_tco_links, move_link_to_title
-from .utils.var import Cid, Sid, Img, Clr
+from .utils.var import Cid, Sid, Clr
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -106,7 +107,7 @@ class CopypasteLeague(commands.Cog):
         e.description = content_if_property("og:description")
         e.set_image(url=img_url)
         e.set_thumbnail(url=content_if_property('og:image'))
-        e.set_author(name='League of Legends', icon_url=Img.league)
+        e.set_author(name='League of Legends', icon_url=LOL_LOGO)
         msg = await self.bot.get_channel(Cid.lol_news).send(embed=e)
         await msg.publish()
 

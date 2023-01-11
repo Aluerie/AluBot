@@ -13,14 +13,14 @@ CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY,
     name TEXT,
     lastseen TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
-    inlvl INTEGER DEFAULT (1),
     exp INTEGER DEFAULT (0),
     cur INTEGER DEFAULT (0),
     rep INTEGER DEFAULT (0),
     tzone TEXT,
     bdate TIMESTAMPTZ,
     msg_count BIGINT DEFAULT (0),
-    can_make_tags BOOLEAN DEFAULT TRUE
+    can_make_tags BOOLEAN DEFAULT TRUE,
+    inlvl BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS emotes (

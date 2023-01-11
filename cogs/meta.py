@@ -1,133 +1,218 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Literal
+from typing import TYPE_CHECKING, Optional, Literal, NamedTuple, Sequence, List
 
 import unicodedata
 
 import discord
 from discord import app_commands
-from discord.ext import commands, tasks
+from discord.ext import commands, menus, tasks
 
-from .utils import pages
+from .utils import checks
 from .utils.checks import is_owner
 from .utils.context import Context
 from .utils.formats import human_timedelta
+from .utils.pagination import Paginator
 from .utils.var import Cid, Clr, Ems, Rid, Lmt
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
 
 
-class DropdownHelp(discord.ui.Select):
-    def __init__(self, paginator, options):
-        super().__init__(placeholder='Choose help category', min_values=1, max_values=1, options=options)
-        self.paginator = paginator
+# #####################################################################################################################
+# HELP CLASSES ########################################################################################################
+# #####################################################################################################################
+class HelpFormatData(NamedTuple):
+    cog: commands.Cog | Literal['front_page', 'back_page']
+    cmds: Optional[Sequence[commands.Command]]
+
+
+class HelpPageSource(menus.ListPageSource):
+    def __init__(self, data: List[HelpFormatData], help_cmd: MyHelpCommand):
+        super().__init__(entries=data, per_page=1)
+        self.help_cmd: MyHelpCommand = help_cmd
+        self.data: List[HelpFormatData] = data
+
+    async def format_page(self, menu: HelpPages, entries: HelpFormatData):
+        cog, cmds = entries.cog, entries.cmds
+
+        e = discord.Embed(colour=Clr.prpl)
+        e.set_footer(text=f'With love, {self.help_cmd.context.bot.user.name}')
+
+        if cog == 'front_page':
+            e.title = f'{menu.ctx.bot.user.name}\'s $help Menu'
+            e.description = (
+                f'{menu.ctx.bot.user.name} is an ultimate multi-purpose bot !\n\n'
+                'Use dropdown menu below to select a category.'
+            )
+            e.add_field(name=f'{menu.ctx.bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
+            e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
+            e.add_field(name='Bot Owner', value=f'{menu.ctx.bot.owner}')
+        elif cog == 'back_page':
+            e.title = 'Other features $help page'
+            e.description = (
+                f'{Ems.PepoDetective} There is a list of not listed on other pages features. '
+                f'Maybe I even forgot something to write down'
+            )
+            e.add_field(
+                name='• Notifications about fav Aluerie\'s streamers picking her fav champs/heroes', inline=False,
+                value=f'Just look into <#{Cid.alubot}> !'
+            )
+            e.add_field(
+                name='• News feeds', inline=False,
+                value=(
+                    f'Dota/League related news feed in <#{Cid.dota_news}> and <#{Cid.lol_news}> '
+                    f'taken from all over the internet! Even more, bot automatically parsed and analyses dota updates ;'
+                )
+            )
+            e.add_field(
+                name='• Context Menu Commands', inline=False,
+                value='Right click any user/message and find some commands in `Apps` folder'
+            )
+            e.add_field(
+                name='• Confessions', inline=False,
+                value=(
+                    f'Just visit <#{Cid.confessions}> and use buttons at the very bottom of the channel. '
+                    f'There are two buttons: for anonymous and non-anonymous confessions. '
+                    f'If you use the latter - your server nickname will be shown in confession message.'
+                )
+            )
+            e.add_field(
+                name='• Some stats', inline=False,
+                value='Scroll down channel list to see some stats like my local time ;'
+            )
+            e.add_field(
+                name='• Twitch.tv notifications', inline=False,
+                value=(
+                    f'Notifications for my own stream in <#{Cid.stream_notifs}> and '
+                    f'<@&{Rid.live_stream}> role for live streamers-members'
+                )
+            )
+            e.add_field(
+                name='• Reaction roles', inline=False,
+                value=f'Take some roles in <#{Cid.roles}>'
+            )
+            e.add_field(
+                name='• Timers', inline=False,
+                value=f'Bot sometimes posts daily reminders in <#{Cid.general}>'
+            )
+            e.add_field(
+                name='• Welcoming new people', inline=False,
+                value=f'The bot welcomes new people in <#{Cid.welcome}>'
+            )
+            e.add_field(
+                name='• Controlling emote spam channels', inline=False,
+                value=(
+                    f'The bots moderates <#{Cid.comfy_spam}> and <#{Cid.emote_spam}>, '
+                    f'also sometimes spams these channels too ;'
+                )
+            )
+            e.add_field(
+                name="• Logging", inline=False,
+                value=(
+                    'The bot logs a lot of actions like message editing, new profile pics, emote change, etc '
+                    'into different channels;'
+                )
+            )
+            e.add_field(
+                name="• Milestone members", inline=False,
+                value=(
+                    f'Every 50th member of this server gets fancy <@&{Rid.milestone}> role and '
+                    f'small congratulation text in <#{Cid.welcome}>'
+                )
+            )
+            e.add_field(
+                name="• Random comfy reactions", inline=False,
+                value=f"Every message has a chance to get a comfy {Ems.peepoComfy} reaction on it ;"
+            )
+            e.add_field(
+                name='• Some important things', inline=False,
+                value=f'For example, the bot does not like bots in <#{Cid.general}> and weebs in <#{Cid.weebs}>'
+            )
+            e.add_field(
+                name='• Thanks to twitch subs', inline=False,
+                value=(
+                    f"The bot thanks people who get role <@&{Rid.subs}> via discord-twitch integration "
+                    f"in <#{Cid.stream_notifs}>"
+                )
+            )
+            e.add_field(
+                name='• Experience system', inline=False,
+                value='We have our own special experience system'
+            )
+            e.add_field(
+                name='• Reputation system', inline=False,
+                value=(
+                    'Your "thanks", "ty" messages with mentions give people reputation or '
+                    'you can just use `$rep` command'
+                )
+            )
+            e.add_field(
+                name='• Your life is...', inline=False,
+                value='Just a joke !'
+            )
+        else:
+            e.title = getattr(cog, "qualified_name", "No Category")
+            cog_desc = getattr(cog, "description", "No Description")
+            cog_emote = getattr(cog, "help_emote", None)
+
+            command_signatures = [chr(10).join(await self.help_cmd.get_the_answer(c)) for c in cmds]
+
+            e.description = (
+                f'{str(cog_emote) + " " if cog_emote else ""}{cog_desc}\n\n'
+                f'{chr(10).join(command_signatures)}'
+            )
+
+        return e
+
+
+class HelpSelect(discord.ui.Select):
+    def __init__(self, paginator: HelpPages):
+        super().__init__(placeholder='Choose help category')
+        self.paginator: HelpPages = paginator
+        self.__fill_options()
+
+    def __fill_options(self) -> None:
+        self.add_option(
+            label='Home Page',
+            description='Index Page of the $help menu',
+            emoji='\N{HOUSE BUILDING}',
+            value=str(0),
+        )
+        max_len = len(self.paginator.source.data)
+        counter = 0
+        for entry in self.paginator.source.data:
+            cog = entry.cog
+            if cog in ['front_page', 'back_page']:
+                continue
+
+            cog_name = getattr(cog, "qualified_name", "No Category")
+            cog_desc = getattr(cog, "description", "No Description")
+            cog_emote = getattr(cog, "help_emote", None)
+
+            self.add_option(
+                label=cog_name,
+                description=cog_desc.split('\n', 1)[0],
+                emoji=cog_emote,
+                value=str(counter + 1)
+            )
+            counter += 1
+        self.add_option(
+            label='Other Features',
+            description='Things that bot does without commands',
+            emoji=Ems.PepoDetective,
+            value=str(max_len - 1)
+        )
 
     async def callback(self, ntr: discord.Interaction):
-        await self.paginator.goto_page(page_number=int(self.values[0]), ntr=ntr)
+        await self.paginator.show_page(ntr, int(self.values[0]))
 
 
-class ViewHelp(discord.ui.View):
-    def __init__(self, paginator, options):
-        super().__init__()
-        self.paginator = paginator
-        self.add_item(DropdownHelp(paginator, options=options))
+class HelpPages(Paginator):
+    source: HelpPageSource
 
-
-def front_embed(ctx: Context):
-    e = discord.Embed(title=f'{ctx.bot.user.name}\'s $help Menu')
-    e.description = (
-        f'{ctx.bot.user.name} is an ultimate multi-purpose bot !\n\n'
-        'Use dropdown menu below to select a category.'
-    )
-    e.add_field(name=f'{ctx.bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
-    e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
-    e.add_field(name='Bot Owner', value=f'{ctx.bot.owner}')
-    return e
-
-
-last_embed = discord.Embed(
-    title='Other features $help page',
-    description=(
-        f'{Ems.PepoDetective} There is a list of not listed on other pages features. '
-        f'Maybe I even forgot something to write down'
-    ),
-).add_field(
-    name='• Notifications about fav Aluerie\'s streamers picking her fav champs/heroes', inline=False,
-    value=f'Just look into <#{Cid.alubot}> !'
-).add_field(
-    name='• News feeds', inline=False,
-    value=(
-        f'Dota/League related news feed in <#{Cid.dota_news}> and <#{Cid.lol_news}> '
-        f'taken from all over the internet! Even more, bot automatically parsed and analyses dota updates ;'
-    )
-).add_field(
-    name='• Context Menu Commands', inline=False,
-    value='Right click any user/message and find some commands in `Apps` folder'
-).add_field(
-    name='• Confessions', inline=False,
-    value=(
-        f'Just visit <#{Cid.confessions}> and use buttons at the very bottom of the channel. '
-        f'There are two buttons: for anonymous and non-anonymous confessions. '
-        f'If you use the latter - your server nickname will be shown in confession message.'
-    )
-).add_field(
-    name='• Some stats', inline=False,
-    value='Scroll down channel list to see some stats like my local time ;'
-).add_field(
-    name='• Twitch.tv notifications', inline=False,
-    value=(
-        f'Notifications for my own stream in <#{Cid.stream_notifs}> and '
-        f'<@&{Rid.live_stream}> role for live streamers-members'
-    )
-).add_field(
-    name='• Reaction roles', inline=False,
-    value=f'Take some roles in <#{Cid.roles}>'
-).add_field(
-    name='• Timers', inline=False,
-    value=f'Bot sometimes posts daily reminders in <#{Cid.general}>'
-).add_field(
-    name='• Welcoming new people', inline=False,
-    value=f'The bot welcomes new people in <#{Cid.welcome}>'
-).add_field(
-    name='• Controlling emote spam channels', inline=False,
-    value=(
-        f'The bots moderates <#{Cid.comfy_spam}> and <#{Cid.emote_spam}>, '
-        f'also sometimes spams these channels too ;'
-    )
-).add_field(
-    name="• Logging", inline=False,
-    value=(
-        'The bot logs a lot of actions like message editing, new profile pics, emote change, etc '
-        'into different channels;'
-    )
-).add_field(
-    name="• Milestone members", inline=False,
-    value=(
-        f'Every 50th member of this server gets fancy <@&{Rid.milestone}> role and '
-        f'small congratulation text in <#{Cid.welcome}>'
-    )
-).add_field(
-    name="• Random comfy reactions", inline=False,
-    value=f"Every message has a chance to get a comfy {Ems.peepoComfy} reaction on it ;"
-).add_field(
-    name='• Some important things', inline=False,
-    value=f'For example, the bot does not like bots in <#{Cid.general}> and weebs in <#{Cid.weebs}>'
-).add_field(
-    name='• Thanks to twitch subs', inline=False,
-    value=(
-        f"The bot thanks people who get role <@&{Rid.subs}> via discord-twitch integration "
-        f"in <#{Cid.stream_notifs}>"
-    )
-).add_field(
-    name='• Experience system', inline=False,
-    value='We have our own special experience system'
-).add_field(
-    name='• Reputation system', inline=False,
-    value='Your "thanks", "ty" messages with mentions give people reputation or you can just use `$rep` command ;'
-).add_field(
-    name='• Your life is...', inline=False,
-    value='Just a joke !'
-)
+    def __init__(self, ctx: Context, source: HelpPageSource):
+        super().__init__(ctx, source)
+        self.add_item(HelpSelect(self))
 
 
 class MyHelpCommand(commands.HelpCommand):
@@ -135,7 +220,7 @@ class MyHelpCommand(commands.HelpCommand):
 
     def __init__(self,):
         super().__init__(
-            verify_checks=False,
+            verify_checks=True,
             command_attrs={
                 'hidden': False,  # change to True to hide from help menu
                 'help':
@@ -162,104 +247,55 @@ class MyHelpCommand(commands.HelpCommand):
 
     def get_command_signature(self, c: commands.Command):
 
-        checks = ''
-        if c.checks:
-            checks = set(getattr(i, '__doc__') or "mods only" for i in c.checks)
-            checks = [f"*{i}*" for i in checks]
-            checks = f"**!** {', '.join(checks)}\n"
-
-        # slash = Ems.slash if getattr(c, '__commands_is_hybrid__', False) else ''
-
-        aliases = ''
-        if len(c.aliases):
-            aliases = ' | aliases: ' + '; '.join([f'`{ali}`' for ali in c.aliases])
-
-        cd_str = ''
-        if c.cooldown is not None:
-            cd_str = f' | cd: {c.cooldown.rate} per {human_timedelta(c.cooldown.per, strip=True)}'
-
-        help_str = c.help or 'No documentation'
-
-        def get_sign(o):
-            signature = '' if o.signature == '' else f' `{o.signature}`'
-
-            if getattr(c, 'root_parent'):
-                name = c.root_parent.name
-            else:
-                name = c.name
-
+        def signature():
+            sign = f' `{c.signature}`' if c.signature else ''
+            name = c.name if not getattr(c, 'root_parent') else c.root_parent.name
             app_command = self.context.bot.tree.get_app_command(name)
             if app_command:
                 cmd_mention = f"</{c.qualified_name}:{app_command.id}>"
             else:
                 prefix = getattr(self.context, 'clean_prefix', '$')
-                cmd_mention = f'`{prefix}{o.qualified_name}`'
-            return f'{cmd_mention}{signature}'
+                cmd_mention = f'`{prefix}{c.qualified_name}`'
+            return f'{cmd_mention}{sign}'
 
-        return f'\N{BLACK CIRCLE} {get_sign(c)}{aliases}{cd_str}\n{checks}{help_str}'
+        def aliases():
+            if len(c.aliases):
+                return ' | aliases: ' + '; '.join([f'`{ali}`' for ali in c.aliases])
+            return ''
+
+        def cd():
+            if c.cooldown is not None:
+                return f' | cd: {c.cooldown.rate} per {human_timedelta(c.cooldown.per, strip=True, suffix=False)}'
+            return ''
+
+        def check():
+            if c.checks:
+                res = set(getattr(i, '__doc__') or "mods only" for i in c.checks)
+                res = [f"*{i}*" for i in res]
+                return f"**!** {', '.join(res)}\n"
+            return ''
+
+        def help_str():
+            return c.help or 'No documentation'
+
+        return f'\N{BLACK CIRCLE} {signature()}{aliases()}{cd()}\n{check()}{help_str()}'
 
     async def send_bot_help(self, mapping):
         await self.context.typing()
-        embed_list = []
-        drop_options = []
-
-        embed_list.append(front_embed(self.context))
-        drop_options.append(
-            discord.SelectOption(
-                label='Home Page',
-                description='Index Page of the $help menu',
-                emoji='\N{HOUSE BUILDING}',
-                value=str(0),
-            )
-        )
-
         sorted_list_of_keys = sorted(mapping, key=lambda x: getattr(x, "qualified_name", "No Category"))
         sorted_mapping = {k: mapping[k] for k in sorted_list_of_keys}
-        # print(sorted_mapping)
+
+        help_data: List[HelpFormatData] = [HelpFormatData(cog='front_page', cmds=None)]
         for cog, cmds in sorted_mapping.items():
-            filtered = await self.filter_commands(cmds, sort=True)
-            command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
+            if not getattr(cog, 'setup_emote', None):
+                filtered = await self.filter_commands(cmds, sort=True)
+                if filtered:
+                    help_data.append(HelpFormatData(cog=cog, cmds=filtered))
+        help_data.append(HelpFormatData(cog='back_page', cmds=None))
 
-            cog_name = getattr(cog, "qualified_name", "No Category")
-            cog_desc = getattr(cog, "description", "No Description")
-            cog_emote = getattr(cog, "help_emote", None)
-
-            if command_signatures:
-                e = discord.Embed(title=cog_name)
-                e.description = (
-                    f'{str(cog_emote) + " " if cog_emote else ""}{cog_desc}\n\n'
-                    f'{chr(10).join(command_signatures)}'
-                )
-
-                embed_list.append(e)
-                drop_options.append(
-                    discord.SelectOption(
-                        label=cog_name,
-                        description=cog_desc.split('\n', 1)[0],
-                        emoji=cog_emote,
-                        value=str(len(embed_list) - 1)
-                    )
-                )
-
-        embed_list.append(last_embed)
-        drop_options.append(
-            discord.SelectOption(
-                label='Other Features',
-                description='Things that bot does without commands',
-                emoji=Ems.PepoDetective,
-                value=str(len(embed_list) - 1)
-            )
-        )
-
-        for e in embed_list:
-            e.colour = Clr.prpl
-            e.set_footer(text=f'With love, {self.context.bot.user.display_name}')
-            e.set_thumbnail(url=self.context.bot.user.display_avatar.url)
-        paginator = pages.Paginator(
-            pages=embed_list
-        )
-        paginator.custom_view = ViewHelp(paginator, options=drop_options)
-        await paginator.send(self.context)
+        pages = HelpPages(self.context, HelpPageSource(help_data, self))
+        # pages.add_item(HelpSelect())
+        await pages.start()
 
     async def send_cog_help(self, cog):
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
@@ -296,6 +332,10 @@ class MyHelpCommand(commands.HelpCommand):
         await self.context.reply(embed=e)
 
 
+# #####################################################################################################################
+# FEEDBACK CLASSES ####################################################################################################
+# #####################################################################################################################
+
 class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
     summary = discord.ui.TextInput(
         label='Summary',
@@ -325,6 +365,103 @@ class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
         await interaction.response.send_message(embed=e2, ephemeral=True)
 
 
+# #####################################################################################################################
+# SETUP CLASSES #######################################################################################################
+# #####################################################################################################################
+class SetupFormatData(NamedTuple):
+    cog: commands.Cog | Literal['front_page', 'back_page']
+
+
+class SetupSelect(discord.ui.Select):
+    def __init__(self, paginator: SetupPages):
+        super().__init__(placeholder='Choose setup category')
+        self.paginator: SetupPages = paginator
+        self.__fill_options()
+
+    def __fill_options(self) -> None:
+        self.add_option(
+            label='Home Page',
+            description='Index Page of the setup menu',
+            emoji='\N{HOUSE BUILDING}',
+            value=str(0),
+        )
+        counter = 0
+        for entry in self.paginator.source.data:
+            cog = entry.cog
+            if cog in ['front_page']:
+                continue
+
+            cog_name = getattr(cog, "qualified_name", "No Category")
+            cog_desc = getattr(cog, "description", "No Description")
+            cog_emote = getattr(cog, "setup_emote", None)
+
+            self.add_option(
+                label=cog_name,
+                description=cog_desc,
+                emoji=cog_emote,
+                value=str(counter + 1)
+            )
+            counter += 1
+
+    async def callback(self, ntr: discord.Interaction):
+        await self.paginator.show_page(ntr, int(self.values[0]))
+
+
+class SetupPageSource(menus.ListPageSource):
+    def __init__(self, data: List[SetupFormatData]):
+        super().__init__(entries=data, per_page=1)
+        self.data: List[SetupFormatData] = data
+
+    async def format_page(self, menu: SetupPages, entries: SetupFormatData):
+        cog = entries.cog
+        if cog == 'front_page':
+            # todo: fill it properly
+            e = discord.Embed(colour=Clr.prpl)
+            e.description = 'Front page baby'
+            return e
+        else:
+            e1 = getattr(cog, 'setup_info', None)
+            e2 = getattr(cog, 'setup_state', None)
+            v = getattr(cog, 'setup_view', None)
+            view: discord.ui.View = await v(menu)
+
+            menu.clear_items()
+            menu.fill_items()
+            menu.add_item(SetupSelect(menu))
+            for c in view.children:
+                menu.add_item(c)
+            return {'embeds': [await e1(), await e2(menu.ctx)]}
+
+
+class SetupPages(Paginator):
+    source: SetupPageSource
+
+    def __init__(self, ctx: Context, source: SetupPageSource):
+        super().__init__(ctx, source)
+        self.add_item(SetupSelect(self))
+
+
+class SetupCog:
+
+    @property
+    def setup_emote(self):
+        raise NotImplementedError
+
+    async def setup_info(self) -> discord.Embed:
+        raise NotImplementedError
+
+    async def setup_state(self, ctx: Context) -> discord.Embed:
+        raise NotImplementedError
+
+    async def setup_view(self, pages: SetupPages) -> discord.ui.View:
+        raise NotImplementedError
+
+
+# #####################################################################################################################
+# Cog #####################################################################################################
+# #####################################################################################################################
+
+
 class Meta(commands.Cog):
     """Commands-utilities related to Discord or the Bot itself."""
 
@@ -345,13 +482,19 @@ class Meta(commands.Cog):
         self.load_help_info.cancel()
         self.bot.help_command = self._original_help_command
 
-    @property
-    def feedback_channel(self) -> Optional[discord.TextChannel]:
-        return self.bot.get_channel(Cid.global_logs)  # type: ignore
+    @commands.hybrid_command()
+    async def setup(self, ctx: Context):
+        setup_data: List[SetupFormatData] = [SetupFormatData(cog='front_page')]
+        for cog_name, cog in self.bot.cogs.items():
+            if getattr(cog, 'setup_info', None):
+                setup_data.append(SetupFormatData(cog=cog))
+
+        pages = SetupPages(ctx, SetupPageSource(setup_data))
+        await pages.start()
 
     # **The** famous Umbra\'s sync command holy moly. `?tag usc`. Or `?tag umbra sync command`
     @is_owner()
-    @commands.command(hidden=True)
+    @commands.command()
     async def sync(
             self,
             ctx: Context,
@@ -359,7 +502,6 @@ class Meta(commands.Cog):
             spec: Optional[Literal["~", "*", "^"]] = None
     ) -> None:
         """Sync command. Usage examples:
-
         * `$sync` -> global sync
         * `$sync ~` -> sync current guild
         * `$sync *` -> copies all global app commands to current guild and syncs
@@ -429,8 +571,8 @@ class Meta(commands.Cog):
 
     @commands.command(aliases=['join'])
     async def invite(self, ctx: Context):
-        """Show my invite link so you can invite me.
-        You can also press discord-native button "Add to Server" in my profile.
+        """Show the invite link, so you can add me to your server.
+        You can also press "Add to Server" button in my profile.
         """
         perms = discord.Permissions.all()
         # perms.read_messages = True
@@ -438,6 +580,10 @@ class Meta(commands.Cog):
         e = discord.Embed(title='Invite link for the bot', url=url, description=url, color=Clr.prpl)
         e.set_thumbnail(url=self.bot.user.display_avatar.url)
         await ctx.reply(embed=e)
+
+    @property
+    def feedback_channel(self) -> Optional[discord.TextChannel]:
+        return self.bot.get_channel(Cid.global_logs)  # type: ignore
 
     @staticmethod
     def get_feedback_embed(
@@ -466,8 +612,7 @@ class Meta(commands.Cog):
     @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
     async def feedback(self, ctx: Context, *, details: str):
         """Give feedback about the bot directly to the bot developer.
-
-        This is a quick way to request features or bug fixes.
+        This is a quick way to request features or bug fixes. \
         The bot will DM you about the status of your request if possible/needed.
         You can also open issues/PR on [GitHub](https://github.com/Aluerie/AluBot).
         """
@@ -503,15 +648,14 @@ class Meta(commands.Cog):
 
     @commands.command()
     async def charinfo(self, ctx: Context, *, characters: str):
-        """Shows information about a character(-s).
-
+        """Shows information about a character(-s). \
         Only up to a few characters tho.
         """
 
         def to_string(c: str) -> str:
             digit = f'{ord(c):x}'
             name = unicodedata.name(c, None)
-            name = f'`\\N{name}`' if name else 'Name not found.'
+            name = f'`\\N{{{name}}}`' if name else 'Name not found.'
             return (
                 f'`\\U{digit:>08}` | {name} | {c} \N{EM DASH} '
                 f'<https://www.fileformat.info/info/unicode/char/{digit}>'
@@ -524,5 +668,133 @@ class Meta(commands.Cog):
         await ctx.send(msg)
 
 
+# #####################################################################################################################
+# Prefix CLASSES #####################################################################################################
+# #####################################################################################################################
+class SetPrefixModal(discord.ui.Modal, title='New prefix setup'):
+
+    prefix = discord.ui.TextInput(
+        label='New prefix for the server',
+        placeholder='Enter up to 3 characters',
+        max_length=3
+    )
+
+    def __init__(self, cog: PrefixSetupCog, paginator: SetupPages) -> None:
+        super().__init__()
+        self.cog: PrefixSetupCog = cog
+        self.paginator: SetupPages = paginator
+
+    async def on_error(self, ntr: discord.Interaction, error: Exception, /) -> None:
+        e = discord.Embed(colour=Clr.error)
+        if isinstance(error, commands.BadArgument):
+            e.description = f'{error}'
+        else:
+            e.description = 'Unknown error, sorry'
+        await ntr.response.send_message(embed=e, ephemeral=True)
+
+    async def on_submit(self, ntr: discord.Interaction) -> None:
+        e = await self.cog.prefix_set_worker(ntr.guild.id, new_prefix=str(self.prefix.value))
+        await ntr.response.send_message(embed=e, ephemeral=True)
+        await self.paginator.show_page(ntr, self.paginator.current_page_number)
+
+
+class PrefixView(discord.ui.View):
+    def __init__(self, cog: PrefixSetupCog, paginator: SetupPages) -> None:
+        super().__init__()
+        self.cog: PrefixSetupCog = cog
+        self.paginator: SetupPages = paginator
+
+    @discord.ui.button(emoji='\N{HEAVY DOLLAR SIGN}', label='Change prefix', style=discord.ButtonStyle.blurple)
+    async def set_prefix(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+        await ntr.response.send_modal(SetPrefixModal(self.cog, self.paginator))
+
+    @discord.ui.button(emoji='\N{BANKNOTE WITH DOLLAR SIGN}', label='Reset prefix', style=discord.ButtonStyle.blurple)
+    async def reset_prefix(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+        e = await self.cog.prefix_set_worker(ntr.guild.id, self.cog.bot.main_prefix)
+        await ntr.response.send_message(embed=e, ephemeral=True)
+        await self.paginator.show_page(ntr, self.paginator.current_page_number)
+
+
+class PrefixSetupCog(commands.Cog, SetupCog, name='Prefix Setup'):
+    """Change the server prefix for text commands"""
+
+    def __init__(self, bot: AluBot):
+        self.bot: AluBot = bot
+
+    @property
+    def setup_emote(self):
+        return '\N{HEAVY DOLLAR SIGN}'
+
+    async def setup_info(self):
+        e = discord.Embed(colour=Clr.prpl)
+        e.title = 'Server Prefix Setup'
+        e.description = (
+            'You can choose server prefix with button "Change prefix" below. \n\n'
+            f'Bot\'s default prefix for text commands is {self.bot.main_prefix}. '
+            f'The bot also answers on {self.bot.user.mention} mentions, like {self.bot.user.mention}` help`.'
+        )
+        return e
+
+    async def setup_state(self, ctx: Context):
+        return await self.prefix_check_worker(ctx.guild.id)
+
+    async def setup_view(self, pages: SetupPages):
+        return PrefixView(self, pages)
+
+    async def prefix_check_worker(self, guild_id: int):
+        e = discord.Embed(colour=Clr.rspbrry)
+        prefix = self.bot.prefixes.get(guild_id)
+        if prefix is None:
+            prefix = self.bot.main_prefix
+        e.description = f'Current prefix: `{prefix}`'
+        return e
+
+    async def prefix_set_worker(self, guild_id: int, new_prefix: str) -> discord.Embed:
+        if len(new_prefix.split()) > 1:
+            raise commands.BadArgument(
+                'Space usage is not allowed in `prefix set` command'
+            )
+        if (le := len(new_prefix)) > 3:
+            raise commands.BadArgument(
+                f'Prefix should consist of 1, 2 or 3 (in the worst case) characters. Not {le} !'
+            )
+        if new_prefix == self.bot.main_prefix:
+            await self.bot.prefixes.remove(guild_id)
+            e = discord.Embed(colour=Clr.prpl)
+            e.description = f'Successfully reset prefix to our default `{new_prefix}` sign'
+            return e
+        else:
+            await self.bot.prefixes.put(guild_id, new_prefix)
+            return discord.Embed(description=f'Changed this server prefix to `{new_prefix}`', colour=Clr.prpl)
+
+    @checks.is_manager()
+    @commands.group(invoke_without_command=True)
+    async def prefix(self, ctx: Context):
+        """Group command about prefix for this server"""
+        e = await self.prefix_check_worker(ctx.guild.id)
+        e.set_footer(text=f'To change prefix use `@{self.bot.user.name} prefix set` command')
+        await ctx.reply(embed=e)
+
+    @checks.is_manager()
+    @prefix.command(name='check')
+    async def prefix_check(self, ctx: Context):
+        """Check prefix for this server"""
+        e = await self.prefix_check_worker(ctx.guild.id)
+        e.set_footer(text=f'To change prefix use `@{self.bot.user.name} prefix set` command')
+        await ctx.reply(embed=e)
+
+    @checks.is_manager()
+    @prefix.command(name='set')
+    async def prefix_set(self, ctx: Context, *, new_prefix: str):
+        """Set new prefix for the server.
+        If you have troubles to set a new prefix because other bots also answer it then \
+        just mention the bot with the command `@AluBot prefix set`.
+        Spaces are not allowed in the prefix, and it should be 1-3 symbols.
+        """
+        e = self.prefix_set_worker(ctx.guild.id, new_prefix)
+        await ctx.reply(embed=e)
+
+
 async def setup(bot: AluBot):
     await bot.add_cog(Meta(bot))
+    await bot.add_cog(PrefixSetupCog(bot))

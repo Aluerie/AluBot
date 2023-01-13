@@ -580,7 +580,7 @@ class Meta(commands.Cog):
             e = discord.Embed(colour=Clr.prpl)
             e.description = f'Logged in as {self.bot.user.name}.'
             await self.bot.get_channel(Cid.spam_me).send(embed=e)
-            e.description = f'Finished updating/rebooting. Logged in as {self.bot.user.name}.'
+            e.set_footer(text='Finished updating/rebooting')
             await self.bot.get_channel(Cid.bot_spam).send(embed=e)
 
     @load_help_info.before_loop

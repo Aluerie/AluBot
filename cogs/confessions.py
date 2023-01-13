@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class ButtonOnCooldown(commands.CommandError):
     def __init__(self, retry_after: float):
-        self.retry_after = retry_after
+        self.retry_after: float = retry_after
 
 
 def key(ntr: discord.Interaction):

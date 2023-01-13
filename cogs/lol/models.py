@@ -113,7 +113,7 @@ class LiveMatch(Match):
             stream_preview_url: str,
             display_name: str,
             bot: AluBot
-    ) -> Image:
+    ) -> Image.Image:
         log.debug('I m here #1')
         img = await bot.url_to_img(stream_preview_url)
         width, height = img.size

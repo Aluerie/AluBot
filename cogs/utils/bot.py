@@ -294,6 +294,12 @@ class AluBot(commands.Bot,):
         for page in paginator.pages:
             await ch.send(page)
 
+    @property
+    def spam_me_channel(self) -> discord.TextChannel: 
+        # Shortcup so checker doesn't complain too much
+        # and we do not have to `from .utils.vars import Cid``
+        # ?tag botvar in a nutshell
+        return self.get_channel(Cid.spam_me)  # type: ignore
 
 # ######################################################################################################################
 # ########################################### MY COMMAND APP TREE ######################################################

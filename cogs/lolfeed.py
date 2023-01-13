@@ -81,7 +81,7 @@ class LoLFeedNotifications(commands.Cog):
                 continue
             self.all_live_match_ids.append(live_game.id)
             p = next((x for x in live_game.participants if x.summoner_id == r.id), None)
-            if p.champion_id in fav_champ_ids and r.last_edited != live_game.id:
+            if p and p.champion_id in fav_champ_ids and r.last_edited != live_game.id:
                 query = """ SELECT lolfeed_ch_id 
                             FROM guilds
                             WHERE $1=ANY(lolfeed_champ_ids) 
@@ -100,7 +100,7 @@ class LoLFeedNotifications(commands.Cog):
                     self.live_matches.append(
                         LiveMatch(
                             match_id=live_game.id,
-                            platform=p.platform,
+                            platform=p.platform,  # type: ignore
                             account_name=p.summoner_name,
                             start_time=round(live_game.start_time_millis / 1000),
                             champ_id=p.champion_id,

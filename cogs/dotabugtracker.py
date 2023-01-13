@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Set, Optional
+from typing import TYPE_CHECKING, List, Set, Optional, Tuple
 
 import asyncio
 import re
@@ -8,7 +8,7 @@ import textwrap
 
 import discord
 from discord.ext import commands, tasks
-import github.GithubException
+from github.GithubException import GithubException
 
 from .utils.var import Sid, Cid, Clr, Lmt
 
@@ -31,7 +31,7 @@ class BaseEvent:
         self.colour: int = colour
         self._picture = picture
         self.word: str = word
-        self.text_flag: bool = text_flag
+        self.text_flag: Optional[bool] = text_flag
 
     @property
     def file(self) -> discord.File:
@@ -57,21 +57,22 @@ class TimeLinePoint:
             self,
             *,
             event_type: BaseEvent,
-            created_at: datetime,
-            actor: NamedUser,
+            created_at: datetime.datetime,
+            actor: NamedUser.NamedUser,
             issue_number: int,
             body: str = '',
             comment_url: Optional[str] = None
     ):
         self.event_type: BaseEvent = event_type
-        self.created_at: datetime = created_at.replace(tzinfo=datetime.timezone.utc)
-        self.actor: NamedUser = actor
+        self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.timezone.utc)
+        self.actor: NamedUser.NamedUser = actor
         self.issue_number: int = issue_number
         self.body: str = body
-        self.comment_url: str = comment_url
+        self.comment_url: Optional[str] = comment_url
 
     @property
     def author_str(self) -> str:
+
         return f'@{self.actor.login} {self.event_type.word} bugtracker issue #{self.issue_number}'
 
     @property
@@ -88,13 +89,13 @@ class TimeLine:
 
     def __init__(
             self,
-            issue: Issue,
+            issue: Issue.Issue,
     ):
-        self.issue: Issue = issue
+        self.issue: Issue.Issue = issue
 
         self.events: List[TimeLinePoint] = []
         self.comments: List[TimeLinePoint] = []
-        self.authors: Set[str] = set()
+        self.authors: Set[NamedUser.NamedUser] = set()
 
     def add_event(self, event: TimeLinePoint):
         if event.event_type.text_flag:
@@ -107,7 +108,7 @@ class TimeLine:
         return sorted(self.events + self.comments, key=lambda x: x.created_at, reverse=False)
 
     @property
-    def embed_and_file(self) -> (discord.Embed, discord.File):
+    def embed_and_file(self) -> Tuple[discord.Embed, discord.File | None]:
         e = discord.Embed(title=textwrap.shorten(self.issue.title, width=Lmt.Embed.title), url=self.issue.html_url)
         if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
             # we just send a small embed
@@ -159,7 +160,7 @@ class DotaBugtracker(commands.Cog):
         assignees = [x.login for x in repo.get_assignees()]
 
         query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
-        dt: datetime = await self.bot.pool.fetchval(query, Sid.alu)
+        dt: datetime.datetime = await self.bot.pool.fetchval(query, Sid.alu)
 
         # from datetime import timedelta  # <- for testing
         # dt = datetime.now(timezone.utc) - timedelta(hours=9)  # <- for testing
@@ -254,11 +255,11 @@ class DotaBugtracker(commands.Cog):
 
     @git_comments_check.error
     async def git_comments_check_error(self, error):
-        if isinstance(error, github.GithubException):
+        if isinstance(error, GithubException):
             if error.status == 502:
                 if self.retries == 0:
                     e = discord.Embed(description='DotaBugtracker: Server Error 502')
-                    await self.bot.get_channel(Cid.spam_me).send(embed=e)
+                    await self.bot.spam_me_channel.send(embed=e)
                 await asyncio.sleep(60 * 10 * 2**self.retries)
                 self.retries += 1
                 self.git_comments_check.restart()

@@ -33,8 +33,7 @@ class StartView(discord.ui.View):
 
     @discord.ui.button(label='Author', emoji='🖋️', style=discord.ButtonStyle.blurple)
     async def author_btn(self, ntr: discord.Interaction, btn: discord.Button):
-
-        return 1
+        pass
 
 
 class EmbedMaker(commands.Cog, name='Embed Maker'):

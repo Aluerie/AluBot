@@ -39,7 +39,7 @@ class PassEvent(commands.Cog):
     async def botcheck(self):
         if self.crashed:
             return
-        if datetime.datetime.now(datetime.timezone.utc) - self.lastupdated > datetime.timedelta(minutes=70):
+        if datetime.datetime.now(datetime.timezone.utc) - self.lastupdated > datetime.timedelta(minutes=40):
             await self.bot.get_channel(start_errors).send(
                 content=f'<@{Uid.alu}> I think the bot crashed but did not even send the message'
             )

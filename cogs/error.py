@@ -133,7 +133,7 @@ class CommandErrorHandler(commands.Cog):
                     error_e.set_author(
                         name=f'{ctx.author} triggered error in {ctx.channel}',
                         url=jump_url,
-                        icon_url=ctx.author.avatar.url
+                        icon_url=ctx.author.display_avatar.url
                     )
                 mention = (ctx.channel.id != Cid.spam_me)
                 await self.bot.send_traceback(error, embed=error_e, mention=mention)

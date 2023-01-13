@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-import datetime
+import asyncio
 
 import discord
 from discord.ext import commands, tasks
@@ -18,11 +18,9 @@ game_feed = 966316773869772860
 class PassEvent(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.lastupdated = datetime.datetime.now(datetime.timezone.utc)
-        self.crashed: bool = True
 
     async def cog_load(self) -> None:
-        self.botcheck.start()
+        pass
 
     async def cog_unload(self) -> None:
         self.botcheck.cancel()
@@ -30,19 +28,13 @@ class PassEvent(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.channel.id == game_feed:
-            self.lastupdated = datetime.datetime.now(datetime.timezone.utc)
-            self.crashed = False
-        if message.channel.id == start_errors:
-            self.crashed = True
+            self.botcheck.restart()
 
-    @tasks.loop(hours=2)
+    @tasks.loop()
     async def botcheck(self):
-        if self.crashed:
-            return
-        if datetime.datetime.now(datetime.timezone.utc) - self.lastupdated > datetime.timedelta(minutes=40):
-            await self.bot.get_channel(start_errors).send(
-                content=f'<@{Uid.alu}> I think the bot crashed but did not even send the message'
-            )
+        await asyncio.sleep(52 * 60)  # let's assume the longest possible game+q time is ~52 mins
+        channel: discord.TextChannel = self.bot.get_channel(start_errors)  # type: ignore
+        await channel.send(  f'<@{Uid.alu}> I think the bot crashed but did not even send the message')
 
     @botcheck.before_loop
     async def before(self):

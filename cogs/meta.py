@@ -422,15 +422,15 @@ class SetupPageSource(menus.ListPageSource):
         else:
             e1 = getattr(cog, 'setup_info', None)
             e2 = getattr(cog, 'setup_state', None)
-            v = getattr(cog, 'setup_view', None)
-            view: discord.ui.View = await v(menu)
-
-            menu.clear_items()
-            menu.fill_items()
-            menu.add_item(SetupSelect(menu))
-            for c in view.children:
-                menu.add_item(c)
-            return {'embeds': [await e1(), await e2(menu.ctx)]}
+            embeds = [e for e in [e1, e2] if e]
+            if v := getattr(cog, 'setup_view', None):
+                view: discord.ui.View = await v(menu)
+                menu.clear_items()
+                menu.fill_items()
+                menu.add_item(SetupSelect(menu))
+                for c in view.children:
+                    menu.add_item(c)
+            return {'embeds': embeds}
 
 
 class SetupPages(Paginator):

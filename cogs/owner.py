@@ -158,12 +158,19 @@ class AdminTools(commands.Cog, name='Tools for Bot Owner'):
             word, colour = 'left', MP.red(shade=500)
 
         e = discord.Embed(title=word, description=guild.description, colour=colour)
-        e.set_author(name=f"The bot {word} {str(guild.owner)}'s guild", icon_url=guild.owner.avatar.url)
-        e.set_thumbnail(url=guild.icon.url)
-
         e.add_field(name='Guild ID', value=f'`{guild.id}`')
         e.add_field(name='Shard ID', value=guild.shard_id or 'N/A')
-        e.add_field(name='Owner ID', value=f'`{guild.owner.id}`')
+
+        if guild.owner:
+            e.set_author(
+                name=f"The bot {word} {str(guild.owner)}'s guild", 
+                icon_url=guild.owner.display_avatar.url
+            )
+            e.add_field(name='Owner ID', value=f'`{guild.owner.id}`')
+
+        if guild.icon:
+            e.set_thumbnail(url=guild.icon.url)
+        
         bots = sum(m.bot for m in guild.members)
         total = guild.member_count or 1
         e.add_field(name='Members', value=total)

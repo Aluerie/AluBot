@@ -56,8 +56,8 @@ All info in `$help` or `/help` command of the bot. But here is list that is prob
 ### 🤝 Reporting Bugs, Making Suggestions and Contributing
 
 * There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/.github/CONTRIBUTING.md)
-* TL;DR^: Feel free to open a GitHub Issue/PR/Discussion or write me (Aluerie ❤#6524) on discord. You can 
-look my [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas.
+* TL;DR^: Feel free to open a GitHub Issue/PR/Discussion, use `/feedback` bot command or write me (Aluerie ❤#6524) 
+on discord. You can also look my [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
 
 ### 🛠️Running
 
@@ -77,7 +77,7 @@ And I'm honestly not a very good programmer. Nevertheless,
    
 ```python
 """
-Just list of extensions from `./cogs` that are going to be tested with Testing version of the Bot 
+List of extensions from `./cogs` to test. The bot will load only extensions from that list. 
 
 -- List them without `.py`-ending as in 'confessions' and not 'confessions.py'
 
@@ -86,8 +86,8 @@ Actual AluBot does not use this file at all, the bot just assumes the `test_list
 test_list = [  # for test bot
     'embedmaker',  # just some cogs to test 
     'fun', 
-    'error',  # error handler from there is handy
-    'meta',  # it has $help so you can look how your new commands looks here
+    'error',  # global error handlers from there are handy
+    'meta',  # it has /$help, /$setup, so you can look how your new commands looks here
 ]
 ```
 ### 🤗Thanks 

@@ -287,7 +287,7 @@ class MyHelpCommand(commands.HelpCommand):
 
         help_data: List[HelpFormatData] = [HelpFormatData(cog='front_page', cmds=None)]
         for cog, cmds in sorted_mapping.items():
-            if not getattr(cog, 'setup_emote', None):
+            if not getattr(cog, 'setup_info', None):
                 filtered = await self.filter_commands(cmds, sort=True)
                 if filtered:
                     help_data.append(HelpFormatData(cog=cog, cmds=filtered))
@@ -438,7 +438,28 @@ class SetupPages(Paginator):
 
     def __init__(self, ctx: Context, source: SetupPageSource):
         super().__init__(ctx, source)
+        self.show_text_cmds = True
         self.add_item(SetupSelect(self))
+
+    def after_update_labels(self, page_number: int) -> None:
+        self.text_cmds.label = '\N{NOTEBOOK}' if self.show_text_cmds else '\N{OPEN BOOK}'
+
+    def fill_items(self):
+        if self.source.is_paginating():
+            for item in [
+                self.refresh,
+                self.previous_page,
+                self.index,
+                self.next_page,
+                self.text_cmds
+            ]:
+                self.add_item(item)
+
+    @discord.ui.button(label='\N{NOTEBOOK}', style=discord.ButtonStyle.blurple)
+    async def text_cmds(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+        """Toggle showing text commands embed in the setup paginator"""
+        self.show_text_cmds = not self.show_text_cmds
+        await self.show_page(ntr, self.current_page_number)
 
 
 class SetupCog:
@@ -557,9 +578,10 @@ class Meta(commands.Cog):
         if not self.bot.test:
             # announce to people that we logged in
             e = discord.Embed(colour=Clr.prpl)
+            e.description = f'Logged in as {self.bot.user.name}.'
+            await self.bot.get_channel(Cid.spam_me).send(embed=e)
             e.description = f'Finished updating/rebooting. Logged in as {self.bot.user.name}.'
-            for id_ in [Cid.bot_spam, Cid.spam_me]:
-                await self.bot.get_channel(id_).send(embed=e)
+            await self.bot.get_channel(Cid.bot_spam).send(embed=e)
 
     @load_help_info.before_loop
     async def before(self):

@@ -4,8 +4,9 @@
 
 * Check out [Project](https://github.com/users/Aluerie/projects/8/views/1) to get some ideas what I want to work on 
 and what I am currently working on. 
-* Currently, the bot is really just a one-person project so I'm apologizing in advance if this todo list^ are messy 
-because I do not really expect any random help from random visitors.
+* Currently, the bot is really just a one-person project (at least as for now), 
+so I'm apologizing in advance if this todo list^ are messy because 
+I do not really expect any random help from random visitors.
 
 ### Did you find a bug?
 
@@ -14,6 +15,8 @@ because I do not really expect any random help from random visitors.
 * If you're unable to find an open issue addressing the problem, 
 [open a new one](https://github.com/Aluerie/AluBot/issues/new). 
 Be sure to include a **title and clear description**, as much relevant information as possible.
+* There is also `/feedback`/`$feedback` command that you can use right from the bot command menu to make some quick
+bug report or feature request.
 
 ### Did you write a code that fixes a bug?
 
@@ -51,3 +54,4 @@ Aluerie ❤
 ### Contact me by:
 * Discord Direct Message: Aluerie ❤#6524
 * Mention me in [my server](https://discord.gg/K8FuDeP)
+* `/feeback` or `$feedback` command from the bot command menu

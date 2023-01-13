@@ -47,6 +47,7 @@ class EventType:
     commented = BaseEvent('commented', colour=0x4285F4, picture='commented.png', word='commented', text_flag=True)
     opened = BaseEvent('opened', colour=0x52CC99, picture='opened.png', word='opened', text_flag=True)
 
+    # these should match one of event names from GitHub documentation 
     issue_events = ['assigned', 'closed', 'reopened']
 
 
@@ -170,6 +171,7 @@ class DotaBugtracker(commands.Cog):
             events = [
                 x for x in i.get_events()
                 if x.created_at.replace(tzinfo=datetime.timezone.utc) > dt
+                and x.actor  # apparently some people just delete their accounts after closing their issues, #6556 :D
                 and x.actor.login in assignees
                 and x.event in EventType.issue_events
             ]

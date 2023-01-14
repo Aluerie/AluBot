@@ -578,7 +578,7 @@ class Meta(commands.Cog):
         if not self.bot.test:
             # announce to people that we logged in
             e = discord.Embed(colour=Clr.prpl)
-            e.description = f'Logged in as {self.bot.user.name}.'
+            e.description = f'Logged in as {self.bot.user.name}'
             await self.bot.get_channel(Cid.spam_me).send(embed=e)
             e.set_footer(text='Finished updating/rebooting')
             await self.bot.get_channel(Cid.bot_spam).send(embed=e)
@@ -588,7 +588,7 @@ class Meta(commands.Cog):
         await self.bot.wait_until_ready()
 
     @load_help_info.error
-    async def load_help_info_error(self, error: Exception):
+    async def load_help_info_error(self, error):
         await self.bot.send_traceback(error, where='load_help_info')
 
     @commands.command(aliases=['join'])

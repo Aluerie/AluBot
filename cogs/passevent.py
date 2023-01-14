@@ -23,20 +23,28 @@ class PassEvent(commands.Cog):
         pass
 
     async def cog_unload(self) -> None:
-        self.botcheck.cancel()
+        self.pass_check.cancel()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.channel.id == game_feed:
-            self.botcheck.restart()
+            if self.pass_check.is_running():
+                self.pass_check.restart()
+            else:
+                self.pass_check.start()
 
-    @tasks.loop()
-    async def botcheck(self):
-        await asyncio.sleep(52 * 60)  # let's assume the longest possible game+q time is ~52 mins
+    @tasks.loop(count=1)
+    async def pass_check(self):
+        await asyncio.sleep(50*60)  # let's assume the longest possible game+q time is ~50 mins
         channel: discord.TextChannel = self.bot.get_channel(start_errors)  # type: ignore
         await channel.send(  f'<@{Uid.alu}> I think the bot crashed but did not even send the message')
 
-    @botcheck.before_loop
+    @pass_check.error
+    async def pass_check_error(self, error):
+        await self.bot.send_traceback(error, where='PassEvent check')
+        # self.git_comments_check.restart()
+
+    @pass_check.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
 

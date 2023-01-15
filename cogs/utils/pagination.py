@@ -6,7 +6,7 @@ Sources I used to create this file and files that are dependent on it:
 * pagination walk gist from InterStella0
     - https://gist.github.com/InterStella0/454cc51e05e60e63b81ea2e8490ef140
 * help walk gist from InterStella0
-    - https://gist.github.com/InterStella0/454cc51e05e60e63b81ea2e8490ef140
+    - https://gist.github.com/InterStella0/b78488fb28cadf279dfd3164b9f0cf96
 * past fork of it that still has View section
     - https://gist.github.com/Shashank3736/44c124dcaa5c4fdddc0300bec575dc08
 * RoboDanny's meta/pagination files (license MPL v2 from Rapptz/RoboDanny)
@@ -133,7 +133,7 @@ class Paginator(discord.ui.View):
         page = await self.source.get_page(page_number)
         self.current_page_number = page_number
         kwargs = await self._get_kwargs_from_page(page)
-        self._update_labels(page_number)
+        self._update_nav_labels(page_number)
         if kwargs:
             if ntr.response.is_done():
                 if self.message:
@@ -141,29 +141,42 @@ class Paginator(discord.ui.View):
             else:
                 await ntr.response.edit_message(**kwargs, view=self)
 
-    def after_update_labels(self, page_number: int) -> None:
+    async def show_checked_page(self, ntr: discord.Interaction, page_number: int) -> None:
+        """Just so next/prev don't IndexError me and loop correctly"""
+        max_pages = self.source.get_max_pages()
+        try: 
+            if max_pages is None:
+                # if there is no max_pages - we can't check.
+                await self.show_page(ntr, page_number)
+            else:
+                await self.show_page(ntr, page_number % max_pages)
+        except IndexError:
+            # we can handle it
+            pass
+
+    def update_more_labels(self, page_number: int) -> None:
         ...
 
-    def _update_labels(self, page_number: int) -> None:
+    def _update_nav_labels(self, page_number: int) -> None:
         max_pages = self.source.get_max_pages()
         self.index.label = f'{page_number + 1}/{max_pages}'
 
         if page_number == 0:
             self.previous_page.label = '\N{RIGHTWARDS ARROW WITH HOOK}'
             self.next_page.label = '>'
-        elif page_number == max_pages - 1:
+        elif max_pages and page_number == max_pages - 1:
             self.previous_page.label = '<'
             self.next_page.label = '\N{LEFTWARDS ARROW WITH HOOK}'
         else:
             self.previous_page.label = '<'
             self.next_page.label = '>'
-        self.after_update_labels(page_number)
+        self.update_more_labels(page_number)
 
     async def start(self, *, ephemeral: bool = False) -> None:
         await self.source._prepare_once()
         page = await self.source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
-        self._update_labels(0)
+        self._update_nav_labels(0)
         self.message = await self.ctx.send(**kwargs, view=self, ephemeral=ephemeral)
 
     async def interaction_check(self, ntr: discord.Interaction) -> bool:
@@ -178,7 +191,8 @@ class Paginator(discord.ui.View):
     async def on_timeout(self) -> None:
         if self.message:
             for item in self.children:
-                item.disabled = True
+                # item in self.childen is Select/Button which have ``.disable`` but typehinted as Item
+                item.disabled = True  # type: ignore 
             await self.message.edit(view=self)
 
     # todo: change those for debugging reasons pepega
@@ -196,10 +210,7 @@ class Paginator(discord.ui.View):
     @discord.ui.button(label='<', style=discord.ButtonStyle.red)
     async def previous_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):
         """Go to previous page"""
-        if self.current_page_number == 0:
-            await self.show_page(ntr, self.source.get_max_pages() - 1)
-        else:
-            await self.show_page(ntr, self.current_page_number - 1)
+        await self.show_checked_page(ntr, self.current_page_number - 1)
 
     @discord.ui.button(label='/', style=discord.ButtonStyle.gray)
     async def index(self, ntr: discord.Interaction, _btn: discord.ui.Button):
@@ -209,10 +220,7 @@ class Paginator(discord.ui.View):
     @discord.ui.button(label='>', style=discord.ButtonStyle.green)
     async def next_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):
         """Go to next page"""
-        if self.source.get_max_pages() - 1 == self.current_page_number:
-            await self.show_page(ntr, 0)
-        else:
-            await self.show_page(ntr, self.current_page_number + 1)
+        await self.show_checked_page(ntr, self.current_page_number + 1)
 
     @discord.ui.button(label='\N{RIGHT-POINTING MAGNIFYING GLASS}', style=discord.ButtonStyle.blurple)
     async def search(self, ntr: discord.Interaction, _btn: discord.ui.Button):
@@ -240,8 +248,8 @@ class EnumeratedPageSource(menus.ListPageSource):
             entries,
             *,
             per_page: int,
-            no_enumeration: bool = False,
-            description_prefix: str
+            no_enumeration: Optional[bool] = False,
+            description_prefix: str = ''
     ):
         super().__init__(entries, per_page=per_page)
         self.description_prefix = description_prefix
@@ -275,7 +283,7 @@ class EnumeratedPages(Paginator):
             per_page: int,
             no_enumeration: Optional[bool] = False,
             title: Optional[str] = None,
-            description_prefix: Optional[str] = '',
+            description_prefix: str = '',
             colour: Optional[Union[int, discord.Colour]] = None,
             footer_text: Optional[str] = None,
             author_name: Optional[str] = None,

@@ -9,6 +9,7 @@ from discord.ext import commands
 
 from .utils.context import Context
 from .utils.formats import human_timedelta
+from .utils.translator import TranslateError
 from .utils.var import Clr, Cid, Ems
 
 if TYPE_CHECKING:
@@ -112,6 +113,8 @@ class CommandErrorHandler(commands.Cog):
             case commands.CommandOnCooldown() | app_commands.CommandOnCooldown():
                 desc = f"Please retry in `{human_timedelta(error.retry_after, brief=True)}`"
             case commands.CheckFailure():
+                desc = f'{error}'
+            case TranslateError():
                 desc = f'{error}'
             case _:
                 handled = False

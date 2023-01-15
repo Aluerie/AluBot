@@ -27,7 +27,7 @@ LP_ICON = 'https://liquipedia.net/commons/extensions/TeamLiquidIntegration/resou
 async def schedule_work(
         session: ClientSession,
         schedule_mode: ScheduleMode,
-        query: str = None,
+        query: Optional[str] = None,
 ) -> discord.Embed:
     """Main function"""
 

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated, Optional
 
 import discord
 from discord import app_commands
@@ -7,6 +7,7 @@ from discord.ext import commands
 from PIL import Image
 
 from cogs.twitter import download_twitter_images
+from .utils.translator import translate
 from .utils.var import Clr, Ems
 
 if TYPE_CHECKING:
@@ -22,7 +23,10 @@ class ToolsCog(commands.Cog, name='Tools'):
 
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-        self.players_by_group = []
+        self.translate_ctx_menu = app_commands.ContextMenu(
+            name='Translate to English', 
+            callback=self.translate_ctx_menu_callback
+        )
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
@@ -30,6 +34,45 @@ class ToolsCog(commands.Cog, name='Tools'):
 
     def cog_load(self) -> None:
         self.bot.ini_twitter()
+        self.bot.tree.add_command(self.translate_ctx_menu)
+
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(self.translate_ctx_menu.name, type=self.translate_ctx_menu.type)
+
+    async def translate_embed(self, text: str):
+        # TranslateError is handled in global ErrorHandler, maybe we need to rework it tho
+        # into try/except or cog_error
+        result = await translate(text, session=self.bot.session)
+
+        e = discord.Embed(title='Google Translate to English', colour=Clr.prpl)
+        e.description = result.translated
+        e.set_footer(text=f'Detected language: {result.source_lang}')
+        return e
+
+    async def translate_ctx_menu_callback(self, ntr: discord.Interaction, message: discord.Message):
+        if len(text := message.content) == 0:
+            raise commands.BadArgument("Sorry it seems this message doesn't have content")
+        e = await self.translate_embed(text)
+        await ntr.response.send_message(embed=e, ephemeral=True)
+
+    @commands.command(name='translate')
+    async def ext_translate(self, ctx: Context, *, message: Annotated[Optional[str], commands.clean_content] = None):
+        """Translate a message to English using Google Translate, auto-detects source language."""
+        if message is None:
+            reply = ctx.replied_message
+            if reply is not None:
+                message = reply.content
+            else:
+                raise commands.BadArgument('Missing a message to translate')
+        e = await self.translate_embed(message)
+        await ctx.reply(embed=e)
+
+    @app_commands.command(name='translate')
+    @app_commands.describe(text="Enter text to translate")
+    async def slash_translate(self, ntr: discord.Interaction, text: str):
+        """Google Translate to English, auto-detects source language"""
+        e = await self.translate_embed(text)
+        await ntr.response.send_message(embed=e)
 
     @commands.hybrid_command(
         name='convert',
@@ -57,8 +100,4 @@ class ToolsCog(commands.Cog, name='Tools'):
 
 
 async def setup(bot: AluBot):
-    # while twitter is banned in russia # TODO: Remove this
-    import platform
-    if platform.system() == 'Windows':
-        return
     await bot.add_cog(ToolsCog(bot))

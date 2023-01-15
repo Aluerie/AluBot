@@ -441,7 +441,7 @@ class SetupPages(Paginator):
         self.show_text_cmds = True
         self.add_item(SetupSelect(self))
 
-    def after_update_labels(self, page_number: int) -> None:
+    def update_more_labels(self, page_number: int) -> None:
         self.text_cmds.label = '\N{NOTEBOOK}' if self.show_text_cmds else '\N{OPEN BOOK}'
 
     def fill_items(self):

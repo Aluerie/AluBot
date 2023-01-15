@@ -13,7 +13,6 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import psutil
 from PIL import ImageColor, Image
-from async_google_trans_new import google_translator
 from dateparser.search import search_dates
 from dota2 import __version__ as dota2__version__
 from pyot import __version__ as pyot__version__
@@ -41,24 +40,11 @@ async def account_age_ctx_menu(ntr: discord.Interaction, member: discord.Member)
     await ntr.response.send_message(f"{member.mention} is {human_timedelta(age)} old.", ephemeral=True)
 
 
-async def translate_msg_ctx_menu(ntr: discord.Interaction, message: discord.Message):
-    e = discord.Embed(colour=message.author.colour, title='Google Translate to English')
-    if len(message.content) == 0:
-        e.description = "Sorry it seems this message doesn't have content"
-    else:
-        translator = google_translator()
-        e.description = await translator.translate(message.content, lang_tgt='en')
-        e.set_footer(text=f'Detected language: {(await translator.detect(message.content))[0]}')
-    await ntr.response.send_message(embed=e, ephemeral=True)
-
-
 class Info(commands.Cog, name='Info'):
     """Commands to get some useful info"""
 
-    def __init__(self, bot):
+    def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-
-        self.ctx_menu1 = app_commands.ContextMenu(name='Translate to English', callback=translate_msg_ctx_menu)
         self.ctx_menu2 = app_commands.ContextMenu(name='View Account Age', callback=account_age_ctx_menu)
 
     @property
@@ -66,11 +52,9 @@ class Info(commands.Cog, name='Info'):
         return discord.PartialEmoji.from_str(Ems.PepoG)
 
     async def cog_load(self) -> None:
-        self.bot.tree.add_command(self.ctx_menu1)
         self.bot.tree.add_command(self.ctx_menu2)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
         self.bot.tree.remove_command(self.ctx_menu2.name, type=self.ctx_menu2.type)
 
     @commands.Cog.listener()
@@ -81,16 +65,17 @@ class Info(commands.Cog, name='Info'):
         if pdates is None:
             return
         for pdate in pdates:
-            if pdate[1].tzinfo is not None:
-                dt = pdate[1]
+            dt = pdate[1]
+            if dt.tzinfo is not None:
                 e = discord.Embed(colour=Clr.prpl)
-                e.description = \
-                    f'"{pdate[0]}" in your timezone:\n {format_dt_tdR(dt)}\n' \
+                e.description = (
+                    f'"{pdate[0]}" in your timezone:\n {format_dt_tdR(dt)}\n'
                     f'{dt.tzname()} is GMT {dt.utcoffset().seconds / 3600:+.1f}, dls: {dt.dst().seconds / 3600:+.1f}'
+                )
                 await message.channel.send(embed=e)
 
     @commands.Cog.listener()
-    async def on_member_update(self, before, after):
+    async def on_member_update(self, before: discord.Member, after: discord.Member):
         if before.guild.id != Sid.alu:
             return
         added_role = list(set(after.roles) - set(before.roles))
@@ -137,49 +122,38 @@ class Info(commands.Cog, name='Info'):
         e.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
         await ctx.reply(embed=e)
 
-    @commands.hybrid_command()
-    @app_commands.describe(text="Enter text to translate")
-    async def translate(self, ctx: Context, *, text: str):
-        """Translate text into English using Google Translate, auto-detects source language."""
-        translator = google_translator()
-        e = discord.Embed(title='Google Translate to English', colour=ctx.author.colour)
-        e.description = await translator.translate(text, lang_tgt='en')
-        e.set_footer(text=f'Detected language: {(await translator.detect(text))[0]}')
-        await ctx.reply(embed=e)
-
     @commands.hybrid_command(aliases=['color'], usage='<formatted_colour_string>',)
-    @app_commands.describe(colour_arg='Colour in any of supported formats')
-    async def colour(self, ctx, *, colour_arg: str):
-        """
-        Get info about colour in specified <formatted_colour_string>
+    @app_commands.describe(colour='Colour in any of supported formats')
+    async def colour(self, ctx, *, colour: str):
+        """Get info about colour in specified <formatted_colour_string>
 
         The bot supports the following string formats:
 
-        • Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`
-        • RGB: `rgb(red, green, blue)` where the colour values are integers or percentages
-        • Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`
-        • Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`
-        • Common HTML color names: `red`, `Blue`
-        • Extra: MaterialUI Google Palette: `mu(colour_name, shade)`
-        • Extra: MateriaAccentUI Google Palette: `mu(colour_name, shade)`
-        • Last but not least: `prpl` for favourite Aluerie\'s colour
+        \N{BULLET} Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`
+        \N{BULLET} RGB: `rgb(red, green, blue)` where the colour values are integers or percentages
+        \N{BULLET} Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`
+        \N{BULLET} Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`
+        \N{BULLET} Common HTML color names: `red`, `Blue`
+        \N{BULLET} Extra: MaterialUI Google Palette: `mu(colour_name, shade)`
+        \N{BULLET} Extra: MateriaAccentUI Google Palette: `mu(colour_name, shade)`
+        \N{BULLET} Last but not least: `prpl` for favourite Aluerie\'s colour
         """
-        if colour_arg == 'prpl':
-            colour_arg = '#9678B6'
+        if colour == 'prpl':
+            colour = '#9678B6'
 
         m = re.match(
-            r"mu\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour_arg
+            r"mu\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour
         )
         if m:
-            colour_arg = hex(MP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
+            colour = hex(MP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
 
         m = re.match(
-            r"mua\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour_arg
+            r"mua\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour
         )
         if m:
-            colour_arg = hex(MAP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
+            colour = hex(MAP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
 
-        rgb = ImageColor.getcolor(colour_arg, "RGB")
+        rgb = ImageColor.getcolor(colour, "RGB")
 
         def rgb2hex(r, g, b):
             return "#{:02x}{:02x}{:02x}".format(r, g, b)
@@ -196,20 +170,13 @@ class Info(commands.Cog, name='Info'):
         e.set_thumbnail(url=f'attachment://{file.filename}')
         await ctx.reply(embed=e, file=file)
 
-    @colour.autocomplete('colour_arg')
+    @colour.autocomplete('colour')
     async def colour_callback(
             self,
             _: discord.Interaction,
             current: str
     ) -> List[app_commands.Choice[str]]:
-        colours = [
-            'prpl',
-            'rgb(',
-            'hsl(',
-            'hsv(',
-            'mu(',
-            'mua('
-        ] + list(ImageColor.colormap.keys())
+        colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mu(', 'mua('] + list(ImageColor.colormap.keys())
         return [
             app_commands.Choice(name=clr, value=clr)
             for clr in colours if current.lower() in clr.lower()
@@ -262,7 +229,7 @@ class Info(commands.Cog, name='Info'):
         e.add_field(
             name='Current % | max values',
             value=(
-                f'\N{BLACK CIRCLE} CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
+                # f'\N{BLACK CIRCLE} CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
                 f'\N{BLACK CIRCLE} RAM usage: \n{psutil.virtual_memory().percent}% | '
                 f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
                 f'\N{BLACK CIRCLE} Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
@@ -270,7 +237,7 @@ class Info(commands.Cog, name='Info'):
             )
         )
         e.add_field(
-            name='Python Versions',
+            name='Versions',
             value=(
                 f'\N{BLACK CIRCLE} Python: {platform.python_version()}\n'
                 f'\N{BLACK CIRCLE} discord.py {discord.__version__}\n'
@@ -293,7 +260,7 @@ class Info(commands.Cog, name='Info'):
     async def stats(self, ctx: Context):
         """Summary stats for the bot"""
         e = discord.Embed(title='Summary bot stats', colour=Clr.prpl)
-        e.set_thumbnail(url=self.bot.user.avatar.url)
+        e.set_thumbnail(url=self.bot.user.display_avatar.url)
         e.add_field(name="Server Count", value=str(len(self.bot.guilds)))
         e.add_field(name="User Count", value=str(len(self.bot.users)))
         e.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")

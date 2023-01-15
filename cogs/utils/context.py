@@ -147,6 +147,20 @@ class Context(commands.Context):
         #     case _:
         #         return '\N{BLACK LARGE SQUARE}'
 
+    @discord.utils.cached_property
+    def replied_reference(self) -> Optional[discord.MessageReference]:
+        ref = self.message.reference
+        if ref and isinstance(ref.resolved, discord.Message):
+            return ref.resolved.to_reference()
+        return None
+
+    @discord.utils.cached_property
+    def replied_message(self) -> Optional[discord.Message]:
+        ref = self.message.reference
+        if ref and isinstance(ref.resolved, discord.Message):
+            return ref.resolved
+        return None
+
 
 class GuildContext(Context):
     author: discord.Member

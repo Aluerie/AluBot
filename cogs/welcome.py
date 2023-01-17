@@ -57,12 +57,11 @@ async def welcome_message(
     image = await welcome_image(session, member)
 
     if back:
-        wave_emote, the_word = Ems.DankLove, ''
+        wave_emote, the_word = Ems.DankLove, 'BACK'
     else:
-        wave_emote, the_word = Ems.peepoWave, 'BACK'
-    content_text = '**💜 Welcome {2} to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'.format(
-        member.mention, wave_emote, the_word
-    )
+        wave_emote, the_word = Ems.peepoWave, ''
+    content_text = '**💜 Welcome {2} to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'\
+        .format(member.mention, wave_emote, the_word)
 
     if not member.bot:
         description = (

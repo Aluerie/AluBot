@@ -91,8 +91,7 @@ class ToolsCog(commands.Cog, name='Tools'):
     @commands.hybrid_command()
     @app_commands.describe(tweet_ids='Number(-s) in the end of tweet link')
     async def twitter_image(self, ctx: Context, *, tweet_ids: str):
-        """
-        Download image from tweets. \
+        """Download image from tweets. \
         Useful for Aluerie because Twitter is banned in Russia.
         • `<tweet_ids>` are tweet ids - it's just numbers in the end of tweet links.
         """

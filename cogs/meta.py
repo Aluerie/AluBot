@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Literal, NamedTuple, Sequence, List, Self
+from typing import TYPE_CHECKING, Optional, Literal, NamedTuple, Sequence, List
+from typing_extensions import Self
 
 import unicodedata
 

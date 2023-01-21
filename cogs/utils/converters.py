@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Self
+from typing import TYPE_CHECKING, Optional
+from typing_extensions import Self
 
 from discord.ext import commands
 

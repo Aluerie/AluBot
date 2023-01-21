@@ -38,7 +38,7 @@ class Cid:
     """Autocomplete-friendly stash for channel ids
 
     Example Usage: ::
-
+    
         # Remember that channel mentions are
         channel_mention = f'<#{Cid.channel_id}>'
     """

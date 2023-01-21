@@ -132,7 +132,7 @@ class Context(commands.Context):
         await self.reply('test test')
 
     @staticmethod
-    def checkmark(semi_bool: bool | None):
+    def tick(semi_bool: bool | None):
         emoji_dict = {
             True: '\N{WHITE HEAVY CHECK MARK}',
             False: '\N{CROSS MARK}',
@@ -146,6 +146,13 @@ class Context(commands.Context):
         #         return '\N{CROSS MARK}'
         #     case _:
         #         return '\N{BLACK LARGE SQUARE}'
+
+    async def try_tick_reaction(self, semi_bool: bool | None):
+        try:
+            await self.message.add_reaction(self.tick(semi_bool))
+        except:
+            pass
+
 
     @discord.utils.cached_property
     def replied_reference(self) -> Optional[discord.MessageReference]:
@@ -163,6 +170,16 @@ class Context(commands.Context):
 
 
 class GuildContext(Context):
-    author: discord.Member
-    guild: discord.Guild
-    channel: Union[discord.VoiceChannel, discord.TextChannel, discord.Thread]
+    if TYPE_CHECKING:
+        author: discord.Member
+        guild: discord.Guild
+        channel: Union[discord.VoiceChannel, discord.TextChannel, discord.Thread]
+
+
+# I guess, I'm tired of # type: ignore
+# There is no analogy to custom Context in discord.Interaction (as for now)
+# so we just have to typehint client: AluBot
+# and implement custom functions into AluBot class
+class Interaction(discord.Interaction):
+    if TYPE_CHECKING:
+        client: AluBot

@@ -29,7 +29,7 @@ class Plural:
 
         >>> format(Plural(1), 'child|children')  # '1 child'
         >>> format(Plural(8), 'week|weeks')  # '8 weeks'
-        >>>> f'{Plural(3):reminder}' # 3 reminders
+        >>> f'{Plural(3):reminder}' # 3 reminders
     """
     def __init__(self, value: int):
         self.value: int = value
@@ -267,8 +267,17 @@ def block_function(string, blocked_words, whitelist_words):
 def indent(symbol, counter, offset, split_size):
     return str(symbol).ljust(len(str(((counter - offset) // split_size + 1) * split_size)), " ")
 
+#######################################################################
+# ANSI ################################################################
+#######################################################################
+# It is not used anywhere in the bot
+# because mobile does not support coloured codeblocks/ansi tech
+# but well, let's keep it
+# https://gist.github.com/kkrypt0nn/a02506f3712ff2d1c8ca7c9e0aed7c06
+
 
 class AnsiFG(Enum):
+    """Ansi foreground colours"""
     gray = 30
     red = 31
     green = 32
@@ -283,6 +292,7 @@ class AnsiFG(Enum):
 
 
 class AnsiBG(Enum):
+    """Ansi background colours"""
     firefly_dark_blue = 40
     orange = 41
     marble_blue = 42
@@ -296,10 +306,21 @@ class AnsiBG(Enum):
         return self.value
 
 
+class AnsiFMT(Enum):
+    """Ansi text formats"""
+    normal = 0
+    bold = 1
+    underline = 4
+
+    def __int__(self) -> int:
+        return self.value
+
+
 def ansi(
         text: str,
-        foreground: AnsiFG = None,
-        background: AnsiBG = None,
+        *,
+        foreground: Optional[AnsiFG] = None,
+        background: Optional[AnsiBG] = None,
         bold: bool = False,
         underline: bool = False
 ) -> str:
@@ -309,11 +330,11 @@ def ansi(
     # todo: check ansi gist for more
     # todo: check if stuff from docs in MyColourFormatting in bot.py works.
     # i think discord ansi is a bit halved
-    array_join = [0]
+    array_join = [AnsiFMT.normal.value]
     if bold:
-        array_join.append(1)
+        array_join.append(AnsiFMT.bold.value)
     if underline:
-        array_join.append(4)
+        array_join.append(AnsiFMT.underline.value)
     if background:
         array_join.append(background.value)
     if foreground:

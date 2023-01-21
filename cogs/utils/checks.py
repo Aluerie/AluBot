@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, TypeVar
 
+import discord
 from discord import app_commands
 from discord.ext import commands
 
@@ -25,17 +26,31 @@ def is_guild_owner():
 
 
 def is_trustee():
-    async def predicate(ctx: Context) -> bool:
+    async def pred(ctx_ntr: Context | discord.Interaction) -> bool:
         """trustees only"""
+        if isinstance(ctx_ntr, Context):
+            user_id = ctx_ntr.author.id
+            pool = ctx_ntr.pool
+        else:  # discord.Interaction
+            user_id = ctx_ntr.user
+            pool = ctx_ntr.client.pool  # type: ignore
+
         query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
-        trusted_ids = await ctx.pool.fetchval(query, Sid.alu)
-        if ctx.author.id in trusted_ids:
+        trusted_ids = await pool.fetchval(query, Sid.alu)
+        if user_id in trusted_ids:
             return True
         else:
             raise commands.CheckFailure(
                 message='Sorry, only trusted people can use this command'
             )
-    return commands.check(predicate)
+
+    def decorator(func: T) -> T:
+        commands.check(pred)(func)
+        app_commands.check(pred)(func)
+        app_commands.default_permissions(administrator=True)(func)
+        return func
+
+    return decorator
 
 
 def is_owner():

@@ -98,8 +98,8 @@ class Info(commands.Cog, name='Info'):
         aliases=['utc'],
         description="Show GMT(UTC) time"
     )
-    async def gmt(self, ctx):
-        """Show GMT (UTC) time ;"""
+    async def gmt(self, ctx: Context):
+        """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
         e = discord.Embed(colour=Clr.prpl, title='GMT(Greenwich Mean Time)')

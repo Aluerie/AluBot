@@ -314,27 +314,28 @@ class MyCommandTree(app_commands.CommandTree):
     The class makes the tree store app_commands.AppCommand
     to access later for mentioning or anything
     """
+
     def __init__(self, client: AluBot):
-        super().__init__(client=client)  # (**kwargs)
+        super().__init__(client=client)
         self._global_app_commands: AppCommandStore = {}
-        # guild_id: AppCommandStore # :thinking: ?
+        # guild_id: AppCommandStore
         self._guild_app_commands: Dict[int, AppCommandStore] = {}
 
     def find_app_command_by_names(
             self,
             *qualified_name: str,
-            guild: Optional[Union[Snowflake, int]] = None
+            guild: Optional[Union[Snowflake, int]] = None,
     ) -> Optional[app_commands.AppCommand]:
-        cmds = self._global_app_commands
+        commands = self._global_app_commands
         if guild:
             guild_id = guild.id if not isinstance(guild, int) else guild
-            guild_cmds = self._guild_app_commands.get(guild_id, {})
-            if not guild_cmds and self.fallback_to_global:
-                cmds = self._global_app_commands
+            guild_commands = self._guild_app_commands.get(guild_id, {})
+            if not guild_commands and self.fallback_to_global:
+                commands = self._global_app_commands
             else:
-                cmds = guild_cmds
+                commands = guild_commands
 
-        for cmd_name, cmd in cmds.items():
+        for cmd_name, cmd in commands.items():
             if any(name in qualified_name for name in cmd_name.split()):
                 return cmd
 
@@ -343,7 +344,7 @@ class MyCommandTree(app_commands.CommandTree):
     def get_app_command(
             self,
             value: Union[str, int],
-            guild: Optional[Union[Snowflake, int]] = None
+            guild: Optional[Union[Snowflake, int]] = None,
     ) -> Optional[app_commands.AppCommand]:
         def search_dict(d: AppCommandStore) -> Optional[app_commands.AppCommand]:
             for cmd_name, cmd in d.items():
@@ -366,22 +367,21 @@ class MyCommandTree(app_commands.CommandTree):
         ret: AppCommandStore = {}
 
         def unpack_options(
-                options: List[Union[app_commands.AppCommand, app_commands.AppCommandGroup, app_commands.Argument]]
-        ):
+                options: List[Union[app_commands.AppCommand, app_commands.AppCommandGroup, app_commands.Argument]]):
             for option in options:
                 if isinstance(option, app_commands.AppCommandGroup):
                     ret[option.qualified_name] = option  # type: ignore
                     unpack_options(option.options)  # type: ignore
 
-        for cmd in commands:
-            ret[cmd.name] = cmd
-            unpack_options(cmd.options)  # type: ignore
+        for command in commands:
+            ret[command.name] = command
+            unpack_options(command.options)  # type: ignore
 
         return ret
 
     async def _update_cache(
             self,
-            commands: Optional[List[app_commands.AppCommand]] = None,
+            commands: List[app_commands.AppCommand],
             guild: Optional[Union[Snowflake, int]] = None
     ) -> None:
         # because we support both int and Snowflake
@@ -392,9 +392,6 @@ class MyCommandTree(app_commands.CommandTree):
                 _guild = discord.Object(guild)
             else:
                 _guild = guild
-
-        if not commands:
-            commands = await self.fetch_commands(guild=_guild)
 
         if _guild:
             self._guild_app_commands[_guild.id] = self._unpack_app_commands(commands)
@@ -419,8 +416,7 @@ class MyCommandTree(app_commands.CommandTree):
 
     def clear_commands(
             self,
-            *,
-            guild: Optional[Snowflake],
+            *, guild: Optional[Snowflake],
             type: Optional[discord.AppCommandType] = None,
             clear_app_commands_cache: bool = True
     ) -> None:

@@ -9,7 +9,7 @@ from discord.ext import commands, tasks, menus
 
 from .utils.context import Context
 from .utils import pagination
-from .utils.var import Cid
+from .utils.var import Cid, Sid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -68,7 +68,8 @@ class BetaTest(commands.Cog):
         return
 
     @app_commands.command()
-    async def welp(self, ntr: discord.Interaction):
+    @app_commands.guilds(Sid.wink)
+    async def welping(self, ntr: discord.Interaction):
         await ntr.response.send_message('allo')
 
     @commands.hybrid_command()
@@ -82,7 +83,7 @@ class BetaTest(commands.Cog):
 
         data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         formatter = MySource(data, per_page=1)
-        menu = pagination.Paginator(formatter, ctx=ctx)
+        menu = pagination.Paginator(ctx, formatter, ctx=ctx)
         await menu.start()
 
     @test_task.before_loop

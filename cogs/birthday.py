@@ -199,12 +199,12 @@ class Birthday(commands.Cog):
         e.set_footer(text='Important! By submitting this information you agree it can be shown to anyone.')
         await ctx.reply(embed=e)
 
-    @birthday.command(aliases=['del'])
-    async def delete(self, ctx: Context):
-        """Delete your birthday data and stop getting congratulations"""
+    @birthday.command(aliases=['del', 'delete'])
+    async def remove(self, ctx: Context):
+        """Remove your birthday data and stop getting congratulations"""
         query = 'UPDATE users SET bdate=$1 WHERE users.id=$2;'
         await self.bot.pool.execute(query, None, ctx.author.id)
-        await ctx.reply("Your birthday is successfully deleted", ephemeral=True)
+        await ctx.reply("Your birthday is successfully removed from the bot database", ephemeral=True)
 
     @birthday.command(usage='[member=you]')
     @app_commands.describe(member='Member of the server or you if not specified')

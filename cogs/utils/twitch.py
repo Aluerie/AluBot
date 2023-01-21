@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List
 
 import logging
 import re
+from typing import TYPE_CHECKING, List
 
-from discord.ext.commands import BadArgument
 import twitchio
+from discord.ext.commands import BadArgument
 
 from cogs.lol.const import LOL_GAME_CATEGORY_TWITCH_ID
 from cogs.utils.formats import human_timedelta

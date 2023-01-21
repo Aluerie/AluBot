@@ -1,0 +1,13 @@
+[tool.black]
+line-length = 120
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+combine_as_imports = true
+combine_star = true
+line_length = 120
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"

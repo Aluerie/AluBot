@@ -153,7 +153,7 @@ class DotaBugtracker(commands.Cog):
     async def cog_unload(self) -> None:
         self.git_comments_check.stop()  # .cancel()
 
-    @tasks.loop(minutes=10)
+    @tasks.loop(minutes=3)
     async def git_comments_check(self):
         repo = self.bot.git_gameplay
 
@@ -259,7 +259,7 @@ class DotaBugtracker(commands.Cog):
             if error.status == 502:
                 if self.retries == 0:
                     e = discord.Embed(description='DotaBugtracker: Server Error 502')
-                    await self.bot.spam_me_channel.send(embed=e)
+                    await self.bot.spam_channel.send(embed=e)
                 await asyncio.sleep(60 * 10 * 2**self.retries)
                 self.retries += 1
                 self.git_comments_check.restart()

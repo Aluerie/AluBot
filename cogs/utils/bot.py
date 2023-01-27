@@ -96,7 +96,7 @@ class AluBot(commands.Bot,):
         self.client_id: int = cfg.TEST_DISCORD_CLIENT_ID if test else cfg.DISCORD_CLIENT_ID
         self.test: bool = test
         self.app_commands: Dict[str, int] = {}
-        self.odota_ratelimit: str = 'was not received yet'
+        self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
 
     async def setup_hook(self) -> None:
         self.session = ClientSession()
@@ -238,7 +238,7 @@ class AluBot(commands.Bot,):
         monthly = headers.get('X-Rate-Limit-Remaining-Month')
         minutely = headers.get('X-Rate-Limit-Remaining-Minute')
         if monthly is not None or minutely is not None:
-            self.odota_ratelimit = f'monthly: {monthly}, minutely: {minutely}'
+            self.odota_ratelimit = {'monthly': monthly, 'minutely': minutely}
 
     @property
     def reminder(self) -> Optional[Reminder]:
@@ -276,7 +276,8 @@ class AluBot(commands.Bot,):
         --------
         None
         """
-        ch: discord.TextChannel = destination or self.get_channel(Cid.spam_me)
+
+        ch: discord.TextChannel = destination or self.spam_channel
 
         etype, value, trace = type(error), error, error.__traceback__
         traceback_content = "".join(
@@ -295,11 +296,15 @@ class AluBot(commands.Bot,):
             await ch.send(page)
 
     @property
-    def spam_me_channel(self) -> discord.TextChannel: 
-        # Shortcup so checker doesn't complain too much
+    def spam_ch_id(self):
+        return Cid.test_spam if self.test else Cid.spam_me
+
+    @property
+    def spam_channel(self) -> discord.TextChannel:
+        # Shortcup so checker doesn't complain too much,
         # and we do not have to `from .utils.vars import Cid``
         # ?tag botvar in a nutshell
-        return self.get_channel(Cid.spam_me)  # type: ignore
+        return self.get_channel(self.spam_ch_id)  # type: ignore
 
 # ######################################################################################################################
 # ########################################### MY COMMAND APP TREE ######################################################

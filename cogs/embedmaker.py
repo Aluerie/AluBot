@@ -17,7 +17,7 @@ from .utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
-    from .utils.context import Context, Interaction
+    from .utils.context import Context
 
 
 class StartView(discord.ui.View):

@@ -180,13 +180,9 @@ class ScheduleSelect(discord.ui.Select):
         )
         self.query = query
 
-    async def callback(self, ntr: discord.Interaction):
+    async def callback(self, ntr: discord.Interaction[AluBot]):
         enum_sch = ScheduleMode(value=int(self.values[0]))
-        e = await schedule_work(
-            ntr.client.session,  # type: ignore
-            enum_sch,
-            self.query
-        )
+        e = await schedule_work(ntr.client.session, enum_sch, self.query)
         await ntr.response.edit_message(embed=e)
 
 
@@ -200,12 +196,12 @@ class ScheduleView(discord.ui.View):
         self.schedule_select = ss = ScheduleSelect(query)
         self.add_item(ss)
 
-    async def interaction_check(self, ntr: discord.Interaction) -> bool:
+    async def interaction_check(self, ntr: discord.Interaction[AluBot]) -> bool:
         if ntr.user and ntr.user.id == self.author.id:
             return True
         else:
             e = await schedule_work(
-                ntr.client.session,  # type: ignore
+                ntr.client.session,
                 ScheduleMode(value=int(self.schedule_select.values[0])),
                 self.query
             )

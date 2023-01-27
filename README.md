@@ -74,9 +74,9 @@ All info in `$help` or `/help` command of the bot. But here is list that is prob
 
 * There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/.github/CONTRIBUTING.md)
 * TL;DR^: Feel free to...
-  * open a GitHub Issue/PR/Discussion
-  * Use `/feedback` bot command 
-  * write me (Aluerie ❤#6524) on discord
+  * open a GitHub Issue/PR/Discussion,
+  * use `/feedback` bot command, 
+  * write me (Aluerie ❤#6524) on discord,
   * look my [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
 
 ### 🛠️Running
@@ -123,4 +123,4 @@ Example of such commands is `/birthday set`.
 If you are using the command - you are giving me consent to store your birthday data, 
 work with it and show to other people. 
 
-The bot have commands to delete your data, i.e. `/birthday remove`.
+The bot has commands to delete your data, i.e. `/birthday remove`.

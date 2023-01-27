@@ -158,9 +158,9 @@ class TestGitFeed(commands.Cog):
         num = 4
         url, embeds, files = await get_gitdiff_embed(test_num=num)
         for embed in embeds:
-            await self.bot.get_channel(Cid.spam_me).send(content=url, embed=embed)
+            await self.bot.spam_channel.send(content=url, embed=embed)
         if len(files):
-            await self.bot.get_channel(Cid.spam_me).send(files=files)
+            await self.bot.spam_channel.send(files=files)
 
     @testing.before_loop
     async def before(self):

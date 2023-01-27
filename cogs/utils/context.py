@@ -153,7 +153,6 @@ class Context(commands.Context):
         except:
             pass
 
-
     @discord.utils.cached_property
     def replied_reference(self) -> Optional[discord.MessageReference]:
         ref = self.message.reference
@@ -174,12 +173,3 @@ class GuildContext(Context):
         author: discord.Member
         guild: discord.Guild
         channel: Union[discord.VoiceChannel, discord.TextChannel, discord.Thread]
-
-
-# I guess, I'm tired of # type: ignore
-# There is no analogy to custom Context in discord.Interaction (as for now)
-# so we just have to typehint client: AluBot
-# and implement custom functions into AluBot class
-class Interaction(discord.Interaction):
-    if TYPE_CHECKING:
-        client: AluBot

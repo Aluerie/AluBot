@@ -35,6 +35,7 @@ from discord.ext import menus
 from .var import Clr, Ems
 
 if TYPE_CHECKING:
+    from .bot import AluBot
     from .context import Context
 
 
@@ -192,12 +193,12 @@ class Paginator(discord.ui.View):
             await self.message.edit(view=self)
 
     # todo: change those for debugging reasons pepega
-    async def on_error(self, ntr: discord.Interaction, error: Exception, item: discord.ui.Item) -> None:
+    async def on_error(self, ntr: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item) -> None:
         if ntr.response.is_done():
             await ntr.followup.send(f"Some error occurred, sorry", ephemeral=True)
         else:
             await ntr.response.send_message(f"Some error occurred, sorry", ephemeral=True)
-        await ntr.client.send_traceback(error, where="Paginator")  # type: ignore
+        await ntr.client.send_traceback(error, where="Paginator")
 
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
     async def home_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):

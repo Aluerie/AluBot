@@ -8,6 +8,7 @@ from discord.ext import commands
 from .var import Sid
 
 if TYPE_CHECKING:
+    from .bot import AluBot
     from .context import GuildContext, Context
 
 T = TypeVar('T')
@@ -26,14 +27,14 @@ def is_guild_owner():
 
 
 def is_trustee():
-    async def pred(ctx_ntr: Context | discord.Interaction) -> bool:
+    async def pred(ctx_ntr: Context | discord.Interaction[AluBot]) -> bool:
         """trustees only"""
         if isinstance(ctx_ntr, Context):
             user_id = ctx_ntr.author.id
             pool = ctx_ntr.pool
         else:  # discord.Interaction
             user_id = ctx_ntr.user
-            pool = ctx_ntr.client.pool  # type: ignore
+            pool = ctx_ntr.client.pool
 
         query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
         trusted_ids = await pool.fetchval(query, Sid.alu)

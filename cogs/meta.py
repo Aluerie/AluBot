@@ -17,7 +17,7 @@ from .utils.var import Cid, Clr, Ems, Rid, Lmt
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
-    from .utils.context import GuildContext, Interaction
+    from .utils.context import GuildContext
 
 
 # #####################################################################################################################
@@ -721,7 +721,7 @@ class PrefixSetModal(discord.ui.Modal, title='New prefix setup'):
             e.description = 'Unknown error, sorry'
         await ntr.response.send_message(embed=e, ephemeral=True)
 
-    async def on_submit(self, ntr: Interaction) -> None:
+    async def on_submit(self, ntr: discord.Interaction[AluBot]) -> None:
         p: GuildPrefix = await GuildPrefix.construct(ntr.client, ntr.guild, str(self.prefix.value))
         e = await p.set_prefix()
         await ntr.response.send_message(embed=e, ephemeral=True)
@@ -735,11 +735,11 @@ class PrefixSetupView(discord.ui.View):
         self.paginator: SetupPages = paginator
 
     @discord.ui.button(emoji='\N{HEAVY DOLLAR SIGN}', label='Change prefix', style=discord.ButtonStyle.blurple)
-    async def set_prefix(self, ntr: Interaction, _btn: discord.ui.Button):
+    async def set_prefix(self, ntr: discord.Interaction[AluBot], _btn: discord.ui.Button):
         await ntr.response.send_modal(PrefixSetModal(self.cog, self.paginator))
 
     @discord.ui.button(emoji='\N{BANKNOTE WITH DOLLAR SIGN}', label='Reset prefix', style=discord.ButtonStyle.blurple)
-    async def reset_prefix(self, ntr: Interaction, _btn: discord.ui.Button):
+    async def reset_prefix(self, ntr: discord.Interaction[AluBot], _btn: discord.ui.Button):
         p = GuildPrefix(ntr.client, ntr.guild)
         e = await p.set_prefix()
         await ntr.response.send_message(embed=e, ephemeral=True)

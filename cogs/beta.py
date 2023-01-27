@@ -64,7 +64,7 @@ class BetaTest(commands.Cog):
         e.set_footer(text=word, icon_url=link)
         e.set_thumbnail(url=link)
         e.set_image(url=link)
-        await self.bot.get_channel(Cid.spam_me).send(embed=e)
+        await self.bot.get_channel(Cid.test_spam).send(embed=e)
         return
 
     @app_commands.command()
@@ -83,7 +83,7 @@ class BetaTest(commands.Cog):
 
         data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         formatter = MySource(data, per_page=1)
-        menu = pagination.Paginator(ctx, formatter, ctx=ctx)
+        menu = pagination.Paginator(ctx, formatter)
         await menu.start()
 
     @test_task.before_loop

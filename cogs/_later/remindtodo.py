@@ -44,8 +44,6 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
             return
         if msg.content.startswith('$afk') or msg.content.startswith('~afk'):
             return
-        if msg.channel.id in [Cid.logs, Cid.spam_me]:
-            return
 
         for key in self.active_afk:
             if key in msg.raw_mentions:

@@ -1,0 +1,41 @@
+name: Bug report
+description: Something behaves in a way it probably should not... Or maybe does not work at all.
+
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: >
+        * Thanks for taking the time to fill out a bug. 
+        * For quicker bug report you can dm/@ me in discord or use `/feedback` command.
+        * Please note that this form is for bugs only!
+
+  - type: input
+    attributes:
+      label: 🔵Summary
+      description: A clear, simple and concise description of what the bug is
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🟣Description. Preferably, please, list Reproduction Steps, Expected and Actual Results.
+      description: >
+        * What you did to make it happen. 
+        * What is the problem? 
+        * Describe steps to reproduce the issue and expected/actual results.
+        * Please attach videos or screenshots if possible.
+      placeholder: What is the problem?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 🟢Checklist
+      description: |
+        Let's make sure you've properly done due diligence when reporting this issue!
+      options:
+        - label: I have searched the existing issues and my post is not a duplicate.
+          required: true

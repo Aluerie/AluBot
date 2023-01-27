@@ -65,7 +65,7 @@ class ConfView(discord.ui.View):
             raise ButtonOnCooldown(retry_after)
         return True
 
-    async def on_error(self, ntr: discord.Interaction, error: Exception, item: discord.ui.Item):
+    async def on_error(self, ntr: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item):
         if isinstance(error, ButtonOnCooldown):
             e = discord.Embed(colour=Clr.error).set_author(name=error.__class__.__name__)
             e.description = (
@@ -75,7 +75,7 @@ class ConfView(discord.ui.View):
             await ntr.response.send_message(embed=e, ephemeral=True)
         else:
             # await super().on_error(ntr, error, item) # original on_error
-            await ntr.client.send_traceback(error, where='Confessions')  # type: ignore
+            await ntr.client.send_traceback(error, where='Confessions')
 
     @discord.ui.button(
         label="Anonymous confession",

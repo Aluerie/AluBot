@@ -19,7 +19,7 @@ from .dota.models import ActiveMatch, OpendotaRequestMatch, PostMatchPlayerData
 from .utils.checks import is_guild_owner, is_trustee
 from .utils.context import Context, GuildContext
 from .utils.fpc import FPCBase, TwitchAccCheckCog
-from .utils.var import MP, Cid, Clr, Ems
+from .utils.var import MP, Cid, Clr, Ems, Uid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -297,8 +297,11 @@ class PostMatchEdits(commands.Cog):
     @tasks.loop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
     async def daily_report(self):
         e = discord.Embed(title="Daily Report", colour=MP.black())
-        e.description = f"Odota limits: {self.bot.odota_ratelimit}"
-        await self.bot.get_channel(Cid.spam_me).send(embed=e)
+        the_dict = self.bot.odota_ratelimit
+        month, min = the_dict['monthly'], the_dict['minutely']
+        e.description = f"Odota limits. monthly: {month} minutely: {min}"
+        content = f'<@{Uid.alu}>' if month < 10_000 else ''
+        await self.bot.get_channel(Cid.daily_report).send(content=content, embed=e)
 
     @daily_report.before_loop
     async def before(self):

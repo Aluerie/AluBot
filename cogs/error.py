@@ -10,7 +10,7 @@ from discord.ext import commands
 from .utils.context import Context
 from .utils.formats import human_timedelta
 from .utils.translator import TranslateError
-from .utils.var import Clr, Cid, Ems
+from .utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
@@ -138,7 +138,7 @@ class CommandErrorHandler(commands.Cog):
                         url=jump_url,
                         icon_url=ctx.author.display_avatar.url
                     )
-                mention = (ctx.channel.id != Cid.spam_me)
+                mention = (ctx.channel.id != ctx.bot.spam_ch_id)
                 await self.bot.send_traceback(error, embed=error_e, mention=mention)
 
         # send the error

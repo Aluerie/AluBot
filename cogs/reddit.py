@@ -90,7 +90,7 @@ class Reddit(commands.Cog):
                             < datetime.timedelta(days=7):
                         embeds = await process_comments(comment)
                         for item in embeds:
-                            msg = await self.bot.get_channel(Cid.spam_me).send(embed=item)
+                            msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
                             await msg.publish()
             except AsyncPrawcoreException:
                 await asyncio.sleep(60 * running)

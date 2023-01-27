@@ -9,41 +9,26 @@ body:
     attributes:
       value: >
         
-        * Thanks for taking the time to fill out a bug. 
-        
-        * For quicker bug report you can dm/@ me in discord or use `/feedback` command.
-        
-        * Please note that this form is for bugs only!
+        * For quicker feature request you can dm/@ me in discord or use `/feedback` command.
 
   - type: input
     attributes:
       label: 🔵Summary
-      description: A clear, simple and concise description of what the bug is
+      description: A clear, simple and concise description of what your feature request is.
     validations:
       required: true
 
   - type: textarea
     attributes:
-      label: 🟣Description. Preferably, please, list Reproduction Steps, Expected and Actual Results.
+      label: 🟣Description.
       description: >
         
-        * What you did to make it happen. 
+        * What would you like this feature to do?
         
-        * What is the problem? 
+        * What problem is your feature trying to solve? 
         
-        * Describe steps to reproduce the issue and expected/actual results.
-        
-        * Please attach videos or screenshots if possible.
-      placeholder: What is the problem?
+        * What becomes easier or possible when this feature is implemented?
+
+      placeholder: What is the feature?
     validations:
       required: true
-
-  - type: checkboxes
-    id: checklist
-    attributes:
-      label: 🟢Checklist
-      description: |
-        Let's make sure you've properly done due diligence when reporting this issue!
-      options:
-        - label: I have searched the existing issues and my post is not a duplicate.
-          required: true

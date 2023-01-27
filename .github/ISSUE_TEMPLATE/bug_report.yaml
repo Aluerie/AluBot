@@ -10,7 +10,9 @@ body:
       value: >
         
         * Thanks for taking the time to fill out a bug. 
+        
         * For quicker bug report you can dm/@ me in discord or use `/feedback` command.
+        
         * Please note that this form is for bugs only!
 
   - type: input
@@ -26,8 +28,11 @@ body:
       description: >
         
         * What you did to make it happen. 
+        
         * What is the problem? 
+        
         * Describe steps to reproduce the issue and expected/actual results.
+        
         * Please attach videos or screenshots if possible.
       placeholder: What is the problem?
     validations:

@@ -1,12 +1,14 @@
 name: Bug report
 description: Something behaves in a way it probably should not... Or maybe does not work at all.
 
+
 labels: ["bug"]
 
 body:
   - type: markdown
     attributes:
       value: >
+        
         * Thanks for taking the time to fill out a bug. 
         * For quicker bug report you can dm/@ me in discord or use `/feedback` command.
         * Please note that this form is for bugs only!
@@ -22,6 +24,7 @@ body:
     attributes:
       label: 🟣Description. Preferably, please, list Reproduction Steps, Expected and Actual Results.
       description: >
+        
         * What you did to make it happen. 
         * What is the problem? 
         * Describe steps to reproduce the issue and expected/actual results.

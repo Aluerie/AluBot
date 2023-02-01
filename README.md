@@ -39,7 +39,7 @@ with pretty much everything I ever needed ! Check List of features after the pic
 
 ### 📖 List of features
 
-All info in `$help` or `/help` command of the bot. But here is list that is probably not full:
+All info in `/help` and `/setup` commands of the bot. But here is list that is probably not full:
  - [X] maintains #🍋dota2_news
    * [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates - comments from Valve employees  
    * Steam DB's [GameTracking-Dota2](https://github.com/SteamDatabase/GameTracking-Dota2) updates and its analysis

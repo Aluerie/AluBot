@@ -68,7 +68,7 @@ class BetaTest(commands.Cog):
         return
 
     @app_commands.command()
-    @app_commands.guilds(Sid.wink)
+    @app_commands.guilds(Sid.test)
     async def welping(self, ntr: discord.Interaction):
         await ntr.response.send_message('allo')
 

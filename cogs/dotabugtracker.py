@@ -9,8 +9,9 @@ import textwrap
 import discord
 from discord.ext import commands, tasks
 from github.GithubException import GithubException
+from PIL import Image
 
-from .utils.var import Sid, Cid, Clr, Lmt
+from .utils.var import Sid, Cid, Lmt
 
 if TYPE_CHECKING:
     from github import Issue, NamedUser
@@ -23,29 +24,39 @@ class BaseEvent:
             name: str,
             *,
             colour: int,
-            picture: str,
             word: str,
             text_flag: Optional[bool] = False
     ) -> None:
         self.name: str = name
         self.colour: int = colour
-        self._picture = picture
         self.word: str = word
         self.text_flag: Optional[bool] = text_flag
 
     @property
+    def file_path(self) -> str:
+        return f'./media/{self.name}.png'
+
+    @property
     def file(self) -> discord.File:
-        return discord.File(f'./media/{self._picture}', filename=self._picture)
+        return discord.File(self.file_path)
+
+    def emote(self, bot: AluBot) -> discord.Emoji | None:
+        return discord.utils.find(lambda m: m.name == self.name, bot.test_guild.emojis)
 
 
 class EventType:
     # pictures are taken from 16px versions here https://primer.style/octicons/
     # and background circles are added with simple online editor https://iconscout.com/color-editor
-    assigned = BaseEvent('assigned', colour=0x21262D, picture='assigned.png', word='self-assigned')
-    closed = BaseEvent('closed', colour=0x9B6CEA, picture='closed.png', word='closed')
-    reopened = BaseEvent('reopened', colour=0x238636, picture='reopened.png', word='reopened')
-    commented = BaseEvent('commented', colour=0x4285F4, picture='commented.png', word='commented', text_flag=True)
-    opened = BaseEvent('opened', colour=0x52CC99, picture='opened.png', word='opened', text_flag=True)
+    # make pics to be 128x128, so it's consistent for all sizes
+    # I kindly ask you to have same matching names for
+    # * variable below
+    # * PNG-picture in assets folder
+    # * emote name in wink server
+    assigned = BaseEvent('assigned', colour=0x21262D, word='self-assigned')
+    closed = BaseEvent('closed', colour=0x9B6CEA, word='closed')
+    reopened = BaseEvent('reopened', colour=0x238636, word='reopened')
+    commented = BaseEvent('commented', colour=0x4285F4, word='commented', text_flag=True)
+    opened = BaseEvent('opened', colour=0x52CC99, word='opened', text_flag=True)
 
     # these should match one of event names from GitHub documentation 
     issue_events = ['assigned', 'closed', 'reopened']
@@ -107,8 +118,7 @@ class TimeLine:
     def sorted_points_list(self):
         return sorted(self.events + self.comments, key=lambda x: x.created_at, reverse=False)
 
-    @property
-    def embed_and_file(self) -> Tuple[discord.Embed, discord.File | None]:
+    def embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File | None]:
         e = discord.Embed(title=textwrap.shorten(self.issue.title, width=Lmt.Embed.title), url=self.issue.html_url)
         if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
             # we just send a small embed
@@ -130,14 +140,30 @@ class TimeLine:
             file = le.event_type.file
             e.set_thumbnail(url=f'attachment://{file.filename}')
         else:
-            e.colour = Clr.prpl
+            e.colour = 0x4078c0  # git colour, first in google :D
+            pil_pics = []
             for p in (sorted_points := self.sorted_points_list()):
+                pil_pics.append(p.event_type.file_path)
+                if not p.body:
+                    p.body = ' '  # so event-actions get printed in the following chunking
                 chunks, chunk_size = len(p.markdown_body), Lmt.Embed.field_value
                 fields = [p.markdown_body[i:i+chunk_size] for i in range(0, chunks, chunk_size)]
                 for x in fields:
-                    e.add_field(name=p.author_str, value=x, inline=False)
-            e.set_author(name=f'bugtracker issue #{self.issue.number} update', url=sorted_points[-1].comment_url)
-            file = None
+                    e.add_field(name=f'{p.event_type.emote(bot)}{p.author_str}', value=x, inline=False)
+            e.set_author(
+                name=f'Bugtracker issue #{self.issue.number} update',
+                url=sorted_points[-1].comment_url,
+                icon_url='https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png'
+            )
+            delta_x_y = 32
+            size_x_y = 128 + (len(pil_pics) - 1) * delta_x_y  # 128 is images size
+            dst = Image.new('RGBA', (size_x_y, size_x_y), (0, 0, 0, 0))
+            for i, pic_name in enumerate(pil_pics):
+                im = Image.open(pic_name)
+                dst.paste(im, (i*delta_x_y, i*delta_x_y), im)
+
+            file = bot.img_to_file(dst, filename=f'bugtracker_update_{self.issue.number}.png')
+            e.set_thumbnail(url=f'attachment://{file.filename}')
         return e, file
 
 
@@ -162,8 +188,8 @@ class DotaBugtracker(commands.Cog):
         query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
         dt: datetime.datetime = await self.bot.pool.fetchval(query, Sid.alu)
 
-        # from datetime import timedelta  # <- for testing
-        # dt = datetime.now(timezone.utc) - timedelta(hours=9)  # <- for testing
+        # if self.bot.test:  # TESTING
+        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=29)
 
         issue_dict = dict()
 
@@ -223,7 +249,7 @@ class DotaBugtracker(commands.Cog):
                 )
             )
 
-        efs = [v.embed_and_file for v in issue_dict.values()]
+        efs = [v.embed_and_file(self.bot) for v in issue_dict.values()]
 
         batches_to_send, character_counter, embed_counter = [], 0, 0
         for em, file in efs:

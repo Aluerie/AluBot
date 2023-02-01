@@ -1,6 +1,5 @@
-name: Bug report
-description: Something behaves in a way it probably should not... Or maybe does not work at all.
-
+name: Feature Request
+description: Suggest a feature for this bot
 
 labels: ["bug"]
 
@@ -29,6 +28,6 @@ body:
         
         * What becomes easier or possible when this feature is implemented?
 
-      placeholder: What is the feature?
+      placeholder: ...
     validations:
       required: true

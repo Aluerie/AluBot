@@ -1,5 +1,5 @@
-name: Feature Request
-description: Suggest a feature for this bot
+name: Bug report
+description: Something behaves in a way it probably should not... Or maybe does not work at all.
 
 
 labels: feature request
@@ -32,7 +32,7 @@ body:
         * Describe steps to reproduce the issue and expected/actual results.
         
         * Please attach videos or screenshots if possible.
-      placeholder: What is the problem?
+      placeholder: ...
     validations:
       required: true
 

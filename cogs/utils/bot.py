@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Union, Sequence
 import datetime
 import logging
 from logging.handlers import RotatingFileHandler
+import os
 import traceback
-from os import environ, listdir
 
 import discord
 from discord import app_commands
@@ -24,7 +24,7 @@ from . import imgtools
 from .context import Context
 from .jsonconfig import PrefixConfig
 from .twitch import TwitchClient
-from .var import Cid, Clr
+from .var import Cid, Clr, Sid
 
 if TYPE_CHECKING:
     from discord.abc import Snowflake
@@ -103,15 +103,16 @@ class AluBot(commands.Bot,):
         self.prefixes = PrefixConfig(self.pool)
         self.bot_app_info = await self.application_info()
 
-        environ["JISHAKU_NO_UNDERSCORE"] = "True"
-        environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
-        extensions_list = ['jishaku']
+        os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
+        os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
+        os.environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
+        extensions = ['jishaku']
         if self.test and len(test_list):
-            extensions_list += [f'cogs.{name}' for name in test_list]
+            extensions += [f'cogs.{name}' for name in test_list]
         else:
-            extensions_list += [f'cogs.{filename[:-3]}' for filename in listdir('./cogs') if filename.endswith('.py')]
+            extensions += [f'cogs.{filename[:-3]}' for filename in os.listdir('./cogs') if filename.endswith('.py')]
 
-        for ext in extensions_list:
+        for ext in extensions:
             try:
                 await self.load_extension(ext)
             except Exception as e:
@@ -295,6 +296,8 @@ class AluBot(commands.Bot,):
         for page in paginator.pages:
             await ch.send(page)
 
+    # SHORTCUTS ########################################################################################################
+
     @property
     def spam_ch_id(self):
         return Cid.test_spam if self.test else Cid.spam_me
@@ -305,6 +308,10 @@ class AluBot(commands.Bot,):
         # and we do not have to `from .utils.vars import Cid``
         # ?tag botvar in a nutshell
         return self.get_channel(self.spam_ch_id)  # type: ignore
+
+    @property
+    def test_guild(self) -> discord.Guild:
+        return self.get_guild(Sid.test)  # type: ignore
 
 # ######################################################################################################################
 # ########################################### MY COMMAND APP TREE ######################################################

@@ -24,12 +24,12 @@ class Rgx:
 class Sid:
     """Autocomplete-friendly stash for server ids"""
     alu = 702561315478044804
-    wink = 759916212842659850
+    test = 759916212842659850
     blush = 1015226252086476860
 
     guild_ids = [
         alu,
-        wink,
+        test,
         blush
     ]
 

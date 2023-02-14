@@ -26,14 +26,15 @@ def top_source_tv_games_response(result):
 
 @dota.on('matches_minimal')
 def matches_minimal_response(matches):
-    log.info(
-        f"{matches}"
-    )
+    log.info(f"{matches}")
+
+
+@dota.on('ready')
+def test_func():
+    # dota.request_top_source_tv_games(start_game=90)
+    dota.request_matches_minimal(match_ids=[6884832211])
 
 
 steam.login(username=STEAM_TEST_LGN, password=STEAM_TEST_PSW)
 dota.launch()
-#dota.request_top_source_tv_games(start_game=90)
-
-dota.request_matches_minimal(match_ids=[6884832211])
 steam.run_forever()

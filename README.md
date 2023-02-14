@@ -76,7 +76,7 @@ All info in `/help` and `/setup` commands of the bot. But here is list that is p
 * TL;DR^: Feel free to...
   * open a GitHub Issue/PR/Discussion,
   * use `/feedback` bot command, 
-  * write me (Aluerie ❤#6524) on discord,
+  * write me ([Aluerie ❤#6524](https://discordapp.com/users/312204139751014400)) on discord,
   * look my [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
 
 ### 🛠️Running

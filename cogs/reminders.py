@@ -34,6 +34,8 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+def is_aware(d: datetime.datetime) -> bool:
+    return d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None
 
 class SnoozeModal(discord.ui.Modal, title='Snooze'):
     duration = discord.ui.TextInput(label='Duration', placeholder='10 minutes', default='10 minutes', min_length=2)
@@ -220,13 +222,14 @@ class Reminder(commands.Cog):
         self.bot.dispatch(event_name, timer)
 
     async def dispatch_timers(self) -> None:
+        """Dispatch timers"""
         try:
             while not self.bot.is_closed():
                 # can `asyncio.sleep` only for up to ~48 days reliably,
                 # so we cap it at 40 days, see: http://bugs.python.org/issue20493
                 timer = self._current_timer = await self.wait_for_active_timers(days=40)
                 log.debug(f'RE | {timer}')
-                now = datetime.datetime.utcnow()  # even tho it's `__utc__now()` - it's not timezone-aware
+                now = discord.utils.utcnow()  # timezone-aware
 
                 if timer.expires >= now:
                     to_sleep = (timer.expires - now).total_seconds()
@@ -284,7 +287,6 @@ class Reminder(commands.Cog):
                     VALUES ($1, $2::jsonb, $3, $4)
                     RETURNING id;
                 """
-
         row = await self.bot.pool.fetchrow(query, event, {'args': args, 'kwargs': kwargs}, when, now)
         timer.id = row[0]
 
@@ -308,6 +310,7 @@ class Reminder(commands.Cog):
             text: str
     ):
         """Remind helper so we don't duplicate"""
+
         timer = await self.create_timer(
             dt,
             'reminder',

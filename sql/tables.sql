@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS lol_messages (
 CREATE TABLE IF NOT EXISTS reminders (
     id SERIAL PRIMARY KEY,
     event TEXT,
-    expires TIMESTAMPTZ,
+    expires TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
     created TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
     extra JSONB DEFAULT ('{}'::jsonb)
 );

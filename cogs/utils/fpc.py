@@ -27,27 +27,28 @@ class FPCBase:
     Since many base features can be generalized -
     here is the base class containing base methods.
     """
+
     def __init__(
-            self,
-            /,
-            *,
-            feature_name: str,
-            game_name: str,
-            game_codeword: str,
-            game_logo: str,
-            colour: discord.Colour,
-            bot: AluBot,
-            players_table: str,
-            accounts_table: str,
-            channel_id_column: str,
-            players_column: str,
-            characters_column: str,
-            spoil_column: str,
-            acc_info_columns: List[str],
-            get_char_name_by_id: Callable[[int], Awaitable[str]],
-            get_char_id_by_name: Callable[[str], Awaitable[int]],
-            get_all_character_names: Callable[[], Awaitable[List[str]]],
-            character_gather_word: str
+        self,
+        /,
+        *,
+        feature_name: str,
+        game_name: str,
+        game_codeword: str,
+        game_logo: str,
+        colour: discord.Colour,
+        bot: AluBot,
+        players_table: str,
+        accounts_table: str,
+        channel_id_column: str,
+        players_column: str,
+        characters_column: str,
+        spoil_column: str,
+        acc_info_columns: List[str],
+        get_char_name_by_id: Callable[[int], Awaitable[str]],
+        get_char_id_by_name: Callable[[str], Awaitable[int]],
+        get_all_character_names: Callable[[], Awaitable[List[str]]],
+        character_gather_word: str,
     ) -> None:
         self.feature_name: str = feature_name
         self.game_name: str = game_name
@@ -68,9 +69,9 @@ class FPCBase:
         self.character_gather_word: str = character_gather_word
 
     async def channel_set(
-            self,
-            ctx: GuildContext,
-            channel: Optional[discord.TextChannel],
+        self,
+        ctx: GuildContext,
+        channel: Optional[discord.TextChannel],
     ) -> None:
         """Base function for setting channel for FPC Feed feature"""
         ch = channel or ctx.channel
@@ -84,8 +85,8 @@ class FPCBase:
         await ctx.reply(embed=e)
 
     async def channel_disable(
-            self,
-            ctx: GuildContext,
+        self,
+        ctx: GuildContext,
     ) -> None:
         """Base function for disabling channel for FPC Feed feature"""
         query = f'SELECT {self.channel_id_column} FROM guilds WHERE id=$1'
@@ -100,8 +101,8 @@ class FPCBase:
         await ctx.reply(embed=e)
 
     async def channel_check(
-            self,
-            ctx: Context,
+        self,
+        ctx: Context,
     ) -> None:
         """Base function for checking if channel is set for FPC Feed feature"""
         query = f'SELECT {self.channel_id_column} FROM guilds WHERE id=$1'
@@ -117,10 +118,7 @@ class FPCBase:
             await ctx.reply(embed=e)
 
     @staticmethod
-    def player_name_string(
-            display_name: str,
-            twitch: Union[int, None]
-    ) -> str:
+    def player_name_string(display_name: str, twitch: Union[int, None]) -> str:
         if twitch:
             return f"\N{BLACK CIRCLE} [{display_name}](https://www.twitch.tv/{display_name})"
         else:
@@ -131,26 +129,13 @@ class FPCBase:
         raise NotImplementedError
 
     @staticmethod
-    def player_acc_string(
-            **kwargs
-    ) -> str:
+    def player_acc_string(**kwargs) -> str:
         raise NotImplementedError
 
-    def player_name_acc_string(
-            self,
-            display_name: str,
-            twitch_id: Union[int, None],
-            **kwargs
-    ) -> str:
-        return (
-            f'{self.player_name_string(display_name, twitch_id)}\n'
-            f'{self.player_acc_string(**kwargs)}'
-        )
+    def player_name_acc_string(self, display_name: str, twitch_id: Union[int, None], **kwargs) -> str:
+        return f'{self.player_name_string(display_name, twitch_id)}\n' f'{self.player_acc_string(**kwargs)}'
 
-    async def database_list(
-            self,
-            ctx: Context
-    ) -> None:
+    async def database_list(self, ctx: Context) -> None:
         """Base function for sending database list embed"""
         await ctx.typing()
 
@@ -172,7 +157,7 @@ class FPCBase:
                 followed = ' {0} {0} {0}'.format(Ems.DankLove) if row.player_id in fav_player_id_list else ''
                 player_dict[row.player_id] = {
                     'name': f"{self.player_name_string(row.display_name, row.twitch_id)}{followed}",
-                    'info': []
+                    'info': [],
                 }
             kwargs = {col: row[col] for col in ['id'] + self.acc_info_columns}
             player_dict[row.player_id]['info'].append(self.player_acc_string(**kwargs))
@@ -186,38 +171,23 @@ class FPCBase:
             no_enumeration=True,
             colour=self.colour,
             title=f"List of {self.game_name} players in Database",
-            footer_text=f'With love, {ctx.guild.me.display_name}'
+            footer_text=f'With love, {ctx.guild.me.display_name}',
         )
         await pgs.start()
 
-    async def get_player_dict(
-            self,
-            *,
-            name_flag: str,
-            twitch_flag: bool
-    ) -> dict:
+    async def get_player_dict(self, *, name_flag: str, twitch_flag: bool) -> dict:
         name_lower = name_flag.lower()
         if twitch_flag:
             twitch_id, display_name = await self.bot.twitch.twitch_id_and_display_name_by_login(name_lower)
         else:
             twitch_id, display_name = None, name_flag
 
-        return {
-            'name_lower': name_lower,
-            'display_name': display_name,
-            'twitch_id': twitch_id
-        }
+        return {'name_lower': name_lower, 'display_name': display_name, 'twitch_id': twitch_id}
 
-    async def get_account_dict(
-            self,
-            **kwargs
-    ) -> dict:
+    async def get_account_dict(self, **kwargs) -> dict:
         ...
-    
-    async def check_if_already_in_database(
-            self,
-            account_dict: dict
-    ):
+
+    async def check_if_already_in_database(self, account_dict: dict):
         query = f""" SELECT display_name, name_lower
                     FROM {self.players_table} 
                     WHERE id =(
@@ -233,13 +203,8 @@ class FPCBase:
                 f'It is marked as {user.display_name}\'s account.\n\n'
                 f'Did you mean to use `/dota player add {user.name_lower}` to add the stream into your fav list?'
             )
-        
-    async def database_add(
-            self,
-            ctx: Context,
-            player_dict: dict,
-            account_dict: dict
-    ):
+
+    async def database_add(self, ctx: Context, player_dict: dict, account_dict: dict):
         """Base function for adding accounts into the database"""
         await self.check_if_already_in_database(account_dict)
 
@@ -255,7 +220,7 @@ class FPCBase:
                         SELECT {'id'} FROM {self.players_table} WHERE {'name_lower'}=$1
                 """
         player_id = await ctx.pool.fetchval(query, *player_dict.values())
-        dollars = [f'${i}' for i in range(1, len(self.acc_info_columns)+3)]  # [$1, $2, ... ]
+        dollars = [f'${i}' for i in range(1, len(self.acc_info_columns) + 3)]  # [$1, $2, ... ]
         query = f"""INSERT INTO {self.accounts_table}
                     (player_id, id, {', '.join(self.acc_info_columns)})
                     VALUES {'('}{', '.join(dollars)}{')'}
@@ -264,9 +229,7 @@ class FPCBase:
         e = discord.Embed(colour=self.colour)
         e.add_field(
             name=f'Successfully added the account to the database',
-            value=self.player_name_acc_string(
-                player_dict['display_name'], player_dict['twitch_id'], **account_dict
-            )
+            value=self.player_name_acc_string(player_dict['display_name'], player_dict['twitch_id'], **account_dict),
         )
         e.set_footer(text=self.game_name, icon_url=self.game_logo)
         await ctx.reply(embed=e)
@@ -275,10 +238,10 @@ class FPCBase:
         await self.bot.get_channel(Cid.global_logs).send(embed=e)
 
     async def database_request(
-            self,
-            ctx: Context,
-            player_dict: dict,
-            account_dict: dict,
+        self,
+        ctx: Context,
+        player_dict: dict,
+        account_dict: dict,
     ) -> None:
         """Base function for requesting to add accounts into the database"""
         await self.check_if_already_in_database(account_dict)
@@ -308,17 +271,14 @@ class FPCBase:
         # cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
         # warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
         cmd_usage_str = f"name: {player_dict['display_name']} {self.cmd_usage_str(**account_dict)}"
-        warn_e.add_field(
-            name='Command',
-            value=f'{self.game_codeword} player add {cmd_usage_str}'
-        )
+        warn_e.add_field(name='Command', value=f'{self.game_codeword} player add {cmd_usage_str}')
         await self.bot.get_channel(Cid.global_logs).send(embed=warn_e)
 
     async def database_remove(
-            self,
-            ctx: Context,
-            name_lower: Optional[str],
-            account_id: Optional[Union[str, int]]  # steam_id for dota, something else for lol
+        self,
+        ctx: Context,
+        name_lower: Optional[str],
+        account_id: Optional[Union[str, int]],  # steam_id for dota, something else for lol
     ) -> None:
         """Base function for removing accounts from the database"""
         if name_lower is None and account_id is None:
@@ -335,8 +295,7 @@ class FPCBase:
                 val = await ctx.pool.fetchval(query, account_id, name_lower)
                 if val is None:
                     raise commands.BadArgument(
-                        'This account either is not in the database '
-                        'or does not belong to the said player'
+                        'This account either is not in the database ' 'or does not belong to the said player'
                     )
 
             # query for account only
@@ -372,48 +331,38 @@ class FPCBase:
         e = discord.Embed(colour=self.colour)
         e.add_field(
             name='Successfully removed account(-s) from the database',
-            value=f'{ans_name}{" - " + str(account_id) if account_id else ""}'
+            value=f'{ans_name}{" - " + str(account_id) if account_id else ""}',
         )
         e.set_footer(text=self.game_name, icon_url=self.game_logo)
         await ctx.reply(embed=e)
 
     @staticmethod
     def construct_the_embed(
-            s_names: List[str],
-            a_names: List[str],
-            f_names: List[str],
-            *,
-            gather_word: str,
-            mode_add: bool
+        s_names: List[str], a_names: List[str], f_names: List[str], *, gather_word: str, mode_add: bool
     ) -> discord.Embed:
         e = discord.Embed()
         if s_names:
             e.colour = MP.green(shade=500)
             e.add_field(
                 name=f"Success: {gather_word} were {'added to' if mode_add else 'removed from'} your list",
-                value=f"`{', '.join(s_names)}`", inline=False
+                value=f"`{', '.join(s_names)}`",
+                inline=False,
             )
         if a_names:
             e.colour = MP.orange(shade=500)
             e.add_field(
                 name=f'Already: {gather_word} are already {"" if mode_add else "not"} in your list',
-                value=f"`{', '.join(a_names)}`", inline=False
+                value=f"`{', '.join(a_names)}`",
+                inline=False,
             )
         if f_names:
             e.colour = MP.red(shade=500)
             e.add_field(
-                name=f'Fail: These {gather_word} are not in the database',
-                value=f"`{', '.join(f_names)}`", inline=False
+                name=f'Fail: These {gather_word} are not in the database', value=f"`{', '.join(f_names)}`", inline=False
             )
         return e
 
-    async def player_add_remove(
-            self,
-            ctx: Context,
-            player_names: List[str],
-            *,
-            mode_add: bool
-    ) -> None:
+    async def player_add_remove(self, ctx: Context, player_names: List[str], *, mode_add: bool) -> None:
         """
         Base function to add/remove players from user's favourite list.
 
@@ -464,11 +413,7 @@ class FPCBase:
         await ctx.reply(embed=e)
 
     async def player_add_remove_autocomplete(
-            self,
-            ntr: discord.Interaction,
-            current: str,
-            *,
-            mode_add: bool
+        self, ntr: discord.Interaction, current: str, *, mode_add: bool
     ) -> List[app_commands.Choice[str]]:
         """Base function for player add/remove autocomplete"""
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
@@ -485,10 +430,7 @@ class FPCBase:
         choice_list = [x for x in [a for a, in rows] if x.lower() not in namespace_list]
         return [app_commands.Choice(name=n, value=n) for n in choice_list if current.lower() in n.lower()]
 
-    async def player_list(
-            self,
-            ctx: Context
-    ):
+    async def player_list(self, ctx: Context):
         """Base function for player list command"""
         await ctx.typing()
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
@@ -506,13 +448,7 @@ class FPCBase:
         e.description = '\n'.join(player_names)
         await ctx.reply(embed=e)
 
-    async def character_add_remove(
-            self,
-            ctx: GuildContext,
-            character_names: List[str],
-            *,
-            mode_add: bool
-    ):
+    async def character_add_remove(self, ctx: GuildContext, character_names: List[str], *, mode_add: bool):
         """Base function for adding/removing characters such as heroes/champs from fav lists"""
         await ctx.typing()
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
@@ -545,11 +481,7 @@ class FPCBase:
         await ctx.reply(embed=e)
 
     async def character_add_remove_autocomplete(
-            self,
-            ntr: discord.Interaction,
-            current: str,
-            *,
-            mode_add: bool
+        self, ntr: discord.Interaction, current: str, *, mode_add: bool
     ) -> List[app_commands.Choice[str]]:
         """Base function for character add/remove autocomplete"""
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
@@ -571,10 +503,7 @@ class FPCBase:
         return_list = list(dict.fromkeys(precise_match + close_match))
         return [app_commands.Choice(name=n, value=n) for n in return_list][:25]  # type: ignore
 
-    async def character_list(
-            self,
-            ctx: Context
-    ) -> None:
+    async def character_list(self, ctx: Context) -> None:
         """Base function for character list commands"""
         await ctx.typing()
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
@@ -585,11 +514,7 @@ class FPCBase:
         e.description = '\n'.join(fav_names)
         await ctx.reply(embed=e)
 
-    async def spoil(
-            self,
-            ctx: Context,
-            spoil: bool
-    ):
+    async def spoil(self, ctx: Context, spoil: bool):
         """Base function for spoil commands"""
         query = f'UPDATE guilds SET {self.spoil_column}=$1 WHERE id=$2'
         await self.bot.pool.execute(query, spoil, ctx.guild.id)

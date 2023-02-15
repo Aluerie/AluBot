@@ -9,7 +9,8 @@ from bs4 import BeautifulSoup
 from discord import app_commands
 from discord.ext import commands
 
-from .utils.var import Clr, Ems
+from .utils.formats import format_dt_tdR
+from .utils.var import MP, Clr, Ems
 from .dota.const import DOTA_LOGO
 
 if TYPE_CHECKING:
@@ -25,9 +26,9 @@ LP_ICON = 'https://liquipedia.net/commons/extensions/TeamLiquidIntegration/resou
 
 
 async def schedule_work(
-        session: ClientSession,
-        schedule_mode: ScheduleMode,
-        query: Optional[str] = None,
+    session: ClientSession,
+    schedule_mode: ScheduleMode,
+    query: Optional[str] = None,
 ) -> discord.Embed:
     """Main function"""
 
@@ -107,32 +108,14 @@ select_options = [
         emoji=Ems.PepoRules,
         label="Next 24h: Featured + Favourite (Default)",
         description="Featured games + some fav teams next 24 hours",
-        value='1'
+        value='1',
     ),
     discord.SelectOption(
-        emoji=Ems.peepoHappyDank,
-        label="Next 24h: Featured",
-        description="Featured games next 24 hours",
-        value='2'
+        emoji=Ems.peepoHappyDank, label="Next 24h: Featured", description="Featured games next 24 hours", value='2'
     ),
-    discord.SelectOption(
-        emoji=Ems.bubuAyaya,
-        label="Featured",
-        description="Featured games by Liquidpedia",
-        value='3'
-    ),
-    discord.SelectOption(
-        emoji=Ems.PepoG,
-        label="Full Schedule",
-        description="All pro games!",
-        value='4'
-    ),
-    discord.SelectOption(
-        emoji=Ems.PepoDetective,
-        label="Completed",
-        description="Already finished games",
-        value='5'
-    )
+    discord.SelectOption(emoji=Ems.bubuAyaya, label="Featured", description="Featured games by Liquidpedia", value='3'),
+    discord.SelectOption(emoji=Ems.PepoG, label="Full Schedule", description="All pro games!", value='4'),
+    discord.SelectOption(emoji=Ems.PepoDetective, label="Completed", description="Already finished games", value='5'),
 ]
 
 
@@ -154,7 +137,7 @@ class ScheduleMode(Enum):
             ScheduleMode.next24_featured: 2,
             ScheduleMode.featured: 2,
             ScheduleMode.full_shedule: 1,
-            ScheduleMode.completed: 3
+            ScheduleMode.completed: 3,
         }
         return lookup[self]
 
@@ -174,10 +157,7 @@ class ScheduleMode(Enum):
 
 class ScheduleSelect(discord.ui.Select):
     def __init__(self, query: str):
-        super().__init__(
-            options=select_options,
-            placeholder='Select schedule category'
-        )
+        super().__init__(options=select_options, placeholder='Select schedule category')
         self.query = query
 
     async def callback(self, ntr: discord.Interaction[AluBot]):
@@ -187,7 +167,6 @@ class ScheduleSelect(discord.ui.Select):
 
 
 class ScheduleView(discord.ui.View):
-
     def __init__(self, author: discord.User, query: str):
         super().__init__()
         self.author: discord.User = author
@@ -201,9 +180,7 @@ class ScheduleView(discord.ui.View):
             return True
         else:
             e = await schedule_work(
-                ntr.client.session,
-                ScheduleMode(value=int(self.schedule_select.values[0])),
-                self.query
+                ntr.client.session, ScheduleMode(value=int(self.schedule_select.values[0])), self.query
             )
             await ntr.response.send_message(embed=e, ephemeral=True)
             return False
@@ -215,11 +192,12 @@ class ScheduleView(discord.ui.View):
             await self.message.edit(view=self)
 
 
-class DotaSchedule(commands.Cog, name='Dota 2 Schedule'):
-    """Check Pro Matches schedule
+class Schedule(commands.Cog, name='Dota 2 Schedule'):
+    """Check Pro Matches schedule.
 
-    Info is taken from Liquipedia.
+    Currently, the bot supports Dota 2 and football.
     """
+
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
@@ -228,10 +206,7 @@ class DotaSchedule(commands.Cog, name='Dota 2 Schedule'):
         return discord.PartialEmoji.from_str(Ems.MadgeThreat)
 
     async def embed_worker(
-            self,
-            author: discord.User,
-            schedule_mode: int = 1,
-            query: Optional[str] = None
+        self, author: discord.User, schedule_mode: int = 1, query: Optional[str] = None
     ) -> (discord.Embed, discord.ui.View):
         e = await schedule_work(self.bot.session, ScheduleMode(value=schedule_mode), query)
         v = ScheduleView(author, query)
@@ -250,15 +225,9 @@ class DotaSchedule(commands.Cog, name='Dota 2 Schedule'):
 
     @app_commands.command(name='schedule')
     @app_commands.rename(schedule_mode='filter')
-    @app_commands.choices(schedule_mode=[
-        app_commands.Choice(name=i.label, value=int(i.value))
-        for i in select_options
-    ])
+    @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in select_options])
     async def slash_schedule(
-            self,
-            ntr: discord.Interaction,
-            schedule_mode: Optional[int] = 1,
-            query: Optional[str] = None
+        self, ntr: discord.Interaction, schedule_mode: Optional[int] = 1, query: Optional[str] = None
     ):
         """Dota 2 Pro Matches Schedule
 
@@ -276,6 +245,41 @@ class DotaSchedule(commands.Cog, name='Dota 2 Schedule'):
         await ntr.response.send_message(embed=e, view=v)
         v.message = await ntr.original_response()
 
+    @commands.hybrid_command(aliases=['fts'])
+    async def fixtures(self, ctx: Context):
+        """Get football fixtures"""
+        url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
+        async with self.bot.session.get(url) as r:
+            soup = BeautifulSoup(await r.read(), 'html.parser')
+            fixtures = soup.find('of-match-cards-list')
+            if fixtures:
+                # game_week = fixtures.find('h3', attrs={'class': 'section-header__subtitle'})
+                # print(game_week.text)
+                matches = fixtures.findAll('li', attrs={'class': 'simple-match-cards-list__match-card'})
+                match_strings = []
+                for match in matches:
+                    team_content = match.findAll(
+                        'of-simple-match-card-team', attrs={'class': 'simple-match-card__team-content'}
+                    )
+                    team1 = team_content[0].find('span', attrs={'class': 'simple-match-card-team__name'}).text
+                    team2 = team_content[1].find('span', attrs={'class': 'simple-match-card-team__name'}).text
+                    match_time = match.find('span', attrs={'class': 'simple-match-card__pre-match'}).find('time')['datetime']
+
+                    dt = datetime.datetime.fromisoformat(match_time).replace(tzinfo=datetime.timezone.utc)
+                    teams = f'{team1} - {team2}'.ljust(40, " ")
+                    match_strings.append(f'`{teams}` {format_dt_tdR(dt)}')
+                
+                e = discord.Embed(colour=0xe0fa51)
+                e.description = '\n'.join(match_strings)
+                e.set_author(name='Info from onefootball.com', url=url, icon_url='https://i.imgur.com/pm2JgEW.jpg')
+                e.title = 'Premier League Fixtures'
+                e.url = url
+                await ctx.reply(embed=e)
+            else:
+                e = discord.Embed(colour=Clr.error)
+                e.description = 'No matches found'
+                await ctx.reply(embed=e)
+
 
 async def setup(bot: AluBot):
-    await bot.add_cog(DotaSchedule(bot))
+    await bot.add_cog(Schedule(bot))

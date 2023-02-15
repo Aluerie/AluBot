@@ -34,8 +34,10 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+
 def is_aware(d: datetime.datetime) -> bool:
     return d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None
+
 
 class SnoozeModal(discord.ui.Modal, title='Snooze'):
     duration = discord.ui.TextInput(label='Duration', placeholder='10 minutes', default='10 minutes', min_length=2)
@@ -111,14 +113,7 @@ class RemindRecord(DRecord):
 
 
 class Timer:
-    __slots__ = (
-        'id',
-        'event',
-        'expires',
-        'created_at',
-        'args',
-        'kwargs'
-    )
+    __slots__ = ('id', 'event', 'expires', 'created_at', 'args', 'kwargs')
 
     def __init__(self, *, record: Union[RemindRecord, dict]):
         self.id: int = record['id']
@@ -144,13 +139,13 @@ class Timer:
 
     @classmethod
     def temporary(
-            cls,
-            *,
-            event: str,
-            expires: datetime.datetime,
-            created: datetime.datetime,
-            args: Sequence[Any],
-            kwargs: dict[str, Any]
+        cls,
+        *,
+        event: str,
+        expires: datetime.datetime,
+        created: datetime.datetime,
+        args: Sequence[Any],
+        kwargs: dict[str, Any],
     ) -> Self:
         """Initiate the timer without the database before deciding to put it in"""
         pseudo_record = {
@@ -158,15 +153,13 @@ class Timer:
             'event': event,
             'expires': expires,
             'created': created,
-            'extra': {'args': args, 'kwargs': kwargs}
+            'extra': {'args': args, 'kwargs': kwargs},
         }
         return cls(record=pseudo_record)
 
     @property
     def format_dt_R(self) -> str:
-        return discord.utils.format_dt(
-            self.created_at.replace(tzinfo=datetime.timezone.utc), style='R'
-        )
+        return discord.utils.format_dt(self.created_at.replace(tzinfo=datetime.timezone.utc), style='R')
 
     @property
     def author_id(self) -> Optional[int]:
@@ -263,7 +256,7 @@ class Reminder(commands.Cog):
             Keyword arguments to pass to the event
         created: datetime.datetime
             Special keyword-only argument to use as the creation time.
-            Should make the timedeltas a bit more consistent.
+            Should make the time-deltas a bit more consistent.
 
         Note
         ------
@@ -302,13 +295,7 @@ class Reminder(commands.Cog):
 
         return timer
 
-    async def remind_helper(
-            self,
-            ctx: Context,
-            *,
-            dt: datetime.datetime,
-            text: str
-    ):
+    async def remind_helper(self, ctx: Context, *, dt: datetime.datetime, text: str):
         """Remind helper so we don't duplicate"""
 
         timer = await self.create_timer(
@@ -318,7 +305,7 @@ class Reminder(commands.Cog):
             ctx.channel.id,
             text,
             created=ctx.message.created_at,
-            message_id=ctx.message.id
+            message_id=ctx.message.id,
         )
         delta = formats.human_timedelta(dt, source=timer.created_at)
         e = discord.Embed(colour=ctx.author.colour)
@@ -328,13 +315,10 @@ class Reminder(commands.Cog):
 
     @commands.hybrid_group(aliases=['reminder', 'remindme'], usage='<when>')
     async def remind(
-            self,
-            ctx: Context,
-            *,
-            when: Annotated[
-                times.FriendlyTimeResult,
-                times.UserFriendlyTime(commands.clean_content, default='...')  # type: ignore # pycharm things
-            ]
+        self,
+        ctx: Context,
+        *,
+        when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')],
     ):
         """Main group of remind command. Just a way to make an alias for 'remind me' with a space."""
         await self.remind_helper(ctx, dt=when.dt, text=when.arg)
@@ -342,10 +326,10 @@ class Reminder(commands.Cog):
     @remind.app_command.command(name='set')
     @app_commands.describe(when='When to be reminded of something, in GMT', text='What to be reminded of')
     async def reminder_set(
-            self,
-            ntr: discord.Interaction,
-            when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
-            text: str = '...'
+        self,
+        ntr: discord.Interaction,
+        when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
+        text: str = '...',
     ):
         """Sets a reminder to remind you of something at a specific time"""
         ctx = await Context.from_interaction(ntr)
@@ -358,13 +342,10 @@ class Reminder(commands.Cog):
 
     @remind.command(name='me', with_app_command=False)
     async def remind_me(
-            self,
-            ctx: Context,
-            *,
-            when: Annotated[
-                times.FriendlyTimeResult,
-                times.UserFriendlyTime(commands.clean_content, default='...')  # type: ignore # pycharm things
-            ]
+        self,
+        ctx: Context,
+        *,
+        when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')],
     ):
         """Reminds you of something after a certain amount of time.
 
@@ -402,7 +383,7 @@ class Reminder(commands.Cog):
             per_page=10,
             author_name=f'{ctx.author.display_name}\'s Reminders list',
             author_icon=ctx.author.display_avatar.url,
-            colour=ctx.author.colour
+            colour=ctx.author.colour,
         )
         await pgs.start()
 

@@ -24,7 +24,7 @@ class Config(Generic[_T]):
     def __init__(
         self,
         filename: str,
-        pool: Pool = None,
+        pool: Optional[Pool] = None,
         *,
         encoder: Optional[Type[json.JSONEncoder]] = None,
     ):
@@ -33,7 +33,7 @@ class Config(Generic[_T]):
         self.encoder = encoder
         self.loop = asyncio.get_running_loop()
         self.lock = asyncio.Lock()
-        self._json: Dict[str, Union[Any]] = {}
+        self._json: Dict[str, Union[_T, Any]] = {}
         if self.load_from_file():
             pass
         elif pool:
@@ -100,6 +100,10 @@ class Config(Generic[_T]):
 
 
 class PrefixConfig(Config):
+    """Prefix Config"""
+    if TYPE_CHECKING:
+        pool: Pool
+
     def __init__(self, pool: Pool):
         super().__init__(
             filename='prefixes.json',

@@ -263,13 +263,17 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
                     )
                     team1 = team_content[0].find('span', attrs={'class': 'simple-match-card-team__name'}).text
                     team2 = team_content[1].find('span', attrs={'class': 'simple-match-card-team__name'}).text
-                    match_time = match.find('span', attrs={'class': 'simple-match-card__pre-match'}).find('time')['datetime']
+                    match_time = match.find('span', attrs={'class': 'simple-match-card__pre-match'}).find('time')[
+                        'datetime'
+                    ]
 
-                    dt = datetime.datetime.fromisoformat(match_time).replace(tzinfo=datetime.timezone.utc)
+                    dt = datetime.datetime.strptime(match_time, '%Y-%m-%dT%H:%M:%SZ').replace(
+                        tzinfo=datetime.timezone.utc
+                    )
                     teams = f'{team1} - {team2}'.ljust(40, " ")
                     match_strings.append(f'`{teams}` {format_dt_tdR(dt)}')
-                
-                e = discord.Embed(colour=0xe0fa51)
+
+                e = discord.Embed(colour=0xE0FA51)
                 e.description = '\n'.join(match_strings)
                 e.set_author(name='Info from onefootball.com', url=url, icon_url='https://i.imgur.com/pm2JgEW.jpg')
                 e.title = 'Premier League Fixtures'

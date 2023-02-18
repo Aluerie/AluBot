@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import logging
 
@@ -55,6 +55,8 @@ class BetaTest(commands.Cog):
 
     @tasks.loop(count=1)
     async def test_task(self):
+        # member = discord.utils.find(lambda m: m.name.startswith('Alu'), self.bot.test_guild.members)
+        # print(member)
         return
         link = 'https://i.imgur.com/8Y92Gdk.png'
         # 'https://i.imgur.com/nsUP5fI.png' # 'https://i.imgur.com/MtT6oKS.png' #'https://i.imgur.com/uT8CJHt.png'

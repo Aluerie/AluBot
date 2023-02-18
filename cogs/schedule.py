@@ -10,7 +10,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from .utils.formats import format_dt_tdR
-from .utils.var import MP, Clr, Ems
+from .utils.var import Clr, Ems
 from .dota.const import DOTA_LOGO
 
 if TYPE_CHECKING:
@@ -263,15 +263,16 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
                     )
                     team1 = team_content[0].find('span', attrs={'class': 'simple-match-card-team__name'}).text
                     team2 = team_content[1].find('span', attrs={'class': 'simple-match-card-team__name'}).text
-                    match_time = match.find('span', attrs={'class': 'simple-match-card__pre-match'}).find('time')[
-                        'datetime'
-                    ]
-
-                    dt = datetime.datetime.strptime(match_time, '%Y-%m-%dT%H:%M:%SZ').replace(
-                        tzinfo=datetime.timezone.utc
-                    )
-                    teams = f'{team1} - {team2}'.ljust(40, " ")
-                    match_strings.append(f'`{teams}` {format_dt_tdR(dt)}')
+                    pre_match_data = match.find('span', attrs={'class': 'simple-match-card__pre-match'})
+                    if pre_match_data is not None:
+                        match_time = match.find('span', attrs={'class': 'simple-match-card__pre-match'}).find('time')[
+                            'datetime'
+                        ]
+                        dt = datetime.datetime.strptime(match_time, '%Y-%m-%dT%H:%M:%SZ').replace(
+                            tzinfo=datetime.timezone.utc
+                        )
+                        teams = f'{team1} - {team2}'.ljust(40, " ")
+                        match_strings.append(f'`{teams}` {format_dt_tdR(dt)}')
 
                 e = discord.Embed(colour=0xE0FA51)
                 e.description = '\n'.join(match_strings)

@@ -298,10 +298,10 @@ class PostMatchEdits(commands.Cog):
     async def daily_report(self):
         e = discord.Embed(title="Daily Report", colour=MP.black())
         the_dict = self.bot.odota_ratelimit
-        month, min = the_dict['monthly'], the_dict['minutely']
+        month, min = int(the_dict['monthly']), int(the_dict['minutely'])
         e.description = f"Odota limits. monthly: {month} minutely: {min}"
         content = f'<@{Uid.alu}>' if month < 10_000 else ''
-        await self.bot.get_channel(Cid.daily_report).send(content=content, embed=e)
+        await self.bot.get_channel(Cid.daily_report).send(content=content, embed=e)  # type: ignore
 
     @daily_report.before_loop
     async def before(self):

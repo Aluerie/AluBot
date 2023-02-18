@@ -25,12 +25,10 @@ class Sid:
     """Autocomplete-friendly stash for server ids"""
     alu = 702561315478044804
     test = 759916212842659850
-    blush = 1015226252086476860
 
     guild_ids = [
         alu,
-        test,
-        blush
+        test
     ]
 
 
@@ -73,6 +71,7 @@ class Cid:
     coop = 966366521607745586
 
     global_logs = 997149550324240465
+    spam_logs = 1075497084075130880
     daily_report = 1066406466778566801
 
     roses = 759916212842659853
@@ -147,10 +146,9 @@ class Rid:
     level_roles = []  # maybe fill it later
     ignored_for_logs = [voice, live_stream] + category_roles_ids
 
-    waste_bots_role = 1015289532645642314
 
-
-class Ems:  # Emote strings
+class Ems:  
+    """Emote strings."""
     # alu server nonani
     bedNerdge = '<:_:855495407110586439>'
     DankApprove = '<:_:853015071042961468>'

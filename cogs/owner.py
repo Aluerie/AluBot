@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from .utils.bot import AluBot
     from .dotafeed import DotaFeedToolsCog
     from .lolfeed import LoLFeedToolsCog
-    
+
 
 class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
     """Bot owner tools"""
@@ -368,7 +368,6 @@ class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
 
         """
 
-        await ntr.response.defer()
         dota_cog = self.get_dota_tools_cog()
         player_dict = await dota_cog.get_player_dict(name_flag=name, twitch_flag=twitch)
         account_dict = await dota_cog.get_account_dict(steam_flag=steam)
@@ -387,7 +386,6 @@ class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
             Steam_id in any of 64/32/3/2 versions, friend_id or just Steam profile link.
         """
 
-        await ntr.response.defer()
         dota_cog = self.get_dota_tools_cog()
         if steam:
             steam_id, _ = dota_cog.get_steam_id_and_64(steam)
@@ -424,7 +422,6 @@ class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
             Summoner name of the account
         """
 
-        await ntr.response.defer()
         lol_cog = self.get_lol_tools_cog()
         player_dict = await lol_cog.get_player_dict(name_flag=name, twitch_flag=True)
         account_dict = await lol_cog.get_account_dict(server=server, account=account)
@@ -447,7 +444,6 @@ class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
             Summoner name of the account
         """
 
-        await ntr.response.defer()
         lol_cog = self.get_lol_tools_cog()
         if bool(server) != bool(account):
             raise commands.BadArgument('You need to provide both `server` and `account` to delete the specific account')

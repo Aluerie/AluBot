@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Literal, NamedTuple, Sequence, List
+from typing import TYPE_CHECKING, Optional, Literal, NamedTuple, Sequence, List, Tuple
 from typing_extensions import Self
 
 import unicodedata
@@ -681,20 +681,22 @@ class Meta(commands.Cog):
         Only up to a few characters tho.
         """
 
-        def to_string(c: str) -> str:
+        def to_string(c: str) -> Tuple[str, str]:
             digit = f'{ord(c):x}'
             name = unicodedata.name(c, None)
-            name = f'`\\N{{{name}}}`' if name else 'Name not found.'
-            return (
-                f'{name} \n `\\U{digit:>08}` | {c} | '
-                f'<https://www.fileformat.info/info/unicode/char/{digit}>'
-            )
+            name = f'\N{BLACK CIRCLE} `\\N{{{name}}}`' if name else 'Name not found.'
+            string = f'[`\\U{digit:>08}`](https://www.fileformat.info/info/unicode/char/{digit}) `{c}`'
+            return name, string
 
-        msg = chr(10).join(map(to_string, characters))
-        if len(msg) > 2000:
-            e = discord.Embed(description='Output too long to display.', colour=Clr.error)
-            return await ctx.send(embed=e)
-        await ctx.send(msg)
+        e = discord.Embed(colour=discord.Colour.blurple())
+        for c in characters[:10]:
+            n, s = to_string(c)
+            e.add_field(name=n, value=s, inline=False)
+        if len(characters) > 10:
+            e.colour = Clr.error
+            e.set_footer(text='Output was too long. Displaying only first 10 chars.')
+
+        await ctx.send(embed=e)
 
 
 # #####################################################################################################################

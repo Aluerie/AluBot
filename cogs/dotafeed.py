@@ -17,12 +17,12 @@ from .dota import hero
 from .dota.const import DOTA_LOGO
 from .dota.models import ActiveMatch, OpendotaRequestMatch, PostMatchPlayerData
 from .utils.checks import is_manager
-from .utils.context import Context
 from .utils.fpc import FPCBase, TwitchAccCheckCog
 from .utils.var import MP, Cid, Clr, Ems, Uid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
+    from .utils.context import Context
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -298,14 +298,25 @@ class PostMatchEdits(commands.Cog):
     async def daily_report(self):
         e = discord.Embed(title="Daily Report", colour=MP.black())
         the_dict = self.bot.odota_ratelimit
-        month, min = int(the_dict['monthly']), int(the_dict['minutely'])
-        e.description = f"Odota limits. monthly: {month} minutely: {min}"
+        month, minute = int(the_dict['monthly']), int(the_dict['minutely'])
+        e.description = f"Odota limits. monthly: {month} minutely: {minute}"
         content = f'<@{Uid.alu}>' if month < 10_000 else ''
         await self.bot.get_channel(Cid.daily_report).send(content=content, embed=e)  # type: ignore
 
     @daily_report.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
+
+
+class AddDotaPlayerFlags(commands.FlagConverter, case_insensitive=True):
+    name: str
+    steam: str
+    twitch: bool
+
+
+class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
+    name: Optional[str]
+    steam: Optional[str]
 
 
 class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
@@ -359,40 +370,89 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
 
-    dota = app_commands.Group(
+    # dota ##############################################
+
+    slh_dota = app_commands.Group(
         name="dota",
         description="Group command about DotaFeed",
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
-    dota_channel = app_commands.Group(
+    @is_manager()
+    @commands.group(name="dota")
+    async def ext_dota(self, ctx: Context):
+        """Group command about Dota, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # dota channel ######################################
+
+    slh_dota_channel = app_commands.Group(
         name="channel",
         description="Group command about DotaFeed channel settings",
-        parent=dota,
+        parent=slh_dota,
     )
 
     @is_manager()
-    @dota_channel.command(name="set")
+    @ext_dota.group(name="channel")
+    async def ext_dota_channel(self, ctx: Context):
+        """Group command about DotaFeed Channel, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # dota channel set ##################################
+
+    @slh_dota_channel.command(name="set")
     @app_commands.describe(channel="Choose channel to set up DotaFeed notifications")
-    async def dota_channel_set(self, ntr: discord.Interaction[AluBot], channel: Optional[discord.TextChannel]):
+    async def slh_dota_channel_set(self, ntr: discord.Interaction[AluBot], channel: Optional[discord.TextChannel]):
         """Set channel to be the DotaFeed notifications channel."""
         await self.channel_set(ntr, channel)
 
-    @dota_channel.command(name="disable", description="Disable DotaFeed notifications channel")
-    async def dota_channel_disable(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_dota_channel.command(name="set", usage="[channel=curr]")
+    async def ext_dota_channel_set(self, ctx: Context, channel: Optional[discord.TextChannel]):
+        """Set channel to be the DotaFeed notifications channel."""
+        await self.channel_set(ctx, channel)
+
+    # dota channel disable ##################################
+
+    @slh_dota_channel.command(name="disable", description="Disable DotaFeed notifications channel")
+    async def slh_dota_channel_disable(self, ntr: discord.Interaction[AluBot]):
         """Disable DotaFeed notifications channel. Data won't be affected."""
         await self.channel_disable(ntr)
 
-    @dota_channel.command(name="check", description="Check if DotaFeed channel is set up")
-    async def dota_channel_check(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_dota_channel.command(name="disable")
+    async def ext_dota_channel_disable(self, ctx: Context):
+        """Stop getting DotaFeed notifs. Data about fav heroes/players won't be affected."""
+        await self.channel_disable(ctx)
+
+    # dota channel check ##################################
+
+    @slh_dota_channel.command(name="check", description="Check if DotaFeed channel is set up")
+    async def slh_dota_channel_check(self, ntr: discord.Interaction[AluBot]):
         """Check if DotaFeed channel is set up"""
         await self.channel_check(ntr)
 
-    dota_database = app_commands.Group(
+    @is_manager()
+    @ext_dota_channel.command(name="check")
+    async def ext_dota_channel_check(self, ctx: Context):
+        """Check if DotaFeed channel is set up in the server."""
+        await self.channel_check(ctx)
+
+    # dota database ##################################
+
+    slh_dota_database = app_commands.Group(
         name="database",
         description="Group command about DotaFeed database",
-        parent=dota,
+        parent=slh_dota,
     )
+
+    @is_manager()
+    @ext_dota.group(name="database", aliases=["db"])
+    async def ext_dota_database(self, ctx: Context):
+        """Group command about Dota 2 database, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # helper functions ##################################
 
     @staticmethod
     def cmd_usage_str(**kwargs):
@@ -409,13 +469,6 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
             f"[Steam](https://steamcommunity.com/profiles/{steam_id})"
             f"/[Dotabuff](https://www.dotabuff.com/players/{friend_id})"
         )
-
-    @dota_database.command(
-        name="list", description="List of players in the database available for DotaFeed feature"
-    )
-    async def dota_database_list(self, ntr: discord.Interaction[AluBot]):
-        """List of players in the database available for DotaFeed feature."""
-        await self.database_list(ntr)
 
     @staticmethod
     def get_steam_id_and_64(steam_string: str):
@@ -435,7 +488,24 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         steam_id, friend_id = self.get_steam_id_and_64(steam_flag)
         return {"id": steam_id, "friend_id": friend_id}
 
-    @dota_database.command(name="request")
+    # dota database list ##################################
+
+    @slh_dota_database.command(
+        name="list", description="List of players in the database available for DotaFeed feature"
+    )
+    async def slh_dota_database_list(self, ntr: discord.Interaction[AluBot]):
+        """List of players in the database available for DotaFeed feature."""
+        await self.database_list(ntr)
+
+    @is_manager()
+    @ext_dota_database.command(name="list")
+    async def ext_dota_database_list(self, ctx: Context):
+        """List of players in the database available for DotaFeed feature."""
+        await self.database_list(ctx)
+
+    # dota database request ##################################
+
+    @slh_dota_database.command(name="request")
     async def dota_database_request(self, ntr: discord.Interaction[AluBot], name: str, steam: str, twitch: bool):
         """Request player to be added into the database.
 
@@ -450,21 +520,43 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
             If you proved twitch handle for "name" then press `True` otherwise `False`.
         """
 
-        await ntr.response.defer()
         player_dict = await self.get_player_dict(name_flag=name, twitch_flag=twitch)
         account_dict = await self.get_account_dict(steam_flag=steam)
         await self.database_request(ntr, player_dict, account_dict)
 
-    dota_player = app_commands.Group(
+    @is_manager()
+    @ext_dota_database.command(
+        name="request",
+        usage="name: <name> steam: <steamid> twitch: <yes/no>",
+    )
+    async def ext_dota_database_request(self, ctx: Context, *, flags: AddDotaPlayerFlags):
+        """Request player to be added into the database.
+        This will send a request message into Aluerie's personal logs channel.
+        """
+        player_dict = await self.get_player_dict(name_flag=flags.name, twitch_flag=flags.twitch)
+        account_dict = await self.get_account_dict(steam_flag=flags.steam)
+        await self.database_request(ctx, player_dict, account_dict)
+
+    # dota player ##################################
+
+    slh_dota_player = app_commands.Group(
         name="player",
         description="Group command about DotaFeed player",
-        parent=dota,
+        parent=slh_dota,
     )
+
+    @is_manager()
+    @ext_dota.group(name="player", aliases=["streamer"])
+    async def ext_dota_player(self, ctx: Context):
+        """Group command about Dota 2 player, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # dota player add ##################################
 
     async def player_add_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=True)
 
-    @dota_player.command(name="add")
+    @slh_dota_player.command(name="add")
     @app_commands.describe(
         **{
             f"name{i}": "Name of a player. Suggestions from database above exclude your already fav players"
@@ -484,7 +576,7 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         name10=player_add_autocomplete,
     )
     # @app_commands.autocomplete(**{f'name{i}': player_add_autocomplete for i in range(1, 11)})
-    async def dota_player_add(
+    async def slh_dota_player_add(
         self,
         ntr: discord.Interaction[AluBot],
         name1: Optional[str],
@@ -500,16 +592,23 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
     ):
         """Add player to your favourites."""
         player_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        if not player_names:
-            raise commands.BadArgument("You cannot use this command without naming at least one player.")
         await self.player_add_remove(ntr, player_names, mode_add=True)
+
+    @is_manager()
+    @ext_dota_player.command(name="add", usage="<player_name(-s)>")
+    async def ext_dota_player_add(self, ctx: Context, *, player_names: str):
+        """Add player to your favourites."""
+        player_names = [b for x in player_names.split(",") if (b := x.lstrip().rstrip())]
+        await self.player_add_remove(ctx, player_names, mode_add=True)
+
+    # dota player remove ##################################
 
     async def player_remove_autocomplete(
         self, ntr: discord.Interaction[AluBot], current: str
     ) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=False)
 
-    @dota_player.command(name="remove")
+    @slh_dota_player.command(name="remove")
     @app_commands.describe(**{f"name{i}": "Name of a player" for i in range(1, 11)})
     @app_commands.autocomplete(
         name1=player_remove_autocomplete,
@@ -524,7 +623,7 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         name10=player_remove_autocomplete,
     )
     # @app_commands.autocomplete(**{f'name{i}': player_remove_autocomplete for i in range(1, 11)})
-    async def dota_player_remove(
+    async def slh_dota_player_remove(
         self,
         ntr: discord.Interaction[AluBot],
         name1: Optional[str],
@@ -540,25 +639,48 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
     ):
         """Remove player from your favourites."""
         player_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        if not player_names:
-            raise commands.BadArgument("You cannot use this command without naming at least one player.")
         await self.player_add_remove(ntr, player_names, mode_add=False)
 
-    @dota_player.command(name="list")
-    async def dota_player_list(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_dota_player.command(name="remove", usage="<player_name(-s)>")
+    async def ext_dota_player_remove(self, ctx: Context, *, player_names: str):
+        """Remove player from your favourites."""
+        player_names = [b for x in player_names.split(",") if (b := x.lstrip().rstrip())]
+        await self.player_add_remove(ctx, player_names, mode_add=False)
+
+    # dota player list ##################################
+
+    @slh_dota_player.command(name="list")
+    async def slh_dota_player_list(self, ntr: discord.Interaction[AluBot]):
         """Show list of your favourite players."""
         await self.player_list(ntr)
 
-    dota_hero = app_commands.Group(
+    @is_manager()
+    @ext_dota_player.command(name="list")
+    async def ext_dota_player_list(self, ctx: Context):
+        """Show current list of fav players."""
+        await self.player_list(ctx)
+
+    # dota hero ##################################
+
+    slh_dota_hero = app_commands.Group(
         name="hero",
         description="Group command about DotaFeed hero",
-        parent=dota,
+        parent=slh_dota,
     )
+
+    @is_manager()
+    @ext_dota.group(name="hero")
+    async def ext_dota_hero(self, ctx: Context):
+        """Group command about Dota 2, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # dota hero add ##################################
 
     async def hero_add_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=True)
 
-    @dota_hero.command(name="add")
+    @slh_dota_hero.command(name="add")
     @app_commands.describe(**{f"name{i}": "Name of a hero" for i in range(1, 11)})
     @app_commands.autocomplete(
         name1=hero_add_autocomplete,
@@ -573,7 +695,7 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         name10=hero_add_autocomplete,
     )
     # @app_commands.autocomplete(**{f'name{i}': hero_add_autocomplete for i in range(1, 11)})
-    async def dota_hero_add(
+    async def slh_dota_hero_add(
         self,
         ntr: discord.Interaction[AluBot],
         name1: Optional[str],
@@ -589,15 +711,28 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
     ):
         """Add hero to your favourites."""
         hero_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        if not hero_names:
-            raise commands.BadArgument("You cannot use this command without naming at least one hero.")
-
         await self.character_add_remove(ntr, hero_names, mode_add=True)
+
+    @is_manager()
+    @ext_dota_hero.command(name="add", usage="<hero_name(-s)>")
+    async def ext_dota_hero_add(self, ctx: Context, *, hero_names: str):
+        """Add hero(-es) to your fav heroes list. \
+        Use names from Dota 2 hero grid. For example,
+        • `Anti-Mage` (letter case does not matter) and not `Magina`;
+        • `Queen of Pain` and not `QoP`.
+        """
+        # At last, you can find proper name
+        # [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
+        # under one of `"localized_name"`
+        hero_names = [b for x in hero_names.split(",") if (b := x.lstrip().rstrip())]
+        await self.character_add_remove(ctx, hero_names, mode_add=True)
+
+    # dota hero remove ##################################
 
     async def hero_remove_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=False)
 
-    @dota_hero.command(name="remove")
+    @slh_dota_hero.command(name="remove")
     @app_commands.describe(**{f"name{i}": "Name of a hero" for i in range(1, 11)})
     @app_commands.autocomplete(
         name1=hero_remove_autocomplete,
@@ -612,7 +747,7 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         name10=hero_remove_autocomplete,
     )
     # @app_commands.autocomplete(**{f'name{i}': hero_add_autocomplete for i in range(1, 11)})
-    async def dota_hero_remove(
+    async def slh_dota_hero_remove(
         self,
         ntr: discord.Interaction[AluBot],
         name1: Optional[str],
@@ -628,21 +763,43 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
     ):
         """Remove hero from your favourites."""
         hero_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        if not hero_names:
-            raise commands.BadArgument("You cannot use this command without naming at least one hero.")
-
         await self.character_add_remove(ntr, hero_names, mode_add=False)
 
-    @dota_hero.command(name="list")
-    async def dota_hero_list(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_dota_hero.command(name="remove", usage="<hero_name(-s)>")
+    async def ext_dota_hero_remove(self, ctx: Context, *, hero_names: str):
+        """Remove hero(-es) from your fav heroes list."""
+        hero_names = [x.lstrip().rstrip() for x in hero_names.split(",") if x]
+        await self.character_add_remove(ctx, hero_names, mode_add=False)
+
+    # dota hero list ##################################
+
+    @slh_dota_hero.command(name="list")
+    async def slh_dota_hero_list(self, ntr: discord.Interaction[AluBot]):
         """Show your favourite heroes list."""
         await self.character_list(ntr)
 
-    @dota.command(name="spoil")
+    @is_manager()
+    @ext_dota_hero.command(name="list")
+    async def ext_dota_hero_list(self, ctx: Context):
+        """Show current list of fav heroes."""
+        await self.character_list(ctx)
+
+    # dota spoil ##################################
+
+    @slh_dota.command(name="spoil")
     @app_commands.describe(spoil="`True` to enable spoiling with stats, `False` for disable")
-    async def dota_spoil(self, ntr: discord.Interaction[AluBot], spoil: bool):
+    async def slh_dota_spoil(self, ntr: discord.Interaction[AluBot], spoil: bool):
         """Turn on/off spoiling resulting stats for matches."""
         await self.spoil(ntr, spoil)
+
+    @is_manager()
+    @ext_dota.command(name="spoil")
+    async def ext_dota_spoil(self, ctx: Context, spoil: bool):
+        """Turn on/off spoiling resulting stats for matches.
+        It is "on" by default, so it can show what items players finished with and KDA.
+        """
+        await self.spoil(ctx, spoil)
 
 
 async def setup(bot: AluBot):

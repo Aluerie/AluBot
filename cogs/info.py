@@ -253,18 +253,25 @@ class Info(commands.Cog, name='Info'):
             )
         await ctx.reply(embed=e)
 
-    @info.command(
-        name='stats',
-        description='Summary stats for the bot'
-    )
-    async def stats(self, ctx: Context):
-        """Summary stats for the bot"""
+    @info.command()
+    async def botstats(self, ctx: Context):
+        """Summary stats for the bot."""
         e = discord.Embed(title='Summary bot stats', colour=Clr.prpl)
         e.set_thumbnail(url=self.bot.user.display_avatar.url)
         e.add_field(name="Server Count", value=str(len(self.bot.guilds)))
         e.add_field(name="User Count", value=str(len(self.bot.users)))
         e.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")
         e.add_field(name='Uptime', value=human_timedelta(discord.utils.utcnow() - self.bot.launch_time, brief=True))
+        await ctx.reply(embed=e)
+
+    @info.command()
+    async def bio(self, ctx: Context):
+        """Some bot bio info"""
+        e = discord.Embed(title='Bot\'s Bio Info', colour=Clr.prpl)
+        e.description = ''
+        e.add_field(name='Developer', value=str(self.bot.owner))
+        e.add_field(name='Source Code', value='[link](https://github.com/Aluerie/AluBot)')
+        e.add_field(name='License', value='MPL - 2.0')
         await ctx.reply(embed=e)
 
 

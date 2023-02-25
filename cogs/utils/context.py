@@ -58,9 +58,15 @@ class Context(commands.Context):
         super().__init__(**kwargs)
         self.pool: Pool = self.bot.pool
 
+    # to match interaction
     @property
     def client(self) -> AluBot:
         return self.bot
+
+    # to match interaction
+    @property
+    def user(self) -> discord.User | discord.Member:
+        return self.author
 
     @property
     def session(self) -> ClientSession:

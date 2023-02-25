@@ -686,7 +686,7 @@ class Meta(commands.Cog):
             name = unicodedata.name(c, None)
             name = f'`\\N{{{name}}}`' if name else 'Name not found.'
             return (
-                f'`{name} \n \\U{digit:>08}` | {c} | '
+                f'{name} \n `\\U{digit:>08}` | {c} | '
                 f'<https://www.fileformat.info/info/unicode/char/{digit}>'
             )
 

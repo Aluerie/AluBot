@@ -37,12 +37,16 @@ with pretty much everything I ever needed ! Check List of features after the pic
 
 <img src="./media/ReadMe/MainFeature.png" alt="alubot preview">
 
-# ReadMe Contents
+## ReadMe Contents
 
 1. [📖 Features](#features) 
-2. Wiki
-    1. xd
-    2. xd
+2. [🏠 Wiki](https://github.com/Aluerie/AluBot/wiki) - link to github wiki page, most notably:
+    * [🛠️ Running/Installation guide](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9B%A0%EF%B8%8FRunning-Installation-guide)
+    * [🕵️ Privacy Policy and Terms of Service](https://github.com/Aluerie/AluBot/wiki/%F0%9F%95%B5%EF%B8%8F--Privacy-Policy-and-Terms-of-Service)
+3. [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
+4. [🤗 Thanks](#-thanks)
+
+---
 
 ### 📖 Features
 

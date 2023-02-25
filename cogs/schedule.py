@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Tuple
 from enum import Enum
 
 import datetime
@@ -207,7 +207,7 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
 
     async def embed_worker(
         self, author: discord.User, schedule_mode: int = 1, query: Optional[str] = None
-    ) -> (discord.Embed, discord.ui.View):
+    ) -> Tuple[discord.Embed, discord.ui.View]:
         e = await schedule_work(self.bot.session, ScheduleMode(value=schedule_mode), query)
         v = ScheduleView(author, query)
         return e, v

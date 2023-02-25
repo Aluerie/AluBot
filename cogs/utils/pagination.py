@@ -32,11 +32,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import discord
 from discord.ext import menus
 
+from .context import Context
 from .var import Clr, Ems
 
 if TYPE_CHECKING:
     from .bot import AluBot
-    from .context import Context
 
 
 class IndexModal(discord.ui.Modal, title="Go to page"):
@@ -100,12 +100,19 @@ class Paginator(discord.ui.View):
     # it's only usable in text or hybrid commands
     # (but looks like it's enough)
     # ToDO: Implement `self.ntr: Optional[Interaction] = ntr` and all
-    def __init__(self, ctx: Context, source: menus.PageSource):
+    def __init__(self, ctx_ntr: Context | discord.Interaction[AluBot], source: menus.PageSource):
         super().__init__()
-        self.ctx: Context = ctx
+        self.ctx_ntr: Context | discord.Interaction[AluBot] = ctx_ntr
         self.source: menus.PageSource = source
         self.message: Optional[discord.Message] = None
         self.current_page_number: int = 0
+
+        if isinstance(ctx_ntr, Context):
+            author: discord.User | discord.Member = ctx_ntr.author
+        elif isinstance(ctx_ntr, discord.Interaction):
+            author = ctx_ntr.user
+        self.author: discord.User | discord.Member = author
+
         self.clear_items()
         self.fill_items()
 
@@ -174,10 +181,21 @@ class Paginator(discord.ui.View):
         page = await self.source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
         self._update_nav_labels(0)
-        self.message = await self.ctx.send(**kwargs, view=self, ephemeral=ephemeral)
+
+        if isinstance(self.ctx_ntr, Context):
+            self.message = await self.ctx_ntr.send(**kwargs, view=self, ephemeral=ephemeral)
+        elif isinstance(self.ctx_ntr, discord.Interaction):
+            if self.ctx_ntr.response.is_done():
+                self.message = await self.ctx_ntr.followup.send(**kwargs, view=self, ephemeral=ephemeral)
+            else:
+                print('allo')
+                await self.ctx_ntr.response.send_message(**kwargs, view=self, ephemeral=ephemeral)
+                self.message = await self.ctx_ntr.original_response()
+        else:
+            raise RuntimeError("Cannot start a paginator without a context or interaction.")
 
     async def interaction_check(self, ntr: discord.Interaction) -> bool:
-        if ntr.user and ntr.user.id in (self.ctx.bot.owner_id, self.ctx.author.id):
+        if ntr.user and ntr.user.id in (self.ctx_ntr.client.owner_id, self.author.id):
             return True
         else:
             e = discord.Embed(colour=Clr.error)
@@ -188,7 +206,7 @@ class Paginator(discord.ui.View):
     async def on_timeout(self) -> None:
         if self.message:
             for item in self.children:
-                # item in self.childen is Select/Button which have ``.disable`` but typehinted as Item
+                # item in self.children is Select/Button which have ``.disable`` but typehinted as Item
                 item.disabled = True  # type: ignore
             await self.message.edit(view=self)
 
@@ -267,7 +285,7 @@ class EnumeratedPages(Paginator):
 
     def __init__(
         self,
-        ctx: Context,
+        ctx_ntr: Context | discord.Interaction[AluBot],
         entries: List[str],
         *,
         per_page: int,
@@ -285,7 +303,7 @@ class EnumeratedPages(Paginator):
         # for page in paginator.pages
         # you can look your old ctx.send_pages command
         super().__init__(
-            ctx,
+            ctx_ntr,
             EnumeratedPageSource(
                 entries, per_page=per_page, no_enumeration=no_enumeration, description_prefix=description_prefix
             ),

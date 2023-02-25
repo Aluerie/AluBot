@@ -106,7 +106,7 @@ class AluBot(commands.Bot,):
         os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
         os.environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
-        extensions = ['jishaku']
+        extensions = []  # ['jishaku'] - does not work with 2.2.0
         if self.test and len(test_list):
             extensions += [f'cogs.{name}' for name in test_list]
         else:
@@ -304,7 +304,7 @@ class AluBot(commands.Bot,):
 
     @property
     def spam_channel(self) -> discord.TextChannel:
-        # Shortcup so checker doesn't complain too much,
+        # Shortcut so checker doesn't complain too much,
         # and we do not have to `from .utils.vars import Cid``
         # ?tag botvar in a nutshell
         return self.get_channel(self.spam_ch_id)  # type: ignore

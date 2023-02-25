@@ -13,7 +13,6 @@ from .var import MP, Ems, Cid
 
 if TYPE_CHECKING:
     from .bot import AluBot
-    from .context import Context, GuildContext
 
 
 class FPCBase:
@@ -70,52 +69,51 @@ class FPCBase:
 
     async def channel_set(
         self,
-        ctx: GuildContext,
+        ntr: discord.Interaction[AluBot],
         channel: Optional[discord.TextChannel],
     ) -> None:
         """Base function for setting channel for FPC Feed feature"""
-        ch = channel or ctx.channel
-        if not ch.permissions_for(ctx.guild.me).send_messages:
+        ch = channel or ntr.channel
+        if not ch.permissions_for(ntr.guild.me).send_messages:
             raise commands.BotMissingPermissions(['I do not have permission to `send_messages` in that channel'])
 
         query = f'UPDATE guilds SET {self.channel_id_column}=$1 WHERE id=$2'
-        await ctx.pool.execute(query, ch.id, ctx.guild.id)
+        await ntr.client.pool.execute(query, ch.id, ntr.guild.id)
         e = discord.Embed(colour=self.colour)
         e.description = f'Channel {ch.mention} is set to be the {self.feature_name} channel for this server'
-        await ctx.reply(embed=e)
+        await ntr.response.send_message(embed=e)
 
     async def channel_disable(
         self,
-        ctx: GuildContext,
+        ntr: discord.Interaction[AluBot],
     ) -> None:
         """Base function for disabling channel for FPC Feed feature"""
         query = f'SELECT {self.channel_id_column} FROM guilds WHERE id=$1'
-        ch_id = await ctx.pool.fetchval(query, ctx.guild.id)
+        ch_id = await ntr.client.pool.fetchval(query, ntr.guild.id)
 
-        if (ch := ctx.bot.get_channel(ch_id)) is None:
+        if (ch := ntr.client.get_channel(ch_id)) is None:
             raise commands.BadArgument(f'{self.feature_name} channel is not set or already was reset')
         query = f'UPDATE guilds SET {self.channel_id_column}=NULL WHERE id=$1'
-        await ctx.pool.execute(query, ctx.guild.id)
+        await ntr.client.pool.execute(query, ntr.guild.id)
         e = discord.Embed(colour=self.colour)
         e.description = f'Channel {ch.mention} is no longer the {self.feature_name} channel.'
-        await ctx.reply(embed=e)
+        await ntr.response.send_message(embed=e)
 
     async def channel_check(
         self,
-        ctx: Context,
+        ntr: discord.Interaction[AluBot],
     ) -> None:
         """Base function for checking if channel is set for FPC Feed feature"""
         query = f'SELECT {self.channel_id_column} FROM guilds WHERE id=$1'
-        ch_id = await ctx.pool.fetchval(query, ctx.guild.id)
+        ch_id = await ntr.client.pool.fetchval(query, ntr.guild.id)
 
-        if (ch := ctx.bot.get_channel(ch_id)) is None:
+        if (ch := ntr.client.get_channel(ch_id)) is None:
             e = discord.Embed(colour=self.colour)
             e.description = f'{self.feature_name} channel is not currently set.'
-            await ctx.reply(embed=e)
         else:
             e = discord.Embed(colour=self.colour)
             e.description = f'{self.feature_name} channel is currently set to {ch.mention}.'
-            await ctx.reply(embed=e)
+        await ntr.response.send_message(embed=e)
 
     @staticmethod
     def player_name_string(display_name: str, twitch: Union[int, None]) -> str:
@@ -135,12 +133,12 @@ class FPCBase:
     def player_name_acc_string(self, display_name: str, twitch_id: Union[int, None], **kwargs) -> str:
         return f'{self.player_name_string(display_name, twitch_id)}\n' f'{self.player_acc_string(**kwargs)}'
 
-    async def database_list(self, ctx: Context) -> None:
+    async def database_list(self, ntr: discord.Interaction[AluBot]) -> None:
         """Base function for sending database list embed"""
-        await ctx.typing()
+        await ntr.response.defer()
 
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
-        fav_player_id_list = await ctx.pool.fetchval(query, ctx.guild.id)
+        fav_player_id_list = await ntr.client.pool.fetchval(query, ntr.guild.id)
 
         query = f"""SELECT {', '.join(['player_id', 'display_name', 'twitch_id', 'a.id'] + self.acc_info_columns)}
                     FROM {self.players_table} p
@@ -148,7 +146,7 @@ class FPCBase:
                     ON p.id = a.player_id
                     ORDER BY {'display_name'} 
                 """
-        rows = await ctx.pool.fetch(query) or []
+        rows = await ntr.client.pool.fetch(query) or []
 
         player_dict = dict()
 
@@ -165,13 +163,13 @@ class FPCBase:
         ans_array = [f"{v['name']}\n{chr(10).join(v['info'])}" for v in player_dict.values()]
 
         pgs = EnumeratedPages(
-            ctx,
+            ntr,
             ans_array,
             per_page=10,
             no_enumeration=True,
             colour=self.colour,
             title=f"List of {self.game_name} players in Database",
-            footer_text=f'With love, {ctx.guild.me.display_name}',
+            footer_text=f'With love, {ntr.guild.me.display_name}',
         )
         await pgs.start()
 
@@ -204,7 +202,7 @@ class FPCBase:
                 f'Did you mean to use `/dota player add {user.name_lower}` to add the stream into your fav list?'
             )
 
-    async def database_add(self, ctx: Context, player_dict: dict, account_dict: dict):
+    async def database_add(self, ntr: discord.Interaction[AluBot], player_dict: dict, account_dict: dict):
         """Base function for adding accounts into the database"""
         await self.check_if_already_in_database(account_dict)
 
@@ -219,27 +217,27 @@ class FPCBase:
                     UNION 
                         SELECT {'id'} FROM {self.players_table} WHERE {'name_lower'}=$1
                 """
-        player_id = await ctx.pool.fetchval(query, *player_dict.values())
+        player_id = await ntr.client.pool.fetchval(query, *player_dict.values())
         dollars = [f'${i}' for i in range(1, len(self.acc_info_columns) + 3)]  # [$1, $2, ... ]
         query = f"""INSERT INTO {self.accounts_table}
                     (player_id, id, {', '.join(self.acc_info_columns)})
                     VALUES {'('}{', '.join(dollars)}{')'}
                 """
-        await ctx.pool.execute(query, player_id, *account_dict.values())
+        await ntr.client.pool.execute(query, player_id, *account_dict.values())
         e = discord.Embed(colour=self.colour)
         e.add_field(
             name=f'Successfully added the account to the database',
             value=self.player_name_acc_string(player_dict['display_name'], player_dict['twitch_id'], **account_dict),
         )
         e.set_footer(text=self.game_name, icon_url=self.game_logo)
-        await ctx.reply(embed=e)
+        await ntr.followup.send(embed=e)
         e.colour = MP.green(shade=200)
-        e.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        e.set_author(name=ntr.user, icon_url=ntr.user.avatar.url)
         await self.bot.get_channel(Cid.global_logs).send(embed=e)
 
     async def database_request(
         self,
-        ctx: Context,
+        ntr: discord.Interaction[AluBot],
         player_dict: dict,
         account_dict: dict,
     ) -> None:
@@ -256,18 +254,18 @@ class FPCBase:
         )
         warn_e.add_field(name='Request to add an account into the database', value=player_string)
         warn_e.set_footer(text=self.game_name, icon_url=self.game_logo)
-        if not await ctx.prompt(embed=warn_e):
-            await ctx.reply('Aborting...', delete_after=5.0)
+        if not await ntr.client.prompt(embed=warn_e):
+            await ntr.followup.send('Aborting...', delete_after=5.0)
             return
 
         e = discord.Embed(colour=self.colour)
         e.add_field(name='Successfully made a request to add the account into the database', value=player_string)
-        await ctx.reply(embed=e)
+        await ntr.followup.send(embed=e)
 
         warn_e.colour = MP.orange(shade=200)
         warn_e.title = ''
         warn_e.description = ''
-        warn_e.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        warn_e.set_author(name=ntr.user, icon_url=ntr.user.avatar.url)
         # cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
         # warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
         cmd_usage_str = f"name: {player_dict['display_name']} {self.cmd_usage_str(**account_dict)}"
@@ -276,7 +274,7 @@ class FPCBase:
 
     async def database_remove(
         self,
-        ctx: Context,
+        ntr: discord.Interaction[AluBot],
         name_lower: Optional[str],
         account_id: Optional[Union[str, int]],  # steam_id for dota, something else for lol
     ) -> None:
@@ -292,7 +290,7 @@ class FPCBase:
                             ON p.id = a.player_id
                             WHERE a.id=$1 AND p.name_lower=$2
                         """
-                val = await ctx.pool.fetchval(query, account_id, name_lower)
+                val = await ntr.client.pool.fetchval(query, account_id, name_lower)
                 if val is None:
                     raise commands.BadArgument(
                         'This account either is not in the database ' 'or does not belong to the said player'
@@ -315,7 +313,7 @@ class FPCBase:
                             )
                         RETURNING display_name
                     """
-            ans_name = await ctx.pool.fetchval(query, account_id)
+            ans_name = await ntr.client.pool.fetchval(query, account_id)
             if ans_name is None:
                 raise commands.BadArgument('There is no account with such account details')
         else:
@@ -324,7 +322,7 @@ class FPCBase:
                         WHERE name_lower=$1
                         RETURNING display_name
                     """
-            ans_name = await ctx.pool.fetchval(query, name_lower)
+            ans_name = await ntr.client.pool.fetchval(query, name_lower)
             if ans_name is None:
                 raise commands.BadArgument('There is no account with such player name')
 
@@ -334,7 +332,7 @@ class FPCBase:
             value=f'{ans_name}{" - " + str(account_id) if account_id else ""}',
         )
         e.set_footer(text=self.game_name, icon_url=self.game_logo)
-        await ctx.reply(embed=e)
+        await ntr.followup.send(embed=e)
 
     @staticmethod
     def construct_the_embed(
@@ -362,23 +360,24 @@ class FPCBase:
             )
         return e
 
-    async def player_add_remove(self, ctx: Context, player_names: List[str], *, mode_add: bool) -> None:
+    async def player_add_remove(self, ntr: discord.Interaction[AluBot], player_names: List[str], *, mode_add: bool) -> None:
         """
         Base function to add/remove players from user's favourite list.
 
         Parameters
         ----------
-        ctx :
+        ntr :
         player_names :
         mode_add :
         """
+        await ntr.response.defer()
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
-        fav_ids = await ctx.pool.fetchval(query, ctx.guild.id)
+        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id)  # type: ignore
         query = f"""SELECT id, name_lower, display_name 
                     FROM {self.players_table}
                     WHERE name_lower=ANY($1)
                 """  # AND NOT id=ANY($2)
-        sa_rows = await ctx.pool.fetch(query, [name.lower() for name in player_names])
+        sa_rows = await ntr.client.pool.fetch(query, [name.lower() for name in player_names])
         # The following notations are assumed logically for mode_add being `True`.
         # +-----------------+-----------------------+-----------------------+
         # | variable_name   | `mode_add = True`     | `mode_add = False`    |
@@ -397,7 +396,7 @@ class FPCBase:
 
         query = f"UPDATE guilds SET {self.players_column}=$1 WHERE id=$2"
         new_fav_ids = fav_ids + s_ids if mode_add else [i for i in fav_ids if i not in a_ids]
-        await ctx.pool.execute(query, new_fav_ids, ctx.guild.id)
+        await ntr.client.pool.execute(query, new_fav_ids, ntr.guild.id)
 
         if mode_add:
             e = self.construct_the_embed(s_names, a_names, f_names, gather_word='players', mode_add=mode_add)
@@ -410,7 +409,7 @@ class FPCBase:
                     '`$ or /dota database add|request name: <name> steam: <steam_id> twitch: <yes/no>`'
                 )
             )
-        await ctx.reply(embed=e)
+        await ntr.followup.send(embed=e)
 
     async def player_add_remove_autocomplete(
         self, ntr: discord.Interaction, current: str, *, mode_add: bool
@@ -430,11 +429,11 @@ class FPCBase:
         choice_list = [x for x in [a for a, in rows] if x.lower() not in namespace_list]
         return [app_commands.Choice(name=n, value=n) for n in choice_list if current.lower() in n.lower()]
 
-    async def player_list(self, ctx: Context):
+    async def player_list(self, ntr: discord.Interaction[AluBot]):
         """Base function for player list command"""
-        await ctx.typing()
+        await ntr.response.defer()
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
-        fav_ids = await self.bot.pool.fetchval(query, ctx.guild.id)
+        fav_ids = await self.bot.pool.fetchval(query, ntr.guild.id)
 
         query = f"""SELECT display_name, twitch_id 
                     FROM {self.players_table}
@@ -446,13 +445,13 @@ class FPCBase:
         player_names = [self.player_name_string(row.display_name, row.twitch_id) for row in rows]
         e = discord.Embed(title=f'List of favourite {self.game_name} players', colour=self.colour)
         e.description = '\n'.join(player_names)
-        await ctx.reply(embed=e)
+        await ntr.followup.send(embed=e)
 
-    async def character_add_remove(self, ctx: GuildContext, character_names: List[str], *, mode_add: bool):
+    async def character_add_remove(self, ntr: discord.Interaction[AluBot], character_names: List[str], *, mode_add: bool):
         """Base function for adding/removing characters such as heroes/champs from fav lists"""
-        await ctx.typing()
+        await ntr.response.defer()
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
-        fav_ids = await ctx.pool.fetchval(query, ctx.guild.id)
+        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id)  # type: ignore 
 
         f_names, sa_ids = [], []
         for name in character_names:
@@ -468,7 +467,7 @@ class FPCBase:
 
         query = f"UPDATE guilds SET {self.characters_column}=$1 WHERE id=$2"
         new_fav_ids = fav_ids + s_ids if mode_add else [i for i in fav_ids if i not in a_ids]
-        await ctx.pool.execute(query, new_fav_ids, ctx.guild.id)
+        await ntr.client.pool.execute(query, new_fav_ids, ntr.guild.id)
 
         if mode_add:
             e = self.construct_the_embed(
@@ -478,14 +477,14 @@ class FPCBase:
             e = self.construct_the_embed(
                 a_names, s_names, f_names, gather_word=self.character_gather_word, mode_add=mode_add
             )
-        await ctx.reply(embed=e)
+        await ntr.followup.send(embed=e)
 
     async def character_add_remove_autocomplete(
         self, ntr: discord.Interaction, current: str, *, mode_add: bool
     ) -> List[app_commands.Choice[str]]:
         """Base function for character add/remove autocomplete"""
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
-        fav_ids = await self.bot.pool.fetchval(query, ntr.guild.id)
+        fav_ids: List[int] = await self.bot.pool.fetchval(query, ntr.guild.id)  # type: ignore
 
         fav_names = [await self.get_char_name_by_id(i) for i in fav_ids]
 
@@ -503,23 +502,23 @@ class FPCBase:
         return_list = list(dict.fromkeys(precise_match + close_match))
         return [app_commands.Choice(name=n, value=n) for n in return_list][:25]  # type: ignore
 
-    async def character_list(self, ctx: Context) -> None:
+    async def character_list(self, ntr: discord.Interaction[AluBot]) -> None:
         """Base function for character list commands"""
-        await ctx.typing()
+        await ntr.response.defer()
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
-        fav_ids = await self.bot.pool.fetchval(query, ctx.guild.id) or []
+        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id) or []  # type: ignore
         fav_names = [f'{await self.get_char_name_by_id(i)} - `{i}`' for i in fav_ids]
 
         e = discord.Embed(title=f'List of your favourite {self.character_gather_word}', colour=self.colour)
         e.description = '\n'.join(fav_names)
-        await ctx.reply(embed=e)
+        await ntr.followup.send(embed=e)
 
-    async def spoil(self, ctx: Context, spoil: bool):
+    async def spoil(self, ntr: discord.Interaction[AluBot], spoil: bool):
         """Base function for spoil commands"""
         query = f'UPDATE guilds SET {self.spoil_column}=$1 WHERE id=$2'
-        await self.bot.pool.execute(query, spoil, ctx.guild.id)
+        await self.bot.pool.execute(query, spoil, ntr.guild.id)
         e = discord.Embed(description=f"Changed spoil value to {spoil}", colour=self.colour)
-        await ctx.reply(embed=e)
+        await ntr.response.send_message(embed=e)
 
 
 class TwitchAccCheckCog(commands.Cog):

@@ -40,6 +40,9 @@ with pretty much everything I ever needed ! Check List of features after the pic
 # ReadMe Contents
 
 1. [📖 Features](#features) 
+2. Wiki
+    1. xd
+    2. xd
 
 ### 📖 Features
 

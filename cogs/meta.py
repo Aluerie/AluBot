@@ -41,14 +41,14 @@ class HelpPageSource(menus.ListPageSource):
         e.set_footer(text=f'With love, {self.help_cmd.context.bot.user.name}')
 
         if cog == 'front_page':
-            e.title = f'{menu.ctx.bot.user.name}\'s $help Menu'
+            e.title = f'{menu.ctx_ntr.bot.user.name}\'s $help Menu'
             e.description = (
-                f'{menu.ctx.bot.user.name} is an ultimate multi-purpose bot !\n\n'
+                f'{menu.ctx_ntr.bot.user.name} is an ultimate multi-purpose bot !\n\n'
                 'Use dropdown menu below to select a category.'
             )
-            e.add_field(name=f'{menu.ctx.bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
+            e.add_field(name=f'{menu.ctx_ntr.bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
             e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
-            e.add_field(name='Bot Owner', value=f'{menu.ctx.bot.owner}')
+            e.add_field(name='Bot Owner', value=f'{menu.ctx_ntr.bot.owner}')
         elif cog == 'back_page':
             e.title = 'Other features $help page'
             e.description = (
@@ -428,7 +428,7 @@ class SetupPageSource(menus.ListPageSource):
                 embeds.append(await setup_info())
             setup_state = getattr(cog, 'setup_state', None)  # method cog.setup_state(self, ctx: Context)
             if setup_state:
-                embeds.append(await setup_state(menu.ctx))
+                embeds.append(await setup_state(menu.ctx_ntr))
 
             if v := getattr(cog, 'setup_view', None):  # method cog.setup_view(self, pages: SetupPages)
                 view: discord.ui.View = await v(menu)

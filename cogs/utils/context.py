@@ -59,6 +59,10 @@ class Context(commands.Context):
         self.pool: Pool = self.bot.pool
 
     @property
+    def client(self) -> AluBot:
+        return self.bot
+
+    @property
     def session(self) -> ClientSession:
         return self.bot.session
 

@@ -62,7 +62,11 @@ class ShortTime:
 
 
 class HumanTime:
-    calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE)
+    # en_AU has proper DD MM format
+    # https://bear.im/code/parsedatetime/docs/parsedatetime.pdt_locales-pysrc.html#pdtLocale_au.__init__
+    # https://bear.im/code/parsedatetime/docs/parsedatetime.pdt_locales-pysrc.html#pdtLocale_base.__init__
+    constants = pdt.Constants(localeID='en_AU')
+    calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE, constants=constants)
 
     def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
         now = now or datetime.datetime.now(datetime.timezone.utc)
@@ -117,7 +121,8 @@ class TimeTransformer(app_commands.Transformer):
             try:
                 human = FutureTime(value, now=now)
             except commands.BadArgument as e:
-                raise BadTimeTransform(str(e)) from None
+                raise e
+                #  raise BadTimeTransform(str(e)) from None
             else:
                 return human.dt
         else:
@@ -135,11 +140,7 @@ class FriendlyTimeResult:
         self.arg = ''
 
     async def ensure_constraints(
-            self,
-            ctx: Context,
-            uft: UserFriendlyTime,
-            now: datetime.datetime,
-            remaining: str
+        self, ctx: Context, uft: UserFriendlyTime, now: datetime.datetime, remaining: str
     ) -> None:
         if self.dt < now:
             raise commands.BadArgument('This time is in the past.')

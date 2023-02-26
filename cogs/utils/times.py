@@ -20,7 +20,6 @@ from discord.ext import commands
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-
     from .context import Context
 
 
@@ -103,7 +102,7 @@ class FutureTime(Time):
         super().__init__(argument, now=now)
 
         if self._past:
-            raise commands.BadArgument('this time is in the past')
+            raise commands.BadArgument('This time is in the past')
 
 
 class BadTimeTransform(app_commands.AppCommandError):
@@ -121,8 +120,7 @@ class TimeTransformer(app_commands.Transformer):
             try:
                 human = FutureTime(value, now=now)
             except commands.BadArgument as e:
-                raise e
-                #  raise BadTimeTransform(str(e)) from None
+                raise BadTimeTransform(str(e)) from None
             else:
                 return human.dt
         else:

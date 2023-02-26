@@ -10,6 +10,7 @@ from discord.ext import commands
 from .utils.context import Context
 from .utils.formats import human_timedelta
 from .utils.translator import TranslateError
+from .utils.times import BadTimeTransform
 from .utils.var import Clr, Ems
 
 if TYPE_CHECKING:
@@ -116,6 +117,8 @@ class CommandErrorHandler(commands.Cog):
                 desc = f'{error}'
             case TranslateError():
                 desc = f'{error}'
+            case BadTimeTransform():
+                desc = f'{error}'
             case _:
                 handled = False
 
@@ -158,6 +161,11 @@ class CommandErrorHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_app_command_error(self, ntr: discord.Interaction, error):
+        # command = ntr.command
+        # if command is not None:
+        #     if command._has_any_error_handlers():
+        #         return
+        
         if not getattr(ntr, 'error_handled', False):
             ctx = await Context.from_interaction(ntr)
             await self.command_error_work(ctx, error)

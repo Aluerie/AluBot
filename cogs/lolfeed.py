@@ -474,15 +474,13 @@ class LoLFeedToolsCog(commands.Cog, FPCBase, name='LoL'):
         name10: Optional[str],
     ):
         """Add player to your favourites."""
-        player_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        await self.player_add_remove(ntr, player_names, mode_add=True)
+        await self.player_add_remove(ntr, locals(), mode_add=True)
 
     @is_manager()
     @ext_lol_player.command(name='add', usage='<player_name(-s)>')
     async def ext_lol_player_add(self, ctx: Context, *, player_names: str):
         """Add player to your favourites."""
-        player_names = [b for x in player_names.split(',') if (b := x.lstrip().rstrip())]
-        await self.player_add_remove(ctx, player_names, mode_add=True)
+        await self.player_add_remove(ctx, locals(), mode_add=True)
 
     # lol player remove ##################################
 
@@ -521,15 +519,13 @@ class LoLFeedToolsCog(commands.Cog, FPCBase, name='LoL'):
         name10: Optional[str],
     ):
         """Remove player from your favourites."""
-        player_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        await self.player_add_remove(ntr, player_names, mode_add=False)
+        await self.player_add_remove(ntr, locals(), mode_add=False)
 
     @is_manager()
     @ext_lol_player.command(name='remove', usage='<player_name(-s)>')
     async def ext_lol_player_remove(self, ctx: Context, *, player_names: str):
         """Add player to your favourites."""
-        player_names = [b for x in player_names.split(',') if (b := x.lstrip().rstrip())]
-        await self.player_add_remove(ctx, player_names, mode_add=False)
+        await self.player_add_remove(ctx, locals(), mode_add=False)
 
     # lol player list ##################################
 
@@ -595,8 +591,7 @@ class LoLFeedToolsCog(commands.Cog, FPCBase, name='LoL'):
         name10: Optional[str],
     ):
         """Add champ to your favourites."""
-        champ_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        await self.character_add_remove(ntr, champ_names, mode_add=True)
+        await self.character_add_remove(ntr, locals(), mode_add=True)
 
     @is_manager()
     @ext_lol_champ.command(
@@ -605,8 +600,7 @@ class LoLFeedToolsCog(commands.Cog, FPCBase, name='LoL'):
     )
     async def ext_lol_champ_add(self, ctx: Context, *, champ_names: str):
         """Add champ(-s) to your fav champ list."""
-        champ_names = [x for x in champ_names.split(',') if (b := x.lstrip().rstrip())]
-        await self.character_add_remove(ctx, champ_names, mode_add=True)
+        await self.character_add_remove(ctx, locals(), mode_add=True)
 
     # lol champ remove ##################################
 
@@ -645,15 +639,13 @@ class LoLFeedToolsCog(commands.Cog, FPCBase, name='LoL'):
         name10: Optional[str],
     ):
         """Remove champ from your favourites."""
-        champ_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        await self.character_add_remove(ntr, champ_names, mode_add=False)
+        await self.character_add_remove(ntr, locals(), mode_add=False)
 
     @is_manager()
     @ext_lol_champ.command(name='remove', usage='<champ_name(-s)>')
     async def ext_lol_champ_remove(self, ctx: Context, *, champ_names: str):
         """Remove champ(-es) from your fav champs list."""
-        champ_names = [x for x in champ_names.split(',') if (b := x.lstrip().rstrip())]
-        await self.character_add_remove(ctx, champ_names, mode_add=False)
+        await self.character_add_remove(ctx, locals(), mode_add=False)
 
     # lol champ list ##################################
 

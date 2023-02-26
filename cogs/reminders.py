@@ -185,10 +185,6 @@ class Reminder(commands.Cog):
     async def cog_unload(self) -> None:
         self._task.cancel()
 
-    async def cog_command_error(self, ctx: Context, error: commands.CommandError):
-        print(error)
-        pass
-
     async def get_active_timer(self, *, days: int = 7) -> Optional[Timer]:
         query = 'SELECT * FROM reminders WHERE expires < (CURRENT_DATE + $1::interval) ORDER BY expires LIMIT 1;'
         record = await self.bot.pool.fetchrow(query, datetime.timedelta(days=days))
@@ -334,11 +330,6 @@ class Reminder(commands.Cog):
         """Sets a reminder to remind you of something at a specific time"""
         ctx = await Context.from_interaction(ntr)
         await self.remind_helper(ctx, dt=when, text=text)
-
-    @reminder_set.error
-    async def reminder_set_error(self, ntr: discord.Interaction, error: app_commands.AppCommandError):
-        if isinstance(error, times.BadTimeTransform):
-            await ntr.response.send_message(str(error), ephemeral=True)
 
     @remind.command(name='me', with_app_command=False)
     async def remind_me(

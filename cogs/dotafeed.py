@@ -591,15 +591,13 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         name10: Optional[str],
     ):
         """Add player to your favourites."""
-        player_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        await self.player_add_remove(ntr, player_names, mode_add=True)
+        await self.player_add_remove(ntr, locals(), mode_add=True)
 
     @is_manager()
     @ext_dota_player.command(name="add", usage="<player_name(-s)>")
     async def ext_dota_player_add(self, ctx: Context, *, player_names: str):
         """Add player to your favourites."""
-        player_names = [b for x in player_names.split(",") if (b := x.lstrip().rstrip())]
-        await self.player_add_remove(ctx, player_names, mode_add=True)
+        await self.player_add_remove(ctx, locals(), mode_add=True)
 
     # dota player remove ##################################
 
@@ -638,15 +636,13 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         name10: Optional[str],
     ):
         """Remove player from your favourites."""
-        player_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        await self.player_add_remove(ntr, player_names, mode_add=False)
+        await self.player_add_remove(ntr, locals(), mode_add=False)
 
     @is_manager()
     @ext_dota_player.command(name="remove", usage="<player_name(-s)>")
     async def ext_dota_player_remove(self, ctx: Context, *, player_names: str):
         """Remove player from your favourites."""
-        player_names = [b for x in player_names.split(",") if (b := x.lstrip().rstrip())]
-        await self.player_add_remove(ctx, player_names, mode_add=False)
+        await self.player_add_remove(ctx, locals(), mode_add=False)
 
     # dota player list ##################################
 
@@ -710,8 +706,7 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         name10: Optional[str],
     ):
         """Add hero to your favourites."""
-        hero_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        await self.character_add_remove(ntr, hero_names, mode_add=True)
+        await self.character_add_remove(ntr, locals(), mode_add=True)
 
     @is_manager()
     @ext_dota_hero.command(name="add", usage="<hero_name(-s)>")
@@ -724,8 +719,7 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         # At last, you can find proper name
         # [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
         # under one of `"localized_name"`
-        hero_names = [b for x in hero_names.split(",") if (b := x.lstrip().rstrip())]
-        await self.character_add_remove(ctx, hero_names, mode_add=True)
+        await self.character_add_remove(ctx, locals(), mode_add=True)
 
     # dota hero remove ##################################
 
@@ -762,15 +756,13 @@ class DotaFeedToolsCog(commands.Cog, FPCBase, name="Dota 2"):
         name10: Optional[str],
     ):
         """Remove hero from your favourites."""
-        hero_names = list(dict.fromkeys([name for name in list(locals().values())[2:] if name is not None]))
-        await self.character_add_remove(ntr, hero_names, mode_add=False)
+        await self.character_add_remove(ntr, locals(), mode_add=False)
 
     @is_manager()
     @ext_dota_hero.command(name="remove", usage="<hero_name(-s)>")
     async def ext_dota_hero_remove(self, ctx: Context, *, hero_names: str):
         """Remove hero(-es) from your fav heroes list."""
-        hero_names = [x.lstrip().rstrip() for x in hero_names.split(",") if x]
-        await self.character_add_remove(ctx, hero_names, mode_add=False)
+        await self.character_add_remove(ctx, locals(), mode_add=False)
 
     # dota hero list ##################################
 

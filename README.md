@@ -35,7 +35,7 @@ Initial idea was to send me notifications  when my favourite  Dota 2/ League of 
 However, the whole process grew into making *the ultimate multipurpose bot*
 with pretty much everything I ever needed ! Check List of features after the pic.
 
-<img src="./assets/images/readme/MainFeature.png" alt="alubot preview">
+<img src="./assets/images/readme/dota-lol_notifs.png" alt="alubot preview">
 
 ## ReadMe Contents
 

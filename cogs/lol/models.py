@@ -11,14 +11,14 @@ from pyot.utils.functools import async_property
 
 from .const import LiteralPlatform, platform_to_server
 from .utils import get_role_mini_list, icon_url_by_champ_id
-from ..utils.formats import human_timedelta
-from ..utils.imgtools import get_text_wh
-from ..utils.var import Clr, MP
+from utils.formats import human_timedelta
+from utils.imgtools import get_text_wh
+from utils.var import Clr, MP
 
 if TYPE_CHECKING:
     from pyot.models.lol import Spell, Rune
     from pyot.models.lol.match import MatchParticipantData
-    from ..utils.bot import AluBot
+    from utils.bot import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

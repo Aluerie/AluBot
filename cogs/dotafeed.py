@@ -16,13 +16,13 @@ from steam.steamid import EType, SteamID
 from .dota import hero
 from .dota.const import DOTA_LOGO
 from .dota.models import ActiveMatch, OpendotaRequestMatch, PostMatchPlayerData
-from .utils.checks import is_manager
-from .utils.fpc import FPCBase, TwitchAccCheckCog
-from .utils.var import MP, Cid, Clr, Ems, Uid
+from utils.checks import is_manager
+from utils.fpc import FPCBase, TwitchAccCheckCog
+from utils.var import MP, Cid, Clr, Ems, Uid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

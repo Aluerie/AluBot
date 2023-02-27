@@ -8,12 +8,12 @@ import tweepy.asynchronous
 from discord.ext import commands, tasks
 
 from config import TWITTER_BEARER_TOKEN
-from .utils.imgtools import url_to_file
-from .utils.var import Cid
+from utils.imgtools import url_to_file
+from utils.var import Cid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 import logging
 logger = logging.getLogger(__name__)

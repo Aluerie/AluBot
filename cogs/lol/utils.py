@@ -5,7 +5,7 @@ from pyot.models import lol
 from pyot.utils.lol import champion, cdragon
 from roleidentification import get_roles
 
-from cogs.utils.cache import KeyCache
+from utils.cache import KeyCache
 
 if TYPE_CHECKING:
     pass

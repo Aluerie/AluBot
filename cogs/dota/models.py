@@ -10,13 +10,13 @@ from pyot.utils.functools import async_property
 
 from ..dota.const import ODOTA_API_URL, dota_player_colour_map, DOTA_LOGO
 from ..dota import hero, item, ability
-from cogs.utils.formats import human_timedelta
-from cogs.utils.imgtools import img_to_file, get_text_wh
-from cogs.utils.var import Clr, MP, Cid
+from utils.formats import human_timedelta
+from utils.imgtools import img_to_file, get_text_wh
+from utils.var import Clr, MP, Cid
 
 if TYPE_CHECKING:
-    from ..utils.bot import AluBot
-    from ..utils.twitch import TwitchClient
+    from utils.bot import AluBot
+    from utils.twitch import TwitchClient
 
 
 __all__ = (

@@ -10,14 +10,14 @@ from github import Github
 from config import GIT_PERSONAL_TOKEN
 
 from .dota.const import DOTA_LOGO
-from .utils.formats import block_function
-from .utils.github import human_commit
-from .utils.imgtools import str_to_file
-from .utils.links import move_link_to_title, replace_tco_links
-from .utils.var import Cid, Clr, Sid
+from utils.formats import block_function
+from utils.github import human_commit
+from utils.imgtools import str_to_file
+from utils.links import move_link_to_title, replace_tco_links
+from utils.var import Cid, Clr, Sid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 async def get_gitdiff_embed(test_num=0):

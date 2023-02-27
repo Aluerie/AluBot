@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 from discord.ext import commands
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 
 class Timers(commands.Cog):

@@ -3,8 +3,8 @@ from __future__ import annotations
 from discord import Embed, app_commands
 from discord.ext import commands, tasks
 
-from cogs.utils.context import Context
-from cogs.utils.var import Clr, Cid, Sid
+from utils.context import Context
+from utils import Clr, Sid
 
 
 class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, List, Optional, Union, Sequence, overload
+from typing import TYPE_CHECKING, Dict, List, Optional, Union, Sequence
 
 import datetime
 import logging

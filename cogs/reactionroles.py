@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from .utils.checks import is_owner
-from .utils.var import Sid, Cid
+from utils.checks import is_owner
+from utils.var import Sid, Cid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 class ReactionRoles(commands.Cog):

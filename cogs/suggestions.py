@@ -5,10 +5,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from .utils.var import Ems, Sid, Cid, Clr
+from utils.var import Ems, Sid, Cid, Clr
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 class Suggestions(commands.Cog):

@@ -5,14 +5,14 @@ import discord
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from .utils.checks import is_owner
-from .utils.imgtools import url_to_img, img_to_file, get_text_wh
-from .utils.var import Cid, Clr, Ems, Rid, Sid, Uid
+from utils.checks import is_owner
+from utils.imgtools import url_to_img, img_to_file, get_text_wh
+from utils.var import Cid, Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 
 async def welcome_image(session, member: discord.Member):

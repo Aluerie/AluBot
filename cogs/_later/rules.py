@@ -7,10 +7,10 @@ from discord import Embed, app_commands
 from discord.ext import commands
 from discord.ext.commands import Range
 
-from cogs.utils.var import Clr, Rid, Ems
+from utils import Clr, Rid, Ems
 
 if TYPE_CHECKING:
-    from cogs.utils.context import Context
+    from utils.context import Context
 
 
 class ServerInfo(commands.Cog, name='Rules'):

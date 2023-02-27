@@ -17,15 +17,15 @@ from dateparser.search import search_dates
 from dota2 import __version__ as dota2__version__
 from pyot import __version__ as pyot__version__
 
-from .utils.formats import human_timedelta, format_dt_tdR
-from .utils.imgtools import img_to_file
-from .utils.var import Cid, Clr, Ems, Sid, Rid, MP, MAP
+from utils.formats import human_timedelta, format_dt_tdR
+from utils.imgtools import img_to_file
+from utils.var import Cid, Clr, Ems, Sid, Rid, MP, MAP
 
 # from wordcloud import WordCloud
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(

@@ -7,11 +7,11 @@ from discord import app_commands
 from discord.ext import commands
 from gtts import gTTS
 
-from .utils.var import Ems, Clr
+from utils.var import Ems, Clr
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 
 class LanguageData(NamedTuple):

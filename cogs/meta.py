@@ -8,16 +8,16 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus, tasks
 
-from .utils import checks
-from .utils.checks import is_owner
-from .utils.context import Context
-from .utils.formats import human_timedelta
-from .utils.pagination import Paginator
-from .utils.var import Cid, Clr, Ems, Rid, Lmt
+from utils import checks
+from utils.checks import is_owner
+from utils.context import Context
+from utils.formats import human_timedelta
+from utils.pagination import Paginator
+from utils.var import Cid, Clr, Ems, Rid, Lmt
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import GuildContext
+    from utils.bot import AluBot
+    from utils.context import GuildContext
 
 
 # #####################################################################################################################

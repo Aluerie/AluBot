@@ -7,11 +7,11 @@ import discord
 from discord.ext import commands, tasks
 import regex
 
-from .utils.formats import inline_wordbyword_diff
-from .utils.var import Sid, Ems, Cid, Rgx, Clr, Rid
+from utils.formats import inline_wordbyword_diff
+from utils.var import Sid, Ems, Cid, Rgx, Clr, Rid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 class Logging(commands.Cog):

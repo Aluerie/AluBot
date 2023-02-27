@@ -9,14 +9,14 @@ from bs4 import BeautifulSoup
 from discord import app_commands
 from discord.ext import commands
 
-from .utils.formats import format_dt_tdR
-from .utils.var import Clr, Ems
+from utils.formats import format_dt_tdR
+from utils.var import Clr, Ems
 from .dota.const import DOTA_LOGO
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 
 fav_teams = []

@@ -1,6 +1,6 @@
 from typing import List
 
-from ..utils.cache import KeyCache
+from utils.cache import KeyCache
 from .const import *
 
 __all__ = (

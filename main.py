@@ -12,8 +12,8 @@ from pathlib import Path
 import asyncpg
 import click
 
-from cogs.utils.database import create_pool
-from cogs.utils.bot import AluBot, get_log_fmt
+from utils.database import create_pool
+from utils.bot import AluBot, get_log_fmt
 
 if TYPE_CHECKING:
     pass

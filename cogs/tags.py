@@ -6,11 +6,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from .utils.context import Context
-from .utils.var import Clr, Ems, Rid
+from utils.context import Context
+from utils.var import Clr, Ems, Rid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 reserved_words = ['edit', 'add', 'create', 'info', 'delete', 'list', 'text', 'name', 'remove', 'ban']

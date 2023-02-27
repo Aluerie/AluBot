@@ -1,15 +1,15 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import asyncio
 
 import discord
 from discord.ext import commands, tasks
 
-from .utils.var import Cid, Clr, Uid, Sid
+from utils.var import Cid, Clr, Uid, Sid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 class ChannelWatcher(commands.Cog):

@@ -7,12 +7,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from .utils import times
-from .utils.context import Context
-from .utils.var import Rid, Ems, Clr, Uid, Sid, Cid
+from utils import times
+from utils.context import Context
+from utils.var import Rid, Ems, Clr, Uid, Sid, Cid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 class Moderation(commands.Cog):

@@ -9,8 +9,8 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Polygon
 
 from ..dota import hero
-from cogs.utils.imgtools import url_to_img
-from cogs.utils.var import MP, Clr
+from utils.imgtools import url_to_img
+from utils.var import MP, Clr
 
 if TYPE_CHECKING:
     from asyncpg import Pool

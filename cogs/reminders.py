@@ -9,7 +9,7 @@ I had to rewrite half of the bot after reading @Danny's `reminder.py` :D
 from __future__ import annotations
 
 import textwrap
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union, List
+from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
 from typing_extensions import Annotated
 
 import asyncio
@@ -21,15 +21,16 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from .utils import formats, times
-from .utils.context import Context
-from .utils.database import DRecord
-from .utils.pagination import EnumeratedPages
-from .utils.var import Ems, Clr
+from utils import times
+from utils import formats
+from utils.context import Context
+from utils.database import DRecord
+from utils.pagination import EnumeratedPages
+from utils.var import Ems, Clr
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)

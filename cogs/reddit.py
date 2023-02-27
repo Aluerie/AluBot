@@ -13,10 +13,10 @@ from asyncprawcore import AsyncPrawcoreException
 import discord
 from discord.ext import commands, tasks
 
-from .utils.var import Cid, Clr, Lmt
+from utils.var import Cid, Clr, Lmt
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 def silence_event_loop_closed(func):

@@ -9,10 +9,10 @@ from discord.ext import commands, tasks
 import regex
 from numpy.random import randint, choice
 
-from .utils.var import Cid, Clr, Ems, Rgx, Uid
+from utils.var import Cid, Clr, Ems, Rgx, Uid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 class EmoteSpam(commands.Cog):

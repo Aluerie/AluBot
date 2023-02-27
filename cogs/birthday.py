@@ -13,12 +13,12 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from numpy.random import choice
 
-from .utils.pagination import EnumeratedPages
-from .utils.var import Cid, Ems, Rid, Clr, Sid
+from utils.pagination import EnumeratedPages
+from utils.var import Cid, Ems, Rid, Clr, Sid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 
 @lru_cache(maxsize=None)

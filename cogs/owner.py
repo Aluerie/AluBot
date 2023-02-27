@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import asyncio  # to expose to the eval $py command
-import datetime  # to expose to the eval $py command
-import inspect  # to expose to the eval $py command
 import io
 import json
 import os
@@ -16,14 +13,14 @@ from discord import app_commands
 from discord.ext import commands
 
 from .lol.const import LiteralServerUpper
-from .utils.bot import test_list
-from .utils.checks import is_owner
-from .utils.context import Context
-from .utils.converters import Codeblock
-from .utils.var import MP, Cid, Clr, Ems, Rid, Sid
+from utils.bot import test_list
+from utils.checks import is_owner
+from utils.context import Context
+from utils.converters import Codeblock
+from utils.var import MP, Cid, Clr, Ems, Rid, Sid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
     from .dotafeed import DotaFeedToolsCog
     from .lolfeed import LoLFeedToolsCog
 

@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Optional, Sequence
 import discord
 from discord.ext import commands
 
-from .utils.var import Clr, Ems, Sid, Img
+from utils.var import Clr, Ems, Sid, Img
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 
 class Prefix(commands.Cog, name='Settings for the bot'):

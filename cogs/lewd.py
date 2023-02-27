@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from .utils.var import Ems
+from utils.var import Ems
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 
 class LewdCog(commands.Cog, name='Lewd'):

@@ -7,14 +7,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from .utils.context import Context
-from .utils.formats import human_timedelta
-from .utils.translator import TranslateError
-from .utils.times import BadTimeTransform
-from .utils.var import Clr, Ems
+from utils.context import Context
+from utils.formats import human_timedelta
+from utils.translator import TranslateError
+from utils.times import BadTimeTransform
+from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 class CommandErrorHandler(commands.Cog):

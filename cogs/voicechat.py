@@ -5,11 +5,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from .utils.var import Ems, Sid, Rid, Clr, Cid
+from utils.var import Ems, Sid, Rid, Clr, Cid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 ORIGINAL_NAME = '\N{CINEMA}streaming_room'
 

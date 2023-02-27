@@ -11,11 +11,11 @@ from discord.ext import commands, tasks
 from github.GithubException import GithubException
 from PIL import Image
 
-from .utils.var import Sid, Cid, Lmt
+from utils.var import Sid, Cid, Lmt
 
 if TYPE_CHECKING:
     from github import Issue, NamedUser
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 class BaseEvent:

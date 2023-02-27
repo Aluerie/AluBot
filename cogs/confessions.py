@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from .utils.formats import human_timedelta
-from .utils.var import Ems, Clr
+from utils.formats import human_timedelta
+from utils.var import Ems, Clr
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 class ButtonOnCooldown(commands.CommandError):

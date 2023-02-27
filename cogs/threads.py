@@ -6,10 +6,10 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 
-from .utils.var import Sid, Ems
+from utils.var import Sid, Ems
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 watched_threads_ids = []
 

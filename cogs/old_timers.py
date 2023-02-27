@@ -5,11 +5,11 @@ import discord
 from discord.ext import commands, tasks
 from numpy.random import randint, seed
 
-from .utils.var import Rid, Cid, Uid, Sid, Ems, Clr
+from utils.var import Rid, Cid, Uid, Sid, Ems, Clr
 
 if TYPE_CHECKING:
     from asyncpg import Pool
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 seed(None)

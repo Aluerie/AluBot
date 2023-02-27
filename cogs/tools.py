@@ -7,12 +7,12 @@ from discord.ext import commands
 from PIL import Image
 
 from cogs.twitter import download_twitter_images
-from .utils.translator import translate
-from .utils.var import Clr, Ems
+from utils.translator import translate
+from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 
 class ToolsCog(commands.Cog, name='Tools'):

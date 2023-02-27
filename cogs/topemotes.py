@@ -8,14 +8,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from .utils.formats import indent
-from .utils.pagination import EnumeratedPages
-from .utils.var import Clr, Rgx, Ems
+from utils.formats import indent
+from utils.pagination import EnumeratedPages
+from utils.var import Clr, Rgx, Ems
 
 if TYPE_CHECKING:
     from asyncpg import Pool
-    from .utils.bot import AluBot
-    from .utils.context import GuildContext
+    from utils.bot import AluBot
+    from utils.context import GuildContext
 
 
 def filter_emotes_condition(emote, mode):

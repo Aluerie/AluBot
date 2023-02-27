@@ -8,12 +8,12 @@ from discord import app_commands
 from discord.ext import commands
 from numpy.random import randint, choice
 
-from .utils.var import Clr, Ems, Uid, Cid, Sid, Rgx
-from .utils.webhook import user_webhook, check_msg_react
+from utils.var import Clr, Ems, Uid, Cid, Sid, Rgx
+from utils.webhook import user_webhook, check_msg_react
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 
 class RPSView(discord.ui.View):

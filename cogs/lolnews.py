@@ -8,12 +8,12 @@ from discord.ext import commands, tasks
 from bs4 import BeautifulSoup
 
 from .lol.const import LOL_LOGO
-from .utils.formats import block_function
-from .utils.links import replace_tco_links, move_link_to_title
-from .utils.var import Cid, Sid, Clr
+from utils.formats import block_function
+from utils.links import replace_tco_links, move_link_to_title
+from utils.var import Cid, Sid, Clr
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils import AluBot
 
 
 class CopypasteLeague(commands.Cog):

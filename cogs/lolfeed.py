@@ -22,16 +22,16 @@ from .lol.const import (
 )
 from .lol.models import LiveMatch, PostMatchPlayer, Account
 from .lol.utils import get_pyot_meraki_champ_diff_list, get_all_champ_names, get_meraki_patch
-from .utils.checks import is_manager
-from .utils.fpc import FPCBase, TwitchAccCheckCog
-from .utils.var import Clr, Ems
+from utils.checks import is_manager
+from utils.fpc import FPCBase, TwitchAccCheckCog
+from utils.var import Clr, Ems
 
 # need to import the last because in import above we activate 'lol' model
 from pyot.models import lol
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
-    from .utils.context import Context
+    from utils.bot import AluBot
+    from utils.context import Context
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands, tasks
 
-from .utils.var import Sid, Uid, Rid, Img, Cid
+from utils.var import Sid, Uid, Rid, Img, Cid
 
 if TYPE_CHECKING:
-    from .utils.bot import AluBot
+    from utils.bot import AluBot
 
 
 MY_TWITCH_NAME = 'Aluerie'

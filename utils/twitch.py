@@ -8,7 +8,7 @@ import twitchio
 from discord.ext.commands import BadArgument
 
 from cogs.lol.const import LOL_GAME_CATEGORY_TWITCH_ID
-from cogs.utils.formats import human_timedelta
+from utils.formats import human_timedelta
 
 if TYPE_CHECKING:
     from asyncpg import Pool

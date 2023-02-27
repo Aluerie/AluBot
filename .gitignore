@@ -1,19 +1,22 @@
 __pycache__/
 .idea/
 .vscode
+
 .ipynb_checkpoints
+*.ipynb
+
 venv/
 *.ini
-*.ipynb
 
 *.log
 audio.mp3
 
-tlist.py
-/config.py
-
 /db_backup
 prefixes.json
+
+/cogs/beta.py
+tlist.py
+/config.py
 
 # Temporary ignore
 /cogs/template.py

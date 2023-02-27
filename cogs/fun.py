@@ -216,6 +216,8 @@ class FunThings(commands.Cog, name='Fun'):
         await weebs_out(message)
 
         async def ree_the_oof(msg: discord.Message):
+            if not msg.guild or msg.guild.id != Sid.alu:
+                return
             if "Oof" in msg.content:
                 try:
                     await msg.add_reaction(Ems.Ree)
@@ -224,6 +226,8 @@ class FunThings(commands.Cog, name='Fun'):
         await ree_the_oof(message)
 
         async def random_comfy_react(msg: discord.Message):
+            if not msg.guild or msg.guild.id != Sid.alu:
+                return
             roll = randint(1, 300 + 1)
             if roll < 2:
                 try:
@@ -232,8 +236,8 @@ class FunThings(commands.Cog, name='Fun'):
                     return
         await random_comfy_react(message)
 
-        async def yourlife(msg):
-            if msg.guild and msg.guild.id != Sid.alu or randint(1, 170 + 1) >= 2:
+        async def your_life(msg):
+            if not msg.guild or msg.guild.id != Sid.alu or randint(1, 170 + 1) >= 2:
                 return
             try:
                 sliced_text = msg.content.split()
@@ -242,7 +246,7 @@ class FunThings(commands.Cog, name='Fun'):
                     await msg.channel.send(answer_text)
             except Exception:
                 return
-        await yourlife(message)
+        await your_life(message)
 
     @commands.hybrid_command()
     async def doemotespam(self, ctx: Context):
@@ -290,7 +294,7 @@ class FunThings(commands.Cog, name='Fun'):
             ctx: Context,
             channel: Optional[discord.TextChannel] = None,
             *,
-            text: Optional[str] = 'Allo'
+            text: str = 'Allo'
     ):
         """Send `text` to `#channel` and delete your invoking message,
         so it looks like the bot is speaking on its own.

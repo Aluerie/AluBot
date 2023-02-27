@@ -15,7 +15,7 @@ T = TypeVar('T')
 
 
 def is_guild_owner():
-    def predicate(ctx: Context) -> bool:
+    def predicate(ctx: GuildContext) -> bool:
         """server owner only"""
         if ctx.author.id == ctx.guild.owner_id:
             return True
@@ -29,16 +29,9 @@ def is_guild_owner():
 def is_trustee():
     async def pred(ctx_ntr: Context | discord.Interaction[AluBot]) -> bool:
         """trustees only"""
-        if isinstance(ctx_ntr, Context):
-            user_id = ctx_ntr.author.id
-            pool = ctx_ntr.pool
-        else:  # discord.Interaction
-            user_id = ctx_ntr.user
-            pool = ctx_ntr.client.pool
-
         query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
-        trusted_ids = await pool.fetchval(query, Sid.alu)
-        if user_id in trusted_ids:
+        trusted_ids = await ctx_ntr.client.pool.fetchval(query, Sid.alu)
+        if ctx_ntr.user.id in trusted_ids:
             return True
         else:
             raise commands.CheckFailure(

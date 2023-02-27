@@ -108,6 +108,7 @@ class CopypasteLeague(commands.Cog):
         e.set_image(url=img_url)
         e.set_thumbnail(url=content_if_property('og:image'))
         e.set_author(name='League of Legends', icon_url=LOL_LOGO)
+        await self.bot.get_channel(Cid.repost).send(embed=e)
         msg = await self.bot.get_channel(Cid.lol_news).send(embed=e)
         await msg.publish()
 

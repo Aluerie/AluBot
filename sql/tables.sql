@@ -43,7 +43,10 @@ CREATE TABLE IF NOT EXISTS botinfo (
     trusted_ids BIGINT ARRAY,
     irene_is_live INTEGER DEFAULT (0),
     lol_patch TEXT,
-    dota_patch TEXT
+    dota_patch TEXT,
+    event_pass_is_live BOOLEAN DEFAULT (FALSE),
+    drop_watch_live BOOLEAN DEFAULT (FALSE)
+
 );
 
 CREATE TABLE IF NOT EXISTS guilds (

@@ -6,61 +6,91 @@ import asyncio
 import discord
 from discord.ext import commands, tasks
 
-from .utils.var import Clr, Uid, Sid
+from .utils.var import Cid, Clr, Uid, Sid
 
 if TYPE_CHECKING:
     from .utils.bot import AluBot
 
-start_errors = 948936198733328425
-game_feed = 966316773869772860
 
+class ChannelWatcher(commands.Cog):
+    watch_bool: bool
 
-class PassEvent(commands.Cog):
-    def __init__(self, bot: AluBot):
+    def __init__(
+        self,
+        bot: AluBot,
+        cog_name: str,
+        db_column: str,
+        sleep_time: int,
+        watch_channel_id: int,
+        ping_channel_id: int,
+    ):
         self.bot: AluBot = bot
-        self.pass_live: Optional[bool] = None
+        self.__cog_name__ = f'ChannelWatcher: {cog_name}'
+        self.db_column: str = db_column
+        self.sleep_time: int = sleep_time
+        self.watch_channel_id: int = watch_channel_id
+        self.ping_channel_id: int = ping_channel_id
 
     async def cog_load(self) -> None:
-        query = 'SELECT event_pass_is_live FROM botinfo WHERE id=$1'
-        self.pass_live = p = await self.bot.pool.fetchval(query, Sid.alu)
+        query = f'SELECT {self.db_column} FROM botinfo WHERE id=$1'
+        self.watch_bool = p = await self.bot.pool.fetchval(query, Sid.alu)
         if p:
-            self.pass_check.start()
+            self.sleep_task.start()
 
     async def cog_unload(self) -> None:
-        self.pass_check.cancel()
+        self.sleep_task.cancel()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.channel.id == game_feed:
-            if self.pass_check.is_running():
-                self.pass_check.restart()
-                if not self.pass_live:
-                    query = 'UPDATE botinfo SET event_pass_is_live=TRUE WHERE id=$1'
+        if message.channel.id == self.watch_channel_id:
+            if self.sleep_task.is_running():
+                self.sleep_task.restart()
+                if not self.watch_bool:
+                    query = f'UPDATE botinfo SET {self.db_column}=TRUE WHERE id=$1'
                     await self.bot.pool.execute(query, Sid.alu)
-                    self.pass_live = True
+                    self.watch_bool = True
             else:
-                self.pass_check.start()
+                self.sleep_task.start()
 
     @tasks.loop(count=1)
-    async def pass_check(self):
-        await asyncio.sleep(50*60)  # let's assume the longest possible game+q time is ~50 mins
-        channel: discord.TextChannel = self.bot.get_channel(start_errors)  # type: ignore
-        e = discord.Embed(colour=Clr.error)
+    async def sleep_task(self):
+        await asyncio.sleep(self.sleep_time)  # let's assume the longest possible game+q time is ~50 mins
+        channel: discord.TextChannel = self.bot.get_channel(self.ping_channel_id)  # type: ignore
+        e = discord.Embed(colour=Clr.error, title=self.__cog_name__)
         e.description = 'The bot crashed but did not even send the message'
         e.set_footer(text='Or maybe event just ended')
         await channel.send(f'<@{Uid.alu}>', embed=e)
-        query = 'UPDATE botinfo SET event_pass_is_live=TRUE WHERE id=$1'
+        query = f'UPDATE botinfo SET {self.db_column}=FALSE WHERE id=$1'
         await self.bot.pool.execute(query, Sid.alu)
 
-    @pass_check.error
+    @sleep_task.error
     async def pass_check_error(self, error):
-        await self.bot.send_traceback(error, where='PassEvent check')
-        # self.git_comments_check.restart()
+        await self.bot.send_traceback(error, where=self.__cog_name__)
 
-    @pass_check.before_loop
+    @sleep_task.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
 
 
 async def setup(bot: AluBot):
-    await bot.add_cog(PassEvent(bot))
+    await bot.add_cog(
+        ChannelWatcher(
+            bot,
+            cog_name='Event',
+            db_column='event_pass_is_live',
+            sleep_time=50 * 60,  # 50 minutes
+            watch_channel_id=966316773869772860,
+            ping_channel_id=Cid.spam_me,
+        )
+    )
+
+    await bot.add_cog(
+        ChannelWatcher(
+            bot,
+            cog_name='Drops',
+            db_column='drops_watch_live',
+            sleep_time=60 * 60 * 24 * 7,  # a week
+            watch_channel_id=1074010096566284288,
+            ping_channel_id=Cid.spam_me,
+        )
+    )

@@ -41,14 +41,14 @@ class HelpPageSource(menus.ListPageSource):
         e.set_footer(text=f'With love, {self.help_cmd.context.bot.user.name}')
 
         if cog == 'front_page':
-            e.title = f'{menu.ctx_ntr.bot.user.name}\'s $help Menu'
+            e.title = f'{menu.ctx_ntr.client.user.name}\'s $help Menu'
             e.description = (
-                f'{menu.ctx_ntr.bot.user.name} is an ultimate multi-purpose bot !\n\n'
+                f'{menu.ctx_ntr.client.user.name} is an ultimate multi-purpose bot !\n\n'
                 'Use dropdown menu below to select a category.'
             )
-            e.add_field(name=f'{menu.ctx_ntr.bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
+            e.add_field(name=f'{menu.ctx_ntr.client.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
             e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
-            e.add_field(name='Bot Owner', value=f'{menu.ctx_ntr.bot.owner}')
+            e.add_field(name='Bot Owner', value=f'{menu.ctx_ntr.client.owner}')
         elif cog == 'back_page':
             e.title = 'Other features $help page'
             e.description = (
@@ -152,7 +152,7 @@ class HelpPageSource(menus.ListPageSource):
                 name='• Your life is...', inline=False,
                 value='Just a joke !'
             )
-        else:
+        elif cmds:
             e.title = getattr(cog, "qualified_name", "No Category")
             cog_desc = getattr(cog, "description", "No Description")
             cog_emote = getattr(cog, "help_emote", None)
@@ -420,6 +420,10 @@ class SetupPageSource(menus.ListPageSource):
             # todo: fill it properly
             e = discord.Embed(colour=Clr.prpl)
             e.description = 'Front page baby'
+
+            menu.clear_items()
+            menu.fill_items()
+            menu.add_item(SetupSelect(menu))
             return e
         else:
             embeds = []
@@ -436,6 +440,9 @@ class SetupPageSource(menus.ListPageSource):
                 menu.fill_items()
                 menu.add_item(SetupSelect(menu))
                 for c in view.children:
+                    # analogy for @is_manager()
+                    if not menu.author.guild_permissions.manage_guild:
+                        c.disabled = True  # type: ignore
                     menu.add_item(c)
             return {'embeds': embeds}
 
@@ -784,14 +791,17 @@ class GuildPrefix:
 
     @classmethod
     async def convert(cls, ctx: GuildContext, new_prefix: str) -> Self:
-        return cls.construct(ctx.bot, ctx.guild, new_prefix)
+        return await cls.construct(ctx.bot, ctx.guild, new_prefix)
 
     async def set_prefix(self) -> discord.Embed:
         guild_id, new_prefix = self.guild.id, self.prefix
         e = discord.Embed(colour=Clr.prpl)
         if self.prefix == self.bot.main_prefix:
-            await self.bot.prefixes.remove(guild_id)
-            e.description = f'Successfully reset prefix to our default `{new_prefix}` sign'
+            if not self.bot.prefixes.get(guild_id):
+                e.description = f'The prefix was already our default `{new_prefix}` sign'
+            else:
+                await self.bot.prefixes.remove(guild_id)
+                e.description = f'Successfully reset prefix to our default `{new_prefix}` sign'
         else:
             await self.bot.prefixes.put(guild_id, new_prefix)
             e.description = f'Changed this server prefix to `{new_prefix}`'
@@ -834,13 +844,13 @@ class PrefixSetupCog(commands.Cog, SetupCog, name='Prefix Setup'):
     @checks.is_manager()
     @commands.group(invoke_without_command=True)
     async def prefix(self, ctx: GuildContext):
-        """Group command about prefix for this server"""
+        """Group command about prefix for this server."""
         await self.prefix_prefix_check_replies(ctx)
 
     @checks.is_manager()
     @prefix.command(name='check')
     async def prefix_check(self, ctx: GuildContext):
-        """Check prefix for this server"""
+        """Check prefix for this server."""
         await self.prefix_prefix_check_replies(ctx)
 
     @checks.is_manager()

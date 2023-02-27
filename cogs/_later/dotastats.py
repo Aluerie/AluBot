@@ -184,8 +184,8 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         await ctx.typing()
 
         async def create_dh_image(result, offset):
-            time_font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 25)
-            font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 40)
+            time_font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 25)
+            font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 40)
 
             img = Image.new("RGB", (1200, 1200), '#9678b6')
             d = ImageDraw.Draw(img)

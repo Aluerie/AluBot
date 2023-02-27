@@ -34,7 +34,7 @@ class BaseEvent:
 
     @property
     def file_path(self) -> str:
-        return f'./media/{self.name}.png'
+        return f'./assets/images/git/{self.name}.png'
 
     @property
     def file(self) -> discord.File:

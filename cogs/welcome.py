@@ -29,20 +29,20 @@ async def welcome_image(session, member: discord.Member):
     mask_im = Image.new("L", avatar.size, 0)
     draw = ImageDraw.Draw(mask_im)
     draw.ellipse((0, 0, new_width, new_height), fill=255)
-    mask_im.save('./media/mask_circle.jpg', quality=95)
+    mask_im.save('./assets/images/profile/mask_circle.jpg', quality=95)
 
     mask_im_blur = mask_im.filter(ImageFilter.GaussianBlur(5))
-    mask_im_blur.save('./media/mask_circle_blur.jpg', quality=95)
+    mask_im_blur.save('./assets/images/profile/mask_circle_blur.jpg', quality=95)
 
     image.paste(avatar, (left, top), mask_im)
 
-    font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 80)
+    font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 80)
     d = ImageDraw.Draw(image)
     msg = member.display_name
     w1, h1 = get_text_wh(msg, font)
     d.text(((width - w1) / 1 - 10, (height - h1) / 1 - 10), msg, fill=(255, 255, 255), font=font)
 
-    font = ImageFont.truetype('./media/MonsieurLaDoulaise-Regular.ttf', 90)
+    font = ImageFont.truetype('./assets/fonts/MonsieurLaDoulaise-Regular.ttf', 90)
     msg = "Welcome !"
     w2, h2 = get_text_wh(msg, font)
     d.text(((width - w2) / 1 - 10, (height - h2) / 1 - 10 - h1 - 10), msg, fill=(255, 255, 255), font=font)

@@ -45,10 +45,10 @@ async def rank_image(session, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_s
     mask_im = Image.new("L", avatar.size, 0)
     draw = ImageDraw.Draw(mask_im)
     draw.ellipse((0, 0, new_width, new_height), fill=255)
-    mask_im.save('./media/mask_circle.jpg', quality=95)
+    mask_im.save('./assets/images/profile/mask_circle.jpg', quality=95)
 
     mask_im_blur = mask_im.filter(ImageFilter.GaussianBlur(5))
-    mask_im_blur.save('./media/mask_circle_blur.jpg', quality=95)
+    mask_im_blur.save('./assets/images/profile/mask_circle_blur.jpg', quality=95)
 
     image.paste(avatar, (left, top), mask_im)
 
@@ -57,7 +57,7 @@ async def rank_image(session, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_s
     d.rectangle([0, height * 6 / 7, (exp - prev_lvl_exp) / (next_lvl_exp - prev_lvl_exp) * width, height],
                 fill=member.color.to_rgb())
 
-    font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 60)
+    font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 60)
     d.text((width / 4, 0), member.display_name, fill=(255, 255, 255), font=font)
     d.text((width / 4, height * 2 / 6), f"{place_str} rank", fill=(255, 255, 255), font=font)
     d.text((width / 4, height * 3 / 6), f"LVL {lvl}", fill=(255, 255, 255), font=font)

@@ -144,7 +144,7 @@ class ActiveMatch(Match):
             extra_space = 0 if count < 5 else 20
             img.paste(hero_img, (count * 62 + extra_space, 0))
 
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
+        font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 33)
         draw = ImageDraw.Draw(img)
         text = f'{self.display_name} - {await self.hero_name}'
         w2, h2 = get_text_wh(text, font)
@@ -228,7 +228,7 @@ class PostMatchPlayerData:
         last_row_y = height - last_row_h
         img.paste(rectangle, (0, last_row_y))
 
-        font_kda = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 26)
+        font_kda = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 26)
 
         draw = ImageDraw.Draw(img)
         w3, h3 = get_text_wh(self.kda, font_kda)
@@ -254,7 +254,7 @@ class PostMatchPlayerData:
             fill=colour_dict[self.outcome]
         )
 
-        font_m = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 19)
+        font_m = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 19)
 
         async def item_timing_text(item_id, x_left):
             for i in reversed(self.purchase_log):
@@ -289,7 +289,7 @@ class PostMatchPlayerData:
             if (dname := await ability.name_by_id(x)) is not None:
                 talent_strs.append(dname)
 
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 12)
+        font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 12)
         for count, txt in enumerate(talent_strs):
             draw = ImageDraw.Draw(img)
             w4, h4 = get_text_wh(txt, font)

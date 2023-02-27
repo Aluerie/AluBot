@@ -131,7 +131,7 @@ class LiveMatch(Match):
             extra_space = 0 if count < 5 else 20
             img.paste(champ_img, (count * 62 + extra_space, 0))
         log.debug('I m here #3')
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
+        font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 33)
         draw = ImageDraw.Draw(img)
         text = f'{display_name} - {await champion.name_by_id(self.champ_id)}'
         w2, h2 = get_text_wh(text, font)
@@ -197,7 +197,7 @@ class PostMatchPlayer:
         width, height = img.size
         last_row_h = 50
         _last_row_y = height - last_row_h
-        font = ImageFont.truetype('./media/Inter-Black-slnt=0.ttf', 33)
+        font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 33)
 
         draw = ImageDraw.Draw(img)
         w3, h3 = get_text_wh(self.kda, font)

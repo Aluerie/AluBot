@@ -173,7 +173,7 @@ class FunThings(commands.Cog, name='Fun'):
     async def coinflip(self, ctx):
         """Flip a coin """
         word = 'Heads' if randint(2) == 0 else 'Tails'
-        return await ctx.reply(content=word, file=discord.File(f'media/{word}.png'))
+        return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

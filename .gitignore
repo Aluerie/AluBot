@@ -8,8 +8,8 @@ __pycache__/
 venv/
 *.ini
 
-*.log
-audio.mp3
+.logs/
+.temp/
 
 /db_backup
 prefixes.json

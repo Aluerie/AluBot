@@ -111,7 +111,7 @@ class AluBot(commands.Bot,):
         # ensure temp folder
         # todo: maybe remove the concept of temp folder - don't save .mp3 file
         #  for now it is only used in voicechat.py for mp3 file
-        Path("./temp/").mkdir(parents=True, exist_ok=True)
+        Path("./.temp/").mkdir(parents=True, exist_ok=True)
 
         os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"

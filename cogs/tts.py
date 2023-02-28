@@ -85,7 +85,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
             self.connections.update({ctx.guild.id: vc})  # Updating the cache with the guild and channel.
 
         tts = gTTS(text, lang=lang.lang, tld=lang.tld)
-        audio_name = "audio.mp3"
+        audio_name = "./.temp/audio.mp3"
         tts.save(audio_name)
         vc.play(discord.FFmpegPCMAudio(audio_name))
         e = discord.Embed(title='Text-To-Speech request', description=text, colour=ctx.author.colour)

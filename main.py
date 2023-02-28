@@ -38,10 +38,10 @@ def setup_logging(test: bool):
         log.addHandler(handler)
 
         # ensure logs folder
-        Path("./logs/").mkdir(parents=True, exist_ok=True)
+        Path(".logs/").mkdir(parents=True, exist_ok=True)
         # File Handler
         file_handler = RotatingFileHandler(
-            filename=f'logs/alubot{"" if not test else "_test"}.log',
+            filename=f'.logs/alubot{"" if not test else "_test"}.log',
             encoding='utf-8',
             mode='w',
             maxBytes=16 * 1024 * 1024,  # 16 MiB

@@ -11,7 +11,7 @@ venv/
 .logs/
 .temp/
 
-/db_backup
+/.db_backup
 prefixes.json
 
 /cogs/beta.py

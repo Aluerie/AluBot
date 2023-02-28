@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional, List, Tuple
 import datetime
 import logging
 
+import asyncpg
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
@@ -45,6 +46,7 @@ class LoLFeedNotifications(commands.Cog):
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
+        self.lolfeed_notifs.add_exception_type(asyncpg.InternalServerError)
         self.lolfeed_notifs.start()
 
     def cog_unload(self) -> None:

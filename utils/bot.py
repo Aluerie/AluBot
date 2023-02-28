@@ -43,14 +43,6 @@ except ModuleNotFoundError:
     test_list = []
 
 
-def _prefix_callable(bot: AluBot, message: discord.Message):
-    if message.guild is None:
-        prefix = bot.main_prefix
-    else:
-        prefix = bot.prefixes.get(message.guild.id, bot.main_prefix)
-    return commands.when_mentioned_or(prefix, "/")(bot, message)
-
-
 class AluBot(commands.Bot,):
     bot_app_info: discord.AppInfo
     dota: Dota2Client
@@ -73,7 +65,7 @@ class AluBot(commands.Bot,):
         main_prefix = '~' if test else '$'
         self.main_prefix = main_prefix
         super().__init__(
-            command_prefix=_prefix_callable,
+            command_prefix=self.get_pre,
             activity=discord.Streaming(
                 name=f"\N{PURPLE HEART}/help\N{PURPLE HEART}/setup\N{PURPLE HEART}",
                 url='https://www.twitch.tv/aluerie'
@@ -128,6 +120,13 @@ class AluBot(commands.Bot,):
             except Exception as e:
                 log.exception(f'Failed to load extension {ext}.')
                 raise e
+
+    def get_pre(self, message: discord.Message):
+        if message.guild is None:
+            prefix = self.main_prefix
+        else:
+            prefix = self.prefixes.get(message.guild.id, self.main_prefix)
+        return commands.when_mentioned_or(prefix, "/")(self, message)
 
     async def on_ready(self):
         if not hasattr(self, 'launch_time'):

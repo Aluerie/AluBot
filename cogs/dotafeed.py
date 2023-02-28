@@ -5,6 +5,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Union
 
+import asyncpg
 import discord
 import vdf
 from discord import app_commands
@@ -56,6 +57,9 @@ class DotaFeed(commands.Cog):
             # self.bot.dispatch('my_top_games_response')
 
         # self.bot.dota.on('top_source_tv_games', response)
+
+        # maybe asyncpg.PostgresConnectionError
+        self.dota_feed.add_exception_type(asyncpg.InternalServerError)
         self.dota_feed.start()
 
     @commands.Cog.listener()

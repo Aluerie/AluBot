@@ -8,7 +8,6 @@ import tweepy.asynchronous
 from discord.ext import commands, tasks
 
 from config import TWITTER_BEARER_TOKEN
-from utils.imgtools import url_to_file
 from utils.var import Cid
 
 if TYPE_CHECKING:
@@ -19,7 +18,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-async def download_twitter_images(session, ctx: Context, *, tweet_ids: str):
+async def download_twitter_images(ctx: Context, *, tweet_ids: str):
     """Download image from tweets.
     Useful for Aluerie bcs twitter is banned in Russia (NotLikeThis).
     <tweet_ids> are tweet ids - it's just numbers in the end of tweet links.
@@ -38,8 +37,8 @@ async def download_twitter_images(session, ctx: Context, *, tweet_ids: str):
         expansions="attachments.media_keys"
     )
     img_urls = [m.url for m in response.includes['media']]
-    print(img_urls)
-    files = await url_to_file(session, img_urls, return_list=True)
+    # print(img_urls)
+    files = await ctx.bot.imgtools.url_to_file(img_urls, return_list=True)
     split_size = 10
     files_10 = [files[x:x + split_size] for x in range(0, len(files), split_size)]
     for fls in files_10:

@@ -12,7 +12,6 @@ from pyot.utils.functools import async_property
 from .const import LiteralPlatform, platform_to_server
 from .utils import get_role_mini_list, icon_url_by_champ_id
 from utils.formats import human_timedelta
-from utils.imgtools import get_text_wh
 from utils.var import Clr, MP
 
 if TYPE_CHECKING:
@@ -115,7 +114,7 @@ class LiveMatch(Match):
             bot: AluBot
     ) -> Image.Image:
         log.debug('I m here #1')
-        img = await bot.url_to_img(stream_preview_url)
+        img = await bot.imgtools.url_to_img(stream_preview_url)
         width, height = img.size
         last_row_h = 50
         last_row_y = height - last_row_h
@@ -125,7 +124,7 @@ class LiveMatch(Match):
         img.paste(rectangle, (0, last_row_y))
         log.debug('I m here #2')
         champ_img_urls = [await icon_url_by_champ_id(champ_id) for champ_id in await self.roles_arr]
-        champ_imgs = await bot.url_to_img(champ_img_urls)
+        champ_imgs = await bot.imgtools.url_to_img(champ_img_urls)
         for count, champ_img in enumerate(champ_imgs):
             champ_img = champ_img.resize((62, 62))
             extra_space = 0 if count < 5 else 20
@@ -134,11 +133,11 @@ class LiveMatch(Match):
         font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 33)
         draw = ImageDraw.Draw(img)
         text = f'{display_name} - {await champion.name_by_id(self.champ_id)}'
-        w2, h2 = get_text_wh(text, font)
+        w2, h2 = bot.imgtools.get_text_wh(text, font)
         draw.text(((width - w2) / 2, 65), text, font=font, align="center")
         log.debug('I m here #4')
         rune_img_urls = [(await r.get()).icon_abspath for r in self.runes]
-        rune_imgs = await bot.url_to_img(rune_img_urls)
+        rune_imgs = await bot.imgtools.url_to_img(rune_img_urls)
         left = 0
         for count, rune_img in enumerate(rune_imgs):
             if count < 6:
@@ -147,7 +146,7 @@ class LiveMatch(Match):
             left += rune_img.height
         log.debug('I m here #5')
         spell_img_urls = [(await s.get()).icon_abspath for s in self.spells]
-        spell_imgs = await bot.url_to_img(spell_img_urls)
+        spell_imgs = await bot.imgtools.url_to_img(spell_img_urls)
         left = width - 2 * last_row_h
         for count, spell_img in enumerate(spell_imgs):
             spell_img = spell_img.resize((last_row_h, last_row_h))
@@ -157,7 +156,7 @@ class LiveMatch(Match):
 
     async def notif_embed_and_file(self, bot: AluBot) -> (discord.Embed, discord.File):
         ts = await bot.twitch.get_twitch_stream(self.twitch_id)
-        img_file = bot.img_to_file(
+        img_file = bot.imgtools.img_to_file(
             await self.better_thumbnail(ts.preview_url, ts.display_name, bot),
             filename=f'{ts.display_name.replace("_", "")}-is-playing-{await champion.key_by_id(self.champ_id)}.png'
         )
@@ -193,21 +192,21 @@ class PostMatchPlayer:
         self.items = player_data.items
 
     async def edit_the_image(self, img_url: str, bot: AluBot):
-        img = await bot.url_to_img(img_url)
+        img = await bot.imgtools.url_to_img(img_url)
         width, height = img.size
         last_row_h = 50
         _last_row_y = height - last_row_h
         font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 33)
 
         draw = ImageDraw.Draw(img)
-        w3, h3 = get_text_wh(self.kda, font)
+        w3, h3 = bot.imgtools.get_text_wh(self.kda, font)
         draw.text(
             (0, height - last_row_h - h3),
             self.kda,
             font=font,
             align="right"
         )
-        w2, h2 = get_text_wh(self.outcome, font)
+        w2, h2 = bot.imgtools.get_text_wh(self.outcome, font)
         colour_dict = {
             'Win': str(MP.green(shade=800)),
             'Loss': str(MP.red(shade=900)),
@@ -222,7 +221,7 @@ class PostMatchPlayer:
         )
 
         item_img_urls = [(await i.get()).icon_abspath for i in self.items if i.id]
-        item_imgs = await bot.url_to_img(item_img_urls, return_list=True)
+        item_imgs = await bot.imgtools.url_to_img(item_img_urls, return_list=True)
         left = width - len(item_imgs) * last_row_h
         for count, item_img in enumerate(item_imgs):
             item_img = item_img.resize((last_row_h, last_row_h))
@@ -240,7 +239,7 @@ class PostMatchPlayer:
             return
 
         e = msg.embeds[0]
-        img_file = bot.img_to_file(await self.edit_the_image(e.image.url, bot), filename='edited.png')
+        img_file = bot.imgtools.img_to_file(await self.edit_the_image(e.image.url, bot), filename='edited.png')
         e.set_image(url=f'attachment://{img_file.filename}')
         try:
             await msg.edit(embed=e, attachments=[img_file])

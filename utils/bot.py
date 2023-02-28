@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, List, Optional, Union, Sequence
+
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import datetime
 import logging
@@ -20,7 +22,7 @@ from steam.client import SteamClient
 from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config as cfg
-from . import imgtools
+from .imgtools import ImgToolsClient
 from .context import Context
 from .jsonconfig import PrefixConfig
 from .twitch import TwitchClient
@@ -51,16 +53,17 @@ def _prefix_callable(bot: AluBot, message: discord.Message):
 
 class AluBot(commands.Bot,):
     bot_app_info: discord.AppInfo
-    steam: SteamClient
     dota: Dota2Client
     github: Github
     git_gameplay: Repository.Repository
     git_tracker: Repository.Repository
-    session: ClientSession
+    imgtools: ImgToolsClient
     launch_time: datetime.datetime
+    session: ClientSession
     pool: Pool
     prefixes: PrefixConfig
     reddit: Reddit
+    steam: SteamClient
     tree: MyCommandTree
     twitch: TwitchClient
     twitter: TwitterAsyncClient
@@ -72,10 +75,10 @@ class AluBot(commands.Bot,):
         super().__init__(
             command_prefix=_prefix_callable,
             activity=discord.Streaming(
-                name=f"/help /setup",
+                name=f"\N{PURPLE HEART}/help\N{PURPLE HEART}/setup\N{PURPLE HEART}",
                 url='https://www.twitch.tv/aluerie'
             ),
-            intents=discord.Intents(  # if you ever struggle with it - try `Intents.all()`
+            intents=discord.Intents(  # if you ever struggle with it - try `discord.Intents.all()`
                 guilds=True,
                 members=True,
                 bans=True,
@@ -99,9 +102,16 @@ class AluBot(commands.Bot,):
         self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
 
     async def setup_hook(self) -> None:
-        self.session = ClientSession()
+        self.session = s = ClientSession()
+        self.imgtools = ImgToolsClient(session=s)
+
         self.prefixes = PrefixConfig(self.pool)
         self.bot_app_info = await self.application_info()
+
+        # ensure temp folder
+        # todo: maybe remove the concept of temp folder - don't save .mp3 file
+        #  for now it is only used in voicechat.py for mp3 file
+        Path("./temp/").mkdir(parents=True, exist_ok=True)
 
         os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
@@ -194,46 +204,6 @@ class AluBot(commands.Bot,):
     def ini_twitter(self) -> None:
         if not hasattr(self, 'twitter'):
             self.twitter = TwitterAsyncClient(cfg.TWITTER_BEARER_TOKEN)
-
-    # Image Tools
-    @staticmethod
-    def str_to_file(
-            string: str,
-            filename: str = "FromAluBot.txt"
-    ) -> discord.File:
-        return imgtools.str_to_file(string, filename)
-
-    @staticmethod
-    def plt_to_file(
-            fig,
-            filename: str = 'FromAluBot.png'
-    ) -> discord.File:
-        return imgtools.plt_to_file(fig, filename)
-
-    @staticmethod
-    def img_to_file(
-            image,
-            filename: str = 'FromAluBot.png',
-            fmt: str = 'PNG'
-    ) -> discord.File:
-        return imgtools.img_to_file(image, filename, fmt)
-
-    async def url_to_img(
-            self,
-            url: Union[str, Sequence[str]],
-            *,
-            return_list: bool = False
-    ):
-        return await imgtools.url_to_img(self.session, url, return_list=return_list)
-
-    async def url_to_file(
-            self,
-            url: Union[str, Sequence[str]],
-            filename: str = 'FromAluBot.png',
-            *,
-            return_list: bool = False
-    ) -> Union[discord.File, Sequence[discord.File]]:
-        return await imgtools.url_to_file(self.session, url, filename, return_list=return_list)
 
     def update_odota_ratelimit(self, headers) -> None:
         monthly = headers.get('X-Rate-Limit-Remaining-Month')
@@ -339,16 +309,16 @@ class MyCommandTree(app_commands.CommandTree):
             *qualified_name: str,
             guild: Optional[Union[Snowflake, int]] = None,
     ) -> Optional[app_commands.AppCommand]:
-        commands = self._global_app_commands
+        commands_dict = self._global_app_commands
         if guild:
             guild_id = guild.id if not isinstance(guild, int) else guild
             guild_commands = self._guild_app_commands.get(guild_id, {})
             if not guild_commands and self.fallback_to_global:
-                commands = self._global_app_commands
+                commands_dict = self._global_app_commands
             else:
-                commands = guild_commands
+                commands_dict = guild_commands
 
-        for cmd_name, cmd in commands.items():
+        for cmd_name, cmd in commands_dict.items():
             if any(name in qualified_name for name in cmd_name.split()):
                 return cmd
 

@@ -162,7 +162,7 @@ class TimeLine:
                 im = Image.open(pic_name)
                 dst.paste(im, (i*delta_x_y, i*delta_x_y), im)
 
-            file = bot.img_to_file(dst, filename=f'bugtracker_update_{self.issue.number}.png')
+            file = bot.imgtools.img_to_file(dst, filename=f'bugtracker_update_{self.issue.number}.png')
             e.set_thumbnail(url=f'attachment://{file.filename}')
         return e, file
 

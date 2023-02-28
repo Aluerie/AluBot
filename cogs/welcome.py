@@ -6,18 +6,16 @@ from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from utils.checks import is_owner
-from utils.imgtools import url_to_img, img_to_file, get_text_wh
 from utils.var import Cid, Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
-    from aiohttp import ClientSession
     from utils.bot import AluBot
     from utils.context import Context
 
 
-async def welcome_image(session, member: discord.Member):
-    image = Image.open('./media/welcome.png', mode='r')
-    avatar = await url_to_img(session, member.display_avatar.url)
+async def welcome_image(bot: AluBot, member: discord.Member):
+    image = Image.open('./assets/images/profile/welcome.png', mode='r')
+    avatar = await bot.imgtools.url_to_img(member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
 
     width, height = image.size
@@ -39,22 +37,22 @@ async def welcome_image(session, member: discord.Member):
     font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 80)
     d = ImageDraw.Draw(image)
     msg = member.display_name
-    w1, h1 = get_text_wh(msg, font)
+    w1, h1 = bot.imgtools.get_text_wh(msg, font)
     d.text(((width - w1) / 1 - 10, (height - h1) / 1 - 10), msg, fill=(255, 255, 255), font=font)
 
     font = ImageFont.truetype('./assets/fonts/MonsieurLaDoulaise-Regular.ttf', 90)
     msg = "Welcome !"
-    w2, h2 = get_text_wh(msg, font)
+    w2, h2 = bot.imgtools.get_text_wh(msg, font)
     d.text(((width - w2) / 1 - 10, (height - h2) / 1 - 10 - h1 - 10), msg, fill=(255, 255, 255), font=font)
     return image
 
 
 async def welcome_message(
-        session: ClientSession,
+        bot: AluBot,
         member: discord.Member,
         back: bool = False
 ) -> (str, discord.Embed, discord.File):
-    image = await welcome_image(session, member)
+    image = await welcome_image(bot, member)
 
     if back:
         wave_emote, the_word = Ems.DankLove, 'BACK'
@@ -78,7 +76,7 @@ async def welcome_message(
 
     e = discord.Embed(description=description, color=Clr.prpl)
     e.set_footer(text=f"With love, {member.guild.me.display_name}")
-    return content_text, e, img_to_file(image)
+    return content_text, e, bot.imgtools.img_to_file(image)
 
 
 class Welcome(commands.Cog):
@@ -111,7 +109,7 @@ class Welcome(commands.Cog):
                 role = guild.get_role(Rid.level_zero)
                 await member.add_roles(role)
 
-        content_text, embed, image_file = await welcome_message(self.bot.session, member, back=back)
+        content_text, embed, image_file = await welcome_message(self.bot, member, back=back)
         await self.bot.get_channel(Cid.welcome).send(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
@@ -150,9 +148,9 @@ class Welcome(commands.Cog):
     @is_owner()
     @commands.command(hidden=True)
     async def welcome_preview(self, ctx: Context, member: discord.Member = None):
-        """Get a rendered welcome message for a `{@user}`;"""
+        """Get a rendered welcome message for a `{@user}`."""
         mbr = member or ctx.message.author
-        content_text, embed, image_file = await welcome_message(self.bot.session, mbr)
+        content_text, embed, image_file = await welcome_message(self.bot, mbr)
         await ctx.reply(content=content_text, embed=embed, file=image_file)
 
 

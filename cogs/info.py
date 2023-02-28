@@ -18,7 +18,6 @@ from dota2 import __version__ as dota2__version__
 from pyot import __version__ as pyot__version__
 
 from utils.formats import human_timedelta, format_dt_tdR
-from utils.imgtools import img_to_file
 from utils.var import Cid, Clr, Ems, Sid, Rid, MP, MAP
 
 # from wordcloud import WordCloud
@@ -159,7 +158,7 @@ class Info(commands.Cog, name='Info'):
             return "#{:02x}{:02x}{:02x}".format(r, g, b)
 
         img = Image.new('RGB', (300, 300), rgb)
-        file = img_to_file(img, filename='colour.png')
+        file = ctx.bot.imgtools.img_to_file(img, filename='colour.png')
         e = discord.Embed(color=discord.Colour.from_rgb(*rgb), title='Colour info')
         e.description = (
             f'Hex triplet: `{rgb2hex(*rgb)}`\n' +
@@ -193,6 +192,7 @@ class Info(commands.Cog, name='Info'):
                 error = error.original
 
         if isinstance(error, (ValueError, KeyError)):
+            # todo: new error type implement
             ctx.error_handled = True
             e = discord.Embed(description=self.colour.callback.__doc__, colour=Clr.error)
             e.set_author(

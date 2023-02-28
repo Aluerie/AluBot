@@ -9,11 +9,11 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Polygon
 
 from ..dota import hero
-from utils.imgtools import url_to_img
 from utils.var import MP, Clr
 
 if TYPE_CHECKING:
     from asyncpg import Pool
+    from utils.bot import AluBot
 
 
 class MatchHistoryData:
@@ -140,13 +140,13 @@ def gradient_fill(x, y, fill_color=None, ax=None, **kwargs):
     return line, im
 
 
-async def mmr_by_hero_bar(session, ax, hero_stats_dict: dict):
+async def mmr_by_hero_bar(bot: AluBot, ax, hero_stats_dict: dict):
     hero_list = list(hero_stats_dict.keys())
     x_list = list(range(len(hero_stats_dict.keys())))
     y_list = [(v['wins'] - v['losses']) * 30 for v in hero_stats_dict.values()]
 
     for count, (hero_id, y) in enumerate(zip(hero_list, y_list), start=0):
-        hero_icon = await url_to_img(session, url=await hero.iconurl_by_id(hero_id))
+        hero_icon = await bot.imgtools.url_to_img(url=await hero.iconurl_by_id(hero_id))
         if y < 0:
             y = y - 1
         plt.imshow(hero_icon, extent=[count - 0.5, count + 0.5, y, y + 30], aspect='auto')
@@ -165,7 +165,7 @@ async def mmr_by_hero_bar(session, ax, hero_stats_dict: dict):
     return ax
 
 
-async def heroes_played_bar(session, ax, sorted_dict):
+async def heroes_played_bar(bot: AluBot, ax, sorted_dict):
     hero_list = list(sorted_dict.keys())
 
     y_list = range(len(sorted_dict.keys()))
@@ -174,7 +174,7 @@ async def heroes_played_bar(session, ax, sorted_dict):
     sum_list = [x + y for x, y in zip(w_list, l_list)]
 
     for count, (hero_id, y) in enumerate(zip(hero_list, y_list)):
-        hero_icon = await url_to_img(session, url=await hero.iconurl_by_id(hero_id))
+        hero_icon = await bot.imgtools.url_to_img(url=await hero.iconurl_by_id(hero_id))
         plt.imshow(hero_icon, extent=[-1, 0, count - 0.5, count + 0.5], aspect='auto')
 
     # profit_color = [('green' if p > 0 else 'red') for p in y_list]

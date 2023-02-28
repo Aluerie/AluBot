@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from utils.bot import AluBot
 
 
-async def get_gitdiff_embed(test_num=0):
+async def get_gitdiff_embed(test_num: int = 0):
     g = Github(GIT_PERSONAL_TOKEN)
     repo = g.get_repo("SteamDatabase/GameTracking-Dota2")
     commits = repo.get_commits()
@@ -48,7 +48,7 @@ async def get_gitdiff_embed(test_num=0):
         files.append(str_to_file(human, filename="human_patch_notes.txt"))
     else:
         split_size = 4095
-        human_list = [human[x : x + split_size] for x in range(0, len(human), split_size)]
+        human_list = [human[x: x + split_size] for x in range(0, len(human), split_size)]
         e.description = human_list[0] if len(human_list) else ""
         for i in human_list[1:]:
             embeds.append(discord.Embed(colour=0x26425A, description=i))

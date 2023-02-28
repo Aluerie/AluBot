@@ -10,7 +10,6 @@ from discord.ext import commands, tasks
 
 from utils.converters import my_bool
 from utils.formats import ordinal, human_timedelta, indent
-from utils.imgtools import url_to_img, img_to_file, get_text_wh
 from utils.pagination import EnumeratedPages
 from utils.var import Ems, Sid, Cid, Cids, Clr
 
@@ -29,9 +28,9 @@ exp_lvl_table = [
 thanks_words = ['thanks', 'ty', 'thank']
 
 
-async def rank_image(session, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_str, member):
-    image = Image.open('./media/welcome.png', mode='r')
-    avatar = await url_to_img(session, member.display_avatar.url)
+async def rank_image(bot: AluBot, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_str, member):
+    image = Image.open('./assets/images/profile/welcome.png', mode='r')
+    avatar = await bot.imgtools.url_to_img(member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
 
     width, height = image.size
@@ -64,7 +63,7 @@ async def rank_image(session, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_s
     d.text((width / 4, height * 4 / 6), f"{rep} REP", fill=(255, 255, 255), font=font)
 
     msg = f"{exp}/{next_lvl_exp} EXP"
-    w4, h4 = get_text_wh(msg, font)
+    w4, h4 = bot.imgtools.get_text_wh(msg, font)
     d.text((width - w4, height * 5 / 6), msg, fill=(255, 255, 255), font=font)
     return image
 
@@ -109,7 +108,7 @@ async def rank_work(ctx: Union[Context, discord.Interaction], member: discord.Me
     place = 1 + await ctx.pool.fetchval(query, row.exp)
     bot = getattr(ctx, 'bot') or getattr(ctx, 'client')
     image = await rank_image(bot.ses, lvl, row.exp, row.rep, next_lvl_exp, prev_lvl_exp, ordinal(place), member)
-    return img_to_file(image, filename='rank.png')
+    return ctx.bot.imgtools.img_to_file(image, filename='rank.png')
 
 
 async def rank_usercmd(ntr: discord.Interaction, member: discord.Member):

@@ -12,8 +12,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from cogs import get_extensions
 from utils.lol.const import LiteralServerUpper
-from utils.bot import test_extensions
 from utils.checks import is_owner
 from utils.context import Context
 from utils.converters import Codeblock
@@ -22,7 +22,7 @@ from utils.var import MP, Cid, Clr, Ems, Rid, Sid
 if TYPE_CHECKING:
     from utils.bot import AluBot
     from cogs.fpc.dota.settings import DotaNotifsSettings
-    from cogs.fpc.lol.lolfeed import LoLFeedToolsCog
+    from cogs.fpc.lol.settings import LoLNotifsSettings
 
 
 class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
@@ -127,16 +127,7 @@ class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
     @reload.command(name="all", hidden=True)
     async def reload_all(self, ctx: Context):
         """Reloads all modules"""
-        cogs_to_reload = []
-        if self.bot.test and len(test_extensions):
-            cogs_to_reload.append("jishaku")
-            for item in test_extensions:
-                cogs_to_reload.append(f"cogs.{item}")
-        else:
-            cogs_to_reload.append("jishaku")
-            for filename in os.listdir("./cogs"):
-                if filename.endswith(".py"):
-                    cogs_to_reload.append(f"cogs.{filename[:-3]}")
+        cogs_to_reload = get_extensions(ctx.bot.test)
 
         add_reaction = True
         for cog in cogs_to_reload:
@@ -396,9 +387,9 @@ class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
         parent=db,
     )
 
-    def get_lol_tools_cog(self) -> LoLFeedToolsCog:
+    def get_lol_tools_cog(self) -> LoLNotifsSettings:
         """Get lol tools cog"""
-        lol_cog: Optional[LoLFeedToolsCog] = self.bot.get_cog('LoL')  # type:ignore
+        lol_cog: Optional[LoLNotifsSettings] = self.bot.get_cog('LoL')  # type:ignore
         if lol_cog is None:
             # todo: sort this out when we gonna do error handler refactor
             raise commands.ExtensionNotLoaded(name='Dota 2 Cog is not loaded')

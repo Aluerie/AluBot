@@ -21,6 +21,7 @@ from github import Github
 from steam.client import SteamClient
 from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
+from cogs import get_extensions
 import config as cfg
 from .imgtools import ImgToolsClient
 from .context import Context
@@ -36,48 +37,6 @@ if TYPE_CHECKING:
     AppCommandStore = Dict[str, app_commands.AppCommand]  # name: AppCommand
 
 log = logging.getLogger(__name__)
-
-try:
-    from _test import test_extensions
-except ModuleNotFoundError:
-    test_extensions = ()
-
-initial_extensions = ("jishaku",)
-
-extensions = (
-    "cogs.fpc",
-    "cogs.management",
-    "cogs.news",
-    "cogs.meta",
-    "cogs.birthday",
-    "cogs.confessions",
-    "cogs.embedmaker",
-    "cogs.emcom_spam",
-    "cogs.error",
-    "cogs.expsys",
-    "cogs.fun",
-    "cogs.info",
-    "cogs.lewd",
-    "cogs.logs",
-    "cogs.lolnews",
-    "cogs.moderation",
-    "cogs.old_timers",
-    "cogs.passevent",
-    "cogs.reactionroles",
-    "cogs.reminders",
-    "cogs.schedule",
-    "cogs.settings",
-    "cogs.suggestions",
-    "cogs.tags",
-    "cogs.timers",
-    "cogs.tools",
-    "cogs.topemotes",
-    "cogs.tts",
-    "cogs.twtv",
-    "cogs.voicechat",
-    "cogs.welcome",
-    "cogs.wolfram"
-)
 
 
 class AluBot(commands.Bot):
@@ -146,15 +105,7 @@ class AluBot(commands.Bot):
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
         os.environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
 
-        if self.test and len(test_extensions):
-            exts = initial_extensions + tuple(f'cogs.{name}' for name in test_extensions)
-        else:
-            exts = initial_extensions + extensions
-            # remember the roots
-            # there is also an option to do it with pkgutils
-            # [f'cogs.{filename[:-3]}' for filename in os.listdir('./cogs') if filename.endswith('.py')]
-
-        for ext in exts:
+        for ext in get_extensions(self.test):
             try:
                 await self.load_extension(ext)
             except Exception as e:

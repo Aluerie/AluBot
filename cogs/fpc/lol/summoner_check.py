@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from utils.bot import AluBot
 
 
-class LoLAccCheck(commands.Cog):
+class LoLSummonerNameCheck(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 

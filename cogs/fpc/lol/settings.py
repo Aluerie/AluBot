@@ -53,7 +53,7 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
     account: Optional[str]
 
 
-class LoLFeedToolsCog(commands.Cog, FPCBase, name='LoL'):
+class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
     """Commands to set up fav champ + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \
@@ -526,4 +526,4 @@ class LoLFeedToolsCog(commands.Cog, FPCBase, name='LoL'):
 
 
 async def setup(bot):
-    await bot.add_cog(LoLFeedToolsCog(bot))
+    await bot.add_cog(LoLNotifsSettings(bot))

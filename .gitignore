@@ -1,15 +1,17 @@
 .idea/
 .vscode/
-db_backup/
 __pycache__/
 venv/
 
-temp/
-logs/
+.db_backup/
+.temp/
+.logs/
+cogs/
 
 .ipynb_checkpoints/
 *.ipynb
 *.ini
+*.json
 
 config.py
-tlist.py
+_test.py

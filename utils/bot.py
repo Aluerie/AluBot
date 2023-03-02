@@ -69,7 +69,6 @@ extensions = (
     "cogs.settings",
     "cogs.suggestions",
     "cogs.tags",
-    "cogs.threads",
     "cogs.timers",
     "cogs.tools",
     "cogs.topemotes",

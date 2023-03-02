@@ -59,12 +59,8 @@ class Cid:
 
     stream_room = 766063288302698496
 
-    lol_news = 724993871662022766
-
     patch_notes = 731759693113851975
     suggestions = 724994495581782076
-
-    my_time = 788915790543323156
 
     # wink server
     coop = 966366521607745586
@@ -83,10 +79,6 @@ class Cid:
     copydota_info = 873430376033452053
     copydota_steam = 881843565251141632
     copydota_tweets = 963954743644934184
-
-
-class Cids:
-    blacklisted_array = []
 
 
 class Uid:

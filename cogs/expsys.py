@@ -11,7 +11,7 @@ from discord.ext import commands, tasks
 from utils.converters import my_bool
 from utils.formats import ordinal, human_timedelta, indent
 from utils.pagination import EnumeratedPages
-from utils.var import Ems, Sid, Cid, Cids, Clr
+from utils.var import Ems, Sid, Cid, Clr
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -199,7 +199,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
     async def on_message(self, message: discord.Message):
         # if self.bot.test_flag:
         #    return  # let's not mess up with Yennifer
-        if message.author.bot or message.channel.id in Cids.blacklisted_array:
+        if message.author.bot:
             return
 
         if message.guild is not None and message.guild.id in Sid.guild_ids:

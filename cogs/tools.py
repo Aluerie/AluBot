@@ -95,7 +95,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         Useful for Aluerie because Twitter is banned in Russia.
         • `<tweet_ids>` are tweet ids - it's just numbers in the end of tweet links.
         """
-        await download_twitter_images(self.bot.session, ctx, tweet_ids=tweet_ids)
+        await download_twitter_images(ctx, tweet_ids=tweet_ids)
 
 
 async def setup(bot: AluBot):

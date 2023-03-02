@@ -10,7 +10,7 @@ import warnings
 
 import discord
 from discord import app_commands
-from discord.ext import commands, tasks
+from discord.ext import commands
 import psutil
 from PIL import ImageColor, Image
 from dateparser.search import search_dates
@@ -323,55 +323,6 @@ class StatsCommands(commands.Cog, name='Stats'):
         await ctx.reply('it does not work for now, waiting those guys to fix it')
 
 
-class StatsChannels(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
-    async def cog_load(self) -> None:
-        self.my_time.start()
-        self.my_members.start()
-        self.my_bots.start()
-
-    async def cog_unload(self) -> None:
-        self.my_time.stop()
-        self.my_members.stop()
-        self.my_bots.stop()
-
-    @tasks.loop(time=[datetime.time(hour=x) for x in range(0, 24)])
-    async def my_time(self):
-        symbol = '#' if platform.system() == 'Windows' else '-'
-        msk_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3)))
-        new_name = f'\N{ALARM CLOCK} {msk_now.strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
-        await self.bot.get_channel(Cid.my_time).edit(name=new_name)
-
-    @my_time.before_loop
-    async def my_time_before(self):
-        await self.bot.wait_until_ready()
-
-    @tasks.loop(hours=12)
-    async def my_members(self):
-        guild = self.bot.get_guild(Sid.alu)
-        bots_role = guild.get_role(Rid.bots)
-        new_name = f'\N{HOUSE WITH GARDEN} Members: {guild.member_count-len(bots_role.members)}'
-        await guild.get_channel(795743012789551104).edit(name=new_name)
-
-    @my_members.before_loop
-    async def my_members_before(self):
-        await self.bot.wait_until_ready()
-
-    @tasks.loop(hours=15)
-    async def my_bots(self):
-        guild = self.bot.get_guild(Sid.alu)
-        bots_role = guild.get_role(Rid.bots)
-        new_name = f'\N{ROBOT FACE} Bots: {len(bots_role.members)}'
-        await guild.get_channel(795743065787990066).edit(name=new_name)
-
-    @my_bots.before_loop
-    async def my_bots_before(self):
-        await self.bot.wait_until_ready()
-
-
 async def setup(bot: AluBot):
     await bot.add_cog(Info(bot))
-    await bot.add_cog(StatsChannels(bot))
     await bot.add_cog(StatsCommands(bot))

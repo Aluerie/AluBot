@@ -12,20 +12,22 @@ if TYPE_CHECKING:
     from utils.bot import AluBot
 
 
+EVENT_PASS_CHANNEL = 966316773869772860
+DROPS_CHANNEL = 1074010096566284288
+
+
 class ChannelWatcher(commands.Cog):
     watch_bool: bool
 
     def __init__(
         self,
         bot: AluBot,
-        cog_name: str,
         db_column: str,
         sleep_time: int,
         watch_channel_id: int,
         ping_channel_id: int,
     ):
         self.bot: AluBot = bot
-        self.__cog_name__ = f'ChannelWatcher: {cog_name}'
         self.db_column: str = db_column
         self.sleep_time: int = sleep_time
         self.watch_channel_id: int = watch_channel_id
@@ -72,25 +74,28 @@ class ChannelWatcher(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-async def setup(bot: AluBot):
-    await bot.add_cog(
-        ChannelWatcher(
+class EventPassWatcher(ChannelWatcher):
+    def __init__(self, bot: AluBot):
+        super().__init__(
             bot,
-            cog_name='Event',
             db_column='event_pass_is_live',
             sleep_time=50 * 60,  # 50 minutes
-            watch_channel_id=966316773869772860,
+            watch_channel_id=EVENT_PASS_CHANNEL,
             ping_channel_id=Cid.spam_me,
         )
-    )
 
-    await bot.add_cog(
-        ChannelWatcher(
+
+class DropsWatcher(ChannelWatcher):
+    def __init__(self, bot: AluBot):
+        super().__init__(
             bot,
-            cog_name='Drops',
             db_column='drops_watch_live',
             sleep_time=60 * 60 * 24 * 7,  # a week
             watch_channel_id=1074010096566284288,
             ping_channel_id=Cid.spam_me,
         )
-    )
+
+
+async def setup(bot: AluBot):
+    await bot.add_cog(EventPassWatcher(bot))
+    await bot.add_cog(DropsWatcher(bot))

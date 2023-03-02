@@ -64,7 +64,7 @@ class TwitchCog(commands.Cog):
         guild = self.bot.get_guild(Sid.alu)
         mention_role = guild.get_role(Rid.stream_lover)
         content = f'{mention_role.mention} and chat, our Highness **@{tw.display_name}** just went live !'
-        file = await self.bot.url_to_file(tw.preview_url, filename='twtvpreview.png')
+        file = await self.bot.imgtools.url_to_file(tw.preview_url, filename='twtvpreview.png')
         e = discord.Embed(colour=0x9146FF, title=f'{tw.title}', url=tw.url)
         e.description = (
             f'Playing {tw.game}\n/[Watch Stream]({tw.url}){await self.bot.twitch.last_vod_link(MY_TWITCH_ID)}'

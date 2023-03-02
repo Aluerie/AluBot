@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 try:
-    from test import test_extensions
+    from _test import test_extensions
 except ModuleNotFoundError:
     test_extensions = ()
 

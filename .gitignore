@@ -15,7 +15,7 @@ venv/
 prefixes.json
 
 /cogs/beta.py
-test.py
+_test.py
 /config.py
 
 # Temporary ignore

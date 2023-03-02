@@ -59,7 +59,6 @@ class Cid:
 
     stream_room = 766063288302698496
 
-    dota_news = 724986688589267015
     lol_news = 724993871662022766
 
     patch_notes = 731759693113851975

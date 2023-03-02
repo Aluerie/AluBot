@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List
 import twitchio
 from discord.ext.commands import BadArgument
 
-from cogs.lol.const import LOL_GAME_CATEGORY_TWITCH_ID
+from utils.lol.const import LOL_GAME_CATEGORY_TWITCH_ID
 from utils.formats import human_timedelta
 
 if TYPE_CHECKING:

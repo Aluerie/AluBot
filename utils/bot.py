@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union, Iterable
 
 import datetime
 import logging
@@ -38,12 +38,50 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 try:
-    from tlist import test_list
+    from test import test_extensions
 except ModuleNotFoundError:
-    test_list = []
+    test_extensions = ()
+
+initial_extensions = ("jishaku",)
+
+extensions = (
+    "cogs.fpc",
+    "cogs.management",
+    "cogs.news",
+    "cogs.meta",
+    "cogs.birthday",
+    "cogs.confessions",
+    "cogs.embedmaker",
+    "cogs.emcom_spam",
+    "cogs.error",
+    "cogs.expsys",
+    "cogs.fun",
+    "cogs.info",
+    "cogs.lewd",
+    "cogs.logs",
+    "cogs.lolnews",
+    "cogs.moderation",
+    "cogs.old_timers",
+    "cogs.passevent",
+    "cogs.reactionroles",
+    "cogs.reminders",
+    "cogs.schedule",
+    "cogs.settings",
+    "cogs.suggestions",
+    "cogs.tags",
+    "cogs.threads",
+    "cogs.timers",
+    "cogs.tools",
+    "cogs.topemotes",
+    "cogs.tts",
+    "cogs.twtv",
+    "cogs.voicechat",
+    "cogs.welcome",
+    "cogs.wolfram"
+)
 
 
-class AluBot(commands.Bot,):
+class AluBot(commands.Bot):
     bot_app_info: discord.AppInfo
     dota: Dota2Client
     github: Github
@@ -67,7 +105,7 @@ class AluBot(commands.Bot,):
         super().__init__(
             command_prefix=self.get_pre,
             activity=discord.Streaming(
-                name=f"\N{PURPLE HEART}/help\N{PURPLE HEART}/setup\N{PURPLE HEART}",
+                name=f"\N{PURPLE HEART} /help /setup",
                 url='https://www.twitch.tv/aluerie'
             ),
             intents=discord.Intents(  # if you ever struggle with it - try `discord.Intents.all()`
@@ -108,25 +146,28 @@ class AluBot(commands.Bot,):
         os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
         os.environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
-        extensions = []  # ['jishaku'] - does not work with 2.2.0
-        if self.test and len(test_list):
-            extensions += [f'cogs.{name}' for name in test_list]
-        else:
-            extensions += [f'cogs.{filename[:-3]}' for filename in os.listdir('./cogs') if filename.endswith('.py')]
 
-        for ext in extensions:
+        if self.test and len(test_extensions):
+            exts = initial_extensions + tuple(f'cogs.{name}' for name in test_extensions)
+        else:
+            exts = initial_extensions + extensions
+            # remember the roots
+            # there is also an option to do it with pkgutils
+            # [f'cogs.{filename[:-3]}' for filename in os.listdir('./cogs') if filename.endswith('.py')]
+
+        for ext in exts:
             try:
                 await self.load_extension(ext)
             except Exception as e:
                 log.exception(f'Failed to load extension {ext}.')
                 raise e
 
-    def get_pre(self, message: discord.Message):
+    def get_pre(self, bot: AluBot, message: discord.Message) -> Iterable[str]:
         if message.guild is None:
             prefix = self.main_prefix
         else:
             prefix = self.prefixes.get(message.guild.id, self.main_prefix)
-        return commands.when_mentioned_or(prefix, "/")(self, message)
+        return commands.when_mentioned_or(prefix, "/")(bot, message)
 
     async def on_ready(self):
         if not hasattr(self, 'launch_time'):

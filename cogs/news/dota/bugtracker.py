@@ -1,32 +1,28 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Set, Optional, Tuple
 
 import asyncio
-import re
 import datetime
+import re
 import textwrap
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from github.GithubException import GithubException
 from PIL import Image
 
-from utils.var import Sid, Cid, Lmt
+from utils.var import Lmt, Sid
+
+from ._base import DotaNewsBase
 
 if TYPE_CHECKING:
     from github import Issue, NamedUser
+
     from utils.bot import AluBot
 
 
 class BaseEvent:
-    def __init__(
-            self,
-            name: str,
-            *,
-            colour: int,
-            word: str,
-            text_flag: Optional[bool] = False
-    ) -> None:
+    def __init__(self, name: str, *, colour: int, word: str, text_flag: Optional[bool] = False) -> None:
         self.name: str = name
         self.colour: int = colour
         self.word: str = word
@@ -58,21 +54,20 @@ class EventType:
     commented = BaseEvent('commented', colour=0x4285F4, word='commented', text_flag=True)
     opened = BaseEvent('opened', colour=0x52CC99, word='opened', text_flag=True)
 
-    # these should match one of event names from GitHub documentation 
+    # these should match one of event names from GitHub documentation
     issue_events = ['assigned', 'closed', 'reopened']
 
 
 class TimeLinePoint:
-
     def __init__(
-            self,
-            *,
-            event_type: BaseEvent,
-            created_at: datetime.datetime,
-            actor: NamedUser.NamedUser,
-            issue_number: int,
-            body: str = '',
-            comment_url: Optional[str] = None
+        self,
+        *,
+        event_type: BaseEvent,
+        created_at: datetime.datetime,
+        actor: NamedUser.NamedUser,
+        issue_number: int,
+        body: str = '',
+        comment_url: Optional[str] = None,
     ):
         self.event_type: BaseEvent = event_type
         self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.timezone.utc)
@@ -97,10 +92,9 @@ class TimeLinePoint:
 
 
 class TimeLine:
-
     def __init__(
-            self,
-            issue: Issue.Issue,
+        self,
+        issue: Issue.Issue,
     ):
         self.issue: Issue.Issue = issue
 
@@ -131,46 +125,42 @@ class TimeLine:
                 raise RuntimeError('Somehow lead_event is None')
 
             e.colour = le.event_type.colour
-            e.set_author(
-                name=le.author_str,
-                icon_url=le.actor.avatar_url,
-                url=co.comment_url if co else None
-            )
+            e.set_author(name=le.author_str, icon_url=le.actor.avatar_url, url=co.comment_url if co else None)
             e.description = co.markdown_body if co else ''
             file = le.event_type.file
             e.set_thumbnail(url=f'attachment://{file.filename}')
         else:
-            e.colour = 0x4078c0  # git colour, first in google :D
+            e.colour = 0x4078C0  # git colour, first in google :D
             pil_pics = []
             for p in (sorted_points := self.sorted_points_list()):
                 pil_pics.append(p.event_type.file_path)
                 if not p.body:
                     p.body = ' '  # so event-actions get printed in the following chunking
                 chunks, chunk_size = len(p.markdown_body), Lmt.Embed.field_value
-                fields = [p.markdown_body[i:i+chunk_size] for i in range(0, chunks, chunk_size)]
+                fields = [p.markdown_body[i : i + chunk_size] for i in range(0, chunks, chunk_size)]
                 for x in fields:
                     e.add_field(name=f'{p.event_type.emote(bot)}{p.author_str}', value=x, inline=False)
             e.set_author(
                 name=f'Bugtracker issue #{self.issue.number} update',
                 url=sorted_points[-1].comment_url,
-                icon_url='https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png'
+                icon_url='https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png',
             )
             delta_x_y = 32
             size_x_y = 128 + (len(pil_pics) - 1) * delta_x_y  # 128 is images size
             dst = Image.new('RGBA', (size_x_y, size_x_y), (0, 0, 0, 0))
             for i, pic_name in enumerate(pil_pics):
                 im = Image.open(pic_name)
-                dst.paste(im, (i*delta_x_y, i*delta_x_y), im)
+                dst.paste(im, (i * delta_x_y, i * delta_x_y), im)
 
             file = bot.imgtools.img_to_file(dst, filename=f'bugtracker_update_{self.issue.number}.png')
             e.set_thumbnail(url=f'attachment://{file.filename}')
         return e, file
 
 
-class DotaBugtracker(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-        self.retries: int = 0
+class BugTracker(DotaNewsBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.retries: int = 0  # todo: find better solution
 
     async def cog_load(self) -> None:
         self.bot.ini_github()
@@ -196,7 +186,8 @@ class DotaBugtracker(commands.Cog):
         # Closed / Self-assigned / Reopened
         for i in repo.get_issues(sort='updated', state='all', since=dt):
             events = [
-                x for x in i.get_events()
+                x
+                for x in i.get_events()
                 if x.created_at.replace(tzinfo=datetime.timezone.utc) > dt
                 and x.actor  # apparently some people just delete their accounts after closing their issues, #6556 :D
                 and x.actor.login in assignees
@@ -210,7 +201,7 @@ class DotaBugtracker(commands.Cog):
                         event_type=getattr(EventType, e.event),
                         created_at=e.created_at,
                         actor=e.actor,
-                        issue_number=e.issue.number
+                        issue_number=e.issue.number,
                     )
                 )
 
@@ -227,7 +218,7 @@ class DotaBugtracker(commands.Cog):
                         created_at=i.created_at,
                         actor=i.user,
                         body=i.body,
-                        issue_number=i.number
+                        issue_number=i.number,
                     )
                 )
 
@@ -245,7 +236,7 @@ class DotaBugtracker(commands.Cog):
                     actor=c.user,
                     body=c.body,
                     comment_url=c.html_url,
-                    issue_number=issue_num
+                    issue_number=issue_num,
                 )
             )
 
@@ -265,12 +256,11 @@ class DotaBugtracker(commands.Cog):
                 batches_to_send.append([(em, file)])
 
         for i in batches_to_send:
-            msg = await self.bot.get_channel(Cid.dota_news).send(
-                embeds=[e for e, _ in i], files=[f for _, f in i if f]
-            )
-            if msg.channel.id == Cid.dota_news:
-                await msg.publish()
-        
+            msg = await self.news_channel.send(embeds=[e for e, _ in i], files=[f for _, f in i if f])
+            # todo: if we implement custom for public then we need to only publish from my own server
+            #  or just remove the following `.publish()` line at all
+            await msg.publish()
+
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
         await self.bot.pool.execute(query, discord.utils.utcnow(), Sid.alu)
         self.retries = 0
@@ -295,5 +285,5 @@ class DotaBugtracker(commands.Cog):
         # self.git_comments_check.restart()
 
 
-async def setup(bot: AluBot):
-    await bot.add_cog(DotaBugtracker(bot))
+async def setup(bot):
+    await bot.add_cog(BugTracker(bot))

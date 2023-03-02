@@ -1,39 +1,38 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import asyncio
-from asyncio.proactor_events import _ProactorBasePipeTransport
 import datetime
-from functools import wraps
 import logging
-import platform
+from typing import TYPE_CHECKING
 
 import asyncpraw
-from asyncprawcore import AsyncPrawcoreException
 import discord
+from asyncprawcore import AsyncPrawcoreException
 from discord.ext import commands, tasks
 
-from utils.var import Cid, Clr, Lmt
+from utils.var import Clr, Lmt
+
+from cogs.news.dota._base import DotaNewsBase
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
 
 
-def silence_event_loop_closed(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        try:
-            return func(self, *args, **kwargs)
-        except RuntimeError as e:
-            if str(e) != 'Event loop is closed':
-                raise
-
-    return wrapper
-
-
-if platform.system() == 'Windows':
-    # Silence the exception here.
-    _ProactorBasePipeTransport.__del__ = silence_event_loop_closed(_ProactorBasePipeTransport.__del__)
+# def silence_event_loop_closed(func):
+#     @wraps(func)
+#     def wrapper(self, *args, **kwargs):
+#         try:
+#             return func(self, *args, **kwargs)
+#         except RuntimeError as e:
+#             if str(e) != 'Event loop is closed':
+#                 raise
+#
+#     return wrapper
+#
+#
+# if platform.system() == 'Windows':
+#     # Silence the exception here.
+#     _ProactorBasePipeTransport.__del__ = silence_event_loop_closed(_ProactorBasePipeTransport.__del__)
 
 log = logging.getLogger(__name__)
 
@@ -48,34 +47,29 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
 
     embeds = [
         discord.Embed(
-            title=comment.submission.title[:256],
-            description=page,
-            url=comment.submission.shortlink,
-            colour=Clr.reddit
+            title=comment.submission.title[:256], description=page, url=comment.submission.shortlink, colour=Clr.reddit
         )
         for page in paginator.pages
     ]
     embeds[0].set_author(
         name=f'{comment.author.name} commented in r/{comment.subreddit.display_name} post',
         icon_url=comment.author.icon_img,
-        url=f'https://www.reddit.com{comment.permalink}'
+        url=f'https://www.reddit.com{comment.permalink}',
     )
     return embeds
 
 
-class Reddit(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
+class Reddit(DotaNewsBase):
     def cog_load(self) -> None:
         self.bot.ini_reddit()
         self.userfeed.start()
 
     def cog_unload(self) -> None:
-        self.userfeed.cancel()
+        self.userfeed.stop()
 
     @tasks.loop(minutes=40)
     async def userfeed(self):
+        # todo: there is somewhere unclosed client session when running this cog
         log.debug("Starting to stalk u/JeffHill")
         running = 1
         while running:
@@ -86,11 +80,12 @@ class Reddit(commands.Cog):
                         continue
                     dtime = datetime.datetime.fromtimestamp(comment.created_utc)
                     # IDK there was some weird bug with sending old messages after 2 months
-                    if discord.utils.utcnow() - dtime.replace(tzinfo=datetime.timezone.utc) \
-                            < datetime.timedelta(days=7):
+                    if discord.utils.utcnow() - dtime.replace(tzinfo=datetime.timezone.utc) < datetime.timedelta(
+                        days=7
+                    ):
                         embeds = await process_comments(comment)
                         for item in embeds:
-                            msg = await self.bot.get_channel(Cid.dota_news).send(embed=item)
+                            msg = await self.news_channel.send(embed=item)
                             await msg.publish()
             except AsyncPrawcoreException:
                 await asyncio.sleep(60 * running)

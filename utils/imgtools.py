@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Tuple
 
 from collections.abc import Sequence
 from io import BytesIO, StringIO
-from typing import Union
+from typing import TYPE_CHECKING, Tuple, Union
 
 import discord
 from PIL import Image, ImageOps
@@ -15,7 +14,6 @@ if TYPE_CHECKING:
 
 
 class ImgToolsClient:
-
     def __init__(self, session: ClientSession):
         self.session: ClientSession = session
 
@@ -58,12 +56,7 @@ class ImgToolsClient:
         image_binary.seek(0)
         return discord.File(fp=image_binary, filename=filename)
 
-    async def url_to_img(
-            self,
-            url: Union[str, Sequence[str]],
-            *,
-            return_list: bool = False
-    ):
+    async def url_to_img(self, url: Union[str, Sequence[str]], *, return_list: bool = False):
         if isinstance(url, str):
             url_array = [url]
         elif isinstance(url, Sequence):
@@ -83,11 +76,7 @@ class ImgToolsClient:
             return images if len(images) > 1 or len(images) == 0 else images[0]
 
     async def url_to_file(
-            self,
-            url: Union[str, Sequence[str]],
-            filename: str = 'FromAluBot.png',
-            *,
-            return_list: bool = False
+        self, url: Union[str, Sequence[str]], filename: str = 'FromAluBot.png', *, return_list: bool = False
     ) -> Union[discord.File, Sequence[discord.File]]:
         if isinstance(url, str):
             url_array = [url]

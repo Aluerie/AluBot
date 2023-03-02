@@ -1,34 +1,30 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List, Tuple
 
-import datetime
 import logging
 
-import asyncpg
 import discord
 from discord import app_commands
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-from pyot.core.exceptions import NotFound, ServerError
+from pyot.core.exceptions import NotFound
 from pyot.utils.lol import champion
 
-from .lol.const import (
-    platform_to_region,
+from utils.lol.const import (
     platform_to_server,
     server_to_platform,
     LOL_LOGO,
     LiteralServerUpper,
-    LiteralServer,
-    SOLO_RANKED_5v5_QUEUE_ENUM,
+    LiteralServer
 )
-from .lol.models import LiveMatch, PostMatchPlayer, Account
-from .lol.utils import get_pyot_meraki_champ_diff_list, get_all_champ_names, get_meraki_patch
+from utils.lol.models import Account
+from utils.lol.utils import get_pyot_meraki_champ_diff_list, get_all_champ_names, get_meraki_patch
 from utils.checks import is_manager
-from utils.fpc import FPCBase, TwitchAccCheckCog
 from utils.var import Clr, Ems
+from cogs.fpc._base import FPCBase
 
 # need to import the last because in import above we activate 'lol' model
-from pyot.models import lol
+from pyot.models import lol  # isort: skip
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -38,183 +34,11 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class LoLFeedNotifications(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-        self.live_matches: List[LiveMatch] = []
-        self.all_live_match_ids: List[int] = []
-
-    async def cog_load(self) -> None:
-        await self.bot.ini_twitch()
-        self.lolfeed_notifs.add_exception_type(asyncpg.InternalServerError)
-        self.lolfeed_notifs.start()
-
-    def cog_unload(self) -> None:
-        self.lolfeed_notifs.stop()  # .cancel()
-
-    async def fill_live_matches(self):
-        self.live_matches, self.all_live_match_ids = [], []
-
-        query = 'SELECT DISTINCT(unnest(lolfeed_champ_ids)) FROM guilds'
-        fav_champ_ids = [r for r, in await self.bot.pool.fetch(query)]  # row.unnest
-
-        live_fav_player_ids = await self.bot.twitch.get_live_lol_player_ids(pool=self.bot.pool)
-
-        query = f""" SELECT a.id, account, platform, display_name, player_id, twitch_id, last_edited
-                    FROM lol_accounts a
-                    JOIN lol_players p
-                    ON a.player_id = p.id
-                    WHERE player_id=ANY($1)
-                """
-        for r in await self.bot.pool.fetch(query, live_fav_player_ids):
-            try:
-                live_game = await lol.spectator.CurrentGame(summoner_id=r.id, platform=r.platform).get()
-            except NotFound:
-                log.debug(f'Player {r.display_name} is not in the game')
-                continue
-            except ServerError:
-                log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.display_name}')
-                continue
-                # e = Embed(colour=Clr.error)
-                # e.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
-                # await self.bot.get_channel(Cid.spam_me).send(embed=e)  # content=umntn(Uid.alu)
-
-            if not hasattr(live_game, 'queue_id') or live_game.queue_id != SOLO_RANKED_5v5_QUEUE_ENUM:
-                continue
-            self.all_live_match_ids.append(live_game.id)
-            p = next((x for x in live_game.participants if x.summoner_id == r.id), None)
-            if p and p.champion_id in fav_champ_ids and r.last_edited != live_game.id:
-                query = """ SELECT lolfeed_ch_id 
-                            FROM guilds
-                            WHERE $1=ANY(lolfeed_champ_ids) 
-                                AND $2=ANY(lolfeed_stream_ids)
-                                AND NOT lolfeed_ch_id=ANY(
-                                    SELECT channel_id
-                                    FROM lol_messages
-                                    WHERE match_id=$3
-                                )     
-                        """
-                channel_ids = [i for i, in await self.bot.pool.fetch(query, p.champion_id, r.player_id, live_game.id)]
-                if channel_ids:
-                    log.debug(f'LF | {r.display_name} - {await champion.key_by_id(p.champion_id)}')
-                    self.live_matches.append(
-                        LiveMatch(
-                            match_id=live_game.id,
-                            platform=p.platform,  # type: ignore
-                            account_name=p.summoner_name,
-                            start_time=round(live_game.start_time_millis / 1000),
-                            champ_id=p.champion_id,
-                            all_champ_ids=[player.champion_id for player in live_game.participants],
-                            twitch_id=r.twitch_id,
-                            spells=p.spells,
-                            runes=p.runes,
-                            channel_ids=channel_ids,
-                            account_id=p.summoner_id,
-                        )
-                    )
-
-    async def send_notifications(self, match: LiveMatch):
-        log.debug("LF | Sending LoLFeed notification")
-        for ch_id in match.channel_ids:
-            if (ch := self.bot.get_channel(ch_id)) is None:
-                log.debug("LF | The channel is None")
-                continue
-
-            em, img_file = await match.notif_embed_and_file(self.bot)
-            log.debug('LF | Successfully made embed+file')
-            em.title = f"{ch.guild.owner.name}'s fav champ + player spotted"
-            msg = await ch.send(embed=em, file=img_file)
-
-            query = """ INSERT INTO lol_matches (id, region, platform)
-                        VALUES ($1, $2, $3)
-                        ON CONFLICT DO NOTHING 
-                    """
-            await self.bot.pool.execute(query, match.match_id, platform_to_region(match.platform), match.platform)
-            query = """ INSERT INTO lol_messages
-                        (message_id, channel_id, match_id, champ_id) 
-                        VALUES ($1, $2, $3, $4)
-                    """
-            await self.bot.pool.execute(query, msg.id, ch.id, match.match_id, match.champ_id)
-            query = 'UPDATE lol_accounts SET last_edited=$1 WHERE id=$2'
-            await self.bot.pool.execute(query, match.match_id, match.account_id)
-
-    async def declare_matches_finished(self):
-        query = """ UPDATE lol_matches 
-                    SET is_finished=TRUE
-                    WHERE NOT id=ANY($1)
-                    AND lol_matches.is_finished IS DISTINCT FROM TRUE
-                """
-        await self.bot.pool.execute(query, self.all_live_match_ids)
-
-    @tasks.loop(seconds=59)
-    async def lolfeed_notifs(self):
-        log.debug(f'LF | --- Task is starting now ---')
-        await self.fill_live_matches()
-        for match in self.live_matches:
-            await self.send_notifications(match)
-        await self.declare_matches_finished()
-        log.debug(f'LF | --- Task is finished ---')
-
-    @lolfeed_notifs.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
-
-    @lolfeed_notifs.error
-    async def lolfeed_notifs_error(self, error):
-        await self.bot.send_traceback(error, where='LoLFeed Notifs')
-        # self.lolfeed.restart()
 
 
-class LoLFeedPostMatchEdits(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-        self.postmatch_players: List[PostMatchPlayer] = []
-        self.postmatch_edits.start()
 
-    async def fill_postmatch_players(self):
-        """Fill `self.postmatch_players` -  data about players who have just finished their matches"""
-        self.postmatch_players = []
 
-        query = "SELECT * FROM lol_matches WHERE is_finished=TRUE"
-        for row in await self.bot.pool.fetch(query):
-            try:
-                match = await lol.Match(id=f'{row.platform.upper()}_{row.id}', region=row.region).get()
-            except NotFound:
-                continue
-            except ValueError as error:  # gosu incident ValueError: '' is not a valid platform
-                raise error
-                # continue
 
-            query = 'SELECT * FROM lol_messages WHERE match_id=$1'
-            for r in await self.bot.pool.fetch(query, row.id):
-                for participant in match.info.participants:
-                    if participant.champion_id == r.champ_id:
-                        self.postmatch_players.append(
-                            PostMatchPlayer(
-                                player_data=participant,
-                                channel_id=r.channel_id,
-                                message_id=r.message_id,
-                            )
-                        )
-            query = 'DELETE FROM lol_matches WHERE id=$1'
-            await self.bot.pool.fetch(query, row.id)
-
-    @tasks.loop(seconds=59)
-    async def postmatch_edits(self):
-        # log.debug(f'LE | --- Task is starting now ---')
-        await self.fill_postmatch_players()
-        for player in self.postmatch_players:
-            await player.edit_the_embed(self.bot)
-        # log.debug(f'LE | --- Task is finished ---')
-
-    @postmatch_edits.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
-
-    @postmatch_edits.error
-    async def postmatch_edits_error(self, error):
-        await self.bot.send_traceback(error, where='LoLFeed PostMatchEdits')
-        # self.lolfeed.restart()
 
 
 class AddStreamFlags(commands.FlagConverter, case_insensitive=True):
@@ -701,40 +525,5 @@ class LoLFeedToolsCog(commands.Cog, FPCBase, name='LoL'):
         await ctx.reply(embed=e)
 
 
-class LoLAccCheck(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
-    async def cog_load(self) -> None:
-        self.check_acc_renames.start()
-
-    async def cog_unload(self) -> None:
-        self.check_acc_renames.cancel()
-
-    @tasks.loop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.timezone.utc))
-    async def check_acc_renames(self):
-        if datetime.datetime.now(datetime.timezone.utc).day != 17:
-            return
-
-        log.info("league checking acc renames every 24 hours")
-        query = 'SELECT id, platform, accname FROM lolaccs'
-        rows = await self.bot.pool.fetch(query)
-
-        for row in rows:
-            person = await lol.summoner.Summoner(id=row.id, platform=row.platform).get()
-            if person.name != row.accname:
-                query = 'UPDATE lolaccs SET accname=$1 WHERE id=$2'
-                await self.bot.pool.execute(query, person.name, row.id)
-
-    @check_acc_renames.before_loop
-    async def before(self):
-        log.info("check_acc_renames before the loop")
-        await self.bot.wait_until_ready()
-
-
-async def setup(bot: AluBot):
-    await bot.add_cog(LoLFeedNotifications(bot))
-    await bot.add_cog(LoLFeedPostMatchEdits(bot))
+async def setup(bot):
     await bot.add_cog(LoLFeedToolsCog(bot))
-    await bot.add_cog(LoLAccCheck(bot))
-    await bot.add_cog(TwitchAccCheckCog(bot, 'lol_players', 18))

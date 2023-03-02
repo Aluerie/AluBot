@@ -142,7 +142,7 @@ async def utils_test_main():
 if __name__ == '__main__':
     import asyncio
     from pyot.conf.utils import import_confs
-    import_confs("cogs.lol.pyotconf")
+    import_confs("utils.lol.pyotconf")
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

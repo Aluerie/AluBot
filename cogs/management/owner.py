@@ -12,8 +12,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from .lol.const import LiteralServerUpper
-from utils.bot import test_list
+from utils.lol.const import LiteralServerUpper
+from utils.bot import test_extensions
 from utils.checks import is_owner
 from utils.context import Context
 from utils.converters import Codeblock
@@ -21,8 +21,8 @@ from utils.var import MP, Cid, Clr, Ems, Rid, Sid
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
-    from .dotafeed import DotaFeedToolsCog
-    from .lolfeed import LoLFeedToolsCog
+    from cogs.fpc.dota.settings import DotaNotifsSettings
+    from cogs.fpc.lol.lolfeed import LoLFeedToolsCog
 
 
 class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
@@ -128,9 +128,9 @@ class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
     async def reload_all(self, ctx: Context):
         """Reloads all modules"""
         cogs_to_reload = []
-        if self.bot.test and len(test_list):
+        if self.bot.test and len(test_extensions):
             cogs_to_reload.append("jishaku")
-            for item in test_list:
+            for item in test_extensions:
                 cogs_to_reload.append(f"cogs.{item}")
         else:
             cogs_to_reload.append("jishaku")
@@ -341,9 +341,9 @@ class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
         parent=db,
     )
 
-    def get_dota_tools_cog(self) -> DotaFeedToolsCog:
+    def get_dota_tools_cog(self) -> DotaNotifsSettings:
         """Get dota tools cog"""
-        dota_cog: Optional[DotaFeedToolsCog] = self.bot.get_cog('Dota 2')  # type:ignore
+        dota_cog: Optional[DotaNotifsSettings] = self.bot.get_cog('Dota 2')  # type:ignore
         if dota_cog is None:
             # todo: sort this out when we gonna do error handler refactor
             raise commands.ExtensionNotLoaded(name='Dota 2 Cog is not loaded')
@@ -450,7 +450,3 @@ class AdminTools(commands.Cog, name="Tools for the Bot Owner"):
         else:
             lol_id = None
         await lol_cog.database_remove(ntr, name.lower(), lol_id)
-
-
-async def setup(bot: AluBot):
-    await bot.add_cog(AdminTools(bot))

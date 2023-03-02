@@ -6,7 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image
 
-from cogs.twitter import download_twitter_images
+from cogs.news.dota.twitter import download_twitter_images
 from utils.translator import translate
 from utils.var import Clr, Ems
 

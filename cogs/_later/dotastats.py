@@ -13,8 +13,8 @@ from config import DOTA_FRIENDID
 from .utils import pages
 from .utils.distools import send_pages_list
 from .dota import hero
-from cogs.dota.models import Match
-from cogs.dota.stalk import (
+from utils.dota import Match
+from utils.dota import (
     MatchHistoryData,
     fancy_ax,
     generate_data,

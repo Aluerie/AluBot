@@ -1,3 +1,4 @@
 from pyot.conf.utils import import_confs
 
-import_confs("cogs.lol.pyotconf")
+import_confs("utils.lol.pyotconf")
+

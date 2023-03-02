@@ -8,12 +8,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from .context import Context
-from .pagination import EnumeratedPages
-from .var import MP, Ems, Cid
+from utils.context import Context
+from utils.pagination import EnumeratedPages
+from utils.var import MP, Ems, Cid
 
 if TYPE_CHECKING:
-    from .bot import AluBot
+    from utils.bot import AluBot
 
 
 class FPCBase:
@@ -405,7 +405,7 @@ class FPCBase:
         Parameters
         ----------
         ctx :
-        player_names :
+        local_dict :
         mode_add :
         """
         player_names = self.get_names_list_from_locals(ctx, local_dict)
@@ -580,12 +580,13 @@ class FPCBase:
         await ctx.reply(embed=e)
 
 
-class TwitchAccCheckCog(commands.Cog):
+class TwitchAccountCheckBase(commands.Cog):
+
     def __init__(self, bot: AluBot, table_name: str, day: int):
         self.bot: AluBot = bot
         self.table_name: str = table_name
         self.day: int = day
-        self.__cog_name__ = f'TwitchAccCheckCog for {table_name}'
+        # self.__cog_name__ = f'TwitchAccCheckCog for {table_name}'
 
     async def cog_load(self) -> None:
         self.check_acc_renames.start()

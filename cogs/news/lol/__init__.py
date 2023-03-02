@@ -1,5 +1,5 @@
 from .copy import CopypasteLeague
-from lol_com import LoLCom
+from .lol_com import LoLCom
 
 
 async def setup(bot):

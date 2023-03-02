@@ -1,13 +1,13 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import asyncio
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
 
 from utils.formats import block_function
-from utils.links import replace_tco_links, move_link_to_title
+from utils.links import move_link_to_title, replace_tco_links
 from utils.var import Cid
 
 from ._base import LoLNewsBase
@@ -34,7 +34,7 @@ class CopypasteLeague(LoLNewsBase):
         'RiotExis',  # legends of runeterra
         'RiotZephyreal',  # merch
         'davetron',  # LoR
-        'infinitystudioc'  # merch
+        'infinitystudioc',  # merch
     ]
 
     whitelist_words = [

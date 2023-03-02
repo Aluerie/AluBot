@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import discord
-from discord.ext import tasks
 from bs4 import BeautifulSoup
+from discord.ext import tasks
 
 from utils.lol.const import LOL_LOGO
-from utils.var import Cid, Sid, Clr
+from utils.var import Cid, Clr, Sid
 
 from ._base import LoLNewsBase
 
@@ -15,7 +16,6 @@ if TYPE_CHECKING:
 
 
 class LoLCom(LoLNewsBase):
-
     async def cog_load(self) -> None:
         self.patch_checker.start()
 

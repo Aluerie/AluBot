@@ -3,7 +3,7 @@ Features thar are probably going to stay
 **exclusive** to AluBot hideout server
 """
 
-from emote_spam import EmoteSpam, ComfySpam
+from .emote_spam import ComfySpam, EmoteSpam
 from .stats import StatsVoiceChannels
 from .stream_name import StreamChannelName
 

@@ -33,7 +33,7 @@ class StartView(discord.ui.View):
         self.message = message
 
     @discord.ui.button(label='Author', emoji='🖋️', style=discord.ButtonStyle.blurple)
-    async def author_btn(self, ntr: discord.Interaction, btn: discord.ui.Button):
+    async def author_btn(self, ntr: discord.Interaction, _btn: discord.ui.Button):
         await ntr.response.send_message("hello")
 
 

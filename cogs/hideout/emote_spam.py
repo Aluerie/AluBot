@@ -11,13 +11,16 @@ from numpy.random import randint, choice
 
 from utils.var import Cid, Clr, Ems, Rgx, Uid
 
+from ._base import HideoutBase
+
 if TYPE_CHECKING:
     from utils.bot import AluBot
 
+EMOTE_SPAM = 730838697443852430
+COMFY_SPAM = 727539910713671802
 
-class EmoteSpam(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+
+class EmoteSpam(HideoutBase):
 
     async def cog_load(self) -> None:
         self.emote_spam.start()
@@ -29,7 +32,7 @@ class EmoteSpam(commands.Cog):
 
     async def emote_spam_control(self, message: discord.Message, nqn_check: int = 1):
 
-        if message.channel.id == Cid.emote_spam:
+        if message.channel.id == EMOTE_SPAM:
             if len(message.embeds):
                 return await message.delete()
             # emoji_regex = get_emoji_regexp()
@@ -82,7 +85,7 @@ class EmoteSpam(commands.Cog):
                 rand_emoji = choice(rand_guild.emojis)
                 if rand_emoji.is_usable():
                     break
-            await self.bot.get_channel(Cid.emote_spam).send('{0} {0} {0}'.format(str(rand_emoji)))
+            await self.bot.get_channel(EMOTE_SPAM).send('{0} {0} {0}'.format(str(rand_emoji)))
 
     @emote_spam.before_loop
     async def before(self):
@@ -90,7 +93,7 @@ class EmoteSpam(commands.Cog):
 
     @tasks.loop(count=1)
     async def offline_criminal_check(self):
-        channel = self.bot.get_channel(Cid.emote_spam)
+        channel = self.bot.get_channel(EMOTE_SPAM)
         async for message in channel.history(limit=2000):
             if message.author.id == Uid.bot:
                 return
@@ -116,7 +119,7 @@ class ComfySpam(commands.Cog):
         self.offline_criminal_check.cancel()
 
     async def comfy_chat_control(self, message: discord.Message):
-        if message.channel.id == Cid.comfy_spam:
+        if message.channel.id == COMFY_SPAM:
             if len(message.embeds):
                 return await message.delete()
             text = str(message.content)
@@ -146,7 +149,7 @@ class ComfySpam(commands.Cog):
     @tasks.loop(minutes=60)
     async def comfy_spam(self):
         if randint(1, 100 + 1) < 2:
-            await self.bot.get_channel(Cid.comfy_spam).send('{0} {0} {0}'.format(Ems.peepoComfy))
+            await self.bot.get_channel(COMFY_SPAM).send('{0} {0} {0}'.format(Ems.peepoComfy))
 
     @comfy_spam.before_loop
     async def before(self):
@@ -154,7 +157,7 @@ class ComfySpam(commands.Cog):
 
     @tasks.loop(count=1)
     async def offline_criminal_check(self):
-        channel = self.bot.get_channel(Cid.comfy_spam)
+        channel = self.bot.get_channel(COMFY_SPAM)
         async for message in channel.history(limit=2000):
             if message.author.id == Uid.bot:
                 return

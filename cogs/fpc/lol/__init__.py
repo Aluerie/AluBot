@@ -4,10 +4,15 @@ from .settings import LoLNotifsSettings
 from .summoner_check import LoLSummonerNameCheck
 from .twitch_check import LoLTwitchAccountCheck
 
+LOL_COGS = (
+    LoLNotifs,
+    LoLFeedPostMatchEdit,
+    LoLNotifsSettings,
+    LoLSummonerNameCheck,
+    LoLTwitchAccountCheck,
+)
+
 
 async def setup(bot):
-    await bot.add_cog(LoLNotifs(bot))
-    await bot.add_cog(LoLFeedPostMatchEdit(bot))
-    await bot.add_cog(LoLNotifsSettings(bot))
-    await bot.add_cog(LoLSummonerNameCheck(bot))
-    await bot.add_cog(LoLTwitchAccountCheck(bot))
+    for C in LOL_COGS:
+        await bot.add_cog(C(bot))

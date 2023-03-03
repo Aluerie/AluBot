@@ -22,6 +22,7 @@ class WolframAlpha(commands.Cog):
     Probably the best computational intelligence service ever.
     [wolframalpha.com](https://www.wolframalpha.com/)
     """
+
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.wa_basic_url = (

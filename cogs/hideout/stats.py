@@ -6,7 +6,7 @@ import platform
 
 from discord.ext import tasks
 
-from utils.var import Cid, Sid, Rid
+from utils.var import Rid
 
 from ._base import HideoutBase
 
@@ -64,3 +64,7 @@ class StatsVoiceChannels(HideoutBase):
     @total_bots.before_loop
     async def total_bots_before(self):
         await self.bot.wait_until_ready()
+
+
+async def setup(bot):
+    await bot.add_cog(StatsVoiceChannels(bot))

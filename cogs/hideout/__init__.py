@@ -1,22 +1,20 @@
-import discord
+"""
+Features thar are probably going to stay
+**exclusive** to AluBot hideout server
+"""
 
-from utils.var import Ems
-
+from emote_spam import EmoteSpam, ComfySpam
 from .stats import StatsVoiceChannels
+from .stream_name import StreamChannelName
 
-
-class Hideout(
-    StatsVoiceChannels
-):
-    """
-    Special Features for Hideout server.
-    """
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        # todo: find better emote bcs it belongs to fun
-        return discord.PartialEmoji.from_str(Ems.FeelsDankMan)
+HIDEOUT_COGS = (
+    EmoteSpam,
+    ComfySpam,
+    StatsVoiceChannels,
+    StreamChannelName,
+)
 
 
 async def setup(bot):
-    await bot.add_cog(Hideout(bot))
+    for m in HIDEOUT_COGS:
+        await bot.add_cog(m(bot))

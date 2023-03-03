@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import discord
@@ -9,22 +8,22 @@ from discord.ext import commands, tasks
 
 from utils.var import Ems, Sid, Rid, Clr, Cid
 
+from ._base import HideoutBase
+
 if TYPE_CHECKING:
     from utils.bot import AluBot
     from utils.context import Context
 
 ORIGINAL_NAME = '\N{CINEMA}streaming_room'
+STREAM_ROOM_CHANNEL = 766063288302698496
 
 
-class VoiceChat(commands.Cog, name='Voice Chat'):
+class StreamChannelName(HideoutBase, name='\N{CINEMA}streaming_room Control'):
     """Change streaming room title
 
     Get folks ready to watch your stream with a fancy title \
     so everybody knows what you are streaming.
     """
-
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
@@ -90,8 +89,8 @@ class VoiceChat(commands.Cog, name='Voice Chat'):
     async def title(self, ctx: Context, *, text: str):
         """Sets title for **#\N{CINEMA}streaming_room** so people know what you are streaming"""
         new_name = f'\N{CINEMA}{text}'
-        guild = self.bot.get_guild(Sid.alu)
-        await guild.get_channel(Cid.stream_room).edit(name=new_name)
+        guild = self.hideout
+        await guild.get_channel(STREAM_ROOM_CHANNEL).edit(name=new_name)
         e = discord.Embed(description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=Clr.prpl)
         await ctx.reply(embed=e)
 
@@ -99,14 +98,14 @@ class VoiceChat(commands.Cog, name='Voice Chat'):
     @streaming_room.command(name='reset')
     async def reset(self, ctx: Context):
         """Reset **#\N{CINEMA}streaming_room** title ;"""
-        guild = self.bot.get_guild(Sid.alu)
-        await guild.get_channel(Cid.stream_room).edit(name=ORIGINAL_NAME)
+        guild = self.hideout
+        await guild.get_channel(STREAM_ROOM_CHANNEL).edit(name=ORIGINAL_NAME)
         e = discord.Embed(description=f'Title of **#{ORIGINAL_NAME}** has been reset', colour=Clr.prpl)
         await ctx.reply(embed=e)
 
     @tasks.loop(count=1)
     async def check_voice_members(self):
-        guild = self.bot.get_guild(Sid.alu)
+        guild = self.hideout
         voice_role = guild.get_role(Rid.voice)
         for member in voice_role.members:
             if member.voice is None:
@@ -118,4 +117,4 @@ class VoiceChat(commands.Cog, name='Voice Chat'):
 
 
 async def setup(bot: AluBot):
-    await bot.add_cog(VoiceChat(bot))
+    await bot.add_cog(StreamChannelName(bot))

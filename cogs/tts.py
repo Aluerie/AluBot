@@ -28,7 +28,7 @@ class LanguageCollection:
     es = LanguageData(code='es-ES', locale='Spanish (Spain)', lang='es', tld='es')
     pt = LanguageData(code='pt-PT', locale='Portuguese (Portugal)', lang='pt', tld='pt')
     cn = LanguageData(code='zh-CN', locale='Mandarin (China Mainland)', lang='zh-CN', tld='com')
-    uk = LanguageData(code='uk-UA', locale='Ukrainian (Ukrain)', lang='uk', tld='com.ua')
+    uk = LanguageData(code='uk-UA', locale='Ukrainian (Ukraine)', lang='uk', tld='com.ua')
 
     Literal = Literal['fr', 'en', 'ru', 'es', 'pt', 'cn', 'uk']
 

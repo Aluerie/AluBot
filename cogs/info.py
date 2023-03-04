@@ -13,14 +13,12 @@ import psutil
 from dateparser.search import search_dates
 from discord import app_commands
 from discord.ext import commands
-from dota2 import __version__ as dota2__version__
 from PIL import Image, ImageColor
-from pyot import __version__ as pyot__version__
 
 from utils.formats import format_dt_tdR, human_timedelta
 from utils.var import MAP, MP, Cid, Clr, Ems, Rid, Sid
 
-from ..utils.checks import is_owner
+from utils.checks import is_owner
 
 # from wordcloud import WordCloud
 

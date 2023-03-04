@@ -60,7 +60,7 @@ class SyncCommandCog(ManagementBase):
                 raise commands.BadArgument("You used `$sync` command with a spec outside of guild")
         else:
             synced = await ctx.bot.tree.sync()
-            e.description = f"Synced `{len(synced)}` commands globally the current guild."
+            e.description = f"Synced `{len(synced)}` commands globally."
         await ctx.reply(embed=e)
 
 

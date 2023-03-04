@@ -205,7 +205,7 @@ class OtherCog(MetaBase):
         e.set_thumbnail(url=self.bot.user.display_avatar.url)
         await ctx.reply(embed=e)
 
-    @commands.command(help="Checks the bot's ping to Discord")
+    @commands.hybrid_command(help="Checks the bot's ping to Discord")
     async def ping(self, ctx: Context):
         pings: List[PingTuple] = []
 
@@ -316,7 +316,7 @@ class OtherCog(MetaBase):
         )
         await ctx.reply(embed=e)
 
-    @commands.command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
+    @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
     async def source(self, ctx: Context, *, command: Optional[str] = None):
         """Links to the bots code, or a specific command's"""
         source_url = ctx.bot.repo

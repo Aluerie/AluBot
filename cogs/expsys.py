@@ -193,7 +193,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
 
         query = f"""SELECT id, exp, rep 
                     FROM users 
-                    WHERE inlvl!=0
+                    WHERE inlvl=TRUE
                     ORDER BY {sort_by} DESC;
                 """
         rows = await self.bot.pool.fetch(query)

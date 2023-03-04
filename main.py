@@ -1,19 +1,21 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import asyncio
-from contextlib import contextmanager
 import logging
-from logging.handlers import RotatingFileHandler
 import sys
 import traceback
+from contextlib import contextmanager
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from types import coroutine
+from typing import TYPE_CHECKING
 
 import asyncpg
 import click
+from cogs import get_extensions
 
-from utils.database import create_pool
 from utils.bot import AluBot, get_log_fmt
+from utils.database import create_pool
 
 if TYPE_CHECKING:
     pass
@@ -45,7 +47,7 @@ def setup_logging(test: bool):
             encoding='utf-8',
             mode='w',
             maxBytes=16 * 1024 * 1024,  # 16 MiB
-            backupCount=5  # Rotate through 5 files
+            backupCount=5,  # Rotate through 5 files
         )
         file_handler.setFormatter(get_log_fmt(file_handler))
         log.addHandler(file_handler)
@@ -59,7 +61,7 @@ def setup_logging(test: bool):
             log.removeHandler(hdlr)
 
 
-async def bot_run(test: bool):
+async def discord_bot_start(test: bool):
     log = logging.getLogger()
     try:
         pool = await create_pool()
@@ -67,10 +69,20 @@ async def bot_run(test: bool):
         click.echo('Could not set up PostgreSQL. Exiting.', file=sys.stderr)
         log.exception('Could not set up PostgreSQL. Exiting.')
         return
-
+    
+    
     async with AluBot(test) as bot:
         bot.pool = pool
-        await bot.my_start()
+
+        if 'cogs.twitchbot' in get_extensions(test):
+            from cogs.twitchbot._twtvbot import TwitchBot
+            bot.twitchbot = tb = TwitchBot(bot)
+            tb = tb.start()
+        else:
+            async def empty_coro():
+                return
+            tb = empty_coro()
+        await asyncio.gather(bot.my_start(), tb)
 
 
 @click.group(invoke_without_command=True, options_metavar='[options]')
@@ -78,9 +90,10 @@ async def bot_run(test: bool):
 @click.option('--test', '-t', is_flag=True)
 def main(click_ctx: click.Context, test: bool):
     """Launches the bot."""
+
     if click_ctx.invoked_subcommand is None:
         with setup_logging(test):
-            asyncio.run(bot_run(test))
+            asyncio.run(discord_bot_start(test))
 
 
 @main.group(short_help='database stuff', options_metavar='[options]')
@@ -92,6 +105,7 @@ def db():
 def create():
     """Creates the database tables."""
     try:
+
         async def run_create():
             connection: asyncpg.Connection = await asyncpg.connect(POSTGRES_URL)  # type: ignore
             async with connection.transaction():

@@ -54,7 +54,7 @@ class LoLNotifs(commands.Cog):
             try:
                 live_game = await lol.spectator.CurrentGame(summoner_id=r.id, platform=r.platform).get()
             except NotFound:
-                log.debug(f'Player {r.display_name} is not in the game')
+                log.debug(f'Player {r.display_name} is not in the game on acc {r.account}')
                 continue
             except ServerError:
                 log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.display_name}')

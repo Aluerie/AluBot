@@ -1,30 +1,30 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Union, Iterable
-
 import datetime
 import logging
-from logging.handlers import RotatingFileHandler
 import os
 import traceback
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Union
 
 import discord
+from aiohttp import ClientSession
+from asyncpg import Pool
+from asyncpraw import Reddit
 from discord import app_commands
 from discord.ext import commands
-from asyncpg import Pool
-from aiohttp import ClientSession
-from asyncpraw import Reddit
-
 from dota2.client import Dota2Client
 from github import Github
 from steam.client import SteamClient
 from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
-from cogs import get_extensions
 import config as cfg
-from .imgtools import ImgToolsClient
+from cogs import get_extensions
+from cogs.twitchbot._twtvbot import TwitchBot
+
 from .context import Context
+from .imgtools import ImgToolsClient
 from .jsonconfig import PrefixConfig
 from .twitch import TwitchClient
 from .var import Cid, Clr, Sid
@@ -32,6 +32,7 @@ from .var import Cid, Clr, Sid
 if TYPE_CHECKING:
     from discord.abc import Snowflake
     from github import Repository
+
     from cogs.reminders import Reminder
 
     AppCommandStore = Dict[str, app_commands.AppCommand]  # name: AppCommand
@@ -54,6 +55,7 @@ class AluBot(commands.Bot):
     steam: SteamClient
     tree: MyCommandTree
     twitch: TwitchClient
+    twitchbot: TwitchBot
     twitter: TwitterAsyncClient
     user: discord.ClientUser
 
@@ -62,10 +64,7 @@ class AluBot(commands.Bot):
         self.main_prefix = main_prefix
         super().__init__(
             command_prefix=self.get_pre,
-            activity=discord.Streaming(
-                name=f"\N{PURPLE HEART} /help /setup",
-                url='https://www.twitch.tv/aluerie'
-            ),
+            activity=discord.Streaming(name=f"\N{PURPLE HEART} /help /setup", url='https://www.twitch.tv/aluerie'),
             intents=discord.Intents(  # if you ever struggle with it - try `discord.Intents.all()`
                 guilds=True,
                 members=True,
@@ -75,14 +74,10 @@ class AluBot(commands.Bot):
                 presences=True,
                 messages=True,
                 reactions=True,
-                message_content=True
+                message_content=True,
             ),
-            allowed_mentions=discord.AllowedMentions(
-                roles=True,
-                replied_user=False,
-                everyone=False
-            ),  # .none()
-            tree_cls=MyCommandTree
+            allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
+            tree_cls=MyCommandTree,
         )
         self.client_id: int = cfg.TEST_DISCORD_CLIENT_ID if test else cfg.DISCORD_CLIENT_ID
         self.test: bool = test
@@ -135,13 +130,7 @@ class AluBot(commands.Bot):
         token = cfg.TEST_TOKEN if self.test else cfg.MAIN_TOKEN
         await super().start(token, reconnect=True)
 
-    async def get_context(
-            self,
-            origin: Union[discord.Interaction, discord.Message],
-            /,
-            *,
-            cls=Context
-    ) -> Context:
+    async def get_context(self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context) -> Context:
         return await super().get_context(origin, cls=cls)
 
     @property
@@ -158,9 +147,15 @@ class AluBot(commands.Bot):
         if self.steam.connected is False:
             log.debug(f"dota2info: client.connected {self.steam.connected}")
             if self.test:
-                steam_login, steam_password = (cfg.STEAM_TEST_LGN, cfg.STEAM_TEST_PSW,)
+                steam_login, steam_password = (
+                    cfg.STEAM_TEST_LGN,
+                    cfg.STEAM_TEST_PSW,
+                )
             else:
-                steam_login, steam_password = (cfg.STEAM_MAIN_LGN, cfg.STEAM_MAIN_PSW,)
+                steam_login, steam_password = (
+                    cfg.STEAM_MAIN_LGN,
+                    cfg.STEAM_MAIN_PSW,
+                )
 
             if self.steam.login(username=steam_login, password=steam_password):
                 self.steam.change_status(persona_state=7)
@@ -183,7 +178,7 @@ class AluBot(commands.Bot):
                 client_secret=cfg.REDDIT_CLIENT_SECRET,
                 password=cfg.REDDIT_PASSWORD,
                 user_agent=cfg.REDDIT_USER_AGENT,
-                username=cfg.REDDIT_USERNAME
+                username=cfg.REDDIT_USERNAME,
             )
 
     async def ini_twitch(self) -> None:
@@ -206,14 +201,14 @@ class AluBot(commands.Bot):
         return self.get_cog('Reminder')  # type: ignore
 
     async def send_traceback(
-            self,
-            error: Exception,
-            destination: Optional[discord.TextChannel] = None,
-            *,
-            where: str = 'not specified',
-            embed: Optional[discord.Embed] = None,
-            verbosity: int = 10,
-            mention: bool = True
+        self,
+        error: Exception,
+        destination: Optional[discord.TextChannel] = None,
+        *,
+        where: str = 'not specified',
+        embed: Optional[discord.Embed] = None,
+        verbosity: int = 10,
+        mention: bool = True,
     ) -> None:
         """Function to send traceback into the discord channel.
         Parameters
@@ -241,9 +236,9 @@ class AluBot(commands.Bot):
         ch: discord.TextChannel = destination or self.spam_channel
 
         etype, value, trace = type(error), error, error.__traceback__
-        traceback_content = "".join(
-            traceback.format_exception(etype, value, trace, verbosity)
-        ).replace("``", "`\u200b`")
+        traceback_content = "".join(traceback.format_exception(etype, value, trace, verbosity)).replace(
+            "``", "`\u200b`"
+        )
 
         paginator = commands.Paginator(prefix='```python')
         for line in traceback_content.split('\n'):
@@ -282,7 +277,7 @@ class AluBot(commands.Bot):
 # Credits to @Soheab
 # https://gist.github.com/Soheab/fed903c25b1aae1f11a8ca8c33243131#file-bot_subclass
 class MyCommandTree(app_commands.CommandTree):
-    """ Custom Command tree class to set up slash cmds mentions
+    """Custom Command tree class to set up slash cmds mentions
 
     The class makes the tree store app_commands.AppCommand
     to access later for mentioning or anything
@@ -295,9 +290,9 @@ class MyCommandTree(app_commands.CommandTree):
         self._guild_app_commands: Dict[int, AppCommandStore] = {}
 
     def find_app_command_by_names(
-            self,
-            *qualified_name: str,
-            guild: Optional[Union[Snowflake, int]] = None,
+        self,
+        *qualified_name: str,
+        guild: Optional[Union[Snowflake, int]] = None,
     ) -> Optional[app_commands.AppCommand]:
         commands_dict = self._global_app_commands
         if guild:
@@ -315,9 +310,9 @@ class MyCommandTree(app_commands.CommandTree):
         return None
 
     def get_app_command(
-            self,
-            value: Union[str, int],
-            guild: Optional[Union[Snowflake, int]] = None,
+        self,
+        value: Union[str, int],
+        guild: Optional[Union[Snowflake, int]] = None,
     ) -> Optional[app_commands.AppCommand]:
         def search_dict(d: AppCommandStore) -> Optional[app_commands.AppCommand]:
             for cmd_name, cmd in d.items():
@@ -340,7 +335,8 @@ class MyCommandTree(app_commands.CommandTree):
         ret: AppCommandStore = {}
 
         def unpack_options(
-                options: List[Union[app_commands.AppCommand, app_commands.AppCommandGroup, app_commands.Argument]]):
+            options: List[Union[app_commands.AppCommand, app_commands.AppCommandGroup, app_commands.Argument]]
+        ):
             for option in options:
                 if isinstance(option, app_commands.AppCommandGroup):
                     ret[option.qualified_name] = option  # type: ignore
@@ -353,9 +349,7 @@ class MyCommandTree(app_commands.CommandTree):
         return ret
 
     async def _update_cache(
-            self,
-            commands: List[app_commands.AppCommand],
-            guild: Optional[Union[Snowflake, int]] = None
+        self, commands: List[app_commands.AppCommand], guild: Optional[Union[Snowflake, int]] = None
     ) -> None:
         # because we support both int and Snowflake
         # we need to convert it to a Snowflake like object if it's an int
@@ -388,10 +382,11 @@ class MyCommandTree(app_commands.CommandTree):
             self._global_app_commands = {}
 
     def clear_commands(
-            self,
-            *, guild: Optional[Snowflake],
-            type: Optional[discord.AppCommandType] = None,
-            clear_app_commands_cache: bool = True
+        self,
+        *,
+        guild: Optional[Snowflake],
+        type: Optional[discord.AppCommandType] = None,
+        clear_app_commands_cache: bool = True,
     ) -> None:
         super().clear_commands(guild=guild)
         if clear_app_commands_cache:
@@ -452,16 +447,18 @@ class MyColourFormatter(logging.Formatter):
         return output
 
 
-def get_log_fmt(
-        handler: logging.Handler
-):
-    if isinstance(handler, logging.StreamHandler) and discord.utils.stream_supports_colour(handler.stream)\
-            and not isinstance(handler, RotatingFileHandler):  # force file handler fmt into `else`
+def get_log_fmt(handler: logging.Handler):
+    if (
+        isinstance(handler, logging.StreamHandler)
+        and discord.utils.stream_supports_colour(handler.stream)
+        and not isinstance(handler, RotatingFileHandler)
+    ):  # force file handler fmt into `else`
         formatter = MyColourFormatter()
     else:
         formatter = logging.Formatter(
             '{asctime} | {levelname:<7} | {name:<23} | {lineno:<4} | {funcName:<30} | {message}',
-            '%H:%M:%S %d/%m', style='{'
+            '%H:%M:%S %d/%m',
+            style='{',
         )
 
     return formatter

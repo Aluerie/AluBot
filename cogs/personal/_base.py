@@ -18,4 +18,4 @@ class HideoutBase(commands.Cog):
 
     @property
     def hideout(self) -> discord.Guild:
-        return self.bot.get_guild(Sid.alu)  # type: ignore
+        return self.bot.get_guild(Sid.test)  # type: ignore

@@ -1,3 +1,5 @@
+# /* cSpell:disable */
+
 # DISCORD
 MAIN_TOKEN = ''  # your bot's token
 DISCORD_CLIENT_ID = 123  # your bot's client id from oath page
@@ -42,3 +44,5 @@ REDDIT_USERNAME = ''
 
 # TWITTER
 TWITTER_BEARER_TOKEN = ''
+
+# /* cSpell:enable */

@@ -6,7 +6,6 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image
 
-from cogs.news.dota.twitter import download_twitter_images
 from utils.translator import translate
 from utils.var import Clr, Ems
 
@@ -87,15 +86,6 @@ class ToolsCog(commands.Cog, name='Tools'):
         file = self.bot.imgtools.img_to_file(img, filename='converted.png', fmt='PNG')
         e = discord.Embed(colour=Clr.prpl, description='Image was converted to `.png` format')
         await ctx.reply(embed=e, file=file)
-
-    @commands.hybrid_command()
-    @app_commands.describe(tweet_ids='Number(-s) in the end of tweet link')
-    async def twitter_image(self, ctx: Context, *, tweet_ids: str):
-        """Download image from tweets. \
-        Useful for Aluerie because Twitter is banned in Russia.
-        • `<tweet_ids>` are tweet ids - it's just numbers in the end of tweet links.
-        """
-        await download_twitter_images(ctx, tweet_ids=tweet_ids)
 
 
 async def setup(bot: AluBot):

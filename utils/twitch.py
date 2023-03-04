@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 import twitchio
 from discord.ext.commands import BadArgument
 
-from utils.lol.const import LOL_GAME_CATEGORY_TWITCH_ID
 from utils.formats import human_timedelta
+from utils.lol.const import LOL_GAME_CATEGORY_TWITCH_ID
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -22,7 +22,7 @@ class TwitchClient(twitchio.Client):
 
     async def twitch_id_by_name(self, user_name: str) -> int:
         """Gets twitch_id by user_login"""
-        user: twitchio.User = next(iter(await self.fetch_users(names=[user_name])), None)
+        user: Optional[twitchio.User] = next(iter(await self.fetch_users(names=[user_name])), None)
         if user:
             return user.id
         else:
@@ -44,23 +44,19 @@ class TwitchClient(twitchio.Client):
         else:
             raise BadArgument(f'Error checking stream `{user_login}`.\n User either does not exist or is banned.')
 
-    async def last_vod_link(
-            self,
-            user_id: int,
-            seconds_ago: int = 0,
-            md: bool = True
-    ) -> str:
+    async def last_vod_link(self, user_id: int, seconds_ago: int = 0, md: bool = True) -> str:
         """Get last vod link for user with `user_id` with timestamp as well"""
         try:
-            video: twitchio.Video = next(iter(
-                await self.fetch_videos(user_id=user_id, period='day')  # type: ignore # ???
-            ), None)
+            video: twitchio.Video = next(
+                iter(await self.fetch_videos(user_id=user_id, period='day')), None  # type: ignore # ???
+            )
 
             def get_time_from_hms(hms_time: str):
                 """Convert time after `?t=` in vod link into amount of seconds
 
                 03h51m08s -> 3 * 3600 + 51 * 60 + 8 = 13868
                 """
+
                 def regex_time(letter: str) -> int:
                     """h -> 3, m -> 51, s -> 8 for above example"""
                     pattern = r'\d+(?={})'.format(letter)
@@ -101,17 +97,7 @@ class TwitchClient(twitchio.Client):
 
 class TwitchStream:
 
-    __slots__ = (
-        'twitch_id',
-        'display_name',
-        'name',
-        'game',
-        'url',
-        'logo_url',
-        'online',
-        'title',
-        'preview_url'
-    )
+    __slots__ = ('twitch_id', 'display_name', 'name', 'game', 'url', 'logo_url', 'online', 'title', 'preview_url')
 
     if TYPE_CHECKING:
         display_name: str
@@ -153,6 +139,7 @@ class TwitchStream:
 
 async def main():
     from config import TWITCH_TOKEN
+
     tc = TwitchClient(token=TWITCH_TOKEN)
     await tc.connect()
     tw_id = await tc.twitch_id_by_name('gorgc')
@@ -163,6 +150,7 @@ async def main():
 
 if __name__ == '__main__':
     import asyncio
+
     logging.basicConfig()
     log.setLevel(logging.DEBUG)
 

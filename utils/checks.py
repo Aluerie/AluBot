@@ -20,9 +20,8 @@ def is_guild_owner():
         if ctx.author.id == ctx.guild.owner_id:
             return True
         else:
-            raise commands.CheckFailure(
-                message='Sorry, only server owner is allowed to use this command'
-            )
+            raise commands.CheckFailure(message='Sorry, only server owner is allowed to use this command')
+
     return commands.check(predicate)
 
 
@@ -34,9 +33,7 @@ def is_trustee():
         if ctx_ntr.user.id in trusted_ids:
             return True
         else:
-            raise commands.CheckFailure(
-                message='Sorry, only trusted people can use this command'
-            )
+            raise commands.CheckFailure(message='Sorry, only trusted people can use this command')
 
     def decorator(func: T) -> T:
         commands.check(pred)(func)
@@ -64,6 +61,7 @@ def is_owner():
 # ######################################################################################################################
 # ################################# Hybrid checks ######################################################################
 # ######################################################################################################################
+
 
 async def check_guild_permissions(ctx: GuildContext, perms: dict[str, bool], *, check=all):
     if await ctx.bot.is_owner(ctx.author):  # type: ignore

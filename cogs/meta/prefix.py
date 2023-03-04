@@ -20,9 +20,7 @@ if TYPE_CHECKING:
 class PrefixSetModal(discord.ui.Modal, title='New prefix setup'):
 
     prefix = discord.ui.TextInput(
-        label='New prefix for the server',
-        placeholder='Enter up to 3 character',
-        max_length=3
+        label='New prefix for the server', placeholder='Enter up to 3 character', max_length=3
     )
 
     def __init__(self, cog: PrefixSetupCog, paginator: SetupPages) -> None:
@@ -117,7 +115,6 @@ class GuildPrefix:
 
 
 class PrefixSetupCog(MetaBase, SetupCog, name='Prefix Setup'):
-
     @property
     def setup_emote(self):
         return '\N{HEAVY DOLLAR SIGN}'

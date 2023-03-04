@@ -16,6 +16,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
 
     More to come.
     """
+
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
@@ -41,9 +42,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
 
     @commands.Cog.listener()
     async def on_guild_emojis_update(
-            self, guild: discord.Guild,
-            before: Sequence[discord.Emoji],
-            after: Sequence[discord.Emoji]
+        self, guild: discord.Guild, before: Sequence[discord.Emoji], after: Sequence[discord.Emoji]
     ):
         query = 'SELECT emote_logs_id FROM guilds WHERE id=$1'
         val = await self.bot.pool.fetchval(query, guild.id)
@@ -70,7 +69,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
                 if not emote.managed and guild.id == Sid.alu:
                     query = 'DELETE FROM emotes WHERE id=$1'
                     await self.bot.pool.execute(query, emote.id)
-                e = discord.Embed(title=f'`:{emote.name}:` emote removed', colour=0xb22222)
+                e = discord.Embed(title=f'`:{emote.name}:` emote removed', colour=0xB22222)
                 e.description = f'[Image link]({emote.url})'
                 e.set_thumbnail(url=emote.url)
                 await set_author(emote, e, discord.AuditLogAction.emoji_delete)
@@ -78,7 +77,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
         # Add emote ###############################################################################
         elif diff_after != [] and diff_before == []:
             for emote in diff_after:
-                e = discord.Embed(title=f'`:{emote.name}:` emote created', colour=0x00ff7f)
+                e = discord.Embed(title=f'`:{emote.name}:` emote created', colour=0x00FF7F)
                 e.description = f'[Image link]({emote.url})'
                 e.set_thumbnail(url=emote.url)
                 await set_author(emote, e, discord.AuditLogAction.emoji_create)
@@ -97,7 +96,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
                 if not emote_after.managed and guild.id == Sid.alu:
                     query = 'UPDATE emotes SET name=$1 WHERE id=$2'
                     await self.bot.pool.execute(query, emote_after.id, str(emote_after))
-                e = discord.Embed(colour=0x1e90ff, description=f'[Image link]({emote_after.url})')
+                e = discord.Embed(colour=0x1E90FF, description=f'[Image link]({emote_after.url})')
                 replaced_or_renamed_word = "replaced by" if emote_after.managed else "renamed into"
                 e.title = f'`:{emote_before.name}:` emote {replaced_or_renamed_word} `:{emote_after.name}:`'
                 e.set_thumbnail(url=emote_after.url)

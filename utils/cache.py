@@ -15,7 +15,6 @@ async def get_resp_json(*, url: str) -> dict:
 
 
 class KeyCache:
-
     def __init__(self) -> None:
         self.cached_data = {}
         self.lock = asyncio.Lock()

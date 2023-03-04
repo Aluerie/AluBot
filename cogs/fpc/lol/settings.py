@@ -10,13 +10,7 @@ from discord.ext import commands
 from pyot.core.exceptions import NotFound
 from pyot.utils.lol import champion
 
-from utils.lol.const import (
-    platform_to_server,
-    server_to_platform,
-    LOL_LOGO,
-    LiteralServerUpper,
-    LiteralServer
-)
+from utils.lol.const import platform_to_server, server_to_platform, LOL_LOGO, LiteralServerUpper, LiteralServer
 from utils.lol.models import Account
 from utils.lol.utils import get_pyot_meraki_champ_diff_list, get_all_champ_names, get_meraki_patch
 from utils.checks import is_manager
@@ -32,13 +26,6 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-
-
-
-
-
-
-
 
 
 class AddStreamFlags(commands.FlagConverter, case_insensitive=True):

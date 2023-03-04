@@ -44,12 +44,12 @@ class ReactionRoles(commands.Cog):
         arg = arg.split(' ')
         start = int(arg[0])
         amount = int(arg[1])
-        emoji_array = arg[2:2 + amount]
+        emoji_array = arg[2 : 2 + amount]
         text = ''  # .join(arg[2+amount:]) + '\n\n'
-        for i, (emoji, role) in enumerate(zip(emoji_array, colour_array[start:start + amount]), start=start+1):
+        for i, (emoji, role) in enumerate(zip(emoji_array, colour_array[start : start + amount]), start=start + 1):
             text += f'{i}. {emoji} - {role.mention}\n'
 
-        e = discord.Embed(title=f'Colour roles №{start + 1}-{start + amount}', colour=0x9678b6)
+        e = discord.Embed(title=f'Colour roles №{start + 1}-{start + amount}', colour=0x9678B6)
         msg = await ctx.reply(content=text, embed=e)
         for emoji in emoji_array:
             await msg.add_reaction(emoji)
@@ -88,15 +88,15 @@ class ReactionRoles(commands.Cog):
         arg = arg.split(' ')
         start = int(arg[0])
         amount = int(arg[1])
-        roles_names = arg[2:2 + amount]
+        roles_names = arg[2 : 2 + amount]
         roles_array = self.get_roles_by_mentions(roles_names)
-        emoji_array = arg[2 + amount:2 + amount + amount]
+        emoji_array = arg[2 + amount : 2 + amount + amount]
 
         text = ''
-        for emoji, role in zip(emoji_array, roles_array[start:start + amount]):
+        for emoji, role in zip(emoji_array, roles_array[start : start + amount]):
             text += '{} - {}\n'.format(emoji, role.mention)
 
-        e = discord.Embed(title=' '.join(arg[2 + 2 * amount:]), colour=0x9678b6)
+        e = discord.Embed(title=' '.join(arg[2 + 2 * amount :]), colour=0x9678B6)
         msg = await ctx.reply(content=text, embed=e)
         for emoji in emoji_array:
             await msg.add_reaction(emoji)

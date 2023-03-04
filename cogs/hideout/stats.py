@@ -21,7 +21,6 @@ TOTAL_BOTS_CHANNEL = 795743065787990066
 
 
 class StatsVoiceChannels(HideoutBase):
-
     async def cog_load(self) -> None:
         self.my_time.start()
         self.total_members.start()

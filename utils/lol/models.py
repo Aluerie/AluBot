@@ -19,12 +19,7 @@ if TYPE_CHECKING:
     from pyot.models.lol.match import MatchParticipantData
     from utils.bot import AluBot
 
-__all__ = (
-    'Account',
-    'Match',
-    'LiveMatch',
-    'PostMatchPlayer'
-)
+__all__ = ('Account', 'Match', 'LiveMatch', 'PostMatchPlayer')
 
 
 log = logging.getLogger(__name__)
@@ -32,11 +27,7 @@ log.setLevel(logging.DEBUG)
 
 
 class Account:
-    def __init__(
-            self,
-            platform: LiteralPlatform,
-            account_name: str
-    ):
+    def __init__(self, platform: LiteralPlatform, account_name: str):
         self.platform: LiteralPlatform = platform
         self.account_name = account_name
 
@@ -60,32 +51,26 @@ class Account:
 
 
 class Match(Account):
-    def __init__(
-            self,
-            match_id: int,
-            platform: LiteralPlatform,
-            account_name: str
-    ):
+    def __init__(self, match_id: int, platform: LiteralPlatform, account_name: str):
         super().__init__(platform, account_name)
         self.match_id: int = match_id
 
 
 class LiveMatch(Match):
-
     def __init__(
-            self,
-            *,
-            match_id: int,
-            platform: LiteralPlatform,
-            account_name: str,
-            start_time: int,
-            champ_id: int,
-            all_champ_ids: List[int],
-            twitch_id: int,
-            spells: List[Spell],
-            runes: List[Rune],
-            channel_ids: List[int],
-            account_id: str
+        self,
+        *,
+        match_id: int,
+        platform: LiteralPlatform,
+        account_name: str,
+        start_time: int,
+        champ_id: int,
+        all_champ_ids: List[int],
+        twitch_id: int,
+        spells: List[Spell],
+        runes: List[Rune],
+        channel_ids: List[int],
+        account_id: str,
     ):
         super().__init__(match_id, platform, account_name)
         self.start_time = start_time
@@ -115,12 +100,7 @@ class LiveMatch(Match):
     async def champ_icon_url(self):
         return await icon_url_by_champ_id(self.champ_id)
 
-    async def better_thumbnail(
-            self,
-            stream_preview_url: str,
-            display_name: str,
-            bot: AluBot
-    ) -> Image.Image:
+    async def better_thumbnail(self, stream_preview_url: str, display_name: str, bot: AluBot) -> Image.Image:
         log.debug('I m here #1')
         img = await bot.imgtools.url_to_img(stream_preview_url)
         width, height = img.size
@@ -166,7 +146,7 @@ class LiveMatch(Match):
         ts = await bot.twitch.get_twitch_stream(self.twitch_id)
         img_file = bot.imgtools.img_to_file(
             await self.better_thumbnail(ts.preview_url, ts.display_name, bot),
-            filename=f'{ts.display_name.replace("_", "")}-is-playing-{await champion.key_by_id(self.champ_id)}.png'
+            filename=f'{ts.display_name.replace("_", "")}-is-playing-{await champion.key_by_id(self.champ_id)}.png',
         )
         log.debug('LF | made a better thumbnail')
         e = discord.Embed(color=Clr.rspbrry, url=ts.url)
@@ -183,14 +163,7 @@ class LiveMatch(Match):
 
 
 class PostMatchPlayer:
-
-    def __init__(
-            self,
-            *,
-            player_data: MatchParticipantData,
-            channel_id: int,
-            message_id: int
-    ):
+    def __init__(self, *, player_data: MatchParticipantData, channel_id: int, message_id: int):
         self.channel_id = channel_id
         self.message_id = message_id
 
@@ -208,24 +181,15 @@ class PostMatchPlayer:
 
         draw = ImageDraw.Draw(img)
         w3, h3 = bot.imgtools.get_text_wh(self.kda, font)
-        draw.text(
-            (0, height - last_row_h - h3),
-            self.kda,
-            font=font,
-            align="right"
-        )
+        draw.text((0, height - last_row_h - h3), self.kda, font=font, align="right")
         w2, h2 = bot.imgtools.get_text_wh(self.outcome, font)
-        colour_dict = {
-            'Win': str(MP.green(shade=800)),
-            'Loss': str(MP.red(shade=900)),
-            'No Scored': (255, 255, 255)
-        }
+        colour_dict = {'Win': str(MP.green(shade=800)), 'Loss': str(MP.red(shade=900)), 'No Scored': (255, 255, 255)}
         draw.text(
             (0, height - last_row_h - h3 - h2 - 5),
             self.outcome,
             font=font,
             align="center",
-            fill=colour_dict[self.outcome]
+            fill=colour_dict[self.outcome],
         )
 
         item_img_urls = [(await i.get()).icon_abspath for i in self.items if i.id]

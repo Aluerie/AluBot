@@ -41,6 +41,7 @@ async def get_sorted_emote_dict(mode, pool: Pool):
             return True
         else:
             return False
+
     query = 'SELECT * FROM emotes'
     rows = await pool.fetch(query)
     for row in rows:
@@ -81,6 +82,7 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
 
     The bot keeps data for one month.
     """
+
     def __init__(self, bot):
         self.bot: AluBot = bot
 
@@ -107,10 +109,7 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
                 query = 'UPDATE emotes SET month_array[30]=month_array[30]+1 WHERE id=$1;'
                 await self.bot.pool.execute(query, emote_id)
 
-    @commands.hybrid_command(
-        name='topemotes',
-        description='Show emotes usage stats'
-    )
+    @commands.hybrid_command(name='topemotes', description='Show emotes usage stats')
     @app_commands.describe(keyword='Possible keywords: `all`, `ani`, `nonani`')
     async def topemotes(self, ctx, keyword: Literal['all', 'ani', 'nonani'] = 'all'):
         """Show emotes usage stats for `keyword` group ;\

@@ -12,6 +12,7 @@ PERSONAL_COGS = (
     PersonalCommands,
 )
 
+
 async def setup(bot):
     for C in PERSONAL_COGS:
         await bot.add_cog(C(bot))

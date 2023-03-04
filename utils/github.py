@@ -20,20 +20,43 @@ async def human_commit(repo, commits, test_num=0):
 
     ignored_files = [
         'game/bin/built_from_cl.txt',  # just contains build version number like `7200634`
-        'game/dota/steam.inf'  # contains steam client server version which we have in embed title anyway
+        'game/dota/steam.inf',  # contains steam client server version which we have in embed title anyway
     ]
     ignored_gennames = [
         'linux',  # let's ignore all files about linux
         'win64',  # same about Windows
     ]
     loc_langs = [  # 'english' and 'localization' are not there
-        'brazilian', 'bulgarian', 'czech', 'danish', 'dutch', 'finnish', 'french', 'german', 'greek',
-        'hungarian', 'italian', 'japanese', 'korean', 'koreana', 'latam', 'norwegian', 'polish', 'portuguese',
-        'romanian', 'russian', 'schinese', 'spanish', 'swedish', 'tchinese', 'thai', 'turkish', 'ukrainian', 'vietnamese'
+        'brazilian',
+        'bulgarian',
+        'czech',
+        'danish',
+        'dutch',
+        'finnish',
+        'french',
+        'german',
+        'greek',
+        'hungarian',
+        'italian',
+        'japanese',
+        'korean',
+        'koreana',
+        'latam',
+        'norwegian',
+        'polish',
+        'portuguese',
+        'romanian',
+        'russian',
+        'schinese',
+        'spanish',
+        'swedish',
+        'tchinese',
+        'thai',
+        'turkish',
+        'ukrainian',
+        'vietnamese',
     ]
-    crc_checks = [  # useful to check myself, also have mentions of non-public files
-        'game/dota/pak01_dir.txt'
-    ]
+    crc_checks = ['game/dota/pak01_dir.txt']  # useful to check myself, also have mentions of non-public files
 
     patch_set = PatchSet(await get_diff_string())
     human = set()  # set containing strings that will be human-readable patch notes
@@ -48,6 +71,7 @@ async def human_commit(repo, commits, test_num=0):
                     if ln.startswith('+'):
                         res_list.append(ln[1:].split(' ')[0])
         return res_list
+
     crc_files = get_crc_checked_files()
 
     def remove_from_crc(filefilename):
@@ -90,16 +114,10 @@ async def human_commit(repo, commits, test_num=0):
                         f'"{remove_tri_bracket_content(inline_wordbyword_diff(remove_dict[key], add_dict[key]))}"'
                     )
                 else:
-                    human.add(
-                        f'Created string `{key}`: '
-                        f'"{remove_tri_bracket_content(add_dict[key])}"'
-                    )
+                    human.add(f'Created string `{key}`: ' f'"{remove_tri_bracket_content(add_dict[key])}"')
             for key in remove_dict:
                 if key not in add_dict:
-                    human.add(
-                        f'Removed string `{key}`: '
-                        f'"{remove_tri_bracket_content(remove_dict[key])}"'
-                    )
+                    human.add(f'Removed string `{key}`: ' f'"{remove_tri_bracket_content(remove_dict[key])}"')
             remove_from_crc(pfile.path)
             continue
         elif pfile.path == 'game/dota/pak01_dir/scripts/items/items_game.txt':
@@ -129,6 +147,7 @@ async def human_commit(repo, commits, test_num=0):
                             else:
                                 names_array.append(name_candidate)
                                 data_array.append([key, old_dict[key], new_dict[key]])
+
             my_dict_diff(curr_dict, old_dict)
             for name, data in zip(names_array, data_array):
                 human.add('Item `{0} ` was modified: `{1}` from `{2}` to `{3}`'.format(name, *data))
@@ -143,7 +162,7 @@ async def human_commit(repo, commits, test_num=0):
                 async with session.get(old_url) as resp:
                     old_dict1 = vdf.loads(await resp.text())
 
-            #print(curr_dict)
+            # print(curr_dict)
             rem_array = []
             add_array = []
             mod_array = []

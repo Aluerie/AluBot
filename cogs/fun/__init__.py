@@ -6,10 +6,7 @@ from .rock_paper_scissors import RockPaperScissorsCommand
 from .other import Other
 
 
-class Fun(
-    RockPaperScissorsCommand,
-    Other
-):
+class Fun(RockPaperScissorsCommand, Other):
     """
     Commands to have fun with
     """

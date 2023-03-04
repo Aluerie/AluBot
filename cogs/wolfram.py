@@ -26,7 +26,7 @@ class WolframAlpha(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.wa_basic_url = (
-            f'https://api.wolframalpha.com/v1/simple?appid={WOLFRAM_TOKEN}' 
+            f'https://api.wolframalpha.com/v1/simple?appid={WOLFRAM_TOKEN}'
             f'&background=black&foreground=white&layout=labelbar&i='
         )
         self.wa_short_url = f"https://api.wolframalpha.com/v1/result?appid={WOLFRAM_TOKEN}&i="
@@ -49,17 +49,10 @@ class WolframAlpha(commands.Cog):
         async with self.bot.session.get(question_url) as resp:
             await ctx.reply(
                 content=f"```py\n{query}```",
-                file=discord.File(
-                    fp=BytesIO(await resp.read()),
-                    filename="WolframAlpha.png"
-                )
+                file=discord.File(fp=BytesIO(await resp.read()), filename="WolframAlpha.png"),
             )
 
-    @commands.hybrid_command(
-        name="wolfram_short",
-        description="Get short answer from WolframAlpha.com",
-        aliases=['wa']
-    )
+    @commands.hybrid_command(name="wolfram_short", description="Get short answer from WolframAlpha.com", aliases=['wa'])
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
     async def wolfram_shorter(self, ctx: Context, *, query: str):

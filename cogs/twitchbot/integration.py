@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 
 
 class Integration(commands.Cog):
-
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
@@ -35,7 +34,7 @@ class Integration(commands.Cog):
 
     async def cog_unload(self) -> None:
         pass
-    
+
     @commands.command()
     async def twitch_hi(self, ctx: Context):
         await self.bot.twitchbot.get_channel('Aluerie').send('yo')  # type: ignore

@@ -18,22 +18,14 @@ if TYPE_CHECKING:
     from utils.twitch import TwitchClient
 
 
-__all__ = (
-    'Match',
-    'ActiveMatch',
-    'PostMatchPlayerData',
-    'OpendotaRequestMatch'
-)
+__all__ = ('Match', 'ActiveMatch', 'PostMatchPlayerData', 'OpendotaRequestMatch')
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
 class Match:
-    def __init__(
-            self,
-            match_id: int
-    ):
+    def __init__(self, match_id: int):
         self.match_id = match_id
 
     @property
@@ -61,11 +53,7 @@ class Match:
         return f'/[Dbuff]({self.dbuff})/[ODota]({self.odota})/[Stratz]({self.stratz})'
 
 
-colour_twitch_status_dict = {
-    'NoTwitch': MP.gray(),
-    'Live': Clr.prpl,
-    'Offline': Clr.twitch
-}
+colour_twitch_status_dict = {'NoTwitch': MP.gray(), 'Live': Clr.prpl, 'Offline': Clr.twitch}
 
 
 class ActiveMatch(Match):
@@ -78,16 +66,16 @@ class ActiveMatch(Match):
     twitch_status: str
 
     def __init__(
-            self,
-            *,
-            match_id: int,
-            start_time: int,
-            player_name: str,
-            hero_id: int,
-            hero_ids: List[int],
-            server_steam_id: int,
-            twitchtv_id: Optional[int] = None,
-            channel_ids: List[int],
+        self,
+        *,
+        match_id: int,
+        start_time: int,
+        player_name: str,
+        hero_id: int,
+        hero_ids: List[int],
+        server_steam_id: int,
+        twitchtv_id: Optional[int] = None,
+        channel_ids: List[int],
     ):
         super().__init__(match_id)
         self.start_time = start_time
@@ -160,7 +148,7 @@ class ActiveMatch(Match):
             filename=(
                 f'{self.twitch_status}-{self.display_name.replace("_", "")}-'
                 f'{(await self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
-            )
+            ),
         )
         e = discord.Embed(colour=self.colour, url=self.url)
         e.description = (
@@ -178,14 +166,15 @@ class PostMatchPlayerData:
     """
     Class
     """
+
     def __init__(
-            self,
-            *,
-            player_data: dict,
-            channel_id: int,
-            message_id: int,
-            twitch_status: Literal['NoTwitch', 'Offline', 'Online'],
-            api_calls_done: int
+        self,
+        *,
+        player_data: dict,
+        channel_id: int,
+        message_id: int,
+        twitch_status: Literal['NoTwitch', 'Offline', 'Online'],
+        api_calls_done: int,
     ):
         self.channel_id = channel_id
         self.message_id = message_id
@@ -231,27 +220,12 @@ class PostMatchPlayerData:
 
         draw = ImageDraw.Draw(img)
         w3, h3 = bot.imgtools.get_text_wh(self.kda, font_kda)
-        draw.text(
-            (0, height - h3),
-            self.kda,
-            font=font_kda,
-            align="right"
-        )
+        draw.text((0, height - h3), self.kda, font=font_kda, align="right")
 
         draw = ImageDraw.Draw(img)
         w2, h2 = bot.imgtools.get_text_wh(self.outcome, font_kda)
-        colour_dict = {
-            'Win': str(MP.green(shade=800)),
-            'Loss': str(MP.red(shade=900)),
-            'Not Scored': (255, 255, 255)
-        }
-        draw.text(
-            (0, height - h3 - h2),
-            self.outcome,
-            font=font_kda,
-            align="center",
-            fill=colour_dict[self.outcome]
-        )
+        colour_dict = {'Win': str(MP.green(shade=800)), 'Loss': str(MP.red(shade=900)), 'Not Scored': (255, 255, 255)}
+        draw.text((0, height - h3 - h2), self.outcome, font=font_kda, align="center", fill=colour_dict[self.outcome])
 
         font_m = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 19)
 
@@ -260,12 +234,7 @@ class PostMatchPlayerData:
                 if item_id == await item.id_by_key(i['key']):
                     text = f"{math.ceil(i['time']/60)}m"
                     w7, h7 = bot.imgtools.get_text_wh(text, font_m)
-                    draw.text(
-                        (x_left, height - h7),
-                        text,
-                        font=font_m,
-                        align="left"
-                    )
+                    draw.text((x_left, height - h7), text, font=font_m, align="left")
                     return
 
         left_i = width - 69 * 6
@@ -292,12 +261,7 @@ class PostMatchPlayerData:
         for count, txt in enumerate(talent_strs):
             draw = ImageDraw.Draw(img)
             w4, h4 = bot.imgtools.get_text_wh(txt, font)
-            draw.text(
-                (width - w4, last_row_y - 30 * 2 - 22 * count),
-                txt,
-                font=font,
-                align="right"
-            )
+            draw.text((width - w4, last_row_y - 30 * 2 - 22 * count), txt, font=font, align="right")
         right = left_i
         if self.aghs_blessing:
             bless_img = await bot.imgtools.url_to_img(ability.lazy_aghs_bless_url)
@@ -348,12 +312,7 @@ class OpendotaTooManyFails(Exception):
 
 
 class OpendotaRequestMatch:
-
-    def __init__(
-            self,
-            match_id: int,
-            job_id: int = None
-    ):
+    def __init__(self, match_id: int, job_id: int = None):
         self.match_id = match_id
         self.job_id: Union[int, None] = job_id
 
@@ -365,21 +324,13 @@ class OpendotaRequestMatch:
         self.dict_ready = False
         self.api_calls_done = 0
 
-    async def post_request(
-            self,
-            bot: AluBot
-    ) -> int:
+    async def post_request(self, bot: AluBot) -> int:
         """
         Make opendota request parsing API call
         @return job_id as integer or False in case of not ok response
         """
-        async with bot.session.post(
-                f'{ODOTA_API_URL}/request/{self.match_id}'
-        ) as resp:
-            log.debug(
-                f'OK: {resp.ok} json: {await resp.json()} '
-                f'tries: {self.tries} fails: {self.fails}'
-            )
+        async with bot.session.post(f'{ODOTA_API_URL}/request/{self.match_id}') as resp:
+            log.debug(f'OK: {resp.ok} json: {await resp.json()} ' f'tries: {self.tries} fails: {self.fails}')
             bot.update_odota_ratelimit(resp.headers)
             self.api_calls_done += 1
             if resp.ok:
@@ -387,18 +338,13 @@ class OpendotaRequestMatch:
             else:
                 raise OpendotaNotOK('POST /request response was not OK')
 
-    async def get_request(
-            self,
-            bot: AluBot
-    ) -> Union[dict, False]:
+    async def get_request(self, bot: AluBot) -> Union[dict, False]:
         """
         Make opendota request parsing API call
         @return job_id as integer or False in case of not ok response
         @raise OpendotaNotOK
         """
-        async with bot.session.get(
-                f'{ODOTA_API_URL}/request/{self.job_id}'
-        ) as resp:
+        async with bot.session.get(f'{ODOTA_API_URL}/request/{self.job_id}') as resp:
             log.debug(
                 f'OK: {resp.ok} json: {await resp.json()} job_id: {self.job_id} '
                 f'tries: {self.tries} fails: {self.fails}'
@@ -410,14 +356,9 @@ class OpendotaRequestMatch:
             else:
                 raise OpendotaNotOK('GET /request response was not OK')
 
-    async def get_matches(
-            self,
-            bot: AluBot
-    ) -> dict:
+    async def get_matches(self, bot: AluBot) -> dict:
         """Make opendota request match data API call"""
-        async with bot.session.get(
-                f'{ODOTA_API_URL}/matches/{self.match_id}'
-        ) as resp:
+        async with bot.session.get(f'{ODOTA_API_URL}/matches/{self.match_id}') as resp:
             log.debug(
                 f'OK: {resp.ok} match_id: {self.match_id} job_id: {self.job_id} '
                 f'tries: {self.tries} fails: {self.fails}'
@@ -434,10 +375,7 @@ class OpendotaRequestMatch:
             else:
                 raise OpendotaNotOK('GET /matches response was not OK')
 
-    async def workflow(
-            self,
-            bot: AluBot
-    ) -> Union[dict, None]:
+    async def workflow(self, bot: AluBot) -> Union[dict, None]:
         if self.fails > 10 or self.parse_attempts > 10:
             raise OpendotaTooManyFails('We failed too many times')
         elif not self.is_first_loop_skipped:
@@ -477,6 +415,6 @@ if __name__ == '__main__':
         hero_ids=[3, 4, 5],
         server_steam_id=9999,
         twitchtv_id=7777,
-        channel_ids=[8888]
+        channel_ids=[8888],
     )
     print(xcali.__dict__)

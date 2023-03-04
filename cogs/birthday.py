@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal, Optional, List
 
 import datetime
 import itertools
@@ -7,6 +6,7 @@ import re
 import zoneinfo
 from difflib import get_close_matches
 from functools import lru_cache
+from typing import TYPE_CHECKING, List, Literal, Optional
 
 import discord
 from discord import app_commands
@@ -14,7 +14,7 @@ from discord.ext import commands, tasks
 from numpy.random import choice
 
 from utils.pagination import EnumeratedPages
-from utils.var import Cid, Ems, Rid, Clr, Sid
+from utils.var import Cid, Clr, Ems, Rid, Sid
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -73,7 +73,7 @@ gratz_bank = [
     'Happy birthday, gorgeous! You are another year older and I just can’t see it. Have a blast! '
     'Wishing you the best of the best!',
     'Wishing you greatest birthday ever, full of love and joy from the moment you open your eyes in the morning '
-    'until you sleep for the night.'
+    'until you sleep for the night.',
 ]
 
 
@@ -91,8 +91,18 @@ def bdate_str(bdate, num_mod=False):
 class SetBirthdayFlags(commands.FlagConverter, case_insensitive=True):
     day: commands.Range[int, 1, 31]
     month: Literal[
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
     ]
     year: Optional[commands.Range[int, 1970]]
     timezone: Optional[str]
@@ -105,6 +115,7 @@ class Birthday(commands.Cog):
     which on your birthday gives you a priority in the members list and makes the bot \
     congratulate you.
     """
+
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
@@ -130,7 +141,17 @@ class Birthday(commands.Cog):
         all_timezones += [
             f'GMT{i}'
             for i in [
-                '+13:00', '+14:00', '+12:45', '+9:30', '+5:30', '-3:30', '+5:45', '+6:30', '+8:45', '+10:30', '+3:30',
+                '+13:00',
+                '+14:00',
+                '+12:45',
+                '+9:30',
+                '+5:30',
+                '-3:30',
+                '+5:45',
+                '+6:30',
+                '+8:45',
+                '+10:30',
+                '+3:30',
                 '-9:30',
             ]
         ]
@@ -145,11 +166,13 @@ class Birthday(commands.Cog):
         name='set',
         aliases=['edit'],
         description='Set your birthday',
-        usage='day: <day> month: <month as word> year: [year] timezone: [timezone]'
+        usage='day: <day> month: <month as word> year: [year] timezone: [timezone]',
     )
     @app_commands.describe(
-        day='Day', month='Month', year='Year',
-        timezone='formats: `GMT+1:00`, `Europe/Paris` or `Etc/GMT-1` (sign is inverted for Etc/GMT).'
+        day='Day',
+        month='Month',
+        year='Year',
+        timezone='formats: `GMT+1:00`, `Europe/Paris` or `Etc/GMT-1` (sign is inverted for Etc/GMT).',
     )
     @app_commands.autocomplete(timezone=timezone_autocomplete)  # type: ignore
     async def set(self, ctx: Context, *, bdate_flags: SetBirthdayFlags):
@@ -158,6 +181,7 @@ class Birthday(commands.Cog):
         Timezone can be set in `GMT+-H:MM` format or standard IANA name like
         `Europe/Paris` or `Etc/GMT-1` (remember sign is inverted for Etc).
         """
+
         def get_dtime() -> datetime:
             if bdate_flags.year:
                 fmt, string = '%d/%B/%Y', f'{bdate_flags.day}/{bdate_flags.month}/{bdate_flags.year}'
@@ -166,9 +190,7 @@ class Birthday(commands.Cog):
             try:
                 return datetime.datetime.strptime(string, fmt)
             except ValueError:
-                raise commands.BadArgument(
-                    "Invalid date given, please recheck the date."
-                )
+                raise commands.BadArgument("Invalid date given, please recheck the date.")
 
         dmy_dtime = get_dtime()
 
@@ -304,7 +326,7 @@ class Birthday(commands.Cog):
             per_page=20,
             title='Birthday List',
             colour=Clr.prpl,
-            footer_text=f'DD/MM/YYYY format | With love, {guild.me.display_name}'
+            footer_text=f'DD/MM/YYYY format | With love, {guild.me.display_name}',
         )
         await pgs.start()
 

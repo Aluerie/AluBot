@@ -33,6 +33,7 @@ class Codeblock:
             - if it is singular ` codeblock
             - if it is not codeblock
     """
+
     def __init__(self, code: str, language: str = ''):
         self.code: str = code
         self.language: str = language

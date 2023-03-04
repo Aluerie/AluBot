@@ -23,8 +23,7 @@ class ToolsCog(commands.Cog, name='Tools'):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.translate_ctx_menu = app_commands.ContextMenu(
-            name='Translate to English', 
-            callback=self.translate_ctx_menu_callback
+            name='Translate to English', callback=self.translate_ctx_menu_callback
         )
 
     @property

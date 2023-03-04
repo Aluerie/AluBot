@@ -395,7 +395,7 @@ class FPCBase:
             names_string = list(local_dict.values())[3]
             names = [b for x in names_string.split(",") if (b := x.lstrip().rstrip())]
         return names
- 
+
     async def player_add_remove(
         self, ctx: Context | discord.Interaction[AluBot], local_dict: Dict[str, Any], *, mode_add: bool
     ) -> None:
@@ -411,7 +411,7 @@ class FPCBase:
         player_names = self.get_names_list_from_locals(ctx, local_dict)
         if isinstance(ctx, discord.Interaction):
             ctx = await Context.from_interaction(ctx)
-    
+
         if not player_names:
             raise commands.BadArgument("You cannot use this command without naming at least one player.")
         await ctx.typing()
@@ -581,7 +581,6 @@ class FPCBase:
 
 
 class TwitchAccountCheckBase(commands.Cog):
-
     def __init__(self, bot: AluBot, table_name: str, day: int):
         self.bot: AluBot = bot
         self.table_name: str = table_name

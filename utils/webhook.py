@@ -8,11 +8,7 @@ if TYPE_CHECKING:
 webhookdict = {}
 
 
-async def user_webhook(
-        ctx: Context, 
-        content: Optional[str] = '',
-        embed: Optional[Embed] = None
-):
+async def user_webhook(ctx: Context, content: Optional[str] = '', embed: Optional[Embed] = None):
     found = 0
     webhook = None
     array = await ctx.channel.webhooks()

@@ -38,7 +38,7 @@ async def schedule_work(
 
     async with session.get(MATCHES_URL) as r:
         soup = BeautifulSoup(await r.read(), 'html.parser')
-    e = discord.Embed(title='Dota 2 Pro Matches Schedule', url=MATCHES_URL, colour=0x042b4c)
+    e = discord.Embed(title='Dota 2 Pro Matches Schedule', url=MATCHES_URL, colour=0x042B4C)
     e.set_author(name='Info from Liquipedia.net', icon_url=LP_ICON, url=MATCHES_URL)
     e.set_footer(text=schedule_mode.label_name, icon_url=DOTA_LOGO)
 
@@ -226,9 +226,7 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
     @app_commands.command(name='schedule')
     @app_commands.rename(schedule_mode='filter')
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in select_options])
-    async def slash_schedule(
-        self, ntr: discord.Interaction, schedule_mode: int = 1, query: Optional[str] = None
-    ):
+    async def slash_schedule(self, ntr: discord.Interaction, schedule_mode: int = 1, query: Optional[str] = None):
         """Dota 2 Pro Matches Schedule
 
         Parameters

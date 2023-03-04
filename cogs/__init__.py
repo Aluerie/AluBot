@@ -6,9 +6,7 @@ except ModuleNotFoundError:
     TEST_EXTENSIONS = tuple()
 
 # EXTENSIONS
-IGNORED_EXTENSIONS = (
-    'cogs.beta',
-)
+IGNORED_EXTENSIONS = ('cogs.beta',)
 INITIAL_EXTENSIONS = ("jishaku",)
 MY_EXTENSIONS = tuple(module.name for module in iter_modules(__path__, f'{__package__}.'))
 

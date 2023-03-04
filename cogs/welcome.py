@@ -48,9 +48,7 @@ async def welcome_image(bot: AluBot, member: discord.Member):
 
 
 async def welcome_message(
-        bot: AluBot,
-        member: discord.Member,
-        back: bool = False
+    bot: AluBot, member: discord.Member, back: bool = False
 ) -> (str, discord.Embed, discord.File):
     image = await welcome_image(bot, member)
 
@@ -58,12 +56,13 @@ async def welcome_message(
         wave_emote, the_word = Ems.DankLove, 'BACK'
     else:
         wave_emote, the_word = Ems.peepoWave, ''
-    content_text = '**💜 Welcome {2} to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'\
-        .format(member.mention, wave_emote, the_word)
+    content_text = '**💜 Welcome {2} to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'.format(
+        member.mention, wave_emote, the_word
+    )
 
     if not member.bot:
         description = (
-            f'**💜 <@{Uid.alu}> is our princess ' 
+            f'**💜 <@{Uid.alu}> is our princess '
             f'and I\'m her bot ! {Ems.peepoRose} {Ems.peepoRose} {Ems.peepoRose}**\n'
             f'1️⃣ Read the rules and useful info in <#724996010169991198> {Ems.PepoG}\n'
             f'2️⃣ Choose some fancy roles in <#725941486063190076> {Ems.peepoNiceDay}\n'
@@ -136,10 +135,9 @@ class Welcome(commands.Cog):
     async def on_member_unban(self, guild: discord.Guild, member: discord.Member):
         if guild.id != Sid.alu:
             return
-        e = discord.Embed(description='{0} {0} {0}'.format(Ems.PogChampPepe), color=0x00ff7f)
+        e = discord.Embed(description='{0} {0} {0}'.format(Ems.PogChampPepe), color=0x00FF7F)
         e.set_author(
-            name=f'{member.display_name} was just unbanned from the server',
-            icon_url=member.display_avatar.url
+            name=f'{member.display_name} was just unbanned from the server', icon_url=member.display_avatar.url
         )
         e.set_footer(text=f"With love, {guild.me.display_name}")
         msg = await self.bot.get_channel(Cid.welcome).send(embed=e)

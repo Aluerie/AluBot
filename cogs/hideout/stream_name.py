@@ -37,9 +37,7 @@ class StreamChannelName(HideoutBase, name='\N{CINEMA}streaming_room Control'):
 
     @commands.Cog.listener()
     async def on_voice_state_update(
-            self, member: discord.Member,
-            before: discord.VoiceState,
-            after: discord.VoiceState
+        self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState
     ):
         if member.guild.id != Sid.alu:
             return
@@ -47,43 +45,33 @@ class StreamChannelName(HideoutBase, name='\N{CINEMA}streaming_room Control'):
         voice_role = guild.get_role(Rid.voice)
         if before.channel is None and after.channel is not None:  # joined the voice channel
             await member.add_roles(voice_role)
-            e = discord.Embed(color=0x00ff7f)
-            e.set_author(
-                name=f'{member.display_name} entered {after.channel.name}',
-                icon_url=member.display_avatar.url
-            )
+            e = discord.Embed(color=0x00FF7F)
+            e.set_author(name=f'{member.display_name} entered {after.channel.name}', icon_url=member.display_avatar.url)
             return await after.channel.send(embed=e)
         if before.channel is not None and after.channel is None:  # quit the voice channel
             await member.remove_roles(voice_role)
             e = discord.Embed(color=0x800000)
-            e.set_author(
-                name=f'{member.display_name} left {before.channel.name}',
-                icon_url=member.display_avatar.url
-            )
+            e.set_author(name=f'{member.display_name} left {before.channel.name}', icon_url=member.display_avatar.url)
             return await before.channel.send(embed=e)
         if before.channel is not None and after.channel is not None:  # changed voice channels
             if before.channel.id != after.channel.id:
-                e = discord.Embed(color=0x6495ed)
+                e = discord.Embed(color=0x6495ED)
                 e.set_author(
                     name=f'{member.display_name} went from {before.channel.name} to {after.channel.name}',
-                    icon_url=member.display_avatar.url
+                    icon_url=member.display_avatar.url,
                 )
                 await before.channel.send(embed=e)
                 return await after.channel.send(embed=e)
 
     @app_commands.guilds(Sid.alu)
-    @commands.hybrid_group(
-        name='streaming-room',
-        aliases=['stream']
-    )
+    @commands.hybrid_group(name='streaming-room', aliases=['stream'])
     async def streaming_room(self, ctx: Context):
         """Group command about Dota, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
     @streaming_room.command(
-        name='title',
-        description=f'Set title for #{ORIGINAL_NAME} so people know what you are streaming'
+        name='title', description=f'Set title for #{ORIGINAL_NAME} so people know what you are streaming'
     )
     @app_commands.describe(text=f'new title for #{ORIGINAL_NAME}')
     async def title(self, ctx: Context, *, text: str):

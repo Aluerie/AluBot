@@ -92,11 +92,7 @@ class Info(commands.Cog, name='Info'):
         await give_text_list(Rid.bots, Cid.bot_spam, 959982214827892737)
         await give_text_list(Rid.nsfwbots, Cid.nsfw_bob_spam, 959982171492323388)
 
-    @commands.hybrid_command(
-        name='gmt',
-        aliases=['utc'],
-        description="Show GMT(UTC) time"
-    )
+    @commands.hybrid_command(name='gmt', aliases=['utc'], description="Show GMT(UTC) time")
     async def gmt(self, ctx: Context):
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
@@ -109,11 +105,7 @@ class Info(commands.Cog, name='Info'):
         e.add_field(name='Date:', value=now_date)
         await ctx.reply(embed=e)
 
-    @commands.hybrid_command(
-        name='role',
-        aliases=['members', 'roleinfo'],
-        description="View info about selected role"
-    )
+    @commands.hybrid_command(name='role', aliases=['members', 'roleinfo'], description="View info about selected role")
     @app_commands.describe(role='Choose role to get info about')
     async def roleinfo(self, ctx, *, role: discord.Role):
         """View info about selected role"""
@@ -121,7 +113,10 @@ class Info(commands.Cog, name='Info'):
         e.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
         await ctx.reply(embed=e)
 
-    @commands.hybrid_command(aliases=['color'], usage='<formatted_colour_string>',)
+    @commands.hybrid_command(
+        aliases=['color'],
+        usage='<formatted_colour_string>',
+    )
     @app_commands.describe(colour='Colour in any of supported formats')
     async def colour(self, ctx, *, colour: str):
         """Get info about colour in specified <formatted_colour_string>
@@ -140,15 +135,11 @@ class Info(commands.Cog, name='Info'):
         if colour == 'prpl':
             colour = '#9678B6'
 
-        m = re.match(
-            r"mu\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour
-        )
+        m = re.match(r"mu\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour)
         if m:
             colour = hex(MP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
 
-        m = re.match(
-            r"mua\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour
-        )
+        m = re.match(r"mua\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour)
         if m:
             colour = hex(MAP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
 
@@ -161,31 +152,23 @@ class Info(commands.Cog, name='Info'):
         file = ctx.bot.imgtools.img_to_file(img, filename='colour.png')
         e = discord.Embed(color=discord.Colour.from_rgb(*rgb), title='Colour info')
         e.description = (
-            f'Hex triplet: `{rgb2hex(*rgb)}`\n' +
-            'RGB: `({}, {}, {})`\n'.format(*rgb) +
-            'HSV: `({:.2f}, {:.2f}, {})`\n'.format(*colorsys.rgb_to_hsv(*rgb)) +
-            'HLS: `({:.2f}, {}, {:.2f})`\n'.format(*colorsys.rgb_to_hls(*rgb))
+            f'Hex triplet: `{rgb2hex(*rgb)}`\n'
+            + 'RGB: `({}, {}, {})`\n'.format(*rgb)
+            + 'HSV: `({:.2f}, {:.2f}, {})`\n'.format(*colorsys.rgb_to_hsv(*rgb))
+            + 'HLS: `({:.2f}, {}, {:.2f})`\n'.format(*colorsys.rgb_to_hls(*rgb))
         )
         e.set_thumbnail(url=f'attachment://{file.filename}')
         await ctx.reply(embed=e, file=file)
 
     @colour.autocomplete('colour')
-    async def colour_callback(
-            self,
-            _: discord.Interaction,
-            current: str
-    ) -> List[app_commands.Choice[str]]:
+    async def colour_callback(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mu(', 'mua('] + list(ImageColor.colormap.keys())
-        return [
-            app_commands.Choice(name=clr, value=clr)
-            for clr in colours if current.lower() in clr.lower()
-        ][:25]
+        return [app_commands.Choice(name=clr, value=clr) for clr in colours if current.lower() in clr.lower()][:25]
 
     @colour.error
     async def colour_error(self, ctx, error):
         if isinstance(
-                error,
-                (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError)
+            error, (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError)
         ):
             error = error.original
             if isinstance(error, (commands.CommandInvokeError, app_commands.CommandInvokeError)):
@@ -196,8 +179,7 @@ class Info(commands.Cog, name='Info'):
             ctx.error_handled = True
             e = discord.Embed(description=self.colour.callback.__doc__, colour=Clr.error)
             e.set_author(
-                name='WrongColourFormat',
-                url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html'
+                name='WrongColourFormat', url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html'
             )
             await ctx.reply(embed=e, ephemeral=True)
 
@@ -207,9 +189,7 @@ class Info(commands.Cog, name='Info'):
         await ctx.scnf()
 
     @info.command(
-        name='sysinfo',
-        description='Get system info about machine currently hosting the bot',
-        aliases=['systeminfo']
+        name='sysinfo', description='Get system info about machine currently hosting the bot', aliases=['systeminfo']
     )
     async def sysinfo(self, ctx: Context):
         """Get system info about machine currently hosting the bot"""
@@ -234,7 +214,7 @@ class Info(commands.Cog, name='Info'):
                 f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
                 f'\N{BLACK CIRCLE} Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
                 f'{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB'
-            )
+            ),
         )
         e.add_field(
             name='Versions',
@@ -243,13 +223,12 @@ class Info(commands.Cog, name='Info'):
                 f'\N{BLACK CIRCLE} discord.py {discord.__version__}\n'
                 f'\N{BLACK CIRCLE} dota2 {dota2__version__}\n'
                 f'\N{BLACK CIRCLE} Pyot {pyot__version__}\n'
-            )
+            ),
         )
         e.set_footer(text=f'AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}')
         if not self.bot.test:
             e.add_field(
-                name="Bot\'s Location judging by IP",
-                value=f"· {data['country']} {data['region']} {data['city']}"
+                name="Bot\'s Location judging by IP", value=f"· {data['country']} {data['region']} {data['city']}"
             )
         await ctx.reply(embed=e)
 
@@ -280,6 +259,7 @@ class StatsCommands(commands.Cog, name='Stats'):
 
     More to come.
     """
+
     def __init__(self, bot):
         self.bot: AluBot = bot
 
@@ -290,14 +270,14 @@ class StatsCommands(commands.Cog, name='Stats'):
     @commands.hybrid_command(
         name='wordcloud',
         description='Get `@member wordcloud over last total `limit` messages in requested `#channel`',
-        usage='[channel(s)=curr] [member(s)=you] [limit=2000]'
+        usage='[channel(s)=curr] [member(s)=you] [limit=2000]',
     )
     @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
     async def wordcloud(
-            self,
-            ctx: Context,
-            channel_or_and_member: commands.Greedy[Union[discord.Member, discord.TextChannel]] = None,
-            limit: int = 2000
+        self,
+        ctx: Context,
+        channel_or_and_member: commands.Greedy[Union[discord.Member, discord.TextChannel]] = None,
+        limit: int = 2000,
     ):
         """Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
 

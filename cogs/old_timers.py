@@ -1,14 +1,16 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands, tasks
 from numpy.random import randint, seed
 
-from utils.var import Rid, Cid, Uid, Sid, Ems, Clr
+from utils.var import Cid, Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
     from asyncpg import Pool
+
     from utils.bot import AluBot
 
 
@@ -37,7 +39,7 @@ async def get_a_text(pool: Pool):
         'Hey chat, follow me on twitch if you haven\'t done it yet: '
         '[twitch.tv/aluerie](https://www.twitch.tv/aluerie) {0} {0} {0}\n'.format(Ems.DankLove),
         f'Hey chat, you can get list of <@&{Rid.bots}> available to use in <#{Cid.bot_spam}> and '
-        f'<@&{Rid.nsfwbots}> in <#{Cid.nsfw_bob_spam}> by respectively checking pins in those channels.'
+        f'<@&{Rid.nsfwbots}> in <#{Cid.nsfw_bob_spam}> by respectively checking pins in those channels.',
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 
@@ -64,7 +66,7 @@ async def get_important_text(pool: Pool):
         'Hey chat, please react with all kind of hearts on '
         '[this message](https://discord.com/channels/702561315478044804/724996010169991198/866012642627420210)',
         f'Hey chat, if you have any problems then <@&{Rid.discord_mods}> can solve it! '
-        f'Especially if it is about this server'
+        f'Especially if it is about this server',
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_important_timer', pool)
 
@@ -74,6 +76,7 @@ async def get_fact_text(pool: Pool):
         query = 'SELECT SUM(msg_count) FROM users'
         val = await pool.fetchval(query)
         return val
+
     daily_reminders_txt = [
         'Hey chat, this server was created on 22/04/2020.',
         'Hey chat, Aluerie made these "interesting daily fact about this server" messages but has no ideas.',
@@ -109,7 +112,7 @@ async def get_rule_text(pool: Pool):
         'Hey chat, remember the rule\n8️⃣ Be talkative, have fun and enjoy your time! :3',
         'Hey chat, remember the rule\n9️⃣ Nothing that violates discord.gg Terms Of Service '
         '(https://discord.com/terms) & follow their guidelines (https://discord.com/guidelines)',
-        'Hey chat, remember the rule\n🔟 Don\'t encourage others to break these rules.'
+        'Hey chat, remember the rule\n🔟 Don\'t encourage others to break these rules.',
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 

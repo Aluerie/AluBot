@@ -73,13 +73,13 @@ class Context(commands.Context):
         return self.bot.session
 
     async def prompt(
-            self,
-            *,
-            content: Optional[str] = None,
-            embed: Optional[discord.Embed] = None,
-            timeout: Optional[float] = 60.0,
-            delete_after: Optional[bool] = True,
-            author_id: Optional[int] = None,
+        self,
+        *,
+        content: Optional[str] = None,
+        embed: Optional[discord.Embed] = None,
+        timeout: Optional[float] = 60.0,
+        delete_after: Optional[bool] = True,
+        author_id: Optional[int] = None,
     ) -> Optional[bool]:
         """
         An interactive reaction confirmation dialog.
@@ -143,11 +143,7 @@ class Context(commands.Context):
 
     @staticmethod
     def tick(semi_bool: bool | None):
-        emoji_dict = {
-            True: '\N{WHITE HEAVY CHECK MARK}',
-            False: '\N{CROSS MARK}',
-            None: '\N{BLACK LARGE SQUARE}'
-        }
+        emoji_dict = {True: '\N{WHITE HEAVY CHECK MARK}', False: '\N{CROSS MARK}', None: '\N{BLACK LARGE SQUARE}'}
         return emoji_dict[semi_bool]
         # match semi_bool:
         #     case True:

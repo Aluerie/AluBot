@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
 
 class Dota2Com(DotaNewsBase):
-
     def cog_load(self) -> None:
         self.patch_checker.start()
 

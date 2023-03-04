@@ -9,6 +9,7 @@ from utils import Clr, Sid
 
 class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
     """Organize yourself with some instruments"""
+
     def __init__(self, bot):
         self.bot = bot
         self.active_reminders = {}
@@ -18,10 +19,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
     def cog_unload(self) -> None:
         self.check_afks.cancel()
 
-    @commands.hybrid_command(
-        name='afk',
-        description='Flag you as afk member'
-    )
+    @commands.hybrid_command(name='afk', description='Flag you as afk member')
     @app_commands.describe(afk_text='Your custom afk note')
     async def afk(self, ctx: Context, *, afk_text: str = '...'):
         """Flags you as afk with your custom afk note ;"""
@@ -49,28 +47,19 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
             if key in msg.raw_mentions:
                 guild = self.bot.get_guild(Sid.alu)
                 member = guild.get_member(key)
-                e = Embed(
-                    colour=Clr.prpl,
-                    title='Afk note:',
-                    description=db.get_value(db.a, key, 'name')
-                ).set_author(
-                    name=f'Sorry, but {member.display_name} is $afk !',
-                    icon_url=member.display_avatar.url
-                ).set_footer(
-                    text=
-                    'PS. Please, consider deleting your ping-message (or just removing ping) '
-                    'if you think it will be irrelevant when they come back (I mean seriously)'
+                e = (
+                    Embed(colour=Clr.prpl, title='Afk note:', description=db.get_value(db.a, key, 'name'))
+                    .set_author(name=f'Sorry, but {member.display_name} is $afk !', icon_url=member.display_avatar.url)
+                    .set_footer(
+                        text='PS. Please, consider deleting your ping-message (or just removing ping) '
+                        'if you think it will be irrelevant when they come back (I mean seriously)'
+                    )
                 )
                 await msg.channel.send(embed=e)
 
         async def send_non_afk_em(author, channel):
-            e = Embed(
-                colour=Clr.prpl,
-                title='Afk note:',
-                description=db.get_value(db.a, author.id, 'name')
-            ).set_author(
-                name=f'{author.display_name} is no longer afk !',
-                icon_url=author.display_avatar.url
+            e = Embed(colour=Clr.prpl, title='Afk note:', description=db.get_value(db.a, author.id, 'name')).set_author(
+                name=f'{author.display_name} is no longer afk !', icon_url=author.display_avatar.url
             )
             db.remove_row(db.a, author.id)
             self.active_afk.pop(author.id)

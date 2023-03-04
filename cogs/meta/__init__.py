@@ -8,12 +8,7 @@ from .setup import SetupCommandCog
 from .prefix import PrefixSetupCog
 
 
-class Meta(
-    HelpCommandCog,
-    SetupCommandCog,
-    OtherCog,
-    PrefixSetupCog
-):
+class Meta(HelpCommandCog, SetupCommandCog, OtherCog, PrefixSetupCog):
     """Commands-utilities related to Discord or the Bot itself."""
 
     @property

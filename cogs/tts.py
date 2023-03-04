@@ -38,6 +38,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
 
     Make the bot talk in voice chat.
     """
+
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.connections: Dict[int, discord.VoiceProtocol] = {}  # guild.id to Voice we are connected to
@@ -54,16 +55,10 @@ class TextToSpeech(commands.Cog, name='TTS'):
     @voice.command(
         name='speak',
         description='Make Text-To-Speech request into voice-chat',
-        usage="[language keyword=fr-FR] <text='Allo'>"
+        usage="[language keyword=fr-FR] <text='Allo'>",
     )
     @app_commands.describe(text="Enter text to speak", language="Choose language/accent")
-    async def speak(
-            self,
-            ctx: Context,
-            language: Optional[LanguageCollection.Literal] = 'fr',
-            *,
-            text: str = 'Allo'
-    ):
+    async def speak(self, ctx: Context, language: Optional[LanguageCollection.Literal] = 'fr', *, text: str = 'Allo'):
         """
         Bot will connect to voice-chat you're in and speak `text` using Google Text-To-Speech module. \
         For available language keywords check `(/ or $)voice languages`
@@ -94,9 +89,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
         await ctx.reply(embed=e)
 
     @voice.command(
-        name='languages',
-        description='Show list of languages supported by `/voice speak` command',
-        aliases=['langs']
+        name='languages', description='Show list of languages supported by `/voice speak` command', aliases=['langs']
     )
     async def languages(self, ctx: Context):
         """Show list of languages supported by `(/ or $)voice speak` command"""
@@ -114,7 +107,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
 
     @voice.command(
         name='stop',
-        description='Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests'
+        description='Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests',
     )
     async def stop(self, ctx: Context):
         """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests."""
@@ -125,16 +118,13 @@ class TextToSpeech(commands.Cog, name='TTS'):
                 e = discord.Embed(description='Stopped', colour=ctx.author.colour)
                 await ctx.reply(embed=e)
             else:
-                e = discord.Embed(description="I don't think I was talking",  colour=Clr.error)
+                e = discord.Embed(description="I don't think I was talking", colour=Clr.error)
                 await ctx.reply(embed=e, ephemeral=True)
         except KeyError:
             e = discord.Embed(description="I'm not in voice channel", colour=Clr.error)
             await ctx.reply(embed=e, ephemeral=True)
 
-    @voice.command(
-        name='leave',
-        description='Leave voice channel'
-    )
+    @voice.command(name='leave', description='Leave voice channel')
     async def leave(self, ctx: Context):
         """Make bot leave voice channel. Bot autoleaves voicechannels but you can make it leave too"""
         try:
@@ -171,10 +161,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
 
     @commands.Cog.listener()
     async def on_voice_state_update(
-            self,
-            member: discord.Member,
-            before: discord.VoiceState,
-            _after: discord.VoiceState
+        self, member: discord.Member, before: discord.VoiceState, _after: discord.VoiceState
     ):
         # disconnect
         if before.channel is not None and len([m for m in before.channel.members if not m.bot]) == 0:

@@ -18,20 +18,27 @@ if TYPE_CHECKING:
 
 class MatchHistoryData:
     def __init__(
-            self,
-            *,
-            match_id: int,
-            hero_id: int,
-            start_time: int,
-            lane_selection_flags: int,
-            match_outcome: int,
-            player_slot: int,
-            pool: Pool
+        self,
+        *,
+        match_id: int,
+        hero_id: int,
+        start_time: int,
+        lane_selection_flags: int,
+        match_outcome: int,
+        player_slot: int,
+        pool: Pool,
     ):
         self.id = match_id
         self.hero_id = hero_id
         self.start_time = start_time
-        role_dict = {0: 0, 1: 1, 2: 3, 4: 2, 8: 4, 16: 5, }
+        role_dict = {
+            0: 0,
+            1: 1,
+            2: 3,
+            4: 2,
+            8: 4,
+            16: 5,
+        }
         self.role = role_dict[lane_selection_flags]
         self.pool = pool
 
@@ -47,6 +54,7 @@ class MatchHistoryData:
                 else:
                     return 3 == match_outcome
             return None
+
         self.winloss = winloss()
 
     async def add_to_database(self):
@@ -55,6 +63,7 @@ class MatchHistoryData:
 
             def new_mmr(prev_mmr):
                 return prev_mmr + 30 if self.winloss else prev_mmr - 30
+
             mmr = new_mmr(last_recorded_match.mmr)
 
             query = """ INSERT INTO dotahistory 
@@ -62,8 +71,7 @@ class MatchHistoryData:
                         VALUES ($1, $2, $3, $4, $5)
                     """
             await self.pool.execute(
-                query,
-                self.id, self.hero_id, self.winloss, mmr, self.role, datetime.fromtimestamp(self.start_time)
+                query, self.id, self.hero_id, self.winloss, mmr, self.role, datetime.fromtimestamp(self.start_time)
             )
 
 
@@ -111,7 +119,7 @@ def gradient_fill(x, y, fill_color=None, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
 
-    line, = ax.plot(x, y, **kwargs)
+    (line,) = ax.plot(x, y, **kwargs)
     if fill_color is None:
         fill_color = line.get_color()
 
@@ -125,10 +133,7 @@ def gradient_fill(x, y, fill_color=None, ax=None, **kwargs):
     z[:, :, -1] = np.linspace(0.3, alpha, 100)[:, None]
 
     xmin, xmax, ymin, ymax = x.min(), x.max(), y.min(), y.max()
-    im = ax.imshow(
-        z, aspect='auto', extent=[xmin, xmax, ymin, ymax],
-        origin='lower', zorder=zorder
-    )
+    im = ax.imshow(z, aspect='auto', extent=[xmin, xmax, ymin, ymax], origin='lower', zorder=zorder)
 
     xy = np.column_stack([x, y])
     xy = np.vstack([[xmin, ymin], xy, [xmax, ymin], [xmin, ymin]])

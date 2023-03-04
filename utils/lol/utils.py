@@ -15,7 +15,7 @@ __all__ = (
     'get_meraki_patch',
     'get_all_champ_names',
     'icon_url_by_champ_id',
-    'get_role_mini_list'
+    'get_role_mini_list',
 )
 
 
@@ -68,24 +68,24 @@ class ChampionRolesCache(KeyCache):
         diff_list = await get_pyot_meraki_champ_diff_list(champion_roles)
 
         def construct_the_dict(
-                playrate: Optional[float] = 10,
-                *,
-                top: Optional[float] = 20,
-                jungle: Optional[float] = 20,
-                mid: Optional[float] = 20,
-                bot: Optional[float] = 20,
-                support: Optional[float] = 20
+            playrate: Optional[float] = 10,
+            *,
+            top: Optional[float] = 20,
+            jungle: Optional[float] = 20,
+            mid: Optional[float] = 20,
+            bot: Optional[float] = 20,
+            support: Optional[float] = 20,
         ) -> dict:
             """Construct the dict for meraki function.
 
             Note all parameters in percent! Just like at www.leagueofgraphs.com
             """
             return {  # global playrate in percent * champion role appearance in %
-                    'TOP': playrate * top * 0.01,
-                    'JUNGLE': playrate * jungle * 0.01,
-                    'MIDDLE': playrate * mid * 0.01,
-                    'BOTTOM': playrate * bot * 0.01,
-                    'UTILITY': playrate * support * 0.01
+                'TOP': playrate * top * 0.01,
+                'JUNGLE': playrate * jungle * 0.01,
+                'MIDDLE': playrate * mid * 0.01,
+                'BOTTOM': playrate * bot * 0.01,
+                'UTILITY': playrate * support * 0.01,
             }
 
         # Nilah (data was taken 03/Jan/23) - {id: the_dict}
@@ -123,9 +123,9 @@ async def get_meraki_patch():
 
 async def get_role_mini_list(all_players_champ_ids) -> List[int]:
     champion_roles = await champion_roles_cache.data
-    role_mini_list = \
-        list(get_roles(champion_roles, all_players_champ_ids[:5]).values()) + \
-        list(get_roles(champion_roles, all_players_champ_ids[5:]).values())
+    role_mini_list = list(get_roles(champion_roles, all_players_champ_ids[:5]).values()) + list(
+        get_roles(champion_roles, all_players_champ_ids[5:]).values()
+    )
     return role_mini_list
 
 
@@ -142,6 +142,7 @@ async def utils_test_main():
 if __name__ == '__main__':
     import asyncio
     from pyot.conf.utils import import_confs
+
     import_confs("utils.lol.pyotconf")
 
     loop = asyncio.new_event_loop()

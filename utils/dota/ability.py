@@ -1,12 +1,7 @@
 from utils.cache import KeyCache
 from .const import *
 
-__all__ = (
-    'lazy_aghs_shard_url',
-    'lazy_aghs_bless_url',
-    'name_by_id',
-    'iconurl_by_id'
-)
+__all__ = ('lazy_aghs_shard_url', 'lazy_aghs_bless_url', 'name_by_id', 'iconurl_by_id')
 
 ATTR_BONUS_ICON = "https://static.wikia.nocookie.net/dota2_gamepedia/images/e/e2/Attribute_Bonus_icon.png"
 TALENTS_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
@@ -16,7 +11,6 @@ lazy_aghs_shard_url = f"{STEAM_CDN_URL}/apps/dota2/images/dota_react/items/aghan
 
 
 class AbilityKeyCache(KeyCache):
-
     async def fill_data(self) -> dict:
         ab_ids_dict = await self.get_resp_json(url=f'{ODOTA_API_URL}/constants/ability_ids')
         abs_dict = await self.get_resp_json(url=f'{ODOTA_API_URL}/constants/abilities')
@@ -25,12 +19,8 @@ class AbilityKeyCache(KeyCache):
         revert_ab_ids_dict = {v: int(k) for k, v in ab_ids_dict.items()}
 
         data = {
-            'iconurl_by_id': {
-                0: DISCONNECT_ICON,
-                730: ATTR_BONUS_ICON
-            },
-            "name_by_id":
-                {730: None},
+            'iconurl_by_id': {0: DISCONNECT_ICON, 730: ATTR_BONUS_ICON},
+            "name_by_id": {730: None},
         }
         for k, v in hero_abs_dict.items():
             for npc_name in v['abilities']:

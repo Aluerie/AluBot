@@ -9,12 +9,11 @@ __all__ = (
     'id_by_npcname',
     'iconurl_by_id',
     'name_by_id',
-    'imgurl_by_id'
+    'imgurl_by_id',
 )
 
 
 class HeroKeyCache(KeyCache):
-
     async def fill_data(self) -> dict:
         url = f'{ODOTA_API_URL}/constants/heroes'
         hero_dict = await self.get_resp_json(url=url)

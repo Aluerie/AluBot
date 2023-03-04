@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 import asyncpg
@@ -28,6 +29,7 @@ class Tags(commands.Cog):
     So in the end if somebody asks "How to learn Python?" - people just use \
     `$tag learn python` and the bot gives well-prepared, well-detailed answer.
     """
+
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
@@ -35,13 +37,7 @@ class Tags(commands.Cog):
     def help_emote(self) -> discord.PartialEmoji:
         return discord.PartialEmoji.from_str(Ems.PepoBeliever)
 
-    async def tag_work(
-            self,
-            ctx: Context,
-            tag_name: str,
-            *,
-            pool: Optional[asyncpg.Pool] = None
-    ):
+    async def tag_work(self, ctx: Context, tag_name: str, *, pool: Optional[asyncpg.Pool] = None):
         pool = pool or self.bot.pool
 
         query = """ SELECT tags.name, tags.content
@@ -60,6 +56,7 @@ class Tags(commands.Cog):
             elif isinstance(ctx, discord.Interaction):
                 await ctx.response.send_message(embed=e)
         else:
+
             def replied_reference(msg: discord.Message) -> Optional[discord.MessageReference]:
                 ref = msg.reference  # you might want to put this under Context subclass
                 if ref and isinstance(ref.resolved, discord.Message):
@@ -73,20 +70,13 @@ class Tags(commands.Cog):
             query = "UPDATE tags SET uses = uses + 1 WHERE tags.name=$1;"
             await pool.execute(query, row.name)
 
-    @app_commands.command(
-        name='tag',
-        description='Use tag for copypaste message'
-    )
+    @app_commands.command(name='tag', description='Use tag for copypaste message')
     @app_commands.describe(tag_name="Summon tag under this name")
     async def tag_slh(self, ntr: discord.Interaction, *, tag_name: str):
         ctx = await Context.from_interaction(ntr)
         await self.tag_work(ctx, tag_name.lower())
 
-    @commands.hybrid_group(
-        name='tags',
-        aliases=['tag'],
-        invoke_without_command=True
-    )
+    @commands.hybrid_group(name='tags', aliases=['tag'], invoke_without_command=True)
     async def tags(self, ctx: Context, *, tag_name: str):
         """Execute tag from the database"""
         await self.tag_work(ctx, tag_name.lower())
@@ -97,10 +87,7 @@ class Tags(commands.Cog):
             await ctx.scnf()
 
     @tags.command(
-        name='add',
-        description='Add a new tag',
-        aliases=['create'],
-        usage='name: <tag_name> text: <tag_text>'
+        name='add', description='Add a new tag', aliases=['create'], usage='name: <tag_name> text: <tag_text>'
     )
     @app_commands.describe(name="Enter short name for your tag (<100 symbols)")
     @app_commands.describe(text="Enter content for your tag (<2000 symbols)")
@@ -108,35 +95,23 @@ class Tags(commands.Cog):
         """Add a new tag into bot's database. Tag name should be <100 symbols and tag text <2000 symbols"""
         tag_name = flags.name.lower()
         if tag_name.split(' ')[0] in reserved_words:
-            raise commands.BadArgument(
-                "Sorry! the first word of your proposed `tag_name` is reserved by system"
-            )
+            raise commands.BadArgument("Sorry! the first word of your proposed `tag_name` is reserved by system")
         elif len(tag_name) < 3:
-            raise commands.BadArgument(
-                "Sorry! `tag_name` should be more than 2 symbols"
-            )
+            raise commands.BadArgument("Sorry! `tag_name` should be more than 2 symbols")
         elif len(tag_name) > 100:
-            raise commands.BadArgument(
-                "Sorry! `tag_name` should be less than 100 symbols"
-            )
+            raise commands.BadArgument("Sorry! `tag_name` should be less than 100 symbols")
         elif len(tag_name) > 2000:
-            raise commands.BadArgument(
-                "Sorry! `tag_text` should be less than 2000 symbols"
-            )
+            raise commands.BadArgument("Sorry! `tag_text` should be less than 2000 symbols")
         else:
             query = 'SELECT users.can_make_tags FROM users WHERE users.id=$1;'
             can_make_tags = await self.bot.pool.fetchval(query, ctx.author.id)
             if not can_make_tags:
-                raise commands.BadArgument(
-                    'Sorry! You are banned from making new tags'
-                )
+                raise commands.BadArgument('Sorry! You are banned from making new tags')
             else:
                 query = 'SELECT tags.name FROM tags WHERE tags.name=$1;'
                 tag_exists = await self.bot.pool.fetchval(query, tag_name)
                 if tag_exists:
-                    raise commands.BadArgument(
-                        'Sorry! Tag under such name already exists'
-                    )
+                    raise commands.BadArgument('Sorry! Tag under such name already exists')
                 else:
                     query = "INSERT INTO tags (name, owner_id, content) VALUES ($1, $2, $3);"
                     await self.bot.pool.execute(query, tag_name, ctx.author.id, flags.text)
@@ -156,10 +131,7 @@ class Tags(commands.Cog):
             )
             await ctx.reply(embed=e)
 
-    @tags.command(
-        name='info',
-        description='Get info about specific tag'
-    )
+    @tags.command(name='info', description='Get info about specific tag')
     @app_commands.describe(tag_name="Tag name")
     async def info(self, ctx: Context, *, tag_name: str):
         """Get info about the specific tag."""
@@ -179,11 +151,7 @@ class Tags(commands.Cog):
             e = discord.Embed(description='Sorry! Tag under such name does not exist', colour=Clr.error)
         await ctx.reply(embed=e)
 
-    @tags.command(
-        name='delete',
-        description='Delete your tag from bot database',
-        aliases=['remove']
-    )
+    @tags.command(name='delete', description='Delete your tag from bot database', aliases=['remove'])
     @app_commands.describe(tag_name="Tag name")
     async def delete(self, ctx: Context, *, tag_name: str):
         """Delete tag from bot database"""
@@ -205,15 +173,13 @@ class Tags(commands.Cog):
             e.description = f'Successfully deleted tag under name `{tag_name}`'
         else:
             e = discord.Embed(colour=Clr.error)
-            e.description = \
-                f'Sorry! Either the tag with such name does not exist or ' \
+            e.description = (
+                f'Sorry! Either the tag with such name does not exist or '
                 f'you do not have permissions to perform this action.'
+            )
         await ctx.reply(embed=e)
 
-    @tags.command(
-        name='list',
-        description='Get a list of all tags on the guild'
-    )
+    @tags.command(name='list', description='Get a list of all tags on the guild')
     async def list(self, ctx):
         """Show list of all tags in bot's database"""
         query = "SELECT name FROM tags;"
@@ -225,11 +191,7 @@ class Tags(commands.Cog):
     @commands.has_role(Rid.discord_mods)
     @commands.has_permissions(manage_messages=True)
     @app_commands.default_permissions(manage_messages=True)
-    @commands.hybrid_group(
-        name='modtags',
-        aliases=['modtag'],
-        invoke_without_command=True
-    )
+    @commands.hybrid_group(name='modtags', aliases=['modtag'], invoke_without_command=True)
     async def modtags(self, ctx: Context):
         """Group command about ModTags, for actual commands use it together with subcommands"""
         if ctx.invoked_subcommand is None:
@@ -243,18 +205,12 @@ class Tags(commands.Cog):
         e.description = f"{member.mention} is now {'un' if mybool else ''}banned from making new tags"
         await ctx.reply(embed=e)
 
-    @modtags.command(
-        name='ban',
-        description='Ban member from creating new tags'
-    )
+    @modtags.command(name='ban', description='Ban member from creating new tags')
     async def ban(self, ctx: Context, member: discord.Member):
         """Ban member from creating new tags"""
         await self.tag_ban_work(ctx, member, False)
 
-    @modtags.command(
-        name='unban',
-        description='Unban member from creating new tags'
-    )
+    @modtags.command(name='unban', description='Unban member from creating new tags')
     async def unban(self, ctx, member: discord.Member):
         """Unban member from creating new tags"""
         await self.tag_ban_work(ctx, member, True)

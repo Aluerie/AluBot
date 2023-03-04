@@ -1,14 +1,14 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import datetime
+from typing import TYPE_CHECKING
 
 import discord
-from discord.ext import commands, tasks
 import regex
+from discord.ext import commands, tasks
 
 from utils.formats import inline_wordbyword_diff
-from utils.var import Sid, Ems, Cid, Rgx, Clr, Rid
+from utils.var import Cid, Clr, Ems, Rgx, Rid, Sid
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -57,7 +57,7 @@ class Logging(commands.Cog):
         e.set_author(
             name=f'{after.author.display_name} edit in #{after.channel.name}',
             icon_url=after.author.display_avatar.url,
-            url=after.jump_url  # TODO: this link is not jumpable from mobile but we dont care, right ?
+            url=after.jump_url,  # TODO: this link is not jumpable from mobile but we dont care, right ?
         )
         await self.bot.get_channel(Cid.logs).send(embed=e)
 
@@ -72,8 +72,7 @@ class Logging(commands.Cog):
 
         e = discord.Embed(description=msg.content, colour=0xB22222)
         e.set_author(
-            name=f'{msg.author.display_name}\'s del in #{msg.channel.name}',
-            icon_url=msg.author.display_avatar.url
+            name=f'{msg.author.display_name}\'s del in #{msg.channel.name}', icon_url=msg.author.display_avatar.url
         )
         files = [await item.to_file() for item in msg.attachments]
         return await self.bot.get_channel(Cid.logs).send(embed=e, files=files)
@@ -85,7 +84,7 @@ class Logging(commands.Cog):
 
         if before.premium_since is None and after.premium_since is not None:
             e = discord.Embed(title=f"{before.display_name} just boosted the server !", colour=Clr.prpl)
-            e. description = '{0} {0} {0}'.format(Ems.PogChampPepe)
+            e.description = '{0} {0} {0}'.format(Ems.PogChampPepe)
             e.set_author(name=before.display_name, icon_url=before.display_avatar.url)
             e.set_thumbnail(url=before.display_avatar.url)
             for ch_id in [Cid.general, Cid.logs]:
@@ -93,7 +92,7 @@ class Logging(commands.Cog):
 
         added_role = list(set(after.roles) - set(before.roles))
         if added_role and added_role[0].id not in Rid.ignored_for_logs:
-            e = discord.Embed(description=f'**Role added:** {added_role[0].mention}', colour=0x00ff7f)
+            e = discord.Embed(description=f'**Role added:** {added_role[0].mention}', colour=0x00FF7F)
             e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
             return await self.bot.get_channel(Cid.logs).send(embed=e)
 
@@ -107,8 +106,9 @@ class Logging(commands.Cog):
             return
 
         if before.nick != after.nick:  # Nickname changed
-            if (before.nick is not None and before.nick.startswith('[AFK')) \
-                    or (after.nick is not None and after.nick.startswith('[AFK')):
+            if (before.nick is not None and before.nick.startswith('[AFK')) or (
+                after.nick is not None and after.nick.startswith('[AFK')
+            ):
                 return
 
             query = 'UPDATE users SET name=$1 WHERE id=$2'
@@ -138,7 +138,7 @@ class Logging(commands.Cog):
             if 'Stone' in entry.target.display_name:
                 e = discord.Embed(
                     colour=stone_rl.colour,
-                    description=f'{entry.target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
+                    description=f'{entry.target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}',
                 )
                 await self.bot.get_channel(Cid.bot_spam).send(embed=e)
                 await entry.target.add_roles(stone_rl)
@@ -177,7 +177,7 @@ class CommandLogging(commands.Cog):
         e.set_author(
             icon_url=ctx.author.display_avatar.url,
             name=f'{ctx.author.display_name} used command in {ctx.channel.name}',
-            url=jump_url
+            url=jump_url,
         )
         await self.bot.get_channel(Cid.logs).send(embed=e)
 

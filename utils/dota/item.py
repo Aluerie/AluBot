@@ -1,22 +1,15 @@
 from utils.cache import KeyCache
 from .const import *
 
-__all__ = (
-    'iconurl_by_id',
-    'id_by_key'
-)
+__all__ = ('iconurl_by_id', 'id_by_key')
 
 BLACK_TILE = "https://i.imgur.com/TtOovu5.png"
 
 
 class ItemKeyCache(KeyCache):
-
     async def fill_data(self) -> dict:
         item_dict = await self.get_resp_json(url=f'{ODOTA_API_URL}/constants/items')
-        data = {
-            'iconurl_by_id': {0: BLACK_TILE},  # black tile
-            'id_by_key': {}
-        }
+        data = {'iconurl_by_id': {0: BLACK_TILE}, 'id_by_key': {}}  # black tile
         for key, item in item_dict.items():
             data['iconurl_by_id'][item['id']] = f"{STEAM_CDN_URL}{item['img']}"
             data['id_by_key'][key] = item['id']

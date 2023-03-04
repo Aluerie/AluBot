@@ -31,6 +31,7 @@ class Plural:
         >>> format(Plural(8), 'week|weeks')  # '8 weeks'
         >>> f'{Plural(3):reminder}' # 3 reminders
     """
+
     def __init__(self, value: int):
         self.value: int = value
 
@@ -66,13 +67,13 @@ def human_join(seq: Sequence[str], delim: str = ', ', final: str = 'or') -> str:
 
 
 def human_timedelta(
-        dt: Union[datetime.datetime, datetime.timedelta, int, float],
-        *,
-        source: Optional[datetime.datetime] = None,
-        accuracy: Optional[int] = 3,
-        brief: bool = False,
-        strip: bool = False,
-        suffix: bool = True,
+    dt: Union[datetime.datetime, datetime.timedelta, int, float],
+    *,
+    source: Optional[datetime.datetime] = None,
+    accuracy: Optional[int] = 3,
+    brief: bool = False,
+    strip: bool = False,
+    suffix: bool = True,
 ) -> str:
     """
     Human timedelta between `dt` and `source` `datetime.datetime`'s.
@@ -267,6 +268,7 @@ def block_function(string, blocked_words, whitelist_words):
 def indent(symbol, counter, offset, split_size):
     return str(symbol).ljust(len(str(((counter - offset) // split_size + 1) * split_size)), " ")
 
+
 #######################################################################
 # ANSI ################################################################
 #######################################################################
@@ -278,13 +280,14 @@ def indent(symbol, counter, offset, split_size):
 
 class AnsiFG(Enum):
     """Ansi foreground colours"""
+
     gray = 30
     red = 31
     green = 32
     yellow = 33
     blue = 34
     pink = 35
-    cyan = 36,
+    cyan = (36,)
     white = 37
 
     def __int__(self) -> int:
@@ -293,6 +296,7 @@ class AnsiFG(Enum):
 
 class AnsiBG(Enum):
     """Ansi background colours"""
+
     firefly_dark_blue = 40
     orange = 41
     marble_blue = 42
@@ -308,6 +312,7 @@ class AnsiBG(Enum):
 
 class AnsiFMT(Enum):
     """Ansi text formats"""
+
     normal = 0
     bold = 1
     underline = 4
@@ -317,12 +322,12 @@ class AnsiFMT(Enum):
 
 
 def ansi(
-        text: str,
-        *,
-        foreground: Optional[AnsiFG] = None,
-        background: Optional[AnsiBG] = None,
-        bold: bool = False,
-        underline: bool = False
+    text: str,
+    *,
+    foreground: Optional[AnsiFG] = None,
+    background: Optional[AnsiBG] = None,
+    bold: bool = False,
+    underline: bool = False,
 ) -> str:
     """Something ansi function"""
     # todo: make better docs

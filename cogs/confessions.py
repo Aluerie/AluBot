@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from utils.formats import human_timedelta
-from utils.var import Ems, Clr
+from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -69,8 +69,7 @@ class ConfView(discord.ui.View):
         if isinstance(error, ButtonOnCooldown):
             e = discord.Embed(colour=Clr.error).set_author(name=error.__class__.__name__)
             e.description = (
-                "Sorry, you are on cooldown \n"
-                f"Time left `{human_timedelta(error.retry_after, brief=True)}`"
+                "Sorry, you are on cooldown \n" f"Time left `{human_timedelta(error.retry_after, brief=True)}`"
             )
             await ntr.response.send_message(embed=e, ephemeral=True)
         else:
@@ -81,7 +80,7 @@ class ConfView(discord.ui.View):
         label="Anonymous confession",
         custom_id="anonconf-button",
         style=discord.ButtonStyle.primary,
-        emoji=Ems.bubuChrist
+        emoji=Ems.bubuChrist,
     )
     async def button0_callback(self, ntr: discord.Interaction, btn: discord.ui.Button):
         await ntr.response.send_modal(ConfModal(title=btn.label))
@@ -90,7 +89,7 @@ class ConfView(discord.ui.View):
         label="Non-anonymous confession",
         custom_id="nonanonconf-button",
         style=discord.ButtonStyle.primary,
-        emoji=Ems.PepoBeliever
+        emoji=Ems.PepoBeliever,
     )
     async def button1_callback(self, ntr: discord.Interaction, btn: discord.ui.Button):
         await ntr.response.send_modal(ConfModal(title=btn.label))

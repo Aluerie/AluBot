@@ -18,6 +18,7 @@ class DRecord(asyncpg.Record):
     Same as `asyncpg.Record`, but allows dot-notations
     such as `record.id` instead of `record['id']`.
     """
+
     def __getattr__(self, name: str):
         return self[name]
 
@@ -39,14 +40,14 @@ async def create_pool() -> asyncpg.Pool:
         )
 
     return await asyncpg.create_pool(
-            POSTGRES_URL,
-            init=init,
-            command_timeout=60,
-            min_size=10,
-            max_size=10,
-            record_class=DRecord,
-            statement_cache_size=0
-        )
+        POSTGRES_URL,
+        init=init,
+        command_timeout=60,
+        min_size=10,
+        max_size=10,
+        record_class=DRecord,
+        statement_cache_size=0,
+    )
 
 
 # SQL RECIPES BCS I ALWAYS FORGET

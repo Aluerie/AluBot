@@ -41,12 +41,7 @@ class SetupSelect(discord.ui.Select):
             cog_desc = getattr(cog, "description", "No Description")
             cog_emote = getattr(cog, "setup_emote", None)
 
-            self.add_option(
-                label=cog_name,
-                description=cog_desc,
-                emoji=cog_emote,
-                value=str(counter + 1)
-            )
+            self.add_option(label=cog_name, description=cog_desc, emoji=cog_emote, value=str(counter + 1))
             counter += 1
 
     async def callback(self, ntr: discord.Interaction):
@@ -104,13 +99,7 @@ class SetupPages(Paginator):
 
     def fill_items(self):
         if self.source.is_paginating():
-            for item in [
-                self.refresh,
-                self.previous_page,
-                self.index,
-                self.next_page,
-                self.text_cmds
-            ]:
+            for item in [self.refresh, self.previous_page, self.index, self.next_page, self.text_cmds]:
                 self.add_item(item)
 
     @discord.ui.button(label='\N{NOTEBOOK}', style=discord.ButtonStyle.blurple)
@@ -121,7 +110,6 @@ class SetupPages(Paginator):
 
 
 class SetupCog:
-
     @property
     def setup_emote(self):
         raise NotImplementedError
@@ -137,7 +125,6 @@ class SetupCog:
 
 
 class SetupCommandCog(MetaBase):
-
     @commands.hybrid_command()
     async def setup(self, ctx: Context):
         setup_data: List[SetupFormatData] = [SetupFormatData(cog='front_page')]

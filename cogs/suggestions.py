@@ -45,7 +45,7 @@ class Suggestions(commands.Cog):
         msg = await patch_channel.send(embed=e)
         await msg.add_reaction('\N{UPWARDS BLACK ARROW}')
         await msg.add_reaction('\N{DOWNWARDS BLACK ARROW}')
-        suggestion_thread = await msg.create_thread(name=title, auto_archive_duration=7*24*60)
+        suggestion_thread = await msg.create_thread(name=title, auto_archive_duration=7 * 24 * 60)
         await suggestion_thread.send(
             'Here you can discuss current suggestion.\n '
             'Don\'t forget to upvote/downvote initial suggestion message with '

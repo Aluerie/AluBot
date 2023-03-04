@@ -20,6 +20,7 @@ class ServerInfo(commands.Cog, name='Rules'):
     Here you can see commands to view the rules or \
     edit them if you are a mod.
     """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -37,19 +38,13 @@ class ServerInfo(commands.Cog, name='Rules'):
         except:
             await ctx.reply(content='there is no such rule')
 
-    @commands.hybrid_command(
-        name='rule',
-        description="Show rule number `num`"
-    )
+    @commands.hybrid_command(name='rule', description="Show rule number `num`")
     @app_commands.describe(number="Enter a number")
     async def rule(self, ctx, number: Range[int, 0, 99]):
         """Show rule number `num`"""
         await self.rule_work(ctx, number, db.sr, 0)
 
-    @commands.hybrid_command(
-        name='realrule',
-        description="Show *real rule* number `num`"
-    )
+    @commands.hybrid_command(name='realrule', description="Show *real rule* number `num`")
     @app_commands.describe(number="Enter a number")
     async def realrule(self, ctx, number: Range[int, 0, 99]):
         """Show *real rule* number `num`"""
@@ -67,18 +62,12 @@ class ServerInfo(commands.Cog, name='Rules'):
         e.description = f'\n'.join(list_rules)
         await ctx.reply(embed=e)
 
-    @commands.hybrid_command(
-        name='rules',
-        description="Show all rules of the server"
-    )
+    @commands.hybrid_command(name='rules', description="Show all rules of the server")
     async def rules(self, ctx):
         """Show all rules of the server"""
         await self.rules_work(ctx, db.sr, 0)
 
-    @commands.hybrid_command(
-        name='realrules',
-        description="Show all *real rules* of the server"
-    )
+    @commands.hybrid_command(name='realrules', description="Show all *real rules* of the server")
     async def realrules(self, ctx):
         """Show all *real rules* of the server"""
         await self.rules_work(ctx, db.rr, 1)
@@ -115,7 +104,7 @@ class ServerInfo(commands.Cog, name='Rules'):
     @staticmethod
     async def remove_work(ctx, num, dtb, min_number):
         with db.session_scope() as ses:
-            my_row = ses.query(dtb).order_by(dtb.id).limit(num+min_number)[0]
+            my_row = ses.query(dtb).order_by(dtb.id).limit(num + min_number)[0]
             ses.query(dtb).filter_by(id=my_row.id).delete()
         await ctx.reply(content='removed')
 

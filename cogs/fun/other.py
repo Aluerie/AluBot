@@ -18,13 +18,9 @@ if TYPE_CHECKING:
 
 
 class Other(FunBase):
-
-    @commands.hybrid_command(
-        aliases=['cf'],
-        description='Flip a coin: Heads or Tails?'
-    )
+    @commands.hybrid_command(aliases=['cf'], description='Flip a coin: Heads or Tails?')
     async def coinflip(self, ctx):
-        """Flip a coin """
+        """Flip a coin"""
         word = 'Heads' if randint(2) == 0 else 'Tails'
         return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
 
@@ -45,6 +41,7 @@ class Other(FunBase):
                     else:
                         for r in ['❔', '❕', '🤔']:
                             await msg.add_reaction(r)
+
         await work_non_command_mentions(message)
 
         async def bots_in_lobby(msg: discord.Message):
@@ -56,16 +53,20 @@ class Other(FunBase):
                     text = 'Bots'
                 if text is not None:
                     await msg.channel.send('{0} in {1} ! {2} {2} {2}'.format(text, msg.channel.mention, Ems.Ree))
+
         await bots_in_lobby(message)
 
         async def weebs_out(msg: discord.Message):
             if msg.channel.id == Cid.weebs and randint(1, 100 + 1) < 7:
                 await self.bot.get_channel(Cid.weebs).send(
                     '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
-                        '<a:WeebsOutOut:730882034167185448>', '<:WeebsOut:856985447985315860>',
-                        '<a:peepoWeebSmash:728671752414167080>', '<:peepoRiot:730883102678974491>'
+                        '<a:WeebsOutOut:730882034167185448>',
+                        '<:WeebsOut:856985447985315860>',
+                        '<a:peepoWeebSmash:728671752414167080>',
+                        '<:peepoRiot:730883102678974491>',
                     )
                 )
+
         await weebs_out(message)
 
         async def ree_the_oof(msg: discord.Message):
@@ -76,6 +77,7 @@ class Other(FunBase):
                     await msg.add_reaction(Ems.Ree)
                 except discord.errors.Forbidden:
                     await msg.delete()
+
         await ree_the_oof(message)
 
         async def random_comfy_react(msg: discord.Message):
@@ -87,6 +89,7 @@ class Other(FunBase):
                     await msg.add_reaction(Ems.peepoComfy)
                 except Exception:
                     return
+
         await random_comfy_react(message)
 
         async def your_life(msg):
@@ -99,6 +102,7 @@ class Other(FunBase):
                     await msg.channel.send(answer_text)
             except Exception:
                 return
+
         await your_life(message)
 
     @commands.hybrid_command()
@@ -114,9 +118,7 @@ class Other(FunBase):
         if not ctx.interaction:
             await ctx.message.delete()
 
-    @commands.hybrid_command(
-        description='Send apuband emote combo'
-    )
+    @commands.hybrid_command(description='Send apuband emote combo')
     async def apuband(self, ctx: Context):
         """Send apuband emote combo"""
         guild = self.bot.get_guild(Sid.alu)
@@ -128,27 +130,16 @@ class Other(FunBase):
         else:
             await ctx.message.delete()
 
-    @commands.hybrid_command(
-        description='Roll an integer from 1 to `max_roll_number`'
-    )
+    @commands.hybrid_command(description='Roll an integer from 1 to `max_roll_number`')
     @app_commands.describe(max_roll_number="Max limit to roll")
     async def roll(self, ctx, max_roll_number: commands.Range[int, 1, None]):
         """Roll an integer from 1 to `max_roll_number` ;"""
         await ctx.reply(randint(1, max_roll_number + 1))
 
-    @commands.hybrid_command(
-        usage='[channel=curr] [text=Allo]',
-        description='Echo something somewhere'
-    )
+    @commands.hybrid_command(usage='[channel=curr] [text=Allo]', description='Echo something somewhere')
     @app_commands.describe(channel="Channel to send to")
     @app_commands.describe(text="Enter text to speak")
-    async def echo(
-            self,
-            ctx: Context,
-            channel: Optional[discord.TextChannel] = None,
-            *,
-            text: str = 'Allo'
-    ):
+    async def echo(self, ctx: Context, channel: Optional[discord.TextChannel] = None, *, text: str = 'Allo'):
         """Send `text` to `#channel` and delete your invoking message,
         so it looks like the bot is speaking on its own.
         """
@@ -158,9 +149,7 @@ class Other(FunBase):
                 [f'Sorry, these channels are special so you can\'t use this command in {ch.mention}']
             )
         elif not ch.permissions_for(ctx.author).send_messages:
-            raise commands.MissingPermissions(
-                [f'Sorry, you don\'t have permissions to speak in {ch.mention}']
-            )
+            raise commands.MissingPermissions([f'Sorry, you don\'t have permissions to speak in {ch.mention}'])
         else:
             url_array = re.findall(Rgx.url_danny, str(text))
             for url in url_array:  # forbid embeds
@@ -174,9 +163,7 @@ class Other(FunBase):
             pass
 
     @commands.hybrid_command(
-        name='emoteit',
-        aliases=['emotialize'],
-        description="Emotializes your text into standard emotes"
+        name='emoteit', aliases=['emotialize'], description="Emotializes your text into standard emotes"
     )
     @app_commands.describe(text="Text that will be converted into emotes")
     async def emoteit(self, ctx: Context, *, text: str):
@@ -198,11 +185,37 @@ class Other(FunBase):
 
             # [f'{chr(0x30 + i)}{chr(0x20E3)}' for i in range(10)] < also numbers but from chars
             emotialize_dict = {
-                ' ': ' ', '!': '\N{WHITE EXCLAMATION MARK ORNAMENT}', '?': '\N{WHITE QUESTION MARK ORNAMENT}'
+                ' ': ' ',
+                '!': '\N{WHITE EXCLAMATION MARK ORNAMENT}',
+                '?': '\N{WHITE QUESTION MARK ORNAMENT}',
             } | {str(i): n for i, n in enumerate(Ems.phone_numbers)}
             alphabet = [  # maybe make char one as well one day
-                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-                'u', 'v', 'w', 'x', 'y', 'z'
+                'a',
+                'b',
+                'c',
+                'd',
+                'e',
+                'f',
+                'g',
+                'h',
+                'i',
+                'j',
+                'k',
+                'l',
+                'm',
+                'n',
+                'o',
+                'p',
+                'q',
+                'r',
+                's',
+                't',
+                'u',
+                'v',
+                'w',
+                'x',
+                'y',
+                'z',
             ]
             for item in alphabet:
                 emotialize_dict[item] = f':regional_indicator_{item}: '

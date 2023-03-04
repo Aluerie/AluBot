@@ -15,10 +15,10 @@ if TYPE_CHECKING:
 
 class RPSView(discord.ui.View):
     def __init__(
-            self,
-            *,
-            players: [discord.Member, discord.Member],
-            message: Optional[discord.Message] = None,
+        self,
+        *,
+        players: [discord.Member, discord.Member],
+        message: Optional[discord.Message] = None,
     ):
         super().__init__()
         self.players: [discord.Member, discord.Member] = players
@@ -28,10 +28,7 @@ class RPSView(discord.ui.View):
 
     async def on_timeout(self) -> None:
         e = self.message.embeds[0]
-        e.add_field(
-            name='Timeout',
-            value='Sorry, it is been too long, game is over in Draw due to timeout.'
-        )
+        e.add_field(name='Timeout', value='Sorry, it is been too long, game is over in Draw due to timeout.')
         await self.message.edit(embed=e, view=None)
 
     async def bot_choice_edit(self):
@@ -52,10 +49,10 @@ class RPSView(discord.ui.View):
             2,
             name=e.fields[2].name,
             value=(
-                e.fields[2].value +
-                f'\n\N{BLACK CIRCLE} Player {1 + player_index} {self.players[player_index].mention} has made their choice'
+                e.fields[2].value
+                + f'\n\N{BLACK CIRCLE} Player {1 + player_index} {self.players[player_index].mention} has made their choice'
             ),
-            inline=False
+            inline=False,
         )
         await self.message.edit(embed=e)
 
@@ -81,7 +78,8 @@ class RPSView(discord.ui.View):
             await ntr.response.send_message(embed=e, ephemeral=True)
             await self.edit_embed_player_choice(player_index)
 
-        if self.choices[1-player_index] is not None:
+        if self.choices[1 - player_index] is not None:
+
             def winner_index(p1, p2):
                 if (p1 + 1) % 3 == p2:
                     return 2  # Player 2 won because their move is one greater than player 1
@@ -95,16 +93,13 @@ class RPSView(discord.ui.View):
             win_index = winner_index(*player_choices)
 
             def winning_sentence():
-                verb_dict = {
-                    '🪨 Rock': 'smashes',
-                    '🗞️ Paper': 'covers',
-                    '✂ Scissors': 'cut'
-                }
+                verb_dict = {'🪨 Rock': 'smashes', '🗞️ Paper': 'covers', '✂ Scissors': 'cut'}
                 if win_index:
-                    return \
-                        f'{self.choices[win_index-1]} ' \
-                        f'{verb_dict[self.choices[win_index-1]]} ' \
+                    return (
+                        f'{self.choices[win_index-1]} '
+                        f'{verb_dict[self.choices[win_index-1]]} '
                         f'{self.choices[1-(win_index-1)]}'
+                    )
                 else:
                     return 'Both players chose the same !'
 
@@ -116,7 +111,7 @@ class RPSView(discord.ui.View):
                     f'\n\n**Good Game, Well Played {Ems.DankL} {Ems.DankL} {Ems.DankL}**'
                     f'\n**{outcome_list[win_index]}**'
                 ),
-                inline=False
+                inline=False,
             )
             if win_index:
                 em_game.set_thumbnail(url=self.players[win_index - 1].avatar.url)
@@ -137,7 +132,6 @@ class RPSView(discord.ui.View):
 
 
 class RockPaperScissorsCommand(FunBase):
-
     @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps', 'rock_paper_scissors'])
     async def rps(self, ctx: Context, member: discord.Member):
         """Rock Paper Scissors game with @member"""
@@ -150,7 +144,9 @@ class RockPaperScissorsCommand(FunBase):
         e = discord.Embed(title='Rock Paper Scissors Game', colour=Clr.prpl)
         e.add_field(name='Player 1', value=f'{players[0].mention}')
         e.add_field(name='Player 2', value=f'{players[1].mention}')
-        e.add_field(name='Game State Log', value='\N{BLACK CIRCLE} Both players need to choose their item', inline=False)
+        e.add_field(
+            name='Game State Log', value='\N{BLACK CIRCLE} Both players need to choose their item', inline=False
+        )
         view = RPSView(players=players)
         view.message = await ctx.reply(embed=e, view=view)
         if member.bot:

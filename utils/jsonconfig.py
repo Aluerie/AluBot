@@ -101,14 +101,12 @@ class Config(Generic[_T]):
 
 class PrefixConfig(Config):
     """Prefix Config"""
+
     if TYPE_CHECKING:
         pool: Pool
 
     def __init__(self, pool: Pool):
-        super().__init__(
-            filename='prefixes.json',
-            pool=pool
-        )
+        super().__init__(filename='prefixes.json', pool=pool)
 
     async def load_from_database(self):
         query = 'SELECT id, prefix FROM guilds'

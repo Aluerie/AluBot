@@ -1,17 +1,17 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal, Optional, Union
 
 import datetime
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 import discord
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from discord import app_commands
 from discord.ext import commands, tasks
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from utils.converters import my_bool
-from utils.formats import ordinal, human_timedelta, indent
+from utils.formats import human_timedelta, indent, ordinal
 from utils.pagination import EnumeratedPages
-from utils.var import Ems, Sid, Cid, Clr
+from utils.var import Cid, Clr, Ems, Sid
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -20,9 +20,36 @@ if TYPE_CHECKING:
 LAST_SEEN_TIMEOUT = 60
 
 exp_lvl_table = [
-    5, 230, 600, 1080, 1660, 2260, 2980, 3730, 4620, 5550,
-    6520, 7530, 8580, 9805, 11055, 12330, 13630, 14955, 16455, 18045,
-    19645, 21495, 23595, 25945, 28545, 32045, 36545, 42045, 48545, 56045
+    5,
+    230,
+    600,
+    1080,
+    1660,
+    2260,
+    2980,
+    3730,
+    4620,
+    5550,
+    6520,
+    7530,
+    8580,
+    9805,
+    11055,
+    12330,
+    13630,
+    14955,
+    16455,
+    18045,
+    19645,
+    21495,
+    23595,
+    25945,
+    28545,
+    32045,
+    36545,
+    42045,
+    48545,
+    56045,
 ]
 
 thanks_words = ['thanks', 'ty', 'thank']
@@ -53,8 +80,10 @@ async def rank_image(bot: AluBot, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, pla
 
     d = ImageDraw.Draw(image)
     d.rectangle([0, height * 6 / 7, width, height], fill=(98, 98, 98))
-    d.rectangle([0, height * 6 / 7, (exp - prev_lvl_exp) / (next_lvl_exp - prev_lvl_exp) * width, height],
-                fill=member.color.to_rgb())
+    d.rectangle(
+        [0, height * 6 / 7, (exp - prev_lvl_exp) / (next_lvl_exp - prev_lvl_exp) * width, height],
+        fill=member.color.to_rgb(),
+    )
 
     font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 60)
     d.text((width / 4, 0), member.display_name, fill=(255, 255, 255), font=font)
@@ -102,7 +131,7 @@ async def rank_work(ctx: Union[Context, discord.Interaction], member: discord.Me
     if not row.inlvl:
         return await ctx.reply(content="You decided to opt out of the exp system before")
     lvl = get_level(row.exp)
-    next_lvl_exp, prev_lvl_exp = get_exp_for_next_level(lvl), get_exp_for_next_level(lvl-1)
+    next_lvl_exp, prev_lvl_exp = get_exp_for_next_level(lvl), get_exp_for_next_level(lvl - 1)
 
     query = 'SELECT count(*) FROM users WHERE exp > $1'
     place = 1 + await ctx.pool.fetchval(query, row.exp)
@@ -121,6 +150,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
     There is a profile system in Irene\'s server: levelling experience,
     reputation and many other things (currency, custom profile) to come
     """
+
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
@@ -139,11 +169,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
     async def cog_unload(self) -> None:
         self.remove_inactive.cancel()
 
-    @commands.hybrid_command(
-        aliases=['ls'],
-        usage='[member=you]',
-        description='Show when `@member` was last seen'
-    )
+    @commands.hybrid_command(aliases=['ls'], usage='[member=you]', description='Show when `@member` was last seen')
     @app_commands.describe(member='Member to check')
     async def lastseen(self, ctx: Context, member: Optional[discord.Member] = None):
         """Show when `@member` was last seen on this server ;"""
@@ -154,11 +180,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         answer_text = f'{member.mention} was last seen in this server {human_timedelta(dt_delta)}'
         await ctx.reply(content=answer_text)
 
-    @commands.hybrid_command(
-        name='leaderboard',
-        aliases=['l'],
-        description='View server leaderboard'
-    )
+    @commands.hybrid_command(name='leaderboard', aliases=['l'], description='View server leaderboard')
     @app_commands.describe(sort_by='Choose how to sort leaderboard')
     async def leaderboard(self, ctx, sort_by: Literal['exp', 'rep'] = 'exp'):
         """View experience leaderboard for this server ;"""
@@ -191,7 +213,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
             per_page=split_size,
             colour=Clr.prpl,
             title="Server Leaderboard",
-            footer_text=f'With love, {guild.me.display_name}'
+            footer_text=f'With love, {guild.me.display_name}',
         )
         await pgs.start()
 
@@ -224,9 +246,8 @@ class ExperienceSystem(commands.Cog, name='Profile'):
                     level_up_role = discord.utils.get(message.guild.roles, name=f"Level #{level}")
                     previous_level_role = discord.utils.get(message.guild.roles, name=f"Level #{level - 1}")
                     e = discord.Embed(colour=Clr.prpl)
-                    e.description = (
-                        '{0} just advanced to {1} ! '
-                        '{2} {2} {2}'.format(message.author.mention, level_up_role.mention, Ems.PepoG)
+                    e.description = '{0} just advanced to {1} ! ' '{2} {2} {2}'.format(
+                        message.author.mention, level_up_role.mention, Ems.PepoG
                     )
                     await message.channel.send(embed=e)
                     await message.author.remove_roles(previous_level_role)
@@ -239,23 +260,14 @@ class ExperienceSystem(commands.Cog, name='Profile'):
                             query = 'UPDATE users SET rep=rep+1 WHERE id=$1'
                             await self.bot.pool.execute(query, member.id)
 
-    @commands.hybrid_command(
-        name='avatar',
-        description="View User Avatar",
-        usage='[member=you]'
-    )
+    @commands.hybrid_command(name='avatar', description="View User Avatar", usage='[member=you]')
     async def avatar_bridge(self, ctx: Context, user: discord.User = None):
         """Show avatar for `@user`"""
         e = await avatar_work(ctx, user)
         await ctx.reply(embed=e)
 
-    @commands.hybrid_command(
-        aliases=['r'],
-        name='rank',
-        description="View User Server Rank",
-        usage='[member=you]'
-    )
-    async def rank_bridge(self, ctx: Context,  *, member: discord.Member = None):
+    @commands.hybrid_command(aliases=['r'], name='rank', description="View User Server Rank", usage='[member=you]')
+    async def rank_bridge(self, ctx: Context, *, member: discord.Member = None):
         """Show `@member`'s rank, level and experience"""
         await ctx.reply(file=await rank_work(ctx, member))
 
@@ -274,11 +286,8 @@ class ExperienceSystem(commands.Cog, name='Profile'):
         )
         await ctx.reply(content=ans)
 
-    @commands.hybrid_command(
-        name='rep',
-        description='Give +1 to @member reputation'
-    )
-    @commands.cooldown(1, 60*60, commands.BucketType.user)
+    @commands.hybrid_command(name='rep', description='Give +1 to @member reputation')
+    @commands.cooldown(1, 60 * 60, commands.BucketType.user)
     @app_commands.describe(member='Member to give rep to')
     async def rep(self, ctx, member: discord.Member):
         """Give +1 to `@member`'s reputation ;"""
@@ -288,7 +297,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
             query = 'UPDATE users SET rep=rep+1 WHERE id=$1 RETURNING rep'
             rep = await self.bot.pool.fetchval(query, member.id)
             answer_text = f'Added +1 reputation to **{member.display_name}**: now {rep} reputation'
-            await ctx.reply(content=answer_text) 
+            await ctx.reply(content=answer_text)
 
     @tasks.loop(time=datetime.time(hour=13, minute=13, tzinfo=datetime.timezone.utc))
     async def remove_inactive(self):
@@ -301,7 +310,10 @@ class ExperienceSystem(commands.Cog, name='Profile'):
             if person is None and discord.utils.utcnow() - row.lastseen > datetime.timedelta(days=30):
                 query = 'DELETE FROM users WHERE id=$1'
                 await self.bot.pool.execute(query, row.id)
-                e = discord.Embed(description=f"id = {row.id}", colour=0xE6D690,)
+                e = discord.Embed(
+                    description=f"id = {row.id}",
+                    colour=0xE6D690,
+                )
                 e.set_author(name=f"{row.name} was removed from the datebase")
                 await guild.get_channel(Cid.logs).send(embed=e)
 

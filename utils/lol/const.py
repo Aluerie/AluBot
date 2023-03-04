@@ -16,7 +16,7 @@ __all__ = (
     'platform_to_server',
     'platform_to_region',
     'SOLO_RANKED_5v5_QUEUE_ENUM',
-    'LOL_GAME_CATEGORY_TWITCH_ID'
+    'LOL_GAME_CATEGORY_TWITCH_ID',
 )
 
 LOL_LOGO = 'https://i.imgur.com/1DJa07b.png'
@@ -27,8 +27,28 @@ LiteralPlatform = Literal['br1', 'eun1', 'euw1', 'jp1', 'kr', 'la1', 'la2', 'na1
 LiteralRegion = Literal['americas', 'asia', 'europe']
 LiteralServerUpper = Literal['BR', 'EUN', 'EUW', 'JP', 'KR', 'LAN', 'LAS', 'NA', 'OC', 'RU', 'TR']
 LiteralServer = Literal[
-    'BR', 'EUN', 'EUW', 'JP', 'KR', 'LAN', 'LAS', 'NA', 'OC', 'RU', 'TR',
-    'br', 'eun', 'euw', 'jp', 'kr', 'lan', 'las', 'na', 'oc', 'ru', 'tr'
+    'BR',
+    'EUN',
+    'EUW',
+    'JP',
+    'KR',
+    'LAN',
+    'LAS',
+    'NA',
+    'OC',
+    'RU',
+    'TR',
+    'br',
+    'eun',
+    'euw',
+    'jp',
+    'kr',
+    'lan',
+    'las',
+    'na',
+    'oc',
+    'ru',
+    'tr',
 ]
 
 
@@ -43,7 +63,7 @@ platform_to_region_dict = {
     'na1': 'americas',
     'oc1': 'asia',
     'ru': 'europe',
-    'tr1': 'europe'
+    'tr1': 'europe',
 }
 
 server_to_platform_dict = {
@@ -57,13 +77,10 @@ server_to_platform_dict = {
     'na': 'na1',
     'oc': 'oc1',
     'ru': 'ru',
-    'tr': 'tr1'
+    'tr': 'tr1',
 }
 
-platform_to_server_dict = {
-    v: k
-    for k, v in server_to_platform_dict.items()
-}
+platform_to_server_dict = {v: k for k, v in server_to_platform_dict.items()}
 
 
 def server_to_platform(server: LiteralServer) -> LiteralPlatform:

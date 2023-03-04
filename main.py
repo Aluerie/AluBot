@@ -69,18 +69,20 @@ async def discord_bot_start(test: bool):
         click.echo('Could not set up PostgreSQL. Exiting.', file=sys.stderr)
         log.exception('Could not set up PostgreSQL. Exiting.')
         return
-    
-    
+
     async with AluBot(test) as bot:
         bot.pool = pool
 
         if 'cogs.twitchbot' in get_extensions(test):
             from cogs.twitchbot._twtvbot import TwitchBot
+
             bot.twitchbot = tb = TwitchBot(bot)
             tb = tb.start()
         else:
+
             async def empty_coro():
                 return
+
             tb = empty_coro()
         await asyncio.gather(bot.my_start(), tb)
 

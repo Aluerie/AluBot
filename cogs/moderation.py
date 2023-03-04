@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Annotated
 
 import datetime
+from typing import TYPE_CHECKING, Annotated
 
 import discord
 from discord import app_commands
@@ -9,7 +9,7 @@ from discord.ext import commands
 
 from utils import times
 from utils.context import Context
-from utils.var import Rid, Ems, Clr, Uid, Sid, Cid
+from utils.var import Cid, Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 class Moderation(commands.Cog):
     """Commands to moderate servers with"""
+
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.active_mutes = {}
@@ -71,14 +72,14 @@ class Moderation(commands.Cog):
     @commands.has_role(Rid.discord_mods)
     @commands.command(usage='<time> [reason]')
     async def mute(
-            self,
-            ctx: Context,
-            member: discord.Member,
-            *,
-            when: Annotated[
-                times.FriendlyTimeResult,
-                times.UserFriendlyTime(commands.clean_content, default='…')  # type: ignore # pycharm things
-            ]
+        self,
+        ctx: Context,
+        member: discord.Member,
+        *,
+        when: Annotated[
+            times.FriendlyTimeResult,
+            times.UserFriendlyTime(commands.clean_content, default='…'),  # type: ignore # pycharm things
+        ],
     ):
         """Mute+timeout member from chatting"""
         delta = when.dt - discord.utils.utcnow()
@@ -112,8 +113,7 @@ class Moderation(commands.Cog):
                     mute_actor_str = entry.user.name
 
             e.set_author(
-                name=f'{after.display_name} is muted by {mute_actor_str} until',
-                icon_url=after.display_avatar.url
+                name=f'{after.display_name} is muted by {mute_actor_str} until', icon_url=after.display_avatar.url
             )
             return await self.bot.get_channel(Cid.logs).send(embed=e)
 

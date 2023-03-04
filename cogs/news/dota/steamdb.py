@@ -62,7 +62,6 @@ async def get_gitdiff_embed(test_num: int = 0):
 
 
 class SteamDB(DotaNewsBase):
-
     def cog_load(self) -> None:
         self.bot.ini_github()
 
@@ -84,9 +83,7 @@ class SteamDB(DotaNewsBase):
                         msg = await self.news_channel.send(files=files)
                         await msg.publish()
                 if "https://steamcommunity.com" in msg.content:
-                    msg = await self.news_channel.send(
-                        content=msg.content, embeds=msg.embeds, files=msg.attachments
-                    )
+                    msg = await self.news_channel.send(content=msg.content, embeds=msg.embeds, files=msg.attachments)
                     await msg.publish()
 
             elif msg.channel.id == Cid.copydota_steam:

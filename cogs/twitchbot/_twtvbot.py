@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 
 
 class TwitchBot(commands.Bot):
-
     def __init__(self, discord_bot: AluBot):
         # prefix can be a callable, which returns a list of strings or a string...
         # initial_channels can also be a callable which returns a list of strings...

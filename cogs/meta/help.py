@@ -49,102 +49,102 @@ class HelpPageSource(menus.ListPageSource):
                 f'Maybe I even forgot something to write down'
             )
             e.add_field(
-                name='• Notifications about fav Aluerie\'s streamers picking her fav champs/heroes', inline=False,
-                value=f'Just look into <#{Cid.alubot}> !'
+                name='• Notifications about fav Aluerie\'s streamers picking her fav champs/heroes',
+                inline=False,
+                value=f'Just look into <#{Cid.alubot}> !',
             )
             e.add_field(
-                name='• News feeds', inline=False,
+                name='• News feeds',
+                inline=False,
                 value=(
                     f'Dota/League related news feed in <#{Cid.dota_news}> and <#{Cid.lol_news}> '
                     f'taken from all over the internet! Even more, bot automatically parsed and analyses dota updates ;'
-                )
+                ),
             )
             e.add_field(
-                name='• Context Menu Commands', inline=False,
-                value='Right click any user/message and find some commands in `Apps` folder'
+                name='• Context Menu Commands',
+                inline=False,
+                value='Right click any user/message and find some commands in `Apps` folder',
             )
             e.add_field(
-                name='• Confessions', inline=False,
+                name='• Confessions',
+                inline=False,
                 value=(
                     f'Just visit <#{Cid.confessions}> and use buttons at the very bottom of the channel. '
                     f'There are two buttons: for anonymous and non-anonymous confessions. '
                     f'If you use the latter - your server nickname will be shown in confession message.'
-                )
+                ),
             )
             e.add_field(
-                name='• Some stats', inline=False,
-                value='Scroll down channel list to see some stats like my local time ;'
+                name='• Some stats',
+                inline=False,
+                value='Scroll down channel list to see some stats like my local time ;',
             )
             e.add_field(
-                name='• Twitch.tv notifications', inline=False,
+                name='• Twitch.tv notifications',
+                inline=False,
                 value=(
                     f'Notifications for my own stream in <#{Cid.stream_notifs}> and '
                     f'<@&{Rid.live_stream}> role for live streamers-members'
-                )
+                ),
+            )
+            e.add_field(name='• Reaction roles', inline=False, value=f'Take some roles in <#{Cid.roles}>')
+            e.add_field(name='• Timers', inline=False, value=f'Bot sometimes posts daily reminders in <#{Cid.general}>')
+            e.add_field(
+                name='• Welcoming new people', inline=False, value=f'The bot welcomes new people in <#{Cid.welcome}>'
             )
             e.add_field(
-                name='• Reaction roles', inline=False,
-                value=f'Take some roles in <#{Cid.roles}>'
-            )
-            e.add_field(
-                name='• Timers', inline=False,
-                value=f'Bot sometimes posts daily reminders in <#{Cid.general}>'
-            )
-            e.add_field(
-                name='• Welcoming new people', inline=False,
-                value=f'The bot welcomes new people in <#{Cid.welcome}>'
-            )
-            e.add_field(
-                name='• Controlling emote spam channels', inline=False,
+                name='• Controlling emote spam channels',
+                inline=False,
                 value=(
                     f'The bots moderates <#{Cid.comfy_spam}> and <#{Cid.emote_spam}>, '
                     f'also sometimes spams these channels too ;'
-                )
+                ),
             )
             e.add_field(
-                name="• Logging", inline=False,
+                name="• Logging",
+                inline=False,
                 value=(
                     'The bot logs a lot of actions like message editing, new profile pics, emote change, etc '
                     'into different channels;'
-                )
+                ),
             )
             e.add_field(
-                name="• Milestone members", inline=False,
+                name="• Milestone members",
+                inline=False,
                 value=(
                     f'Every 50th member of this server gets fancy <@&{Rid.milestone}> role and '
                     f'small congratulation text in <#{Cid.welcome}>'
-                )
+                ),
             )
             e.add_field(
-                name="• Random comfy reactions", inline=False,
-                value=f"Every message has a chance to get a comfy {Ems.peepoComfy} reaction on it ;"
+                name="• Random comfy reactions",
+                inline=False,
+                value=f"Every message has a chance to get a comfy {Ems.peepoComfy} reaction on it ;",
             )
             e.add_field(
-                name='• Some important things', inline=False,
-                value=f'For example, the bot does not like bots in <#{Cid.general}> and weebs in <#{Cid.weebs}>'
+                name='• Some important things',
+                inline=False,
+                value=f'For example, the bot does not like bots in <#{Cid.general}> and weebs in <#{Cid.weebs}>',
             )
             e.add_field(
-                name='• Thanks to twitch subs', inline=False,
+                name='• Thanks to twitch subs',
+                inline=False,
                 value=(
                     f"The bot thanks people who get role <@&{Rid.subs}> via discord-twitch integration "
                     f"in <#{Cid.stream_notifs}>"
-                )
+                ),
             )
+            e.add_field(name='• Experience system', inline=False, value='We have our own special experience system')
             e.add_field(
-                name='• Experience system', inline=False,
-                value='We have our own special experience system'
-            )
-            e.add_field(
-                name='• Reputation system', inline=False,
+                name='• Reputation system',
+                inline=False,
                 value=(
                     'Your "thanks", "ty" messages with mentions give people reputation or '
                     'you can just use `$rep` command'
-                )
+                ),
             )
-            e.add_field(
-                name='• Your life is...', inline=False,
-                value='Just a joke !'
-            )
+            e.add_field(name='• Your life is...', inline=False, value='Just a joke !')
         elif cmds:
             e.title = getattr(cog, "qualified_name", "No Category")
             cog_desc = getattr(cog, "description", "No Description")
@@ -153,8 +153,7 @@ class HelpPageSource(menus.ListPageSource):
             command_signatures = [chr(10).join(await self.help_cmd.get_the_answer(c)) for c in cmds]
 
             e.description = (
-                f'{str(cog_emote) + " " if cog_emote else ""}{cog_desc}\n\n'
-                f'{chr(10).join(command_signatures)}'
+                f'{str(cog_emote) + " " if cog_emote else ""}{cog_desc}\n\n' f'{chr(10).join(command_signatures)}'
             )
 
         return e
@@ -185,17 +184,14 @@ class HelpSelect(discord.ui.Select):
             cog_emote = getattr(cog, "help_emote", None)
 
             self.add_option(
-                label=cog_name,
-                description=cog_desc.split('\n', 1)[0],
-                emoji=cog_emote,
-                value=str(counter + 1)
+                label=cog_name, description=cog_desc.split('\n', 1)[0], emoji=cog_emote, value=str(counter + 1)
             )
             counter += 1
         self.add_option(
             label='Other Features',
             description='Things that bot does without commands',
             emoji=Ems.PepoDetective,
-            value=str(max_len - 1)
+            value=str(max_len - 1),
         )
 
     async def callback(self, ntr: discord.Interaction):
@@ -213,17 +209,17 @@ class HelpPages(Paginator):
 class MyHelpCommand(commands.HelpCommand):
     context: Context
 
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         super().__init__(
             verify_checks=True,
             command_attrs={
                 'hidden': False,  # change to True to hide from help menu
-                'help':
-                    'Show `help` menu for common bot commands. '
-                    'Note that you can use `$help [command/group/cog]` to get a help on specific things',
-                'brief':
-                    f'{Ems.slash}'
-            }
+                'help': 'Show `help` menu for common bot commands. '
+                'Note that you can use `$help [command/group/cog]` to get a help on specific things',
+                'brief': f'{Ems.slash}',
+            },
         )
 
     async def get_the_answer(self, c, answer=None, deep=0):
@@ -233,7 +229,7 @@ class MyHelpCommand(commands.HelpCommand):
             if c.brief == Ems.slash:
                 answer.append(self.get_command_signature(c))
             for x in await self.filter_commands(c.commands, sort=True):
-                await self.get_the_answer(x, answer=answer, deep=deep+1)
+                await self.get_the_answer(x, answer=answer, deep=deep + 1)
             if deep > 0:
                 answer.append('')
         else:
@@ -241,7 +237,6 @@ class MyHelpCommand(commands.HelpCommand):
         return answer
 
     def get_command_signature(self, c: commands.Command):
-
         def signature():
             sign = f' `{c.signature}`' if c.signature else ''
             name = c.name if not getattr(c, 'root_parent') else c.root_parent.name

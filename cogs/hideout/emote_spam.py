@@ -21,7 +21,6 @@ COMFY_SPAM = 727539910713671802
 
 
 class EmoteSpam(HideoutBase):
-
     async def cog_load(self) -> None:
         self.emote_spam.start()
         self.offline_criminal_check.start()
@@ -54,8 +53,11 @@ class EmoteSpam(HideoutBase):
                     await message.delete()
                 except discord.NotFound:
                     return
-                answer_text = "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}"\
-                    .format(message.author.mention, message.channel.mention, Ems.Ree)
+                answer_text = (
+                    "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
+                        message.author.mention, message.channel.mention, Ems.Ree
+                    )
+                )
                 e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl)
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.get_channel(Cid.bot_spam).send(answer_text, embed=e)
@@ -127,9 +129,10 @@ class ComfySpam(commands.Cog):
             for item in Ems.comfy_emotes:
                 text = text.replace(item, "")
             if text:
-                answer_text = \
-                    "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! " \
+                answer_text = (
+                    "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! "
                     "{2} {2} {2}".format(message.author.mention, message.channel.mention, Ems.Ree)
+                )
                 e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl)
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.get_channel(Cid.bot_spam).send(answer_text, embed=e)

@@ -9,6 +9,5 @@ if TYPE_CHECKING:
 
 
 class MetaBase(commands.Cog):
-
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot

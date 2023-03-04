@@ -19,15 +19,10 @@ if TYPE_CHECKING:
 
 class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
     summary = discord.ui.TextInput(
-        label='Summary',
-        placeholder='A brief explanation of what you want',
-        max_length=Lmt.Embed.title
+        label='Summary', placeholder='A brief explanation of what you want', max_length=Lmt.Embed.title
     )
     details = discord.ui.TextInput(
-        label='Details',
-        placeholder='Leave a comment',
-        style=discord.TextStyle.long,
-        required=False
+        label='Details', placeholder='Leave a comment', style=discord.TextStyle.long, required=False
     )
 
     def __init__(self, cog: OtherCog) -> None:
@@ -47,57 +42,6 @@ class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
 
 
 class OtherCog(MetaBase):
-
-    # **The** famous Umbra\'s sync command holy moly. `?tag usc`. Or `?tag umbra sync command`
-    @is_owner()
-    @commands.command()
-    async def sync(
-            self,
-            ctx: Context,
-            guilds: commands.Greedy[discord.Object],
-            spec: Optional[Literal["~", "*", "^"]] = None
-    ) -> None:
-        """Sync command. Usage examples:
-        * `$sync` -> global sync
-        * `$sync ~` -> sync current guild
-        * `$sync *` -> copies all global app commands to current guild and syncs
-        * `$sync ^` -> clears all commands from the current guild target and syncs (removes guild commands)
-        * `$sync id_1 id_2` -> syncs guilds with id 1 and 2
-        """
-
-        # todo: remove this from help for plebs
-        if not guilds:
-            match spec:
-                case "~":
-                    synced = await ctx.bot.tree.sync(guild=ctx.guild)
-                case "*":
-                    ctx.bot.tree.copy_global_to(guild=ctx.guild)
-                    synced = await ctx.bot.tree.sync(guild=ctx.guild)
-                case "^":
-                    ctx.bot.tree.clear_commands(guild=ctx.guild)
-                    await ctx.bot.tree.sync(guild=ctx.guild)
-                    synced = []
-                case _:
-                    synced = await ctx.bot.tree.sync()
-
-            e = discord.Embed(colour=Clr.prpl)
-            e.description = f"Synced `{len(synced)}` commands {'globally' if spec is None else 'to the current guild.'}"
-            await ctx.reply(embed=e)
-            return
-
-        fmt = 0
-        cmds = []
-        for guild in guilds:
-            try:
-                cmds += await ctx.bot.tree.sync(guild=guild)
-            except discord.HTTPException:
-                pass
-            else:
-                fmt += 1
-        e = discord.Embed(colour=Clr.prpl)
-        e.description = f"Synced the tree to `{fmt}/{len(guilds)}` guilds."
-        await ctx.reply(embed=e)
-
     @commands.command(aliases=['join'])
     async def invite(self, ctx: Context):
         """Show the invite link, so you can add me to your server.

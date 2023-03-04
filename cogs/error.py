@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import inspect
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
@@ -9,8 +9,8 @@ from discord.ext import commands
 
 from utils.context import Context
 from utils.formats import human_timedelta
-from utils.translator import TranslateError
 from utils.times import BadTimeTransform
+from utils.translator import TranslateError
 from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
@@ -24,8 +24,12 @@ class CommandErrorHandler(commands.Cog):
 
     async def command_error_work(self, ctx: Context, error) -> None:
         while isinstance(
-                error,
-                (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError,)
+            error,
+            (
+                commands.HybridCommandError,
+                commands.CommandInvokeError,
+                app_commands.CommandInvokeError,
+            ),
         ):  # circle to the actual error throughout all the chains
             error = error.original
 
@@ -42,9 +46,11 @@ class CommandErrorHandler(commands.Cog):
                 desc = f'Please, provide this flag:\n`{error.flag.name}`'
             case commands.MissingRequiredArgument():
                 desc = f'Please, provide this argument:\n`{error.param.name}`'
-                if getattr(error.param, 'converter', None) and \
-                        inspect.isclass(error.param.converter) and \
-                        issubclass(error.param.converter, commands.FlagConverter):
+                if (
+                    getattr(error.param, 'converter', None)
+                    and inspect.isclass(error.param.converter)
+                    and issubclass(error.param.converter, commands.FlagConverter)
+                ):
                     desc += (
                         '\n\nThis is flag based argument. '
                         'Remember, commands with those are used together with flag-keywords , i.e.\n'
@@ -77,8 +83,9 @@ class CommandErrorHandler(commands.Cog):
             case commands.BadBoolArgument():
                 desc = f'Bad argument: {error.argument}'
             case commands.BadLiteralArgument():
-                desc = \
+                desc = (
                     f'Only these choices are valid for parameter `{error.param.name}`:\n `{", ".join(error.literals)}`'
+                )
             case commands.BadArgument():
                 desc = f'{error}'
             case commands.MissingPermissions():
@@ -103,12 +110,12 @@ class CommandErrorHandler(commands.Cog):
                 desc = f'Sorry, only {ctx.bot.owner} as the bot owner is allowed to use this command.'
             case commands.PrivateMessageOnly():
                 desc = (
-                    f"The command is only for usage in private messages with the bot. " 
+                    f"The command is only for usage in private messages with the bot. "
                     f"Please, send a dm to {self.bot.user.mention}"
                 )
             case commands.NoPrivateMessage():
                 desc = (
-                    f"The command is only for usage in server channels. " 
+                    f"The command is only for usage in server channels. "
                     f"Please, go to a server where {self.bot.user.mention} is invited."
                 )
             case commands.CommandOnCooldown() | app_commands.CommandOnCooldown():
@@ -139,9 +146,9 @@ class CommandErrorHandler(commands.Cog):
                     error_e.set_author(
                         name=f'{ctx.author} triggered error in {ctx.channel}',
                         url=jump_url,
-                        icon_url=ctx.author.display_avatar.url
+                        icon_url=ctx.author.display_avatar.url,
                     )
-                mention = (ctx.channel.id != ctx.bot.spam_ch_id)
+                mention = ctx.channel.id != ctx.bot.spam_ch_id
                 await self.bot.send_traceback(error, embed=error_e, mention=mention)
 
         # send the error
@@ -165,7 +172,7 @@ class CommandErrorHandler(commands.Cog):
         # if command is not None:
         #     if command._has_any_error_handlers():
         #         return
-        
+
         if not getattr(ntr, 'error_handled', False):
             ctx = await Context.from_interaction(ntr)
             await self.command_error_work(ctx, error)

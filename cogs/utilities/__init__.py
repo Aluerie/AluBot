@@ -1,9 +1,9 @@
-import imp
 import discord
 
 from .dev_utils import DevUtilities
 
 from utils.var import Ems
+
 
 class Utilities(
     DevUtilities,
@@ -16,3 +16,7 @@ class Utilities(
     def help_emote(self) -> discord.PartialEmoji:
         # todo: different emote - this one is taken
         return discord.PartialEmoji.from_str(Ems.FeelsDankManLostHisHat)
+
+
+async def setup(bot):
+    await bot.add_cog(Utilities(bot))

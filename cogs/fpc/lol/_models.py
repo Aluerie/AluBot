@@ -1,22 +1,24 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import logging
-from typing import TYPE_CHECKING, List
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING, List, Tuple
 
 import discord
 from PIL import Image, ImageDraw, ImageFont
-from pyot.utils.lol import champion
 from pyot.utils.functools import async_property
+from pyot.utils.lol import champion
 
-from .const import LiteralPlatform, platform_to_server
-from .utils import get_role_mini_list, icon_url_by_champ_id
 from utils.formats import human_timedelta
-from utils.var import Clr, MP
+from utils.var import MP, Clr
+
+from utils.lol.const import LiteralPlatform, platform_to_server
+from utils.lol.utils import get_role_mini_list, icon_url_by_champ_id
 
 if TYPE_CHECKING:
-    from pyot.models.lol import Spell, Rune
+    from pyot.models.lol import Rune, Spell
     from pyot.models.lol.match import MatchParticipantData
+
     from utils.bot import AluBot
 
 __all__ = ('Account', 'Match', 'LiveMatch', 'PostMatchPlayer')
@@ -142,7 +144,7 @@ class LiveMatch(Match):
         log.debug('I m here #6')
         return img
 
-    async def notif_embed_and_file(self, bot: AluBot) -> (discord.Embed, discord.File):
+    async def notif_embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File]:
         ts = await bot.twitch.get_twitch_stream(self.twitch_id)
         img_file = bot.imgtools.img_to_file(
             await self.better_thumbnail(ts.preview_url, ts.display_name, bot),

@@ -3,11 +3,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, List
 
-
 from discord.ext import commands, tasks
 from pyot.core.exceptions import NotFound
 
-from utils.lol.models import PostMatchPlayer
+from ._models import PostMatchPlayer
 
 # need to import the last because in import above we activate 'lol' model
 from pyot.models import lol  # isort: skip

@@ -1,17 +1,17 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Optional, Literal, Union
 
 import logging
 import math
+from typing import TYPE_CHECKING, List, Literal, Optional, Union
 
 import discord
-from PIL import Image, ImageOps, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pyot.utils.functools import async_property
 
-from ..dota.const import ODOTA_API_URL, dota_player_colour_map, DOTA_LOGO
-from ..dota import hero, item, ability
+from utils.dota import ability, hero, item
+from utils.dota.const import DOTA_LOGO, ODOTA_API_URL, dota_player_colour_map
 from utils.formats import human_timedelta
-from utils.var import Clr, MP, Cid
+from utils.var import MP, Cid, Clr
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -118,7 +118,7 @@ class ActiveMatch(Match):
 
     async def better_thumbnail(self, bot: AluBot) -> Image:
         img = await bot.imgtools.url_to_img(self.img_url)
-        width, height = img.size
+        width, _height = img.size
         rectangle = Image.new("RGB", (width, 70), str(self.colour))
         ImageDraw.Draw(rectangle)
         img.paste(rectangle)
@@ -156,7 +156,7 @@ class ActiveMatch(Match):
             f'{self.vod_link}{self.links}'
         )
         e.set_image(url=f'attachment://{img_file.filename}')
-        e.set_thumbnail(url=await hero.imgurl_by_id(self.hero_id))
+        e.set_thumbnail(url=await hero.img_url_by_id(self.hero_id))
         e.set_author(name=f'{self.display_name} - {await self.hero_name}', url=self.url, icon_url=self.logo_url)
         e.set_footer(text=f'watch_server {self.server_steam_id}')
         return e, img_file

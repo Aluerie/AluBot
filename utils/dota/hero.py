@@ -1,15 +1,16 @@
 from typing import List
 
 from utils.cache import KeyCache
+
 from .const import *
 
 __all__ = (
     # 'hero_keys_cache', # maybe
     'id_by_name',
     'id_by_npcname',
-    'iconurl_by_id',
+    'icon_url_by_id',
     'name_by_id',
-    'imgurl_by_id',
+    'img_url_by_id',
 )
 
 
@@ -21,15 +22,15 @@ class HeroKeyCache(KeyCache):
             'id_by_npcname': {'': 0},
             'id_by_name': {'bot_game': 0},
             'name_by_id': {0: 'bot_game'},
-            'imgurl_by_id': {0: DISCONNECT_ICON},
-            'iconurl_by_id': {0: DISCONNECT_ICON},
+            'img_url_by_id': {0: DISCONNECT_ICON},
+            'icon_url_by_id': {0: DISCONNECT_ICON},
         }
         for id_, hero in hero_dict.items():
             data['id_by_npcname'][hero['name']] = hero['id']
             data['id_by_name'][hero['localized_name'].lower()] = hero['id']
             data['name_by_id'][hero['id']] = hero['localized_name']
-            data['imgurl_by_id'][hero['id']] = f"{STEAM_CDN_URL}{hero['img']}"
-            data['iconurl_by_id'][hero['id']] = f"{STEAM_CDN_URL}{hero['icon']}"
+            data['img_url_by_id'][hero['id']] = f"{STEAM_CDN_URL}{hero['img']}"
+            data['icon_url_by_id'][hero['id']] = f"{STEAM_CDN_URL}{hero['icon']}"
         return data
 
 
@@ -63,22 +64,22 @@ async def name_by_id(value: int) -> str:
     return data['name_by_id'][value]
 
 
-async def imgurl_by_id(value: int) -> str:
+async def img_url_by_id(value: int) -> str:
     """Get hero icon utl id by id.
 
     Example: 1 -> 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png?'
     """
     data = await hero_keys_cache.data
-    return data['imgurl_by_id'][value]
+    return data['img_url_by_id'][value]
 
 
-async def iconurl_by_id(value: int) -> str:
+async def icon_url_by_id(value: int) -> str:
     """Get hero icon utl id by id.
 
     Example: 1 -> 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/icons/antimage.png?'
     """
     data = await hero_keys_cache.data
-    return data['iconurl_by_id'][value]
+    return data['icon_url_by_id'][value]
 
 
 async def get_all_hero_names() -> List[str]:

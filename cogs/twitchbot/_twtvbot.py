@@ -25,6 +25,10 @@ class TwitchBot(commands.Bot):
         log.info(f'TwitchBot Ready as {self.nick} | user_id = {self.user_id}')
 
     @commands.command()
+    async def ping(self, ctx: commands.Context):
+        await ctx.send("\N{TABLE TENNIS PADDLE AND BALL} Pong!")
+
+    @commands.command()
     async def hello(self, ctx: commands.Context):
         await ctx.send(f'Hello @{ctx.author.name}!')
 

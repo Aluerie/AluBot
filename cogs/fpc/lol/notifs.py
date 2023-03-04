@@ -1,16 +1,16 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List
 
 import logging
+from typing import TYPE_CHECKING, List
 
 import asyncpg
 from discord.ext import commands, tasks
-
 from pyot.core.exceptions import NotFound, ServerError
 from pyot.utils.lol import champion
 
-from utils.lol.const import platform_to_region, SOLO_RANKED_5v5_QUEUE_ENUM
-from utils.lol.models import LiveMatch
+from utils.lol.const import SOLO_RANKED_5v5_QUEUE_ENUM, platform_to_region
+
+from ._models import LiveMatch
 
 # need to import the last because in import above we activate 'lol' model
 from pyot.models import lol  # isort: skip

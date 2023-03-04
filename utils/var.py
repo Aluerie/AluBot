@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Literal, Optional
-from typing_extensions import Self
 
 import discord
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     pass
@@ -175,6 +175,8 @@ class Ems:
 
     # wink server nonani
 
+    github_logo = '<:_:1081677464637550662>'
+
     bubuSip = '<:_:865033396189921290>'
     bubuGun = '<:_:847805078543007755>'
     bubuChrist = '<:_:847805078769631262>'
@@ -243,6 +245,7 @@ class Clr:
     olive = discord.Colour(0x98BF64)
     reddit = discord.Colour(0xFF4500)
     twitch = discord.Colour(0x9146FF)
+    bot_colour = discord.Colour(0x9400d3)
 
 
 class MaterialPalette(discord.Colour):

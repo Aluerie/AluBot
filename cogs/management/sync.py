@@ -6,13 +6,12 @@ import discord
 from discord.ext import commands
 
 from utils.checks import is_owner
-from utils.context import Context
 from utils.var import Clr
 
 from ._base import ManagementBase
 
 if TYPE_CHECKING:
-    pass
+    from utils.context import Context
 
 
 class SyncCommandCog(ManagementBase):
@@ -31,37 +30,37 @@ class SyncCommandCog(ManagementBase):
         * `$sync id_1 id_2` -> syncs guilds with id 1 and 2
         """
 
-        # todo: remove this from help for plebs
-        if not guilds:
-            match spec:
-                case "~":
-                    synced = await ctx.bot.tree.sync(guild=ctx.guild)
-                case "*":
-                    ctx.bot.tree.copy_global_to(guild=ctx.guild)
-                    synced = await ctx.bot.tree.sync(guild=ctx.guild)
-                case "^":
-                    ctx.bot.tree.clear_commands(guild=ctx.guild)
-                    await ctx.bot.tree.sync(guild=ctx.guild)
-                    synced = []
-                case _:
-                    synced = await ctx.bot.tree.sync()
-
-            e = discord.Embed(colour=Clr.prpl)
-            e.description = f"Synced `{len(synced)}` commands {'globally' if spec is None else 'to the current guild.'}"
-            await ctx.reply(embed=e)
-            return
-
-        fmt = 0
-        cmds = []
-        for guild in guilds:
-            try:
-                cmds += await ctx.bot.tree.sync(guild=guild)
-            except discord.HTTPException:
-                pass
-            else:
-                fmt += 1
         e = discord.Embed(colour=Clr.prpl)
-        e.description = f"Synced the tree to `{fmt}/{len(guilds)}` guilds."
+        if guilds:
+            fmt = 0
+            cmds = []
+            for guild in guilds:
+                try:
+                    cmds += await ctx.bot.tree.sync(guild=guild)
+                except discord.HTTPException:
+                    pass
+                else:
+                    fmt += 1
+            e.description = f"Synced the tree to `{fmt}/{len(guilds)}` guilds."
+        elif spec:
+            if ctx.guild:
+                match spec:
+                    case "~":
+                        synced = await ctx.bot.tree.sync(guild=ctx.guild)
+                    case "*":
+                        ctx.bot.tree.copy_global_to(guild=ctx.guild)
+                        synced = await ctx.bot.tree.sync(guild=ctx.guild)
+                    case "^":
+                        ctx.bot.tree.clear_commands(guild=ctx.guild)
+                        await ctx.bot.tree.sync(guild=ctx.guild)
+                        synced = []
+                e.description = f"Synced `{len(synced)}` commands to the current guild."
+            else:
+                # todo: maybe raise different error
+                raise commands.BadArgument("You used `$sync` command with a spec outside of guild")
+        else:
+            synced = await ctx.bot.tree.sync()
+            e.description = f"Synced `{len(synced)}` commands globally the current guild."
         await ctx.reply(embed=e)
 
 

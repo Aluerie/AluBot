@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Literal, NamedTuple, Sequence, List
+
+from typing import TYPE_CHECKING, List, Literal, NamedTuple, Optional, Sequence
 
 import discord
 from discord import app_commands
@@ -353,7 +354,7 @@ class HelpCommandCog(MetaBase):
         await self.bot.tree.fetch_commands()
 
         if not self.bot.test:
-            # todo: move this somewhhere else
+            # todo: move this somewhere else
             # announce to people that we logged in
             e = discord.Embed(colour=Clr.prpl)
             e.description = f'Logged in as {self.bot.user.name}'

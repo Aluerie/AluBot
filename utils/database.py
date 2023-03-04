@@ -47,7 +47,7 @@ async def create_pool() -> asyncpg.Pool:
         max_size=10,
         record_class=DRecord,
         statement_cache_size=0,
-    )
+    ) # type: ignore
 
 
 # SQL RECIPES BCS I ALWAYS FORGET
@@ -57,7 +57,7 @@ ALTER TABLE botinfo ALTER COLUMN git_checked_dt
 TYPE TIMESTAMPTZ USING git_checked_dt AT TIME ZONE 'UTC' ;
 
 -- recipe to set default 
-ALTER TABLE users ALTER COLUMN lastseen
+ALTER TABLE users ALTER COLUMN created_at
 SET DEFAULT (now() at time zone 'utc');
 
 -- recipe to INSERT and return True/None if it was success
@@ -65,7 +65,7 @@ INSERT INTO users (id, name)
 VALUES ($1, $2) 
 ON CONFLICT DO NOTHING
 RETURNING True;
--- ### value = await self.bot.pool.fetchval(query, 333356, 'hihihi')
+-- ### value = await self.bot.pool.fetchval(query, 333356, 'hi')
 
 --- recipe to add a new column
 ALTER TABLE dota_matches

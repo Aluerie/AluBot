@@ -84,6 +84,8 @@ class AluBot(commands.Bot):
         self.app_commands: Dict[str, int] = {}
         self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
 
+        self.repo = 'https://github.com/Aluerie/AluBot'
+
     async def setup_hook(self) -> None:
         self.session = s = ClientSession()
         self.imgtools = ImgToolsClient(session=s)

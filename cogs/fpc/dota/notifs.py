@@ -11,7 +11,8 @@ from steam.core.msg import MsgProto
 from steam.enums import emsg
 
 from utils.dota import hero
-from utils.dota.models import ActiveMatch
+
+from ._models import ActiveMatch
 
 if TYPE_CHECKING:
     from utils.bot import AluBot

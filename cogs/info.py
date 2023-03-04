@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Union
 
 import colorsys
 import datetime
@@ -7,18 +6,21 @@ import platform
 import re
 import socket
 import warnings
+from typing import TYPE_CHECKING, List, Union
 
 import discord
+import psutil
+from dateparser.search import search_dates
 from discord import app_commands
 from discord.ext import commands
-import psutil
-from PIL import ImageColor, Image
-from dateparser.search import search_dates
 from dota2 import __version__ as dota2__version__
+from PIL import Image, ImageColor
 from pyot import __version__ as pyot__version__
 
-from utils.formats import human_timedelta, format_dt_tdR
-from utils.var import Cid, Clr, Ems, Sid, Rid, MP, MAP
+from utils.formats import format_dt_tdR, human_timedelta
+from utils.var import MAP, MP, Cid, Clr, Ems, Rid, Sid
+
+from ..utils.checks import is_owner
 
 # from wordcloud import WordCloud
 
@@ -183,13 +185,12 @@ class Info(commands.Cog, name='Info'):
             )
             await ctx.reply(embed=e, ephemeral=True)
 
-    @commands.hybrid_group()
-    async def info(self, ctx: Context):
-        """Group command about Info, for actual commands use it together with subcommands"""
-        await ctx.scnf()
-
-    @info.command(
-        name='sysinfo', description='Get system info about machine currently hosting the bot', aliases=['systeminfo']
+    @is_owner()
+    @commands.command(
+        name='sysinfo',
+        description='Get system info about machine currently hosting the bot',
+        aliases=['systeminfo'],
+        hidden=True,
     )
     async def sysinfo(self, ctx: Context):
         """Get system info about machine currently hosting the bot"""
@@ -216,41 +217,11 @@ class Info(commands.Cog, name='Info'):
                 f'{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB'
             ),
         )
-        e.add_field(
-            name='Versions',
-            value=(
-                f'\N{BLACK CIRCLE} Python: {platform.python_version()}\n'
-                f'\N{BLACK CIRCLE} discord.py {discord.__version__}\n'
-                f'\N{BLACK CIRCLE} dota2 {dota2__version__}\n'
-                f'\N{BLACK CIRCLE} Pyot {pyot__version__}\n'
-            ),
-        )
         e.set_footer(text=f'AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}')
         if not self.bot.test:
             e.add_field(
                 name="Bot\'s Location judging by IP", value=f"· {data['country']} {data['region']} {data['city']}"
             )
-        await ctx.reply(embed=e)
-
-    @info.command()
-    async def botstats(self, ctx: Context):
-        """Summary stats for the bot."""
-        e = discord.Embed(title='Summary bot stats', colour=Clr.prpl)
-        e.set_thumbnail(url=self.bot.user.display_avatar.url)
-        e.add_field(name="Server Count", value=str(len(self.bot.guilds)))
-        e.add_field(name="User Count", value=str(len(self.bot.users)))
-        e.add_field(name="Ping", value=f"{self.bot.latency * 1000:.2f}ms")
-        e.add_field(name='Uptime', value=human_timedelta(discord.utils.utcnow() - self.bot.launch_time, brief=True))
-        await ctx.reply(embed=e)
-
-    @info.command()
-    async def bio(self, ctx: Context):
-        """Some bot bio info"""
-        e = discord.Embed(title='Bot\'s Bio Info', colour=Clr.prpl)
-        e.description = ''
-        e.add_field(name='Developer', value=str(self.bot.owner))
-        e.add_field(name='Source Code', value='[link](https://github.com/Aluerie/AluBot)')
-        e.add_field(name='License', value='MPL - 2.0')
         await ctx.reply(embed=e)
 
 

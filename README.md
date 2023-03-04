@@ -41,8 +41,9 @@ with pretty much everything I ever needed ! Check List of features after the pic
 
 1. [📖 Features](#features) 
 2. [🏠 Wiki](https://github.com/Aluerie/AluBot/wiki) - link to github wiki page, most notably:
+    * [🕵️ Privacy Policy](https://github.com/Aluerie/AluBot/wiki/%F0%9F%95%B5%EF%B8%8F--Privacy-Policy)
+    * [🖊️ Terms of Service](https://github.com/Aluerie/AluBot/wiki/%F0%9F%96%8A%EF%B8%8F-Terms-of-Service)
     * [🛠️ Running/Installation guide](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9B%A0%EF%B8%8FRunning-Installation-guide)
-    * [🕵️ Privacy Policy and Terms of Service](https://github.com/Aluerie/AluBot/wiki/%F0%9F%95%B5%EF%B8%8F--Privacy-Policy-and-Terms-of-Service)
 3. [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
 4. [🤗 Thanks](#-thanks)
 

@@ -8,10 +8,11 @@ from discord import app_commands
 from discord.ext import commands
 from steam.steamid import EType, SteamID
 
+from utils.checks import is_manager
 from utils.dota import hero
 from utils.dota.const import DOTA_LOGO
-from utils.checks import is_manager
 from utils.var import Clr, Ems
+
 from .._base import FPCBase
 
 if TYPE_CHECKING:

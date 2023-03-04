@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING, Dict, List
 import discord
 from discord.ext import commands, tasks
 
-from utils.dota.models import OpendotaRequestMatch, PostMatchPlayerData
 from utils.var import MP, Cid, Clr, Uid
+
+from ._models import OpendotaRequestMatch, PostMatchPlayerData
 
 if TYPE_CHECKING:
     from utils.bot import AluBot

@@ -4,7 +4,7 @@ git+https://github.com/Rapptz/discord-ext-menus
 git+https://github.com/meraki-analytics/role-identification.git
 git+https://github.com/Gorialis/jishaku.git
 
-aiofiles~=23.1.0
+aiofiles~=0.8.0
 pillow==9.4.0
 emoji==2.2.0
 numpy==1.24.2

@@ -121,26 +121,26 @@ async def avatar_usercmd(ntr: discord.Interaction, user: discord.User):
     await ntr.response.send_message(embed=e, ephemeral=True)
 
 
-async def rank_work(ctx: Union[Context, discord.Interaction], member: discord.Member):
+async def rank_work(ctx: Union[Context, discord.Interaction[AluBot]], member: discord.Member):
     member = member or getattr(ctx, 'author') or getattr(ctx, 'user')
     if member.bot:
         raise commands.BadArgument('Sorry! our system does not count experience for bots.')
 
     query = 'SELECT inlvl, exp, rep FROM users WHERE id=$1'
-    row = await ctx.pool.fetchrow(query, member.id)
+    row = await ctx.client.pool.fetchrow(query, member.id)
     if not row.inlvl:
-        return await ctx.reply(content="You decided to opt out of the exp system before")
+        raise commands.BadArgument("You decided to opt out of the exp system before")
     lvl = get_level(row.exp)
     next_lvl_exp, prev_lvl_exp = get_exp_for_next_level(lvl), get_exp_for_next_level(lvl - 1)
 
     query = 'SELECT count(*) FROM users WHERE exp > $1'
-    place = 1 + await ctx.pool.fetchval(query, row.exp)
+    place = 1 + await ctx.client.pool.fetchval(query, row.exp)
     bot = getattr(ctx, 'bot') or getattr(ctx, 'client')
     image = await rank_image(bot.ses, lvl, row.exp, row.rep, next_lvl_exp, prev_lvl_exp, ordinal(place), member)
-    return ctx.bot.imgtools.img_to_file(image, filename='rank.png')
+    return ctx.client.imgtools.img_to_file(image, filename='rank.png')
 
 
-async def rank_usercmd(ntr: discord.Interaction, member: discord.Member):
+async def rank_usercmd(ntr: discord.Interaction[AluBot], member: discord.Member):
     await ntr.response.send_message(file=await rank_work(ntr, member), ephemeral=True)
 
 

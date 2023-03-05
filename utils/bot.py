@@ -21,7 +21,6 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config as cfg
 from cogs import get_extensions
-from cogs.twitchbot._twtvbot import TwitchBot
 
 from .context import Context
 from .imgtools import ImgToolsClient

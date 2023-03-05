@@ -61,7 +61,7 @@ def setup_logging(test: bool):
             log.removeHandler(hdlr)
 
 
-async def discord_bot_start(test: bool):
+async def bot_start(test: bool):
     log = logging.getLogger()
     try:
         pool = await create_pool()
@@ -72,19 +72,7 @@ async def discord_bot_start(test: bool):
 
     async with AluBot(test) as bot:
         bot.pool = pool
-
-        if 'cogs.twitchbot' in get_extensions(test):
-            from cogs.twitchbot._twtvbot import TwitchBot
-
-            bot.twitchbot = tb = TwitchBot(bot)
-            tb = tb.start()
-        else:
-
-            async def empty_coro():
-                return
-
-            tb = empty_coro()
-        await asyncio.gather(bot.my_start(), tb)
+        await bot.my_start()
 
 
 @click.group(invoke_without_command=True, options_metavar='[options]')
@@ -95,7 +83,7 @@ def main(click_ctx: click.Context, test: bool):
 
     if click_ctx.invoked_subcommand is None:
         with setup_logging(test):
-            asyncio.run(discord_bot_start(test))
+            asyncio.run(bot_start(test))
 
 
 @main.group(short_help='database stuff', options_metavar='[options]')

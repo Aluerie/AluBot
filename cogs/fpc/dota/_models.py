@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
-from typing import TYPE_CHECKING, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, List, Literal, Optional, Tuple, Union
 
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -116,7 +116,7 @@ class ActiveMatch(Match):
                 self.vod_link = ''
         self.colour = colour_twitch_status_dict[self.twitch_status]
 
-    async def better_thumbnail(self, bot: AluBot) -> Image:
+    async def better_thumbnail(self, bot: AluBot) -> Image.Image:
         img = await bot.imgtools.url_to_img(self.img_url)
         width, _height = img.size
         rectangle = Image.new("RGB", (width, 70), str(self.colour))
@@ -124,7 +124,7 @@ class ActiveMatch(Match):
         img.paste(rectangle)
 
         for count, hero_id in enumerate(self.hero_ids):
-            hero_img = await bot.imgtools.url_to_img(await hero.imgurl_by_id(hero_id))
+            hero_img = await bot.imgtools.url_to_img(await hero.img_url_by_id(hero_id))
             # h_width, h_height = heroImg.size
             hero_img = hero_img.resize((62, 35))
             hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=dota_player_colour_map.get(count))
@@ -141,7 +141,7 @@ class ActiveMatch(Match):
         draw.text((0, 35 + h2 + 10), self.twitch_status, font=font, align="center", fill=str(self.colour))
         return img
 
-    async def notif_embed_and_file(self, bot: AluBot) -> (discord.Embed, discord.File):
+    async def notif_embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File]:
         await self.get_twitch_data(bot.twitch)
         img_file = bot.imgtools.img_to_file(
             await self.better_thumbnail(bot),
@@ -312,9 +312,9 @@ class OpendotaTooManyFails(Exception):
 
 
 class OpendotaRequestMatch:
-    def __init__(self, match_id: int, job_id: int = None):
+    def __init__(self, match_id: int, job_id: Optional[int] = None):
         self.match_id = match_id
-        self.job_id: Union[int, None] = job_id
+        self.job_id: Optional[int] = job_id
 
         self.fails = 0
         self.tries = 0
@@ -407,7 +407,7 @@ class OpendotaRequestMatch:
 
 if __name__ == '__main__':
 
-    xcali = ActiveMatch(
+    xcalibur = ActiveMatch(
         match_id=0,
         start_time=0,
         player_name='me',
@@ -417,4 +417,4 @@ if __name__ == '__main__':
         twitchtv_id=7777,
         channel_ids=[8888],
     )
-    print(xcali.__dict__)
+    print(xcalibur.__dict__)

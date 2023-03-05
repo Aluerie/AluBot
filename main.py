@@ -7,12 +7,10 @@ import traceback
 from contextlib import contextmanager
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from types import coroutine
 from typing import TYPE_CHECKING
 
 import asyncpg
 import click
-from cogs import get_extensions
 
 from utils.bot import AluBot, get_log_fmt
 from utils.database import create_pool

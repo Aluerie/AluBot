@@ -59,7 +59,7 @@ class Cid:
 
     lol_news = 724993871662022766
     dota_news = 724986688589267015
-    
+
     stream_room = 766063288302698496
 
     patch_notes = 731759693113851975
@@ -251,7 +251,7 @@ class Clr:
     olive = discord.Colour(0x98BF64)
     reddit = discord.Colour(0xFF4500)
     twitch = discord.Colour(0x9146FF)
-    bot_colour = discord.Colour(0x9400d3)
+    bot_colour = discord.Colour(0x9400D3)
 
 
 class MaterialPalette(discord.Colour):
@@ -260,175 +260,113 @@ class MaterialPalette(discord.Colour):
     def __init__(self, value: int):
         super().__init__(value)
 
-    colors = {
-        'red': [0xB71C1C, 0xC62828, 0xD32F2F, 0xE53935, 0xF44336, 0xEF5350, 0xE57373, 0xEF9A9A, 0xFFCDD2, 0xFFEBEE],
-        'pink': [0x880E4F, 0xAD1457, 0xC2185B, 0xD81B60, 0xE91E63, 0xEC407A, 0xF06292, 0xF48FB1, 0xF8BBD0, 0xFCE4EC],
-        'purple': [0x4A148C, 0x6A1B9A, 0x7B1FA2, 0x8E24AA, 0x9C27B0, 0xAB47BC, 0xBA68C8, 0xCE93D8, 0xE1BEE7, 0xF3E5F5],
-        'deep_purple': [
-            0x311B92,
-            0x4527A0,
-            0x512DA8,
-            0x5E35B1,
-            0x673AB7,
-            0x7E57C2,
-            0x9575CD,
-            0xB39DDB,
-            0xD1C4E9,
-            0xEDE7F6,
-        ],
-        'indigo': [0x1A237E, 0x283593, 0x303F9F, 0x3949AB, 0x3F51B5, 0x5C6BC0, 0x7986CB, 0x9FA8DA, 0xC5CAE9, 0xE8EAF6],
-        'blue': [0x0D47A1, 0x1565C0, 0x1976D2, 0x1E88E5, 0x2196F3, 0x42A5F5, 0x64B5F6, 0x90CAF9, 0xBBDEFB, 0xE3F2FD],
-        'light_blue': [
-            0x01579B,
-            0x0277BD,
-            0x0288D1,
-            0x039BE5,
-            0x03A9F4,
-            0x29B6F6,
-            0x4FC3F7,
-            0x81D4FA,
-            0xB3E5FC,
-            0xE1F5FE,
-        ],
-        'cyan': [0x006064, 0x00838F, 0x0097A7, 0x00ACC1, 0x00BCD4, 0x26C6DA, 0x4DD0E1, 0x80DEEA, 0xB2EBF2, 0xE0F7FA],
-        'teal': [0x004D40, 0x00695C, 0x00796B, 0x00897B, 0x009688, 0x26A69A, 0x4DB6AC, 0x80CBC4, 0xB2DFDB, 0xE0F2F1],
-        'green': [0x1B5E20, 0x2E7D32, 0x388E3C, 0x43A047, 0x4CAF50, 0x66BB6A, 0x81C784, 0xA5D6A7, 0xC8E6C9, 0xE8F5E9],
-        'light_green': [
-            0x33691E,
-            0x558B2F,
-            0x689F38,
-            0x7CB342,
-            0x8BC34A,
-            0x9CCC65,
-            0xAED581,
-            0xC5E1A5,
-            0xDCEDC8,
-            0xF1F8E9,
-        ],
-        'lime': [0x827717, 0x9E9D24, 0xAFB42B, 0xC0CA33, 0xCDDC39, 0xD4E157, 0xDCE775, 0xE6EE9C, 0xF0F4C3, 0xF9FBE7],
-        'yellow': [0xF57F17, 0xF9A825, 0xFBC02D, 0xFDD835, 0xFFEB3B, 0xFFEE58, 0xFFF176, 0xFFF59D, 0xFFF9C4, 0xFFFDE7],
-        'amber': [0xFF6F00, 0xFF8F00, 0xFFA000, 0xFFB300, 0xFFC107, 0xFFCA28, 0xFFD54F, 0xFFE082, 0xFFECB3, 0xFFF8E1],
-        'orange': [0xE65100, 0xEF6C00, 0xF57C00, 0xFB8C00, 0xFF9800, 0xFFA726, 0xFFB74D, 0xFFCC80, 0xFFE0B2, 0xFFF3E0],
-        'deep_orange': [
-            0xBF360C,
-            0xD84315,
-            0xE64A19,
-            0xF4511E,
-            0xFF5722,
-            0xFF7043,
-            0xFF8A65,
-            0xFFAB91,
-            0xFFCCBC,
-            0xFBE9E7,
-        ],
-        'brown': [0x3E2723, 0x4E342E, 0x5D4037, 0x6D4C41, 0x795548, 0x8D6E63, 0xA1887F, 0xBCAAA4, 0xD7CCC8, 0xEFEBE9],
-        'gray': [0x212121, 0x424242, 0x616161, 0x757575, 0x9E9E9E, 0xBDBDBD, 0xE0E0E0, 0xEEEEEE, 0xF5F5F5, 0xFAFAFA],
-        'blue_gray': [
-            0x263238,
-            0x37474F,
-            0x455A64,
-            0x546E7A,
-            0x607D8B,
-            0x78909C,
-            0x90A4AE,
-            0xB0BEC5,
-            0xCFD8DC,
-            0xECEFF1,
-        ],
-        'black': [0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000],
-        'white': [0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF],
-    }
     shades = [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
-    core: Literal[500] = 500
-    colors_dict = {}
-    for key, values in colors.items():
-        colors_dict[key] = {shade: clr for shade, clr in zip(shades, values)}
-
     ShadeTypeHint = Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
 
     @classmethod
-    def red(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['red'][shade])
+    def red(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0xB71C1C, 0xC62828, 0xD32F2F, 0xE53935, 0xF44336, 0xEF5350, 0xE57373, 0xEF9A9A, 0xFFCDD2, 0xFFEBEE]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def pink(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['pink'][shade])
+    def pink(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x880E4F, 0xAD1457, 0xC2185B, 0xD81B60, 0xE91E63, 0xEC407A, 0xF06292, 0xF48FB1, 0xF8BBD0, 0xFCE4EC]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def purple(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['purple'][shade])
+    def purple(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x4A148C, 0x6A1B9A, 0x7B1FA2, 0x8E24AA, 0x9C27B0, 0xAB47BC, 0xBA68C8, 0xCE93D8, 0xE1BEE7, 0xF3E5F5]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def deep_purple(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['deep_purple'][shade])
+    def deep_purple(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x311B92, 0x4527A0, 0x512DA8, 0x5E35B1, 0x673AB7, 0x7E57C2, 0x9575CD, 0xB39DDB, 0xD1C4E9, 0xEDE7F6]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def indigo(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['indigo'][shade])
+    def indigo(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x1A237E, 0x283593, 0x303F9F, 0x3949AB, 0x3F51B5, 0x5C6BC0, 0x7986CB, 0x9FA8DA, 0xC5CAE9, 0xE8EAF6]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def blue(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['blue'][shade])
+    def blue(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x0D47A1, 0x1565C0, 0x1976D2, 0x1E88E5, 0x2196F3, 0x42A5F5, 0x64B5F6, 0x90CAF9, 0xBBDEFB, 0xE3F2FD]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def light_blue(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['light_blue'][shade])
+    def light_blue(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x01579B, 0x0277BD, 0x0288D1, 0x039BE5, 0x03A9F4, 0x29B6F6, 0x4FC3F7, 0x81D4FA, 0xB3E5FC, 0xE1F5FE]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def cyan(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['cyan'][shade])
+    def cyan(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x006064, 0x00838F, 0x0097A7, 0x00ACC1, 0x00BCD4, 0x26C6DA, 0x4DD0E1, 0x80DEEA, 0xB2EBF2, 0xE0F7FA]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def teal(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['teal'][shade])
+    def teal(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x004D40, 0x00695C, 0x00796B, 0x00897B, 0x009688, 0x26A69A, 0x4DB6AC, 0x80CBC4, 0xB2DFDB, 0xE0F2F1]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def green(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['green'][shade])
+    def green(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x1B5E20, 0x2E7D32, 0x388E3C, 0x43A047, 0x4CAF50, 0x66BB6A, 0x81C784, 0xA5D6A7, 0xC8E6C9, 0xE8F5E9]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def light_green(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['light_green'][shade])
+    def light_green(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x33691E, 0x558B2F, 0x689F38, 0x7CB342, 0x8BC34A, 0x9CCC65, 0xAED581, 0xC5E1A5, 0xDCEDC8, 0xF1F8E9]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def lime(cls, *, shade: Optional[ShadeTypeHint] = core) -> Self:
-        return cls(cls.colors_dict['lime'][shade])
+    def lime(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x827717, 0x9E9D24, 0xAFB42B, 0xC0CA33, 0xCDDC39, 0xD4E157, 0xDCE775, 0xE6EE9C, 0xF0F4C3, 0xF9FBE7]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def yellow(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['yellow'][shade])
+    def yellow(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0xF57F17, 0xF9A825, 0xFBC02D, 0xFDD835, 0xFFEB3B, 0xFFEE58, 0xFFF176, 0xFFF59D, 0xFFF9C4, 0xFFFDE7]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def amber(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['amber'][shade])
+    def amber(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0xFF6F00, 0xFF8F00, 0xFFA000, 0xFFB300, 0xFFC107, 0xFFCA28, 0xFFD54F, 0xFFE082, 0xFFECB3, 0xFFF8E1]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def orange(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['orange'][shade])
+    def orange(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0xE65100, 0xEF6C00, 0xF57C00, 0xFB8C00, 0xFF9800, 0xFFA726, 0xFFB74D, 0xFFCC80, 0xFFE0B2, 0xFFF3E0]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def deep_orange(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['deep_orange'][shade])
+    def deep_orange(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0xBF360C, 0xD84315, 0xE64A19, 0xF4511E, 0xFF5722, 0xFF7043, 0xFF8A65, 0xFFAB91, 0xFFCCBC, 0xFBE9E7]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def brown(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['brown'][shade])
+    def brown(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x3E2723, 0x4E342E, 0x5D4037, 0x6D4C41, 0x795548, 0x8D6E63, 0xA1887F, 0xBCAAA4, 0xD7CCC8, 0xEFEBE9]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def gray(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['gray'][shade])
+    def gray(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x212121, 0x424242, 0x616161, 0x757575, 0x9E9E9E, 0xBDBDBD, 0xE0E0E0, 0xEEEEEE, 0xF5F5F5, 0xFAFAFA]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def blue_gray(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls.colors_dict['blue_gray'][shade]
+    def blue_gray(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x263238, 0x37474F, 0x455A64, 0x546E7A, 0x607D8B, 0x78909C, 0x90A4AE, 0xB0BEC5, 0xCFD8DC, 0xECEFF1]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def black(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['black'][shade])
+    def black(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000]
+        return cls(c[cls.shades.index(shade)])
 
     @classmethod
-    def white(cls, *, shade: ShadeTypeHint = core) -> Self:
-        return cls(cls.colors_dict['white'][shade])
+    def white(cls, *, shade: ShadeTypeHint = 500) -> Self:
+        c = [0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF]
+        return cls(c[cls.shades.index(shade)])
 
 
 class MaterialAccentPalette(discord.Colour):
@@ -456,7 +394,6 @@ class MaterialAccentPalette(discord.Colour):
         'deep-orange': [0xDD2C00, 0xFF3D00, 0xFF6E40, 0xFF9E80],
     }
     shades = [700, 400, 200, 100]
-    core: Literal[200] = 200
     ShadeTypeHint = Literal[700, 400, 200, 100]
 
     colors_dict = {}
@@ -464,87 +401,87 @@ class MaterialAccentPalette(discord.Colour):
         colors_dict[k] = {shade: clr for shade, clr in zip(shades, v)}
 
     @classmethod
-    def red(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def red(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['red'][shade])
 
     @classmethod
-    def pink(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def pink(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['pink'][shade])
 
     @classmethod
-    def purple(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def purple(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['purple'][shade])
 
     @classmethod
-    def deep_purple(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def deep_purple(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['deep_purple'][shade])
 
     @classmethod
-    def indigo(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def indigo(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['indigo'][shade])
 
     @classmethod
-    def blue(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def blue(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['blue'][shade])
 
     @classmethod
-    def light_blue(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def light_blue(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['light_blue'][shade])
 
     @classmethod
-    def cyan(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def cyan(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['cyan'][shade])
 
     @classmethod
-    def teal(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def teal(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['teal'][shade])
 
     @classmethod
-    def green(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def green(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls.colors_dict['green'][shade]
 
     @classmethod
-    def light_green(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def light_green(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls.colors_dict['light_green'][shade]
 
     @classmethod
-    def lime(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def lime(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls.colors_dict['lime'][shade]
 
     @classmethod
-    def yellow(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def yellow(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls.colors_dict['yellow'][shade]
 
     @classmethod
-    def amber(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def amber(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls.colors_dict['amber'][shade]
 
     @classmethod
-    def orange(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def orange(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls.colors_dict['orange'][shade]
 
     @classmethod
-    def deep_orange(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def deep_orange(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls.colors_dict['deep_orange'][shade]
 
     @classmethod
-    def brown(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def brown(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['brown'][shade])
 
     @classmethod
-    def gray(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def gray(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['gray'][shade])
 
     @classmethod
-    def blue_gray(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def blue_gray(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['blue_gray'][shade])
 
     @classmethod
-    def black(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def black(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['black'][shade])
 
     @classmethod
-    def white(cls, *, shade: ShadeTypeHint = core) -> Self:
+    def white(cls, *, shade: ShadeTypeHint = 200) -> Self:
         return cls(cls.colors_dict['white'][shade])
 
 

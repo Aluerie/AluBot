@@ -5,11 +5,13 @@ and provide features for only me
 
 from .channel_watcher import DropsWatcher, EventPassWatcher
 from .personal import PersonalCommands
+from .insider import Insider
 
 PERSONAL_COGS = (
     DropsWatcher,
     EventPassWatcher,
     PersonalCommands,
+    Insider
 )
 
 

@@ -41,3 +41,4 @@ twitchio~=2.5.0
 tzdata~=2022.7
 
 uvloop~=0.17.0  #ignore on windows bcs not available
+feedparser~=6.0.10

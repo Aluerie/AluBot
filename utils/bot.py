@@ -54,7 +54,6 @@ class AluBot(commands.Bot):
     steam: SteamClient
     tree: MyCommandTree
     twitch: TwitchClient
-    twitchbot: TwitchBot
     twitter: TwitterAsyncClient
     user: discord.ClientUser
 

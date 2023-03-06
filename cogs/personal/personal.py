@@ -9,10 +9,10 @@ if TYPE_CHECKING:
     from utils.bot import AluBot
     from utils.context import Context
 
-from ._base import HideoutBase
+from ._base import PersonalBase
 
 
-class PersonalCommands(HideoutBase):
+class PersonalCommands(PersonalBase):
     @commands.hybrid_command()
     @app_commands.describe(tweet_ids='Number(-s) in the end of tweet link')
     async def twitter_image(self, ctx: Context, *, tweet_ids: str):

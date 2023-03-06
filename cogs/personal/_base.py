@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from utils.bot import AluBot
 
 
-class HideoutBase(commands.Cog):
+class PersonalBase(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 

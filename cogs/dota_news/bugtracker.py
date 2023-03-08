@@ -5,7 +5,7 @@ import datetime
 import re
 import textwrap
 from enum import Enum
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple
 
 import discord
 from discord.ext import tasks

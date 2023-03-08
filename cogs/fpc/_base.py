@@ -385,14 +385,14 @@ class FPCBase:
     ) -> List[str]:
         if isinstance(ctx, discord.Interaction):
             # if it's interaction then locals is dictionary with keys
-            # "cog, ntr, name1, name2, ..." where each name is a string
+            # "cog(self), ntr, name1, name2, ..." where each name is a string
             # meaning we only need [2:]
             names = list(dict.fromkeys([name for name in list(local_dict.values())[2:] if name is not None]))
         else:
             # if it's Context then our locals is dictionary with keys
-            # "cog, ctx, char_names" where char_names is a string
-            # meaning we only need [3] and then strip all commas
-            names_string = list(local_dict.values())[3]
+            # "cog(self), ctx, char_names" where char_names is a string
+            # meaning we only need [2] and then strip all commas
+            names_string = list(local_dict.values())[2]
             names = [b for x in names_string.split(",") if (b := x.lstrip().rstrip())]
         return names
 

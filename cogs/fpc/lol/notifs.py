@@ -149,5 +149,5 @@ class LoLNotifs(commands.Cog):
         # self.lolfeed.restart()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(LoLNotifs(bot))

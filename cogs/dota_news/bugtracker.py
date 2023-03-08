@@ -125,7 +125,7 @@ class TimeLine:
         self.events.append(event)
         self.authors.add(event.actor)
     
-    def add_comment(self, comment: Comment)
+    def add_comment(self, comment: Comment):
         self.comments.append(comment)
         self.authors.add(comment.actor)
 

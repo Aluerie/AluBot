@@ -31,16 +31,16 @@ class Insider(PersonalBase):
         rss = feedparser.parse(url)
 
         for entry in rss.entries:
-            if re.findall(r'25[0-9]{3}', entry.title):  # dev entry check
+            if re.findall(r'23[0-9]{3}', entry.title):  # dev entry check
                 p = entry
                 break
         else:
             return
 
         query = """ UPDATE botinfo 
-                        SET insider_vesion=$1
+                        SET insider_version=$1
                         WHERE id=$2 
-                        AND insider_vesion IS DISTINCT FROM $1
+                        AND insider_version IS DISTINCT FROM $1
                         RETURNING True
                     """
         val = await self.bot.pool.fetchval(query, p.title, Sid.alu)

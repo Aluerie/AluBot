@@ -43,8 +43,6 @@ class AluBot(commands.Bot):
     bot_app_info: discord.AppInfo
     dota: Dota2Client
     github: Github
-    git_gameplay: Repository.Repository
-    git_tracker: Repository.Repository
     imgtools: ImgToolsClient
     launch_time: datetime.datetime
     session: ClientSession
@@ -168,8 +166,6 @@ class AluBot(commands.Bot):
     def ini_github(self) -> None:
         if not hasattr(self, 'github'):
             self.github = Github(cfg.GIT_PERSONAL_TOKEN)
-            self.git_gameplay = self.github.get_repo("ValveSoftware/Dota2-Gameplay")
-            self.git_tracker = self.github.get_repo("SteamDatabase/GameTracking-Dota2")
 
     def ini_reddit(self) -> None:
         if not hasattr(self, 'reddit'):

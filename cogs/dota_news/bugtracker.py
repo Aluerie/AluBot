@@ -4,7 +4,8 @@ import asyncio
 import datetime
 import re
 import textwrap
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple
+from enum import Enum
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Union
 
 import discord
 from discord.ext import tasks
@@ -20,13 +21,15 @@ if TYPE_CHECKING:
 
     from utils.bot import AluBot
 
+GITHUB_REPO = "ValveSoftware/Dota2-Gameplay"
+GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
 
-class BaseEvent:
-    def __init__(self, name: str, *, colour: int, word: str, text_flag: Optional[bool] = False) -> None:
+
+class EventBase:
+    def __init__(self, name: str, *, colour: int, word: str) -> None:
         self.name: str = name
         self.colour: int = colour
         self.word: str = word
-        self.text_flag: Optional[bool] = text_flag
 
     @property
     def file_path(self) -> str:
@@ -40,53 +43,69 @@ class BaseEvent:
         return discord.utils.find(lambda m: m.name == self.name, bot.test_guild.emojis)
 
 
-class EventType:
-    # pictures are taken from 16px versions here https://primer.style/octicons/
-    # and background circles are added with simple online editor https://iconscout.com/color-editor
-    # make pics to be 128x128, so it's consistent for all sizes
-    # I kindly ask you to have same matching names for
-    # * variable below
-    # * PNG-picture in assets folder
-    # * emote name in wink server
-    assigned = BaseEvent('assigned', colour=0x21262D, word='self-assigned')
-    closed = BaseEvent('closed', colour=0x9B6CEA, word='closed')
-    reopened = BaseEvent('reopened', colour=0x238636, word='reopened')
-    commented = BaseEvent('commented', colour=0x4285F4, word='commented', text_flag=True)
-    opened = BaseEvent('opened', colour=0x52CC99, word='opened', text_flag=True)
-
-    # these should match one of event names from GitHub documentation
-    issue_events = ['assigned', 'closed', 'reopened']
+class CommentBase(EventBase):
+    pass
 
 
-class TimeLinePoint:
+# pictures are taken from 16px versions here https://primer.style/octicons/
+# and background circles are added with simple online editor https://iconscout.com/color-editor
+# make pics to be 128x128, so it's consistent for all sizes
+# I kindly ask you to have same matching names for
+# * variable below
+# * PNG-picture in assets folder
+# * emote name in wink server
+
+
+class EventType(Enum):
+    assigned = EventBase('assigned', colour=0x21262D, word='self-assigned')
+    # Todo if valve one day decides to assign issues to each other then rework^^^
+    closed = EventBase('closed', colour=0x9B6CEA, word='closed')
+    reopened = EventBase('reopened', colour=0x238636, word='reopened')
+
+
+class CommentType(Enum):
+    commented = CommentBase('commented', colour=0x4285F4, word='commented')
+    opened = CommentBase('opened', colour=0x52CC99, word='opened')
+
+
+class Event:
     def __init__(
         self,
         *,
-        event_type: BaseEvent,
+        enum_type: EventBase,
         created_at: datetime.datetime,
         actor: NamedUser.NamedUser,
         issue_number: int,
-        body: str = '',
-        comment_url: Optional[str] = None,
     ):
-        self.event_type: BaseEvent = event_type
+        self.event_type: EventBase = enum_type
         self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.timezone.utc)
         self.actor: NamedUser.NamedUser = actor
         self.issue_number: int = issue_number
-        self.body: str = body
-        self.comment_url: Optional[str] = comment_url
 
     @property
     def author_str(self) -> str:
-
         return f'@{self.actor.login} {self.event_type.word} bugtracker issue #{self.issue_number}'
+
+
+class Comment(Event):
+    def __init__(
+        self,
+        *,
+        enum_type: CommentBase,
+        created_at: datetime.datetime,
+        actor: NamedUser.NamedUser,
+        issue_number: int,
+        comment_body: str,
+        comment_url: Optional[str] = None,
+    ):
+        super().__init__(enum_type=enum_type, created_at=created_at, actor=actor, issue_number=issue_number)
+        self.comment_body: str = comment_body
+        self.comment_url: Optional[str] = comment_url
 
     @property
     def markdown_body(self) -> str:
-        if self.body == '':  # just skip the work if it is empty
-            return self.body
-        url_regex = re.compile(r'(https://github.com/ValveSoftware/Dota2-Gameplay/issues/(\d+))')
-        body = url_regex.sub(r'[#\2](\1)', self.body)
+        url_regex = re.compile(fr'({GITHUB_REPO_URL}/issues/(\d+))')
+        body = url_regex.sub(r'[#\2](\1)', self.comment_body)
         body = '\n'.join([line for line in body.splitlines() if line])
         return body.replace('<br>', '')
 
@@ -98,19 +117,28 @@ class TimeLine:
     ):
         self.issue: Issue.Issue = issue
 
-        self.events: List[TimeLinePoint] = []
-        self.comments: List[TimeLinePoint] = []
+        self.events: List[Event] = []
+        self.comments: List[Comment] = []
         self.authors: Set[NamedUser.NamedUser] = set()
 
-    def add_event(self, event: TimeLinePoint):
-        if event.event_type.text_flag:
-            self.comments.append(event)
-        else:
-            self.events.append(event)
+    def add_event(self, event: Event):
+        self.events.append(event)
         self.authors.add(event.actor)
+    
+    def add_comment(self, comment: Comment)
+        self.comments.append(comment)
+        self.authors.add(comment.actor)
 
-    def sorted_points_list(self):
+    def sorted_points_list(self) -> List[Event | Comment]:
         return sorted(self.events + self.comments, key=lambda x: x.created_at, reverse=False)
+
+    def last_comment_url(self) -> Optional[str]:
+        sorted_comments = sorted(self.comments, key=lambda x: x.created_at, reverse=False)
+        try:
+            last_comment_url = sorted_comments[-1].comment_url
+        except IndexError:
+            last_comment_url = None
+        return last_comment_url
 
     def embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File | None]:
         e = discord.Embed(title=textwrap.shorten(self.issue.title, width=Lmt.Embed.title), url=self.issue.html_url)
@@ -132,17 +160,16 @@ class TimeLine:
         else:
             e.colour = 0x4078C0  # git colour, first in google :D
             pil_pics = []
-            for p in (sorted_points := self.sorted_points_list()):
+            for p in self.sorted_points_list():
                 pil_pics.append(p.event_type.file_path)
-                if not p.body:
-                    p.body = ' '  # so event-actions get printed in the following chunking
-                chunks, chunk_size = len(p.markdown_body), Lmt.Embed.field_value
-                fields = [p.markdown_body[i : i + chunk_size] for i in range(0, chunks, chunk_size)]
+                markdown_body = getattr(p, 'markdown_body', ' ')
+                chunks, chunk_size = len(markdown_body), Lmt.Embed.field_value
+                fields = [markdown_body[i : i + chunk_size] for i in range(0, chunks, chunk_size)]
                 for x in fields:
                     e.add_field(name=f'{p.event_type.emote(bot)}{p.author_str}', value=x, inline=False)
             e.set_author(
                 name=f'Bugtracker issue #{self.issue.number} update',
-                url=sorted_points[-1].comment_url,
+                url=self.last_comment_url,
                 icon_url='https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png',
             )
             delta_x_y = 32
@@ -164,6 +191,7 @@ class BugTracker(DotaNewsBase):
 
     async def cog_load(self) -> None:
         self.bot.ini_github()
+        self.dota2gameplay_repo = self.bot.github.get_repo(GITHUB_REPO)
         self.git_comments_check.start()
 
     async def cog_unload(self) -> None:
@@ -171,7 +199,7 @@ class BugTracker(DotaNewsBase):
 
     @tasks.loop(minutes=3)
     async def git_comments_check(self):
-        repo = self.bot.git_gameplay
+        repo = self.dota2gameplay_repo
 
         assignees = [x.login for x in repo.get_assignees()]
 
@@ -191,14 +219,14 @@ class BugTracker(DotaNewsBase):
                 if x.created_at.replace(tzinfo=datetime.timezone.utc) > dt
                 and x.actor  # apparently some people just delete their accounts after closing their issues, #6556 :D
                 and x.actor.login in assignees
-                and x.event in EventType.issue_events
+                and x.event in [x.name for x in list(EventType)]
             ]
             for e in events:
                 if e.issue.number not in issue_dict:
                     issue_dict[e.issue.number] = TimeLine(issue=e.issue)
-                issue_dict[e.issue.number].add_event(
-                    TimeLinePoint(
-                        event_type=getattr(EventType, e.event),
+                issue_dict[e.issue.number].add_comment(
+                    Event(
+                        enum_type=(getattr(EventType, e.event)).value,
                         created_at=e.created_at,
                         actor=e.actor,
                         issue_number=e.issue.number,
@@ -212,13 +240,13 @@ class BugTracker(DotaNewsBase):
             if i.user.login in assignees:
                 if i.number not in issue_dict:
                     issue_dict[i.number] = TimeLine(issue=i)
-                issue_dict[i.number].add_event(
-                    TimeLinePoint(
-                        event_type=EventType.opened,
+                issue_dict[i.number].add_comment(
+                    Comment(
+                        enum_type=CommentType.opened.value,
                         created_at=i.created_at,
                         actor=i.user,
-                        body=i.body,
                         issue_number=i.number,
+                        comment_body=i.body,
                     )
                 )
 
@@ -230,13 +258,13 @@ class BugTracker(DotaNewsBase):
                 issue = repo.get_issue(issue_num)
                 issue_dict[issue.number] = TimeLine(issue=issue)
             issue_dict[issue_num].add_event(
-                TimeLinePoint(
-                    event_type=EventType.commented,
+                Comment(
+                    enum_type=CommentType.commented.value,
                     created_at=c.created_at,
                     actor=c.user,
-                    body=c.body,
-                    comment_url=c.html_url,
                     issue_number=issue_num,
+                    comment_body=c.body,
+                    comment_url=c.html_url,
                 )
             )
 
@@ -285,5 +313,5 @@ class BugTracker(DotaNewsBase):
         # self.git_comments_check.restart()
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(BugTracker(bot))

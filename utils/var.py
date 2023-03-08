@@ -57,7 +57,6 @@ class Cid:
     bot_spam = 724986090632642653
     nsfw_bob_spam = 731607736155897978
 
-    lol_news = 724993871662022766
     dota_news = 724986688589267015
 
     stream_room = 766063288302698496

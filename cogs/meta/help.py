@@ -58,7 +58,7 @@ class HelpPageSource(menus.ListPageSource):
                 name='• News feeds',
                 inline=False,
                 value=(
-                    f'Dota/League related news feed in <#{Cid.dota_news}> and <#{Cid.lol_news}> '
+                    f'Dota/League related dota_news feed in <#{Cid.dota_news}> '
                     f'taken from all over the internet! Even more, bot automatically parsed and analyses dota updates ;'
                 ),
             )

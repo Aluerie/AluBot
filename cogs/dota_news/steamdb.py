@@ -102,7 +102,7 @@ class SteamDB(DotaNewsBase):
                     msg = await self.news_channel.send(embeds=embeds)
                     await msg.publish()
         except Exception as error:
-            await self.bot.send_traceback(error, where="#dota-news copypaste")
+            await self.bot.send_traceback(error, where="#dota-dota_news copypaste")
 
 
 class TestGitFeed(commands.Cog):

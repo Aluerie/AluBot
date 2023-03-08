@@ -12,7 +12,7 @@ from discord.ext import commands, tasks
 
 from utils.var import Clr, Lmt
 
-from cogs.news.dota._base import DotaNewsBase
+from ._base import DotaNewsBase
 
 if TYPE_CHECKING:
     from utils.bot import AluBot

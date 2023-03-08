@@ -1,8 +1,8 @@
-from .bugtracker import BugTracker
-from .dota2com import Dota2Com
-from .reddit import Reddit
-from .steamdb import SteamDB
-from .twitter import Twitter
+from cogs.news.bugtracker import BugTracker
+from cogs.news.dota2com import Dota2Com
+from cogs.news.reddit import Reddit
+from cogs.news.steamdb import SteamDB
+from cogs.news.twitter import Twitter
 
 
 async def setup(bot):

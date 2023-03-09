@@ -132,6 +132,7 @@ class TimeLine:
     def sorted_points_list(self) -> List[Event | Comment]:
         return sorted(self.events + self.comments, key=lambda x: x.created_at, reverse=False)
 
+    @property
     def last_comment_url(self) -> Optional[str]:
         sorted_comments = sorted(self.comments, key=lambda x: x.created_at, reverse=False)
         try:

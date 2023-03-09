@@ -224,7 +224,7 @@ class BugTracker(DotaNewsBase):
             for e in events:
                 if e.issue.number not in issue_dict:
                     issue_dict[e.issue.number] = TimeLine(issue=e.issue)
-                issue_dict[e.issue.number].add_comment(
+                issue_dict[e.issue.number].add_event(
                     Event(
                         enum_type=(getattr(EventType, e.event)).value,
                         created_at=e.created_at,
@@ -257,7 +257,7 @@ class BugTracker(DotaNewsBase):
             if issue_num not in issue_dict:
                 issue = repo.get_issue(issue_num)
                 issue_dict[issue.number] = TimeLine(issue=issue)
-            issue_dict[issue_num].add_event(
+            issue_dict[issue_num].add_comment(
                 Comment(
                     enum_type=CommentType.commented.value,
                     created_at=c.created_at,

@@ -6,14 +6,14 @@ import asyncio
 import discord
 from discord.ext import commands, tasks
 
-from utils.var import Cid, Clr, Uid, Sid
+from utils.var import Cid, Clr, Sid
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
 
 
 EVENT_PASS_CHANNEL = 966316773869772860
-DROPS_CHANNEL = 1074010096566284288
+EVENT_ROLE_MENTION = '<@&1090274008680902667>'
 
 
 class ChannelWatcher(commands.Cog):
@@ -26,12 +26,14 @@ class ChannelWatcher(commands.Cog):
         sleep_time: int,
         watch_channel_id: int,
         ping_channel_id: int,
+        role_mention: str = ''
     ):
         self.bot: AluBot = bot
         self.db_column: str = db_column
         self.sleep_time: int = sleep_time
         self.watch_channel_id: int = watch_channel_id
         self.ping_channel_id: int = ping_channel_id
+        self.role_mention = role_mention
 
     async def cog_load(self) -> None:
         query = f'SELECT {self.db_column} FROM botinfo WHERE id=$1'
@@ -61,7 +63,7 @@ class ChannelWatcher(commands.Cog):
         e = discord.Embed(colour=Clr.error, title=self.__cog_name__)
         e.description = 'The bot crashed but did not even send the message'
         e.set_footer(text='Or maybe event just ended')
-        await channel.send(f'<@{Uid.alu}>', embed=e)
+        await channel.send(self.role_mention, embed=e)
         query = f'UPDATE botinfo SET {self.db_column}=FALSE WHERE id=$1'
         await self.bot.pool.execute(query, Sid.alu)
 
@@ -82,20 +84,24 @@ class EventPassWatcher(ChannelWatcher):
             sleep_time=50 * 60,  # 50 minutes
             watch_channel_id=EVENT_PASS_CHANNEL,
             ping_channel_id=Cid.spam_me,
+            role_mention=EVENT_ROLE_MENTION
         )
 
-
-class DropsWatcher(ChannelWatcher):
-    def __init__(self, bot: AluBot):
-        super().__init__(
-            bot,
-            db_column='drops_watch_live',
-            sleep_time=60 * 60 * 24 * 7,  # a week
-            watch_channel_id=1074010096566284288,
-            ping_channel_id=Cid.spam_me,
-        )
+# looks like the era is over
+#
+# DROPS_CHANNEL = 1074010096566284288
+#
+# class DropsWatcher(ChannelWatcher):
+#     def __init__(self, bot: AluBot):
+#         super().__init__(
+#             bot,
+#             db_column='drops_watch_live',
+#             sleep_time=60 * 60 * 24 * 7,  # a week
+#             watch_channel_id=1074010096566284288,
+#             ping_channel_id=Cid.spam_me,
+#         )
 
 
 async def setup(bot: AluBot):
     await bot.add_cog(EventPassWatcher(bot))
-    await bot.add_cog(DropsWatcher(bot))
+    # await bot.add_cog(DropsWatcher(bot))

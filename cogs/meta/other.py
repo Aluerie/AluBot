@@ -80,7 +80,8 @@ def format_commit(commit):
     commit_tz = datetime.timezone(datetime.timedelta(minutes=commit.commit_time_offset))
     commit_time = datetime.datetime.fromtimestamp(commit.commit_time).astimezone(commit_tz)
     offset = discord.utils.format_dt(commit_time, style="R")
-    return f"[`{short_sha2}`](https://github.com/DuckBot-Discord/DuckBot/commit/{commit.hex}) {short} ({offset})"
+    # todo: change the link below to proper global variable I guess ;
+    return f"[`{short_sha2}`](https://github.com/Aluerie/AluBot/commit/{commit.hex}) {short} ({offset})"
 
 
 def get_latest_commits(limit: int = 5):

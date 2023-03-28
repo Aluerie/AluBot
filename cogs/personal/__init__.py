@@ -3,12 +3,11 @@ These cogs are about my private one-person server
 and provide features for only me
 """
 
-from .channel_watcher import DropsWatcher, EventPassWatcher
+from .channel_watcher import EventPassWatcher
 from .personal import PersonalCommands
 from .scrab import Insider, LoLCom
 
 PERSONAL_COGS = (
-    DropsWatcher,
     EventPassWatcher,
     PersonalCommands,
     Insider,

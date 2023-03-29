@@ -1,20 +1,20 @@
 """
-Features thar are probably going to stay
-**exclusive** to AluBot hideout server
+These cogs are about my private one-person server
+and provide features for only me
 """
 
-from .emote_spam import ComfySpam, EmoteSpam
-from .stats import StatsVoiceChannels
-from .stream_name import StreamChannelName
+from .channel_watcher import EventPassWatcher
+from .personal import PersonalCommands
+from .scrab import Insider, LoLCom
 
-HIDEOUT_COGS = (
-    EmoteSpam,
-    ComfySpam,
-    StatsVoiceChannels,
-    StreamChannelName,
+PERSONAL_COGS = (
+    EventPassWatcher,
+    PersonalCommands,
+    Insider,
+    LoLCom
 )
 
 
 async def setup(bot):
-    for m in HIDEOUT_COGS:
-        await bot.add_cog(m(bot))
+    for C in PERSONAL_COGS:
+        await bot.add_cog(C(bot))

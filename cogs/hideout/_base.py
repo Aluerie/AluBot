@@ -11,10 +11,10 @@ if TYPE_CHECKING:
     from utils.bot import AluBot
 
 
-class HideoutBase(commands.Cog):
+class PersonalBase(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
     @property
     def hideout(self) -> discord.Guild:
-        return self.bot.get_guild(Sid.alu)  # type: ignore
+        return self.bot.get_guild(Sid.test)  # type: ignore

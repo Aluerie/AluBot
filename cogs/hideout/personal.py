@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+import discord
 from discord import app_commands
 from discord.ext import commands
 
@@ -11,6 +12,8 @@ if TYPE_CHECKING:
     from utils.context import Context
 
 from ._base import PersonalBase
+
+JAILED_BOTS_ID = 1090428532162822234
 
 
 class PersonalCommands(PersonalBase):
@@ -27,8 +30,8 @@ class PersonalCommands(PersonalBase):
         if not ctx.interaction:
             await ctx.message.edit(suppress=True)
 
-        tweet_ids = re.split('; |, |,| ', tweet_ids)
-        tweet_ids = [t.split('/')[-1].split('?')[0] for t in tweet_ids]
+        ids = re.split('; |, |,| ', tweet_ids)
+        ids = [t.split('/')[-1].split('?')[0] for t in ids]
 
         response = await ctx.bot.twitter.get_tweets(
             tweet_ids, media_fields=["url", "preview_image_url"], expansions="attachments.media_keys"
@@ -40,6 +43,16 @@ class PersonalCommands(PersonalBase):
         files_10 = [files[x : x + split_size] for x in range(0, len(files), split_size)]
         for fls in files_10:
             await ctx.reply(files=fls)
+
+    @property
+    def jailed_bots(self) -> discord.Role:
+        return self.hideout.get_role(JAILED_BOTS_ID)  # type: ignore
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member):
+        if member.guild == self.hideout and member.bot:
+            await member.add_roles(self.jailed_bots)
+            await member.edit(nick=f"{member.display_name} | ")
 
 
 async def setup(bot: AluBot):

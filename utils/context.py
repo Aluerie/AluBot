@@ -14,12 +14,11 @@ if TYPE_CHECKING:
 
 
 class ConfirmationView(discord.ui.View):
-    def __init__(self, *, timeout: float, author_id: int, ctx: Context, delete_after: bool) -> None:
+    def __init__(self, *, timeout: float, author_id: int, delete_after: bool) -> None:
         super().__init__(timeout=timeout)
         self.value: Optional[bool] = None
-        self.delete_after: Optional[bool] = delete_after
-        self.author_id: Optional[int] = author_id
-        self.ctx: Optional[Context] = ctx
+        self.delete_after: bool = delete_after
+        self.author_id: int = author_id
         self.message: Optional[discord.Message] = None
 
     async def interaction_check(self, ntr: discord.Interaction) -> bool:
@@ -38,16 +37,18 @@ class ConfirmationView(discord.ui.View):
     async def confirm(self, ntr: discord.Interaction, _: discord.ui.Button):
         self.value = True
         await ntr.response.defer()
-        if self.delete_after and self.message:
-            await self.message.delete()
+        if self.delete_after:
+            await ntr.delete_original_response()
+
         self.stop()
 
     @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
     async def cancel(self, ntr: discord.Interaction, _: discord.ui.Button):
         self.value = False
         await ntr.response.defer()
-        if self.delete_after and self.message:
-            await self.message.delete()
+        if self.delete_after:
+            await ntr.delete_original_response()
+
         self.stop()
 
 
@@ -77,8 +78,8 @@ class Context(commands.Context):
         *,
         content: Optional[str] = None,
         embed: Optional[discord.Embed] = None,
-        timeout: Optional[float] = 60.0,
-        delete_after: Optional[bool] = True,
+        timeout: float = 60.0,
+        delete_after: bool = True,
         author_id: Optional[int] = None,
     ) -> Optional[bool]:
         """
@@ -108,7 +109,7 @@ class Context(commands.Context):
             raise TypeError('Either content or embed should be provided')
 
         author_id = author_id or self.author.id
-        view = ConfirmationView(timeout=timeout, delete_after=delete_after, ctx=self, author_id=author_id)
+        view = ConfirmationView(timeout=timeout, delete_after=delete_after, author_id=author_id)
         view.message = await self.reply(content=content, embed=embed, view=view)
         await view.wait()
         return view.value

@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS timer_categories (
     id SERIAL PRIMARY KEY,
     name TEXT,
     frequency INTERVAL,
-    probability FLOAT CHECK ( 0 < probability <= 1 ),
+    probability FLOAT CHECK ( 0 < probability AND probability <= 1 ),
     start_dt TIMESTAMP DEFAULT (now() at time zone 'utc'),
     channel_id BIGINT NOT NULL
 );

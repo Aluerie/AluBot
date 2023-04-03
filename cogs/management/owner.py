@@ -196,3 +196,12 @@ class AdminTools(ManagementBase):
         }
         json_object = json.dumps(json_dict, indent=4)
         await ctx.reply(content=f"```json\n{json_object}```")
+
+    # @is_owner()
+    # @commands.command(hidden=True)
+    # async def export_database(self, ctx: Context, db_name: str):
+    #     """Export database table with `db_name` to a `.csv` file."""
+    #     query = f"COPY (SELECT * FROM {db_name}) TO '/.logs/{db_name}.csv' WITH CSV DELIMITER ',' HEADER;"
+    #     await ctx.pool.execute(query)
+    #     await ctx.reply('Done')
+

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 import datetime
 import platform
 
+import discord
 from discord.ext import tasks
 
 from utils.var import Rid
@@ -42,12 +43,18 @@ class StatsVoiceChannels(HideoutBase):
     async def my_time_before(self):
         await self.bot.wait_until_ready()
 
+    @property
+    def bots_role(self) -> discord.Role:
+        return self.community.get_role(Rid.bots)  # type: ignore 
+
     @tasks.loop(time=[datetime.time(hour=3)])
     async def total_members(self):
-        guild = self.hideout
-        bots_role = guild.get_role(Rid.bots)
-        new_name = f'\N{HOUSE WITH GARDEN} Members: {guild.member_count-len(bots_role.members)}'
-        await guild.get_channel(TOTAL_MEMBERS_CHANNEL).edit(name=new_name)
+        guild = self.community
+        bots_role = self.bots_role
+        channel: discord.VoiceChannel = guild.get_channel(TOTAL_MEMBERS_CHANNEL)  # type: ignore # known ID
+        member_count = guild.member_count or 0
+        new_name = f'\N{HOUSE WITH GARDEN} Members: {member_count - len(bots_role.members)}'
+        await channel.edit(name=new_name)
 
     @total_members.before_loop
     async def total_members_before(self):
@@ -55,10 +62,11 @@ class StatsVoiceChannels(HideoutBase):
 
     @tasks.loop(time=[datetime.time(hour=3)])
     async def total_bots(self):
-        guild = self.hideout
-        bots_role = guild.get_role(Rid.bots)
+        guild = self.community
+        bots_role = self.bots_role
+        channel: discord.VoiceChannel = guild.get_channel(TOTAL_BOTS_CHANNEL)  # type: ignore # known ID
         new_name = f'\N{ROBOT FACE} Bots: {len(bots_role.members)}'
-        await guild.get_channel(TOTAL_BOTS_CHANNEL).edit(name=new_name)
+        await channel.edit(name=new_name)
 
     @total_bots.before_loop
     async def total_bots_before(self):

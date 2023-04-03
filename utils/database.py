@@ -43,8 +43,8 @@ async def create_pool() -> asyncpg.Pool:
         POSTGRES_URL,
         init=init,
         command_timeout=60,
-        min_size=10,
-        max_size=10,
+        min_size=20,
+        max_size=20,
         record_class=DRecord,
         statement_cache_size=0,
     ) # type: ignore
@@ -85,4 +85,6 @@ FROM dota_players p
 WHERE NOT p.id=ANY(foo)
 ORDER BY similarity(display_name, 'gorgc') DESC
 LIMIT 12;
+
 """
+# COPY (SELECT * FROM {db_name}) TO '/.logs/{db_name}.csv' WITH CSV DELIMITER ',' HEADER;

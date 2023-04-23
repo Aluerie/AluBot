@@ -220,12 +220,17 @@ class BugTracker(DotaNewsBase):
 
     @is_owner()
     @valve.command()
-    async def add(self, ctx: Context, login: str):
-        query = "INSERT INTO valve_devs (login) VALUES ($1)"
-        await self.bot.pool.execute(query, login)
-        self.valve_devs.append(login)
+    async def add(self, ctx: Context, *, login: str):
+        logins = [b for x in login.split(",") if (b := x.lstrip().rstrip())]
+        print(logins)
+        query = "INSERT INTO valve_devs (login) VALUES ($1);"
+        for login in logins:
+            # looks like executemany wont work bcs it executes strings letter by letter!
+            await self.bot.pool.execute(query, login)
+        self.valve_devs.extend(logins)
         e = discord.Embed(color=MP.green())
-        e.description = f'Added user `{login}` to the list of Valve devs.'
+        answer = ', '.join(f'`{l}`' for l in logins)
+        e.description = f'Added user(-s) to the list of Valve devs.\n{answer}'
         await ctx.reply(embed=e)
 
     @is_owner()
@@ -245,6 +250,7 @@ class BugTracker(DotaNewsBase):
         query = "SELECT login FROM valve_devs"
         valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
         e = discord.Embed(color=MP.blue(), title='List of known Valve devs')
+        valve_devs.sort()
         e.description = '\n'.join([f'\N{BLACK CIRCLE}{i}' for i in valve_devs])
         await ctx.reply(embed=e)
 
@@ -259,8 +265,8 @@ class BugTracker(DotaNewsBase):
         dt: datetime.datetime = await self.bot.pool.fetchval(query, Sid.alu)
         now = discord.utils.utcnow()
 
-        if self.bot.test:  # TESTING
-            dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
+        # if self.bot.test:  # TESTING
+        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
 
         issue_dict = dict()
 

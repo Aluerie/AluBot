@@ -12,9 +12,8 @@ import discord
 from discord.ext import commands, tasks
 from github.GithubException import GithubException
 from PIL import Image
+
 from utils.checks import is_owner
-
-
 from utils.var import MP, Lmt, Sid
 
 from ._base import DotaNewsBase
@@ -243,7 +242,6 @@ class BugTracker(DotaNewsBase):
         e.description = f'Removed user `{login}` from the list of Valve devs.'
         await ctx.reply(embed=e)
 
-    
     @is_owner()
     @valve.command()
     async def list(self, ctx: Context):
@@ -251,7 +249,7 @@ class BugTracker(DotaNewsBase):
         valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
         e = discord.Embed(color=MP.blue(), title='List of known Valve devs')
         valve_devs.sort()
-        e.description = '\n'.join([f'\N{BLACK CIRCLE}{i}' for i in valve_devs])
+        e.description = '\n'.join([f'\N{BLACK CIRCLE} {i}' for i in valve_devs])
         await ctx.reply(embed=e)
 
     @tasks.loop(minutes=3)

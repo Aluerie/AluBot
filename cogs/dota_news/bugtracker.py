@@ -221,16 +221,31 @@ class BugTracker(DotaNewsBase):
     @valve.command()
     async def add(self, ctx: Context, *, login: str):
         logins = [b for x in login.split(",") if (b := x.lstrip().rstrip())]
-        print(logins)
-        query = "INSERT INTO valve_devs (login) VALUES ($1);"
-        for login in logins:
+        query = """ INSERT INTO valve_devs (login) VALUES ($1)
+                    ON CONFLICT DO NOTHING
+                    RETURNING True;
+                """
+        
+        error_logins = []
+        success_logins = []
+        for l in logins:
             # looks like executemany wont work bcs it executes strings letter by letter!
-            await self.bot.pool.execute(query, login)
-        self.valve_devs.extend(logins)
-        e = discord.Embed(color=MP.green())
-        answer = ', '.join(f'`{l}`' for l in logins)
-        e.description = f'Added user(-s) to the list of Valve devs.\n{answer}'
-        await ctx.reply(embed=e)
+            val = await self.bot.pool.fetchval(query, l)
+            if val:
+                success_logins.append(l)
+            else:
+                error_logins.append(l)
+        if success_logins:
+            self.valve_devs.extend(success_logins)
+            e = discord.Embed(color=MP.green())
+            answer = ', '.join(f'`{l}`' for l in logins)
+            e.description = f'Added user(-s) to the list of Valve devs.\n{answer}'
+            await ctx.reply(embed=e)
+        if error_logins:
+            e = discord.Embed(color=MP.red())
+            answer = ', '.join(f'`{l}`' for l in logins)
+            e.description = f'User(-s) were already in the list of Valve devs.\n{answer}'
+            await ctx.reply(embed=e)
 
     @is_owner()
     @valve.command()
@@ -238,7 +253,7 @@ class BugTracker(DotaNewsBase):
         query = "DELETE FROM valve_devs WHERE login=$1"
         await self.bot.pool.execute(query, login)
         self.valve_devs.remove(login)
-        e = discord.Embed(color=MP.red())
+        e = discord.Embed(color=MP.orange())
         e.description = f'Removed user `{login}` from the list of Valve devs.'
         await ctx.reply(embed=e)
 
@@ -263,22 +278,35 @@ class BugTracker(DotaNewsBase):
         dt: datetime.datetime = await self.bot.pool.fetchval(query, Sid.alu)
         now = discord.utils.utcnow()
 
-        # if self.bot.test:  # TESTING
-        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
+        if self.bot.test:  # TESTING
+            dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
 
         issue_dict = dict()
+        issues_list = repo.get_issues(sort='updated', state='all', since=dt)
 
-        # Closed / Self-assigned / Reopened
-        for i in repo.get_issues(sort='updated', state='all', since=dt):
+        for i in issues_list:
+            # Closed / Self-assigned / Reopened
             events = [
                 x
                 for x in i.get_events()
                 if now > x.created_at.replace(tzinfo=datetime.timezone.utc) > dt
                 and x.actor  # apparently some people just delete their accounts after closing their issues, #6556 :D
-                and x.actor.login in assignees
+                # and x.actor.login in assignees
                 and x.event in [x.name for x in list(EventType)]
             ]
             for e in events:
+                if e.actor.login in assignees:
+                    pass
+                elif e.actor != e.issue.user:
+                    # if actor is not OP of the issue then we can consider 
+                    # that this person is a valve dev
+                    assignees.append(e.actor.login)
+                    self.valve_devs.append(e.actor.login)
+                    query = """ INSERT INTO valve_devs (login) VALUES ($1)
+                                ON CONFLICT DO NOTHING;
+                            """
+                    await self.bot.pool.execute(query, e.actor.login)
+
                 if e.issue.number not in issue_dict:
                     issue_dict[e.issue.number] = TimeLine(issue=e.issue)
                 issue_dict[e.issue.number].add_event(
@@ -291,7 +319,7 @@ class BugTracker(DotaNewsBase):
                 )
 
         # Issues opened by Valve devs
-        for i in repo.get_issues(sort='created', state='open', since=dt):
+        for i in issues_list:
             if not dt < i.created_at.replace(tzinfo=datetime.timezone.utc) < now:
                 continue
             if i.user.login in assignees:
@@ -311,6 +339,7 @@ class BugTracker(DotaNewsBase):
         for c in [x for x in repo.get_issues_comments(sort='updated', since=dt) if x.user.login in assignees]:
             # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
             issue_num = int(c.issue_url.split('/')[-1])
+            
             if issue_num not in issue_dict:
                 issue = repo.get_issue(issue_num)
                 issue_dict[issue.number] = TimeLine(issue=issue)

@@ -214,7 +214,7 @@ class BugTracker(DotaNewsBase):
     @is_owner()
     @commands.group(name="valve", hidden=True)
     async def valve(self, ctx: Context):
-        """Group for guild commands. Use it together with subcommands"""
+        """Group for valve devs commands. Use it together with subcommands"""
         await ctx.scnf()
 
     @is_owner()
@@ -278,8 +278,8 @@ class BugTracker(DotaNewsBase):
         dt: datetime.datetime = await self.bot.pool.fetchval(query, Sid.alu)
         now = discord.utils.utcnow()
 
-        if self.bot.test:  # TESTING
-            dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
+        # if self.bot.test:  # TESTING
+        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
 
         issue_dict = dict()
         issues_list = repo.get_issues(sort='updated', state='all', since=dt)
@@ -295,17 +295,19 @@ class BugTracker(DotaNewsBase):
                 and x.event in [x.name for x in list(EventType)]
             ]
             for e in events:
-                if e.actor.login in assignees:
+                if (login := e.actor.login) in assignees:
                     pass
-                elif e.actor != e.issue.user:
+                elif login != e.issue.user.login:
                     # if actor is not OP of the issue then we can consider 
                     # that this person is a valve dev
-                    assignees.append(e.actor.login)
-                    self.valve_devs.append(e.actor.login)
+                    assignees.append(login)
+                    self.valve_devs.append(login)
                     query = """ INSERT INTO valve_devs (login) VALUES ($1)
                                 ON CONFLICT DO NOTHING;
                             """
-                    await self.bot.pool.execute(query, e.actor.login)
+                    await self.bot.pool.execute(query, login)
+                else:
+                    continue
 
                 if e.issue.number not in issue_dict:
                     issue_dict[e.issue.number] = TimeLine(issue=e.issue)

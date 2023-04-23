@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import asyncpg
 import click
 
+from config import POSTGRES_URL
 from utils.bot import AluBot, get_log_fmt
 from utils.database import create_pool
 
@@ -95,7 +96,7 @@ def create():
     try:
 
         async def run_create():
-            connection: asyncpg.Connection = await asyncpg.connect(POSTGRES_URL)  # type: ignore
+            connection: asyncpg.Connection = await asyncpg.connect(POSTGRES_URL) 
             async with connection.transaction():
                 sql = Path('sql/tables.sql').read_text('utf-8')
                 await connection.execute(sql)

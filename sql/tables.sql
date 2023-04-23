@@ -208,3 +208,7 @@ CREATE TABLE IF NOT EXISTS dotahistory (
     patch_letter TEXT,
     custom_note TEXT
 );
+
+CREATE TABLE IF NOT EXISTS valve_devs (
+    login TEXT PRIMARY KEY
+);

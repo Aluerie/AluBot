@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import logging
 import re
 import textwrap
 from enum import Enum
 from typing import TYPE_CHECKING, List, Optional, Set, Tuple
 
 import discord
-from discord.ext import tasks
+from discord.ext import commands, tasks
 from github.GithubException import GithubException
 from PIL import Image
+from utils.checks import is_owner
 
-from utils.var import Lmt, Sid
+
+from utils.var import MP, Lmt, Sid
 
 from ._base import DotaNewsBase
 
@@ -20,6 +23,11 @@ if TYPE_CHECKING:
     from github import Issue, NamedUser
 
     from utils.bot import AluBot
+    from utils.context import Context
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 
 GITHUB_REPO = "ValveSoftware/Dota2-Gameplay"
 GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
@@ -193,22 +201,66 @@ class BugTracker(DotaNewsBase):
     async def cog_load(self) -> None:
         self.bot.ini_github()
         self.dota2gameplay_repo = self.bot.github.get_repo(GITHUB_REPO)
+        self.valve_devs = await self.get_valve_devs()
         self.git_comments_check.start()
 
     async def cog_unload(self) -> None:
         self.git_comments_check.stop()  # .cancel()
 
+    async def get_valve_devs(self) -> List[str]:
+        query = 'SELECT login FROM valve_devs'
+        valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
+        return valve_devs
+
+    @is_owner()
+    @commands.group(name="valve", hidden=True)
+    async def valve(self, ctx: Context):
+        """Group for guild commands. Use it together with subcommands"""
+        await ctx.scnf()
+
+    @is_owner()
+    @valve.command()
+    async def add(self, ctx: Context, login: str):
+        query = "INSERT INTO valve_devs (login) VALUES ($1)"
+        await self.bot.pool.execute(query, login)
+        self.valve_devs.append(login)
+        e = discord.Embed(color=MP.green())
+        e.description = f'Added user `{login}` to the list of Valve devs.'
+        await ctx.reply(embed=e)
+
+    @is_owner()
+    @valve.command()
+    async def remove(self, ctx: Context, login: str):
+        query = "DELETE FROM valve_devs WHERE login=$1"
+        await self.bot.pool.execute(query, login)
+        self.valve_devs.remove(login)
+        e = discord.Embed(color=MP.red())
+        e.description = f'Removed user `{login}` from the list of Valve devs.'
+        await ctx.reply(embed=e)
+
+    
+    @is_owner()
+    @valve.command()
+    async def list(self, ctx: Context):
+        query = "SELECT login FROM valve_devs"
+        valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
+        e = discord.Embed(color=MP.blue(), title='List of known Valve devs')
+        e.description = '\n'.join([f'\N{BLACK CIRCLE}{i}' for i in valve_devs])
+        await ctx.reply(embed=e)
+
     @tasks.loop(minutes=3)
     async def git_comments_check(self):
+        log.debug('BugTracker task started')
         repo = self.dota2gameplay_repo
 
-        assignees = [x.login for x in repo.get_assignees()]
+        assignees = self.valve_devs
 
         query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
         dt: datetime.datetime = await self.bot.pool.fetchval(query, Sid.alu)
+        now = discord.utils.utcnow()
 
-        # if self.bot.test:  # TESTING
-        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=29)
+        if self.bot.test:  # TESTING
+            dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
 
         issue_dict = dict()
 
@@ -217,7 +269,7 @@ class BugTracker(DotaNewsBase):
             events = [
                 x
                 for x in i.get_events()
-                if x.created_at.replace(tzinfo=datetime.timezone.utc) > dt
+                if now > x.created_at.replace(tzinfo=datetime.timezone.utc) > dt
                 and x.actor  # apparently some people just delete their accounts after closing their issues, #6556 :D
                 and x.actor.login in assignees
                 and x.event in [x.name for x in list(EventType)]
@@ -236,7 +288,7 @@ class BugTracker(DotaNewsBase):
 
         # Issues opened by Valve devs
         for i in repo.get_issues(sort='created', state='open', since=dt):
-            if i.created_at.replace(tzinfo=datetime.timezone.utc) < dt:
+            if not dt < i.created_at.replace(tzinfo=datetime.timezone.utc) < now:
                 continue
             if i.user.login in assignees:
                 if i.number not in issue_dict:
@@ -291,8 +343,9 @@ class BugTracker(DotaNewsBase):
             await msg.publish()
 
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
-        await self.bot.pool.execute(query, discord.utils.utcnow(), Sid.alu)
+        await self.bot.pool.execute(query, now, Sid.alu)
         self.retries = 0
+        log.debug('BugTracker task is finished')
 
     @git_comments_check.before_loop
     async def before(self):

@@ -6,10 +6,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from utils.var import Ems, Sid, Rid, Clr, Cid
+from utils.const.community import STREAM_ROOM_CHANNEL
+from utils.var import Cid, Clr, Ems, Rid, Sid
 
 from ._base import HideoutBase
-from ._const import STREAM_ROOM_CHANNEL
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -37,11 +37,11 @@ class StreamChannelName(HideoutBase, name='\N{CINEMA}streaming_room Control'):
 
     @property
     def stream_channel(self) -> discord.VoiceChannel:
-        return self.community.get_channel(STREAM_ROOM_CHANNEL)  # type: ignore # known ID
+        return self.bot.community.stream_room
 
     @property
-    def voice_role(self) -> discord.VoiceChannel:
-        return self.community.get_channel(Rid.voice)  # type: ignore # known ID
+    def voice_role(self) -> discord.Role:
+        return self.bot.community.voice_role
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -49,7 +49,7 @@ class StreamChannelName(HideoutBase, name='\N{CINEMA}streaming_room Control'):
     ):
         if member.guild.id != Sid.alu:
             return
-        
+
         voice_role = self.voice_role
         if before.channel is None and after.channel is not None:  # joined the voice channel
             await member.add_roles(voice_role)

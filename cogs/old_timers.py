@@ -7,6 +7,7 @@ from discord.ext import commands, tasks
 from numpy.random import randint, seed
 
 from utils.var import Cid, Clr, Ems, Rid, Sid, Uid
+from utils.const import community
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -29,7 +30,7 @@ async def get_a_text(pool: Pool):
         f'Hey chat, if you see some high/elite MMR streamer pick PA/DW - '
         f'don\'t hesitate to ping <@{Uid.alu}> about it pretty please !',
         'Hey chat, please use channels according to their description',
-        f'Hey chat, please use <@&{Rid.bots}> strictly in <#{Cid.bot_spam} '
+        f'Hey chat, please use <@&{Rid.bots}> strictly in <#{community.BOT_SPAM} '
         f'(and <@&{Rid.nsfw_bots}> in <#{Cid.nsfw_bob_spam}> with exceptions of \n'
         f'0️⃣ feel free to use <@{Uid.bot}> everywhere\n'
         f'1️⃣ <@{Uid.mango}> in <#{Cid.pubs_talk}>\n'
@@ -38,7 +39,7 @@ async def get_a_text(pool: Pool):
         f'bot commands. Even more to come in future !',
         'Hey chat, follow me on twitch if you haven\'t done it yet: '
         '[twitch.tv/aluerie](https://www.twitch.tv/aluerie) {0} {0} {0}\n'.format(Ems.DankLove),
-        f'Hey chat, you can get list of <@&{Rid.bots}> available to use in <#{Cid.bot_spam}> and '
+        f'Hey chat, you can get list of <@&{Rid.bots}> available to use in <#{community.BOT_SPAM}> and '
         f'<@&{Rid.nsfw_bots}> in <#{Cid.nsfw_bob_spam}> by respectively checking pins in those channels.',
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)

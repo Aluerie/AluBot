@@ -21,16 +21,17 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config as cfg
 from cogs import get_extensions
+from utils.const.community import CommunityGuild
 
 from .context import Context
 from .imgtools import ImgToolsClient
 from .jsonconfig import PrefixConfig
 from .twitch import TwitchClient
-from .var import Cid, Clr, Sid
+from .var import Clr
+from .const.hideout import HideoutGuild
 
 if TYPE_CHECKING:
     from discord.abc import Snowflake
-    from github import Repository
 
     from cogs.reminders import Reminder
 
@@ -122,10 +123,12 @@ class AluBot(commands.Bot):
         if hasattr(self, 'session'):
             await self.session.close()
         if hasattr(self, 'twitch'):
+            pass
             await self.twitch.close()
 
     async def my_start(self) -> None:
         token = cfg.TEST_TOKEN if self.test else cfg.MAIN_TOKEN
+        token = cfg.MAIN_TOKEN
         await super().start(token, reconnect=True)
 
     async def get_context(self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context) -> Context:
@@ -229,7 +232,7 @@ class AluBot(commands.Bot):
         None
         """
 
-        ch: discord.TextChannel = destination or self.spam_channel
+        ch: discord.TextChannel = destination or self.hideout.spam
 
         etype, value, trace = type(error), error, error.__traceback__
         traceback_content = "".join(traceback.format_exception(etype, value, trace, verbosity)).replace(
@@ -248,21 +251,14 @@ class AluBot(commands.Bot):
             await ch.send(page)
 
     # SHORTCUTS ########################################################################################################
-
+    
     @property
-    def spam_ch_id(self):
-        return Cid.test_spam if self.test else Cid.spam_me
-
+    def hideout(self) -> HideoutGuild:
+        return HideoutGuild(self)
+    
     @property
-    def spam_channel(self) -> discord.TextChannel:
-        # Shortcut so checker doesn't complain too much,
-        # and we do not have to `from .utils.vars import Cid``
-        # ?tag botvar in a nutshell
-        return self.get_channel(self.spam_ch_id)  # type: ignore
-
-    @property
-    def test_guild(self) -> discord.Guild:
-        return self.get_guild(Sid.test)  # type: ignore
+    def community(self) -> CommunityGuild:
+        return CommunityGuild(self)
 
 
 # ######################################################################################################################

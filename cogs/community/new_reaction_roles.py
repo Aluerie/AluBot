@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from utils.checks import is_owner
-from utils.var import Cid, Clr, Sid
+from utils.var import Cid, Clr, Ems, Sid
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -17,10 +17,17 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
     def __init__(self):
         super().__init__(
             custom_id='colour_roles_dropdown',
-            placeholder='Type \N{KEYBOARD} name of a colour and Select it.'
+            placeholder='Type \N{KEYBOARD} name of a colour and Select it.',
+            min_values=0,
+            max_values=1
         )
 
     async def callback(self, ntr: discord.Interaction[AluBot]):
+        if not len(self.values):
+            e = discord.Embed()
+            e.description = f'You\'ve selected zero roles and thus I did nothing {Ems.peepoComfy}'
+            return await ntr.response.send_message(embed=e, ephemeral=True)
+
         colour_category_role = ntr.client.community.guild.get_role(851786344354938880)
         activity_category_role = ntr.client.community.guild.get_role(852199351808032788)
 
@@ -76,22 +83,8 @@ class ColourRoles(commands.Cog):
 
     @is_owner()
     @commands.command(hidden=True)
-    async def role_selection(self, ctx: Context):
-        e = discord.Embed(title='\N{LOWER LEFT PAINTBRUSH} Colour Roles \N{LOWER LEFT PAINTBRUSH}')
-        e.colour = 0x9400D3
-        e.description = (
-            '\N{HEAVY BLACK HEART} If you want to have a custom colour to your username/nickname, then please: do the following\n'
-            '* \N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP} Find your desired colour from 140 available colours in a table in the attached image below.\n'
-            '* \N{DIGIT TWO}\N{COMBINING ENCLOSING KEYCAP} **(!)Type** name of your chosen role in drop-down menu below and Select it.\n'
-            '* \N{DIGIT THREE}\N{COMBINING ENCLOSING KEYCAP} Done! You should get your desired role and colour.\n'
-            '\n'
-            '* Note that the bot won\'t give you any other roles than colour roles.\n'
-            '\n'
-            '\N{PURPLE HEART} And by the way, your chosen custom colour will override colours of special roles if you have ones.'
-        )
-        e.set_image(url='https://i.imgur.com/bHEpVlb.png')
-
-        await ctx.send(embed=e, view=ColourRolesView())
+    async def new_role_selection(self, ctx: Context):
+        await ctx.send(view=ColourRolesView())
         # await self.bot.community.role_selection.send(embed=e, view=ColourRolesView())
 
 

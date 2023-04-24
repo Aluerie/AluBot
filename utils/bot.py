@@ -128,7 +128,7 @@ class AluBot(commands.Bot):
 
     async def my_start(self) -> None:
         token = cfg.TEST_TOKEN if self.test else cfg.MAIN_TOKEN
-        token = cfg.MAIN_TOKEN
+        # token = cfg.MAIN_TOKEN
         await super().start(token, reconnect=True)
 
     async def get_context(self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context) -> Context:

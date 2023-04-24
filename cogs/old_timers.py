@@ -30,7 +30,7 @@ async def get_a_text(pool: Pool):
         f'don\'t hesitate to ping <@{Uid.alu}> about it pretty please !',
         'Hey chat, please use channels according to their description',
         f'Hey chat, please use <@&{Rid.bots}> strictly in <#{Cid.bot_spam} '
-        f'(and <@&{Rid.nsfwbots}> in <#{Cid.nsfw_bob_spam}> with exceptions of \n'
+        f'(and <@&{Rid.nsfw_bots}> in <#{Cid.nsfw_bob_spam}> with exceptions of \n'
         f'0️⃣ feel free to use <@{Uid.bot}> everywhere\n'
         f'1️⃣ <@{Uid.mango}> in <#{Cid.pubs_talk}>\n'
         f'2️⃣ <@{Uid.nqn}>\'s in-built "free-nitro" functions everywhere',
@@ -39,7 +39,7 @@ async def get_a_text(pool: Pool):
         'Hey chat, follow me on twitch if you haven\'t done it yet: '
         '[twitch.tv/aluerie](https://www.twitch.tv/aluerie) {0} {0} {0}\n'.format(Ems.DankLove),
         f'Hey chat, you can get list of <@&{Rid.bots}> available to use in <#{Cid.bot_spam}> and '
-        f'<@&{Rid.nsfwbots}> in <#{Cid.nsfw_bob_spam}> by respectively checking pins in those channels.',
+        f'<@&{Rid.nsfw_bots}> in <#{Cid.nsfw_bob_spam}> by respectively checking pins in those channels.',
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 

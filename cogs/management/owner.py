@@ -142,7 +142,7 @@ class AdminTools(ManagementBase):
         e.add_field(name="Members", value=total)
         e.add_field(name="Bots", value=f"{bots} ({bots / total:.2%})")
         e.timestamp = guild.me.joined_at
-        await self.bot.get_channel(Cid.global_logs).send(embed=e)
+        await self.bot.hideout.global_logs.send(embed=e)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):

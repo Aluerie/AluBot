@@ -50,7 +50,7 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
         if tweet.in_reply_to_user_id is not None:
             return
 
-        channel_id = Cid.spam_me if tweet.author_id == 1272226371109031937 else Cid.copydota_tweets
+        channel_id = Cid.spam_me if tweet.author_id == 1272226371109031937 else Cid.copy_dota_tweets
         await self.bot.get_channel(channel_id).send(content=f"https://twitter.com/{username}/status/{tweet.id}")
 
     async def on_request_error(self, status_code):

@@ -42,7 +42,7 @@ class Dota2Com(DotaNewsBase):
             return
 
         e = discord.Embed(title="Patch Notes", url=f'https://www.dota2.com/patches/{patch_number}', colour=Clr.prpl)
-        e.description = "Hey chat, I think new patch is out!"
+        e.description = f"Hey chat, I think new patch {patch_name} is out!"
         e.set_footer(text="I'm checking Valve's datafeed every 10 minutes")
         e.set_author(name=f"Patch {patch_number} is out", icon_url=DOTA_LOGO)
         msg = await self.news_channel.send(embed=e)

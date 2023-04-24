@@ -10,15 +10,10 @@ from discord.ext import tasks
 from utils.var import Rid
 
 from ._base import HideoutBase
+from ._const import MY_TIME_CHANNEL, TOTAL_MEMBERS_CHANNEL, TOTAL_BOTS_CHANNEL
 
 if TYPE_CHECKING:
     pass
-
-# Voice Channels which titles will show various stats
-# todo: these ids to wiki
-MY_TIME_CHANNEL = 788915790543323156
-TOTAL_MEMBERS_CHANNEL = 795743012789551104
-TOTAL_BOTS_CHANNEL = 795743065787990066
 
 
 class StatsVoiceChannels(HideoutBase):
@@ -37,7 +32,8 @@ class StatsVoiceChannels(HideoutBase):
         symbol = '#' if platform.system() == 'Windows' else '-'
         msk_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3)))
         new_name = f'\N{ALARM CLOCK} {msk_now.strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
-        await self.bot.get_channel(MY_TIME_CHANNEL).edit(name=new_name)
+        channel: discord.VoiceChannel = guild.get_channel(MY_TIME_CHANNEL)  # type: ignore # known ID
+        await channel.edit(name=new_name)
 
     @my_time.before_loop
     async def my_time_before(self):

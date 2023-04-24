@@ -8,6 +8,7 @@ from discord.ext import commands, tasks
 from github import Github
 
 from config import GIT_PERSONAL_TOKEN
+from utils.const.hideout import COPY_DOTA_INFO, COPY_DOTA_STEAM, COPY_DOTA_TWEETS
 from utils.formats import block_function
 from utils.github import human_commit
 from utils.imgtools import str_to_file
@@ -74,7 +75,7 @@ class SteamDB(DotaNewsBase):
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         try:
-            if msg.channel.id == Cid.copydota_info:
+            if msg.channel.id == COPY_DOTA_INFO:
                 if "https://steamdb.info" in msg.content:
                     url, embeds, files = await get_gitdiff_embed()
                     msg = await self.news_channel.send(content=f"<{url}>", embeds=embeds)
@@ -86,14 +87,14 @@ class SteamDB(DotaNewsBase):
                     msg = await self.news_channel.send(content=msg.content, embeds=msg.embeds, files=msg.attachments)
                     await msg.publish()
 
-            elif msg.channel.id == Cid.copydota_steam:
+            elif msg.channel.id == COPY_DOTA_STEAM:
                 if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
                 e = discord.Embed(colour=0x171A21, description=msg.content)
                 msg = await self.news_channel.send(embed=e)
                 await msg.publish()
 
-            elif msg.channel.id == Cid.copydota_tweets:
+            elif msg.channel.id == COPY_DOTA_TWEETS:
                 await asyncio.sleep(2)
                 answer = await msg.channel.fetch_message(int(msg.id))
                 embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]
@@ -118,9 +119,9 @@ class TestGitFeed(commands.Cog):
         num = 4
         url, embeds, files = await get_gitdiff_embed(test_num=num)
         for embed in embeds:
-            await self.bot.spam_channel.send(content=url, embed=embed)
+            await self.bot.hideout.spam.send(content=url, embed=embed)
         if len(files):
-            await self.bot.spam_channel.send(files=files)
+            await self.bot.hideout.spam.send(files=files)
 
     @testing.before_loop
     async def before(self):

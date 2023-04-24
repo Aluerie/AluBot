@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from discord.ext import tasks
 
 from utils.lol.const import LOL_LOGO
-from utils.var import Cid, Clr, Sid
+from utils.var import Clr, Sid
 
 from ._base import PersonalBase
 
@@ -51,7 +51,7 @@ class Insider(PersonalBase):
         e.set_image(
             url='https://blogs.windows.com/wp-content/themes/microsoft-stories-theme/img/theme/windows-placeholder.jpg'
         )
-        msg = await self.bot.get_channel(Cid.repost).send(embed=e)
+        msg = await self.repost.send(embed=e)
         # await msg.publish()
 
     @insider_checker.before_loop
@@ -103,7 +103,7 @@ class LoLCom(PersonalBase):
         e.set_image(url=img_url)
         e.set_thumbnail(url=content_if_property('og:image'))
         e.set_author(name='League of Legends', icon_url=LOL_LOGO)
-        await self.bot.get_channel(Cid.repost).send(embed=e)
+        await self.repost.send(embed=e)
 
     @patch_checker.before_loop
     async def before(self):

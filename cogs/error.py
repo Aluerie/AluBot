@@ -148,7 +148,7 @@ class CommandErrorHandler(commands.Cog):
                         url=jump_url,
                         icon_url=ctx.author.display_avatar.url,
                     )
-                mention = ctx.channel.id != ctx.bot.spam_ch_id
+                mention = ctx.channel.id != ctx.bot.hideout.spam_channel_id
                 await self.bot.send_traceback(error, embed=error_e, mention=mention)
 
         # send the error

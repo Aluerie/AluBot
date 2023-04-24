@@ -47,7 +47,7 @@ class EventBase:
         return discord.File(self.file_path)
 
     def emote(self, bot: AluBot) -> discord.Emoji | None:
-        return discord.utils.find(lambda m: m.name == self.name, bot.test_guild.emojis)
+        return discord.utils.find(lambda m: m.name == self.name, bot.hideout.guild.emojis)
 
 
 class CommentBase(EventBase):
@@ -392,7 +392,7 @@ class BugTracker(DotaNewsBase):
             if error.status == 502:
                 if self.retries == 0:
                     e = discord.Embed(description='DotaBugtracker: Server Error 502')
-                    await self.bot.spam_channel.send(embed=e)
+                    await self.bot.hideout.spam.send(embed=e)
                 await asyncio.sleep(60 * 10 * 2**self.retries)
                 self.retries += 1
                 self.git_comments_check.restart()

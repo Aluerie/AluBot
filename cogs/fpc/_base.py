@@ -244,8 +244,8 @@ class FPCBase:
         e.set_footer(text=self.game_name, icon_url=self.game_logo)
         await ctx.reply(embed=e)
         e.colour = MP.green(shade=200)
-        e.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
-        await self.bot.get_channel(Cid.global_logs).send(embed=e)
+        e.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
+        await self.bot.hideout.global_logs.send(embed=e)
 
     async def database_request(
         self,
@@ -285,7 +285,7 @@ class FPCBase:
         # warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
         cmd_usage_str = f"name: {player_dict['display_name']} {self.cmd_usage_str(**account_dict)}"
         warn_e.add_field(name='Command', value=f'{self.game_codeword} player add {cmd_usage_str}')
-        await self.bot.get_channel(Cid.global_logs).send(embed=warn_e)
+        await self.bot.hideout.global_logs.send(embed=warn_e)
 
     async def database_remove(
         self,

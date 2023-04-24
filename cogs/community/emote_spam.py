@@ -3,21 +3,19 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-import emoji
 import discord
-from discord.ext import commands, tasks
+import emoji
 import regex
-from numpy.random import randint, choice
+from discord.ext import commands, tasks
+from numpy.random import choice, randint
 
 from utils.var import Cid, Clr, Ems, Rgx, Uid
 
 from ._base import HideoutBase
+from ._const import COMFY_SPAM, EMOTE_SPAM
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
-
-EMOTE_SPAM = 730838697443852430
-COMFY_SPAM = 727539910713671802
 
 
 class EmoteSpam(HideoutBase):
@@ -30,7 +28,6 @@ class EmoteSpam(HideoutBase):
         self.offline_criminal_check.cancel()
 
     async def emote_spam_control(self, message: discord.Message, nqn_check: int = 1):
-
         if message.channel.id == EMOTE_SPAM:
             if len(message.embeds):
                 return await message.delete()
@@ -38,7 +35,7 @@ class EmoteSpam(HideoutBase):
             # text = emoji_regex.sub('', msg.content)  # standard emotes
 
             text = emoji.replace_emoji(message.content, replace='')  # type: ignore # ???
-            filters = [Rgx.whitespaces, Rgx.emote, Rgx.nqn, Rgx.invis_symb]
+            filters = [Rgx.whitespaces, Rgx.emote, Rgx.nqn, Rgx.invis_symbol]
             if nqn_check == 0:
                 filters.remove(Rgx.nqn)
             for item in filters:

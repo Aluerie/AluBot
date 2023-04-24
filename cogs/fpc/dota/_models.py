@@ -11,7 +11,8 @@ from pyot.utils.functools import async_property
 from utils.dota import ability, hero, item
 from utils.dota.const import DOTA_LOGO, ODOTA_API_URL, dota_player_colour_map
 from utils.formats import human_timedelta
-from utils.var import MP, Cid, Clr
+from utils.var import MP, Clr
+from utils.const.hideout import REPOST
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
@@ -291,7 +292,7 @@ class PostMatchPlayerData:
         e = msg.embeds[0]
         img_file = bot.imgtools.img_to_file(await self.edit_the_image(e.image.url, bot), filename='edited.png')
         e.set_image(url=f'attachment://{img_file.filename}')
-        if self.channel_id == Cid.repost:
+        if self.channel_id == REPOST:
             e.set_footer(text=f'{e.footer.text or ""} | {self.api_calls_done}')
         try:
             await msg.edit(embed=e, attachments=[img_file])

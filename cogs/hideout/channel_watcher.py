@@ -1,24 +1,19 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import asyncio
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands, tasks
 
-from utils.var import Cid, Clr, Sid
+from utils.const.hideout import EVENT_PASS, EVENT_ROLE, SPAM_ME
+from utils.var import Clr, Sid
 
 if TYPE_CHECKING:
     from utils.bot import AluBot
 
 
-EVENT_PASS_CHANNEL = 966316773869772860
-EVENT_ROLE_MENTION = '<@&1090274008680902667>'
-
-
 class ChannelWatcher(commands.Cog):
-    watch_bool: bool
-
     def __init__(
         self,
         bot: AluBot,
@@ -26,14 +21,15 @@ class ChannelWatcher(commands.Cog):
         sleep_time: int,
         watch_channel_id: int,
         ping_channel_id: int,
-        role_mention: str = ''
+        role_mention: str = '',
     ):
         self.bot: AluBot = bot
         self.db_column: str = db_column
         self.sleep_time: int = sleep_time
         self.watch_channel_id: int = watch_channel_id
         self.ping_channel_id: int = ping_channel_id
-        self.role_mention = role_mention
+        self.role_mention: str = role_mention
+        self.watch_bool: bool = True
 
     async def cog_load(self) -> None:
         query = f'SELECT {self.db_column} FROM botinfo WHERE id=$1'
@@ -82,10 +78,11 @@ class EventPassWatcher(ChannelWatcher):
             bot,
             db_column='event_pass_is_live',
             sleep_time=50 * 60,  # 50 minutes
-            watch_channel_id=EVENT_PASS_CHANNEL,
-            ping_channel_id=Cid.spam_me,
-            role_mention=EVENT_ROLE_MENTION
+            watch_channel_id=EVENT_PASS,
+            ping_channel_id=SPAM_ME,
+            role_mention=f'<@&{EVENT_ROLE}>',
         )
+
 
 # looks like the era is over
 #

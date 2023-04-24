@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Literal, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal
 
 import discord
 from typing_extensions import Self
@@ -15,7 +17,7 @@ class Rgx:
     bug_check = r":.*:"
     emote_stats = r"<a?:[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>"
     emote_stats_ids = r"<a?:[a-zA-Z0-9_]{2,32}:([0-9]{18,22})>"
-    invis_symb = "[^!-~]+"  # IDK might be huge question mark
+    invis_symbol = "[^!-~]+"  # IDK might be huge question mark
 
     url_danny = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
     url_simple = r"(https?://\S+)"
@@ -54,7 +56,7 @@ class Cid:
     alubot = 724991054474117241
     confessions = 731703242597072896
     weebs = 731887442768166933
-    bot_spam = 724986090632642653
+    
     nsfw_bob_spam = 731607736155897978
 
     dota_news = 724986688589267015
@@ -63,24 +65,6 @@ class Cid:
 
     patch_notes = 731759693113851975
     suggestions = 724994495581782076
-
-    # wink server
-    coop = 966366521607745586
-
-    global_logs = 997149550324240465
-    spam_logs = 1075497084075130880
-    daily_report = 1066406466778566801
-
-    roses = 759916212842659853
-    spam_me = 970823670702411810
-    test_spam = 1066379298363166791
-
-    repost = 971504469995049041
-
-    copylol_ff20 = 791099728498130944
-    copydota_info = 873430376033452053
-    copydota_steam = 881843565251141632
-    copydota_tweets = 963954743644934184
 
 
 class Uid:
@@ -95,7 +79,7 @@ class Uid:
     alu = 312204139751014400
     bot = 713124699663499274
     yen = 948934071432654929
-    mandara = 812763204010246174
+    lala = 812763204010246174
     mango = 213476188037971968
     nqn = 559426966151757824
 
@@ -111,7 +95,7 @@ class Rid:
 
     bot_admins = (743509859894558731, 837052934919028746)
     bots = 724981475099017276
-    nsfwbots = 959955573405777981
+    nsfw_bots = 959955573405777981
     plebs = 727492782196916275
     subs = 979723279491285012
     milestone = 745716947098009640
@@ -144,7 +128,7 @@ class Rid:
 class Ems:
     """Emote strings."""
 
-    # alu server nonani
+    # alu server non-animated emotes
     bedNerdge = '<:_:855495407110586439>'
     DankApprove = '<:_:853015071042961468>'
     DankHatTooBig = '<:_:855056297098215474>'
@@ -178,7 +162,7 @@ class Ems:
     FeelsRainMan = '<a:_:902254223851421796>'
     DankL = '<a:_:1014616758470070353>'
 
-    # wink server nonani
+    # wink server non-animated
 
     github_logo = '<:_:1081677464637550662>'
 

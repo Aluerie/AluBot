@@ -358,7 +358,7 @@ class HelpCommandCog(MetaBase):
             # announce to people that we logged in
             e = discord.Embed(colour=Clr.prpl)
             e.description = f'Logged in as {self.bot.user.name}'
-            await self.bot.spam_channel.send(embed=e)
+            await self.bot.hideout.spam.send(embed=e)
             e.set_footer(text='Finished updating/rebooting')
             await self.bot.get_channel(Cid.bot_spam).send(embed=e)
 

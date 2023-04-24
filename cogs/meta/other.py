@@ -123,7 +123,8 @@ class PingTuple(NamedTuple):
 class OtherCog(MetaBase):
     @property
     def feedback_channel(self) -> Optional[discord.TextChannel]:
-        return self.bot.get_channel(Cid.global_logs)  # type: ignore
+        # maybe add different channel
+        return self.bot.hideout.global_logs
 
     @commands.command()
     async def hello(self, ctx: Context):

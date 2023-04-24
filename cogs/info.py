@@ -15,10 +15,9 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageColor
 
+from utils.checks import is_owner
 from utils.formats import format_dt_tdR, human_timedelta
 from utils.var import MAP, MP, Cid, Clr, Ems, Rid, Sid
-
-from utils.checks import is_owner
 
 # from wordcloud import WordCloud
 
@@ -90,7 +89,7 @@ class Info(commands.Cog, name='Info'):
                 await msg.edit(content='', embed=e)
 
         await give_text_list(Rid.bots, Cid.bot_spam, 959982214827892737)
-        await give_text_list(Rid.nsfwbots, Cid.nsfw_bob_spam, 959982171492323388)
+        await give_text_list(Rid.nsfw_bots, Cid.nsfw_bob_spam, 959982171492323388)
 
     @commands.hybrid_command(name='gmt', aliases=['utc'], description="Show GMT(UTC) time")
     async def gmt(self, ctx: Context):

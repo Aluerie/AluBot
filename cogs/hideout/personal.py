@@ -13,8 +13,6 @@ if TYPE_CHECKING:
 
 from ._base import PersonalBase
 
-JAILED_BOTS_ID = 1090428532162822234
-
 
 class PersonalCommands(PersonalBase):
     @commands.hybrid_command()
@@ -43,10 +41,6 @@ class PersonalCommands(PersonalBase):
         files_10 = [files[x : x + split_size] for x in range(0, len(files), split_size)]
         for fls in files_10:
             await ctx.reply(files=fls)
-
-    @property
-    def jailed_bots(self) -> discord.Role:
-        return self.hideout.get_role(JAILED_BOTS_ID)  # type: ignore
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

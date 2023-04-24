@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from io import BytesIO, StringIO
-from typing import TYPE_CHECKING, Tuple, Union
+from typing import TYPE_CHECKING, Tuple, Union, overload
 
 import discord
 from PIL import Image, ImageOps
@@ -55,6 +55,14 @@ class ImgToolsClient:
         image.save(image_binary, fmt)
         image_binary.seek(0)
         return discord.File(fp=image_binary, filename=filename)
+
+    @overload
+    async def url_to_img(self, url: str, *, return_list: bool = ...) -> Image.Image:
+        ...
+
+    @overload
+    async def url_to_img(self, url: Sequence[str], *, return_list: bool = ...) -> Sequence[Image.Image]:
+        ...
 
     async def url_to_img(self, url: Union[str, Sequence[str]], *, return_list: bool = False):
         if isinstance(url, str):

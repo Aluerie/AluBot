@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands, tasks
 
+from utils import AluCog
 from utils.var import Sid, Uid, Rid, Img, Cid
 
 if TYPE_CHECKING:
@@ -14,27 +15,24 @@ MY_TWITCH_NAME = 'Aluerie'
 MY_TWITCH_ID = 180499648
 
 
-class TwitchCog(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
+class TwitchCog(AluCog):
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
-        self.mystream.start()
+        self.my_stream.start()
 
     def cog_unload(self) -> None:
-        self.mystream.cancel()
+        self.my_stream.cancel()
 
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
         if before.bot or before.activities == after.activities or before.id == Uid.alu:
             return
 
-        guild = self.bot.get_guild(Sid.alu)
+        guild = self.community.guild
         if after.guild != guild:
             return
 
-        stream_rl = guild.get_role(Rid.live_stream)
+        stream_rl = self.community.live_stream_role
 
         stream_after = None
         for item in after.activities:
@@ -49,7 +47,7 @@ class TwitchCog(commands.Cog):
             return
 
     @tasks.loop(minutes=2)
-    async def mystream(self):
+    async def my_stream(self):
         tw = await self.bot.twitch.get_twitch_stream(MY_TWITCH_ID)
         query = """ UPDATE botinfo SET irene_is_live=$1 
                     WHERE id=$2 
@@ -75,7 +73,7 @@ class TwitchCog(commands.Cog):
         e.set_image(url=f'attachment://{file.filename}')
         await guild.get_channel(Cid.stream_notifs).send(content=content, embed=e, file=file)
 
-    @mystream.before_loop
+    @my_stream.before_loop
     async def before(self):
         await self.bot.wait_until_ready()
 

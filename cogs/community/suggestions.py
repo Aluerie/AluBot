@@ -4,32 +4,25 @@ from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
-from discord.ext import commands
 
 from utils import AluCog
 from utils.var import Clr, Ems, Sid
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot
 
 
-class Suggestions(AluCog):
+class Suggestions(AluCog, emote=Ems.peepoWTF):
     """Commands related to suggestions such as
 
     * setting up suggestion channel
     * making said suggestions
     """
 
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.peepoWTF)
-
-    @commands.hybrid_command(aliases=["suggestion"])
+    @app_commands.guilds(Sid.alu)
+    @app_commands.command()
     @app_commands.describe(text='Suggestion text')
-    async def suggest(self, ctx: AluContext, *, text: str):
+    async def suggest(self, ntr: discord.Interaction, *, text: str):
         """Suggest something for people to vote on in suggestion channel"""
         channel = self.community.suggestions
         query = """ UPDATE botinfo 
@@ -41,8 +34,8 @@ class Suggestions(AluCog):
 
         title = f'Suggestion #{number}'
         e = discord.Embed(color=Clr.prpl, title=title, description=text)
-        e.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-        e.set_footer(text=f'With love, {ctx.guild.me.display_name}')
+        e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
+
         msg = await channel.send(embed=e)
         await msg.add_reaction('\N{UPWARDS BLACK ARROW}')
         await msg.add_reaction('\N{DOWNWARDS BLACK ARROW}')
@@ -53,8 +46,8 @@ class Suggestions(AluCog):
             '\N{UPWARDS BLACK ARROW} \N{DOWNWARDS BLACK ARROW} reactions.'
         )
         e2 = discord.Embed(color=Clr.prpl)
-        e2.description = f'{ctx.author.mention}, sent your suggestion under #{number} into {channel.mention}'
-        await ctx.reply(embed=e2, ephemeral=True)
+        e2.description = f'{ntr.user.mention}, sent your suggestion under #{number} into {channel.mention}'
+        await ntr.response.send_message(embed=e2, ephemeral=True)
 
 
 async def setup(bot: AluBot):

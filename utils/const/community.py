@@ -35,6 +35,7 @@ TOTAL_BOTS = 795743065787990066
 BOTS_ROLE = 724981475099017276
 VOICE_ROLE = 761475276361826315
 ROLLING_STONE_ROLE = 819096910848851988
+LIVE_STREAM_ROLE = 760082390059581471
 
 class CommunityGuild:
     def __init__(self, bot: AluBot):
@@ -106,5 +107,9 @@ class CommunityGuild:
         return self.community.get_role(BOTS_ROLE)  # type: ignore 
     
     @property
+    def live_stream_role(self) -> discord.Role:
+        return self.community.get_role(LIVE_STREAM_ROLE)  # type: ignore 
+    
+    @property
     def rolling_stone_role(self) -> discord.Role:
-        return self.community.get_role(BOTS_ROLE)  # type: ignore 
+        return self.community.get_role(ROLLING_STONE_ROLE)  # type: ignore 

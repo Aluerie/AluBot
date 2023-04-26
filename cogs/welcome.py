@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 
-async def welcome_image(bot: AluBot, member: discord.Member):
+async def welcome_image(bot: AluBot, member: discord.User | discord.Member):
     image = Image.open('./assets/images/profile/welcome.png', mode='r')
     avatar = await bot.imgtools.url_to_img(member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))

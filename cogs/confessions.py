@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
+from utils import AluCog
 from utils.formats import human_timedelta
 from utils.var import Clr, Ems
 
@@ -41,16 +42,14 @@ class ConfModal(discord.ui.Modal):
         e.set_footer(text="Use buttons below to make a new confession in this channel")
         if self.title == "Non-anonymous confession":
             e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
-        await ntr.channel.send(embeds=[e])
-        await ntr.channel.send(
-            '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Ems.bubuChrist, '\N{CHURCH}', Ems.PepoBeliever)
-        )
+        channel: discord.abc.Messageable = ntr.channel  # type: ignore # TODO: fix
+        await channel.send(embeds=[e])
+        saint_string = '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Ems.bubuChrist, '\N{CHURCH}', Ems.PepoBeliever)
+        await channel.send(saint_string)
         await ntr.response.send_message(content=f"The Lord be with you {Ems.PepoBeliever}", ephemeral=True)
-        try:
+        if ntr.message:
             await ntr.message.delete()
-        except AttributeError:  # was already deleted  `AttributeError: 'NoneType' object has no attribute 'delete'`
-            pass
-        await ntr.channel.send(view=ConfView())
+        await channel.send(view=ConfView())
         cd.update_rate_limit(ntr)
 
 
@@ -60,8 +59,8 @@ class ConfView(discord.ui.View):
 
     async def interaction_check(self, ntr: discord.Interaction) -> bool:
         # retry_after = self.cd.update_rate_limit(ntr) # returns retry_after which is nice
-        retry_after = cd.get_bucket(ntr).get_retry_after()
-        if retry_after:
+        bucket = cd.get_bucket(ntr)
+        if bucket and (retry_after := bucket.get_retry_after()):
             raise ButtonOnCooldown(retry_after)
         return True
 
@@ -95,9 +94,7 @@ class ConfView(discord.ui.View):
         await ntr.response.send_modal(ConfModal(title=btn.label))
 
 
-class Confession(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+class Confession(AluCog):
 
     @commands.Cog.listener()
     async def on_ready(self):

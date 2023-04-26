@@ -10,8 +10,9 @@ from .emote_spam import ComfySpam, EmoteSpam
 from .colour_roles import ColourRoles
 from .stats import StatsVoiceChannels
 from .stream_name import StreamChannelName
+from .suggestions import Suggestions
 
-COMMUNITY_COGS = (EmoteSpam, ComfySpam, StatsVoiceChannels, StreamChannelName, ColourRoles)
+COMMUNITY_COGS = (EmoteSpam, ComfySpam, StatsVoiceChannels, StreamChannelName, ColourRoles, Suggestions)
 
 
 async def setup(bot):

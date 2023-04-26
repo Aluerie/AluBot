@@ -17,7 +17,7 @@ from utils import AluCog
 from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluContext
 
 
 class StartView(discord.ui.View):
@@ -51,5 +51,5 @@ class EmbedMaker(AluCog, name="Embed Maker", emote=Ems.DankZzz):
         view.message = await ctx.reply(embeds=view.embeds, view=view)
 
 
-async def setup(bot: AluBot):
+async def setup(bot):
     await bot.add_cog(EmbedMaker(bot))

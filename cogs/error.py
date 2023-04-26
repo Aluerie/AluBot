@@ -7,20 +7,20 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils.bases.context import AluContext
+from utils import AluCog, AluContext
 from utils.formats import human_timedelta
 from utils.times import BadTimeTransform
 from utils.translator import TranslateError
 from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    pass
 
 
-class CommandErrorHandler(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-        bot.tree.on_error = self.on_app_command_error
+class CommandErrorHandler(AluCog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bot.tree.on_error = self.on_app_command_error
 
     async def command_error_work(self, ctx: AluContext, error) -> None:
         while isinstance(
@@ -178,5 +178,5 @@ class CommandErrorHandler(commands.Cog):
             await self.command_error_work(ctx, error)
 
 
-async def setup(bot: AluBot):
+async def setup(bot):
     await bot.add_cog(CommandErrorHandler(bot))

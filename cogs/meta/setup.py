@@ -5,11 +5,9 @@ from typing import TYPE_CHECKING, List, Literal, NamedTuple
 import discord
 from discord.ext import commands, menus
 
-from utils.bases.context import AluContext
+from utils import AluCog, AluContext
 from utils.pagination import Paginator
 from utils.var import Clr
-
-from ._base import MetaBase
 
 if TYPE_CHECKING:
     pass
@@ -125,7 +123,7 @@ class SetupCog:
         raise NotImplementedError
 
 
-class SetupCommandCog(MetaBase):
+class SetupCommandCog(AluCog):
     @commands.hybrid_command()
     async def setup(self, ctx: AluContext):
         setup_data: List[SetupFormatData] = [SetupFormatData(cog='front_page')]

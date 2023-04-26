@@ -2,10 +2,10 @@ import discord
 
 from utils.var import Ems
 
-from .other import OtherCog
 from .help import HelpCommandCog
-from .setup import SetupCommandCog
+from .other import OtherCog
 from .prefix import PrefixSetupCog
+from .setup import SetupCommandCog
 
 
 class Meta(HelpCommandCog, SetupCommandCog, OtherCog, PrefixSetupCog):

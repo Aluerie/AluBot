@@ -19,12 +19,14 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config as cfg
 from cogs import get_extensions
-from utils import AluContext, CommunityGuild, HideoutGuild
+from utils import AluContext
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 from utils.var import Clr
 
+from ..const.community import CommunityGuild
+from ..const.hideout import HideoutGuild
 from .cmd_cache import MyCommandTree
 
 if TYPE_CHECKING:

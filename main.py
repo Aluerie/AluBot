@@ -4,8 +4,7 @@ import asyncio
 import logging
 import sys
 import traceback
-from contextlib import contextmanager
-from logging.handlers import RotatingFileHandler
+
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -13,8 +12,7 @@ import asyncpg
 import click
 
 from config import POSTGRES_URL
-from utils import AluBot
-from utils.bot.colour_log import get_log_fmt
+from utils import AluBot, setup_logging
 from utils.database import create_pool
 
 if TYPE_CHECKING:
@@ -28,37 +26,7 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-@contextmanager
-def setup_logging(test: bool):
-    log = logging.getLogger()
-    log.setLevel(logging.INFO)
 
-    try:
-        # Stream Handler
-        handler = logging.StreamHandler()
-        handler.setFormatter(get_log_fmt(handler))
-        log.addHandler(handler)
-
-        # ensure logs folder
-        Path(".logs/").mkdir(parents=True, exist_ok=True)
-        # File Handler
-        file_handler = RotatingFileHandler(
-            filename=f'.logs/alubot{"" if not test else "_test"}.log',
-            encoding='utf-8',
-            mode='w',
-            maxBytes=16 * 1024 * 1024,  # 16 MiB
-            backupCount=5,  # Rotate through 5 files
-        )
-        file_handler.setFormatter(get_log_fmt(file_handler))
-        log.addHandler(file_handler)
-
-        yield
-    finally:
-        # __exit__
-        handlers = log.handlers[:]
-        for hdlr in handlers:
-            hdlr.close()
-            log.removeHandler(hdlr)
 
 
 async def bot_start(test: bool):

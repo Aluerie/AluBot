@@ -9,14 +9,14 @@ from discord.ext import commands
 from .var import Sid
 
 if TYPE_CHECKING:
-    from .bases.context import AluContext, GuildContext
+    from .bases.context import AluContext, AluGuildContext
     from .bot import AluBot
 
 T = TypeVar('T')
 
 
 def is_guild_owner():
-    def predicate(ctx: GuildContext) -> bool:
+    def predicate(ctx: AluGuildContext) -> bool:
         """server owner only"""
         if ctx.author.id == ctx.guild.owner_id:
             return True
@@ -64,7 +64,7 @@ def is_owner():
 # ######################################################################################################################
 
 
-async def check_guild_permissions(ctx: GuildContext, perms: dict[str, bool], *, check=all):
+async def check_guild_permissions(ctx: AluGuildContext, perms: dict[str, bool], *, check=all):
     if await ctx.bot.is_owner(ctx.author):  # type: ignore
         return True
 
@@ -76,7 +76,7 @@ async def check_guild_permissions(ctx: GuildContext, perms: dict[str, bool], *, 
 
 
 def hybrid_permissions_check(**perms: bool) -> Callable[[T], T]:
-    async def pred(ctx: GuildContext):
+    async def pred(ctx: AluGuildContext):
         return await check_guild_permissions(ctx, perms)
 
     def decorator(func: T) -> T:
@@ -99,7 +99,7 @@ def hybrid_permissions_check(**perms: bool) -> Callable[[T], T]:
 def is_manager():
     perms = {'manage_guild': True}
 
-    async def pred(ctx: GuildContext):
+    async def pred(ctx: AluGuildContext):
         """managers only"""
         return await check_guild_permissions(ctx, perms)
 
@@ -117,7 +117,7 @@ def is_manager():
 def is_mod():
     perms = {'ban_members': True, 'manage_messages': True}
 
-    async def pred(ctx: GuildContext):
+    async def pred(ctx: AluGuildContext):
         """mods only"""
         return await check_guild_permissions(ctx, perms)
 
@@ -135,7 +135,7 @@ def is_mod():
 def is_admin():
     perms = {'administrator': True}
 
-    async def pred(ctx: GuildContext):
+    async def pred(ctx: AluGuildContext):
         """admins only"""
         return await check_guild_permissions(ctx, perms)
 

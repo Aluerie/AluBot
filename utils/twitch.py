@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import twitchio
 from discord.ext.commands import BadArgument
@@ -30,15 +30,15 @@ class TwitchClient(twitchio.Client):
 
     async def name_by_twitch_id(self, user_id: int) -> str:
         """Gets display_name by twitch_id"""
-        user: twitchio.User = next(iter(await self.fetch_users(ids=[user_id])), None)
+        user: Optional[twitchio.User] = next(iter(await self.fetch_users(ids=[user_id])), None)
         if user:
             return user.display_name
         else:
             raise BadArgument(f'Error checking stream `{user_id}`.\n User either does not exist or is banned.')
 
-    async def twitch_id_and_display_name_by_login(self, user_login: str) -> (int, str):
+    async def twitch_id_and_display_name_by_login(self, user_login: str) -> Tuple[int, str]:
         """Gets tuple (twitch_id, display_name) by user_login from one call to twitch client"""
-        user: twitchio.User = next(iter(await self.fetch_users(names=[user_login])), None)
+        user: Optional[twitchio.User] = next(iter(await self.fetch_users(names=[user_login])), None)
         if user:
             return user.id, user.display_name
         else:

@@ -118,20 +118,20 @@ class CommunityGuild:
 
     @property
     def bots_role(self) -> discord.Role:
-        return self.community.get_role(BOTS_ROLE)  # type: ignore
+        return self.bot.get_role(BOTS_ROLE)  # type: ignore
 
     @property
     def live_stream_role(self) -> discord.Role:
-        return self.community.get_role(LIVE_STREAM_ROLE)  # type: ignore
+        return self.bot.get_role(LIVE_STREAM_ROLE)  # type: ignore
 
     @property
     def birthday_role(self) -> discord.Role:
-        return self.community.get_role(BIRTHDAY_ROLE)  # type: ignore
+        return self.bot.get_role(BIRTHDAY_ROLE)  # type: ignore
 
     @property
     def rolling_stone_role(self) -> discord.Role:
-        return self.community.get_role(ROLLING_STONE_ROLE)  # type: ignore
+        return self.bot.get_role(ROLLING_STONE_ROLE)  # type: ignore
 
     @property
     def stream_lover_role(self) -> discord.Role:
-        return self.community.get_role(STREAM_LOVER_ROLE)  # type: ignore
+        return self.bot.get_role(STREAM_LOVER_ROLE)  # type: ignore

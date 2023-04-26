@@ -15,7 +15,7 @@ from numpy.random import choice
 
 from utils import AluCog
 from utils.pagination import EnumeratedPages
-from utils.var import Cid, Clr, Ems, Rid, Sid
+from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

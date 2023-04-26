@@ -59,8 +59,7 @@ class TwitchCog(AluCog):
         if not (val and tw.online):
             return
 
-        guild = self.bot.get_guild(Sid.alu)
-        mention_role = guild.get_role(Rid.stream_lover)
+        mention_role = self.community.stream_lover_role
         content = f'{mention_role.mention} and chat, our Highness **@{tw.display_name}** just went live !'
         file = await self.bot.imgtools.url_to_file(tw.preview_url, filename='twtvpreview.png')
         e = discord.Embed(colour=0x9146FF, title=f'{tw.title}', url=tw.url)
@@ -68,10 +67,9 @@ class TwitchCog(AluCog):
             f'Playing {tw.game}\n/[Watch Stream]({tw.url}){await self.bot.twitch.last_vod_link(MY_TWITCH_ID)}'
         )
         e.set_author(name=f'{tw.display_name} just went live on Twitch!', icon_url=tw.logo_url, url=tw.url)
-        e.set_footer(text=f'Twitch.tv | With love, {guild.me.display_name}', icon_url=Img.twitchtv)
         e.set_thumbnail(url=tw.logo_url)
         e.set_image(url=f'attachment://{file.filename}')
-        await guild.get_channel(Cid.stream_notifs).send(content=content, embed=e, file=file)
+        await self.community.stream_notifs.send(content=content, embed=e, file=file)
 
     @my_stream.before_loop
     async def before(self):

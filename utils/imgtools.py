@@ -83,6 +83,16 @@ class ImgToolsClient:
         else:
             return images if len(images) > 1 or len(images) == 0 else images[0]
 
+    @overload
+    async def url_to_file(self, url: str, filename: str = ..., *, return_list: bool = ...) -> discord.File:
+        ...
+
+    @overload
+    async def url_to_file(
+        self, url: Sequence[str], filename: str = ..., *, return_list: bool = ...
+    ) -> Sequence[discord.File]:
+        ...
+
     async def url_to_file(
         self, url: Union[str, Sequence[str]], filename: str = 'FromAluBot.png', *, return_list: bool = False
     ) -> Union[discord.File, Sequence[discord.File]]:

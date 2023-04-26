@@ -242,6 +242,8 @@ class Birthday(AluCog, emote=Ems.peepoHappyDank):
         query = 'SELECT id, bdate, tzone FROM users WHERE bdate IS NOT NULL'
         rows = await self.bot.pool.fetch(query)
 
+        guild = self.community.guild
+
         for row in rows:
             bdate: datetime.datetime = row.bdate
 
@@ -251,17 +253,19 @@ class Birthday(AluCog, emote=Ems.peepoHappyDank):
                     tzone_seconds = 3600 * int(split[0]) + 60 * int(split[1])
                     tzone_offset = datetime.timedelta(seconds=tzone_seconds)
                 else:
-                    tzone_offset = datetime.datetime.now(zoneinfo.ZoneInfo(row.tzone)).utcoffset()
+                    tzone_offset = datetime.datetime.now(
+                        zoneinfo.ZoneInfo(row.tzone)
+                    ).utcoffset() or datetime.timedelta(seconds=0)
             else:
                 tzone_offset = datetime.timedelta(seconds=0)
 
             now_date = datetime.datetime.now(datetime.timezone.utc) + tzone_offset
-            guild = self.bot.get_guild(Sid.alu)
+            
             bperson = guild.get_member(row.id)
             if bperson is None:
                 continue
 
-            bday_rl = guild.get_role(Rid.bday)
+            bday_rl = self.community.birthday_role
             if now_date.month == bdate.month and now_date.day == bdate.day:
                 if bday_rl not in bperson.roles:
                     await bperson.add_roles(bday_rl)
@@ -277,7 +281,7 @@ class Birthday(AluCog, emote=Ems.peepoHappyDank):
                     )
                     e.set_image(url=bperson.display_avatar.url)
                     e.add_field(name=f'Dear {bperson.display_name} !', inline=False, value=get_congratulation_text())
-                    await self.bot.get_channel(Cid.bday_notifs).send(content=answer_text, embed=e)
+                    await self.community.bday_notifs.send(content=answer_text, embed=e)
             else:
                 if bday_rl in bperson.roles:
                     await bperson.remove_roles(bday_rl)
@@ -294,7 +298,7 @@ class Birthday(AluCog, emote=Ems.peepoHappyDank):
     @birthday.command(name='list', hidden=True)
     async def birthday_list(self, ctx: AluContext):
         """Show list of birthdays in this server"""
-        guild = self.bot.get_guild(Sid.alu)
+        guild = self.community.guild
 
         query = """ SELECT id, bdate, tzone
                     FROM users 

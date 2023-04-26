@@ -13,16 +13,17 @@ if TYPE_CHECKING:
 
 async def replace_tco_links(session, embed: Embed) -> Embed:
     text = embed.description
-    url_array = re.findall(Rgx.url_danny, str(text))
-    try:
-        for url in url_array:
-            async with session.get(url) as resp:
-                link_for_embed = f'[Redirect link]({resp.url})'
-                text = text.replace(url, link_for_embed)
-    except ClientConnectorError:
-        # well sorry bro twitter is still banned it seems like
-        pass
-    embed.description = text
+    if text:
+        url_array = re.findall(Rgx.url_danny, str(text))
+        try:
+            for url in url_array:
+                async with session.get(url) as resp:
+                    link_for_embed = f'[Redirect link]({resp.url})'
+                    text = text.replace(url, link_for_embed)
+        except ClientConnectorError:
+            # well sorry bro twitter is still banned it seems like
+            pass
+        embed.description = text
     return embed
 
 

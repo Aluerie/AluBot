@@ -1,23 +1,23 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
 
 import re
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
-from numpy.random import randint, choice
+from numpy.random import choice, randint
 
-from utils.var import Clr, Ems, Uid, Cid, Sid, Rgx
-from utils.webhook import user_webhook, check_msg_react
+from utils.var import Cid, Clr, Ems, Rgx, Sid, Uid
+from utils.webhook import check_msg_react, user_webhook
 
-from ._base import FunBase
+from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils.context import Context
+    from utils.bases.context import AluContext
 
 
-class Other(FunBase):
+class Other(AluCog):
     @commands.hybrid_command(aliases=['cf'], description='Flip a coin: Heads or Tails?')
     async def coinflip(self, ctx):
         """Flip a coin"""
@@ -106,7 +106,7 @@ class Other(FunBase):
         await your_life(message)
 
     @commands.hybrid_command()
-    async def doemotespam(self, ctx: Context):
+    async def doemotespam(self, ctx: AluContext):
         """Send 3x random emote into emote spam channel"""
         rand_guild = choice(self.bot.guilds)
         rand_emoji = choice(rand_guild.emojis)
@@ -119,7 +119,7 @@ class Other(FunBase):
             await ctx.message.delete()
 
     @commands.hybrid_command(description='Send apuband emote combo')
-    async def apuband(self, ctx: Context):
+    async def apuband(self, ctx: AluContext):
         """Send apuband emote combo"""
         guild = self.bot.get_guild(Sid.alu)
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
@@ -139,7 +139,7 @@ class Other(FunBase):
     @commands.hybrid_command(usage='[channel=curr] [text=Allo]', description='Echo something somewhere')
     @app_commands.describe(channel="Channel to send to")
     @app_commands.describe(text="Enter text to speak")
-    async def echo(self, ctx: Context, channel: Optional[discord.TextChannel] = None, *, text: str = 'Allo'):
+    async def echo(self, ctx: AluContext, channel: Optional[discord.TextChannel] = None, *, text: str = 'Allo'):
         """Send `text` to `#channel` and delete your invoking message,
         so it looks like the bot is speaking on its own.
         """
@@ -166,7 +166,7 @@ class Other(FunBase):
         name='emoteit', aliases=['emotialize'], description="Emotializes your text into standard emotes"
     )
     @app_commands.describe(text="Text that will be converted into emotes")
-    async def emoteit(self, ctx: Context, *, text: str):
+    async def emoteit(self, ctx: AluContext, *, text: str):
         """Emotializes your text into standard emotes"""
         answer = ''
         skip_mode = 0

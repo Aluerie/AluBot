@@ -15,7 +15,7 @@ from utils.var import MP, Clr
 from utils.const.hideout import REPOST
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
     from utils.twitch import TwitchClient
 
 

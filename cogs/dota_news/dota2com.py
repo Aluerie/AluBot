@@ -5,16 +5,15 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import tasks
 
+from utils import AluCog
 from utils.dota.const import DOTA_LOGO
 from utils.var import Clr, Sid
-
-from ._base import DotaNewsBase
 
 if TYPE_CHECKING:
     pass
 
 
-class Dota2Com(DotaNewsBase):
+class Dota2Com(AluCog):
     def cog_load(self) -> None:
         self.patch_checker.start()
 
@@ -45,7 +44,7 @@ class Dota2Com(DotaNewsBase):
         e.description = f"Hey chat, I think new patch {patch_name} is out!"
         e.set_footer(text="I'm checking Valve's datafeed every 10 minutes")
         e.set_author(name=f"Patch {patch_number} is out", icon_url=DOTA_LOGO)
-        msg = await self.news_channel.send(embed=e)
+        msg = await self.bot.community.dota_news.send(embed=e)
         await msg.publish()
 
     @patch_checker.before_loop

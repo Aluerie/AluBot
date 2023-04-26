@@ -8,12 +8,13 @@ from discord.ext import commands, tasks
 
 from utils.const.hideout import EVENT_PASS, EVENT_ROLE, SPAM_ME
 from utils.var import Clr, Sid
+from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
-class ChannelWatcher(commands.Cog):
+class ChannelWatcher(AluCog):
     def __init__(
         self,
         bot: AluBot,

@@ -6,15 +6,13 @@ from typing_extensions import Self
 import discord
 from discord.ext import commands
 
-from utils import checks
+from utils import AluCog, checks
 from utils.var import Clr
 
-from ._base import MetaBase
 from .setup import SetupPages, SetupCog
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import GuildContext
+    from utils import AluBot, AluGuildContext
 
 
 class PrefixSetModal(discord.ui.Modal, title='New prefix setup'):
@@ -96,7 +94,7 @@ class GuildPrefix:
         return cls(bot, guild, new_prefix)
 
     @classmethod
-    async def convert(cls, ctx: GuildContext, new_prefix: str) -> Self:
+    async def convert(cls, ctx: AluGuildContext, new_prefix: str) -> Self:
         return await cls.construct(ctx.bot, ctx.guild, new_prefix)
 
     async def set_prefix(self) -> discord.Embed:
@@ -114,7 +112,7 @@ class GuildPrefix:
         return e
 
 
-class PrefixSetupCog(MetaBase, SetupCog, name='Prefix Setup'):
+class PrefixSetupCog(AluCog, SetupCog, name='Prefix Setup'):
     @property
     def setup_emote(self):
         return '\N{HEAVY DOLLAR SIGN}'
@@ -129,14 +127,14 @@ class PrefixSetupCog(MetaBase, SetupCog, name='Prefix Setup'):
         )
         return e
 
-    async def setup_state(self, ctx: GuildContext):
+    async def setup_state(self, ctx: AluGuildContext):
         p = await GuildPrefix.from_guild(self.bot, ctx.guild)
         return p.check_prefix()
 
     async def setup_view(self, pages: SetupPages):
         return PrefixSetupView(self, pages)
 
-    async def prefix_prefix_check_replies(self, ctx: GuildContext):
+    async def prefix_prefix_check_replies(self, ctx: AluGuildContext):
         p = await GuildPrefix.from_guild(self.bot, ctx.guild)
         e = p.check_prefix()
         e.set_footer(text=f'To change prefix use `@{self.bot.user.name} prefix set` command')
@@ -144,24 +142,24 @@ class PrefixSetupCog(MetaBase, SetupCog, name='Prefix Setup'):
 
     @checks.is_manager()
     @commands.group(invoke_without_command=True)
-    async def prefix(self, ctx: GuildContext):
+    async def prefix(self, ctx: AluGuildContext):
         """Group command about prefix for this server."""
         await self.prefix_prefix_check_replies(ctx)
 
     @checks.is_manager()
     @prefix.command(name='check')
-    async def prefix_check(self, ctx: GuildContext):
+    async def prefix_check(self, ctx: AluGuildContext):
         """Check prefix for this server."""
         await self.prefix_prefix_check_replies(ctx)
 
     @checks.is_manager()
     @prefix.command(name='set')
-    async def prefix_set(self, ctx: GuildContext, *, new_prefix: GuildPrefix):
+    async def prefix_set(self, ctx: AluGuildContext, *, new_prefix: GuildPrefix):
         """Set new prefix for the server.
         If you have troubles to set a new prefix because other bots also answer it then \
         just mention the bot with the command <@713124699663499274>` prefix set`.
         Spaces are not allowed in the prefix, and it should be 1-3 symbols.
         """
 
-        e = new_prefix.set_prefix()
+        e = await new_prefix.set_prefix()
         await ctx.reply(embed=e)

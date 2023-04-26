@@ -4,15 +4,13 @@ import datetime
 import logging
 import os
 import traceback
-from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, Iterable, Optional, Union
 
 import discord
 from aiohttp import ClientSession
 from asyncpg import Pool
 from asyncpraw import Reddit
-from discord import app_commands
 from discord.ext import commands
 from dota2.client import Dota2Client
 from github import Github
@@ -21,21 +19,19 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config as cfg
 from cogs import get_extensions
-from utils.const.community import CommunityGuild
+from utils import AluContext, CommunityGuild, HideoutGuild
+from utils.imgtools import ImgToolsClient
+from utils.jsonconfig import PrefixConfig
+from utils.twitch import TwitchClient
+from utils.var import Clr
 
-from .context import Context
-from .imgtools import ImgToolsClient
-from .jsonconfig import PrefixConfig
-from .twitch import TwitchClient
-from .var import Clr
-from .const.hideout import HideoutGuild
+from .cmd_cache import MyCommandTree
 
 if TYPE_CHECKING:
-    from discord.abc import Snowflake
-
     from cogs.reminders import Reminder
 
-    AppCommandStore = Dict[str, app_commands.AppCommand]  # name: AppCommand
+
+__all__ = ('AluBot',)
 
 log = logging.getLogger(__name__)
 
@@ -131,7 +127,9 @@ class AluBot(commands.Bot):
         # token = cfg.MAIN_TOKEN
         await super().start(token, reconnect=True)
 
-    async def get_context(self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context) -> Context:
+    async def get_context(
+        self, origin: Union[discord.Interaction, discord.Message], /, *, cls=AluContext
+    ) -> AluContext:
         return await super().get_context(origin, cls=cls)
 
     @property
@@ -251,206 +249,11 @@ class AluBot(commands.Bot):
             await ch.send(page)
 
     # SHORTCUTS ########################################################################################################
-    
+
     @property
     def hideout(self) -> HideoutGuild:
         return HideoutGuild(self)
-    
+
     @property
     def community(self) -> CommunityGuild:
         return CommunityGuild(self)
-
-
-# ######################################################################################################################
-# ########################################### MY COMMAND APP TREE ######################################################
-# ######################################################################################################################
-
-
-# Credits to @Soheab
-# https://gist.github.com/Soheab/fed903c25b1aae1f11a8ca8c33243131#file-bot_subclass
-class MyCommandTree(app_commands.CommandTree):
-    """Custom Command tree class to set up slash cmds mentions
-
-    The class makes the tree store app_commands.AppCommand
-    to access later for mentioning or anything
-    """
-
-    def __init__(self, client: AluBot):
-        super().__init__(client=client)
-        self._global_app_commands: AppCommandStore = {}
-        # guild_id: AppCommandStore
-        self._guild_app_commands: Dict[int, AppCommandStore] = {}
-
-    def find_app_command_by_names(
-        self,
-        *qualified_name: str,
-        guild: Optional[Union[Snowflake, int]] = None,
-    ) -> Optional[app_commands.AppCommand]:
-        commands_dict = self._global_app_commands
-        if guild:
-            guild_id = guild.id if not isinstance(guild, int) else guild
-            guild_commands = self._guild_app_commands.get(guild_id, {})
-            if not guild_commands and self.fallback_to_global:
-                commands_dict = self._global_app_commands
-            else:
-                commands_dict = guild_commands
-
-        for cmd_name, cmd in commands_dict.items():
-            if any(name in qualified_name for name in cmd_name.split()):
-                return cmd
-
-        return None
-
-    def get_app_command(
-        self,
-        value: Union[str, int],
-        guild: Optional[Union[Snowflake, int]] = None,
-    ) -> Optional[app_commands.AppCommand]:
-        def search_dict(d: AppCommandStore) -> Optional[app_commands.AppCommand]:
-            for cmd_name, cmd in d.items():
-                if value == cmd_name or (str(value).isdigit() and int(value) == cmd.id):
-                    return cmd
-            return None
-
-        if guild:
-            guild_id = guild.id if not isinstance(guild, int) else guild
-            guild_commands = self._guild_app_commands.get(guild_id, {})
-            if not self.fallback_to_global:
-                return search_dict(guild_commands)
-            else:
-                return search_dict(guild_commands) or search_dict(self._global_app_commands)
-        else:
-            return search_dict(self._global_app_commands)
-
-    @staticmethod
-    def _unpack_app_commands(commands: List[app_commands.AppCommand]) -> AppCommandStore:
-        ret: AppCommandStore = {}
-
-        def unpack_options(
-            options: List[Union[app_commands.AppCommand, app_commands.AppCommandGroup, app_commands.Argument]]
-        ):
-            for option in options:
-                if isinstance(option, app_commands.AppCommandGroup):
-                    ret[option.qualified_name] = option  # type: ignore
-                    unpack_options(option.options)  # type: ignore
-
-        for command in commands:
-            ret[command.name] = command
-            unpack_options(command.options)  # type: ignore
-
-        return ret
-
-    async def _update_cache(
-        self, commands: List[app_commands.AppCommand], guild: Optional[Union[Snowflake, int]] = None
-    ) -> None:
-        # because we support both int and Snowflake
-        # we need to convert it to a Snowflake like object if it's an int
-        _guild: Optional[Snowflake] = None
-        if guild is not None:
-            if isinstance(guild, int):
-                _guild = discord.Object(guild)
-            else:
-                _guild = guild
-
-        if _guild:
-            self._guild_app_commands[_guild.id] = self._unpack_app_commands(commands)
-        else:
-            self._global_app_commands = self._unpack_app_commands(commands)
-
-    async def fetch_command(self, command_id: int, /, *, guild: Optional[Snowflake] = None) -> app_commands.AppCommand:
-        res = await super().fetch_command(command_id, guild=guild)
-        await self._update_cache([res], guild=guild)
-        return res
-
-    async def fetch_commands(self, *, guild: Optional[Snowflake] = None) -> List[app_commands.AppCommand]:
-        res = await super().fetch_commands(guild=guild)
-        await self._update_cache(res, guild=guild)
-        return res
-
-    def clear_app_commands_cache(self, *, guild: Optional[Snowflake]) -> None:
-        if guild:
-            self._guild_app_commands.pop(guild.id, None)
-        else:
-            self._global_app_commands = {}
-
-    def clear_commands(
-        self,
-        *,
-        guild: Optional[Snowflake],
-        type: Optional[discord.AppCommandType] = None,
-        clear_app_commands_cache: bool = True,
-    ) -> None:
-        super().clear_commands(guild=guild)
-        if clear_app_commands_cache:
-            self.clear_app_commands_cache(guild=guild)
-
-    async def sync(self, *, guild: Optional[Snowflake] = None) -> List[app_commands.AppCommand]:
-        res = await super().sync(guild=guild)
-        await self._update_cache(res, guild=guild)
-        return res
-
-
-# ######################################################################################################################
-# ############################################# LOGGING MAGIC ##########################################################
-# ######################################################################################################################
-
-
-class MyColourFormatter(logging.Formatter):
-    # ANSI codes are a bit weird to decipher if you're unfamiliar with them, so here's a refresher
-    # It starts off with a format like \x1b[XXXm where XXX is a semicolon separated list of commands
-    # The important ones here relate to colour.
-    # 30-37 are black, red, green, yellow, blue, magenta, cyan and white in that order
-    # 40-47 are the same except for the background
-    # 90-97 are the same but "bright" foreground
-    # 100-107 are the same as the bright ones but for the background.
-    # 1 means bold, 2 means dim, 0 means reset, and 4 means underline.
-
-    LEVEL_COLOURS = [
-        (logging.DEBUG, '\x1b[40;1m'),
-        (logging.INFO, '\x1b[34;1m'),
-        (logging.WARNING, '\x1b[33;1m'),
-        (logging.ERROR, '\x1b[31m'),
-        (logging.CRITICAL, '\x1b[41m'),
-    ]
-
-    FORMATS = {
-        level: logging.Formatter(
-            f'\x1b[37;1m%(asctime)s\x1b[0m | {colour}%(levelname)-7s\x1b[0m | '
-            f'\x1b[35m%(name)-23s\x1b[0m | %(lineno)-4d | %(funcName)-30s | %(message)s',
-            '%H:%M:%S %d/%m',
-        )
-        for level, colour in LEVEL_COLOURS
-    }
-
-    def format(self, record):
-        formatter = self.FORMATS.get(record.levelno)
-        if formatter is None:
-            formatter = self.FORMATS[logging.DEBUG]
-
-        # Override the traceback to always print in red
-        if record.exc_info:
-            text = formatter.formatException(record.exc_info)
-            record.exc_text = f'\x1b[31m{text}\x1b[0m'
-
-        output = formatter.format(record)
-
-        # Remove the cache layer
-        record.exc_text = None
-        return output
-
-
-def get_log_fmt(handler: logging.Handler):
-    if (
-        isinstance(handler, logging.StreamHandler)
-        and discord.utils.stream_supports_colour(handler.stream)
-        and not isinstance(handler, RotatingFileHandler)
-    ):  # force file handler fmt into `else`
-        formatter = MyColourFormatter()
-    else:
-        formatter = logging.Formatter(
-            '{asctime} | {levelname:<7} | {name:<23} | {lineno:<4} | {funcName:<30} | {message}',
-            '%H:%M:%S %d/%m',
-            style='{',
-        )
-
-    return formatter

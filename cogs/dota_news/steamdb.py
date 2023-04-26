@@ -13,12 +13,11 @@ from utils.formats import block_function
 from utils.github import human_commit
 from utils.imgtools import str_to_file
 from utils.links import move_link_to_title, replace_tco_links
-from utils.var import Cid
 
-from ._base import DotaNewsBase
+from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 async def get_gitdiff_embed(test_num: int = 0):
@@ -62,7 +61,7 @@ async def get_gitdiff_embed(test_num: int = 0):
     return e.url, embeds, files
 
 
-class SteamDB(DotaNewsBase):
+class SteamDB(AluCog):
     def cog_load(self) -> None:
         self.bot.ini_github()
 
@@ -75,23 +74,28 @@ class SteamDB(DotaNewsBase):
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         try:
+            if msg.channel.id in (COPY_DOTA_INFO, COPY_DOTA_STEAM, COPY_DOTA_TWEETS):
+                news_channel = self.bot.community.dota_news
+            else:
+                return
+            
             if msg.channel.id == COPY_DOTA_INFO:
                 if "https://steamdb.info" in msg.content:
                     url, embeds, files = await get_gitdiff_embed()
-                    msg = await self.news_channel.send(content=f"<{url}>", embeds=embeds)
+                    msg = await news_channel.send(content=f"<{url}>", embeds=embeds)
                     await msg.publish()
                     if len(files):
-                        msg = await self.news_channel.send(files=files)
+                        msg = await news_channel.send(files=files)
                         await msg.publish()
                 if "https://steamcommunity.com" in msg.content:
-                    msg = await self.news_channel.send(content=msg.content, embeds=msg.embeds, files=msg.attachments)
+                    msg = await news_channel.send(content=msg.content, embeds=msg.embeds, files=msg.attachments)
                     await msg.publish()
 
             elif msg.channel.id == COPY_DOTA_STEAM:
                 if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
                 e = discord.Embed(colour=0x171A21, description=msg.content)
-                msg = await self.news_channel.send(embed=e)
+                msg = await news_channel.send(embed=e)
                 await msg.publish()
 
             elif msg.channel.id == COPY_DOTA_TWEETS:
@@ -100,15 +104,15 @@ class SteamDB(DotaNewsBase):
                 embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]
                 embeds = [move_link_to_title(embed) for embed in embeds]
                 if embeds:
-                    msg = await self.news_channel.send(embeds=embeds)
+                    msg = await news_channel.send(embeds=embeds)
                     await msg.publish()
         except Exception as error:
             await self.bot.send_traceback(error, where="#dota-dota_news copypaste")
 
 
-class TestGitFeed(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+class TestGitFeed(AluCog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.testing.start()
 
     def cog_unload(self) -> None:

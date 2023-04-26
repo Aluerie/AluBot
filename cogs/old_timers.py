@@ -12,7 +12,7 @@ from utils.const import community
 if TYPE_CHECKING:
     from asyncpg import Pool
 
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 seed(None)

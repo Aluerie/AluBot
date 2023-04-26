@@ -9,24 +9,24 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import discord
 from discord.ext import commands
 
+from utils.bases.context import AluContext
 from utils.checks import is_owner
-from utils.context import Context
 from utils.converters import Codeblock
 
-from ._base import ManagementBase
+from ._base import ManagementBaseCog
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
-class CodeRun(ManagementBase):
+class CodeRun(ManagementBaseCog):
     def __init__(self, bot: AluBot):
         super().__init__(bot)
         self._last_result: Optional[Any] = None
         self.sessions: set[int] = set()
 
     def get_var_dict_from_ctx(
-        self, ctx: Context, mentions: Optional[List[Union[discord.User, discord.TextChannel, discord.Role]]]
+        self, ctx: AluContext, mentions: Optional[List[Union[discord.User, discord.TextChannel, discord.Role]]]
     ) -> Dict[str, Any]:
         """Returns the dict to be used in eval/REPL."""
         env = {
@@ -72,7 +72,7 @@ class CodeRun(ManagementBase):
     @commands.command(hidden=True, name="py", aliases=["eval", "python"])
     async def python(
         self,
-        ctx: Context,
+        ctx: AluContext,
         mentions: commands.Greedy[Union[discord.Member, discord.User, discord.abc.GuildChannel, discord.Role]] = None,
         *,
         codeblock: Optional[Codeblock] = None,

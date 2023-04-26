@@ -9,7 +9,7 @@ from discord.ext import commands, tasks
 from pyot.models import lol  # isort: skip
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 class LoLSummonerNameCheck(commands.Cog):

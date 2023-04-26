@@ -1,17 +1,18 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, Optional, Literal, NamedTuple
+
 import typing
+from typing import TYPE_CHECKING, Dict, Literal, NamedTuple, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 from gtts import gTTS
 
-from utils.var import Ems, Clr
+from utils import AluCog
+from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 
 class LanguageData(NamedTuple):
@@ -33,22 +34,18 @@ class LanguageCollection:
     Literal = Literal['fr', 'en', 'ru', 'es', 'pt', 'cn', 'uk']
 
 
-class TextToSpeech(commands.Cog, name='TTS'):
+class TextToSpeech(AluCog, name='TTS', emote=Ems.Ree):
     """Text To Speech commands.
 
     Make the bot talk in voice chat.
     """
 
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.connections: Dict[int, discord.VoiceProtocol] = {}  # guild.id to Voice we are connected to
 
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.Ree)
-
     @commands.hybrid_group(name='voice')
-    async def voice(self, ctx: Context):
+    async def voice(self, ctx: AluContext):
         """Group command about Voice commands, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -58,7 +55,9 @@ class TextToSpeech(commands.Cog, name='TTS'):
         usage="[language keyword=fr-FR] <text='Allo'>",
     )
     @app_commands.describe(text="Enter text to speak", language="Choose language/accent")
-    async def speak(self, ctx: Context, language: Optional[LanguageCollection.Literal] = 'fr', *, text: str = 'Allo'):
+    async def speak(
+        self, ctx: AluContext, language: Optional[LanguageCollection.Literal] = 'fr', *, text: str = 'Allo'
+    ):
         """
         Bot will connect to voice-chat you're in and speak `text` using Google Text-To-Speech module. \
         For available language keywords check `(/ or $)voice languages`
@@ -91,7 +90,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
     @voice.command(
         name='languages', description='Show list of languages supported by `/voice speak` command', aliases=['langs']
     )
-    async def languages(self, ctx: Context):
+    async def languages(self, ctx: AluContext):
         """Show list of languages supported by `(/ or $)voice speak` command"""
         language_keys = typing.get_args(LanguageCollection.Literal)
         our_list = [f"{key}: {getattr(LanguageCollection, key).locale}" for key in language_keys]
@@ -109,7 +108,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
         name='stop',
         description='Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests',
     )
-    async def stop(self, ctx: Context):
+    async def stop(self, ctx: AluContext):
         """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests."""
         try:
             vc = self.connections[ctx.guild.id]
@@ -125,7 +124,7 @@ class TextToSpeech(commands.Cog, name='TTS'):
             await ctx.reply(embed=e, ephemeral=True)
 
     @voice.command(name='leave', description='Leave voice channel')
-    async def leave(self, ctx: Context):
+    async def leave(self, ctx: AluContext):
         """Make bot leave voice channel. Bot autoleaves voicechannels but you can make it leave too"""
         try:
             vc = self.connections[ctx.guild.id]

@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
-from typing_extensions import Self
 
 from discord.ext import commands
+from typing_extensions import Self
 
 if TYPE_CHECKING:
-    from .context import Context
+    from .bases.context import AluContext
 
 
 def my_bool(argument: str):
@@ -39,7 +40,7 @@ class Codeblock:
         self.language: str = language
 
     @classmethod
-    async def convert(cls, _ctx: Context, argument: str) -> Self:
+    async def convert(cls, _ctx: AluContext, argument: str) -> Self:
         argument = argument.lstrip()  # Even tho it's left-stripped by default in the lib :thinking:
 
         # if we ever want regex implementation then

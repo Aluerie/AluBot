@@ -12,7 +12,7 @@ from ._models import PostMatchPlayer
 from pyot.models import lol  # isort: skip
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

@@ -12,8 +12,7 @@ from utils.var import MP, Cid, Clr, Uid
 from ._models import OpendotaRequestMatch, PostMatchPlayerData
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -81,7 +80,7 @@ class DotaPostMatchEdit(commands.Cog):
         # self.dotafeed.restart()
 
     @commands.command(hidden=True, aliases=["odrl", "od_rl", "odota_ratelimit"])
-    async def opendota_ratelimit(self, ctx: Context):
+    async def opendota_ratelimit(self, ctx: AluContext):
         """Send opendota rate limit numbers"""
         e = discord.Embed(colour=Clr.prpl, description=f"Odota limits: {self.bot.odota_ratelimit}")
         await ctx.reply(embed=e)

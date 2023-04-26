@@ -7,10 +7,10 @@ from discord import Embed, app_commands
 from discord.ext import commands
 from discord.ext.commands import Range
 
-from utils import Clr, Rid, Ems
+from utils import Clr, Ems, Rid
 
 if TYPE_CHECKING:
-    from utils.context import Context
+    from utils.bases.context import AluContext
 
 
 class ServerInfo(commands.Cog, name='Rules'):
@@ -74,13 +74,13 @@ class ServerInfo(commands.Cog, name='Rules'):
 
     @commands.has_role(Rid.discord_mods)
     @commands.group()
-    async def modrule(self, ctx: Context):
+    async def modrule(self, ctx: AluContext):
         """Group command about rule modding, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @commands.has_role(Rid.discord_mods)
     @commands.group()
-    async def modrealrule(self, ctx: Context):
+    async def modrealrule(self, ctx: AluContext):
         """Group command about rule modding, for actual commands use it together with subcommands"""
         await ctx.scnf()
 

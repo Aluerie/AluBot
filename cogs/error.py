@@ -7,14 +7,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils.context import Context
+from utils.bases.context import AluContext
 from utils.formats import human_timedelta
 from utils.times import BadTimeTransform
 from utils.translator import TranslateError
 from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 class CommandErrorHandler(commands.Cog):
@@ -22,7 +22,7 @@ class CommandErrorHandler(commands.Cog):
         self.bot: AluBot = bot
         bot.tree.on_error = self.on_app_command_error
 
-    async def command_error_work(self, ctx: Context, error) -> None:
+    async def command_error_work(self, ctx: AluContext, error) -> None:
         while isinstance(
             error,
             (
@@ -162,7 +162,7 @@ class CommandErrorHandler(commands.Cog):
             await ctx.reply(embed=e, ephemeral=True)
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: Context, error):
+    async def on_command_error(self, ctx: AluContext, error):
         if not getattr(ctx, 'error_handled', False):
             await self.command_error_work(ctx, error)
 
@@ -174,7 +174,7 @@ class CommandErrorHandler(commands.Cog):
         #         return
 
         if not getattr(ntr, 'error_handled', False):
-            ctx = await Context.from_interaction(ntr)
+            ctx = await AluContext.from_interaction(ntr)
             await self.command_error_work(ctx, error)
 
 

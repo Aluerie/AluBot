@@ -8,29 +8,28 @@ I had to rewrite half of the bot after reading @Danny's `reminder.py` :D
 """
 from __future__ import annotations
 
-import textwrap
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
-from typing_extensions import Annotated
-
 import asyncio
 import datetime
 import logging
+import textwrap
+from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
 
 import asyncpg
 import discord
 from discord import app_commands
 from discord.ext import commands
+from typing_extensions import Annotated
 
-from utils import times
-from utils import formats
-from utils.context import Context
+from utils import formats, times
+from utils.bases.context import AluContext
 from utils.database import DRecord
 from utils.pagination import EnumeratedPages
-from utils.var import Ems, Clr
+from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from typing_extensions import Self
-    from utils.bot import AluBot
+
+    from utils import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -292,7 +291,7 @@ class Reminder(commands.Cog):
 
         return timer
 
-    async def remind_helper(self, ctx: Context, *, dt: datetime.datetime, text: str):
+    async def remind_helper(self, ctx: AluContext, *, dt: datetime.datetime, text: str):
         """Remind helper so we don't duplicate"""
 
         timer = await self.create_timer(
@@ -313,7 +312,7 @@ class Reminder(commands.Cog):
     @commands.hybrid_group(aliases=['reminder', 'remindme'], usage='<when>')
     async def remind(
         self,
-        ctx: Context,
+        ctx: AluContext,
         *,
         when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')],
     ):
@@ -329,13 +328,13 @@ class Reminder(commands.Cog):
         text: str = '...',
     ):
         """Sets a reminder to remind you of something at a specific time"""
-        ctx = await Context.from_interaction(ntr)
+        ctx = await AluContext.from_interaction(ntr)
         await self.remind_helper(ctx, dt=when, text=text)
 
     @remind.command(name='me', with_app_command=False)
     async def remind_me(
         self,
-        ctx: Context,
+        ctx: AluContext,
         *,
         when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')],
     ):
@@ -354,7 +353,7 @@ class Reminder(commands.Cog):
         await self.remind_helper(ctx, dt=when.dt, text=when.arg)
 
     @remind.command(name='list', ignore_extra=False)
-    async def remind_list(self, ctx: Context):
+    async def remind_list(self, ctx: AluContext):
         """Shows a list of your current reminders"""
         query = """ SELECT id, expires, extra #>> '{args,2}'
                     FROM reminders
@@ -402,7 +401,7 @@ class Reminder(commands.Cog):
     @remind.command(name='delete', aliases=['remove', 'cancel'], ignore_extra=True)
     # @app_commands.autocomplete(id=remind_delete_id_autocomplete)  # type: ignore
     # @app_commands.describe(id='either input a number of reminder id or choose it from suggestion^')
-    async def remind_delete(self, ctx: Context, *, id: int):
+    async def remind_delete(self, ctx: AluContext, *, id: int):
         """Deletes a reminder by its ID.
 
         To get a reminder ID, use the reminder list command or autocomplete for slash command.
@@ -431,7 +430,7 @@ class Reminder(commands.Cog):
         await ctx.reply(embed=e)
 
     @remind.command(name='clear', ignore_extra=False)
-    async def reminder_clear(self, ctx: Context):
+    async def reminder_clear(self, ctx: AluContext):
         """Clears all reminders you have set."""
 
         # For UX purposes this has to be two queries.

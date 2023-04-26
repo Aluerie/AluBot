@@ -20,8 +20,7 @@ from .utils.imgtools import img_to_file, url_to_img, plt_to_file, get_text_wh
 from .utils.var import Ems, Clr, MP
 
 if TYPE_CHECKING:
-    from .utils.context import Context
-    from .utils.bot import AluBot
+    from utils import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 # log.setLevel(logging.WARNING)

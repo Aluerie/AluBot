@@ -1,19 +1,19 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Awaitable, Dict, List, Callable, Optional, Union
 
 import datetime
 from difflib import get_close_matches
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional, Union
 
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from utils.context import Context
+from utils.bases.context import AluContext
 from utils.pagination import EnumeratedPages
-from utils.var import MP, Ems, Cid
+from utils.var import MP, Ems
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 class FPCBase:
@@ -70,12 +70,12 @@ class FPCBase:
 
     async def channel_set(
         self,
-        ctx: Context | discord.Interaction[AluBot],
+        ctx: AluContext | discord.Interaction[AluBot],
         channel: Optional[discord.TextChannel],
     ) -> None:
         """Base function for setting channel for FPC Feed feature"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         ch = channel or ctx.channel
         if not ch.permissions_for(ctx.guild.me).send_messages:
             raise commands.BotMissingPermissions(['I do not have permission to `send_messages` in that channel'])
@@ -88,11 +88,11 @@ class FPCBase:
 
     async def channel_disable(
         self,
-        ctx: Context | discord.Interaction[AluBot],
+        ctx: AluContext | discord.Interaction[AluBot],
     ) -> None:
         """Base function for disabling channel for FPC Feed feature"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         query = f'SELECT {self.channel_id_column} FROM guilds WHERE id=$1'
         ch_id = await ctx.client.pool.fetchval(query, ctx.guild.id)
 
@@ -106,11 +106,11 @@ class FPCBase:
 
     async def channel_check(
         self,
-        ctx: Context | discord.Interaction[AluBot],
+        ctx: AluContext | discord.Interaction[AluBot],
     ) -> None:
         """Base function for checking if channel is set for FPC Feed feature"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         query = f'SELECT {self.channel_id_column} FROM guilds WHERE id=$1'
         ch_id = await ctx.client.pool.fetchval(query, ctx.guild.id)
 
@@ -140,10 +140,10 @@ class FPCBase:
     def player_name_acc_string(self, display_name: str, twitch_id: Union[int, None], **kwargs) -> str:
         return f'{self.player_name_string(display_name, twitch_id)}\n' f'{self.player_acc_string(**kwargs)}'
 
-    async def database_list(self, ctx: Context | discord.Interaction[AluBot]) -> None:
+    async def database_list(self, ctx: AluContext | discord.Interaction[AluBot]) -> None:
         """Base function for sending database list embed"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         await ctx.typing()
 
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
@@ -211,10 +211,10 @@ class FPCBase:
                 f'Did you mean to use `/dota player add {user.name_lower}` to add the stream into your fav list?'
             )
 
-    async def database_add(self, ctx: Context | discord.Interaction[AluBot], player_dict: dict, account_dict: dict):
+    async def database_add(self, ctx: AluContext | discord.Interaction[AluBot], player_dict: dict, account_dict: dict):
         """Base function for adding accounts into the database"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         await ctx.typing()
         await self.check_if_already_in_database(account_dict)
 
@@ -249,13 +249,13 @@ class FPCBase:
 
     async def database_request(
         self,
-        ctx: Context | discord.Interaction[AluBot],
+        ctx: AluContext | discord.Interaction[AluBot],
         player_dict: dict,
         account_dict: dict,
     ) -> None:
         """Base function for requesting to add accounts into the database"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         await ctx.typing()
         await self.check_if_already_in_database(account_dict)
 
@@ -280,7 +280,7 @@ class FPCBase:
         warn_e.colour = MP.orange(shade=200)
         warn_e.title = ''
         warn_e.description = ''
-        warn_e.set_author(name=ctx.user, icon_url=ctx.user.avatar.url)
+        warn_e.set_author(name=ctx.user, icon_url=ctx.user.display_avatar.url)
         # cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
         # warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
         cmd_usage_str = f"name: {player_dict['display_name']} {self.cmd_usage_str(**account_dict)}"
@@ -289,13 +289,13 @@ class FPCBase:
 
     async def database_remove(
         self,
-        ctx: Context | discord.Interaction[AluBot],
+        ctx: AluContext | discord.Interaction[AluBot],
         name_lower: Optional[str],
         account_id: Optional[Union[str, int]],  # steam_id for dota, something else for lol
     ) -> None:
         """Base function for removing accounts from the database"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         await ctx.typing()
         if name_lower is None and account_id is None:
             raise commands.BadArgument('You need to provide at least one of flags: `name`, `steam`')
@@ -380,7 +380,7 @@ class FPCBase:
 
     @staticmethod
     def get_names_list_from_locals(
-        ctx: Context | discord.Interaction[AluBot],
+        ctx: AluContext | discord.Interaction[AluBot],
         local_dict: Dict[str, Any],
     ) -> List[str]:
         if isinstance(ctx, discord.Interaction):
@@ -397,7 +397,7 @@ class FPCBase:
         return names
 
     async def player_add_remove(
-        self, ctx: Context | discord.Interaction[AluBot], local_dict: Dict[str, Any], *, mode_add: bool
+        self, ctx: AluContext | discord.Interaction[AluBot], local_dict: Dict[str, Any], *, mode_add: bool
     ) -> None:
         """
         Base function to add/remove players from user's favourite list.
@@ -410,7 +410,7 @@ class FPCBase:
         """
         player_names = self.get_names_list_from_locals(ctx, local_dict)
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
 
         if not player_names:
             raise commands.BadArgument("You cannot use this command without naming at least one player.")
@@ -473,10 +473,10 @@ class FPCBase:
         choice_list = [x for x in [a for a, in rows] if x.lower() not in namespace_list]
         return [app_commands.Choice(name=n, value=n) for n in choice_list if current.lower() in n.lower()]
 
-    async def player_list(self, ctx: Context | discord.Interaction[AluBot]):
+    async def player_list(self, ctx: AluContext | discord.Interaction[AluBot]):
         """Base function for player list command"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         await ctx.typing()
         query = f'SELECT {self.players_column} FROM guilds WHERE id=$1'
         fav_ids = await self.bot.pool.fetchval(query, ctx.guild.id)
@@ -494,12 +494,12 @@ class FPCBase:
         await ctx.reply(embed=e)
 
     async def character_add_remove(
-        self, ctx: Context | discord.Interaction[AluBot], local_dict: Dict[str, Any], *, mode_add: bool
+        self, ctx: AluContext | discord.Interaction[AluBot], local_dict: Dict[str, Any], *, mode_add: bool
     ):
         """Base function for adding/removing characters such as heroes/champs from fav lists"""
         character_names = self.get_names_list_from_locals(ctx, local_dict)
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
 
         if not character_names:
             raise commands.BadArgument("You cannot use this command without naming at least one character.")
@@ -557,10 +557,10 @@ class FPCBase:
         return_list = list(dict.fromkeys(precise_match + close_match))
         return [app_commands.Choice(name=n, value=n) for n in return_list][:25]  # type: ignore
 
-    async def character_list(self, ctx: Context | discord.Interaction[AluBot]) -> None:
+    async def character_list(self, ctx: AluContext | discord.Interaction[AluBot]) -> None:
         """Base function for character list commands"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         await ctx.typing()
         query = f'SELECT {self.characters_column} FROM guilds WHERE id=$1'
         fav_ids: List[int] = await ctx.client.pool.fetchval(query, ctx.guild.id) or []  # type: ignore
@@ -570,10 +570,10 @@ class FPCBase:
         e.description = '\n'.join(fav_names)
         await ctx.reply(embed=e)
 
-    async def spoil(self, ctx: Context | discord.Interaction[AluBot], spoil: bool):
+    async def spoil(self, ctx: AluContext | discord.Interaction[AluBot], spoil: bool):
         """Base function for spoil commands"""
         if isinstance(ctx, discord.Interaction):
-            ctx = await Context.from_interaction(ctx)
+            ctx = await AluContext.from_interaction(ctx)
         query = f'UPDATE guilds SET {self.spoil_column}=$1 WHERE id=$2'
         await self.bot.pool.execute(query, spoil, ctx.guild.id)
         e = discord.Embed(description=f"Changed spoil value to {spoil}", colour=self.colour)

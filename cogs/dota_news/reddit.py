@@ -12,10 +12,10 @@ from discord.ext import commands, tasks
 
 from utils.var import Clr, Lmt
 
-from ._base import DotaNewsBase
+from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 # def silence_event_loop_closed(func):
@@ -59,7 +59,7 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
     return embeds
 
 
-class Reddit(DotaNewsBase):
+class Reddit(AluCog):
     def cog_load(self) -> None:
         self.bot.ini_reddit()
         self.userfeed.start()
@@ -85,7 +85,7 @@ class Reddit(DotaNewsBase):
                     ):
                         embeds = await process_comments(comment)
                         for item in embeds:
-                            msg = await self.news_channel.send(embed=item)
+                            msg = await self.bot.community.dota_news.send(embed=item)
                             await msg.publish()
             except AsyncPrawcoreException:
                 await asyncio.sleep(60 * running)
@@ -93,7 +93,6 @@ class Reddit(DotaNewsBase):
 
     @userfeed.before_loop
     async def before(self):
-        # log.info("redditfeed before loop")
         await self.bot.wait_until_ready()
 
     @userfeed.error

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import discord
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 # guild id
 HIDEOUT = 759916212842659850
@@ -45,17 +45,21 @@ class HideoutGuild:
     """
 
     def __init__(self, bot: AluBot):
-        self.guild: discord.Guild = bot.get_guild(HIDEOUT)  # type: ignore
+        self.bot: AluBot = bot
         self.test: bool = bot.test
+
+    @property
+    def guild(self) -> discord.Guild:
+        return self.bot.get_guild(HIDEOUT) # type: ignore
 
     # channels
     @property
     def global_logs(self) -> discord.TextChannel:
-        return self.guild.get_channel(GLOBAL_LOGS)  # type: ignore
+        return self.bot.get_channel(GLOBAL_LOGS)  # type: ignore
 
     @property
     def daily_report(self) -> discord.TextChannel:
-        return self.guild.get_channel(DAILY_REPORT)  # type: ignore
+        return self.bot.get_channel(DAILY_REPORT)  # type: ignore
 
     @property
     def spam_channel_id(self) -> int:
@@ -63,13 +67,17 @@ class HideoutGuild:
 
     @property
     def spam(self) -> discord.TextChannel:
-        return self.guild.get_channel(self.spam_channel_id)  # type: ignore
+        return self.bot.get_channel(self.spam_channel_id)  # type: ignore
 
     @property
     def repost(self) -> discord.TextChannel:
-        return self.guild.get_channel(REPOST)  # type: ignore
+        return self.bot.get_channel(REPOST)  # type: ignore
 
+    @property
+    def copy_dota_tweets(self) -> discord.TextChannel:
+        return self.bot.get_channel(COPY_DOTA_TWEETS)  # type: ignore
+    
     # roles
     @property
     def jailed_bots(self) -> discord.Role:
-        return self.hideout.get_role(JAILED_BOTS)  # type: ignore
+        return self.bot.get_role(JAILED_BOTS)  # type: ignore

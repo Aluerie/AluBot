@@ -7,17 +7,16 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from utils import AluCog
+
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
-
-from ._base import PersonalBase
+    from utils import AluBot, AluContext
 
 
-class PersonalCommands(PersonalBase):
+class PersonalCommands(AluCog):
     @commands.hybrid_command()
     @app_commands.describe(tweet_ids='Number(-s) in the end of tweet link')
-    async def twitter_image(self, ctx: Context, *, tweet_ids: str):
+    async def twitter_image(self, ctx: AluContext, *, tweet_ids: str):
         """Download image from tweets. \
         Useful for Aluerie because Twitter is banned in Russia.
         • `<tweet_ids>` are tweet ids - it's just numbers in the end of tweet links.
@@ -44,8 +43,8 @@ class PersonalCommands(PersonalBase):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        if member.guild == self.hideout and member.bot:
-            await member.add_roles(self.jailed_bots)
+        if member.guild == self.bot.hideout.guild and member.bot:
+            await member.add_roles(self.bot.hideout.jailed_bots)
             await member.edit(nick=f"{member.display_name} | ")
 
 

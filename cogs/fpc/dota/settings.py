@@ -16,8 +16,7 @@ from utils.var import Clr, Ems
 from .._base import FPCBase
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -95,7 +94,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @commands.group(name="dota")
-    async def ext_dota(self, ctx: Context):
+    async def ext_dota(self, ctx: AluContext):
         """Group command about Dota, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -109,7 +108,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota.group(name="channel")
-    async def ext_dota_channel(self, ctx: Context):
+    async def ext_dota_channel(self, ctx: AluContext):
         """Group command about DotaFeed Channel, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -123,7 +122,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_channel.command(name="set", usage="[channel=curr]")
-    async def ext_dota_channel_set(self, ctx: Context, channel: Optional[discord.TextChannel]):
+    async def ext_dota_channel_set(self, ctx: AluContext, channel: Optional[discord.TextChannel]):
         """Set channel to be the DotaFeed notifications channel."""
         await self.channel_set(ctx, channel)
 
@@ -136,7 +135,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_channel.command(name="disable")
-    async def ext_dota_channel_disable(self, ctx: Context):
+    async def ext_dota_channel_disable(self, ctx: AluContext):
         """Stop getting DotaFeed notifs. Data about fav heroes/players won't be affected."""
         await self.channel_disable(ctx)
 
@@ -149,7 +148,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_channel.command(name="check")
-    async def ext_dota_channel_check(self, ctx: Context):
+    async def ext_dota_channel_check(self, ctx: AluContext):
         """Check if DotaFeed channel is set up in the server."""
         await self.channel_check(ctx)
 
@@ -163,7 +162,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota.group(name="database", aliases=["db"])
-    async def ext_dota_database(self, ctx: Context):
+    async def ext_dota_database(self, ctx: AluContext):
         """Group command about Dota 2 database, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -214,7 +213,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_database.command(name="list")
-    async def ext_dota_database_list(self, ctx: Context):
+    async def ext_dota_database_list(self, ctx: AluContext):
         """List of players in the database available for DotaFeed feature."""
         await self.database_list(ctx)
 
@@ -244,7 +243,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
         name="request",
         usage="name: <name> steam: <steamid> twitch: <yes/no>",
     )
-    async def ext_dota_database_request(self, ctx: Context, *, flags: AddDotaPlayerFlags):
+    async def ext_dota_database_request(self, ctx: AluContext, *, flags: AddDotaPlayerFlags):
         """Request player to be added into the database.
         This will send a request message into Aluerie's personal logs channel.
         """
@@ -262,7 +261,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota.group(name="player", aliases=["streamer"])
-    async def ext_dota_player(self, ctx: Context):
+    async def ext_dota_player(self, ctx: AluContext):
         """Group command about Dota 2 player, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -310,7 +309,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_player.command(name="add", usage="<player_name(-s)>")
-    async def ext_dota_player_add(self, ctx: Context, *, player_names: str):
+    async def ext_dota_player_add(self, ctx: AluContext, *, player_names: str):
         """Add player to your favourites."""
         await self.player_add_remove(ctx, locals(), mode_add=True)
 
@@ -355,7 +354,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_player.command(name="remove", usage="<player_name(-s)>")
-    async def ext_dota_player_remove(self, ctx: Context, *, player_names: str):
+    async def ext_dota_player_remove(self, ctx: AluContext, *, player_names: str):
         """Remove player from your favourites."""
         await self.player_add_remove(ctx, locals(), mode_add=False)
 
@@ -368,7 +367,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_player.command(name="list")
-    async def ext_dota_player_list(self, ctx: Context):
+    async def ext_dota_player_list(self, ctx: AluContext):
         """Show current list of fav players."""
         await self.player_list(ctx)
 
@@ -382,7 +381,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota.group(name="hero")
-    async def ext_dota_hero(self, ctx: Context):
+    async def ext_dota_hero(self, ctx: AluContext):
         """Group command about Dota 2, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -425,7 +424,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_hero.command(name="add", usage="<hero_name(-s)>")
-    async def ext_dota_hero_add(self, ctx: Context, *, hero_names: str):
+    async def ext_dota_hero_add(self, ctx: AluContext, *, hero_names: str):
         """Add hero(-es) to your fav heroes list. \
         Use names from Dota 2 hero grid. For example,
         • `Anti-Mage` (letter case does not matter) and not `Magina`;
@@ -475,7 +474,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_hero.command(name="remove", usage="<hero_name(-s)>")
-    async def ext_dota_hero_remove(self, ctx: Context, *, hero_names: str):
+    async def ext_dota_hero_remove(self, ctx: AluContext, *, hero_names: str):
         """Remove hero(-es) from your fav heroes list."""
         await self.character_add_remove(ctx, locals(), mode_add=False)
 
@@ -488,7 +487,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota_hero.command(name="list")
-    async def ext_dota_hero_list(self, ctx: Context):
+    async def ext_dota_hero_list(self, ctx: AluContext):
         """Show current list of fav heroes."""
         await self.character_list(ctx)
 
@@ -502,7 +501,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @is_manager()
     @ext_dota.command(name="spoil")
-    async def ext_dota_spoil(self, ctx: Context, spoil: bool):
+    async def ext_dota_spoil(self, ctx: AluContext, spoil: bool):
         """Turn on/off spoiling resulting stats for matches.
         It is "on" by default, so it can show what items players finished with and KDA.
         """

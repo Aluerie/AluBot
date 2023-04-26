@@ -6,42 +6,27 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from utils.const.community import STREAM_ROOM_CHANNEL
-from utils.var import Cid, Clr, Ems, Rid, Sid
-
-from ._base import HideoutBase
+from utils import AluCog
+from utils.var import Clr, Ems, Sid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 ORIGINAL_NAME = '\N{CINEMA}streaming_room'
 
 
-class StreamChannelName(HideoutBase, name='\N{CINEMA}streaming_room Control'):
+class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=Ems.peepoMovie):
     """Change streaming room title
 
     Get folks ready to watch your stream with a fancy title \
     so everybody knows what you are streaming.
     """
 
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.peepoMovie)
-
     async def cog_load(self) -> None:
         self.check_voice_members.start()
 
     async def cog_unload(self) -> None:
         self.check_voice_members.cancel()
-
-    @property
-    def stream_channel(self) -> discord.VoiceChannel:
-        return self.bot.community.stream_room
-
-    @property
-    def voice_role(self) -> discord.Role:
-        return self.bot.community.voice_role
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -50,7 +35,7 @@ class StreamChannelName(HideoutBase, name='\N{CINEMA}streaming_room Control'):
         if member.guild.id != Sid.alu:
             return
 
-        voice_role = self.voice_role
+        voice_role = self.bot.community.voice_role
         if before.channel is None and after.channel is not None:  # joined the voice channel
             await member.add_roles(voice_role)
             e = discord.Embed(color=0x00FF7F)
@@ -73,7 +58,7 @@ class StreamChannelName(HideoutBase, name='\N{CINEMA}streaming_room Control'):
 
     @app_commands.guilds(Sid.alu)
     @commands.hybrid_group(name='streaming-room', aliases=['stream'])
-    async def streaming_room(self, ctx: Context):
+    async def streaming_room(self, ctx: AluContext):
         """Group command about Dota, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -82,24 +67,24 @@ class StreamChannelName(HideoutBase, name='\N{CINEMA}streaming_room Control'):
         name='title', description=f'Set title for #{ORIGINAL_NAME} so people know what you are streaming'
     )
     @app_commands.describe(text=f'new title for #{ORIGINAL_NAME}')
-    async def title(self, ctx: Context, *, text: str):
+    async def title(self, ctx: AluContext, *, text: str):
         """Sets title for **#\N{CINEMA}streaming_room** so people know what you are streaming"""
         new_name = f'\N{CINEMA}{text}'
-        await self.stream_channel.edit(name=new_name)
+        await self.bot.community.stream_room.edit(name=new_name)
         e = discord.Embed(description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=Clr.prpl)
         await ctx.reply(embed=e)
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
     @streaming_room.command(name='reset')
-    async def reset(self, ctx: Context):
+    async def reset(self, ctx: AluContext):
         """Reset **#\N{CINEMA}streaming_room** title ;"""
-        await self.stream_channel.edit(name=ORIGINAL_NAME)
+        await self.bot.community.stream_room.edit(name=ORIGINAL_NAME)
         e = discord.Embed(description=f'Title of **#{ORIGINAL_NAME}** has been reset', colour=Clr.prpl)
         await ctx.reply(embed=e)
 
     @tasks.loop(count=1)
     async def check_voice_members(self):
-        voice_role = self.voice_role
+        voice_role = self.bot.community.voice_role
         for member in voice_role.members:
             if member.voice is None:
                 await member.remove_roles(voice_role)

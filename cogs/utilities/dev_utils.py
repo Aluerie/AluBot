@@ -6,21 +6,21 @@ from typing import TYPE_CHECKING, Tuple
 import discord
 from discord.ext import commands
 
-from utils.context import Context
+from utils import AluCog, AluContext
 from utils.var import Clr
 
-from ._base import UtilitiesBase
 
 if TYPE_CHECKING:
     pass
 
 
-class DevUtilities(UtilitiesBase):
+class DevUtilities(AluCog):
     @commands.command()
-    async def charinfo(self, ctx: Context, *, characters: str):
+    async def charinfo(self, ctx: AluContext, *, characters: str):
         """Shows information about a character(-s). \
         Only up to a few characters tho.
         """
+
         def to_string(c: str) -> Tuple[str, str]:
             digit = f'{ord(c):x}'
             name = unicodedata.name(c, None)

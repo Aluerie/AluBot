@@ -8,12 +8,10 @@ import tweepy.asynchronous
 from discord.ext import tasks
 
 from config import TWITTER_BEARER_TOKEN
-from utils.var import Cid
-
-from ._base import DotaNewsBase
+from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 import logging
 
@@ -50,11 +48,11 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
         if tweet.in_reply_to_user_id is not None:
             return
 
-        channel_id = Cid.spam_me if tweet.author_id == 1272226371109031937 else Cid.copy_dota_tweets
-        await self.bot.get_channel(channel_id).send(content=f"https://twitter.com/{username}/status/{tweet.id}")
+        channel = self.bot.hideout.spam if tweet.author_id == 1272226371109031937 else self.bot.hideout.copy_dota_tweets
+        await channel.send(content=f"https://twitter.com/{username}/status/{tweet.id}")
 
     async def on_request_error(self, status_code):
-        await self.bot.get_channel(Cid.spam_me).send(
+        await self.bot.hideout.spam.send(
             content=f"{self.bot.owner.mention} I'm stuck with twitter-stream {status_code}"
         )
         self.disconnect()
@@ -78,7 +76,7 @@ async def new_stream(bot: AluBot):
     await myStream.initiate_stream()
 
 
-class Twitter(DotaNewsBase):
+class Twitter(AluCog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.myStream = None

@@ -14,8 +14,7 @@ from utils.var import Clr, Rgx, Ems
 
 if TYPE_CHECKING:
     from asyncpg import Pool
-    from utils.bot import AluBot
-    from utils.context import GuildContext
+    from utils import AluBot, AluGuildContext
 
 
 def filter_emotes_condition(emote, mode):
@@ -51,7 +50,7 @@ async def get_sorted_emote_dict(mode, pool: Pool):
     return {k: v for k, v in sorted(emote_dict.items(), key=lambda item: item[1], reverse=True)}
 
 
-async def topemotes_job(ctx: GuildContext, mode):
+async def topemotes_job(ctx: AluGuildContext, mode):
     sorted_emote_dict = await get_sorted_emote_dict(mode, pool=ctx.pool)
     new_array = []
     split_size = 20

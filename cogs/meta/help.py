@@ -6,15 +6,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus, tasks
 
-from utils.context import Context
+from utils import AluCog, AluContext
 from utils.formats import human_timedelta
 from utils.pagination import Paginator
 from utils.var import Cid, Clr, Ems, Rid
 
-from ._base import MetaBase
-
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 class HelpFormatData(NamedTuple):
@@ -202,13 +200,13 @@ class HelpSelect(discord.ui.Select):
 class HelpPages(Paginator):
     source: HelpPageSource
 
-    def __init__(self, ctx: Context, source: HelpPageSource):
+    def __init__(self, ctx: AluContext, source: HelpPageSource):
         super().__init__(ctx, source)
         self.add_item(HelpSelect(self))
 
 
 class MyHelpCommand(commands.HelpCommand):
-    context: Context
+    context: AluContext
 
     def __init__(
         self,
@@ -323,7 +321,7 @@ class MyHelpCommand(commands.HelpCommand):
         await self.context.reply(embed=e)
 
 
-class HelpCommandCog(MetaBase):
+class HelpCommandCog(AluCog):
     """Commands-utilities related to Discord or the Bot itself."""
 
     def __init__(self, bot: AluBot):
@@ -344,7 +342,7 @@ class HelpCommandCog(MetaBase):
     async def help_slash(self, ntr: discord.Interaction, *, command: Optional[str]):
         """Show help menu for the bot"""
         my_help = MyHelpCommand()
-        my_help.context = ctx = await Context.from_interaction(ntr)
+        my_help.context = ctx = await AluContext.from_interaction(ntr)
         await my_help.command_callback(ctx, command=command)
 
     @tasks.loop(count=1)

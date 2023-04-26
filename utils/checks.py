@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Callable, TypeVar
 
 import discord
@@ -8,8 +9,8 @@ from discord.ext import commands
 from .var import Sid
 
 if TYPE_CHECKING:
+    from .bases.context import AluContext, GuildContext
     from .bot import AluBot
-    from .context import GuildContext, Context
 
 T = TypeVar('T')
 
@@ -26,7 +27,7 @@ def is_guild_owner():
 
 
 def is_trustee():
-    async def pred(ctx_ntr: Context | discord.Interaction[AluBot]) -> bool:
+    async def pred(ctx_ntr: AluContext | discord.Interaction[AluBot]) -> bool:
         """trustees only"""
         query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
         trusted_ids = await ctx_ntr.client.pool.fetchval(query, Sid.alu)
@@ -45,7 +46,7 @@ def is_trustee():
 
 
 def is_owner():
-    async def predicate(ctx: Context) -> bool:
+    async def predicate(ctx: AluContext) -> bool:
         """Aluerie only"""
         if not await ctx.bot.is_owner(ctx.author):
             raise commands.NotOwner()
@@ -90,6 +91,7 @@ def hybrid_permissions_check(**perms: bool) -> Callable[[T], T]:
 # but I need to manually define docstring so /help command can catch it
 # Unfortunately, I don't know any other way
 # ToDo: figure a way to get docs to decorators instead of to predicates
+
 
 # def is_manager():
 #     """managers only"""

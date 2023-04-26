@@ -1,17 +1,19 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils.var import Ems, Sid, Cid, Clr
+from utils import AluCog
+from utils.var import Clr, Ems, Sid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot, AluContext
 
 
-class Suggestions(commands.Cog):
+class Suggestions(AluCog):
     """Commands related to suggestions such as
 
     * setting up suggestion channel
@@ -27,10 +29,9 @@ class Suggestions(commands.Cog):
 
     @commands.hybrid_command(aliases=["suggestion"])
     @app_commands.describe(text='Suggestion text')
-    async def suggest(self, ctx, *, text: str):
+    async def suggest(self, ctx: AluContext, *, text: str):
         """Suggest something for people to vote on in suggestion channel"""
-        patch_channel = self.bot.get_channel(Cid.suggestions)
-
+        channel = self.community.suggestions
         query = """ UPDATE botinfo 
                     SET suggestion_num=botinfo.suggestion_num+1 
                     WHERE id=$1 
@@ -42,7 +43,7 @@ class Suggestions(commands.Cog):
         e = discord.Embed(color=Clr.prpl, title=title, description=text)
         e.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
         e.set_footer(text=f'With love, {ctx.guild.me.display_name}')
-        msg = await patch_channel.send(embed=e)
+        msg = await channel.send(embed=e)
         await msg.add_reaction('\N{UPWARDS BLACK ARROW}')
         await msg.add_reaction('\N{DOWNWARDS BLACK ARROW}')
         suggestion_thread = await msg.create_thread(name=title, auto_archive_duration=7 * 24 * 60)
@@ -52,7 +53,7 @@ class Suggestions(commands.Cog):
             '\N{UPWARDS BLACK ARROW} \N{DOWNWARDS BLACK ARROW} reactions.'
         )
         e2 = discord.Embed(color=Clr.prpl)
-        e2.description = f'{ctx.author.mention}, sent your suggestion under #{number} into {patch_channel.mention}'
+        e2.description = f'{ctx.author.mention}, sent your suggestion under #{number} into {channel.mention}'
         await ctx.reply(embed=e2, ephemeral=True)
 
 

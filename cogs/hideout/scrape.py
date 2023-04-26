@@ -11,13 +11,13 @@ from discord.ext import tasks
 from utils.lol.const import LOL_LOGO
 from utils.var import Clr, Sid
 
-from ._base import PersonalBase
+from utils import AluCog
 
 if TYPE_CHECKING:
     pass
 
 
-class Insider(PersonalBase):
+class Insider(AluCog):
     def cog_load(self) -> None:
         self.insider_checker.start()
 
@@ -51,7 +51,7 @@ class Insider(PersonalBase):
         e.set_image(
             url='https://blogs.windows.com/wp-content/themes/microsoft-stories-theme/img/theme/windows-placeholder.jpg'
         )
-        msg = await self.repost.send(embed=e)
+        msg = await self.bot.hideout.repost.send(embed=e)
         # await msg.publish()
 
     @insider_checker.before_loop
@@ -59,7 +59,7 @@ class Insider(PersonalBase):
         await self.bot.wait_until_ready()
 
 
-class LoLCom(PersonalBase):
+class LoLCom(AluCog):
     async def cog_load(self) -> None:
         self.patch_checker.start()
 
@@ -97,13 +97,13 @@ class LoLCom(PersonalBase):
             return None
 
         # maybe use ('a' ,{'class': 'skins cboxElement'})
-        img_url = patch_soup.find('h2', id='patch-patch-highlights').find_next('a').get('href')
+        img_url = patch_soup.find('h2', id='patch-patch-highlights').find_next('a').get('href')  # type: ignore # TODO:FIX
         e = discord.Embed(title=content_if_property('og:title'), url=patch_url, colour=Clr.rspbrry)
         e.description = content_if_property("og:description")
         e.set_image(url=img_url)
         e.set_thumbnail(url=content_if_property('og:image'))
         e.set_author(name='League of Legends', icon_url=LOL_LOGO)
-        await self.repost.send(embed=e)
+        await self.bot.hideout.repost.send(embed=e)
 
     @patch_checker.before_loop
     async def before(self):

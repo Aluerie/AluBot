@@ -7,12 +7,11 @@ https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py - Plural,
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py - human_timedelta
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Sequence, Union
-
-from enum import Enum
 
 import datetime
 import difflib
+from enum import Enum
+from typing import TYPE_CHECKING, Optional, Sequence, Union
 
 from dateutil.relativedelta import relativedelta
 from discord.utils import format_dt
@@ -235,7 +234,7 @@ def inline_diff(a, b):  # a = old_string, b = new_string
 
 
 # https://stackoverflow.com/questions/39001097/match-changes-by-words-not-by-characters
-def inline_wordbyword_diff(a, b):  # a = old_string, b = new_string #
+def inline_word_by_word_diff(a, b):  # a = old_string, b = new_string #
     a, b = a.split(), b.split()
     matcher = difflib.SequenceMatcher(None, a, b)
 

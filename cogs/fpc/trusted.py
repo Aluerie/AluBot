@@ -10,7 +10,7 @@ from utils.lol.const import LiteralServerUpper
 from utils.var import Sid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
     from cogs.fpc.dota.settings import DotaNotifsSettings
     from cogs.fpc.lol.settings import LoLNotifsSettings
 

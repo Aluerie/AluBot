@@ -13,7 +13,7 @@ import asyncpg
 import click
 
 from config import POSTGRES_URL
-from utils.bot import AluBot, get_log_fmt
+from utils import AluBot, get_log_fmt
 from utils.database import create_pool
 
 if TYPE_CHECKING:

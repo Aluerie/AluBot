@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Literal
+
+from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 from discord.ext import commands
@@ -7,10 +8,10 @@ from numpy.random import choice
 
 from utils.var import Clr, Ems
 
-from ._base import FunBase
+from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils.context import Context
+    from utils.bases.context import AluContext
 
 
 class RPSView(discord.ui.View):
@@ -131,9 +132,9 @@ class RPSView(discord.ui.View):
         await self.rps_button_callback(ntr, btn)
 
 
-class RockPaperScissorsCommand(FunBase):
+class RockPaperScissorsCommand(AluCog):
     @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps', 'rock_paper_scissors'])
-    async def rps(self, ctx: Context, member: discord.Member):
+    async def rps(self, ctx: AluContext, member: discord.Member):
         """Rock Paper Scissors game with @member"""
         if member == ctx.author:
             raise commands.BadArgument('You cannot challenge yourself in a Rock Paper Scissors game')

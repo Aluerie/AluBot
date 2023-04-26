@@ -1,14 +1,16 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from .context import Context
     from discord import Embed
+
+    from .bases.context import AluContext
 
 webhookdict = {}
 
 
-async def user_webhook(ctx: Context, content: Optional[str] = '', embed: Optional[Embed] = None):
+async def user_webhook(ctx: AluContext, content: Optional[str] = '', embed: Optional[Embed] = None):
     found = 0
     webhook = None
     array = await ctx.channel.webhooks()

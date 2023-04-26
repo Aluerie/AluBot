@@ -6,7 +6,7 @@ from aiohttp import ClientSession
 from github import Github
 from unidiff import PatchSet
 
-from .formats import inline_wordbyword_diff
+from .formats import inline_word_by_word_diff
 
 
 async def human_commit(repo, commits, test_num=0):
@@ -111,7 +111,7 @@ async def human_commit(repo, commits, test_num=0):
                 if key in remove_dict:
                     human.add(
                         f'Changed string `{key}`: '
-                        f'"{remove_tri_bracket_content(inline_wordbyword_diff(remove_dict[key], add_dict[key]))}"'
+                        f'"{remove_tri_bracket_content(inline_word_by_word_diff(remove_dict[key], add_dict[key]))}"'
                     )
                 else:
                     human.add(f'Created string `{key}`: ' f'"{remove_tri_bracket_content(add_dict[key])}"')
@@ -121,7 +121,6 @@ async def human_commit(repo, commits, test_num=0):
             remove_from_crc(pfile.path)
             continue
         elif pfile.path == 'game/dota/pak01_dir/scripts/items/items_game.txt':
-
             curr_url = f'{repo_url}/raw/{commits[0 + test_num].sha}/{pfile.path}'
             old_url = curr_url.replace(commits[0 + test_num].sha, commits[1 + test_num].sha)
 

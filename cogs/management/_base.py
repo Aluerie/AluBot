@@ -2,18 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from discord.ext import commands
+from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluContext
 
 
-class ManagementBase(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
+class ManagementBaseCog(AluCog):
     # if I ever forget to put @is_owner()
     # note that we still should put @is_owner() bcs of $help command quirk
-    async def cog_check(self, ctx: Context) -> bool:
+    async def cog_check(self, ctx: AluContext) -> bool:
         return await self.bot.is_owner(ctx.author)

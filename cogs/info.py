@@ -15,6 +15,7 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageColor
 
+from utils import AluCog
 from utils.checks import is_owner
 from utils.formats import format_dt_tdR, human_timedelta
 from utils.var import MAP, MP, Cid, Clr, Ems, Rid, Sid
@@ -22,8 +23,7 @@ from utils.var import MAP, MP, Cid, Clr, Ems, Rid, Sid
 # from wordcloud import WordCloud
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
@@ -38,16 +38,12 @@ async def account_age_ctx_menu(ntr: discord.Interaction, member: discord.Member)
     await ntr.response.send_message(f"{member.mention} is {human_timedelta(age)} old.", ephemeral=True)
 
 
-class Info(commands.Cog, name='Info'):
+class Info(AluCog, name='Info', emote=Ems.PepoG):
     """Commands to get some useful info"""
 
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.ctx_menu2 = app_commands.ContextMenu(name='View Account Age', callback=account_age_ctx_menu)
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.PepoG)
 
     async def cog_load(self) -> None:
         self.bot.tree.add_command(self.ctx_menu2)
@@ -92,7 +88,7 @@ class Info(commands.Cog, name='Info'):
         await give_text_list(Rid.nsfw_bots, Cid.nsfw_bob_spam, 959982171492323388)
 
     @commands.hybrid_command(name='gmt', aliases=['utc'], description="Show GMT(UTC) time")
-    async def gmt(self, ctx: Context):
+    async def gmt(self, ctx: AluContext):
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
@@ -189,7 +185,7 @@ class Info(commands.Cog, name='Info'):
         aliases=['systeminfo'],
         hidden=True,
     )
-    async def sysinfo(self, ctx: Context):
+    async def sysinfo(self, ctx: AluContext):
         """Get system info about machine currently hosting the bot"""
         url = 'https://ipinfo.io/json'
         async with self.bot.session.get(url) as resp:
@@ -243,7 +239,7 @@ class StatsCommands(commands.Cog, name='Stats'):
     @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
     async def wordcloud(
         self,
-        ctx: Context,
+        ctx: AluContext,
         channel_or_and_member: commands.Greedy[Union[discord.Member, discord.TextChannel]] = None,
         limit: int = 2000,
     ):

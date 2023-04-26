@@ -13,16 +13,14 @@ from discord.ext import commands, tasks
 from github.GithubException import GithubException
 from PIL import Image
 
+from utils import AluCog
 from utils.checks import is_owner
 from utils.var import MP, Lmt, Sid
-
-from ._base import DotaNewsBase
 
 if TYPE_CHECKING:
     from github import Issue, NamedUser
 
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -131,7 +129,7 @@ class TimeLine:
     def add_event(self, event: Event):
         self.events.append(event)
         self.authors.add(event.actor)
-    
+
     def add_comment(self, comment: Comment):
         self.comments.append(comment)
         self.authors.add(comment.actor)
@@ -192,7 +190,7 @@ class TimeLine:
         return e, file
 
 
-class BugTracker(DotaNewsBase):
+class BugTracker(AluCog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.retries: int = 0  # todo: find better solution
@@ -213,19 +211,19 @@ class BugTracker(DotaNewsBase):
 
     @is_owner()
     @commands.group(name="valve", hidden=True)
-    async def valve(self, ctx: Context):
+    async def valve(self, ctx: AluContext):
         """Group for valve devs commands. Use it together with subcommands"""
         await ctx.scnf()
 
     @is_owner()
     @valve.command()
-    async def add(self, ctx: Context, *, login: str):
+    async def add(self, ctx: AluContext, *, login: str):
         logins = [b for x in login.split(",") if (b := x.lstrip().rstrip())]
         query = """ INSERT INTO valve_devs (login) VALUES ($1)
                     ON CONFLICT DO NOTHING
                     RETURNING True;
                 """
-        
+
         error_logins = []
         success_logins = []
         for l in logins:
@@ -249,7 +247,7 @@ class BugTracker(DotaNewsBase):
 
     @is_owner()
     @valve.command()
-    async def remove(self, ctx: Context, login: str):
+    async def remove(self, ctx: AluContext, login: str):
         query = "DELETE FROM valve_devs WHERE login=$1"
         await self.bot.pool.execute(query, login)
         self.valve_devs.remove(login)
@@ -259,7 +257,7 @@ class BugTracker(DotaNewsBase):
 
     @is_owner()
     @valve.command()
-    async def list(self, ctx: Context):
+    async def list(self, ctx: AluContext):
         query = "SELECT login FROM valve_devs"
         valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
         e = discord.Embed(color=MP.blue(), title='List of known Valve devs')
@@ -298,7 +296,7 @@ class BugTracker(DotaNewsBase):
                 if (login := e.actor.login) in assignees:
                     pass
                 elif login != e.issue.user.login:
-                    # if actor is not OP of the issue then we can consider 
+                    # if actor is not OP of the issue then we can consider
                     # that this person is a valve dev
                     assignees.append(login)
                     self.valve_devs.append(login)
@@ -341,7 +339,7 @@ class BugTracker(DotaNewsBase):
         for c in [x for x in repo.get_issues_comments(sort='updated', since=dt) if x.user.login in assignees]:
             # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
             issue_num = int(c.issue_url.split('/')[-1])
-            
+
             if issue_num not in issue_dict:
                 issue = repo.get_issue(issue_num)
                 issue_dict[issue.number] = TimeLine(issue=issue)
@@ -372,7 +370,7 @@ class BugTracker(DotaNewsBase):
                 batches_to_send.append([(em, file)])
 
         for i in batches_to_send:
-            msg = await self.news_channel.send(embeds=[e for e, _ in i], files=[f for _, f in i if f])
+            msg = await self.bot.community.dota_news.send(embeds=[e for e, _ in i], files=[f for _, f in i if f])
             # todo: if we implement custom for public then we need to only publish from my own server
             #  or just remove the following `.publish()` line at all
             await msg.publish()

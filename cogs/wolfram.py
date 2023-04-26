@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 from io import BytesIO
+from typing import TYPE_CHECKING
 from urllib import parse as urlparse
 
 import discord
@@ -9,31 +9,25 @@ from discord import app_commands
 from discord.ext import commands
 
 from config import WOLFRAM_TOKEN
+from utils import AluCog
 from utils.var import Ems
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 
-class WolframAlpha(commands.Cog):
+class WolframAlpha(AluCog, emote=Ems.bedNerdge):
     """Query Wolfram Alpha within the bot.
 
     Probably the best computational intelligence service ever.
     [wolframalpha.com](https://www.wolframalpha.com/)
     """
 
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-        self.wa_basic_url = (
-            f'https://api.wolframalpha.com/v1/simple?appid={WOLFRAM_TOKEN}'
-            f'&background=black&foreground=white&layout=labelbar&i='
-        )
-        self.wa_short_url = f"https://api.wolframalpha.com/v1/result?appid={WOLFRAM_TOKEN}&i="
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.bedNerdge)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        base = 'https://api.wolframalpha.com/v1'
+        self.simple_url = f'{base}/simple?appid={WOLFRAM_TOKEN}&background=black&foreground=white&layout=labelbar&i='
+        self.short_url = f"{base}/result?appid={WOLFRAM_TOKEN}&i="
 
     @commands.hybrid_command(
         name="wolfram_long",
@@ -42,10 +36,10 @@ class WolframAlpha(commands.Cog):
     )
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
-    async def wolf(self, ctx: Context, *, query: str):
+    async def wolf(self, ctx: AluContext, *, query: str):
         """Get answer from WolframAlpha"""
         await ctx.typing()
-        question_url = f'{self.wa_basic_url}{urlparse.quote(query)}'
+        question_url = f'{self.simple_url}{urlparse.quote(query)}'
         async with self.bot.session.get(question_url) as resp:
             await ctx.reply(
                 content=f"```py\n{query}```",
@@ -55,10 +49,10 @@ class WolframAlpha(commands.Cog):
     @commands.hybrid_command(name="wolfram_short", description="Get short answer from WolframAlpha.com", aliases=['wa'])
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
-    async def wolfram_shorter(self, ctx: Context, *, query: str):
+    async def wolfram_shorter(self, ctx: AluContext, *, query: str):
         """Get shorter answer from WolframAlpha"""
         await ctx.typing()
-        question_url = f'{self.wa_short_url}{urlparse.quote(query)}'
+        question_url = f'{self.short_url}{urlparse.quote(query)}'
         async with self.bot.session.get(question_url) as resp:
             await ctx.reply(f"```py\n{query}```{await resp.text()}")
 

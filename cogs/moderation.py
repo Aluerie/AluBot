@@ -7,30 +7,25 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import times
-from utils.context import Context
+from utils import AluCog, AluContext, times
 from utils.var import Cid, Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
-class Moderation(commands.Cog):
+class Moderation(AluCog, emote=Ems.peepoPolice):
     """Commands to moderate servers with"""
 
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.active_mutes = {}
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.peepoPolice)
 
     @commands.has_role(Rid.discord_mods)
     @app_commands.default_permissions(manage_messages=True)
     @commands.hybrid_command(name='warn', description='Warn member')
     @app_commands.describe(member='Member to warn', reason='Reason')
-    async def warn(self, ctx: Context, member: discord.Member, *, reason: str = "No reason"):
+    async def warn(self, ctx: AluContext, member: discord.Member, *, reason: str = "No reason"):
         """Give member a warning"""
         if member.id == Uid.alu:
             raise commands.BadArgument(f"You can't do that to Aluerie {Ems.bubuGun}")
@@ -42,10 +37,10 @@ class Moderation(commands.Cog):
         e.set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         msg = await ctx.reply(embed=e)
         e.url = msg.jump_url
-        await self.bot.get_channel(Cid.logs).send(embed=e)
+        await self.community.logs.send(embed=e)
 
     @staticmethod
-    async def mute_work(ctx, member, dt: datetime, duration: datetime.timedelta, reason):
+    async def mute_work(ctx, member, dt: datetime.datetime, duration: datetime.timedelta, reason):
         try:
             await member.timeout(duration, reason=reason)
         except discord.Forbidden:
@@ -65,7 +60,7 @@ class Moderation(commands.Cog):
     @app_commands.describe(member='Member to mute+timeout', duration='Duration of the mute', reason='Reason')
     async def mute(self, ctx: discord.Interaction, member: discord.Member, duration: str, *, reason: str = "No reason"):
         dt = times.FutureTime(duration)
-        ctx = await Context.from_interaction(ctx)
+        ctx = await AluContext.from_interaction(ctx)
         delta = dt.dt - discord.utils.utcnow()
         await self.mute_work(ctx, member, dt.dt, delta, reason)
 
@@ -73,7 +68,7 @@ class Moderation(commands.Cog):
     @commands.command(usage='<time> [reason]')
     async def mute(
         self,
-        ctx: Context,
+        ctx: AluContext,
         member: discord.Member,
         *,
         when: Annotated[
@@ -89,7 +84,7 @@ class Moderation(commands.Cog):
     @app_commands.default_permissions(manage_messages=True)
     @commands.hybrid_command(name='unmute', description='Remove timeout+mute from member')
     @app_commands.describe(member='Member to unmute', reason='Reason')
-    async def unmute(self, ctx: Context, member: discord.Member, *, reason: str = 'No reason'):
+    async def unmute(self, ctx: AluContext, member: discord.Member, *, reason: str = 'No reason'):
         """Remove timeout+mute from member"""
         await member.timeout(None, reason=reason)
         e = discord.Embed(color=Clr.prpl, title="Unmute member")

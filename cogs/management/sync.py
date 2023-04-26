@@ -8,19 +8,18 @@ from discord.ext import commands
 from utils.checks import is_owner
 from utils.var import Clr
 
-from ._base import ManagementBase
+from ._base import ManagementBaseCog
 
 if TYPE_CHECKING:
-    from utils.context import Context
+    from utils.bases.context import AluContext
 
 
-class SyncCommandCog(ManagementBase):
-
+class SyncCommandCog(ManagementBaseCog):
     # **The** famous Umbra\'s sync command holy moly. `?tag usc`. Or `?tag umbra sync command`
     @is_owner()
     @commands.command()
     async def sync(
-        self, ctx: Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None
+        self, ctx: AluContext, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None
     ) -> None:
         """Sync command. Usage examples:
         * `$sync` -> global sync

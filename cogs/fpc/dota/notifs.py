@@ -15,7 +15,7 @@ from utils.dota import hero
 from ._models import ActiveMatch
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

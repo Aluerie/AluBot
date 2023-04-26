@@ -5,12 +5,18 @@ from typing import TYPE_CHECKING, Optional, Union
 import discord
 from discord.ext import commands
 
-from .var import Clr
+from ..var import Clr
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
     from asyncpg import Pool
-    from .bot import AluBot
+
+    from ..bot import AluBot
+
+__all__ = (
+    'AluContext',
+    'AluGuildContext',
+)
 
 
 class ConfirmationView(discord.ui.View):
@@ -52,11 +58,11 @@ class ConfirmationView(discord.ui.View):
         self.stop()
 
 
-class Context(commands.Context):
+class AluContext(commands.Context):
     bot: AluBot
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.pool: Pool = self.bot.pool
 
     # to match interaction
@@ -175,7 +181,7 @@ class Context(commands.Context):
         return None
 
 
-class GuildContext(Context):
+class AluGuildContext(AluContext):
     if TYPE_CHECKING:
         author: discord.Member
         guild: discord.Guild

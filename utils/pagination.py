@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import discord
 from discord.ext import menus
 
-from .context import Context
+from .bases.context import AluContext
 from .var import Clr, Ems
 
 if TYPE_CHECKING:
@@ -95,19 +95,18 @@ class SearchModal(discord.ui.Modal, title="Search Page by query"):
 
 
 class Paginator(discord.ui.View):
-
     # Currently only accept Context class, so
     # it's only usable in text or hybrid commands
     # (but looks like it's enough)
     # ToDO: Implement `self.ntr: Optional[Interaction] = ntr` and all
-    def __init__(self, ctx_ntr: Context | discord.Interaction[AluBot], source: menus.PageSource):
+    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], source: menus.PageSource):
         super().__init__()
-        self.ctx_ntr: Context | discord.Interaction[AluBot] = ctx_ntr
+        self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
         self.source: menus.PageSource = source
         self.message: Optional[discord.Message] = None
         self.current_page_number: int = 0
 
-        if isinstance(ctx_ntr, Context):
+        if isinstance(ctx_ntr, AluContext):
             author: discord.User | discord.Member = ctx_ntr.author
         elif isinstance(ctx_ntr, discord.Interaction):
             author = ctx_ntr.user
@@ -182,7 +181,7 @@ class Paginator(discord.ui.View):
         kwargs = await self._get_kwargs_from_page(page)
         self._update_nav_labels(0)
 
-        if isinstance(self.ctx_ntr, Context):
+        if isinstance(self.ctx_ntr, AluContext):
             self.message = await self.ctx_ntr.send(**kwargs, view=self, ephemeral=ephemeral)
         elif isinstance(self.ctx_ntr, discord.Interaction):
             if self.ctx_ntr.response.is_done():
@@ -264,7 +263,6 @@ class EnumeratedPageSource(menus.ListPageSource):
         self.no_enumeration = no_enumeration
 
     async def format_page(self, menu: EnumeratedPages, entries: List[str]):
-
         if not self.no_enumeration:
             pages = []
             for idx, entry in enumerate(entries, start=menu.current_page_number * self.per_page):
@@ -285,7 +283,7 @@ class EnumeratedPages(Paginator):
 
     def __init__(
         self,
-        ctx_ntr: Context | discord.Interaction[AluBot],
+        ctx_ntr: AluContext | discord.Interaction[AluBot],
         entries: List[str],
         *,
         per_page: int,

@@ -1,22 +1,22 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Tuple
-from enum import Enum
 
 import datetime
+from enum import Enum
+from typing import TYPE_CHECKING, Optional, Tuple
 
 import discord
 from bs4 import BeautifulSoup
 from discord import app_commands
 from discord.ext import commands
 
+from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_tdR
 from utils.var import Clr, Ems
-from utils.dota.const import DOTA_LOGO
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
-    from utils.bot import AluBot
-    from utils.context import Context
+
+    from utils import AluBot, AluContext
 
 
 fav_teams = []
@@ -214,7 +214,7 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
         return e, v
 
     @commands.command(name='schedule', aliases=['sch'])
-    async def ext_schedule(self, ctx: Context, *, query: Optional[str] = None):
+    async def ext_schedule(self, ctx: AluContext, *, query: Optional[str] = None):
         """Get featured Dota 2 Pro Matches Schedule
 
         Use `query` to filter schedule by teams or tournaments, for example `$sch EG` will show only EG matches
@@ -244,7 +244,7 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
         v.message = await ntr.original_response()
 
     @commands.hybrid_command(aliases=['fts'])
-    async def fixtures(self, ctx: Context):
+    async def fixtures(self, ctx: AluContext):
         """Get football fixtures"""
         url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
         async with self.bot.session.get(url) as r:

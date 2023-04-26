@@ -7,11 +7,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils.context import Context
+from utils.bases.context import AluContext
 from utils.var import Clr, Ems, Rid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 reserved_words = ['edit', 'add', 'create', 'info', 'delete', 'list', 'text', 'name', 'remove', 'ban']
@@ -37,7 +37,7 @@ class Tags(commands.Cog):
     def help_emote(self) -> discord.PartialEmoji:
         return discord.PartialEmoji.from_str(Ems.PepoBeliever)
 
-    async def tag_work(self, ctx: Context, tag_name: str, *, pool: Optional[asyncpg.Pool] = None):
+    async def tag_work(self, ctx: AluContext, tag_name: str, *, pool: Optional[asyncpg.Pool] = None):
         pool = pool or self.bot.pool
 
         query = """ SELECT tags.name, tags.content
@@ -73,16 +73,16 @@ class Tags(commands.Cog):
     @app_commands.command(name='tag', description='Use tag for copypaste message')
     @app_commands.describe(tag_name="Summon tag under this name")
     async def tag_slh(self, ntr: discord.Interaction, *, tag_name: str):
-        ctx = await Context.from_interaction(ntr)
+        ctx = await AluContext.from_interaction(ntr)
         await self.tag_work(ctx, tag_name.lower())
 
     @commands.hybrid_group(name='tags', aliases=['tag'], invoke_without_command=True)
-    async def tags(self, ctx: Context, *, tag_name: str):
+    async def tags(self, ctx: AluContext, *, tag_name: str):
         """Execute tag from the database"""
         await self.tag_work(ctx, tag_name.lower())
 
     @tags.error
-    async def tags_error(self, ctx: Context, error):
+    async def tags_error(self, ctx: AluContext, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.scnf()
 
@@ -133,7 +133,7 @@ class Tags(commands.Cog):
 
     @tags.command(name='info', description='Get info about specific tag')
     @app_commands.describe(tag_name="Tag name")
-    async def info(self, ctx: Context, *, tag_name: str):
+    async def info(self, ctx: AluContext, *, tag_name: str):
         """Get info about the specific tag."""
         tag_name = tag_name.lower()
         query = 'SELECT * FROM tags WHERE name=$1'
@@ -153,7 +153,7 @@ class Tags(commands.Cog):
 
     @tags.command(name='delete', description='Delete your tag from bot database', aliases=['remove'])
     @app_commands.describe(tag_name="Tag name")
-    async def delete(self, ctx: Context, *, tag_name: str):
+    async def delete(self, ctx: AluContext, *, tag_name: str):
         """Delete tag from bot database"""
         tag_name = tag_name.lower()
 
@@ -192,7 +192,7 @@ class Tags(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     @app_commands.default_permissions(manage_messages=True)
     @commands.hybrid_group(name='modtags', aliases=['modtag'], invoke_without_command=True)
-    async def modtags(self, ctx: Context):
+    async def modtags(self, ctx: AluContext):
         """Group command about ModTags, for actual commands use it together with subcommands"""
         if ctx.invoked_subcommand is None:
             await ctx.scnf()
@@ -206,7 +206,7 @@ class Tags(commands.Cog):
         await ctx.reply(embed=e)
 
     @modtags.command(name='ban', description='Ban member from creating new tags')
-    async def ban(self, ctx: Context, member: discord.Member):
+    async def ban(self, ctx: AluContext, member: discord.Member):
         """Ban member from creating new tags"""
         await self.tag_ban_work(ctx, member, False)
 

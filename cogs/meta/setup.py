@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal, NamedTuple, List
+
+from typing import TYPE_CHECKING, List, Literal, NamedTuple
 
 import discord
 from discord.ext import commands, menus
 
-from utils.context import Context
+from utils.bases.context import AluContext
 from utils.pagination import Paginator
 from utils.var import Clr
 
@@ -89,7 +90,7 @@ class SetupPageSource(menus.ListPageSource):
 class SetupPages(Paginator):
     source: SetupPageSource
 
-    def __init__(self, ctx: Context, source: SetupPageSource):
+    def __init__(self, ctx: AluContext, source: SetupPageSource):
         super().__init__(ctx, source)
         self.show_text_cmds = True
         self.add_item(SetupSelect(self))
@@ -117,7 +118,7 @@ class SetupCog:
     async def setup_info(self) -> discord.Embed:
         raise NotImplementedError
 
-    async def setup_state(self, ctx: Context) -> discord.Embed:
+    async def setup_state(self, ctx: AluContext) -> discord.Embed:
         raise NotImplementedError
 
     async def setup_view(self, pages: SetupPages) -> discord.ui.View:
@@ -126,7 +127,7 @@ class SetupCog:
 
 class SetupCommandCog(MetaBase):
     @commands.hybrid_command()
-    async def setup(self, ctx: Context):
+    async def setup(self, ctx: AluContext):
         setup_data: List[SetupFormatData] = [SetupFormatData(cog='front_page')]
         for cog_name, cog in self.bot.cogs.items():
             if getattr(cog, 'setup_info', None):

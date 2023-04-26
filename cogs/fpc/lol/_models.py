@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from pyot.models.lol import Rune, Spell
     from pyot.models.lol.match import MatchParticipantData
 
-    from utils.bot import AluBot
+    from utils import AluBot
 
 __all__ = ('Account', 'Match', 'LiveMatch', 'PostMatchPlayer')
 

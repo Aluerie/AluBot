@@ -13,11 +13,11 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord.ext import commands
 
+from utils import AluCog
 from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 
 class StartView(discord.ui.View):
@@ -37,21 +37,15 @@ class StartView(discord.ui.View):
         await ntr.response.send_message("hello")
 
 
-class EmbedMaker(commands.Cog, name="Embed Maker"):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.DankZzz)
+class EmbedMaker(AluCog, name="Embed Maker", emote=Ems.DankZzz):
 
     @commands.hybrid_group(name="embed")
-    async def embed_(self, ctx: Context):
+    async def embed_(self, ctx: AluContext):
         """Group command about Embed Build, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @embed_.command()
-    async def make(self, ctx: Context):
+    async def make(self, ctx: AluContext):
         """Embed Maker command. Opens a menu for making/editing/importing embed messages."""
         view = StartView()
         view.message = await ctx.reply(embeds=view.embeds, view=view)

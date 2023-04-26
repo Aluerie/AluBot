@@ -13,12 +13,12 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from numpy.random import choice
 
+from utils import AluCog
 from utils.pagination import EnumeratedPages
 from utils.var import Cid, Clr, Ems, Rid, Sid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 
 @lru_cache(maxsize=None)
@@ -108,20 +108,13 @@ class SetBirthdayFlags(commands.FlagConverter, case_insensitive=True):
     timezone: Optional[str]
 
 
-class Birthday(commands.Cog):
+class Birthday(AluCog, emote=Ems.peepoHappyDank):
     """Set your birthday and get congratulations from the bot.
 
     There is a special role in Eileen's server \
     which on your birthday gives you a priority in the members list and makes the bot \
     congratulate you.
     """
-
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.peepoHappyDank)
 
     def cog_load(self) -> None:
         self.check_birthdays.start()
@@ -130,7 +123,7 @@ class Birthday(commands.Cog):
         self.check_birthdays.cancel()
 
     @commands.hybrid_group()
-    async def birthday(self, ctx: Context):
+    async def birthday(self, ctx: AluContext):
         """Group command about birthdays, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -175,14 +168,14 @@ class Birthday(commands.Cog):
         timezone='formats: `GMT+1:00`, `Europe/Paris` or `Etc/GMT-1` (sign is inverted for Etc/GMT).',
     )
     @app_commands.autocomplete(timezone=timezone_autocomplete)  # type: ignore
-    async def set(self, ctx: Context, *, bdate_flags: SetBirthdayFlags):
+    async def set(self, ctx: AluContext, *, bdate_flags: SetBirthdayFlags):
         """Set your birthday.
 
         Timezone can be set in `GMT+-H:MM` format or standard IANA name like
         `Europe/Paris` or `Etc/GMT-1` (remember sign is inverted for Etc).
         """
 
-        def get_dtime() -> datetime:
+        def get_dtime() -> datetime.datetime:
             if bdate_flags.year:
                 fmt, string = '%d/%B/%Y', f'{bdate_flags.day}/{bdate_flags.month}/{bdate_flags.year}'
             else:
@@ -222,7 +215,7 @@ class Birthday(commands.Cog):
         await ctx.reply(embed=e)
 
     @birthday.command(aliases=['del', 'delete'])
-    async def remove(self, ctx: Context):
+    async def remove(self, ctx: AluContext):
         """Remove your birthday data and stop getting congratulations"""
         query = 'UPDATE users SET bdate=$1 WHERE users.id=$2;'
         await self.bot.pool.execute(query, None, ctx.author.id)
@@ -230,14 +223,14 @@ class Birthday(commands.Cog):
 
     @birthday.command(usage='[member=you]')
     @app_commands.describe(member='Member of the server or you if not specified')
-    async def check(self, ctx: Context, member: Optional[discord.Member]):
+    async def check(self, ctx: AluContext, member: Optional[discord.Member]):
         """Check your or somebody's birthday in database"""
-        member = member or ctx.message.author
+        person = member or ctx.author
         query = 'SELECT bdate, tzone FROM users WHERE users.id=$1'
-        row = await self.bot.pool.fetchrow(query, member.id)
+        row = await self.bot.pool.fetchrow(query, person.id)
 
         e = discord.Embed(colour=Clr.prpl)
-        e.set_author(name=f'{member.display_name}\'s birthday status', icon_url=member.display_avatar.url)
+        e.set_author(name=f'{person.display_name}\'s birthday status', icon_url=person.display_avatar.url)
         if row.bdate is None:
             e.description = f'It\'s not set yet.'
         else:
@@ -250,7 +243,7 @@ class Birthday(commands.Cog):
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
-            bdate: datetime = row.bdate
+            bdate: datetime.datetime = row.bdate
 
             if row.tzone:
                 if re_zone := re.match(r'^GMT([-+]\d+:\d+)$', row.tzone, re.IGNORECASE):
@@ -299,7 +292,7 @@ class Birthday(commands.Cog):
         # self.dotafeed.restart()
 
     @birthday.command(name='list', hidden=True)
-    async def birthday_list(self, ctx: Context):
+    async def birthday_list(self, ctx: AluContext):
         """Show list of birthdays in this server"""
         guild = self.bot.get_guild(Sid.alu)
 

@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 from utils.var import Sid, Uid, Rid, Img, Cid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 MY_TWITCH_NAME = 'Aluerie'

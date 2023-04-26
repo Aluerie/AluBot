@@ -14,8 +14,7 @@ from utils.pagination import EnumeratedPages
 from utils.var import Cid, Clr, Ems, Sid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 LAST_SEEN_TIMEOUT = 60
 
@@ -121,7 +120,7 @@ async def avatar_usercmd(ntr: discord.Interaction, user: discord.User):
     await ntr.response.send_message(embed=e, ephemeral=True)
 
 
-async def rank_work(ctx: Union[Context, discord.Interaction[AluBot]], member: discord.Member):
+async def rank_work(ctx: Union[AluContext, discord.Interaction[AluBot]], member: discord.Member):
     member = member or getattr(ctx, 'author') or getattr(ctx, 'user')
     if member.bot:
         raise commands.BadArgument('Sorry! our system does not count experience for bots.')
@@ -171,7 +170,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
 
     @commands.hybrid_command(aliases=['ls'], usage='[member=you]', description='Show when `@member` was last seen')
     @app_commands.describe(member='Member to check')
-    async def lastseen(self, ctx: Context, member: Optional[discord.Member] = None):
+    async def lastseen(self, ctx: AluContext, member: Optional[discord.Member] = None):
         """Show when `@member` was last seen on this server ;"""
         member = member or ctx.author
         query = 'SELECT lastseen FROM users WHERE id=$1'
@@ -225,7 +224,6 @@ class ExperienceSystem(commands.Cog, name='Profile'):
             return
 
         if message.guild is not None and message.guild.id in Sid.guild_ids:
-
             query = """ WITH u AS (
                             SELECT lastseen FROM users WHERE id=$1
                         )           
@@ -261,23 +259,23 @@ class ExperienceSystem(commands.Cog, name='Profile'):
                             await self.bot.pool.execute(query, member.id)
 
     @commands.hybrid_command(name='avatar', description="View User Avatar", usage='[member=you]')
-    async def avatar_bridge(self, ctx: Context, user: discord.User = None):
+    async def avatar_bridge(self, ctx: AluContext, user: discord.User = None):
         """Show avatar for `@user`"""
         e = await avatar_work(ctx, user)
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=['r'], name='rank', description="View User Server Rank", usage='[member=you]')
-    async def rank_bridge(self, ctx: Context, *, member: discord.Member = None):
+    async def rank_bridge(self, ctx: AluContext, *, member: discord.Member = None):
         """Show `@member`'s rank, level and experience"""
         await ctx.reply(file=await rank_work(ctx, member))
 
     @commands.group()
-    async def levels(self, ctx: Context):
+    async def levels(self, ctx: AluContext):
         """Group command about Levels, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @levels.command(usage='yes/no')
-    async def notifs(self, ctx: Context, in_or_out: my_bool):
+    async def notifs(self, ctx: AluContext, in_or_out: my_bool):
         """Opt `in/out` of exp system notifs and all leaderboard presence ;"""
         query = f'UPDATE users SET inlvl={in_or_out} WHERE id=$1;'
         await self.bot.pool.execute(query, ctx.author.id)

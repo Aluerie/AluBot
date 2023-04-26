@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
+from utils import AluCog
 from utils.checks import is_owner
-from utils.var import Cid, Clr, Ems, Sid
+from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 
 class ColourRolesDropdown(discord.ui.RoleSelect):
@@ -19,7 +19,7 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
             custom_id='colour_roles_dropdown',
             placeholder='Type \N{KEYBOARD} name of a colour and Select it.',
             min_values=0,
-            max_values=1
+            max_values=1,
         )
 
     async def callback(self, ntr: discord.Interaction[AluBot]):
@@ -32,7 +32,7 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
         activity_category_role = ntr.client.community.guild.get_role(852199351808032788)
 
         def is_colour_role(role: discord.Role) -> bool:
-            return  activity_category_role < role < colour_category_role
+            return activity_category_role < role < colour_category_role
 
         role = self.values[0]
         try:
@@ -73,17 +73,14 @@ class ColourRolesView(discord.ui.View):
         self.add_item(ColourRolesDropdown())
 
 
-class ColourRoles(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
+class ColourRoles(AluCog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.bot.add_view(ColourRolesView())
 
     @is_owner()
     @commands.command(hidden=True)
-    async def new_role_selection(self, ctx: Context):
+    async def new_role_selection(self, ctx: AluContext):
         await ctx.send(view=ColourRolesView())
         # await self.bot.community.role_selection.send(embed=e, view=ColourRolesView())
 

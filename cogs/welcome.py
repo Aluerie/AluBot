@@ -1,16 +1,16 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
+from typing import TYPE_CHECKING, Optional, Tuple
 
 import discord
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from utils.checks import is_owner
-from utils.var import Cid, Clr, Ems, Rid, Sid, Uid
+from utils.var import Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 
 async def welcome_image(bot: AluBot, member: discord.Member):
@@ -49,7 +49,7 @@ async def welcome_image(bot: AluBot, member: discord.Member):
 
 async def welcome_message(
     bot: AluBot, member: discord.Member, back: bool = False
-) -> (str, discord.Embed, discord.File):
+) -> Tuple[str, discord.Embed, discord.File]:
     image = await welcome_image(bot, member)
 
     if back:
@@ -84,13 +84,12 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        guild = self.bot.get_guild(Sid.alu)
+        guild = self.bot.community.guild
         if member.guild != guild:
             return
-        bots_role = guild.get_role(Rid.bots)
         back = False
         if member.bot:
-            await member.add_roles(bots_role)
+            await member.add_roles(self.bot.community.bots_role)
             await member.edit(nick=f"{member.display_name} | ")
         else:
             query = """ INSERT INTO users (id, name) 
@@ -109,7 +108,7 @@ class Welcome(commands.Cog):
                 await member.add_roles(role)
 
         content_text, embed, image_file = await welcome_message(self.bot, member, back=back)
-        await self.bot.get_channel(Cid.welcome).send(content=content_text, embed=embed, file=image_file)
+        await self.bot.community.welcome.send(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
@@ -118,7 +117,7 @@ class Welcome(commands.Cog):
         e = discord.Embed(description='{0} {0} {0}'.format(Ems.FeelsRainMan), colour=0x000000)
         e.set_author(name='{0} just left the server'.format(member.display_name), icon_url=member.display_avatar.url)
         e.set_footer(text=f"With love, {member.guild.me.display_name}")
-        msg = await self.bot.get_channel(Cid.welcome).send(embed=e)
+        msg = await self.bot.community.welcome.send(embed=e)
         await msg.add_reaction(Ems.FeelsRainMan)
 
     @commands.Cog.listener()
@@ -128,7 +127,7 @@ class Welcome(commands.Cog):
         e = discord.Embed(description='{0} {0} {0}'.format(Ems.peepoPolice), color=0x800000)
         e.set_author(name=f'{member.display_name} was just banned from the server', icon_url=member.display_avatar.url)
         e.set_footer(text=f"With love, {guild.me.display_name}")
-        msg = await self.bot.get_channel(Cid.welcome).send(embed=e)
+        msg = await self.bot.community.welcome.send(embed=e)
         await msg.add_reaction(Ems.peepoPolice)
 
     @commands.Cog.listener()
@@ -140,15 +139,15 @@ class Welcome(commands.Cog):
             name=f'{member.display_name} was just unbanned from the server', icon_url=member.display_avatar.url
         )
         e.set_footer(text=f"With love, {guild.me.display_name}")
-        msg = await self.bot.get_channel(Cid.welcome).send(embed=e)
+        msg = await self.bot.community.welcome.send(embed=e)
         await msg.add_reaction(Ems.PogChampPepe)
 
     @is_owner()
     @commands.command(hidden=True)
-    async def welcome_preview(self, ctx: Context, member: discord.Member = None):
+    async def welcome_preview(self, ctx: AluContext, member: Optional[discord.Member]):
         """Get a rendered welcome message for a `{@user}`."""
-        mbr = member or ctx.message.author
-        content_text, embed, image_file = await welcome_message(self.bot, mbr)
+        person = member or ctx.author
+        content_text, embed, image_file = await welcome_message(self.bot, person)
         await ctx.reply(content=content_text, embed=embed, file=image_file)
 
 

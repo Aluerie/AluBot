@@ -21,8 +21,7 @@ from ._models import Account
 from pyot.models import lol  # isort: skip
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -87,7 +86,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @commands.group(name='lol', aliases=['league'])
-    async def ext_lol(self, ctx: Context):
+    async def ext_lol(self, ctx: AluContext):
         """Group command about LoL, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -99,7 +98,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol.group()
-    async def ext_lol_channel(self, ctx: Context):
+    async def ext_lol_channel(self, ctx: AluContext):
         """Group command about LoL channel, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -115,7 +114,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol_channel.command(name='set', usage='[channel=curr]')
-    async def ext_lol_channel_set(self, ctx: Context, channel: Optional[discord.TextChannel] = None):
+    async def ext_lol_channel_set(self, ctx: AluContext, channel: Optional[discord.TextChannel] = None):
         """Set channel to be the LoLFeed notifications channel."""
         await self.channel_set(ctx, channel)
 
@@ -128,7 +127,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol_channel.command(name='disable')
-    async def ext_lol_channel_disable(self, ctx: Context):
+    async def ext_lol_channel_disable(self, ctx: AluContext):
         """Stop getting LoLFeed notifs. Data about fav champs/players won't be affected."""
         await self.channel_disable(ctx)
 
@@ -141,7 +140,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol_channel.command(name='check')
-    async def ext_lol_channel_check(self, ctx: Context):
+    async def ext_lol_channel_check(self, ctx: AluContext):
         """Check if LoLFeed channel is set up in the server."""
         await self.channel_check(ctx)
 
@@ -155,7 +154,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol.group(name='database', aliases=['db'])
-    async def ext_lol_database(self, ctx: Context):
+    async def ext_lol_database(self, ctx: AluContext):
         """Group command about LoL database, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -198,7 +197,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol_database.command(name='list')
-    async def ext_lol_database_list(self, ctx: Context):
+    async def ext_lol_database_list(self, ctx: AluContext):
         """List of players in the database available for LoLFeed feature."""
         await self.database_list(ctx)
 
@@ -223,7 +222,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
         name='request',
         usage='name: <twitch_name> server: <server-region> account: <account_name>',
     )
-    async def ext_lol_database_request(self, ctx: Context, *, flags: AddStreamFlags):
+    async def ext_lol_database_request(self, ctx: AluContext, *, flags: AddStreamFlags):
         """Request player to be added into the database.
         This will send a request message into Aluerie's personal logs channel.
         """
@@ -241,7 +240,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol.group(name='player', aliases=['streamer'])
-    async def ext_lol_player(self, ctx: Context):
+    async def ext_lol_player(self, ctx: AluContext):
         """Group command about LoL player, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -291,7 +290,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol_player.command(name='add', usage='<player_name(-s)>')
-    async def ext_lol_player_add(self, ctx: Context, *, player_names: str):
+    async def ext_lol_player_add(self, ctx: AluContext, *, player_names: str):
         """Add player to your favourites."""
         await self.player_add_remove(ctx, locals(), mode_add=True)
 
@@ -336,7 +335,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol_player.command(name='remove', usage='<player_name(-s)>')
-    async def ext_lol_player_remove(self, ctx: Context, *, player_names: str):
+    async def ext_lol_player_remove(self, ctx: AluContext, *, player_names: str):
         """Add player to your favourites."""
         await self.player_add_remove(ctx, locals(), mode_add=False)
 
@@ -349,7 +348,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol_player.command(name='list')
-    async def ext_lol_player_list(self, ctx: Context):
+    async def ext_lol_player_list(self, ctx: AluContext):
         """Show list of your favourite players."""
         await self.player_list(ctx)
 
@@ -363,7 +362,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol.group(name='champ')
-    async def ext_lol_champ(self, ctx: Context):
+    async def ext_lol_champ(self, ctx: AluContext):
         """Group command about LoL champs, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -411,7 +410,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
         name='add',
         usage='<champ_name(-s)>',
     )
-    async def ext_lol_champ_add(self, ctx: Context, *, champ_names: str):
+    async def ext_lol_champ_add(self, ctx: AluContext, *, champ_names: str):
         """Add champ(-s) to your fav champ list."""
         await self.character_add_remove(ctx, locals(), mode_add=True)
 
@@ -456,7 +455,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol_champ.command(name='remove', usage='<champ_name(-s)>')
-    async def ext_lol_champ_remove(self, ctx: Context, *, champ_names: str):
+    async def ext_lol_champ_remove(self, ctx: AluContext, *, champ_names: str):
         """Remove champ(-es) from your fav champs list."""
         await self.character_add_remove(ctx, locals(), mode_add=False)
 
@@ -469,7 +468,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol_champ.command(name='list')
-    async def ext_lol_champ_list(self, ctx: Context):
+    async def ext_lol_champ_list(self, ctx: AluContext):
         """Show current list of fav champ."""
         await self.character_list(ctx)
 
@@ -483,7 +482,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @is_manager()
     @ext_lol.command(name='spoil')
-    async def ext_lol_spoil(self, ctx: Context, spoil: bool):
+    async def ext_lol_spoil(self, ctx: AluContext, spoil: bool):
         """Turn on/off spoiling resulting stats for matches.
         It is "on" by default, so it can show what items players finished with and KDA.
         """
@@ -492,7 +491,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
     # meraki ##################################
 
     @commands.command(hidden=True)
-    async def meraki(self, ctx: Context):
+    async def meraki(self, ctx: AluContext):
         """Show list of champions that are missing from Meraki JSON."""
         champ_ids = await get_pyot_meraki_champ_diff_list()
         champ_str = [f'\N{BLACK CIRCLE} {await champion.key_by_id(i)} - `{i}`' for i in champ_ids] or ['None missing']

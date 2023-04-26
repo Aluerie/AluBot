@@ -7,7 +7,7 @@ The features in these cogs are probably going to stay exclusive to the community
 """
 
 from .emote_spam import ComfySpam, EmoteSpam
-from .new_reaction_roles import ColourRoles
+from .colour_roles import ColourRoles
 from .stats import StatsVoiceChannels
 from .stream_name import StreamChannelName
 

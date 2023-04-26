@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Annotated, Optional
 
 import discord
@@ -10,8 +11,7 @@ from utils.translator import translate
 from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 
 class ToolsCog(commands.Cog, name='Tools'):
@@ -54,7 +54,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         await ntr.response.send_message(embed=e, ephemeral=True)
 
     @commands.command(name='translate')
-    async def ext_translate(self, ctx: Context, *, message: Annotated[Optional[str], commands.clean_content] = None):
+    async def ext_translate(self, ctx: AluContext, *, message: Annotated[Optional[str], commands.clean_content] = None):
         """Translate a message to English using Google Translate, auto-detects source language."""
         if message is None:
             reply = ctx.replied_message
@@ -77,7 +77,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         description='Convert image from webp to png format',
     )
     @app_commands.describe(url='Url of image to convert')
-    async def convert(self, ctx: Context, *, url: str):
+    async def convert(self, ctx: AluContext, *, url: str):
         """Convert image from webp to png format"""
         img = await self.bot.imgtools.url_to_img(url)
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags

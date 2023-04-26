@@ -1,17 +1,16 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
+from utils import AluCog
+
 if TYPE_CHECKING:
-    from utils.bot import AluBot
-    from utils.context import Context
+    from utils import AluBot, AluContext
 
 
-class Timers(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
+class Timers(AluCog):
     async def cog_load(self) -> None:
         pass
 
@@ -19,11 +18,11 @@ class Timers(commands.Cog):
         pass
 
     @commands.hybrid_group()
-    async def timer(self, ctx: Context):
+    async def timer(self, ctx: AluContext):
         await ctx.scnf()
 
     @timer.group()
-    async def create(self, ctx: Context, category: str, frequency: str, probability: float):
+    async def create(self, ctx: AluContext, category: str, frequency: str, probability: float):
         pass
 
     @commands.Cog.listener()  # Yep, that's the best name I came up with.

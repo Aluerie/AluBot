@@ -1,71 +1,50 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import datetime
 import platform
+from typing import TYPE_CHECKING
 
-import discord
 from discord.ext import tasks
 
-from utils.var import Rid
-
-from ._base import HideoutBase
-from ._const import MY_TIME_CHANNEL, TOTAL_MEMBERS_CHANNEL, TOTAL_BOTS_CHANNEL
+from utils import AluCog
 
 if TYPE_CHECKING:
     pass
 
 
-class StatsVoiceChannels(HideoutBase):
+class StatsVoiceChannels(AluCog):
     async def cog_load(self) -> None:
         self.my_time.start()
-        self.total_members.start()
-        self.total_bots.start()
+        self.refresh_member_stats.start()
 
     async def cog_unload(self) -> None:
         self.my_time.stop()
-        self.total_members.stop()
-        self.total_bots.stop()
+        self.refresh_member_stats.stop()
 
-    @tasks.loop(time=[datetime.time(hour=x) for x in range(0, 24)])
+    @tasks.loop(time=[datetime.time(hour=x) for x in range(0, 24)])  # 24 times a day
     async def my_time(self):
         symbol = '#' if platform.system() == 'Windows' else '-'
         msk_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3)))
         new_name = f'\N{ALARM CLOCK} {msk_now.strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
-        channel: discord.VoiceChannel = guild.get_channel(MY_TIME_CHANNEL)  # type: ignore # known ID
-        await channel.edit(name=new_name)
+        await self.bot.community.my_time.edit(name=new_name)
 
     @my_time.before_loop
     async def my_time_before(self):
         await self.bot.wait_until_ready()
 
-    @property
-    def bots_role(self) -> discord.Role:
-        return self.community.get_role(Rid.bots)  # type: ignore 
+    @tasks.loop(time=[datetime.time(hour=3)])  # once a day
+    async def refresh_member_stats(self):
+        amount_of_bots = len(self.bot.community.bots_role.members)
+        amount_of_people = (self.bot.community.guild.member_count or 0) - amount_of_bots
 
-    @tasks.loop(time=[datetime.time(hour=3)])
-    async def total_members(self):
-        guild = self.community
-        bots_role = self.bots_role
-        channel: discord.VoiceChannel = guild.get_channel(TOTAL_MEMBERS_CHANNEL)  # type: ignore # known ID
-        member_count = guild.member_count or 0
-        new_name = f'\N{HOUSE WITH GARDEN} Members: {member_count - len(bots_role.members)}'
-        await channel.edit(name=new_name)
+        # total people
+        await self.bot.community.total_people.edit(name=f'\N{HOUSE WITH GARDEN} People: {amount_of_people}')
 
-    @total_members.before_loop
-    async def total_members_before(self):
-        await self.bot.wait_until_ready()
+        # total bots
+        await self.bot.community.total_bots.edit(name=f'\N{ROBOT FACE} Bots: {amount_of_bots}')
 
-    @tasks.loop(time=[datetime.time(hour=3)])
-    async def total_bots(self):
-        guild = self.community
-        bots_role = self.bots_role
-        channel: discord.VoiceChannel = guild.get_channel(TOTAL_BOTS_CHANNEL)  # type: ignore # known ID
-        new_name = f'\N{ROBOT FACE} Bots: {len(bots_role.members)}'
-        await channel.edit(name=new_name)
-
-    @total_bots.before_loop
-    async def total_bots_before(self):
+    @refresh_member_stats.before_loop
+    async def refresh_member_stats_before(self):
         await self.bot.wait_until_ready()
 
 

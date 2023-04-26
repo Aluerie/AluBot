@@ -9,7 +9,7 @@ from utils.formats import human_timedelta
 from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 class ButtonOnCooldown(commands.CommandError):

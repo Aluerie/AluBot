@@ -8,7 +8,7 @@ from utils.checks import is_owner
 from utils.var import Sid, Cid
 
 if TYPE_CHECKING:
-    from utils.bot import AluBot
+    from utils import AluBot
 
 
 class ReactionRoles(commands.Cog):

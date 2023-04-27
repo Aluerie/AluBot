@@ -9,8 +9,11 @@ from ._enums import ChannelEnum, RoleEnum
 if TYPE_CHECKING:
     from utils import AluBot
 
+__all__ = ('Chd', 'Rhd', 'HideoutGuild')
+
 # guild id
 HIDEOUT = 759916212842659850
+
 
 class Chd(ChannelEnum):
     global_logs = 997149550324240465

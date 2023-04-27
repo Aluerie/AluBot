@@ -18,7 +18,7 @@ from PIL import Image, ImageColor
 from utils import AluCog
 from utils.checks import is_owner
 from utils.formats import format_dt_tdR, human_timedelta
-from utils.var import MAP, MP, Cid, Clr, Ems, Rid, Sid
+from utils.var import MAP, MP, Clr, Ems, Sid
 
 # from wordcloud import WordCloud
 

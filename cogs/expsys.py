@@ -8,10 +8,11 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from utils import AluCog
 from utils.converters import my_bool
 from utils.formats import human_timedelta, indent, ordinal
 from utils.pagination import EnumeratedPages
-from utils.var import Cid, Clr, Ems, Sid
+from utils.var import Clr, Ems, Sid
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -143,15 +144,15 @@ async def rank_usercmd(ntr: discord.Interaction[AluBot], member: discord.Member)
     await ntr.response.send_message(file=await rank_work(ntr, member), ephemeral=True)
 
 
-class ExperienceSystem(commands.Cog, name='Profile'):
+class ExperienceSystem(AluCog, name='Profile'):
     """Commands about member profiles
 
     There is a profile system in Irene\'s server: levelling experience,
     reputation and many other things (currency, custom profile) to come
     """
 
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.ctx_menu1 = app_commands.ContextMenu(name="View User Avatar", callback=avatar_usercmd)
         self.ctx_menu2 = app_commands.ContextMenu(name="View User Server Rank", callback=rank_usercmd)
@@ -313,7 +314,7 @@ class ExperienceSystem(commands.Cog, name='Profile'):
                     colour=0xE6D690,
                 )
                 e.set_author(name=f"{row.name} was removed from the datebase")
-                await guild.get_channel(Cid.logs).send(embed=e)
+                await self.community.logs.send(embed=e)
 
     @remove_inactive.before_loop
     async def before(self):

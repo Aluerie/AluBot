@@ -75,17 +75,15 @@ class Info(AluCog, name='Info', emote=Ems.PepoG):
         added_role = list(set(after.roles) - set(before.roles))
         removed_role = list(set(before.roles) - set(after.roles))
 
-        async def give_text_list(role_id, ch_id, msg_id):
-            if (added_role and added_role[0].id == role_id) or (removed_role and removed_role[0].id == role_id):
-                channel = before.guild.get_channel(ch_id)
+        async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id):
+            if (added_role and added_role[0] == role) or (removed_role and removed_role[0] == role):
                 msg = channel.get_partial_message(msg_id)
-                role = before.guild.get_role(role_id)
                 e = discord.Embed(title=f'List of {role.name}', colour=Clr.prpl)
                 e.description = ''.join([f'{member.mention}\n' for member in role.members])
                 await msg.edit(content='', embed=e)
 
-        await give_text_list(Rid.bots, Cid.bot_spam, 959982214827892737)
-        await give_text_list(Rid.nsfw_bots, Cid.nsfw_bob_spam, 959982171492323388)
+        await give_text_list(self.community.bots_role, self.community.bot_spam, 959982214827892737)
+        await give_text_list(self.community.nsfw_bots_role, self.community.nsfw_bot_spam, 959982171492323388)
 
     @commands.hybrid_command(name='gmt', aliases=['utc'], description="Show GMT(UTC) time")
     async def gmt(self, ctx: AluContext):
@@ -93,16 +91,14 @@ class Info(AluCog, name='Info', emote=Ems.PepoG):
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
         e = discord.Embed(colour=Clr.prpl, title='GMT(Greenwich Mean Time)')
-        e.set_footer(
-            text=f'GMT is the same as UTC (Universal Time Coordinated)\nWith love, {ctx.guild.me.display_name}'
-        )
+        e.set_footer(text=f'GMT is the same as UTC (Universal Time Coordinated)')
         e.add_field(name='Time:', value=now_time)
         e.add_field(name='Date:', value=now_date)
         await ctx.reply(embed=e)
 
-    @commands.hybrid_command(name='role', aliases=['members', 'roleinfo'], description="View info about selected role")
+    @commands.hybrid_command(name='role', description="View info about selected role")
     @app_commands.describe(role='Choose role to get info about')
-    async def roleinfo(self, ctx, *, role: discord.Role):
+    async def role_info(self, ctx, *, role: discord.Role):
         """View info about selected role"""
         e = discord.Embed(title="Role information", colour=role.colour)
         e.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])

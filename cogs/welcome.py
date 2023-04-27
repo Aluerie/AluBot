@@ -7,7 +7,8 @@ from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from utils.checks import is_owner
-from utils.var import Clr, Ems, Rid, Sid, Uid
+from utils.var import Clr, Ems, Rid, Sid
+from utils.const.community import Uid
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -62,7 +63,7 @@ async def welcome_message(
 
     if not member.bot:
         description = (
-            f'**💜 <@{Uid.alu}> is our princess '
+            f'**💜 {Uid.alu} is our princess '
             f'and I\'m her bot ! {Ems.peepoRose} {Ems.peepoRose} {Ems.peepoRose}**\n'
             f'1️⃣ Read the rules and useful info in <#724996010169991198> {Ems.PepoG}\n'
             f'2️⃣ Choose some fancy roles in <#725941486063190076> {Ems.peepoNiceDay}\n'

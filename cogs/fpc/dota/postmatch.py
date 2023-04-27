@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Dict, List
 import discord
 from discord.ext import commands, tasks
 
-from utils.var import MP, Cid, Clr, Uid
+from utils import AluCog
+from utils.var import MP, Clr, Uid
 
 from ._models import OpendotaRequestMatch, PostMatchPlayerData
 
@@ -18,9 +19,9 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class DotaPostMatchEdit(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+class DotaPostMatchEdit(AluCog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.postmatch_players: List[PostMatchPlayerData] = []
         self.opendota_req_cache: Dict[int, OpendotaRequestMatch] = dict()
 
@@ -92,7 +93,7 @@ class DotaPostMatchEdit(commands.Cog):
         month, minute = int(the_dict['monthly']), int(the_dict['minutely'])
         e.description = f"Odota limits. monthly: {month} minutely: {minute}"
         content = f'<@{Uid.alu}>' if month < 10_000 else ''
-        await self.bot.get_channel(Cid.daily_report).send(content=content, embed=e)  # type: ignore
+        await self.hideout.daily_report.send(content=content, embed=e)  # type: ignore
 
     @daily_report.before_loop
     async def before(self):

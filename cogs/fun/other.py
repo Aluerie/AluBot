@@ -8,21 +8,21 @@ from discord import app_commands
 from discord.ext import commands
 from numpy.random import choice, randint
 
-from utils.var import Cid, Clr, Ems, Rgx, Sid, Uid
+from utils import AluCog
+from utils.const import Cid
+from utils.var import Clr, Ems, Rgx, Sid, Uid
 from utils.webhook import check_msg_react, user_webhook
 
-from utils import AluCog
-
 if TYPE_CHECKING:
-    from utils.bases.context import AluContext
+    from utils import AluContext
 
 
 class Other(AluCog):
-    @commands.hybrid_command(aliases=['cf'], description='Flip a coin: Heads or Tails?')
-    async def coinflip(self, ctx):
-        """Flip a coin"""
+    @app_commands.command()
+    async def coinflip(self, ntr: discord.Interaction):
+        """Flip a coin: Heads or Tails?"""
         word = 'Heads' if randint(2) == 0 else 'Tails'
-        return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
+        return await ntr.response.send_message(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -45,20 +45,20 @@ class Other(AluCog):
         await work_non_command_mentions(message)
 
         async def bots_in_lobby(msg: discord.Message):
-            if msg.channel.id == Cid.general:
+            if msg.channel.id == Cid.general.id:
                 text = None
                 if msg.interaction is not None and msg.interaction.type == discord.InteractionType.application_command:
                     text = 'Slash-commands'
                 if msg.author.bot and not msg.webhook_id:
                     text = 'Bots'
                 if text is not None:
-                    await msg.channel.send('{0} in {1} ! {2} {2} {2}'.format(text, msg.channel.mention, Ems.Ree))
+                    await msg.channel.send('{0} in {1} ! {2} {2} {2}'.format(text, Cid.general.mention, Ems.Ree))
 
         await bots_in_lobby(message)
 
         async def weebs_out(msg: discord.Message):
-            if msg.channel.id == Cid.weebs and randint(1, 100 + 1) < 7:
-                await self.bot.get_channel(Cid.weebs).send(
+            if msg.channel.id == Cid.weebs.id and randint(1, 100 + 1) < 7:
+                await msg.channel.send(
                     '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
                         '<a:WeebsOutOut:730882034167185448>',
                         '<:WeebsOut:856985447985315860>',
@@ -105,18 +105,16 @@ class Other(AluCog):
 
         await your_life(message)
 
-    @commands.hybrid_command()
-    async def doemotespam(self, ctx: AluContext):
+    @app_commands.command()
+    async def do_emote_spam(self, ntr: discord.Interaction):
         """Send 3x random emote into emote spam channel"""
-        rand_guild = choice(self.bot.guilds)
+        rand_guild = choice(self.bot.guilds)  # type: ignore #TODO:FIX
         rand_emoji = choice(rand_guild.emojis)
         answer_text = f'{str(rand_emoji)} ' * 3
-        emot_ch = self.bot.get_channel(Cid.emote_spam)
-        await emot_ch.send(answer_text)
-        e = discord.Embed(colour=Clr.prpl, description=f'I sent {answer_text} into {emot_ch.mention}')
-        await ctx.reply(embed=e, ephemeral=True, delete_after=10)
-        if not ctx.interaction:
-            await ctx.message.delete()
+        channel = self.community.emote_spam
+        await channel.send(answer_text)
+        e = discord.Embed(colour=Clr.prpl, description=f'I sent {answer_text} into {channel.mention}')
+        await ntr.response.send_message(embed=e, ephemeral=True, delete_after=10)
 
     @commands.hybrid_command(description='Send apuband emote combo')
     async def apuband(self, ctx: AluContext):

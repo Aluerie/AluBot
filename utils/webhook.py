@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
     from .bases.context import AluContext
 
-webhookdict = {}
+webhook_dict = {}
 
 
 async def user_webhook(ctx: AluContext, content: Optional[str] = '', embed: Optional[Embed] = None):
@@ -28,16 +28,16 @@ async def user_webhook(ctx: AluContext, content: Optional[str] = '', embed: Opti
         avatar_url=ctx.author.display_avatar.url,
         wait=True,
     )
-    if ctx.author.id not in webhookdict:
-        webhookdict[ctx.author.id] = [msg.id]
+    if ctx.author.id not in webhook_dict:
+        webhook_dict[ctx.author.id] = [msg.id]
     else:
-        webhookdict[ctx.author.id].append(msg.id)
+        webhook_dict[ctx.author.id].append(msg.id)
     return webhook
 
 
 def check_msg_react(userid, msgid):
     # print(webhookdict)
-    if userid in webhookdict:
-        if msgid in webhookdict[userid]:
+    if userid in webhook_dict:
+        if msgid in webhook_dict[userid]:
             return 1
     return 0

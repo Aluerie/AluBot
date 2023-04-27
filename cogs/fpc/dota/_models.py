@@ -8,11 +8,11 @@ import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pyot.utils.functools import async_property
 
+from utils.const.hideout import repost
 from utils.dota import ability, hero, item
 from utils.dota.const import DOTA_LOGO, ODOTA_API_URL, dota_player_colour_map
 from utils.formats import human_timedelta
 from utils.var import MP, Clr
-from utils.const.hideout import REPOST
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -205,7 +205,6 @@ class PostMatchPlayerData:
         return f'<{self.__class__.__name__} {pairs}>'
 
     async def edit_the_image(self, img_url, bot: AluBot):
-
         img = await bot.imgtools.url_to_img(img_url)
 
         width, height = img.size
@@ -292,7 +291,7 @@ class PostMatchPlayerData:
         e = msg.embeds[0]
         img_file = bot.imgtools.img_to_file(await self.edit_the_image(e.image.url, bot), filename='edited.png')
         e.set_image(url=f'attachment://{img_file.filename}')
-        if self.channel_id == REPOST:
+        if self.channel_id == repost:
             e.set_footer(text=f'{e.footer.text or ""} | {self.api_calls_done}')
         try:
             await msg.edit(embed=e, attachments=[img_file])
@@ -407,7 +406,6 @@ class OpendotaRequestMatch:
 
 
 if __name__ == '__main__':
-
     xcalibur = ActiveMatch(
         match_id=0,
         start_time=0,

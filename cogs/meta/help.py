@@ -47,103 +47,6 @@ class HelpPageSource(menus.ListPageSource):
                 f'{Ems.PepoDetective} There is a list of not listed on other pages features. '
                 f'Maybe I even forgot something to write down'
             )
-            e.add_field(
-                name='• Notifications about fav Aluerie\'s streamers picking her fav champs/heroes',
-                inline=False,
-                value=f'Just look into <#{Cid.alubot}> !',
-            )
-            e.add_field(
-                name='• News feeds',
-                inline=False,
-                value=(
-                    f'Dota/League related dota_news feed in <#{Cid.dota_news}> '
-                    f'taken from all over the internet! Even more, bot automatically parsed and analyses dota updates ;'
-                ),
-            )
-            e.add_field(
-                name='• Context Menu Commands',
-                inline=False,
-                value='Right click any user/message and find some commands in `Apps` folder',
-            )
-            e.add_field(
-                name='• Confessions',
-                inline=False,
-                value=(
-                    f'Just visit <#{Cid.confessions}> and use buttons at the very bottom of the channel. '
-                    f'There are two buttons: for anonymous and non-anonymous confessions. '
-                    f'If you use the latter - your server nickname will be shown in confession message.'
-                ),
-            )
-            e.add_field(
-                name='• Some stats',
-                inline=False,
-                value='Scroll down channel list to see some stats like my local time ;',
-            )
-            e.add_field(
-                name='• Twitch.tv notifications',
-                inline=False,
-                value=(
-                    f'Notifications for my own stream in <#{Cid.stream_notifs}> and '
-                    f'<@&{Rid.live_stream}> role for live streamers-members'
-                ),
-            )
-            e.add_field(name='• Reaction roles', inline=False, value=f'Take some roles in <#{Cid.roles}>')
-            e.add_field(name='• Timers', inline=False, value=f'Bot sometimes posts daily reminders in <#{Cid.general}>')
-            e.add_field(
-                name='• Welcoming new people', inline=False, value=f'The bot welcomes new people in <#{Cid.welcome}>'
-            )
-            e.add_field(
-                name='• Controlling emote spam channels',
-                inline=False,
-                value=(
-                    f'The bots moderates <#{Cid.comfy_spam}> and <#{Cid.emote_spam}>, '
-                    f'also sometimes spams these channels too ;'
-                ),
-            )
-            e.add_field(
-                name="• Logging",
-                inline=False,
-                value=(
-                    'The bot logs a lot of actions like message editing, new profile pics, emote change, etc '
-                    'into different channels;'
-                ),
-            )
-            e.add_field(
-                name="• Milestone members",
-                inline=False,
-                value=(
-                    f'Every 50th member of this server gets fancy <@&{Rid.milestone}> role and '
-                    f'small congratulation text in <#{Cid.welcome}>'
-                ),
-            )
-            e.add_field(
-                name="• Random comfy reactions",
-                inline=False,
-                value=f"Every message has a chance to get a comfy {Ems.peepoComfy} reaction on it ;",
-            )
-            e.add_field(
-                name='• Some important things',
-                inline=False,
-                value=f'For example, the bot does not like bots in <#{Cid.general}> and weebs in <#{Cid.weebs}>',
-            )
-            e.add_field(
-                name='• Thanks to twitch subs',
-                inline=False,
-                value=(
-                    f"The bot thanks people who get role <@&{Rid.subs}> via discord-twitch integration "
-                    f"in <#{Cid.stream_notifs}>"
-                ),
-            )
-            e.add_field(name='• Experience system', inline=False, value='We have our own special experience system')
-            e.add_field(
-                name='• Reputation system',
-                inline=False,
-                value=(
-                    'Your "thanks", "ty" messages with mentions give people reputation or '
-                    'you can just use `$rep` command'
-                ),
-            )
-            e.add_field(name='• Your life is...', inline=False, value='Just a joke !')
         elif cmds:
             e.title = getattr(cog, "qualified_name", "No Category")
             cog_desc = getattr(cog, "description", "No Description")
@@ -356,9 +259,9 @@ class HelpCommandCog(AluCog):
             # announce to people that we logged in
             e = discord.Embed(colour=Clr.prpl)
             e.description = f'Logged in as {self.bot.user.name}'
-            await self.bot.hideout.spam.send(embed=e)
+            await self.hideout.spam.send(embed=e)
             e.set_footer(text='Finished updating/rebooting')
-            await self.bot.get_channel(Cid.bot_spam).send(embed=e)
+            await self.community.bot_spam.send(embed=e)
 
     @load_help_info.before_loop
     async def before(self):

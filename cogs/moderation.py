@@ -110,7 +110,7 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
             e.set_author(
                 name=f'{after.display_name} is muted by {mute_actor_str} until', icon_url=after.display_avatar.url
             )
-            return await self.bot.get_channel(Cid.logs).send(embed=e)
+            return await self.community.logs.send(embed=e)
 
         # elif before.is_timed_out() is True and after.is_timed_out() is False:  # member is unmuted
         #     return

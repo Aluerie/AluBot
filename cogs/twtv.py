@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands, tasks
 
 from utils import AluCog
-from utils.var import Sid, Uid, Rid, Img, Cid
+from utils.var import Sid, Uid
 
 if TYPE_CHECKING:
     from utils import AluBot

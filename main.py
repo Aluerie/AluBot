@@ -4,7 +4,6 @@ import asyncio
 import logging
 import sys
 import traceback
-
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -24,9 +23,6 @@ except ImportError:
     pass
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
-
-
 
 
 async def bot_start(test: bool):
@@ -65,7 +61,7 @@ def create():
     try:
 
         async def run_create():
-            connection: asyncpg.Connection = await asyncpg.connect(POSTGRES_URL) 
+            connection: asyncpg.Connection = await asyncpg.connect(POSTGRES_URL)
             async with connection.transaction():
                 sql = Path('sql/tables.sql').read_text('utf-8')
                 await connection.execute(sql)

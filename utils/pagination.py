@@ -187,7 +187,6 @@ class Paginator(discord.ui.View):
             if self.ctx_ntr.response.is_done():
                 self.message = await self.ctx_ntr.followup.send(**kwargs, view=self, ephemeral=ephemeral)
             else:
-                print('allo')
                 await self.ctx_ntr.response.send_message(**kwargs, view=self, ephemeral=ephemeral)
                 self.message = await self.ctx_ntr.original_response()
         else:

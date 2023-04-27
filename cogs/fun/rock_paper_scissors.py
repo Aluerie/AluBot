@@ -14,24 +14,19 @@ if TYPE_CHECKING:
 
 
 class RPSElement(NamedTuple):
-    name: str
     number: int
     emote: str
     word: str
 
 
 class RPSChoice(Enum):
-    rock = RPSElement(name='Rock', number=0, emote='\N{ROCK}', word='smashes')
-    paper = RPSElement(name='Paper', number=1, emote='\N{ROLLED-UP NEWSPAPER}', word='covers')
-    scissors = RPSElement(name='Scissors', number=2, emote='\N{BLACK SCISSORS}', word='cut')
-
-    @property
-    def emote(self) -> str:
-        return self.value.emote
+    Rock = RPSElement(number=0, emote='\N{ROCK}', word='smashes')
+    Paper = RPSElement(number=1, emote='\N{ROLLED-UP NEWSPAPER}', word='covers')
+    Scissors = RPSElement(number=2, emote='\N{BLACK SCISSORS}', word='cut')
 
     @property
     def emote_name(self):
-        return f'{self.value.emote} {self.value.name}'
+        return f'{self.value.emote} {self.name}'
 
 
 class RPSView(discord.ui.View):
@@ -57,16 +52,12 @@ class RPSView(discord.ui.View):
         await self.message.edit(embed=e, view=None)
 
     async def bot_choice_edit(self):
-        self.choices[self.player2] = choice(self.all_choices)
+        self.choices[self.player2] = choice(list(RPSChoice))  # type: ignore # TODO: FIX
         await self.edit_embed_player_choice(self.player2)
 
     @staticmethod
     def choice_name(btn_: discord.ui.Button):
         return f'{btn_.emoji} {btn_.label}'
-
-    @property
-    def all_choices(self):
-        return [self.choice_name(b) for b in self.children if isinstance(b, discord.ui.Button)]
 
     async def edit_embed_player_choice(self, player: discord.User | discord.Member):
         e = self.message.embeds[0].copy()
@@ -99,17 +90,17 @@ class RPSView(discord.ui.View):
         c1 = self.choices[self.player1]
         c2 = self.choices[self.player2]
 
-        def winning_choice(c1, c2) -> Tuple[str, str, Optional[discord.User | discord.Member]]:
-            if (c1.number + 1) % 3 == c2.number:  # Player 2 won because their move is one greater than player 1
-                return f'{c2.emote_name} {c2.word} {c1.emote_name}', f'{self.player2.mention} wins', self.player2
-            elif c1.number == c2.number:  # It's a draw because both players played the same move
+        def winning_choice(c1: RPSChoice, c2: RPSChoice) -> Tuple[str, str, Optional[discord.User | discord.Member]]:
+            if (c1.value.number + 1) % 3 == c2.value.number:  # Player2 won bcs their move is +1 bigger than ~player1
+                return f'{c2.emote_name} {c2.value.word} {c1.emote_name}', f'{self.player2.mention} wins', self.player2
+            elif c1.value.number == c2.value.number:  # It's a draw bcs both players played the same move
                 return 'Both players chose the same.', 'Draw', None
-            else:  # Player 1 wins because we know that it's not a draw and that player 2 didn't win
-                return f'{c1.emote_name} {c1.word} {c2.emote_name}', f'{self.player1.mention} wins', self.player1
+            else:  # Player1 wins bcs we know that it's not a draw and that player2 didn't win
+                return f'{c1.emote_name} {c1.value.word} {c2.emote_name}', f'{self.player1.mention} wins', self.player1
 
         winning_strings = winning_choice(c1, c2)
         ggwp = f'\n\n**Good Game, Well Played {Ems.DankL} {Ems.DankL} {Ems.DankL}**'
-        return f'{choices_string}\n{winning_strings[0]}{ggwp}{winning_strings[1]}', winning_strings[2]
+        return f'{choices_string}\n{winning_strings[0]}{ggwp}\n{winning_strings[1]}', winning_strings[2]
 
     async def rps_button_callback(self, ntr: discord.Interaction, choice: RPSChoice):
         self.choices[ntr.user] = choice
@@ -127,17 +118,19 @@ class RPSView(discord.ui.View):
             await self.message.edit(embed=em_game, view=None)
             self.stop()
 
-    @discord.ui.button(label=RPSChoice.rock.name, emoji=RPSChoice.rock.emote, style=discord.ButtonStyle.red)
+    @discord.ui.button(label=RPSChoice.Rock.name, emoji=RPSChoice.Rock.value.emote, style=discord.ButtonStyle.red)
     async def rock_button(self, ntr: discord.Interaction, _btn: discord.ui.Button):
-        await self.rps_button_callback(ntr, RPSChoice.rock)
+        await self.rps_button_callback(ntr, RPSChoice.Rock)
 
-    @discord.ui.button(label=RPSChoice.paper.name, emoji=RPSChoice.paper.emote, style=discord.ButtonStyle.green)
+    @discord.ui.button(label=RPSChoice.Paper.name, emoji=RPSChoice.Paper.value.emote, style=discord.ButtonStyle.green)
     async def paper_button(self, ntr: discord.Interaction, _btn: discord.ui.Button):
-        await self.rps_button_callback(ntr, RPSChoice.paper)
+        await self.rps_button_callback(ntr, RPSChoice.Paper)
 
-    @discord.ui.button(label=RPSChoice.scissors.name, emoji=RPSChoice.scissors.emote, style=discord.ButtonStyle.blurple)
+    @discord.ui.button(
+        label=RPSChoice.Scissors.name, emoji=RPSChoice.Scissors.value.emote, style=discord.ButtonStyle.blurple
+    )
     async def scissors_button(self, ntr: discord.Interaction, _btn: discord.ui.Button):
-        await self.rps_button_callback(ntr, RPSChoice.scissors)
+        await self.rps_button_callback(ntr, RPSChoice.Scissors)
 
 
 class RockPaperScissorsCommand(AluCog):

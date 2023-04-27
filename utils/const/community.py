@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 __all__ = (
     'Cid',
     'Rid',
+    'Uid',
     'CommunityGuild',
 )
 

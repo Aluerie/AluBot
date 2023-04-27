@@ -8,7 +8,7 @@ from numpy.random import randint, seed
 
 from utils import AluCog
 from utils.var import Clr, Ems, Sid
-from utils.const.community import Cid, Rid, Uid
+from utils.const import Cid, Rid, Uid
 
 if TYPE_CHECKING:
     from asyncpg import Pool

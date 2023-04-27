@@ -8,7 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils import AluCog, AluContext, times
-from utils.var import Cid, Clr, Ems, Rid, Sid, Uid
+from utils.var import Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
     from utils import AluBot

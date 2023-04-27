@@ -11,7 +11,7 @@ from utils.var import Clr
 from ._base import ManagementBaseCog
 
 if TYPE_CHECKING:
-    from utils.bases.context import AluContext
+    from utils import AluContext
 
 
 class SyncCommandCog(ManagementBaseCog):

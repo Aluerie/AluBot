@@ -10,7 +10,7 @@ from discord.ext import commands
 from cogs import get_extensions
 from utils.bases.context import AluContext
 from utils.checks import is_owner
-from utils.var import MP, Cid, Clr, Ems, Sid
+from utils.var import MP, Clr, Ems, Sid
 
 from ._base import ManagementBaseCog
 

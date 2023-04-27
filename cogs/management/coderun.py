@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import discord
 from discord.ext import commands
 
-from utils.bases.context import AluContext
+from utils import AluContext
 from utils.checks import is_owner
 from utils.converters import Codeblock
 

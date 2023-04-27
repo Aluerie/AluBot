@@ -20,11 +20,10 @@ from discord import app_commands
 from discord.ext import commands
 from typing_extensions import Annotated
 
-from utils import formats, times
+from utils import formats, times, Clr, Ems
 from utils.bases.context import AluContext
 from utils.database import DRecord
 from utils.pagination import EnumeratedPages
-from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from typing_extensions import Self

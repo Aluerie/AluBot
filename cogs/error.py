@@ -7,11 +7,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext
+from utils import AluCog, AluContext, Clr, Ems
 from utils.formats import human_timedelta
 from utils.times import BadTimeTransform
 from utils.translator import TranslateError
-from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     pass

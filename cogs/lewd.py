@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from utils import AluCog
-from utils.var import Ems
+from utils import AluCog, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

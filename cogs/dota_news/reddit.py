@@ -10,9 +10,7 @@ import discord
 from asyncprawcore import AsyncPrawcoreException
 from discord.ext import commands, tasks
 
-from utils.var import Clr, Lmt
-
-from utils import AluCog
+from utils import AluCog, Clr, Lmt
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -85,7 +83,7 @@ class Reddit(AluCog):
                     ):
                         embeds = await process_comments(comment)
                         for item in embeds:
-                            msg = await self.bot.community.dota_news.send(embed=item)
+                            msg = await self.community.dota_news.send(embed=item)
                             await msg.publish()
             except AsyncPrawcoreException:
                 await asyncio.sleep(60 * running)

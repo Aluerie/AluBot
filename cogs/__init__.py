@@ -15,8 +15,10 @@ ALL_EXTENSIONS = INITIAL_EXTENSIONS + MY_EXTENSIONS
 EXTENSIONS = tuple(x for x in ALL_EXTENSIONS if x not in IGNORED_EXTENSIONS)
 
 # TEST EXTENSIONS
-TEST_EXTENSIONS = tuple(f'cogs.{x}' if x not in INITIAL_EXTENSIONS else x for x in TEST_EXTENSIONS)
-
+if TEST_EXTENSIONS:
+    TEST_EXTENSIONS = tuple(f'cogs.{x}' if x not in INITIAL_EXTENSIONS else x for x in TEST_EXTENSIONS)
+else:
+    TEST_EXTENSIONS = EXTENSIONS
 
 def get_extensions(test: bool):
     if test:

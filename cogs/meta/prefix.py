@@ -1,22 +1,21 @@
 # todo: move this file somewhere else - some guild setup material, maybe just one general cog for setup command
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
-from typing_extensions import Self
 
 import discord
 from discord.ext import commands
+from typing_extensions import Self
 
-from utils import AluCog, checks
-from utils.var import Clr
+from utils import AluCog, Clr, checks
 
-from .setup import SetupPages, SetupCog
+from .setup import SetupCog, SetupPages
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext
 
 
 class PrefixSetModal(discord.ui.Modal, title='New prefix setup'):
-
     prefix = discord.ui.TextInput(
         label='New prefix for the server', placeholder='Enter up to 3 character', max_length=3
     )

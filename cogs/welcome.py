@@ -7,8 +7,7 @@ from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from utils.checks import is_owner
-from utils.var import Clr, Ems, Rid, Sid
-from utils.const.community import Uid
+from utils import Rid, Sid, Uid, Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -113,7 +112,7 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
-        if member.guild.id != Sid.alu:
+        if member.guild.id != Sid.community:
             return
         e = discord.Embed(description='{0} {0} {0}'.format(Ems.FeelsRainMan), colour=0x000000)
         e.set_author(name='{0} just left the server'.format(member.display_name), icon_url=member.display_avatar.url)
@@ -123,7 +122,7 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
-        if guild.id != Sid.alu:
+        if guild.id != Sid.community:
             return
         e = discord.Embed(description='{0} {0} {0}'.format(Ems.peepoPolice), color=0x800000)
         e.set_author(name=f'{member.display_name} was just banned from the server', icon_url=member.display_avatar.url)
@@ -133,7 +132,7 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, member: discord.Member):
-        if guild.id != Sid.alu:
+        if guild.id != Sid.community:
             return
         e = discord.Embed(description='{0} {0} {0}'.format(Ems.PogChampPepe), color=0x00FF7F)
         e.set_author(

@@ -1,9 +1,9 @@
 import discord
 
-from utils.var import Ems
+from utils import Ems
 
-from .rock_paper_scissors import RockPaperScissorsCommand
 from .other import Other
+from .rock_paper_scissors import RockPaperScissorsCommand
 
 
 class Fun(RockPaperScissorsCommand, Other):

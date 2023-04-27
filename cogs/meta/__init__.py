@@ -1,6 +1,6 @@
 import discord
 
-from utils.var import Ems
+from utils import Ems
 
 from .help import HelpCommandCog
 from .other import OtherCog

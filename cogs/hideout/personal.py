@@ -33,7 +33,7 @@ class PersonalCommands(AluCog):
         response = await ctx.bot.twitter.get_tweets(
             tweet_ids, media_fields=["url", "preview_image_url"], expansions="attachments.media_keys"
         )
-        img_urls = [m.url for m in response.includes['media']]
+        img_urls = [m.url for m in response.includes['media']]  # type: ignore #TODO: fix
         # print(img_urls)
         files = await ctx.bot.imgtools.url_to_file(img_urls, return_list=True)
         split_size = 10

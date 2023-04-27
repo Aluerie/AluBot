@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from utils.checks import is_owner
-from utils.var import Clr
+from utils import Clr
 
 from ._base import ManagementBaseCog
 

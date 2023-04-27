@@ -8,11 +8,10 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from utils import AluCog
+from utils import AluCog, Clr, Ems, Sid
 from utils.converters import my_bool
 from utils.formats import human_timedelta, indent, ordinal
 from utils.pagination import EnumeratedPages
-from utils.var import Clr, Ems, Sid
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -184,7 +183,7 @@ class ExperienceSystem(AluCog, name='Profile'):
     @app_commands.describe(sort_by='Choose how to sort leaderboard')
     async def leaderboard(self, ctx, sort_by: Literal['exp', 'rep'] = 'exp'):
         """View experience leaderboard for this server ;"""
-        guild = self.bot.get_guild(Sid.alu)
+        guild = self.community.guild
 
         new_array = []
         split_size = 10
@@ -224,7 +223,7 @@ class ExperienceSystem(AluCog, name='Profile'):
         if message.author.bot:
             return
 
-        if message.guild is not None and message.guild.id in Sid.guild_ids:
+        if message.guild is not None and message.guild.id in [Sid.community]:
             query = """ WITH u AS (
                             SELECT lastseen FROM users WHERE id=$1
                         )           
@@ -304,7 +303,7 @@ class ExperienceSystem(AluCog, name='Profile'):
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
-            guild = self.bot.get_guild(Sid.alu)
+            guild = self.community.guild
             person = guild.get_member(row.id)
             if person is None and discord.utils.utcnow() - row.lastseen > datetime.timedelta(days=30):
                 query = 'DELETE FROM users WHERE id=$1'
@@ -313,7 +312,7 @@ class ExperienceSystem(AluCog, name='Profile'):
                     description=f"id = {row.id}",
                     colour=0xE6D690,
                 )
-                e.set_author(name=f"{row.name} was removed from the datebase")
+                e.set_author(name=f"{row.name} was removed from the database")
                 await self.community.logs.send(embed=e)
 
     @remove_inactive.before_loop

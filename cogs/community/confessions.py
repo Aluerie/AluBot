@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from utils import AluCog
+from utils import AluCog, Clr, Ems
 from utils.formats import human_timedelta
-from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot

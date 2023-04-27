@@ -8,9 +8,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from utils.bases.context import AluContext
+from utils import AluContext, MClr, Ems
 from utils.pagination import EnumeratedPages
-from utils.var import MP, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -243,7 +242,7 @@ class FPCBase:
         )
         e.set_footer(text=self.game_name, icon_url=self.game_logo)
         await ctx.reply(embed=e)
-        e.colour = MP.green(shade=200)
+        e.colour = MClr.green(shade=200)
         e.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
         await self.bot.hideout.global_logs.send(embed=e)
 
@@ -277,7 +276,7 @@ class FPCBase:
         e.add_field(name='Successfully made a request to add the account into the database', value=player_string)
         await ctx.reply(embed=e)
 
-        warn_e.colour = MP.orange(shade=200)
+        warn_e.colour = MClr.orange(shade=200)
         warn_e.title = ''
         warn_e.description = ''
         warn_e.set_author(name=ctx.user, icon_url=ctx.user.display_avatar.url)
@@ -358,21 +357,21 @@ class FPCBase:
     ) -> discord.Embed:
         e = discord.Embed()
         if s_names:
-            e.colour = MP.green(shade=500)
+            e.colour = MClr.green(shade=500)
             e.add_field(
                 name=f"Success: {gather_word} were {'added to' if mode_add else 'removed from'} your list",
                 value=f"`{', '.join(s_names)}`",
                 inline=False,
             )
         if a_names:
-            e.colour = MP.orange(shade=500)
+            e.colour = MClr.orange(shade=500)
             e.add_field(
                 name=f'Already: {gather_word} are already {"" if mode_add else "not"} in your list',
                 value=f"`{', '.join(a_names)}`",
                 inline=False,
             )
         if f_names:
-            e.colour = MP.red(shade=500)
+            e.colour = MClr.red(shade=500)
             e.add_field(
                 name=f'Fail: These {gather_word} are not in the database', value=f"`{', '.join(f_names)}`", inline=False
             )

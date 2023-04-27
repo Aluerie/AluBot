@@ -15,10 +15,9 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageColor
 
-from utils import AluCog
+from utils import AluCog, Clr, Ems, Sid
 from utils.checks import is_owner
 from utils.formats import format_dt_tdR, human_timedelta
-from utils.var import MAP, MP, Clr, Ems, Sid
 
 # from wordcloud import WordCloud
 
@@ -70,7 +69,7 @@ class Info(AluCog, name='Info', emote=Ems.PepoG):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
-        if before.guild.id != Sid.alu:
+        if before.guild.id != Sid.community:
             return
         added_role = list(set(after.roles) - set(before.roles))
         removed_role = list(set(before.roles) - set(after.roles))

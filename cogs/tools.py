@@ -8,7 +8,7 @@ from discord.ext import commands
 from PIL import Image
 
 from utils.translator import translate
-from utils.var import Clr, Ems
+from utils import Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

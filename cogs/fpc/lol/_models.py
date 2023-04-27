@@ -10,7 +10,7 @@ from pyot.utils.functools import async_property
 from pyot.utils.lol import champion
 
 from utils.formats import human_timedelta
-from utils.var import MP, Clr
+from utils import MClr, Clr
 
 from utils.lol.const import LiteralPlatform, platform_to_server
 from utils.lol.utils import get_role_mini_list, icon_url_by_champ_id
@@ -185,7 +185,7 @@ class PostMatchPlayer:
         w3, h3 = bot.imgtools.get_text_wh(self.kda, font)
         draw.text((0, height - last_row_h - h3), self.kda, font=font, align="right")
         w2, h2 = bot.imgtools.get_text_wh(self.outcome, font)
-        colour_dict = {'Win': str(MP.green(shade=800)), 'Loss': str(MP.red(shade=900)), 'No Scored': (255, 255, 255)}
+        colour_dict = {'Win': str(MClr.green(shade=800)), 'Loss': str(MClr.red(shade=900)), 'No Scored': (255, 255, 255)}
         draw.text(
             (0, height - last_row_h - h3 - h2 - 5),
             self.outcome,

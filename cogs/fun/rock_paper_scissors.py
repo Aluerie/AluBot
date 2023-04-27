@@ -6,9 +6,7 @@ import discord
 from discord.ext import commands
 from numpy.random import choice
 
-from utils.var import Clr, Ems
-
-from utils import AluCog
+from utils import AluCog, Clr, Ems
 
 if TYPE_CHECKING:
     from utils.bases.context import AluContext

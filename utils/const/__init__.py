@@ -1,2 +1,3 @@
-from .community import *
-from .hideout import *
+from .colours import *
+from .guilds import *
+from .other import *

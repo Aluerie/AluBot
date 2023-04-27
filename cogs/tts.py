@@ -8,8 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 from gtts import gTTS
 
-from utils import AluCog
-from utils.var import Clr, Ems
+from utils import AluCog, Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

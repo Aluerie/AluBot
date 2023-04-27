@@ -32,8 +32,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import discord
 from discord.ext import menus
 
-from .bases.context import AluContext
-from .var import Clr, Ems
+from .bases import AluContext
+from .const import Clr, Ems
 
 if TYPE_CHECKING:
     from .bot import AluBot

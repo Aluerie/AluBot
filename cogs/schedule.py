@@ -11,7 +11,7 @@ from discord.ext import commands
 
 from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_tdR
-from utils.var import Clr, Ems
+from utils import Clr, Ems
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession

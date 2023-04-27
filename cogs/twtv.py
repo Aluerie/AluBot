@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog
-from utils.var import Sid, Uid
+from utils import AluCog, Sid
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -25,7 +24,7 @@ class TwitchCog(AluCog):
 
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
-        if before.bot or before.activities == after.activities or before.id == Uid.alu:
+        if before.bot or before.activities == after.activities or before.id == self.bot.owner_id:
             return
 
         guild = self.community.guild
@@ -54,7 +53,7 @@ class TwitchCog(AluCog):
                     AND irene_is_live IS DISTINCT FROM $1
                     RETURNING True;
                 """
-        val = await self.bot.pool.fetchval(query, tw.online, Sid.alu)
+        val = await self.bot.pool.fetchval(query, tw.online, Sid.community)
 
         if not (val and tw.online):
             return

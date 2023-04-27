@@ -6,9 +6,7 @@ import discord
 from discord.ext import tasks
 from numpy.random import randint, seed
 
-from utils import AluCog
-from utils.var import Clr, Ems, Sid
-from utils.const import Cid, Rid, Uid
+from utils import AluCog, Cid, Clr, Ems, Rid, Uid, Sid
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -21,8 +19,9 @@ seed(None)
 
 async def get_the_thing(txt_list, name, pool: Pool):
     query = f'UPDATE botinfo SET {name} = {name} + 1 WHERE id=$1 RETURNING {name}'
-    val = await pool.fetchval(query, Sid.alu)
+    val = await pool.fetchval(query, Sid.community)
     return txt_list[val % len(txt_list)]
+
 
 daily_reminders_txt = [
     f'Hey chat, don\'t forget to spam some emotes in {Cid.comfy_spam} or {Cid.emote_spam}',
@@ -41,6 +40,8 @@ daily_reminders_txt = [
     f'Hey chat, you can get list of {Rid.bots} available to use in {Cid.bot_spam} and '
     f'{Rid.nsfw_bots} in {Cid.nsfw_bot_spam} by respectively checking pins in those channels.',
 ]
+
+
 async def get_a_text(pool: Pool):
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 
@@ -119,7 +120,6 @@ async def get_rule_text(pool: Pool):
 
 
 class OldTimers(AluCog):
-
     async def cog_load(self) -> None:
         self.daily_reminders.start()
         self.daily_important_reminders.start()

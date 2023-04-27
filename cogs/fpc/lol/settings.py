@@ -12,7 +12,7 @@ from pyot.utils.lol import champion
 from utils.checks import is_manager
 from utils.lol.const import LOL_LOGO, LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
 from utils.lol.utils import get_all_champ_names, get_meraki_patch, get_pyot_meraki_champ_diff_list
-from utils.var import Clr, Ems
+from utils import Clr, Ems
 
 from .._base import FPCBase
 from ._models import Account

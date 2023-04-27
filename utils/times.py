@@ -21,7 +21,7 @@ from discord.ext import commands
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-    from .bases.context import AluContext
+    from .bases import AluContext
 
 
 class ShortTime:

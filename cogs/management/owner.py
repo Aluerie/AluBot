@@ -10,7 +10,7 @@ from discord.ext import commands
 from cogs import get_extensions
 from utils.bases.context import AluContext
 from utils.checks import is_owner
-from utils.var import MP, Clr, Ems, Sid
+from utils import MClr, Clr, Ems, Sid
 
 from ._base import ManagementBaseCog
 
@@ -26,7 +26,7 @@ class AdminTools(ManagementBaseCog):
 
     async def trustee_add_remove(self, ctx: AluContext, user_id: int, mode: Literal["add", "remov"]):
         query = "SELECT trusted_ids FROM botinfo WHERE id=$1"
-        trusted_ids = await self.bot.pool.fetchval(query, Sid.alu)
+        trusted_ids = await self.bot.pool.fetchval(query, Sid.community)
 
         if mode == "add":
             trusted_ids.append(user_id)
@@ -34,7 +34,7 @@ class AdminTools(ManagementBaseCog):
             trusted_ids.remove(user_id)
 
         query = "UPDATE botinfo SET trusted_ids=$1 WHERE id=$2"
-        await self.bot.pool.execute(query, trusted_ids, Sid.alu)
+        await self.bot.pool.execute(query, trusted_ids, Sid.community)
         e = discord.Embed(colour=Clr.prpl)
         e.description = f"We {mode}ed user with id {user_id} to the list of trusted users"
         await ctx.reply(embed=e)
@@ -122,9 +122,9 @@ class AdminTools(ManagementBaseCog):
 
     async def send_guild_embed(self, guild: discord.Guild, join: bool):
         if join:
-            word, colour = "joined", MP.green(shade=500)
+            word, colour = "joined", MClr.green(shade=500)
         else:
-            word, colour = "left", MP.red(shade=500)
+            word, colour = "left", MClr.red(shade=500)
 
         e = discord.Embed(title=word, description=guild.description, colour=colour)
         e.add_field(name="Guild ID", value=f"`{guild.id}`")

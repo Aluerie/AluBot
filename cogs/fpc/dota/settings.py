@@ -11,7 +11,7 @@ from steam.steamid import EType, SteamID
 from utils.checks import is_manager
 from utils.dota import hero
 from utils.dota.const import DOTA_LOGO
-from utils.var import Clr, Ems
+from utils import Clr, Ems
 
 from .._base import FPCBase
 

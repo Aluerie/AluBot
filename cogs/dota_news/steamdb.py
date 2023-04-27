@@ -8,8 +8,7 @@ from discord.ext import commands, tasks
 from github import Github
 
 from config import GIT_PERSONAL_TOKEN
-from utils import AluCog
-from utils.const import Chd
+from utils import AluCog, Cid
 from utils.formats import block_function
 from utils.github import human_commit
 from utils.imgtools import str_to_file
@@ -73,12 +72,12 @@ class SteamDB(AluCog):
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         try:
-            if msg.channel.id in (Chd.copy_dota_info.id, Chd.copy_dota_steam.id, Chd.copy_dota_tweets.id):
-                news_channel = self.bot.community.dota_news
+            if msg.channel.id in (Cid.copy_dota_info.id, Cid.copy_dota_steam.id, Cid.copy_dota_tweets.id):
+                news_channel = self.community.dota_news
             else:
                 return
 
-            if msg.channel.id == Chd.copy_dota_info.id:
+            if msg.channel.id == Cid.copy_dota_info.id:
                 if "https://steamdb.info" in msg.content:
                     url, embeds, files = await get_gitdiff_embed()
                     msg = await news_channel.send(content=f"<{url}>", embeds=embeds)
@@ -87,17 +86,18 @@ class SteamDB(AluCog):
                         msg = await news_channel.send(files=files)
                         await msg.publish()
                 if "https://steamcommunity.com" in msg.content:
-                    msg = await news_channel.send(content=msg.content, embeds=msg.embeds, files=msg.attachments)
+                    files = [await x.to_file() for x in msg.attachments]
+                    msg = await news_channel.send(content=msg.content, embeds=msg.embeds, files=files)
                     await msg.publish()
 
-            elif msg.channel.id == Chd.copy_dota_steam.id:
+            elif msg.channel.id == Cid.copy_dota_steam.id:
                 if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
                 e = discord.Embed(colour=0x171A21, description=msg.content)
                 msg = await news_channel.send(embed=e)
                 await msg.publish()
 
-            elif msg.channel.id == Chd.copy_dota_tweets.id:
+            elif msg.channel.id == Cid.copy_dota_tweets.id:
                 await asyncio.sleep(2)
                 answer = await msg.channel.fetch_message(int(msg.id))
                 embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]
@@ -122,9 +122,9 @@ class TestGitFeed(AluCog):
         num = 4
         url, embeds, files = await get_gitdiff_embed(test_num=num)
         for embed in embeds:
-            await self.bot.hideout.spam.send(content=url, embed=embed)
+            await self.hideout.spam.send(content=url, embed=embed)
         if len(files):
-            await self.bot.hideout.spam.send(files=files)
+            await self.hideout.spam.send(files=files)
 
     @testing.before_loop
     async def before(self):

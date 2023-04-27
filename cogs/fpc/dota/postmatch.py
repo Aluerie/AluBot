@@ -7,8 +7,7 @@ from typing import TYPE_CHECKING, Dict, List
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog
-from utils.var import MP, Clr, Uid
+from utils import AluCog, Clr, MClr
 
 from ._models import OpendotaRequestMatch, PostMatchPlayerData
 
@@ -88,11 +87,11 @@ class DotaPostMatchEdit(AluCog):
 
     @tasks.loop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
     async def daily_report(self):
-        e = discord.Embed(title="Daily Report", colour=MP.black())
+        e = discord.Embed(title="Daily Report", colour=MClr.black())
         the_dict = self.bot.odota_ratelimit
         month, minute = int(the_dict['monthly']), int(the_dict['minutely'])
         e.description = f"Odota limits. monthly: {month} minutely: {minute}"
-        content = f'<@{Uid.alu}>' if month < 10_000 else ''
+        content = f'{self.bot.owner_id}' if month < 10_000 else ''
         await self.hideout.daily_report.send(content=content, embed=e)  # type: ignore
 
     @daily_report.before_loop

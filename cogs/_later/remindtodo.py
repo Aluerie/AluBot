@@ -37,15 +37,15 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
             pass
 
     @commands.Cog.listener()
-    async def on_message(self, msg: Message):
-        if msg.guild is None:  # message.guild.id != Sid.alu:
+    async def on_message(self, msg: discord.Message):
+        if msg.guild is None:  # message.guild.id != Sid.community:
             return
         if msg.content.startswith('$afk') or msg.content.startswith('~afk'):
             return
 
         for key in self.active_afk:
             if key in msg.raw_mentions:
-                guild = self.bot.get_guild(Sid.alu)
+                guild = self.bot.get_guild(Sid.community)
                 member = guild.get_member(key)
                 e = (
                     Embed(colour=Clr.prpl, title='Afk note:', description=db.get_value(db.a, key, 'name'))

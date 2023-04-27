@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import tasks
 
-from utils import AluCog
+from utils import AluCog, Clr, Sid
 from utils.dota.const import DOTA_LOGO
-from utils.var import Clr, Sid
 
 if TYPE_CHECKING:
     pass
@@ -26,7 +25,7 @@ class Dota2Com(AluCog):
         async with self.bot.session.get(url) as resp:
             data = await resp.json()
 
-        # db.set_value(db.b, Sid.alu, dota_patch='sadge')
+        # db.set_value(db.b, Sid.community, dota_patch='sadge')
         last_patch = data["patches"][-1]
         patch_number, patch_name = last_patch["patch_number"], last_patch["patch_name"]
 
@@ -36,7 +35,7 @@ class Dota2Com(AluCog):
                         AND dota_patch IS DISTINCT FROM $1
                         RETURNING True
                     """
-        val = await self.bot.pool.fetchval(query, patch_number, Sid.alu)
+        val = await self.bot.pool.fetchval(query, patch_number, Sid.community)
         if not val:
             return
 

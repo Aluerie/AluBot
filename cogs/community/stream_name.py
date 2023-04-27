@@ -6,8 +6,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from utils import AluCog
-from utils.var import Clr, Ems, Sid
+from utils import AluCog, Clr, Ems, Sid
+
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -32,7 +32,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
     async def on_voice_state_update(
         self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState
     ):
-        if member.guild.id != Sid.alu:
+        if member.guild.id != self.community.id:
             return
 
         voice_role = self.bot.community.voice_role
@@ -56,7 +56,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
                 await before.channel.send(embed=e)
                 return await after.channel.send(embed=e)
 
-    @app_commands.guilds(Sid.alu)
+    @app_commands.guilds(Sid.community)
     @commands.hybrid_group(name='streaming-room', aliases=['stream'])
     async def streaming_room(self, ctx: AluContext):
         """Group command about Dota, for actual commands use it together with subcommands"""

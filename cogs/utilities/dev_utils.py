@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING, Tuple
 import discord
 from discord.ext import commands
 
-from utils import AluCog, AluContext
-from utils.var import Clr
+from utils import AluCog, AluContext, Clr
 
 
 if TYPE_CHECKING:

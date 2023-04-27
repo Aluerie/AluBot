@@ -23,10 +23,8 @@ from utils import AluContext
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
-from utils.var import Clr
 
-from ..const.community import CommunityGuild
-from ..const.hideout import HideoutGuild
+from ..const import CommunityGuild, HideoutGuild, Clr
 from .cmd_cache import MyCommandTree
 
 if TYPE_CHECKING:
@@ -102,7 +100,7 @@ class AluBot(commands.Bot):
                 await self.load_extension(ext)
             except Exception as e:
                 log.exception(f'Failed to load extension {ext}.')
-                raise e
+                 
 
     def get_pre(self, bot: AluBot, message: discord.Message) -> Iterable[str]:
         if message.guild is None:

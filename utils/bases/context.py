@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, Union
 import discord
 from discord.ext import commands
 
-from ..var import Clr
+from ..const import Clr
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession

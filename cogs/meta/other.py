@@ -16,9 +16,8 @@ import pygit2
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext
+from utils import AluCog, AluContext, Clr, Ems, Lmt
 from utils.checks import is_owner
-from utils.var import Clr, Ems, Lmt
 
 
 if TYPE_CHECKING:

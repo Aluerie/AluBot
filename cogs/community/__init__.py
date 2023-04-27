@@ -6,12 +6,12 @@ It functions as both bot support server and community as in Aluerie followers, f
 The features in these cogs are probably going to stay exclusive to the community server.
 """
 
-from .emote_spam import ComfySpam, EmoteSpam
 from .colour_roles import ColourRoles
+from .confessions import Confession
+from .emote_spam import ComfySpam, EmoteSpam
 from .stats import StatsVoiceChannels
 from .stream_name import StreamChannelName
 from .suggestions import Suggestions
-from .confessions import Confession
 
 COMMUNITY_COGS = (EmoteSpam, ComfySpam, StatsVoiceChannels, StreamChannelName, ColourRoles, Suggestions, Confession)
 

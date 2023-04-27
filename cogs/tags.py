@@ -7,8 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils.bases.context import AluContext
-from utils.var import Clr, Ems, Rid
+from utils import AluContext, Clr, Ems, Rid
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -188,7 +187,7 @@ class Tags(commands.Cog):
         e.description = ', '.join([f"`{row.name}`" for row in rows])
         await ctx.reply(embed=e)
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Rid.discord_mods.id)
     @commands.has_permissions(manage_messages=True)
     @app_commands.default_permissions(manage_messages=True)
     @commands.hybrid_group(name='modtags', aliases=['modtag'], invoke_without_command=True)

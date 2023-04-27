@@ -7,9 +7,8 @@ import discord
 import regex
 from discord.ext import commands, tasks
 
-from utils import AluCog
+from utils import AluCog, Clr, Ems, Rgx, Rid, Sid
 from utils.formats import inline_word_by_word_diff
-from utils.var import Clr, Ems, Rgx, Rid, Sid
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -44,7 +43,7 @@ class Logging(AluCog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        if after.guild is None or after.guild.id != Sid.alu:
+        if after.guild is None or after.guild.id != Sid.community:
             return
         if before.author.bot is True:
             return
@@ -61,9 +60,9 @@ class Logging(AluCog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, msg):
-        if msg.guild.id != Sid.alu or msg.author.bot:
+        if msg.guild.id != Sid.community or msg.author.bot:
             return
-        if regex.search(Rgx.bug_check, msg.content):
+        if regex.search(Rgx.bug_check, msg.content):  # bug_check
             return
         if msg.content.startswith('$'):
             return
@@ -77,17 +76,17 @@ class Logging(AluCog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if before.guild.id != Sid.alu:
+        if before.guild.id != Sid.community:
             return
 
         added_role = list(set(after.roles) - set(before.roles))
-        if added_role and added_role[0].id not in Rid.ignored_for_logs:
+        if added_role and not Rid.is_ignored_for_logs(added_role[0].id):
             e = discord.Embed(description=f'**Role added:** {added_role[0].mention}', colour=0x00FF7F)
             e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
             return await self.bot.community.logs.send(embed=e)
 
         removed_role = list(set(before.roles) - set(after.roles))
-        if removed_role and removed_role[0].id not in Rid.ignored_for_logs:
+        if removed_role and not Rid.is_ignored_for_logs(removed_role[0].id):
             e = discord.Embed(description=f'**Role removed:** {removed_role[0].mention}', colour=0x006400)
             e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
             return await self.bot.community.logs.send(embed=e)
@@ -144,7 +143,7 @@ class CommandLogging(commands.Cog):
         self.bot: AluBot = bot
 
     ignored_users = []  # [Uid.alu]
-    included_guilds = [Sid.alu]
+    included_guilds = [Sid.community]
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):

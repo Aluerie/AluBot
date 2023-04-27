@@ -6,7 +6,7 @@ from discord.ext import commands
 from typing_extensions import Self
 
 if TYPE_CHECKING:
-    from .bases.context import AluContext
+    from .bases import AluContext
 
 
 def my_bool(argument: str):

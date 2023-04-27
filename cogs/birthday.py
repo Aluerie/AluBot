@@ -13,9 +13,8 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from numpy.random import choice
 
-from utils import AluCog
+from utils import AluCog, Clr, Ems
 from utils.pagination import EnumeratedPages
-from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

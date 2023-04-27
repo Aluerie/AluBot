@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils.lol.const import LiteralServerUpper
-from utils.var import Sid
+from utils import Sid
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -22,7 +22,7 @@ class FPCTrusted(commands.Cog):
     db = app_commands.Group(
         name="db",
         description="Group command about managing database",
-        guild_ids=[Sid.test],
+        guild_ids=[Sid.hideout],
     )
 
     db_dota = app_commands.Group(

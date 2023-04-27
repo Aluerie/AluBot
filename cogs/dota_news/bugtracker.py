@@ -13,9 +13,8 @@ from discord.ext import commands, tasks
 from github.GithubException import GithubException
 from PIL import Image
 
-from utils import AluCog
+from utils import AluCog, MClr, Lmt, Sid
 from utils.checks import is_owner
-from utils.var import MP, Lmt, Sid
 
 if TYPE_CHECKING:
     from github import Issue, NamedUser
@@ -235,12 +234,12 @@ class BugTracker(AluCog):
                 error_logins.append(l)
         if success_logins:
             self.valve_devs.extend(success_logins)
-            e = discord.Embed(color=MP.green())
+            e = discord.Embed(color=MClr.green())
             answer = ', '.join(f'`{l}`' for l in logins)
             e.description = f'Added user(-s) to the list of Valve devs.\n{answer}'
             await ctx.reply(embed=e)
         if error_logins:
-            e = discord.Embed(color=MP.red())
+            e = discord.Embed(color=MClr.red())
             answer = ', '.join(f'`{l}`' for l in logins)
             e.description = f'User(-s) were already in the list of Valve devs.\n{answer}'
             await ctx.reply(embed=e)
@@ -251,7 +250,7 @@ class BugTracker(AluCog):
         query = "DELETE FROM valve_devs WHERE login=$1"
         await self.bot.pool.execute(query, login)
         self.valve_devs.remove(login)
-        e = discord.Embed(color=MP.orange())
+        e = discord.Embed(color=MClr.orange())
         e.description = f'Removed user `{login}` from the list of Valve devs.'
         await ctx.reply(embed=e)
 
@@ -260,7 +259,7 @@ class BugTracker(AluCog):
     async def list(self, ctx: AluContext):
         query = "SELECT login FROM valve_devs"
         valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
-        e = discord.Embed(color=MP.blue(), title='List of known Valve devs')
+        e = discord.Embed(color=MClr.blue(), title='List of known Valve devs')
         valve_devs.sort()
         e.description = '\n'.join([f'\N{BLACK CIRCLE} {i}' for i in valve_devs])
         await ctx.reply(embed=e)
@@ -273,7 +272,7 @@ class BugTracker(AluCog):
         assignees = self.valve_devs
 
         query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
-        dt: datetime.datetime = await self.bot.pool.fetchval(query, Sid.alu)
+        dt: datetime.datetime = await self.bot.pool.fetchval(query, Sid.community)
         now = discord.utils.utcnow()
 
         # if self.bot.test:  # TESTING
@@ -370,13 +369,13 @@ class BugTracker(AluCog):
                 batches_to_send.append([(em, file)])
 
         for i in batches_to_send:
-            msg = await self.bot.community.dota_news.send(embeds=[e for e, _ in i], files=[f for _, f in i if f])
+            msg = await self.community.dota_news.send(embeds=[e for e, _ in i], files=[f for _, f in i if f])
             # todo: if we implement custom for public then we need to only publish from my own server
             #  or just remove the following `.publish()` line at all
             await msg.publish()
 
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
-        await self.bot.pool.execute(query, now, Sid.alu)
+        await self.bot.pool.execute(query, now, Sid.community)
         self.retries = 0
         log.debug('BugTracker task is finished')
 
@@ -390,7 +389,7 @@ class BugTracker(AluCog):
             if error.status == 502:
                 if self.retries == 0:
                     e = discord.Embed(description='DotaBugtracker: Server Error 502')
-                    await self.bot.hideout.spam.send(embed=e)
+                    await self.hideout.spam.send(embed=e)
                 await asyncio.sleep(60 * 10 * 2**self.retries)
                 self.retries += 1
                 self.git_comments_check.restart()

@@ -7,8 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext, times
-from utils.var import Clr, Ems, Rid, Sid, Uid
+from utils import AluCog, AluContext, times, Clr, Ems, Rid, Sid
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -21,13 +20,13 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
         super().__init__(*args, **kwargs)
         self.active_mutes = {}
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Rid.discord_mods.id)
     @app_commands.default_permissions(manage_messages=True)
     @commands.hybrid_command(name='warn', description='Warn member')
     @app_commands.describe(member='Member to warn', reason='Reason')
     async def warn(self, ctx: AluContext, member: discord.Member, *, reason: str = "No reason"):
         """Give member a warning"""
-        if member.id == Uid.alu:
+        if member.id == self.bot.owner_id:
             raise commands.BadArgument(f"You can't do that to Aluerie {Ems.bubuGun}")
         if member.bot:
             raise commands.BadArgument("Don't bully bots, please")
@@ -64,7 +63,7 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
         delta = dt.dt - discord.utils.utcnow()
         await self.mute_work(ctx, member, dt.dt, delta, reason)
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Rid.discord_mods.id)
     @commands.command(usage='<time> [reason]')
     async def mute(
         self,
@@ -80,7 +79,7 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
         delta = when.dt - discord.utils.utcnow()
         await self.mute_work(ctx, member, when.dt, delta, when.arg)
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Rid.discord_mods.id)
     @app_commands.default_permissions(manage_messages=True)
     @commands.hybrid_command(name='unmute', description='Remove timeout+mute from member')
     @app_commands.describe(member='Member to unmute', reason='Reason')
@@ -96,7 +95,7 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
-        if after.guild.id != Sid.alu:
+        if after.guild.id != Sid.community:
             return
 
         if before.is_timed_out() is False and after.is_timed_out() is True:  # member is muted

@@ -8,9 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 from numpy.random import choice, randint
 
-from utils import AluCog
-from utils.const import Cid
-from utils.var import Clr, Ems, Rgx, Sid, Uid
+from utils import AluCog, Cid, Clr, Ems, Rgx, Sid, Uid
 from utils.webhook import check_msg_react, user_webhook
 
 if TYPE_CHECKING:
@@ -26,7 +24,7 @@ class Other(AluCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.id in [Uid.bot, Uid.yen]:
+        if message.author.id in [Uid.bot.id, Uid.yen.id]:
             return
 
         async def work_non_command_mentions(msg: discord.Message):
@@ -70,7 +68,7 @@ class Other(AluCog):
         await weebs_out(message)
 
         async def ree_the_oof(msg: discord.Message):
-            if not msg.guild or msg.guild.id != Sid.alu:
+            if not msg.guild or msg.guild.id != Sid.community:
                 return
             if "Oof" in msg.content:
                 try:
@@ -81,7 +79,7 @@ class Other(AluCog):
         await ree_the_oof(message)
 
         async def random_comfy_react(msg: discord.Message):
-            if not msg.guild or msg.guild.id != Sid.alu:
+            if not msg.guild or msg.guild.id != Sid.community:
                 return
             roll = randint(1, 300 + 1)
             if roll < 2:
@@ -93,7 +91,7 @@ class Other(AluCog):
         await random_comfy_react(message)
 
         async def your_life(msg):
-            if not msg.guild or msg.guild.id != Sid.alu or randint(1, 170 + 1) >= 2:
+            if not msg.guild or msg.guild.id != Sid.community or randint(1, 170 + 1) >= 2:
                 return
             try:
                 sliced_text = msg.content.split()
@@ -119,7 +117,7 @@ class Other(AluCog):
     @commands.hybrid_command(description='Send apuband emote combo')
     async def apuband(self, ctx: AluContext):
         """Send apuband emote combo"""
-        guild = self.bot.get_guild(Sid.alu)
+        guild = self.community.guild
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
         content = ' '.join([str(discord.utils.get(guild.emojis, name=e)) for e in emote_names])
         await ctx.channel.send(content=content)
@@ -142,14 +140,14 @@ class Other(AluCog):
         so it looks like the bot is speaking on its own.
         """
         ch = channel or ctx.channel
-        if ch.id in [Cid.emote_spam, Cid.comfy_spam]:
+        if ch.id in [Cid.emote_spam.id, Cid.comfy_spam.id]:
             raise commands.MissingPermissions(
                 [f'Sorry, these channels are special so you can\'t use this command in {ch.mention}']
             )
         elif not ch.permissions_for(ctx.author).send_messages:
             raise commands.MissingPermissions([f'Sorry, you don\'t have permissions to speak in {ch.mention}'])
         else:
-            url_array = re.findall(Rgx.url_danny, str(text))
+            url_array = re.findall(Rgx.url_link, str(text))
             for url in url_array:  # forbid embeds
                 text = text.replace(url, f'<{url}>')
             await ch.send(text)

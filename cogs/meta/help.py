@@ -6,10 +6,9 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus, tasks
 
-from utils import AluCog, AluContext
+from utils import AluCog, AluContext, Clr, Ems
 from utils.formats import human_timedelta
 from utils.pagination import Paginator
-from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot

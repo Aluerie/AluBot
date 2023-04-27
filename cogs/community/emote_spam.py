@@ -9,9 +9,7 @@ import regex
 from discord.ext import commands, tasks
 from numpy.random import choice, randint
 
-from utils.var import Clr, Ems, Rgx, Uid
-from utils.const import Cid
-from utils import AluCog
+from utils import AluCog, Cid, Clr, Ems, Rgx
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -35,7 +33,9 @@ class EmoteSpam(AluCog):
             # text = emoji_regex.sub('', msg.content)  # standard emotes
 
             text = emoji.replace_emoji(message.content, replace='')
-            filters = [Rgx.whitespaces, Rgx.emote, Rgx.nqn, Rgx.invis_symbol]
+
+            # there is definitely a better way to regex it out
+            filters = [Rgx.whitespace, Rgx.emote, Rgx.nqn, Rgx.invis]
             if nqn_check == 0:
                 filters.remove(Rgx.nqn)
             for item in filters:
@@ -90,7 +90,7 @@ class EmoteSpam(AluCog):
     async def offline_criminal_check(self):
         channel = self.bot.community.emote_spam
         async for message in channel.history(limit=2000):
-            if message.author.id == Uid.bot:
+            if message.author.id == self.bot.user.id:
                 return
             if await self.emote_spam_work(message):
                 text = f'Offline criminal found {Ems.peepoPolice}'
@@ -102,7 +102,6 @@ class EmoteSpam(AluCog):
 
 
 class ComfySpam(AluCog):
-
     async def cog_load(self) -> None:
         self.comfy_spam.start()
         self.offline_criminal_check.start()
@@ -117,7 +116,7 @@ class ComfySpam(AluCog):
             if len(message.embeds):
                 return await message.delete()
             text = str(message.content)
-            text = regex.sub(Rgx.whitespaces, '', text)
+            text = regex.sub(Rgx.whitespace, '', text)
             for item in Ems.comfy_emotes:
                 text = text.replace(item, "")
             if text:
@@ -144,7 +143,7 @@ class ComfySpam(AluCog):
     @tasks.loop(minutes=60)
     async def comfy_spam(self):
         if randint(1, 100 + 1) < 2:
-            await self.bot.community.comfy_spam.send('{0} {0} {0}'.format(Ems.peepoComfy))
+            await self.community.comfy_spam.send('{0} {0} {0}'.format(Ems.peepoComfy))
 
     @comfy_spam.before_loop
     async def comfy_spam_before(self):
@@ -152,8 +151,8 @@ class ComfySpam(AluCog):
 
     @tasks.loop(count=1)
     async def offline_criminal_check(self):
-        async for message in self.bot.community.comfy_spam.history(limit=2000):
-            if message.author.id == Uid.bot:
+        async for message in self.community.comfy_spam.history(limit=2000):
+            if message.author.id == self.bot.user.id:
                 return
             if await self.comfy_chat_control(message):
                 text = f'Offline criminal found {Ems.peepoPolice}'

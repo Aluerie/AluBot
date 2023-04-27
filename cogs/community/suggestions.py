@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord import app_commands
 
-from utils import AluCog
-from utils.var import Clr, Ems, Sid
+from utils import AluCog, Clr, Ems, Sid
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -19,7 +18,7 @@ class Suggestions(AluCog, emote=Ems.peepoWTF):
     * making said suggestions
     """
 
-    @app_commands.guilds(Sid.alu)
+    @app_commands.guilds(Sid.community)
     @app_commands.command()
     @app_commands.describe(text='Suggestion text')
     async def suggest(self, ntr: discord.Interaction, *, text: str):
@@ -30,7 +29,7 @@ class Suggestions(AluCog, emote=Ems.peepoWTF):
                     WHERE id=$1 
                     RETURNING suggestion_num;
                 """
-        number = await self.bot.pool.fetchval(query, Sid.alu)
+        number = await self.bot.pool.fetchval(query, Sid.community)
 
         title = f'Suggestion #{number}'
         e = discord.Embed(color=Clr.prpl, title=title, description=text)

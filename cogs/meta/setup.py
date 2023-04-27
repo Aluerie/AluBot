@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, List, Literal, NamedTuple
 import discord
 from discord.ext import commands, menus
 
-from utils import AluCog, AluContext
+from utils import AluCog, AluContext, Clr
 from utils.pagination import Paginator
-from utils.var import Clr
 
 if TYPE_CHECKING:
     pass

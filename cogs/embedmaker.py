@@ -13,8 +13,7 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord.ext import commands
 
-from utils import AluCog
-from utils.var import Clr, Ems
+from utils import AluCog, Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluContext
@@ -38,7 +37,6 @@ class StartView(discord.ui.View):
 
 
 class EmbedMaker(AluCog, name="Embed Maker", emote=Ems.DankZzz):
-
     @commands.hybrid_group(name="embed")
     async def embed_(self, ctx: AluContext):
         """Group command about Embed Build, for actual commands use it together with subcommands"""

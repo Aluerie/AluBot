@@ -9,9 +9,7 @@ from bs4 import BeautifulSoup
 from discord.ext import tasks
 
 from utils.lol.const import LOL_LOGO
-from utils.var import Clr, Sid
-
-from utils import AluCog
+from utils import AluCog, Clr, Sid
 
 if TYPE_CHECKING:
     pass
@@ -43,7 +41,7 @@ class Insider(AluCog):
                         AND insider_version IS DISTINCT FROM $1
                         RETURNING True
                     """
-        val = await self.bot.pool.fetchval(query, p.title, Sid.alu)
+        val = await self.bot.pool.fetchval(query, p.title, Sid.community)
         if not val:
             return
 
@@ -81,7 +79,7 @@ class LoLCom(AluCog):
                     AND lol_patch IS DISTINCT FROM $1
                     RETURNING True
                 """
-        val = await self.bot.pool.fetchval(query, new_patch_href, Sid.alu)
+        val = await self.bot.pool.fetchval(query, new_patch_href, Sid.community)
         if not val:
             return
 

@@ -1,23 +1,53 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import TYPE_CHECKING
 
 import discord
 
-from ._enums import ChannelEnum, RoleEnum, UserEnum
-
 if TYPE_CHECKING:
     from utils import AluBot
 
-__all__ = (
-    'Cid',
-    'Rid',
-    'Uid',
-    'CommunityGuild',
-)
+__all__ = ('Sid', 'Cid', 'Rid', 'Uid', 'CommunityGuild', 'HideoutGuild')
 
-# GUILD ID
-COMMUNITY = 702561315478044804
+
+class EnumID(Enum):
+    def __int__(self) -> int:
+        return self.value
+
+    def __str__(self) -> str:
+        return self.mention
+
+    @property
+    def id(self):
+        return self.value
+
+    @property
+    def mention(self) -> str:
+        raise NotImplemented
+
+
+class ChannelEnum(EnumID):
+    @property
+    def mention(self) -> str:
+        return f'<#{self.value}>'
+
+
+class RoleEnum(EnumID):
+    @property
+    def mention(self) -> str:
+        return f'<@&{self.value}>'
+
+
+class UserEnum(EnumID):
+    @property
+    def mention(self) -> str:
+        return f'<@{self.value}>'
+
+
+class Sid:
+    community = 702561315478044804
+    hideout = 759916212842659850
 
 
 class Cid(ChannelEnum):
@@ -50,8 +80,24 @@ class Cid(ChannelEnum):
     total_people = 795743012789551104
     total_bots = 795743065787990066
 
+    # HIDEOUT
+    global_logs = 997149550324240465
+    daily_report = 1066406466778566801
+
+    spam_me = 970823670702411810
+    test_spam = 1066379298363166791
+
+    repost = 971504469995049041
+
+    copy_dota_info = 873430376033452053
+    copy_dota_steam = 881843565251141632
+    copy_dota_tweets = 963954743644934184
+
+    event_pass = 966316773869772860
+
 
 class Rid(RoleEnum):
+    # COMMUNITY
     bots = 724981475099017276
     nsfw_bots = 959955573405777981
     voice = 761475276361826315
@@ -60,6 +106,28 @@ class Rid(RoleEnum):
     birthday = 748586533627363469
     stream_lover = 760082003495223298
     discord_mods = 855839522620047420
+    level_zero = 852663921085251585
+
+    # HIDEOUT
+    event = 1090274008680902667
+    jailed_bots = 1090428532162822234
+
+    @staticmethod
+    def is_category_role(role_id: int) -> bool:
+        return role_id in [
+            856589983707693087,  # moderation
+            852199351808032788,  # activity
+            852193537067843634,  # subscription
+            852199851840372847,  # special
+            851786344354938880,  # games
+            852192240306618419,  # notification
+            852194400922632262,  # pronoun
+            727492782196916275,  # plebs
+        ]
+
+    @staticmethod
+    def is_ignored_for_logs(role_id: int) -> bool:
+        return role_id in [Rid.voice.id, Rid.live_stream.id] or Rid.is_category_role(role_id)
 
 
 class Uid(UserEnum):
@@ -71,13 +139,19 @@ class Uid(UserEnum):
     nqn = 559426966151757824
 
 
-class CommunityGuild:
-    def __init__(self, bot: AluBot):
+class SavedGuild:
+    def __init__(self, bot: AluBot, guild_id: int):
         self.bot: AluBot = bot
+        self.id: int = guild_id
 
     @property
     def guild(self) -> discord.Guild:
-        return self.bot.get_guild(COMMUNITY)  # type: ignore
+        return self.bot.get_guild(self.id)  # type: ignore
+
+
+class CommunityGuild(SavedGuild):
+    def __init__(self, bot: AluBot):
+        super().__init__(bot, Sid.community)
 
     # channels #########################################################
     @property
@@ -176,3 +250,47 @@ class CommunityGuild:
     @property
     def stream_lover_role(self) -> discord.Role:
         return self.guild.get_role(Rid.stream_lover.id)  # type: ignore
+
+
+class HideoutGuild(SavedGuild):
+    """
+    My (probably wrong) way to combat
+    absurd amount of "type: ignore" in the code
+    with `get_channel` and similar methods for channels with known ids.
+
+    This class basically mirrors my HideOut guild and tells the type checker
+    known channels and their type, known roles, etc.
+    """
+
+    def __init__(self, bot: AluBot):
+        super().__init__(bot, Sid.hideout)
+
+    # channels
+    @property
+    def global_logs(self) -> discord.TextChannel:
+        return self.bot.get_channel(Cid.global_logs.id)  # type: ignore
+
+    @property
+    def daily_report(self) -> discord.TextChannel:
+        return self.bot.get_channel(Cid.daily_report.id)  # type: ignore
+
+    @property
+    def spam_channel_id(self) -> int:
+        return Cid.test_spam.id if self.bot.test else Cid.spam_me.id
+
+    @property
+    def spam(self) -> discord.TextChannel:
+        return self.bot.get_channel(self.spam_channel_id)  # type: ignore
+
+    @property
+    def repost(self) -> discord.TextChannel:
+        return self.bot.get_channel(Cid.repost.id)  # type: ignore
+
+    @property
+    def copy_dota_tweets(self) -> discord.TextChannel:
+        return self.bot.get_channel(Cid.copy_dota_tweets.id)  # type: ignore
+
+    # roles
+    @property
+    def jailed_bots(self) -> discord.Role:
+        return self.guild.get_role(Rid.jailed_bots.id)  # type: ignore

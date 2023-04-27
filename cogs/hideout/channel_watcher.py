@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands, tasks
 
 from utils import AluCog
-from utils.const.hideout import event, event_pass, spam_me
+from utils.const import Chd, Rhd
 from utils.var import Clr, Sid
 
 if TYPE_CHECKING:
@@ -79,9 +79,9 @@ class EventPassWatcher(ChannelWatcher):
             bot,
             db_column='event_pass_is_live',
             sleep_time=50 * 60,  # 50 minutes
-            watch_channel_id=event_pass,
-            ping_channel_id=spam_me,
-            role_mention=f'<@&{event}>',
+            watch_channel_id=Chd.event_pass.id,
+            ping_channel_id=Chd.spam_me.id,
+            role_mention=Rhd.event.mention,
         )
 
 

@@ -127,7 +127,7 @@ class ActiveMatch(Match):
             hero_img = await bot.imgtools.url_to_img(await hero.img_url_by_id(hero_id))
             # h_width, h_height = heroImg.size
             hero_img = hero_img.resize((62, 35))
-            hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=dota_player_colour_map.get(count))
+            hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=dota_player_colour_map.get(count, "#FF0000"))
             extra_space = 0 if count < 5 else 20
             img.paste(hero_img, (count * 62 + extra_space, 0))
 

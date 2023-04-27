@@ -109,14 +109,14 @@ class TwitchStream:
         title: str
         preview_url: str
 
-    def __init__(self, twitch_id: int, user: twitchio.User, stream: twitchio.Stream):
+    def __init__(self, twitch_id: int, user: twitchio.User, stream: Optional[twitchio.Stream]):
         self.twitch_id = twitch_id
         self._update(user, stream)
 
     def __repr__(self):
         return f"<Stream id={self.twitch_id} name={self.name} online={self.online} title={self.title}>"
 
-    def _update(self, user: twitchio.User, stream: twitchio.Stream):
+    def _update(self, user: twitchio.User, stream: Optional[twitchio.Stream]):
         self.display_name = user.display_name
         self.name = user.name
         self.url = f'https://www.twitch.tv/{self.display_name}'

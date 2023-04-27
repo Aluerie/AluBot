@@ -50,13 +50,14 @@ class Logging(AluCog):
         if before.content == after.content:  # most likely some link embed link action
             return
 
+        channel: discord.abc.GuildChannel = after.channel #type: ignore
         e = discord.Embed(description=inline_word_by_word_diff(before.content, after.content), colour=0x00BFFF)
         e.set_author(
-            name=f'{after.author.display_name} edit in #{after.channel.name}',
+            name=f'{after.author.display_name} edit in #{channel.name}',
             icon_url=after.author.display_avatar.url,
             url=after.jump_url,  # TODO: this link is not jumpable from mobile but we dont care, right ?
         )
-        await self.bot.community.logs.send(embed=e)
+        await self.community.logs.send(embed=e)
 
     @commands.Cog.listener()
     async def on_message_delete(self, msg):
@@ -120,18 +121,21 @@ class Logging(AluCog):
     async def rolling_stones_check(self):
         guild = self.bot.community.guild
         stone_rl = self.bot.community.rolling_stone_role
+
         async for entry in guild.audit_logs(action=discord.AuditLogAction.member_update):
-            if isinstance(entry.target, discord.User) or stone_rl in entry.target.roles:
+            target: discord.Member = entry.target # type: ignore 
+            if stone_rl in target.roles:
                 return
-            if 'Stone' in entry.target.display_name:
+            
+            if 'Stone' in target.display_name:
                 e = discord.Embed(
                     colour=stone_rl.colour,
-                    description=f'{entry.target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}',
+                    description=f'{target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}',
                 )
                 await self.bot.community.bot_spam.send(embed=e)
-                await entry.target.add_roles(stone_rl)
+                await target.add_roles(stone_rl)
             else:
-                await entry.target.remove_roles(stone_rl)
+                await target.remove_roles(stone_rl)
 
     @rolling_stones_check.before_loop
     async def before(self):
@@ -147,7 +151,7 @@ class CommandLogging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
-        if ctx.guild.id not in self.included_guilds or ctx.author.id in self.ignored_users:
+        if not ctx.guild or ctx.guild.id not in self.included_guilds or ctx.author.id in self.ignored_users:
             return
 
         cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])

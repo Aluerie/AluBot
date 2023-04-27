@@ -78,9 +78,9 @@ async def rank_image(bot: AluBot, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, pla
     image.paste(avatar, (left, top), mask_im)
 
     d = ImageDraw.Draw(image)
-    d.rectangle([0, height * 6 / 7, width, height], fill=(98, 98, 98))
+    d.rectangle((0, height * 6 / 7, width, height), fill=(98, 98, 98))
     d.rectangle(
-        [0, height * 6 / 7, (exp - prev_lvl_exp) / (next_lvl_exp - prev_lvl_exp) * width, height],
+        (0, height * 6 / 7, (exp - prev_lvl_exp) / (next_lvl_exp - prev_lvl_exp) * width, height),
         fill=member.color.to_rgb(),
     )
 
@@ -115,7 +115,7 @@ async def avatar_work(ctx, user: discord.User):
     return e
 
 
-async def avatar_usercmd(ntr: discord.Interaction, user: discord.User):
+async def avatar_user_cmd(ntr: discord.Interaction, user: discord.User):
     e = await avatar_work(ntr, user)
     await ntr.response.send_message(embed=e, ephemeral=True)
 
@@ -139,7 +139,7 @@ async def rank_work(ctx: Union[AluContext, discord.Interaction[AluBot]], member:
     return ctx.client.imgtools.img_to_file(image, filename='rank.png')
 
 
-async def rank_usercmd(ntr: discord.Interaction[AluBot], member: discord.Member):
+async def rank_user_cmd(ntr: discord.Interaction[AluBot], member: discord.Member):
     await ntr.response.send_message(file=await rank_work(ntr, member), ephemeral=True)
 
 
@@ -153,8 +153,8 @@ class ExperienceSystem(AluCog, name='Profile'):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.ctx_menu1 = app_commands.ContextMenu(name="View User Avatar", callback=avatar_usercmd)
-        self.ctx_menu2 = app_commands.ContextMenu(name="View User Server Rank", callback=rank_usercmd)
+        self.ctx_menu1 = app_commands.ContextMenu(name="View User Avatar", callback=avatar_user_cmd)
+        self.ctx_menu2 = app_commands.ContextMenu(name="View User Server Rank", callback=rank_user_cmd)
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
@@ -167,17 +167,6 @@ class ExperienceSystem(AluCog, name='Profile'):
 
     async def cog_unload(self) -> None:
         self.remove_inactive.cancel()
-
-    @commands.hybrid_command(aliases=['ls'], usage='[member=you]', description='Show when `@member` was last seen')
-    @app_commands.describe(member='Member to check')
-    async def lastseen(self, ctx: AluContext, member: Optional[discord.Member] = None):
-        """Show when `@member` was last seen on this server ;"""
-        member = member or ctx.author
-        query = 'SELECT lastseen FROM users WHERE id=$1'
-        lastseen = await self.bot.pool.fetchval(query, member.id)
-        dt_delta = discord.utils.utcnow() - lastseen
-        answer_text = f'{member.mention} was last seen in this server {human_timedelta(dt_delta)}'
-        await ctx.reply(content=answer_text)
 
     @commands.hybrid_command(name='leaderboard', aliases=['l'], description='View server leaderboard')
     @app_commands.describe(sort_by='Choose how to sort leaderboard')
@@ -218,12 +207,10 @@ class ExperienceSystem(AluCog, name='Profile'):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        # if self.bot.test_flag:
-        #    return  # let's not mess up with Yennifer
         if message.author.bot:
             return
 
-        if message.guild is not None and message.guild.id in [Sid.community]:
+        if message.guild and message.guild.id in [Sid.community]:
             query = """ WITH u AS (
                             SELECT lastseen FROM users WHERE id=$1
                         )           
@@ -234,6 +221,7 @@ class ExperienceSystem(AluCog, name='Profile'):
                     """
             lastseen = await self.bot.pool.fetchval(query, message.author.id)
 
+            author: discord.Member = message.author  # type: ignore
             dt_now = discord.utils.utcnow()
             if dt_now - lastseen > datetime.timedelta(seconds=LAST_SEEN_TIMEOUT):
                 query = 'UPDATE users SET exp=exp+1 WHERE id=$1 RETURNING exp'
@@ -241,15 +229,21 @@ class ExperienceSystem(AluCog, name='Profile'):
                 level = get_level(exp)
 
                 if exp == get_exp_for_next_level(get_level(exp) - 1):
-                    level_up_role = discord.utils.get(message.guild.roles, name=f"Level #{level}")
-                    previous_level_role = discord.utils.get(message.guild.roles, name=f"Level #{level - 1}")
+                    level_up_role: Optional[discord.Role] = discord.utils.get(
+                        message.guild.roles, name=f"Level #{level}"
+                    )
+                    previous_level_role: Optional[discord.Role] = discord.utils.get(
+                        message.guild.roles, name=f"Level #{level - 1}"
+                    )
+                    if not level_up_role or not previous_level_role:
+                        raise ValueError('Roles were not found in the community guild')
                     e = discord.Embed(colour=Clr.prpl)
                     e.description = '{0} just advanced to {1} ! ' '{2} {2} {2}'.format(
                         message.author.mention, level_up_role.mention, Ems.PepoG
                     )
                     await message.channel.send(embed=e)
-                    await message.author.remove_roles(previous_level_role)
-                    await message.author.add_roles(level_up_role)
+                    await author.remove_roles(previous_level_role)
+                    await author.add_roles(level_up_role)
 
             for item in thanks_words:  # reputation part
                 if item in message.content.lower():
@@ -257,32 +251,6 @@ class ExperienceSystem(AluCog, name='Profile'):
                         if member != message.author:
                             query = 'UPDATE users SET rep=rep+1 WHERE id=$1'
                             await self.bot.pool.execute(query, member.id)
-
-    @commands.hybrid_command(name='avatar', description="View User Avatar", usage='[member=you]')
-    async def avatar_bridge(self, ctx: AluContext, user: discord.User = None):
-        """Show avatar for `@user`"""
-        e = await avatar_work(ctx, user)
-        await ctx.reply(embed=e)
-
-    @commands.hybrid_command(aliases=['r'], name='rank', description="View User Server Rank", usage='[member=you]')
-    async def rank_bridge(self, ctx: AluContext, *, member: discord.Member = None):
-        """Show `@member`'s rank, level and experience"""
-        await ctx.reply(file=await rank_work(ctx, member))
-
-    @commands.group()
-    async def levels(self, ctx: AluContext):
-        """Group command about Levels, for actual commands use it together with subcommands"""
-        await ctx.scnf()
-
-    @levels.command(usage='yes/no')
-    async def notifs(self, ctx: AluContext, in_or_out: my_bool):
-        """Opt `in/out` of exp system notifs and all leaderboard presence ;"""
-        query = f'UPDATE users SET inlvl={in_or_out} WHERE id=$1;'
-        await self.bot.pool.execute(query, ctx.author.id)
-        ans = (
-            f'{ctx.author.display_name} is now opted {in_or_out} of exp-system notifications and being in leaderboards'
-        )
-        await ctx.reply(content=ans)
 
     @commands.hybrid_command(name='rep', description='Give +1 to @member reputation')
     @commands.cooldown(1, 60 * 60, commands.BucketType.user)

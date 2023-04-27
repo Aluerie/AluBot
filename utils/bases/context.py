@@ -116,7 +116,10 @@ class AluContext(commands.Context):
 
         author_id = author_id or self.author.id
         view = ConfirmationView(timeout=timeout, delete_after=delete_after, author_id=author_id)
-        view.message = await self.reply(content=content, embed=embed, view=view)
+        if embed:
+            view.message = await self.reply(content=content, embed=embed, view=view)
+        else:
+            view.message = await self.reply(content=content, view=view)
         await view.wait()
         return view.value
 

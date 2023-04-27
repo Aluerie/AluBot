@@ -72,10 +72,10 @@ class HumanTime:
         now = now or datetime.datetime.now(datetime.timezone.utc)
         dt, status = self.calendar.parseDT(argument, sourceTime=now)
         dt = dt.replace(tzinfo=datetime.timezone.utc)
-        if not status.hasDateOrTime:
+        if not status.hasDateOrTime:  # type: ignore # TODO: fix
             raise commands.BadArgument('invalid time provided, try e.g. "tomorrow" or "3 days"')
 
-        if not status.hasTime:
+        if not status.hasTime:  # type: ignore # TODO: fix
             # replace it with the current time
             dt = dt.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, TypeVar
+from typing import TYPE_CHECKING, Callable, List, TypeVar
 
 import discord
 from discord import app_commands
@@ -30,7 +30,7 @@ def is_trustee():
     async def pred(ctx_ntr: AluContext | discord.Interaction[AluBot]) -> bool:
         """trustees only"""
         query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
-        trusted_ids = await ctx_ntr.client.pool.fetchval(query, Sid.community)
+        trusted_ids: List[int] = await ctx_ntr.client.pool.fetchval(query, Sid.community)  # type: ignore
         if ctx_ntr.user.id in trusted_ids:
             return True
         else:

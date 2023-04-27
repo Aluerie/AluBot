@@ -50,7 +50,7 @@ class SnoozeModal(discord.ui.Modal, title='Snooze'):
     async def on_submit(self, ntr: discord.Interaction) -> None:
         try:
             when = times.FutureTime(str(self.duration)).dt
-        except commands.BadArgument:  # Exceptiom
+        except commands.BadArgument:  # Exception
             await ntr.response.send_message(
                 'Duration could not be parsed, sorry. Try something like "5 minutes" or "1 hour"', ephemeral=True
             )

@@ -72,7 +72,7 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
         *,
         when: Annotated[
             times.FriendlyTimeResult,
-            times.UserFriendlyTime(commands.clean_content, default='…'),  # type: ignore # pycharm things
+            times.UserFriendlyTime(commands.clean_content, default='…'),
         ],
     ):
         """Mute+timeout member from chatting"""
@@ -98,13 +98,15 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
         if after.guild.id != Sid.community:
             return
 
-        if before.is_timed_out() is False and after.is_timed_out() is True:  # member is muted
+        if after.timed_out_until and before.is_timed_out() is False and after.is_timed_out() is True:  # member is muted
             e = discord.Embed(colour=Clr.red, description=discord.utils.format_dt(after.timed_out_until, style="R"))
 
             mute_actor_str = "Unknown"
             async for entry in after.guild.audit_logs(action=discord.AuditLogAction.member_update):
-                if entry.target.id == after.id and entry.after.timed_out_until == after.timed_out_until:
-                    mute_actor_str = entry.user.name
+                target: discord.Member = entry.target # type: ignore
+                user: discord.Member = entry.target # type: ignore
+                if target.id == after.id and entry.after.timed_out_until == after.timed_out_until:
+                    mute_actor_str = user.name
 
             e.set_author(
                 name=f'{after.display_name} is muted by {mute_actor_str} until', icon_url=after.display_avatar.url

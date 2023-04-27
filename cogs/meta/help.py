@@ -9,7 +9,7 @@ from discord.ext import commands, menus, tasks
 from utils import AluCog, AluContext
 from utils.formats import human_timedelta
 from utils.pagination import Paginator
-from utils.var import Cid, Clr, Ems, Rid
+from utils.var import Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot

@@ -9,7 +9,7 @@ from github import Github
 
 from config import GIT_PERSONAL_TOKEN
 from utils import AluCog
-from utils.const.hideout import copy_dota_info, copy_dota_steam, copy_dota_tweets
+from utils.const import Chd
 from utils.formats import block_function
 from utils.github import human_commit
 from utils.imgtools import str_to_file
@@ -73,12 +73,12 @@ class SteamDB(AluCog):
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         try:
-            if msg.channel.id in (copy_dota_info, copy_dota_steam, copy_dota_tweets):
+            if msg.channel.id in (Chd.copy_dota_info.id, Chd.copy_dota_steam.id, Chd.copy_dota_tweets.id):
                 news_channel = self.bot.community.dota_news
             else:
                 return
 
-            if msg.channel.id == copy_dota_info:
+            if msg.channel.id == Chd.copy_dota_info.id:
                 if "https://steamdb.info" in msg.content:
                     url, embeds, files = await get_gitdiff_embed()
                     msg = await news_channel.send(content=f"<{url}>", embeds=embeds)
@@ -90,14 +90,14 @@ class SteamDB(AluCog):
                     msg = await news_channel.send(content=msg.content, embeds=msg.embeds, files=msg.attachments)
                     await msg.publish()
 
-            elif msg.channel.id == copy_dota_steam:
+            elif msg.channel.id == Chd.copy_dota_steam.id:
                 if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
                 e = discord.Embed(colour=0x171A21, description=msg.content)
                 msg = await news_channel.send(embed=e)
                 await msg.publish()
 
-            elif msg.channel.id == copy_dota_tweets:
+            elif msg.channel.id == Chd.copy_dota_tweets.id:
                 await asyncio.sleep(2)
                 answer = await msg.channel.fetch_message(int(msg.id))
                 embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]

@@ -9,9 +9,8 @@ import regex
 from discord.ext import commands, tasks
 from numpy.random import choice, randint
 
-from utils.const.community import COMFY_SPAM, EMOTE_SPAM
 from utils.var import Clr, Ems, Rgx, Uid
-
+from utils.const import Cid
 from utils import AluCog
 
 if TYPE_CHECKING:
@@ -28,7 +27,7 @@ class EmoteSpam(AluCog):
         self.offline_criminal_check.cancel()
 
     async def emote_spam_control(self, message: discord.Message, nqn_check: int = 1):
-        if message.channel.id == EMOTE_SPAM:
+        if message.channel.id == Cid.emote_spam.id:
             channel: discord.TextChannel = message.channel  # type: ignore
             if len(message.embeds):
                 return await message.delete()
@@ -113,7 +112,7 @@ class ComfySpam(AluCog):
         self.offline_criminal_check.cancel()
 
     async def comfy_chat_control(self, message: discord.Message):
-        if message.channel.id == COMFY_SPAM:
+        if message.channel.id == Cid.comfy_spam.id:
             channel: discord.TextChannel = message.channel  # type: ignore
             if len(message.embeds):
                 return await message.delete()

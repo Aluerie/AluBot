@@ -51,7 +51,7 @@ class Insider(AluCog):
         e.set_image(
             url='https://blogs.windows.com/wp-content/themes/microsoft-stories-theme/img/theme/windows-placeholder.jpg'
         )
-        msg = await self.bot.hideout.repost.send(embed=e)
+        msg = await self.hideout.repost.send(embed=e)
         # await msg.publish()
 
     @insider_checker.before_loop

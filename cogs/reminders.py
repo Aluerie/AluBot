@@ -20,7 +20,7 @@ from discord import app_commands
 from discord.ext import commands
 from typing_extensions import Annotated
 
-from utils import formats, times, Clr, Ems
+from utils import Clr, Ems, formats, times
 from utils.bases.context import AluContext
 from utils.database import DRecord
 from utils.pagination import EnumeratedPages
@@ -415,7 +415,7 @@ class Reminder(commands.Cog):
 
         status = await ctx.pool.execute(query, id, str(ctx.author.id))
         if status == 'DELETE 0':
-            e = discord.Embed(description='Could not delete any reminders with that ID.', colour=Clr.error)
+            e = discord.Embed(description='Could not delete any reminders with that ID.', colour=Clr.error())
             e.set_author(name='IDError')
             return await ctx.reply(embed=e)
 
@@ -425,7 +425,7 @@ class Reminder(commands.Cog):
             self._task.cancel()
             self._task = self.bot.loop.create_task(self.dispatch_timers())
 
-        e = discord.Embed(description='Successfully deleted reminder.', colour=Clr.prpl)
+        e = discord.Embed(description='Successfully deleted reminder.', colour=Clr.prpl())
         await ctx.reply(embed=e)
 
     @remind.command(name='clear', ignore_extra=False)

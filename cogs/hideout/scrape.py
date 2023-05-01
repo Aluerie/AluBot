@@ -8,8 +8,8 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import tasks
 
-from utils.lol.const import LOL_LOGO
 from utils import AluCog, Clr, Sid
+from utils.lol.const import LOL_LOGO
 
 if TYPE_CHECKING:
     pass
@@ -24,7 +24,6 @@ class Insider(AluCog):
 
     @tasks.loop(minutes=10)
     async def insider_checker(self):
-
         url = "https://blogs.windows.com/windows-insider/feed/"
         rss = feedparser.parse(url)
 
@@ -66,7 +65,6 @@ class LoLCom(AluCog):
 
     @tasks.loop(minutes=15)
     async def patch_checker(self):
-
         url = "https://www.leagueoflegends.com/en-us/news/tags/patch-notes/"
         async with self.bot.session.get(url) as resp:
             soup = BeautifulSoup(await resp.read(), 'html.parser')
@@ -96,7 +94,7 @@ class LoLCom(AluCog):
 
         # maybe use ('a' ,{'class': 'skins cboxElement'})
         img_url = patch_soup.find('h2', id='patch-patch-highlights').find_next('a').get('href')  # type: ignore # TODO:FIX
-        e = discord.Embed(title=content_if_property('og:title'), url=patch_url, colour=Clr.rspbrry)
+        e = discord.Embed(title=content_if_property('og:title'), url=patch_url, colour=Clr.rspbrry())
         e.description = content_if_property("og:description")
         e.set_image(url=img_url)
         e.set_thumbnail(url=content_if_property('og:image'))

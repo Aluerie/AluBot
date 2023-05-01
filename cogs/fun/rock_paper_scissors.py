@@ -73,14 +73,14 @@ class RPSView(discord.ui.View):
         if ntr.user and ntr.user in self.players:
             if ntr.user.id in self.choices:
                 e = discord.Embed(
-                    colour=Clr.error, description=f'You\'ve already chosen **{self.choices[ntr.user.id]}**'
+                    colour=Clr.error(), description=f'You\'ve already chosen **{self.choices[ntr.user.id]}**'
                 )
                 await ntr.response.send_message(embed=e, ephemeral=True)
                 return False
             else:
                 return True
         else:
-            e = discord.Embed(colour=Clr.error, description='Sorry! This game dialog is not for you.')
+            e = discord.Embed(colour=Clr.error(), description='Sorry! This game dialog is not for you.')
             await ntr.response.send_message(embed=e, ephemeral=True)
             return False
 
@@ -105,7 +105,7 @@ class RPSView(discord.ui.View):
     async def rps_button_callback(self, ntr: discord.Interaction, choice: RPSChoice):
         self.choices[ntr.user] = choice
 
-        e = discord.Embed(colour=Clr.prpl, description=f'You\'ve chosen **{choice.emote_name}**')
+        e = discord.Embed(colour=Clr.prpl(), description=f'You\'ve chosen **{choice.emote_name}**')
         await ntr.response.send_message(embed=e, ephemeral=True)
         await self.edit_embed_player_choice(ntr.user)
 
@@ -143,7 +143,7 @@ class RockPaperScissorsCommand(AluCog):
             raise commands.BadArgument('I\'m afraid other bots do not know how to play this game')
 
         player1, player2 = (ctx.author, user)
-        e = discord.Embed(title='Rock Paper Scissors Game', colour=Clr.prpl)
+        e = discord.Embed(title='Rock Paper Scissors Game', colour=Clr.prpl())
         e.add_field(name='Player 1', value=f'{player1.mention}')
         e.add_field(name='Player 2', value=f'{player2.mention}')
         e.add_field(

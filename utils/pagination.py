@@ -52,13 +52,13 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
 
     async def on_submit(self, ntr: discord.Interaction):
         if self.paginator.is_finished():
-            e = discord.Embed(colour=Clr.error, description="Took too long")
+            e = discord.Embed(colour=Clr.error(), description="Took too long")
             await ntr.response.send_message(embed=e, ephemeral=True)
             return
 
         value = str(self.goto.value)
         if not value.isdigit():
-            e = discord.Embed(colour=Clr.error)
+            e = discord.Embed(colour=Clr.error())
             e.description = f"Expected a page number between 1 and {self.max_pages_as_str}, not {value!r}"
             await ntr.response.send_message(embed=e, ephemeral=True)
             return
@@ -196,7 +196,7 @@ class Paginator(discord.ui.View):
         if ntr.user and ntr.user.id in (self.ctx_ntr.client.owner_id, self.author.id):
             return True
         else:
-            e = discord.Embed(colour=Clr.error)
+            e = discord.Embed(colour=Clr.error())
             e.description = "This pagination menu cannot be controlled by you ! {0} {0} {0}".format(Ems.peepoWTF)
             await ntr.response.send_message(embed=e, ephemeral=True)
             return False

@@ -28,7 +28,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
         else:
             db.set_value(db.a, ctx.author.id, name=afk_text)
         self.active_afk[ctx.author.id] = afk_text
-        e = Embed(color=Clr.prpl)
+        e = Embed(color=Clr.prpl())
         e.description = f'{ctx.author.mention}, you are flagged as afk with `afk_text`:\n{afk_text}'
         await ctx.reply(embed=e)
         try:
@@ -48,7 +48,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
                 guild = self.bot.get_guild(Sid.community)
                 member = guild.get_member(key)
                 e = (
-                    Embed(colour=Clr.prpl, title='Afk note:', description=db.get_value(db.a, key, 'name'))
+                    Embed(colour=Clr.prpl(), title='Afk note:', description=db.get_value(db.a, key, 'name'))
                     .set_author(name=f'Sorry, but {member.display_name} is $afk !', icon_url=member.display_avatar.url)
                     .set_footer(
                         text='PS. Please, consider deleting your ping-message (or just removing ping) '
@@ -58,9 +58,9 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
                 await msg.channel.send(embed=e)
 
         async def send_non_afk_em(author, channel):
-            e = Embed(colour=Clr.prpl, title='Afk note:', description=db.get_value(db.a, author.id, 'name')).set_author(
-                name=f'{author.display_name} is no longer afk !', icon_url=author.display_avatar.url
-            )
+            e = Embed(
+                colour=Clr.prpl(), title='Afk note:', description=db.get_value(db.a, author.id, 'name')
+            ).set_author(name=f'{author.display_name} is no longer afk !', icon_url=author.display_avatar.url)
             db.remove_row(db.a, author.id)
             self.active_afk.pop(author.id)
             await channel.send(embed=e)

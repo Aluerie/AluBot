@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext, times, Clr, Ems, Rid, Sid
+from utils import AluCog, AluContext, Clr, Ems, Rid, Sid, times
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -31,7 +31,7 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
         if member.bot:
             raise commands.BadArgument("Don't bully bots, please")
 
-        e = discord.Embed(title="Manual warning by a mod", colour=Clr.prpl, description=reason)
+        e = discord.Embed(title="Manual warning by a mod", colour=Clr.prpl(), description=reason)
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         e.set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         msg = await ctx.reply(embed=e)
@@ -43,11 +43,11 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
         try:
             await member.timeout(duration, reason=reason)
         except discord.Forbidden:
-            e = discord.Embed(color=Clr.error, description=f'You can not mute that member')
+            e = discord.Embed(color=Clr.error(), description=f'You can not mute that member')
             e.set_author(name='MissingPermissions')
             return await ctx.reply(embed=e, ephemeral=True)
 
-        e = discord.Embed(color=Clr.prpl, title="Mute member")
+        e = discord.Embed(color=Clr.prpl(), title="Mute member")
         e.description = f'mute until {discord.utils.format_dt(dt, "R")}'
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         e.add_field(name='Reason', value=reason)
@@ -86,7 +86,7 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
     async def unmute(self, ctx: AluContext, member: discord.Member, *, reason: str = 'No reason'):
         """Remove timeout+mute from member"""
         await member.timeout(None, reason=reason)
-        e = discord.Embed(color=Clr.prpl, title="Unmute member")
+        e = discord.Embed(color=Clr.prpl(), title="Unmute member")
         e.description = f"{member.mention}, you are unmuted now, congrats {Ems.bubuSip}"
         e.add_field(name='Reason', value=reason)
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
@@ -103,8 +103,8 @@ class Moderation(AluCog, emote=Ems.peepoPolice):
 
             mute_actor_str = "Unknown"
             async for entry in after.guild.audit_logs(action=discord.AuditLogAction.member_update):
-                target: discord.Member = entry.target # type: ignore
-                user: discord.Member = entry.target # type: ignore
+                target: discord.Member = entry.target  # type: ignore
+                user: discord.Member = entry.target  # type: ignore
                 if target.id == after.id and entry.after.timed_out_until == after.timed_out_until:
                     mute_actor_str = user.name
 

@@ -59,7 +59,7 @@ class LoLNotifs(commands.Cog):
             except ServerError:
                 log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.display_name}')
                 continue
-                # e = Embed(colour=Clr.error)
+                # e = Embed(colour=Clr.error())
                 # e.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
                 # await self.bot.get_channel(Cid.spam_me).send(embed=e)  # content=umntn(Uid.alu)
 

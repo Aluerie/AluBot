@@ -6,8 +6,8 @@ import discord
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from utils import Clr, Ems, Rid, Sid, Uid
 from utils.checks import is_owner
-from utils import Rid, Sid, Uid, Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -73,7 +73,7 @@ async def welcome_message(
     else:
         description = f'Chat, it\'s a new bot in our server. Use it wisely {Ems.peepoComfy}'
 
-    e = discord.Embed(description=description, color=Clr.prpl)
+    e = discord.Embed(description=description, color=Clr.prpl())
     e.set_footer(text=f"With love, {member.guild.me.display_name}")
     return content_text, e, bot.imgtools.img_to_file(image)
 

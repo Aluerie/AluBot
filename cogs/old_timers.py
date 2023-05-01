@@ -6,7 +6,7 @@ import discord
 from discord.ext import tasks
 from numpy.random import randint, seed
 
-from utils import AluCog, Cid, Clr, Ems, Rid, Uid, Sid
+from utils import AluCog, Cid, Clr, Ems, Rid, Sid, Uid
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -148,15 +148,15 @@ class OldTimers(AluCog):
 
     @tasks.loop(minutes=87)
     async def daily_reminders(self):
-        await self.timer_work('Daily Message', Clr.prpl, await get_a_text(self.bot.pool))
+        await self.timer_work('Daily Message', Clr.prpl(), await get_a_text(self.bot.pool))
 
     @tasks.loop(minutes=89)
     async def daily_important_reminders(self):
-        await self.timer_work('Daily Important Message', Clr.rspbrry, await get_important_text(self.bot.pool))
+        await self.timer_work('Daily Important Message', Clr.rspbrry(), await get_important_text(self.bot.pool))
 
     @tasks.loop(minutes=157)
     async def daily_fact_reminders(self):
-        await self.timer_work('Daily Fact Message', Clr.neon, await get_fact_text(self.bot.pool))
+        await self.timer_work('Daily Fact Message', Clr.neon(), await get_fact_text(self.bot.pool))
 
     @tasks.loop(minutes=136)
     async def daily_rule_reminders(self):

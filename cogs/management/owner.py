@@ -8,9 +8,9 @@ import discord
 from discord.ext import commands
 
 from cogs import get_extensions
+from utils import Clr, Ems, MClr, Sid
 from utils.bases.context import AluContext
 from utils.checks import is_owner
-from utils import MClr, Clr, Ems, Sid
 
 from ._base import ManagementBaseCog
 
@@ -35,7 +35,7 @@ class AdminTools(ManagementBaseCog):
 
         query = "UPDATE botinfo SET trusted_ids=$1 WHERE id=$2"
         await self.bot.pool.execute(query, trusted_ids, Sid.community)
-        e = discord.Embed(colour=Clr.prpl)
+        e = discord.Embed(colour=Clr.prpl())
         e.description = f"We {mode}ed user with id {user_id} to the list of trusted users"
         await ctx.reply(embed=e)
 
@@ -60,7 +60,7 @@ class AdminTools(ManagementBaseCog):
         cogs = [f"\N{BLACK CIRCLE} {x[:-3]}" for x in os.listdir("./cogs") if x.endswith(".py")] + [
             "\N{BLACK CIRCLE} jishaku"
         ]
-        e = discord.Embed(title="Available Extensions", description="\n".join(cogs), colour=Clr.prpl)
+        e = discord.Embed(title="Available Extensions", description="\n".join(cogs), colour=Clr.prpl())
         await ctx.reply(embed=e)
 
     async def load_unload_reload_job(self, ctx: AluContext, module: str, *, mode: Literal["load", "unload", "reload"]):
@@ -74,7 +74,7 @@ class AdminTools(ManagementBaseCog):
                 case "reload":
                     await self.reload_or_load_extension(filename)
         except commands.ExtensionError as error:
-            e = discord.Embed(description=f"{error}", colour=Clr.error)
+            e = discord.Embed(description=f"{error}", colour=Clr.error())
             e.set_author(name=error.__class__.__name__)
             await ctx.reply(embed=e)
         else:
@@ -168,7 +168,7 @@ class AdminTools(ManagementBaseCog):
         """'Make bot leave guild with named guild_id;"""
         if guild is not None:
             await guild.leave()
-            e = discord.Embed(colour=Clr.prpl)
+            e = discord.Embed(colour=Clr.prpl())
             e.description = f"Just left guild {guild.name} with id `{guild.id}`\n"
             await ctx.reply(embed=e)
         else:
@@ -178,7 +178,7 @@ class AdminTools(ManagementBaseCog):
     @guild_group.command(hidden=True)
     async def list(self, ctx: AluContext):
         """Show list of guilds the bot is in."""
-        e = discord.Embed(colour=Clr.prpl)
+        e = discord.Embed(colour=Clr.prpl())
         e.description = (
             f"The bot is in these guilds\n"
             f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"

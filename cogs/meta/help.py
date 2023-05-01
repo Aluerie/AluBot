@@ -28,7 +28,7 @@ class HelpPageSource(menus.ListPageSource):
     async def format_page(self, menu: HelpPages, entries: HelpFormatData):
         cog, cmds = entries.cog, entries.cmds
 
-        e = discord.Embed(colour=Clr.prpl)
+        e = discord.Embed(colour=Clr.prpl())
         e.set_footer(text=f'With love, {self.help_cmd.context.bot.user.name}')
 
         if cog == 'front_page':
@@ -195,7 +195,7 @@ class MyHelpCommand(commands.HelpCommand):
         cog_name = getattr(cog, "qualified_name", "No Category")
         cog_desc = getattr(cog, "description", "No Description")
 
-        e = discord.Embed(colour=Clr.prpl, title=cog_name)
+        e = discord.Embed(colour=Clr.prpl(), title=cog_name)
         e.description = f'{cog_desc}\n\n{chr(10).join(command_signatures)}'
         e.set_footer(text=f'With love, {self.context.bot.user.display_name}')
         e.set_thumbnail(url=self.context.bot.user.display_avatar.url)
@@ -204,15 +204,17 @@ class MyHelpCommand(commands.HelpCommand):
     async def send_group_help(self, group):
         filtered = await self.filter_commands(group.commands, sort=True)
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
-        e = discord.Embed(color=Clr.prpl, title=group.name, description=f'{chr(10).join(command_signatures)}')
+        e = discord.Embed(color=Clr.prpl(), title=group.name, description=f'{chr(10).join(command_signatures)}')
         await self.context.reply(embed=e)
 
     async def send_command_help(self, command):
-        e = discord.Embed(title=command.qualified_name, color=Clr.prpl, description=self.get_command_signature(command))
+        e = discord.Embed(
+            title=command.qualified_name, color=Clr.prpl(), description=self.get_command_signature(command)
+        )
         await self.context.reply(embed=e)
 
     async def send_error_message(self, error):
-        e = discord.Embed(title="Help Command Error", description=error, color=Clr.error)
+        e = discord.Embed(title="Help Command Error", description=error, color=Clr.error())
         e.set_footer(
             text=(
                 'Check the spelling of your desired command/category and '
@@ -256,7 +258,7 @@ class HelpCommandCog(AluCog):
         if not self.bot.test:
             # todo: move this somewhere else
             # announce to people that we logged in
-            e = discord.Embed(colour=Clr.prpl)
+            e = discord.Embed(colour=Clr.prpl())
             e.description = f'Logged in as {self.bot.user.name}'
             await self.hideout.spam.send(embed=e)
             e.set_footer(text='Finished updating/rebooting')

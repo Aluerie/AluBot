@@ -111,7 +111,7 @@ class Other(AluCog):
         answer_text = f'{str(rand_emoji)} ' * 3
         channel = self.community.emote_spam
         await channel.send(answer_text)
-        e = discord.Embed(colour=Clr.prpl, description=f'I sent {answer_text} into {channel.mention}')
+        e = discord.Embed(colour=Clr.prpl(), description=f'I sent {answer_text} into {channel.mention}')
         await ntr.response.send_message(embed=e, ephemeral=True, delete_after=10)
 
     @commands.hybrid_command(description='Send apuband emote combo')

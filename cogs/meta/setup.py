@@ -55,7 +55,7 @@ class SetupPageSource(menus.ListPageSource):
         cog = entries.cog
         if cog == 'front_page':
             # todo: fill it properly
-            e = discord.Embed(colour=Clr.prpl)
+            e = discord.Embed(colour=Clr.prpl())
             e.description = 'Front page baby'
 
             menu.clear_items()

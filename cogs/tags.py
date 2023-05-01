@@ -48,7 +48,7 @@ class Tags(commands.Cog):
 
         if row is None:
             prefix = getattr(ctx, 'clean_prefix', '/')
-            e = discord.Embed(description='Sorry! Tag under such name does not exist', colour=Clr.error)
+            e = discord.Embed(description='Sorry! Tag under such name does not exist', colour=Clr.error())
             e.set_footer(text=f'Consider making one with `{prefix}tags add`')
             if isinstance(ctx, commands.Context):
                 await ctx.reply(embed=e)
@@ -114,7 +114,7 @@ class Tags(commands.Cog):
                 else:
                     query = "INSERT INTO tags (name, owner_id, content) VALUES ($1, $2, $3);"
                     await self.bot.pool.execute(query, tag_name, ctx.author.id, flags.text)
-                    e = discord.Embed(colour=Clr.prpl)
+                    e = discord.Embed(colour=Clr.prpl())
                     e.description = f"Tag under name `{tag_name}` was successfully added"
         return await ctx.reply(embed=e)
 
@@ -122,7 +122,7 @@ class Tags(commands.Cog):
     async def add_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.MissingRequiredFlag):
             ctx.error_handled = True
-            e = discord.Embed(colour=Clr.error).set_author(name='WrongCommandUsage')
+            e = discord.Embed(colour=Clr.error()).set_author(name='WrongCommandUsage')
             e.description = (
                 'Sorry! Command usage is\n `$tag add name: <tag_name> text: <tag_text>`\n'
                 'where `<tag_name>` is <100 symbols and `<tag_text>` is <2000 symbols. \n'
@@ -138,7 +138,7 @@ class Tags(commands.Cog):
         query = 'SELECT * FROM tags WHERE name=$1'
         row = await self.bot.pool.fetchrow(query, tag_name)
         if row:
-            e = discord.Embed(colour=Clr.prpl, title='Tag info')
+            e = discord.Embed(colour=Clr.prpl(), title='Tag info')
             tag_owner = self.bot.get_user(row.owner_id)
             e.description = (
                 f"Tag name: `{row.name}`\n"
@@ -147,7 +147,7 @@ class Tags(commands.Cog):
                 f"Tag was created on {discord.utils.format_dt(row.created_at)}"
             )
         else:
-            e = discord.Embed(description='Sorry! Tag under such name does not exist', colour=Clr.error)
+            e = discord.Embed(description='Sorry! Tag under such name does not exist', colour=Clr.error())
         await ctx.reply(embed=e)
 
     @tags.command(name='delete', description='Delete your tag from bot database', aliases=['remove'])
@@ -168,10 +168,10 @@ class Tags(commands.Cog):
         val = await self.bot.pool.fetchrow(query, *args)
 
         if val:
-            e = discord.Embed(colour=Clr.prpl)
+            e = discord.Embed(colour=Clr.prpl())
             e.description = f'Successfully deleted tag under name `{tag_name}`'
         else:
-            e = discord.Embed(colour=Clr.error)
+            e = discord.Embed(colour=Clr.error())
             e.description = (
                 f'Sorry! Either the tag with such name does not exist or '
                 f'you do not have permissions to perform this action.'
@@ -183,7 +183,7 @@ class Tags(commands.Cog):
         """Show list of all tags in bot's database"""
         query = "SELECT name FROM tags;"
         rows = await self.bot.pool.fetch(query)
-        e = discord.Embed(title='List of tags', colour=Clr.prpl)
+        e = discord.Embed(title='List of tags', colour=Clr.prpl())
         e.description = ', '.join([f"`{row.name}`" for row in rows])
         await ctx.reply(embed=e)
 

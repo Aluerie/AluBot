@@ -1,7 +1,7 @@
 class Ems:
     """Emote strings."""
 
-    # alu server non-animated emotes
+    # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
     bedNerdge = '<:_:855495407110586439>'
     DankApprove = '<:_:853015071042961468>'
     DankHatTooBig = '<:_:855056297098215474>'
@@ -31,11 +31,11 @@ class Ems:
     peepoWTF = '<:_:730688500680097862>'
     DankZzz = '<:_:732126852251910144>'
 
-    # alu server ani
+    # COMMUNITY SERVER, ANIMATED EMOTES ################################################################################
     FeelsRainMan = '<a:_:902254223851421796>'
     DankL = '<a:_:1014616758470070353>'
 
-    # wink server non-animated
+    # HIDEOUT SERVER, NON-ANIMATED EMOTES ##############################################################################
 
     github_logo = '<:_:1081677464637550662>'
 
@@ -49,13 +49,14 @@ class Ems:
     DankG = '<:_:998012133948276857>'
     peepoBusiness = '<:_:998157352098340934>'
     peepoMovie = '<:_:998163742741246003>'
-    # wink server ani
+    # HIDEOUT SERVER, ANIMATED EMOTES ##################################################################################
     # nothing for now
 
-    # general emotes
+    # COMMON EMOTES ####################################################################################################
     Offline = '\N{LARGE RED CIRCLE}'
     Online = '\N{LARGE GREEN CIRCLE}'
-    # emotes arrays
+
+    # EMOTE LISTS ######################################################################################################
     comfy_emotes = [
         "<:peepoComfy:726438781208756288>",
         "<:_:726438781208756288>",

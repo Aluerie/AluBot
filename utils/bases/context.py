@@ -31,7 +31,7 @@ class ConfirmationView(discord.ui.View):
         if ntr.user and ntr.user.id == self.author_id:
             return True
         else:
-            e = discord.Embed(description='Sorry! This confirmation dialog is not for you.', colour=Clr.error)
+            e = discord.Embed(description='Sorry! This confirmation dialog is not for you.', colour=Clr.error())
             await ntr.response.send_message(embed=e, ephemeral=True)
             return False
 
@@ -143,7 +143,7 @@ class AluContext(commands.Context):
                 else:
                     ans += f'\n`{get_command_signature(c)}`'
 
-            e = discord.Embed(colour=Clr.error, description=ans)
+            e = discord.Embed(colour=Clr.error(), description=ans)
             e.set_author(name='SubcommandNotFound')
             e.set_footer(text=f'`{prefix}help {self.command.name}` for more info')
             return await self.reply(embed=e, ephemeral=True)

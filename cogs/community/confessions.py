@@ -37,7 +37,7 @@ class ConfModal(discord.ui.Modal):
     )
 
     async def on_submit(self, ntr: discord.Interaction):
-        e = discord.Embed(title=self.title, colour=Clr.prpl, description=self.conf.value)
+        e = discord.Embed(title=self.title, colour=Clr.prpl(), description=self.conf.value)
         e.set_footer(text="Use buttons below to make a new confession in this channel")
         if self.title == "Non-anonymous confession":
             e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
@@ -65,7 +65,7 @@ class ConfView(discord.ui.View):
 
     async def on_error(self, ntr: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item):
         if isinstance(error, ButtonOnCooldown):
-            e = discord.Embed(colour=Clr.error).set_author(name=error.__class__.__name__)
+            e = discord.Embed(colour=Clr.error()).set_author(name=error.__class__.__name__)
             e.description = (
                 "Sorry, you are on cooldown \n" f"Time left `{human_timedelta(error.retry_after, brief=True)}`"
             )
@@ -94,7 +94,6 @@ class ConfView(discord.ui.View):
 
 
 class Confession(AluCog):
-
     @commands.Cog.listener()
     async def on_ready(self):
         self.bot.add_view(ConfView())  # Registers a View for persistent listening

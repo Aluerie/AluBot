@@ -45,7 +45,10 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
 
     embeds = [
         discord.Embed(
-            title=comment.submission.title[:256], description=page, url=comment.submission.shortlink, colour=Clr.reddit
+            title=comment.submission.title[:256],
+            description=page,
+            url=comment.submission.shortlink,
+            colour=Clr.reddit(),
         )
         for page in paginator.pages
     ]

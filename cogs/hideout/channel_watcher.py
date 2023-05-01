@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog, Cid, Rid, Clr, Sid
+from utils import AluCog, Cid, Clr, Rid, Sid
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -55,7 +55,7 @@ class ChannelWatcher(AluCog):
     async def sleep_task(self):
         await asyncio.sleep(self.sleep_time)  # let's assume the longest possible game+q time is ~50 mins
         channel: discord.TextChannel = self.bot.get_channel(self.ping_channel_id)  # type: ignore
-        e = discord.Embed(colour=Clr.error, title=self.__cog_name__)
+        e = discord.Embed(colour=Clr.error(), title=self.__cog_name__)
         e.description = 'The bot crashed but did not even send the message'
         e.set_footer(text='Or maybe event just ended')
         await channel.send(self.role_mention, embed=e)

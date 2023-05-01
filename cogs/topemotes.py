@@ -1,19 +1,20 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal
 
 import datetime
 import re
+from typing import TYPE_CHECKING, Literal
 
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
+from utils import Clr, Ems, Rgx
 from utils.formats import indent
 from utils.pagination import EnumeratedPages
-from utils import Clr, Rgx, Ems
 
 if TYPE_CHECKING:
     from asyncpg import Pool
+
     from utils import AluBot, AluGuildContext
 
 
@@ -58,7 +59,6 @@ async def topemotes_job(ctx: AluGuildContext, mode):
     max_length = 18
 
     for cnt, key in enumerate(sorted_emote_dict, start=offset):
-
         new_array.append(
             f'`{indent(cnt, cnt, offset, split_size)}` '
             f'{key}`{key.split(":")[1][:max_length].ljust(max_length, " ")}{sorted_emote_dict[key]}`'
@@ -68,7 +68,7 @@ async def topemotes_job(ctx: AluGuildContext, mode):
         new_array,
         per_page=split_size,
         no_enumeration=True,
-        colour=Clr.prpl,
+        colour=Clr.prpl(),
         title="Top emotes used last month",
         footer_text=f'With love, {ctx.guild.me.display_name}',
         description_prefix=f'`{"Emote".ljust(max_length + 4, " ")}Usages`\n',

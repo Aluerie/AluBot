@@ -9,9 +9,9 @@ from bs4 import BeautifulSoup
 from discord import app_commands
 from discord.ext import commands
 
+from utils import Clr, Ems
 from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_tdR
-from utils import Clr, Ems
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -280,7 +280,7 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
                 e.url = url
                 await ctx.reply(embed=e)
             else:
-                e = discord.Embed(colour=Clr.error)
+                e = discord.Embed(colour=Clr.error())
                 e.description = 'No matches found'
                 await ctx.reply(embed=e)
 

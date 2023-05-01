@@ -199,7 +199,7 @@ class ExperienceSystem(AluCog, name='Profile'):
             ctx,
             new_array,
             per_page=split_size,
-            colour=Clr.prpl,
+            colour=Clr.prpl(),
             title="Server Leaderboard",
             footer_text=f'With love, {guild.me.display_name}',
         )
@@ -237,7 +237,7 @@ class ExperienceSystem(AluCog, name='Profile'):
                     )
                     if not level_up_role or not previous_level_role:
                         raise ValueError('Roles were not found in the community guild')
-                    e = discord.Embed(colour=Clr.prpl)
+                    e = discord.Embed(colour=Clr.prpl())
                     e.description = '{0} just advanced to {1} ! ' '{2} {2} {2}'.format(
                         message.author.mention, level_up_role.mention, Ems.PepoG
                     )

@@ -208,7 +208,7 @@ class Birthday(AluCog, emote=Ems.peepoHappyDank):
 
         query = 'UPDATE users SET bdate=$1, tzone=$2 WHERE users.id=$3;'
         await self.bot.pool.execute(query, dmy_dtime, tz_for_db, ctx.author.id)
-        e = discord.Embed(colour=Clr.prpl, title='Your birthday is successfully set')
+        e = discord.Embed(colour=Clr.prpl(), title='Your birthday is successfully set')
         e.description = f'Date: {bdate_str(dmy_dtime)}\nTimezone: {tz_for_db}'
         e.set_footer(text='Important! By submitting this information you agree it can be shown to anyone.')
         await ctx.reply(embed=e)
@@ -228,7 +228,7 @@ class Birthday(AluCog, emote=Ems.peepoHappyDank):
         query = 'SELECT bdate, tzone FROM users WHERE users.id=$1'
         row = await self.bot.pool.fetchrow(query, person.id)
 
-        e = discord.Embed(colour=Clr.prpl)
+        e = discord.Embed(colour=Clr.prpl())
         e.set_author(name=f'{person.display_name}\'s birthday status', icon_url=person.display_avatar.url)
         if row.bdate is None:
             e.description = f'It\'s not set yet.'
@@ -259,7 +259,7 @@ class Birthday(AluCog, emote=Ems.peepoHappyDank):
                 tzone_offset = datetime.timedelta(seconds=0)
 
             now_date = datetime.datetime.now(datetime.timezone.utc) + tzone_offset
-            
+
             bperson = guild.get_member(row.id)
             if bperson is None:
                 continue
@@ -321,7 +321,7 @@ class Birthday(AluCog, emote=Ems.peepoHappyDank):
             entries=string_list,
             per_page=20,
             title='Birthday List',
-            colour=Clr.prpl,
+            colour=Clr.prpl(),
             footer_text=f'DD/MM/YYYY format | With love, {guild.me.display_name}',
         )
         await pgs.start()

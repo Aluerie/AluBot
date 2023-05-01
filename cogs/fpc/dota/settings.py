@@ -8,10 +8,10 @@ from discord import app_commands
 from discord.ext import commands
 from steam.steamid import EType, SteamID
 
+from utils import Clr, Ems
 from utils.checks import is_manager
 from utils.dota import hero
 from utils.dota.const import DOTA_LOGO
-from utils import Clr, Ems
 
 from .._base import FPCBase
 
@@ -61,7 +61,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
             game_name="Dota 2",
             game_codeword="dota",
             game_logo=DOTA_LOGO,
-            colour=Clr.prpl,
+            colour=Clr.prpl(),
             bot=bot,
             players_table="dota_players",
             accounts_table="dota_accounts",

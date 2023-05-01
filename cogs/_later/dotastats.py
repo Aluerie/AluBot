@@ -1,23 +1,31 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import datetime
 import logging
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands, tasks
-from PIL import Image, ImageDraw, ImageFont
 from matplotlib import pyplot as plt
+from PIL import Image, ImageDraw, ImageFont
 
 from config import DOTA_FRIENDID
+from utils.dota import (
+    Match,
+    MatchHistoryData,
+    fancy_ax,
+    generate_data,
+    gradient_fill,
+    heroes_played_bar,
+    mmr_by_hero_bar,
+)
+
+from .dota import hero
 from .utils import pages
 from .utils.distools import send_pages_list
-from .dota import hero
-from utils.dota import Match
-from utils.dota import MatchHistoryData, fancy_ax, generate_data, gradient_fill, mmr_by_hero_bar, heroes_played_bar
 from .utils.formats import indent
-from .utils.imgtools import img_to_file, url_to_img, plt_to_file, get_text_wh
-from .utils.var import Ems, Clr, MP
+from .utils.imgtools import get_text_wh, img_to_file, plt_to_file, url_to_img
+from .utils.var import MP, Clr, Ems
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -146,7 +154,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         """Aluerie's last played Dota 2 match id"""
         await ctx.typing()
         res = try_get_gamerstats(ctx.bot, start_at_match_id=0, matches_requested=1)
-        e = discord.Embed(description=f'`{res[0].match_id}`', colour=Clr.prpl)
+        e = discord.Embed(description=f'`{res[0].match_id}`', colour=Clr.prpl())
         e.set_author(name='Aluerie\'s last match id')
         return await ctx.reply(embed=e)
 
@@ -169,7 +177,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         for _ in range(5):
             for match in try_get_gamerstats(ctx.bot, start_at_match_id=start_at_match_id):
                 if match.start_time < morning_time:
-                    e = discord.Embed(colour=Clr.prpl)
+                    e = discord.Embed(colour=Clr.prpl())
                     e.set_author(name='Aluerie\'s WL for today')
                     max_len = max([len(key) for key in dict_answer])
                     ans = [
@@ -270,7 +278,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
 
         pages_list = []
         for item in files_list:
-            e = discord.Embed(title="Aluerie's Dota 2 match history", colour=Clr.prpl)
+            e = discord.Embed(title="Aluerie's Dota 2 match history", colour=Clr.prpl())
             e.set_image(url=f'attachment://{item.filename}')
             e.set_footer(text='for copypastable match_ids use `$stalk match_ids`')
             pages_list.append(pages.Page(embeds=[e], files=[item]))
@@ -281,7 +289,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     async def dh_error(self, ctx: Context, error):
         if isinstance(error.original, IndexError):
             ctx.error_handled = True
-            e = discord.Embed(colour=Clr.error)
+            e = discord.Embed(colour=Clr.error())
             e.description = 'Oups, logging into steam took too long, please retry in a bit'
             e.set_author(name='SteamLoginError')
             e.set_footer(text='If this happens again, then @ Aluerie, please')
@@ -313,7 +321,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
             ctx,
             string_list,
             split_size=split_size,
-            colour=Clr.prpl,
+            colour=Clr.prpl(),
             title="Copypastable match ids",
         )
 
@@ -384,7 +392,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         """Sync information for Irene's ranked infographics"""
         await ctx.typing()
         await self.sync_work()
-        e = discord.Embed(description='Sync was done', colour=Clr.prpl)
+        e = discord.Embed(description='Sync was done', colour=Clr.prpl())
         await ctx.reply(embed=e)
 
     @tasks.loop(
@@ -451,7 +459,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         axText = fancy_ax(axText)
 
         ax = fig.add_subplot(gs[2:5, 0:10])
-        gradient_fill(*await generate_data(self.bot.pool), color=str(Clr.twitch), ax=ax, linewidth=5.0, marker='o')
+        gradient_fill(*await generate_data(self.bot.pool), color=str(Clr.twitch()), ax=ax, linewidth=5.0, marker='o')
         ax.set_title('MMR Plot', x=0.5, y=0.92)
         ax.tick_params(axis="y", direction="in", pad=-42)
         ax.tick_params(axis="x", direction="in", pad=-25)
@@ -524,7 +532,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         axRain.get_xaxis().set_visible(False)
         axRain.get_yaxis().set_visible(False)
         fig.patch.set_linewidth(4)
-        fig.patch.set_edgecolor(str(Clr.prpl))
+        fig.patch.set_edgecolor(str(Clr.prpl()))
         await ctx.reply(file=plt_to_file(fig, filename='mmr.png'))
 
 

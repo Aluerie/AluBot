@@ -50,7 +50,7 @@ class Logging(AluCog):
         if before.content == after.content:  # most likely some link embed link action
             return
 
-        channel: discord.abc.GuildChannel = after.channel #type: ignore
+        channel: discord.abc.GuildChannel = after.channel  # type: ignore
         e = discord.Embed(description=inline_word_by_word_diff(before.content, after.content), colour=0x00BFFF)
         e.set_author(
             name=f'{after.author.display_name} edit in #{channel.name}',
@@ -110,7 +110,7 @@ class Logging(AluCog):
 
             stone_rl = self.bot.community.rolling_stone_role
             if after.nick and 'Stone' in after.nick:
-                e = discord.Embed(colour=Clr.prpl)
+                e = discord.Embed(colour=Clr.prpl())
                 e.description = f'{after.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
                 await self.bot.community.bot_spam.send(embed=e)
                 await after.add_roles(stone_rl)
@@ -123,10 +123,10 @@ class Logging(AluCog):
         stone_rl = self.bot.community.rolling_stone_role
 
         async for entry in guild.audit_logs(action=discord.AuditLogAction.member_update):
-            target: discord.Member = entry.target # type: ignore 
+            target: discord.Member = entry.target  # type: ignore
             if stone_rl in target.roles:
                 return
-            
+
             if 'Stone' in target.display_name:
                 e = discord.Embed(
                     colour=stone_rl.colour,

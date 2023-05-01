@@ -82,7 +82,7 @@ class DotaPostMatchEdit(AluCog):
     @commands.command(hidden=True, aliases=["odrl", "od_rl", "odota_ratelimit"])
     async def opendota_ratelimit(self, ctx: AluContext):
         """Send opendota rate limit numbers"""
-        e = discord.Embed(colour=Clr.prpl, description=f"Odota limits: {self.bot.odota_ratelimit}")
+        e = discord.Embed(colour=Clr.prpl(), description=f"Odota limits: {self.bot.odota_ratelimit}")
         await ctx.reply(embed=e)
 
     @tasks.loop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))

@@ -60,7 +60,7 @@ class Info(AluCog, name='Info', emote=Ems.PepoG):
         for pdate in pdates:
             dt = pdate[1]
             if dt.tzinfo is not None:
-                e = discord.Embed(colour=Clr.prpl)
+                e = discord.Embed(colour=Clr.prpl())
                 e.description = (
                     f'"{pdate[0]}" in your timezone:\n {format_dt_tdR(dt)}\n'
                     f'{dt.tzname()} is GMT {dt.utcoffset().seconds / 3600:+.1f}, dls: {dt.dst().seconds / 3600:+.1f}'
@@ -77,7 +77,7 @@ class Info(AluCog, name='Info', emote=Ems.PepoG):
         async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id):
             if (added_role and added_role[0] == role) or (removed_role and removed_role[0] == role):
                 msg = channel.get_partial_message(msg_id)
-                e = discord.Embed(title=f'List of {role.name}', colour=Clr.prpl)
+                e = discord.Embed(title=f'List of {role.name}', colour=Clr.prpl())
                 e.description = ''.join([f'{member.mention}\n' for member in role.members])
                 await msg.edit(content='', embed=e)
 
@@ -89,7 +89,7 @@ class Info(AluCog, name='Info', emote=Ems.PepoG):
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
-        e = discord.Embed(colour=Clr.prpl, title='GMT(Greenwich Mean Time)')
+        e = discord.Embed(colour=Clr.prpl(), title='GMT(Greenwich Mean Time)')
         e.set_footer(text=f'GMT is the same as UTC (Universal Time Coordinated)')
         e.add_field(name='Time:', value=now_time)
         e.add_field(name='Date:', value=now_date)
@@ -167,7 +167,7 @@ class Info(AluCog, name='Info', emote=Ems.PepoG):
         if isinstance(error, (ValueError, KeyError)):
             # todo: new error type implement
             ctx.error_handled = True
-            e = discord.Embed(description=self.colour.callback.__doc__, colour=Clr.error)
+            e = discord.Embed(description=self.colour.callback.__doc__, colour=Clr.error())
             e.set_author(
                 name='WrongColourFormat', url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html'
             )
@@ -186,7 +186,7 @@ class Info(AluCog, name='Info', emote=Ems.PepoG):
         async with self.bot.session.get(url) as resp:
             data = await resp.json()
 
-        e = discord.Embed(title="Bot Host Machine System Info", colour=Clr.prpl)
+        e = discord.Embed(title="Bot Host Machine System Info", colour=Clr.prpl())
         e.description = (
             f'\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n'
             f'\N{BLACK CIRCLE} Machine: {platform.machine()}\n'
@@ -252,7 +252,7 @@ class StatsCommands(commands.Cog, name='Stats'):
         for ch in channels:
             text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])
         # wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
-        e = discord.Embed(colour=Clr.prpl)
+        e = discord.Embed(colour=Clr.prpl())
         e.description = (
             f"Members: {', '.join([m.mention for m in members])}\n"
             f"Channels: {', '.join([c.mention for c in channels])}\n"

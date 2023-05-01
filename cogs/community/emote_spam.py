@@ -51,7 +51,7 @@ class EmoteSpam(AluCog):
                         message.author.mention, channel.mention, Ems.Ree
                     )
                 )
-                e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl)
+                e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl())
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 return 1
@@ -124,7 +124,7 @@ class ComfySpam(AluCog):
                     "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! "
                     "{2} {2} {2}".format(message.author.mention, channel.mention, Ems.Ree)
                 )
-                e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl)
+                e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl())
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 await message.delete()

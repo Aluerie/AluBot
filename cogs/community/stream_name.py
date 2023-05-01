@@ -8,7 +8,6 @@ from discord.ext import commands, tasks
 
 from utils import AluCog, Clr, Ems, Sid
 
-
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
@@ -71,7 +70,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
         """Sets title for **#\N{CINEMA}streaming_room** so people know what you are streaming"""
         new_name = f'\N{CINEMA}{text}'
         await self.bot.community.stream_room.edit(name=new_name)
-        e = discord.Embed(description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=Clr.prpl)
+        e = discord.Embed(description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=Clr.prpl())
         await ctx.reply(embed=e)
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
@@ -79,7 +78,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
     async def reset(self, ctx: AluContext):
         """Reset **#\N{CINEMA}streaming_room** title ;"""
         await self.bot.community.stream_room.edit(name=ORIGINAL_NAME)
-        e = discord.Embed(description=f'Title of **#{ORIGINAL_NAME}** has been reset', colour=Clr.prpl)
+        e = discord.Embed(description=f'Title of **#{ORIGINAL_NAME}** has been reset', colour=Clr.prpl())
         await ctx.reply(embed=e)
 
     @tasks.loop(count=1)

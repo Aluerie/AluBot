@@ -32,7 +32,7 @@ class ServerInfo(commands.Cog, name='Rules'):
     async def rule_work(ctx, num, dtb, min_number):
         try:
             my_row = db.session.query(dtb).order_by(dtb.id).limit(num + min_number)[num - min_number]
-            e = Embed(colour=Clr.prpl, title=f'Rule {num}')
+            e = Embed(colour=Clr.prpl(), title=f'Rule {num}')
             e.description = f'{num}. {my_row.text}'
             await ctx.reply(embed=e)
         except:
@@ -57,7 +57,7 @@ class ServerInfo(commands.Cog, name='Rules'):
             list_rules = [
                 f'{counter}. {row.text}' for counter, row in enumerate(ses.query(dtb).order_by(dtb.id), start=min_value)
             ]
-        e = Embed(colour=Clr.prpl)
+        e = Embed(colour=Clr.prpl())
         e.title = 'Server rules'
         e.description = f'\n'.join(list_rules)
         await ctx.reply(embed=e)

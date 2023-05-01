@@ -8,10 +8,10 @@ import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pyot.utils.functools import async_property
 
+from utils import Cid, Clr, MClr
 from utils.dota import ability, hero, item
 from utils.dota.const import DOTA_LOGO, ODOTA_API_URL, dota_player_colour_map
 from utils.formats import human_timedelta
-from utils import Cid, MClr, Clr
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -53,7 +53,7 @@ class Match:
         return f'/[Dbuff]({self.dbuff})/[ODota]({self.odota})/[Stratz]({self.stratz})'
 
 
-colour_twitch_status_dict = {'NoTwitch': MClr.gray(), 'Live': Clr.prpl, 'Offline': Clr.twitch}
+colour_twitch_status_dict = {'NoTwitch': MClr.gray(), 'Live': Clr.prpl(), 'Offline': Clr.twitch()}
 
 
 class ActiveMatch(Match):
@@ -223,7 +223,11 @@ class PostMatchPlayerData:
 
         draw = ImageDraw.Draw(img)
         w2, h2 = bot.imgtools.get_text_wh(self.outcome, font_kda)
-        colour_dict = {'Win': str(MClr.green(shade=800)), 'Loss': str(MClr.red(shade=900)), 'Not Scored': (255, 255, 255)}
+        colour_dict = {
+            'Win': str(MClr.green(shade=800)),
+            'Loss': str(MClr.red(shade=900)),
+            'Not Scored': (255, 255, 255),
+        }
         draw.text((0, height - h3 - h2), self.outcome, font=font_kda, align="center", fill=colour_dict[self.outcome])
 
         font_m = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 19)

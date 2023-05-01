@@ -34,7 +34,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
         query = 'UPDATE guilds SET emote_logs_id=$1 WHERE id=$2'
         await self.bot.pool.execute(query, ch.id, ctx.guild.id)
 
-        e = discord.Embed(title='Emote logging is turned on', colour=Clr.prpl)
+        e = discord.Embed(title='Emote logging is turned on', colour=Clr.prpl())
         e.description = f'Now I will log emote create/delete/rename actions in {ch.mention}. Go try it!'
         e.set_footer(text=f'With love, {ctx.guild.me.display_name}')
         e.set_thumbnail(url=ctx.guild.me.display_avatar.url)

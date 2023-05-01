@@ -32,7 +32,7 @@ class Suggestions(AluCog, emote=Ems.peepoWTF):
         number = await self.bot.pool.fetchval(query, Sid.community)
 
         title = f'Suggestion #{number}'
-        e = discord.Embed(color=Clr.prpl, title=title, description=text)
+        e = discord.Embed(color=Clr.prpl(), title=title, description=text)
         e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
 
         msg = await channel.send(embed=e)
@@ -44,7 +44,7 @@ class Suggestions(AluCog, emote=Ems.peepoWTF):
             'Don\'t forget to upvote/downvote initial suggestion message with '
             '\N{UPWARDS BLACK ARROW} \N{DOWNWARDS BLACK ARROW} reactions.'
         )
-        e2 = discord.Embed(color=Clr.prpl)
+        e2 = discord.Embed(color=Clr.prpl())
         e2.description = f'{ntr.user.mention}, sent your suggestion under #{number} into {channel.mention}'
         await ntr.response.send_message(embed=e2, ephemeral=True)
 

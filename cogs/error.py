@@ -140,7 +140,7 @@ class CommandErrorHandler(AluCog):
                 else:
                     jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
 
-                error_e = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=Clr.error)
+                error_e = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=Clr.error())
                 if not self.bot.test:
                     error_e.set_author(
                         name=f'{ctx.author} triggered error in {ctx.channel}',
@@ -157,7 +157,7 @@ class CommandErrorHandler(AluCog):
             else:
                 return
         else:
-            e = discord.Embed(color=Clr.error, description=desc).set_author(name=error_type)
+            e = discord.Embed(color=Clr.error(), description=desc).set_author(name=error_type)
             await ctx.reply(embed=e, ephemeral=True)
 
     @commands.Cog.listener()

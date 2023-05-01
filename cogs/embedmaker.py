@@ -27,7 +27,7 @@ class StartView(discord.ui.View):
     ):
         super().__init__()
 
-        self.starting_embed = discord.Embed(title='Embed Maker', colour=Clr.prpl)
+        self.starting_embed = discord.Embed(title='Embed Maker', colour=Clr.prpl())
         self.embeds = [self.starting_embed]
         self.message = message
 

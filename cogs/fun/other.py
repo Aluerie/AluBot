@@ -9,7 +9,7 @@ from discord.ext import commands
 from numpy.random import choice, randint
 
 from utils import AluCog
-from utils.const import Channel, Colour, Emote, Guild, Rgx, User, DIGITS
+from utils.const import DIGITS, REGEX_URL_LINK, Channel, Colour, Emote, Guild, User
 from utils.webhook import check_msg_react, user_webhook
 
 if TYPE_CHECKING:
@@ -148,7 +148,7 @@ class Other(AluCog):
         elif not ch.permissions_for(ctx.author).send_messages:
             raise commands.MissingPermissions([f'Sorry, you don\'t have permissions to speak in {ch.mention}'])
         else:
-            url_array = re.findall(Rgx.url_link, str(text))
+            url_array = re.findall(REGEX_URL_LINK, str(text))
             for url in url_array:  # forbid embeds
                 text = text.replace(url, f'<{url}>')
             await ch.send(text)

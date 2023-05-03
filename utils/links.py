@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectorError
 
-from .const import Rgx
+from .const import REGEX_URL_LINK
 
 if TYPE_CHECKING:
     from discord import Embed
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 async def replace_tco_links(session, embed: Embed) -> Embed:
     text = embed.description
     if text:
-        url_array = re.findall(Rgx.url_link, str(text))
+        url_array = re.findall(REGEX_URL_LINK, str(text))
         try:
             for url in url_array:
                 async with session.get(url) as resp:
@@ -34,6 +34,6 @@ def move_link_to_title(embed: Embed) -> Embed:
 
 
 def get_links_from_str(string):
-    # url_array = re.findall(Rgx.url_link, str(string))
+    # url_array = re.findall(REGEX_URL_LINK, str(string))
     # return [item for item in url_array if 'twitter' in item]
-    return re.findall(Rgx.url_link, str(string))
+    return re.findall(REGEX_URL_LINK, str(string))

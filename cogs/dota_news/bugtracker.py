@@ -13,7 +13,8 @@ from discord.ext import commands, tasks
 from github.GithubException import GithubException
 from PIL import Image
 
-from utils import AluCog, MClr, Lmt, Sid
+from utils import AluCog
+from utils.const import Guild, Limit, MaterialPalette
 from utils.checks import is_owner
 
 if TYPE_CHECKING:
@@ -146,7 +147,7 @@ class TimeLine:
         return last_comment_url
 
     def embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File | None]:
-        e = discord.Embed(title=textwrap.shorten(self.issue.title, width=Lmt.Embed.title), url=self.issue.html_url)
+        e = discord.Embed(title=textwrap.shorten(self.issue.title, width=Limit.Embed.title), url=self.issue.html_url)
         if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
             # we just send a small embed
             # 1 author and 1 event with possible comment event to it
@@ -168,7 +169,7 @@ class TimeLine:
             for p in self.sorted_points_list():
                 pil_pics.append(p.event_type.file_path)
                 markdown_body = getattr(p, 'markdown_body', ' ')
-                chunks, chunk_size = len(markdown_body), Lmt.Embed.field_value
+                chunks, chunk_size = len(markdown_body), Limit.Embed.field_value
                 fields = [markdown_body[i : i + chunk_size] for i in range(0, chunks, chunk_size)]
                 for x in fields:
                     e.add_field(name=f'{p.event_type.emote(bot)}{p.author_str}', value=x, inline=False)
@@ -234,12 +235,12 @@ class BugTracker(AluCog):
                 error_logins.append(l)
         if success_logins:
             self.valve_devs.extend(success_logins)
-            e = discord.Embed(color=MClr.green())
+            e = discord.Embed(color=MaterialPalette.green())
             answer = ', '.join(f'`{l}`' for l in logins)
             e.description = f'Added user(-s) to the list of Valve devs.\n{answer}'
             await ctx.reply(embed=e)
         if error_logins:
-            e = discord.Embed(color=MClr.red())
+            e = discord.Embed(color=MaterialPalette.red())
             answer = ', '.join(f'`{l}`' for l in logins)
             e.description = f'User(-s) were already in the list of Valve devs.\n{answer}'
             await ctx.reply(embed=e)
@@ -250,7 +251,7 @@ class BugTracker(AluCog):
         query = "DELETE FROM valve_devs WHERE login=$1"
         await self.bot.pool.execute(query, login)
         self.valve_devs.remove(login)
-        e = discord.Embed(color=MClr.orange())
+        e = discord.Embed(color=MaterialPalette.orange())
         e.description = f'Removed user `{login}` from the list of Valve devs.'
         await ctx.reply(embed=e)
 
@@ -259,7 +260,7 @@ class BugTracker(AluCog):
     async def list(self, ctx: AluContext):
         query = "SELECT login FROM valve_devs"
         valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
-        e = discord.Embed(color=MClr.blue(), title='List of known Valve devs')
+        e = discord.Embed(color=MaterialPalette.blue(), title='List of known Valve devs')
         valve_devs.sort()
         e.description = '\n'.join([f'\N{BLACK CIRCLE} {i}' for i in valve_devs])
         await ctx.reply(embed=e)
@@ -272,7 +273,7 @@ class BugTracker(AluCog):
         assignees = self.valve_devs
 
         query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
-        dt: datetime.datetime = await self.bot.pool.fetchval(query, Sid.community)
+        dt: datetime.datetime = await self.bot.pool.fetchval(query, Guild.community)
         now = discord.utils.utcnow()
 
         # if self.bot.test:  # TESTING
@@ -359,7 +360,7 @@ class BugTracker(AluCog):
         for em, file in efs:
             character_counter += len(em)
             embed_counter += 1
-            if character_counter < Lmt.Embed.sum_all and embed_counter < 10 + 1:
+            if character_counter < Limit.Embed.sum_all and embed_counter < 10 + 1:
                 try:
                     batches_to_send[-1].append((em, file))
                 except IndexError:
@@ -375,7 +376,7 @@ class BugTracker(AluCog):
             await msg.publish()
 
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
-        await self.bot.pool.execute(query, now, Sid.community)
+        await self.bot.pool.execute(query, now, Guild.community)
         self.retries = 0
         log.debug('BugTracker task is finished')
 

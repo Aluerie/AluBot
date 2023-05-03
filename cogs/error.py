@@ -7,7 +7,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext, Clr, Ems
+from utils import AluCog, AluContext
+from utils.const import Colour, Emote
 from utils.formats import human_timedelta
 from utils.times import BadTimeTransform
 from utils.translator import TranslateError
@@ -24,11 +25,7 @@ class CommandErrorHandler(AluCog):
     async def command_error_work(self, ctx: AluContext, error) -> None:
         while isinstance(
             error,
-            (
-                commands.HybridCommandError,
-                commands.CommandInvokeError,
-                app_commands.CommandInvokeError,
-            ),
+            (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError),
         ):  # circle to the actual error throughout all the chains
             error = error.original
 
@@ -130,7 +127,7 @@ class CommandErrorHandler(AluCog):
 
                 desc = (
                     "I've notified my creator and we'll hopefully get it fixed soon. \n"
-                    "Sorry for the inconvenience! {0} {0} {0}".format(Ems.DankL)
+                    "Sorry for the inconvenience! {0} {0} {0}".format(Emote.DankL)
                 )
                 error_type = 'Oups...Unexpected error!'
 
@@ -140,7 +137,7 @@ class CommandErrorHandler(AluCog):
                 else:
                     jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
 
-                error_e = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=Clr.error())
+                error_e = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=Colour.error())
                 if not self.bot.test:
                     error_e.set_author(
                         name=f'{ctx.author} triggered error in {ctx.channel}',
@@ -157,7 +154,7 @@ class CommandErrorHandler(AluCog):
             else:
                 return
         else:
-            e = discord.Embed(color=Clr.error(), description=desc).set_author(name=error_type)
+            e = discord.Embed(color=Colour.error(), description=desc).set_author(name=error_type)
             await ctx.reply(embed=e, ephemeral=True)
 
     @commands.Cog.listener()

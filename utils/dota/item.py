@@ -1,4 +1,5 @@
 from utils.cache import KeyCache
+
 from .const import *
 
 __all__ = ('iconurl_by_id', 'id_by_key')

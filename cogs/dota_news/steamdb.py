@@ -8,7 +8,8 @@ from discord.ext import commands, tasks
 from github import Github
 
 from config import GIT_PERSONAL_TOKEN
-from utils import AluCog, Cid
+from utils import AluCog
+from utils.const import Channel
 from utils.formats import block_function
 from utils.github import human_commit
 from utils.imgtools import str_to_file
@@ -72,12 +73,12 @@ class SteamDB(AluCog):
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         try:
-            if msg.channel.id in (Cid.copy_dota_info.id, Cid.copy_dota_steam.id, Cid.copy_dota_tweets.id):
+            if msg.channel.id in (Channel.copy_dota_info, Channel.copy_dota_steam, Channel.copy_dota_tweets):
                 news_channel = self.community.dota_news
             else:
                 return
 
-            if msg.channel.id == Cid.copy_dota_info.id:
+            if msg.channel.id == Channel.copy_dota_info:
                 if "https://steamdb.info" in msg.content:
                     url, embeds, files = await get_gitdiff_embed()
                     msg = await news_channel.send(content=f"<{url}>", embeds=embeds)
@@ -90,14 +91,14 @@ class SteamDB(AluCog):
                     msg = await news_channel.send(content=msg.content, embeds=msg.embeds, files=files)
                     await msg.publish()
 
-            elif msg.channel.id == Cid.copy_dota_steam.id:
+            elif msg.channel.id == Channel.copy_dota_steam:
                 if block_function(msg.content, self.blocked_words, self.whitelist_words):
                     return
                 e = discord.Embed(colour=0x171A21, description=msg.content)
                 msg = await news_channel.send(embed=e)
                 await msg.publish()
 
-            elif msg.channel.id == Cid.copy_dota_tweets.id:
+            elif msg.channel.id == Channel.copy_dota_tweets:
                 await asyncio.sleep(2)
                 answer = await msg.channel.fetch_message(int(msg.id))
                 embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]

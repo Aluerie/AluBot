@@ -16,7 +16,8 @@ import pygit2
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext, Clr, Ems, Lmt
+from utils import AluCog, AluContext
+from utils.const import Colour, Emote, Limit
 from utils.checks import is_owner
 
 if TYPE_CHECKING:
@@ -89,7 +90,7 @@ def get_latest_commits(limit: int = 5):
 
 class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
     summary = discord.ui.TextInput(
-        label='Summary', placeholder='A brief explanation of what you want', max_length=Lmt.Embed.title
+        label='Summary', placeholder='A brief explanation of what you want', max_length=Limit.Embed.title
     )
     details = discord.ui.TextInput(
         label='Details', placeholder='Leave a comment', style=discord.TextStyle.long, required=False
@@ -107,7 +108,7 @@ class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
 
         e = self.cog.get_feedback_embed(interaction, summary=str(self.summary), details=self.details.value)
         await channel.send(embed=e)
-        e2 = discord.Embed(colour=Clr.prpl(), description='Successfully submitted feedback')
+        e2 = discord.Embed(colour=Colour.prpl(), description='Successfully submitted feedback')
         await interaction.response.send_message(embed=e2, ephemeral=True)
 
 
@@ -125,7 +126,7 @@ class OtherCog(AluCog):
 
     @commands.command()
     async def hello(self, ctx: AluContext):
-        await ctx.reply(f'Hello {Ems.bubuAyaya}')
+        await ctx.reply(f'Hello {Emote.bubuAyaya}')
 
     @staticmethod
     def get_feedback_embed(
@@ -134,7 +135,7 @@ class OtherCog(AluCog):
         summary: Optional[str] = None,
         details: Optional[str] = None,
     ) -> discord.Embed:
-        e = discord.Embed(title=summary, description=details, colour=Clr.prpl())
+        e = discord.Embed(title=summary, description=details, colour=Colour.prpl())
 
         if ctx_ntr.guild is not None:
             e.add_field(name='Server', value=f'{ctx_ntr.guild.name} | ID: {ctx_ntr.guild.id}', inline=False)
@@ -165,7 +166,7 @@ class OtherCog(AluCog):
 
         e = self.get_feedback_embed(ctx, details=details)
         await channel.send(embed=e)
-        e2 = discord.Embed(colour=Clr.prpl(), description='Successfully sent feedback')
+        e2 = discord.Embed(colour=Colour.prpl(), description='Successfully sent feedback')
         await ctx.send(embed=e2)
 
     @app_commands.command(name='feedback')
@@ -177,7 +178,7 @@ class OtherCog(AluCog):
     @commands.command(aliases=['pm'], hidden=True)
     async def dm(self, ctx: AluContext, user: discord.User, *, content: str):
         """Write direct message to {user}."""
-        e = discord.Embed(colour=Clr.prpl(), title='Message from a developer')
+        e = discord.Embed(colour=Colour.prpl(), title='Message from a developer')
         e.set_author(name=str(ctx.author), icon_url=ctx.author.display_avatar.url)
         e.description = content
         e.set_footer(
@@ -189,7 +190,7 @@ class OtherCog(AluCog):
             )
         )
         await user.send(embed=e)
-        e2 = discord.Embed(colour=Clr.prpl(), description='DM successfully sent.')
+        e2 = discord.Embed(colour=Colour.prpl(), description='DM successfully sent.')
         await ctx.send(embed=e2)
 
     @commands.command(aliases=['join'])
@@ -200,7 +201,7 @@ class OtherCog(AluCog):
         perms = discord.Permissions.all()
         # perms.read_messages = True
         url = discord.utils.oauth_url(self.bot.client_id, permissions=perms)
-        e = discord.Embed(title='Invite link for the bot', url=url, description=url, color=Clr.prpl())
+        e = discord.Embed(title='Invite link for the bot', url=url, description=url, color=Colour.prpl())
         e.set_thumbnail(url=self.bot.user.display_avatar.url)
         await ctx.reply(embed=e)
 
@@ -250,7 +251,7 @@ class OtherCog(AluCog):
         await ctx.defer()
         information = await self.bot.application_info()
         e = discord.Embed(
-            colour=Clr.bot_colour(),
+            colour=Colour.bot_colour(),
             description=(
                 "\N{HEAVY BLACK HEART} Hi, I'm the ultimate multipurpose bot. \N{PURPLE HEART}\n"
                 "\N{SWAN} Notifs for your fav twtv+character combos.\n"
@@ -332,7 +333,7 @@ class OtherCog(AluCog):
         )
 
         if command is None:
-            return await ctx.reply(embed=e, view=Url(source_url, label="Repository link", emoji=Ems.github_logo))
+            return await ctx.reply(embed=e, view=Url(source_url, label="Repository link", emoji=Emote.github_logo))
 
         if command == "help":
             src = type(self.bot.help_command)
@@ -366,5 +367,5 @@ class OtherCog(AluCog):
 
         await ctx.reply(
             embed=e,
-            view=Url(final_url, label=f"Source code for command \"{str(obj)}\"", emoji=Ems.github_logo),
+            view=Url(final_url, label=f"Source code for command \"{str(obj)}\"", emoji=Emote.github_logo),
         )

@@ -1,6 +1,6 @@
 import discord
 
-from utils import Ems
+from utils.const import Emote
 
 from .help import HelpCommandCog
 from .other import OtherCog
@@ -13,7 +13,7 @@ class Meta(HelpCommandCog, SetupCommandCog, OtherCog, PrefixSetupCog):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.FeelsDankManLostHisHat)
+        return discord.PartialEmoji.from_str(Emote.FeelsDankManLostHisHat)
 
 
 async def setup(bot):

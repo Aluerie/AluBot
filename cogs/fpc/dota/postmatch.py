@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Dict, List
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog, Clr, MClr
+from utils import AluCog
+from utils.const import Colour, MaterialPalette
 
 from ._models import OpendotaRequestMatch, PostMatchPlayerData
 
@@ -82,12 +83,12 @@ class DotaPostMatchEdit(AluCog):
     @commands.command(hidden=True, aliases=["odrl", "od_rl", "odota_ratelimit"])
     async def opendota_ratelimit(self, ctx: AluContext):
         """Send opendota rate limit numbers"""
-        e = discord.Embed(colour=Clr.prpl(), description=f"Odota limits: {self.bot.odota_ratelimit}")
+        e = discord.Embed(colour=Colour.prpl(), description=f"Odota limits: {self.bot.odota_ratelimit}")
         await ctx.reply(embed=e)
 
     @tasks.loop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
     async def daily_report(self):
-        e = discord.Embed(title="Daily Report", colour=MClr.black())
+        e = discord.Embed(title="Daily Report", colour=MaterialPalette.black())
         the_dict = self.bot.odota_ratelimit
         month, minute = int(the_dict['monthly']), int(the_dict['minutely'])
         e.description = f"Odota limits. monthly: {month} minutely: {minute}"

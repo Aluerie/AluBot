@@ -8,7 +8,8 @@ from discord import app_commands
 from discord.ext import commands
 from gtts import gTTS
 
-from utils import AluCog, Clr, Ems
+from utils import AluCog
+from utils.const import Colour, Emote
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -33,7 +34,7 @@ class LanguageCollection:
     Literal = Literal['fr', 'en', 'ru', 'es', 'pt', 'cn', 'uk']
 
 
-class TextToSpeech(AluCog, name='TTS', emote=Ems.Ree):
+class TextToSpeech(AluCog, name='TTS', emote=Emote.Ree):
     """Text To Speech commands.
 
     Make the bot talk in voice chat.
@@ -68,7 +69,7 @@ class TextToSpeech(AluCog, name='TTS', emote=Ems.Ree):
         lang: LanguageData = getattr(LanguageCollection, language)
         voice = ctx.author.voice
         if not voice:
-            e = discord.Embed(description="You aren't in a voice channel!", colour=Clr.error())
+            e = discord.Embed(description="You aren't in a voice channel!", colour=Colour.error())
             return await ctx.reply(embed=e, ephemeral=True)
         if ctx.voice_client is not None:
             vc = self.connections[ctx.guild.id]
@@ -93,7 +94,7 @@ class TextToSpeech(AluCog, name='TTS', emote=Ems.Ree):
         """Show list of languages supported by `(/ or $)voice speak` command"""
         language_keys = typing.get_args(LanguageCollection.Literal)
         our_list = [f"{key}: {getattr(LanguageCollection, key).locale}" for key in language_keys]
-        e = discord.Embed(title='List of languages supported by the bot', colour=Clr.prpl())
+        e = discord.Embed(title='List of languages supported by the bot', colour=Colour.prpl())
         e.description = (
             f'Commands `$voice` and `/voice` support following languages.\n '
             f'Example of usage for text-command: `$voice en-UK allo chat AYAYA`.\n '
@@ -116,10 +117,10 @@ class TextToSpeech(AluCog, name='TTS', emote=Ems.Ree):
                 e = discord.Embed(description='Stopped', colour=ctx.author.colour)
                 await ctx.reply(embed=e)
             else:
-                e = discord.Embed(description="I don't think I was talking", colour=Clr.error())
+                e = discord.Embed(description="I don't think I was talking", colour=Colour.error())
                 await ctx.reply(embed=e, ephemeral=True)
         except KeyError:
-            e = discord.Embed(description="I'm not in voice channel", colour=Clr.error())
+            e = discord.Embed(description="I'm not in voice channel", colour=Colour.error())
             await ctx.reply(embed=e, ephemeral=True)
 
     @voice.command(name='leave', description='Leave voice channel')
@@ -131,7 +132,7 @@ class TextToSpeech(AluCog, name='TTS', emote=Ems.Ree):
             e = discord.Embed(description=f'I left {vc.channel.mention}', colour=ctx.author.colour)
             await ctx.reply(embed=e)
         except KeyError:
-            e = discord.Embed(description="I'm not in voice channel", colour=Clr.error())
+            e = discord.Embed(description="I'm not in voice channel", colour=Colour.error())
             await ctx.reply(embed=e, ephemeral=True)
 
     @commands.hybrid_command(
@@ -142,7 +143,7 @@ class TextToSpeech(AluCog, name='TTS', emote=Ems.Ree):
         """`Bonjour !` into both text/voice chats"""
         voice = ctx.author.voice
         if not voice:
-            return await ctx.reply(content=f'Bonjour {Ems.bubuAyaya}')
+            return await ctx.reply(content=f'Bonjour {Emote.bubuAyaya}')
         if ctx.voice_client is not None:
             vc = self.connections[ctx.guild.id]
             await ctx.voice_client.move_to(voice.channel)
@@ -154,7 +155,7 @@ class TextToSpeech(AluCog, name='TTS', emote=Ems.Ree):
         audio_name = "audio.mp3"
         tts.save(audio_name)
         vc.play(discord.FFmpegPCMAudio(audio_name))
-        content = f'Bonjour {Ems.bubuAyaya}'
+        content = f'Bonjour {Emote.bubuAyaya}'
         await ctx.reply(content=content)
 
     @commands.Cog.listener()

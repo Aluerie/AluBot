@@ -3,7 +3,7 @@ from __future__ import annotations
 from discord import Embed, app_commands
 from discord.ext import commands, tasks
 
-from utils import Clr, Sid
+from utils import Colour, Guild
 from utils.bases.context import AluContext
 
 
@@ -28,7 +28,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
         else:
             db.set_value(db.a, ctx.author.id, name=afk_text)
         self.active_afk[ctx.author.id] = afk_text
-        e = Embed(color=Clr.prpl())
+        e = Embed(color=Colour.prpl())
         e.description = f'{ctx.author.mention}, you are flagged as afk with `afk_text`:\n{afk_text}'
         await ctx.reply(embed=e)
         try:
@@ -38,17 +38,17 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
-        if msg.guild is None:  # message.guild.id != Sid.community:
+        if msg.guild is None:  # message.guild.id != Guild.community:
             return
         if msg.content.startswith('$afk') or msg.content.startswith('~afk'):
             return
 
         for key in self.active_afk:
             if key in msg.raw_mentions:
-                guild = self.bot.get_guild(Sid.community)
+                guild = self.bot.get_guild(Guild.community)
                 member = guild.get_member(key)
                 e = (
-                    Embed(colour=Clr.prpl(), title='Afk note:', description=db.get_value(db.a, key, 'name'))
+                    Embed(colour=Colour.prpl(), title='Afk note:', description=db.get_value(db.a, key, 'name'))
                     .set_author(name=f'Sorry, but {member.display_name} is $afk !', icon_url=member.display_avatar.url)
                     .set_footer(
                         text='PS. Please, consider deleting your ping-message (or just removing ping) '
@@ -59,7 +59,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
 
         async def send_non_afk_em(author, channel):
             e = Embed(
-                colour=Clr.prpl(), title='Afk note:', description=db.get_value(db.a, author.id, 'name')
+                colour=Colour.prpl(), title='Afk note:', description=db.get_value(db.a, author.id, 'name')
             ).set_author(name=f'{author.display_name} is no longer afk !', icon_url=author.display_avatar.url)
             db.remove_row(db.a, author.id)
             self.active_afk.pop(author.id)

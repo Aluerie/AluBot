@@ -10,7 +10,8 @@ import discord
 from asyncprawcore import AsyncPrawcoreException
 from discord.ext import commands, tasks
 
-from utils import AluCog, Clr, Lmt
+from utils import AluCog
+from utils.const import Colour, Limit
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -40,7 +41,7 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
     await comment.subreddit.load()  # DO NOT FORGET TO LOAD
     await comment.author.load()  # DO NOT FORGET TO LOAD
 
-    paginator = commands.Paginator(max_size=Lmt.Embed.description, prefix='', suffix='')
+    paginator = commands.Paginator(max_size=Limit.Embed.description, prefix='', suffix='')
     paginator.add_line(comment.body)
 
     embeds = [
@@ -48,7 +49,7 @@ async def process_comments(comment: asyncpraw.reddit.Comment):
             title=comment.submission.title[:256],
             description=page,
             url=comment.submission.shortlink,
-            colour=Clr.reddit(),
+            colour=Colour.reddit(),
         )
         for page in paginator.pages
     ]

@@ -8,8 +8,8 @@ from discord import app_commands
 from discord.ext import commands
 from steam.steamid import EType, SteamID
 
-from utils import Clr, Ems
 from utils.checks import is_manager
+from utils.const import Colour, Emote
 from utils.dota import hero
 from utils.dota.const import DOTA_LOGO
 
@@ -61,7 +61,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
             game_name="Dota 2",
             game_codeword="dota",
             game_logo=DOTA_LOGO,
-            colour=Clr.prpl(),
+            colour=Colour.prpl(),
             bot=bot,
             players_table="dota_players",
             accounts_table="dota_accounts",
@@ -79,7 +79,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.DankLove)
+        return discord.PartialEmoji.from_str(Emote.DankLove)
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()

@@ -1,4 +1,7 @@
-class Ems:
+from enum import IntEnum, StrEnum
+
+
+class Emote(StrEnum):
     """Emote strings."""
 
     # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
@@ -56,25 +59,20 @@ class Ems:
     Offline = '\N{LARGE RED CIRCLE}'
     Online = '\N{LARGE GREEN CIRCLE}'
 
-    # EMOTE LISTS ######################################################################################################
-    comfy_emotes = [
-        "<:peepoComfy:726438781208756288>",
-        "<:_:726438781208756288>",
-        "<:pepoblanket:595156413974577162>",
-        "<:_:595156413974577162>",
-    ]
-    phone_numbers = [
-        '\N{DIGIT ZERO}',
-        '\N{DIGIT ONE}',
-        '\N{DIGIT TWO}',
-        '\N{DIGIT THREE}',
-        '\N{DIGIT FOUR}',
-        '\N{DIGIT FIVE}',
-        '\N{DIGIT SIX}',
-        '\N{DIGIT SEVEN}',
-        '\N{DIGIT EIGHT}',
-        '\N{DIGIT NINE}',
-    ]
+
+# EMOTE LISTS ######################################################################################################
+DIGITS = [
+    '\N{DIGIT ZERO}\N{COMBINING ENCLOSING KEYCAP}',
+    '\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP}',
+    '\N{DIGIT TWO}\N{COMBINING ENCLOSING KEYCAP}',
+    '\N{DIGIT THREE}\N{COMBINING ENCLOSING KEYCAP}',
+    '\N{DIGIT FOUR}\N{COMBINING ENCLOSING KEYCAP}',
+    '\N{DIGIT FIVE}\N{COMBINING ENCLOSING KEYCAP}',
+    '\N{DIGIT SIX}\N{COMBINING ENCLOSING KEYCAP}',
+    '\N{DIGIT SEVEN}\N{COMBINING ENCLOSING KEYCAP}',
+    '\N{DIGIT EIGHT}\N{COMBINING ENCLOSING KEYCAP}',
+    '\N{DIGIT NINE}\N{COMBINING ENCLOSING KEYCAP}',
+]
 
 
 class Rgx:
@@ -87,20 +85,20 @@ class Rgx:
     emote_stats_ids = r"<a?:[a-zA-Z0-9_]{2,32}:([0-9]{18,22})>"
     invis = "[^!-~]+"  # IDK might be huge question mark
 
-    url_link = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
-    # url_simple = r"(https?://\S+)"
+
+REGEX_URL_LINK = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
 
-class Img:
+class Picture(StrEnum):
     github = 'https://pics.freeicons.io/uploads/icons/png/4381378511600029534-512.png'
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
-    twitchtv = (
+    twitch = (
         "https://cdn3.iconfinder.com/data/icons/"
         "social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
     )
 
 
-class Lmt:
+class Limit:
     class Embed:
         sum_all = 6000
         footer_text = 2048

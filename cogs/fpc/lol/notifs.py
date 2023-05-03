@@ -59,9 +59,9 @@ class LoLNotifs(commands.Cog):
             except ServerError:
                 log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.display_name}')
                 continue
-                # e = Embed(colour=Clr.error())
+                # e = Embed(colour=Colour.error())
                 # e.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
-                # await self.bot.get_channel(Cid.spam_me).send(embed=e)  # content=umntn(Uid.alu)
+                # await self.bot.get_channel(Channel.spam_me).send(embed=e)  # content=umntn(User.alu)
 
             if not hasattr(live_game, 'queue_id') or live_game.queue_id != SOLO_RANKED_5v5_QUEUE_ENUM:
                 continue

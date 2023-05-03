@@ -8,7 +8,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from utils import Clr, Ems, Rgx
+from utils.const import Colour, Emote, Rgx
 from utils.formats import indent
 from utils.pagination import EnumeratedPages
 
@@ -68,7 +68,7 @@ async def topemotes_job(ctx: AluGuildContext, mode):
         new_array,
         per_page=split_size,
         no_enumeration=True,
-        colour=Clr.prpl(),
+        colour=Colour.prpl(),
         title="Top emotes used last month",
         footer_text=f'With love, {ctx.guild.me.display_name}',
         description_prefix=f'`{"Emote".ljust(max_length + 4, " ")}Usages`\n',
@@ -87,7 +87,7 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.peepoComfy)
+        return discord.PartialEmoji.from_str(Emote.peepoComfy)
 
     def cog_load(self) -> None:
         self.daily_emote_shift.start()

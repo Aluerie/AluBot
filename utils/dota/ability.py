@@ -1,4 +1,5 @@
 from utils.cache import KeyCache
+
 from .const import *
 
 __all__ = ('lazy_aghs_shard_url', 'lazy_aghs_bless_url', 'name_by_id', 'iconurl_by_id')

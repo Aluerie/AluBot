@@ -1,10 +1,12 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog, Sid
+from utils import AluCog
+from utils.const import Guild
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -53,7 +55,7 @@ class TwitchCog(AluCog):
                     AND irene_is_live IS DISTINCT FROM $1
                     RETURNING True;
                 """
-        val = await self.bot.pool.fetchval(query, tw.online, Sid.community)
+        val = await self.bot.pool.fetchval(query, tw.online, Guild.community)
 
         if not (val and tw.online):
             return

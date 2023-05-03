@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Tuple
 import discord
 from discord.ext import commands
 
-from utils import AluCog, AluContext, Clr
+from utils import AluCog, AluContext
+from utils.const import Colour
 
 if TYPE_CHECKING:
     pass
@@ -31,7 +32,7 @@ class DevUtilities(AluCog):
             n, s = to_string(c)
             e.add_field(name=n, value=s, inline=False)
         if len(characters) > 10:
-            e.colour = Clr.error()
+            e.colour = Colour.error()
             e.set_footer(text='Output was too long. Displaying only first 10 chars.')
 
         await ctx.send(embed=e)

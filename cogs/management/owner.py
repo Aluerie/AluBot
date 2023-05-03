@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from cogs import get_extensions
-from utils import Clr, Ems, MClr, Sid
+from utils.const import Colour, Emote, Guild, MaterialPalette
 from utils.bases.context import AluContext
 from utils.checks import is_owner
 
@@ -26,7 +26,7 @@ class AdminTools(ManagementBaseCog):
 
     async def trustee_add_remove(self, ctx: AluContext, user_id: int, mode: Literal["add", "remov"]):
         query = "SELECT trusted_ids FROM botinfo WHERE id=$1"
-        trusted_ids = await self.bot.pool.fetchval(query, Sid.community)
+        trusted_ids = await self.bot.pool.fetchval(query, Guild.community)
 
         if mode == "add":
             trusted_ids.append(user_id)
@@ -34,8 +34,8 @@ class AdminTools(ManagementBaseCog):
             trusted_ids.remove(user_id)
 
         query = "UPDATE botinfo SET trusted_ids=$1 WHERE id=$2"
-        await self.bot.pool.execute(query, trusted_ids, Sid.community)
-        e = discord.Embed(colour=Clr.prpl())
+        await self.bot.pool.execute(query, trusted_ids, Guild.community)
+        e = discord.Embed(colour=Colour.prpl())
         e.description = f"We {mode}ed user with id {user_id} to the list of trusted users"
         await ctx.reply(embed=e)
 
@@ -60,7 +60,7 @@ class AdminTools(ManagementBaseCog):
         cogs = [f"\N{BLACK CIRCLE} {x[:-3]}" for x in os.listdir("./cogs") if x.endswith(".py")] + [
             "\N{BLACK CIRCLE} jishaku"
         ]
-        e = discord.Embed(title="Available Extensions", description="\n".join(cogs), colour=Clr.prpl())
+        e = discord.Embed(title="Available Extensions", description="\n".join(cogs), colour=Colour.prpl())
         await ctx.reply(embed=e)
 
     async def load_unload_reload_job(self, ctx: AluContext, module: str, *, mode: Literal["load", "unload", "reload"]):
@@ -74,11 +74,11 @@ class AdminTools(ManagementBaseCog):
                 case "reload":
                     await self.reload_or_load_extension(filename)
         except commands.ExtensionError as error:
-            e = discord.Embed(description=f"{error}", colour=Clr.error())
+            e = discord.Embed(description=f"{error}", colour=Colour.error())
             e.set_author(name=error.__class__.__name__)
             await ctx.reply(embed=e)
         else:
-            await ctx.message.add_reaction(Ems.DankApprove)
+            await ctx.message.add_reaction(Emote.DankApprove)
 
     @is_owner()
     @commands.command(name="load", hidden=True)
@@ -118,13 +118,13 @@ class AdminTools(ManagementBaseCog):
                 await ctx.reply(f"{error.__class__.__name__}: {error}")
                 add_reaction = False
         if add_reaction:
-            await ctx.message.add_reaction(Ems.DankApprove)
+            await ctx.message.add_reaction(Emote.DankApprove)
 
     async def send_guild_embed(self, guild: discord.Guild, join: bool):
         if join:
-            word, colour = "joined", MClr.green(shade=500)
+            word, colour = "joined", MaterialPalette.green(shade=500)
         else:
-            word, colour = "left", MClr.red(shade=500)
+            word, colour = "left", MaterialPalette.red(shade=500)
 
         e = discord.Embed(title=word, description=guild.description, colour=colour)
         e.add_field(name="Guild ID", value=f"`{guild.id}`")
@@ -168,7 +168,7 @@ class AdminTools(ManagementBaseCog):
         """'Make bot leave guild with named guild_id;"""
         if guild is not None:
             await guild.leave()
-            e = discord.Embed(colour=Clr.prpl())
+            e = discord.Embed(colour=Colour.prpl())
             e.description = f"Just left guild {guild.name} with id `{guild.id}`\n"
             await ctx.reply(embed=e)
         else:
@@ -178,7 +178,7 @@ class AdminTools(ManagementBaseCog):
     @guild_group.command(hidden=True)
     async def list(self, ctx: AluContext):
         """Show list of guilds the bot is in."""
-        e = discord.Embed(colour=Clr.prpl())
+        e = discord.Embed(colour=Colour.prpl())
         e.description = (
             f"The bot is in these guilds\n"
             f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"

@@ -7,7 +7,8 @@ import discord
 import regex
 from discord.ext import commands, tasks
 
-from utils import AluCog, Clr, Ems, Rgx, Rid, Sid
+from utils import AluCog
+from utils.const import IGNORED_FOR_LOGS, Colour, Emote, Guild, Rgx
 from utils.formats import inline_word_by_word_diff
 
 if TYPE_CHECKING:
@@ -29,21 +30,21 @@ class Logging(AluCog):
         e = discord.Embed(colour=member.colour)
         e.set_author(name=member.display_name, icon_url=before.display_avatar.url)
         if before.avatar != after.avatar:
-            e.title = f'User\'s avatar was changed {Ems.PepoDetective}'
+            e.title = f'User\'s avatar was changed {Emote.PepoDetective}'
             e.description = '**Before:**  thumbnail to the right\n**After:** image below'
             e.set_thumbnail(url=before.display_avatar.url)
             e.set_image(url=after.display_avatar.url)
         elif before.name != after.name:
-            e.title = f'User\'s global name was changed {Ems.PepoDetective}'
+            e.title = f'User\'s global name was changed {Emote.PepoDetective}'
             e.description = f'**Before:** {before.name}\n**After:** {after.name}'
         elif before.discriminator != after.discriminator:
-            e.title = f'User\'s discriminator was changed {Ems.PepoDetective}'
+            e.title = f'User\'s discriminator was changed {Emote.PepoDetective}'
             e.description = f'**Before:** {before.discriminator}\n**After:** {after.discriminator}'
         return await self.bot.community.bot_spam.send(embed=e)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        if after.guild is None or after.guild.id != Sid.community:
+        if after.guild is None or after.guild.id != Guild.community:
             return
         if before.author.bot is True:
             return
@@ -61,7 +62,7 @@ class Logging(AluCog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, msg):
-        if msg.guild.id != Sid.community or msg.author.bot:
+        if msg.guild.id != Guild.community or msg.author.bot:
             return
         if regex.search(Rgx.bug_check, msg.content):  # bug_check
             return
@@ -77,17 +78,17 @@ class Logging(AluCog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if before.guild.id != Sid.community:
+        if before.guild.id != Guild.community:
             return
 
         added_role = list(set(after.roles) - set(before.roles))
-        if added_role and not Rid.is_ignored_for_logs(added_role[0].id):
+        if added_role and added_role[0].id not in IGNORED_FOR_LOGS:
             e = discord.Embed(description=f'**Role added:** {added_role[0].mention}', colour=0x00FF7F)
             e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
             return await self.bot.community.logs.send(embed=e)
 
         removed_role = list(set(before.roles) - set(after.roles))
-        if removed_role and not Rid.is_ignored_for_logs(removed_role[0].id):
+        if removed_role and removed_role[0].id not in IGNORED_FOR_LOGS:
             e = discord.Embed(description=f'**Role removed:** {removed_role[0].mention}', colour=0x006400)
             e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
             return await self.bot.community.logs.send(embed=e)
@@ -103,15 +104,15 @@ class Logging(AluCog):
 
             query = 'UPDATE users SET name=$1 WHERE id=$2'
             await self.bot.pool.execute(query, after.display_name, after.id)
-            e = discord.Embed(title=f'User\'s server nickname was changed {Ems.PepoDetective}', colour=after.color)
+            e = discord.Embed(title=f'User\'s server nickname was changed {Emote.PepoDetective}', colour=after.color)
             e.description = f'**Before:** {before.nick}\n**After:** {after.nick}'
             e.set_author(name=before.name, icon_url=before.display_avatar.url)
             await self.bot.community.bot_spam.send(embed=e)
 
             stone_rl = self.bot.community.rolling_stone_role
             if after.nick and 'Stone' in after.nick:
-                e = discord.Embed(colour=Clr.prpl())
-                e.description = f'{after.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}'
+                e = discord.Embed(colour=Colour.prpl())
+                e.description = f'{after.mention} gets lucky {stone_rl.mention} role {Emote.PogChampPepe}'
                 await self.bot.community.bot_spam.send(embed=e)
                 await after.add_roles(stone_rl)
             else:
@@ -130,7 +131,7 @@ class Logging(AluCog):
             if 'Stone' in target.display_name:
                 e = discord.Embed(
                     colour=stone_rl.colour,
-                    description=f'{target.mention} gets lucky {stone_rl.mention} role {Ems.PogChampPepe}',
+                    description=f'{target.mention} gets lucky {stone_rl.mention} role {Emote.PogChampPepe}',
                 )
                 await self.bot.community.bot_spam.send(embed=e)
                 await target.add_roles(stone_rl)
@@ -146,8 +147,8 @@ class CommandLogging(commands.Cog):
     def __init__(self, bot):
         self.bot: AluBot = bot
 
-    ignored_users = []  # [Uid.alu]
-    included_guilds = [Sid.community]
+    ignored_users = []  # [User.alu]
+    included_guilds = [Guild.community]
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):

@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from discord import app_commands
 from discord.ext import commands
 
-from utils import Clr, Ems
+from utils.const import Colour, Emote
 from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_tdR
 
@@ -105,17 +105,19 @@ async def schedule_work(
 
 select_options = [
     discord.SelectOption(
-        emoji=Ems.PepoRules,
+        emoji=Emote.PepoRules,
         label="Next 24h: Featured + Favourite (Default)",
         description="Featured games + some fav teams next 24 hours",
         value='1',
     ),
     discord.SelectOption(
-        emoji=Ems.peepoHappyDank, label="Next 24h: Featured", description="Featured games next 24 hours", value='2'
+        emoji=Emote.peepoHappyDank, label="Next 24h: Featured", description="Featured games next 24 hours", value='2'
     ),
-    discord.SelectOption(emoji=Ems.bubuAyaya, label="Featured", description="Featured games by Liquidpedia", value='3'),
-    discord.SelectOption(emoji=Ems.PepoG, label="Full Schedule", description="All pro games!", value='4'),
-    discord.SelectOption(emoji=Ems.PepoDetective, label="Completed", description="Already finished games", value='5'),
+    discord.SelectOption(
+        emoji=Emote.bubuAyaya, label="Featured", description="Featured games by Liquidpedia", value='3'
+    ),
+    discord.SelectOption(emoji=Emote.PepoG, label="Full Schedule", description="All pro games!", value='4'),
+    discord.SelectOption(emoji=Emote.PepoDetective, label="Completed", description="Already finished games", value='5'),
 ]
 
 
@@ -204,7 +206,7 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.MadgeThreat)
+        return discord.PartialEmoji.from_str(Emote.MadgeThreat)
 
     async def embed_worker(
         self, author: discord.User | discord.Member, schedule_mode: int = 1, query: Optional[str] = None
@@ -280,7 +282,7 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
                 e.url = url
                 await ctx.reply(embed=e)
             else:
-                e = discord.Embed(colour=Clr.error())
+                e = discord.Embed(colour=Colour.error())
                 e.description = 'No matches found'
                 await ctx.reply(embed=e)
 

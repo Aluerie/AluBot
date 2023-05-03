@@ -8,7 +8,8 @@ from discord import app_commands
 from discord.ext import commands
 from numpy.random import choice, randint
 
-from utils import AluCog, Cid, Clr, Ems, Rgx, Sid, Uid
+from utils import AluCog
+from utils.const import Channel, Colour, Emote, Guild, Rgx, User, DIGITS
 from utils.webhook import check_msg_react, user_webhook
 
 if TYPE_CHECKING:
@@ -24,14 +25,14 @@ class Other(AluCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.id in [Uid.bot.id, Uid.yen.id]:
+        if message.author.id in [User.bot, User.yen]:
             return
 
         async def work_non_command_mentions(msg: discord.Message):
             """for now there is only blush and question marks"""
             if msg.guild and msg.guild.me in msg.mentions:
                 if any([item in msg.content.lower() for item in ['😊', "blush"]]):
-                    await msg.channel.send(f'{msg.author.mention} {Ems.peepoBlushDank}')
+                    await msg.channel.send(f'{msg.author.mention} {Emote.peepoBlushDank}')
                 else:
                     ctx = await self.bot.get_context(msg)
                     if ctx.command:
@@ -43,19 +44,19 @@ class Other(AluCog):
         await work_non_command_mentions(message)
 
         async def bots_in_lobby(msg: discord.Message):
-            if msg.channel.id == Cid.general.id:
+            if msg.channel.id == Channel.general:
                 text = None
                 if msg.interaction is not None and msg.interaction.type == discord.InteractionType.application_command:
                     text = 'Slash-commands'
                 if msg.author.bot and not msg.webhook_id:
                     text = 'Bots'
                 if text is not None:
-                    await msg.channel.send('{0} in {1} ! {2} {2} {2}'.format(text, Cid.general.mention, Ems.Ree))
+                    await msg.channel.send('{0} in {1} ! {2} {2} {2}'.format(text, Channel.general.mention, Emote.Ree))
 
         await bots_in_lobby(message)
 
         async def weebs_out(msg: discord.Message):
-            if msg.channel.id == Cid.weebs.id and randint(1, 100 + 1) < 7:
+            if msg.channel.id == Channel.weebs and randint(1, 100 + 1) < 7:
                 await msg.channel.send(
                     '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
                         '<a:WeebsOutOut:730882034167185448>',
@@ -68,30 +69,30 @@ class Other(AluCog):
         await weebs_out(message)
 
         async def ree_the_oof(msg: discord.Message):
-            if not msg.guild or msg.guild.id != Sid.community:
+            if not msg.guild or msg.guild.id != Guild.community:
                 return
             if "Oof" in msg.content:
                 try:
-                    await msg.add_reaction(Ems.Ree)
+                    await msg.add_reaction(Emote.Ree)
                 except discord.errors.Forbidden:
                     await msg.delete()
 
         await ree_the_oof(message)
 
         async def random_comfy_react(msg: discord.Message):
-            if not msg.guild or msg.guild.id != Sid.community:
+            if not msg.guild or msg.guild.id != Guild.community:
                 return
             roll = randint(1, 300 + 1)
             if roll < 2:
                 try:
-                    await msg.add_reaction(Ems.peepoComfy)
+                    await msg.add_reaction(Emote.peepoComfy)
                 except Exception:
                     return
 
         await random_comfy_react(message)
 
         async def your_life(msg):
-            if not msg.guild or msg.guild.id != Sid.community or randint(1, 170 + 1) >= 2:
+            if not msg.guild or msg.guild.id != Guild.community or randint(1, 170 + 1) >= 2:
                 return
             try:
                 sliced_text = msg.content.split()
@@ -111,7 +112,7 @@ class Other(AluCog):
         answer_text = f'{str(rand_emoji)} ' * 3
         channel = self.community.emote_spam
         await channel.send(answer_text)
-        e = discord.Embed(colour=Clr.prpl(), description=f'I sent {answer_text} into {channel.mention}')
+        e = discord.Embed(colour=Colour.prpl(), description=f'I sent {answer_text} into {channel.mention}')
         await ntr.response.send_message(embed=e, ephemeral=True, delete_after=10)
 
     @commands.hybrid_command(description='Send apuband emote combo')
@@ -122,7 +123,7 @@ class Other(AluCog):
         content = ' '.join([str(discord.utils.get(guild.emojis, name=e)) for e in emote_names])
         await ctx.channel.send(content=content)
         if ctx.interaction:
-            await ctx.reply(content=f'Nice {Ems.DankApprove}', ephemeral=True)
+            await ctx.reply(content=f'Nice {Emote.DankApprove}', ephemeral=True)
         else:
             await ctx.message.delete()
 
@@ -140,7 +141,7 @@ class Other(AluCog):
         so it looks like the bot is speaking on its own.
         """
         ch = channel or ctx.channel
-        if ch.id in [Cid.emote_spam.id, Cid.comfy_spam.id]:
+        if ch.id in [Channel.emote_spam, Channel.comfy_spam]:
             raise commands.MissingPermissions(
                 [f'Sorry, these channels are special so you can\'t use this command in {ch.mention}']
             )
@@ -152,7 +153,7 @@ class Other(AluCog):
                 text = text.replace(url, f'<{url}>')
             await ch.send(text)
             if ctx.interaction:
-                await ctx.reply(content=f'I did it {Ems.DankApprove}', ephemeral=True)
+                await ctx.reply(content=f'I did it {Emote.DankApprove}', ephemeral=True)
         try:
             await ctx.message.delete()
         except:
@@ -184,7 +185,7 @@ class Other(AluCog):
                 ' ': ' ',
                 '!': '\N{WHITE EXCLAMATION MARK ORNAMENT}',
                 '?': '\N{WHITE QUESTION MARK ORNAMENT}',
-            } | {str(i): n for i, n in enumerate(Ems.phone_numbers)}
+            } | {str(i): n for i, n in enumerate(DIGITS)}
             alphabet = [  # maybe make char one as well one day
                 'a',
                 'b',
@@ -222,7 +223,7 @@ class Other(AluCog):
                 answer += letter
         await user_webhook(ctx, content=answer)
         if ctx.interaction:
-            await ctx.reply(content=Ems.DankApprove, ephemeral=True)
+            await ctx.reply(content=Emote.DankApprove, ephemeral=True)
         else:
             await ctx.message.delete()
 

@@ -6,13 +6,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from utils.const import Guild
 from utils.lol.const import LiteralServerUpper
-from utils import Sid
 
 if TYPE_CHECKING:
-    from utils import AluBot
     from cogs.fpc.dota.settings import DotaNotifsSettings
     from cogs.fpc.lol.settings import LoLNotifsSettings
+    from utils import AluBot
 
 
 class FPCTrusted(commands.Cog):
@@ -22,7 +22,7 @@ class FPCTrusted(commands.Cog):
     db = app_commands.Group(
         name="db",
         description="Group command about managing database",
-        guild_ids=[Sid.hideout],
+        guild_ids=[Guild.hideout],
     )
 
     db_dota = app_commands.Group(

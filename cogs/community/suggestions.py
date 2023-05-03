@@ -5,20 +5,21 @@ from typing import TYPE_CHECKING
 import discord
 from discord import app_commands
 
-from utils import AluCog, Clr, Ems, Sid
+from utils import AluCog
+from utils.const import Colour, Emote, Guild
 
 if TYPE_CHECKING:
     from utils import AluBot
 
 
-class Suggestions(AluCog, emote=Ems.peepoWTF):
+class Suggestions(AluCog, emote=Emote.peepoWTF):
     """Commands related to suggestions such as
 
     * setting up suggestion channel
     * making said suggestions
     """
 
-    @app_commands.guilds(Sid.community)
+    @app_commands.guilds(Guild.community)
     @app_commands.command()
     @app_commands.describe(text='Suggestion text')
     async def suggest(self, ntr: discord.Interaction, *, text: str):
@@ -29,10 +30,10 @@ class Suggestions(AluCog, emote=Ems.peepoWTF):
                     WHERE id=$1 
                     RETURNING suggestion_num;
                 """
-        number = await self.bot.pool.fetchval(query, Sid.community)
+        number = await self.bot.pool.fetchval(query, Guild.community)
 
         title = f'Suggestion #{number}'
-        e = discord.Embed(color=Clr.prpl(), title=title, description=text)
+        e = discord.Embed(color=Colour.prpl(), title=title, description=text)
         e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
 
         msg = await channel.send(embed=e)
@@ -44,7 +45,7 @@ class Suggestions(AluCog, emote=Ems.peepoWTF):
             'Don\'t forget to upvote/downvote initial suggestion message with '
             '\N{UPWARDS BLACK ARROW} \N{DOWNWARDS BLACK ARROW} reactions.'
         )
-        e2 = discord.Embed(color=Clr.prpl())
+        e2 = discord.Embed(color=Colour.prpl())
         e2.description = f'{ntr.user.mention}, sent your suggestion under #{number} into {channel.mention}'
         await ntr.response.send_message(embed=e2, ephemeral=True)
 

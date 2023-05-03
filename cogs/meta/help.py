@@ -6,7 +6,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus, tasks
 
-from utils import AluCog, AluContext, Clr, Ems
+from utils import AluCog, AluContext
+from utils.const import Colour, Emote
 from utils.formats import human_timedelta
 from utils.pagination import Paginator
 
@@ -28,7 +29,7 @@ class HelpPageSource(menus.ListPageSource):
     async def format_page(self, menu: HelpPages, entries: HelpFormatData):
         cog, cmds = entries.cog, entries.cmds
 
-        e = discord.Embed(colour=Clr.prpl())
+        e = discord.Embed(colour=Colour.prpl())
         e.set_footer(text=f'With love, {self.help_cmd.context.bot.user.name}')
 
         if cog == 'front_page':
@@ -43,7 +44,7 @@ class HelpPageSource(menus.ListPageSource):
         elif cog == 'back_page':
             e.title = 'Other features $help page'
             e.description = (
-                f'{Ems.PepoDetective} There is a list of not listed on other pages features. '
+                f'{Emote.PepoDetective} There is a list of not listed on other pages features. '
                 f'Maybe I even forgot something to write down'
             )
         elif cmds:
@@ -91,7 +92,7 @@ class HelpSelect(discord.ui.Select):
         self.add_option(
             label='Other Features',
             description='Things that bot does without commands',
-            emoji=Ems.PepoDetective,
+            emoji=Emote.PepoDetective,
             value=str(max_len - 1),
         )
 
@@ -119,7 +120,7 @@ class MyHelpCommand(commands.HelpCommand):
                 'hidden': False,  # change to True to hide from help menu
                 'help': 'Show `help` menu for common bot commands. '
                 'Note that you can use `$help [command/group/cog]` to get a help on specific things',
-                'brief': f'{Ems.slash}',
+                'brief': f'{Emote.slash}',
             },
         )
 
@@ -127,7 +128,7 @@ class MyHelpCommand(commands.HelpCommand):
         if answer is None:
             answer = []
         if getattr(c, 'commands', None) is not None:
-            if c.brief == Ems.slash:
+            if c.brief == Emote.slash:
                 answer.append(self.get_command_signature(c))
             for x in await self.filter_commands(c.commands, sort=True):
                 await self.get_the_answer(x, answer=answer, deep=deep + 1)
@@ -195,7 +196,7 @@ class MyHelpCommand(commands.HelpCommand):
         cog_name = getattr(cog, "qualified_name", "No Category")
         cog_desc = getattr(cog, "description", "No Description")
 
-        e = discord.Embed(colour=Clr.prpl(), title=cog_name)
+        e = discord.Embed(colour=Colour.prpl(), title=cog_name)
         e.description = f'{cog_desc}\n\n{chr(10).join(command_signatures)}'
         e.set_footer(text=f'With love, {self.context.bot.user.display_name}')
         e.set_thumbnail(url=self.context.bot.user.display_avatar.url)
@@ -204,17 +205,17 @@ class MyHelpCommand(commands.HelpCommand):
     async def send_group_help(self, group):
         filtered = await self.filter_commands(group.commands, sort=True)
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
-        e = discord.Embed(color=Clr.prpl(), title=group.name, description=f'{chr(10).join(command_signatures)}')
+        e = discord.Embed(color=Colour.prpl(), title=group.name, description=f'{chr(10).join(command_signatures)}')
         await self.context.reply(embed=e)
 
     async def send_command_help(self, command):
         e = discord.Embed(
-            title=command.qualified_name, color=Clr.prpl(), description=self.get_command_signature(command)
+            title=command.qualified_name, color=Colour.prpl(), description=self.get_command_signature(command)
         )
         await self.context.reply(embed=e)
 
     async def send_error_message(self, error):
-        e = discord.Embed(title="Help Command Error", description=error, color=Clr.error())
+        e = discord.Embed(title="Help Command Error", description=error, color=Colour.error())
         e.set_footer(
             text=(
                 'Check the spelling of your desired command/category and '
@@ -258,7 +259,7 @@ class HelpCommandCog(AluCog):
         if not self.bot.test:
             # todo: move this somewhere else
             # announce to people that we logged in
-            e = discord.Embed(colour=Clr.prpl())
+            e = discord.Embed(colour=Colour.prpl())
             e.description = f'Logged in as {self.bot.user.name}'
             await self.hideout.spam.send(embed=e)
             e.set_footer(text='Finished updating/rebooting')

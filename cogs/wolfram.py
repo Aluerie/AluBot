@@ -9,13 +9,14 @@ from discord import app_commands
 from discord.ext import commands
 
 from config import WOLFRAM_TOKEN
-from utils import AluCog, Ems
+from utils import AluCog
+from utils.const import Emote
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 
-class WolframAlpha(AluCog, emote=Ems.bedNerdge):
+class WolframAlpha(AluCog, emote=Emote.bedNerdge):
     """Query Wolfram Alpha within the bot.
 
     Probably the best computational intelligence service ever.

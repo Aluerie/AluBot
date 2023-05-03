@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING, List, Literal, NamedTuple
 import discord
 from discord.ext import commands, menus
 
-from utils import AluCog, AluContext, Clr
+from utils import AluCog, AluContext
+from utils.const import Colour
 from utils.pagination import Paginator
 
 if TYPE_CHECKING:
@@ -55,7 +56,7 @@ class SetupPageSource(menus.ListPageSource):
         cog = entries.cog
         if cog == 'front_page':
             # todo: fill it properly
-            e = discord.Embed(colour=Clr.prpl())
+            e = discord.Embed(colour=Colour.prpl())
             e.description = 'Front page baby'
 
             menu.clear_items()

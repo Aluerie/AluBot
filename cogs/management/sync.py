@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 import discord
 from discord.ext import commands
 
-from utils import Clr
+from utils.const import Colour
 from utils.checks import is_owner
 
 from ._base import ManagementBaseCog
@@ -29,7 +29,7 @@ class SyncCommandCog(ManagementBaseCog):
         * `$sync id_1 id_2` -> syncs guilds with id 1 and 2
         """
 
-        e = discord.Embed(colour=Clr.prpl())
+        e = discord.Embed(colour=Colour.prpl())
         if guilds:
             fmt = 0
             cmds = []

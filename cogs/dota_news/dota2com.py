@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import tasks
 
-from utils import AluCog, Clr, Sid
+from utils import AluCog
+from utils.const import Colour, Guild
 from utils.dota.const import DOTA_LOGO
 
 if TYPE_CHECKING:
@@ -25,7 +26,7 @@ class Dota2Com(AluCog):
         async with self.bot.session.get(url) as resp:
             data = await resp.json()
 
-        # db.set_value(db.b, Sid.community, dota_patch='sadge')
+        # db.set_value(db.b, Guild.community, dota_patch='sadge')
         last_patch = data["patches"][-1]
         patch_number, patch_name = last_patch["patch_number"], last_patch["patch_name"]
 
@@ -35,11 +36,13 @@ class Dota2Com(AluCog):
                         AND dota_patch IS DISTINCT FROM $1
                         RETURNING True
                     """
-        val = await self.bot.pool.fetchval(query, patch_number, Sid.community)
+        val = await self.bot.pool.fetchval(query, patch_number, Guild.community)
         if not val:
             return
 
-        e = discord.Embed(title="Patch Notes", url=f'https://www.dota2.com/patches/{patch_number}', colour=Clr.prpl())
+        e = discord.Embed(
+            title="Patch Notes", url=f'https://www.dota2.com/patches/{patch_number}', colour=Colour.prpl()
+        )
         e.description = f"Hey chat, I think new patch {patch_name} is out!"
         e.set_footer(text="I'm checking Valve's datafeed every 10 minutes")
         e.set_author(name=f"Patch {patch_number} is out", icon_url=DOTA_LOGO)

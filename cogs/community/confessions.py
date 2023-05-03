@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from utils import AluCog, Clr, Ems
+from utils import AluCog
+from utils.const import Colour, Emote
 from utils.formats import human_timedelta
 
 if TYPE_CHECKING:
@@ -37,15 +38,15 @@ class ConfModal(discord.ui.Modal):
     )
 
     async def on_submit(self, ntr: discord.Interaction):
-        e = discord.Embed(title=self.title, colour=Clr.prpl(), description=self.conf.value)
+        e = discord.Embed(title=self.title, colour=Colour.prpl(), description=self.conf.value)
         e.set_footer(text="Use buttons below to make a new confession in this channel")
         if self.title == "Non-anonymous confession":
             e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
         channel: discord.abc.Messageable = ntr.channel  # type: ignore # TODO: fix
         await channel.send(embeds=[e])
-        saint_string = '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Ems.bubuChrist, '\N{CHURCH}', Ems.PepoBeliever)
+        saint_string = '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Emote.bubuChrist, '\N{CHURCH}', Emote.PepoBeliever)
         await channel.send(saint_string)
-        await ntr.response.send_message(content=f"The Lord be with you {Ems.PepoBeliever}", ephemeral=True)
+        await ntr.response.send_message(content=f"The Lord be with you {Emote.PepoBeliever}", ephemeral=True)
         if ntr.message:
             await ntr.message.delete()
         await channel.send(view=ConfView())
@@ -65,7 +66,7 @@ class ConfView(discord.ui.View):
 
     async def on_error(self, ntr: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item):
         if isinstance(error, ButtonOnCooldown):
-            e = discord.Embed(colour=Clr.error()).set_author(name=error.__class__.__name__)
+            e = discord.Embed(colour=Colour.error()).set_author(name=error.__class__.__name__)
             e.description = (
                 "Sorry, you are on cooldown \n" f"Time left `{human_timedelta(error.retry_after, brief=True)}`"
             )
@@ -78,7 +79,7 @@ class ConfView(discord.ui.View):
         label="Anonymous confession",
         custom_id="anonconf-button",
         style=discord.ButtonStyle.primary,
-        emoji=Ems.bubuChrist,
+        emoji=Emote.bubuChrist,
     )
     async def button0_callback(self, ntr: discord.Interaction, btn: discord.ui.Button):
         await ntr.response.send_modal(ConfModal(title=btn.label))
@@ -87,7 +88,7 @@ class ConfView(discord.ui.View):
         label="Non-anonymous confession",
         custom_id="nonanonconf-button",
         style=discord.ButtonStyle.primary,
-        emoji=Ems.PepoBeliever,
+        emoji=Emote.PepoBeliever,
     )
     async def button1_callback(self, ntr: discord.Interaction, btn: discord.ui.Button):
         await ntr.response.send_modal(ConfModal(title=btn.label))
@@ -100,7 +101,7 @@ class Confession(AluCog):
 
         # very silly testing way
         # print('hello')
-        # await self.bot.get_channel(Cid.spam_me).send(view=ConfView())
+        # await self.bot.get_channel(Channel.spam_me).send(view=ConfView())
 
 
 async def setup(bot: AluBot):

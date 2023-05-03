@@ -9,7 +9,8 @@ import regex
 from discord.ext import commands, tasks
 from numpy.random import choice, randint
 
-from utils import AluCog, Cid, Clr, Ems, Rgx
+from utils import AluCog
+from utils.const import Channel, Colour, Emote, Rgx
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -25,7 +26,7 @@ class EmoteSpam(AluCog):
         self.offline_criminal_check.cancel()
 
     async def emote_spam_control(self, message: discord.Message, nqn_check: int = 1):
-        if message.channel.id == Cid.emote_spam.id:
+        if message.channel.id == Channel.emote_spam:
             channel: discord.TextChannel = message.channel  # type: ignore
             if len(message.embeds):
                 return await message.delete()
@@ -48,10 +49,10 @@ class EmoteSpam(AluCog):
                     return
                 answer_text = (
                     "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
-                        message.author.mention, channel.mention, Ems.Ree
+                        message.author.mention, channel.mention, Emote.Ree
                     )
                 )
-                e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl())
+                e = discord.Embed(title="Deleted message", description=message.content, color=Colour.prpl())
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 return 1
@@ -93,7 +94,7 @@ class EmoteSpam(AluCog):
             if message.author.id == self.bot.user.id:
                 return
             if await self.emote_spam_work(message):
-                text = f'Offline criminal found {Ems.peepoPolice}'
+                text = f'Offline criminal found {Emote.peepoPolice}'
                 await self.bot.community.bot_spam.send(content=text)
 
     @offline_criminal_check.before_loop
@@ -110,21 +111,28 @@ class ComfySpam(AluCog):
         self.comfy_spam.cancel()
         self.offline_criminal_check.cancel()
 
+    comfy_emotes = [
+        "<:peepoComfy:726438781208756288>",
+        "<:_:726438781208756288>",
+        "<:pepoblanket:595156413974577162>",
+        "<:_:595156413974577162>",
+    ]
+
     async def comfy_chat_control(self, message: discord.Message):
-        if message.channel.id == Cid.comfy_spam.id:
+        if message.channel.id == Channel.comfy_spam:
             channel: discord.TextChannel = message.channel  # type: ignore
             if len(message.embeds):
                 return await message.delete()
             text = str(message.content)
             text = regex.sub(Rgx.whitespace, '', text)
-            for item in Ems.comfy_emotes:
+            for item in self.comfy_emotes:
                 text = text.replace(item, "")
             if text:
                 answer_text = (
                     "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! "
-                    "{2} {2} {2}".format(message.author.mention, channel.mention, Ems.Ree)
+                    "{2} {2} {2}".format(message.author.mention, channel.mention, Emote.Ree)
                 )
-                e = discord.Embed(title="Deleted message", description=message.content, color=Clr.prpl())
+                e = discord.Embed(title="Deleted message", description=message.content, color=Colour.prpl())
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 await message.delete()
@@ -143,7 +151,7 @@ class ComfySpam(AluCog):
     @tasks.loop(minutes=60)
     async def comfy_spam(self):
         if randint(1, 100 + 1) < 2:
-            await self.community.comfy_spam.send('{0} {0} {0}'.format(Ems.peepoComfy))
+            await self.community.comfy_spam.send('{0} {0} {0}'.format(Emote.peepoComfy))
 
     @comfy_spam.before_loop
     async def comfy_spam_before(self):
@@ -155,7 +163,7 @@ class ComfySpam(AluCog):
             if message.author.id == self.bot.user.id:
                 return
             if await self.comfy_chat_control(message):
-                text = f'Offline criminal found {Ems.peepoPolice}'
+                text = f'Offline criminal found {Emote.peepoPolice}'
                 await self.bot.community.bot_spam.send(content=text)
 
     @offline_criminal_check.before_loop

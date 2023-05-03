@@ -8,7 +8,7 @@ import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pyot.utils.functools import async_property
 
-from utils import Cid, Clr, MClr
+from utils.const import Channel, Colour, MaterialPalette
 from utils.dota import ability, hero, item
 from utils.dota.const import DOTA_LOGO, ODOTA_API_URL, dota_player_colour_map
 from utils.formats import human_timedelta
@@ -53,7 +53,7 @@ class Match:
         return f'/[Dbuff]({self.dbuff})/[ODota]({self.odota})/[Stratz]({self.stratz})'
 
 
-colour_twitch_status_dict = {'NoTwitch': MClr.gray(), 'Live': Clr.prpl(), 'Offline': Clr.twitch()}
+colour_twitch_status_dict = {'NoTwitch': MaterialPalette.gray(), 'Live': Colour.prpl(), 'Offline': Colour.twitch()}
 
 
 class ActiveMatch(Match):
@@ -224,8 +224,8 @@ class PostMatchPlayerData:
         draw = ImageDraw.Draw(img)
         w2, h2 = bot.imgtools.get_text_wh(self.outcome, font_kda)
         colour_dict = {
-            'Win': str(MClr.green(shade=800)),
-            'Loss': str(MClr.red(shade=900)),
+            'Win': str(MaterialPalette.green(shade=800)),
+            'Loss': str(MaterialPalette.red(shade=900)),
             'Not Scored': (255, 255, 255),
         }
         draw.text((0, height - h3 - h2), self.outcome, font=font_kda, align="center", fill=colour_dict[self.outcome])
@@ -294,7 +294,7 @@ class PostMatchPlayerData:
         e = msg.embeds[0]
         img_file = bot.imgtools.img_to_file(await self.edit_the_image(e.image.url, bot), filename='edited.png')
         e.set_image(url=f'attachment://{img_file.filename}')
-        if self.channel_id == Cid.repost.id:
+        if self.channel_id == Channel.repost:
             e.set_footer(text=f'{e.footer.text or ""} | {self.api_calls_done}')
         try:
             await msg.edit(embed=e, attachments=[img_file])

@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.patches import Polygon
 
-from utils.var import MP, Clr
+from utils.const import MaterialPalette, Colour
 
 from ..dota import hero
 
@@ -158,7 +158,7 @@ async def mmr_by_hero_bar(bot: AluBot, ax, hero_stats_dict: dict):
             y = y - 1
         plt.imshow(hero_icon, extent=[count - 0.5, count + 0.5, y, y + 30], aspect='auto')
 
-    profit_color = [(str(Clr.twitch()) if p > 0 else str(MP.purple(shade=200))) for p in y_list]
+    profit_color = [(str(Colour.twitch()) if p > 0 else str(MaterialPalette.purple(shade=200))) for p in y_list]
 
     ax.bar(x_list, y_list, color=profit_color)
     ax.set_yticks(np.arange(min(y_list) - 60, max(y_list) + 60, 30.0))
@@ -186,8 +186,8 @@ async def heroes_played_bar(bot: AluBot, ax, sorted_dict):
 
     # profit_color = [('green' if p > 0 else 'red') for p in y_list]
 
-    ax.barh(y_list, w_list, color=str(Clr.twitch()))  # color=profit_color)
-    ax.barh(y_list, l_list, color=str(MP.purple(shade=200)), left=w_list)
+    ax.barh(y_list, w_list, color=str(Colour.twitch()))  # color=profit_color)
+    ax.barh(y_list, l_list, color=str(MaterialPalette.purple(shade=200)), left=w_list)
 
     ax.set_aspect(1 / 1)
     ax.get_xaxis().set_visible(False)

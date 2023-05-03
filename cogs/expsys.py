@@ -8,9 +8,9 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from utils import AluCog, Clr, Ems, Sid
-from utils.converters import my_bool
-from utils.formats import human_timedelta, indent, ordinal
+from utils import AluCog
+from utils.const import Colour, Emote, Guild
+from utils.formats import indent, ordinal
 from utils.pagination import EnumeratedPages
 
 if TYPE_CHECKING:
@@ -158,7 +158,7 @@ class ExperienceSystem(AluCog, name='Profile'):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.bubuAyaya)
+        return discord.PartialEmoji.from_str(Emote.bubuAyaya)
 
     async def cog_load(self) -> None:
         self.remove_inactive.start()
@@ -199,7 +199,7 @@ class ExperienceSystem(AluCog, name='Profile'):
             ctx,
             new_array,
             per_page=split_size,
-            colour=Clr.prpl(),
+            colour=Colour.prpl(),
             title="Server Leaderboard",
             footer_text=f'With love, {guild.me.display_name}',
         )
@@ -210,7 +210,7 @@ class ExperienceSystem(AluCog, name='Profile'):
         if message.author.bot:
             return
 
-        if message.guild and message.guild.id in [Sid.community]:
+        if message.guild and message.guild.id in [Guild.community]:
             query = """ WITH u AS (
                             SELECT lastseen FROM users WHERE id=$1
                         )           
@@ -237,9 +237,9 @@ class ExperienceSystem(AluCog, name='Profile'):
                     )
                     if not level_up_role or not previous_level_role:
                         raise ValueError('Roles were not found in the community guild')
-                    e = discord.Embed(colour=Clr.prpl())
+                    e = discord.Embed(colour=Colour.prpl())
                     e.description = '{0} just advanced to {1} ! ' '{2} {2} {2}'.format(
-                        message.author.mention, level_up_role.mention, Ems.PepoG
+                        message.author.mention, level_up_role.mention, Emote.PepoG
                     )
                     await message.channel.send(embed=e)
                     await author.remove_roles(previous_level_role)
@@ -276,10 +276,7 @@ class ExperienceSystem(AluCog, name='Profile'):
             if person is None and discord.utils.utcnow() - row.lastseen > datetime.timedelta(days=30):
                 query = 'DELETE FROM users WHERE id=$1'
                 await self.bot.pool.execute(query, row.id)
-                e = discord.Embed(
-                    description=f"id = {row.id}",
-                    colour=0xE6D690,
-                )
+                e = discord.Embed(description=f"id = {row.id}", colour=0xE6D690)
                 e.set_author(name=f"{row.name} was removed from the database")
                 await self.community.logs.send(embed=e)
 

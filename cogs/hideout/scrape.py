@@ -8,7 +8,8 @@ import feedparser
 from bs4 import BeautifulSoup
 from discord.ext import tasks
 
-from utils import AluCog, Clr, Sid
+from utils import AluCog
+from utils.const import Colour, Guild
 from utils.lol.const import LOL_LOGO
 
 if TYPE_CHECKING:
@@ -40,7 +41,7 @@ class Insider(AluCog):
                         AND insider_version IS DISTINCT FROM $1
                         RETURNING True
                     """
-        val = await self.bot.pool.fetchval(query, p.title, Sid.community)
+        val = await self.bot.pool.fetchval(query, p.title, Guild.community)
         if not val:
             return
 
@@ -77,7 +78,7 @@ class LoLCom(AluCog):
                     AND lol_patch IS DISTINCT FROM $1
                     RETURNING True
                 """
-        val = await self.bot.pool.fetchval(query, new_patch_href, Sid.community)
+        val = await self.bot.pool.fetchval(query, new_patch_href, Guild.community)
         if not val:
             return
 
@@ -94,7 +95,7 @@ class LoLCom(AluCog):
 
         # maybe use ('a' ,{'class': 'skins cboxElement'})
         img_url = patch_soup.find('h2', id='patch-patch-highlights').find_next('a').get('href')  # type: ignore # TODO:FIX
-        e = discord.Embed(title=content_if_property('og:title'), url=patch_url, colour=Clr.rspbrry())
+        e = discord.Embed(title=content_if_property('og:title'), url=patch_url, colour=Colour.rspbrry())
         e.description = content_if_property("og:description")
         e.set_image(url=img_url)
         e.set_thumbnail(url=content_if_property('og:image'))

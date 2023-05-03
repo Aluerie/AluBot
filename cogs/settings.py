@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, Sequence
 import discord
 from discord.ext import commands
 
-from utils import Clr, Ems, Img, Sid
+from utils.const import Colour, Emote, Guild, Picture
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -22,7 +22,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.PepoBeliever)
+        return discord.PartialEmoji.from_str(Emote.PepoBeliever)
 
     @commands.command()
     @commands.has_permissions(manage_emojis=True)
@@ -34,7 +34,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
         query = 'UPDATE guilds SET emote_logs_id=$1 WHERE id=$2'
         await self.bot.pool.execute(query, ch.id, ctx.guild.id)
 
-        e = discord.Embed(title='Emote logging is turned on', colour=Clr.prpl())
+        e = discord.Embed(title='Emote logging is turned on', colour=Colour.prpl())
         e.description = f'Now I will log emote create/delete/rename actions in {ch.mention}. Go try it!'
         e.set_footer(text=f'With love, {ctx.guild.me.display_name}')
         e.set_thumbnail(url=ctx.guild.me.display_avatar.url)
@@ -55,7 +55,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
 
         async def set_author(emotion, embedx: discord.Embed, act: discord.AuditLogAction):
             if emotion.managed:
-                embedx.set_author(name='Tw.tv Sub integration', icon_url=Img.twitchtv)
+                embedx.set_author(name='Tw.tv Sub integration', icon_url=Picture.twitch)
                 return
             else:
                 async for entry in guild.audit_logs(action=act):
@@ -66,7 +66,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
         # Remove emote ###########################################################################
         if diff_after == [] and diff_before != []:
             for emote in diff_before:
-                if not emote.managed and guild.id == Sid.community:
+                if not emote.managed and guild.id == Guild.community:
                     query = 'DELETE FROM emotes WHERE id=$1'
                     await self.bot.pool.execute(query, emote.id)
                 e = discord.Embed(title=f'`:{emote.name}:` emote removed', colour=0xB22222)
@@ -85,7 +85,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
                 if not emote.managed:
                     msg = await ch.send('{0} {0} {0}'.format(str(emote)))
                     await msg.add_reaction(str(emote))
-                if guild.id == Sid.community:
+                if guild.id == Guild.community:
                     query = 'INSERT INTO emotes (id, name, animated) VALUES ($1, $2, $3)'
                     await self.bot.pool.execute(query, emote.id, str(emote), emote.animated)
         # Renamed emote ###########################################################################
@@ -93,7 +93,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
             diff_after_name = [x for x in after if x.name not in [x.name for x in before]]
             diff_before_name = [x for x in before if x.name not in [x.name for x in after]]
             for emote_after, emote_before in zip(diff_after_name, diff_before_name):
-                if not emote_after.managed and guild.id == Sid.community:
+                if not emote_after.managed and guild.id == Guild.community:
                     query = 'UPDATE emotes SET name=$1 WHERE id=$2'
                     await self.bot.pool.execute(query, emote_after.id, str(emote_after))
                 e = discord.Embed(colour=0x1E90FF, description=f'[Image link]({emote_after.url})')

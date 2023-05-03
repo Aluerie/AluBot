@@ -7,7 +7,7 @@ from discord import Embed, app_commands
 from discord.ext import commands
 from discord.ext.commands import Range
 
-from utils import Clr, Ems, Rid
+from utils import Colour, Emote, Role
 
 if TYPE_CHECKING:
     from utils.bases.context import AluContext
@@ -26,13 +26,13 @@ class ServerInfo(commands.Cog, name='Rules'):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.PepoRules)
+        return discord.PartialEmoji.from_str(Emote.PepoRules)
 
     @staticmethod
     async def rule_work(ctx, num, dtb, min_number):
         try:
             my_row = db.session.query(dtb).order_by(dtb.id).limit(num + min_number)[num - min_number]
-            e = Embed(colour=Clr.prpl(), title=f'Rule {num}')
+            e = Embed(colour=Colour.prpl(), title=f'Rule {num}')
             e.description = f'{num}. {my_row.text}'
             await ctx.reply(embed=e)
         except:
@@ -57,7 +57,7 @@ class ServerInfo(commands.Cog, name='Rules'):
             list_rules = [
                 f'{counter}. {row.text}' for counter, row in enumerate(ses.query(dtb).order_by(dtb.id), start=min_value)
             ]
-        e = Embed(colour=Clr.prpl())
+        e = Embed(colour=Colour.prpl())
         e.title = 'Server rules'
         e.description = f'\n'.join(list_rules)
         await ctx.reply(embed=e)
@@ -72,13 +72,13 @@ class ServerInfo(commands.Cog, name='Rules'):
         """Show all *real rules* of the server"""
         await self.rules_work(ctx, db.rr, 1)
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Role.discord_mods)
     @commands.group()
     async def modrule(self, ctx: AluContext):
         """Group command about rule modding, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Role.discord_mods)
     @commands.group()
     async def modrealrule(self, ctx: AluContext):
         """Group command about rule modding, for actual commands use it together with subcommands"""
@@ -89,13 +89,13 @@ class ServerInfo(commands.Cog, name='Rules'):
         db.append_row(dtb, text=text)
         await ctx.reply(content='added')
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Role.discord_mods)
     @modrule.command()
     async def add(self, ctx, *, text: str):
         """Add rule to server rules"""
         await self.add_work(ctx, text, db.sr)
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Role.discord_mods)
     @modrealrule.command(name='add')
     async def add2(self, ctx, *, text: str):
         """Add rule to *real rules*"""
@@ -108,13 +108,13 @@ class ServerInfo(commands.Cog, name='Rules'):
             ses.query(dtb).filter_by(id=my_row.id).delete()
         await ctx.reply(content='removed')
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Role.discord_mods)
     @modrule.command()
     async def remove(self, ctx, num: int):
         """Remove rule under number `num` from server rules"""
         await self.remove_work(ctx, num, db.sr, 0)
 
-    @commands.has_role(Rid.discord_mods)
+    @commands.has_role(Role.discord_mods)
     @modrealrule.command(name='remove')
     async def remove2(self, ctx, num: int):
         """Remove rule under number `num` from *real rules*"""

@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image
 
-from utils import Clr, Ems
+from utils.const import Colour, Emote
 from utils.translator import translate
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ class ToolsCog(commands.Cog, name='Tools'):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.DankFix)
+        return discord.PartialEmoji.from_str(Emote.DankFix)
 
     def cog_load(self) -> None:
         self.bot.ini_twitter()
@@ -42,14 +42,14 @@ class ToolsCog(commands.Cog, name='Tools'):
         # into try/except or cog_error
         result = await translate(text, session=self.bot.session)
 
-        e = discord.Embed(title='Google Translate to English', colour=Clr.prpl())
+        e = discord.Embed(title='Google Translate to English', colour=Colour.prpl())
         e.description = result.translated
         e.set_footer(text=f'Detected language: {result.source_lang}')
         return e
 
     async def translate_ctx_menu_callback(self, ntr: discord.Interaction, message: discord.Message):
         if len(text := message.content) == 0:
-            raise commands.BadArgument("Sorry it seems this message doesn't have content")
+            raise commands.BadArgument("Sorry it seEmote this message doesn't have content")
         e = await self.translate_embed(text)
         await ntr.response.send_message(embed=e, ephemeral=True)
 
@@ -83,7 +83,7 @@ class ToolsCog(commands.Cog, name='Tools'):
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags
         img.thumbnail(maxsize, Image.ANTIALIAS)
         file = self.bot.imgtools.img_to_file(img, filename='converted.png', fmt='PNG')
-        e = discord.Embed(colour=Clr.prpl(), description='Image was converted to `.png` format')
+        e = discord.Embed(colour=Colour.prpl(), description='Image was converted to `.png` format')
         await ctx.reply(embed=e, file=file)
 
 

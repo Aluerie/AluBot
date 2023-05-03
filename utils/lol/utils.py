@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, List, Optional
 
 from pyot.models import lol
-from pyot.utils.lol import champion, cdragon
+from pyot.utils.lol import cdragon, champion
 from roleidentification import get_roles
 
 from utils.cache import KeyCache
@@ -141,6 +142,7 @@ async def utils_test_main():
 
 if __name__ == '__main__':
     import asyncio
+
     from pyot.conf.utils import import_confs
 
     import_confs("utils.lol.pyotconf")

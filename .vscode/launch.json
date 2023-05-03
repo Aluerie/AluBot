@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "YenBot",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "args": [
+                "-t"
+            ],
+            "console": "integratedTerminal",
+            //"justMyCode": true
+        },
+        {
+            "name": "AluBot",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "args": [],
+            "console": "integratedTerminal",
+            //"justMyCode": true
+        }
+    ]
+}

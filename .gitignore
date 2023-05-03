@@ -1,11 +1,16 @@
-__pycache__/
+.vscode/*
+!.vscode/launch.json
+#!.vscode/settings.json
+
 .idea/
-.vscode
+
+__pycache__/
 
 .ipynb_checkpoints
 *.ipynb
 
 venv/
+
 *.ini
 
 .logs/
@@ -14,8 +19,11 @@ venv/
 /.db_backup
 prefixes.json
 
+# beta test
 /cogs/beta.py
 _test.py
+
+# config secrets
 /config.py
 
 # Temporary ignore

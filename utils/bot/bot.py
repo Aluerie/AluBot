@@ -24,7 +24,7 @@ from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 
-from ..const import Clr, CommunityGuild, HideoutGuild
+from ..const import Colour, CommunityGuild, HideoutGuild
 from .cmd_cache import MyCommandTree
 
 if TYPE_CHECKING:
@@ -240,7 +240,7 @@ class AluBot(commands.Bot):
         for line in traceback_content.split('\n'):
             paginator.add_line(line)
 
-        e = embed or discord.Embed(colour=Clr.error()).set_author(name=where)
+        e = embed or discord.Embed(colour=Colour.error()).set_author(name=where)
         content = self.owner.mention if mention else ''
         await ch.send(content=content, embed=e)
 

@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 from pyot.utils.functools import async_property
 from pyot.utils.lol import champion
 
-from utils import Clr, MClr
+from utils.const import Colour, MaterialPalette
 from utils.formats import human_timedelta
 from utils.lol.const import LiteralPlatform, platform_to_server
 from utils.lol.utils import get_role_mini_list, icon_url_by_champ_id
@@ -107,7 +107,7 @@ class LiveMatch(Match):
         width, height = img.size
         last_row_h = 50
         last_row_y = height - last_row_h
-        rectangle = Image.new("RGB", (width, 100), str(Clr.rspbrry()))
+        rectangle = Image.new("RGB", (width, 100), str(Colour.rspbrry()))
         ImageDraw.Draw(rectangle)
         img.paste(rectangle)
         img.paste(rectangle, (0, last_row_y))
@@ -150,7 +150,7 @@ class LiveMatch(Match):
             filename=f'{ts.display_name.replace("_", "")}-is-playing-{await champion.key_by_id(self.champ_id)}.png',
         )
         log.debug('LF | made a better thumbnail')
-        e = discord.Embed(color=Clr.rspbrry(), url=ts.url)
+        e = discord.Embed(color=Colour.rspbrry(), url=ts.url)
         e.description = (
             f'Match `{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n'
             f'{await bot.twitch.last_vod_link(ts.twitch_id, seconds_ago=self.long_ago)}{self.links}'
@@ -185,8 +185,8 @@ class PostMatchPlayer:
         draw.text((0, height - last_row_h - h3), self.kda, font=font, align="right")
         w2, h2 = bot.imgtools.get_text_wh(self.outcome, font)
         colour_dict = {
-            'Win': str(MClr.green(shade=800)),
-            'Loss': str(MClr.red(shade=900)),
+            'Win': str(MaterialPalette.green(shade=800)),
+            'Loss': str(MaterialPalette.red(shade=900)),
             'No Scored': (255, 255, 255),
         }
         draw.text(

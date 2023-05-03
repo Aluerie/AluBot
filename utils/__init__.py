@@ -1,4 +1,4 @@
 from .bases import *
 from .bot import *
-from .const import *
+from . import const as const
 

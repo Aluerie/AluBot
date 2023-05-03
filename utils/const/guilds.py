@@ -1,56 +1,49 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import TYPE_CHECKING
+from enum import IntEnum
+from typing import TYPE_CHECKING, TypeVar
 
 import discord
 
 if TYPE_CHECKING:
     from utils import AluBot
 
-__all__ = ('Sid', 'Cid', 'Rid', 'Uid', 'CommunityGuild', 'HideoutGuild')
+T = TypeVar("T")
 
 
-class EnumID(Enum):
-    def __int__(self) -> int:
-        return self.value
-
+class SnowflakeEnum(IntEnum):
     def __str__(self) -> str:
         return self.mention
-
-    @property
-    def id(self):
-        return self.value
 
     @property
     def mention(self) -> str:
         raise NotImplemented
 
 
-class ChannelEnum(EnumID):
+class ChannelEnum(SnowflakeEnum):
     @property
     def mention(self) -> str:
         return f'<#{self.value}>'
 
 
-class RoleEnum(EnumID):
+class RoleEnum(SnowflakeEnum):
     @property
     def mention(self) -> str:
         return f'<@&{self.value}>'
 
 
-class UserEnum(EnumID):
+class UserEnum(SnowflakeEnum):
     @property
     def mention(self) -> str:
         return f'<@{self.value}>'
 
 
-class Sid:
+class Guild:
     community = 702561315478044804
     hideout = 759916212842659850
 
 
-class Cid(ChannelEnum):
+class Channel(ChannelEnum):
     rules = 724996010169991198
     role_selection = 1099742867947262093
 
@@ -93,10 +86,12 @@ class Cid(ChannelEnum):
     copy_dota_steam = 881843565251141632
     copy_dota_tweets = 963954743644934184
 
+    forum = 1020566035377705001
+
     event_pass = 966316773869772860
 
 
-class Rid(RoleEnum):
+class Role(RoleEnum):
     # COMMUNITY
     bots = 724981475099017276
     nsfw_bots = 959955573405777981
@@ -112,25 +107,22 @@ class Rid(RoleEnum):
     event = 1090274008680902667
     jailed_bots = 1090428532162822234
 
-    @staticmethod
-    def is_category_role(role_id: int) -> bool:
-        return role_id in [
-            856589983707693087,  # moderation
-            852199351808032788,  # activity
-            852193537067843634,  # subscription
-            852199851840372847,  # special
-            851786344354938880,  # games
-            852192240306618419,  # notification
-            852194400922632262,  # pronoun
-            727492782196916275,  # plebs
-        ]
 
-    @staticmethod
-    def is_ignored_for_logs(role_id: int) -> bool:
-        return role_id in [Rid.voice.id, Rid.live_stream.id] or Rid.is_category_role(role_id)
+CATEGORY_ROLES = [
+    856589983707693087,  # moderation
+    852199351808032788,  # activity
+    852193537067843634,  # subscription
+    852199851840372847,  # special
+    851786344354938880,  # games
+    852192240306618419,  # notification
+    852194400922632262,  # pronoun
+    727492782196916275,  # plebs
+]
+
+IGNORED_FOR_LOGS = [Role.voice, Role.live_stream] + CATEGORY_ROLES
 
 
-class Uid(UserEnum):
+class User(UserEnum):
     alu = 312204139751014400
     bot = 713124699663499274
     yen = 948934071432654929
@@ -140,157 +132,192 @@ class Uid(UserEnum):
 
 
 class SavedGuild:
+    """Represents a Discord Saved guild.
+
+    This class is supposed to be subclassed in order
+    to mirror structure of known Discord Guild with correct typing, i.e.
+    >>> self.bot.community.spam # typechecker knows it's discord.TextChannel
+
+    For more look info look into subclasses below.
+    - :class:`~CommunityGuild`
+    - :class:`~HideoutGuild`
+
+    Attributes
+    ------------
+    bot: :class:`AluBot`
+        The bot instance to initiate all snowflakes into discord Objects
+    id: :class:`int`
+        Snowflake ID for the guild itself.
+    """
+
     def __init__(self, bot: AluBot, guild_id: int):
         self.bot: AluBot = bot
         self.id: int = guild_id
 
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} id={self.id}>'
+
     @property
     def guild(self) -> discord.Guild:
-        return self.bot.get_guild(self.id)  # type: ignore
+        guild = self.bot.get_guild(self.id)
+        if guild is None:
+            raise RuntimeError(f"{self} not in cache.")
+        return guild
+
+    def get_channel(self, channel_id: int, typ: type[T]) -> T:
+        channel = self.guild.get_channel(channel_id)
+        if channel:
+            if isinstance(channel, typ):
+                return channel
+            raise TypeError(f"Channel id={channel_id} was type: {type(channel)} expected: {typ}")
+
+            # the other way for this is
+            #   >>> # this line omitted from runtime when python is run with - O
+            #   >>> assert isinstance(channel, typ)
+            #   >>> return channel
+        else:
+            raise RuntimeError(f"Channel id={channel_id} from {self} not in cache")
+        
+    def get_role(self, role_id: int) -> discord.Role:
+        role = self.guild.get_role(role_id)
+        if role is None:
+            raise RuntimeError(f"Role id={role_id} from {self} not in cache")
+        return role
 
 
 class CommunityGuild(SavedGuild):
     def __init__(self, bot: AluBot):
-        super().__init__(bot, Sid.community)
+        super().__init__(bot, Guild.community)
 
-    # channels #########################################################
+    # channels #########################################################################################################
     @property
     def role_selection(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.role_selection.id)  # type: ignore
+        return self.get_channel(Channel.role_selection, discord.TextChannel)
 
     @property
     def welcome(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.welcome.id)  # type: ignore
+        return self.get_channel(Channel.welcome, discord.TextChannel)
 
     @property
     def bday_notifs(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.bday_notifs.id)  # type: ignore
+        return self.get_channel(Channel.bday_notifs, discord.TextChannel)
 
     @property
     def stream_notifs(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.stream_notifs.id)  # type: ignore
+        return self.get_channel(Channel.stream_notifs, discord.TextChannel)
 
     @property
     def general(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.general.id)  # type: ignore
+        return self.get_channel(Channel.general, discord.TextChannel)
 
     @property
     def comfy_spam(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.comfy_spam.id)  # type: ignore
+        return self.get_channel(Channel.comfy_spam, discord.TextChannel)
 
     @property
     def emote_spam(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.emote_spam.id)  # type: ignore
+        return self.get_channel(Channel.emote_spam, discord.TextChannel)
 
     @property
     def logs(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.logs.id)  # type: ignore
+        return self.get_channel(Channel.logs, discord.TextChannel)  
 
     @property
     def bot_spam(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.bot_spam.id)  # type: ignore
+        return self.get_channel(Channel.bot_spam, discord.TextChannel)
 
     @property
     def nsfw_bot_spam(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.nsfw_bot_spam.id)  # type: ignore
+        return self.get_channel(Channel.nsfw_bot_spam, discord.TextChannel)
 
     @property
     def stream_room(self) -> discord.VoiceChannel:
-        return self.bot.get_channel(Cid.stream_room.id)  # type: ignore
+        return self.get_channel(Channel.stream_room, discord.VoiceChannel)
 
     @property
     def patch_notes(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.patch_notes.id)  # type: ignore
+        return self.get_channel(Channel.patch_notes, discord.TextChannel)
 
     @property
     def suggestions(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.suggestions.id)  # type: ignore
+        return self.get_channel(Channel.suggestions, discord.TextChannel)
 
     @property
     def dota_news(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.dota_news.id)  # type: ignore
+        return self.get_channel(Channel.dota_news, discord.TextChannel)
 
     @property
     def my_time(self) -> discord.VoiceChannel:
-        return self.bot.get_channel(Cid.my_time.id)  # type: ignore
+        return self.get_channel(Channel.my_time, discord.VoiceChannel)
 
     @property
     def total_people(self) -> discord.VoiceChannel:
-        return self.bot.get_channel(Cid.total_people.id)  # type: ignore
+        return self.get_channel(Channel.total_people, discord.VoiceChannel)
 
     @property
     def total_bots(self) -> discord.VoiceChannel:
-        return self.bot.get_channel(Cid.total_bots.id)  # type: ignore
+        return self.get_channel(Channel.total_bots, discord.VoiceChannel)
 
-    # roles ############################################################
+    # roles ############################################################################################################
     @property
     def voice_role(self) -> discord.Role:
-        return self.guild.get_role(Rid.voice.id)  # type: ignore
+        return self.get_role(Role.voice)
 
     @property
     def bots_role(self) -> discord.Role:
-        return self.guild.get_role(Rid.bots.id)  # type: ignore
+        return self.get_role(Role.bots)
 
     @property
     def nsfw_bots_role(self) -> discord.Role:
-        return self.guild.get_role(Rid.nsfw_bots.id)  # type: ignore
+        return self.get_role(Role.nsfw_bots)
 
     @property
     def live_stream_role(self) -> discord.Role:
-        return self.guild.get_role(Rid.live_stream.id)  # type: ignore
+        return self.get_role(Role.live_stream)
 
     @property
     def birthday_role(self) -> discord.Role:
-        return self.guild.get_role(Rid.birthday.id)  # type: ignore
+        return self.get_role(Role.birthday)
 
     @property
     def rolling_stone_role(self) -> discord.Role:
-        return self.guild.get_role(Rid.rolling_stone.id)  # type: ignore
+        return self.get_role(Role.rolling_stone)
 
     @property
     def stream_lover_role(self) -> discord.Role:
-        return self.guild.get_role(Rid.stream_lover.id)  # type: ignore
+        return self.get_role(Role.stream_lover)
 
 
 class HideoutGuild(SavedGuild):
-    """
-    My (probably wrong) way to combat
-    absurd amount of "type: ignore" in the code
-    with `get_channel` and similar methods for channels with known ids.
-
-    This class basically mirrors my HideOut guild and tells the type checker
-    known channels and their type, known roles, etc.
-    """
-
     def __init__(self, bot: AluBot):
-        super().__init__(bot, Sid.hideout)
+        super().__init__(bot, Guild.hideout)
 
     # channels
     @property
     def global_logs(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.global_logs.id)  # type: ignore
+        return self.get_channel(Channel.global_logs, discord.TextChannel)
 
     @property
     def daily_report(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.daily_report.id)  # type: ignore
+        return self.get_channel(Channel.daily_report, discord.TextChannel)
 
     @property
     def spam_channel_id(self) -> int:
-        return Cid.test_spam.id if self.bot.test else Cid.spam_me.id
+        return Channel.test_spam if self.bot.test else Channel.spam_me
 
     @property
     def spam(self) -> discord.TextChannel:
-        return self.bot.get_channel(self.spam_channel_id)  # type: ignore
+        return self.get_channel(self.spam_channel_id, discord.TextChannel)
 
     @property
     def repost(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.repost.id)  # type: ignore
+        return self.get_channel(Channel.repost, discord.TextChannel)
 
     @property
     def copy_dota_tweets(self) -> discord.TextChannel:
-        return self.bot.get_channel(Cid.copy_dota_tweets.id)  # type: ignore
+        return self.get_channel(Channel.copy_dota_tweets, discord.TextChannel)
 
-    # roles
+    # roles ############################################################################################################
     @property
     def jailed_bots(self) -> discord.Role:
-        return self.guild.get_role(Rid.jailed_bots.id)  # type: ignore
+        return self.get_role(Role.jailed_bots)

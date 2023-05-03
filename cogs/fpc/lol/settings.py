@@ -9,8 +9,8 @@ from discord.ext import commands
 from pyot.core.exceptions import NotFound
 from pyot.utils.lol import champion
 
-from utils import Clr, Ems
 from utils.checks import is_manager
+from utils.const import Colour, Emote
 from utils.lol.const import LOL_LOGO, LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
 from utils.lol.utils import get_all_champ_names, get_meraki_patch, get_pyot_meraki_champ_diff_list
 
@@ -53,7 +53,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
             game_name='LoL',
             game_codeword='lol',
             game_logo=LOL_LOGO,
-            colour=Clr.rspbrry(),
+            colour=Colour.rspbrry(),
             bot=bot,
             players_table='lol_players',
             accounts_table='lol_accounts',
@@ -71,7 +71,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.PogChampPepe)
+        return discord.PartialEmoji.from_str(Emote.PogChampPepe)
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
@@ -498,7 +498,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
 
         meraki_patch = await get_meraki_patch()
 
-        e = discord.Embed(title='List of champs missing from Meraki JSON', colour=Clr.rspbrry())
+        e = discord.Embed(title='List of champs missing from Meraki JSON', colour=Colour.rspbrry())
         e.description = '\n'.join(champ_str)
         e.add_field(
             name='Links',

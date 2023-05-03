@@ -96,7 +96,6 @@ class TwitchClient(twitchio.Client):
 
 
 class TwitchStream:
-
     __slots__ = ('twitch_id', 'display_name', 'name', 'game', 'url', 'logo_url', 'online', 'title', 'preview_url')
 
     if TYPE_CHECKING:

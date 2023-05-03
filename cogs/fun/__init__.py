@@ -1,6 +1,6 @@
 import discord
 
-from utils import Ems
+from utils.const import Emote
 
 from .other import Other
 from .rock_paper_scissors import RockPaperScissorsCommand
@@ -13,7 +13,7 @@ class Fun(RockPaperScissorsCommand, Other):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Ems.FeelsDankMan)
+        return discord.PartialEmoji.from_str(Emote.FeelsDankMan)
 
 
 async def setup(bot):

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from bs4 import BeautifulSoup
 from discord import app_commands
-from discord.ext import commands
 
+from utils import AluCog
 from utils.const import Colour, Emote
 from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_tdR
@@ -16,7 +16,7 @@ from utils.formats import format_dt_tdR
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from utils import AluBot, AluContext
+    from utils import AluBot
 
 
 fav_teams = []
@@ -195,40 +195,16 @@ class ScheduleView(discord.ui.View):
             await self.message.edit(view=self)
 
 
-class Schedule(commands.Cog, name='Dota 2 Schedule'):
+class Schedule(AluCog, name='Schedules', emote=Emote.MadgeThreat):
     """Check Pro Matches schedule.
 
     Currently, the bot supports Dota 2 and football.
     """
 
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Emote.MadgeThreat)
-
-    async def embed_worker(
-        self, author: discord.User | discord.Member, schedule_mode: int = 1, query: Optional[str] = None
-    ) -> Tuple[discord.Embed, ScheduleView]:
-        e = await schedule_work(self.bot.session, ScheduleMode(value=schedule_mode), query)
-        v = ScheduleView(author, query)
-        return e, v
-
-    @commands.command(name='schedule', aliases=['sch'])
-    async def ext_schedule(self, ctx: AluContext, *, query: Optional[str] = None):
-        """Get featured Dota 2 Pro Matches Schedule
-
-        Use `query` to filter schedule by teams or tournaments, for example `$sch EG` will show only EG matches
-        """
-
-        e, v = await self.embed_worker(ctx.author, query=query)
-        v.message = await ctx.reply(embed=e, view=v)
-
-    @app_commands.command(name='schedule')
+    @app_commands.command()
     @app_commands.rename(schedule_mode='filter')
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in select_options])
-    async def slash_schedule(self, ntr: discord.Interaction, schedule_mode: int = 1, query: Optional[str] = None):
+    async def schedule(self, ntr: discord.Interaction, schedule_mode: int = 1, query: Optional[str] = None):
         """Dota 2 Pro Matches Schedule
 
         Parameters
@@ -240,13 +216,13 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
         query: Optional[str]
             Search filter, i.e. "EG" (or any other team/tourney names)
         """
-
-        e, v = await self.embed_worker(ntr.user, schedule_mode=schedule_mode, query=query)
+        e = await schedule_work(self.bot.session, ScheduleMode(value=schedule_mode), query)
+        v = ScheduleView(ntr.user, query)
         await ntr.response.send_message(embed=e, view=v)
         v.message = await ntr.original_response()
 
-    @commands.hybrid_command(aliases=['fts'])
-    async def fixtures(self, ctx: AluContext):
+    @app_commands.command()
+    async def fixtures(self, ntr: discord.Interaction):
         """Get football fixtures"""
         url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
         async with self.bot.session.get(url) as r:
@@ -275,16 +251,14 @@ class Schedule(commands.Cog, name='Dota 2 Schedule'):
                         teams = f'{team1} - {team2}'.ljust(40, " ")
                         match_strings.append(f'`{teams}` {format_dt_tdR(dt)}')
 
-                e = discord.Embed(colour=0xE0FA51)
+                e = discord.Embed(colour=0xE0FA51, title='Premier League Fixtures', url=url)
                 e.description = '\n'.join(match_strings)
                 e.set_author(name='Info from onefootball.com', url=url, icon_url='https://i.imgur.com/pm2JgEW.jpg')
-                e.title = 'Premier League Fixtures'
-                e.url = url
-                await ctx.reply(embed=e)
+                await ntr.response.send_message(embed=e)
             else:
                 e = discord.Embed(colour=Colour.error())
                 e.description = 'No matches found'
-                await ctx.reply(embed=e)
+                await ntr.response.send_message(embed=e)
 
 
 async def setup(bot: AluBot):

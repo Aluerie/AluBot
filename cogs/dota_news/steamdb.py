@@ -118,7 +118,7 @@ class SteamDB(AluCog):
                 case Channel.copy_steam_beta:
                     if "SteamClientBeta" in msg.content:
                         files = [await x.to_file() for x in msg.attachments]
-                        msg = await self.news_channel.send(content=msg.content, embeds=msg.embeds, files=files)
+                        msg = await self.hideout.repost.send(content=msg.content, embeds=msg.embeds, files=files)
                         await msg.publish()
         except Exception as error:
             await self.bot.send_traceback(error, where="#dota-dota_news copypaste")

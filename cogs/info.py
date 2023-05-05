@@ -92,8 +92,7 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
         e = discord.Embed(colour=Colour.prpl(), title='GMT(Greenwich Mean Time)')
         e.set_footer(text=f'GMT is the same as UTC (Universal Time Coordinated)')
-        e.add_field(name='Time:', value=now_time)
-        e.add_field(name='Date:', value=now_date)
+        e.add_field(name='Time:', value=now_time).add_field(name='Date:', value=now_date)
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(name='role', description="View info about selected role")
@@ -216,18 +215,11 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         await ctx.reply(embed=e)
 
 
-class StatsCommands(commands.Cog, name='Stats'):
+class StatsCommands(AluCog, name='Stats', emote=Emote.Smartge):
     """Some stats/infographics/diagrams/info
 
     More to come.
     """
-
-    def __init__(self, bot):
-        self.bot: AluBot = bot
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Emote.Smartge)
 
     @commands.hybrid_command(
         name='wordcloud',

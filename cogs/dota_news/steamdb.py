@@ -1,3 +1,16 @@
+"""
+This cog is just rude reposting from steamdb resources. 
+
+Unfortunately, I'm clueless about how to get the info from steam itself
+And following announcement channels in steamdb discord is not a solution 
+because I only need ~1/10 of messages they post in here.
+
+If this ever becomes a problem or my bot becomes big t
+hen I will have to rewrite this cog.
+
+But for now I just repost messages I'm interested it to only my channel. 
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -66,46 +79,47 @@ class SteamDB(AluCog):
 
     blocked_words = ["Steam Community", "Steam Store"]
 
-    whitelist_words = [
-        "https://steamdb.info",
-    ]
+    whitelist_words = ["https://steamdb.info"]
+
+    @property
+    def news_channel(self) -> discord.TextChannel:
+        return self.community.dota_news
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         try:
-            if msg.channel.id in (Channel.copy_dota_info, Channel.copy_dota_steam, Channel.copy_dota_tweets):
-                news_channel = self.community.dota_news
-            else:
-                return
-
-            if msg.channel.id == Channel.copy_dota_info:
-                if "https://steamdb.info" in msg.content:
-                    url, embeds, files = await get_gitdiff_embed()
-                    msg = await news_channel.send(content=f"<{url}>", embeds=embeds)
-                    await msg.publish()
-                    if len(files):
-                        msg = await news_channel.send(files=files)
+            match msg.channel.id:
+                case Channel.copy_dota_info:
+                    if "https://steamdb.info" in msg.content:
+                        url, embeds, files = await get_gitdiff_embed()
+                        msg = await self.news_channel.send(content=f"<{url}>", embeds=embeds)
                         await msg.publish()
-                if "https://steamcommunity.com" in msg.content:
-                    files = [await x.to_file() for x in msg.attachments]
-                    msg = await news_channel.send(content=msg.content, embeds=msg.embeds, files=files)
+                        if len(files):
+                            msg = await self.news_channel.send(files=files)
+                            await msg.publish()
+                    if "https://steamcommunity.com" in msg.content:
+                        files = [await x.to_file() for x in msg.attachments]
+                        msg = await self.news_channel.send(content=msg.content, embeds=msg.embeds, files=files)
+                        await msg.publish()
+                case Channel.copy_dota_steam:
+                    if block_function(msg.content, self.blocked_words, self.whitelist_words):
+                        return
+                    e = discord.Embed(colour=0x171A21, description=msg.content)
+                    msg = await self.news_channel.send(embed=e)
                     await msg.publish()
-
-            elif msg.channel.id == Channel.copy_dota_steam:
-                if block_function(msg.content, self.blocked_words, self.whitelist_words):
-                    return
-                e = discord.Embed(colour=0x171A21, description=msg.content)
-                msg = await news_channel.send(embed=e)
-                await msg.publish()
-
-            elif msg.channel.id == Channel.copy_dota_tweets:
-                await asyncio.sleep(2)
-                answer = await msg.channel.fetch_message(int(msg.id))
-                embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]
-                embeds = [move_link_to_title(embed) for embed in embeds]
-                if embeds:
-                    msg = await news_channel.send(embeds=embeds)
-                    await msg.publish()
+                case Channel.copy_dota_tweets:
+                    await asyncio.sleep(2)
+                    answer = await msg.channel.fetch_message(int(msg.id))
+                    embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]
+                    embeds = [move_link_to_title(embed) for embed in embeds]
+                    if embeds:
+                        msg = await self.news_channel.send(embeds=embeds)
+                        await msg.publish()
+                case Channel.copy_steam_beta:
+                    if "SteamClientBeta" in msg.content:
+                        files = [await x.to_file() for x in msg.attachments]
+                        msg = await self.news_channel.send(content=msg.content, embeds=msg.embeds, files=files)
+                        await msg.publish()
         except Exception as error:
             await self.bot.send_traceback(error, where="#dota-dota_news copypaste")
 

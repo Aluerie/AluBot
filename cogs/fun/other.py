@@ -115,23 +115,28 @@ class Other(AluCog):
         e = discord.Embed(colour=Colour.prpl(), description=f'I sent {answer_text} into {channel.mention}')
         await ntr.response.send_message(embed=e, ephemeral=True, delete_after=10)
 
-    @commands.hybrid_command(description='Send apuband emote combo')
-    async def apuband(self, ctx: AluContext):
-        """Send apuband emote combo"""
+    @app_commands.command()
+    async def apuband(self, ntr: discord.Interaction):
+        """Send apuband emote combo."""
         guild = self.community.guild
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
         content = ' '.join([str(discord.utils.get(guild.emojis, name=e)) for e in emote_names])
-        await ctx.channel.send(content=content)
-        if ctx.interaction:
-            await ctx.reply(content=f'Nice {Emote.DankApprove}', ephemeral=True)
-        else:
-            await ctx.message.delete()
+        try:
+            if ntr.channel and not isinstance(ntr.channel, (discord.ForumChannel, discord.CategoryChannel)):
+                await ntr.channel.send(content=content)
+                await ntr.response.send_message(content=f'Nice {Emote.DankApprove}', ephemeral=True)
+            else:
+                msg = f'We can\'t send messages in forum channels {Emote.FeelsDankManLostHisHat}'
+                await ntr.response.send_message(content=msg, ephemeral=True)
+        except:
+            msg = f'Something went wrong {Emote.FeelsDankManLostHisHat} probably permissions'
+            await ntr.response.send_message(content=msg, ephemeral=True)
 
-    @commands.hybrid_command(description='Roll an integer from 1 to `max_roll_number`')
+    @app_commands.command()
     @app_commands.describe(max_roll_number="Max limit to roll")
-    async def roll(self, ctx, max_roll_number: commands.Range[int, 1, None]):
-        """Roll an integer from 1 to `max_roll_number` ;"""
-        await ctx.reply(randint(1, max_roll_number + 1))
+    async def roll(self, ntr: discord.Interaction, max_roll_number: commands.Range[int, 1, None]):
+        """Roll an integer from 1 to `max_roll_number`."""
+        await ntr.response.send_message(randint(1, max_roll_number + 1))
 
     @commands.hybrid_command(usage='[channel=curr] [text=Allo]', description='Echo something somewhere')
     @app_commands.describe(channel="Channel to send to")

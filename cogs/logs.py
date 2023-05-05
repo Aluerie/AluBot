@@ -143,10 +143,7 @@ class Logging(AluCog):
         await self.bot.wait_until_ready()
 
 
-class CommandLogging(commands.Cog):
-    def __init__(self, bot):
-        self.bot: AluBot = bot
-
+class CommandLogging(AluCog):
     ignored_users = []  # [User.alu]
     included_guilds = [Guild.community]
 

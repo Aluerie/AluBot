@@ -26,7 +26,9 @@ class CodeRun(ManagementBaseCog):
         self.sessions: set[int] = set()
 
     def get_var_dict_from_ctx(
-        self, ctx: AluContext, mentions: Optional[List[Union[discord.User, discord.TextChannel, discord.Role]]]
+        self,
+        ctx: AluContext,
+        mentions: commands.Greedy[Union[discord.Member, discord.User, discord.abc.GuildChannel, discord.Role]],
     ) -> Dict[str, Any]:
         """Returns the dict to be used in eval/REPL."""
         env = {
@@ -42,7 +44,7 @@ class CodeRun(ManagementBaseCog):
             "msg": ctx.message,
         }
 
-        # Now let's add convertable mentions into the env
+        # Now let's add convertible mentions into the env
         # they will be possible to call as mention_0, user_3, role_20
         # note that number is just order in our initial message so if @John is "mention_4" then he is also "user_4"
         lookup = {
@@ -73,7 +75,7 @@ class CodeRun(ManagementBaseCog):
     async def python(
         self,
         ctx: AluContext,
-        mentions: commands.Greedy[Union[discord.Member, discord.User, discord.abc.GuildChannel, discord.Role]] = None,
+        mentions: commands.Greedy[Union[discord.Member, discord.User, discord.abc.GuildChannel, discord.Role]],
         *,
         codeblock: Optional[Codeblock] = None,
     ):

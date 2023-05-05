@@ -1,34 +1,31 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated, Optional
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 from PIL import Image
 
+from utils import AluCog
 from utils.const import Colour, Emote
 from utils.translator import translate
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot
 
 
-class ToolsCog(commands.Cog, name='Tools'):
+class ToolsCog(AluCog, name='Tools', emote=Emote.DankFix):
     """Some useful stuff
 
     Maybe one day it's going to be helpful for somebody.
     """
 
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.translate_ctx_menu = app_commands.ContextMenu(
             name='Translate to English', callback=self.translate_ctx_menu_callback
         )
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Emote.DankFix)
 
     def cog_load(self) -> None:
         self.bot.ini_twitter()
@@ -53,38 +50,23 @@ class ToolsCog(commands.Cog, name='Tools'):
         e = await self.translate_embed(text)
         await ntr.response.send_message(embed=e, ephemeral=True)
 
-    @commands.command(name='translate')
-    async def ext_translate(self, ctx: AluContext, *, message: Annotated[Optional[str], commands.clean_content] = None):
-        """Translate a message to English using Google Translate, auto-detects source language."""
-        if message is None:
-            reply = ctx.replied_message
-            if reply is not None:
-                message = reply.content
-            else:
-                raise commands.BadArgument('Missing a message to translate')
-        e = await self.translate_embed(message)
-        await ctx.reply(embed=e)
-
-    @app_commands.command(name='translate')
+    @app_commands.command()
     @app_commands.describe(text="Enter text to translate")
-    async def slash_translate(self, ntr: discord.Interaction, text: str):
+    async def translate(self, ntr: discord.Interaction, text: str):
         """Google Translate to English, auto-detects source language"""
         e = await self.translate_embed(text)
         await ntr.response.send_message(embed=e)
 
-    @commands.hybrid_command(
-        name='convert',
-        description='Convert image from webp to png format',
-    )
+    @app_commands.command()
     @app_commands.describe(url='Url of image to convert')
-    async def convert(self, ctx: AluContext, *, url: str):
+    async def convert(self, ntr: discord.Interaction, *, url: str):
         """Convert image from webp to png format"""
         img = await self.bot.imgtools.url_to_img(url)
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags
         img.thumbnail(maxsize, Image.ANTIALIAS)
         file = self.bot.imgtools.img_to_file(img, filename='converted.png', fmt='PNG')
         e = discord.Embed(colour=Colour.prpl(), description='Image was converted to `.png` format')
-        await ctx.reply(embed=e, file=file)
+        await ntr.response.send_message(embed=e, file=file)
 
 
 async def setup(bot: AluBot):

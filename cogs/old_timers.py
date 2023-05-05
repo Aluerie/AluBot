@@ -7,7 +7,7 @@ from discord.ext import tasks
 from numpy.random import randint, seed
 
 from utils import AluCog
-from utils.const import Channel, Colour, Emote, Guild, Role, User
+from utils.const import Channel, Colour, Emote, Guild, Role, User, DIGITS
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -31,9 +31,9 @@ daily_reminders_txt = [
     'Hey chat, please use channels according to their description',
     f'Hey chat, please use {Role.bots} strictly in {Channel.bot_spam} '
     f'(and {Role.nsfw_bots} in {Channel.nsfw_bot_spam} with exceptions of \n'
-    f'0️⃣ feel free to use <@{User.bot}> everywhere\n'
-    f'1️⃣ {User.mango} in {Channel.pubs_talk}\n'
-    f'2️⃣ {User.nqn}\'s in-built "free-nitro" functions everywhere',
+    f'\N{DIGIT ZERO}\N{COMBINING ENCLOSING KEYCAP} feel free to use {User.bot} everywhere\n'
+    f'\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP} {User.mango} in {Channel.pubs_talk}\n'
+    f'\N{DIGIT TWO}\N{COMBINING ENCLOSING KEYCAP} {User.nqn}\'s in-built "free-nitro" functions everywhere',
     f'Hey chat, remember to check `$help` and {Channel.patch_notes}. We have a lot of cool features and '
     f'bot commands. Even more to come in future !',
     'Hey chat, follow me on twitch if you haven\'t done it yet: '
@@ -47,30 +47,29 @@ async def get_a_text(pool: Pool):
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 
 
+daily_reminders_txt = [
+    'Hey chat, check out rules in {0}. Follow them or {1} {1} {1}'.format(Channel.rules, Emote.bubuGun),
+    f'Hey chat, remember to grab some roles in {Channel.role_selection} including a custom colour from 140 available !',
+    'Hey chat, if you have any suggestions about server/stream/emotes/anything - '
+    f'suggest them in {Channel.suggestions} with `$suggest ***` command and discuss them there !',
+    'Hey chat, you can set up your birthday date with `$birthday` command for some sweet congratulations '
+    f'from us on that day and in {Channel.bday_notifs}.',
+    'Hey chat, {0} exist {1} {1} {1}'.format(Channel.confessions, Emote.PepoBeliever),
+    f'Hey chat, fix your posture {Emote.PepoBeliever}',
+    'Hey chat, remember to smile \N{SLIGHTLY SMILING FACE}',
+    'Hey chat, feel free to invite new cool people to this server {0} {0} {0}'.format(Emote.peepoComfy),
+    'Hey chat, follow étiquette.',
+    f'Hey chat, if you ever forget what prefix/help-command bot you want to use have - just look at its nickname, '
+    f'for example, {User.nqn} - means its help command is `++help` and its prefix is `++`',
+    f'Hey chat, if you ever see {User.bot} offline (it should be always at the top of the members list online) - '
+    'immediately ping me',
+    f'Hey chat, if while watching my stream you see some cool moment - clip it and post to {Channel.clips}',
+    'Hey chat, remember to stay hydrated ! {0} {0} {0}'.format(Emote.bubuSip),
+    f'Hey chat, if you have any problems then {Role.discord_mods} can solve it! Especially if it is about this server',
+]
+
+
 async def get_important_text(pool: Pool):
-    daily_reminders_txt = [
-        'Hey chat, check out rules in {0}. Follow them or {1} {1} {1}'.format(Channel.rules, Emote.bubuGun),
-        f'Hey chat, remember to grab some roles in {Channel.role_selection} including a custom colour from 140 available !',
-        'Hey chat, if you have any suggestions about server/stream/emotes/anything - '
-        f'suggest them in {Channel.suggestions} with `$suggest ***` command and discuss them there !',
-        'Hey chat, you can set up your birthday date with `$birthday` command for some sweet congratulations '
-        f'from us on that day and in {Channel.bday_notifs}.',
-        'Hey chat, {0} exist {1} {1} {1}'.format(Channel.confessions, Emote.PepoBeliever),
-        f'Hey chat, fix your posture {Emote.PepoBeliever}',
-        'Hey chat, remember to smile 🙂',
-        'Hey chat, feel free to invite new cool people to this server {0} {0} {0}'.format(Emote.peepoComfy),
-        'Hey chat, follow étiquette.',
-        f'Hey chat, if you ever forget what prefix/help-command bot you want to use have - just look at its nickname, '
-        f'for example, {User.nqn} - means its help command is `++help` and its prefix is `++`',
-        f'Hey chat, if you ever see {User.bot} offline (it should be always at the top of the members list online) - '
-        'immediately ping me',
-        f'Hey chat, if while watching my stream you see some cool moment - clip it and post to {Channel.clips}',
-        'Hey chat, remember to stay hydrated ! {0} {0} {0}'.format(Emote.bubuSip),
-        'Hey chat, please react with all kind of hearts on '
-        '[this message](https://discord.com/channels/702561315478044804/724996010169991198/866012642627420210)',
-        f'Hey chat, if you have any problEmote then {Role.discord_mods} can solve it! '
-        f'Especially if it is about this server',
-    ]
     return await get_the_thing(daily_reminders_txt, 'curr_important_timer', pool)
 
 
@@ -102,20 +101,20 @@ async def get_gif_text(pool: Pool):
 async def get_rule_text(pool: Pool):
     daily_reminders_txt = [
         'Hey chat, follow étiqueté.',
-        'Hey chat, remember the rule\n1️⃣ Respect everybody in the server. Be polite.',
-        'Hey chat, remember the rule\n2️⃣ Keep the chat in English if possible so everyone understands.',
-        'Hey chat, remember the rule\n3️⃣ No racism, sexism or homophobia.',
-        'Hey chat, remember the rule\n4️⃣ No offensive language.',
-        'Hey chat, remember the rule\n5️⃣ Spam is OK. That means as long as it doesn\'t completely clog chat up '
+        f'Hey chat, remember the rule\n{DIGITS[1]} Respect everybody in the server. Be polite.',
+        f'Hey chat, remember the rule\n{DIGITS[2]} Keep the chat in English if possible so everyone understands.',
+        f'Hey chat, remember the rule\n{DIGITS[3]} No racism, sexism or homophobia.',
+        f'Hey chat, remember the rule\n{DIGITS[4]} No offensive language.',
+        f'Hey chat, remember the rule\n{DIGITS[5]} Spam is OK. That means as long as it doesn\'t completely clog chat up '
         'and makes it unreadable then it\'s fine. And well #xxx_spam channels are created to be spammed.',
         'Hey chat, follow étiqueté.',
-        'Hey chat, remember the rule\n6️⃣ No spoilers of any kind '
+        f'Hey chat, remember the rule\n{DIGITS[6]} No spoilers of any kind '
         '(this includes games stories and IRL-things like movies/tournaments/etc). ',
-        'Hey chat, remember the rule\n7️⃣ No shady links.',
-        'Hey chat, remember the rule\n8️⃣ Be talkative, have fun and enjoy your time! :3',
-        'Hey chat, remember the rule\n9️⃣ Nothing that violates discord.gg Terms Of Service '
+        f'Hey chat, remember the rule\n{DIGITS[7]} No shady links.',
+        f'Hey chat, remember the rule\n{DIGITS[8]} Be talkative, have fun and enjoy your time! :3',
+        f'Hey chat, remember the rule\n{DIGITS[9]} Nothing that violates discord.gg Terms Of Service '
         '(https://discord.com/terms) & follow their guidelines (https://discord.com/guidelines)',
-        'Hey chat, remember the rule\n🔟 Don\'t encourage others to break these rules.',
+        'Hey chat, remember the rule\n\N{KEYCAP TEN} Don\'t encourage others to break these rules.',
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 

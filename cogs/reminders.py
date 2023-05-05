@@ -20,7 +20,7 @@ from discord import app_commands
 from discord.ext import commands
 from typing_extensions import Annotated
 
-from utils import AluContext, formats, times
+from utils import AluContext, AluCog, formats, times
 from utils.const import Colour, Emote
 from utils.database import DRecord
 from utils.pagination import EnumeratedPages
@@ -167,19 +167,15 @@ class Timer:
         return None
 
 
-class Reminder(commands.Cog):
+class Reminder(AluCog, emote=Emote.DankG):
     """Remind yourself of something at sometime"""
 
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self._have_data = asyncio.Event()
         self._current_timer: Optional[Timer] = None
-        self._task = bot.loop.create_task(self.dispatch_timers())
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Emote.DankG)
+        self._task = self.bot.loop.create_task(self.dispatch_timers())
 
     async def cog_unload(self) -> None:
         self._task.cancel()

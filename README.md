@@ -16,7 +16,7 @@
 <https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=9678b6&logo=discord&logoColor=7289da&label=total%20users&query=%24.users&url=https%3A%2F%2Faluerie.github.io%2FAluBot%2Fapi%2Fdata.json>
 )
 ![Updated](
-<https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=9678b6&logo=none&label=<-%20Info%20updated&query=%24.updated&url=https%3A%2F%2Faluerie.github.io%2FAluBot%2Fapi%2Fdata.json>)
+<https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=9678b6&logo=none&label=\<-%20Info%20updated&query=%24.updated&url=https%3A%2F%2Faluerie.github.io%2FAluBot%2Fapi%2Fdata.json>)
 
 [![Discord](
 <https://img.shields.io/discord/702561315478044804?style=for-the-badge&color=7289da&label=Chat%20On%20Discord&logo=discord&logoColor=7289da>
@@ -24,7 +24,7 @@
 <https://discord.gg/K8FuDeP>
 )
 [![Dashboard](
-<https://img.shields.io/badge/bot>'s%20website-link-9400d3?style=for-the-badge&logo=githubsponsors&logoColor=9400d3
+<https://img.shields.io/badge/bot's%20website-link-9400d3?style=for-the-badge&logo=githubsponsors&logoColor=9400d3>
 )](
 <https://aluerie.github.io/AluBot/>
 )

@@ -1,0 +1,9 @@
+.idea
+.logs
+.temp
+.vscode
+__pycache__
+venv
+*.py
+*.ipynb
+*.json

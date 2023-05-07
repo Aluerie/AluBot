@@ -112,8 +112,8 @@ async def get_rule_text(pool: Pool):
         '(this includes games stories and IRL-things like movies/tournaments/etc). ',
         f'Hey chat, remember the rule\n{DIGITS[7]} No shady links.',
         f'Hey chat, remember the rule\n{DIGITS[8]} Be talkative, have fun and enjoy your time! :3',
-        f'Hey chat, remember the rule\n{DIGITS[9]} Nothing that violates discord.gg Terms Of Service '
-        '(https://discord.com/terms) & follow their guidelines (https://discord.com/guidelines)',
+        f'Hey chat, remember the rule\n{DIGITS[9]} Nothing that violates Discord [Terms Of Service]'
+        '(https://discord.com/terms) & follow [their guidelines](https://discord.com/guidelines)',
         'Hey chat, remember the rule\n\N{KEYCAP TEN} Don\'t encourage others to break these rules.',
     ]
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-from typing import TYPE_CHECKING, Dict, Literal, NamedTuple, Optional
+from typing import TYPE_CHECKING, Dict, Literal, NamedTuple
 
 import discord
 from discord import app_commands
@@ -12,7 +12,7 @@ from utils import AluCog
 from utils.const import Colour, Emote
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot
 
 
 class LanguageData(NamedTuple):
@@ -42,121 +42,111 @@ class TextToSpeech(AluCog, name='TTS', emote=Emote.Ree):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.connections: Dict[int, discord.VoiceProtocol] = {}  # guild.id to Voice we are connected to
+        self.connections: Dict[int, discord.VoiceClient] = {}  # guild.id to Voice we are connected to
 
-    @commands.hybrid_group(name='voice')
-    async def voice(self, ctx: AluContext):
-        """Group command about Voice commands, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+    tts_group = app_commands.Group(name="tts", description="Group command about TTS commands", guild_only=True)
 
-    @voice.command(
-        name='speak',
-        description='Make Text-To-Speech request into voice-chat',
-        usage="[language keyword=fr-FR] <text='Allo'>",
-    )
+    @tts_group.command()
     @app_commands.describe(text="Enter text to speak", language="Choose language/accent")
-    async def speak(
-        self, ctx: AluContext, language: Optional[LanguageCollection.Literal] = 'fr', *, text: str = 'Allo'
-    ):
-        """
-        Bot will connect to voice-chat you're in and speak `text` using Google Text-To-Speech module. \
-        For available language keywords check `(/ or $)voice languages`
-        """
+    async def speak(self, ntr: discord.Interaction, language: LanguageCollection.Literal = 'fr', *, text: str = 'Allo'):
+        """Make Text-To-Speech request into voice-chat."""
+        assert ntr.guild is not None
 
-        # honourable mention of exec to avoid the warning
-        # tuple(list(lang_dict.keys()))
-        # exec('xd = typing.Literal["{0}"]'.format('","'.join(list(lang_dict.keys()))))
         lang: LanguageData = getattr(LanguageCollection, language)
-        voice = ctx.author.voice
-        if not voice:
-            e = discord.Embed(description="You aren't in a voice channel!", colour=Colour.error())
-            return await ctx.reply(embed=e, ephemeral=True)
-        if ctx.voice_client is not None:
-            vc = self.connections[ctx.guild.id]
-            await ctx.voice_client.move_to(voice.channel)
+
+        if not (member := ntr.guild.get_member(ntr.user.id)):
+            # TODO: raise better error type
+            raise commands.BadArgument('Something went wrong.')
+
+        if not (voice_state := member.voice):
+            # TODO: raise better error type
+            raise commands.BadArgument("You aren't in a voice channel!")
+
+        if (voice_client := ntr.guild.voice_client) is not None:
+            vc = self.connections[ntr.guild.id]
+            assert isinstance(voice_client, discord.VoiceClient)
+            await voice_client.move_to(voice_state.channel)
         else:
-            vc = await voice.channel.connect()  # Connect to the voice channel the author is in.
-            self.connections.update({ctx.guild.id: vc})  # Updating the cache with the guild and channel.
+            if not voice_state.channel:
+                # TODO: raise better error type
+                raise commands.BadArgument("You aren't connected to a voice channel!")
+            vc = await voice_state.channel.connect()  # Connect to the voice channel the author is in.
+            self.connections.update({ntr.guild.id: vc})  # Updating the cache with the guild and channel.
+
+        assert isinstance(vc, discord.VoiceClient)
 
         tts = gTTS(text, lang=lang.lang, tld=lang.tld)
         audio_name = "./.temp/audio.mp3"
         tts.save(audio_name)
         vc.play(discord.FFmpegPCMAudio(audio_name))
-        e = discord.Embed(title='Text-To-Speech request', description=text, colour=ctx.author.colour)
-        e.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+
+        e = discord.Embed(title='Text-To-Speech request', description=text, colour=ntr.user.colour)
+        e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
         e.set_footer(text=f"{lang.code} Language: {lang.locale}")
-        await ctx.reply(embed=e)
+        await ntr.response.send_message(embed=e)
 
-    @voice.command(
-        name='languages', description='Show list of languages supported by `/voice speak` command', aliases=['langs']
-    )
-    async def languages(self, ctx: AluContext):
-        """Show list of languages supported by `(/ or $)voice speak` command"""
-        language_keys = typing.get_args(LanguageCollection.Literal)
-        our_list = [f"{key}: {getattr(LanguageCollection, key).locale}" for key in language_keys]
-        e = discord.Embed(title='List of languages supported by the bot', colour=Colour.prpl())
-        e.description = (
-            f'Commands `$voice` and `/voice` support following languages.\n '
-            f'Example of usage for text-command: `$voice en-UK allo chat AYAYA`.\n '
-            f'When using slash-command choose language from available list in its options.'
-            f'\n```\n'
-            '\n'.join(our_list) + '```'
-        )
-        await ctx.reply(embed=e)
-
-    @voice.command(
-        name='stop',
-        description='Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests',
-    )
-    async def stop(self, ctx: AluContext):
+    @tts_group.command()
+    async def stop(self, ntr: discord.Interaction):
         """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests."""
         try:
-            vc = self.connections[ctx.guild.id]
-            if vc.is_playing():
-                vc.stop()
-                e = discord.Embed(description='Stopped', colour=ctx.author.colour)
-                await ctx.reply(embed=e)
-            else:
-                e = discord.Embed(description="I don't think I was talking", colour=Colour.error())
-                await ctx.reply(embed=e, ephemeral=True)
+            assert isinstance(ntr.guild, discord.Guild)
+            vc = self.connections[ntr.guild.id]
         except KeyError:
-            e = discord.Embed(description="I'm not in voice channel", colour=Colour.error())
-            await ctx.reply(embed=e, ephemeral=True)
+            # TODO: raise better error type
+            raise commands.BadArgument("I'm not in voice channel")
 
-    @voice.command(name='leave', description='Leave voice channel')
-    async def leave(self, ctx: AluContext):
-        """Make bot leave voice channel. Bot autoleaves voicechannels but you can make it leave too"""
-        try:
-            vc = self.connections[ctx.guild.id]
-            await vc.disconnect()
-            e = discord.Embed(description=f'I left {vc.channel.mention}', colour=ctx.author.colour)
-            await ctx.reply(embed=e)
-        except KeyError:
-            e = discord.Embed(description="I'm not in voice channel", colour=Colour.error())
-            await ctx.reply(embed=e, ephemeral=True)
-
-    @commands.hybrid_command(
-        name='bonjour',
-        description=f'`Bonjour !` into both text/voice chats',
-    )
-    async def bonjour(self, ctx):
-        """`Bonjour !` into both text/voice chats"""
-        voice = ctx.author.voice
-        if not voice:
-            return await ctx.reply(content=f'Bonjour {Emote.bubuAyaya}')
-        if ctx.voice_client is not None:
-            vc = self.connections[ctx.guild.id]
-            await ctx.voice_client.move_to(voice.channel)
+        if vc.is_playing():
+            vc.stop()
+            e = discord.Embed(description='Stopped', colour=ntr.user.colour)
+            await ntr.response.send_message(embed=e)
         else:
-            vc = await voice.channel.connect()  # Connect to the voice channel the author is in.
-            self.connections.update({ctx.guild.id: vc})  # Updating the cache with the guild and channel.
+            e = discord.Embed(description="I don't think I was talking", colour=Colour.error())
+            await ntr.response.send_message(embed=e, ephemeral=True)
+
+    @tts_group.command()
+    async def leave(self, ntr: discord.Interaction):
+        """Make bot leave voice channel."""
+        try:
+            assert isinstance(ntr.guild, discord.Guild)
+            vc = self.connections[ntr.guild.id]
+        except KeyError:
+            # TODO: raise better error type
+            raise commands.BadArgument("I'm not in a voice channel.")
+
+        await vc.disconnect()
+        e = discord.Embed(description=f'I left {vc.channel.mention}', colour=ntr.user.colour)
+        await ntr.response.send_message(embed=e)
+
+    @app_commands.guild_only()
+    @app_commands.command(name='bonjour')
+    async def bonjour(self, ntr: discord.Interaction):
+        """`Bonjour !` into both text/voice chats"""
+        content = f'Bonjour {Emote.bubuAyaya}'
+
+        assert ntr.guild is not None
+
+        if not (member := ntr.guild.get_member(ntr.user.id)):
+            # TODO: raise better error type
+            raise commands.BadArgument('Something went wrong.')
+
+        if not (voice_state := member.voice):
+            return await ntr.response.send_message(content=content)
+            
+        if ntr.guild.voice_client is not None:
+            vc = self.connections[ntr.guild.id]
+            await vc.move_to(voice_state.channel)
+        else:
+            if not voice_state.channel:
+                # TODO: raise better error type
+                raise commands.BadArgument("You aren't connected to a voice channel!")
+            vc = await voice_state.channel.connect()  # Connect to the voice channel the author is in.
+            self.connections.update({ntr.guild.id: vc})  # Updating the cache with the guild and channel.
 
         tts = gTTS('Bonjour !', lang='fr', tld='fr')
         audio_name = "audio.mp3"
         tts.save(audio_name)
         vc.play(discord.FFmpegPCMAudio(audio_name))
-        content = f'Bonjour {Emote.bubuAyaya}'
-        await ctx.reply(content=content)
+        await ntr.response.send_message(content=content)
 
     @commands.Cog.listener()
     async def on_voice_state_update(

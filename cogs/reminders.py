@@ -20,7 +20,7 @@ from discord import app_commands
 from discord.ext import commands
 from typing_extensions import Annotated
 
-from utils import AluContext, AluCog, formats, times
+from utils import AluCog, AluContext, formats, times
 from utils.const import Colour, Emote
 from utils.database import DRecord
 from utils.pagination import EnumeratedPages
@@ -51,9 +51,8 @@ class SnoozeModal(discord.ui.Modal, title='Snooze'):
         try:
             when = times.FutureTime(str(self.duration)).dt
         except commands.BadArgument:  # Exception
-            await ntr.response.send_message(
-                'Duration could not be parsed, sorry. Try something like "5 minutes" or "1 hour"', ephemeral=True
-            )
+            msg = 'Duration could not be parsed, sorry. Try something like "5 minutes" or "1 hour"'
+            await ntr.response.send_message(msg, ephemeral=True)
             return
 
         self.parent.snooze.disabled = True
@@ -64,9 +63,8 @@ class SnoozeModal(discord.ui.Modal, title='Snooze'):
         )
         author_id, _, message = self.timer.args
         delta = formats.human_timedelta(when, source=refreshed.created_at)
-        await ntr.followup.send(
-            f"Alright <@{author_id}>, I've snoozed your reminder for {delta}: {message}", ephemeral=True
-        )
+        msg = f"Alright <@{author_id}>, I've snoozed your reminder for {delta}: {message}"
+        await ntr.followup.send(msg, ephemeral=True)
 
 
 class SnoozeButton(discord.ui.Button['ReminderView']):

@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from utils import AluCog
 from utils.checks import is_owner
 from utils.const import CATEGORY_ROLES, Colour, Emote, Guild, Role, User
 
@@ -78,10 +79,7 @@ async def welcome_message(
     return content_text, e, bot.imgtools.img_to_file(image)
 
 
-class Welcome(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
+class Welcome(AluCog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         guild = self.bot.community.guild
@@ -135,9 +133,8 @@ class Welcome(commands.Cog):
         if guild.id != Guild.community:
             return
         e = discord.Embed(description='{0} {0} {0}'.format(Emote.PogChampPepe), color=0x00FF7F)
-        e.set_author(
-            name=f'{member.display_name} was just unbanned from the server', icon_url=member.display_avatar.url
-        )
+        text = f'{member.display_name} was just unbanned from the server'
+        e.set_author(name=text, icon_url=member.display_avatar.url)
         e.set_footer(text=f"With love, {guild.me.display_name}")
         msg = await self.bot.community.welcome.send(embed=e)
         await msg.add_reaction(Emote.PogChampPepe)

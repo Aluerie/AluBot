@@ -149,6 +149,8 @@ class CommandLogging(AluCog):
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context):
+        assert ctx.command
+
         if not ctx.guild or ctx.guild.id not in self.included_guilds or ctx.author.id in self.ignored_users:
             return
 
@@ -164,11 +166,13 @@ class CommandLogging(AluCog):
             cmd_text = ctx.message.content
 
         e = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=ctx.author.colour)
-        e.set_author(
-            icon_url=ctx.author.display_avatar.url,
-            name=f'{ctx.author.display_name} used command in {ctx.channel.name}',
-            url=jump_url,
-        )
+        if isinstance(ctx.channel, discord.DMChannel):
+            channel_name = 'DMs'
+        else:
+            channel_name = getattr(ctx.channel, 'name', 'somewhere \N{THINKING FACE}')
+
+        msg = f'{ctx.author.display_name} used command in {channel_name}'
+        e.set_author(icon_url=ctx.author.display_avatar.url, name=msg, url=jump_url)
         await self.bot.community.logs.send(embed=e)
 
 

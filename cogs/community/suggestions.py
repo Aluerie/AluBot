@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 import discord
@@ -24,7 +25,9 @@ class Suggestions(AluCog, emote=Emote.peepoWTF):
     @app_commands.describe(text='Suggestion text')
     async def suggest(self, ntr: discord.Interaction, *, text: str):
         """Suggest something for people to vote on in suggestion channel"""
-        channel = self.community.suggestions
+        await ntr.response.defer()
+
+        channel = self.community.logs
         query = """ UPDATE botinfo 
                     SET suggestion_num=botinfo.suggestion_num+1 
                     WHERE id=$1 
@@ -43,11 +46,19 @@ class Suggestions(AluCog, emote=Emote.peepoWTF):
         await suggestion_thread.send(
             'Here you can discuss current suggestion.\n '
             'Don\'t forget to upvote/downvote initial suggestion message with '
-            '\N{UPWARDS BLACK ARROW} \N{DOWNWARDS BLACK ARROW} reactions.'
+            '\N{UPWARDS BLACK ARROW}\N{VARIATION SELECTOR-16} '
+            '\N{DOWNWARDS BLACK ARROW}\N{VARIATION SELECTOR-16} reactions.'
         )
         e2 = discord.Embed(color=Colour.prpl())
         e2.description = f'{ntr.user.mention}, sent your suggestion under #{number} into {channel.mention}'
-        await ntr.response.send_message(embed=e2, ephemeral=True)
+        e.set_footer(text='This message will be deleted in 10 seconds')
+        msg = await ntr.followup.send(embed=e2, ephemeral=True, wait=True)
+        try:
+            # follow up webhooks dont have `delete_after` in `.send` :(
+            await asyncio.sleep(10)
+            await msg.delete()
+        except:
+            pass
 
 
 async def setup(bot: AluBot):

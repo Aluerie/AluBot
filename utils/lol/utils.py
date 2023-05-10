@@ -69,13 +69,13 @@ class ChampionRolesCache(KeyCache):
         diff_list = await get_pyot_meraki_champ_diff_list(champion_roles)
 
         def construct_the_dict(
-            playrate: Optional[float] = 10,
+            playrate: float = 10,
             *,
-            top: Optional[float] = 20,
-            jungle: Optional[float] = 20,
-            mid: Optional[float] = 20,
-            bot: Optional[float] = 20,
-            support: Optional[float] = 20,
+            top: float = 20,
+            jungle: float = 20,
+            mid: float = 20,
+            bot: float = 20,
+            support: float = 20,
         ) -> dict:
             """Construct the dict for meraki function.
 
@@ -111,7 +111,7 @@ async def icon_url_by_champ_id(champ_id: int) -> str:
     return cdragon.abs_url(champ.square_path)
 
 
-async def get_pyot_meraki_champ_diff_list(data_meraki: dict = None):
+async def get_pyot_meraki_champ_diff_list(data_meraki: Optional[dict] = None):
     data_pyot = await champion.champion_keys_cache.data
     data_meraki = data_meraki or await champion_roles_cache.data
     return set(data_pyot['id_by_name'].values()) - set(data_meraki.keys())
@@ -123,30 +123,12 @@ async def get_meraki_patch():
 
 
 async def get_role_mini_list(all_players_champ_ids) -> List[int]:
-    champion_roles = await champion_roles_cache.data
-    role_mini_list = list(get_roles(champion_roles, all_players_champ_ids[:5]).values()) + list(
-        get_roles(champion_roles, all_players_champ_ids[5:]).values()
-    )
-    return role_mini_list
-
-
-async def utils_test_main():
-    blue_team = [895, 200, 888, 238, 92]  # ['Nilah', 'BelVeth', 'Renata', '', 'Zed', 'Riven']
-    red_team = [122, 69, 64, 201, 119]  # ['Darius', 'Cassiopeia', 'Lee Sin', 'Braum', 'Draven']
-
-    sorted_champ_ids = await get_role_mini_list(blue_team + red_team)
-
-    print([await champion.name_by_id(i) for i in sorted_champ_ids[:5]])
-    print([await champion.name_by_id(i) for i in sorted_champ_ids[5:]])
-
-
-if __name__ == '__main__':
-    import asyncio
-
-    from pyot.conf.utils import import_confs
-
-    import_confs("utils.lol.pyotconf")
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(utils_test_main())
+    try:
+        champion_roles = await champion_roles_cache.data
+        team1 = list(get_roles(champion_roles, all_players_champ_ids[:5]).values())
+        team2 = list(get_roles(champion_roles, all_players_champ_ids[5:]).values())
+        role_mini_list = team1 + team2
+        return role_mini_list
+    except:
+        # there was some problem with probably meraki
+        return all_players_champ_ids

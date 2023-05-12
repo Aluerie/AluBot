@@ -20,8 +20,8 @@ class ModUtilitiesCog(AluCog):
         to move some bad messages out of sight,
         but not clear/delete them.
         '''
-        for _ in range(20):
-            await ctx.send(content=const.Emote.DankHatTooBig)
+        content = '\n'.join([const.Emote.DankHatTooBig for _ in range(20)])
+        await ctx.send(content=content)
 
 
 async def setup(bot):

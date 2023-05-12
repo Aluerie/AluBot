@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class EmoteUtilitiesCog(AluCog):
 
     @is_owner()
-    @commands.command()
+    @commands.command(name='steal')
     @commands.has_permissions(manage_emojis=True, hidden=True)
     async def steal(self, ctx: AluContext, emoji: discord.PartialEmoji):
         """Add the emote to Hideout Server."""

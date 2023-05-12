@@ -252,7 +252,8 @@ class StatsCommands(AluCog, name='Stats', emote=Emote.Smartge):
             f"Channels: {', '.join([c.mention for c in channels])}\n"
             f"Limit: {limit}"
         )
-        await ctx.reply(embed=e, file=self.bot.imgtools.img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
+        file = self.bot.imgtools.img_to_file(WordCloud.to_image(), filename='wordcloud.png')
+        await ctx.reply(embed=e, file=file)
 
 
 async def setup(bot: AluBot):

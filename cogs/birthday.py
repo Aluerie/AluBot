@@ -13,8 +13,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from numpy.random import choice
 
-from utils import AluCog
-from utils.const import Colour, Emote
+from utils import AluCog, const
 from utils.pagination import EnumeratedPages
 
 if TYPE_CHECKING:
@@ -78,7 +77,7 @@ gratz_bank = [
 
 
 def get_congratulation_text():
-    return f'{choice(gratz_bank)} {Emote.peepoHappyDank}'
+    return f'{choice(gratz_bank)} {const.Emote.peepoHappyDank}'
 
 
 def bdate_str(bdate, num_mod=False):
@@ -108,7 +107,7 @@ class SetBirthdayFlags(commands.FlagConverter, case_insensitive=True):
     timezone: Optional[str]
 
 
-class Birthday(AluCog, emote=Emote.peepoHappyDank):
+class Birthday(AluCog, emote=const.Emote.peepoHappyDank):
     """Set your birthday and get congratulations from the bot.
 
     There is a special role in Eileen's server \
@@ -209,7 +208,7 @@ class Birthday(AluCog, emote=Emote.peepoHappyDank):
 
         query = 'UPDATE users SET bdate=$1, tzone=$2 WHERE users.id=$3;'
         await self.bot.pool.execute(query, dmy_dtime, tz_for_db, ctx.author.id)
-        e = discord.Embed(colour=Colour.prpl(), title='Your birthday is successfully set')
+        e = discord.Embed(colour=const.Colour.prpl(), title='Your birthday is successfully set')
         e.description = f'Date: {bdate_str(dmy_dtime)}\nTimezone: {tz_for_db}'
         e.set_footer(text='Important! By submitting this information you agree it can be shown to anyone.')
         await ctx.reply(embed=e)
@@ -229,7 +228,7 @@ class Birthday(AluCog, emote=Emote.peepoHappyDank):
         query = 'SELECT bdate, tzone FROM users WHERE users.id=$1'
         row = await self.bot.pool.fetchrow(query, person.id)
 
-        e = discord.Embed(colour=Colour.prpl())
+        e = discord.Embed(colour=const.Colour.prpl())
         e.set_author(name=f'{person.display_name}\'s birthday status', icon_url=person.display_avatar.url)
         if row.bdate is None:
             e.description = f'It\'s not set yet.'
@@ -269,10 +268,10 @@ class Birthday(AluCog, emote=Emote.peepoHappyDank):
             if now_date.month == bdate.month and now_date.day == bdate.day:
                 if bday_rl not in bperson.roles:
                     await bperson.add_roles(bday_rl)
-                    answer_text = f'Chat, today is {bperson.mention}\'s birthday !'
+                    answer_text = f'Chat, today is {bperson.mention}\'s birthday ! {const.Role.birthday_lover}'
                     if bdate.year != 1900:
                         answer_text += f'{bperson.display_name} is now {now_date.year - bdate.year} years old !'
-                    e = discord.Embed(title=f'CONGRATULATIONS !!! {Emote.peepoRose * 3}', color=bperson.color)
+                    e = discord.Embed(title=f'CONGRATULATIONS !!! {const.Emote.peepoRose * 3}', color=bperson.color)
                     e.set_footer(
                         text=(
                             f'Today is {bdate_str(bdate)}; Timezone: {row.tzone}\n'
@@ -322,7 +321,7 @@ class Birthday(AluCog, emote=Emote.peepoHappyDank):
             entries=string_list,
             per_page=20,
             title='Birthday List',
-            colour=Colour.prpl(),
+            colour=const.Colour.prpl(),
             footer_text=f'DD/MM/YYYY format | With love, {guild.me.display_name}',
         )
         await pgs.start()

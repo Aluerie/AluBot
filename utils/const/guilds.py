@@ -103,6 +103,7 @@ class Role(RoleEnum):
     stream_lover = 760082003495223298
     discord_mods = 855839522620047420
     level_zero = 852663921085251585
+    birthday_lover = 1106342236100243499
 
     # HIDEOUT
     event = 1090274008680902667

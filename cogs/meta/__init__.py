@@ -5,7 +5,7 @@ from utils.const import Emote
 from .help import HelpCommandCog
 from .other import OtherCog
 from .prefix import PrefixSetupCog
-from .setup import SetupCommandCog
+from .setup_cog import SetupCommandCog
 
 
 class Meta(HelpCommandCog, SetupCommandCog, OtherCog, PrefixSetupCog):

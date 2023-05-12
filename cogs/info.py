@@ -14,13 +14,12 @@ from dateparser.search import search_dates
 from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageColor
+from wordcloud import WordCloud
 
 from utils import AluCog
-from utils.const import Colour, Emote, Guild
 from utils.checks import is_owner
+from utils.const import Colour, Emote, Guild
 from utils.formats import format_dt_tdR, human_timedelta
-
-# from wordcloud import WordCloud
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -253,8 +252,7 @@ class StatsCommands(AluCog, name='Stats', emote=Emote.Smartge):
             f"Channels: {', '.join([c.mention for c in channels])}\n"
             f"Limit: {limit}"
         )
-        # await ctx.reply(embed=e, file=img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
-        await ctx.reply('it does not work for now, waiting those guys to fix it')
+        await ctx.reply(embed=e, file=self.bot.imgtools.img_to_file(wordcloud.to_image(), filename='wordcloud.png'))
 
 
 async def setup(bot: AluBot):

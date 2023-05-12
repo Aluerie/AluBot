@@ -88,7 +88,6 @@ class Welcome(AluCog):
         back = False
         if member.bot:
             await member.add_roles(self.bot.community.bots_role)
-            await member.edit(nick=f"{member.display_name} | ")
         else:
             query = """ INSERT INTO users (id, name) 
                         VALUES ($1, $2) 

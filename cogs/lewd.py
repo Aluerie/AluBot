@@ -4,14 +4,13 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from utils import AluCog
-from utils.const import Emote
+from utils import AluCog, const
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 
-class LewdCog(AluCog, name='Lewd', emote=Emote.peepoPlsStepOnMe):
+class LewdCog(AluCog, name='Lewd', emote=const.Emote.peepoPlsStepOnMe):
     """NSFW tier commands
 
     Horny, huh
@@ -20,7 +19,7 @@ class LewdCog(AluCog, name='Lewd', emote=Emote.peepoPlsStepOnMe):
     @commands.hybrid_command()
     async def lewd(self, ctx: AluContext):
         """[NSFW] Get a random horny picture."""
-        await ctx.reply('Coming soon {0} {0} {0}'.format(Emote.Jebaited))
+        await ctx.reply('Coming soon {0} {0} {0}'.format(const.Emote.Jebaited))
 
 
 async def setup(bot: AluBot):

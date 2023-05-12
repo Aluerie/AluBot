@@ -10,7 +10,7 @@ from typing_extensions import Self
 from utils import AluCog, checks
 from utils.const import Colour
 
-from .setup import SetupCog, SetupPages
+from .setup_cog import SetupCog, SetupPages
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext

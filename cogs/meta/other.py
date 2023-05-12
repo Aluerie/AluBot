@@ -17,8 +17,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils import AluCog, AluContext
-from utils.const import Colour, Emote, Limit
 from utils.checks import is_owner
+from utils.const import Colour, Emote, Limit
 
 if TYPE_CHECKING:
     pass
@@ -93,7 +93,11 @@ class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
         label='Summary', placeholder='A brief explanation of what you want', max_length=Limit.Embed.title
     )
     details = discord.ui.TextInput(
-        label='Details', placeholder='Leave a comment', style=discord.TextStyle.long, required=False
+        label='Details',
+        placeholder='Leave a comment',
+        style=discord.TextStyle.long,
+        required=False,
+        max_length=Limit.Embed.description,
     )
 
     def __init__(self, cog: OtherCog) -> None:
@@ -108,8 +112,10 @@ class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
 
         e = self.cog.get_feedback_embed(interaction, summary=str(self.summary), details=self.details.value)
         await channel.send(embed=e)
-        e2 = discord.Embed(colour=Colour.prpl(), description='Successfully submitted feedback')
-        await interaction.response.send_message(embed=e2, ephemeral=True)
+        e2 = discord.Embed(
+            colour=Colour.prpl(), title='Successfully submitted feedback', description=self.details.value
+        )
+        await interaction.response.send_message(embed=e2)
 
 
 class PingTuple(NamedTuple):

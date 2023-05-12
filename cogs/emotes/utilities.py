@@ -9,14 +9,13 @@ from utils import AluCog, const
 from utils.checks import is_owner
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from utils import AluBot, AluContext
 
 
 class EmoteUtilitiesCog(AluCog):
-
     @is_owner()
-    @commands.command(name='steal')
-    @commands.has_permissions(manage_emojis=True, hidden=True)
+    @commands.command(name='steal', hidden=True)
+    @commands.has_permissions(manage_emojis=True)
     async def steal(self, ctx: AluContext, emoji: discord.PartialEmoji):
         """Add the emote to Hideout Server."""
         emote = await self.hideout.guild.create_custom_emoji(name=emoji.name, image=await emoji.read())
@@ -27,5 +26,5 @@ class EmoteUtilitiesCog(AluCog):
         await ctx.send(embed=e, file=file)
 
 
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(EmoteUtilitiesCog(bot))

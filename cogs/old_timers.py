@@ -146,23 +146,23 @@ class OldTimers(AluCog):
         e = discord.Embed(title=title, color=Colour, description=description)
         return await self.community.general.send(embed=e)
 
-    @tasks.loop(minutes=87)
+    @tasks.loop(minutes=107)
     async def daily_reminders(self):
         await self.timer_work('Daily Message', Colour.prpl(), await get_a_text(self.bot.pool))
 
-    @tasks.loop(minutes=89)
+    @tasks.loop(minutes=109)
     async def daily_important_reminders(self):
         await self.timer_work('Daily Important Message', Colour.rspbrry(), await get_important_text(self.bot.pool))
 
-    @tasks.loop(minutes=157)
+    @tasks.loop(minutes=167)
     async def daily_fact_reminders(self):
         await self.timer_work('Daily Fact Message', Colour.neon(), await get_fact_text(self.bot.pool))
 
-    @tasks.loop(minutes=136)
+    @tasks.loop(minutes=156)
     async def daily_rule_reminders(self):
         await self.timer_work('Daily Rule Message', 0x66FFBF, await get_rule_text(self.bot.pool))
 
-    @tasks.loop(minutes=97)
+    @tasks.loop(minutes=107)
     async def daily_gif_reminders(self):
         if randint(1, 100 + 1) > 2 or await self.check_amount_messages():
             return

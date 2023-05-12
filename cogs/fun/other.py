@@ -13,7 +13,7 @@ from utils.const import DIGITS, REGEX_URL_LINK, Channel, Colour, Emote, Guild, U
 from utils.webhook import check_msg_react, user_webhook
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from utils import AluContext, AluGuildContext
 
 
 class Other(AluCog):
@@ -141,7 +141,7 @@ class Other(AluCog):
     @commands.hybrid_command(usage='[channel=curr] [text=Allo]', description='Echo something somewhere')
     @app_commands.describe(channel="Channel to send to")
     @app_commands.describe(text="Enter text to speak")
-    async def echo(self, ctx: AluContext, channel: Optional[discord.TextChannel] = None, *, text: str = 'Allo'):
+    async def echo(self, ctx: AluGuildContext, channel: Optional[discord.TextChannel] = None, *, text: str = 'Allo'):
         """Send `text` to `#channel` and delete your invoking message,
         so it looks like the bot is speaking on its own.
         """

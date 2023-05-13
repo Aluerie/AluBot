@@ -48,7 +48,7 @@ class PersonalCommands(AluCog):
 
     @commands.Cog.listener(name='on_message')
     async def personal_git_copy_paste(self, message: discord.Message):
-        if message.channel.id != const.Channel.copy_github:
+        if message.channel.id == const.Channel.copy_github:
             embeds = [e.copy() for e in message.embeds]
 
             for e in embeds:

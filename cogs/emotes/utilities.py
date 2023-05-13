@@ -20,10 +20,12 @@ class EmoteUtilitiesCog(AluCog):
         """Add the emote to Hideout Server."""
         emote = await self.hideout.guild.create_custom_emoji(name=emoji.name, image=await emoji.read())
         e = discord.Embed(title='Yoink!', colour=const.MaterialPalette.amber(shade=400))
-        e.description = f'Added {emote} to the hideout server.\n`\\{emote}`'
+        e.description = f'Added {emote} to the hideout server.\n`{emote}`'
         file = await emoji.to_file()
         e.set_thumbnail(url=f'attachment://{file.filename}')
-        await ctx.send(embed=e, file=file)
+        animated = 'a' if emote.animated else ''
+        e.add_field(name='For code', value=f"`{emote.name} = '<{animated}:_:{emote.id}:>'`")
+        await ctx.reply(embed=e, file=file)
 
 
 async def setup(bot: AluBot):

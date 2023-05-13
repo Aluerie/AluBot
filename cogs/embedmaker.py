@@ -13,8 +13,7 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord.ext import commands
 
-from utils import AluCog
-from utils.const import Colour, Emote
+from utils import AluCog, const
 
 if TYPE_CHECKING:
     from utils import AluContext
@@ -28,16 +27,16 @@ class StartView(discord.ui.View):
     ):
         super().__init__()
 
-        self.starting_embed = discord.Embed(title='Embed Maker', colour=Colour.prpl())
+        self.starting_embed = discord.Embed(title='Embed Maker', colour=const.Colour.prpl())
         self.embeds = [self.starting_embed]
         self.message = message
 
-    @discord.ui.button(label='Author', emoji='🖋️', style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label='Author', emoji='\N{LOWER LEFT FOUNTAIN PEN}', style=discord.ButtonStyle.blurple)
     async def author_btn(self, ntr: discord.Interaction, _btn: discord.ui.Button):
         await ntr.response.send_message("hello")
 
 
-class EmbedMaker(AluCog, name="Embed Maker", emote=Emote.DankZzz):
+class EmbedMaker(AluCog, name="Embed Maker", emote=const.Emote.DankZzz):
     @commands.hybrid_group(name="embed")
     async def embed_(self, ctx: AluContext):
         """Group command about Embed Build, for actual commands use it together with subcommands"""

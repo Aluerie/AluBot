@@ -86,6 +86,7 @@ class Channel(ChannelEnum):
     copy_dota_steam = 881843565251141632
     copy_dota_tweets = 963954743644934184
     copy_steam_beta = 1103038924068241511
+    copy_github = 1107050162628595742
 
     forum = 1020566035377705001
 

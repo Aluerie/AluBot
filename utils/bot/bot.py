@@ -78,6 +78,7 @@ class AluBot(commands.Bot):
         self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
 
         self.repo = 'https://github.com/Aluerie/AluBot'
+        self.developer = 'Aluerie'
 
     async def setup_hook(self) -> None:
         self.session = s = ClientSession()

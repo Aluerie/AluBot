@@ -111,11 +111,11 @@ class Welcome(AluCog):
     async def on_member_remove(self, member: discord.Member):
         if member.guild.id != Guild.community:
             return
-        e = discord.Embed(description='{0} {0} {0}'.format(Emote.FeelsRainMan), colour=0x000000)
+        e = discord.Embed(description='{0} {0} {0}'.format(Emote.SmogeInTheRain), colour=0x000000)
         e.set_author(name='{0} just left the server'.format(member.display_name), icon_url=member.display_avatar.url)
         e.set_footer(text=f"With love, {member.guild.me.display_name}")
         msg = await self.bot.community.welcome.send(embed=e)
-        await msg.add_reaction(Emote.FeelsRainMan)
+        await msg.add_reaction(Emote.SmogeInTheRain)
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, member: discord.Member):

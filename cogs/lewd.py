@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 
-class LewdCog(AluCog, name='Lewd', emote=const.Emote.peepoPlsStepOnMe):
+class LewdCog(AluCog, name='Lewd', emote=const.Emote.peepoStepOnMePls):
     """NSFW tier commands
 
     Horny, huh

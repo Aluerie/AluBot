@@ -4,14 +4,6 @@ from enum import IntEnum, StrEnum
 class Emote(StrEnum):
     """Emote strings."""
 
-    # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
-
-    peepoNiceDay = '<:_:857224123885158400>'
-    
-    # COMMUNITY SERVER, ANIMATED EMOTES ################################################################################
-    FeelsRainMan = '<a:_:902254223851421796>'
-    DankL = '<a:_:1014616758470070353>'
-
     # HIDEOUT SERVER, NON-ANIMATED EMOTES ##############################################################################
 
     bedNerdge = '<:_:1106748389565153300:>'
@@ -37,6 +29,7 @@ class Emote(StrEnum):
     peepoComfy = '<:_:1107471654944260096:>'
     peepoHappyDank = '<:_:1107471671520133202:>'
     peepoMovie = '<:_:998163742741246003>'
+    peepoNiceDay = '<:_:1107477683568382076>'
     peepoPolice = '<:_:1107475416559661126:>'
     peepoRoseDank = '<:_:1107475422276497508:>'
     peepoStepOnMePls = '<:_:1107471687466889267:>'
@@ -53,7 +46,8 @@ class Emote(StrEnum):
     TwoBButt = '<:_:853729747846168576>'
 
     # HIDEOUT SERVER, ANIMATED EMOTES ##################################################################################
-    # nothing for now
+    DankL = '<a:_:1107481467912736859>'
+    SmogeInTheRain = '<a:_:1107481464024608859>'
 
     # COMMON EMOTES ####################################################################################################
     Offline = '\N{LARGE RED CIRCLE}'

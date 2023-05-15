@@ -49,9 +49,7 @@ class EmoteUtilitiesCog(AluCog):
     #     await ntr.response.send_message(embeds=embeds, files=files, ephemeral=True)
     #     # await ntr.followup.send(embed=e, files=files)
 
-    @is_owner()
     @commands.command(name='steal', hidden=True)
-    @commands.has_permissions(manage_emojis=True)
     async def steal(self, ctx: AluContext, emotes: commands.Greedy[discord.PartialEmoji]):
         """Add the emote to Hideout Server."""
         es = [await self.hideout.guild.create_custom_emoji(name=e.name, image=await e.read()) for e in emotes]

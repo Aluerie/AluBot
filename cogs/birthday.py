@@ -271,7 +271,7 @@ class Birthday(AluCog, emote=const.Emote.peepoHappyDank):
                     answer_text = f'Chat, today is {bperson.mention}\'s birthday ! {const.Role.birthday_lover}'
                     if bdate.year != 1900:
                         answer_text += f'{bperson.display_name} is now {now_date.year - bdate.year} years old !'
-                    e = discord.Embed(title=f'CONGRATULATIONS !!! {const.Emote.peepoRose * 3}', color=bperson.color)
+                    e = discord.Embed(title=f'CONGRATULATIONS !!! {const.Emote.peepoRoseDank * 3}', color=bperson.color)
                     e.set_footer(
                         text=(
                             f'Today is {bdate_str(bdate)}; Timezone: {row.tzone}\n'

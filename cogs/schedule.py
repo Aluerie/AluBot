@@ -195,7 +195,7 @@ class ScheduleView(discord.ui.View):
             await self.message.edit(view=self)
 
 
-class Schedule(AluCog, name='Schedules', emote=Emote.MadgeThreat):
+class Schedule(AluCog, name='Schedules', emote=Emote.DankMadgeThreat):
     """Check Pro Matches schedule.
 
     Currently, the bot supports Dota 2 and football.

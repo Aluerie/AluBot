@@ -56,7 +56,7 @@ async def welcome_message(
     if back:
         wave_emote, the_word = Emote.DankLove, 'BACK'
     else:
-        wave_emote, the_word = Emote.peepoWave, ''
+        wave_emote, the_word = Emote.DankHey, ''
     content_text = '**💜 Welcome {2} to Aluerie ❤\'s server, {0} !** {1} {1} {1}\n'.format(
         member.mention, wave_emote, the_word
     )
@@ -64,7 +64,7 @@ async def welcome_message(
     if not member.bot:
         description = (
             f'**💜 {User.alu} is our princess '
-            f'and I\'m her bot ! {Emote.peepoRose} {Emote.peepoRose} {Emote.peepoRose}**\n'
+            f'and I\'m her bot ! {Emote.peepoRoseDank} {Emote.peepoRoseDank} {Emote.peepoRoseDank}**\n'
             f'1️⃣ Read the rules and useful info in <#724996010169991198> {Emote.PepoG}\n'
             f'2️⃣ Choose some fancy roles in <#725941486063190076> {Emote.peepoNiceDay}\n'
             f'3️⃣ Go to <#702561315478044807> or any other channel and chat with us {Emote.peepoComfy}\n'

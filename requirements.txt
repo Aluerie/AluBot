@@ -8,6 +8,9 @@ twitchio[speed] @ git+https://github.com/TwitchIO/TwitchIO.git
 git+https://github.com/meraki-analytics/role-identification.git
 git+https://github.com/Gorialis/jishaku.git
 
+steamio @ git+https://github.com/Gobot1234/steam.py@main
+steam-ext-dota2 @ git+https://github.com/Gobot1234/steam-ext-dota2@main
+
 uvloop~=0.17.0; platform_system == 'Linux'  #ignore on windows bcs not available
 
 aiofiles~=0.8.0
@@ -27,7 +30,7 @@ vdf~=3.3
 pyot~=6.0.8
 beautifulsoup4~=4.12.0
 urllib3~=1.26.9
-wordcloud~=1.9.1.1
+wordcloud~=1.9.1.1; platform_system == 'Linux'
 matplotlib~=3.7.1
 PyGithub==1.58.1
 gtts~=2.3.1

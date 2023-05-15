@@ -56,9 +56,9 @@ class Dota2Com(AluCog):
         if not val:
             return
 
-        e = discord.Embed(title="Patch Notes", colour=const.Colour.prpl())
+        e = discord.Embed(title=f"New patch out {const.Emote.PogChampPepe}", colour=const.Colour.prpl())
         e.url = f'https://www.dota2.com/patches/{patch_number}'
-        e.description = f"Hey chat, I think new patch {patch_name} is out! {const.Emote.PogChampPepe}"
+        e.description = f"Hey chat, I think new patch {patch_name} is out!"
         e.set_footer(text="I'm checking Valve's datafeed every 10 minutes")
         e.set_author(name=f"Patch {patch_number} is out", icon_url=DOTA_LOGO)
         msg = await self.bot.community.dota_news.send(embed=e)

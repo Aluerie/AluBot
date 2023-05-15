@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, Any, Optional
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog
+from utils import AluCog, const
 from utils.checks import is_owner
-from utils.const import Colour, Guild, Emote
 from utils.dota.const import DOTA_LOGO
 
 if TYPE_CHECKING:
@@ -32,7 +31,7 @@ class Dota2Com(AluCog):
         is_today_patch_day = not self.is_today_patch_day if yes_no is None else yes_no
         new_frequency = {'seconds': 10} if is_today_patch_day else {'minutes': 10}
         self.patch_checker.change_interval(**new_frequency)
-        e = discord.Embed(colour=Colour.prpl())
+        e = discord.Embed(colour=const.Colour.prpl())
         t = ','.join([f'{k}={v}' for k, v in new_frequency.items()])  # seconds=30
         e.description = f"Changed frequency to `{t}`"
         await ctx.reply(embed=e)
@@ -53,15 +52,15 @@ class Dota2Com(AluCog):
                         AND dota_patch IS DISTINCT FROM $1
                         RETURNING True
                 """
-        val = await self.bot.pool.fetchval(query, patch_number, Guild.community)
+        val = await self.bot.pool.fetchval(query, patch_number, const.Guild.community)
         if not val:
             return
 
-        e = discord.Embed(title="Patch Notes", colour=Colour.prpl())
+        e = discord.Embed(title="Patch Notes", colour=const.Colour.prpl())
         e.url = f'https://www.dota2.com/patches/{patch_number}'
-        e.description = f"Hey chat, I think new patch {patch_name} is out!"
+        e.description = f"Hey chat, I think new patch {patch_name} is out! {const.Emote.PogChampPepe}"
         e.set_footer(text="I'm checking Valve's datafeed every 10 minutes")
-        e.set_author(name=f"Patch {patch_number} is out {Emote.peepoHappyDank}", icon_url=DOTA_LOGO)
+        e.set_author(name=f"Patch {patch_number} is out", icon_url=DOTA_LOGO)
         msg = await self.bot.community.dota_news.send(embed=e)
         await msg.publish()
 

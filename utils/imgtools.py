@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from io import BytesIO, StringIO
-from typing import TYPE_CHECKING, Tuple, Union, overload
+from typing import TYPE_CHECKING, Optional, Tuple, Union, overload
 
 import discord
 from PIL import Image, ImageOps
@@ -89,25 +89,35 @@ class ImgToolsClient:
 
     @overload
     async def url_to_file(
-        self, url: Sequence[str], filename: str = ..., *, return_list: bool = ...
+        self, url: Sequence[str], filename: Sequence[str] = ..., *, return_list: bool = ...
     ) -> Sequence[discord.File]:
         ...
 
     async def url_to_file(
-        self, url: Union[str, Sequence[str]], filename: str = 'FromAluBot.png', *, return_list: bool = False
+        self,
+        url: Union[str, Sequence[str]],
+        filename: Optional[Union[str, Sequence[str]]] = None,
+        *,
+        return_list: bool = False,
     ) -> Union[discord.File, Sequence[discord.File]]:
-        if isinstance(url, str):
-            url_array = [url]
-        elif isinstance(url, Sequence):
-            url_array = url
+        if isinstance(url, str) and isinstance(filename, str):
+            urls = [url]
+            filenames = [filename if filename else 'FromAluBot.png']
+        elif isinstance(url, Sequence) and all(isinstance(elem, str) for elem in url) \
+            and isinstance(filename, Sequence) and all(isinstance(elem, str) for elem in filename):
+            urls = url
+            filenames = filename if filename else [f'{i}FromAluBot.png' for i in range(len(url))]
+            if len(urls) != len(filename):
+                raise ValueError('Expected list of urls match list of filenames in size.')
         else:
-            raise TypeError('Expected url as string or sequence of urls as strings')
+            # TODO: idk, make it better :D
+            raise TypeError(f'Some types mismatch. Expected str or matching in sizes lists of str.')
 
         files = []
-        for counter, url_item in enumerate(url_array):
+        for url_item, fname in zip(urls, filenames):
             async with self.session.get(url_item) as resp:
                 data = BytesIO(await resp.read())
-                files.append(discord.File(data, f'{counter}{filename}'))
+                files.append(discord.File(data, fname))
         if return_list:
             return files
         else:

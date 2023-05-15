@@ -19,12 +19,11 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config as cfg
 from cogs import get_extensions
-from utils import AluContext
+from utils import AluContext, const
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 
-from ..const import Colour, CommunityGuild, HideoutGuild
 from .cmd_cache import MyCommandTree
 
 if TYPE_CHECKING:
@@ -241,7 +240,7 @@ class AluBot(commands.Bot):
         for line in traceback_content.split('\n'):
             paginator.add_line(line)
 
-        e = embed or discord.Embed(colour=Colour.error()).set_author(name=where)
+        e = embed or discord.Embed(colour=const.Colour.error()).set_author(name=where)
         content = self.owner.mention if mention else ''
         await ch.send(content=content, embed=e)
 
@@ -251,9 +250,9 @@ class AluBot(commands.Bot):
     # SHORTCUTS ########################################################################################################
 
     @property
-    def hideout(self) -> HideoutGuild:
-        return HideoutGuild(self)
+    def hideout(self) -> const.HideoutGuild:
+        return const.HideoutGuild(self)
 
     @property
-    def community(self) -> CommunityGuild:
-        return CommunityGuild(self)
+    def community(self) -> const.CommunityGuild:
+        return const.CommunityGuild(self)

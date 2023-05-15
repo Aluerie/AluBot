@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import typing
 from typing import TYPE_CHECKING, Dict, Literal, NamedTuple
 
 import discord
@@ -8,8 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 from gtts import gTTS
 
-from utils import AluCog
-from utils.const import Colour, Emote
+from utils import AluCog, const
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -34,7 +32,7 @@ class LanguageCollection:
     Literal = Literal['fr', 'en', 'ru', 'es', 'pt', 'cn', 'uk']
 
 
-class TextToSpeech(AluCog, name='TTS', emote=Emote.Ree):
+class TextToSpeech(AluCog, name='TTS', emote=const.Emote.Ree):
     """Text To Speech commands.
 
     Make the bot talk in voice chat.
@@ -100,7 +98,7 @@ class TextToSpeech(AluCog, name='TTS', emote=Emote.Ree):
             e = discord.Embed(description='Stopped', colour=ntr.user.colour)
             await ntr.response.send_message(embed=e)
         else:
-            e = discord.Embed(description="I don't think I was talking", colour=Colour.error())
+            e = discord.Embed(description="I don't think I was talking", colour=const.Colour.error())
             await ntr.response.send_message(embed=e, ephemeral=True)
 
     @tts_group.command()
@@ -121,7 +119,7 @@ class TextToSpeech(AluCog, name='TTS', emote=Emote.Ree):
     @app_commands.command(name='bonjour')
     async def bonjour(self, ntr: discord.Interaction):
         """`Bonjour !` into both text/voice chats"""
-        content = f'Bonjour {Emote.bubuAyaya}'
+        content = f'Bonjour {const.Emote.bubuAyaya}'
 
         assert ntr.guild is not None
 

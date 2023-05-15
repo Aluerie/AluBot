@@ -1,9 +1,10 @@
 from utils import const
 
 from .utilities import ModUtilitiesCog
+from .clean import CleanCog
 
 
-class Moderation(ModUtilitiesCog, emote=const.Emote.peepoPolice):
+class Moderation(ModUtilitiesCog, CleanCog, emote=const.Emote.peepoPolice):
     """Commands to moderate servers with"""
 
 

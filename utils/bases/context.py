@@ -190,3 +190,4 @@ class AluGuildContext(AluContext):
         author: discord.Member
         guild: discord.Guild
         channel: Union[discord.VoiceChannel, discord.TextChannel, discord.Thread]
+        me: discord.Member

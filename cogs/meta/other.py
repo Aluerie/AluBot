@@ -251,23 +251,12 @@ class OtherCog(AluCog):
 
         await message.edit(embed=e)
 
-    @commands.hybrid_command(help="Shows info about the bot", aliases=["botinfo", "bi"])
+    @commands.hybrid_command(help="Show info about the bot", aliases=["botinfo", "bi"])
     async def about(self, ctx: AluContext):
         """Information about the bot itself."""
         await ctx.defer()
         information = await self.bot.application_info()
-        e = discord.Embed(
-            colour=Colour.bot_colour(),
-            description=(
-                "\N{HEAVY BLACK HEART} Hi, I'm the ultimate multipurpose bot. \N{PURPLE HEART}\n"
-                "\N{SWAN} Notifs for your fav twtv+character combos.\n"
-                "\N{PENGUIN} Supported games: Dota 2, LoL.\n"
-                "\N{MOBILE PHONE WITH RIGHTWARDS ARROW AT LEFT} Use `/feedback` for contact, requests.\n"
-                f"\N{GEAR} Slash\N{WHITE HEAVY CHECK MARK}, "
-                f"Text\N{WHITE HEAVY CHECK MARK} cmds (default prefix `{ctx.bot.main_prefix}`).\n"
-                f"\N{LINK SYMBOL} Code: [GitHub]({self.bot.repo}) (try also `{ctx.prefix}source [command]`)"
-            ),
-        )
+        e = discord.Embed(colour=Colour.bot_colour(), description=information.description)
         e.add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
 
         e.set_author(
@@ -299,7 +288,7 @@ class OtherCog(AluCog):
         e.add_field(name='Command Stats', value='*stats coming soon*')
         # todo: implement command run total and total amount of slash/text commands in the bot maybe tasks
         e.add_field(
-            name="Lines",
+            name="Code stats",
             value=(
                 f"Lines: {await count_lines('./', '.py'):,}"
                 f"\nFunctions: {await count_others('./', '.py', 'def '):,}"

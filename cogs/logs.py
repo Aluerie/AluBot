@@ -60,8 +60,8 @@ class Logging(AluCog):
         await self.community.logs.send(embed=e)
 
     @commands.Cog.listener()
-    async def on_message_delete(self, msg):
-        if msg.guild.id != const.Guild.community or msg.author.bot:
+    async def on_message_delete(self, msg: discord.Message):
+        if msg.author.bot or (msg.guild and msg.guild.id != const.Guild.community):
             return
         if regex.search(const.Rgx.bug_check, msg.content):  # bug_check
             return

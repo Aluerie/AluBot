@@ -55,7 +55,7 @@ class EmoteUtilitiesCog(AluCog):
     async def steal(self, ctx: AluContext, emotes: commands.Greedy[discord.PartialEmoji]):
         """Add the emote to Hideout Server."""
         es = [await self.hideout.guild.create_custom_emoji(name=e.name, image=await e.read()) for e in emotes]
-        code = '\n'.join([f'`{emote.name} = \'<{"a" if emote.animated else ""}:_:{emote.id}:>\'`' for emote in es])
+        code = '\n'.join([f'{emote.name} = \'<{"a" if emote.animated else ""}:_:{emote.id}:>\'' for emote in es])
         await ctx.reply(f'```\n{code}```')
 
 

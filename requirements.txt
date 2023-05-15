@@ -8,8 +8,8 @@ twitchio[speed] @ git+https://github.com/TwitchIO/TwitchIO.git
 git+https://github.com/meraki-analytics/role-identification.git
 git+https://github.com/Gorialis/jishaku.git
 
-steamio @ git+https://github.com/Gobot1234/steam.py@main
-steam-ext-dota2 @ git+https://github.com/Gobot1234/steam-ext-dota2@main
+# steamio @ git+https://github.com/Gobot1234/steam.py@main
+# steam-ext-dota2 @ git+https://github.com/Gobot1234/steam-ext-dota2@main
 
 uvloop~=0.17.0; platform_system == 'Linux'  #ignore on windows bcs not available
 
@@ -23,6 +23,7 @@ asyncpraw==7.7.0
 tweepy[async]==4.13.0
 # webpreview~=1.7.2
 # lxml~=4.9.1
+# .....................
 steam~=1.4.4
 protobuf~=3.20.1
 dota2~=1.1.0

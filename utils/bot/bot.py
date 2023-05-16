@@ -146,13 +146,13 @@ class AluBot(commands.Bot):
             log.debug(f"dota2info: client.connected {self.steam.connected}")
             if self.test:
                 steam_login, steam_password = (
-                    cfg.STEAM_TEST_LGN,
-                    cfg.STEAM_TEST_PSW,
+                    cfg.TEST_STEAM_USERNAME,
+                    cfg.TEST_STEAM_PASSWORD,
                 )
             else:
                 steam_login, steam_password = (
-                    cfg.STEAM_MAIN_LGN,
-                    cfg.STEAM_MAIN_PSW,
+                    cfg.STEAM_USERNAME,
+                    cfg.STEAM_PASSWORD,
                 )
 
             if self.steam.login(username=steam_login, password=steam_password):

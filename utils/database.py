@@ -50,41 +50,4 @@ async def create_pool() -> asyncpg.Pool:
     ) # type: ignore
 
 
-# SQL RECIPES BCS I ALWAYS FORGET
-""" 
---- recipe for converting column to tz aware 
-ALTER TABLE botinfo ALTER COLUMN git_checked_dt
-TYPE TIMESTAMPTZ USING git_checked_dt AT TIME ZONE 'UTC' ;
 
--- recipe to set default 
-ALTER TABLE users ALTER COLUMN created_at
-SET DEFAULT (now() at time zone 'utc');
-
--- recipe to INSERT and return True/None if it was success
-INSERT INTO users (id, name) 
-VALUES ($1, $2) 
-ON CONFLICT DO NOTHING
-RETURNING True;
--- ### value = await self.bot.pool.fetchval(query, 333356, 'hi')
-
---- recipe to add a new column
-ALTER TABLE dota_matches
-ADD COLUMN live BOOLEAN DEFAULT TRUE;
-
---- recipe to get all column names
-SELECT column_name
-FROM information_schema.columns
-WHERE table_name=$1;
-
----------
-WITH foo AS (SELECT array(SELECT dotafeed_stream_ids
-FROM guilds
-WHERE id = 759916212842659850))
-SELECT display_name
-FROM dota_players p
-WHERE NOT p.id=ANY(foo)
-ORDER BY similarity(display_name, 'gorgc') DESC
-LIMIT 12;
-
-"""
-# COPY (SELECT * FROM {db_name}) TO '/.logs/{db_name}.csv' WITH CSV DELIMITER ',' HEADER;

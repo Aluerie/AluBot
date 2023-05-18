@@ -15,12 +15,7 @@ if TYPE_CHECKING:
 class LoLSummonerNameCheck(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
-
-    async def cog_load(self) -> None:
         self.check_acc_renames.start()
-
-    async def cog_unload(self) -> None:
-        self.check_acc_renames.cancel()
 
     @tasks.loop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.timezone.utc))
     async def check_acc_renames(self):

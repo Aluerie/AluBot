@@ -29,10 +29,12 @@ class DotaPostMatchEdit(AluCog):
         self.bot.ini_steam_dota()
         self.postmatch_edits.start()
         self.daily_report.start()
+        return await super().cog_load()
 
     async def cog_unload(self) -> None:
         self.postmatch_edits.stop()  # .cancel()
         self.daily_report.stop()  # .cancel()
+        return await super().cog_unload()
 
     async def fill_postmatch_players(self):
         self.postmatch_players = []

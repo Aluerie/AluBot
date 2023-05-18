@@ -84,7 +84,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
 
     @tasks.loop(count=1)
     async def check_voice_members(self):
-        voice_role = self.bot.community.voice_role
+        voice_role = self.community.voice_role
         for member in voice_role.members:
             if member.voice is None:
                 await member.remove_roles(voice_role)

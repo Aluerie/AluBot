@@ -22,7 +22,15 @@ class LoLFeedPostMatchEdit(commands.Cog):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
         self.postmatch_players: List[PostMatchPlayer] = []
+
+    async def cog_load(self) -> None:
+        await self.bot.ini_twitch()
         self.postmatch_edits.start()
+        return await super().cog_load()
+
+    async def cog_unload(self) -> None:
+        self.postmatch_edits.stop()  # .cancel()
+        return await super().cog_unload()
 
     async def fill_postmatch_players(self):
         """Fill `self.postmatch_players` -  data about players who have just finished their matches"""

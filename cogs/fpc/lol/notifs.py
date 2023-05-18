@@ -32,9 +32,11 @@ class LoLNotifs(commands.Cog):
         await self.bot.ini_twitch()
         self.lolfeed_notifs.add_exception_type(asyncpg.InternalServerError)
         self.lolfeed_notifs.start()
-
-    def cog_unload(self) -> None:
+        return await super().cog_load()
+    
+    async def cog_unload(self) -> None:
         self.lolfeed_notifs.stop()  # .cancel()
+        return await super().cog_unload()
 
     async def fill_live_matches(self):
         self.live_matches, self.all_live_match_ids = [], []

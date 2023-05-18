@@ -53,6 +53,7 @@ class DotaNotifs(commands.Cog):
         # maybe asyncpg.PostgresConnectionError
         self.dota_feed.add_exception_type(asyncpg.InternalServerError)
         self.dota_feed.start()
+        return await super().cog_load()
 
     @commands.Cog.listener()
     async def on_my_top_games_response(self):
@@ -60,6 +61,7 @@ class DotaNotifs(commands.Cog):
 
     async def cog_unload(self) -> None:
         self.dota_feed.cancel()
+        return await super().cog_unload()
 
     async def preliminary_queries(self):
         async def get_all_fav_ids(column_name: str) -> List[int]:

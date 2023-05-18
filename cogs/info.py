@@ -14,7 +14,7 @@ from dateparser.search import search_dates
 from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageColor
-from wordcloud import WordCloud
+#from wordcloud import WordCloud
 
 from utils import AluCog
 from utils.checks import is_owner

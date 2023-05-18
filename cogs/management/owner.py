@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import json
 import os
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Awaitable, Callable, Literal
 
 import discord
 from discord.ext import commands
 
-from cogs import get_extensions
-from utils.const import Colour, Emote, Guild, MaterialPalette
-from utils.bases.context import AluContext
+from cogs import INITIAL_EXTENSIONS, get_extensions
+from utils import AluContext, const
 from utils.checks import is_owner
 
 from ._base import ManagementBaseCog
@@ -26,7 +25,7 @@ class AdminTools(ManagementBaseCog):
 
     async def trustee_add_remove(self, ctx: AluContext, user_id: int, mode: Literal["add", "remov"]):
         query = "SELECT trusted_ids FROM botinfo WHERE id=$1"
-        trusted_ids = await self.bot.pool.fetchval(query, Guild.community)
+        trusted_ids = await self.bot.pool.fetchval(query, const.Guild.community)
 
         if mode == "add":
             trusted_ids.append(user_id)
@@ -34,8 +33,8 @@ class AdminTools(ManagementBaseCog):
             trusted_ids.remove(user_id)
 
         query = "UPDATE botinfo SET trusted_ids=$1 WHERE id=$2"
-        await self.bot.pool.execute(query, trusted_ids, Guild.community)
-        e = discord.Embed(colour=Colour.prpl())
+        await self.bot.pool.execute(query, trusted_ids, const.Guild.community)
+        e = discord.Embed(colour=const.Colour.prpl())
         e.description = f"We {mode}ed user with id {user_id} to the list of trusted users"
         await ctx.reply(embed=e)
 
@@ -57,46 +56,40 @@ class AdminTools(ManagementBaseCog):
     @commands.command(name="extensions", hidden=True)
     async def extensions(self, ctx: AluContext):
         """Shows available extensions to load/reload/unload."""
-        cogs = [f"\N{BLACK CIRCLE} {x[:-3]}" for x in os.listdir("./cogs") if x.endswith(".py")] + [
-            "\N{BLACK CIRCLE} jishaku"
-        ]
-        e = discord.Embed(title="Available Extensions", description="\n".join(cogs), colour=Colour.prpl())
+        exts = [f"\N{BLACK CIRCLE} {ext[5:] if ext.startswith('cogs.') else ext}" for ext in self.bot.extensions.keys()]
+        e = discord.Embed(title="Available Extensions", description="\n".join(exts), colour=const.Colour.prpl())
         await ctx.reply(embed=e)
 
-    async def load_unload_reload_job(self, ctx: AluContext, module: str, *, mode: Literal["load", "unload", "reload"]):
+    async def load_unload_reload_job(self, ctx: AluContext, module: str, *, job_func: Callable[[str], Awaitable[None]]):
         try:
-            filename = f"cogs.{module.lower()}"  # so we do `$unload beta` instead of `$unload beta.py`
-            match mode:
-                case "load":
-                    await self.bot.load_extension(filename)
-                case "unload":
-                    await self.bot.unload_extension(filename)
-                case "reload":
-                    await self.reload_or_load_extension(filename)
+            # so we do `$unload beta` instead of `$unload beta.py`
+            m = module.lower()
+            filename = f"cogs.{m}" if m not in INITIAL_EXTENSIONS else m
+            await job_func(filename)
         except commands.ExtensionError as error:
-            e = discord.Embed(description=f"{error}", colour=Colour.error())
+            e = discord.Embed(description=f"{error}", colour=const.Colour.error())
             e.set_author(name=error.__class__.__name__)
             await ctx.reply(embed=e)
         else:
-            await ctx.message.add_reaction(Emote.DankApprove)
+            await ctx.message.add_reaction(const.Emote.DankApprove)
 
     @is_owner()
     @commands.command(name="load", hidden=True)
     async def load(self, ctx: AluContext, *, module: str):
         """Loads a module."""
-        await self.load_unload_reload_job(ctx, module, mode="load")
+        await self.load_unload_reload_job(ctx, module, job_func=self.bot.load_extension)
 
     @is_owner()
     @commands.command(name="unload", hidden=True)
     async def unload(self, ctx: AluContext, *, module: str):
         """Unloads a module."""
-        await self.load_unload_reload_job(ctx, module, mode="unload")
+        await self.load_unload_reload_job(ctx, module, job_func=self.bot.unload_extension)
 
     @is_owner()
     @commands.group(name="reload", hidden=True, invoke_without_command=True)
     async def reload(self, ctx: AluContext, *, module: str):
         """Reloads a module."""
-        await self.load_unload_reload_job(ctx, module, mode="reload")
+        await self.load_unload_reload_job(ctx, module, job_func=self.reload_or_load_extension)
 
     async def reload_or_load_extension(self, module: str) -> None:
         try:
@@ -118,13 +111,13 @@ class AdminTools(ManagementBaseCog):
                 await ctx.reply(f"{error.__class__.__name__}: {error}")
                 add_reaction = False
         if add_reaction:
-            await ctx.message.add_reaction(Emote.DankApprove)
+            await ctx.message.add_reaction(const.Emote.DankApprove)
 
     async def send_guild_embed(self, guild: discord.Guild, join: bool):
         if join:
-            word, colour = "joined", MaterialPalette.green(shade=500)
+            word, colour = "joined", const.MaterialPalette.green(shade=500)
         else:
-            word, colour = "left", MaterialPalette.red(shade=500)
+            word, colour = "left", const.MaterialPalette.red(shade=500)
 
         e = discord.Embed(title=word, description=guild.description, colour=colour)
         e.add_field(name="Guild ID", value=f"`{guild.id}`")
@@ -168,7 +161,7 @@ class AdminTools(ManagementBaseCog):
         """'Make bot leave guild with named guild_id;"""
         if guild is not None:
             await guild.leave()
-            e = discord.Embed(colour=Colour.prpl())
+            e = discord.Embed(colour=const.Colour.prpl())
             e.description = f"Just left guild {guild.name} with id `{guild.id}`\n"
             await ctx.reply(embed=e)
         else:
@@ -178,7 +171,7 @@ class AdminTools(ManagementBaseCog):
     @guild_group.command(hidden=True)
     async def list(self, ctx: AluContext):
         """Show list of guilds the bot is in."""
-        e = discord.Embed(colour=Colour.prpl())
+        e = discord.Embed(colour=const.Colour.prpl())
         e.description = (
             f"The bot is in these guilds\n"
             f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"

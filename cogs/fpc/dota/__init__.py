@@ -1,16 +1,16 @@
+from utils import const
+
 from .notifs import DotaNotifs
 from .postmatch import DotaPostMatchEdit
 from .settings import DotaNotifsSettings
 from .twitch_check import DotaTwitchAccountCheck
 
-DOTA_COGS = (
-    DotaNotifs,
-    DotaPostMatchEdit,
-    DotaNotifsSettings,
-    DotaTwitchAccountCheck,
-)
+
+class Dota2FPC(DotaNotifs, DotaPostMatchEdit, DotaNotifsSettings, DotaTwitchAccountCheck, emote=const.Emote.DankLove):
+    """
+    Dota 2 - Favourite player+character combo notifications.
+    """
 
 
 async def setup(bot):
-    for C in DOTA_COGS:
-        await bot.add_cog(C(bot))
+    await bot.add_cog(Dota2FPC(bot))

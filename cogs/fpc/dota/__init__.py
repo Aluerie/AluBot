@@ -11,6 +11,8 @@ class Dota2FPC(DotaNotifs, DotaPostMatchEdit, DotaNotifsSettings, DotaTwitchAcco
     Dota 2 - Favourite player+character combo notifications.
     """
 
+    pass
+
 
 async def setup(bot):
     await bot.add_cog(Dota2FPC(bot))

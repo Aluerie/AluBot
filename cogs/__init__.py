@@ -28,9 +28,8 @@ def get_extensions(test: bool) -> tuple:
         subfolder_extensions = tuple(
             module.name
             for sf in non_ext_subfolders
-            for module in iter_modules(path=[f'cogs\\{sf}'], prefix=f'cogs.{sf}.')
+            for module in iter_modules(path=[f'cogs/{sf}'], prefix=f'cogs.{sf}.')
         )
 
         extensions = my_extensions + subfolder_extensions
-        print(extensions)
         return extensions

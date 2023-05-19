@@ -3,7 +3,10 @@ from enum import IntEnum, StrEnum
 
 class Emote(StrEnum):
     """Emote strings."""
-
+    
+    # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
+    peepoComfy = '<:_:726438781208756288>'
+    
     # HIDEOUT SERVER, NON-ANIMATED EMOTES ##############################################################################
 
     bedNerdge = '<:_:1106748389565153300>'
@@ -26,7 +29,7 @@ class Emote(StrEnum):
     Lewd = '<:_:976604430059331684>'
     peepoBlushDank = '<:_:1107471683448754287>'
     peepoBusiness = '<:_:998157352098340934>'
-    peepoComfy = '<:_:1107471654944260096>'
+    # peepoComfy = '<:_:1107471654944260096>' # let's use from community 
     peepoHappyDank = '<:_:1107471671520133202>'
     peepoMovie = '<:_:998163742741246003>'
     peepoNiceDay = '<:_:1107477683568382076>'

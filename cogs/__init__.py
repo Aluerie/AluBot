@@ -32,4 +32,5 @@ def get_extensions(test: bool) -> tuple:
         )
 
         extensions = my_extensions + subfolder_extensions
+        print(extensions)
         return extensions

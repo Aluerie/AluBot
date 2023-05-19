@@ -5,13 +5,15 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands, tasks
 
+from utils import AluCog
+
 if TYPE_CHECKING:
     from utils import AluBot
 
 
-class TwitchAccountCheckBase(commands.Cog):
-    def __init__(self, bot: AluBot, table_name: str, day: int):
-        self.bot: AluBot = bot
+class TwitchAccountCheckBase(AluCog):
+    def __init__(self, bot: AluBot, table_name: str, day: int, *args, **kwargs):
+        super().__init__(bot, *args, **kwargs)
         self.table_name: str = table_name
         self.day: int = day
         # self.__cog_name__ = f'TwitchAccCheckCog for {table_name}'

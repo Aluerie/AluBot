@@ -20,8 +20,8 @@ log.setLevel(logging.DEBUG)
 
 
 class DotaPostMatchEdit(AluCog):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, bot: AluBot, *args, **kwargs):
+        super().__init__(bot, *args, **kwargs)
         self.postmatch_players: List[PostMatchPlayerData] = []
         self.opendota_req_cache: Dict[int, OpendotaRequestMatch] = dict()
 

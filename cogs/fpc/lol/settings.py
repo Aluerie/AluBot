@@ -39,7 +39,7 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
     account: Optional[str]
 
 
-class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
+class LoLNotifsSettings(FPCBase, name='LoL'):
     """Commands to set up fav champ + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \
@@ -47,7 +47,7 @@ class LoLNotifsSettings(commands.Cog, FPCBase, name='LoL'):
     The bot will send messages in a chosen channel when your fav streamer picks your fav champ.
     """
 
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(
             feature_name='LoLFeed',
             game_name='LoL',

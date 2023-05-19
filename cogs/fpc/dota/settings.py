@@ -8,6 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 from steam.steamid import EType, SteamID
 
+from utils import AluCog
 from utils.const import Colour, Emote
 from utils.dota import hero
 from utils.dota.const import DOTA_LOGO
@@ -32,7 +33,7 @@ class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
     steam: Optional[str]
 
 
-class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
+class DotaNotifsSettings(FPCBase, name="Dota 2"):
     """Commands to set up fav hero + player notifs.
 
     These commands allow you to choose players from our database as your favorite \
@@ -54,8 +55,9 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
     6. Ready ! More info below
     """
 
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(
+            *args,
             feature_name="DotaFeed",
             game_name="Dota 2",
             game_codeword="dota",
@@ -73,6 +75,7 @@ class DotaNotifsSettings(commands.Cog, FPCBase, name="Dota 2"):
             get_char_name_by_id=hero.name_by_id,
             get_all_character_names=hero.get_all_hero_names,
             character_gather_word="heroes",
+            **kwargs,
         )
         self.bot: AluBot = bot
 

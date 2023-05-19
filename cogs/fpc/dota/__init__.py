@@ -1,4 +1,4 @@
-from utils import const
+from utils import AluBot, const
 
 from .notifs import DotaNotifs
 from .postmatch import DotaPostMatchEdit
@@ -11,8 +11,6 @@ class Dota2FPC(DotaNotifs, DotaPostMatchEdit, DotaNotifsSettings, DotaTwitchAcco
     Dota 2 - Favourite player+character combo notifications.
     """
 
-    pass
 
-
-async def setup(bot):
+async def setup(bot: AluBot):
     await bot.add_cog(Dota2FPC(bot))

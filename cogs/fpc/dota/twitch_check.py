@@ -2,8 +2,8 @@ from .._fpc_utils._twitch_check import TwitchAccountCheckBase
 
 
 class DotaTwitchAccountCheck(TwitchAccountCheckBase):
-    def __init__(self, bot):
-        super().__init__(bot, "dota_players", 16)
+    def __init__(self, bot, *args, **kwargs):
+        super().__init__(bot, "dota_players", 16, *args, **kwargs)
 
 
 async def setup(bot):

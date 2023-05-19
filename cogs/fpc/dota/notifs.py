@@ -10,6 +10,7 @@ from discord.ext import commands, tasks
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
+from utils import AluCog
 from utils.dota import hero
 
 from ._models import ActiveMatch
@@ -21,9 +22,9 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class DotaNotifs(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+class DotaNotifs(AluCog):
+    def __init__(self, bot: AluBot, *args, **kwargs):
+        super().__init__(bot, *args, **kwargs)
         self.lobby_ids: Set[int] = set()
         self.top_source_dict: Dict = {}
         self.live_matches: List[ActiveMatch] = []

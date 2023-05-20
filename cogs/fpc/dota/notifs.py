@@ -66,13 +66,13 @@ class DotaNotifs(AluCog):
         return await super().cog_unload()
 
     async def preliminary_queries(self):
-        async def get_all_fav_ids(column_name: str) -> List[int]:
-            query = f"SELECT DISTINCT(unnest({column_name})) FROM fpc WHERE game=$1"
-            rows = await self.bot.pool.fetch(query, 'dota')
-            return [row.unnest for row in rows]
+        async def get_all_fav_ids(table_name: str, column_name: str) -> List[int]:
+            query = f"DISTINCT(SELECT {column_name} FROM dota_favourite_{table_name})"
+            rows = await self.bot.pool.fetch(query)
+            return [r for r, in rows]
 
-        self.hero_fav_ids = await get_all_fav_ids("characters")
-        self.player_fav_ids = await get_all_fav_ids("players")
+        self.hero_fav_ids = await get_all_fav_ids("characters", 'character_id')
+        self.player_fav_ids = await get_all_fav_ids("players", 'player_name')
 
     async def get_args_for_top_source(self, specific_games_flag: bool) -> Union[None, dict]:
         self.bot.steam_dota_login()

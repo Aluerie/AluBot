@@ -61,7 +61,7 @@ class DotaPostMatchEdit(AluCog):
                                 )
                             )
             if cache_item.dict_ready:
-                self.opendota_req_cache.pop(row.id)
+                self.opendota_req_cache.pop(row.match_id)
                 query = "DELETE FROM dota_matches WHERE match_id=$1"
                 await self.bot.pool.execute(query, row.match_id)
 

@@ -36,11 +36,11 @@ class TwitchClient(twitchio.Client):
         else:
             raise BadArgument(f'Error checking stream `{user_id}`.\n User either does not exist or is banned.')
 
-    async def twitch_id_and_display_name_by_login(self, user_login: str) -> Tuple[int, str]:
+    async def fpc_data_by_login(self, user_login: str) -> Tuple[int, str, str]:
         """Gets tuple (twitch_id, display_name) by user_login from one call to twitch client"""
         user: Optional[twitchio.User] = next(iter(await self.fetch_users(names=[user_login])), None)
         if user:
-            return user.id, user.display_name
+            return user.id, user.display_name, user.profile_image
         else:
             raise BadArgument(f'Error checking stream `{user_login}`.\n User either does not exist or is banned.')
 

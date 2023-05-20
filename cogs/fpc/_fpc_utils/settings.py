@@ -246,11 +246,16 @@ class FPCSettingsBase(AluCog):
     async def get_player_dict(self, *, name_flag: str, twitch_flag: bool) -> dict:
         name_lower = name_flag.lower()
         if twitch_flag:
-            twitch_id, display_name = await self.bot.twitch.twitch_id_and_display_name_by_login(name_lower)
+            twitch_id, display_name, profile_image = await self.bot.twitch.fpc_data_by_login(name_lower)
         else:
-            twitch_id, display_name = None, name_flag
+            twitch_id, display_name, profile_image = None, name_flag, discord.utils.MISSING
 
-        return {'name_lower': name_lower, 'display_name': display_name, 'twitch_id': twitch_id}
+        return {
+            'name_lower': name_lower,
+            'display_name': display_name,
+            'twitch_id': twitch_id,
+            'profile_image': profile_image,
+        }
 
     async def get_account_dict(self, **kwargs) -> dict:
         ...
@@ -270,7 +275,7 @@ class FPCSettingsBase(AluCog):
             raise commands.BadArgument(
                 'This account is already in the database.\n'
                 f'It is marked as {user.display_name}\'s account.\n\n'
-                f'Did you mean to use `/{self.game} player add {user.name_lower}` to add the player into your fav list?'
+                f'Did you mean to use `/{self.game} player add name1: {user.name_lower}` to add the player into your fav list?'
             )
 
     async def database_add(self, ntr: discord.Interaction[AluBot], player_dict: dict, account_dict: dict):
@@ -283,7 +288,9 @@ class FPCSettingsBase(AluCog):
                             VALUES ($1, $2, $3)
                         ON CONFLICT (name_lower) DO NOTHING
                 """
-        await ntr.client.pool.execute(query, *player_dict.values())
+        await ntr.client.pool.execute(
+            query, player_dict['name_lower'], player_dict['display_name'], player_dict['twitch_id']
+        )
 
         dollars = [f'${i}' for i in range(1, len(self.extra_account_info_columns) + 3)]  # [$1, $2, ... ]
         query = f"""INSERT INTO {self.game}_accounts
@@ -297,6 +304,7 @@ class FPCSettingsBase(AluCog):
             value=self.player_name_acc_string(player_dict['display_name'], player_dict['twitch_id'], **account_dict),
         )
         e.set_author(name=self.game_mention, icon_url=self.game_icon)
+        e.set_thumbnail(url=player_dict['profile_image'])
         await ntr.followup.send(embed=e)
         e.colour = const.MaterialPalette.green(shade=200)
         e.set_author(name=ntr.user, icon_url=ntr.user.display_avatar.url)
@@ -322,6 +330,8 @@ class FPCSettingsBase(AluCog):
         )
         warn_e.add_field(name='Request to add an account into the database', value=player_string)
         warn_e.set_author(name=self.game_mention, icon_url=self.game_icon)
+        warn_e.set_thumbnail(url=player_dict['profile_image'])
+        
         if not await ntr.client.prompt(ntr, embed=warn_e):
             assert isinstance(ntr.channel, discord.TextChannel)
             await ntr.channel.send('Aborting...')
@@ -464,7 +474,7 @@ class FPCSettingsBase(AluCog):
         # +-----------------+-----------------------+-----------------------+
         # | failed          | failed to add         | failed to remove      |
         # +-----------------+-----------------------+-----------------------+
-        
+
         # ids, which are name_lower for this
         success_ids = [row.name_lower for row in success_and_already_rows if row.name_lower not in fav_names]
         already_ids = [row.name_lower for row in success_and_already_rows if row.name_lower in fav_names]

@@ -42,6 +42,9 @@ class Guild:
     community = 702561315478044804
     hideout = 759916212842659850
 
+    # friends
+    stone = 773607529879699497
+
 
 class Channel(ChannelEnum):
     rules = 724996010169991198
@@ -180,7 +183,7 @@ class SavedGuild:
             #   >>> return channel
         else:
             raise RuntimeError(f"Channel id={channel_id} from {self} not in cache")
-        
+
     def get_role(self, role_id: int) -> discord.Role:
         role = self.guild.get_role(role_id)
         if role is None:
@@ -223,7 +226,7 @@ class CommunityGuild(SavedGuild):
 
     @property
     def logs(self) -> discord.TextChannel:
-        return self.get_channel(Channel.logs, discord.TextChannel)  
+        return self.get_channel(Channel.logs, discord.TextChannel)
 
     @property
     def bot_spam(self) -> discord.TextChannel:

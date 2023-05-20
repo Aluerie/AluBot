@@ -22,7 +22,7 @@ class FPCTrusted(commands.Cog):
     db = app_commands.Group(
         name="database",
         description="Group command about managing database",
-        guild_ids=[Guild.hideout],
+        guild_ids=[Guild.hideout, Guild.stone],
     )
 
     db_dota = app_commands.Group(
@@ -33,7 +33,7 @@ class FPCTrusted(commands.Cog):
 
     def get_dota_tools_cog(self) -> DotaNotifsSettings:
         """Get dota tools cog"""
-        dota_cog: Optional[DotaNotifsSettings] = self.bot.get_cog('Dota 2')  # type:ignore
+        dota_cog: Optional[DotaNotifsSettings] = self.bot.get_cog('Dota2FPC')  # type:ignore
         if dota_cog is None:
             # todo: sort this out when we gonna do error handler refactor
             raise commands.ExtensionNotLoaded(name='Dota 2 Cog is not loaded')
@@ -88,10 +88,11 @@ class FPCTrusted(commands.Cog):
 
     def get_lol_tools_cog(self) -> LoLNotifsSettings:
         """Get lol tools cog"""
-        lol_cog: Optional[LoLNotifsSettings] = self.bot.get_cog('LoL')  # type:ignore
+        # TODO: you will change the name below - make it more reliable, idk how
+        lol_cog: Optional[LoLNotifsSettings] = self.bot.get_cog('LoLFPC')  # type:ignore
         if lol_cog is None:
             # todo: sort this out when we gonna do error handler refactor
-            raise commands.ExtensionNotLoaded(name='Dota 2 Cog is not loaded')
+            raise commands.ExtensionNotLoaded(name='LoLFPC is not loaded')
         return lol_cog
 
     @db_lol.command(name='add')

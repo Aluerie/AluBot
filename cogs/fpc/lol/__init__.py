@@ -6,7 +6,7 @@ from .twitch_check import LoLTwitchAccountCheck
 
 from utils import const
 
-class LoL2FPC(
+class LoLFPC(
     LoLNotifs,
     LoLFeedPostMatchEdit,
     LoLNotifsSettings,
@@ -20,4 +20,4 @@ class LoL2FPC(
 
 
 async def setup(bot):
-    await bot.add_cog(LoL2FPC(bot))
+    await bot.add_cog(LoLFPC(bot))

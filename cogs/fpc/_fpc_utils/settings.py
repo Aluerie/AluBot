@@ -340,7 +340,7 @@ class FPCSettingsBase(AluCog):
                 query = f"""SELECT a.id 
                             FROM {self.game}_players p
                             JOIN {self.game}_accounts a
-                            ON p.id = a.player_id
+                            ON p.name_lower = a.name_lower
                             WHERE a.id=$1 AND p.name_lower=$2
                         """
                 val = await ntr.client.pool.fetchval(query, account_id, name_lower)
@@ -353,15 +353,15 @@ class FPCSettingsBase(AluCog):
             query = f"""WITH del_child AS (
                             DELETE FROM {self.game}_accounts
                             WHERE  id = $1
-                            RETURNING player_id, id
+                            RETURNING name_lower, id
                             )
                         DELETE FROM {self.game}_players p
                         USING  del_child x
-                        WHERE  p.id = x.player_id
+                        WHERE  p.name_lower = x.name_lower
                         AND    NOT EXISTS (
                             SELECT 1
                             FROM   {self.game}_accounts c
-                            WHERE  c.player_id = x.player_id
+                            WHERE  c.name_lower = x.name_lower
                             AND    c.id <> x.id
                             )
                         RETURNING display_name

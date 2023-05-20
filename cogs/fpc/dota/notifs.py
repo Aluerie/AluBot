@@ -142,8 +142,7 @@ class DotaNotifs(AluCog):
 
                 query = """ SELECT channel_id
                             FROM dota_settings
-                            WHERE game=$4
-                                AND $1=ANY(characters)
+                            WHERE $1=ANY(characters)
                                 AND $2=ANY(players)
                                 AND NOT channel_id=ANY(
                                     SELECT channel_id FROM dota_messages WHERE match_id=$3
@@ -180,22 +179,22 @@ class DotaNotifs(AluCog):
             owner_name = ch.guild.owner.name if ch.guild.owner else 'Somebody'
             em.title = f"{owner_name}'s fav hero + player spotted"
             msg = await ch.send(embed=em, file=img_file)
-            query = """ INSERT INTO old_dota_matches (id) 
+            query = """ INSERT INTO dota_matches (id) 
                         VALUES ($1) 
                         ON CONFLICT DO NOTHING
                     """
             await self.bot.pool.execute(query, match.match_id)
-            query = """ INSERT INTO old_dota_messages 
+            query = """ INSERT INTO dota_messages 
                         (message_id, channel_id, match_id, hero_id, twitch_status) 
                         VALUES ($1, $2, $3, $4, $5)
                     """
             await self.bot.pool.execute(query, msg.id, ch.id, match.match_id, match.hero_id, match.twitch_status)
 
     async def declare_matches_finished(self):
-        query = """ UPDATE old_dota_matches 
+        query = """ UPDATE dota_matches 
                     SET is_finished=TRUE
                     WHERE NOT id=ANY($1)
-                    AND old_dota_matches.is_finished IS DISTINCT FROM TRUE
+                    AND dota_matches.is_finished IS DISTINCT FROM TRUE
                 """
         await self.bot.pool.execute(query, list(self.top_source_dict.keys()))
 

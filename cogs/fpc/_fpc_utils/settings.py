@@ -449,7 +449,9 @@ class FPCSettingsBase(AluCog):
         # | failed          | failed to add         | failed to remove      |
         # +-----------------+-----------------------+-----------------------+
         success_names = [row.name_lower for row in success_and_already_rows if row.name_lower not in fav_names]
-        success_display_names = [row.display_name for row in success_and_already_rows if row.id not in fav_names]
+        success_display_names = [
+            row.display_name for row in success_and_already_rows if row.name_lower not in fav_names
+        ]
 
         already_names = [row.name_lower for row in success_and_already_rows if row.name_lower in fav_names]
         already_display_names = [row.display_name for row in success_and_already_rows if row.name_lower in fav_names]
@@ -457,12 +459,6 @@ class FPCSettingsBase(AluCog):
         failed_names = [
             name for name in player_names if name.lower() not in [row.name_lower for row in success_and_already_rows]
         ]
-
-
-        new_favourite_names = fav_names + success_names if mode_add else [i for i in fav_names if i not in already_names]
-
-        sql_args = [(ntr.guild.id, name) for name in new_favourite_names]
-        
 
         if mode_add:
             query = f'''INSERT INTO {self.game}_favourite_players (guild_id, player_name) VALUES ($1, $2)'''
@@ -492,12 +488,12 @@ class FPCSettingsBase(AluCog):
         """Base function for player add/remove autocomplete"""
         assert ntr.guild
 
-        query = f'SELECT players FROM fpc WHERE guild_id=$1 AND game=$2'
-        fav_ids = await self.bot.pool.fetch(query, ntr.guild.id, self.game) or []
+        query = f'SELECT player_name FROM {self.game}_favourite_players WHERE guild_id=$1'
+        fav_ids = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id, self.game)]
         clause = 'NOT' if mode_add else ''
         query = f"""SELECT display_name
                     FROM {self.game}_players
-                    WHERE {clause} id=ANY($1)
+                    WHERE {clause} name_lower=ANY($1)
                     ORDER BY similarity(display_name, $2) DESC
                     LIMIT 6;
                 """

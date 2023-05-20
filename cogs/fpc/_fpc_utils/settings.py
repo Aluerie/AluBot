@@ -208,7 +208,7 @@ class FPCSettingsBase(AluCog):
                     'name': f"{self.player_name_string(row.display_name, row.twitch_id)}{followed}",
                     'info': [],
                 }
-            kwargs = {col: row[col] for col in ['name_lower'] + self.extra_account_info_columns}
+            kwargs = {col: row[col] for col in ['id'] + self.extra_account_info_columns}
             player_dict[row.name_lower]['info'].append(self.player_acc_string(**kwargs))
 
         ans_array = [f"{v['name']}\n{chr(10).join(v['info'])}" for v in player_dict.values()]

@@ -203,7 +203,9 @@ class FPCSettingsBase(AluCog):
 
         for row in rows:
             if row.name_lower not in player_dict:
-                followed = ' {0} {0} {0}'.format(const.Emote.DankLove) if row.name_lower in favourite_player_list else ''
+                followed = (
+                    ' {0} {0} {0}'.format(const.Emote.DankLove) if row.name_lower in favourite_player_list else ''
+                )
                 player_dict[row.name_lower] = {
                     'name': f"{self.player_name_string(row.display_name, row.twitch_id)}{followed}",
                     'info': [],
@@ -417,7 +419,7 @@ class FPCSettingsBase(AluCog):
 
         Parameters
         ----------
-        ctx :
+        ntr:
         local_dict :
         mode_add :
         """
@@ -429,45 +431,57 @@ class FPCSettingsBase(AluCog):
         if not player_names:
             raise commands.BadArgument("You cannot use this command without naming at least one player.")
 
-        query = f'SELECT players FROM fpc WHERE guild_id=$1 AND game=$2'
-        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id, self.game) or []  # type: ignore
-        query = f"""SELECT id, name_lower, display_name 
+        query = f'SELECT player_name FROM dota_favourite_players WHERE guild_id=$1'
+        fav_names = [r for r, in await ntr.client.pool.fetch(query, ntr.guild.id)]
+        query = f"""SELECT name_lower, display_name 
                     FROM {self.game}_players
                     WHERE name_lower=ANY($1)
-                """  # AND NOT id=ANY($2)
-        sa_rows = await ntr.client.pool.fetch(query, [name.lower() for name in player_names])
+                """
+        success_and_already_rows = await ntr.client.pool.fetch(query, [name.lower() for name in player_names])
         # The following notations are assumed logically for mode_add being `True`.
         # +-----------------+-----------------------+-----------------------+
         # | variable_name   | `mode_add = True`     | `mode_add = False`    |
         # +=================+=======================+=======================+
-        # | s               | successfully added    | already removed       |
+        # | success         | successfully added    | already removed       |
         # +-----------------+-----------------------+-----------------------+
-        # | a               | already added         | successfully removed  |
+        # | already         | already added         | successfully removed  |
         # +-----------------+-----------------------+-----------------------+
-        # | f               | failed to add         | failed to remove      |
+        # | failed          | failed to add         | failed to remove      |
         # +-----------------+-----------------------+-----------------------+
-        s_ids = [row.id for row in sa_rows if row.id not in fav_ids]
-        s_names = [row.display_name for row in sa_rows if row.id not in fav_ids]
-        a_ids = [row.id for row in sa_rows if row.id in fav_ids]
-        a_names = [row.display_name for row in sa_rows if row.id in fav_ids]
-        f_names = [name for name in player_names if name.lower() not in [row.name_lower for row in sa_rows]]
+        success_names = [row.name_lower for row in success_and_already_rows if row.name_lower not in fav_names]
+        success_display_names = [row.display_name for row in success_and_already_rows if row.id not in fav_names]
 
-        query = f'''INSERT INTO fpc (game, guild_id)
-                    VALUES ($1, $2)
-                    ON CONFLICT (game, guild_id) DO UPDATE
-                        SET players=$3;
-                '''
-        new_fav_ids = fav_ids + s_ids if mode_add else [i for i in fav_ids if i not in a_ids]
-        await ntr.client.pool.execute(query, self.game, ntr.guild.id, new_fav_ids)
+        already_names = [row.name_lower for row in success_and_already_rows if row.name_lower in fav_names]
+        already_display_names = [row.display_name for row in success_and_already_rows if row.name_lower in fav_names]
+
+        failed_names = [
+            name for name in player_names if name.lower() not in [row.name_lower for row in success_and_already_rows]
+        ]
+
+
+        new_favourite_names = fav_names + success_names if mode_add else [i for i in fav_names if i not in already_names]
+
+        sql_args = [(ntr.guild.id, name) for name in new_favourite_names]
+        
 
         if mode_add:
-            e = self.construct_the_embed(s_names, a_names, f_names, gather_word='players', mode_add=mode_add)
+            query = f'''INSERT INTO {self.game}_favourite_players (guild_id, player_name) VALUES ($1, $2)'''
+            await ntr.client.pool.executemany(query, [(ntr.guild.id, name) for name in success_names])
+
+            e = self.construct_the_embed(
+                success_display_names, already_display_names, failed_names, gather_word='players', mode_add=mode_add
+            )
         else:
-            e = self.construct_the_embed(a_names, s_names, f_names, gather_word='players', mode_add=mode_add)
-        if f_names:
+            query = f'''DELETE FROM {self.game}_favourite_players WHERE guild_id=$1 AND player_name=ANY($2)'''
+            await ntr.client.pool.executemany(query, already_names)
+
+            e = self.construct_the_embed(
+                already_display_names, success_display_names, failed_names, gather_word='players', mode_add=mode_add
+            )
+        if failed_names:
             text = (
-                'Check your argument or consider adding (for trustees)/requesting such player with '
-                '`$ or /dota database add|request name: <name> steam: <steam_id> twitch: <yes/no>`'
+                f'Check your argument or consider adding (for trustees)/requesting such player with '
+                f'`/{self.game} database add|request`'
             )
             e.set_footer(text=text)
         await ntr.followup.send(embed=e)

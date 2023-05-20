@@ -12,8 +12,10 @@ CREATE TABLE IF NOT EXISTS dota_players (
 );
 
 CREATE TABLE IF NOT EXISTS dota_favourite_players (
-    guild_id BIGINT PRIMARY KEY,
+    guild_id BIGINT,
     player_name TEXT NOT NULL,
+
+    PRIMARY KEY(guild_id, player_name),
 
     CONSTRAINT fk_guild_id
         FOREIGN KEY (guild_id)
@@ -24,8 +26,10 @@ CREATE TABLE IF NOT EXISTS dota_favourite_players (
 );
 
 CREATE TABLE IF NOT EXISTS dota_favourite_characters (
-    guild_id BIGINT PRIMARY KEY,
+    guild_id BIGINT,
     character_id INT NOT NULL,
+
+    PRIMARY KEY(guild_id, character_id),
 
     CONSTRAINT fk_guild_id
         FOREIGN KEY (guild_id)

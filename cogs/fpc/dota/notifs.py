@@ -67,7 +67,7 @@ class DotaNotifs(AluCog):
 
     async def preliminary_queries(self):
         async def get_all_fav_ids(table_name: str, column_name: str) -> List[int]:
-            query = f"DISTINCT(SELECT {column_name} FROM dota_favourite_{table_name})"
+            query = f"SELECT DISTINCT {column_name} FROM dota_favourite_{table_name}"
             rows = await self.bot.pool.fetch(query)
             return [r for r, in rows]
 

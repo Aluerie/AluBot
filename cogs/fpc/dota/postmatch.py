@@ -50,7 +50,7 @@ class DotaPostMatchEdit(AluCog):
                 query = "SELECT * FROM dota_messages WHERE match_id=$1"
                 for r in await self.bot.pool.fetch(query, row.match_id):
                     for player in pl_dict_list:
-                        if player["character_id"] == r.character_id:
+                        if player["hero_id"] == r.character_id:
                             self.postmatch_players.append(
                                 PostMatchPlayerData(
                                     player_data=player,

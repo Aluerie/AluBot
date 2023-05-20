@@ -313,7 +313,7 @@ class FPCBase(AluCog):
         # cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
         # warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
         cmd_usage_str = f"name: {player_dict['display_name']} {self.cmd_usage_str(**account_dict|player_dict)}"
-        warn_e.add_field(name='Command', value=f'{self.game} player add {cmd_usage_str}')
+        warn_e.add_field(name='Command', value=f'/database {self.game} add {cmd_usage_str}')
         await self.bot.hideout.global_logs.send(embed=warn_e)
 
     async def database_remove(

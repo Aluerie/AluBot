@@ -20,7 +20,7 @@ class FPCTrusted(commands.Cog):
         self.bot: AluBot = bot
 
     db = app_commands.Group(
-        name="db",
+        name="database",
         description="Group command about managing database",
         guild_ids=[Guild.hideout],
     )

@@ -103,7 +103,7 @@ class LoLNotifsSettings(FPCBase, name='LoL'):
         try:
             platform = server_to_platform(server)
             player = await summoner.Summoner(name=account, platform=platform).get()
-            return player.id, player.platform, player.name
+            return (player.id, player.platform, player.name)
         except NotFound:
             raise commands.BadArgument(
                 f"Error checking league account with name `{account}` for `{server}` server: \n"

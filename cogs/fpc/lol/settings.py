@@ -26,18 +26,6 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class AddStreamFlags(commands.FlagConverter, case_insensitive=True):
-    name: str
-    server: LiteralServer
-    account: str
-
-
-class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
-    name: str
-    server: Optional[LiteralServer]
-    account: Optional[str]
-
-
 class LoLNotifsSettings(FPCBase, name='LoL'):
     """Commands to set up fav champ + fav stream notifs.
 
@@ -59,7 +47,7 @@ class LoLNotifsSettings(FPCBase, name='LoL'):
             character_id_by_name=champion.id_by_name,
             all_character_names=get_all_champ_names,
             character_gather_word='champs',
-            **kwargs
+            **kwargs,
         )
 
     async def cog_load(self) -> None:

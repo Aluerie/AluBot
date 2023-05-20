@@ -21,17 +21,6 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class AddDotaPlayerFlags(commands.FlagConverter, case_insensitive=True):
-    name: str
-    steam: str
-    twitch: bool
-
-
-class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
-    name: Optional[str]
-    steam: Optional[str]
-
-
 class DotaNotifsSettings(FPCBase, name="Dota 2"):
     """Commands to set up fav hero + player notifs.
 

@@ -304,7 +304,7 @@ class FPCBase(AluCog):
 
         e = discord.Embed(colour=self.colour)
         e.add_field(name='Successfully made a request to add the account into the database', value=player_string)
-        await ntr.response.send_message(embed=e)
+        await ntr.followup.send(embed=e)
 
         warn_e.colour = const.MaterialPalette.orange(shade=200)
         warn_e.title = ''

@@ -287,6 +287,7 @@ class PostMatchPlayerData:
             return  # wrong bot, I guess
 
         try:
+            assert isinstance(ch, discord.TextChannel)
             msg = await ch.fetch_message(self.message_id)
         except discord.NotFound:
             return
@@ -341,7 +342,7 @@ class OpendotaRequestMatch:
             else:
                 raise OpendotaNotOK('POST /request response was not OK')
 
-    async def get_request(self, bot: AluBot) -> Union[dict, False]:
+    async def get_request(self, bot: AluBot) -> Union[dict, Literal[False]]:
         """
         Make opendota request parsing API call
         @return job_id as integer or False in case of not ok response
@@ -387,7 +388,7 @@ class OpendotaRequestMatch:
             if self.tries >= pow(3, self.fails) - 1:
                 try:
                     self.job_id = await self.post_request(bot)
-                    query = "UPDATE old_dota_matches SET opendota_jobid=$1 WHERE id=$2"
+                    query = "UPDATE dota_matches SET opendota_jobid=$1 WHERE match_id=$2"
                     await bot.pool.execute(query, self.job_id, self.match_id)
                     self.tries, self.fails = 0, 0
                 except OpendotaNotOK:

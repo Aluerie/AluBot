@@ -112,13 +112,28 @@ class FPCSettingsBase(AluCog):
         e.set_author(name=self.game_mention, icon_url=self.game_icon)
         await ntr.response.send_message(embed=e)
 
+    async def is_fpc_channel_set(self, ntr: discord.Interaction[AluBot], raise_: bool = False):
+        assert ntr.guild
+        query = f'SELECT channel_id FROM {self.game}_settings WHERE guild_id=$1'
+        ch_id = await ntr.client.pool.fetchval(query, ntr.guild.id)
+        if ch_id:
+            return ch_id
+        elif raise_:
+            # TODO: better error, maybe its own embed ?
+            msg = (
+                'I\'m sorry, but you cannot use this command without setting up FPC (Favourite Player+Character) channel'
+                f' first. Please, use `/{self.game} channel set` to assign it.'
+            )
+            raise commands.BadArgument(msg)
+        else:
+            return False
+
     async def get_fpc_channel(self, ntr: discord.Interaction[AluBot]) -> discord.TextChannel:
         assert ntr.guild
 
-        query = f'SELECT channel_id FROM {self.game}_settings WHERE guild_id=$1'
-        ch_id = await ntr.client.pool.fetchval(query, ntr.guild.id)
+        ch_id = await self.is_fpc_channel_set(ntr)
 
-        if ch_id is None:
+        if not ch_id:
             # TODO: better error, maybe its own embed ?
             msg = (
                 f'FPC (Favourite Player+Character) notifications channel for {self.game_mention} '
@@ -425,6 +440,7 @@ class FPCSettingsBase(AluCog):
         """
         await ntr.response.defer()
         assert ntr.guild
+        await self.is_fpc_channel_set(ntr, raise_=True)
 
         player_names = self.get_names_list_from_locals(ntr, local_dict)
 
@@ -448,13 +464,14 @@ class FPCSettingsBase(AluCog):
         # +-----------------+-----------------------+-----------------------+
         # | failed          | failed to add         | failed to remove      |
         # +-----------------+-----------------------+-----------------------+
-        success_names = [row.name_lower for row in success_and_already_rows if row.name_lower not in fav_names]
-        success_display_names = [
-            row.display_name for row in success_and_already_rows if row.name_lower not in fav_names
-        ]
+        
+        # ids, which are name_lower for this
+        success_ids = [row.name_lower for row in success_and_already_rows if row.name_lower not in fav_names]
+        already_ids = [row.name_lower for row in success_and_already_rows if row.name_lower in fav_names]
 
-        already_names = [row.name_lower for row in success_and_already_rows if row.name_lower in fav_names]
-        already_display_names = [row.display_name for row in success_and_already_rows if row.name_lower in fav_names]
+        # display names
+        success_names = [row.display_name for row in success_and_already_rows if row.name_lower not in fav_names]
+        already_names = [row.display_name for row in success_and_already_rows if row.name_lower in fav_names]
 
         failed_names = [
             name for name in player_names if name.lower() not in [row.name_lower for row in success_and_already_rows]
@@ -462,17 +479,17 @@ class FPCSettingsBase(AluCog):
 
         if mode_add:
             query = f'''INSERT INTO {self.game}_favourite_players (guild_id, player_name) VALUES ($1, $2)'''
-            await ntr.client.pool.executemany(query, [(ntr.guild.id, name) for name in success_names])
+            await ntr.client.pool.executemany(query, [(ntr.guild.id, name) for name in success_ids])
 
             e = self.construct_the_embed(
-                success_display_names, already_display_names, failed_names, gather_word='players', mode_add=mode_add
+                success_names, already_names, failed_names, gather_word='players', mode_add=mode_add
             )
         else:
             query = f'''DELETE FROM {self.game}_favourite_players WHERE guild_id=$1 AND player_name=ANY($2)'''
-            await ntr.client.pool.executemany(query, already_names)
+            await ntr.client.pool.execute(query, ntr.guild.id, already_ids)
 
             e = self.construct_the_embed(
-                already_display_names, success_display_names, failed_names, gather_word='players', mode_add=mode_add
+                already_names, success_names, failed_names, gather_word='players', mode_add=mode_add
             )
         if failed_names:
             text = (
@@ -507,12 +524,12 @@ class FPCSettingsBase(AluCog):
         assert ntr.guild
 
         await ntr.response.defer()
-        query = f'SELECT player_name FROM {self.game}_favourite_players WHERE guild_id=$1 AND game=$2'
-        fav_ids = await self.bot.pool.fetchval(query, ntr.guild.id, self.game) or []
+        query = f'SELECT player_name FROM {self.game}_favourite_players WHERE guild_id=$1'
+        fav_ids = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id)]
 
         query = f"""SELECT display_name, twitch_id 
                     FROM {self.game}_players
-                    WHERE id=ANY($1)
+                    WHERE name_lower=ANY($1)
                     ORDER BY display_name
                 """
         rows = await self.bot.pool.fetch(query, fav_ids) or []
@@ -535,37 +552,37 @@ class FPCSettingsBase(AluCog):
             raise commands.BadArgument("You cannot use this command without naming at least one character.")
 
         await ntr.response.defer()
+        await self.is_fpc_channel_set(ntr, raise_=True)
 
-        query = f'SELECT characters FROM fpc WHERE guild_id=$1'
-        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id) or []  # type: ignore
+        query = f'SELECT character_id FROM {self.game}_favourite_characters WHERE guild_id=$1'
+        fav_ids: List[int] = [r for r, in await ntr.client.pool.fetch(query, ntr.guild.id)]  # type: ignore
 
-        f_names, sa_ids = [], []
+        failed_names, success_and_already_ids = [], []
         for name in character_names:
             try:
-                sa_ids.append(await self.character_id_by_name(name))
+                success_and_already_ids.append(await self.character_id_by_name(name))
             except KeyError:
-                f_names.append(name)
+                failed_names.append(name)
 
-        s_ids = [i for i in sa_ids if i not in fav_ids]
-        a_ids = [i for i in sa_ids if i in fav_ids]
-        s_names = [await self.character_name_by_id(i) for i in s_ids]
-        a_names = [await self.character_name_by_id(i) for i in a_ids]
-
-        query = f'''INSERT INTO fpc (game, guild_id)
-                    VALUES ($1, $2)
-                    ON CONFLICT (game, guild_id) DO UPDATE 
-                        SET characters=$3;
-                '''
-        new_fav_ids = fav_ids + s_ids if mode_add else [i for i in fav_ids if i not in a_ids]
-        await ntr.client.pool.execute(query, self.game, ntr.guild.id, new_fav_ids)
+        # ids
+        success_ids = [i for i in success_and_already_ids if i not in fav_ids]
+        already_ids = [i for i in success_and_already_ids if i in fav_ids]
+        # display names
+        success_names = [await self.character_name_by_id(i) for i in success_ids]
+        already_names = [await self.character_name_by_id(i) for i in already_ids]
 
         if mode_add:
+            query = f'''INSERT INTO {self.game}_favourite_characters (guild_id, character_id) VALUES ($1, $2)'''
+            await ntr.client.pool.executemany(query, [(ntr.guild.id, name) for name in success_ids])
+
             e = self.construct_the_embed(
-                s_names, a_names, f_names, gather_word=self.character_gather_word, mode_add=mode_add
+                success_names, already_names, failed_names, gather_word=self.character_gather_word, mode_add=mode_add
             )
         else:
+            query = f'''DELETE FROM {self.game}_favourite_characters WHERE guild_id=$1 AND character_id=ANY($2)'''
+            await ntr.client.pool.execute(query, ntr.guild.id, already_ids)
             e = self.construct_the_embed(
-                a_names, s_names, f_names, gather_word=self.character_gather_word, mode_add=mode_add
+                already_names, success_names, failed_names, gather_word=self.character_gather_word, mode_add=mode_add
             )
         await ntr.followup.send(embed=e)
 
@@ -573,8 +590,8 @@ class FPCSettingsBase(AluCog):
         self, ntr: discord.Interaction, current: str, *, mode_add: bool
     ) -> List[app_commands.Choice[str]]:
         """Base function for character add/remove autocomplete"""
-        query = f'SELECT characters FROM fpc WHERE guild_id=$1'
-        fav_ids: List[int] = await self.bot.pool.fetchval(query, ntr.guild.id) or []  # type:ignore
+        query = f'SELECT character_id FROM {self.game}_favourite_characters WHERE guild_id=$1'
+        fav_ids: List[int] = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id)]  # type:ignore
 
         fav_names = [await self.character_name_by_id(i) for i in fav_ids]
 
@@ -598,8 +615,8 @@ class FPCSettingsBase(AluCog):
     async def character_list(self, ntr: discord.Interaction[AluBot]) -> None:
         """Base function for character list commands"""
         await ntr.response.defer()
-        query = f'SELECT characters FROM fpc WHERE guild_id=$1 AND game=$2'
-        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id, self.game) or []  # type: ignore
+        query = f'SELECT character_id FROM {self.game}_favourite_characters WHERE guild_id=$1'
+        fav_ids: List[int] = [r for r, in await ntr.client.pool.fetch(query, ntr.guild.id)]  # type: ignore
         fav_names = [f'{await self.character_name_by_id(i)} - `{i}`' for i in fav_ids]
 
         e = discord.Embed(title=f'List of your favourite {self.character_gather_word}', colour=self.colour)
@@ -610,11 +627,11 @@ class FPCSettingsBase(AluCog):
         """Base function for spoil commands"""
         assert ntr.guild
 
-        query = f'''INSERT INTO fpc (game, guild_id)
-                    VALUES ($1, $2)
-                    ON CONFLICT (game, guild_id) DO UPDATE
-                        SET spoil=$3;
+        await self.is_fpc_channel_set(ntr, raise_=True)
+
+        query = f'''UPDATE {self.game}_settings 
+                    SET spoil=$2 WHERE guild_id=$1;
                 '''
-        await self.bot.pool.execute(query, self.game, ntr.guild.id, spoil)
+        await self.bot.pool.execute(query, ntr.guild.id, spoil)
         e = discord.Embed(description=f"Changed spoil value to {spoil}", colour=self.colour)
         await ntr.response.send_message(embed=e)

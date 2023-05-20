@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List
 
 import asyncpg
 import discord
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from pyot.core.exceptions import NotFound, ServerError
 from pyot.utils.lol import champion
 
@@ -43,16 +43,16 @@ class LoLNotifs(AluCog):
     async def fill_live_matches(self):
         self.live_matches, self.all_live_match_ids = [], []
 
-        query = 'SELECT DISTINCT(unnest(characters)) FROM fpc WHERE game=$1'
-        fav_champ_ids = [r for r, in await self.bot.pool.fetch(query, 'lol')]  # row.unnest
+        query = 'SELECT DISTINCT character_id FROM lol_favourite_characters'
+        fav_champ_ids = [r for r, in await self.bot.pool.fetch(query)]  # row.unnest
 
         live_fav_player_ids = await self.bot.twitch.get_live_lol_player_ids(pool=self.bot.pool)
 
-        query = f""" SELECT a.id, account, platform, display_name, player_id, twitch_id, last_edited
+        query = f""" SELECT a.id, account, platform, display_name, p.name_lower, twitch_id, last_edited
                     FROM lol_accounts a
                     JOIN lol_players p
-                    ON a.player_id = p.id
-                    WHERE player_id=ANY($1)
+                    ON a.name_lower = p.name_lower
+                    WHERE p.name_lower=ANY($1)
                 """
         for r in await self.bot.pool.fetch(query, live_fav_player_ids):
             try:
@@ -72,19 +72,15 @@ class LoLNotifs(AluCog):
             self.all_live_match_ids.append(live_game.id)
             p = next((x for x in live_game.participants if x.summoner_id == r.id), None)
             if p and p.champion_id in fav_champ_ids and r.last_edited != live_game.id:
-                query = """ SELECT channel_id 
-                            FROM fpc
-                            WHERE game=$4
-                                AND $1=ANY(characters) 
-                                AND $2=ANY(players)
-                                AND NOT channel_id=ANY(
-                                    SELECT channel_id
-                                    FROM lol_messages
-                                    WHERE match_id=$3
-                                )     
+                query = """ SELECT ls.channel_id 
+                            FROM lol_favourite_characters lfc
+                            JOIN lol_favourite_players lfp on lfc.guild_id = lfp.guild_id
+                            JOIN lol_settings ls on ls.guild_id = lfc.guild_id
+                            WHERE character_id=$1 AND player_name=$2
+                            AND NOT channel_id=ANY(SELECT channel_id FROM lol_messagesWHERE match_id=$3);     
                         """
                 channel_ids = [
-                    i for i, in await self.bot.pool.fetch(query, p.champion_id, r.player_id, live_game.id, 'lol')
+                    i for i, in await self.bot.pool.fetch(query, p.champion_id, r.name_lower, live_game.id, 'lol')
                 ]
                 if channel_ids:
                     log.debug(f'LF | {r.display_name} - {await champion.key_by_id(p.champion_id)}')
@@ -133,10 +129,10 @@ class LoLNotifs(AluCog):
             await self.bot.pool.execute(query, match.match_id, match.account_id)
 
     async def declare_matches_finished(self):
-        query = """ UPDATE lol_matches 
+        query = """ UPDATE lol_matches lm
                     SET is_finished=TRUE
-                    WHERE NOT id=ANY($1)
-                    AND lol_matches.is_finished IS DISTINCT FROM TRUE
+                    WHERE NOT match_id=ANY($1)
+                    AND lm.is_finished IS DISTINCT FROM TRUE
                 """
         await self.bot.pool.execute(query, self.all_live_match_ids)
 

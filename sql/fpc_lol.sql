@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS lol_favourite_characters (
 CREATE TABLE IF NOT EXISTS lol_accounts (
     id TEXT PRIMARY KEY,
     platform TEXT NOT NULL,
-    account_name TEXT NOT NULL,
+    account TEXT NOT NULL,
     name_lower TEXT NOT NULL,
     last_edited BIGINT, -- this column is needed bcs Riot API is not precise
     CONSTRAINT fk_player

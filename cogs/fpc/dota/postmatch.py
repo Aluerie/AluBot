@@ -39,16 +39,16 @@ class DotaPostMatchEdit(AluCog):
     async def fill_postmatch_players(self):
         self.postmatch_players = []
 
-        query = "SELECT * FROM old_dota_matches WHERE is_finished=TRUE"
+        query = "SELECT * FROM dota_matches WHERE is_finished=TRUE"
         for row in await self.bot.pool.fetch(query):
-            if row.id not in self.opendota_req_cache:
-                self.opendota_req_cache[row.id] = OpendotaRequestMatch(row.id, row.opendota_jobid)
+            if row.match_id not in self.opendota_req_cache:
+                self.opendota_req_cache[row.match_id] = OpendotaRequestMatch(row.match_id, row.opendota_jobid)
 
-            cache_item: OpendotaRequestMatch = self.opendota_req_cache[row.id]
+            cache_item: OpendotaRequestMatch = self.opendota_req_cache[row.match_id]
 
             if pl_dict_list := await cache_item.workflow(self.bot):
-                query = "SELECT * FROM old_dota_messages WHERE match_id=$1"
-                for r in await self.bot.pool.fetch(query, row.id):
+                query = "SELECT * FROM dota_messages WHERE match_id=$1"
+                for r in await self.bot.pool.fetch(query, row.match_id):
                     for player in pl_dict_list:
                         if player["hero_id"] == r.hero_id:
                             self.postmatch_players.append(
@@ -62,8 +62,8 @@ class DotaPostMatchEdit(AluCog):
                             )
             if cache_item.dict_ready:
                 self.opendota_req_cache.pop(row.id)
-                query = "DELETE FROM old_dota_matches WHERE id=$1"
-                await self.bot.pool.execute(query, row.id)
+                query = "DELETE FROM dota_matches WHERE match_id=$1"
+                await self.bot.pool.execute(query, row.match_id)
 
     @tasks.loop(minutes=1)
     async def postmatch_edits(self):

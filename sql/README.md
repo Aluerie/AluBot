@@ -38,7 +38,7 @@ Disclaimer: maybe some of these are bad. I'm learning.
 4. Recipe to add a new column
 
     ```sql
-    ALTER TABLE old_dota_matches
+    ALTER TABLE dota_matches
     ADD COLUMN live BOOLEAN DEFAULT TRUE;
     ```
 

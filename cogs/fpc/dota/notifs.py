@@ -81,7 +81,7 @@ class DotaNotifs(AluCog):
             proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
             proto_msg.header.routing_appid = 570  # type: ignore
 
-            query = "SELECT id FROM dota_accounts WHERE player_id=ANY($1)"
+            query = "SELECT id FROM dota_accounts WHERE name_lower=ANY($1)"
             steam_ids = [i for i, in await self.bot.pool.fetch(query, self.player_fav_ids)]
             proto_msg.body.steamid_request.extend(steam_ids)  # type: ignore
             resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
@@ -128,28 +128,28 @@ class DotaNotifs(AluCog):
 
     async def analyze_top_source_response(self):
         self.live_matches = []
-        query = "SELECT friend_id FROM dota_accounts WHERE player_id=ANY($1)"
+        query = "SELECT friend_id FROM dota_accounts WHERE name_lower=ANY($1)"
         friend_ids = [f for f, in await self.bot.pool.fetch(query, self.player_fav_ids)]
 
         for match in self.top_source_dict.values():
             our_persons = [x for x in match.players if x.account_id in friend_ids and x.hero_id in self.hero_fav_ids]
             for person in our_persons:
-                query = """ SELECT id, display_name, twitch_id 
+                query = """ SELECT name_lower, display_name, twitch_id 
                             FROM dota_players 
-                            WHERE id=(SELECT player_id FROM dota_accounts WHERE friend_id=$1)
+                            WHERE name_lower=(SELECT name_lower FROM dota_accounts WHERE friend_id=$1)
                         """
                 user = await self.bot.pool.fetchrow(query, person.account_id)
-
-                query = """ SELECT channel_id
-                            FROM dota_settings
-                            WHERE $1=ANY(characters)
-                                AND $2=ANY(players)
-                                AND NOT channel_id=ANY(
-                                    SELECT channel_id FROM dota_messages WHERE match_id=$3
-                                )          
-                        """
+                query = '''
+                            SELECT ds.channel_id
+                            FROM dota_favourite_characters dfc
+                            JOIN dota_favourite_players dfp on dfc.guild_id = dfp.guild_id
+                            JOIN dota_settings ds on ds.guild_id = dfc.guild_id
+                            WHERE character_id=$1 AND player_name=$2
+                            AND NOT ds.channel_id=ANY(SELECT channel_id FROM dota_messages WHERE match_id=$3);
+                        '''
                 channel_ids = [
-                    i for i, in await self.bot.pool.fetch(query, person.hero_id, user.id, match.match_id, 'dota')
+                    i
+                    for i, in await self.bot.pool.fetch(query, person.hero_id, user.name_lower, match.match_id)
                 ]
                 if channel_ids:
                     log.debug(f"DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}")
@@ -179,13 +179,13 @@ class DotaNotifs(AluCog):
             owner_name = ch.guild.owner.name if ch.guild.owner else 'Somebody'
             em.title = f"{owner_name}'s fav hero + player spotted"
             msg = await ch.send(embed=em, file=img_file)
-            query = """ INSERT INTO dota_matches (id) 
+            query = """ INSERT INTO dota_matches (match_id) 
                         VALUES ($1) 
                         ON CONFLICT DO NOTHING
                     """
             await self.bot.pool.execute(query, match.match_id)
             query = """ INSERT INTO dota_messages 
-                        (message_id, channel_id, match_id, hero_id, twitch_status) 
+                        (message_id, channel_id, match_id, character_id, twitch_status) 
                         VALUES ($1, $2, $3, $4, $5)
                     """
             await self.bot.pool.execute(query, msg.id, ch.id, match.match_id, match.hero_id, match.twitch_status)
@@ -193,7 +193,7 @@ class DotaNotifs(AluCog):
     async def declare_matches_finished(self):
         query = """ UPDATE dota_matches 
                     SET is_finished=TRUE
-                    WHERE NOT id=ANY($1)
+                    WHERE NOT match_id=ANY($1)
                     AND dota_matches.is_finished IS DISTINCT FROM TRUE
                 """
         await self.bot.pool.execute(query, list(self.top_source_dict.keys()))

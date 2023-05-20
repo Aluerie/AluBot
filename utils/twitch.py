@@ -74,14 +74,16 @@ class TwitchClient(twitchio.Client):
 
     async def get_live_lol_player_ids(self, pool: Pool) -> List[int]:
         """Get twitch ids for live League of Legends streams"""
-        query = f"""SELECT twitch_id, id
+        query = f"""SELECT twitch_id, name_lower
                     FROM lol_players
-                    WHERE id=ANY(
-                        SELECT DISTINCT(unnest(players)) FROM fpc WHERE game=$1
+                    WHERE name_lower=ANY(
+                        SELECT DISTINCT player_name FROM lol_favourite_players
                     )
                 """
-        twitch_id_to_fav_id_dict = {r.twitch_id: r.id for r in await pool.fetch(query, 'lol')}
-
+        twitch_id_to_fav_id_dict = {r.twitch_id: r.name_lower for r in await pool.fetch(query)}
+        if not twitch_id_to_fav_id_dict:
+            # otherwise fetch_streams fetches top100 streams and we dont want that.
+            return []
         live_twitch_ids = [
             i.user.id
             for i in await self.fetch_streams(user_ids=list(twitch_id_to_fav_id_dict.keys()))

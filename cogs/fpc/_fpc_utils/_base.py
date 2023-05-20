@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext, const
+from utils import AluCog, const
 from utils.pagination import EnumeratedPages
 
 if TYPE_CHECKING:
@@ -299,7 +299,7 @@ class FPCBase(AluCog):
         warn_e.set_author(name=self.game_mention, icon_url=self.game_icon)
         if not await ntr.client.prompt(ntr, embed=warn_e):
             assert isinstance(ntr.channel, discord.TextChannel)
-            await ntr.channel.send('Aborting...', delete_after=5.0)
+            await ntr.channel.send('Aborting...')
             return
 
         e = discord.Embed(colour=self.colour)
@@ -312,7 +312,7 @@ class FPCBase(AluCog):
         warn_e.set_author(name=ntr.user, icon_url=ntr.user.display_avatar.url)
         # cmd_str = ' '.join(f'{k}: {v}' for k, v in flags.__dict__.items())
         # warn_em.add_field(name='Command', value=f'`$dota stream add {cmd_str}`', inline=False)
-        cmd_usage_str = f"name: {player_dict['display_name']} {self.cmd_usage_str(**account_dict)}"
+        cmd_usage_str = f"name: {player_dict['display_name']} {self.cmd_usage_str(**account_dict|player_dict)}"
         warn_e.add_field(name='Command', value=f'{self.game} player add {cmd_usage_str}')
         await self.bot.hideout.global_logs.send(embed=warn_e)
 

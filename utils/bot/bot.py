@@ -255,7 +255,7 @@ class AluBot(commands.Bot):
         content: str = discord.utils.MISSING,
         embed: discord.Embed = discord.utils.MISSING,
         timeout: float = 100.0,
-        delete_after: bool = True,
+        delete_after: bool = False,
         author_id: Optional[int] = None,
     ) -> Optional[bool]:
         """

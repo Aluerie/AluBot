@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS dota_favourite_characters (
     CONSTRAINT fk_guild_id
         FOREIGN KEY (guild_id)
         REFERENCES dota_settings(guild_id) ON DELETE CASCADE
-
 );
 
 CREATE TABLE IF NOT EXISTS dota_accounts (

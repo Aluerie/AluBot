@@ -100,7 +100,7 @@ class FPCSettingsBase(AluCog):
             msg = 'I do not have permission to `send_messages` in that channel'
             raise app_commands.BotMissingPermissions([msg])
 
-        query = f'''INSERT INTO {self.game} (guild_id, guild_name, channel_id)
+        query = f'''INSERT INTO {self.game}_settings (guild_id, guild_name, channel_id)
                     VALUES ($1, $2, $3)
                     ON CONFLICT (guild_id) DO UPDATE
                         SET channel_id=$3;

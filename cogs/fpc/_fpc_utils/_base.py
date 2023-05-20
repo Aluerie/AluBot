@@ -98,7 +98,7 @@ class FPCBase(AluCog):
 
         e = discord.Embed(colour=self.colour, title='FPC (Favourite Player+Character) channel set')
         e.description = f'Notifications will be sent to {ch.mention}.'
-        e.set_footer(icon_url=self.game_icon, text=self.game_mention)
+        e.set_author(name=self.game_mention, icon_url=self.game_icon)
         await ntr.response.send_message(embed=e)
 
     async def get_fpc_channel(self, ntr: discord.Interaction[AluBot]) -> discord.TextChannel:
@@ -136,7 +136,7 @@ class FPCBase(AluCog):
             f'Notifications will not be sent to {ch.mention} anymore.'
             'Your data was not affected in case it was a miss-click or something.'
         )
-        e.set_footer(icon_url=self.game_icon, text=self.game_mention)
+        e.set_author(name=self.game_mention, icon_url=self.game_icon)
         await ntr.response.send_message(embed=e)
 
     async def channel_check(self, ntr: discord.Interaction[AluBot]) -> None:
@@ -147,7 +147,7 @@ class FPCBase(AluCog):
 
         e = discord.Embed(colour=self.colour, title='FPC (Favourite Player+Character) channel check')
         e.description = f'Notifications are set to be sent to {ch.mention}.'
-        e.set_footer(icon_url=self.game_icon, text=self.game_mention)
+        e.set_author(name=self.game_mention, icon_url=self.game_icon)
         await ntr.response.send_message(embed=e)
 
     @staticmethod
@@ -208,6 +208,8 @@ class FPCBase(AluCog):
             colour=self.colour,
             title=f"List of {self.game_mention} players in Database",
             footer_text=f'With love, {ntr.guild.me.display_name}',
+            author_name=self.game_mention,
+            author_icon=self.game_icon
         )
         await pgs.start()
 
@@ -269,7 +271,7 @@ class FPCBase(AluCog):
             name=f'Successfully added the account to the database',
             value=self.player_name_acc_string(player_dict['display_name'], player_dict['twitch_id'], **account_dict),
         )
-        e.set_footer(text=self.game_mention, icon_url=self.game_icon)
+        e.set_author(name=self.game_mention, icon_url=self.game_icon)
         await ntr.followup.send(embed=e)
         e.colour = const.MaterialPalette.green(shade=200)
         e.set_author(name=ntr.user, icon_url=ntr.user.display_avatar.url)
@@ -294,7 +296,7 @@ class FPCBase(AluCog):
             'This information will be sent to Aluerie. Please, double check before confirming.'
         )
         warn_e.add_field(name='Request to add an account into the database', value=player_string)
-        warn_e.set_footer(text=self.game_mention, icon_url=self.game_icon)
+        warn_e.set_author(name=self.game_mention, icon_url=self.game_icon)
         if not await ntr.client.prompt(ntr, embed=warn_e):
             assert isinstance(ntr.channel, discord.TextChannel)
             await ntr.channel.send('Aborting...', delete_after=5.0)
@@ -372,14 +374,14 @@ class FPCBase(AluCog):
         e = discord.Embed(colour=self.colour)
         msg = 'Successfully removed account(-s) from the database'
         e.add_field(name=msg, value=f'{ans_name}{" - " + str(account_id) if account_id else ""}')
-        e.set_footer(text=self.game_mention, icon_url=self.game_icon)
+        e.set_author(name=self.game_mention, icon_url=self.game_icon)
         await ntr.followup.send(embed=e)
 
-    @staticmethod
     def construct_the_embed(
-        s_names: List[str], a_names: List[str], f_names: List[str], *, gather_word: str, mode_add: bool
+        self, s_names: List[str], a_names: List[str], f_names: List[str], *, gather_word: str, mode_add: bool
     ) -> discord.Embed:
         e = discord.Embed()
+        e.set_author(name=self.game_mention, icon_url=self.game_icon)
         if s_names:
             e.colour = const.MaterialPalette.green(shade=500)
             msg = f"Success: {gather_word} were {'added to' if mode_add else 'removed from'} your list"
@@ -500,7 +502,7 @@ class FPCBase(AluCog):
         player_names = [self.player_name_string(row.display_name, row.twitch_id) for row in rows]
         e = discord.Embed(title=f'List of favourite players', colour=self.colour)
         e.description = '\n'.join(player_names)
-        e.set_footer(text=self.game_mention, icon_url=self.game_icon)
+        e.set_author(name=self.game_mention, icon_url=self.game_icon)
         await ntr.followup.send(embed=e)
 
     async def character_add_remove(

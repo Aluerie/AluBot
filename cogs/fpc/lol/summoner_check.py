@@ -17,10 +17,13 @@ if TYPE_CHECKING:
 class LoLSummonerNameCheck(AluCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        self.check_acc_renames.start()
-
+        
+    async def cog_load(self) -> None:
+        self.check_summoner_renames.start()
+        return await super().cog_load()
+    
     @tasks.loop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.timezone.utc))
-    async def check_acc_renames(self):
+    async def check_summoner_renames(self):
         if datetime.datetime.now(datetime.timezone.utc).day != 17:
             return
 
@@ -33,6 +36,6 @@ class LoLSummonerNameCheck(AluCog):
                 query = 'UPDATE lolaccs SET accname=$1 WHERE id=$2'
                 await self.bot.pool.execute(query, person.name, row.id)
 
-    @check_acc_renames.before_loop
+    @check_summoner_renames.before_loop
     async def before(self):
         await self.bot.wait_until_ready()

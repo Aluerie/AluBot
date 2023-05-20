@@ -43,8 +43,8 @@ class LoLNotifs(AluCog):
     async def fill_live_matches(self):
         self.live_matches, self.all_live_match_ids = [], []
 
-        query = 'SELECT DISTINCT(unnest(characters)) FROM fpc WHERE game=lol'
-        fav_champ_ids = [r for r, in await self.bot.pool.fetch(query)]  # row.unnest
+        query = 'SELECT DISTINCT(unnest(characters)) FROM fpc WHERE game=$1'
+        fav_champ_ids = [r for r, in await self.bot.pool.fetch(query, 'lol')]  # row.unnest
 
         live_fav_player_ids = await self.bot.twitch.get_live_lol_player_ids(pool=self.bot.pool)
 

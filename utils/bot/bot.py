@@ -5,7 +5,7 @@ import logging
 import os
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterable, Optional, Union, overload
+from typing import TYPE_CHECKING, Dict, Iterable, Optional, Union
 
 import discord
 from aiohttp import ClientSession

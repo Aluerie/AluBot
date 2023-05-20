@@ -40,23 +40,24 @@ class ConfirmationView(discord.ui.View):
         if self.delete_after and self.message:
             await self.message.delete()
 
-    @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
-    async def confirm(self, ntr: discord.Interaction, _: discord.ui.Button):
-        self.value = True
+    async def button_callback(self, ntr: discord.Interaction, yes_no: bool):
+        self.value = yes_no
         await ntr.response.defer()
         if self.delete_after:
             await ntr.delete_original_response()
-
+        else:
+            for item in self.children:
+                item.disabled = True  # type: ignore
+            await ntr.edit_original_response(view=self)
         self.stop()
+
+    @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
+    async def confirm(self, ntr: discord.Interaction, _: discord.ui.Button):
+        await self.button_callback(ntr, True)
 
     @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
     async def cancel(self, ntr: discord.Interaction, _: discord.ui.Button):
-        self.value = False
-        await ntr.response.defer()
-        if self.delete_after:
-            await ntr.delete_original_response()
-
-        self.stop()
+        await self.button_callback(ntr, False)
 
 
 class AluContext(commands.Context):
@@ -83,46 +84,21 @@ class AluContext(commands.Context):
     async def prompt(
         self,
         *,
-        content: Optional[str] = None,
-        embed: Optional[discord.Embed] = None,
-        timeout: float = 60.0,
+        content: str = discord.utils.MISSING,
+        embed: discord.Embed = discord.utils.MISSING,
+        timeout: float = 100.0,
         delete_after: bool = True,
         author_id: Optional[int] = None,
     ) -> Optional[bool]:
-        """
-        An interactive reaction confirmation dialog.
-        Parameters
-        -----------
-        content: str
-            Text message to show along with the prompt.
-        embed:
-            Embed to show along with the prompt.
-        timeout: float
-            How long to wait before returning.
-        delete_after: bool
-            Whether to delete the confirmation message after we're done.
-        author_id: Optional[int]
-            The member who should respond to the prompt. Defaults to the author of the
-            Context's message.
-        Returns
-        --------
-        Optional[bool]
-            ``True`` if explicit confirm,
-            ``False`` if explicit deny,
-            ``None`` if deny due to timeout
-        ----
-        """
-        if content is None and embed is None:
-            raise TypeError('Either content or embed should be provided')
-
-        author_id = author_id or self.author.id
-        view = ConfirmationView(timeout=timeout, delete_after=delete_after, author_id=author_id)
-        if embed:
-            view.message = await self.reply(content=content, embed=embed, view=view)
-        else:
-            view.message = await self.reply(content=content, view=view)
-        await view.wait()
-        return view.value
+        """A shortcut to prompt function from bot class."""
+        return await self.bot.prompt(
+            self,
+            content=content,
+            embed=embed,
+            timeout=timeout,
+            delete_after=delete_after,
+            author_id=author_id,
+        )
 
     async def scnf(self):
         if self.invoked_subcommand is None:

@@ -55,7 +55,7 @@ class DotaNotifsSettings(FPCBase, name="Dota 2"):
             character_id_by_name=hero.id_by_name,
             character_name_by_id=hero.name_by_id,
             all_character_names=hero.get_all_hero_names,
-            character_gather_word="heroes",
+            character_word_plural="heroes",
             **kwargs,
         )
 

@@ -46,7 +46,7 @@ class LoLNotifsSettings(FPCBase, name='LoL'):
             character_name_by_id=champion.name_by_id,
             character_id_by_name=champion.id_by_name,
             all_character_names=get_all_champ_names,
-            character_gather_word='champs',
+            character_word_plural='champs',
             **kwargs,
         )
 

@@ -27,21 +27,30 @@ class FPCBase(AluCog):
 
     Attributes
     -----------
-    colour: :class:`discord.Colour`
+    colour: discord.Colour
         The colour that will be used for all embeds related to this game.
-    game: :class:`str`
+    game: str
         Name of the game. This is used for `game` column in `fpc` SQL table.
         Important!!!
         1) It's assumed that SQL tables created for FPC are named accordingly.
         Meaning, f'{self.game}_accounts' should be a table of accounts for the game.
         2) name for slash command is assumed to be /{self.game}, i.e. /dota player add
-    display_game: :class:`str`
+    display_game: str
         Display name of the game. This is used in response strings mentioning the game.
-    display_icon: :class:`str`
+    display_icon: str
         Display icon for the game. This is used in footnote icons mentioning the game.
-    extra_account_info_columns: :class:`List[str]`
+    extra_account_info_columns: List[str]
         Extra column-names for columns in "{self.game}_accounts" table.
         For example, you need `platform` as region name in League of Legends in order to find the account.
+    character_name_by_id: Callable[[int], Awaitable[str]]
+        Function that gets character name by its id, i.e. 1 -> 'Anti-Mage'.
+    character_id_by_name: Callable[[str], Awaitable[int]]
+        Function that gets character id by its name, i.e. 'Anti-Mage' -> 1.
+    all_character_names: Callable[[], Awaitable[List[str]]]
+        Function that fetches a list of all characters from the game.
+    character_word_plural: str
+        Just a word to describe the characters for the game, 
+        i.e. "heroes" for Dota 2, "champions" for LoL, "agents" for Valorant.
     """
 
     def __init__(
@@ -56,7 +65,7 @@ class FPCBase(AluCog):
         character_name_by_id: Callable[[int], Awaitable[str]],
         character_id_by_name: Callable[[str], Awaitable[int]],
         all_character_names: Callable[[], Awaitable[List[str]]],
-        character_gather_word: str,
+        character_word_plural: str,
         # **kwargs,
     ) -> None:
         super().__init__(bot)  # , *args, **kwargs)
@@ -68,7 +77,7 @@ class FPCBase(AluCog):
         self.character_name_by_id: Callable[[int], Awaitable[str]] = character_name_by_id
         self.character_id_by_name: Callable[[str], Awaitable[int]] = character_id_by_name
         self.all_character_names: Callable[[], Awaitable[List[str]]] = all_character_names
-        self.character_gather_word: str = character_gather_word
+        self.character_gather_word: str = character_word_plural
 
     async def channel_set(
         self,
@@ -209,7 +218,7 @@ class FPCBase(AluCog):
             title=f"List of {self.game_mention} players in Database",
             footer_text=f'With love, {ntr.guild.me.display_name}',
             author_name=self.game_mention,
-            author_icon=self.game_icon
+            author_icon=self.game_icon,
         )
         await pgs.start()
 

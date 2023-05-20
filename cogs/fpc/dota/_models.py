@@ -387,7 +387,7 @@ class OpendotaRequestMatch:
             if self.tries >= pow(3, self.fails) - 1:
                 try:
                     self.job_id = await self.post_request(bot)
-                    query = "UPDATE dota_matches SET opendota_jobid=$1 WHERE id=$2"
+                    query = "UPDATE old_dota_matches SET opendota_jobid=$1 WHERE id=$2"
                     await bot.pool.execute(query, self.job_id, self.match_id)
                     self.tries, self.fails = 0, 0
                 except OpendotaNotOK:

@@ -38,7 +38,7 @@ Disclaimer: maybe some of these are bad. I'm learning.
 4. Recipe to add a new column
 
     ```sql
-    ALTER TABLE dota_matches
+    ALTER TABLE old_dota_matches
     ADD COLUMN live BOOLEAN DEFAULT TRUE;
     ```
 
@@ -58,7 +58,7 @@ Disclaimer: maybe some of these are bad. I'm learning.
     FROM guilds
     WHERE id = 759916212842659850))
     SELECT display_name
-    FROM dota_players p
+    FROM old_dota_players p
     WHERE NOT p.id=ANY(foo)
     ORDER BY similarity(display_name, 'gorgc') DESC
     LIMIT 12;

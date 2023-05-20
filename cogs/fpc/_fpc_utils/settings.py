@@ -13,9 +13,8 @@ from utils.pagination import EnumeratedPages
 if TYPE_CHECKING:
     from utils import AluBot
 
-__all__ = (
-    'FPCSettingsBase',
-)
+__all__ = ('FPCSettingsBase',)
+
 
 class FPCSettingsBase(AluCog):
     """Base class for cogs representing FPC (Favourite Player+Character) feature
@@ -101,12 +100,12 @@ class FPCSettingsBase(AluCog):
             msg = 'I do not have permission to `send_messages` in that channel'
             raise app_commands.BotMissingPermissions([msg])
 
-        query = f'''INSERT INTO fpc (game, guild_id, channel_id)
+        query = f'''INSERT INTO {self.game} (guild_id, guild_name, channel_id)
                     VALUES ($1, $2, $3)
-                    ON CONFLICT (game, guild_id) DO UPDATE
+                    ON CONFLICT (guild_id) DO UPDATE
                         SET channel_id=$3;
                 '''
-        await ntr.client.pool.execute(query, self.game, ntr.guild.id, ch.id)
+        await ntr.client.pool.execute(query, ntr.guild.id, ntr.guild.name, ch.id)
 
         e = discord.Embed(colour=self.colour, title='FPC (Favourite Player+Character) channel set')
         e.description = f'Notifications will be sent to {ch.mention}.'
@@ -116,8 +115,8 @@ class FPCSettingsBase(AluCog):
     async def get_fpc_channel(self, ntr: discord.Interaction[AluBot]) -> discord.TextChannel:
         assert ntr.guild
 
-        query = f'SELECT channel_id FROM fpc WHERE guild_id=$1 AND game=$2'
-        ch_id = await ntr.client.pool.fetchval(query, ntr.guild.id, self.game)
+        query = f'SELECT channel_id FROM {self.game}_settings WHERE guild_id=$1'
+        ch_id = await ntr.client.pool.fetchval(query, ntr.guild.id)
 
         if ch_id is None:
             # TODO: better error, maybe its own embed ?
@@ -137,12 +136,12 @@ class FPCSettingsBase(AluCog):
 
         ch = await self.get_fpc_channel(ntr)
 
-        query = f'''INSERT INTO fpc (game, guild_id, channel_id)
+        query = f'''INSERT INTO fpc (guild_id, guild_name, channel_id)
                     VALUES ($1, $2, NULL)
                     ON CONFLICT (game, guild_id) DO UPDATE
                         SET channel_id=NULL;
                 '''
-        await ntr.client.pool.execute(query, ntr.guild.id)
+        await ntr.client.pool.execute(query, ntr.guild.id, ntr.guild.name)
         e = discord.Embed(colour=self.colour, title='FPC (Favourite Player+Character) channel disabled')
         e.description = (
             f'Notifications will not be sent to {ch.mention} anymore.'
@@ -186,14 +185,16 @@ class FPCSettingsBase(AluCog):
 
         assert ntr.guild
 
-        query = f'SELECT players FROM fpc WHERE guild_id=$1 AND game=$2'
-        favourite_player_list = await ntr.client.pool.fetchval(query, ntr.guild.id, self.game) or []
+        query = f'SELECT player_name FROM {self.game}_favourite_players WHERE guild_id=$1'
+        favourite_player_list = [r for r, in await ntr.client.pool.fetch(query, ntr.guild.id, self.game)]
 
-        columns = ', '.join(['player_id', 'display_name', 'twitch_id', 'a.id'] + self.extra_account_info_columns)
+        columns = ', '.join(
+            ['p.name_lower', 'display_name', 'twitch_id', 'a.name_lower'] + self.extra_account_info_columns
+        )
         query = f"""SELECT {columns}
                     FROM {self.game}_players p
                     JOIN {self.game}_accounts a
-                    ON p.id = a.player_id
+                    ON p.name_lower = a.name_lower
                     ORDER BY {'display_name'} 
                 """
         rows = await ntr.client.pool.fetch(query) or []
@@ -240,10 +241,10 @@ class FPCSettingsBase(AluCog):
     async def check_if_already_in_database(self, account_dict: dict):
         query = f""" SELECT display_name, name_lower
                     FROM {self.game}_players 
-                    WHERE id =(
-                        SELECT player_id
+                    WHERE name_lower =(
+                        SELECT name_lower
                         FROM {self.game}_accounts
-                        WHERE id=$1
+                        WHERE steam_id=$1
                     )
                 """
         user = await self.bot.pool.fetchrow(query, account_dict['id'])

@@ -58,40 +58,6 @@ CREATE TABLE IF NOT EXISTS guilds (
     birthday_role BIGINT
 );
 
-CREATE TABLE IF NOT EXISTS dota_players (
-    id SERIAL PRIMARY KEY,
-    name_lower TEXT NOT NULL UNIQUE,
-    display_name TEXT NOT NULL,
-    twitch_id BIGINT
-);
-
-CREATE TABLE IF NOT EXISTS dota_accounts (
-    id BIGINT PRIMARY KEY,
-    friend_id BIGINT,
-    player_id INT NOT NULL,
-    CONSTRAINT fk_player
-        FOREIGN KEY (player_id)
-        REFERENCES dota_players(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS dota_matches (
-    id BIGINT PRIMARY KEY,
-    is_finished BOOLEAN DEFAULT FALSE,
-    opendota_jobid BIGINT
-);
-
-CREATE TABLE IF NOT EXISTS dota_messages (
-    message_id BIGINT PRIMARY KEY,
-    channel_id BIGINT NOT NULL,
-    match_id BIGINT NOT NULL,
-    hero_id INTEGER NOT NULL,
-    twitch_status TEXT NOT NULL,
-
-    CONSTRAINT fk_match
-        FOREIGN KEY (match_id)
-            REFERENCES dota_matches(id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS lol_players (
     id SERIAL PRIMARY KEY,
     name_lower TEXT NOT NULL UNIQUE,
@@ -205,14 +171,3 @@ CREATE TABLE IF NOT EXISTS valve_devs (
     login TEXT PRIMARY KEY
 );
 
-CREATE TABLE IF NOT EXISTS fpc (
-    game TEXT NOT NULL,
-    guild_id BIGINT NOT NULL,
-    channel_id BIGINT,
-
-    PRIMARY KEY (game, guild_id),
-
-    players INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
-    characters INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
-    spoil BOOLEAN DEFAULT TRUE
-);

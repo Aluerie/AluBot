@@ -121,7 +121,7 @@ class FPCSettingsBase(AluCog):
         if ch_id is None:
             # TODO: better error, maybe its own embed ?
             msg = (
-                f'FPC (Favourite Player+Character) notifications channel for {self.game_mention}'
+                f'FPC (Favourite Player+Character) notifications channel for {self.game_mention} '
                 'is not set or already was reset.'
             )
             raise commands.BadArgument(msg)
@@ -186,7 +186,7 @@ class FPCSettingsBase(AluCog):
         assert ntr.guild
 
         query = f'SELECT player_name FROM {self.game}_favourite_players WHERE guild_id=$1'
-        favourite_player_list = [r for r, in await ntr.client.pool.fetch(query, ntr.guild.id, self.game)]
+        favourite_player_list = [r for r, in await ntr.client.pool.fetch(query, ntr.guild.id)]
 
         columns = ', '.join(
             ['p.name_lower', 'display_name', 'twitch_id', 'a.name_lower'] + self.extra_account_info_columns
@@ -244,7 +244,7 @@ class FPCSettingsBase(AluCog):
                     WHERE name_lower =(
                         SELECT name_lower
                         FROM {self.game}_accounts
-                        WHERE steam_id=$1
+                        WHERE id=$1
                     )
                 """
         user = await self.bot.pool.fetchrow(query, account_dict['id'])

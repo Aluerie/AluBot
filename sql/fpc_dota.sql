@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS dota_favourite_characters (
 );
 
 CREATE TABLE IF NOT EXISTS dota_accounts (
-    steam_id BIGINT PRIMARY KEY,
+    id BIGINT PRIMARY KEY,
     friend_id BIGINT,
     name_lower TEXT NOT NULL,
     CONSTRAINT fk_player

@@ -489,7 +489,7 @@ class FPCSettingsBase(AluCog):
         assert ntr.guild
 
         query = f'SELECT player_name FROM {self.game}_favourite_players WHERE guild_id=$1'
-        fav_ids = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id, self.game)]
+        fav_ids = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id)]
         clause = 'NOT' if mode_add else ''
         query = f"""SELECT display_name
                     FROM {self.game}_players
@@ -507,7 +507,7 @@ class FPCSettingsBase(AluCog):
         assert ntr.guild
 
         await ntr.response.defer()
-        query = f'SELECT players FROM fpc WHERE guild_id=$1 AND game=$2'
+        query = f'SELECT player_name FROM {self.game}_favourite_players WHERE guild_id=$1 AND game=$2'
         fav_ids = await self.bot.pool.fetchval(query, ntr.guild.id, self.game) or []
 
         query = f"""SELECT display_name, twitch_id 

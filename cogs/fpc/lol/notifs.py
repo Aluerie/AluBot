@@ -9,6 +9,7 @@ from discord.ext import commands, tasks
 from pyot.core.exceptions import NotFound, ServerError
 from pyot.utils.lol import champion
 
+from utils import AluCog
 from utils.lol.const import SOLO_RANKED_5v5_QUEUE_ENUM, platform_to_region
 
 from ._models import LiveMatch
@@ -23,9 +24,9 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class LoLNotifs(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+class LoLNotifs(AluCog):
+    def __init__(self, bot: AluBot, *args, **kwargs):
+        super().__init__(bot, *args, **kwargs)
         self.live_matches: List[LiveMatch] = []
         self.all_live_match_ids: List[int] = []
 

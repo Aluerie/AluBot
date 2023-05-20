@@ -3,8 +3,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, List
 
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from pyot.core.exceptions import NotFound
+
+from utils import AluCog
 
 from ._models import PostMatchPlayer
 
@@ -18,9 +20,9 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class LoLFeedPostMatchEdit(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+class LoLFeedPostMatchEdit(AluCog):
+    def __init__(self, bot: AluBot, *args, **kwargs):
+        super().__init__(bot, *args, **kwargs)
         self.postmatch_players: List[PostMatchPlayer] = []
 
     async def cog_load(self) -> None:

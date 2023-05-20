@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING
 
 import datetime
 
-from discord.ext import commands, tasks
+from discord.ext import tasks
+
+from utils import AluCog
 
 # need to import the last because in import above we activate 'lol' model
 from pyot.models import lol  # isort: skip
@@ -12,9 +14,9 @@ if TYPE_CHECKING:
     from utils import AluBot
 
 
-class LoLSummonerNameCheck(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+class LoLSummonerNameCheck(AluCog):
+    def __init__(self, bot: AluBot, *args, **kwargs):
+        super().__init__(bot, *args, **kwargs)
         self.check_acc_renames.start()
 
     @tasks.loop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.timezone.utc))

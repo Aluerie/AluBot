@@ -104,8 +104,8 @@ class FPCBase(AluCog):
     async def get_fpc_channel(self, ntr: discord.Interaction[AluBot]) -> discord.TextChannel:
         assert ntr.guild
 
-        query = f'SELECT channel_id FROM fpc WHERE guild_id=$1'
-        ch_id = await ntr.client.pool.fetchval(query, ntr.guild.id)
+        query = f'SELECT channel_id FROM fpc WHERE guild_id=$1 AND game=$2'
+        ch_id = await ntr.client.pool.fetchval(query, ntr.guild.id, self.game)
 
         if ch_id is None:
             # TODO: better error, maybe its own embed ?
@@ -174,8 +174,8 @@ class FPCBase(AluCog):
 
         assert ntr.guild
 
-        query = f'SELECT players FROM fpc WHERE guild_id=$1'
-        favourite_player_list = await ntr.client.pool.fetchval(query, ntr.guild.id) or []
+        query = f'SELECT players FROM fpc WHERE guild_id=$1 AND game=$2'
+        favourite_player_list = await ntr.client.pool.fetchval(query, ntr.guild.id, self.game) or []
 
         columns = ', '.join(['player_id', 'display_name', 'twitch_id', 'a.id'] + self.extra_account_info_columns)
         query = f"""SELECT {columns}
@@ -419,8 +419,8 @@ class FPCBase(AluCog):
         if not player_names:
             raise commands.BadArgument("You cannot use this command without naming at least one player.")
 
-        query = f'SELECT players FROM fpc WHERE guild_id=$1'
-        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id) or []  # type: ignore
+        query = f'SELECT players FROM fpc WHERE guild_id=$1 AND game=$2'
+        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id, self.game) or []  # type: ignore
         query = f"""SELECT id, name_lower, display_name 
                     FROM {self.game}_players
                     WHERE name_lower=ANY($1)
@@ -468,8 +468,8 @@ class FPCBase(AluCog):
         """Base function for player add/remove autocomplete"""
         assert ntr.guild
 
-        query = f'SELECT players FROM fpc WHERE guild_id=$1'
-        fav_ids = await self.bot.pool.fetch(query, ntr.guild.id) or []
+        query = f'SELECT players FROM fpc WHERE guild_id=$1 AND game=$2'
+        fav_ids = await self.bot.pool.fetch(query, ntr.guild.id, self.game) or []
         clause = 'NOT' if mode_add else ''
         query = f"""SELECT display_name
                     FROM {self.game}_players
@@ -487,8 +487,8 @@ class FPCBase(AluCog):
         assert ntr.guild
 
         await ntr.response.defer()
-        query = f'SELECT players FROM fpc WHERE guild_id=$1'
-        fav_ids = await self.bot.pool.fetchval(query, ntr.guild.id) or []
+        query = f'SELECT players FROM fpc WHERE guild_id=$1 AND game=$2'
+        fav_ids = await self.bot.pool.fetchval(query, ntr.guild.id, self.game) or []
 
         query = f"""SELECT display_name, twitch_id 
                     FROM {self.game}_players
@@ -578,8 +578,8 @@ class FPCBase(AluCog):
     async def character_list(self, ntr: discord.Interaction[AluBot]) -> None:
         """Base function for character list commands"""
         await ntr.response.defer()
-        query = f'SELECT characters FROM fpc WHERE guild_id=$1'
-        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id) or []  # type: ignore
+        query = f'SELECT characters FROM fpc WHERE guild_id=$1 AND game=$2'
+        fav_ids: List[int] = await ntr.client.pool.fetchval(query, ntr.guild.id, self.game) or []  # type: ignore
         fav_names = [f'{await self.character_name_by_id(i)} - `{i}`' for i in fav_ids]
 
         e = discord.Embed(title=f'List of your favourite {self.character_gather_word}', colour=self.colour)

@@ -29,6 +29,7 @@ def get_extensions(test: bool) -> tuple:
             module.name
             for sf in non_ext_subfolders
             for module in iter_modules(path=[f'cogs/{sf}'], prefix=f'cogs.{sf}.')
+            if not module.name.rsplit('.', 1)[-1].startswith('_')
         )
 
         extensions = my_extensions + subfolder_extensions

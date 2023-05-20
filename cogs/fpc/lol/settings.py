@@ -13,7 +13,7 @@ from utils import const
 from utils.lol.const import LOL_LOGO, LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
 from utils.lol.utils import get_all_champ_names, get_meraki_patch, get_pyot_meraki_champ_diff_list
 
-from .._fpc_utils._base import FPCBase
+from .._fpc_utils import FPCSettingsBase
 from ._models import Account
 
 # need to import the last because in import above we activate 'lol' model
@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class LoLNotifsSettings(FPCBase, name='LoL'):
+class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
     """Commands to set up fav champ + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \

@@ -13,8 +13,11 @@ from utils.pagination import EnumeratedPages
 if TYPE_CHECKING:
     from utils import AluBot
 
+__all__ = (
+    'FPCSettingsBase',
+)
 
-class FPCBase(AluCog):
+class FPCSettingsBase(AluCog):
     """Base class for cogs representing FPC (Favourite Player+Character) feature
     for different games:
 
@@ -49,7 +52,7 @@ class FPCBase(AluCog):
     all_character_names: Callable[[], Awaitable[List[str]]]
         Function that fetches a list of all characters from the game.
     character_word_plural: str
-        Just a word to describe the characters for the game, 
+        Just a word to describe the characters for the game,
         i.e. "heroes" for Dota 2, "champions" for LoL, "agents" for Valorant.
     """
 
@@ -261,19 +264,22 @@ class FPCBase(AluCog):
                         INSERT INTO {self.game}_players
                             (name_lower, display_name, twitch_id)
                                 VALUES ($1, $2, $3)
-                            ON CONFLICT DO NOTHING
+                            ON CONFLICT (name_lower) DO NOTHING
                             RETURNING id
                     )
                     SELECT * FROM e
                     UNION 
                         SELECT {'id'} FROM {self.game}_players WHERE {'name_lower'}=$1
                 """
+        print(player_dict)
         player_id = await ntr.client.pool.fetchval(query, *player_dict.values())
         dollars = [f'${i}' for i in range(1, len(self.extra_account_info_columns) + 3)]  # [$1, $2, ... ]
         query = f"""INSERT INTO {self.game}_accounts
                     (player_id, id, {', '.join(self.extra_account_info_columns)})
                     VALUES {'('}{', '.join(dollars)}{')'}
                 """
+        print(player_id)
+        print(account_dict)
         await ntr.client.pool.execute(query, player_id, *account_dict.values())
         e = discord.Embed(colour=self.colour)
         e.add_field(

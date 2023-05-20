@@ -3,12 +3,14 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING
 
-from discord.ext import commands, tasks
+from discord.ext import tasks
 
 from utils import AluCog
 
 if TYPE_CHECKING:
     from utils import AluBot
+
+__all__ = ('TwitchAccountCheckBase',)
 
 
 class TwitchAccountCheckBase(AluCog):

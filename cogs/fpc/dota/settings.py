@@ -12,7 +12,7 @@ from utils import const
 from utils.dota import hero
 from utils.dota.const import DOTA_LOGO
 
-from .._fpc_utils._base import FPCBase
+from .._fpc_utils import FPCSettingsBase
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class DotaNotifsSettings(FPCBase, name="Dota 2"):
+class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
     """Commands to set up fav hero + player notifs.
 
     These commands allow you to choose players from our database as your favorite \

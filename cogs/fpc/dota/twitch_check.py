@@ -1,4 +1,4 @@
-from .._fpc_utils._twitch_check import TwitchAccountCheckBase
+from .._fpc_utils.twitch_check import TwitchAccountCheckBase
 
 
 class DotaTwitchAccountCheck(TwitchAccountCheckBase):

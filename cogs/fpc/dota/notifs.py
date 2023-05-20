@@ -81,7 +81,7 @@ class DotaNotifs(AluCog):
             proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
             proto_msg.header.routing_appid = 570  # type: ignore
 
-            query = "SELECT id FROM old_dota_accounts WHERE player_id=ANY($1)"
+            query = "SELECT id FROM dota_accounts WHERE player_id=ANY($1)"
             steam_ids = [i for i, in await self.bot.pool.fetch(query, self.player_fav_ids)]
             proto_msg.body.steamid_request.extend(steam_ids)  # type: ignore
             resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
@@ -128,25 +128,25 @@ class DotaNotifs(AluCog):
 
     async def analyze_top_source_response(self):
         self.live_matches = []
-        query = "SELECT friend_id FROM old_dota_accounts WHERE player_id=ANY($1)"
+        query = "SELECT friend_id FROM dota_accounts WHERE player_id=ANY($1)"
         friend_ids = [f for f, in await self.bot.pool.fetch(query, self.player_fav_ids)]
 
         for match in self.top_source_dict.values():
             our_persons = [x for x in match.players if x.account_id in friend_ids and x.hero_id in self.hero_fav_ids]
             for person in our_persons:
                 query = """ SELECT id, display_name, twitch_id 
-                            FROM old_dota_players 
-                            WHERE id=(SELECT player_id FROM old_dota_accounts WHERE friend_id=$1)
+                            FROM dota_players 
+                            WHERE id=(SELECT player_id FROM dota_accounts WHERE friend_id=$1)
                         """
                 user = await self.bot.pool.fetchrow(query, person.account_id)
 
                 query = """ SELECT channel_id
-                            FROM fpc
+                            FROM dota_settings
                             WHERE game=$4
                                 AND $1=ANY(characters)
                                 AND $2=ANY(players)
                                 AND NOT channel_id=ANY(
-                                    SELECT channel_id FROM old_dota_messages WHERE match_id=$3
+                                    SELECT channel_id FROM dota_messages WHERE match_id=$3
                                 )          
                         """
                 channel_ids = [

@@ -189,7 +189,7 @@ class FPCSettingsBase(AluCog):
         favourite_player_list = [r for r, in await ntr.client.pool.fetch(query, ntr.guild.id)]
 
         columns = ', '.join(
-            ['p.name_lower', 'display_name', 'twitch_id', 'a.name_lower'] + self.extra_account_info_columns
+            ['p.id', 'p.name_lower', 'display_name', 'twitch_id', 'a.name_lower'] + self.extra_account_info_columns
         )
         query = f"""SELECT {columns}
                     FROM {self.game}_players p

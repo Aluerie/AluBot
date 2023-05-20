@@ -74,7 +74,7 @@ class LoLNotifs(AluCog):
             if p and p.champion_id in fav_champ_ids and r.last_edited != live_game.id:
                 query = """ SELECT channel_id 
                             FROM fpc
-                            WHERE game=lol
+                            WHERE game=$4
                                 AND $1=ANY(characters) 
                                 AND $2=ANY(players)
                                 AND NOT channel_id=ANY(
@@ -83,7 +83,9 @@ class LoLNotifs(AluCog):
                                     WHERE match_id=$3
                                 )     
                         """
-                channel_ids = [i for i, in await self.bot.pool.fetch(query, p.champion_id, r.player_id, live_game.id)]
+                channel_ids = [
+                    i for i, in await self.bot.pool.fetch(query, p.champion_id, r.player_id, live_game.id, 'lol')
+                ]
                 if channel_ids:
                     log.debug(f'LF | {r.display_name} - {await champion.key_by_id(p.champion_id)}')
                     self.live_matches.append(

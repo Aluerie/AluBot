@@ -77,10 +77,10 @@ class TwitchClient(twitchio.Client):
         query = f"""SELECT twitch_id, id
                     FROM lol_players
                     WHERE id=ANY(
-                        SELECT DISTINCT(unnest(lolfeed_stream_ids)) FROM guilds
+                        SELECT DISTINCT(unnest(players)) FROM fpc WHERE game=$1
                     )
                 """
-        twitch_id_to_fav_id_dict = {r.twitch_id: r.id for r in await pool.fetch(query)}
+        twitch_id_to_fav_id_dict = {r.twitch_id: r.id for r in await pool.fetch(query, 'lol')}
 
         live_twitch_ids = [
             i.user.id

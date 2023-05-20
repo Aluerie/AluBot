@@ -142,14 +142,16 @@ class DotaNotifs(AluCog):
 
                 query = """ SELECT channel_id
                             FROM fpc
-                            WHERE game=dota
+                            WHERE game=$4
                                 AND $1=ANY(characters)
                                 AND $2=ANY(players)
                                 AND NOT channel_id=ANY(
                                     SELECT channel_id FROM dota_messages WHERE match_id=$3
                                 )          
                         """
-                channel_ids = [i for i, in await self.bot.pool.fetch(query, person.hero_id, user.id, match.match_id)]
+                channel_ids = [
+                    i for i, in await self.bot.pool.fetch(query, person.hero_id, user.id, match.match_id, 'dota')
+                ]
                 if channel_ids:
                     log.debug(f"DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}")
                     self.live_matches.append(

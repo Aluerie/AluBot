@@ -136,9 +136,9 @@ class FPCSettingsBase(AluCog):
 
         ch = await self.get_fpc_channel(ntr)
 
-        query = f'''INSERT INTO fpc (guild_id, guild_name, channel_id)
+        query = f'''INSERT INTO {self.game}_settings (guild_id, guild_name, channel_id)
                     VALUES ($1, $2, NULL)
-                    ON CONFLICT (game, guild_id) DO UPDATE
+                    ON CONFLICT (guild_id) DO UPDATE
                         SET channel_id=NULL;
                 '''
         await ntr.client.pool.execute(query, ntr.guild.id, ntr.guild.name)

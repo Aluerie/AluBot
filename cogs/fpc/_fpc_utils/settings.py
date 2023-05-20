@@ -151,19 +151,29 @@ class FPCSettingsBase(AluCog):
 
         ch = await self.get_fpc_channel(ntr)
 
-        query = f'''INSERT INTO {self.game}_settings (guild_id, guild_name, channel_id)
-                    VALUES ($1, $2, NULL)
-                    ON CONFLICT (guild_id) DO UPDATE
-                        SET channel_id=NULL;
-                '''
-        await ntr.client.pool.execute(query, ntr.guild.id, ntr.guild.name)
-        e = discord.Embed(colour=self.colour, title='FPC (Favourite Player+Character) channel disabled')
+        warn_embed = discord.Embed(colour=self.colour, title='Confirmation Prompt')
+        warn_embed.description = (
+            f'Are you sure you want to disable FPC notifications in {ch.mention}?\n\n'
+        )
+        warn_embed.add_field(
+            name='!!!',
+            value='This will also reset/delete players/characters data in the bot database.'
+        )
+        warn_embed.set_author(name=self.game_mention, icon_url=self.game_icon)
+        if not await ntr.client.prompt(ntr, embed=warn_embed):
+            cancel_embed = discord.Embed(colour=discord.Colour.red())
+            cancel_embed.description = 'You pressed "Cancel"'
+            await ntr.followup.send(embed=cancel_embed)
+            return
+        
+        query = f'''DELETE FROM {self.game}_settings WHERE guild_id=$1'''
+        await ntr.client.pool.execute(query, ntr.guild.id)
+        e = discord.Embed(colour=discord.Colour.green(), title='FPC (Favourite Player+Character) channel disabled')
         e.description = (
-            f'Notifications will not be sent to {ch.mention} anymore.'
-            'Your data was not affected in case it was a miss-click or something.'
+            f'Notifications will not be sent to {ch.mention} anymore. Your data was deleted.'
         )
         e.set_author(name=self.game_mention, icon_url=self.game_icon)
-        await ntr.response.send_message(embed=e)
+        await ntr.followup.send(embed=e)
 
     async def channel_check(self, ntr: discord.Interaction[AluBot]) -> None:
         """Base function for checking if channel is set for FPC Feed feature"""
@@ -331,10 +341,11 @@ class FPCSettingsBase(AluCog):
         warn_e.add_field(name='Request to add an account into the database', value=player_string)
         warn_e.set_author(name=self.game_mention, icon_url=self.game_icon)
         warn_e.set_thumbnail(url=player_dict['profile_image'])
-        
+
         if not await ntr.client.prompt(ntr, embed=warn_e):
-            assert isinstance(ntr.channel, discord.TextChannel)
-            await ntr.channel.send('Aborting...')
+            cancel_embed = discord.Embed(colour=discord.Colour.red())
+            cancel_embed.description = 'You pressed "Cancel"'
+            await ntr.followup.send(embed=cancel_embed)
             return
 
         e = discord.Embed(colour=self.colour)

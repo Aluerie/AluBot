@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, Union
 import discord
 from discord.ext import commands
 
-from ..const import Colour
+from ..const import Colour, Tick
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -51,11 +51,11 @@ class ConfirmationView(discord.ui.View):
             await ntr.edit_original_response(view=self)
         self.stop()
 
-    @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green)
+    @discord.ui.button(emoji=Tick.yes, label='Confirm', style=discord.ButtonStyle.green)
     async def confirm(self, ntr: discord.Interaction, _: discord.ui.Button):
         await self.button_callback(ntr, True)
 
-    @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red)
+    @discord.ui.button(emoji=Tick.no, label='Cancel', style=discord.ButtonStyle.red)
     async def cancel(self, ntr: discord.Interaction, _: discord.ui.Button):
         await self.button_callback(ntr, False)
 

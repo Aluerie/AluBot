@@ -56,6 +56,11 @@ class Emote(StrEnum):
     Offline = '\N{LARGE RED CIRCLE}'
     Online = '\N{LARGE GREEN CIRCLE}'
 
+class Tick(StrEnum):
+    yes = '\N{WHITE HEAVY CHECK MARK}'
+    no = '\N{CROSS MARK}'
+    black = '\N{BLACK LARGE SQUARE}'
+
 
 # EMOTE LISTS ######################################################################################################
 DIGITS = [

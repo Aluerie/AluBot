@@ -202,14 +202,14 @@ class FPCSettingsBase(AluCog):
         player_dict = dict()
 
         for row in rows:
-            if row.player_id not in player_dict:
-                followed = ' {0} {0} {0}'.format(const.Emote.DankLove) if row.player_id in favourite_player_list else ''
-                player_dict[row.player_id] = {
+            if row.name_lower not in player_dict:
+                followed = ' {0} {0} {0}'.format(const.Emote.DankLove) if row.name_lower in favourite_player_list else ''
+                player_dict[row.name_lower] = {
                     'name': f"{self.player_name_string(row.display_name, row.twitch_id)}{followed}",
                     'info': [],
                 }
             kwargs = {col: row[col] for col in ['id'] + self.extra_account_info_columns}
-            player_dict[row.player_id]['info'].append(self.player_acc_string(**kwargs))
+            player_dict[row.name_lower]['info'].append(self.player_acc_string(**kwargs))
 
         ans_array = [f"{v['name']}\n{chr(10).join(v['info'])}" for v in player_dict.values()]
 

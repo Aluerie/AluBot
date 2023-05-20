@@ -4,6 +4,7 @@ from .settings import LoLNotifsSettings
 from .summoner_check import LoLSummonerNameCheck
 from .twitch_check import LoLTwitchAccountCheck
 
+from utils import const
 
 class LoL2FPC(
     LoLNotifs,
@@ -11,6 +12,7 @@ class LoL2FPC(
     LoLNotifsSettings,
     LoLSummonerNameCheck,
     LoLTwitchAccountCheck,
+    emote=const.Emote.PogChampPepe
 ):
     """
     LoL - Favourite player+character combo notifications.

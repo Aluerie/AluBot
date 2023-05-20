@@ -8,8 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 from steam.steamid import EType, SteamID
 
-from utils import AluCog
-from utils.const import Colour, Emote
+from utils import const
 from utils.dota import hero
 from utils.dota.const import DOTA_LOGO
 
@@ -57,27 +56,19 @@ class DotaNotifsSettings(FPCBase, name="Dota 2"):
 
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(
+            bot,
             *args,
-            feature_name="DotaFeed",
-            game_name="Dota 2",
-            game_codeword="dota",
-            game_logo=DOTA_LOGO,
-            colour=Colour.prpl(),
-            bot=bot,
-            players_table="dota_players",
-            accounts_table="dota_accounts",
-            channel_id_column="dotafeed_ch_id",
-            players_column="dotafeed_stream_ids",
-            characters_column="dotafeed_hero_ids",
-            spoil_column="dotafeed_spoils_on",
-            acc_info_columns=["friend_id"],
-            get_char_id_by_name=hero.id_by_name,
-            get_char_name_by_id=hero.name_by_id,
-            get_all_character_names=hero.get_all_hero_names,
+            colour=const.Colour.prpl(),
+            game='dota',
+            game_mention='Dota 2',
+            game_icon=DOTA_LOGO,
+            extra_account_info_columns=["friend_id"],
+            character_id_by_name=hero.id_by_name,
+            character_name_by_id=hero.name_by_id,
+            all_character_names=hero.get_all_hero_names,
             character_gather_word="heroes",
             **kwargs,
         )
-        self.bot: AluBot = bot
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()

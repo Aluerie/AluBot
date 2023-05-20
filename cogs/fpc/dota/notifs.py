@@ -5,6 +5,7 @@ import time
 from typing import TYPE_CHECKING, Dict, List, Set, Union
 
 import asyncpg
+import discord
 import vdf
 from discord.ext import commands, tasks
 from steam.core.msg import MsgProto
@@ -66,12 +67,12 @@ class DotaNotifs(AluCog):
 
     async def preliminary_queries(self):
         async def get_all_fav_ids(column_name: str) -> List[int]:
-            query = f"SELECT DISTINCT(unnest({column_name})) FROM guilds"
-            rows = await self.bot.pool.fetch(query)
+            query = f"SELECT DISTINCT(unnest({column_name})) FROM fpc WHERE game=$1"
+            rows = await self.bot.pool.fetch(query, 'dota')
             return [row.unnest for row in rows]
 
-        self.hero_fav_ids = await get_all_fav_ids("dotafeed_hero_ids")
-        self.player_fav_ids = await get_all_fav_ids("dotafeed_stream_ids")
+        self.hero_fav_ids = await get_all_fav_ids("characters")
+        self.player_fav_ids = await get_all_fav_ids("players")
 
     async def get_args_for_top_source(self, specific_games_flag: bool) -> Union[None, dict]:
         self.bot.steam_dota_login()
@@ -123,7 +124,7 @@ class DotaNotifs(AluCog):
         # the hack that does not work
         # await asyncio.sleep(4)
         # await self.bot.wait_for('my_top_games_response', timeout=4)
-        # also idea with asyncio.Event() or checkin if top_source_dict is populated
+        # also idea with asyncio.Event() or checking if top_source_dict is populated
 
     async def analyze_top_source_response(self):
         self.live_matches = []
@@ -139,11 +140,12 @@ class DotaNotifs(AluCog):
                         """
                 user = await self.bot.pool.fetchrow(query, person.account_id)
 
-                query = """ SELECT dotafeed_ch_id
-                            FROM guilds
-                            WHERE $1=ANY(dotafeed_hero_ids)
-                                AND $2=ANY(dotafeed_stream_ids)
-                                AND NOT dotafeed_ch_id=ANY(
+                query = """ SELECT channel_id
+                            FROM fpc
+                            WHERE game=dota
+                                AND $1=ANY(characters)
+                                AND $2=ANY(players)
+                                AND NOT channel_id=ANY(
                                     SELECT channel_id FROM dota_messages WHERE match_id=$3
                                 )          
                         """
@@ -170,9 +172,11 @@ class DotaNotifs(AluCog):
                 log.debug("LF | The channel is None")
                 continue
 
+            assert isinstance(ch, discord.TextChannel)
             em, img_file = await match.notif_embed_and_file(self.bot)
             log.debug("LF | Successfully made embed+file")
-            em.title = f"{ch.guild.owner.name}'s fav hero + player spotted"
+            owner_name = ch.guild.owner.name if ch.guild.owner else 'Somebody'
+            em.title = f"{owner_name}'s fav hero + player spotted"
             msg = await ch.send(embed=em, file=img_file)
             query = """ INSERT INTO dota_matches (id) 
                         VALUES ($1) 

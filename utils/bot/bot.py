@@ -5,7 +5,7 @@ import logging
 import os
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Dict, Iterable, Optional, Union, overload
 
 import discord
 from aiohttp import ClientSession
@@ -20,6 +20,7 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 import config as cfg
 from cogs import get_extensions
 from utils import AluContext, const
+from utils.bases.context import ConfirmationView
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
@@ -246,6 +247,54 @@ class AluBot(commands.Bot):
 
         for page in paginator.pages:
             await ch.send(page)
+
+    async def prompt(
+        self,
+        ctx_ntr: AluContext | discord.Interaction[AluBot],
+        *,
+        content: str = discord.utils.MISSING,
+        embed: discord.Embed = discord.utils.MISSING,
+        timeout: float = 100.0,
+        delete_after: bool = True,
+        author_id: Optional[int] = None,
+    ) -> Optional[bool]:
+        """
+        An interactive reaction confirmation dialog.
+        Parameters
+        -----------
+        content: str
+            Text message to show along with the prompt.
+        embed:
+            Embed to show along with the prompt.
+        timeout: float
+            How long to wait before returning.
+        delete_after: bool
+            Whether to delete the confirmation message after we're done.
+        author_id: Optional[int]
+            The member who should respond to the prompt. Defaults to the author of the
+            Context's message.
+        Returns
+        --------
+        Optional[bool]
+            ``True`` if explicit confirm,
+            ``False`` if explicit deny,
+            ``None`` if deny due to timeout
+        ----
+        """
+        if content is None and embed is None:
+            raise TypeError('Either content or embed should be provided')
+
+        author_id = author_id or ctx_ntr.user.id
+        view = ConfirmationView(timeout=timeout, delete_after=delete_after, author_id=author_id)
+        if isinstance(ctx_ntr, AluContext):
+            view.message = await ctx_ntr.reply(content=content, embed=embed, view=view)
+        elif isinstance(ctx_ntr, discord.Interaction):
+            if not ctx_ntr.response.is_done():
+                view.message = await ctx_ntr.response.send_message(content=content, embed=embed, view=view)
+            else:
+                view.message = await ctx_ntr.followup.send(content=content, embed=embed, view=view)
+        await view.wait()
+        return view.value
 
     # SHORTCUTS ########################################################################################################
 

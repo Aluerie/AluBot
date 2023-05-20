@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING, List
 
 import asyncpg
+import discord
 from discord.ext import commands, tasks
 from pyot.core.exceptions import NotFound, ServerError
 from pyot.utils.lol import champion
@@ -33,7 +34,7 @@ class LoLNotifs(commands.Cog):
         self.lolfeed_notifs.add_exception_type(asyncpg.InternalServerError)
         self.lolfeed_notifs.start()
         return await super().cog_load()
-    
+
     async def cog_unload(self) -> None:
         self.lolfeed_notifs.stop()  # .cancel()
         return await super().cog_unload()
@@ -41,7 +42,7 @@ class LoLNotifs(commands.Cog):
     async def fill_live_matches(self):
         self.live_matches, self.all_live_match_ids = [], []
 
-        query = 'SELECT DISTINCT(unnest(lolfeed_champ_ids)) FROM guilds'
+        query = 'SELECT DISTINCT(unnest(characters)) FROM fpc WHERE game=lol'
         fav_champ_ids = [r for r, in await self.bot.pool.fetch(query)]  # row.unnest
 
         live_fav_player_ids = await self.bot.twitch.get_live_lol_player_ids(pool=self.bot.pool)
@@ -70,11 +71,12 @@ class LoLNotifs(commands.Cog):
             self.all_live_match_ids.append(live_game.id)
             p = next((x for x in live_game.participants if x.summoner_id == r.id), None)
             if p and p.champion_id in fav_champ_ids and r.last_edited != live_game.id:
-                query = """ SELECT lolfeed_ch_id 
-                            FROM guilds
-                            WHERE $1=ANY(lolfeed_champ_ids) 
-                                AND $2=ANY(lolfeed_stream_ids)
-                                AND NOT lolfeed_ch_id=ANY(
+                query = """ SELECT channel_id 
+                            FROM fpc
+                            WHERE game=lol
+                                AND $1=ANY(characters) 
+                                AND $2=ANY(players)
+                                AND NOT channel_id=ANY(
                                     SELECT channel_id
                                     FROM lol_messages
                                     WHERE match_id=$3
@@ -108,7 +110,10 @@ class LoLNotifs(commands.Cog):
 
             em, img_file = await match.notif_embed_and_file(self.bot)
             log.debug('LF | Successfully made embed+file')
-            em.title = f"{ch.guild.owner.name}'s fav champ + player spotted"
+            assert isinstance(ch, discord.TextChannel)
+
+            owner_name = ch.guild.owner.name if ch.guild.owner else 'Somebody'
+            em.title = f"{owner_name}'s fav champ + player spotted"
             msg = await ch.send(embed=em, file=img_file)
 
             query = """ INSERT INTO lol_matches (id, region, platform)

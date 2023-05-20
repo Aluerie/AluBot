@@ -9,8 +9,7 @@ from discord.ext import commands
 from pyot.core.exceptions import NotFound
 from pyot.utils.lol import champion
 
-from utils.checks import is_manager
-from utils.const import Colour, Emote
+from utils import const
 from utils.lol.const import LOL_LOGO, LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
 from utils.lol.utils import get_all_champ_names, get_meraki_patch, get_pyot_meraki_champ_diff_list
 
@@ -49,29 +48,19 @@ class LoLNotifsSettings(FPCBase, name='LoL'):
 
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(
-            feature_name='LoLFeed',
-            game_name='LoL',
-            game_codeword='lol',
-            game_logo=LOL_LOGO,
-            colour=Colour.rspbrry(),
-            bot=bot,
-            players_table='lol_players',
-            accounts_table='lol_accounts',
-            channel_id_column='lolfeed_ch_id',
-            players_column='lolfeed_stream_ids',
-            characters_column='lolfeed_champ_ids',
-            spoil_column='lolfeed_spoils_on',
-            acc_info_columns=['platform', 'account'],
-            get_char_name_by_id=champion.name_by_id,
-            get_char_id_by_name=champion.id_by_name,
-            get_all_character_names=get_all_champ_names,
+            bot,
+            *args,
+            colour=const.Colour.rspbrry(),
+            game='lol',
+            game_mention='League of Legends',
+            game_icon=LOL_LOGO,
+            extra_account_info_columns=['platform', 'account'],
+            character_name_by_id=champion.name_by_id,
+            character_id_by_name=champion.id_by_name,
+            all_character_names=get_all_champ_names,
             character_gather_word='champs',
+            **kwargs
         )
-        self.bot: AluBot = bot
-
-    @property
-    def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Emote.PogChampPepe)
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
@@ -349,7 +338,7 @@ class LoLNotifsSettings(FPCBase, name='LoL'):
 
         meraki_patch = await get_meraki_patch()
 
-        e = discord.Embed(title='List of champs missing from Meraki JSON', colour=Colour.rspbrry())
+        e = discord.Embed(title='List of champs missing from Meraki JSON', colour=const.Colour.rspbrry())
         e.description = '\n'.join(champ_str)
         e.add_field(
             name='Links',

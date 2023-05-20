@@ -54,14 +54,6 @@ CREATE TABLE IF NOT EXISTS guilds (
     name TEXT,
     prefix TEXT,
     emote_logs_id BIGINT,
-    dotafeed_ch_id BIGINT,
-    dotafeed_hero_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
-    dotafeed_stream_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
-    dotafeed_spoils_on BOOLEAN DEFAULT TRUE,
-    lolfeed_ch_id BIGINT,
-    lolfeed_champ_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
-    lolfeed_stream_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
-    lolfeed_spoils_on BOOLEAN DEFAULT TRUE,
     birthday_channel BIGINT,
     birthday_role BIGINT
 );
@@ -211,4 +203,16 @@ CREATE TABLE IF NOT EXISTS dotahistory (
 
 CREATE TABLE IF NOT EXISTS valve_devs (
     login TEXT PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS fpc (
+    game TEXT NOT NULL,
+    guild_id BIGINT NOT NULL,
+    channel_id BIGINT,
+
+    PRIMARY KEY (game, guild_id),
+
+    player_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
+    character_ids INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[],
+    spoil BOOLEAN DEFAULT TRUE
 );

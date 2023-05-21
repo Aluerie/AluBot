@@ -112,6 +112,9 @@ class Role(RoleEnum):
     level_zero = 852663921085251585
     birthday_lover = 1106342236100243499
 
+    colour_category = 851786344354938880
+    activity_category = 852199351808032788
+
     # HIDEOUT
     event = 1090274008680902667
     jailed_bots = 1090428532162822234

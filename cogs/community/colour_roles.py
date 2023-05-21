@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from utils import AluCog
-from utils.const import Colour, Emote
+from utils import AluCog, const
 from utils.checks import is_owner
 
 if TYPE_CHECKING:
@@ -25,11 +24,11 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
     async def callback(self, ntr: discord.Interaction[AluBot]):
         if not len(self.values):
             e = discord.Embed()
-            e.description = f'You\'ve selected zero roles and thus I did nothing {Emote.peepoComfy}'
+            e.description = f'You\'ve selected zero roles and thus I did nothing {const.Emote.peepoComfy}'
             return await ntr.response.send_message(embed=e, ephemeral=True)
 
-        colour_category_role = ntr.client.community.guild.get_role(851786344354938880)
-        activity_category_role = ntr.client.community.guild.get_role(852199351808032788)
+        colour_category_role = ntr.client.community.guild.get_role(const.Role.colour_category)
+        activity_category_role = ntr.client.community.guild.get_role(const.Role.activity_category)
 
         def is_colour_role(role: discord.Role) -> bool:
             return activity_category_role < role < colour_category_role
@@ -41,7 +40,7 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
             else:
                 raise ValueError
         except ValueError:
-            e = discord.Embed(color=Colour.error())
+            e = discord.Embed(color=const.Colour.error())
             e.description = 'You are trying to choose non-colour role, which I won\'t give.'
             await ntr.response.send_message(embed=e, ephemeral=True)
         else:

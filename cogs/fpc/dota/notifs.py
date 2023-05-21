@@ -198,7 +198,7 @@ class DotaNotifs(AluCog):
                 """
         await self.bot.pool.execute(query, list(self.top_source_dict.keys()))
 
-    @tasks.loop(seconds=59)
+    @tasks.loop(seconds=49)
     async def dota_feed(self):
         log.debug(f"DF | --- Task is starting now ---")
 

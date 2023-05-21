@@ -46,7 +46,6 @@ CREATE TABLE IF NOT EXISTS botinfo (
     dota_patch TEXT,
     event_pass_is_live BOOLEAN DEFAULT (FALSE),
     drop_watch_live BOOLEAN DEFAULT (FALSE)
-
 );
 
 CREATE TABLE IF NOT EXISTS guilds (
@@ -135,3 +134,6 @@ CREATE TABLE IF NOT EXISTS valve_devs (
     login TEXT PRIMARY KEY
 );
 
+CREATE TABLE IF NOT EXISTS autoparse (
+    steam_id BIGINT PRIMARY KEY
+);

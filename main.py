@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import asyncio
 import logging
 import sys
@@ -63,8 +64,10 @@ def create():
         async def run_create():
             connection: asyncpg.Connection = await asyncpg.connect(POSTGRES_URL)
             async with connection.transaction():
-                sql = Path('sql/tables.sql').read_text('utf-8')
-                await connection.execute(sql)
+                for f in Path('sql').iterdir():
+                    if f.is_file() and f.suffix == '.sql' and not f.name.startswith("_"):
+                        sql = f.read_text('utf-8')
+                        await connection.execute(sql)
 
         asyncio.run(run_create())
     except Exception:

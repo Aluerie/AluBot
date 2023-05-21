@@ -37,61 +37,71 @@ with pretty much everything I ever needed ! Check List of features after the pic
 
 ![AluBot preview](./assets/images/readme/dota-lol_notifs.png)
 
-## ReadMe Contents
+## Table of Contents
 
-1. [📖 Features](#-features)
-2. [🏠 Wiki](https://github.com/Aluerie/AluBot/wiki) - link to github wiki page, most notably:
-    * [🕵️ Privacy Policy](https://github.com/Aluerie/AluBot/wiki/%F0%9F%95%B5%EF%B8%8F--Privacy-Policy)
-    * [🖊️ Terms of Service](https://github.com/Aluerie/AluBot/wiki/%F0%9F%96%8A%EF%B8%8F-Terms-of-Service)
-    * [🛠️ Running/Installation guide](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9B%A0%EF%B8%8FRunning-Installation-guide)
-3. [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
-4. [🤗 Thanks](#-thanks)
+- [AluBot 💜](#alubot-)
+  - [Table of Contents](#table-of-contents)
+  - [🏠 Wiki](#-wiki)
+  - [📖 Features](#-features)
+  - [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
+  - [🤗 Thanks](#-thanks)
 
 ---
 
-### 📖 Features
+## 🏠 [Wiki](<https://github.com/Aluerie/AluBot/wiki>)
 
-All info in `/help` and `/setup` commands of the bot. But here is list that is probably not full:
+I put a lot of information into GitHub [🏠 Wiki](https://github.com/Aluerie/AluBot/wiki) - so go check it out. Including:
 
-* [X] maintains #🍋dota2_news
-  * [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates - comments from Valve employees  
-  * Steam DB's [GameTracking-Dota2](https://github.com/SteamDatabase/GameTracking-Dota2) updates and its analysis
-  * Twitter, Reddit comments/posts from known accounts
-* [X] #🔬lol_news announcement channel
-* [X] TextToSpeech
-* [X] Confessions
-* [X] Birthday role and congratulations
-* [X] Moderation
-* [X] Twitch starting stream notifications
-* [X] Timers
-* [X] Welcome messages
-* [X] Logging
-* [X] Emote stats
-* [X] Info commands
-* [X] WolframAlpha queries commands
-* [X] Tags system
-* [X] Google translate messages
-* [X] Suggestion commands
-* [X] Wordcloud
-* [X] ToDo list
-* [X] Reminders
-* [X] AFK/Self-mute commands
-* [X] NSFW
-* [X] Schedule for Dota 2 matches
-* [X] Stalking my Dota 2 profile (despite my "Expose data" setting is off)
-* [X] So in total Over 100 useful/fun commands.
-* [X] And so much more to come.
+- [🛠️ Running/Installation guide](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9B%A0%EF%B8%8FRunning-Installation-guide)
+- [🕵️ Privacy Policy](https://github.com/Aluerie/AluBot/wiki/%F0%9F%95%B5%EF%B8%8F--Privacy-Policy)
+- [🖊️ Terms of Service](https://github.com/Aluerie/AluBot/wiki/%F0%9F%96%8A%EF%B8%8F-Terms-of-Service)
+- [🔬 GitHub stats for the project](https://github.com/Aluerie/AluBot/wiki/%F0%9F%94%AC-GitHub-stats-for-the-project)
+- [🚓 Credits, Licence, Copyright](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9A%93-Credits,-Licence,-Copyright)
 
-### 🤝 Reporting Bugs, Making Suggestions and Contributing
+## 📖 Features
 
-* There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/.github/CONTRIBUTING.md)
-* TL;DR^: Feel free to
-  * open a GitHub Issue/PR/Discussion
-  * use `/feedback` bot command
-  * write [Aluerie ❤#6524](https://discordapp.com/users/312204139751014400) on discord
-  * look my [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
+All info in `/help` and `/setup` commands of the bot. This list is not updated in a long time, but still (#TODO: update the list, heh):
 
-### 🤗 Thanks
+- [X] maintains #🍋dota2_news
+  - [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates - comments from Valve employees  
+  - Steam DB's [GameTracking-Dota2](https://github.com/SteamDatabase/GameTracking-Dota2) updates and its analysis
+  - Twitter, Reddit comments/posts from known accounts
+- [X] #🔬lol_news announcement channel
+- [X] TextToSpeech
+- [X] Confessions
+- [X] Birthday role and congratulations
+- [X] Moderation
+- [X] Twitch starting stream notifications
+- [X] Timers
+- [X] Welcome messages
+- [X] Logging
+- [X] Emote stats
+- [X] Info commands
+- [X] WolframAlpha queries commands
+- [X] Tags system
+- [X] Google translate messages
+- [X] Suggestion commands
+- [X] Wordcloud
+- [X] ToDo list
+- [X] Reminders
+- [X] AFK/Self-mute commands
+- [X] NSFW
+- [X] Schedule for Dota 2 matches
+- [X] Stalking my Dota 2 profile (despite my "Expose data" setting is off)
+- [X] So in total Over 100 useful/fun commands.
+- [X] And so much more to come.
+
+## 🤝 Reporting Bugs, Making Suggestions and Contributing
+
+- There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/.github/CONTRIBUTING.md)
+- TL;DR^: Feel free to
+  - open a GitHub Issue/PR/Discussion
+  - use `/feedback` bot command
+  - write [Aluerie ❤#6524](https://discordapp.com/users/312204139751014400) on discord
+  - look my [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
+  - join our [discord server](https://discord.gg/K8FuDeP)
+
+## 🤗 Thanks
 
 Thanks to everybody who has ever helped me with the bot in any way or form.
 

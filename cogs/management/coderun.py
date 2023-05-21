@@ -118,7 +118,7 @@ class CodeRun(ManagementBaseCog):
 
             if ret is None:
                 if value:
-                    await ctx.send(f"```py\n{value}\n```")
+                    await ctx.send(f"```py\n{value.__repr__}\n```") # TODO: should it be repr ?
             else:
                 self._last_result = ret
                 await ctx.send(f"```py\n{value}{ret}\n```")

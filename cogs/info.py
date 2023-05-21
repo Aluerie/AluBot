@@ -94,12 +94,14 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         e.add_field(name='Time:', value=now_time).add_field(name='Date:', value=now_date)
         await ctx.reply(embed=e)
 
-    @commands.hybrid_command(name='role', description="View info about selected role")
+    @commands.hybrid_command(name='role')
     @app_commands.describe(role='Choose role to get info about')
     async def role_info(self, ctx, *, role: discord.Role):
-        """View info about selected role"""
+        """View info about selected role."""
         e = discord.Embed(title="Role information", colour=role.colour)
-        e.description = '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
+        msg = f'Role {role.mention}'
+        msg += '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
+        e.description = msg
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(

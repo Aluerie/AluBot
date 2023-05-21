@@ -29,19 +29,10 @@ class OpenDotaAutoParser(AluCog):
         self.opendota_req_cache: Dict[int, OpendotaRequestMatch] = dict()
 
     def cog_load(self) -> None:
-        self.autoparse_task.start()
-
-    def cog_unload(self) -> None:
-        self.autoparse_task.cancel()
-
-    async def get_active_matches(self):
-        self.lobby_ids = set()
         self.bot.steam_dota_login()
 
-        def ready_function():
-            self.bot.dota.request_top_source_tv_games(lobby_ids=list(self.lobby_ids))
-
-        def response(result):
+        @self.bot.dota.on("top_source_tv_games")  # type: ignore
+        def autoparse_response(result):
             if result.specific_games:
                 m_ids = [m.match_id for m in result.game_list]
                 self.matches_to_parse = [m_id for m_id in self.active_matches if m_id not in m_ids]
@@ -49,7 +40,15 @@ class OpenDotaAutoParser(AluCog):
             else:
                 self.matches_to_parse = self.active_matches
             # print(f'to parse {self.matches_to_parse} active {self.active_matches}')
-            self.bot.dota.emit('top_games_response')
+            self.bot.dota.emit('autoparse_top_games_response')
+
+        self.autoparse_task.start()
+
+    def cog_unload(self) -> None:
+        self.autoparse_task.cancel()
+
+    async def get_active_matches(self):
+        self.lobby_ids = set()
 
         proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
         proto_msg.header.routing_appid = 570  # type: ignore
@@ -70,9 +69,8 @@ class OpenDotaAutoParser(AluCog):
 
         # print(self.lobby_ids)
         # dota.on('ready', ready_function)
-        self.bot.dota.once('top_source_tv_games', response)
-        ready_function()
-        self.bot.dota.wait_event('top_games_response', timeout=8)
+        self.bot.dota.request_top_source_tv_games(lobby_ids=list(self.lobby_ids))
+        self.bot.dota.wait_event('autoparse_top_games_response', timeout=8)
 
     @tasks.loop(seconds=59)
     async def autoparse_task(self):

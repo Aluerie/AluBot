@@ -77,7 +77,7 @@ class LoLNotifs(AluCog):
                             JOIN lol_favourite_players lfp on lfc.guild_id = lfp.guild_id
                             JOIN lol_settings ls on ls.guild_id = lfc.guild_id
                             WHERE character_id=$1 AND player_name=$2
-                            AND NOT channel_id=ANY(SELECT channel_id FROM lol_messagesWHERE match_id=$3);     
+                            AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3);     
                         """
                 channel_ids = [
                     i for i, in await self.bot.pool.fetch(query, p.champion_id, r.name_lower, live_game.id, 'lol')

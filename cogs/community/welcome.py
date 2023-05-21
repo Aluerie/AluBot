@@ -96,11 +96,13 @@ class Welcome(AluCog):
             back = value is not True
 
             for role_id in const.CATEGORY_ROLES:
-                role: discord.Role = guild.get_role(role_id)  # type: ignore
-                await member.add_roles(role)
+                role = guild.get_role(role_id)
+                if role:
+                    await member.add_roles(role)
             if not back:
-                role: discord.Role = guild.get_role(Role.level_zero)  # type: ignore
-                await member.add_roles(role)
+                role = guild.get_role(const.Role.level_zero)
+                if role:
+                    await member.add_roles(role)
 
         content_text, embed, image_file = await welcome_message(self.bot, member, back=back)
         await self.bot.community.welcome.send(content=content_text, embed=embed, file=image_file)

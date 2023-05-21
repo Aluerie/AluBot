@@ -80,14 +80,14 @@ class LoLNotifs(AluCog):
                             AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3);     
                         """
                 channel_ids = [
-                    i for i, in await self.bot.pool.fetch(query, p.champion_id, r.name_lower, live_game.id, 'lol')
+                    i for i, in await self.bot.pool.fetch(query, p.champion_id, r.name_lower, live_game.id)
                 ]
                 if channel_ids:
                     log.debug(f'LF | {r.display_name} - {await champion.key_by_id(p.champion_id)}')
                     self.live_matches.append(
                         LiveMatch(
                             match_id=live_game.id,
-                            platform=p.platform,  # type: ignore
+                            platform=p.platform,  # type: ignore # p.platform is `str` in pyot.
                             account_name=p.summoner_name,
                             start_time=round(live_game.start_time_millis / 1000),
                             champ_id=p.champion_id,

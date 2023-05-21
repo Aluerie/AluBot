@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, List, Literal, Optional
 
 import discord
 from discord.ext import commands
 
-from utils.const import Colour
+from utils import const
 from utils.checks import is_owner
 
 from ._base import ManagementBaseCog
@@ -15,11 +15,20 @@ if TYPE_CHECKING:
 
 
 class SyncCommandCog(ManagementBaseCog):
-    # **The** famous Umbra\'s sync command holy moly. `?tag usc`. Or `?tag umbra sync command`
+    """ A SPECIAL ONE-COMMAND COG FOR ONE AND ONLY, THE FAMOUS UMBRA SYNC COMMAND. HOLY MOLY!
+
+    `?tag usc` which abbreviates to `?tag umbra sync command`.
+
+    This command is used to sync app_commands. 
+    """
+
     @is_owner()
     @commands.command()
     async def sync(
-        self, ctx: AluContext, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None
+        self,
+        ctx: AluContext,
+        guilds: commands.Greedy[discord.Guild],
+        spec: Optional[Literal["~", "*", "^", "trust"]] = None,
     ) -> None:
         """Sync command. Usage examples:
         * `$sync` -> global sync
@@ -27,10 +36,12 @@ class SyncCommandCog(ManagementBaseCog):
         * `$sync *` -> copies all global app commands to current guild and syncs
         * `$sync ^` -> clears all commands from the current guild target and syncs (removes guild commands)
         * `$sync id_1 id_2` -> syncs guilds with id 1 and 2
+        * `$sync trust` -> sync trusted guilds
         """
 
-        e = discord.Embed(colour=Colour.prpl())
-        if guilds:
+        e = discord.Embed(colour=const.Colour.prpl())
+
+        async def sync_to_guild_list(guilds: commands.Greedy[discord.Guild] | List[discord.Guild]):
             fmt = 0
             cmds = []
             for guild in guilds:
@@ -40,7 +51,15 @@ class SyncCommandCog(ManagementBaseCog):
                     pass
                 else:
                     fmt += 1
-            e.description = f"Synced the tree to `{fmt}/{len(guilds)}` guilds."
+            return f"Synced the tree to `{fmt}/{len(guilds)}` guilds."
+
+        if spec == "trust":
+            guild_list = [
+                y for y in (ctx.bot.get_guild(guild_id) for guild_id in const.TRUSTED_GUILDS) if y is not None
+            ]
+            e.description = await sync_to_guild_list(guild_list)
+        elif guilds:
+            e.description = await sync_to_guild_list(guilds)
         elif spec:
             if ctx.guild:
                 match spec:

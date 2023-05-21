@@ -34,12 +34,13 @@ def is_trustee():
         if ctx_ntr.user.id in trusted_ids:
             return True
         else:
+            # TODO: better error ?
             raise commands.CheckFailure(message='Sorry, only trusted people can use this command')
 
     def decorator(func: T) -> T:
         commands.check(pred)(func)
-        app_commands.check(pred)(func)
-        app_commands.default_permissions(administrator=True)(func)
+        app_commands.check(pred)(func)  # if it's only `app_commands.command` then ^commands wont be triggered.
+        app_commands.default_permissions(manage_guild=True)(func)
         return func
 
     return decorator

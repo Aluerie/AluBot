@@ -152,12 +152,9 @@ class FPCSettingsBase(AluCog):
         ch = await self.get_fpc_channel(ntr)
 
         warn_embed = discord.Embed(colour=self.colour, title='Confirmation Prompt')
-        warn_embed.description = (
-            f'Are you sure you want to disable FPC notifications in {ch.mention}?\n\n'
-        )
+        warn_embed.description = f'Are you sure you want to disable FPC notifications in {ch.mention}?\n\n'
         warn_embed.add_field(
-            name='!!!',
-            value='This will also reset/delete players/characters data in the bot database.'
+            name='!!!', value='This will also reset/delete players/characters data in the bot database.'
         )
         warn_embed.set_author(name=self.game_mention, icon_url=self.game_icon)
         if not await ntr.client.prompt(ntr, embed=warn_embed):
@@ -165,13 +162,11 @@ class FPCSettingsBase(AluCog):
             cancel_embed.description = 'You pressed "Cancel"'
             await ntr.followup.send(embed=cancel_embed)
             return
-        
+
         query = f'''DELETE FROM {self.game}_settings WHERE guild_id=$1'''
         await ntr.client.pool.execute(query, ntr.guild.id)
         e = discord.Embed(colour=discord.Colour.green(), title='FPC (Favourite Player+Character) channel disabled')
-        e.description = (
-            f'Notifications will not be sent to {ch.mention} anymore. Your data was deleted.'
-        )
+        e.description = f'Notifications will not be sent to {ch.mention} anymore. Your data was deleted.'
         e.set_author(name=self.game_mention, icon_url=self.game_icon)
         await ntr.followup.send(embed=e)
 

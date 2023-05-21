@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils.const import Guild
+from utils import AluCog, const, checks
 from utils.lol.const import LiteralServerUpper
 
 if TYPE_CHECKING:
@@ -15,14 +15,12 @@ if TYPE_CHECKING:
     from utils import AluBot
 
 
-class FPCTrusted(commands.Cog):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
+class FPCTrusted(AluCog):
 
     db = app_commands.Group(
         name="database",
         description="Group command about managing database",
-        guild_ids=[Guild.hideout, Guild.stone],
+        guild_ids=const.TRUSTED_GUILDS,
     )
 
     db_dota = app_commands.Group(
@@ -39,6 +37,7 @@ class FPCTrusted(commands.Cog):
             raise commands.ExtensionNotLoaded(name='Dota 2 Cog is not loaded')
         return dota_cog
 
+    @checks.is_trustee()
     @db_dota.command(name="add")
     async def db_dota_add(self, ntr: discord.Interaction[AluBot], name: str, steam: str, twitch: bool):
         """Add player to the database.
@@ -60,6 +59,7 @@ class FPCTrusted(commands.Cog):
         account_dict = await dota_cog.get_account_dict(steam_flag=steam)
         await dota_cog.database_add(ntr, player_dict, account_dict)
 
+    @checks.is_trustee()
     @db_dota.command(name='remove')
     async def db_dota_remove(self, ntr: discord.Interaction[AluBot], name: str, steam: Optional[str]):
         """Remove account/player from the database.
@@ -95,6 +95,7 @@ class FPCTrusted(commands.Cog):
             raise commands.ExtensionNotLoaded(name='LoLFPC is not loaded')
         return lol_cog
 
+    @checks.is_trustee()
     @db_lol.command(name='add')
     async def db_lol_add(self, ntr: discord.Interaction[AluBot], name: str, server: LiteralServerUpper, account: str):
         """Add player to the database.
@@ -115,6 +116,7 @@ class FPCTrusted(commands.Cog):
         account_dict = await lol_cog.get_account_dict(server=server, account=account)
         await lol_cog.database_add(ntr, player_dict, account_dict)
 
+    @checks.is_trustee()
     @db_lol.command(name='remove')
     async def db_lol_remove(
         self, ntr: discord.Interaction[AluBot], name: str, server: Optional[LiteralServerUpper], account: Optional[str]
@@ -135,9 +137,9 @@ class FPCTrusted(commands.Cog):
         lol_cog = self.get_lol_tools_cog()
         if bool(server) != bool(account):
             raise commands.BadArgument('You need to provide both `server` and `account` to delete the specific account')
-        elif server:
+        elif server and account:
             # todo: check type str | None for account
-            lol_id, _, _ = lol_cog.get_lol_id(server=server, account=account)
+            lol_id, _, _ = await lol_cog.get_lol_id(server=server, account=account)
         else:
             lol_id = None
         await lol_cog.database_remove(ntr, name.lower(), lol_id)

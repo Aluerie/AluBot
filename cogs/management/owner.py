@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import json
-import os
-from typing import TYPE_CHECKING, Awaitable, Callable, Literal
+from typing import TYPE_CHECKING, Awaitable, Callable, List, Literal
 
 import discord
 from discord.ext import commands
@@ -23,10 +22,12 @@ class AdminTools(ManagementBaseCog):
     async def trustee(self, ctx: AluContext):
         await ctx.scnf()
 
-    async def trustee_add_remove(self, ctx: AluContext, user_id: int, mode: Literal["add", "remov"]):
+    async def get_trusted_ids(self) -> List[int]:
         query = "SELECT trusted_ids FROM botinfo WHERE id=$1"
-        trusted_ids = await self.bot.pool.fetchval(query, const.Guild.community)
+        return await self.bot.pool.fetchval(query, const.Guild.community)
 
+    async def trustee_add_remove(self, ctx: AluContext, user_id: int, mode: Literal["add", "remov"]):
+        trusted_ids = await self.get_trusted_ids()
         if mode == "add":
             trusted_ids.append(user_id)
         elif mode == "remov":
@@ -51,6 +52,15 @@ class AdminTools(ManagementBaseCog):
     async def remove(self, ctx: AluContext, user_id: int):
         """Remove trustee privilege from a user with `user_id`."""
         await self.trustee_add_remove(ctx, user_id=user_id, mode="remov")
+
+    @is_owner()
+    @trustee.command(name='list', hidden=True)
+    async def list_(self, ctx: AluContext):
+        """Get list of trusted users."""
+        trusted_ids = await self.get_trusted_ids()
+        msg = '\n'.join([f'\N{BLACK CIRCLE} {ctx.bot.get_user(i)} - `{i}`' for i in trusted_ids])
+        e = discord.Embed(color=const.Colour.prpl(), title='List of trustees', description=msg)
+        await ctx.reply(embed=e)
 
     @is_owner()
     @commands.command(name="extensions", hidden=True)

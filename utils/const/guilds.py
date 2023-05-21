@@ -46,6 +46,9 @@ class Guild:
     stone = 773607529879699497
 
 
+TRUSTED_GUILDS = [Guild.hideout, Guild.stone]
+
+
 class Channel(ChannelEnum):
     rules = 724996010169991198
     role_selection = 1099742867947262093

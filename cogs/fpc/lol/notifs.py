@@ -115,7 +115,7 @@ class LoLNotifs(AluCog):
             em.title = f"{owner_name}'s fav champ + player spotted"
             msg = await ch.send(embed=em, file=img_file)
 
-            query = """ INSERT INTO lol_matches (id, region, platform)
+            query = """ INSERT INTO lol_matches (match_id, region, platform)
                         VALUES ($1, $2, $3)
                         ON CONFLICT DO NOTHING 
                     """

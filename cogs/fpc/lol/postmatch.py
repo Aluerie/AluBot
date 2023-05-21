@@ -41,7 +41,7 @@ class LoLFeedPostMatchEdit(AluCog):
         query = "SELECT * FROM lol_matches WHERE is_finished=TRUE"
         for row in await self.bot.pool.fetch(query):
             try:
-                match = await lol.Match(id=f'{row.platform.upper()}_{row.id}', region=row.region).get()
+                match = await lol.Match(id=f'{row.platform.upper()}_{row.match_id}', region=row.region).get()
             except NotFound:
                 continue
             except ValueError as error:  # gosu incident ValueError: '' is not a valid platform
@@ -49,7 +49,7 @@ class LoLFeedPostMatchEdit(AluCog):
                 # continue
 
             query = 'SELECT * FROM lol_messages WHERE match_id=$1'
-            for r in await self.bot.pool.fetch(query, row.id):
+            for r in await self.bot.pool.fetch(query, row.match_id):
                 for participant in match.info.participants:
                     if participant.champion_id == r.champ_id:
                         self.postmatch_players.append(
@@ -59,8 +59,8 @@ class LoLFeedPostMatchEdit(AluCog):
                                 message_id=r.message_id,
                             )
                         )
-            query = 'DELETE FROM lol_matches WHERE id=$1'
-            await self.bot.pool.fetch(query, row.id)
+            query = 'DELETE FROM lol_matches WHERE match_id=$1'
+            await self.bot.pool.fetch(query, row.match_id)
 
     @tasks.loop(seconds=59)
     async def postmatch_edits(self):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Dict, List, Set
 
 import vdf
@@ -12,6 +13,9 @@ from utils import AluCog
 
 if TYPE_CHECKING:
     from utils import AluBot
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 class OpenDotaAutoParser(AluCog):
@@ -29,18 +33,16 @@ class OpenDotaAutoParser(AluCog):
         self.opendota_req_cache: Dict[int, OpendotaRequestMatch] = dict()
 
     def cog_load(self) -> None:
-        self.bot.steam_dota_login()
+        self.bot.ini_steam_dota()
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def autoparse_response(result):
             if result.specific_games:
                 m_ids = [m.match_id for m in result.game_list]
-                self.matches_to_parse = [m_id for m_id in self.active_matches if m_id not in m_ids]
-                self.active_matches += [m_id for m_id in m_ids if m_id not in self.active_matches]
-            else:
-                self.matches_to_parse = self.active_matches
-            # print(f'to parse {self.matches_to_parse} active {self.active_matches}')
-            self.bot.dota.emit('autoparse_top_games_response')
+                self.matches_to_parse = list(dict.fromkeys([m_id for m_id in self.active_matches if m_id not in m_ids]))
+                self.active_matches += list(dict.fromkeys([m_id for m_id in m_ids if m_id not in self.active_matches]))
+                log.debug(f'to parse {self.matches_to_parse} active {self.active_matches}')
+                self.bot.dota.emit('autoparse_top_games_response')
 
         self.autoparse_task.start()
 
@@ -54,6 +56,7 @@ class OpenDotaAutoParser(AluCog):
         proto_msg.header.routing_appid = 570  # type: ignore
         query = 'SELECT steam_id FROM autoparse'
         steam_ids = [r for r, in await self.bot.pool.fetch(query)]
+        log.debug(f'{steam_ids=}')
         proto_msg.body.steamid_request.extend(steam_ids)  # type: ignore
         resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
         if resp is None:
@@ -82,6 +85,7 @@ class OpenDotaAutoParser(AluCog):
             cache_item: OpendotaRequestMatch = self.opendota_req_cache[match_id]
 
             await cache_item.workflow(self.bot)
+            print(cache_item)
             if cache_item.dict_ready:
                 self.opendota_req_cache.pop(match_id)
                 self.active_matches.remove(match_id)

@@ -43,12 +43,14 @@ class DotaNotifs(AluCog):
             #     f"{result.start_game, result.game_list_index, len(result.game_list)} "
             #     f"{result.game_list[0].players[0].account_id}"
             # )
-            for match in result.game_list:
-                self.top_source_dict[match.match_id] = match
-            # not good: we have 10+ top_source_tv_events, but we send response on the very first one so it s not precise
-            self.bot.dota.emit("my_top_games_response")
-            # did not work
-            # self.bot.dispatch('my_top_games_response')
+            if not result.specific_games:
+                for match in result.game_list:
+                    self.top_source_dict[match.match_id] = match
+                # not good: we have 10+ top_source_tv_events, but we send response on the very first one so it s not precise
+                if len(self.top_source_dict) == 100:
+                    self.bot.dota.emit("my_top_games_response")
+                # did not work
+                # self.bot.dispatch('my_top_games_response')
 
         # self.bot.dota.on('top_source_tv_games', response)
 
@@ -204,7 +206,10 @@ class DotaNotifs(AluCog):
 
         await self.preliminary_queries()
         self.top_source_dict = {}
-        for specific_games_flag in [False, True]:
+        for specific_games_flag in [False]: #, True]:
+            #  there is kinda no point in True since all streamers we are subbed to are top100 players
+            # there is also a small quirk that i separate dota_tools.autoparse with this
+            # via result.specific_games arg
             args = await self.get_args_for_top_source(specific_games_flag)
             if args:  # check args value is not empty
                 start_time = time.perf_counter()

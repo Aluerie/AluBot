@@ -32,7 +32,9 @@ class OpenDotaAutoParser(AluCog):
         self.matches_to_parse: List[int] = []
         self.opendota_req_cache: Dict[int, OpendotaRequestMatch] = dict()
 
-    def cog_load(self) -> None:
+        self.steam_ids: List[int]
+
+    async def cog_load(self) -> None:
         self.bot.ini_steam_dota()
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
@@ -42,13 +44,15 @@ class OpenDotaAutoParser(AluCog):
                 self.matches_to_parse = list(dict.fromkeys([m_id for m_id in self.active_matches if m_id not in m_ids]))
                 self.active_matches += list(dict.fromkeys([m_id for m_id in m_ids if m_id not in self.active_matches]))
                 log.debug(f'to parse {self.matches_to_parse} active {self.active_matches}')
-            else:
-                self.matches_to_parse = self.active_matches
-            self.bot.dota.emit('autoparse_top_games_response')
+                self.bot.dota.emit('autoparse_top_games_response')
+                #TODO: maybe put here friend_id conditions as a next conditional 
+
+        query = 'SELECT steam_id FROM autoparse'
+        self.steam_ids = [r for r, in await self.bot.pool.fetch(query)]
 
         self.autoparse_task.start()
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.autoparse_task.cancel()
 
     async def get_active_matches(self):
@@ -56,10 +60,8 @@ class OpenDotaAutoParser(AluCog):
 
         proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
         proto_msg.header.routing_appid = 570  # type: ignore
-        query = 'SELECT steam_id FROM autoparse'
-        steam_ids = [r for r, in await self.bot.pool.fetch(query)]
-        log.debug(f'{steam_ids=}')
-        proto_msg.body.steamid_request.extend(steam_ids)  # type: ignore
+
+        proto_msg.body.steamid_request.extend(self.steam_ids)  # type: ignore
         resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
         if resp is None:
             print('resp is None, hopefully everything else will be fine tho;')
@@ -74,8 +76,11 @@ class OpenDotaAutoParser(AluCog):
 
         # print(self.lobby_ids)
         # dota.on('ready', ready_function)
-        self.bot.dota.request_top_source_tv_games(lobby_ids=list(self.lobby_ids))
-        self.bot.dota.wait_event('autoparse_top_games_response', timeout=8)
+        if self.lobby_ids:
+            self.bot.dota.request_top_source_tv_games(lobby_ids=list(self.lobby_ids))
+            self.bot.dota.wait_event('autoparse_top_games_response', timeout=8)
+        else:
+            self.matches_to_parse = self.active_matches
 
     @tasks.loop(seconds=59)
     async def autoparse_task(self):

@@ -328,6 +328,12 @@ class OpendotaRequestMatch:
         self.dict_ready = False
         self.api_calls_done = 0
 
+    def __repr__(self) -> str:
+        return (
+            f'<OpendotaRequestMatch match_id={self.match_id} '
+            f'fails/tries/parse={self.fails}/{self.tries}/{self.parse_attempts} ready={self.dict_ready}>'
+        )
+
     async def post_request(self, bot: AluBot) -> int:
         """
         Make opendota request parsing API call

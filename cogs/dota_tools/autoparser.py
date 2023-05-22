@@ -26,7 +26,7 @@ class OpenDotaAutoParser(AluCog):
 
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        self.active_matches: List[int] = []
+        self.active_matches: List[int] = [7165513460]
         self.lobby_ids: Set[int] = set()
 
         self.matches_to_parse: List[int] = []
@@ -42,7 +42,9 @@ class OpenDotaAutoParser(AluCog):
                 self.matches_to_parse = list(dict.fromkeys([m_id for m_id in self.active_matches if m_id not in m_ids]))
                 self.active_matches += list(dict.fromkeys([m_id for m_id in m_ids if m_id not in self.active_matches]))
                 log.debug(f'to parse {self.matches_to_parse} active {self.active_matches}')
-                self.bot.dota.emit('autoparse_top_games_response')
+            else:
+                self.matches_to_parse = self.active_matches
+            self.bot.dota.emit('autoparse_top_games_response')
 
         self.autoparse_task.start()
 
@@ -85,7 +87,7 @@ class OpenDotaAutoParser(AluCog):
             cache_item: OpendotaRequestMatch = self.opendota_req_cache[match_id]
 
             await cache_item.workflow(self.bot)
-            print(cache_item)
+            # print(cache_item)
             if cache_item.dict_ready:
                 self.opendota_req_cache.pop(match_id)
                 self.active_matches.remove(match_id)

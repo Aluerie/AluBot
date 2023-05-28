@@ -348,7 +348,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
     # lol champ ##################################
 
     slh_lol_champ = app_commands.Group(
-        name='champ',
+        name='champion',
         description='Group command about LoLFeed champs',
         parent=slh_lol,
     )

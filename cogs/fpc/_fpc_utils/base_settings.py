@@ -589,7 +589,7 @@ class FPCSettingsBase(AluCog):
         await self.is_fpc_channel_set(ctx, raise_=True)
 
         query = f'SELECT character_id FROM {self.game}_favourite_characters WHERE guild_id=$1'
-        fav_ids: List[int] = [r for r, in await ctx.client.pool.fetch(query, ctx.guild.id)]  # type: ignore
+        fav_ids: List[int] = [r for r, in await ctx.client.pool.fetch(query, ctx.guild.id)]
 
         failed_names, success_and_already_ids = [], []
         for name in character_names:
@@ -625,7 +625,8 @@ class FPCSettingsBase(AluCog):
     ) -> List[app_commands.Choice[str]]:
         """Base function for character add/remove autocomplete"""
         query = f'SELECT character_id FROM {self.game}_favourite_characters WHERE guild_id=$1'
-        fav_ids: List[int] = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id)]  # type:ignore
+        assert ntr.guild
+        fav_ids: List[int] = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id)]
 
         fav_names = [await self.character_name_by_id(i) for i in fav_ids]
 
@@ -644,14 +645,14 @@ class FPCSettingsBase(AluCog):
         close_match = get_close_matches(current, choice_names, n=5, cutoff=0)
 
         return_list = list(dict.fromkeys(precise_match + close_match))
-        return [app_commands.Choice(name=n, value=n) for n in return_list][:25]  # type: ignore
+        return [app_commands.Choice(name=n, value=n) for n in return_list][:25]
 
     async def character_list(self, ctx_ntr: AluGuildContext | discord.Interaction[AluBot]) -> None:
         """Base function for character list commands"""
         ctx = await self.get_ctx(ctx_ntr)
         await ctx.typing()
         query = f'SELECT character_id FROM {self.game}_favourite_characters WHERE guild_id=$1'
-        fav_ids: List[int] = [r for r, in await ntr.client.pool.fetch(query, ntr.guild.id)]  # type: ignore
+        fav_ids: List[int] = [r for r, in await ctx.client.pool.fetch(query, ctx.guild.id)]
         fav_names = [f'{await self.character_name_by_id(i)} - `{i}`' for i in fav_ids]
 
         e = discord.Embed(title=f'List of your favourite {self.character_gather_word}', colour=self.colour)

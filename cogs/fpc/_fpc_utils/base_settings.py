@@ -689,6 +689,8 @@ class FPCSettingsBase(AluCog):
         new_hero_list = [(id_, name) for id_, name in data['name_by_id'].items()]
         new_hero_list.sort(key=lambda x: x[1])
 
-        pages = CharacterPages(ctx, CharacterPageSource(new_hero_list), self.game)
+        pages = CharacterPages(
+            ctx, CharacterPageSource(new_hero_list), self.game, self.colour, self.character_gather_word
+        )
         await pages.start()
         # await ctx.send(content=content)

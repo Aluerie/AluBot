@@ -46,6 +46,19 @@ class CharacterPageSource(menus.ListPageSource):
         super().__init__(entries=data, per_page=20)
         # self.data: List[Tuple[int, str]] = data
 
+    def character_page_embed(self, menu: CharacterPages) -> discord.Embed:
+        e = discord.Embed(colour=menu.colour)
+        e.title = f'Your favourite {menu.gather_word} list interactive setup'
+
+        e.description = (
+            f'Below there is a pagination menu representing each character from {menu.game}. '
+            'The colour of buttons shows if it\'s chosen as your favourite. '
+            'Press the buttons to mark/demark as favourites.'
+        )
+        e.add_field(name='Green Buttons\N{LARGE GREEN SQUARE}', value=f'Your favourite {menu.gather_word}.')
+        e.add_field(name='Gray Buttons\N{BLACK LARGE SQUARE}', value=f'Your non-favourite {menu.gather_word}.')
+        return e
+
     async def format_page(self, menu: CharacterPages, entries: List[Tuple[int, str]]):
         """
 
@@ -67,12 +80,16 @@ class CharacterPageSource(menus.ListPageSource):
             id_, name = entry
             is_fav = id_ in fav_ids
             menu.add_item(CharacterButton(name, is_fav, id_, menu))
-        return ''
+
+        e = self.character_page_embed(menu)
+        return e
 
 
 class CharacterPages(Paginator):
     source: CharacterPageSource
 
-    def __init__(self, ctx: AluContext, source: CharacterPageSource, game: str):
+    def __init__(self, ctx: AluContext, source: CharacterPageSource, game: str, colour: discord.Colour, gather_word: str):
         super().__init__(ctx, source)
-        self.game = game
+        self.game: str = game
+        self.colour: discord.Colour = colour
+        self.gather_word: str = gather_word

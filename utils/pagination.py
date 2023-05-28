@@ -105,12 +105,7 @@ class Paginator(discord.ui.View):
         self.source: menus.PageSource = source
         self.message: Optional[discord.Message] = None
         self.current_page_number: int = 0
-
-        if isinstance(ctx_ntr, AluContext):
-            author: discord.User | discord.Member = ctx_ntr.author
-        elif isinstance(ctx_ntr, discord.Interaction):
-            author = ctx_ntr.user
-        self.author: discord.User | discord.Member = author
+        self.author: discord.User | discord.Member = ctx_ntr.user
 
         self.clear_items()
         self.fill_items()

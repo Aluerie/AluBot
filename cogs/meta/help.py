@@ -111,9 +111,7 @@ class HelpPages(Paginator):
 class MyHelpCommand(commands.HelpCommand):
     context: AluContext
 
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         super().__init__(
             verify_checks=True,
             command_attrs={

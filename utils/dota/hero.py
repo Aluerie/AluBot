@@ -15,6 +15,8 @@ __all__ = (
 
 
 class HeroKeyCache(KeyCache):
+    # TODO: if type_checking: so we have typed dict and autocomplete on  hero_keys_cache.data['id_by_npcname']
+    # instead of unknown unknown
     async def fill_data(self) -> dict:
         url = f'{ODOTA_API_URL}/constants/heroes'
         hero_dict = await self.get_resp_json(url=url)
@@ -25,7 +27,7 @@ class HeroKeyCache(KeyCache):
             'img_url_by_id': {0: DISCONNECT_ICON},
             'icon_url_by_id': {0: DISCONNECT_ICON},
         }
-        for id_, hero in hero_dict.items():
+        for _, hero in hero_dict.items():
             data['id_by_npcname'][hero['name']] = hero['id']
             data['id_by_name'][hero['localized_name'].lower()] = hero['id']
             data['name_by_id'][hero['id']] = hero['localized_name']
@@ -87,7 +89,7 @@ async def get_all_hero_names() -> List[str]:
     data = await hero_keys_cache.data
     hero_dict = data['name_by_id']
     hero_dict.pop(0, None)
-    return list(hero_dict.values())
+    return sorted(list(hero_dict.values()))
 
 
 async def get_all_hero_ids() -> List[int]:

@@ -69,7 +69,7 @@ gratz_bank = [
     'Happy Birthday!',
     'May your birthday mark the beginning of a wonderful period of time in your life!',
     'My dear friend, may your special day be full of beautiful, magical and unforgettable moments!',
-    'Happy birthday, gorgeous! You are another year older and I just can’t see it. Have a blast! '
+    'Happy birthday, gorgeous! You are another year older and I just can\'t see it. Have a blast! '
     'Wishing you the best of the best!',
     'Wishing you greatest birthday ever, full of love and joy from the moment you open your eyes in the morning '
     'until you sleep for the night.',

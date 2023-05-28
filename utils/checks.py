@@ -91,7 +91,7 @@ def hybrid_permissions_check(**perms: bool) -> Callable[[T], T]:
 # for following `is_manager`, `is_mod`, `is_admin check` we could use `hybrid_permissions_check`
 # but I need to manually define docstring so /help command can catch it
 # Unfortunately, I don't know any other way
-# ToDo: figure a way to get docs to decorators instead of to predicates
+# TODO: figure a way to get docs to decorators instead of to predicates
 
 
 # def is_manager():

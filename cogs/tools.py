@@ -11,7 +11,7 @@ from utils import AluCog, const
 from utils.translator import translate
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from utils import AluBot, AluContext
 
 
 class ToolsCog(AluCog, name='Tools', emote=const.Emote.DankFix):
@@ -49,23 +49,23 @@ class ToolsCog(AluCog, name='Tools', emote=const.Emote.DankFix):
         e = await self.translate_embed(text)
         await ntr.response.send_message(embed=e, ephemeral=True)
 
-    @app_commands.command()
+    @commands.hybrid_command()
     @app_commands.describe(text="Enter text to translate")
-    async def translate(self, ntr: discord.Interaction, text: str):
+    async def translate(self, ctx: AluContext, text: str):
         """Google Translate to English, auto-detects source language"""
         e = await self.translate_embed(text)
-        await ntr.response.send_message(embed=e)
+        await ctx.reply(embed=e)
 
-    @app_commands.command()
+    @commands.hybrid_command()
     @app_commands.describe(url='Url of image to convert')
-    async def convert(self, ntr: discord.Interaction, *, url: str):
+    async def convert(self, ctx: AluContext, *, url: str):
         """Convert image from webp to png format"""
         img = await self.bot.imgtools.url_to_img(url)
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags
         img.thumbnail(maxsize, Image.ANTIALIAS)
         file = self.bot.imgtools.img_to_file(img, filename='converted.png', fmt='PNG')
         e = discord.Embed(colour=const.Colour.prpl(), description='Image was converted to `.png` format')
-        await ntr.response.send_message(embed=e, file=file)
+        await ctx.reply(embed=e, file=file)
 
 
 async def setup(bot: AluBot):

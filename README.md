@@ -37,10 +37,10 @@ with pretty much everything I ever needed ! Check List of features after the pic
 
 ![AluBot preview](./assets/images/readme/dota-lol_notifs.png)
 
-## Table of Contents
+## 🏓Table of Contents
 
 - [AluBot 💜](#alubot-)
-  - [Table of Contents](#table-of-contents)
+  - [🏓Table of Contents](#table-of-contents)
   - [🏠 Wiki](#-wiki)
   - [📖 Features](#-features)
   - [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
@@ -60,7 +60,7 @@ I put a lot of information into GitHub [🏠 Wiki](https://github.com/Aluerie/Al
 
 ## 📖 Features
 
-All info in `/help` and `/setup` commands of the bot. This list is not updated in a long time, but still (#TODO: update the list, heh):
+All info in `/help` and `/setup` commands of the bot. This list has not been updated in a long time, but still (#TODO: update the list, heh):
 
 - [X] maintains #🍋dota2_news
   - [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates - comments from Valve employees  
@@ -93,12 +93,12 @@ All info in `/help` and `/setup` commands of the bot. This list is not updated i
 
 ## 🤝 Reporting Bugs, Making Suggestions and Contributing
 
-- There are [Contributing guidelines](https://github.com/Aluerie/AluBot/blob/main/.github/CONTRIBUTING.md)
+- There are [Contributing guidelines](/.github/CONTRIBUTING.md)
 - TL;DR^: Feel free to
-  - open a GitHub Issue/PR/Discussion
+  - open a GitHub Issue/PR
   - use `/feedback` bot command
   - write [Aluerie ❤#6524](https://discordapp.com/users/312204139751014400) on discord
-  - look my [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
+  - look [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
   - join our [discord server](https://discord.gg/K8FuDeP)
 
 ## 🤗 Thanks

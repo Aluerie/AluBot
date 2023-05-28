@@ -42,7 +42,10 @@ class Prefix(commands.Cog, name='Settings for the bot'):
 
     @commands.Cog.listener()
     async def on_guild_emojis_update(
-        self, guild: discord.Guild, before: Sequence[discord.Emoji], after: Sequence[discord.Emoji]
+        self,
+        guild: discord.Guild,
+        before: Sequence[discord.Emoji],
+        after: Sequence[discord.Emoji],
     ):
         query = 'SELECT emote_logs_id FROM guilds WHERE id=$1'
         val = await self.bot.pool.fetchval(query, guild.id)

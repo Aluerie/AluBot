@@ -17,11 +17,11 @@ if TYPE_CHECKING:
 
 
 class Other(AluCog):
-    @app_commands.command()
-    async def coinflip(self, ntr: discord.Interaction):
+    @commands.hybrid_command()
+    async def coinflip(self, ctx: AluContext):
         """Flip a coin: Heads or Tails?"""
         word = 'Heads' if randint(2) == 0 else 'Tails'
-        return await ntr.response.send_message(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
+        return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -104,8 +104,8 @@ class Other(AluCog):
 
         await your_life(message)
 
-    @app_commands.command()
-    async def do_emote_spam(self, ntr: discord.Interaction):
+    @commands.hybrid_command()
+    async def do_emote_spam(self, ctx: AluContext):
         """Send 3x random emote into emote spam channel"""
         rand_guild = choice(self.bot.guilds)  # type: ignore #TODO:FIX
         rand_emoji = choice(rand_guild.emojis)
@@ -113,30 +113,30 @@ class Other(AluCog):
         channel = self.community.emote_spam
         await channel.send(answer_text)
         e = discord.Embed(colour=Colour.prpl(), description=f'I sent {answer_text} into {channel.mention}')
-        await ntr.response.send_message(embed=e, ephemeral=True, delete_after=10)
+        await ctx.reply(embed=e, ephemeral=True, delete_after=10)
 
-    @app_commands.command()
-    async def apuband(self, ntr: discord.Interaction):
+    @commands.hybrid_command()
+    async def apuband(self, ctx: AluContext):
         """Send apuband emote combo."""
         guild = self.community.guild
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
         content = ' '.join([str(discord.utils.get(guild.emojis, name=e)) for e in emote_names])
         try:
-            if ntr.channel and not isinstance(ntr.channel, (discord.ForumChannel, discord.CategoryChannel)):
-                await ntr.channel.send(content=content)
-                await ntr.response.send_message(content=f'Nice {Emote.DankApprove}', ephemeral=True)
+            if ctx.channel and not isinstance(ctx.channel, (discord.ForumChannel, discord.CategoryChannel)):
+                await ctx.channel.send(content=content)
+                await ctx.reply(content=f'Nice {Emote.DankApprove}', ephemeral=True)
             else:
                 msg = f'We can\'t send messages in forum channels {Emote.FeelsDankManLostHisHat}'
-                await ntr.response.send_message(content=msg, ephemeral=True)
+                await ctx.reply(content=msg, ephemeral=True)
         except:
             msg = f'Something went wrong {Emote.FeelsDankManLostHisHat} probably permissions'
-            await ntr.response.send_message(content=msg, ephemeral=True)
+            await ctx.reply(content=msg, ephemeral=True)
 
-    @app_commands.command()
+    @commands.hybrid_command()
     @app_commands.describe(max_roll_number="Max limit to roll")
-    async def roll(self, ntr: discord.Interaction, max_roll_number: app_commands.Range[int, 1]):
+    async def roll(self, ctx: AluContext, max_roll_number: app_commands.Range[int, 1]):
         """Roll an integer from 1 to `max_roll_number`."""
-        await ntr.response.send_message(randint(1, max_roll_number + 1))
+        await ctx.reply(content=str(randint(1, max_roll_number + 1)))
 
     @commands.hybrid_command(usage='[channel=curr] [text=Allo]', description='Echo something somewhere')
     @app_commands.describe(channel="Channel to send to")

@@ -3,14 +3,13 @@ Inspired by RoboDanny's `config.py`. So all credit to Danny.
 Very educational though.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Dict, Generic, TypeVar, Union, Optional, Type
 
+import asyncio
 import json
 import os
-from json import JSONDecodeError
-
 import uuid
-import asyncio
+from json import JSONDecodeError
+from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type, TypeVar, Union
 
 if TYPE_CHECKING:
     from asyncpg import Pool

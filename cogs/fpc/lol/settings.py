@@ -10,6 +10,7 @@ from pyot.core.exceptions import NotFound
 from pyot.utils.lol import champion
 
 from utils import const
+from utils.checks import is_manager
 from utils.lol.const import LOL_LOGO, LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
 from utils.lol.utils import get_all_champ_names, get_meraki_patch, get_pyot_meraki_champ_diff_list
 
@@ -20,10 +21,22 @@ from ._models import Account
 from pyot.models.lol import summoner  # isort: skip
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+
+class AddStreamFlags(commands.FlagConverter, case_insensitive=True):
+    name: str
+    server: LiteralServer
+    account: str
+
+
+class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
+    name: str
+    server: Optional[LiteralServer]
+    account: Optional[str]
 
 
 class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
@@ -54,37 +67,91 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         await self.bot.ini_twitch()
         return await super().cog_load()
 
-    lol = app_commands.Group(
+    # lol ##############################################
+
+    slh_lol = app_commands.Group(
         name="lol",
         description="Group command about LolFeed",
         default_permissions=discord.Permissions(manage_guild=True),
+        guild_only=True,
     )
 
-    lol_channel = app_commands.Group(
-        name='channel', description='Group command about LoLFeed channel settings', parent=lol
+    @commands.guild_only()
+    @is_manager()
+    @commands.group(name='lol', aliases=['league'])
+    async def ext_lol(self, ctx: AluGuildContext):
+        """Group command about LoL, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # lol channel ##############################################
+
+    slh_lol_channel = app_commands.Group(
+        name='channel', description='Group command about LoLFeed channel settings', parent=slh_lol
     )
 
-    @lol_channel.command(name='set')
-    @app_commands.describe(channel='Channel to set up LoLFeed notifications')
-    async def lol_channel_set(self, ntr: discord.Interaction[AluBot], channel: Optional[discord.TextChannel] = None):
+    @is_manager()
+    @ext_lol.group()
+    async def ext_lol_channel(self, ctx: AluGuildContext):
+        """Group command about LoL channel, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # lol channel set ##############################################
+
+    @slh_lol_channel.command(name='set')
+    @app_commands.describe(channel='Choose channel to set up LoLFeed notifications')
+    async def slh_lol_channel_set(
+        self, ntr: discord.Interaction[AluBot], channel: Optional[discord.TextChannel] = None
+    ):
         """Set channel to be the LoLFeed notifications channel."""
         await self.channel_set(ntr, channel)
 
-    @lol_channel.command(name='disable')
-    async def lol_channel_disable(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_lol_channel.command(name='set', usage='[channel=curr]')
+    async def ext_lol_channel_set(self, ctx: AluGuildContext, channel: Optional[discord.TextChannel] = None):
+        """Set channel to be the LoLFeed notifications channel."""
+        await self.channel_set(ctx, channel)
+
+    # lol channel disable ##############################################
+
+    @slh_lol_channel.command(name='disable')
+    async def slh_lol_channel_disable(self, ntr: discord.Interaction[AluBot]):
         """Disable LoLFeed notifications channel."""
         await self.channel_disable(ntr)
 
-    @lol_channel.command(name='check')
-    async def lol_channel_check(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_lol_channel.command(name='disable')
+    async def ext_lol_channel_disable(self, ctx: AluGuildContext):
+        """Stop getting LoLFeed notifs. Data about fav champs/players won't be affected."""
+        await self.channel_disable(ctx)
+
+    # lol channel check ##############################################
+
+    @slh_lol_channel.command(name='check')
+    async def slh_lol_channel_check(self, ntr: discord.Interaction[AluBot]):
         """Check if LoLFeed channel is set up."""
         await self.channel_check(ntr)
 
-    lol_database = app_commands.Group(
+    @is_manager()
+    @ext_lol_channel.command(name='check')
+    async def ext_lol_channel_check(self, ctx: AluGuildContext):
+        """Check if LoLFeed channel is set up in the server."""
+        await self.channel_check(ctx)
+
+    # lol database ##############################################
+
+    slh_lol_database = app_commands.Group(
         name='database',
         description='Group command about LoLFeed database',
-        parent=lol,
+        parent=slh_lol,
     )
+
+    @is_manager()
+    @ext_lol.group(name='database', aliases=['db'])
+    async def ext_lol_database(self, ctx: AluGuildContext):
+        """Group command about LoL database, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # helper functions ##############################################
 
     @staticmethod
     def cmd_usage_str(**kwargs):
@@ -103,7 +170,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         try:
             platform = server_to_platform(server)
             player = await summoner.Summoner(name=account, platform=platform).get()
-            return (player.id, player.platform, player.name,)
+            return player.id, player.platform, player.name
         except NotFound:
             raise commands.BadArgument(
                 f"Error checking league account with name `{account}` for `{server}` server: \n"
@@ -116,18 +183,26 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
 
     # lol database list ##################################
 
-    @lol_database.command(name='list')
-    async def lol_database_list(self, ntr: discord.Interaction[AluBot]):
+    @slh_lol_database.command(name='list')
+    async def slh_lol_database_list(self, ntr: discord.Interaction[AluBot]):
         """List of players in the database available for LoLFeed feature."""
         await self.database_list(ntr)
 
-    @lol_database.command(name='request')
+    @is_manager()
+    @ext_lol_database.command(name='list')
+    async def ext_lol_database_list(self, ctx: AluGuildContext):
+        """List of players in the database available for LoLFeed feature."""
+        await self.database_list(ctx)
+
+    # lol database request ##################################
+
+    @slh_lol_database.command(name='request')
     @app_commands.describe(
         name='twitch.tv player\'s handle',
         server='Server of the account, i.e. "NA", "EUW"',
         account='Summoner name of the account',
     )
-    async def lol_database_request(
+    async def slh_lol_database_request(
         self, ntr: discord.Interaction[AluBot], name: str, server: LiteralServerUpper, account: str
     ):
         """Request player to be added into the database."""
@@ -135,18 +210,41 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         account_dict = await self.get_account_dict(server=server, account=account)
         await self.database_request(ntr, player_dict, account_dict)
 
-    lol_player = app_commands.Group(
+    @is_manager()
+    @ext_lol_database.command(
+        name='request',
+        usage='name: <twitch_name> server: <server-region> account: <account_name>',
+    )
+    async def ext_lol_database_request(self, ctx: AluGuildContext, *, flags: AddStreamFlags):
+        """Request player to be added into the database.
+        This will send a request message into Aluerie's personal logs channel.
+        """
+        player_dict = await self.get_player_dict(name_flag=flags.name, twitch_flag=True)
+        account_dict = await self.get_account_dict(server=flags.server, account=flags.account)
+        await self.database_request(ctx, player_dict, account_dict)
+
+    # lol player ##################################
+
+    slh_lol_player = app_commands.Group(
         name='player',
         description='Group command about LoLFeed player',
-        parent=lol,
+        parent=slh_lol,
     )
+
+    @is_manager()
+    @ext_lol.group(name='player', aliases=['streamer'])
+    async def ext_lol_player(self, ctx: AluGuildContext):
+        """Group command about LoL player, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # lol player add ##################################
 
     async def lol_player_add_autocomplete(
         self, ntr: discord.Interaction, current: str
     ) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=True)
 
-    @lol_player.command(name='add')
+    @slh_lol_player.command(name='add')
     @app_commands.describe(
         **{
             f'name{i}': 'Name of a player. Suggestions from database above exclude your already fav players'
@@ -183,12 +281,20 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Add player to your favourites."""
         await self.player_add_remove(ntr, locals(), mode_add=True)
 
+    @is_manager()
+    @ext_lol_player.command(name='add', usage='<player_name(-s)>')
+    async def ext_lol_player_add(self, ctx: AluGuildContext, *, player_names: str):
+        """Add player to your favourites."""
+        await self.player_add_remove(ctx, locals(), mode_add=True)
+
+    # lol player remove ##################################
+
     async def player_remove_autocomplete(
         self, ntr: discord.Interaction, current: str
     ) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=False)
 
-    @lol_player.command(name='remove')
+    @slh_lol_player.command(name='remove')
     @app_commands.describe(**{f'name{i}': 'Name of a player' for i in range(1, 11)})
     @app_commands.autocomplete(
         name1=player_remove_autocomplete,
@@ -203,7 +309,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         name10=player_remove_autocomplete,
     )
     # @app_commands.autocomplete(**{f'name{i}': player_remove_autocomplete for i in range(1, 11)})
-    async def lol_player_remove(
+    async def slh_lol_player_remove(
         self,
         ntr: discord.Interaction[AluBot],
         name1: Optional[str],
@@ -220,23 +326,47 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Remove player from your favourites."""
         await self.player_add_remove(ntr, locals(), mode_add=False)
 
-    @lol_player.command(name='list')
-    async def lol_player_list(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_lol_player.command(name='remove', usage='<player_name(-s)>')
+    async def ext_lol_player_remove(self, ctx: AluGuildContext, *, player_names: str):
+        """Add player to your favourites."""
+        await self.player_add_remove(ctx, locals(), mode_add=False)
+
+    # lol player list ##################################
+
+    @slh_lol_player.command(name='list')
+    async def slh_lol_player_list(self, ntr: discord.Interaction[AluBot]):
         """Show list of your favourite players."""
         await self.player_list(ntr)
 
-    lol_champ = app_commands.Group(
-        name='champion',
+    @is_manager()
+    @ext_lol_player.command(name='list')
+    async def ext_lol_player_list(self, ctx: AluGuildContext):
+        """Show list of your favourite players."""
+        await self.player_list(ctx)
+
+    # lol champ ##################################
+
+    slh_lol_champ = app_commands.Group(
+        name='champ',
         description='Group command about LoLFeed champs',
-        parent=lol,
+        parent=slh_lol,
     )
+
+    @is_manager()
+    @ext_lol.group(name='champ')
+    async def ext_lol_champ(self, ctx: AluGuildContext):
+        """Group command about LoL champs, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # lol champ add ##################################
 
     async def lol_champ_add_autocomplete(
         self, ntr: discord.Interaction, current: str
     ) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=True)
 
-    @lol_champ.command(name='add')
+    @slh_lol_champ.command(name='add')
     @app_commands.describe(**{f'name{i}': 'Name of a champ' for i in range(1, 11)})
     @app_commands.autocomplete(
         name1=lol_champ_add_autocomplete,
@@ -251,7 +381,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         name10=lol_champ_add_autocomplete,
     )
     # @app_commands.autocomplete(**{f'name{i}': lol_champ_add_autocomplete for i in range(1, 11)})
-    async def lol_champ_add(
+    async def slh_lol_champ_add(
         self,
         ntr: discord.Interaction[AluBot],
         name1: Optional[str],
@@ -268,12 +398,23 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Add champ to your favourites."""
         await self.character_add_remove(ntr, locals(), mode_add=True)
 
+    @is_manager()
+    @ext_lol_champ.command(
+        name='add',
+        usage='<champ_name(-s)>',
+    )
+    async def ext_lol_champ_add(self, ctx: AluGuildContext, *, champ_names: str):
+        """Add champ(-s) to your fav champ list."""
+        await self.character_add_remove(ctx, locals(), mode_add=True)
+
+    # lol champ remove ##################################
+
     async def lol_champ_remove_autocomplete(
         self, ntr: discord.Interaction, current: str
     ) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=False)
 
-    @lol_champ.command(name='remove')
+    @slh_lol_champ.command(name='remove')
     @app_commands.describe(**{f'name{i}': 'Name of a champ' for i in range(1, 11)})
     @app_commands.autocomplete(
         name1=lol_champ_remove_autocomplete,
@@ -305,21 +446,61 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Remove champ from your favourites."""
         await self.character_add_remove(ntr, locals(), mode_add=False)
 
-    @lol_champ.command(name='list')
-    async def lol_champ_list(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_lol_champ.command(name='remove', usage='<champ_name(-s)>')
+    async def ext_lol_champ_remove(self, ctx: AluGuildContext, *, champ_names: str):
+        """Remove champ(-es) from your fav champs list."""
+        await self.character_add_remove(ctx, locals(), mode_add=False)
+
+    # lol champ list ##################################
+
+    @slh_lol_champ.command(name='list')
+    async def slh_lol_champ_list(self, ntr: discord.Interaction[AluBot]):
         """Show your favourite champs list."""
         await self.character_list(ntr)
 
-    @lol.command(name='spoil')
+    @is_manager()
+    @ext_lol_champ.command(name='list')
+    async def ext_lol_champ_list(self, ctx: AluGuildContext):
+        """Show current list of fav champ."""
+        await self.character_list(ctx)
+
+    # lol champ spoil ##################################
+
+    @slh_lol.command(name='spoil')
     @app_commands.describe(spoil='`True` to enable spoiling with stats, `False` for disable')
-    async def lol_spoil(self, ntr: discord.Interaction[AluBot], spoil: bool):
+    async def slh_lol_spoil(self, ntr: discord.Interaction[AluBot], spoil: bool):
         """Turn on/off spoiling resulting stats for matches."""
         await self.spoil(ntr, spoil)
+
+    @is_manager()
+    @ext_lol.command(name='spoil')
+    async def ext_lol_spoil(self, ctx: AluGuildContext, spoil: bool):
+        """Turn on/off spoiling resulting stats for matches.
+        It is "on" by default, so it can show what items players finished with and KDA.
+        """
+        await self.spoil(ctx, spoil)
+
+    # character setup
+
+    async def get_character_data(self):
+        return await champion.champion_keys_cache.data
+    
+    @slh_lol_champ.command(name='setup')
+    async def slh_dota_hero_setup(self, ntr: discord.Interaction[AluBot]):
+        """Interactive setup to add/remove heroes in/from your favourite list."""
+        await self.character_setup(ntr)
+    
+    @is_manager()
+    @ext_lol_champ.command(name='setup')
+    async def ext_dota_hero_setup(self, ctx: AluGuildContext):
+        """Interactive setup to add/remove heroes in/from your favourite list."""
+        await self.character_setup(ctx)
 
     # meraki ##################################
 
     @commands.command(hidden=True)
-    async def meraki(self, ctx: AluContext):
+    async def meraki(self, ctx: AluGuildContext):
         """Show list of champions that are missing from Meraki JSON."""
         champ_ids = await get_pyot_meraki_champ_diff_list()
         champ_str = [f'\N{BLACK CIRCLE} {await champion.key_by_id(i)} - `{i}`' for i in champ_ids] or ['None missing']

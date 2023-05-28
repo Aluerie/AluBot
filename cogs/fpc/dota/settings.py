@@ -9,16 +9,28 @@ from discord.ext import commands
 from steam.steamid import EType, SteamID
 
 from utils import const
+from utils.checks import is_manager
 from utils.dota import hero
 from utils.dota.const import DOTA_LOGO
 
 from .._fpc_utils import FPCSettingsBase
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from utils import AluBot, AluGuildContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+
+class AddDotaPlayerFlags(commands.FlagConverter, case_insensitive=True):
+    name: str
+    steam: str
+    twitch: bool
+
+
+class RemoveStreamFlags(commands.FlagConverter, case_insensitive=True):
+    name: Optional[str]
+    steam: Optional[str]
 
 
 class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
@@ -65,39 +77,89 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
 
     # dota ##############################################
 
-    dota = app_commands.Group(
+    slh_dota = app_commands.Group(
         name="dota",
         description="Group command about DotaFeed",
         default_permissions=discord.Permissions(manage_guild=True),
+        guild_only=True
     )
 
-    dota_channel = app_commands.Group(
+    @commands.guild_only()
+    @is_manager()
+    @commands.group(name="dota")
+    async def ext_dota(self, ctx: AluGuildContext):
+        """Group command about Dota, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # dota channel ######################################
+
+    slh_dota_channel = app_commands.Group(
         name="channel",
         description="Group command about DotaFeed channel settings",
-        parent=dota,
+        parent=slh_dota,
     )
 
-    @dota_channel.command(name="set")
-    @app_commands.describe(channel="channel to set up DotaFeed notifications")
-    async def dota_channel_set(self, ntr: discord.Interaction[AluBot], channel: Optional[discord.TextChannel]):
+    @is_manager()
+    @ext_dota.group(name="channel")
+    async def ext_dota_channel(self, ctx: AluGuildContext):
+        """Group command about DotaFeed Channel, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # dota channel set ##################################
+
+    @slh_dota_channel.command(name="set")
+    @app_commands.describe(channel="Choose channel to set up DotaFeed notifications")
+    async def slh_dota_channel_set(self, ntr: discord.Interaction[AluBot], channel: Optional[discord.TextChannel]):
         """Set channel to be the DotaFeed notifications channel."""
         await self.channel_set(ntr, channel)
 
-    @dota_channel.command(name="disable")
-    async def dota_channel_disable(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_dota_channel.command(name="set", usage="[channel=curr]")
+    async def ext_dota_channel_set(self, ctx: AluGuildContext, channel: Optional[discord.TextChannel]):
+        """Set channel to be the DotaFeed notifications channel."""
+        await self.channel_set(ctx, channel)
+
+    # dota channel disable ##################################
+
+    @slh_dota_channel.command(name="disable", description="Disable DotaFeed notifications channel")
+    async def slh_dota_channel_disable(self, ntr: discord.Interaction[AluBot]):
         """Disable DotaFeed notifications channel. Data won't be affected."""
         await self.channel_disable(ntr)
 
-    @dota_channel.command(name="check")
-    async def dota_channel_check(self, ntr: discord.Interaction[AluBot]):
-        """Check if DotaFeed channel is set up."""
+    @is_manager()
+    @ext_dota_channel.command(name="disable")
+    async def ext_dota_channel_disable(self, ctx: AluGuildContext):
+        """Stop getting DotaFeed notifs. Data about fav heroes/players won't be affected."""
+        await self.channel_disable(ctx)
+
+    # dota channel check ##################################
+
+    @slh_dota_channel.command(name="check", description="Check if DotaFeed channel is set up")
+    async def slh_dota_channel_check(self, ntr: discord.Interaction[AluBot]):
+        """Check if DotaFeed channel is set up"""
         await self.channel_check(ntr)
 
-    dota_database = app_commands.Group(
+    @is_manager()
+    @ext_dota_channel.command(name="check")
+    async def ext_dota_channel_check(self, ctx: AluGuildContext):
+        """Check if DotaFeed channel is set up in the server."""
+        await self.channel_check(ctx)
+
+    # dota database ##################################
+
+    slh_dota_database = app_commands.Group(
         name="database",
         description="Group command about DotaFeed database",
-        parent=dota,
+        parent=slh_dota,
     )
+
+    @is_manager()
+    @ext_dota.group(name="database", aliases=["db"])
+    async def ext_dota_database(self, ctx: AluGuildContext):
+        """Group command about Dota 2 database, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # helper functions ##################################
 
     @staticmethod
     def cmd_usage_str(**kwargs):
@@ -133,12 +195,24 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         steam_id, friend_id = self.get_steam_id_and_64(steam_flag)
         return {"id": steam_id, "friend_id": friend_id}
 
-    @dota_database.command(name="list")
-    async def dota_database_list(self, ntr: discord.Interaction[AluBot]):
+    # dota database list ##################################
+
+    @slh_dota_database.command(
+        name="list", description="List of players in the database available for DotaFeed feature"
+    )
+    async def slh_dota_database_list(self, ntr: discord.Interaction[AluBot]):
         """List of players in the database available for DotaFeed feature."""
         await self.database_list(ntr)
 
-    @dota_database.command(name="request")
+    @is_manager()
+    @ext_dota_database.command(name="list")
+    async def ext_dota_database_list(self, ctx: AluGuildContext):
+        """List of players in the database available for DotaFeed feature."""
+        await self.database_list(ctx)
+
+    # dota database request ##################################
+
+    @slh_dota_database.command(name="request")
     async def dota_database_request(self, ntr: discord.Interaction[AluBot], name: str, steam: str, twitch: bool):
         """Request player to be added into the database.
 
@@ -157,16 +231,39 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         account_dict = await self.get_account_dict(steam_flag=steam)
         await self.database_request(ntr, player_dict, account_dict)
 
-    dota_player = app_commands.Group(
+    @is_manager()
+    @ext_dota_database.command(
+        name="request",
+        usage="name: <name> steam: <steamid> twitch: <yes/no>",
+    )
+    async def ext_dota_database_request(self, ctx: AluGuildContext, *, flags: AddDotaPlayerFlags):
+        """Request player to be added into the database.
+        This will send a request message into Aluerie's personal logs channel.
+        """
+        player_dict = await self.get_player_dict(name_flag=flags.name, twitch_flag=flags.twitch)
+        account_dict = await self.get_account_dict(steam_flag=flags.steam)
+        await self.database_request(ctx, player_dict, account_dict)
+
+    # dota player ##################################
+
+    slh_dota_player = app_commands.Group(
         name="player",
         description="Group command about DotaFeed player",
-        parent=dota,
+        parent=slh_dota,
     )
+
+    @is_manager()
+    @ext_dota.group(name="player", aliases=["streamer"])
+    async def ext_dota_player(self, ctx: AluGuildContext):
+        """Group command about Dota 2 player, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # dota player add ##################################
 
     async def player_add_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=True)
 
-    @dota_player.command(name="add")
+    @slh_dota_player.command(name="add")
     @app_commands.describe(
         **{
             f"name{i}": "Name of a player. Suggestions from database above exclude your already fav players"
@@ -186,7 +283,7 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         name10=player_add_autocomplete,
     )
     # @app_commands.autocomplete(**{f'name{i}': player_add_autocomplete for i in range(1, 11)})
-    async def dota_player_add(
+    async def slh_dota_player_add(
         self,
         ntr: discord.Interaction[AluBot],
         name1: Optional[str],
@@ -203,12 +300,20 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         """Add player to your favourites."""
         await self.player_add_remove(ntr, locals(), mode_add=True)
 
+    @is_manager()
+    @ext_dota_player.command(name="add", usage="<player_name(-s)>")
+    async def ext_dota_player_add(self, ctx: AluGuildContext, *, player_names: str):
+        """Add player to your favourites."""
+        await self.player_add_remove(ctx, locals(), mode_add=True)
+
+    # dota player remove ##################################
+
     async def player_remove_autocomplete(
         self, ntr: discord.Interaction[AluBot], current: str
     ) -> List[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=False)
 
-    @dota_player.command(name="remove")
+    @slh_dota_player.command(name="remove")
     @app_commands.describe(**{f"name{i}": "Name of a player" for i in range(1, 11)})
     @app_commands.autocomplete(
         name1=player_remove_autocomplete,
@@ -223,7 +328,7 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         name10=player_remove_autocomplete,
     )
     # @app_commands.autocomplete(**{f'name{i}': player_remove_autocomplete for i in range(1, 11)})
-    async def dota_player_remove(
+    async def slh_dota_player_remove(
         self,
         ntr: discord.Interaction[AluBot],
         name1: Optional[str],
@@ -240,21 +345,45 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         """Remove player from your favourites."""
         await self.player_add_remove(ntr, locals(), mode_add=False)
 
-    @dota_player.command(name="list")
-    async def dota_player_list(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_dota_player.command(name="remove", usage="<player_name(-s)>")
+    async def ext_dota_player_remove(self, ctx: AluGuildContext, *, player_names: str):
+        """Remove player from your favourites."""
+        await self.player_add_remove(ctx, locals(), mode_add=False)
+
+    # dota player list ##################################
+
+    @slh_dota_player.command(name="list")
+    async def slh_dota_player_list(self, ntr: discord.Interaction[AluBot]):
         """Show list of your favourite players."""
         await self.player_list(ntr)
 
-    dota_hero = app_commands.Group(
+    @is_manager()
+    @ext_dota_player.command(name="list")
+    async def ext_dota_player_list(self, ctx: AluGuildContext):
+        """Show current list of fav players."""
+        await self.player_list(ctx)
+
+    # dota hero ##################################
+
+    slh_dota_hero = app_commands.Group(
         name="hero",
         description="Group command about DotaFeed hero",
-        parent=dota,
+        parent=slh_dota,
     )
+
+    @is_manager()
+    @ext_dota.group(name="hero")
+    async def ext_dota_hero(self, ctx: AluGuildContext):
+        """Group command about Dota 2, for actual commands use it together with subcommands"""
+        await ctx.scnf()
+
+    # dota hero add ##################################
 
     async def hero_add_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=True)
 
-    @dota_hero.command(name="add")
+    @slh_dota_hero.command(name="add")
     @app_commands.describe(**{f"name{i}": "Name of a hero" for i in range(1, 11)})
     @app_commands.autocomplete(
         name1=hero_add_autocomplete,
@@ -286,10 +415,25 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         """Add hero to your favourites."""
         await self.character_add_remove(ntr, locals(), mode_add=True)
 
+    @is_manager()
+    @ext_dota_hero.command(name="add", usage="<hero_name(-s)>")
+    async def ext_dota_hero_add(self, ctx: AluGuildContext, *, hero_names: str):
+        """Add hero(-es) to your fav heroes list. \
+        Use names from Dota 2 hero grid. For example,
+        • `Anti-Mage` (letter case does not matter) and not `Magina`;
+        • `Queen of Pain` and not `QoP`.
+        """
+        # At last, you can find proper name
+        # [here](https://api.opendota.com/api/constants/heroes) with Ctrl+F \
+        # under one of `"localized_name"`
+        await self.character_add_remove(ctx, locals(), mode_add=True)
+
+    # dota hero remove ##################################
+
     async def hero_remove_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=False)
 
-    @dota_hero.command(name="remove")
+    @slh_dota_hero.command(name="remove")
     @app_commands.describe(**{f"name{i}": "Name of a hero" for i in range(1, 11)})
     @app_commands.autocomplete(
         name1=hero_remove_autocomplete,
@@ -321,16 +465,63 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         """Remove hero from your favourites."""
         await self.character_add_remove(ntr, locals(), mode_add=False)
 
-    @dota_hero.command(name="list")
-    async def dota_hero_list(self, ntr: discord.Interaction[AluBot]):
+    @is_manager()
+    @ext_dota_hero.command(name="remove", usage="<hero_name(-s)>")
+    async def ext_dota_hero_remove(self, ctx: AluGuildContext, *, hero_names: str):
+        """Remove hero(-es) from your fav heroes list."""
+        await self.character_add_remove(ctx, locals(), mode_add=False)
+
+    # dota hero list ##################################
+
+    @slh_dota_hero.command(name="list")
+    async def slh_dota_hero_list(self, ntr: discord.Interaction[AluBot]):
         """Show your favourite heroes list."""
         await self.character_list(ntr)
 
-    @dota.command(name="spoil")
+    @is_manager()
+    @ext_dota_hero.command(name="list")
+    async def ext_dota_hero_list(self, ctx: AluGuildContext):
+        """Show current list of fav heroes."""
+        await self.character_list(ctx)
+
+    # dota spoil ##################################
+
+    @slh_dota.command(name="spoil")
     @app_commands.describe(spoil="`True` to enable spoiling with stats, `False` for disable")
-    async def dota_spoil(self, ntr: discord.Interaction[AluBot], spoil: bool):
+    async def slh_dota_spoil(self, ntr: discord.Interaction[AluBot], spoil: bool):
         """Turn on/off spoiling resulting stats for matches."""
         await self.spoil(ntr, spoil)
+
+    @is_manager()
+    @ext_dota.command(name="spoil")
+    async def ext_dota_spoil(self, ctx: AluGuildContext, spoil: bool):
+        """Turn on/off spoiling resulting stats for matches.
+        It is "on" by default, so it can show what items players finished with and KDA.
+        """
+        await self.spoil(ctx, spoil)
+
+    # TODO: maybe idk reformat this into hyper_commands
+    # either 
+    # * combine the concept of slash/text commands with no cares if slash commands work
+    # * remove auto-complete versions of the commands and only leave interactive views setup
+    # * instead of "working" when got text command - send "warning sorry you better use slash command"
+    # * new ideas, pepega
+
+    # character setup
+
+    async def get_character_data(self):
+        return await hero.hero_keys_cache.data
+    
+    @slh_dota_hero.command(name='setup')
+    async def slh_dota_hero_setup(self, ntr: discord.Interaction[AluBot]):
+        """Interactive setup to add/remove heroes in/from your favourite list."""
+        await self.character_setup(ntr)
+    
+    @is_manager()
+    @ext_dota_hero.command(name='setup')
+    async def ext_dota_hero_setup(self, ctx: AluGuildContext):
+        """Interactive setup to add/remove heroes in/from your favourite list."""
+        await self.character_setup(ctx)
 
 
 async def setup(bot: AluBot):

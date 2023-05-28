@@ -578,9 +578,8 @@ class FPCSettingsBase(AluCog):
         self, ctx_ntr: AluGuildContext | discord.Interaction[AluBot], local_dict: Dict[str, Any], *, mode_add: bool
     ):
         """Base function for adding/removing characters such as heroes/champs from fav lists"""
+        character_names = self.get_names_list_from_locals(ctx_ntr, local_dict)
         ctx = await self.get_ctx(ctx_ntr)
-
-        character_names = self.get_names_list_from_locals(ctx, local_dict)
 
         if not character_names:
             raise commands.BadArgument("You cannot use this command without naming at least one character.")

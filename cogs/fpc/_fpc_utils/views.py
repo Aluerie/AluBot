@@ -52,7 +52,7 @@ class CharacterPageSource(menus.ListPageSource):
 
         e.description = (
             f'Below there is a pagination menu representing each character from {menu.game}. '
-            'The colour of buttons shows if it\'s chosen as your favourite. '
+            'Button\'s colour shows if it\'s chosen as your favourite. '
             'Press the buttons to mark/demark as favourites.'
         )
         e.add_field(name='Green Buttons\N{LARGE GREEN SQUARE}', value=f'Your favourite {menu.gather_word}.')

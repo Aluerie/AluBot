@@ -206,7 +206,7 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
     Currently, the bot supports Dota 2 and football.
     """
 
-    @commands.hybrid_command()
+    @commands.hybrid_command(aliases=['sch'])
     @app_commands.rename(schedule_mode='filter')
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in select_options])
     async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: Optional[str] = None):

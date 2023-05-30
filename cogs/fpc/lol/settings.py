@@ -487,14 +487,14 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         return await champion.champion_keys_cache.data
     
     @slh_lol_champ.command(name='setup')
-    async def slh_dota_hero_setup(self, ntr: discord.Interaction[AluBot]):
-        """Interactive setup to add/remove heroes in/from your favourite list."""
+    async def slh_lol_champ_setup(self, ntr: discord.Interaction[AluBot]):
+        """Interactive setup to add/remove champions in/from your favourite list."""
         await self.character_setup(ntr)
     
     @is_manager()
     @ext_lol_champ.command(name='setup')
-    async def ext_dota_hero_setup(self, ctx: AluGuildContext):
-        """Interactive setup to add/remove heroes in/from your favourite list."""
+    async def ext_lol_champ_setup(self, ctx: AluGuildContext):
+        """Interactive setup to add/remove champions in/from your favourite list."""
         await self.character_setup(ctx)
 
     # meraki ##################################

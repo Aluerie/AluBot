@@ -500,13 +500,6 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         """
         await self.spoil(ctx, spoil)
 
-    # TODO: maybe idk reformat this into hyper_commands
-    # either 
-    # * combine the concept of slash/text commands with no cares if slash commands work
-    # * remove auto-complete versions of the commands and only leave interactive views setup
-    # * instead of "working" when got text command - send "warning sorry you better use slash command"
-    # * new ideas, pepega
-
     # character setup
 
     async def get_character_data(self):

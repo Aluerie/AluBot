@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from typing import TYPE_CHECKING
 
@@ -11,6 +12,9 @@ from utils import AluCog
 
 if TYPE_CHECKING:
     from utils import AluContext
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)  # .DEBUG)
 
 
 class LinkUtilities(AluCog):
@@ -28,9 +32,10 @@ class LinkUtilities(AluCog):
 
     def fix_link_worker(self, message_content: str) -> str:
         """Fix embeds for twitter/instagram/more to come with better embeds."""
-        url_regex = (
-            lambda x: fr"http[s]?://(?:www\.){x}(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
-        )
+        
+        def url_regex(x: str) -> str:
+            return fr"http[s]?://(?:www\.)?{x}(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+        
         fix_dict = {
             # social network: better embed site,
             'twitter.com': 'fxtwitter.com',
@@ -38,10 +43,11 @@ class LinkUtilities(AluCog):
         }
         answer_urls = []
         for site, fix_site in fix_dict.items():
-            r_site = site.replace('.', r'\.')  # dot in regex needs to be slashed 
+            r_site = site.replace('.', r'\.')  # dot in regex needs to be slashed
             urls = re.findall(url_regex(r_site), message_content)
             answer_urls += [re.sub(site, fix_site, u) for u in urls]
 
+        log.debug(answer_urls)
         if not len(answer_urls):
             # TODO: BETTER ERROR GOD DAMN IT
             raise commands.BadArgument('This message does not have any twitter/instagram links to "fix".')

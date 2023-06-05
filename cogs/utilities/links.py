@@ -28,7 +28,6 @@ class LinkUtilities(AluCog):
 
     def fix_link_worker(self, message_content: str) -> str:
         """Fix embeds for twitter/instagram/more to come with better embeds."""
-        print(message_content)
         url_regex = (
             lambda x: fr"http[s]?://(?:www\.){x}(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
         )
@@ -43,7 +42,6 @@ class LinkUtilities(AluCog):
             urls = re.findall(url_regex(r_site), message_content)
             answer_urls += [re.sub(site, fix_site, u) for u in urls]
 
-        print(answer_urls, len(answer_urls), not len(answer_urls))
         if not len(answer_urls):
             # TODO: BETTER ERROR GOD DAMN IT
             raise commands.BadArgument('This message does not have any twitter/instagram links to "fix".')

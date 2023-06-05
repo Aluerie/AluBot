@@ -45,6 +45,7 @@ class ToolsCog(AluCog, name='Tools', emote=const.Emote.DankFix):
 
     async def translate_ctx_menu_callback(self, ntr: discord.Interaction, message: discord.Message):
         if len(text := message.content) == 0:
+            # TODO: make better error
             raise commands.BadArgument("Sorry it seEmote this message doesn't have content")
         e = await self.translate_embed(text)
         await ntr.response.send_message(embed=e, ephemeral=True)

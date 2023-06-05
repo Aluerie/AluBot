@@ -1,14 +1,14 @@
-import discord
-
 from utils.const import Emote
 
 from .dev_utils import DevUtilities
 from .embedmaker import EmbedMaker
+from .links import LinkUtilities
 
 
 class Utilities(
     DevUtilities,
     EmbedMaker,
+    LinkUtilities,
     name='Utilities',
     emote=Emote.FeelsDankManLostHisHat
 ):

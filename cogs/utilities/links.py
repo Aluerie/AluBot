@@ -30,16 +30,17 @@ class LinkUtilities(AluCog):
         """Fix embeds for twitter/instagram/more to come with better embeds."""
         print(message_content)
         url_regex = (
-            lambda x: fr"http[s]?://(?:www\.){x}\.com(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+            lambda x: fr"http[s]?://(?:www\.){x}(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
         )
         fix_dict = {
             # social network: better embed site,
-            'twitter': 'fxtwitter.com',
-            'instagram': 'ddinstagram.com',
+            'twitter.com': 'fxtwitter.com',
+            'instagram.com': 'ddinstagram.com',
         }
         answer_urls = []
         for site, fix_site in fix_dict.items():
-            urls = re.findall(url_regex(site), message_content)
+            r_site = site.replace('.', r'\.')  # dot in regex needs to be slashed 
+            urls = re.findall(url_regex(r_site), message_content)
             answer_urls += [re.sub(site, fix_site, u) for u in urls]
 
         print(answer_urls, len(answer_urls), not len(answer_urls))

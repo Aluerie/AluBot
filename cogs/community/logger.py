@@ -56,9 +56,11 @@ class CommunityMemberLogging(AluCog):
         """
         e = self.base_embed(member)
         word = self.verb_word(before_field, after_field)
-        e.description = f'{member.mention}\'s {attribute_locale} was {word} {const.Emote.PepoDetective}'
-        e.add_field(name='Before', value=discord.utils.escape_markdown(before_field) if before_field else '`...`')
-        e.add_field(name='After', value=discord.utils.escape_markdown(after_field) if after_field else '`...`')
+        e.description = (
+            f'{member.mention}\'s {attribute_locale} was {word} {const.Emote.PepoDetective}\n'
+            f'**Before**: {discord.utils.escape_markdown(before_field) if before_field else "`...`"}\n'
+            f'**After**: {discord.utils.escape_markdown(after_field) if after_field else "`...`"}'
+        )
         return e
 
     @commands.Cog.listener('on_user_update')
@@ -176,7 +178,10 @@ class CommunityMessageLogging(AluCog):
         msg = f'{after.author.display_name} edit in #{channel.name}'
         e.set_author(name=msg, icon_url=after.author.display_avatar.url, url=after.jump_url)
         # TODO: if discord ever makes author field jumpable from mobile then remove [Jump Link] from below
-        e.description = f'[`Jump link`]({after.jump_url}) | {inline_word_by_word_diff(before.content, after.content)}'
+        # TODO: inline word by word doesn't really work well on emote changes too
+        # for example if before is peepoComfy and after is dankComfy then it wont be obvious in the embed result 
+        # since discord formats emotes first.
+        e.description = f'[`Jump link`]({after.jump_url}) {inline_word_by_word_diff(before.content, after.content)}'
         await self.community.logs.send(embed=e)
 
     @commands.Cog.listener()

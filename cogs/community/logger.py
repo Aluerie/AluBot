@@ -103,6 +103,7 @@ class CommunityMemberLogging(AluCog):
             extra_e.set_footer(text=f'{before.id}')
             await self.hideout.spam.send(embed=extra_e)
 
+        # TODO: it will fail if there is more than 10 things
         await self.bot.community.bot_spam.send(embeds=embeds)
 
     @commands.Cog.listener('on_member_update')
@@ -175,7 +176,7 @@ class CommunityMessageLogging(AluCog):
         msg = f'{after.author.display_name} edit in #{channel.name}'
         e.set_author(name=msg, icon_url=after.author.display_avatar.url, url=after.jump_url)
         # TODO: if discord ever makes author field jumpable from mobile then remove [Jump Link] from below
-        e.description = f'`[Jump link]({after.jump_url})` | {inline_word_by_word_diff(before.content, after.content)}'
+        e.description = f'[`Jump link`]({after.jump_url}) | {inline_word_by_word_diff(before.content, after.content)}'
         await self.community.logs.send(embed=e)
 
     @commands.Cog.listener()

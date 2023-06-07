@@ -58,7 +58,7 @@ class CommunityMemberLogging(AluCog):
         word = self.verb_word(before_field, after_field)
         e.description = (
             f'{member.mention}\'s {attribute_locale} was {word} {const.Emote.PepoDetective}\n'
-            f'**Before**: {discord.utils.escape_markdown(before_field) if before_field else "`...`"}\n'
+            f'**Before**: {discord.utils.escape_markdown(before_field) if before_field else "`...`"}\n\n'
             f'**After**: {discord.utils.escape_markdown(after_field) if after_field else "`...`"}'
         )
         return e

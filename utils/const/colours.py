@@ -25,7 +25,7 @@ class Colour(discord.Colour):
     @classmethod
     def rspbrry(cls) -> Self:
         return cls(0xC42C48)
-
+    
     @classmethod
     def neon(cls) -> Self:
         return cls(0x4D4DFF)
@@ -33,6 +33,10 @@ class Colour(discord.Colour):
     @classmethod
     def error(cls) -> Self:
         return cls(0x800000)
+
+    @classmethod
+    def error_handler(cls) -> Self:
+        return cls(0xA32952)
 
     @classmethod
     def olive(cls) -> Self:

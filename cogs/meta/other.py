@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 
 class Url(discord.ui.View):
+    # TODO : make a helper class out of it
     def __init__(self, url: str, label: str = 'Open', emoji: Optional[str] = None):
         super().__init__()
         self.add_item(discord.ui.Button(label=label, emoji=emoji, url=url))
@@ -176,7 +177,7 @@ class OtherCog(AluCog):
         await ctx.send(embed=e2)
 
     @app_commands.command(name='feedback')
-    async def slash_feedback(self, ntr: discord.Interaction):
+    async def slh_feedback(self, ntr: discord.Interaction):
         """Give feedback about the bot directly to the bot developer."""
         await ntr.response.send_modal(FeedbackModal(self))
 
@@ -187,14 +188,12 @@ class OtherCog(AluCog):
         e = discord.Embed(colour=Colour.prpl(), title='Message from a developer')
         e.set_author(name=str(ctx.author), icon_url=ctx.author.display_avatar.url)
         e.description = content
-        e.set_footer(
-            text=(
-                'This message is sent to you in DMs because you had previously submitted feedback or '
-                'I found a bug in a command you used, I do not monitor this DM. '
-                '\n'
-                'Please, use `/feedback` if you *need* to answer my message.'
-            )
+        footer_text = (
+            'This message is sent to you in DMs because you had previously submitted feedback or '
+            'I found a bug in a command you used, I do not monitor this DM.\n'
+            'Please, use `/feedback` if you *need* to answer my message.'
         )
+        e.set_footer(text=footer_text)
         await user.send(embed=e)
         e2 = discord.Embed(colour=Colour.prpl(), description='DM successfully sent.')
         await ctx.send(embed=e2)
@@ -204,27 +203,71 @@ class OtherCog(AluCog):
         """Show the invite link, so you can add me to your server.
         You can also press "Add to Server" button in my profile.
         """
-        perms = discord.Permissions.all()
-        # perms.read_messages = True
-        url = discord.utils.oauth_url(self.bot.client_id, permissions=perms)
-        e = discord.Embed(title='Invite link for the bot', url=url, description=url, color=Colour.prpl())
-        e.set_thumbnail(url=self.bot.user.display_avatar.url)
-        await ctx.reply(embed=e)
+        # TODO: maybe make slash command out of it too
 
-    @commands.hybrid_command(help="Checks the bot's ping to Discord")
+        # Idk why but I want to weight all these permissions carefully so
+        # let's make a table for what we actually need those permissions.
+        # The following permissions are taken from https://discord.com/developers/applications/
+        # in /oauth2/general Bot Permissions section
+        # and should match what that webpage offers.
+
+        # Since I have a weird set of functions that greatly differs for Public/Community/Hideout usage
+        # Let's weight them in comparison to give ourselves a reasoning why this or that should be `True`.
+        # Maybe I should create separate bots for each
+        # At the same time it's quite possible I will make features that are currently community-only to be public
+        # This is why I probably should be greedy with permissions
+        # After all we are growing into multipurpose bot that can do everything.
+        p = discord.Permissions()
+        # +-----------------------------+-------------------------+-------------------------+-------------------------+
+        # | Permission                  | Public                  | Community               | Hideout                 |
+        # +=============================+=========================+=========================+=========================+
+        # | General Permissions                                                                                       |
+        # +-----------------------------+-------------------------+-------------------------+-------------------------+
+        # | View Audit Log              | Emote logging                                                     | <- | <- | 
+        p.view_audit_log = True
+        # | Read Messages/View Channels | Many-many Set channel functions such as FPC Notifications         | <- | <- |
+        p.read_messages = True
+        # +-----------------------------+-------------------------+-------------------------+-------------------------+
+        # | Text Permissions                                                                                          |
+        # +-----------------------------+-------------------------+-------------------------+-------------------------+
+        # | Send Messages               | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
+        p.send_messages = True
+        # | Embed Links                 | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
+        p.embed_links = True
+        # | Attach Files                | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
+        p.attach_files = True
+        # | Read Message History        | Practically everywhere (for ctx.reply)                            | <- | <- |
+        p.read_message_history = True
+        # | Use External Emojis         | Practically everywhere to use emojis from const.Emotes            | <- | <- |
+        p.external_emojis = True
+        # | Add Reactions               | ?!:thinking: reactions on @AluBot mentions                        | <- | <- |
+        p.add_reactions = True
+        # +-----------------------------+-------------------------+-------------------------+-------------------------+
+        # | Voice Permissions                                                                                         |
+        # +-----------------------------+-------------------------+-------------------------+-------------------------+
+        # | Connect                     | TextToSpeech commands                                             | <- | <- |
+        p.connect = True
+        # | Speak                       | TextToSpeech commands                                             | <- | <- |
+        p.speak = True
+        # +-----------------------------+-------------------------+-------------------------+-------------------------+
+
+        url = discord.utils.oauth_url(self.bot.client_id, permissions=p)
+        v = discord.ui.View(timeout=1)
+        v.add_item(discord.ui.Button(emoji="\N{SWAN}", label="Invite Link", url=url))
+        await ctx.reply(view=v)
+
+    @commands.hybrid_command(help="Checks the bot\'s ping to Discord")
     async def ping(self, ctx: AluContext):
         pings: List[PingTuple] = []
 
         typing_start = time.monotonic()
         await ctx.typing()
-        typing_end = time.monotonic()
-        typing_ms = (typing_end - typing_start) * 1000
+        typing_ms = (time.monotonic() - typing_start) * 1000
         pings.append(PingTuple('\N{KEYBOARD}', 'Typing', typing_ms))
 
         start = time.perf_counter()
         message = await ctx.reply("\N{TABLE TENNIS PADDLE AND BALL} Pong!")
-        end = time.perf_counter()
-        message_ms = (end - start) * 1000
+        message_ms = (time.perf_counter() - start) * 1000
         pings.append(PingTuple('\N{LOVE LETTER}', 'Message', message_ms))
 
         latency_ms = self.bot.latency * 1000
@@ -232,8 +275,7 @@ class OtherCog(AluCog):
 
         postgres_start = time.perf_counter()
         await self.bot.pool.fetch("SELECT 1")
-        postgres_end = time.perf_counter()
-        postgres_ms = (postgres_end - postgres_start) * 1000
+        postgres_ms = (time.perf_counter() - postgres_start) * 1000
         pings.append(PingTuple('\N{ELEPHANT}', 'Database', postgres_ms))
 
         average = sum([k.value for k in pings]) / len(pings)
@@ -259,10 +301,7 @@ class OtherCog(AluCog):
         e = discord.Embed(colour=Colour.bot_colour(), description=information.description)
         e.add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
 
-        e.set_author(
-            name=f"Made by {information.owner}",
-            icon_url=information.owner.display_avatar.url,
-        )
+        e.set_author(name=f"Made by {information.owner}", icon_url=information.owner.display_avatar.url)
         # statistics
         total_members = 0
         total_unique = len(self.bot.users)

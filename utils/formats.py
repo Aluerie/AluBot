@@ -1,19 +1,17 @@
 """
 Helping functions to create better/easier or just human-friendly formatting for various things.
-
-Code for the class `Plural`, the functions `human_join` and `human_timedelta`
-is licensed MPL v2 from Rapptz/RoboDanny
-https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py - Plural, human_join
-https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py - human_timedelta
 """
+
 from __future__ import annotations
 
 import datetime
 import difflib
+import traceback
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, Sequence, Union
+from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 
 from dateutil.relativedelta import relativedelta
+from discord.ext import commands
 from discord.utils import format_dt
 
 if TYPE_CHECKING:
@@ -30,6 +28,9 @@ class Plural:
         >>> format(Plural(8), 'week|weeks')  # '8 weeks'
         >>> f'{Plural(3):reminder}' # 3 reminders
     """
+
+    # licensed MPL v2 from Rapptz/RoboDanny
+    # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
 
     def __init__(self, value: int):
         self.value: int = value
@@ -52,6 +53,10 @@ def human_join(seq: Sequence[str], delim: str = ', ', final: str = 'or') -> str:
         >>> human_join(['Conan Doyle', 'Nabokov', 'Fitzgerald'], final='and')
         >>> 'Conan Doyle, Nabokov and Fitzgerald'
     """
+
+    # licensed MPL v2 from Rapptz/RoboDanny
+    # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
+
     size = len(seq)
     if size == 0:
         return ''
@@ -106,6 +111,10 @@ def human_timedelta(
     str
         Human readable string describing difference between `dt` and `source`
     """
+
+    # licensed MPL v2 from Rapptz/RoboDanny
+    # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
+
     if strip:
         brief = True
 
@@ -286,7 +295,7 @@ class AnsiFG(Enum):
     yellow = 33
     blue = 34
     pink = 35
-    cyan = (36,)
+    cyan = 36
     white = 37
 
     def __int__(self) -> int:
@@ -329,8 +338,8 @@ def ansi(
     underline: bool = False,
 ) -> str:
     """Something ansi function"""
-    # todo: make better docs
-    # todo: what s the point of ansi function if mobile doesnt support it
+    # TODO: make better docs
+    # todo: what s the point of ansi function if mobile does not support it
     # todo: check ansi gist for more
     # todo: check if stuff from docs in MyColourFormatting in bot.py works.
     # i think discord ansi is a bit halved
@@ -345,3 +354,21 @@ def ansi(
         array_join.append(foreground.value)
     final_format = ';'.join(list(map(str, array_join)))
     return f'\u001b[{final_format}m{text}\u001b[0m'
+
+
+def prepare_exception_for_send(exc: Exception) -> List[str]:
+    """
+
+    Returns
+    --------
+    List[str]
+        List of paginated strings ready to be sent to discord
+        according to its character limits via webhook or message.
+    """
+    traceback_content = "".join(traceback.format_exception(exc))
+
+    paginator = commands.Paginator(prefix='```py')
+    for line in traceback_content.split('\n'):
+        paginator.add_line(line)
+
+    return paginator.pages

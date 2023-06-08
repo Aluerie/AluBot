@@ -63,10 +63,8 @@ class TwitchCog(AluCog):
         mention_role = self.community.stream_lover_role
         content = f'{mention_role.mention} and chat, our Highness **@{tw.display_name}** just went live !'
         file = await self.bot.imgtools.url_to_file(tw.preview_url, filename='twtvpreview.png')
-        e = discord.Embed(colour=0x9146FF, title=f'{tw.title}', url=tw.url)
-        e.description = (
-            f'Playing {tw.game}\n/[Watch Stream]({tw.url}){await self.bot.twitch.last_vod_link(MY_TWITCH_ID)}'
-        )
+        desc = f'Playing {tw.game}\n/[Watch Stream]({tw.url}){await self.bot.twitch.last_vod_link(MY_TWITCH_ID)}'
+        e = discord.Embed(colour=0x9146FF, title=f'{tw.title}', url=tw.url, description=desc)
         e.set_author(name=f'{tw.display_name} just went live on Twitch!', icon_url=tw.logo_url, url=tw.url)
         e.set_thumbnail(url=tw.logo_url)
         e.set_image(url=f'attachment://{file.filename}')

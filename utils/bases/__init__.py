@@ -1,2 +1,2 @@
-from .base_cog import *
+from .cog import *
 from .context import *

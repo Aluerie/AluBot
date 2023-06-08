@@ -34,17 +34,21 @@ class CommunityMemberLogging(AluCog):
             return 'changed'
 
     def before_after_embed(
-        self, member: discord.Member, attribute_locale: str, before_field: str | None, after_field: str | None
+        self,
+        member: discord.Member,
+        attribute_locale: str,
+        before_field: str | None,
+        after_field: str | None,
     ) -> discord.Embed:
         """
-        Gives Before/After embed to send later for logging purposes
+        Gives Before/After embed to send later for logger purposes
 
         Parameters
         ----------
         member: discord.Member
             member for whom the embed is triggered for
         attribute_locale: str
-            Normal discord settings/human-understandable name for attribute that was changed for @member
+            Name from Discord Settings page for changed @member's object attribute
         before_field: str | None
             Value of the said attribute before the triggered event
         after_field: str | None
@@ -52,15 +56,15 @@ class CommunityMemberLogging(AluCog):
 
         Returns
         ----------
-        Embed to send for logging purposes
+        Embed to send for logger purposes
         """
         e = self.base_embed(member)
-        word = self.verb_word(before_field, after_field)
         e.description = (
-            f'{member.mention}\'s {attribute_locale} was {word} {const.Emote.PepoDetective}\n'
-            f'**Before**: {discord.utils.escape_markdown(before_field) if before_field else "`...`"}\n'
-            f'**After**: {discord.utils.escape_markdown(after_field) if after_field else "`...`"}'
+            f'{member.mention}\'s {attribute_locale} was {self.verb_word(before_field, after_field)} '
+            f'{const.Emote.PepoDetective}\n'
         )
+        e.add_field(name='Before', value=discord.utils.escape_markdown(before_field) if before_field else "`...`")
+        e.add_field(name='After', value=discord.utils.escape_markdown(after_field) if after_field else "`...`")
         return e
 
     @commands.Cog.listener('on_user_update')
@@ -99,14 +103,14 @@ class CommunityMemberLogging(AluCog):
             changes = [attr for attr in b if b[attr] != a[attr]]
             extra_e = self.base_embed(member)
             for attr in changes:
-                # todo: this will fail if 25+ fields
+                # TODO: this will fail if 25+ fields
                 value = f'**Before**: {getattr(before, attr)}\n**After**: {getattr(after, attr)}'
                 extra_e.add_field(name=f'`{attr}`', value=value)
             extra_e.set_footer(text=f'{before.id}')
             await self.hideout.spam.send(embed=extra_e)
 
         # TODO: it will fail if there is more than 10 things
-        await self.bot.community.bot_spam.send(embeds=embeds)
+        await self.community.bot_spam.send(embeds=embeds)
 
     @commands.Cog.listener('on_member_update')
     async def logger_member_roles_update(self, before: discord.Member, after: discord.Member):
@@ -126,14 +130,14 @@ class CommunityMemberLogging(AluCog):
             return await self.bot.community.logs.send(embed=e)
 
     async def rolling_stones_role_check(self, after: discord.Member):
-        stone_rl = self.bot.community.rolling_stone_role
+        rolling_stones_role = self.community.rolling_stone_role
         if after.nick and 'Stone' in after.nick:
-            e = discord.Embed(colour=const.Colour.prpl())
-            e.description = f'{after.mention} gets lucky {stone_rl.mention} role {const.Emote.PogChampPepe}'
+            e = discord.Embed(colour=rolling_stones_role.colour)
+            e.description = f'{after.mention} gets lucky {rolling_stones_role.mention} role {const.Emote.PogChampPepe}'
             await self.bot.community.bot_spam.send(embed=e)
-            await after.add_roles(stone_rl)
+            await after.add_roles(rolling_stones_role)
         else:
-            await after.remove_roles(stone_rl)
+            await after.remove_roles(rolling_stones_role)
 
     @commands.Cog.listener('on_member_update')
     async def logger_member_nickname_update(self, before: discord.Member, after: discord.Member):
@@ -179,7 +183,7 @@ class CommunityMessageLogging(AluCog):
         e.set_author(name=msg, icon_url=after.author.display_avatar.url, url=after.jump_url)
         # TODO: if discord ever makes author field jumpable from mobile then remove [Jump Link] from below
         # TODO: inline word by word doesn't really work well on emote changes too
-        # for example if before is peepoComfy and after is dankComfy then it wont be obvious in the embed result 
+        # for example if before is peepoComfy and after is dankComfy then it wont be obvious in the embed result
         # since discord formats emotes first.
         e.description = f'[`Jump link`]({after.jump_url}) {inline_word_by_word_diff(before.content, after.content)}'
         await self.community.logs.send(embed=e)
@@ -237,4 +241,3 @@ class CommunityCommandLogging(AluCog):
 async def setup(bot: AluBot):
     for c in (CommunityMemberLogging, CommunityMessageLogging, CommunityCommandLogging):
         await bot.add_cog(c(bot))
-

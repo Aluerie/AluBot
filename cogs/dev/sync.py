@@ -8,18 +8,20 @@ from discord.ext import commands
 from utils import const
 from utils.checks import is_owner
 
-from ._base import ManagementBaseCog
+from ._base import DevBaseCog
 
 if TYPE_CHECKING:
     from utils import AluContext
 
 
-class SyncCommandCog(ManagementBaseCog):
-    """ A SPECIAL ONE-COMMAND COG FOR ONE AND ONLY, THE FAMOUS UMBRA SYNC COMMAND. HOLY MOLY!
+class UmbraSyncCommandCog(DevBaseCog):
+    """A SPECIAL ONE-COMMAND COG FOR ONE AND ONLY, THE FAMOUS UMBRA SYNC COMMAND. HOLY MOLY!
+    (A BIT MODIFIED THO, SORRY UMBRA)
 
     `?tag usc` which abbreviates to `?tag umbra sync command`.
 
-    This command is used to sync app_commands. 
+    This command is used to sync app_commands so people don't use
+    their very precious `?tag ass` on me in discord.py server.
     """
 
     @is_owner()
@@ -83,4 +85,4 @@ class SyncCommandCog(ManagementBaseCog):
 
 
 async def setup(bot):
-    await bot.add_cog(SyncCommandCog(bot))
+    await bot.add_cog(UmbraSyncCommandCog(bot))

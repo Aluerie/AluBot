@@ -17,13 +17,14 @@ from github import Github
 from steam.client import SteamClient
 from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
-import config as cfg
+import config
 from cogs import get_extensions
 from utils import AluContext, const
 from utils.bases.context import ConfirmationView
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
+from utils import formats, const
 
 from .cmd_cache import MyCommandTree
 
@@ -59,6 +60,7 @@ class AluBot(commands.Bot):
             command_prefix=self.get_pre,
             activity=discord.Streaming(name=f"\N{PURPLE HEART} /help /setup", url='https://www.twitch.tv/aluerie'),
             intents=discord.Intents(  # if you ever struggle with it - try `discord.Intents.all()`
+                # TODO: do same with those as you have with invite link lol
                 guilds=True,
                 members=True,
                 bans=True,
@@ -72,13 +74,18 @@ class AluBot(commands.Bot):
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=MyCommandTree,
         )
-        self.client_id: int = cfg.TEST_DISCORD_CLIENT_ID if test else cfg.DISCORD_CLIENT_ID
+        self.client_id: int = config.TEST_DISCORD_CLIENT_ID if test else config.DISCORD_CLIENT_ID
         self.test: bool = test
         self.app_commands: Dict[str, int] = {}
         self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
 
         self.repo = 'https://github.com/Aluerie/AluBot'
         self.developer = 'Aluerie'
+
+        # modules
+        # TODO: uncomment when we need
+        # self.config = config
+        self.formats = formats
 
     async def setup_hook(self) -> None:
         self.session = s = ClientSession()
@@ -88,7 +95,7 @@ class AluBot(commands.Bot):
         self.bot_app_info = await self.application_info()
 
         # ensure temp folder
-        # todo: maybe remove the concept of temp folder - don't save .mp3 file
+        # TODO: maybe remove the concept of temp folder - don't save .mp3 file
         #  for now it is only used in tts.py for mp3 file
         Path("./.temp/").mkdir(parents=True, exist_ok=True)
 
@@ -123,7 +130,7 @@ class AluBot(commands.Bot):
             await self.twitch.close()
 
     async def my_start(self) -> None:
-        token = cfg.TEST_TOKEN if self.test else cfg.MAIN_TOKEN
+        token = config.TEST_TOKEN if self.test else config.MAIN_TOKEN
         # token = cfg.MAIN_TOKEN
         await super().start(token, reconnect=True)
 
@@ -147,13 +154,13 @@ class AluBot(commands.Bot):
             log.debug(f"dota2info: client.connected {self.steam.connected}")
             if self.test:
                 steam_login, steam_password = (
-                    cfg.TEST_STEAM_USERNAME,
-                    cfg.TEST_STEAM_PASSWORD,
+                    config.TEST_STEAM_USERNAME,
+                    config.TEST_STEAM_PASSWORD,
                 )
             else:
                 steam_login, steam_password = (
-                    cfg.STEAM_USERNAME,
-                    cfg.STEAM_PASSWORD,
+                    config.STEAM_USERNAME,
+                    config.STEAM_PASSWORD,
                 )
 
             if self.steam.login(username=steam_login, password=steam_password):
@@ -166,26 +173,26 @@ class AluBot(commands.Bot):
 
     def ini_github(self) -> None:
         if not hasattr(self, 'github'):
-            self.github = Github(cfg.GIT_PERSONAL_TOKEN)
+            self.github = Github(config.GIT_PERSONAL_TOKEN)
 
     def ini_reddit(self) -> None:
         if not hasattr(self, 'reddit'):
             self.reddit = Reddit(
-                client_id=cfg.REDDIT_CLIENT_ID,
-                client_secret=cfg.REDDIT_CLIENT_SECRET,
-                password=cfg.REDDIT_PASSWORD,
-                user_agent=cfg.REDDIT_USER_AGENT,
-                username=cfg.REDDIT_USERNAME,
+                client_id=config.REDDIT_CLIENT_ID,
+                client_secret=config.REDDIT_CLIENT_SECRET,
+                password=config.REDDIT_PASSWORD,
+                user_agent=config.REDDIT_USER_AGENT,
+                username=config.REDDIT_USERNAME,
             )
 
     async def ini_twitch(self) -> None:
         if not hasattr(self, 'twitch'):
-            self.twitch = TwitchClient(cfg.TWITCH_TOKEN)
+            self.twitch = TwitchClient(config.TWITCH_TOKEN)
             await self.twitch.connect()
 
     def ini_twitter(self) -> None:
         if not hasattr(self, 'twitter'):
-            self.twitter = TwitterAsyncClient(cfg.TWITTER_BEARER_TOKEN)
+            self.twitter = TwitterAsyncClient(config.TWITTER_BEARER_TOKEN)
 
     def update_odota_ratelimit(self, headers) -> None:
         monthly = headers.get('X-Rate-Limit-Remaining-Month')
@@ -197,10 +204,37 @@ class AluBot(commands.Bot):
     def reminder(self) -> Optional[Reminder]:
         return self.get_cog('Reminder')  # type: ignore
 
+    @discord.utils.cached_property
+    def error_webhook(self) -> discord.Webhook:
+        if self.test:
+            url = config.TEST_ERROR_HANDLER_WEBHOOK_URL
+        else:
+            url = config.ERROR_HANDLER_WEBHOOK_URL
+
+        hook = discord.Webhook.from_url(url=url, session=self.session)
+        return hook
+    
+    async def send_exception(
+            self,
+            exc: Exception,
+            embed: discord.Embed
+        ):
+        """Docs"""
+        # TODO: Docs^
+        error_pages = self.formats.prepare_exception_for_send(exc)
+        
+        hook = self.error_webhook
+        try:
+            await hook.send(const.Role.error_ping.mention)
+            for page in error_pages:
+                await hook.send(page)
+            await hook.send(embed=embed)
+        except:
+            pass
+        
     async def send_traceback(
         self,
         error: Exception,
-        destination: Optional[discord.TextChannel] = None,
         *,
         where: str = 'not specified',
         embed: Optional[discord.Embed] = None,
@@ -230,23 +264,23 @@ class AluBot(commands.Bot):
         None
         """
 
-        ch: discord.TextChannel = destination or self.hideout.spam
-
         etype, value, trace = type(error), error, error.__traceback__
         traceback_content = "".join(traceback.format_exception(etype, value, trace, verbosity)).replace(
             "``", "`\u200b`"
         )
 
-        paginator = commands.Paginator(prefix='```python')
+        paginator = commands.Paginator(prefix='```py')
         for line in traceback_content.split('\n'):
             paginator.add_line(line)
 
         e = embed or discord.Embed(colour=const.Colour.error()).set_author(name=where)
         content = self.owner.mention if mention else ''
-        await ch.send(content=content, embed=e)
+
+        wh = self.error_webhook
+        await wh.send(content=content, embed=e)
 
         for page in paginator.pages:
-            await ch.send(page)
+            await wh.send(page)
 
     async def prompt(
         self,
@@ -295,8 +329,6 @@ class AluBot(commands.Bot):
                 view.message = await ctx_ntr.followup.send(content=content, embed=embed, view=view)
         await view.wait()
         return view.value
-
-    # SHORTCUTS ########################################################################################################
 
     @property
     def hideout(self) -> const.HideoutGuild:

@@ -14,7 +14,7 @@ from utils.times import BadTimeTransform
 from utils.translator import TranslateError
 
 if TYPE_CHECKING:
-    pass
+    from utils import AluBot
 
 
 class CommandErrorHandler(AluCog):

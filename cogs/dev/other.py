@@ -10,13 +10,13 @@ from cogs import INITIAL_EXTENSIONS, get_extensions
 from utils import AluContext, const
 from utils.checks import is_owner
 
-from ._base import ManagementBaseCog
+from ._base import DevBaseCog
 
 if TYPE_CHECKING:
     pass
 
 
-class AdminTools(ManagementBaseCog):
+class AdminTools(DevBaseCog):
     @is_owner()
     @commands.group(hidden=True)
     async def trustee(self, ctx: AluContext):

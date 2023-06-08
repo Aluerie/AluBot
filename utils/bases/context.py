@@ -61,11 +61,15 @@ class ConfirmationView(discord.ui.View):
 
 
 class AluContext(commands.Context):
-    bot: AluBot
+    """The subclassed Context to allow some extra functionality."""
+
+    if TYPE_CHECKING:
+        bot: AluBot
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pool: Pool = self.bot.pool
+        self.is_error_handled: bool = False
 
     # to match interaction
     @property

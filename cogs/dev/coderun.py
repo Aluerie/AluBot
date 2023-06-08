@@ -4,7 +4,7 @@ import io
 import textwrap
 import traceback
 from contextlib import redirect_stdout
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 import discord
 from discord.ext import commands
@@ -13,13 +13,13 @@ from utils import AluContext
 from utils.checks import is_owner
 from utils.converters import Codeblock
 
-from ._base import ManagementBaseCog
+from ._base import DevBaseCog
 
 if TYPE_CHECKING:
     from utils import AluBot
 
 
-class CodeRun(ManagementBaseCog):
+class CodeRun(DevBaseCog):
     def __init__(self, bot: AluBot):
         super().__init__(bot)
         self._last_result: Optional[Any] = None
@@ -118,7 +118,7 @@ class CodeRun(ManagementBaseCog):
 
             if ret is None:
                 if value:
-                    await ctx.send(f"```py\n{value.__repr__}\n```") # TODO: should it be repr ?
+                    await ctx.send(f"```py\n{value.__repr__}\n```")  # TODO: should it be repr ?
             else:
                 self._last_result = ret
                 await ctx.send(f"```py\n{value}{ret}\n```")

@@ -77,9 +77,11 @@ async def new_stream(bot: AluBot):
 
 
 class Twitter(AluCog):
+    if TYPE_CHECKING:
+        myStream: MyAsyncStreamingClient
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.myStream = None
 
     def cog_load(self) -> None:
         if platform.system() == 'Windows':

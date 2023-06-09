@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 GITHUB_REPO = "ValveSoftware/Dota2-Gameplay"

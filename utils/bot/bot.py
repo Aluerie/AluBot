@@ -222,8 +222,8 @@ class AluBot(commands.Bot):
         self,
         exception: BaseException,
         *,
-        embed: discord.Embed = MISSING,
-        from_where: str = MISSING,
+        embed: Optional[discord.Embed] = None,
+        from_where: str = 'From somewhere',
         mention: bool = True,
         include_traceback: bool = True,
     ) -> None:
@@ -236,6 +236,7 @@ class AluBot(commands.Bot):
             Exception that the developers of AluBot are going to be notified about
         embed: :class: discord.Embed
             discord.Embed object to prettify the output with extra info
+            Note that specifiying embed will foreshadow `from_where` value.
         from_where: :class: str
             If there is no need for custom embed but you just want to attach
             a simple string string telling where error has happened then you use `from_where`
@@ -244,7 +245,7 @@ class AluBot(commands.Bot):
         include_traceback: :class: bool
             Whether include the traceback into the messages.
         """
-        if from_where is not MISSING and embed is not MISSING:
+        if from_where is not None and embed is not None:
             raise TypeError('Cannot mix `from_where` and `embed` keyword arguments.')
 
         hook = self.error_webhook
@@ -264,7 +265,6 @@ class AluBot(commands.Bot):
             e = embed or discord.Embed(colour=const.Colour.error()).set_author(name=from_where)
             await hook.send(embed=e)
         except:
-            # TODO: hmm i dont like this.
             pass
 
     async def send_traceback(

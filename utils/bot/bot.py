@@ -249,7 +249,7 @@ class AluBot(commands.Bot):
 
         hook = self.error_webhook
         try:
-            log.info(mention, from_where, include_traceback)
+            log.info(f'{mention}, {from_where}, {include_traceback}')
             if mention:
                 await hook.send(const.Role.error_ping.mention)
             if include_traceback:

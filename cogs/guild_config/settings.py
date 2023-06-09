@@ -8,7 +8,7 @@ from discord.ext import commands
 from utils.const import Colour, Emote, Guild, Picture
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 
 class Prefix(commands.Cog, name='Settings for the bot'):
@@ -27,7 +27,7 @@ class Prefix(commands.Cog, name='Settings for the bot'):
     @commands.command()
     @commands.has_permissions(manage_emojis=True)
     @commands.bot_has_permissions(view_audit_log=True)
-    async def turn_emote_logs(self, ctx: AluContext, channel: Optional[discord.TextChannel] = None):
+    async def turn_emote_logs(self, ctx: AluGuildContext, channel: Optional[discord.TextChannel] = None):
         """Turn emote logs on in this channel for this guild"""
         ch = channel or ctx.channel
 

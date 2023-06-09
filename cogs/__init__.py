@@ -8,7 +8,7 @@ except ModuleNotFoundError:
     IGNORE_TEST = True
 
 # EXTENSIONS
-IGNORED_EXTENSIONS = ('cogs.beta',)
+IGNORED_EXTENSIONS = ('cogs.beta', 'cogs.zeta')
 INITIAL_EXTENSIONS = ("jishaku",)
 
 

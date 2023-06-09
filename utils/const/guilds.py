@@ -46,6 +46,7 @@ class Guild:
     stone = 773607529879699497
 
 
+MY_GUILDS = [Guild.hideout, Guild.community]
 TRUSTED_GUILDS = [Guild.hideout, Guild.stone]
 
 
@@ -334,7 +335,7 @@ class HideoutGuild(SavedGuild):
     @property
     def jailed_bots(self) -> discord.Role:
         return self.get_role(Role.jailed_bots)
-    
+
     @property
     def error_ping(self) -> discord.Role:
         return self.get_role(Role.error_ping)

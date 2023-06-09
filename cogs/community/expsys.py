@@ -14,7 +14,7 @@ from utils.formats import indent, ordinal
 from utils.pagination import EnumeratedPages
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 LAST_SEEN_TIMEOUT = 60
 
@@ -93,7 +93,7 @@ async def avatar_user_cmd(ntr: discord.Interaction, user: discord.User):
     await ntr.response.send_message(embed=e, ephemeral=True)
 
 
-async def rank_work(ctx: Union[AluContext, discord.Interaction[AluBot]], member: discord.Member):
+async def rank_work(ctx: Union[AluGuildContext, discord.Interaction[AluBot]], member: discord.Member):
     member = member or getattr(ctx, 'author') or getattr(ctx, 'user')
     if member.bot:
         raise commands.BadArgument('Sorry! our system does not count experience for bots.')

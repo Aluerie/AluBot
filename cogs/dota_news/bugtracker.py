@@ -14,13 +14,13 @@ from github.GithubException import GithubException
 from PIL import Image
 
 from utils import AluCog
-from utils.const import Guild, Limit, MaterialPalette
 from utils.checks import is_owner
+from utils.const import Guild, Limit, MaterialPalette
 
 if TYPE_CHECKING:
     from github import Issue, NamedUser
 
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -211,13 +211,13 @@ class BugTracker(AluCog):
 
     @is_owner()
     @commands.group(name="valve", hidden=True)
-    async def valve(self, ctx: AluContext):
+    async def valve(self, ctx: AluGuildContext):
         """Group for valve devs commands. Use it together with subcommands"""
         await ctx.scnf()
 
     @is_owner()
     @valve.command()
-    async def add(self, ctx: AluContext, *, login: str):
+    async def add(self, ctx: AluGuildContext, *, login: str):
         logins = [b for x in login.split(",") if (b := x.lstrip().rstrip())]
         query = """ INSERT INTO valve_devs (login) VALUES ($1)
                     ON CONFLICT DO NOTHING
@@ -247,7 +247,7 @@ class BugTracker(AluCog):
 
     @is_owner()
     @valve.command()
-    async def remove(self, ctx: AluContext, login: str):
+    async def remove(self, ctx: AluGuildContext, login: str):
         query = "DELETE FROM valve_devs WHERE login=$1"
         await self.bot.pool.execute(query, login)
         self.valve_devs.remove(login)
@@ -257,7 +257,7 @@ class BugTracker(AluCog):
 
     @is_owner()
     @valve.command()
-    async def list(self, ctx: AluContext):
+    async def list(self, ctx: AluGuildContext):
         query = "SELECT login FROM valve_devs"
         valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
         e = discord.Embed(color=MaterialPalette.blue(), title='List of known Valve devs')

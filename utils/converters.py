@@ -6,7 +6,7 @@ from discord.ext import commands
 from typing_extensions import Self
 
 if TYPE_CHECKING:
-    from .bases import AluContext
+    from .bases import AluGuildContext
 
 
 def my_bool(argument: str):
@@ -40,7 +40,7 @@ class Codeblock:
         self.language: str = language
 
     @classmethod
-    async def convert(cls, _ctx: AluContext, argument: str) -> Self:
+    async def convert(cls, _ctx: AluGuildContext, argument: str) -> Self:
         argument = argument.lstrip()  # Even tho it's left-stripped by default in the lib :thinking:
 
         # if we ever want regex implementation then
@@ -73,7 +73,7 @@ class Codeblock:
 # So to accept snowflake inputs you need a string and then convert it into an integer.
 class Snowflake:
     @classmethod
-    async def convert(cls, ctx: AluContext, argument: str) -> int:
+    async def convert(cls, ctx: AluGuildContext, argument: str) -> int:
         try:
             return int(argument)
         except ValueError:

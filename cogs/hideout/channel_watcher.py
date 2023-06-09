@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog
-from utils.const import Channel, Colour, Guild, Role
+from utils import AluCog, const
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -33,7 +32,7 @@ class ChannelWatcher(AluCog):
 
     async def cog_load(self) -> None:
         query = f'SELECT {self.db_column} FROM botinfo WHERE id=$1'
-        self.watch_bool = p = await self.bot.pool.fetchval(query, Guild.community)
+        self.watch_bool = p = await self.bot.pool.fetchval(query, const.Guild.community)
         if p:
             self.sleep_task.start()
 
@@ -47,7 +46,7 @@ class ChannelWatcher(AluCog):
                 self.sleep_task.restart()
                 if not self.watch_bool:
                     query = f'UPDATE botinfo SET {self.db_column}=TRUE WHERE id=$1'
-                    await self.bot.pool.execute(query, Guild.community)
+                    await self.bot.pool.execute(query, const.Guild.community)
                     self.watch_bool = True
             else:
                 self.sleep_task.start()
@@ -56,12 +55,12 @@ class ChannelWatcher(AluCog):
     async def sleep_task(self):
         await asyncio.sleep(self.sleep_time)  # let's assume the longest possible game+q time is ~50 mins
         channel: discord.TextChannel = self.bot.get_channel(self.ping_channel_id)  # type: ignore
-        e = discord.Embed(colour=Colour.error(), title=self.__cog_name__)
+        e = discord.Embed(colour=const.Colour.error(), title=self.__cog_name__)
         e.description = 'The bot crashed but did not even send the message'
         e.set_footer(text='Or maybe event just ended')
         await channel.send(self.role_mention, embed=e)
         query = f'UPDATE botinfo SET {self.db_column}=FALSE WHERE id=$1'
-        await self.bot.pool.execute(query, Guild.community)
+        await self.bot.pool.execute(query, const.Guild.community)
 
     @sleep_task.error
     async def pass_check_error(self, error):
@@ -78,9 +77,9 @@ class EventPassWatcher(ChannelWatcher):
             bot,
             db_column='event_pass_is_live',
             sleep_time=50 * 60,  # 50 minutes
-            watch_channel_id=Channel.event_pass,
-            ping_channel_id=Channel.spam_me,
-            role_mention=Role.event.mention,
+            watch_channel_id=const.Channel.event_pass,
+            ping_channel_id=const.Channel.spam_me,
+            role_mention=const.Role.event.mention,
         )
 
 

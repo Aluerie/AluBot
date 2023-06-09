@@ -9,7 +9,7 @@ from utils import AluCog, const
 from utils.checks import is_owner
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 
 class ColourRolesDropdown(discord.ui.RoleSelect):
@@ -79,7 +79,7 @@ class ColourRoles(AluCog):
 
     @is_owner()
     @commands.command(hidden=True)
-    async def new_role_selection(self, ctx: AluContext):
+    async def new_role_selection(self, ctx: AluGuildContext):
         await ctx.send(view=ColourRolesView())
         # await self.bot.community.role_selection.send(embed=e, view=ColourRolesView())
 

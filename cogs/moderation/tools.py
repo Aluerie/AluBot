@@ -45,7 +45,7 @@ class PurgeFlags(commands.FlagConverter):
     )
 
 
-class CleanCog(AluCog):
+class ModerationTools(AluCog):
     @commands.hybrid_command(aliases=['remove'], usage='[search] [flags...]')
     @commands.guild_only()
     @checks.hybrid_permissions_check(manage_messages=True)
@@ -169,10 +169,22 @@ class CleanCog(AluCog):
         to_send = '\n'.join(messages)
 
         if len(to_send) > 2000:
-            await ctx.send(f'Successfully removed {deleted} messages.', delete_after=10)
+            await ctx.reply(f'Successfully removed {deleted} messages.', delete_after=10)
         else:
-            await ctx.send(to_send, delete_after=10)
+            await ctx.reply(to_send, delete_after=10)
+
+    @commands.hybrid_command()
+    @commands.guild_only()
+    @checks.hybrid_permissions_check(manage_messages=True)
+    async def spam_chat(self, ctx: AluGuildContext):
+        '''Let the bot to spam the chat in case you want
+        to move some bad messages out of sight,
+        but not clear/delete them, like some annoying/flashing images
+        that aren't particularly offensive, just annoying.
+        '''
+        content = '\n'.join([const.Emote.DankHatTooBig for _ in range(20)])
+        await ctx.reply(content=content)
 
 
 async def setup(bot):
-    await bot.add_cog(CleanCog(bot))
+    await bot.add_cog(ModerationTools(bot))

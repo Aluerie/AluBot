@@ -14,15 +14,17 @@ from dateparser.search import search_dates
 from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageColor
-#from wordcloud import WordCloud
 
 from utils import AluCog
 from utils.checks import is_owner
 from utils.const import Colour, Emote, Guild
 from utils.formats import format_dt_tdR, human_timedelta
 
+# from wordcloud import WordCloud
+
+
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
@@ -85,7 +87,7 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         await give_text_list(self.community.nsfw_bots_role, self.community.nsfw_bot_spam, 959982171492323388)
 
     @commands.hybrid_command(name='gmt', aliases=['utc'], description="Show GMT(UTC) time")
-    async def gmt(self, ctx: AluContext):
+    async def gmt(self, ctx: AluGuildContext):
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
@@ -183,7 +185,7 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         aliases=['systeminfo'],
         hidden=True,
     )
-    async def sysinfo(self, ctx: AluContext):
+    async def sysinfo(self, ctx: AluGuildContext):
         """Get system info about machine currently hosting the bot"""
         url = 'https://ipinfo.io/json'
         async with self.bot.session.get(url) as resp:
@@ -230,7 +232,7 @@ class StatsCommands(AluCog, name='Stats', emote=Emote.Smartge):
     @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
     async def wordcloud(
         self,
-        ctx: AluContext,
+        ctx: AluGuildContext,
         channel_or_and_member: commands.Greedy[Union[discord.Member, discord.TextChannel]] = None,
         limit: int = 2000,
     ):

@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+__all__ = ('aluloop',)
+
 
 class AluLoop(tasks.Loop):
     """
@@ -40,7 +42,7 @@ class AluLoop(tasks.Loop):
         """
         I want to give a standard coro to `_before_loop`.
 
-        Otherwise every task has same 
+        Otherwise every task has same
         >>> @my_task.before_loop
         >>> @other_task.before_loop
         >>> async def my_task_before(self):
@@ -57,7 +59,7 @@ class AluLoop(tasks.Loop):
 
     async def _error(self, *args: Any) -> None:
         """
-        Same _error as in parent class but 
+        Same _error as in parent class but
         added sending webhook notifications to my spam
         """
         exception: Exception = args[-1]

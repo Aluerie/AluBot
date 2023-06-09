@@ -16,7 +16,7 @@ import pygit2
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext
+from utils import AluCog, AluGuildContext
 from utils.checks import is_owner
 from utils.const import Colour, Emote, Limit
 
@@ -132,12 +132,12 @@ class OtherCog(AluCog):
         return self.bot.hideout.global_logs
 
     @commands.command()
-    async def hello(self, ctx: AluContext):
+    async def hello(self, ctx: AluGuildContext):
         await ctx.reply(f'Hello {Emote.bubuAyaya}')
 
     @staticmethod
     def get_feedback_embed(
-        ctx_ntr: AluContext | discord.Interaction,
+        ctx_ntr: AluGuildContext | discord.Interaction,
         *,
         summary: Optional[str] = None,
         details: Optional[str] = None,
@@ -160,7 +160,7 @@ class OtherCog(AluCog):
 
     @commands.command(name='feedback')
     @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
-    async def ext_feedback(self, ctx: AluContext, *, details: str):
+    async def ext_feedback(self, ctx: AluGuildContext, *, details: str):
         """Give feedback about the bot directly to the bot developer.
         This is a quick way to request features or bug fixes. \
         The bot will DM you about the status of your request if possible/needed.
@@ -183,7 +183,7 @@ class OtherCog(AluCog):
 
     @is_owner()
     @commands.command(aliases=['pm'], hidden=True)
-    async def dm(self, ctx: AluContext, user: discord.User, *, content: str):
+    async def dm(self, ctx: AluGuildContext, user: discord.User, *, content: str):
         """Write direct message to {user}."""
         e = discord.Embed(colour=Colour.prpl(), title='Message from a developer')
         e.set_author(name=str(ctx.author), icon_url=ctx.author.display_avatar.url)
@@ -199,7 +199,7 @@ class OtherCog(AluCog):
         await ctx.send(embed=e2)
 
     @commands.command(aliases=['join'])
-    async def invite(self, ctx: AluContext):
+    async def invite(self, ctx: AluGuildContext):
         """Show the invite link, so you can add me to your server.
         You can also press "Add to Server" button in my profile.
         """
@@ -223,7 +223,7 @@ class OtherCog(AluCog):
         # +=============================+=========================+=========================+=========================+
         # | General Permissions                                                                                       |
         # +-----------------------------+-------------------------+-------------------------+-------------------------+
-        # | View Audit Log              | Emote logging                                                     | <- | <- | 
+        # | View Audit Log              | Emote logging                                                     | <- | <- |
         p.view_audit_log = True
         # | Read Messages/View Channels | Many-many Set channel functions such as FPC Notifications         | <- | <- |
         p.read_messages = True
@@ -257,7 +257,7 @@ class OtherCog(AluCog):
         await ctx.reply(view=v)
 
     @commands.hybrid_command(help="Checks the bot\'s ping to Discord")
-    async def ping(self, ctx: AluContext):
+    async def ping(self, ctx: AluGuildContext):
         pings: List[PingTuple] = []
 
         typing_start = time.monotonic()
@@ -294,7 +294,7 @@ class OtherCog(AluCog):
         await message.edit(embed=e)
 
     @commands.hybrid_command(help="Show info about the bot", aliases=["botinfo", "bi"])
-    async def about(self, ctx: AluContext):
+    async def about(self, ctx: AluGuildContext):
         """Information about the bot itself."""
         await ctx.defer()
         information = await self.bot.application_info()
@@ -351,7 +351,7 @@ class OtherCog(AluCog):
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
-    async def source(self, ctx: AluContext, *, command: Optional[str] = None):
+    async def source(self, ctx: AluGuildContext, *, command: Optional[str] = None):
         """Links to the bots code, or a specific command's"""
         source_url = ctx.bot.repo
         branch = "master"

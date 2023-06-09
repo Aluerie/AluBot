@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Tuple
 import discord
 from discord.ext import commands
 
-from utils import AluCog, AluContext
+from utils import AluCog, AluGuildContext
 from utils.const import Colour
 
 if TYPE_CHECKING:
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class DevUtilities(AluCog):
     @commands.command()
-    async def charinfo(self, ctx: AluContext, *, characters: str):
+    async def charinfo(self, ctx: AluGuildContext, *, characters: str):
         """Shows information about a character(-s). \
         Only up to a few characters tho.
         """

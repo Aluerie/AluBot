@@ -21,7 +21,6 @@ prefixes.json
 
 # beta test
 /cogs/beta.py
-/cogs/_beta.py
 _test.py
 
 # config secrets

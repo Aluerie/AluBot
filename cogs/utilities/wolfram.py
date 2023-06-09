@@ -12,7 +12,7 @@ from config import WOLFRAM_TOKEN
 from utils import AluCog, const
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 
 class WolframAlpha(AluCog, emote=const.Emote.bedNerdge):
@@ -35,7 +35,7 @@ class WolframAlpha(AluCog, emote=const.Emote.bedNerdge):
     )
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
-    async def wolf(self, ctx: AluContext, *, query: str):
+    async def wolf(self, ctx: AluGuildContext, *, query: str):
         """Get answer from WolframAlpha"""
         await ctx.typing()
         question_url = f'{self.simple_url}{urlparse.quote(query)}'
@@ -48,7 +48,7 @@ class WolframAlpha(AluCog, emote=const.Emote.bedNerdge):
     @commands.hybrid_command(name="wolfram_short", description="Get short answer from WolframAlpha.com", aliases=['wa'])
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha')
-    async def wolfram_shorter(self, ctx: AluContext, *, query: str):
+    async def wolfram_shorter(self, ctx: AluGuildContext, *, query: str):
         """Get shorter answer from WolframAlpha"""
         await ctx.typing()
         question_url = f'{self.short_url}{urlparse.quote(query)}'

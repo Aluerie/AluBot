@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import discord
 from discord.ext import menus
 
-from .bases import AluContext
+from .bases import AluGuildContext
 from .const import Colour, Emote
 
 if TYPE_CHECKING:
@@ -95,13 +95,9 @@ class SearchModal(discord.ui.Modal, title="Search Page by query"):
 
 
 class Paginator(discord.ui.View):
-    # Currently only accept Context class, so
-    # it's only usable in text or hybrid commands
-    # (but looks like it's enough)
-    # ToDO: Implement `self.ntr: Optional[Interaction] = ntr` and all
-    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], source: menus.PageSource):
+    def __init__(self, ctx_ntr: AluGuildContext | discord.Interaction[AluBot], source: menus.PageSource):
         super().__init__()
-        self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
+        self.ctx_ntr: AluGuildContext | discord.Interaction[AluBot] = ctx_ntr
         self.source: menus.PageSource = source
         self.message: Optional[discord.Message] = None
         self.current_page_number: int = 0
@@ -176,7 +172,7 @@ class Paginator(discord.ui.View):
         kwargs = await self._get_kwargs_from_page(page)
         self._update_nav_labels(0)
 
-        if isinstance(self.ctx_ntr, AluContext):
+        if isinstance(self.ctx_ntr, AluGuildContext):
             self.message = await self.ctx_ntr.send(**kwargs, view=self, ephemeral=ephemeral)
         elif isinstance(self.ctx_ntr, discord.Interaction):
             if self.ctx_ntr.response.is_done():
@@ -277,7 +273,7 @@ class EnumeratedPages(Paginator):
 
     def __init__(
         self,
-        ctx_ntr: AluContext | discord.Interaction[AluBot],
+        ctx_ntr: AluGuildContext | discord.Interaction[AluBot],
         entries: List[str],
         *,
         per_page: int,
@@ -297,7 +293,10 @@ class EnumeratedPages(Paginator):
         super().__init__(
             ctx_ntr,
             EnumeratedPageSource(
-                entries, per_page=per_page, no_enumeration=no_enumeration, description_prefix=description_prefix
+                entries,
+                per_page=per_page,
+                no_enumeration=no_enumeration,
+                description_prefix=description_prefix,
             ),
         )
         e = discord.Embed(title=title, colour=colour)

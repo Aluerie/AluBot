@@ -21,7 +21,7 @@ from discord.ext import commands
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-    from .bases import AluContext
+    from .bases import AluGuildContext
 
 
 class ShortTime:
@@ -57,7 +57,7 @@ class ShortTime:
         self.dt = now + relativedelta(**data)
 
     @classmethod
-    async def convert(cls, ctx: AluContext, argument: str) -> Self:
+    async def convert(cls, ctx: AluGuildContext, argument: str) -> Self:
         return cls(argument, now=ctx.message.created_at)
 
 
@@ -83,7 +83,7 @@ class HumanTime:
         self._past: bool = dt < now
 
     @classmethod
-    async def convert(cls, ctx: AluContext, argument: str) -> Self:
+    async def convert(cls, ctx: AluGuildContext, argument: str) -> Self:
         return cls(argument, now=ctx.message.created_at)
 
 
@@ -139,7 +139,7 @@ class FriendlyTimeResult:
         self.arg = ''
 
     async def ensure_constraints(
-        self, ctx: AluContext, uft: UserFriendlyTime, now: datetime.datetime, remaining: str
+        self, ctx: AluGuildContext, uft: UserFriendlyTime, now: datetime.datetime, remaining: str
     ) -> None:
         if self.dt < now:
             raise commands.BadArgument('This time is in the past.')
@@ -173,7 +173,7 @@ class UserFriendlyTime(commands.Converter):
         self.converter: commands.Converter = converter  # type: ignore  # It doesn't understand this narrowing
         self.default: Any = default
 
-    async def convert(self, ctx: AluContext, argument: str) -> FriendlyTimeResult:
+    async def convert(self, ctx: AluGuildContext, argument: str) -> FriendlyTimeResult:
         calendar = HumanTime.calendar
         regex = ShortTime.compiled
         now = ctx.message.created_at

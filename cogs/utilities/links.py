@@ -11,7 +11,7 @@ from discord.ext import commands
 from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from utils import AluGuildContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)  # .DEBUG)
@@ -32,10 +32,10 @@ class LinkUtilities(AluCog):
 
     def fix_link_worker(self, message_content: str) -> str:
         """Fix embeds for twitter/instagram/more to come with better embeds."""
-        
+
         def url_regex(x: str) -> str:
             return fr"http[s]?://(?:www\.)?{x}(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
-        
+
         fix_dict = {
             # social network: better embed site,
             'twitter.com': 'fxtwitter.com',
@@ -59,7 +59,7 @@ class LinkUtilities(AluCog):
 
     @commands.hybrid_command()
     @app_commands.describe(link="Enter Twitter/Instagram link to \"fix\"")
-    async def fix_links(self, ctx: AluContext, *, link: str):
+    async def fix_links(self, ctx: AluGuildContext, *, link: str):
         """Fix twitter/instagram links with better embeds."""
         content = self.fix_link_worker(link)
         await ctx.reply(content)

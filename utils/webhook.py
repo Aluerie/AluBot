@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from discord import Embed
 
-    from .bases.context import AluContext
+    from .bases.context import AluGuildContext
 
 webhook_dict = {}
 
 
-async def user_webhook(ctx: AluContext, content: Optional[str] = '', embed: Optional[Embed] = None):
+async def user_webhook(ctx: AluGuildContext, content: Optional[str] = '', embed: Optional[Embed] = None):
     found = 0
     webhook = None
     array = await ctx.channel.webhooks()

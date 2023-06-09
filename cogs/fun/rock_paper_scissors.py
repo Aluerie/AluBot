@@ -7,11 +7,10 @@ import discord
 from discord.ext import commands
 from numpy.random import choice
 
-from utils import AluCog
-from utils.const import Colour, Emote
+from utils import AluCog, const
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from utils import AluGuildContext
 
 
 class RPSElement(NamedTuple):
@@ -73,15 +72,14 @@ class RPSView(discord.ui.View):
     async def interaction_check(self, ntr: discord.Interaction) -> bool:
         if ntr.user and ntr.user in self.players:
             if ntr.user.id in self.choices:
-                e = discord.Embed(
-                    colour=Colour.error(), description=f'You\'ve already chosen **{self.choices[ntr.user.id]}**'
-                )
+                e = discord.Embed(colour=const.Colour.error())
+                e.description = f'You\'ve already chosen **{self.choices[ntr.user.id]}**'
                 await ntr.response.send_message(embed=e, ephemeral=True)
                 return False
             else:
                 return True
         else:
-            e = discord.Embed(colour=Colour.error(), description='Sorry! This game dialog is not for you.')
+            e = discord.Embed(colour=const.Colour.error(), description='Sorry! This game dialog is not for you.')
             await ntr.response.send_message(embed=e, ephemeral=True)
             return False
 
@@ -100,13 +98,13 @@ class RPSView(discord.ui.View):
                 return f'{c1.emote_name} {c1.value.word} {c2.emote_name}', f'{self.player1.mention} wins', self.player1
 
         winning_strings = winning_choice(c1, c2)
-        ggwp = f'\n\n**Good Game, Well Played {Emote.DankL} {Emote.DankL} {Emote.DankL}**'
+        ggwp = '\n\n**Good Game, Well Played {0} {0} {0}**'.format(const.Emote.DankL)
         return f'{choices_string}\n{winning_strings[0]}{ggwp}\n{winning_strings[1]}', winning_strings[2]
 
     async def rps_button_callback(self, ntr: discord.Interaction, choice: RPSChoice):
         self.choices[ntr.user] = choice
 
-        e = discord.Embed(colour=Colour.prpl(), description=f'You\'ve chosen **{choice.emote_name}**')
+        e = discord.Embed(colour=const.Colour.prpl(), description=f'You\'ve chosen **{choice.emote_name}**')
         await ntr.response.send_message(embed=e, ephemeral=True)
         await self.edit_embed_player_choice(ntr.user)
 
@@ -136,7 +134,7 @@ class RPSView(discord.ui.View):
 
 class RockPaperScissorsCommand(AluCog):
     @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps', 'rock_paper_scissors'])
-    async def rps(self, ctx: AluContext, user: discord.Member | discord.User):
+    async def rps(self, ctx: AluGuildContext, user: discord.Member | discord.User):
         """Rock Paper Scissors game with @member"""
         if user == ctx.author:
             raise commands.BadArgument('You cannot challenge yourself in a Rock Paper Scissors game')
@@ -144,7 +142,7 @@ class RockPaperScissorsCommand(AluCog):
             raise commands.BadArgument('I\'m afraid other bots do not know how to play this game')
 
         player1, player2 = (ctx.author, user)
-        e = discord.Embed(title='Rock Paper Scissors Game', colour=Colour.prpl())
+        e = discord.Embed(title='Rock Paper Scissors Game', colour=const.Colour.prpl())
         e.add_field(name='Player 1', value=f'{player1.mention}')
         e.add_field(name='Player 2', value=f'{player2.mention}')
         e.add_field(

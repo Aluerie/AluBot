@@ -13,12 +13,12 @@ from utils.const import DIGITS, REGEX_URL_LINK, Channel, Colour, Emote, Guild, U
 from utils.webhook import check_msg_react, user_webhook
 
 if TYPE_CHECKING:
-    from utils import AluContext, AluGuildContext
+    from utils import AluGuildContext
 
 
 class Other(AluCog):
     @commands.hybrid_command()
-    async def coinflip(self, ctx: AluContext):
+    async def coinflip(self, ctx: AluGuildContext):
         """Flip a coin: Heads or Tails?"""
         word = 'Heads' if randint(2) == 0 else 'Tails'
         return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
@@ -105,7 +105,7 @@ class Other(AluCog):
         await your_life(message)
 
     @commands.hybrid_command()
-    async def do_emote_spam(self, ctx: AluContext):
+    async def do_emote_spam(self, ctx: AluGuildContext):
         """Send 3x random emote into emote spam channel"""
         rand_guild = choice(self.bot.guilds)  # type: ignore #TODO:FIX
         rand_emoji = choice(rand_guild.emojis)
@@ -116,7 +116,7 @@ class Other(AluCog):
         await ctx.reply(embed=e, ephemeral=True, delete_after=10)
 
     @commands.hybrid_command()
-    async def apuband(self, ctx: AluContext):
+    async def apuband(self, ctx: AluGuildContext):
         """Send apuband emote combo."""
         guild = self.community.guild
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
@@ -134,7 +134,7 @@ class Other(AluCog):
 
     @commands.hybrid_command()
     @app_commands.describe(max_roll_number="Max limit to roll")
-    async def roll(self, ctx: AluContext, max_roll_number: app_commands.Range[int, 1]):
+    async def roll(self, ctx: AluGuildContext, max_roll_number: app_commands.Range[int, 1]):
         """Roll an integer from 1 to `max_roll_number`."""
         await ctx.reply(content=str(randint(1, max_roll_number + 1)))
 
@@ -147,9 +147,8 @@ class Other(AluCog):
         """
         ch = channel or ctx.channel
         if ch.id in [Channel.emote_spam, Channel.comfy_spam]:
-            raise commands.MissingPermissions(
-                [f'Sorry, these channels are special so you can\'t use this command in {ch.mention}']
-            )
+            msg = f'Sorry, these channels are special so you can\'t use this command in {ch.mention}'
+            raise commands.MissingPermissions([msg])
         elif not ch.permissions_for(ctx.author).send_messages:
             raise commands.MissingPermissions([f'Sorry, you don\'t have permissions to speak in {ch.mention}'])
         else:
@@ -168,7 +167,7 @@ class Other(AluCog):
         name='emoteit', aliases=['emotialize'], description="Emotializes your text into standard emotes"
     )
     @app_commands.describe(text="Text that will be converted into emotes")
-    async def emoteit(self, ctx: AluContext, *, text: str):
+    async def emoteit(self, ctx: AluGuildContext, *, text: str):
         """Emotializes your text into standard emotes"""
         answer = ''
         skip_mode = 0

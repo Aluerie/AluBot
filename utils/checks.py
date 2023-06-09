@@ -6,10 +6,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from .const import Guild
+from .const import MY_GUILDS, Guild
 
 if TYPE_CHECKING:
-    from .bases import AluContext, AluGuildContext
+    from .bases import AluGuildContext
     from .bot import AluBot
 
 T = TypeVar('T')
@@ -27,7 +27,7 @@ def is_guild_owner():
 
 
 def is_trustee():
-    async def pred(ctx_ntr: AluContext | discord.Interaction[AluBot]) -> bool:
+    async def pred(ctx_ntr: AluGuildContext | discord.Interaction[AluBot]) -> bool:
         """trustees only"""
         query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
         trusted_ids: List[int] = await ctx_ntr.client.pool.fetchval(query, Guild.community)  # type: ignore
@@ -47,7 +47,7 @@ def is_trustee():
 
 
 def is_owner():
-    async def predicate(ctx: AluContext) -> bool:
+    async def predicate(ctx: AluGuildContext) -> bool:
         """Aluerie only"""
         if not await ctx.bot.is_owner(ctx.author):
             raise commands.NotOwner()
@@ -146,3 +146,25 @@ def is_admin():
         return func
 
     return decorator
+
+
+def is_in_guilds(*guild_ids: int):
+    def predicate(ctx: AluGuildContext) -> bool:
+        """Only in specific servers"""
+        guild = ctx.guild
+        if guild is not None and guild.id in guild_ids:
+            return True
+        else:
+            raise commands.CheckFailure('Sorry! This command is not usable in this servers')
+
+    def decorator(func: T) -> T:
+        commands.check(predicate)(func)
+        app_commands.guild_only(func)
+        app_commands.guilds(*guild_ids)
+        return func
+
+    return decorator
+
+
+def is_my_guild():
+    return is_in_guilds(*MY_GUILDS)

@@ -8,7 +8,7 @@ from discord.ext import menus
 from utils.pagination import Paginator
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 
 class CharacterButton(discord.ui.Button):
@@ -63,11 +63,11 @@ class CharacterPageSource(menus.ListPageSource):
         """
 
         ----
-        Entries in this case are [(1, "Anti-Mage), (2, Axe), ...] kind of tuples. 
+        Entries in this case are [(1, "Anti-Mage), (2, Axe), ...] kind of tuples.
         """
 
-        # unfortunately we have to fetch fav characters each format page 
-        # in case they are bad acting with using both slash commands 
+        # unfortunately we have to fetch fav characters each format page
+        # in case they are bad acting with using both slash commands
         # or several menus
         query = f'SELECT character_id FROM {menu.game}_favourite_characters WHERE guild_id=$1'
         assert menu.ctx_ntr.guild
@@ -88,7 +88,9 @@ class CharacterPageSource(menus.ListPageSource):
 class CharacterPages(Paginator):
     source: CharacterPageSource
 
-    def __init__(self, ctx: AluContext, source: CharacterPageSource, game: str, colour: discord.Colour, gather_word: str):
+    def __init__(
+        self, ctx: AluGuildContext, source: CharacterPageSource, game: str, colour: discord.Colour, gather_word: str
+    ):
         super().__init__(ctx, source)
         self.game: str = game
         self.colour: discord.Colour = colour

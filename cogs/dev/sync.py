@@ -11,7 +11,7 @@ from utils.checks import is_owner
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from utils import AluGuildContext
 
 
 class UmbraSyncCommandCog(DevBaseCog):
@@ -28,7 +28,7 @@ class UmbraSyncCommandCog(DevBaseCog):
     @commands.command()
     async def sync(
         self,
-        ctx: AluContext,
+        ctx: AluGuildContext,
         guilds: commands.Greedy[discord.Guild],
         spec: Optional[Literal["~", "*", "^", "trust"]] = None,
     ) -> None:

@@ -7,7 +7,7 @@ from __future__ import annotations
 import datetime
 import difflib
 import traceback
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 
 from dateutil.relativedelta import relativedelta
@@ -286,7 +286,7 @@ def indent(symbol, counter, offset, split_size):
 # https://gist.github.com/kkrypt0nn/a02506f3712ff2d1c8ca7c9e0aed7c06
 
 
-class AnsiFG(Enum):
+class AnsiFG(IntEnum):
     """Ansi foreground colours"""
 
     gray = 30
@@ -298,11 +298,8 @@ class AnsiFG(Enum):
     cyan = 36
     white = 37
 
-    def __int__(self) -> int:
-        return self.value
 
-
-class AnsiBG(Enum):
+class AnsiBG(IntEnum):
     """Ansi background colours"""
 
     firefly_dark_blue = 40
@@ -314,19 +311,13 @@ class AnsiBG(Enum):
     light_gray = 46
     white = 47
 
-    def __int__(self) -> int:
-        return self.value
 
-
-class AnsiFMT(Enum):
+class AnsiFMT(IntEnum):
     """Ansi text formats"""
 
     normal = 0
     bold = 1
     underline = 4
-
-    def __int__(self) -> int:
-        return self.value
 
 
 def ansi(

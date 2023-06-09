@@ -17,7 +17,7 @@ from utils import AluCog, const
 from utils.pagination import EnumeratedPages
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 
 @lru_cache(maxsize=None)
@@ -122,7 +122,7 @@ class Birthday(AluCog, emote=const.Emote.peepoHappyDank):
         self.check_birthdays.cancel()
 
     @commands.hybrid_group()
-    async def birthday(self, ctx: AluContext):
+    async def birthday(self, ctx: AluGuildContext):
         """Group command about birthdays, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -167,7 +167,7 @@ class Birthday(AluCog, emote=const.Emote.peepoHappyDank):
         timezone='formats: `GMT+1:00`, `Europe/Paris` or `Etc/GMT-1` (sign is inverted for Etc/GMT).',
     )
     @app_commands.autocomplete(timezone=timezone_autocomplete)  # type: ignore
-    async def set(self, ctx: AluContext, *, bdate_flags: SetBirthdayFlags):
+    async def set(self, ctx: AluGuildContext, *, bdate_flags: SetBirthdayFlags):
         """Set your birthday.
 
         Timezone can be set in `GMT+-H:MM` format or standard IANA name like
@@ -214,7 +214,7 @@ class Birthday(AluCog, emote=const.Emote.peepoHappyDank):
         await ctx.reply(embed=e)
 
     @birthday.command(aliases=['del', 'delete'])
-    async def remove(self, ctx: AluContext):
+    async def remove(self, ctx: AluGuildContext):
         """Remove your birthday data and stop getting congratulations"""
         query = 'UPDATE users SET bdate=$1 WHERE users.id=$2;'
         await self.bot.pool.execute(query, None, ctx.author.id)
@@ -222,7 +222,7 @@ class Birthday(AluCog, emote=const.Emote.peepoHappyDank):
 
     @birthday.command(usage='[member=you]')
     @app_commands.describe(member='Member of the server or you if not specified')
-    async def check(self, ctx: AluContext, member: Optional[discord.Member]):
+    async def check(self, ctx: AluGuildContext, member: Optional[discord.Member]):
         """Check your or somebody's birthday in database"""
         person = member or ctx.author
         query = 'SELECT bdate, tzone FROM users WHERE users.id=$1'
@@ -295,7 +295,7 @@ class Birthday(AluCog, emote=const.Emote.peepoHappyDank):
         # self.dotafeed.restart()
 
     @birthday.command(name='list', hidden=True)
-    async def birthday_list(self, ctx: AluContext):
+    async def birthday_list(self, ctx: AluGuildContext):
         """Show list of birthdays in this server"""
         guild = self.community.guild
 

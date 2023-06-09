@@ -1,11 +1,14 @@
 from utils import const
 
-from .utilities import ModUtilitiesCog
-from .clean import CleanCog
+from .tools import ModerationTools
 
 
-class Moderation(ModUtilitiesCog, CleanCog, emote=const.Emote.peepoPolice):
-    """Commands to moderate servers with"""
+class Moderation(ModerationTools, emote=const.Emote.peepoPolice):
+    """Commands to moderate servers with. 
+    
+    Discord standard features offer a lot of tools for moderation, 
+    however I can offer some extra tools.
+    """
 
 
 async def setup(bot):

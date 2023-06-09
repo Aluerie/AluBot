@@ -16,7 +16,7 @@ from utils.formats import format_dt_tdR
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 
 fav_teams = []
@@ -209,7 +209,7 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
     @commands.hybrid_command(aliases=['sch'])
     @app_commands.rename(schedule_mode='filter')
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in select_options])
-    async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: Optional[str] = None):
+    async def schedule(self, ctx: AluGuildContext, schedule_mode: int = 1, query: Optional[str] = None):
         """Dota 2 Pro Matches Schedule
 
         Parameters
@@ -224,10 +224,10 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
         e = await schedule_work(self.bot.session, ScheduleMode(value=schedule_mode), query)
         v = ScheduleView(ctx.user, query)
         msg = await ctx.reply(embed=e, view=v)
-        v.message = msg # await ntr.original_response()
+        v.message = msg  # await ntr.original_response()
 
     @commands.hybrid_command()
-    async def fixtures(self, ctx: AluContext):
+    async def fixtures(self, ctx: AluGuildContext):
         """Get football fixtures"""
         url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
         async with self.bot.session.get(url) as r:
@@ -263,7 +263,7 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
             else:
                 e = discord.Embed(colour=const.Colour.error())
                 e.description = 'No matches found'
-                await ctx.reply(embed=e)
+                await ctx.reply(embed=e, ephemeral=True)
 
 
 async def setup(bot: AluBot):

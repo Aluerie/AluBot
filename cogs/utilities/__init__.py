@@ -1,14 +1,16 @@
 from utils.const import Emote
 
 from .dev_utils import DevUtilities
-from .embedmaker import EmbedMaker
 from .links import LinkUtilities
+from .tools import ToolsCog
+from .wolfram import WolframAlpha
 
 
 class Utilities(
     DevUtilities,
-    EmbedMaker,
     LinkUtilities,
+    ToolsCog,
+    WolframAlpha,
     name='Utilities',
     emote=Emote.FeelsDankManLostHisHat
 ):

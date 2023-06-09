@@ -7,7 +7,7 @@ from discord.ext import commands
 from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 
 class Timers(AluCog):
@@ -18,11 +18,11 @@ class Timers(AluCog):
         pass
 
     @commands.hybrid_group()
-    async def timer(self, ctx: AluContext):
+    async def timer(self, ctx: AluGuildContext):
         await ctx.scnf()
 
     @timer.group()
-    async def create(self, ctx: AluContext, category: str, frequency: str, probability: float):
+    async def create(self, ctx: AluGuildContext, category: str, frequency: str, probability: float):
         pass
 
     @commands.Cog.listener()  # Yep, that's the best name I came up with.

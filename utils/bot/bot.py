@@ -5,7 +5,7 @@ import logging
 import os
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
 
 import discord
 from aiohttp import ClientSession
@@ -19,7 +19,7 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config
 from cogs import get_extensions
-from utils import AluContext, const, formats
+from utils import AluGuildContext, const, formats
 from utils.bases.context import ConfirmationView
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
@@ -28,7 +28,7 @@ from utils.twitch import TwitchClient
 from .cmd_cache import MyCommandTree
 
 if TYPE_CHECKING:
-    from cogs.reminders import Reminder
+    from cogs.reminders.reminders import Reminder
 
 
 __all__ = ('AluBot',)
@@ -53,9 +53,6 @@ class AluBot(commands.Bot):
         twitch: TwitchClient
         twitter: TwitterAsyncClient
         user: discord.ClientUser
-        old_tree_error = Callable[
-            [discord.Interaction, discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
-        ]
 
     def __init__(self, test=False):
         main_prefix = '~' if test else '$'
@@ -139,8 +136,8 @@ class AluBot(commands.Bot):
         await super().start(token, reconnect=True)
 
     async def get_context(
-        self, origin: Union[discord.Interaction, discord.Message], /, *, cls=AluContext
-    ) -> AluContext:
+        self, origin: Union[discord.Interaction, discord.Message], /, *, cls=AluGuildContext
+    ) -> AluGuildContext:
         return await super().get_context(origin, cls=cls)
 
     @property
@@ -218,7 +215,9 @@ class AluBot(commands.Bot):
         hook = discord.Webhook.from_url(url=url, session=self.session)
         return hook
 
-    async def send_exception(self, exception: Exception, embed: discord.Embed, mention: bool = True) -> None:
+    async def send_exception(
+        self, exception: Exception, embed: discord.Embed, mention: bool = True, include_traceback: bool = True
+    ) -> None:
         """
         Send exception and its traceback to notify me via Discord webhook
 
@@ -230,21 +229,26 @@ class AluBot(commands.Bot):
             discord.Embed object to prettify the output with extra info
         mention: :class: bool
             if `True` then the message will mention the bot developer
+        include_traceback: :class: bool
+            Whether include the traceback into the messages.
         """
-        traceback_content = "".join(traceback.format_exception(exception))
-
-        paginator = commands.Paginator(prefix='```py')
-        for line in traceback_content.split('\n'):
-            paginator.add_line(line)
 
         hook = self.error_webhook
         try:
             if mention:
                 await hook.send(const.Role.error_ping.mention)
-            for page in paginator.pages:
-                await hook.send(page)
+            if include_traceback:
+                traceback_content = "".join(traceback.format_exception(exception))
+
+                paginator = commands.Paginator(prefix='```py')
+                for line in traceback_content.split('\n'):
+                    paginator.add_line(line)
+
+                for page in paginator.pages:
+                    await hook.send(page)
             await hook.send(embed=embed)
         except:
+            # TODO: hmm i dont like this.
             pass
 
     async def send_traceback(
@@ -296,7 +300,7 @@ class AluBot(commands.Bot):
 
     async def prompt(
         self,
-        ctx_ntr: AluContext | discord.Interaction[AluBot],
+        ctx_ntr: AluGuildContext | discord.Interaction[AluBot],
         *,
         content: str = discord.utils.MISSING,
         embed: discord.Embed = discord.utils.MISSING,
@@ -332,7 +336,7 @@ class AluBot(commands.Bot):
 
         author_id = author_id or ctx_ntr.user.id
         view = ConfirmationView(timeout=timeout, delete_after=delete_after, author_id=author_id)
-        if isinstance(ctx_ntr, AluContext):
+        if isinstance(ctx_ntr, AluGuildContext):
             view.message = await ctx_ntr.reply(content=content, embed=embed, view=view)
         elif isinstance(ctx_ntr, discord.Interaction):
             if not ctx_ntr.response.is_done():

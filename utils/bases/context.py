@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from ..bot import AluBot
 
 __all__ = (
-    'AluContext',
+    'AluGuildContext',
     'AluGuildContext',
 )
 
@@ -60,7 +60,7 @@ class ConfirmationView(discord.ui.View):
         await self.button_callback(ntr, False)
 
 
-class AluContext(commands.Context):
+class AluGuildContext(commands.Context):
     """The subclassed Context to allow some extra functionality."""
 
     if TYPE_CHECKING:
@@ -165,7 +165,7 @@ class AluContext(commands.Context):
         return None
 
 
-class AluGuildContext(AluContext):
+class AluGuildContext(AluGuildContext):
     if TYPE_CHECKING:
         author: discord.Member
         guild: discord.Guild

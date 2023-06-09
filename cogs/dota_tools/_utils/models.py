@@ -8,9 +8,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.patches import Polygon
 
-from utils.const import MaterialPalette, Colour
-
-from ..dota import hero
+from utils.const import Colour, MaterialPalette
+from utils.dota import hero
 
 if TYPE_CHECKING:
     from asyncpg import Pool

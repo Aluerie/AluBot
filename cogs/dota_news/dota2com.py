@@ -10,7 +10,7 @@ from utils.checks import is_owner
 from utils.dota.const import DOTA_LOGO
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 
 class Dota2Com(AluCog):
@@ -26,7 +26,7 @@ class Dota2Com(AluCog):
 
     @is_owner()
     @commands.command(name='patchday', aliases=['patch_day'])
-    async def patch_day(self, ctx: AluContext, yes_no: Optional[bool]):
+    async def patch_day(self, ctx: AluGuildContext, yes_no: Optional[bool]):
         """Start checking for Dota 2 patches more/less frequently from dota2.com page."""
         is_today_patch_day = not self.is_today_patch_day if yes_no is None else yes_no
         new_frequency = {'seconds': 10} if is_today_patch_day else {'minutes': 10}

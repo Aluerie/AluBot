@@ -5,30 +5,23 @@ import logging
 from typing import TYPE_CHECKING
 
 import discord
+from discord import app_commands
 from discord.ext import commands, tasks
 from matplotlib import pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 
-from config import DOTA_FRIENDID
-from utils.dota import (
-    Match,
-    MatchHistoryData,
-    fancy_ax,
-    generate_data,
-    gradient_fill,
-    heroes_played_bar,
-    mmr_by_hero_bar,
-)
+from cogs.fpc.dota._models import Match
+from config import DOTA_FRIEND_ID
+from utils import const
+from utils.checks import is_my_guild
+from utils.dota import hero
+from utils.formats import indent
+from utils.pagination import EnumeratedPages
 
-from .dota import hero
-from .utils import pages
-from .utils.distools import send_pages_list
-from .utils.formats import indent
-from .utils.imgtools import get_text_wh, img_to_file, plt_to_file, url_to_img
-from .utils.var import MP, Colour, Emote
+from ._utils import MatchHistoryData, fancy_ax, generate_data, gradient_fill, heroes_played_bar, mmr_by_hero_bar
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 log = logging.getLogger(__name__)
 # log.setLevel(logging.WARNING)
@@ -36,47 +29,16 @@ log = logging.getLogger(__name__)
 
 send_matches = []
 
+# fmt: off
 lobby_type_dict = {
-    -1: 'Invalid',
-    0: 'Casual',
-    1: 'Practice',
-    2: 'Tournament',
-    4: 'CoopBot',
-    5: 'LegacyTeam',
-    6: 'LegacySoloQ',
-    7: 'Ranked',
-    8: 'Casual1v1',
-    9: 'WeekendTourney',
-    10: 'LocalBot',
-    11: 'Spectator',
+    -1: 'Invalid', 0: 'Casual', 1: 'Practice', 2: 'Tournament', 4: 'CoopBot', 5: 'LegacyTeam', 6: 'LegacySoloQ',
+    7: 'Ranked', 8: 'Casual1v1', 9: 'WeekendTourney', 10: 'LocalBot', 11: 'Spectator',
 }
 
 game_mode_dict = {
-    1: 'None',
-    2: 'AP',
-    3: 'CM',
-    4: 'RD',
-    5: 'SD',
-    6: 'Intro',
-    7: 'HW',
-    8: 'Reverse CM',
-    9: 'XMAS',
-    10: 'Tutorial',
-    11: 'MO',
-    12: 'LP',
-    13: 'Pool1',
-    14: 'FH',
-    15: 'Custom',
-    16: 'CD',
-    17: 'BD',
-    18: 'AD',
-    19: 'Event',
-    20: 'ARDM',
-    21: '1v1Mid',
-    22: 'All Draft',
-    23: 'Turbo',
-    24: 'Mutation',
-    25: 'Coach',
+    1: 'None', 2: 'AP', 3: 'CM', 4: 'RD', 5: 'SD', 6: 'Intro', 7: 'HW', 8: 'Reverse CM', 9: 'XMAS', 10: 'Tutorial',
+    11: 'MO', 12: 'LP', 13: 'Pool1', 14: 'FH', 15: 'Custom', 16: 'CD', 17: 'BD', 18: 'AD', 19: 'Event', 20: 'ARDM',
+    21: '1v1Mid', 22: 'All Draft', 23: 'Turbo', 24: 'Mutation', 25: 'Coach',
 }
 both_dict = {
     (7, 22): 'Ranked',  # Ranked
@@ -86,6 +48,7 @@ both_dict = {
     (0, 12): 'LowPriority',  # Low Priority
     (0, 5): 'SingleDraft',  # SingleDraft
 }
+# fmt: on
 
 
 def get_match_type_name(lobby_type, game_mode):
@@ -96,15 +59,15 @@ def get_match_type_name(lobby_type, game_mode):
         return f'{lobby_type_dict.get(lobby_type)}-{game_mode_dict.get(game_mode)}'
 
 
-def try_get_gamerstats(bot, start_at_match_id=0, matches_requested=20):
-    log.info("try_get_gamerstats dota2info")
+def try_get_friend_stats(bot, start_at_match_id=0, matches_requested=20):
+    log.debug("try_get_friend_stats dota2info")
     global send_matches
     bot.steam_dota_login()
 
     def ready_function():
-        log.info("ready_function gamerstats")
+        log.debug("ready_function friend stats")
         bot.dota.request_player_match_history(
-            account_id=DOTA_FRIENDID,
+            account_id=DOTA_FRIEND_ID,
             matches_requested=matches_requested,
             start_at_match_id=start_at_match_id,
         )
@@ -130,12 +93,12 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     def __init__(self, bot: AluBot):
         self.bot: AluBot = bot
 
-        self.current_match_data: MatchHistoryData = None  # type: ignore
+        self.current_match_data: MatchHistoryData | None = None
         self.new_matches_for_history = []
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Emote.TwoBButt)
+        return discord.PartialEmoji.from_str(const.Emote.TwoBButt)
 
     async def cog_load(self) -> None:
         self.bot.ini_steam_dota()
@@ -145,24 +108,25 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         self.match_history_refresh.cancel()
 
     @commands.hybrid_group()
-    async def stalk(self, ctx: Context):
+    @is_my_guild()
+    async def stalk(self, ctx: AluGuildContext):
         """Group command about stalking Aluerie, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @stalk.command(name='lm', description="View Aluerie's last played Dota 2 match", aliases=['lastmatch'])
-    async def lm(self, ctx: Context):
+    async def lm(self, ctx: AluGuildContext):
         """Aluerie's last played Dota 2 match id"""
         await ctx.typing()
-        res = try_get_gamerstats(ctx.bot, start_at_match_id=0, matches_requested=1)
-        e = discord.Embed(description=f'`{res[0].match_id}`', colour=Colour.prpl())
+        res = try_get_friend_stats(ctx.bot, start_at_match_id=0, matches_requested=1)
+        e = discord.Embed(description=f'`{res[0].match_id}`', colour=const.Colour.prpl())
         e.set_author(name='Aluerie\'s last match id')
         return await ctx.reply(embed=e)
 
     @stalk.command(name='wl', description="Aluerie's Win - Loss ratio in Dota 2 games for today", aliases=['winrate'])
-    async def wl(self, ctx: Context):
+    async def wl(self, ctx: AluGuildContext):
         """Aluerie's Win - Loss ratio in Dota 2 games for today"""
         await ctx.typing()
-        res = try_get_gamerstats(ctx.bot, start_at_match_id=0)
+        res = try_get_friend_stats(ctx.bot, start_at_match_id=0)
 
         def get_morning_time():
             now = datetime.datetime.now(datetime.timezone.utc)
@@ -175,9 +139,9 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         start_at_match_id = 0
         dict_answer = {'Ranked': {'W': 0, 'L': 0}, 'Unranked': {'W': 0, 'L': 0}}
         for _ in range(5):
-            for match in try_get_gamerstats(ctx.bot, start_at_match_id=start_at_match_id):
+            for match in try_get_friend_stats(ctx.bot, start_at_match_id=start_at_match_id):
                 if match.start_time < morning_time:
-                    e = discord.Embed(colour=Colour.prpl())
+                    e = discord.Embed(colour=const.Colour.prpl())
                     e.set_author(name='Aluerie\'s WL for today')
                     max_len = max([len(key) for key in dict_answer])
                     ans = [
@@ -202,7 +166,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     @stalk.command(
         name='dh', description="Aluerie's Dota 2 Match History (shows last 100 matches)", aliases=['dotahistory']
     )
-    async def dh(self, ctx: Context):
+    async def dh(self, ctx: AluGuildContext):
         """Aluerie's Dota 2 Match History (shows last 100 matches)"""
         await ctx.typing()
 
@@ -221,13 +185,13 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
             col4 = 180
             for c, x in enumerate(result):
                 counter_text = str(c + offset)
-                w0, h0 = get_text_wh(counter_text, font)
+                w0, h0 = self.bot.imgtools.get_text_wh(counter_text, font)
                 d.text(
                     (0 + (col0 - w0) / 2, cell_h * c + (cell_h - h0) / 2), counter_text, fill=(255, 255, 255), font=font
                 )
 
                 time_text = datetime.datetime.fromtimestamp(x.start_time).strftime("%H:%M %d/%m")
-                w1, h1 = get_text_wh(time_text, time_font)
+                w1, h1 = self.bot.imgtools.get_text_wh(time_text, time_font)
                 d.text(
                     (col0 + (col1 - w1) / 2, cell_h * c + (cell_h - h1) / 2),
                     time_text,
@@ -236,7 +200,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                 )
 
                 mode_text = get_match_type_name(x.lobby_type, x.game_mode)
-                w2, h2 = get_text_wh(mode_text, font)
+                w2, h2 = self.bot.imgtools.get_text_wh(mode_text, font)
                 d.text(
                     (col0 + col1 + (col2 - w2) / 2, cell_h * c + (cell_h - h2) / 2),
                     mode_text,
@@ -244,12 +208,12 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                     font=font,
                 )
 
-                hero_img = await self.bot.url_to_img(await hero.imgurl_by_id(x.hero_id))
+                hero_img = await self.bot.imgtools.url_to_img(await hero.img_url_by_id(x.hero_id))
                 hero_img = hero_img.resize((h_width, h_height))
                 img.paste(hero_img, (col0 + col1 + col2, int(cell_h * c)))
 
                 hero_text = await hero.name_by_id(x.hero_id)
-                w3, h3 = get_text_wh(hero_text, font)
+                w3, h3 = self.bot.imgtools.get_text_wh(hero_text, font)
                 d.text(
                     (col0 + col1 + col2 + h_width + (col3 - w3) / 2, cell_h * c + (cell_h - h3) / 2),
                     hero_text,
@@ -258,11 +222,13 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                 )
 
                 wl_text = 'Win' if x.winner else 'Loss'
-                w4, h4 = get_text_wh(wl_text, font)
+                w4, h4 = self.bot.imgtools.get_text_wh(wl_text, font)
                 d.text(
                     (col0 + col1 + col2 + h_width + col3 + (col4 - w4) / 2, cell_h * c + (cell_h - h3) / 2),
                     wl_text,
-                    fill=str(MP.green(shade=800)) if x.winner else str(MP.red(shade=900)),
+                    fill=str(const.MaterialPalette.green(shade=800))
+                    if x.winner
+                    else str(const.MaterialPalette.red(shade=900)),
                     font=font,
                 )
             return img
@@ -271,14 +237,16 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         files_list = []
         offset = 1
         for i in range(5):
-            res = try_get_gamerstats(ctx.bot, start_at_match_id=start_at_match_id)
-            files_list.append(img_to_file(await create_dh_image(res, offset), filename=f'page_{i}.png'))
+            res = try_get_friend_stats(ctx.bot, start_at_match_id=start_at_match_id)
+            files_list.append(
+                self.bot.imgtools.img_to_file(await create_dh_image(res, offset), filename=f'page_{i}.png')
+            )
             start_at_match_id = res[-1].match_id
             offset += 20
 
         pages_list = []
         for item in files_list:
-            e = discord.Embed(title="Aluerie's Dota 2 match history", colour=Colour.prpl())
+            e = discord.Embed(title="Aluerie's Dota 2 match history", colour=const.Colour.prpl())
             e.set_image(url=f'attachment://{item.filename}')
             e.set_footer(text='for copypastable match_ids use `$stalk match_ids`')
             pages_list.append(pages.Page(embeds=[e], files=[item]))
@@ -286,25 +254,25 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         await pages.Paginator(pages=pages_list).send(ctx)
 
     @dh.error
-    async def dh_error(self, ctx: Context, error):
+    async def dh_error(self, ctx: AluGuildContext, error):
         if isinstance(error.original, IndexError):
             ctx.is_error_handled = True
-            e = discord.Embed(colour=Colour.error())
+            e = discord.Embed(colour=const.Colour.error())
             e.description = 'Oups, logging into steam took too long, please retry in a bit'
             e.set_author(name='SteamLoginError')
             e.set_footer(text='If this happens again, then @ Aluerie, please')
             await ctx.reply(embed=e, ephemeral=True)
 
     @stalk.command(name='match_ids')
-    async def match_ids(self, ctx: Context):
-        """Copypastable match ids"""
+    async def match_ids(self, ctx: AluGuildContext):
+        """Copy-paste'able match ids"""
         await ctx.typing()
         start_at_match_id = 0
         string_list = []
         split_size = 20
         offset = 1
         for i in range(5):
-            res = try_get_gamerstats(ctx.bot, start_at_match_id=start_at_match_id)
+            res = try_get_friend_stats(ctx.bot, start_at_match_id=start_at_match_id)
             max_hero_len = max([len(await hero.name_by_id(x.hero_id)) for x in res])
             for c, x in enumerate(res):
                 string_list.append(
@@ -321,18 +289,18 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
             ctx,
             string_list,
             split_size=split_size,
-            colour=Colour.prpl(),
+            colour=const.Colour.prpl(),
             title="Copypastable match ids",
         )
 
     def request_player_match_history(self, start_at_match_id=0, matches_requested=20):
-        log.info("try_get_gamerstats dota2info")
+        log.info("try_get_friend stats dota2info")
         self.bot.steam_dota_login()
 
         def ready_function():
-            log.info("ready_function gamerstats")
+            log.info("ready_function friend stats")
             self.bot.dota.request_player_match_history(
-                account_id=DOTA_FRIENDID,
+                account_id=DOTA_FRIEND_ID,
                 matches_requested=matches_requested,
                 start_at_match_id=start_at_match_id,
             )
@@ -346,17 +314,17 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         self.bot.dota.wait_event('player_match_history_response', timeout=20)
 
     def request_match_details(self, match_id=0, prev_mmr=0):
-        log.info("try_get_gamerstats dota2info")
+        log.info("try_get_friends_stats dota2info")
         self.current_match_data = None
         self.bot.steam_dota_login()
 
         def ready_function():
-            log.info("ready_function gamerstats")
+            log.info("ready_function friend stats")
             self.bot.dota.request_match_details(match_id=match_id)
 
         def response(_match_id, _eresult, match):
             for p in match.players:
-                if p.account_id == DOTA_FRIENDID:
+                if p.account_id == DOTA_FRIEND_ID:
                     self.current_match_data = MatchHistoryData(
                         match_id=match.match_id,
                         hero_id=p.hero_id,
@@ -373,7 +341,8 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         self.bot.dota.wait_event('match_details_response', timeout=20)
 
     @commands.hybrid_group()
-    async def ranked(self, ctx: Context):
+    @is_my_guild()
+    async def ranked(self, ctx: AluGuildContext):
         """Group command"""
         await ctx.scnf()
 
@@ -388,11 +357,11 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
                 continue
 
     @ranked.command()
-    async def sync(self, ctx: Context):
+    async def sync(self, ctx: AluGuildContext):
         """Sync information for Irene's ranked infographics"""
         await ctx.typing()
         await self.sync_work()
-        e = discord.Embed(description='Sync was done', colour=Colour.prpl())
+        e = discord.Embed(description='Sync was done', colour=const.Colour.prpl())
         await ctx.reply(embed=e)
 
     @tasks.loop(
@@ -414,7 +383,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         await self.bot.wait_until_ready()
 
     @ranked.command(aliases=['infographics'])
-    async def info(self, ctx: Context):
+    async def info(self, ctx: AluGuildContext):
         """Infographics about Aluerie ranked adventure"""
         await ctx.typing()
         hero_stats_dict = {}
@@ -439,7 +408,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
             winrate = 100 * wins / (wins + losses)
             return f'{winrate:2.2f}%'
 
-        plt.rc('figure', facecolor=str(MP.gray(shade=300)))
+        plt.rc('figure', facecolor=str(const.MaterialPalette.gray(shade=300)))
         fig = plt.figure(figsize=(10, 12), dpi=300, constrained_layout=True)
         gs = fig.add_gridspec(nrows=7, ncols=10)
 
@@ -458,17 +427,17 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         axText = fancy_ax(axText)
 
         ax = fig.add_subplot(gs[2:5, 0:10])
-        gradient_fill(*await generate_data(self.bot.pool), color=str(Colour.twitch()), ax=ax, linewidth=5.0, marker='o')
+        gradient_fill(*await generate_data(self.bot.pool), color=str(const.Colour.twitch()), ax=ax, linewidth=5.0, marker='o')
         ax.set_title('MMR Plot', x=0.5, y=0.92)
         ax.tick_params(axis="y", direction="in", pad=-42)
         ax.tick_params(axis="x", direction="in", pad=-25)
         ax = fancy_ax(ax)
 
         ax = fig.add_subplot(gs[5:8, 0:6])
-        ax = await mmr_by_hero_bar(self.bot.session, ax, sorted_dict)
+        ax = await mmr_by_hero_bar(self.bot, ax, sorted_dict)
 
         ax = fig.add_subplot(gs[5:8, 6:10])
-        ax = await heroes_played_bar(self.bot.session, ax, sorted_dict)
+        ax = await heroes_played_bar(self.bot, ax, sorted_dict)
 
         query = """ SELECT mmr 
                     FROM dotahistory
@@ -524,15 +493,15 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
             fontsize=12,
         )
         axRain = fancy_ax(axRain)
-        hero_icon = await url_to_img(self.bot.session, url=await hero.imgurl_by_id(last_match['hero_id']))
+        hero_icon = await self.bot.imgtools.url_to_img(await hero.img_url_by_id(last_match['hero_id']))
         hero_icon.putalpha(200)
 
         axRain.imshow(hero_icon, extent=[-30, 30, -20, 20], aspect='auto')
         axRain.get_xaxis().set_visible(False)
         axRain.get_yaxis().set_visible(False)
         fig.patch.set_linewidth(4)
-        fig.patch.set_edgecolor(str(Colour.prpl()))
-        await ctx.reply(file=plt_to_file(fig, filename='mmr.png'))
+        fig.patch.set_edgecolor(str(const.Colour.prpl()))
+        await ctx.reply(file=self.bot.imgtools.plt_to_file(fig, filename='mmr.png'))
 
 
 async def setup(bot: AluBot):

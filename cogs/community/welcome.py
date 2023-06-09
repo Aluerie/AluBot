@@ -6,10 +6,10 @@ import discord
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from utils import AluCog, const, checks
+from utils import AluCog, checks, const
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 
 async def welcome_image(bot: AluBot, member: discord.User | discord.Member):
@@ -140,7 +140,7 @@ class Welcome(AluCog):
 
     @checks.is_owner()
     @commands.command(hidden=True)
-    async def welcome_preview(self, ctx: AluContext, member: Optional[discord.Member]):
+    async def welcome_preview(self, ctx: AluGuildContext, member: Optional[discord.Member]):
         """Get a rendered welcome message for a `{@user}`."""
         person = member or ctx.author
         content_text, embed, image_file = await welcome_message(self.bot, person)

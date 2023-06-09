@@ -10,7 +10,7 @@ from utils import AluCog
 from utils.const import Colour, Emote, Guild
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot, AluGuildContext
 
 ORIGINAL_NAME = '\N{CINEMA}streaming_room'
 
@@ -58,7 +58,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
 
     @app_commands.guilds(Guild.community)
     @commands.hybrid_group(name='streaming-room', aliases=['stream'])
-    async def streaming_room(self, ctx: AluContext):
+    async def streaming_room(self, ctx: AluGuildContext):
         """Group command about Dota, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
@@ -67,7 +67,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
         name='title', description=f'Set title for #{ORIGINAL_NAME} so people know what you are streaming'
     )
     @app_commands.describe(text=f'new title for #{ORIGINAL_NAME}')
-    async def title(self, ctx: AluContext, *, text: str):
+    async def title(self, ctx: AluGuildContext, *, text: str):
         """Sets title for **#\N{CINEMA}streaming_room** so people know what you are streaming"""
         new_name = f'\N{CINEMA}{text}'
         await self.bot.community.stream_room.edit(name=new_name)
@@ -76,7 +76,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
     @streaming_room.command(name='reset')
-    async def reset(self, ctx: AluContext):
+    async def reset(self, ctx: AluGuildContext):
         """Reset **#\N{CINEMA}streaming_room** title ;"""
         await self.bot.community.stream_room.edit(name=ORIGINAL_NAME)
         e = discord.Embed(description=f'Title of **#{ORIGINAL_NAME}** has been reset', colour=Colour.prpl())

@@ -107,9 +107,11 @@ class AluBot(commands.Bot):
         for ext in get_extensions(self.test):
             try:
                 await self.load_extension(ext)
-            except Exception as e:
+            except Exception as error:
                 # TODO: send exception here too
-                log.exception(f'Failed to load extension {ext}.')
+                msg = f'Failed to load extension {ext}.'
+                log.exception(msg)
+                await self.send_exception(error, from_where=msg)
 
     def get_pre(self, bot: AluBot, message: discord.Message) -> Iterable[str]:
         if message.guild is None:

@@ -8,7 +8,7 @@ import tweepy.asynchronous
 from discord.ext import tasks
 
 from config import TWITTER_BEARER_TOKEN
-from utils import AluCog
+from utils import AluCog, aluloop
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -95,17 +95,14 @@ class Twitter(AluCog):
         self.myStream.disconnect()
         self.start_stream.cancel()
 
-    @tasks.loop(count=1)
+    @aluloop.loop(count=1)
     async def start_stream(self):
         await new_stream(self.bot)
 
-    @start_stream.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
-
     @start_stream.error
-    async def start_stream_error(self, _error):
+    async def start_stream_error(self, error: Exception):
         self.start_stream.restart()
+        await self.bot.send_exception(error, from_where='Dota 2 Twitter Task')
 
 
 async def setup(bot: AluBot):

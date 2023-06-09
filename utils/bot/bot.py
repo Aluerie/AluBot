@@ -12,6 +12,7 @@ from aiohttp import ClientSession
 from asyncpg import Pool
 from asyncpraw import Reddit
 from discord.ext import commands
+from discord.utils import MISSING
 from dota2.client import Dota2Client
 from github import Github
 from steam.client import SteamClient
@@ -216,7 +217,13 @@ class AluBot(commands.Bot):
         return hook
 
     async def send_exception(
-        self, exception: Exception, embed: discord.Embed, mention: bool = True, include_traceback: bool = True
+        self,
+        exception: Exception,
+        *,
+        embed: discord.Embed = MISSING,
+        from_where: str = MISSING,
+        mention: bool = True,
+        include_traceback: bool = True,
     ) -> None:
         """
         Send exception and its traceback to notify me via Discord webhook
@@ -227,11 +234,16 @@ class AluBot(commands.Bot):
             Exception that the developers of AluBot are going to be notified about
         embed: :class: discord.Embed
             discord.Embed object to prettify the output with extra info
+        from_where: :class: str
+            If there is no need for custom embed but you just want to attach
+            a simple string string telling where error has happened then you use `from_where`
         mention: :class: bool
             if `True` then the message will mention the bot developer
         include_traceback: :class: bool
             Whether include the traceback into the messages.
         """
+        if from_where is not MISSING and embed is not MISSING:
+            raise TypeError('Cannot mix `from_where` and `embed` keyword arguments.')
 
         hook = self.error_webhook
         try:
@@ -246,7 +258,9 @@ class AluBot(commands.Bot):
 
                 for page in paginator.pages:
                     await hook.send(page)
-            await hook.send(embed=embed)
+
+            e = embed or discord.Embed(colour=const.Colour.error()).set_author(name=from_where)
+            await hook.send(embed=e)
         except:
             # TODO: hmm i dont like this.
             pass

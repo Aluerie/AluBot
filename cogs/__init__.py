@@ -8,9 +8,9 @@ except ModuleNotFoundError:
     IGNORE_TEST = True
 
 # EXTENSIONS
-IGNORED_EXTENSIONS = ('cogs.beta', 'cogs.zeta')
-INITIAL_EXTENSIONS = ("jishaku",)
 
+INITIAL_EXTENSIONS = ("jishaku",) # these don't need "cogs.{x}"
+IGNORED_EXTENSIONS = ('beta', 'zeta')
 
 # Packages
 MY_PACKAGES = tuple(module.name for module in iter_modules(path=__path__))  # , prefix=f'{__package__}.'

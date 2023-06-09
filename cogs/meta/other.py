@@ -98,7 +98,7 @@ class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
         placeholder='Leave a comment',
         style=discord.TextStyle.long,
         required=False,
-        max_length=Limit.Embed.description,
+        max_length=4000, # 4000 is max apparently, Limit.Embed.description,
     )
 
     def __init__(self, cog: OtherCog) -> None:

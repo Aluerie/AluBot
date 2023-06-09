@@ -7,14 +7,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const
+from utils import const, AluContext
 from utils.times import BadTimeTransform
 from utils.translator import TranslateError
 
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from utils import AluBot
 
 
 class ErrorHandlers(DevBaseCog):

@@ -9,7 +9,7 @@ from discord.ext import commands
 from .const import MY_GUILDS, Guild
 
 if TYPE_CHECKING:
-    from .bases import AluGuildContext
+    from .bases import AluGuildContext, AluContext
     from .bot import AluBot
 
 T = TypeVar('T')

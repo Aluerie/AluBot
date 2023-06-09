@@ -99,6 +99,7 @@ class Twitter(AluCog):
     @start_stream.error
     async def start_stream_error(self, error: BaseException):
         self.start_stream.restart()
+        await self.hideout.spam.send(f'{error}')
         await self.bot.send_exception(error, from_where='Dota 2 Twitter Task')
 
 

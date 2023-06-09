@@ -185,7 +185,7 @@ class CommunityMessageLogging(AluCog):
         # TODO: inline word by word doesn't really work well on emote changes too
         # for example if before is peepoComfy and after is dankComfy then it wont be obvious in the embed result
         # since discord formats emotes first.
-        e.description = f'[`Jump link`]({after.jump_url}) {inline_word_by_word_diff(before.content, after.content)}'
+        e.description = f'[**Jump link**]({after.jump_url}) {inline_word_by_word_diff(before.content, after.content)}'
         await self.community.logs.send(embed=e)
 
     @commands.Cog.listener()

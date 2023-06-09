@@ -354,21 +354,3 @@ def ansi(
         array_join.append(foreground.value)
     final_format = ';'.join(list(map(str, array_join)))
     return f'\u001b[{final_format}m{text}\u001b[0m'
-
-
-def prepare_exception_for_send(exc: Exception) -> List[str]:
-    """
-
-    Returns
-    --------
-    List[str]
-        List of paginated strings ready to be sent to discord
-        according to its character limits via webhook or message.
-    """
-    traceback_content = "".join(traceback.format_exception(exc))
-
-    paginator = commands.Paginator(prefix='```py')
-    for line in traceback_content.split('\n'):
-        paginator.add_line(line)
-
-    return paginator.pages

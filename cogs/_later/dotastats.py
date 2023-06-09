@@ -288,7 +288,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     @dh.error
     async def dh_error(self, ctx: Context, error):
         if isinstance(error.original, IndexError):
-            ctx.error_handled = True
+            ctx.is_error_handled = True
             e = discord.Embed(colour=Colour.error())
             e.description = 'Oups, logging into steam took too long, please retry in a bit'
             e.set_author(name='SteamLoginError')
@@ -406,7 +406,6 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         async with self.bot.ses.get(url) as resp:
             soup = BeautifulSoup(await resp.read(), 'html.parser')
 
-        print(soup)
         """
         await self.sync_work()
 

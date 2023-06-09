@@ -5,7 +5,7 @@ import logging
 import os
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, Iterable, Optional, Union
 
 import discord
 from aiohttp import ClientSession
@@ -19,12 +19,11 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config
 from cogs import get_extensions
-from utils import AluContext, const
+from utils import AluContext, const, formats
 from utils.bases.context import ConfirmationView
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
-from utils import formats, const
 
 from .cmd_cache import MyCommandTree
 
@@ -38,20 +37,25 @@ log = logging.getLogger(__name__)
 
 
 class AluBot(commands.Bot):
-    bot_app_info: discord.AppInfo
-    dota: Dota2Client
-    github: Github
-    imgtools: ImgToolsClient
-    launch_time: datetime.datetime
-    session: ClientSession
-    pool: Pool
-    prefixes: PrefixConfig
-    reddit: Reddit
-    steam: SteamClient
-    tree: MyCommandTree
-    twitch: TwitchClient
-    twitter: TwitterAsyncClient
-    user: discord.ClientUser
+    if TYPE_CHECKING:
+        bot_app_info: discord.AppInfo
+        dota: Dota2Client
+        github: Github
+        imgtools: ImgToolsClient
+        launch_time: datetime.datetime
+        logging_handler: Any
+        session: ClientSession
+        pool: Pool
+        prefixes: PrefixConfig
+        reddit: Reddit
+        steam: SteamClient
+        tree: MyCommandTree
+        twitch: TwitchClient
+        twitter: TwitterAsyncClient
+        user: discord.ClientUser
+        old_tree_error = Callable[
+            [discord.Interaction, discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
+        ]
 
     def __init__(self, test=False):
         main_prefix = '~' if test else '$'
@@ -83,8 +87,7 @@ class AluBot(commands.Bot):
         self.developer = 'Aluerie'
 
         # modules
-        # TODO: uncomment when we need
-        # self.config = config
+        self.config = config
         self.formats = formats
 
     async def setup_hook(self) -> None:
@@ -107,6 +110,7 @@ class AluBot(commands.Bot):
             try:
                 await self.load_extension(ext)
             except Exception as e:
+                # TODO: send exception here too
                 log.exception(f'Failed to load extension {ext}.')
 
     def get_pre(self, bot: AluBot, message: discord.Message) -> Iterable[str]:
@@ -213,25 +217,36 @@ class AluBot(commands.Bot):
 
         hook = discord.Webhook.from_url(url=url, session=self.session)
         return hook
-    
-    async def send_exception(
-            self,
-            exc: Exception,
-            embed: discord.Embed
-        ):
-        """Docs"""
-        # TODO: Docs^
-        error_pages = self.formats.prepare_exception_for_send(exc)
-        
+
+    async def send_exception(self, exception: Exception, embed: discord.Embed, mention: bool = True) -> None:
+        """
+        Send exception and its traceback to notify me via Discord webhook
+
+        Parameters
+        -----------
+        error: :class: Exception
+            Exception that the developers of AluBot are going to be notified about
+        embed: :class: discord.Embed
+            discord.Embed object to prettify the output with extra info
+        mention: :class: bool
+            if `True` then the message will mention the bot developer
+        """
+        traceback_content = "".join(traceback.format_exception(exception))
+
+        paginator = commands.Paginator(prefix='```py')
+        for line in traceback_content.split('\n'):
+            paginator.add_line(line)
+
         hook = self.error_webhook
         try:
-            await hook.send(const.Role.error_ping.mention)
-            for page in error_pages:
+            if mention:
+                await hook.send(const.Role.error_ping.mention)
+            for page in paginator.pages:
                 await hook.send(page)
             await hook.send(embed=embed)
         except:
             pass
-        
+
     async def send_traceback(
         self,
         error: Exception,
@@ -242,10 +257,7 @@ class AluBot(commands.Bot):
         mention: bool = True,
     ) -> None:
         """Function to send traceback into the discord channel.
-        Parameters
-        -----------
-        error: :class: Exception
-            Exception that is going to be sent to the `destination`
+
         destination:
             where to send the traceback message
         where:
@@ -257,12 +269,12 @@ class AluBot(commands.Bot):
             you can make the whole embed instead of using default embed `where`
         verbosity:
             A parameter for `traceback.format_exception()`
-        mention: bool
-            if True then the message will mention the bot owner
+
         Returns
         --------
         None
         """
+        # TODO: remove this function in favour of new send_exception
 
         etype, value, trace = type(error), error, error.__traceback__
         traceback_content = "".join(traceback.format_exception(etype, value, trace, verbosity)).replace(

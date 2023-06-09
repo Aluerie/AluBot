@@ -28,7 +28,7 @@ class StatsVoiceChannels(AluCog):
         new_name = f'\N{ALARM CLOCK} {msk_now.strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
         await self.bot.community.my_time.edit(name=new_name)
 
-    @my_time.before_loop
+    
     async def my_time_before(self):
         await self.bot.wait_until_ready()
 
@@ -44,6 +44,7 @@ class StatsVoiceChannels(AluCog):
         await self.bot.community.total_bots.edit(name=f'\N{ROBOT FACE} Bots: {amount_of_bots}')
 
     @refresh_member_stats.before_loop
+    @my_time.before_loop
     async def refresh_member_stats_before(self):
         await self.bot.wait_until_ready()
 

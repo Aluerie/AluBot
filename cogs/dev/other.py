@@ -20,6 +20,7 @@ class AdminTools(DevBaseCog):
     @is_owner()
     @commands.group(hidden=True)
     async def trustee(self, ctx: AluContext):
+        # TODO: move this garbage to FPC or bot management.
         await ctx.scnf()
 
     async def get_trusted_ids(self) -> List[int]:

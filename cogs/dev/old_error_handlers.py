@@ -98,10 +98,6 @@ class CommandErrorHandler(AluCog):
                 desc = f'Missing roles: {", ".join([f"<@&{id_}>" for id_ in error.missing_roles])}'
             case commands.NSFWChannelRequired():
                 desc = "Ask Aluerie to make that channel NSFW friendly"
-            case commands.CommandNotFound():
-                if ctx.prefix in ['/', f'<@{self.bot.user.id}> ', f'<@!{self.bot.user.id}> ']:
-                    return
-                desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.NotOwner():
                 desc = f'Sorry, only {ctx.bot.owner} as the bot owner is allowed to use this command.'
             case commands.PrivateMessageOnly():
@@ -122,40 +118,6 @@ class CommandErrorHandler(AluCog):
                 desc = f'{error}'
             case BadTimeTransform():
                 desc = f'{error}'
-            case _:
-                handled = False
-
-                desc = (
-                    "I've notified my creator and we'll hopefully get it fixed soon. \n"
-                    "Sorry for the inconvenience! {0} {0} {0}".format(Emote.DankL)
-                )
-                error_type = 'Oups...Unexpected error!'
-
-                cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])
-                if ctx.interaction:
-                    jump_url, cmd_text = '', f'/{ctx.command.qualified_name}'
-                else:
-                    jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
-
-                error_e = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=Colour.error())
-                if not self.bot.test:
-                    error_e.set_author(
-                        name=f'{ctx.author} triggered error in {ctx.channel}',
-                        url=jump_url,
-                        icon_url=ctx.author.display_avatar.url,
-                    )
-                mention = ctx.channel.id != ctx.bot.hideout.spam_channel_id
-                await self.bot.send_traceback(error, embed=error_e, mention=mention)
-
-        # send the error
-        if not handled and self.bot.test and not mention:
-            if ctx.interaction:  # they error out unanswered
-                await ctx.reply(':(', ephemeral=True)
-            else:
-                return
-        else:
-            e = discord.Embed(color=Colour.error(), description=desc).set_author(name=error_type)
-            await ctx.reply(embed=e, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: AluContext, error):

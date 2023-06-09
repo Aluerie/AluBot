@@ -122,7 +122,7 @@ class Tags(commands.Cog):
     @add.error
     async def add_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.MissingRequiredFlag):
-            ctx.error_handled = True
+            ctx.is_error_handled = True
             e = discord.Embed(colour=Colour.error()).set_author(name='WrongCommandUsage')
             e.description = (
                 'Sorry! Command usage is\n `$tag add name: <tag_name> text: <tag_text>`\n'

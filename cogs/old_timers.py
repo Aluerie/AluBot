@@ -7,7 +7,7 @@ from discord.ext import tasks
 from numpy.random import randint, seed
 
 from utils import AluCog
-from utils.const import Channel, Colour, Emote, Guild, Role, User, DIGITS
+from utils.const import DIGITS, Channel, Colour, Emote, Guild, Role, User
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -169,23 +169,11 @@ class OldTimers(AluCog):
         await self.community.general.send(await get_gif_text(self.bot.pool))
 
     @daily_reminders.before_loop
-    async def daily_reminders_before(self):
-        await self.bot.wait_until_ready()
-
     @daily_important_reminders.before_loop
-    async def daily_important_reminders_before(self):
-        await self.bot.wait_until_ready()
-
     @daily_fact_reminders.before_loop
-    async def daily_fact_reminders_before(self):
-        await self.bot.wait_until_ready()
-
     @daily_rule_reminders.before_loop
-    async def daily_rule_reminders_before(self):
-        await self.bot.wait_until_ready()
-
     @daily_gif_reminders.before_loop
-    async def daily_gif_reminders_before(self):
+    async def old_timers_before(self):
         await self.bot.wait_until_ready()
 
 

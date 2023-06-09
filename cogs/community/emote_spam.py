@@ -83,10 +83,6 @@ class EmoteSpam(AluCog):
                     break
             await self.bot.community.emote_spam.send('{0} {0} {0}'.format(str(rand_emoji)))
 
-    @emote_spam.before_loop
-    async def emote_spam_before(self):
-        await self.bot.wait_until_ready()
-
     @tasks.loop(count=1)
     async def offline_criminal_check(self):
         channel = self.bot.community.emote_spam
@@ -97,8 +93,9 @@ class EmoteSpam(AluCog):
                 text = f'Offline criminal found {Emote.peepoPolice}'
                 await self.bot.community.bot_spam.send(content=text)
 
+    @emote_spam.before_loop
     @offline_criminal_check.before_loop
-    async def before(self):
+    async def emote_spam_before(self):
         await self.bot.wait_until_ready()
 
 
@@ -153,10 +150,6 @@ class ComfySpam(AluCog):
         if randint(1, 100 + 1) < 2:
             await self.community.comfy_spam.send('{0} {0} {0}'.format(Emote.peepoComfy))
 
-    @comfy_spam.before_loop
-    async def comfy_spam_before(self):
-        await self.bot.wait_until_ready()
-
     @tasks.loop(count=1)
     async def offline_criminal_check(self):
         async for message in self.community.comfy_spam.history(limit=2000):
@@ -166,8 +159,9 @@ class ComfySpam(AluCog):
                 text = f'Offline criminal found {Emote.peepoPolice}'
                 await self.bot.community.bot_spam.send(content=text)
 
+    @comfy_spam.before_loop
     @offline_criminal_check.before_loop
-    async def before(self):
+    async def comfy_spam_before(self):
         await self.bot.wait_until_ready()
 
 

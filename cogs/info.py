@@ -169,7 +169,7 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
 
         if isinstance(error, (ValueError, KeyError)):
             # todo: new error type implement
-            ctx.error_handled = True
+            ctx.is_error_handled = True
             e = discord.Embed(description=self.colour.callback.__doc__, colour=Colour.error())
             e.set_author(
                 name='WrongColourFormat', url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html'

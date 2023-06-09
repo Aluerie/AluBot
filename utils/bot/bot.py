@@ -108,7 +108,6 @@ class AluBot(commands.Bot):
             try:
                 await self.load_extension(ext)
             except Exception as error:
-                # TODO: send exception here too
                 msg = f'Failed to load extension {ext}.'
                 log.exception(msg)
                 await self.send_exception(error, from_where=msg)
@@ -264,8 +263,8 @@ class AluBot(commands.Bot):
 
             e = embed or discord.Embed(colour=const.Colour.error()).set_author(name=from_where)
             await hook.send(embed=e)
-        except:
-            pass
+        except Exception as error:
+            log.error(error)
 
     async def send_traceback(
         self,

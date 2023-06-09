@@ -220,7 +220,7 @@ class AluBot(commands.Bot):
 
     async def send_exception(
         self,
-        exception: Exception,
+        exception: BaseException,
         *,
         embed: discord.Embed = MISSING,
         from_where: str = MISSING,

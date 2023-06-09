@@ -95,12 +95,12 @@ class Twitter(AluCog):
         self.myStream.disconnect()
         self.start_stream.cancel()
 
-    @aluloop.loop(count=1)
+    @aluloop(count=1)
     async def start_stream(self):
         await new_stream(self.bot)
 
     @start_stream.error
-    async def start_stream_error(self, error: Exception):
+    async def start_stream_error(self, error: BaseException):
         self.start_stream.restart()
         await self.bot.send_exception(error, from_where='Dota 2 Twitter Task')
 

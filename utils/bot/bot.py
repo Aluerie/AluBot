@@ -249,10 +249,10 @@ class AluBot(commands.Bot):
 
         hook = self.error_webhook
         try:
-            log.info(f'{mention}, {from_where}, {include_traceback}')
             if mention:
                 await hook.send(const.Role.error_ping.mention)
             if include_traceback:
+                log.info(f'{mention}, {from_where}, {include_traceback}')
                 traceback_content = "".join(traceback.format_exception(exception))
 
                 paginator = commands.Paginator(prefix='```py')
@@ -265,7 +265,7 @@ class AluBot(commands.Bot):
             e = embed or discord.Embed(colour=const.Colour.error()).set_author(name=from_where)
             await hook.send(embed=e)
         except Exception as error:
-            log.error(error)
+            log.info(error)
 
     async def send_traceback(
         self,

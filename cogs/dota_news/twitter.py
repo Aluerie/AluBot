@@ -52,9 +52,8 @@ class MyAsyncStreamingClient(tweepy.asynchronous.AsyncStreamingClient):
         await channel.send(content=f"https://twitter.com/{username}/status/{tweet.id}")
 
     async def on_request_error(self, status_code):
-        await self.bot.hideout.spam.send(
-            content=f"{self.bot.owner.mention} I'm stuck with twitter-stream {status_code}"
-        )
+        msg = f"{self.bot.owner.mention} I'm stuck with twitter-stream {status_code}"
+        await self.bot.hideout.spam.send(content=msg)
         self.disconnect()
 
     async def on_exception(self, exception):
@@ -77,9 +76,6 @@ async def new_stream(bot: AluBot):
 
 
 class Twitter(AluCog):
-    if TYPE_CHECKING:
-        myStream: MyAsyncStreamingClient
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -94,7 +90,6 @@ class Twitter(AluCog):
     def cog_unload(self) -> None:
         if platform.system() == 'Windows':
             return
-        self.myStream.disconnect()
         self.start_stream.cancel()
 
     @aluloop(count=1)

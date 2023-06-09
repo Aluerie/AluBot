@@ -16,7 +16,7 @@ from utils.formats import format_dt_tdR
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from utils import AluBot, AluGuildContext
+    from utils import AluBot, AluContext
 
 
 fav_teams = []
@@ -209,7 +209,7 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
     @commands.hybrid_command(aliases=['sch'])
     @app_commands.rename(schedule_mode='filter')
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in select_options])
-    async def schedule(self, ctx: AluGuildContext, schedule_mode: int = 1, query: Optional[str] = None):
+    async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: Optional[str] = None):
         """Dota 2 Pro Matches Schedule
 
         Parameters
@@ -227,7 +227,7 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
         v.message = msg  # await ntr.original_response()
 
     @commands.hybrid_command()
-    async def fixtures(self, ctx: AluGuildContext):
+    async def fixtures(self, ctx: AluContext):
         """Get football fixtures"""
         url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
         async with self.bot.session.get(url) as r:

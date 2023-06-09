@@ -20,7 +20,7 @@ from discord import app_commands
 from discord.ext import commands
 from typing_extensions import Annotated
 
-from utils import AluCog, AluGuildContext, formats, times
+from utils import AluCog, AluContext, formats, times
 from utils.const import Colour, Emote
 from utils.database import DRecord
 from utils.pagination import EnumeratedPages
@@ -284,7 +284,7 @@ class Reminder(AluCog, emote=Emote.DankG):
 
         return timer
 
-    async def remind_helper(self, ctx: AluGuildContext, *, dt: datetime.datetime, text: str):
+    async def remind_helper(self, ctx: AluContext, *, dt: datetime.datetime, text: str):
         """Remind helper so we don't duplicate"""
 
         timer = await self.create_timer(
@@ -305,7 +305,7 @@ class Reminder(AluCog, emote=Emote.DankG):
     @commands.hybrid_group(aliases=['reminder', 'remindme'], usage='<when>')
     async def remind(
         self,
-        ctx: AluGuildContext,
+        ctx: AluContext,
         *,
         when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')],
     ):
@@ -321,13 +321,13 @@ class Reminder(AluCog, emote=Emote.DankG):
         text: str = '...',
     ):
         """Sets a reminder to remind you of something at a specific time"""
-        ctx = await AluGuildContext.from_interaction(ntr)
+        ctx = await AluContext.from_interaction(ntr)
         await self.remind_helper(ctx, dt=when, text=text)
 
     @remind.command(name='me', with_app_command=False)
     async def remind_me(
         self,
-        ctx: AluGuildContext,
+        ctx: AluContext,
         *,
         when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')],
     ):
@@ -346,7 +346,7 @@ class Reminder(AluCog, emote=Emote.DankG):
         await self.remind_helper(ctx, dt=when.dt, text=when.arg)
 
     @remind.command(name='list', ignore_extra=False)
-    async def remind_list(self, ctx: AluGuildContext):
+    async def remind_list(self, ctx: AluContext):
         """Shows a list of your current reminders"""
         query = """ SELECT id, expires, extra #>> '{args,2}'
                     FROM reminders
@@ -394,7 +394,7 @@ class Reminder(AluCog, emote=Emote.DankG):
     @remind.command(name='delete', aliases=['remove', 'cancel'], ignore_extra=True)
     # @app_commands.autocomplete(id=remind_delete_id_autocomplete)  # type: ignore
     # @app_commands.describe(id='either input a number of reminder id or choose it from suggestion^')
-    async def remind_delete(self, ctx: AluGuildContext, *, id: int):
+    async def remind_delete(self, ctx: AluContext, *, id: int):
         """Deletes a reminder by its ID.
 
         To get a reminder ID, use the reminder list command or autocomplete for slash command.
@@ -423,7 +423,7 @@ class Reminder(AluCog, emote=Emote.DankG):
         await ctx.reply(embed=e)
 
     @remind.command(name='clear', ignore_extra=False)
-    async def reminder_clear(self, ctx: AluGuildContext):
+    async def reminder_clear(self, ctx: AluContext):
         """Clears all reminders you have set."""
 
         # For UX purposes this has to be two queries.

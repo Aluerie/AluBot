@@ -13,7 +13,7 @@ from utils.converters import Snowflake
 from utils.formats import Plural
 
 if TYPE_CHECKING:
-    from utils import AluGuildContext
+    from utils import AluGuildContext, AluContext
 
 
 class PurgeFlags(commands.FlagConverter):
@@ -176,7 +176,7 @@ class ModerationTools(AluCog):
     @commands.hybrid_command()
     @commands.guild_only()
     @checks.hybrid_permissions_check(manage_messages=True)
-    async def spam_chat(self, ctx: AluGuildContext):
+    async def spam_chat(self, ctx: AluContext):
         '''Let the bot to spam the chat in case you want
         to move some bad messages out of sight,
         but not clear/delete them, like some annoying/flashing images

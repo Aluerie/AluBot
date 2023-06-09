@@ -17,7 +17,7 @@ from utils import AluCog, aluloop, const
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluGuildContext
+    from utils import AluBot, AluContext
 
 
 class BetaTestCog(AluCog, name='BetaTest'):
@@ -30,11 +30,11 @@ class BetaTestCog(AluCog, name='BetaTest'):
         return
 
     @commands.command()
-    async def ceta(self, ctx: AluGuildContext):
+    async def ceta(self, ctx: AluContext):
         await ctx.send('ceta')
 
     @commands.hybrid_command()
-    async def heta(self, ctx: AluGuildContext):
+    async def heta(self, ctx: AluContext):
         await ctx.send('heta')
 
     @app_commands.command()

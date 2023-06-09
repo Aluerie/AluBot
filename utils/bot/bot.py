@@ -12,7 +12,6 @@ from aiohttp import ClientSession
 from asyncpg import Pool
 from asyncpraw import Reddit
 from discord.ext import commands
-from discord.utils import MISSING
 from dota2.client import Dota2Client
 from github import Github
 from steam.client import SteamClient
@@ -20,7 +19,7 @@ from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config
 from cogs import get_extensions
-from utils import AluGuildContext, const, formats
+from utils import AluContext, const, formats
 from utils.bases.context import ConfirmationView
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
@@ -138,8 +137,8 @@ class AluBot(commands.Bot):
         await super().start(token, reconnect=True)
 
     async def get_context(
-        self, origin: Union[discord.Interaction, discord.Message], /, *, cls=AluGuildContext
-    ) -> AluGuildContext:
+        self, origin: Union[discord.Interaction, discord.Message], /, *, cls=AluContext
+    ) -> AluContext:
         return await super().get_context(origin, cls=cls)
 
     @property
@@ -316,7 +315,7 @@ class AluBot(commands.Bot):
 
     async def prompt(
         self,
-        ctx_ntr: AluGuildContext | discord.Interaction[AluBot],
+        ctx_ntr: AluContext | discord.Interaction[AluBot],
         *,
         content: str = discord.utils.MISSING,
         embed: discord.Embed = discord.utils.MISSING,
@@ -352,7 +351,7 @@ class AluBot(commands.Bot):
 
         author_id = author_id or ctx_ntr.user.id
         view = ConfirmationView(timeout=timeout, delete_after=delete_after, author_id=author_id)
-        if isinstance(ctx_ntr, AluGuildContext):
+        if isinstance(ctx_ntr, AluContext):
             view.message = await ctx_ntr.reply(content=content, embed=embed, view=view)
         elif isinstance(ctx_ntr, discord.Interaction):
             if not ctx_ntr.response.is_done():

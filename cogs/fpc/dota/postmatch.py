@@ -13,7 +13,7 @@ from utils.const import Colour, MaterialPalette
 from ._models import OpendotaRequestMatch, PostMatchPlayerData
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluGuildContext
+    from utils import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -83,7 +83,7 @@ class DotaPostMatchEdit(AluCog):
         # self.dotafeed.restart()
 
     @commands.command(hidden=True, aliases=["odrl", "od_rl", "odota_ratelimit"])
-    async def opendota_ratelimit(self, ctx: AluGuildContext):
+    async def opendota_ratelimit(self, ctx: AluContext):
         """Send opendota rate limit numbers"""
         e = discord.Embed(colour=Colour.prpl(), description=f"Odota limits: {self.bot.odota_ratelimit}")
         await ctx.reply(embed=e)

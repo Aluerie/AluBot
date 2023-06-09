@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from cogs import INITIAL_EXTENSIONS, get_extensions
-from utils import AluGuildContext, const
+from utils import AluContext, const
 from utils.checks import is_owner
 
 from ._base import DevBaseCog
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class AdminTools(DevBaseCog):
     @is_owner()
     @commands.group(hidden=True)
-    async def trustee(self, ctx: AluGuildContext):
+    async def trustee(self, ctx: AluContext):
         # TODO: move this garbage to FPC or bot management.
         await ctx.scnf()
 
@@ -27,7 +27,7 @@ class AdminTools(DevBaseCog):
         query = "SELECT trusted_ids FROM botinfo WHERE id=$1"
         return await self.bot.pool.fetchval(query, const.Guild.community)
 
-    async def trustee_add_remove(self, ctx: AluGuildContext, user_id: int, mode: Literal["add", "remov"]):
+    async def trustee_add_remove(self, ctx: AluContext, user_id: int, mode: Literal["add", "remov"]):
         trusted_ids = await self.get_trusted_ids()
         if mode == "add":
             trusted_ids.append(user_id)
@@ -42,7 +42,7 @@ class AdminTools(DevBaseCog):
 
     @is_owner()
     @trustee.command(hidden=True)
-    async def add(self, ctx: AluGuildContext, user_id: int):
+    async def add(self, ctx: AluContext, user_id: int):
         """Grant trustee privilege to a user with `user_id`.
         Trustees can use commands that interact with the bot database.
         """
@@ -50,13 +50,13 @@ class AdminTools(DevBaseCog):
 
     @is_owner()
     @trustee.command(hidden=True)
-    async def remove(self, ctx: AluGuildContext, user_id: int):
+    async def remove(self, ctx: AluContext, user_id: int):
         """Remove trustee privilege from a user with `user_id`."""
         await self.trustee_add_remove(ctx, user_id=user_id, mode="remov")
 
     @is_owner()
     @trustee.command(name='list', hidden=True)
-    async def list_(self, ctx: AluGuildContext):
+    async def list_(self, ctx: AluContext):
         """Get list of trusted users."""
         trusted_ids = await self.get_trusted_ids()
         msg = '\n'.join([f'\N{BLACK CIRCLE} {ctx.bot.get_user(i)} - `{i}`' for i in trusted_ids])
@@ -65,14 +65,14 @@ class AdminTools(DevBaseCog):
 
     @is_owner()
     @commands.command(name="extensions", hidden=True)
-    async def extensions(self, ctx: AluGuildContext):
+    async def extensions(self, ctx: AluContext):
         """Shows available extensions to load/reload/unload."""
         exts = [f"\N{BLACK CIRCLE} {ext[5:] if ext.startswith('cogs.') else ext}" for ext in self.bot.extensions.keys()]
         e = discord.Embed(title="Available Extensions", description="\n".join(exts), colour=const.Colour.prpl())
         await ctx.reply(embed=e)
 
     async def load_unload_reload_job(
-        self, ctx: AluGuildContext, module: str, *, job_func: Callable[[str], Awaitable[None]]
+        self, ctx: AluContext, module: str, *, job_func: Callable[[str], Awaitable[None]]
     ):
         try:
             # so we do `$unload beta` instead of `$unload beta.py`
@@ -88,19 +88,19 @@ class AdminTools(DevBaseCog):
 
     @is_owner()
     @commands.command(name="load", hidden=True)
-    async def load(self, ctx: AluGuildContext, *, module: str):
+    async def load(self, ctx: AluContext, *, module: str):
         """Loads a module."""
         await self.load_unload_reload_job(ctx, module, job_func=self.bot.load_extension)
 
     @is_owner()
     @commands.command(name="unload", hidden=True)
-    async def unload(self, ctx: AluGuildContext, *, module: str):
+    async def unload(self, ctx: AluContext, *, module: str):
         """Unloads a module."""
         await self.load_unload_reload_job(ctx, module, job_func=self.bot.unload_extension)
 
     @is_owner()
     @commands.group(name="reload", hidden=True, invoke_without_command=True)
-    async def reload(self, ctx: AluGuildContext, *, module: str):
+    async def reload(self, ctx: AluContext, *, module: str):
         """Reloads a module."""
         await self.load_unload_reload_job(ctx, module, job_func=self.reload_or_load_extension)
 
@@ -112,7 +112,7 @@ class AdminTools(DevBaseCog):
 
     @is_owner()
     @reload.command(name="all", hidden=True)
-    async def reload_all(self, ctx: AluGuildContext):
+    async def reload_all(self, ctx: AluContext):
         """Reloads all modules"""
         cogs_to_reload = get_extensions(ctx.bot.test)
 
@@ -164,13 +164,13 @@ class AdminTools(DevBaseCog):
 
     @is_owner()
     @commands.group(name="guild", hidden=True)
-    async def guild_group(self, ctx: AluGuildContext):
+    async def guild_group(self, ctx: AluContext):
         """Group for guild commands. Use it together with subcommands"""
         await ctx.scnf()
 
     @is_owner()
     @guild_group.command(hidden=True)
-    async def leave(self, ctx: AluGuildContext, guild: discord.Guild):
+    async def leave(self, ctx: AluContext, guild: discord.Guild):
         """'Make bot leave guild with named guild_id;"""
         if guild is not None:
             await guild.leave()
@@ -182,7 +182,7 @@ class AdminTools(DevBaseCog):
 
     @is_owner()
     @guild_group.command(hidden=True)
-    async def list(self, ctx: AluGuildContext):
+    async def list(self, ctx: AluContext):
         """Show list of guilds the bot is in."""
         e = discord.Embed(colour=const.Colour.prpl())
         e.description = (
@@ -193,7 +193,7 @@ class AdminTools(DevBaseCog):
 
     @is_owner()
     @guild_group.command(hidden=True)
-    async def api(self, ctx: AluGuildContext):
+    async def api(self, ctx: AluContext):
         """Lazy way to update GitHub ReadMe badges until I figure out more continuous one"""
         json_dict = {
             "servers": len(self.bot.guilds),

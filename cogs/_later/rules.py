@@ -10,7 +10,7 @@ from discord.ext.commands import Range
 from utils import Colour, Emote, Role
 
 if TYPE_CHECKING:
-    from utils.bases.context import AluGuildContext
+    from utils.bases.context import AluContext
 
 
 class ServerInfo(commands.Cog, name='Rules'):
@@ -74,13 +74,13 @@ class ServerInfo(commands.Cog, name='Rules'):
 
     @commands.has_role(Role.discord_mods)
     @commands.group()
-    async def modrule(self, ctx: AluGuildContext):
+    async def modrule(self, ctx: AluContext):
         """Group command about rule modding, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @commands.has_role(Role.discord_mods)
     @commands.group()
-    async def modrealrule(self, ctx: AluGuildContext):
+    async def modrealrule(self, ctx: AluContext):
         """Group command about rule modding, for actual commands use it together with subcommands"""
         await ctx.scnf()
 

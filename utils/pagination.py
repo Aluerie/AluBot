@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import discord
 from discord.ext import menus
 
-from .bases import AluGuildContext
+from .bases import AluContext
 from .const import Colour, Emote
 
 if TYPE_CHECKING:
@@ -95,9 +95,9 @@ class SearchModal(discord.ui.Modal, title="Search Page by query"):
 
 
 class Paginator(discord.ui.View):
-    def __init__(self, ctx_ntr: AluGuildContext | discord.Interaction[AluBot], source: menus.PageSource):
+    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], source: menus.PageSource):
         super().__init__()
-        self.ctx_ntr: AluGuildContext | discord.Interaction[AluBot] = ctx_ntr
+        self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
         self.source: menus.PageSource = source
         self.message: Optional[discord.Message] = None
         self.current_page_number: int = 0
@@ -172,7 +172,7 @@ class Paginator(discord.ui.View):
         kwargs = await self._get_kwargs_from_page(page)
         self._update_nav_labels(0)
 
-        if isinstance(self.ctx_ntr, AluGuildContext):
+        if isinstance(self.ctx_ntr, AluContext):
             self.message = await self.ctx_ntr.send(**kwargs, view=self, ephemeral=ephemeral)
         elif isinstance(self.ctx_ntr, discord.Interaction):
             if self.ctx_ntr.response.is_done():
@@ -273,7 +273,7 @@ class EnumeratedPages(Paginator):
 
     def __init__(
         self,
-        ctx_ntr: AluGuildContext | discord.Interaction[AluBot],
+        ctx_ntr: AluContext | discord.Interaction[AluBot],
         entries: List[str],
         *,
         per_page: int,

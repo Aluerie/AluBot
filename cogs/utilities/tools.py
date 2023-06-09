@@ -11,7 +11,7 @@ from utils import AluCog, const
 from utils.translator import translate
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluGuildContext
+    from utils import AluBot, AluContext
 
 
 class ToolsCog(AluCog, name='Tools', emote=const.Emote.DankFix):
@@ -52,14 +52,14 @@ class ToolsCog(AluCog, name='Tools', emote=const.Emote.DankFix):
 
     @commands.hybrid_command()
     @app_commands.describe(text="Enter text to translate")
-    async def translate(self, ctx: AluGuildContext, text: str):
+    async def translate(self, ctx: AluContext, text: str):
         """Google Translate to English, auto-detects source language"""
         e = await self.translate_embed(text)
         await ctx.reply(embed=e)
 
     @commands.hybrid_command()
     @app_commands.describe(url='Url of image to convert')
-    async def convert(self, ctx: AluGuildContext, *, url: str):
+    async def convert(self, ctx: AluContext, *, url: str):
         """Convert image from webp to png format"""
         img = await self.bot.imgtools.url_to_img(url)
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags

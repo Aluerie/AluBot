@@ -11,7 +11,7 @@ from discord.ext import commands
 from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils import AluGuildContext
+    from utils import AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)  # .DEBUG)
@@ -59,7 +59,7 @@ class LinkUtilities(AluCog):
 
     @commands.hybrid_command()
     @app_commands.describe(link="Enter Twitter/Instagram link to \"fix\"")
-    async def fix_links(self, ctx: AluGuildContext, *, link: str):
+    async def fix_links(self, ctx: AluContext, *, link: str):
         """Fix twitter/instagram links with better embeds."""
         content = self.fix_link_worker(link)
         await ctx.reply(content)

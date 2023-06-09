@@ -13,12 +13,12 @@ from utils.const import DIGITS, REGEX_URL_LINK, Channel, Colour, Emote, Guild, U
 from utils.webhook import check_msg_react, user_webhook
 
 if TYPE_CHECKING:
-    from utils import AluGuildContext
+    from utils import AluContext
 
 
 class Other(AluCog):
     @commands.hybrid_command()
-    async def coinflip(self, ctx: AluGuildContext):
+    async def coinflip(self, ctx: AluContext):
         """Flip a coin: Heads or Tails?"""
         word = 'Heads' if randint(2) == 0 else 'Tails'
         return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
@@ -105,7 +105,7 @@ class Other(AluCog):
         await your_life(message)
 
     @commands.hybrid_command()
-    async def do_emote_spam(self, ctx: AluGuildContext):
+    async def do_emote_spam(self, ctx: AluContext):
         """Send 3x random emote into emote spam channel"""
         rand_guild = choice(self.bot.guilds)  # type: ignore #TODO:FIX
         rand_emoji = choice(rand_guild.emojis)
@@ -116,7 +116,7 @@ class Other(AluCog):
         await ctx.reply(embed=e, ephemeral=True, delete_after=10)
 
     @commands.hybrid_command()
-    async def apuband(self, ctx: AluGuildContext):
+    async def apuband(self, ctx: AluContext):
         """Send apuband emote combo."""
         guild = self.community.guild
         emote_names = ['peepo1Maracas', 'peepo2Drums', 'peepo3Piano', 'peepo4Guitar', 'peepo5Singer', 'peepo6Sax']
@@ -134,14 +134,14 @@ class Other(AluCog):
 
     @commands.hybrid_command()
     @app_commands.describe(max_roll_number="Max limit to roll")
-    async def roll(self, ctx: AluGuildContext, max_roll_number: app_commands.Range[int, 1]):
+    async def roll(self, ctx: AluContext, max_roll_number: app_commands.Range[int, 1]):
         """Roll an integer from 1 to `max_roll_number`."""
         await ctx.reply(content=str(randint(1, max_roll_number + 1)))
 
     @commands.hybrid_command(usage='[channel=curr] [text=Allo]', description='Echo something somewhere')
     @app_commands.describe(channel="Channel to send to")
     @app_commands.describe(text="Enter text to speak")
-    async def echo(self, ctx: AluGuildContext, channel: Optional[discord.TextChannel] = None, *, text: str = 'Allo'):
+    async def echo(self, ctx: AluContext, channel: Optional[discord.TextChannel] = None, *, text: str = 'Allo'):
         """Send `text` to `#channel` and delete your invoking message,
         so it looks like the bot is speaking on its own.
         """
@@ -167,7 +167,7 @@ class Other(AluCog):
         name='emoteit', aliases=['emotialize'], description="Emotializes your text into standard emotes"
     )
     @app_commands.describe(text="Text that will be converted into emotes")
-    async def emoteit(self, ctx: AluGuildContext, *, text: str):
+    async def emoteit(self, ctx: AluContext, *, text: str):
         """Emotializes your text into standard emotes"""
         answer = ''
         skip_mode = 0

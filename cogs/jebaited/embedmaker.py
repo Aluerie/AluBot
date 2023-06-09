@@ -16,7 +16,7 @@ from discord.ext import commands
 from utils import AluCog, const
 
 if TYPE_CHECKING:
-    from utils import AluGuildContext
+    from utils import AluContext
 
 
 class StartView(discord.ui.View):
@@ -38,12 +38,12 @@ class StartView(discord.ui.View):
 
 class EmbedMaker(AluCog, name="Embed Maker", emote=const.Emote.DankZzz):
     @commands.hybrid_group(name="embed")
-    async def embed_(self, ctx: AluGuildContext):
+    async def embed_(self, ctx: AluContext):
         """Group command about Embed Build, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
     @embed_.command()
-    async def make(self, ctx: AluGuildContext):
+    async def make(self, ctx: AluContext):
         """Embed Maker command. Opens a menu for making/editing/importing embed messages."""
         view = StartView()
         view.message = await ctx.reply(embeds=view.embeds, view=view)

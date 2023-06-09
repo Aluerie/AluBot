@@ -14,7 +14,7 @@ from utils.translator import TranslateError
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluGuildContext
+    from utils import AluBot, AluContext
 
 
 class ErrorHandlers(DevBaseCog):
@@ -31,7 +31,7 @@ class ErrorHandlers(DevBaseCog):
         tree.on_error = self._old_tree_error
 
     async def error_handler_worker(
-        self, ctx: AluGuildContext, error: Exception, _type: Literal['on_app_command_error', 'on_command_error']
+        self, ctx: AluContext, error: Exception, _type: Literal['on_app_command_error', 'on_command_error']
     ):
         """|coro|
 
@@ -49,7 +49,7 @@ class ErrorHandlers(DevBaseCog):
 
         Parameters
         ----------
-        ctx: :class:`DuckContext`
+        ctx: :class:`AluContext`
             The context for the command/app_command.
         error: :class:`Exception`
             The error that was raised or passed down in chain by errors like `commands.HybridCommandError`.
@@ -209,7 +209,7 @@ class ErrorHandlers(DevBaseCog):
         await ctx.reply(embed=e, ephemeral=True)
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: AluGuildContext, error: commands.CommandError) -> None:
+    async def on_command_error(self, ctx: AluContext, error: commands.CommandError) -> None:
         """|coro|
 
         A handler called when an error is raised while invoking a command.
@@ -241,7 +241,7 @@ class ErrorHandlers(DevBaseCog):
         # if command is not None:
         #     if command._has_any_error_handlers():
         #         return
-        ctx = await AluGuildContext.from_interaction(ntr)
+        ctx = await AluContext.from_interaction(ntr)
         await self.error_handler_worker(ctx, error, _type='on_app_command_error')
 
 

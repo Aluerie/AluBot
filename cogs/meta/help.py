@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus, tasks
 
-from utils import AluCog, AluGuildContext
+from utils import AluCog, AluContext
 from utils.const import Colour, Emote
 from utils.formats import human_timedelta
 from utils.pagination import Paginator
@@ -103,13 +103,13 @@ class HelpSelect(discord.ui.Select):
 class HelpPages(Paginator):
     source: HelpPageSource
 
-    def __init__(self, ctx: AluGuildContext, source: HelpPageSource):
+    def __init__(self, ctx: AluContext, source: HelpPageSource):
         super().__init__(ctx, source)
         self.add_item(HelpSelect(self))
 
 
 class MyHelpCommand(commands.HelpCommand):
-    context: AluGuildContext
+    context: AluContext
 
     def __init__(self):
         super().__init__(
@@ -245,7 +245,7 @@ class HelpCommandCog(AluCog):
     async def help_slash(self, ntr: discord.Interaction, *, command: Optional[str]):
         """Show help menu for the bot"""
         my_help = MyHelpCommand()
-        my_help.context = ctx = await AluGuildContext.from_interaction(ntr)
+        my_help.context = ctx = await AluContext.from_interaction(ntr)
         await my_help.command_callback(ctx, command=command)
 
     @tasks.loop(count=1)

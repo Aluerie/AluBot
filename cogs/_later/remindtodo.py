@@ -4,7 +4,7 @@ from discord import Embed, app_commands
 from discord.ext import commands, tasks
 
 from utils import Colour, Guild
-from utils.bases.context import AluGuildContext
+from utils import AluContext
 
 
 class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
@@ -21,7 +21,7 @@ class Remind(commands.Cog, name='Reminders, ToDo and AFK commands'):
 
     @commands.hybrid_command(name='afk', description='Flag you as afk member')
     @app_commands.describe(afk_text='Your custom afk note')
-    async def afk(self, ctx: AluGuildContext, *, afk_text: str = '...'):
+    async def afk(self, ctx: AluContext, *, afk_text: str = '...'):
         """Flags you as afk with your custom afk note ;"""
         if db.session.query(db.a).filter_by(id=ctx.author.id).first() is None:
             db.add_row(db.a, ctx.author.id, name=afk_text)

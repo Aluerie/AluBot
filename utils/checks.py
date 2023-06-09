@@ -27,7 +27,7 @@ def is_guild_owner():
 
 
 def is_trustee():
-    async def pred(ctx_ntr: AluGuildContext | discord.Interaction[AluBot]) -> bool:
+    async def pred(ctx_ntr: AluContext | discord.Interaction[AluBot]) -> bool:
         """trustees only"""
         query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
         trusted_ids: List[int] = await ctx_ntr.client.pool.fetchval(query, Guild.community)  # type: ignore
@@ -47,7 +47,7 @@ def is_trustee():
 
 
 def is_owner():
-    async def predicate(ctx: AluGuildContext) -> bool:
+    async def predicate(ctx: AluContext) -> bool:
         """Aluerie only"""
         if not await ctx.bot.is_owner(ctx.author):
             raise commands.NotOwner()

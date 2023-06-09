@@ -10,13 +10,13 @@ from discord.ext import commands
 from utils import AluCog, const
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluGuildContext
+    from utils import AluBot, AluContext
 
 
 class PersonalCommands(AluCog):
     @commands.hybrid_command()
     @app_commands.describe(tweet_ids='Number(-s) in the end of tweet link')
-    async def twitter_image(self, ctx: AluGuildContext, *, tweet_ids: str):
+    async def twitter_image(self, ctx: AluContext, *, tweet_ids: str):
         """Download image from tweets. \
         Useful for Aluerie because Twitter is banned in Russia.
         • `<tweet_ids>` are tweet ids - it's just numbers in the end of tweet links.

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import random
 import re
 from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
-from numpy.random import choice, randint
 
 from utils import AluCog
 from utils.const import DIGITS, REGEX_URL_LINK, Channel, Colour, Emote, Guild, User
@@ -20,7 +20,7 @@ class Other(AluCog):
     @commands.hybrid_command()
     async def coinflip(self, ctx: AluContext):
         """Flip a coin: Heads or Tails?"""
-        word = 'Heads' if randint(2) == 0 else 'Tails'
+        word = 'Heads' if random.randint(0, 1) == 0 else 'Tails'
         return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
 
     @commands.Cog.listener()
@@ -56,7 +56,7 @@ class Other(AluCog):
         await bots_in_lobby(message)
 
         async def weebs_out(msg: discord.Message):
-            if msg.channel.id == Channel.weebs and randint(1, 100 + 1) < 7:
+            if msg.channel.id == Channel.weebs and random.randint(1, 100 + 1) < 7:
                 await msg.channel.send(
                     '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
                         '<a:WeebsOutOut:730882034167185448>',
@@ -82,7 +82,7 @@ class Other(AluCog):
         async def random_comfy_react(msg: discord.Message):
             if not msg.guild or msg.guild.id != Guild.community:
                 return
-            roll = randint(1, 300 + 1)
+            roll = random.randint(1, 300 + 1)
             if roll < 2:
                 try:
                     await msg.add_reaction(Emote.peepoComfy)
@@ -92,7 +92,7 @@ class Other(AluCog):
         await random_comfy_react(message)
 
         async def your_life(msg):
-            if not msg.guild or msg.guild.id != Guild.community or randint(1, 170 + 1) >= 2:
+            if not msg.guild or msg.guild.id != Guild.community or random.randint(1, 170 + 1) >= 2:
                 return
             try:
                 sliced_text = msg.content.split()
@@ -107,8 +107,8 @@ class Other(AluCog):
     @commands.hybrid_command()
     async def do_emote_spam(self, ctx: AluContext):
         """Send 3x random emote into emote spam channel"""
-        rand_guild = choice(self.bot.guilds)  # type: ignore #TODO:FIX
-        rand_emoji = choice(rand_guild.emojis)
+        rand_guild = random.choice(self.bot.guilds)
+        rand_emoji = random.choice(rand_guild.emojis)
         answer_text = f'{str(rand_emoji)} ' * 3
         channel = self.community.emote_spam
         await channel.send(answer_text)
@@ -136,7 +136,7 @@ class Other(AluCog):
     @app_commands.describe(max_roll_number="Max limit to roll")
     async def roll(self, ctx: AluContext, max_roll_number: app_commands.Range[int, 1]):
         """Roll an integer from 1 to `max_roll_number`."""
-        await ctx.reply(content=str(randint(1, max_roll_number + 1)))
+        await ctx.reply(content=str(random.randint(1, max_roll_number + 1)))
 
     @commands.hybrid_command(usage='[channel=curr] [text=Allo]', description='Echo something somewhere')
     @app_commands.describe(channel="Channel to send to")

@@ -178,14 +178,14 @@ class ErrorHandlers(DevBaseCog):
                 error_type = 'Oups...Unexpected error!'
 
         if warn_developers:
-            cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])
+            cmd_kwargs = ' '.join([f'`{k}`: `{v}`' for k, v in ctx.kwargs.items()])
 
             if ctx.interaction:
                 jump_url, cmd_text = '', f'/{ctx.command.qualified_name}'
             else:
                 jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
 
-            error_embed = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=const.Colour.error())
+            error_embed = discord.Embed(description=f'`{cmd_text}`\n{cmd_kwargs}', colour=const.Colour.error())
             error_embed.set_footer(text=_type)
 
             # if I'm myself in the channel testing commands - I don't need ping-mention or redirection.

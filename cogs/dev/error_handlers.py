@@ -248,7 +248,7 @@ class ErrorHandlers(DevBaseCog):
 old_on_error = commands.Bot.on_error
 
 
-async def on_error(self, event: str, *args: Any, **kwargs: Any) -> None:
+async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
     """|coro|
 
     Called when an error is raised, and it's not from a command,
@@ -265,7 +265,10 @@ async def on_error(self, event: str, *args: Any, **kwargs: Any) -> None:
     """
 
     # Exception Traceback
-    (_exc_type, exc, _tb) = sys.exc_info()
+    (_exception_type, exception, _traceback) = sys.exc_info()
+    if exception is None:
+        # technically bad, but typing-wise for `self.send_exception` it's fine so whatever. 
+        exception = TypeError('Somehow `on_error` fired with exception being `None`.')
 
     # Event Arguments
     e = discord.Embed(title=f'`{event}`', colour=const.Colour.error_handler())
@@ -277,11 +280,11 @@ async def on_error(self, event: str, *args: Any, **kwargs: Any) -> None:
     args_str.append('```')
     e.add_field(name='Args', value='\n'.join(args_str), inline=False)
 
-    await self.send_exception(exc, e)
+    await self.send_exception(exception, embed=e)
 
 
 async def setup(bot: AluBot):
-    commands.Bot.on_error = on_error
+    commands.Bot.on_error = on_error  # type: ignore # self is discord.Client while we want it AluBot.
     await bot.add_cog(ErrorHandlers(bot))
 
 

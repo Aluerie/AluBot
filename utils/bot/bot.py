@@ -215,7 +215,7 @@ class AluBot(commands.Bot):
         exception: BaseException,
         *,
         embed: Optional[discord.Embed] = None,
-        from_where: str = 'From somewhere',
+        from_where: Optional[str] = None,
         mention: bool = True,
         include_traceback: bool = True,
     ) -> None:
@@ -239,6 +239,9 @@ class AluBot(commands.Bot):
         """
         if from_where is not None and embed is not None:
             raise TypeError('Cannot mix `from_where` and `embed` keyword arguments.')
+        if from_where is None and embed is None:
+            from_where = '`from_where` was not specified.'
+            # raise TypeError('Key arguments `from_where` and `embed` cannot be `None` at the same time.')
 
         hook = self.error_webhook
         try:

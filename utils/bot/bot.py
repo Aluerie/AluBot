@@ -15,7 +15,6 @@ from discord.ext import commands
 from dota2.client import Dota2Client
 from github import Github
 from steam.client import SteamClient
-from tweepy.asynchronous import AsyncClient as TwitterAsyncClient
 
 import config
 from cogs import get_extensions
@@ -51,7 +50,6 @@ class AluBot(commands.Bot):
         steam: SteamClient
         tree: MyCommandTree
         twitch: TwitchClient
-        twitter: TwitterAsyncClient
         user: discord.ClientUser
 
     def __init__(self, test=False):
@@ -191,10 +189,6 @@ class AluBot(commands.Bot):
         if not hasattr(self, 'twitch'):
             self.twitch = TwitchClient(config.TWITCH_TOKEN)
             await self.twitch.connect()
-
-    def ini_twitter(self) -> None:
-        if not hasattr(self, 'twitter'):
-            self.twitter = TwitterAsyncClient(config.TWITTER_BEARER_TOKEN)
 
     def update_odota_ratelimit(self, headers) -> None:
         monthly = headers.get('X-Rate-Limit-Remaining-Month')

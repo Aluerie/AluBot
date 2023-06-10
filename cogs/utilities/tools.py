@@ -27,7 +27,6 @@ class ToolsCog(AluCog, name='Tools', emote=const.Emote.DankFix):
         )
 
     def cog_load(self) -> None:
-        self.bot.ini_twitter()
         self.bot.tree.add_command(self.translate_ctx_menu)
 
     async def cog_unload(self) -> None:

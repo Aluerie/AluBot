@@ -9,8 +9,7 @@ from discord.ext import commands
 from pyot.core.exceptions import NotFound
 from pyot.utils.lol import champion
 
-from utils import const
-from utils.checks import is_manager
+from utils import const, checks
 from utils.lol.const import LOL_LOGO, LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
 from utils.lol.utils import get_all_champ_names, get_meraki_patch, get_pyot_meraki_champ_diff_list
 
@@ -76,8 +75,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         guild_only=True,
     )
 
-    @commands.guild_only()
-    @is_manager()
+    @checks.hybrid.is_manager()
     @commands.group(name='lol', aliases=['league'])
     async def ext_lol(self, ctx: AluGuildContext):
         """Group command about LoL, for actual commands use it together with subcommands"""
@@ -89,7 +87,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         name='channel', description='Group command about LoLFeed channel settings', parent=slh_lol
     )
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol.group()
     async def ext_lol_channel(self, ctx: AluGuildContext):
         """Group command about LoL channel, for actual commands use it together with subcommands"""
@@ -105,7 +103,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Set channel to be the LoLFeed notifications channel."""
         await self.channel_set(ntr, channel)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_channel.command(name='set', usage='[channel=curr]')
     async def ext_lol_channel_set(self, ctx: AluGuildContext, channel: Optional[discord.TextChannel] = None):
         """Set channel to be the LoLFeed notifications channel."""
@@ -118,7 +116,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Disable LoLFeed notifications channel."""
         await self.channel_disable(ntr)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_channel.command(name='disable')
     async def ext_lol_channel_disable(self, ctx: AluGuildContext):
         """Stop getting LoLFeed notifs. Data about fav champs/players won't be affected."""
@@ -131,7 +129,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Check if LoLFeed channel is set up."""
         await self.channel_check(ntr)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_channel.command(name='check')
     async def ext_lol_channel_check(self, ctx: AluGuildContext):
         """Check if LoLFeed channel is set up in the server."""
@@ -145,7 +143,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         parent=slh_lol,
     )
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol.group(name='database', aliases=['db'])
     async def ext_lol_database(self, ctx: AluGuildContext):
         """Group command about LoL database, for actual commands use it together with subcommands"""
@@ -188,7 +186,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """List of players in the database available for LoLFeed feature."""
         await self.database_list(ntr)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_database.command(name='list')
     async def ext_lol_database_list(self, ctx: AluGuildContext):
         """List of players in the database available for LoLFeed feature."""
@@ -210,7 +208,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         account_dict = await self.get_account_dict(server=server, account=account)
         await self.database_request(ntr, player_dict, account_dict)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_database.command(
         name='request',
         usage='name: <twitch_name> server: <server-region> account: <account_name>',
@@ -231,7 +229,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         parent=slh_lol,
     )
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol.group(name='player', aliases=['streamer'])
     async def ext_lol_player(self, ctx: AluGuildContext):
         """Group command about LoL player, for actual commands use it together with subcommands"""
@@ -281,7 +279,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Add player to your favourites."""
         await self.player_add_remove(ntr, locals(), mode_add=True)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_player.command(name='add', usage='<player_name(-s)>')
     async def ext_lol_player_add(self, ctx: AluGuildContext, *, player_names: str):
         """Add player to your favourites."""
@@ -326,7 +324,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Remove player from your favourites."""
         await self.player_add_remove(ntr, locals(), mode_add=False)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_player.command(name='remove', usage='<player_name(-s)>')
     async def ext_lol_player_remove(self, ctx: AluGuildContext, *, player_names: str):
         """Add player to your favourites."""
@@ -339,7 +337,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Show list of your favourite players."""
         await self.player_list(ntr)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_player.command(name='list')
     async def ext_lol_player_list(self, ctx: AluGuildContext):
         """Show list of your favourite players."""
@@ -353,7 +351,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         parent=slh_lol,
     )
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol.group(name='champ')
     async def ext_lol_champ(self, ctx: AluGuildContext):
         """Group command about LoL champs, for actual commands use it together with subcommands"""
@@ -398,7 +396,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Add champ to your favourites."""
         await self.character_add_remove(ntr, locals(), mode_add=True)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_champ.command(
         name='add',
         usage='<champ_name(-s)>',
@@ -446,7 +444,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Remove champ from your favourites."""
         await self.character_add_remove(ntr, locals(), mode_add=False)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_champ.command(name='remove', usage='<champ_name(-s)>')
     async def ext_lol_champ_remove(self, ctx: AluGuildContext, *, champ_names: str):
         """Remove champ(-es) from your fav champs list."""
@@ -459,7 +457,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Show your favourite champs list."""
         await self.character_list(ntr)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_champ.command(name='list')
     async def ext_lol_champ_list(self, ctx: AluGuildContext):
         """Show current list of fav champ."""
@@ -473,7 +471,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Turn on/off spoiling resulting stats for matches."""
         await self.spoil(ntr, spoil)
 
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol.command(name='spoil')
     async def ext_lol_spoil(self, ctx: AluGuildContext, spoil: bool):
         """Turn on/off spoiling resulting stats for matches.
@@ -491,7 +489,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         """Interactive setup to add/remove champions in/from your favourite list."""
         await self.character_setup(ntr)
     
-    @is_manager()
+    @checks.hybrid.is_manager()
     @ext_lol_champ.command(name='setup')
     async def ext_lol_champ_setup(self, ctx: AluGuildContext):
         """Interactive setup to add/remove champions in/from your favourite list."""

@@ -138,7 +138,7 @@ class Welcome(AluCog):
         msg = await self.bot.community.welcome.send(embed=e)
         await msg.add_reaction(const.Emote.PogChampPepe)
 
-    @checks.is_owner()
+    @commands.is_owner()
     @commands.command(hidden=True)
     async def welcome_preview(self, ctx: AluContext, member: Optional[discord.Member]):
         """Get a rendered welcome message for a `{@user}`."""

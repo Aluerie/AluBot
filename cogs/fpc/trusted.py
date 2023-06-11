@@ -21,6 +21,7 @@ class FPCTrusted(AluCog):
         name="database",
         description="Group command about managing database",
         guild_ids=const.TRUSTED_GUILDS,
+        default_permissions=discord.Permissions(manage_guild=True)
     )
 
     db_dota = app_commands.Group(
@@ -37,7 +38,7 @@ class FPCTrusted(AluCog):
             raise commands.ExtensionNotLoaded(name='Dota 2 Cog is not loaded')
         return dota_cog
 
-    @checks.is_trustee()
+    @checks.hybrid.is_trustee()
     @db_dota.command(name="add")
     async def db_dota_add(self, ntr: discord.Interaction[AluBot], name: str, steam: str, twitch: bool):
         """Add player to the database.
@@ -59,7 +60,7 @@ class FPCTrusted(AluCog):
         account_dict = await dota_cog.get_account_dict(steam_flag=steam)
         await dota_cog.database_add(ntr, player_dict, account_dict)
 
-    @checks.is_trustee()
+    @checks.hybrid.is_trustee()
     @db_dota.command(name='remove')
     async def db_dota_remove(self, ntr: discord.Interaction[AluBot], name: str, steam: Optional[str]):
         """Remove account/player from the database.
@@ -95,7 +96,7 @@ class FPCTrusted(AluCog):
             raise commands.ExtensionNotLoaded(name='LoLFPC is not loaded')
         return lol_cog
 
-    @checks.is_trustee()
+    @checks.hybrid.is_trustee()
     @db_lol.command(name='add')
     async def db_lol_add(self, ntr: discord.Interaction[AluBot], name: str, server: LiteralServerUpper, account: str):
         """Add player to the database.
@@ -116,7 +117,7 @@ class FPCTrusted(AluCog):
         account_dict = await lol_cog.get_account_dict(server=server, account=account)
         await lol_cog.database_add(ntr, player_dict, account_dict)
 
-    @checks.is_trustee()
+    @checks.hybrid.is_trustee()
     @db_lol.command(name='remove')
     async def db_lol_remove(
         self, ntr: discord.Interaction[AluBot], name: str, server: Optional[LiteralServerUpper], account: Optional[str]

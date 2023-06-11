@@ -140,19 +140,19 @@ class PrefixSetupCog(AluCog, SetupCog, name='Prefix Setup'):
         e.set_footer(text=f'To change prefix use `@{self.bot.user.name} prefix set` command')
         await ctx.reply(embed=e)
 
-    @checks.is_manager()
+    @checks.hybrid.is_manager()
     @commands.group(invoke_without_command=True)
     async def prefix(self, ctx: AluGuildContext):
         """Group command about prefix for this server."""
         await self.prefix_prefix_check_replies(ctx)
 
-    @checks.is_manager()
+    @checks.hybrid.is_manager()
     @prefix.command(name='check')
     async def prefix_check(self, ctx: AluGuildContext):
         """Check prefix for this server."""
         await self.prefix_prefix_check_replies(ctx)
 
-    @checks.is_manager()
+    @checks.hybrid.is_manager()
     @prefix.command(name='set')
     async def prefix_set(self, ctx: AluGuildContext, *, new_prefix: GuildPrefix):
         """Set new prefix for the server.

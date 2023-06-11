@@ -12,8 +12,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 from cogs.fpc.dota._models import Match
 from config import DOTA_FRIEND_ID
-from utils import const
-from utils.checks import is_my_guild
+from utils import const, checks
+
 from utils.dota import hero
 from utils.formats import indent
 from utils.pagination import EnumeratedPages
@@ -108,7 +108,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         self.match_history_refresh.cancel()
 
     @commands.hybrid_group()
-    @is_my_guild()
+    @checks.hybrid.is_my_guild()
     async def stalk(self, ctx: AluGuildContext):
         """Group command about stalking Aluerie, for actual commands use it together with subcommands"""
         await ctx.scnf()
@@ -341,7 +341,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         self.bot.dota.wait_event('match_details_response', timeout=20)
 
     @commands.hybrid_group()
-    @is_my_guild()
+    @checks.hybrid.is_my_guild()
     async def ranked(self, ctx: AluGuildContext):
         """Group command"""
         await ctx.scnf()

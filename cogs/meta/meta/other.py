@@ -17,7 +17,6 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils import AluCog, AluContext
-from utils.checks import is_owner
 from utils.const import Colour, Emote, Limit
 
 if TYPE_CHECKING:
@@ -181,7 +180,7 @@ class OtherCog(AluCog):
         """Give feedback about the bot directly to the bot developer."""
         await ntr.response.send_modal(FeedbackModal(self))
 
-    @is_owner()
+    @commands.is_owner()
     @commands.command(aliases=['pm'], hidden=True)
     async def dm(self, ctx: AluContext, user: discord.User, *, content: str):
         """Write direct message to {user}."""
@@ -232,6 +231,8 @@ class OtherCog(AluCog):
         # +-----------------------------+-------------------------+-------------------------+-------------------------+
         # | Send Messages               | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
         p.send_messages = True
+        # | Manage Messages             | /echo /purge commands                                             | <- | <- |
+        p.manage_messages = True
         # | Embed Links                 | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
         p.embed_links = True
         # | Attach Files                | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
@@ -298,6 +299,7 @@ class OtherCog(AluCog):
         """Information about the bot itself."""
         await ctx.defer()
         information = await self.bot.application_info()
+
         e = discord.Embed(colour=Colour.bot_colour(), description=information.description)
         e.add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
 
@@ -329,9 +331,9 @@ class OtherCog(AluCog):
         e.add_field(
             name="Code stats",
             value=(
-                f"Lines: {await count_lines('./', '.py'):,}"
-                f"\nFunctions: {await count_others('./', '.py', 'def '):,}"
-                f"\nClasses: {await count_others('./', '.py', 'class '):,}"
+                f"Lines: {await count_lines('./', '.py'):,}\n"
+                f"Functions: {await count_others('./', '.py', 'def '):,}\n"
+                f"Classes: {await count_others('./', '.py', 'class '):,}"
             ),
         )
         # try:

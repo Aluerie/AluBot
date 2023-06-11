@@ -248,7 +248,6 @@ class AluBot(commands.Bot):
             if mention:
                 await hook.send(const.Role.error_ping.mention)
             if include_traceback:
-                log.info(f'{mention}, {from_where}, {include_traceback}')
                 traceback_content = "".join(traceback.format_exception(exception))
 
                 paginator = commands.Paginator(prefix='```py')

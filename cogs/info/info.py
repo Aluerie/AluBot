@@ -14,14 +14,10 @@ from dateparser.search import search_dates
 from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageColor
+from wordcloud import WordCloud
 
-from utils import AluCog
-from utils.checks import is_owner
-from utils.const import Colour, Emote, Guild
+from utils import AluCog, const
 from utils.formats import format_dt_tdR, human_timedelta
-
-# from wordcloud import WordCloud
-
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -39,7 +35,7 @@ async def account_age_ctx_menu(ntr: discord.Interaction, member: discord.Member)
     await ntr.response.send_message(f"{member.mention} is {human_timedelta(age)} old.", ephemeral=True)
 
 
-class Info(AluCog, name='Info', emote=Emote.PepoG):
+class Info(AluCog, name='Info', emote=const.Emote.PepoG):
     """Commands to get some useful info"""
 
     def __init__(self, *args, **kwargs):
@@ -62,16 +58,18 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         for pdate in pdates:
             dt = pdate[1]
             if dt.tzinfo is not None:
-                e = discord.Embed(colour=Colour.prpl())
+                e = discord.Embed(colour=const.Colour.prpl())
+                utc_offset = o.seconds if (o := dt.utcoffset()) else 0
+                dst = d.seconds if (d := dt.dst()) else 0
                 e.description = (
                     f'"{pdate[0]}" in your timezone:\n {format_dt_tdR(dt)}\n'
-                    f'{dt.tzname()} is GMT {dt.utcoffset().seconds / 3600:+.1f}, dls: {dt.dst().seconds / 3600:+.1f}'
+                    f'{dt.tzname()} is GMT {utc_offset / 3600:+.1f}, dst: { dst / 3600:+.1f}'
                 )
                 await message.channel.send(embed=e)
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
-        if before.guild.id != Guild.community:
+        if before.guild.id != const.Guild.community:
             return
         added_role = list(set(after.roles) - set(before.roles))
         removed_role = list(set(before.roles) - set(after.roles))
@@ -79,7 +77,7 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id):
             if (added_role and added_role[0] == role) or (removed_role and removed_role[0] == role):
                 msg = channel.get_partial_message(msg_id)
-                e = discord.Embed(title=f'List of {role.name}', colour=Colour.prpl())
+                e = discord.Embed(title=f'List of {role.name}', colour=const.Colour.prpl())
                 e.description = ''.join([f'{member.mention}\n' for member in role.members])
                 await msg.edit(content='', embed=e)
 
@@ -91,7 +89,7 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
-        e = discord.Embed(colour=Colour.prpl(), title='GMT(Greenwich Mean Time)')
+        e = discord.Embed(colour=const.Colour.prpl(), title='GMT(Greenwich Mean Time)')
         e.set_footer(text=f'GMT is the same as UTC (Universal Time Coordinated)')
         e.add_field(name='Time:', value=now_time).add_field(name='Date:', value=now_date)
         await ctx.reply(embed=e)
@@ -130,11 +128,11 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
 
         m = re.match(r"mu\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour)
         if m:
-            colour = hex(MP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
+            colour = hex(const.MaterialPalette.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
 
         m = re.match(r"mua\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour)
         if m:
-            colour = hex(MAP.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
+            colour = hex(const.MaterialAccentPalette.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
 
         rgb = ImageColor.getcolor(colour, "RGB")
 
@@ -172,13 +170,13 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         if isinstance(error, (ValueError, KeyError)):
             # todo: new error type implement
             ctx.is_error_handled = True
-            e = discord.Embed(description=self.colour.callback.__doc__, colour=Colour.error())
+            e = discord.Embed(description=self.colour.callback.__doc__, colour=const.Colour.error())
             e.set_author(
                 name='WrongColourFormat', url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html'
             )
             await ctx.reply(embed=e, ephemeral=True)
 
-    @is_owner()
+    @commands.is_owner()
     @commands.command(
         name='sysinfo',
         description='Get system info about machine currently hosting the bot',
@@ -191,7 +189,7 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         async with self.bot.session.get(url) as resp:
             data = await resp.json()
 
-        e = discord.Embed(title="Bot Host Machine System Info", colour=Colour.prpl())
+        e = discord.Embed(title="Bot Host Machine System Info", colour=const.Colour.prpl())
         e.description = (
             f'\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n'
             f'\N{BLACK CIRCLE} Machine: {platform.machine()}\n'
@@ -218,28 +216,24 @@ class Info(AluCog, name='Info', emote=Emote.PepoG):
         await ctx.reply(embed=e)
 
 
-class StatsCommands(AluCog, name='Stats', emote=Emote.Smartge):
+class StatsCommands(AluCog, name='Stats', emote=const.Emote.Smartge):
     """Some stats/infographics/diagrams/info
 
     More to come.
     """
 
-    @commands.hybrid_command(
-        name='wordcloud',
-        description='Get `@member wordcloud over last total `limit` messages in requested `#channel`',
-        usage='[channel(s)=curr] [member(s)=you] [limit=2000]',
-    )
+    @commands.hybrid_command(name='wordcloud', usage='[channel(s)=curr] [member(s)=you] [limit=2000]')
     @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
     async def wordcloud(
         self,
         ctx: AluContext,
-        channel_or_and_member: commands.Greedy[Union[discord.Member, discord.TextChannel]] = None,
-        limit: int = 2000,
+        channel_or_and_member: commands.Greedy[Union[discord.Member, discord.TextChannel]],
+        limit: commands.Range[int, 2000],
     ):
         """Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
 
-        Can accept multiple members/channels \
-        Note that it's quite slow function or even infinitely slow with bigger limits ;
+        I do not scrap any chat histories into my own database.
+        This is why this command is limited and slow because the bot has to look up channel histories in place.
         """
         await ctx.typing()
         cm = channel_or_and_member or []  # idk i don't like mutable default argument warning
@@ -249,14 +243,15 @@ class StatsCommands(AluCog, name='Stats', emote=Emote.Smartge):
         text = ''
         for ch in channels:
             text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])
-        # wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
-        e = discord.Embed(colour=Colour.prpl())
-        e.description = (
-            f"Members: {', '.join([m.mention for m in members])}\n"
-            f"Channels: {', '.join([c.mention for c in channels])}\n"
-            f"Limit: {limit}"
+        wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
+        e = discord.Embed(colour=const.Colour.prpl())
+        members = ', '.join([m.mention for m in members])
+        channels = ', '.join(
+            [c.mention if isinstance(c, discord.TextChannel) else c.__class__.__name__ for c in channels]
         )
-        file = self.bot.imgtools.img_to_file(WordCloud.to_image(), filename='wordcloud.png')
+
+        e.description = f"Members: {members}\nChannels: {channels}\nLimit: {limit}"
+        file = self.bot.imgtools.img_to_file(wordcloud.to_image(), filename='wordcloud.png')
         await ctx.reply(embed=e, file=file)
 
 

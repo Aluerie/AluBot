@@ -32,7 +32,7 @@ class LanguageCollection:
     Literal = Literal['fr', 'en', 'ru', 'es', 'pt', 'cn', 'uk']
 
 
-class TextToSpeech(AluCog, name='TTS', emote=const.Emote.Ree):
+class TextToSpeech(AluCog, name='Text To Speech', emote=const.Emote.Ree):
     """Text To Speech commands.
 
     Make the bot talk in voice chat.

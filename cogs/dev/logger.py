@@ -71,9 +71,6 @@ class LoggerViaWebhook(DevBaseCog):
         await self.send_log_record(record)
 
 async def setup(bot: AluBot):
-    if bot.test:
-        # Ehh, let's not spam these with testing bots
-        return
     cog = LoggerViaWebhook(bot)
     await bot.add_cog(cog)
     bot.logging_handler = handler = LoggingHandler(cog)
@@ -81,7 +78,5 @@ async def setup(bot: AluBot):
 
 
 async def teardown(bot: AluBot):
-    if bot.test:
-        return
     logging.getLogger().removeHandler(bot.logging_handler)
     del bot.logging_handler

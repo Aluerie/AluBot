@@ -6,7 +6,6 @@ import discord
 from discord.ext import commands, tasks
 
 from utils import AluCog, const
-from utils.checks import is_owner
 from utils.dota.const import DOTA_LOGO
 
 if TYPE_CHECKING:
@@ -24,7 +23,7 @@ class Dota2Com(AluCog):
     def cog_unload(self) -> None:
         self.patch_checker.cancel()
 
-    @is_owner()
+    @commands.is_owner()
     @commands.command(name='patchday', aliases=['patch_day'])
     async def patch_day(self, ctx: AluContext, yes_no: Optional[bool]):
         """Start checking for Dota 2 patches more/less frequently from dota2.com page."""

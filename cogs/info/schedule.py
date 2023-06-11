@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, TypedDict
 
 import discord
 from bs4 import BeautifulSoup
@@ -11,18 +11,47 @@ from discord.ext import commands
 
 from utils import AluCog, const
 from utils.dota.const import DOTA_LOGO
-from utils.formats import format_dt_tdR
+from utils.formats import format_dt_custom, format_dt_tdR
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
     from utils import AluBot, AluContext
 
+    class MatchDict(TypedDict):
+        teams: str
+        twitch_url: str
+        timestamp: datetime.datetime
+
+    class LeagueDict(TypedDict):
+        league_url: str
+        matches: List[MatchDict]
+
+    ScheduleDict = Dict[str, LeagueDict]  # keys are being league names like "Dreamleague S20"
+    """
+
+    schedule_dict = {
+        'Dreamleague': {
+            'league_url': 'wiki_url',
+            'matches': [
+                {
+                    'teams': 'SR - Liquid',
+                    'twitch_url': 'ESL_ember',
+                    'timestamp': *datetime.datetime*
+                }, ...
+            ]
+        }
+    }
+    """ 
+
 
 fav_teams = []
 
 MATCHES_URL = 'https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches'
-LP_ICON = 'https://liquipedia.net/commons/extensions/TeamLiquidIntegration/resources/pagelogo/liquipedia_icon_menu.png'
+LIQUIPEDIA_ICON = (
+    'https://liquipedia.net/commons/extensions/TeamLiquidIntegration/resources/pagelogo/liquipedia_icon_menu.png'
+)
+LIQUIPEDIA_BASE_URL = 'https://liquipedia.net'
 
 
 async def schedule_work(
@@ -39,26 +68,32 @@ async def schedule_work(
     async with session.get(MATCHES_URL) as r:
         soup = BeautifulSoup(await r.read(), 'html.parser')
     e = discord.Embed(title='Dota 2 Pro Matches Schedule', url=MATCHES_URL, colour=0x042B4C)
-    e.set_author(name='Info from Liquipedia.net', icon_url=LP_ICON, url=MATCHES_URL)
+    e.set_author(name='Info from Liquipedia.net', icon_url=LIQUIPEDIA_ICON, url=MATCHES_URL)
     e.set_footer(text=schedule_mode.label_name, icon_url=DOTA_LOGO)
 
-    dict_teams = {}
-    max_char_teams = 15
+    schedule_dict: ScheduleDict = {}
     dt_now = datetime.datetime.now(datetime.timezone.utc)
 
     def work_func(toggle: int, part=1):
         divs = soup.findAll("div", {"data-toggle-area-content": str(toggle)})
         rows = divs[-1].findAll("tbody")
         for row in rows:
+            twitch_handle = row.find(class_="timer-object").get('data-stream-twitch')
+            twitch_url = f'https://www.twitch.tv/{twitch_handle}'
+
             team1 = row.select_one('.team-left').text.strip().replace('`', '.')
             team2 = row.select_one('.team-right').text.strip().replace('`', '.')
+
             time_utc = row.select_one('.match-countdown').text.strip()
             dt = datetime.datetime.strptime(time_utc, '%B %d, %Y - %H:%M UTC').replace(tzinfo=datetime.timezone.utc)
+
             if only_next24:
                 timedelta_obj = dt - dt_now
                 if timedelta_obj.days > 0:
                     continue
+
             league = row.select_one('.match-filler').text.strip().replace(time_utc, '')
+            league_url = row.find(class_="league-icon-small-image").find('a').get('href')
 
             if part == 1 and query is not None:
                 do_we_post = 0
@@ -76,30 +111,49 @@ async def schedule_work(
                 if not do_we_post:
                     continue
 
-            teams = f'{team1} - {team2}'
-            teams = teams[:max_char_teams]
-            if league not in dict_teams:
-                dict_teams[league] = []
-            answer = (
-                f"`{teams.ljust(max_char_teams, ' ')}`"
-                f"{discord.utils.format_dt(dt, style='t')} {discord.utils.format_dt(dt, style='R')}"
+            if league not in schedule_dict:
+                schedule_dict[league] = {'league_url': league_url, 'matches': []}
+
+            schedule_dict[league]['matches'].append(
+                {
+                    'teams': f'{team1} - {team2}',
+                    'timestamp': dt,
+                    'twitch_url': twitch_url,
+                }
             )
-            if answer not in dict_teams[league]:  # remove duplicates if any
-                dict_teams[league].append(answer)
 
     work_func(toggle_mode, part=1)
     if include_favourites:
         work_func(1, part=2)
 
-    answer_str = f'Applied filter: `{query}`\n' if query is not None else ''
-    answer_str += (
-        f'`{"Datetime now ".ljust(max_char_teams, " ")}`'
-        f'{discord.utils.format_dt(dt_now, style="t")} {discord.utils.format_dt(dt_now, style="d")}\n\n'
-    )
+    # find the longest team versus string like "Secret - PSG.LGD"
+    max_amount_of_chars = 0
+    for league_dict in schedule_dict.values():
+        for match in league_dict['matches']:
+            league_max = len(match['teams'])
+            if league_max > max_amount_of_chars:
+                max_amount_of_chars = league_max
 
-    for key, value in dict_teams.items():
-        answer_str += f"**{key}**\n{chr(10).join(value)}\n"
-    e.description = answer_str
+    print(max_amount_of_chars)
+
+    desc = f'Applied filter: `{query}`\n' if query is not None else ''
+    desc += f'`{"Datetime now ".ljust(max_amount_of_chars, " ")}`{format_dt_custom(dt_now, "t", "d")}\n\n'
+
+    for league_name, league_dict in schedule_dict.items():
+        desc += f"[**{league_name}**]({LIQUIPEDIA_BASE_URL}{league_dict['league_url']})\n"
+
+        previous_match_dt: datetime.datetime | None = None
+        for match in league_dict['matches']:
+            dt = match['timestamp']
+            if previous_match_dt and dt - previous_match_dt > datetime.timedelta(hours=6):
+                desc += '\n'
+            previous_match_dt = dt
+            desc += (
+                f"[`{match['teams'].ljust(max_amount_of_chars, ' ')}`]({match['twitch_url']})"
+                f"{format_dt_custom(dt, 't', 'R')}\n"
+            )
+
+    e.description = desc
     return e
 
 
@@ -221,6 +275,7 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
         query: Optional[str]
             Search filter, i.e. "EG" (or any other team/tourney names)
         """
+        await ctx.typing()
         e = await schedule_work(self.bot.session, ScheduleMode(value=schedule_mode), query)
         v = ScheduleView(ctx.user, query)
         msg = await ctx.reply(embed=e, view=v)

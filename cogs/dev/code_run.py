@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 import discord
 from discord.ext import commands
 
-from utils.checks import is_owner
 from utils.converters import Codeblock
 
 from ._base import DevBaseCog
@@ -69,7 +68,6 @@ class CodeRun(DevBaseCog):
 
         return env
 
-    @is_owner()
     @commands.command(hidden=True, name="py", aliases=["eval", "python"])
     async def python(
         self,
@@ -121,3 +119,7 @@ class CodeRun(DevBaseCog):
             else:
                 self._last_result = ret
                 await ctx.send(f"```py\n{value}{ret}\n```")
+
+
+async def setup(bot: AluBot):
+    await bot.add_cog(CodeRun(bot))

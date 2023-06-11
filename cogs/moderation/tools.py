@@ -48,7 +48,8 @@ class PurgeFlags(commands.FlagConverter):
 class ModerationTools(AluCog):
     @commands.hybrid_command(aliases=['remove'], usage='[search] [flags...]')
     @commands.guild_only()
-    @checks.hybrid_permissions_check(manage_messages=True)
+    @checks.hybrid.is_mod()
+    @commands.bot_has_permissions(manage_messages=True)
     @app_commands.describe(search='How many messages to search for')
     async def purge(
         self, ctx: AluGuildContext, search: Optional[commands.Range[int, 1, 2000]] = None, *, flags: PurgeFlags
@@ -175,7 +176,7 @@ class ModerationTools(AluCog):
 
     @commands.hybrid_command()
     @commands.guild_only()
-    @checks.hybrid_permissions_check(manage_messages=True)
+    @checks.hybrid.is_mod()
     async def spam_chat(self, ctx: AluContext):
         '''Let the bot to spam the chat in case you want
         to move some bad messages out of sight,

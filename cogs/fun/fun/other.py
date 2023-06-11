@@ -8,12 +8,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog
-from utils.const import DIGITS, REGEX_URL_LINK, Channel, Colour, Emote, Guild, User
+from utils import AluCog, checks, const
 from utils.webhook import check_msg_react, user_webhook
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from utils import AluContext, AluGuildContext
 
 
 class Other(AluCog):
@@ -25,14 +24,14 @@ class Other(AluCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.id in [User.bot, User.yen]:
+        if message.author.id in [const.User.bot, const.User.yen]:
             return
 
         async def work_non_command_mentions(msg: discord.Message):
             """for now there is only blush and question marks"""
             if msg.guild and msg.guild.me in msg.mentions:
                 if any([item in msg.content.lower() for item in ['😊', "blush"]]):
-                    await msg.channel.send(f'{msg.author.mention} {Emote.peepoBlushDank}')
+                    await msg.channel.send(f'{msg.author.mention} {const.Emote.peepoBlushDank}')
                 else:
                     ctx = await self.bot.get_context(msg)
                     if ctx.command:
@@ -44,19 +43,21 @@ class Other(AluCog):
         await work_non_command_mentions(message)
 
         async def bots_in_lobby(msg: discord.Message):
-            if msg.channel.id == Channel.general:
+            if msg.channel.id == const.Channel.general:
                 text = None
                 if msg.interaction is not None and msg.interaction.type == discord.InteractionType.application_command:
                     text = 'Slash-commands'
                 if msg.author.bot and not msg.webhook_id:
                     text = 'Bots'
                 if text is not None:
-                    await msg.channel.send('{0} in {1} ! {2} {2} {2}'.format(text, Channel.general.mention, Emote.Ree))
+                    await msg.channel.send(
+                        '{0} in {1} ! {2} {2} {2}'.format(text, const.Channel.general.mention, const.Emote.Ree)
+                    )
 
         await bots_in_lobby(message)
 
         async def weebs_out(msg: discord.Message):
-            if msg.channel.id == Channel.weebs and random.randint(1, 100 + 1) < 7:
+            if msg.channel.id == const.Channel.weebs and random.randint(1, 100 + 1) < 7:
                 await msg.channel.send(
                     '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
                         '<a:WeebsOutOut:730882034167185448>',
@@ -69,30 +70,30 @@ class Other(AluCog):
         await weebs_out(message)
 
         async def ree_the_oof(msg: discord.Message):
-            if not msg.guild or msg.guild.id != Guild.community:
+            if not msg.guild or msg.guild.id != const.Guild.community:
                 return
             if "Oof" in msg.content:
                 try:
-                    await msg.add_reaction(Emote.Ree)
+                    await msg.add_reaction(const.Emote.Ree)
                 except discord.errors.Forbidden:
                     await msg.delete()
 
         await ree_the_oof(message)
 
         async def random_comfy_react(msg: discord.Message):
-            if not msg.guild or msg.guild.id != Guild.community:
+            if not msg.guild or msg.guild.id != const.Guild.community:
                 return
             roll = random.randint(1, 300 + 1)
             if roll < 2:
                 try:
-                    await msg.add_reaction(Emote.peepoComfy)
+                    await msg.add_reaction(const.Emote.peepoComfy)
                 except Exception:
                     return
 
         await random_comfy_react(message)
 
         async def your_life(msg):
-            if not msg.guild or msg.guild.id != Guild.community or random.randint(1, 170 + 1) >= 2:
+            if not msg.guild or msg.guild.id != const.Guild.community or random.randint(1, 170 + 1) >= 2:
                 return
             try:
                 sliced_text = msg.content.split()
@@ -112,7 +113,7 @@ class Other(AluCog):
         answer_text = f'{str(rand_emoji)} ' * 3
         channel = self.community.emote_spam
         await channel.send(answer_text)
-        e = discord.Embed(colour=Colour.prpl(), description=f'I sent {answer_text} into {channel.mention}')
+        e = discord.Embed(colour=const.Colour.prpl(), description=f'I sent {answer_text} into {channel.mention}')
         await ctx.reply(embed=e, ephemeral=True, delete_after=10)
 
     @commands.hybrid_command()
@@ -124,12 +125,12 @@ class Other(AluCog):
         try:
             if ctx.channel and not isinstance(ctx.channel, (discord.ForumChannel, discord.CategoryChannel)):
                 await ctx.channel.send(content=content)
-                await ctx.reply(content=f'Nice {Emote.DankApprove}', ephemeral=True)
+                await ctx.reply(content=f'Nice {const.Emote.DankApprove}', ephemeral=True)
             else:
-                msg = f'We can\'t send messages in forum channels {Emote.FeelsDankManLostHisHat}'
+                msg = f'We can\'t send messages in forum channels {const.Emote.FeelsDankManLostHisHat}'
                 await ctx.reply(content=msg, ephemeral=True)
         except:
-            msg = f'Something went wrong {Emote.FeelsDankManLostHisHat} probably permissions'
+            msg = f'Something went wrong {const.Emote.FeelsDankManLostHisHat} probably permissions'
             await ctx.reply(content=msg, ephemeral=True)
 
     @commands.hybrid_command()
@@ -138,26 +139,42 @@ class Other(AluCog):
         """Roll an integer from 1 to `max_roll_number`."""
         await ctx.reply(content=str(random.randint(1, max_roll_number + 1)))
 
-    @commands.hybrid_command(usage='[channel=curr] [text=Allo]', description='Echo something somewhere')
-    @app_commands.describe(channel="Channel to send to")
-    @app_commands.describe(text="Enter text to speak")
-    async def echo(self, ctx: AluContext, channel: Optional[discord.TextChannel] = None, *, text: str = 'Allo'):
-        """Send `text` to `#channel` and delete your invoking message,
-        so it looks like the bot is speaking on its own.
+    @commands.hybrid_command(usage='[channel=curr] [text=Allo]')
+    @commands.check_any(commands.has_permissions(manage_messages=True), commands.check(checks.ext.is_my_guild()))
+    @commands.bot_has_permissions(send_messages=True, manage_messages=True)
+    async def echo(
+        self,
+        ctx: AluGuildContext,
+        channel: Optional[discord.TextChannel] = None,
+        *,
+        text: str = 'Allo',
+    ):
+        """Send `text` to `#channel` from bot's name.
+
+        For text command you can also reply to a message without specifying text`for bot to copy it. 
+
+        Parameters
+        ----------
+        channel: Optional[discord.TextChannel]
+            Channel to send to
+        text:
+            Enter text to speak
         """
+
+        # Note, that if you want bot to send a fancy message with embeds then there is `/embed make` command.
+        # TODO: when embed maker is ready add this^ into the command docstring 
         ch = channel or ctx.channel
-        if ch.id in [Channel.emote_spam, Channel.comfy_spam]:
-            msg = f'Sorry, these channels are special so you can\'t use this command in {ch.mention}'
+        if ch.id in [const.Channel.emote_spam, const.Channel.comfy_spam]:
+            msg = f'Sorry, channel {ch.mention} is special emote-only channel. I won\' speak there.'
             raise commands.MissingPermissions([msg])
         elif not ch.permissions_for(ctx.author).send_messages:
             raise commands.MissingPermissions([f'Sorry, you don\'t have permissions to speak in {ch.mention}'])
         else:
-            url_array = re.findall(REGEX_URL_LINK, str(text))
-            for url in url_array:  # forbid embeds
-                text = text.replace(url, f'<{url}>')
-            await ch.send(text)
+            if replied_msg := ctx.replied_message:
+                text = replied_msg.content
+            await ch.send(text[0:2000])
             if ctx.interaction:
-                await ctx.reply(content=f'I did it {Emote.DankApprove}', ephemeral=True)
+                await ctx.reply(content=f'I did it {const.Emote.DankApprove}', ephemeral=True)
         try:
             await ctx.message.delete()
         except:
@@ -189,7 +206,7 @@ class Other(AluCog):
                 ' ': ' ',
                 '!': '\N{WHITE EXCLAMATION MARK ORNAMENT}',
                 '?': '\N{WHITE QUESTION MARK ORNAMENT}',
-            } | {str(i): n for i, n in enumerate(DIGITS)}
+            } | {str(i): n for i, n in enumerate(const.DIGITS)}
             alphabet = [  # maybe make char one as well one day
                 'a',
                 'b',
@@ -227,7 +244,7 @@ class Other(AluCog):
                 answer += letter
         await user_webhook(ctx, content=answer)
         if ctx.interaction:
-            await ctx.reply(content=Emote.DankApprove, ephemeral=True)
+            await ctx.reply(content=const.Emote.DankApprove, ephemeral=True)
         else:
             await ctx.message.delete()
 

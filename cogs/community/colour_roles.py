@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from utils import AluCog, const
-from utils.checks import is_owner
+from utils import AluCog, checks, const
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext
@@ -77,7 +76,7 @@ class ColourRoles(AluCog):
     async def on_ready(self):
         self.bot.add_view(ColourRolesView())
 
-    @is_owner()
+    @commands.is_owner()
     @commands.command(hidden=True)
     async def new_role_selection(self, ctx: AluGuildContext):
         await ctx.send(view=ColourRolesView())

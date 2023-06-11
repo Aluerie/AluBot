@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
+import os
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, List, Optional, Sequence, TypeVar, Union
 
 import discord

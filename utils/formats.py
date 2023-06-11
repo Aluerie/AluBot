@@ -6,13 +6,11 @@ from __future__ import annotations
 
 import datetime
 import difflib
-import traceback
-from enum import Enum, IntEnum
-from typing import TYPE_CHECKING, List, Optional, Sequence, Union
+from enum import IntEnum
+from typing import TYPE_CHECKING, Optional, Sequence, Union
 
+import discord
 from dateutil.relativedelta import relativedelta
-from discord.ext import commands
-from discord.utils import format_dt
 
 if TYPE_CHECKING:
     pass
@@ -198,16 +196,41 @@ def human_timedelta(
             return sep.join(output) + output_suffix
 
 
+def format_dt_custom(dt: datetime.datetime, *style_letters: discord.utils.TimestampStyle):
+    """
+    Copy from d.py docs for *letters argument
+    +-------------+----------------------------+-----------------+
+    |    Style    |       Example Output       |   Description   |
+    +=============+============================+=================+
+    | t           | 22:57                      | Short Time      |
+    +-------------+----------------------------+-----------------+
+    | T           | 22:57:58                   | Long Time       |
+    +-------------+----------------------------+-----------------+
+    | d           | 17/05/2016                 | Short Date      |
+    +-------------+----------------------------+-----------------+
+    | D           | 17 May 2016                | Long Date       |
+    +-------------+----------------------------+-----------------+
+    | f (default) | 17 May 2016 22:57          | Short Date Time |
+    +-------------+----------------------------+-----------------+
+    | F           | Tuesday, 17 May 2016 22:57 | Long Date Time  |
+    +-------------+----------------------------+-----------------+
+    | R           | 5 years ago                | Relative Time   |
+    +-------------+----------------------------+-----------------+"""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+    return ' '.join([discord.utils.format_dt(dt, letter) for letter in style_letters])
+
+
 def format_dt_tdR(dt: datetime.datetime) -> str:
     """
+    My favourite discord timestamp combination.
+
     Shortcut to combine t, d, R styles together.
     Discord will show something like this:
 
     "22:57 17/05/2015 5 Years Ago"
     """
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
-    return f"{format_dt(dt, 't')} {format_dt(dt, 'd')} ({format_dt(dt, 'R')})"
+    return format_dt_custom(dt, 't', 'd', 'R')
 
 
 def ordinal(n: Union[int, str]) -> str:

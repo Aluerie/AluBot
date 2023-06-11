@@ -6,7 +6,6 @@ import discord
 from discord.ext import commands
 
 from utils import const
-from utils.checks import is_owner
 
 from ._base import DevBaseCog
 
@@ -24,7 +23,6 @@ class UmbraSyncCommandCog(DevBaseCog):
     their very precious `?tag ass` on me in discord.py server.
     """
 
-    @is_owner()
     @commands.command()
     async def sync(
         self,

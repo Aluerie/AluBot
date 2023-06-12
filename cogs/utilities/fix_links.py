@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
@@ -15,6 +15,35 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)  # .DEBUG)
+
+
+def fix_link_worker(text_to_fix: str, omit_rest: bool = False) -> Optional[str]:
+    """Fix embeds for twitter/instagram/more to come with better embeds."""
+
+    def url_regex(x: str) -> str:
+        return fr"http[s]?://(?:www\.)?{x}(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+
+    fix_dict = {
+        # social network: better embed site,
+        'twitter.com': 'fxtwitter.com',
+        'instagram.com': 'ddinstagram.com',
+    }
+
+    urls, fixed_urls = [], []
+    for site, fixed_site in fix_dict.items():
+        r_site = site.replace('.', r'\.')  # dot in regex needs to be slashed
+        urls += re.findall(url_regex(r_site), text_to_fix)
+        fixed_urls += [u.replace(site, fixed_site) for u in urls]
+
+    if not fixed_urls:
+        return None
+    elif omit_rest:
+        return '\n'.join(fixed_urls)
+    else:
+        answer = text_to_fix
+        for u, f in zip(urls, fixed_urls):
+            answer = answer.replace(u, f)
+        return answer
 
 
 class LinkUtilities(AluCog):
@@ -30,36 +59,19 @@ class LinkUtilities(AluCog):
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.fix_link_ctx_menu.name, type=self.fix_link_ctx_menu.type)
 
-    def fix_link_worker(self, message_content: str) -> str:
-        """Fix embeds for twitter/instagram/more to come with better embeds."""
-
-        def url_regex(x: str) -> str:
-            return fr"http[s]?://(?:www\.)?{x}(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
-
-        fix_dict = {
-            # social network: better embed site,
-            'twitter.com': 'fxtwitter.com',
-            'instagram.com': 'ddinstagram.com',
-        }
-        answer_urls = []
-        for site, fix_site in fix_dict.items():
-            r_site = site.replace('.', r'\.')  # dot in regex needs to be slashed
-            urls = re.findall(url_regex(r_site), message_content)
-            answer_urls += [re.sub(site, fix_site, u) for u in urls]
-
-        log.debug(answer_urls)
-        if not len(answer_urls):
-            # TODO: BETTER ERROR GOD DAMN IT
+    def cog_fix_link_worker(self, text_to_fix: str) -> str:
+        res = fix_link_worker(text_to_fix, omit_rest=True)
+        if res is None:
             raise commands.BadArgument('This message does not have any twitter/instagram links to "fix".')
-        return '\n'.join(answer_urls)
+        return res
 
     async def fix_link_ctx_menu_callback(self, ntr: discord.Interaction, message: discord.Message):
-        content = self.fix_link_worker(message.content)
+        content = self.cog_fix_link_worker(message.content)
         await ntr.response.send_message(content)
 
     @commands.hybrid_command()
     @app_commands.describe(link="Enter Twitter/Instagram link to \"fix\"")
     async def fix_links(self, ctx: AluContext, *, link: str):
         """Fix twitter/instagram links with better embeds."""
-        content = self.fix_link_worker(link)
+        content = self.cog_fix_link_worker(link)
         await ctx.reply(content)

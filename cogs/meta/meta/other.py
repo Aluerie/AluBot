@@ -224,6 +224,8 @@ class OtherCog(AluCog):
         # +-----------------------------+-------------------------+-------------------------+-------------------------+
         # | View Audit Log              | Emote logging                                                     | <- | <- |
         p.view_audit_log = True
+        # | Manage Webhooks             |                         | Mimic User Webhooks  <- |                      <- |
+        p.manage_webhooks = True
         # | Read Messages/View Channels | Many-many Set channel functions such as FPC Notifications         | <- | <- |
         p.read_messages = True
         # +-----------------------------+-------------------------+-------------------------+-------------------------+
@@ -231,7 +233,7 @@ class OtherCog(AluCog):
         # +-----------------------------+-------------------------+-------------------------+-------------------------+
         # | Send Messages               | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
         p.send_messages = True
-        # | Manage Messages             | /echo /purge commands                                             | <- | <- |
+        # | Manage Messages             | /echo /purge commands, mimic user                                 | <- | <- |
         p.manage_messages = True
         # | Embed Links                 | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
         p.embed_links = True

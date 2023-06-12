@@ -288,8 +288,6 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
                 self.soup_cache[key] = soup
                 return soup
 
-
-
     @commands.hybrid_command(aliases=['sch'])
     @app_commands.rename(schedule_mode='filter')
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in select_options])

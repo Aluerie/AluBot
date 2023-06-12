@@ -1,7 +1,7 @@
 from utils.const import Emote
 
 from .dev_utils import DevUtilities
-from .links import LinkUtilities
+from .fix_links import LinkUtilities
 from .tools import ToolsCog
 from .wolfram import WolframAlpha
 

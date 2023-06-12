@@ -166,7 +166,7 @@ class Paginator(discord.ui.View):
             self.next_page.label = ">"
         self.update_more_labels(page_number)
 
-    async def start(self, *, ephemeral: bool = False) -> None:
+    async def start(self, *, ephemeral: bool = False, edit_response: bool = False) -> None:
         await self.source._prepare_once()
         page = await self.source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
@@ -177,6 +177,9 @@ class Paginator(discord.ui.View):
         elif isinstance(self.ctx_ntr, discord.Interaction):
             if self.ctx_ntr.response.is_done():
                 self.message = await self.ctx_ntr.followup.send(**kwargs, view=self, ephemeral=ephemeral)
+            elif edit_response:
+                await self.ctx_ntr.response.edit_message(**kwargs, view=self)
+                self.message = await self.ctx_ntr.original_response()
             else:
                 await self.ctx_ntr.response.send_message(**kwargs, view=self, ephemeral=ephemeral)
                 self.message = await self.ctx_ntr.original_response()
@@ -254,13 +257,12 @@ class EnumeratedPageSource(menus.ListPageSource):
 
     async def format_page(self, menu: EnumeratedPages, entries: List[str]):
         if not self.no_enumeration:
-            pages = []
-            for idx, entry in enumerate(entries, start=menu.current_page_number * self.per_page):
-                pages.append(f"`{idx + 1}` {entry}")
+            start = menu.current_page_number * self.per_page
+            rows = [f"`{i + 1}` {entry}" for i, entry in enumerate(entries, start=start)]
         else:
-            pages = entries  # [f'{x}' for x in entries]  # :)
+            rows = entries  # [f'{x}' for x in entries]  # :)
 
-        menu.embed.description = self.description_prefix + "\n".join(pages)
+        menu.embed.description = self.description_prefix + "\n".join(rows)
         return menu.embed
 
 

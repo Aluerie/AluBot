@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Dict
 
 from pyot.models import lol
 from pyot.utils.lol import cdragon, champion
 from roleidentification import get_roles
 
-from utils.cache import KeyCache
+from utils.cache_my import KeyCache
 
 if TYPE_CHECKING:
     pass
@@ -76,7 +76,7 @@ class ChampionRolesCache(KeyCache):
             mid: float = 20,
             bot: float = 20,
             support: float = 20,
-        ) -> dict:
+        ) -> Dict[str, float]:
             """Construct the dict for meraki function.
 
             Note all parameters in percent! Just like at www.leagueofgraphs.com

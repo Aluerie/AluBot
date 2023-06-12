@@ -5,7 +5,7 @@ MAIN_TOKEN = ''  # your bot's token
 DISCORD_CLIENT_ID = 1234  # your bot's client id from oath page
 
 TEST_TOKEN = ''
-TEST_DISCORD_CLIENT_ID = 1234
+TEST_DISCORD_CLIENT_ID = 123_456_789
 
 # STEAM (MAIN account)
 # I have not yet implemented getting SteamGuard codes with super-secret thing
@@ -18,7 +18,7 @@ STEAM_TEST_LGN = ''
 STEAM_TEST_PSW = ''
 
 # DOTA 2
-DOTA_FRIEND_ID = 1234
+DOTA_FRIEND_ID = 123_456_789
 
 # GIT PERSONAL TOKEN
 GIT_PERSONAL_TOKEN = ''

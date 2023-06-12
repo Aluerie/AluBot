@@ -2,47 +2,27 @@ from __future__ import annotations
 
 import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, List, MutableMapping, NamedTuple, Optional
 
 import discord
 from bs4 import BeautifulSoup
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, menus
 
-from utils import AluCog, const
+from utils import AluCog, cache, const, pagination
 from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_custom, format_dt_tdR
 
 if TYPE_CHECKING:
-    from aiohttp import ClientSession
-
     from utils import AluBot, AluContext
 
-    class MatchDict(TypedDict):
-        teams: str
-        twitch_url: str
-        timestamp: datetime.datetime
 
-    class LeagueDict(TypedDict):
-        league_url: str
-        matches: List[MatchDict]
-
-    ScheduleDict = Dict[str, LeagueDict]  # keys are being league names like "Dreamleague S20"
-    """
-
-    schedule_dict = {
-        'Dreamleague': {
-            'league_url': 'wiki_url',
-            'matches': [
-                {
-                    'teams': 'SR - Liquid',
-                    'twitch_url': 'ESL_ember',
-                    'timestamp': *datetime.datetime*
-                }, ...
-            ]
-        }
-    }
-    """ 
+class Match(NamedTuple):
+    league: str
+    league_url: str
+    teams: str
+    twitch_url: str
+    dt: datetime.datetime
 
 
 fav_teams = []
@@ -54,24 +34,35 @@ LIQUIPEDIA_ICON = (
 LIQUIPEDIA_BASE_URL = 'https://liquipedia.net'
 
 
-async def schedule_work(
-    session: ClientSession,
-    schedule_mode: ScheduleMode,
+def scrape_schedule_data(
+    soup: BeautifulSoup,
+    schedule_mode: ScheduleModeEnum,
     query: Optional[str] = None,
-) -> discord.Embed:
-    """Main function"""
+) -> List[Match]:
+    """Get data about Dota 2 matches in a structured dictionary.
+
+    Note: We are scraping liquipedia.net, while I think there is API, that we can/should use.
+
+    Parameters
+    ----------
+    session: :class: `ClientSession`
+        Session we will use to load the liquipedia page.
+    schedule_mode: :class: `ScheduleModeEnum`
+        Enum that defines multiple conditions for the scrap/search/filtering matches.
+    query: :class: Optional[str] = None
+        Text query we will limit results to.
+
+    Returns
+    -------
+    List[Match]
+        data about Dota 2 matches in a structured dictionary.
+    """
 
     toggle_mode = schedule_mode.toggle_mode
     only_next24 = schedule_mode.only_next24
     include_favourites = schedule_mode.include_favourites
 
-    async with session.get(MATCHES_URL) as r:
-        soup = BeautifulSoup(await r.read(), 'html.parser')
-    e = discord.Embed(title='Dota 2 Pro Matches Schedule', url=MATCHES_URL, colour=0x042B4C)
-    e.set_author(name='Info from Liquipedia.net', icon_url=LIQUIPEDIA_ICON, url=MATCHES_URL)
-    e.set_footer(text=schedule_mode.label_name, icon_url=DOTA_LOGO)
-
-    schedule_dict: ScheduleDict = {}
+    matches: List[Match] = []
     dt_now = datetime.datetime.now(datetime.timezone.utc)
 
     def work_func(toggle: int, part=1):
@@ -111,50 +102,21 @@ async def schedule_work(
                 if not do_we_post:
                     continue
 
-            if league not in schedule_dict:
-                schedule_dict[league] = {'league_url': league_url, 'matches': []}
-
-            schedule_dict[league]['matches'].append(
-                {
-                    'teams': f'{team1} - {team2}',
-                    'timestamp': dt,
-                    'twitch_url': twitch_url,
-                }
+            matches.append(
+                Match(
+                    league=league,
+                    league_url=league_url,
+                    teams=f'{team1} - {team2}',
+                    twitch_url=twitch_url,
+                    dt=dt,
+                )
             )
 
     work_func(toggle_mode, part=1)
     if include_favourites:
         work_func(1, part=2)
 
-    # find the longest team versus string like "Secret - PSG.LGD"
-    max_amount_of_chars = 0
-    for league_dict in schedule_dict.values():
-        for match in league_dict['matches']:
-            league_max = len(match['teams'])
-            if league_max > max_amount_of_chars:
-                max_amount_of_chars = league_max
-
-    print(max_amount_of_chars)
-
-    desc = f'Applied filter: `{query}`\n' if query is not None else ''
-    desc += f'`{"Datetime now ".ljust(max_amount_of_chars, " ")}`{format_dt_custom(dt_now, "t", "d")}\n\n'
-
-    for league_name, league_dict in schedule_dict.items():
-        desc += f"[**{league_name}**]({LIQUIPEDIA_BASE_URL}{league_dict['league_url']})\n"
-
-        previous_match_dt: datetime.datetime | None = None
-        for match in league_dict['matches']:
-            dt = match['timestamp']
-            if previous_match_dt and dt - previous_match_dt > datetime.timedelta(hours=6):
-                desc += '\n'
-            previous_match_dt = dt
-            desc += (
-                f"[`{match['teams'].ljust(max_amount_of_chars, ' ')}`]({match['twitch_url']})"
-                f"{format_dt_custom(dt, 't', 'R')}\n"
-            )
-
-    e.description = desc
-    return e
+    return matches
 
 
 select_options = [
@@ -180,7 +142,7 @@ select_options = [
 ]
 
 
-class ScheduleMode(Enum):
+class ScheduleModeEnum(Enum):
     next24_featured_and_favourite = 1
     next24_featured = 2
     featured = 3
@@ -194,11 +156,11 @@ class ScheduleMode(Enum):
     def toggle_mode(self) -> int:
         """variable that is passed to "data-toggle-area-content" div in soup parser"""
         lookup = {
-            ScheduleMode.next24_featured_and_favourite: 2,
-            ScheduleMode.next24_featured: 2,
-            ScheduleMode.featured: 2,
-            ScheduleMode.full_schedule: 1,
-            ScheduleMode.completed: 3,
+            ScheduleModeEnum.next24_featured_and_favourite: 2,
+            ScheduleModeEnum.next24_featured: 2,
+            ScheduleModeEnum.featured: 2,
+            ScheduleModeEnum.full_schedule: 1,
+            ScheduleModeEnum.completed: 3,
         }
         return lookup[self]
 
@@ -217,41 +179,93 @@ class ScheduleMode(Enum):
 
 
 class ScheduleSelect(discord.ui.Select):
-    def __init__(self, query: Optional[str] = None):
-        super().__init__(options=select_options, placeholder='Select schedule category')
+    def __init__(self, author: discord.User | discord.Member, soup: BeautifulSoup, query: Optional[str] = None):
+        super().__init__(options=select_options, placeholder='\N{SPIRAL CALENDAR PAD}Select schedule category')
         self.query: Optional[str] = query
+        self.soup: BeautifulSoup = soup
+        self.author: discord.User | discord.Member = author
 
     async def callback(self, ntr: discord.Interaction[AluBot]):
-        enum_sch = ScheduleMode(value=int(self.values[0]))
-        e = await schedule_work(ntr.client.session, enum_sch, self.query)
-        await ntr.response.edit_message(embed=e)
-
-
-class ScheduleView(discord.ui.View):
-    message: discord.Message
-
-    def __init__(self, author: discord.User | discord.Member, query: Optional[str] = None):
-        super().__init__()
-        self.author: discord.User | discord.Member = author
-        self.query: Optional[str] = query
-        self.schedule_select = ss = ScheduleSelect(query)
-        self.add_item(ss)
+        sch_enum = ScheduleModeEnum(value=int(self.values[0]))
+        pages = SchedulePages(ntr, self.soup, sch_enum, self.query)
+        await pages.start(edit_response=True)
 
     async def interaction_check(self, ntr: discord.Interaction[AluBot]) -> bool:
         if ntr.user and ntr.user.id == self.author.id:
             return True
         else:
-            e = await schedule_work(
-                ntr.client.session, ScheduleMode(value=int(self.schedule_select.values[0])), self.query
-            )
-            await ntr.response.send_message(embed=e, ephemeral=True)
+            sch_enum = ScheduleModeEnum(value=int(self.values[0]))
+            pages = SchedulePages(ntr, self.soup, sch_enum, self.query)
+            await pages.start(ephemeral=True)
             return False
 
-    async def on_timeout(self) -> None:
-        if self.message:
-            for item in self.children:
-                item.disabled = True  # type: ignore
-            await self.message.edit(view=self)
+
+class SchedulePageSource(menus.ListPageSource):
+    def __init__(
+        self,
+        author: discord.User | discord.Member,
+        soup: BeautifulSoup,
+        schedule_enum: ScheduleModeEnum,
+        query: Optional[str] = None,
+    ):
+        initial_data = scrape_schedule_data(soup, schedule_enum, query)
+        super().__init__(entries=initial_data, per_page=32)
+        self.schedule_enum = schedule_enum
+        self.author: discord.User | discord.Member = author
+        self.query: Optional[str] = query
+
+    async def format_page(self, menu: SchedulePages, matches: List[Match]):
+        e = discord.Embed(title='Dota 2 Pro Matches Schedule', url=MATCHES_URL, colour=0x042B4C)
+        e.set_author(name='Info from Liquipedia.net', icon_url=LIQUIPEDIA_ICON, url=MATCHES_URL)
+        e.set_footer(text=self.schedule_enum.label_name, icon_url=DOTA_LOGO)
+
+        dt_now = datetime.datetime.now(datetime.timezone.utc)
+
+        # find the longest team versus string like "Secret - PSG.LGD"
+        longest_teams = max(matches, key=lambda x: len(x.teams))
+        max_amount_of_chars = len(longest_teams.teams)
+
+        desc = f'Applied filter: `{self.query}`\n' if self.query is not None else ''
+        desc += f'`{"Datetime now ".ljust(max_amount_of_chars, " ")}`{format_dt_custom(dt_now, "t", "d")}\n'
+
+        matches.sort(key=lambda x: (x.league, x.dt))
+        # now it's sorted by leagues and dt
+
+        league: str | None = None
+        previous_match_dt: datetime.datetime | None = None
+
+        for match in matches:
+            if league != match.league:
+                desc += f"\n[**{match.league}**]({LIQUIPEDIA_BASE_URL}{match.league_url})\n"
+                league = match.league
+                previous_match_dt = None
+
+            if previous_match_dt and match.dt - previous_match_dt > datetime.timedelta(hours=6):
+                desc += '\n'
+            previous_match_dt = match.dt
+
+            desc += (
+                f"[`{match.teams.ljust(max_amount_of_chars, ' ')}`]({match.twitch_url})"
+                f"{format_dt_custom(match.dt, 't', 'R')}\n"
+            )
+
+        e.description = desc
+        return e
+
+
+class SchedulePages(pagination.Paginator):
+    source: SchedulePageSource
+
+    def __init__(
+        self,
+        ctx: AluContext | discord.Interaction[AluBot],
+        soup: BeautifulSoup,
+        schedule_enum: ScheduleModeEnum,
+        query: Optional[str] = None,
+    ):
+        source = SchedulePageSource(ctx.user, soup, schedule_enum, query)
+        super().__init__(ctx, source)
+        self.add_item(ScheduleSelect(ctx.user, soup, query))
 
 
 class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
@@ -259,6 +273,22 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
 
     Currently, the bot supports Dota 2 and football.
     """
+
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+        super().__init__(bot, *args, **kwargs)
+        self.soup_cache: MutableMapping[str, BeautifulSoup] = cache.ExpiringCache(seconds=1800.0)
+
+    async def get_soup(self, key: str) -> BeautifulSoup:
+        if soup := self.soup_cache.get(key):
+            return soup[0]  # type: ignore # TODO: idk really how to calm it down
+            # MutableMapping above won't be really compatible with this.
+        else:
+            async with self.bot.session.get(MATCHES_URL) as r:
+                soup = BeautifulSoup(await r.read(), 'html.parser')
+                self.soup_cache[key] = soup
+                return soup
+
+
 
     @commands.hybrid_command(aliases=['sch'])
     @app_commands.rename(schedule_mode='filter')
@@ -276,10 +306,10 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
             Search filter, i.e. "EG" (or any other team/tourney names)
         """
         await ctx.typing()
-        e = await schedule_work(self.bot.session, ScheduleMode(value=schedule_mode), query)
-        v = ScheduleView(ctx.user, query)
-        msg = await ctx.reply(embed=e, view=v)
-        v.message = msg  # await ntr.original_response()
+        soup = await self.get_soup('dota2')
+        schedule_enum = ScheduleModeEnum(value=schedule_mode)
+        pages = SchedulePages(ctx, soup, schedule_enum, query)
+        await pages.start()
 
     @commands.hybrid_command()
     async def fixtures(self, ctx: AluContext):

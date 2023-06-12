@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import re
 from typing import TYPE_CHECKING
 
 import discord
@@ -28,10 +30,26 @@ class FixLinksCommunity(AluCog):
 
         try:
             mimic = webhook.MimicUserWebhook.from_message(bot=self.bot, message=message)
-            await mimic.send_user_message(message.author, message=message, new_content=fixed_links)
+            msg = await mimic.send_user_message(message.author, message=message, new_content=fixed_links, wait=True)
             await message.delete()
-        except:
-            return
+            await asyncio.sleep(1)
+
+            # Okay discord is a bit stupid and does not allow hyperlinks from website embeds
+            # this is why I will have to do the job myself.
+            links = []
+            colour = const.Colour.pink()
+            for e in msg.embeds:
+                e = e.copy()
+                links += re.findall(const.REGEX_URL_LINK, str(e.description))
+                colour = e.colour
+
+            if links:
+                e = discord.Embed(color=colour)
+                e.description = '\n'.join(links)
+                await mimic.send_user_message(message.author, embed=e)
+            
+        except Exception as err:
+            print(err)
 
 
 async def setup(bot):

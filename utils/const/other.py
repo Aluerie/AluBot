@@ -87,7 +87,7 @@ class Rgx:
     emote_stats_ids = r"<a?:[a-zA-Z0-9_]{2,32}:([0-9]{18,22})>"
     invis = "[^!-~]+"  # IDK might be huge question mark
 
-
+# TODO: include above^
 REGEX_URL_LINK = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
 

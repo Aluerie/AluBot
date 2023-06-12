@@ -21,7 +21,6 @@ async def replace_tco_links(session, embed: Embed) -> Embed:
                     link_for_embed = f'[Redirect link]({resp.url})'
                     text = text.replace(url, link_for_embed)
         except ClientConnectorError:
-            # well sorry bro twitter is still banned it seEmote like
             pass
         embed.description = text
     return embed

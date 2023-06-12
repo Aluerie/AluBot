@@ -14,11 +14,12 @@ if TYPE_CHECKING:
 
 
 class MimicUserWebhook:
-    """This class aims to manage webhooks that are supposed 
+    """This class aims to manage webhooks that are supposed
     to mimic user message for various NQN inspired features
 
-    for example, fix twitter/instagram links for them. 
+    for example, fix twitter/instagram links for them.
     """
+
     def __init__(self, *, bot: AluBot, channel: WebhookSourceChannel, thread: Optional[discord.Thread]):
         self.bot: AluBot = bot
         self.channel: WebhookSourceChannel = channel
@@ -92,18 +93,26 @@ class MimicUserWebhook:
     async def send_user_message(
         self,
         member: discord.Member | discord.User,
-        message: discord.Message,
-        new_content: str,
+        message: Optional[discord.Message] = None,
+        new_content: str = '',
+        embed: discord.Embed = discord.utils.MISSING,
+        wait: bool = False,
     ):
         wh = await self.get_or_create()
-        await wh.send(
+        if message:
+            files = [await a.to_file() for a in message.attachments]
+        else:
+            files = discord.utils.MISSING
+
+        return await wh.send(
             new_content,
             username=member.display_name,
             avatar_url=member.display_avatar.url,
-            files=[await a.to_file() for a in message.attachments],
+            embed=embed,
+            files=files,
             thread=discord.Object(id=self.thread.id) if self.thread else discord.utils.MISSING,
+            wait=wait,  # type: ignore # why it does not work ? maybe worthy of asking in dpy ?
         )
-
 
 
 # old trash
@@ -111,7 +120,7 @@ class MimicUserWebhook:
 webhook_dict = {}
 
 
-async def user_webhook(ctx, content: Optional[str] = '', embed: Optional[Embed] = None):
+async def user_webhook(ctx, content: Optional[str] = '', embed: Optional[discord.Embed] = None):
     found = 0
     webhook = None
     array = await ctx.channel.webhooks()

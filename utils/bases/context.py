@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union, Any
+from typing import TYPE_CHECKING, Any, Optional, Sequence, Union, overload
 
 import discord
 from discord.ext import commands
@@ -154,7 +154,7 @@ class AluContext(commands.Context):
     def replied_reference(self) -> Optional[discord.MessageReference]:
         ref = self.message.reference
         if ref and isinstance(ref.resolved, discord.Message):
-            return ref.resolved.to_reference()
+            return ref.resolved.to_reference(fail_if_not_exists=False)  # maybe don't make it default
         return None
 
     @discord.utils.cached_property
@@ -163,10 +163,101 @@ class AluContext(commands.Context):
         if ref and isinstance(ref.resolved, discord.Message):
             return ref.resolved
         return None
-    
-    # async def reply(self, content: Optional[str] = None, *, fail_if_not_exists: bool = True, **kwargs: Any):
-    #     reference = kwargs.get('reference') or self.message.to_reference(fail_if_not_exists=fail_if_not_exists)
-    #     await super().reply(content, reference=reference, **kwargs)
+
+    # Just a copy of overloads from `super().reply`
+    # If discord.py changes signature of `ctx.reply` - you gotta recopy these overloads as well
+    # the entire purpose of this is to have `fail_if_not_exists=False` in my reply as a default behavior
+
+    @overload
+    async def reply(
+        self,
+        content: Optional[str] = ...,
+        *,
+        tts: bool = ...,
+        embed: discord.Embed = ...,
+        file: discord.File = ...,
+        stickers: Sequence[Union[discord.GuildSticker, discord.StickerItem]] = ...,
+        delete_after: float = ...,
+        nonce: Union[str, int] = ...,
+        allowed_mentions: discord.AllowedMentions = ...,
+        reference: Union[discord.Message, discord.MessageReference, discord.PartialMessage] = ...,
+        mention_author: bool = ...,
+        view: discord.ui.View = ...,
+        suppress_embeds: bool = ...,
+        ephemeral: bool = ...,
+        silent: bool = ...,
+    ) -> discord.Message:
+        ...
+
+    @overload
+    async def reply(
+        self,
+        content: Optional[str] = ...,
+        *,
+        tts: bool = ...,
+        embed: discord.Embed = ...,
+        files: Sequence[discord.File] = ...,
+        stickers: Sequence[Union[discord.GuildSticker, discord.StickerItem]] = ...,
+        delete_after: float = ...,
+        nonce: Union[str, int] = ...,
+        allowed_mentions: discord.AllowedMentions = ...,
+        reference: Union[discord.Message, discord.MessageReference, discord.PartialMessage] = ...,
+        mention_author: bool = ...,
+        view: discord.ui.View = ...,
+        suppress_embeds: bool = ...,
+        ephemeral: bool = ...,
+        silent: bool = ...,
+    ) -> discord.Message:
+        ...
+
+    @overload
+    async def reply(
+        self,
+        content: Optional[str] = ...,
+        *,
+        tts: bool = ...,
+        embeds: Sequence[discord.Embed] = ...,
+        file: discord.File = ...,
+        stickers: Sequence[Union[discord.GuildSticker, discord.StickerItem]] = ...,
+        delete_after: float = ...,
+        nonce: Union[str, int] = ...,
+        allowed_mentions: discord.AllowedMentions = ...,
+        reference: Union[discord.Message, discord.MessageReference, discord.PartialMessage] = ...,
+        mention_author: bool = ...,
+        view: discord.ui.View = ...,
+        suppress_embeds: bool = ...,
+        ephemeral: bool = ...,
+        silent: bool = ...,
+    ) -> discord.Message:
+        ...
+
+    @overload
+    async def reply(
+        self,
+        content: Optional[str] = ...,
+        *,
+        tts: bool = ...,
+        embeds: Sequence[discord.Embed] = ...,
+        files: Sequence[discord.File] = ...,
+        stickers: Sequence[Union[discord.GuildSticker, discord.StickerItem]] = ...,
+        delete_after: float = ...,
+        nonce: Union[str, int] = ...,
+        allowed_mentions: discord.AllowedMentions = ...,
+        reference: Union[discord.Message, discord.MessageReference, discord.PartialMessage] = ...,
+        mention_author: bool = ...,
+        view: discord.ui.View = ...,
+        suppress_embeds: bool = ...,
+        ephemeral: bool = ...,
+        silent: bool = ...,
+    ) -> discord.Message:
+        ...
+
+    async def reply(self, content: Optional[str] = None, **kwargs: Any):
+        """Literal copy of .reply from the library but with `.to_reference(fail_if_not_exists=False)`"""
+        if self.interaction is None:
+            return await super().send(content, reference=self.message.to_reference(fail_if_not_exists=False), **kwargs)
+        else:
+            return await super().send(content, **kwargs)
 
 
 class AluGuildContext(AluContext):

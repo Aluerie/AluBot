@@ -70,7 +70,7 @@ def scrape_schedule_data(
         rows = divs[-1].findAll("tbody")
         for row in rows:
             twitch_handle = row.find(class_="timer-object").get('data-stream-twitch')
-            twitch_url = f'https://www.twitch.tv/{twitch_handle}'
+            twitch_url = f'https://liquipedia.net/dota2/Special:Stream/twitch/{twitch_handle}'
 
             team1 = row.select_one('.team-left').text.strip().replace('`', '.')
             team2 = row.select_one('.team-right').text.strip().replace('`', '.')

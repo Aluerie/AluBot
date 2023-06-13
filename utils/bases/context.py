@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union, Any
 
 import discord
 from discord.ext import commands
@@ -163,6 +163,10 @@ class AluContext(commands.Context):
         if ref and isinstance(ref.resolved, discord.Message):
             return ref.resolved
         return None
+    
+    # async def reply(self, content: Optional[str] = None, *, fail_if_not_exists: bool = True, **kwargs: Any):
+    #     reference = kwargs.get('reference') or self.message.to_reference(fail_if_not_exists=fail_if_not_exists)
+    #     await super().reply(content, reference=reference, **kwargs)
 
 
 class AluGuildContext(AluContext):

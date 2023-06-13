@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, AluContext
+from utils import AluContext, const
 from utils.times import BadTimeTransform
 from utils.translator import TranslateError
 
@@ -181,7 +181,8 @@ class ErrorHandlers(DevBaseCog):
             cmd_kwargs = ' '.join([f'`{k}`: `{v}`' for k, v in ctx.kwargs.items()])
 
             if ctx.interaction:
-                jump_url, cmd_text = '', f'/{ctx.command.qualified_name}'
+                msg = await ctx.interaction.original_response()
+                jump_url, cmd_text = msg.jump_url, f'/{ctx.command.qualified_name}'
             else:
                 jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
 

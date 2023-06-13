@@ -1,12 +1,12 @@
-from enum import IntEnum, StrEnum
+from enum import StrEnum
 
 
 class Emote(StrEnum):
     """Emote strings."""
-    
+
     # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
     peepoComfy = '<:_:726438781208756288>'
-    
+
     # HIDEOUT SERVER, NON-ANIMATED EMOTES ##############################################################################
 
     bedNerdge = '<:_:1106748389565153300>'
@@ -29,7 +29,7 @@ class Emote(StrEnum):
     Lewd = '<:_:976604430059331684>'
     peepoBlushDank = '<:_:1107471683448754287>'
     peepoBusiness = '<:_:998157352098340934>'
-    # peepoComfy = '<:_:1107471654944260096>' # let's use from community 
+    # peepoComfy = '<:_:1107471654944260096>' # let's use from community
     peepoHappyDank = '<:_:1107471671520133202>'
     peepoMovie = '<:_:998163742741246003>'
     peepoNiceDay = '<:_:1107477683568382076>'
@@ -55,6 +55,7 @@ class Emote(StrEnum):
     # COMMON EMOTES ####################################################################################################
     Offline = '\N{LARGE RED CIRCLE}'
     Online = '\N{LARGE GREEN CIRCLE}'
+
 
 class Tick(StrEnum):
     yes = '\N{WHITE HEAVY CHECK MARK}'
@@ -87,6 +88,7 @@ class Rgx:
     emote_stats_ids = r"<a?:[a-zA-Z0-9_]{2,32}:([0-9]{18,22})>"
     invis = "[^!-~]+"  # IDK might be huge question mark
 
+
 # TODO: include above^
 REGEX_URL_LINK = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
@@ -98,6 +100,10 @@ class Picture(StrEnum):
         "https://cdn3.iconfinder.com/data/icons/"
         "social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
     )
+
+
+class Logo(StrEnum):
+    python = "https://i.imgur.com/5BFecvA.png"
 
 
 class Limit:

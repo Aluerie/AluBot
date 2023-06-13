@@ -16,8 +16,7 @@ import pygit2
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext
-from utils.const import Colour, Emote, Limit
+from utils import AluCog, AluContext, const
 
 if TYPE_CHECKING:
     pass
@@ -90,14 +89,14 @@ def get_latest_commits(limit: int = 5):
 
 class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
     summary = discord.ui.TextInput(
-        label='Summary', placeholder='A brief explanation of what you want', max_length=Limit.Embed.title
+        label='Summary', placeholder='A brief explanation of what you want', max_length=const.Limit.Embed.title
     )
     details = discord.ui.TextInput(
         label='Details',
         placeholder='Leave a comment',
         style=discord.TextStyle.long,
         required=False,
-        max_length=4000, # 4000 is max apparently, Limit.Embed.description,
+        max_length=4000,  # 4000 is max apparently, Limit.Embed.description,
     )
 
     def __init__(self, cog: OtherCog) -> None:
@@ -112,9 +111,8 @@ class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
 
         e = self.cog.get_feedback_embed(interaction, summary=str(self.summary), details=self.details.value)
         await channel.send(embed=e)
-        e2 = discord.Embed(
-            colour=Colour.prpl(), title='Successfully submitted feedback', description=self.details.value
-        )
+        e2 = discord.Embed(colour=const.Colour.prpl(), title='Successfully submitted feedback')
+        e2.description = self.details.value
         await interaction.response.send_message(embed=e2)
 
 
@@ -132,7 +130,7 @@ class OtherCog(AluCog):
 
     @commands.command()
     async def hello(self, ctx: AluContext):
-        await ctx.reply(f'Hello {Emote.bubuAyaya}')
+        await ctx.reply(f'Hello {const.Emote.bubuAyaya}')
 
     @staticmethod
     def get_feedback_embed(
@@ -141,7 +139,7 @@ class OtherCog(AluCog):
         summary: Optional[str] = None,
         details: Optional[str] = None,
     ) -> discord.Embed:
-        e = discord.Embed(title=summary, description=details, colour=Colour.prpl())
+        e = discord.Embed(title=summary, description=details, colour=const.Colour.prpl())
 
         if ctx_ntr.guild is not None:
             e.add_field(name='Server', value=f'{ctx_ntr.guild.name} | ID: {ctx_ntr.guild.id}', inline=False)
@@ -172,7 +170,7 @@ class OtherCog(AluCog):
 
         e = self.get_feedback_embed(ctx, details=details)
         await channel.send(embed=e)
-        e2 = discord.Embed(colour=Colour.prpl(), description='Successfully sent feedback')
+        e2 = discord.Embed(colour=const.Colour.prpl(), description='Successfully sent feedback')
         await ctx.send(embed=e2)
 
     @app_commands.command(name='feedback')
@@ -184,7 +182,7 @@ class OtherCog(AluCog):
     @commands.command(aliases=['pm'], hidden=True)
     async def dm(self, ctx: AluContext, user: discord.User, *, content: str):
         """Write direct message to {user}."""
-        e = discord.Embed(colour=Colour.prpl(), title='Message from a developer')
+        e = discord.Embed(colour=const.Colour.prpl(), title='Message from a developer')
         e.set_author(name=str(ctx.author), icon_url=ctx.author.display_avatar.url)
         e.description = content
         footer_text = (
@@ -194,10 +192,10 @@ class OtherCog(AluCog):
         )
         e.set_footer(text=footer_text)
         await user.send(embed=e)
-        e2 = discord.Embed(colour=Colour.prpl(), description='DM successfully sent.')
+        e2 = discord.Embed(colour=const.Colour.prpl(), description='DM successfully sent.')
         await ctx.send(embed=e2)
 
-    @commands.command(aliases=['join'])
+    @commands.hybrid_command(aliases=['join'])
     async def invite(self, ctx: AluContext):
         """Show the invite link, so you can add me to your server.
         You can also press "Add to Server" button in my profile.
@@ -226,7 +224,7 @@ class OtherCog(AluCog):
         p.view_audit_log = True
         # | Manage Webhooks             |                         | Mimic User Webhooks  <- |                      <- |
         p.manage_webhooks = True
-        # | Read Messages/View Channels | Many-many Set channel functions such as FPC Notifications         | <- | <- |
+        # | Read Messages/View Channels | Many-many .set channel functions such as FPC Notifications        | <- | <- |
         p.read_messages = True
         # +-----------------------------+-------------------------+-------------------------+-------------------------+
         # | Text Permissions                                                                                          |
@@ -286,14 +284,11 @@ class OtherCog(AluCog):
 
         longest_word_length = max([len(p.name) for p in pings])
 
-        answer = '\n'.join(
-            [f"{p.emoji} `{p.name.ljust(longest_word_length, ' ')} | {round(p.value, 3):.3f}ms`" for p in pings]
-        )
+        strings = [f"{p.emoji} `{p.name.ljust(longest_word_length, ' ')} | {round(p.value, 3):.3f}ms`" for p in pings]
+        answer = '\n'.join(strings)
 
         # await asyncio.sleep(0.7)
-        e = discord.Embed(colour=discord.Colour.dark_embed())
-        e.description = answer
-
+        e = discord.Embed(colour=discord.Colour.dark_embed(), description=answer)
         await message.edit(embed=e)
 
     @commands.hybrid_command(help="Show info about the bot", aliases=["botinfo", "bi"])
@@ -302,14 +297,13 @@ class OtherCog(AluCog):
         await ctx.defer()
         information = await self.bot.application_info()
 
-        e = discord.Embed(colour=Colour.bot_colour(), description=information.description)
+        e = discord.Embed(colour=const.Colour.bot_colour(), description=information.description)
         e.add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
 
         e.set_author(name=f"Made by {information.owner}", icon_url=information.owner.display_avatar.url)
         # statistics
         total_members = 0
         total_unique = len(self.bot.users)
-
         guilds = 0
         for guild in self.bot.guilds:
             guilds += 1
@@ -318,10 +312,8 @@ class OtherCog(AluCog):
             total_members += guild.member_count or 1
 
         avg = [(len([m for m in g.members if not m.bot]) / (g.member_count or 1)) * 100 for g in self.bot.guilds]
-        e.add_field(
-            name="Servers",
-            value=f"{guilds} total\n{round(sum(avg) / len(avg), 1)}% avg bot/human",
-        )
+        servers_stats = f"{guilds} total\n{round(sum(avg) / len(avg), 1)}% avg bot/human"
+        e.add_field(name="Servers", value=servers_stats)
         e.add_field(name="Members", value=f"{total_members:,} total\n{total_unique:,} unique")
 
         memory_usage = psutil.Process().memory_full_info().uss / 1024**2
@@ -330,28 +322,16 @@ class OtherCog(AluCog):
         e.add_field(name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU")
         e.add_field(name='Command Stats', value='*stats coming soon*')
         # todo: implement command run total and total amount of slash/text commands in the bot maybe tasks
-        e.add_field(
-            name="Code stats",
-            value=(
-                f"Lines: {await count_lines('./', '.py'):,}\n"
-                f"Functions: {await count_others('./', '.py', 'def '):,}\n"
-                f"Classes: {await count_others('./', '.py', 'class '):,}"
-            ),
+        code_stats = (
+            f"Lines: {await count_lines('./', '.py'):,}\n"
+            f"Functions: {await count_others('./', '.py', 'def '):,}\n"
+            f"Classes: {await count_others('./', '.py', 'class '):,}"
         )
-        # try:
-        #     pass
-        # except (FileNotFoundError, UnicodeDecodeError):
-        #     pass
-        e.add_field(
-            name="Last reboot",
-            value=f"{discord.utils.format_dt(self.bot.launch_time,style='R')}",
-        )
+        e.add_field(name="Code stats", value=code_stats)
+        e.add_field(name="Last reboot", value=discord.utils.format_dt(self.bot.launch_time, style='R'))
 
         version = pkg_resources.get_distribution("discord.py").version
-        e.set_footer(
-            text=f"Made with discord.py v{version} \N{SPARKLING HEART}",
-            icon_url="https://i.imgur.com/5BFecvA.png",
-        )
+        e.set_footer(text=f"Made with discord.py v{version} \N{SPARKLING HEART}", icon_url=const.Logo.python)
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
@@ -371,7 +351,8 @@ class OtherCog(AluCog):
         )
 
         if command is None:
-            return await ctx.reply(embed=e, view=Url(source_url, label="Repository link", emoji=Emote.github_logo))
+            view = Url(source_url, label="Repository link", emoji=const.Emote.github_logo)
+            return await ctx.reply(embed=e, view=view)
 
         if command == "help":
             src = type(self.bot.help_command)
@@ -403,7 +384,5 @@ class OtherCog(AluCog):
         final_url = f"{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}"
         e.set_footer(text=f"{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
 
-        await ctx.reply(
-            embed=e,
-            view=Url(final_url, label=f"Source code for command \"{str(obj)}\"", emoji=Emote.github_logo),
-        )
+        view = Url(final_url, label=f"Source code for command \"{str(obj)}\"", emoji=const.Emote.github_logo)
+        await ctx.reply(embed=e, view=view)

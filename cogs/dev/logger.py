@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import tasks
 
+from utils import formats
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
@@ -56,7 +57,7 @@ class LoggerViaWebhook(DevBaseCog):
 
         emoji = attributes.get(record.levelname, '\N{CROSS MARK}')
         dt = datetime.datetime.utcfromtimestamp(record.created)
-        msg = textwrap.shorten(f'{emoji} {self.bot.formats.format_dt(dt)} {record.message}', width=1990)
+        msg = textwrap.shorten(f'{emoji} {formats.format_dt(dt)} {record.message}', width=1990)
         if record.name == 'discord.gateway':
             username = 'Gateway'
             avatar_url = 'https://i.imgur.com/4PnCKB3.png'

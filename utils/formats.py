@@ -9,7 +9,9 @@ import difflib
 from enum import IntEnum
 from typing import TYPE_CHECKING, Optional, Sequence, Union
 
-import discord
+# remember that we can now use `from utils import formats` into `formats.format_dt` with this:
+# which is a bit more convenient.
+from discord.utils import format_dt, TimestampStyle
 from dateutil.relativedelta import relativedelta
 
 if TYPE_CHECKING:
@@ -196,7 +198,7 @@ def human_timedelta(
             return sep.join(output) + output_suffix
 
 
-def format_dt_custom(dt: datetime.datetime, *style_letters: discord.utils.TimestampStyle):
+def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle):
     """
     Copy from d.py docs for *letters argument
     +-------------+----------------------------+-----------------+
@@ -218,7 +220,7 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: discord.utils.Timest
     +-------------+----------------------------+-----------------+"""
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=datetime.timezone.utc)
-    return ' '.join([discord.utils.format_dt(dt, letter) for letter in style_letters])
+    return ' '.join([format_dt(dt, letter) for letter in style_letters])
 
 
 def format_dt_tdR(dt: datetime.datetime) -> str:

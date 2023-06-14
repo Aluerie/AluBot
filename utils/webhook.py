@@ -8,7 +8,7 @@ from discord.ext import commands
 from . import errors
 
 if TYPE_CHECKING:
-    from . import AluBot, AluGuildContext
+    from . import AluBot, AluContext
 
     WebhookSourceChannel = Union[discord.ForumChannel, discord.VoiceChannel, discord.TextChannel, discord.StageChannel]
 
@@ -47,7 +47,7 @@ class MimicUserWebhook:
                 return res_channel, None
 
     @classmethod
-    def from_context(cls, ctx: AluGuildContext):
+    def from_context(cls, ctx: AluContext):
         channel, thread = cls.get_channel_thread(ctx.channel)
         return cls(bot=ctx.bot, channel=channel, thread=thread)
 
@@ -93,8 +93,9 @@ class MimicUserWebhook:
     async def send_user_message(
         self,
         member: discord.Member | discord.User,
+        *,
         message: Optional[discord.Message] = None,
-        new_content: str = '',
+        content: str = '',
         embed: discord.Embed = discord.utils.MISSING,
         wait: bool = False,
     ):
@@ -105,7 +106,7 @@ class MimicUserWebhook:
             files = discord.utils.MISSING
 
         return await wh.send(
-            new_content,
+            content=content,
             username=member.display_name,
             avatar_url=member.display_avatar.url,
             embed=embed,
@@ -113,41 +114,3 @@ class MimicUserWebhook:
             thread=discord.Object(id=self.thread.id) if self.thread else discord.utils.MISSING,
             wait=wait,  # type: ignore # why it does not work ? maybe worthy of asking in dpy ?
         )
-
-
-# old trash
-
-webhook_dict = {}
-
-
-async def user_webhook(ctx, content: Optional[str] = '', embed: Optional[discord.Embed] = None):
-    found = 0
-    webhook = None
-    array = await ctx.channel.webhooks()
-    for item in array:
-        if item.user == ctx.bot.user:
-            webhook = item
-            found = 1
-            break
-    if not found:
-        webhook = await ctx.channel.create_webhook(name=f"{ctx.channel.name}-1")
-    msg = await webhook.send(
-        content=content,
-        embed=embed,
-        username=ctx.author.display_name,
-        avatar_url=ctx.author.display_avatar.url,
-        wait=True,
-    )
-    if ctx.author.id not in webhook_dict:
-        webhook_dict[ctx.author.id] = [msg.id]
-    else:
-        webhook_dict[ctx.author.id].append(msg.id)
-    return webhook
-
-
-def check_msg_react(userid, msgid):
-    # print(webhookdict)
-    if userid in webhook_dict:
-        if msgid in webhook_dict[userid]:
-            return 1
-    return 0

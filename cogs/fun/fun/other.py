@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import random
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Dict, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, checks, const
-from utils.webhook import check_msg_react, user_webhook
+from utils import AluCog, checks, const, webhook
 
 if TYPE_CHECKING:
     from utils import AluContext, AluGuildContext
@@ -151,7 +150,7 @@ class Other(AluCog):
     ):
         """Send `text` to `#channel` from bot's name.
 
-        For text command you can also reply to a message without specifying text`for bot to copy it. 
+        For text command you can also reply to a message without specifying text`for bot to copy it.
 
         Parameters
         ----------
@@ -162,7 +161,7 @@ class Other(AluCog):
         """
 
         # Note, that if you want bot to send a fancy message with embeds then there is `/embed make` command.
-        # TODO: when embed maker is ready add this^ into the command docstring 
+        # TODO: when embed maker is ready add this^ into the command docstring
         ch = channel or ctx.channel
         if ch.id in [const.Channel.emote_spam, const.Channel.comfy_spam]:
             msg = f'Sorry, channel {ch.mention} is special emote-only channel. I won\' speak there.'
@@ -180,76 +179,64 @@ class Other(AluCog):
         except:
             pass
 
-    @commands.hybrid_command(
-        name='emoteit', aliases=['emotialize'], description="Emotializes your text into standard emotes"
-    )
-    @app_commands.describe(text="Text that will be converted into emotes")
-    async def emoteit(self, ctx: AluContext, *, text: str):
-        """Emotializes your text into standard emotes"""
-        answer = ''
-        skip_mode = 0
-        for letter in text:
-            if letter == '<':
-                skip_mode = 1
-                answer += letter
-                continue
-            if letter == '>':
-                skip_mode = 0
-                answer += letter
-                continue
-            elif skip_mode == 1:
-                answer += letter
-                continue
+    @staticmethod
+    def fancify_text(text: str, *, style: Dict[str, str]):
+        patterns = [
+            const.Rgx.user_mention,
+            const.Rgx.role_mention,
+            const.Rgx.channel_mention,
+            const.Rgx.slash_mention,
+            const.Rgx.emote,
+        ]
+        combined_pattern = r'|'.join(patterns)
+        mentions_or_emotes = re.findall(combined_pattern, text)
 
-            # [f'{chr(0x30 + i)}{chr(0x20E3)}' for i in range(10)] < also numbers but from chars
-            emotialize_dict = {
-                ' ': ' ',
+        style = style | {k: k for k in mentions_or_emotes}
+        pattern = '|'.join(re.escape(k) for k in style)
+        match_repl = lambda c: (style.get(c.group(0)) or style.get(c.group(0).lower()) or c)
+        return re.sub(pattern, match_repl, text)  # type: ignore # i dont understand regex types x_x
+
+    async def send_fancy_text(self, ctx: AluContext, answer: str):
+        if ctx.guild:
+            # TODO: I'm not sure what to do when permissions won't go our way
+            mimic = webhook.MimicUserWebhook.from_context(ctx)
+
+            await mimic.send_user_message(ctx.author, content=answer)
+
+            if ctx.interaction:
+                await ctx.reply(content=f'I did it {const.Emote.DankApprove}', ephemeral=True)
+            else:
+                await ctx.message.delete()
+        else:
+            await ctx.reply(answer)
+
+    @commands.hybrid_command()
+    @app_commands.describe(text="Text to converted to emotes")
+    async def emotify(self, ctx: AluContext, *, text: str):
+        """Emotify your text into default emojis."""
+
+        # A-Z a-z into :regional_identifier_a:-:regional_identifier_z:
+        # analogical for numbers and ?!
+        # more ideas ?
+        style = (
+            {
                 '!': '\N{WHITE EXCLAMATION MARK ORNAMENT}',
                 '?': '\N{WHITE QUESTION MARK ORNAMENT}',
-            } | {str(i): n for i, n in enumerate(const.DIGITS)}
-            alphabet = [  # maybe make char one as well one day
-                'a',
-                'b',
-                'c',
-                'd',
-                'e',
-                'f',
-                'g',
-                'h',
-                'i',
-                'j',
-                'k',
-                'l',
-                'm',
-                'n',
-                'o',
-                'p',
-                'q',
-                'r',
-                's',
-                't',
-                'u',
-                'v',
-                'w',
-                'x',
-                'y',
-                'z',
-            ]
-            for item in alphabet:
-                emotialize_dict[item] = f':regional_indicator_{item}: '
+            }
+            | {str(i): n for i, n in enumerate(const.DIGITS)}
+            | {chr(0x00000061 + x): f'{chr(0x0001F1E6 + x)} ' for x in range(26)}
+        )
+        answer = self.fancify_text(text, style=style)
+        await self.send_fancy_text(ctx, answer)
 
-            if letter.lower() in emotialize_dict.keys():
-                answer += emotialize_dict[letter.lower()]
-            else:
-                answer += letter
-        await user_webhook(ctx, content=answer)
-        if ctx.interaction:
-            await ctx.reply(content=const.Emote.DankApprove, ephemeral=True)
-        else:
-            await ctx.message.delete()
+    @commands.hybrid_command()
+    @app_commands.describe(text="Text to convert into fancy text")
+    async def fancify(self, ctx: AluContext, *, text: str):
+        """Fancify your text into default emojis."""
 
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        if str(reaction) == '\N{CROSS MARK}':
-            if check_msg_react(user.id, reaction.message.id):
-                await reaction.message.delete()
+        # A-Z a-z into fancy version A-Z a-z
+        style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {
+            chr(0x00000061 + x): chr(0x0001D4D0 + x) for x in range(26)
+        }
+        answer = self.fancify_text(text, style=style)
+        await self.send_fancy_text(ctx, answer)

@@ -102,6 +102,7 @@ class Channel(ChannelEnum):
 
 class Role(RoleEnum):
     # COMMUNITY
+    sister_of_the_veil = 821051642443071498
     bots = 724981475099017276
     nsfw_bots = 959955573405777981
     voice = 761475276361826315
@@ -283,6 +284,10 @@ class CommunityGuild(SavedGuild):
         return self.get_channel(Channel.total_bots, discord.VoiceChannel)
 
     # roles ############################################################################################################
+    @property
+    def sister_of_the_veil(self) -> discord.Role:
+        return self.get_role(Role.sister_of_the_veil)
+    
     @property
     def voice_role(self) -> discord.Role:
         return self.get_role(Role.voice)

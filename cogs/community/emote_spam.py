@@ -36,7 +36,7 @@ class EmoteSpam(AluCog):
             text = emoji.replace_emoji(message.content, replace='')
 
             # there is definitely a better way to regex it out
-            filters = [Rgx.whitespace, Rgx.emote, Rgx.nqn, Rgx.invis]
+            filters = [Rgx.whitespace, Rgx.emote_old, Rgx.nqn, Rgx.invis]
             if nqn_check == 0:
                 filters.remove(Rgx.nqn)
             for item in filters:

@@ -70,7 +70,7 @@ async def topemotes_job(ctx: AluContext, mode):
         no_enumeration=True,
         colour=Colour.prpl(),
         title="Top emotes used last month",
-        footer_text=f'With love, {ctx.guild.me.display_name}',
+        footer_text=f'With love, {ctx.bot.user.display_name}',
         description_prefix=f'`{"Emote".ljust(max_length + 4, " ")}Usages`\n',
     )
     await pgs.start()

@@ -79,8 +79,16 @@ DIGITS = [
 
 
 class Rgx:
+    # these match/capture whole mentions/emote as in <a:blabla:123>
+    user_mention = r'<@!?\d+>'
+    role_mention = r'<@&\d+>'
+    channel_mention = r'<#\d+>'
+    slash_mention = r'</[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>'
+    emote = r'<a?:[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>'
+
+    # old stuff
     whitespace = r"\s"  # whitespaces
-    emote = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"  # emotes
+    emote_old = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"  # emotes
     nqn = r":(?P<name>[a-zA-Z0-9_]{2,32}):"  # standard emotes
     # emoji = get_emoji_regexp() # use from emoji import get_emoji_regexp for this
     bug_check = r":.*:"

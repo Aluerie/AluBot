@@ -30,7 +30,7 @@ class FixLinksCommunity(AluCog):
 
         try:
             mimic = webhook.MimicUserWebhook.from_message(bot=self.bot, message=message)
-            msg = await mimic.send_user_message(message.author, message=message, new_content=fixed_links, wait=True)
+            msg = await mimic.send_user_message(message.author, message=message, content=fixed_links, wait=True)
             await message.delete()
             await asyncio.sleep(1)
 
@@ -47,7 +47,7 @@ class FixLinksCommunity(AluCog):
                 e = discord.Embed(color=colour)
                 e.description = '\n'.join(links)
                 await mimic.send_user_message(message.author, embed=e)
-            
+
         except Exception as err:
             print(err)
 

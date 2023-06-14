@@ -206,7 +206,7 @@ class CommunityMessageLogging(AluCog):
 
 
 class CommunityCommandLogging(AluCog):
-    ignored_users = [const.User.alu]
+    ignored_users = [const.User.aluerie]
     included_guilds = [const.Guild.community]
 
     @commands.Cog.listener()

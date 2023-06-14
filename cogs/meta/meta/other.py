@@ -17,6 +17,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils import AluCog, AluContext, const
+from utils.bot.intents_perms import permissions
 
 if TYPE_CHECKING:
     pass
@@ -200,59 +201,8 @@ class OtherCog(AluCog):
         """Show the invite link, so you can add me to your server.
         You can also press "Add to Server" button in my profile.
         """
-        # TODO: maybe make slash command out of it too
 
-        # Idk why but I want to weight all these permissions carefully so
-        # let's make a table for what we actually need those permissions.
-        # The following permissions are taken from https://discord.com/developers/applications/
-        # in /oauth2/general Bot Permissions section
-        # and should match what that webpage offers.
-
-        # Since I have a weird set of functions that greatly differs for Public/Community/Hideout usage
-        # Let's weight them in comparison to give ourselves a reasoning why this or that should be `True`.
-        # Maybe I should create separate bots for each
-        # At the same time it's quite possible I will make features that are currently community-only to be public
-        # This is why I probably should be greedy with permissions
-        # After all we are growing into multipurpose bot that can do everything.
-        p = discord.Permissions()
-        # +-----------------------------+-------------------------+-------------------------+-------------------------+
-        # | Permission                  | Public                  | Community               | Hideout                 |
-        # +=============================+=========================+=========================+=========================+
-        # | General Permissions                                                                                       |
-        # +-----------------------------+-------------------------+-------------------------+-------------------------+
-        # | View Audit Log              | Emote logging                                                     | <- | <- |
-        p.view_audit_log = True
-        # | Manage Webhooks             |                         | Mimic User Webhooks  <- |                      <- |
-        p.manage_webhooks = True
-        # | Read Messages/View Channels | Many-many .set channel functions such as FPC Notifications        | <- | <- |
-        p.read_messages = True
-        # +-----------------------------+-------------------------+-------------------------+-------------------------+
-        # | Text Permissions                                                                                          |
-        # +-----------------------------+-------------------------+-------------------------+-------------------------+
-        # | Send Messages               | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
-        p.send_messages = True
-        # | Manage Messages             | /echo /purge commands, mimic user                                 | <- | <- |
-        p.manage_messages = True
-        # | Embed Links                 | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
-        p.embed_links = True
-        # | Attach Files                | Practically everywhere (i.e. FPC Notifications)                   | <- | <- |
-        p.attach_files = True
-        # | Read Message History        | Practically everywhere (for ctx.reply)                            | <- | <- |
-        p.read_message_history = True
-        # | Use External Emojis         | Practically everywhere to use emojis from const.Emotes            | <- | <- |
-        p.external_emojis = True
-        # | Add Reactions               | ?!:thinking: reactions on @AluBot mentions                        | <- | <- |
-        p.add_reactions = True
-        # +-----------------------------+-------------------------+-------------------------+-------------------------+
-        # | Voice Permissions                                                                                         |
-        # +-----------------------------+-------------------------+-------------------------+-------------------------+
-        # | Connect                     | TextToSpeech commands                                             | <- | <- |
-        p.connect = True
-        # | Speak                       | TextToSpeech commands                                             | <- | <- |
-        p.speak = True
-        # +-----------------------------+-------------------------+-------------------------+-------------------------+
-
-        url = discord.utils.oauth_url(self.bot.client_id, permissions=p)
+        url = discord.utils.oauth_url(self.bot.client_id, permissions=permissions)
         v = discord.ui.View(timeout=1)
         v.add_item(discord.ui.Button(emoji="\N{SWAN}", label="Invite Link", url=url))
         await ctx.reply(view=v)

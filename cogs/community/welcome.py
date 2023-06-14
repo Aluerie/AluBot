@@ -61,7 +61,7 @@ async def welcome_message(
 
     if not member.bot:
         description = (
-            f'**💜 {const.User.alu} is our princess '
+            f'**💜 {const.User.aluerie} is our princess '
             f'and I\'m her bot ! {const.Emote.peepoRoseDank} {const.Emote.peepoRoseDank} {const.Emote.peepoRoseDank}**\n'
             f'{const.DIGITS[1]} Read the rules and useful info in <#724996010169991198> {const.Emote.PepoG}\n'
             f'{const.DIGITS[2]} Choose some fancy roles in <#725941486063190076> {const.Emote.peepoNiceDay}\n'

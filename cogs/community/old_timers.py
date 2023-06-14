@@ -27,7 +27,7 @@ async def get_the_thing(txt_list, name, pool: Pool):
 daily_reminders_txt = [
     f'Hey chat, don\'t forget to spam some emotes in {Channel.comfy_spam} or {Channel.emote_spam}',
     f'Hey chat, if you see some high/elite MMR streamer pick PA/DW/Muerta - '
-    f'don\'t hesitate to ping {User.alu} about it pretty please !',
+    f'don\'t hesitate to ping {User.aluerie} about it pretty please !',
     'Hey chat, please use channels according to their description',
     f'Hey chat, please use {Role.bots} strictly in {Channel.bot_spam} '
     f'(and {Role.nsfw_bots} in {Channel.nsfw_bot_spam} with exceptions of \n'

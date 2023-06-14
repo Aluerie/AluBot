@@ -137,7 +137,7 @@ IGNORED_FOR_LOGS = [Role.voice, Role.live_stream] + CATEGORY_ROLES
 
 
 class User(UserEnum):
-    alu = 312204139751014400
+    aluerie = 312204139751014400
     bot = 713124699663499274
     yen = 948934071432654929
     lala = 812763204010246174
@@ -197,6 +197,16 @@ class SavedGuild:
         if role is None:
             raise RuntimeError(f"Role id={role_id} from {self} not in cache")
         return role
+
+    def get_member(self, user_id: int) -> discord.Member:
+        member = self.guild.get_member(user_id)
+        if member is None:
+            raise RuntimeError(f"Member id={user_id} from {self} not in cache")
+        return member
+
+    @property
+    def aluerie(self) -> discord.Member:
+        return self.get_member(User.aluerie)
 
 
 class CommunityGuild(SavedGuild):

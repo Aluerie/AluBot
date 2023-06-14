@@ -60,6 +60,16 @@ class ModerationCog(AluCog, emote=const.Emote.peepoPolice):
         #     return
         # apparently discord limitation -> it does not ever happen
 
+    @commands.Cog.listener('on_guild_channel_create')
+    async def give_aluerie_all_perms(self, channel: discord.abc.GuildChannel):
+        if channel.guild.id != self.community.id:
+            return
+
+        aluerie = self.community.aluerie
+        allow, deny = discord.Permissions.all(), discord.Permissions.none()
+        all_perms = discord.PermissionOverwrite.from_pair(allow=allow, deny=deny)
+        await channel.set_permissions(aluerie, overwrite=all_perms, reason='Give all permissions to Aluerie.')
+
 
 async def setup(bot: AluBot):
     await bot.add_cog(ModerationCog(bot))

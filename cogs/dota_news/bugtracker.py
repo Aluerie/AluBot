@@ -6,7 +6,7 @@ import logging
 import re
 import textwrap
 from enum import Enum
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 
 import discord
 from discord.ext import commands, tasks
@@ -28,7 +28,7 @@ GITHUB_REPO = "ValveSoftware/Dota2-Gameplay"
 GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
 
 
-class EventBase:
+class ActionBase:
     def __init__(self, name: str, *, colour: int, word: str) -> None:
         self.name: str = name
         self.colour: int = colour
@@ -46,7 +46,11 @@ class EventBase:
         return discord.utils.find(lambda m: m.name == self.name, bot.hideout.guild.emojis)
 
 
-class CommentBase(EventBase):
+class EventBase(ActionBase):
+    pass
+
+
+class CommentBase(ActionBase):
     pass
 
 
@@ -71,7 +75,7 @@ class CommentType(Enum):
     opened = CommentBase('opened', colour=0x52CC99, word='opened')
 
 
-class Event:
+class Action:
     def __init__(
         self,
         *,
@@ -90,18 +94,13 @@ class Event:
         return f'@{self.actor.login} {self.event_type.word} bugtracker issue #{self.issue_number}'
 
 
-class Comment(Event):
-    def __init__(
-        self,
-        *,
-        enum_type: CommentBase,
-        created_at: datetime.datetime,
-        actor: NamedUser.NamedUser,
-        issue_number: int,
-        comment_body: str,
-        comment_url: Optional[str] = None,
-    ):
-        super().__init__(enum_type=enum_type, created_at=created_at, actor=actor, issue_number=issue_number)
+class Event(Action):
+    pass
+
+
+class Comment(Action):
+    def __init__(self, *, comment_body: str, comment_url: Optional[str] = None, **kwargs):
+        super().__init__(**kwargs)
         self.comment_body: str = comment_body
         self.comment_url: Optional[str] = comment_url
 
@@ -114,26 +113,26 @@ class Comment(Event):
 
 
 class TimeLine:
-    def __init__(
-        self,
-        issue: Issue.Issue,
-    ):
+    def __init__(self, issue: Issue.Issue):
         self.issue: Issue.Issue = issue
 
-        self.events: List[Event] = []
-        self.comments: List[Comment] = []
+        self.actions: List[Action] = []
         self.authors: Set[NamedUser.NamedUser] = set()
 
-    def add_event(self, event: Event):
-        self.events.append(event)
-        self.authors.add(event.actor)
+    def add_action(self, action: Action):
+        self.actions.append(action)
+        self.authors.add(action.actor)
 
-    def add_comment(self, comment: Comment):
-        self.comments.append(comment)
-        self.authors.add(comment.actor)
+    def sorted_points_list(self) -> List[Action]:
+        return sorted(self.actions, key=lambda x: x.created_at, reverse=False)
 
-    def sorted_points_list(self) -> List[Event | Comment]:
-        return sorted(self.events + self.comments, key=lambda x: x.created_at, reverse=False)
+    @property
+    def events(self) -> List[Event]:
+        return [e for e in self.actions if isinstance(e, Event)]
+
+    @property
+    def comments(self) -> List[Comment]:
+        return [e for e in self.actions if isinstance(e, Comment)]
 
     @property
     def last_comment_url(self) -> Optional[str]:
@@ -149,18 +148,19 @@ class TimeLine:
         e = discord.Embed(title=title, url=self.issue.html_url)
         if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
             # we just send a small embed
-            # 1 author and 1 event with possible comment event to it
-            ev = next(iter(self.events), None)  # first element in self.events or None if not exist
-            co = next(iter(self.comments), None)  # first element in self.comments or None if not exist
+            # 1 author and 1 event with possible comment to it
+            event = next(iter(self.events), None)  # first element in self.events or None if not exist
+            comment = next(iter(self.comments), None)  # first element in self.comments or None if not exist
 
-            le = ev or co  # lead_event
-            if le is None:
+            lead_action = event or comment
+            if lead_action is None:
                 raise RuntimeError('Somehow lead_event is None')
 
-            e.colour = le.event_type.colour
-            e.set_author(name=le.author_str, icon_url=le.actor.avatar_url, url=co.comment_url if co else None)
-            e.description = co.markdown_body if co else ''
-            file = le.event_type.file
+            e.colour = lead_action.event_type.colour
+            url = comment.comment_url if comment else None
+            e.set_author(name=lead_action.author_str, icon_url=lead_action.actor.avatar_url, url=url)
+            e.description = comment.markdown_body if comment else ''
+            file = lead_action.event_type.file
             e.set_thumbnail(url=f'attachment://{file.filename}')
         else:
             e.colour = 0x4078C0  # git colour, first in google :D
@@ -269,8 +269,6 @@ class BugTracker(AluCog):
         log.debug('BugTracker task started')
         repo = self.dota2gameplay_repo
 
-        assignees = self.valve_devs
-
         query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
         dt: datetime.datetime = await self.bot.pool.fetchval(query, const.Guild.community)
         now = discord.utils.utcnow()
@@ -278,7 +276,7 @@ class BugTracker(AluCog):
         # if self.bot.test:  # TESTING
         #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
 
-        issue_dict = dict()
+        issue_dict: Dict[int, TimeLine] = dict()
         issues_list = repo.get_issues(sort='updated', state='all', since=dt)
 
         for i in issues_list:
@@ -292,12 +290,11 @@ class BugTracker(AluCog):
                 and x.event in [x.name for x in list(EventType)]
             ]
             for e in events:
-                if (login := e.actor.login) in assignees:
+                if (login := e.actor.login) in self.valve_devs:
                     pass
                 elif login != e.issue.user.login:
                     # if actor is not OP of the issue then we can consider
                     # that this person is a valve dev
-                    assignees.append(login)
                     self.valve_devs.append(login)
                     query = """ INSERT INTO valve_devs (login) VALUES ($1)
                                 ON CONFLICT DO NOTHING;
@@ -306,9 +303,7 @@ class BugTracker(AluCog):
                 else:
                     continue
 
-                if e.issue.number not in issue_dict:
-                    issue_dict[e.issue.number] = TimeLine(issue=e.issue)
-                issue_dict[e.issue.number].add_event(
+                issue_dict.setdefault(e.issue.number, TimeLine(issue=e.issue)).add_action(
                     Event(
                         enum_type=(getattr(EventType, e.event)).value,
                         created_at=e.created_at,
@@ -321,10 +316,8 @@ class BugTracker(AluCog):
         for i in issues_list:
             if not dt < i.created_at.replace(tzinfo=datetime.timezone.utc) < now:
                 continue
-            if i.user.login in assignees:
-                if i.number not in issue_dict:
-                    issue_dict[i.number] = TimeLine(issue=i)
-                issue_dict[i.number].add_comment(
+            if i.user.login in self.valve_devs:
+                issue_dict.setdefault(i.number, TimeLine(issue=i)).add_action(
                     Comment(
                         enum_type=CommentType.opened.value,
                         created_at=i.created_at,
@@ -335,14 +328,11 @@ class BugTracker(AluCog):
                 )
 
         # Comments left by Valve devs
-        for c in [x for x in repo.get_issues_comments(sort='updated', since=dt) if x.user.login in assignees]:
+        for c in [x for x in repo.get_issues_comments(sort='updated', since=dt) if x.user.login in self.valve_devs]:
             # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
             issue_num = int(c.issue_url.split('/')[-1])
 
-            if issue_num not in issue_dict:
-                issue = repo.get_issue(issue_num)
-                issue_dict[issue.number] = TimeLine(issue=issue)
-            issue_dict[issue_num].add_comment(
+            issue_dict.setdefault(issue_num, TimeLine(issue=repo.get_issue(issue_num))).add_action(
                 Comment(
                     enum_type=CommentType.commented.value,
                     created_at=c.created_at,
@@ -369,7 +359,7 @@ class BugTracker(AluCog):
                 batches_to_send.append([(em, file)])
 
         for i in batches_to_send:
-            msg = await self.community.dota_news.send(embeds=[e for e, _ in i], files=[f for _, f in i if f])
+            msg = await self.community.dota_news.send(embeds=[e for (e, _) in i], files=[f for (_, f) in i if f])
             # todo: if we implement custom for public then we need to only publish from my own server
             #  or just remove the following `.publish()` line at all
             await msg.publish()
@@ -395,7 +385,7 @@ class BugTracker(AluCog):
                 self.git_comments_check.restart()
                 return
 
-        await self.bot.send_traceback(error, where='Dota2 BugTracker comments task')
+        await self.bot.send_exception(error, from_where='Dota2 BugTracker comments task')
         # self.git_comments_check.restart()
 
 

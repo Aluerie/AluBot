@@ -25,6 +25,7 @@ from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 
 from .cmd_cache import MyCommandTree
+from .intents_perms import intents
 
 if TYPE_CHECKING:
     from cogs.reminders.reminders import Reminder
@@ -58,18 +59,7 @@ class AluBot(commands.Bot):
         super().__init__(
             command_prefix=self.get_pre,
             activity=discord.Streaming(name=f"\N{PURPLE HEART} /help /setup", url='https://www.twitch.tv/aluerie'),
-            intents=discord.Intents(  # if you ever struggle with it - try `discord.Intents.all()`
-                # TODO: do same with those as you have with invite link lol
-                guilds=True,
-                members=True,
-                bans=True,
-                emojis_and_stickers=True,
-                voice_states=True,
-                presences=True,
-                messages=True,
-                reactions=True,
-                message_content=True,
-            ),
+            intents=intents,
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=MyCommandTree,
         )

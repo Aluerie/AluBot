@@ -215,16 +215,15 @@ class Other(AluCog):
     async def emotify(self, ctx: AluContext, *, text: str):
         """Emotify your text into default emojis."""
 
-        # A-Z a-z into :regional_identifier_a:-:regional_identifier_z:
-        # analogical for numbers and ?!
-        # more ideas ?
         style = (
             {
                 '!': '\N{WHITE EXCLAMATION MARK ORNAMENT}',
                 '?': '\N{WHITE QUESTION MARK ORNAMENT}',
-            }
-            | {str(i): n for i, n in enumerate(const.DIGITS)}
-            | {chr(0x00000061 + x): f'{chr(0x0001F1E6 + x)} ' for x in range(26)}
+            }  # ?! into emotes
+            | {str(i): n for i, n in enumerate(const.DIGITS)}  # digits into emotes :zero:, :one:, :two:, ...
+            | {
+                chr(0x00000061 + x): f'{chr(0x0001F1E6 + x)} ' for x in range(26)
+            }  # A-Z a-z into :regional_identifier_a:-:regional_identifier_z:
         )
         answer = self.fancify_text(text, style=style)
         await self.send_fancy_text(ctx, answer)
@@ -234,9 +233,8 @@ class Other(AluCog):
     async def fancify(self, ctx: AluContext, *, text: str):
         """Fancify your text into default emojis."""
 
-        # A-Z a-z into fancy version A-Z a-z
-        style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {
-            chr(0x00000061 + x): chr(0x0001D4D0 + x) for x in range(26)
+        style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy 𝓐-𝓩
+            chr(0x00000061 + x): chr(0x0001D4EA + x) for x in range(26)  # a-z into fancy a-z (Black messes it up)
         }
         answer = self.fancify_text(text, style=style)
         await self.send_fancy_text(ctx, answer)

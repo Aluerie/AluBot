@@ -5,7 +5,7 @@ import logging
 import os
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Annotated, Any, Dict, Iterable, MutableMapping, Optional, Union
 
 import discord
 from aiohttp import ClientSession
@@ -18,12 +18,11 @@ from steam.client import SteamClient
 
 import config
 from cogs import get_extensions
-from utils import AluContext, const, formats
-from utils.bases.context import ConfirmationView
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 
+from .. import AluContext, ConfirmationView, cache, const, formats
 from .cmd_cache import MyCommandTree
 from .intents_perms import intents
 
@@ -74,6 +73,10 @@ class AluBot(commands.Bot):
         # modules
         self.config = config
         self.formats = formats
+
+        self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
+            timedelta=datetime.timedelta(days=7)
+        )
 
     async def setup_hook(self) -> None:
         self.session = s = ClientSession()

@@ -97,7 +97,6 @@ class MimicUserWebhook:
         message: Optional[discord.Message] = None,
         content: str = '',
         embed: discord.Embed = discord.utils.MISSING,
-        wait: bool = False,
     ):
         wh = await self.get_or_create()
         if message:
@@ -105,12 +104,14 @@ class MimicUserWebhook:
         else:
             files = discord.utils.MISSING
 
-        return await wh.send(
+        msg = await wh.send(
             content=content,
             username=member.display_name,
             avatar_url=member.display_avatar.url,
             embed=embed,
             files=files,
             thread=discord.Object(id=self.thread.id) if self.thread else discord.utils.MISSING,
-            wait=wait,  # type: ignore # why it does not work ? maybe worthy of asking in dpy ?
+            wait=True
         )
+        self.bot.mimic_message_user_mapping[msg.id] = member.id
+        return msg

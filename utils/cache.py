@@ -9,10 +9,11 @@ Implementation for Cache.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import enum
 import time
 from functools import wraps
-from typing import Any, Callable, Coroutine, MutableMapping, Protocol, Tuple, TypeVar
+from typing import Any, Callable, Coroutine, MutableMapping, Optional, Protocol, Tuple, TypeVar, overload
 
 from lru import LRU
 
@@ -40,8 +41,23 @@ class CacheProtocol(Protocol[R]):
 
 
 class ExpiringCache(dict):
-    def __init__(self, seconds: float):
-        self.__ttl: float = seconds
+    @overload
+    def __init__(self, *, timedelta: datetime.timedelta):
+        ...
+
+    @overload
+    def __init__(self, *, seconds: float):
+        ...
+
+    def __init__(self, seconds: Optional[float] = None, timedelta: Optional[datetime.timedelta] = None):
+        if seconds is not None and timedelta is None:
+            ttl = seconds
+        elif seconds is None and timedelta is not None:
+            ttl = timedelta.total_seconds()
+        else:
+            raise TypeError('You either specified both `seconds` and `timedelta`, or they are both `None`.')
+        
+        self.__ttl: float = ttl
         super().__init__()
 
     def __verify_cache_integrity(self):
@@ -82,7 +98,7 @@ def cache(
             _internal_cache = {}
             _stats = lambda: (0, 0)
         elif strategy is Strategy.timed:
-            _internal_cache = ExpiringCache(maxsize)
+            _internal_cache = ExpiringCache(seconds=maxsize)
             _stats = lambda: (0, 0)
 
         def _make_key(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:

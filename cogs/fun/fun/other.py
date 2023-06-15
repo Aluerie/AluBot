@@ -144,7 +144,7 @@ class Other(AluCog):
     @commands.hybrid_command()
     @app_commands.describe(text="Text to converted to emotes")
     async def emotify(self, ctx: AluContext, *, text: str):
-        """Emotify your text into default emojis."""
+        """Emotify your text (🇪 🇲 🇴 🇹 🇮 🇫 🇾  🇹 🇪 🇽 🇹)."""
 
         style = (
             {
@@ -164,9 +164,9 @@ class Other(AluCog):
 
     @commands.hybrid_command()
     @app_commands.describe(text="Text to convert into fancy text")
-    async def fancify(self, ctx: AluContext, *, text: str):
-        """Fancify your text into default emojis."""
-
+    async def fancify(self, ctx: AluContext, *, text: str): # cSpell:disable
+        """Fancify your text (𝓯𝓪𝓷𝓬𝓲𝓯𝔂 𝓽𝓮𝔁𝓽).""" 
+        # cSpell:enable
         style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy 𝓐-𝓩
             chr(0x00000061 + x): chr(0x0001D4EA + x) for x in range(26)  # a-z into fancy a-z (Black messes it up)
         }

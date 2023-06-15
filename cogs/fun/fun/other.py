@@ -153,8 +153,11 @@ class Other(AluCog):
             }  # ?! into emotes
             | {str(i): n for i, n in enumerate(const.DIGITS)}  # digits into emotes :zero:, :one:, :two:, ...
             | {
+                chr(0x00000041 + x): f'{chr(0x0001F1E6 + x)} ' for x in range(26)
+            }  # A-Z into :regional_identifier_a:-:regional_identifier_z:
+            | {
                 chr(0x00000061 + x): f'{chr(0x0001F1E6 + x)} ' for x in range(26)
-            }  # A-Z a-z into :regional_identifier_a:-:regional_identifier_z:
+            }  # a-z into :regional_identifier_a:-:regional_identifier_z:
         )
         answer = self.fancify_text(text, style=style)
         await self.send_fancy_text(ctx, answer)

@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluContext, const
+from utils import AluContext, const, errors
 from utils.times import BadTimeTransform
 from utils.translator import TranslateError
 
@@ -66,8 +66,9 @@ class ErrorHandlers(DevBaseCog):
             case commands.HybridCommandError() | commands.CommandInvokeError() | app_commands.CommandInvokeError():
                 # we aren't interested in the chain traceback.
                 return await self.error_handler_worker(ctx, error.original, _type=_type)
-            case commands.BadArgument() | commands.CheckFailure() | TranslateError() | BadTimeTransform():
-                # These errors are generally raised in code by myself with an explanation text as `error`
+            case commands.BadArgument() | commands.CheckFailure() | TranslateError() | BadTimeTransform() \
+                | errors.UserError() | errors.SomethingWentWrong():
+                # These errors are generally raised in code by myself or by my code with an explanation text as `error`
                 desc = f'{error}'
             case app_commands.CommandNotFound():
                 desc = (
@@ -268,7 +269,7 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
     # Exception Traceback
     (_exception_type, exception, _traceback) = sys.exc_info()
     if exception is None:
-        # technically bad, but typing-wise for `self.send_exception` it's fine so whatever. 
+        # technically bad, but typing-wise for `self.send_exception` it's fine so whatever.
         exception = TypeError('Somehow `on_error` fired with exception being `None`.')
 
     # Event Arguments

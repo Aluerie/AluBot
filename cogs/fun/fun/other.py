@@ -21,88 +21,19 @@ class Other(AluCog):
         word = 'Heads' if random.randint(0, 1) == 0 else 'Tails'
         return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        if message.author.id in [const.User.bot, const.User.yen]:
-            return
-
-        async def work_non_command_mentions(msg: discord.Message):
-            """for now there is only blush and question marks"""
-            if msg.guild and msg.guild.me in msg.mentions:
-                if any([item in msg.content.lower() for item in ['😊', "blush"]]):
-                    await msg.channel.send(f'{msg.author.mention} {const.Emote.peepoBlushDank}')
-                else:
-                    ctx = await self.bot.get_context(msg)
-                    if ctx.command:
-                        return
-                    else:
-                        for r in ['❔', '❕', '🤔']:
-                            await msg.add_reaction(r)
-
-        await work_non_command_mentions(message)
-
-        async def bots_in_lobby(msg: discord.Message):
-            if msg.channel.id == const.Channel.general:
-                text = None
-                if msg.interaction is not None and msg.interaction.type == discord.InteractionType.application_command:
-                    text = 'Slash-commands'
-                if msg.author.bot and not msg.webhook_id:
-                    text = 'Bots'
-                if text is not None:
-                    await msg.channel.send(
-                        '{0} in {1} ! {2} {2} {2}'.format(text, const.Channel.general.mention, const.Emote.Ree)
-                    )
-
-        await bots_in_lobby(message)
-
-        async def weebs_out(msg: discord.Message):
-            if msg.channel.id == const.Channel.weebs and random.randint(1, 100 + 1) < 7:
-                await msg.channel.send(
-                    '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
-                        '<a:WeebsOutOut:730882034167185448>',
-                        '<:WeebsOut:856985447985315860>',
-                        '<a:peepoWeebSmash:728671752414167080>',
-                        '<:peepoRiot:730883102678974491>',
-                    )
-                )
-
-        await weebs_out(message)
-
-        async def ree_the_oof(msg: discord.Message):
-            if not msg.guild or msg.guild.id != const.Guild.community:
-                return
-            if "Oof" in msg.content:
-                try:
-                    await msg.add_reaction(const.Emote.Ree)
-                except discord.errors.Forbidden:
-                    await msg.delete()
-
-        await ree_the_oof(message)
-
-        async def random_comfy_react(msg: discord.Message):
-            if not msg.guild or msg.guild.id != const.Guild.community:
-                return
-            roll = random.randint(1, 300 + 1)
-            if roll < 2:
-                try:
-                    await msg.add_reaction(const.Emote.peepoComfy)
-                except Exception:
+    @commands.Cog.listener('on_message')
+    async def reply_non_command_mentions(self, message: discord.Message):
+        """for now there is only blush and question marks"""
+        if message.guild and message.guild.me in message.mentions:
+            if any([item in message.content.lower() for item in ['😊', "blush"]]):
+                await message.channel.send(f'{message.author.mention} {const.Emote.peepoBlushDank}')
+            else:
+                ctx = await self.bot.get_context(message)
+                if ctx.command:
                     return
-
-        await random_comfy_react(message)
-
-        async def your_life(msg):
-            if not msg.guild or msg.guild.id != const.Guild.community or random.randint(1, 170 + 1) >= 2:
-                return
-            try:
-                sliced_text = msg.content.split()
-                if len(sliced_text) > 2:
-                    answer_text = f"Your life {' '.join(sliced_text[2:])}"
-                    await msg.channel.send(answer_text)
-            except Exception:
-                return
-
-        await your_life(message)
+                else:
+                    for r in ['❔', '❕', '🤔']:
+                        await message.add_reaction(r)
 
     @commands.hybrid_command()
     async def do_emote_spam(self, ctx: AluContext):

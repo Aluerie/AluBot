@@ -139,11 +139,14 @@ IGNORED_FOR_LOGS = [Role.voice, Role.live_stream] + CATEGORY_ROLES
 
 class User(UserEnum):
     aluerie = 312204139751014400
-    bot = 713124699663499274
-    yen = 948934071432654929
+    alubot = 713124699663499274
+    yenbot = 1001856865631748159
     lala = 812763204010246174
     mango = 213476188037971968
     nqn = 559426966151757824
+
+
+MY_BOTS = [User.alubot, User.yenbot]
 
 
 class SavedGuild:
@@ -287,7 +290,7 @@ class CommunityGuild(SavedGuild):
     @property
     def sister_of_the_veil(self) -> discord.Role:
         return self.get_role(Role.sister_of_the_veil)
-    
+
     @property
     def voice_role(self) -> discord.Role:
         return self.get_role(Role.voice)

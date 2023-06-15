@@ -31,7 +31,7 @@ daily_reminders_txt = [
     'Hey chat, please use channels according to their description',
     f'Hey chat, please use {Role.bots} strictly in {Channel.bot_spam} '
     f'(and {Role.nsfw_bots} in {Channel.nsfw_bot_spam} with exceptions of \n'
-    f'\N{DIGIT ZERO}\N{COMBINING ENCLOSING KEYCAP} feel free to use {User.bot} everywhere\n'
+    f'\N{DIGIT ZERO}\N{COMBINING ENCLOSING KEYCAP} feel free to use {User.alubot} everywhere\n'
     f'\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP} {User.mango} in {Channel.pubs_talk}\n'
     f'\N{DIGIT TWO}\N{COMBINING ENCLOSING KEYCAP} {User.nqn}\'s in-built "free-nitro" functions everywhere',
     f'Hey chat, remember to check `$help` and {Channel.patch_notes}. We have a lot of cool features and '
@@ -61,7 +61,7 @@ daily_reminders_txt = [
     'Hey chat, follow étiquette.',
     f'Hey chat, if you ever forget what prefix/help-command bot you want to use have - just look at its nickname, '
     f'for example, {User.nqn} - means its help command is `++help` and its prefix is `++`',
-    f'Hey chat, if you ever see {User.bot} offline (it should be always at the top of the members list online) - '
+    f'Hey chat, if you ever see {User.alubot} offline (it should be always at the top of the members list online) - '
     'immediately ping me',
     f'Hey chat, if while watching my stream you see some cool moment - clip it and post to {Channel.clips}',
     'Hey chat, remember to stay hydrated ! {0} {0} {0}'.format(Emote.bubuSip),

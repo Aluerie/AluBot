@@ -56,7 +56,7 @@ class ExpiringCache(dict):
             ttl = timedelta.total_seconds()
         else:
             raise TypeError('You either specified both `seconds` and `timedelta`, or they are both `None`.')
-        
+
         self.__ttl: float = ttl
         super().__init__()
 
@@ -67,13 +67,18 @@ class ExpiringCache(dict):
         for k in to_remove:
             del self[k]
 
+    def get(self, key: str, default: Optional[Any] = None):  # is it correct signature ?
+        self.__verify_cache_integrity()
+        value_and_ttl = super().get(key, default)
+        return value_and_ttl[0] if value_and_ttl else None
+    
     def __contains__(self, key: str):
         self.__verify_cache_integrity()
         return super().__contains__(key)
 
     def __getitem__(self, key: str):
         self.__verify_cache_integrity()
-        return super().__getitem__(key)
+        return super().__getitem__(key)[0]
 
     def __setitem__(self, key: str, value: Any):
         super().__setitem__(key, (value, time.monotonic()))

@@ -280,8 +280,7 @@ class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
 
     async def get_soup(self, key: str) -> BeautifulSoup:
         if soup := self.soup_cache.get(key):
-            return soup[0]  # type: ignore # TODO: idk really how to calm it down
-            # MutableMapping above won't be really compatible with this.
+            return soup
         else:
             async with self.bot.session.get(MATCHES_URL) as r:
                 soup = BeautifulSoup(await r.read(), 'html.parser')

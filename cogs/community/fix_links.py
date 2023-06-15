@@ -31,7 +31,8 @@ class FixLinksCommunity(AluCog):
         self.bot.tree.remove_command(c.name, type=c.type)
 
     async def delete_mimic_ctx_menu_callback(self, ntr: discord.Interaction, message: discord.Message):
-        if self.bot.mimic_message_user_mapping.get(message.id) == ntr.user.id:
+        if self.bot.mimic_message_user_mapping.get(message.id) == ntr.user.id:  # type: ignore # it's not int, it's Tuple[int, float]
+            #^ userid_ttl[0] represents both 
             # the message in cache and belongs to the interaction author (user)
             await message.delete()
             e = discord.Embed(colour=const.Colour.prpl())

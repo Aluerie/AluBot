@@ -359,7 +359,7 @@ class BugTracker(AluCog):
                 batches_to_send.append([(em, file)])
 
         for i in batches_to_send:
-            msg = await self.community.dota_news.send(embeds=[e for (e, _) in i], files=[f for (_, f) in i if f])
+            msg = await self.community.bugtracker_news.send(embeds=[e for (e, _) in i], files=[f for (_, f) in i if f])
             # todo: if we implement custom for public then we need to only publish from my own server
             #  or just remove the following `.publish()` line at all
             await msg.publish()

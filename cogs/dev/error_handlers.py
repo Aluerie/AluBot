@@ -214,7 +214,7 @@ class ErrorHandlers(DevBaseCog):
     async def on_command_error(self, ctx: AluContext, error: commands.CommandError) -> None:
         """|coro|
 
-        A handler called when an error is raised while invoking a command.
+        A handler called when an error is raised while invoking a so called prefix/text/ext command.
 
         Parameters
         ----------
@@ -228,7 +228,8 @@ class ErrorHandlers(DevBaseCog):
     async def on_app_command_error(self, ntr: discord.Interaction, error: app_commands.AppCommandError, /):
         """|coro|
 
-        A handler called when an error is raised while invoking an app_command.
+        A handler called when an error is raised while invoking an app_command. 
+        This includes slash commands, context menu commands.
 
         Parameters
         ----------

@@ -23,7 +23,6 @@ let's make a table for what we actually need those intents.
 # +-------------------------------+---------------------------+---------------------------+---------------------------+
 # | Intents                       | Public                    | Community                 | Hideout                   |
 # +===============================+===========================+===========================+===========================+
-
 # | Guilds                        |                        | on_guild_channel_create - give all perks to Aluerie | <- |
 i.guilds = True
 

@@ -70,6 +70,7 @@ class Channel(ChannelEnum):
     nsfw_bot_spam = 731607736155897978
 
     dota_news = 724986688589267015
+    bugtracker_news = 1119041743002800138
 
     stream_room = 766063288302698496
 
@@ -130,7 +131,7 @@ CATEGORY_ROLES = [
     852199851840372847,  # special
     851786344354938880,  # games
     852192240306618419,  # notification
-    852194400922632262,  # pronoun
+
     727492782196916275,  # plebs
 ]
 
@@ -273,6 +274,10 @@ class CommunityGuild(SavedGuild):
     @property
     def dota_news(self) -> discord.TextChannel:
         return self.get_channel(Channel.dota_news, discord.TextChannel)
+
+    @property
+    def bugtracker_news(self) -> discord.TextChannel:
+        return self.get_channel(Channel.bugtracker_news, discord.TextChannel)
 
     @property
     def my_time(self) -> discord.VoiceChannel:

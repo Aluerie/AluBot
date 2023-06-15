@@ -101,24 +101,24 @@ class SteamDB(AluCog):
                         files = [await x.to_file() for x in msg.attachments]
                         msg = await self.news_channel.send(content=msg.content, embeds=msg.embeds, files=files)
                         await msg.publish()
-                case Channel.copy_dota_steam:
-                    if block_function(msg.content, self.blocked_words, self.whitelist_words):
-                        return
-                    e = discord.Embed(colour=0x171A21, description=msg.content)
-                    msg = await self.news_channel.send(embed=e)
-                    await msg.publish()
-                case Channel.copy_dota_tweets:
-                    await asyncio.sleep(2)
-                    answer = await msg.channel.fetch_message(int(msg.id))
-                    embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]
-                    embeds = [move_link_to_title(embed) for embed in embeds]
-                    if embeds:
-                        msg = await self.news_channel.send(embeds=embeds)
-                        await msg.publish()
-                case Channel.copy_steam_beta:
-                    if "SteamClientBeta" in msg.content:
-                        files = [await x.to_file() for x in msg.attachments]
-                        msg = await self.hideout.repost.send(content=msg.content, embeds=msg.embeds, files=files)
+                # case Channel.copy_dota_steam: # kinda no point, actually.
+                #     if block_function(msg.content, self.blocked_words, self.whitelist_words):
+                #         return
+                #     e = discord.Embed(colour=0x171A21, description=msg.content)
+                #     msg = await self.news_channel.send(embed=e)
+                #     await msg.publish()
+                # case Channel.copy_dota_tweets: # dont work anymore
+                #     await asyncio.sleep(2)
+                #     answer = await msg.channel.fetch_message(int(msg.id))
+                #     embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]
+                #     embeds = [move_link_to_title(embed) for embed in embeds]
+                #     if embeds:
+                #         msg = await self.news_channel.send(embeds=embeds)
+                #         await msg.publish()
+                # case Channel.copy_steam_beta: # no hype anymore
+                #     if "SteamClientBeta" in msg.content:
+                #         files = [await x.to_file() for x in msg.attachments]
+                #         msg = await self.hideout.repost.send(content=msg.content, embeds=msg.embeds, files=files)
         except Exception as error:
             await self.bot.send_traceback(error, where="#dota-dota_news copypaste")
 

@@ -30,7 +30,7 @@ class FixLinksCommunity(AluCog):
         c = self.delete_mimic_ctx_menu
         self.bot.tree.remove_command(c.name, type=c.type)
 
-    async def delete_mimic_ctx_menu_callback(self, ntr: discord.Interaction, message: discord.Message):
+    async def delete_mimic_ctx_menu_callback(self, ntr: discord.Interaction[commands.Bot], message: discord.Message):
         if self.bot.mimic_message_user_mapping.get(message.id) == ntr.user.id:  # type: ignore # it's not int, it's Tuple[int, float]
             #^ userid_ttl[0] represents both 
             # the message in cache and belongs to the interaction author (user)
@@ -46,7 +46,7 @@ class FixLinksCommunity(AluCog):
                 'Either this message\n'
                 '* was not mimicked by me\n'
                 '* expired from cache (7 days)\n'
-                '* or cache was reset (bcs of reboot). \n Sorry. You have to ask mods to delete it.'
+                '* or cache was reset (because of reboot). \nSorry. You have to ask moderators to delete it.'
             )
 
     @commands.Cog.listener('on_message')

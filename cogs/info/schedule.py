@@ -24,6 +24,9 @@ class Match(NamedTuple):
     twitch_url: str
     dt: datetime.datetime
 
+    def __repr__(self) -> str:
+        return f'<{self.league}, {self.teams}>'
+
 
 fav_teams = []
 
@@ -83,7 +86,7 @@ def scrape_schedule_data(
                 if timedelta_obj.days > 0:
                     continue
 
-            league = row.select_one('.match-filler').text.strip().replace(time_utc, '')
+            league: str = row.select_one('.match-filler').text.strip().replace(time_utc, '')
             league_url = row.find(class_="league-icon-small-image").find('a').get('href')
 
             if part == 1 and query is not None:
@@ -104,7 +107,7 @@ def scrape_schedule_data(
 
             matches.append(
                 Match(
-                    league=league,
+                    league=league.lstrip(),
                     league_url=league_url,
                     teams=f'{team1} - {team2}',
                     twitch_url=twitch_url,
@@ -209,7 +212,8 @@ class SchedulePageSource(menus.ListPageSource):
         query: Optional[str] = None,
     ):
         initial_data = scrape_schedule_data(soup, schedule_enum, query)
-        super().__init__(entries=initial_data, per_page=32)
+        initial_data.sort(key=lambda x: (x.league, x.dt))
+        super().__init__(entries=initial_data, per_page=20)
         self.schedule_enum = schedule_enum
         self.author: discord.User | discord.Member = author
         self.query: Optional[str] = query
@@ -228,7 +232,7 @@ class SchedulePageSource(menus.ListPageSource):
         desc = f'Applied filter: `{self.query}`\n' if self.query is not None else ''
         desc += f'`{"Datetime now ".ljust(max_amount_of_chars, " ")}`{format_dt_custom(dt_now, "t", "d")}\n'
 
-        matches.sort(key=lambda x: (x.league, x.dt))
+        # matches.sort(key=lambda x: (x.league, x.dt))
         # now it's sorted by leagues and dt
 
         league: str | None = None

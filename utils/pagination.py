@@ -166,14 +166,17 @@ class Paginator(discord.ui.View):
             self.next_page.label = ">"
         self.update_more_labels(page_number)
 
-    async def start(self, *, ephemeral: bool = False, edit_response: bool = False) -> None:
+    async def start(self, *, ephemeral: bool = False, edit_response: bool = False, reply: bool = True) -> None:
         await self.source._prepare_once()
         page = await self.source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
         self._update_nav_labels(0)
 
         if isinstance(self.ctx_ntr, AluContext):
-            self.message = await self.ctx_ntr.send(**kwargs, view=self, ephemeral=ephemeral)
+            if reply:
+                self.message = await self.ctx_ntr.reply(**kwargs, view=self, ephemeral=ephemeral)
+            else:
+                self.message = await self.ctx_ntr.send(**kwargs, view=self, ephemeral=ephemeral)
         elif isinstance(self.ctx_ntr, discord.Interaction):
             if self.ctx_ntr.response.is_done():
                 self.message = await self.ctx_ntr.followup.send(**kwargs, view=self, ephemeral=ephemeral)

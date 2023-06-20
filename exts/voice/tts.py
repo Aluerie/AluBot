@@ -42,7 +42,10 @@ class TextToSpeech(AluCog, name='Text To Speech', emote=const.Emote.Ree):
         super().__init__(*args, **kwargs)
         self.connections: Dict[int, discord.VoiceClient] = {}  # guild.id to Voice we are connected to
 
-    tts_group = app_commands.Group(name="tts", description="Group command about TTS commands", guild_only=True)
+    # TODO: remake it into hybrid back
+    tts_group = app_commands.Group(
+        name="text-to-speech", description="Group command about TTS commands", guild_only=True
+    )
 
     @tts_group.command()
     @app_commands.describe(text="Enter text to speak", language="Choose language/accent")
@@ -129,7 +132,7 @@ class TextToSpeech(AluCog, name='Text To Speech', emote=const.Emote.Ree):
 
         if not (voice_state := member.voice):
             return await ntr.response.send_message(content=content)
-            
+
         if ntr.guild.voice_client is not None:
             vc = self.connections[ntr.guild.id]
             await vc.move_to(voice_state.channel)

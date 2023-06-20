@@ -8,8 +8,6 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils import AluContext, const, errors
-from utils.times import BadTimeTransform
-from utils.translator import TranslateError
 
 from ._base import DevBaseCog
 
@@ -66,9 +64,13 @@ class ErrorHandlers(DevBaseCog):
             case commands.HybridCommandError() | commands.CommandInvokeError() | app_commands.CommandInvokeError():
                 # we aren't interested in the chain traceback.
                 return await self.error_handler_worker(ctx, error.original, _type=_type)
-            case commands.BadArgument() | commands.CheckFailure() | TranslateError() | BadTimeTransform() \
-                | errors.UserError() | errors.SomethingWentWrong():
+            case errors.ErroneousUsage():
+                # raised by myself but it's not an error per se, thus i dont give error type to the user.
+                error_type = None
+                desc = f'{error}'
+            case commands.BadArgument() | commands.CheckFailure() | errors.AluBotException():
                 # These errors are generally raised in code by myself or by my code with an explanation text as `error`
+                # AluBotException subclassed exceptions are all mine. 
                 desc = f'{error}'
             case app_commands.CommandNotFound():
                 desc = (
@@ -207,7 +209,9 @@ class ErrorHandlers(DevBaseCog):
                     await ctx.reply(':(', ephemeral=True)
                 return
 
-        e = discord.Embed(color=const.Colour.error(), description=desc).set_author(name=error_type)
+        e = discord.Embed(color=const.Colour.error(), description=desc)
+        if error_type:
+            e.set_author(name=error_type)
         await ctx.reply(embed=e, ephemeral=True)
 
     @commands.Cog.listener()

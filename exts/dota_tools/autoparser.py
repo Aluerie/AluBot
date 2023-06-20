@@ -8,7 +8,7 @@ from discord.ext import tasks
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
-from cogs.fpc.dota._models import OpendotaRequestMatch
+from exts.fpc.dota._models import OpendotaRequestMatch
 from utils import AluCog
 
 if TYPE_CHECKING:

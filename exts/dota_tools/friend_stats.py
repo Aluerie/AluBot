@@ -10,7 +10,7 @@ from discord.ext import commands, tasks
 from matplotlib import pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 
-from cogs.fpc.dota._models import Match
+from exts.fpc.dota._models import Match
 from config import DOTA_FRIEND_ID
 from utils import const, checks
 

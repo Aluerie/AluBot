@@ -5,7 +5,7 @@ import logging
 import os
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, MutableMapping, Optional, Union, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Union
 
 import discord
 from aiohttp import ClientSession
@@ -17,7 +17,7 @@ from github import Github
 from steam.client import SteamClient
 
 import config
-from cogs import get_extensions
+from exts import get_extensions
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
@@ -27,7 +27,9 @@ from .cmd_cache import MyCommandTree
 from .intents_perms import intents
 
 if TYPE_CHECKING:
-    from cogs.reminders.reminders import Reminder
+    from exts.reminders.reminders import Reminder
+
+    from .. import AluCog, ExtCategory
 
 
 __all__ = ('AluBot',)
@@ -52,6 +54,8 @@ class AluBot(commands.Bot):
         twitch: TwitchClient
         user: discord.ClientUser
 
+        cogs: Mapping[str, AluCog]
+
     def __init__(self, test=False):
         main_prefix = '~' if test else '$'
         self.main_prefix = main_prefix
@@ -64,7 +68,6 @@ class AluBot(commands.Bot):
         )
         self.client_id: int = config.TEST_DISCORD_CLIENT_ID if test else config.DISCORD_CLIENT_ID
         self.test: bool = test
-        self.app_commands: Dict[str, int] = {}
         self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
 
         self.repo = 'https://github.com/Aluerie/AluBot'
@@ -73,6 +76,8 @@ class AluBot(commands.Bot):
         # modules
         self.config = config
         self.formats = formats
+
+        self.ext_categories: Dict[Optional[ExtCategory], List[AluCog]] = {}
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
             timedelta=datetime.timedelta(days=7)
@@ -108,6 +113,11 @@ class AluBot(commands.Bot):
         else:
             prefix = self.prefixes.get(message.guild.id, self.main_prefix)
         return commands.when_mentioned_or(prefix, "/")(bot, message)
+
+    async def add_cog(self, cog: AluCog, category: Optional[ExtCategory] = None):
+        await super().add_cog(cog)
+
+        self.ext_categories.setdefault(cog.category, []).append(cog)
 
     async def on_ready(self):
         if not hasattr(self, 'launch_time'):

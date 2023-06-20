@@ -20,6 +20,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple, TypedDict
 
+from .bases import AluBotException
+
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
@@ -47,7 +49,7 @@ LANGUAGES = {  # there are 109 languages
 # fmt: on
 
 
-class TranslateError(Exception):
+class TranslateError(AluBotException):
     def __init__(self, status_code: int, text: str) -> None:
         self.status_code: int = status_code
         self.text: str = text

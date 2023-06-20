@@ -9,7 +9,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from cogs.utilities.fix_links import fix_link_worker
+from exts.utilities.fix_links import fix_link_worker
 from utils import AluCog, const, webhook, errors
 
 if TYPE_CHECKING:

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Awaitable, Callable, List, Literal
 import discord
 from discord.ext import commands
 
-from cogs import INITIAL_EXTENSIONS, get_extensions
+from exts import INITIAL_EXTENSIONS, get_extensions
 from utils import AluContext, const
 
 from ._base import DevBaseCog
@@ -61,7 +61,7 @@ class AdminTools(DevBaseCog):
     @commands.command(name="extensions", hidden=True)
     async def extensions(self, ctx: AluContext):
         """Shows available extensions to load/reload/unload."""
-        exts = [f"\N{BLACK CIRCLE} {ext[5:] if ext.startswith('cogs.') else ext}" for ext in self.bot.extensions.keys()]
+        exts = [f"\N{BLACK CIRCLE} {ext[5:] if ext.startswith('exts.') else ext}" for ext in self.bot.extensions.keys()]
         e = discord.Embed(title="Available Extensions", description="\n".join(exts), colour=const.Colour.prpl())
         await ctx.reply(embed=e)
 
@@ -69,7 +69,7 @@ class AdminTools(DevBaseCog):
         try:
             # so we do `$unload beta` instead of `$unload beta.py`
             m = module.lower()
-            filename = f"cogs.{m}" if m not in INITIAL_EXTENSIONS else m
+            filename = f"exts.{m}" if m not in INITIAL_EXTENSIONS else m
             await job_func(filename)
         except commands.ExtensionError as error:
             e = discord.Embed(description=f"{error}", colour=const.Colour.error())
@@ -96,12 +96,23 @@ class AdminTools(DevBaseCog):
     async def reload_or_load_extension(self, module: str) -> None:
         try:
             await self.bot.reload_extension(module)
-        except commands.ExtensionNotLoaded:
+            return
+        except commands.ExtensionNotLoaded as reload_err:
+        #     reload_error = reload_err
+        # try:
             await self.bot.load_extension(module)
+            return
+        # except commands.ExtensionError as load_error:
+        #     e = discord.Embed(description=f"{load_error}\n {reload_error}", colour=const.Colour.error())
+        #     e.set_author(name=f'{load_error.__class__.__name__} {reload_error.__class__.__name__}')
+        #     e.set_footer(text='Both reload and load failed.')
+        #     # TODO: hmm
+        #     await ctx.reply(embed=e)
 
     @reload.command(name="all", hidden=True)
     async def reload_all(self, ctx: AluContext):
         """Reloads all modules"""
+        # TODO: rewrite this
         cogs_to_reload = get_extensions(ctx.bot.test)
 
         add_reaction = True

@@ -10,8 +10,8 @@ from utils import AluCog, const, checks
 from utils.lol.const import LiteralServerUpper
 
 if TYPE_CHECKING:
-    from cogs.fpc.dota.settings import DotaNotifsSettings
-    from cogs.fpc.lol.settings import LoLNotifsSettings
+    from exts.fpc.dota.settings import DotaNotifsSettings
+    from exts.fpc.lol.settings import LoLNotifsSettings
     from utils import AluBot
 
 

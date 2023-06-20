@@ -13,7 +13,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus
 
-from utils import AluCog, aluloop, const
+from utils import AluCog, aluloop, checks, const, errors
 
 log = logging.getLogger(__name__)
 
@@ -28,19 +28,21 @@ class BetaTestCog(AluCog, name='BetaTest'):
 
     @aluloop(count=1)
     async def beta_task(self):
-        return
+        pass
 
     @commands.command()
     async def ceta(self, ctx: AluContext):
+        """xds"""
+        raise errors.ErroneousUsage('xd')
         await ctx.send('ceta')
 
-    @commands.hybrid_command()
-    async def heta(self, ctx: AluContext):
-        await ctx.send('heta')
+    # @commands.hybrid_command()
+    # async def heta(self, ctx: AluContext):
+    #     await ctx.reply('heta')
 
-    @app_commands.command()
-    async def seta(self, ntr: discord.Interaction):
-        await ntr.response.send_message('seta')
+    # @app_commands.command()
+    # async def seta(self, ntr: discord.Interaction):
+    #     await ntr.response.send_message('seta')
 
 
 async def setup(bot: AluBot):

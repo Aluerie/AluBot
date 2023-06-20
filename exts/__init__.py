@@ -69,19 +69,19 @@ def get_extensions(test: bool) -> Tuple[str, ...]:
         tuple of extensions for bot to load
     """
     if test and not IGNORE_TEST:
-        return tuple(f'cogs.{x}' if x not in INITIAL_EXTENSIONS else x for x in TEST_EXTENSIONS)
+        return tuple(f'exts.{x}' if x not in INITIAL_EXTENSIONS else x for x in TEST_EXTENSIONS)
     else:
-        all_folders = [f.name for f in os.scandir('cogs') if f.is_dir() if not f.name.startswith('_')]
+        all_folders = [f.name for f in os.scandir('exts') if f.is_dir() if not f.name.startswith('_')]
 
         cog_category_folders = [x for x in all_folders if x not in MY_PACKAGES]
         uncategorised_extensions = INITIAL_EXTENSIONS + tuple(
-            f'cogs.{x}' for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS
+            f'exts.{x}' for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS
         )
 
         categorised_extensions = tuple(
             module.name
             for sf in cog_category_folders
-            for module in iter_modules(path=[f'cogs/{sf}'], prefix=f'cogs.{sf}.')
+            for module in iter_modules(path=[f'exts/{sf}'], prefix=f'exts.{sf}.')
             if not module.name.rsplit('.', 1)[-1].startswith('_')
         )
 

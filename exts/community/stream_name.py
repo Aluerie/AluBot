@@ -6,8 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from utils import AluCog
-from utils.const import Colour, Emote, Guild
+from utils import AluCog, const
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext
@@ -15,7 +14,7 @@ if TYPE_CHECKING:
 ORIGINAL_NAME = '\N{CINEMA}streaming_room'
 
 
-class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=Emote.peepoMovie):
+class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=const.Emote.peepoMovie):
     """Change streaming room title
 
     Get folks ready to watch your stream with a fancy title \
@@ -56,7 +55,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
                 await before.channel.send(embed=e)
                 return await after.channel.send(embed=e)
 
-    @app_commands.guilds(Guild.community)
+    @app_commands.guilds(const.Guild.community)
     @commands.hybrid_group(name='streaming-room', aliases=['stream'])
     async def streaming_room(self, ctx: AluGuildContext):
         """Group command about Dota, for actual commands use it together with subcommands"""
@@ -71,7 +70,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
         """Sets title for **#\N{CINEMA}streaming_room** so people know what you are streaming"""
         new_name = f'\N{CINEMA}{text}'
         await self.bot.community.stream_room.edit(name=new_name)
-        e = discord.Embed(description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=Colour.prpl())
+        e = discord.Embed(description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=const.Colour.prpl())
         await ctx.reply(embed=e)
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
@@ -79,7 +78,7 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=E
     async def reset(self, ctx: AluGuildContext):
         """Reset **#\N{CINEMA}streaming_room** title ;"""
         await self.bot.community.stream_room.edit(name=ORIGINAL_NAME)
-        e = discord.Embed(description=f'Title of **#{ORIGINAL_NAME}** has been reset', colour=Colour.prpl())
+        e = discord.Embed(description=f'Title of **#{ORIGINAL_NAME}** has been reset', colour=const.Colour.prpl())
         await ctx.reply(embed=e)
 
     @tasks.loop(count=1)

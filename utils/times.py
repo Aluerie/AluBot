@@ -18,6 +18,8 @@ from dateutil.relativedelta import relativedelta
 from discord import app_commands
 from discord.ext import commands
 
+from .bases import AluBotException
+
 if TYPE_CHECKING:
     from typing_extensions import Self
 
@@ -106,7 +108,7 @@ class FutureTime(Time):
             raise commands.BadArgument('This time is in the past')
 
 
-class BadTimeTransform(app_commands.AppCommandError):
+class BadTimeTransform(app_commands.AppCommandError, AluBotException):
     pass
 
 

@@ -114,7 +114,7 @@ class AluBot(commands.Bot):
             prefix = self.prefixes.get(message.guild.id, self.main_prefix)
         return commands.when_mentioned_or(prefix, "/")(bot, message)
 
-    async def add_cog(self, cog: AluCog, category: Optional[ExtCategory] = None):
+    async def add_cog(self, cog: AluCog):
         await super().add_cog(cog)
 
         self.ext_categories.setdefault(cog.category, []).append(cog)

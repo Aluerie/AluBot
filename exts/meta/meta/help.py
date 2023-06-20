@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, NamedTuple, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence
 
 import discord
 from discord import app_commands
@@ -10,6 +10,7 @@ from utils import AluCog, AluContext, ExtCategory, aluloop, const, pagination
 
 if TYPE_CHECKING:
     from utils import AluBot
+
 
 class HelpPageData(NamedTuple):
     cog: AluCog | Literal['front_page']
@@ -31,7 +32,7 @@ class AluHelpPages(pagination.Paginator):
 class AluHelp(commands.HelpCommand):
     context: AluContext
 
-    def __init__(self, starting_category: int  = 0) -> None:
+    def __init__(self, starting_category: int = 0) -> None:
         super().__init__(
             verify_checks=False,  # TODO: idk we need to decide this
             command_attrs={
@@ -41,8 +42,8 @@ class AluHelp(commands.HelpCommand):
             },
         )
         self.starting_category: int = starting_category
-    
-    def get_bot_mapping(self) -> Dict[Optional[ExtCategory], Dict[AluCog, List[commands.Command]]]:
+
+    def get_bot_mapping(self) -> Dict[Optional[ExtCategory], Dict[AluCog | commands.Cog, List[commands.Command]]]:
         """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
 
         # TODO: include solo slash commands and Context Menu commands.
@@ -52,12 +53,14 @@ class AluHelp(commands.HelpCommand):
         }
         return dict(sorted(mapping.items()))
 
-    async def send_bot_help(self, mapping: Dict[Optional[ExtCategory], Dict[AluCog, List[commands.Command]]]):
+    async def send_bot_help(
+        self, mapping: Dict[Optional[ExtCategory], Dict[AluCog | commands.Cog, List[commands.Command]]]
+    ):
         await self.context.typing()
 
         print(mapping)
         help_data: List[HelpPageData] = [HelpPageData(cog='front_page', cmds=None, cog_page=0)]
-        
+
         await self.context.reply('wowzers')
 
 

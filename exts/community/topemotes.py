@@ -84,9 +84,6 @@ class EmoteAnalysis(CommunityCog, name='Emote stats'):
     The bot keeps data for one month.
     """
 
-    def __init__(self, bot):
-        self.bot: AluBot = bot
-
     @property
     def help_emote(self) -> discord.PartialEmoji:
         return discord.PartialEmoji.from_str(const.Emote.peepoComfy)

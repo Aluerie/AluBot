@@ -26,7 +26,7 @@ class ChannelWatcher(HideoutCog):
         *args,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(bot, *args, **kwargs)
         self.bot: AluBot = bot
         self.db_column: str = db_column
         self.sleep_time: int = sleep_time

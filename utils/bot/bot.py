@@ -77,7 +77,7 @@ class AluBot(commands.Bot):
         self.config = config
         self.formats = formats
 
-        self.ext_categories: Dict[Optional[ExtCategory], List[AluCog]] = {}
+        self.ext_categories: Dict[Optional[ExtCategory], List[AluCog | commands.Cog]] = {}
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
             timedelta=datetime.timedelta(days=7)
@@ -114,9 +114,10 @@ class AluBot(commands.Bot):
             prefix = self.prefixes.get(message.guild.id, self.main_prefix)
         return commands.when_mentioned_or(prefix, "/")(bot, message)
 
-    async def add_cog(self, cog: AluCog):
+    async def add_cog(self, cog: AluCog | commands.Cog):
         await super().add_cog(cog)
-        category: Optional[ExtCategory] = getattr(cog, 'category')
+        # jishaku does not have a category thus we have this weird typehint
+        category: Optional[ExtCategory] = getattr(cog, 'category', None)
         self.ext_categories.setdefault(category, []).append(cog)
 
     async def on_ready(self):

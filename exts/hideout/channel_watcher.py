@@ -6,13 +6,15 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog, const
+from utils import const
+
+from ._category import HideoutCog
 
 if TYPE_CHECKING:
     from utils import AluBot
 
 
-class ChannelWatcher(AluCog):
+class ChannelWatcher(HideoutCog):
     def __init__(
         self,
         bot: AluBot,
@@ -21,7 +23,10 @@ class ChannelWatcher(AluCog):
         watch_channel_id: int,
         ping_channel_id: int,
         role_mention: str = '',
+        *args,
+        **kwargs,
     ):
+        super().__init__(*args, **kwargs)
         self.bot: AluBot = bot
         self.db_column: str = db_column
         self.sleep_time: int = sleep_time

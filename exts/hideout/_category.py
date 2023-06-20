@@ -3,7 +3,7 @@ from discord import Embed
 from utils import AluCog, ExtCategory, const
 
 
-class InfoCategory(ExtCategory, name='Information', emote=const.Emote.KURU):
+class HideoutCategory(ExtCategory, name='Hideout', emote=const.Emote.KURU):
     @property
     def help_embed(self) -> Embed:
         e = Embed(color=const.Colour.prpl())
@@ -11,9 +11,9 @@ class InfoCategory(ExtCategory, name='Information', emote=const.Emote.KURU):
         return e
 
 
-category = InfoCategory()
+category = HideoutCategory()
 
 
-class InfoCog(AluCog):
+class HideoutCog(AluCog):
     def __init__(self, bot):
         super().__init__(bot, category=category)

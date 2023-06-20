@@ -14,6 +14,6 @@ class CommunityCategory(ExtCategory, name='Aluerie\'s Community', emote=const.Em
 category = CommunityCategory()
 
 
-class CategoryACog(AluCog):
+class CommunityCog(AluCog):
     def __init__(self, bot):
         super().__init__(bot, category=category)

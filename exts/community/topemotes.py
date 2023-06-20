@@ -8,9 +8,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 
-from utils.const import Colour, Emote, Rgx
+from utils import const
 from utils.formats import indent
 from utils.pagination import EnumeratedPages
+
+from ._category import CommunityCog
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -68,7 +70,7 @@ async def topemotes_job(ctx: AluContext, mode):
         new_array,
         per_page=split_size,
         no_enumeration=True,
-        colour=Colour.prpl(),
+        colour=const.Colour.prpl(),
         title="Top emotes used last month",
         footer_text=f'With love, {ctx.bot.user.display_name}',
         description_prefix=f'`{"Emote".ljust(max_length + 4, " ")}Usages`\n',
@@ -76,7 +78,7 @@ async def topemotes_job(ctx: AluContext, mode):
     await pgs.start()
 
 
-class EmoteAnalysis(commands.Cog, name='Emote stats'):
+class EmoteAnalysis(CommunityCog, name='Emote stats'):
     """See stats on emote usage in Aluerie's server
 
     The bot keeps data for one month.
@@ -87,7 +89,7 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
 
     @property
     def help_emote(self) -> discord.PartialEmoji:
-        return discord.PartialEmoji.from_str(Emote.peepoComfy)
+        return discord.PartialEmoji.from_str(const.Emote.peepoComfy)
 
     def cog_load(self) -> None:
         self.daily_emote_shift.start()
@@ -101,7 +103,7 @@ class EmoteAnalysis(commands.Cog, name='Emote stats'):
         #    return
 
         if not msg.author.bot or msg.webhook_id:
-            custom_emojis_ids = re.findall(Rgx.emote_stats_ids, msg.content)  # they are in str tho
+            custom_emojis_ids = re.findall(const.Rgx.emote_stats_ids, msg.content)  # they are in str tho
             custom_emojis_ids = set(list(map(int, custom_emojis_ids)))
 
             for emote_id in custom_emojis_ids:

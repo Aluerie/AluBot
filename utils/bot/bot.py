@@ -116,8 +116,8 @@ class AluBot(commands.Bot):
 
     async def add_cog(self, cog: AluCog):
         await super().add_cog(cog)
-
-        self.ext_categories.setdefault(cog.category, []).append(cog)
+        category: Optional[ExtCategory] = getattr(cog, 'category')
+        self.ext_categories.setdefault(category, []).append(cog)
 
     async def on_ready(self):
         if not hasattr(self, 'launch_time'):

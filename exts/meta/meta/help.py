@@ -45,7 +45,7 @@ class HelpPageSource(menus.ListPageSource):
 
             desc = cog.description + '\n\n'
             desc += chr(10).join(['\n'.join(await menu.help_cmd.get_the_answer(c)) for c in cmds])
-            e.description = desc
+            e.description = desc[:4000]
             return e
 
 

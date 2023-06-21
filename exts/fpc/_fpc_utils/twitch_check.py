@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from discord.ext import tasks
 
-from utils import AluCog
+from .._category import FPCCog
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 __all__ = ('TwitchAccountCheckBase',)
 
 
-class TwitchAccountCheckBase(AluCog):
+class TwitchAccountCheckBase(FPCCog):
     def __init__(self, bot: AluBot, table_name: str, day: int, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
         self.table_name: str = table_name

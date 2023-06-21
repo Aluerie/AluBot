@@ -10,6 +10,7 @@ from discord.ext import commands
 from utils import AluCog, AluGuildContext, const
 from utils.pagination import EnumeratedPages
 
+from .._category import FPCCog
 from .views import CharacterPages, CharacterPageSource
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 __all__ = ('FPCSettingsBase',)
 
 
-class FPCSettingsBase(AluCog):
+class FPCSettingsBase(FPCCog):
     """Base class for cogs representing FPC (Favourite Player+Character) feature
     for different games:
 
@@ -60,7 +61,7 @@ class FPCSettingsBase(AluCog):
     def __init__(
         self,
         bot: AluBot,
-        # *args,
+        *args,
         colour: discord.Colour,
         game: str,
         game_mention: str,
@@ -70,9 +71,9 @@ class FPCSettingsBase(AluCog):
         character_id_by_name: Callable[[str], Awaitable[int]],
         all_character_names: Callable[[], Awaitable[List[str]]],
         character_word_plural: str,
-        # **kwargs,
+        **kwargs,
     ) -> None:
-        super().__init__(bot)  # , *args, **kwargs)
+        super().__init__(bot, *args, **kwargs)
         self.colour: discord.Colour = colour
         self.game: str = game
         self.game_mention: str = game_mention

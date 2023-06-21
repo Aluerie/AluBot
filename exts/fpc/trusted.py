@@ -6,8 +6,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, const, checks
+from utils import checks, const
 from utils.lol.const import LiteralServerUpper
+
+from ._category import FPCCog
 
 if TYPE_CHECKING:
     from exts.fpc.dota.settings import DotaNotifsSettings
@@ -15,13 +17,12 @@ if TYPE_CHECKING:
     from utils import AluBot
 
 
-class FPCTrusted(AluCog):
-
+class FPCTrusted(FPCCog):
     db = app_commands.Group(
         name="database",
         description="Group command about managing database",
         guild_ids=const.TRUSTED_GUILDS,
-        default_permissions=discord.Permissions(manage_guild=True)
+        default_permissions=discord.Permissions(manage_guild=True),
     )
 
     db_dota = app_commands.Group(

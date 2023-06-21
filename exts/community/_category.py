@@ -1,13 +1,10 @@
-from discord import Embed
+from utils import AluCog, ExtCategory, const
 
-from utils import AluCog, CategoryPage, const
-
-
-class CommunityCategory(CategoryPage, name='Aluerie\'s Community', emote=const.Emote.KURU):
-    ...
-
-
-category = CommunityCategory()
+category = ExtCategory(
+    name='Aluerie\'s Community',
+    emote=const.Emote.peepoComfy,
+    description='Community',
+)
 
 
 class CommunityCog(AluCog):

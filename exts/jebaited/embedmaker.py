@@ -15,6 +15,8 @@ from discord.ext import commands
 
 from utils import AluCog, const
 
+from ._category import JebaitedCog
+
 if TYPE_CHECKING:
     from utils import AluContext
 
@@ -36,7 +38,7 @@ class StartView(discord.ui.View):
         await ntr.response.send_message("hello")
 
 
-class EmbedMaker(AluCog, name="Embed Maker", emote=const.Emote.DankZzz):
+class EmbedMaker(JebaitedCog, name="Embed Maker", emote=const.Emote.DankZzz):
     @commands.hybrid_group(name="embed")
     async def embed_(self, ctx: AluContext):
         """Group command about Embed Build, for actual commands use it together with subcommands"""

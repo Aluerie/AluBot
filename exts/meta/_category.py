@@ -1,32 +1,13 @@
-from __future__ import annotations
+from discord import SelectOption
 
-from typing import TYPE_CHECKING
+from utils import AluCog, const
 
-from discord import Embed
-
-from utils import AluCog, CategoryPage, const
-
-if TYPE_CHECKING:
-    from utils import AluBot
-
-
-class MetaCategory(
-    CategoryPage,
-    name='About',
-    emote=const.Emote.KURU,
-):
-    def help_embed(self, embed: Embed, bot: AluBot) -> Embed:
-        e = super().help_embed(embed, bot)
-        e.description = (
-            f'{bot.user.name} is an ultimate multi-purpose bot !\n\n' 'Use dropdown menu below to select a category.'
-        )
-        e.add_field(name=f'{bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
-        e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
-        e.add_field(name='Bot Owner', value=f'@{bot.owner}')
-        return e
-
-
-category = MetaCategory()
+category = SelectOption(
+    label='About',
+    emoji=const.Emote.KURU,
+    description='Index category of this menu',
+    value=__name__,
+)
 
 
 class MetaCog(AluCog):

@@ -23,14 +23,14 @@ from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 
-from .. import AluContext, ConfirmationView, cache, const, formats, none_category
+from .. import AluContext, ConfirmationView, ExtCategory, cache, const, formats, none_category
 from .cmd_cache import MyCommandTree
 from .intents_perms import intents
 
 if TYPE_CHECKING:
     from exts.reminders.reminders import Reminder
 
-    from .. import AluCog, CategoryPage
+    from .. import AluCog
 
 
 __all__ = ('AluBot',)
@@ -78,8 +78,8 @@ class AluBot(commands.Bot):
         self.config = config
         self.formats = formats
 
-        self.ext_categories: Dict[CategoryPage, List[AluCog | commands.Cog]] = {}
-        # self.ext_categories: Dict[str, List[AluCog | commands.Cog]] = {}
+        # self.category_lookup: Dict[str, discord.SelectOption] = dict()
+        self.category_cogs: Dict[ExtCategory, List[AluCog | commands.Cog]] = dict()
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
             timedelta=datetime.timedelta(days=7)
@@ -121,10 +121,10 @@ class AluBot(commands.Bot):
 
         # jishaku does not have a category thus we have this weird typehint
         category = getattr(cog, 'category', None)
-        if not category:
+        if not category or not isinstance(category, ExtCategory):
             category = none_category
-
-        self.ext_categories.setdefault(category, []).append(cog)
+        
+        self.category_cogs.setdefault(category, []).append(cog)
 
     # __init__ version
     # async def add_cog(self, cog: AluCog | commands.Cog):

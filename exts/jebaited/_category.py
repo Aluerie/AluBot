@@ -1,13 +1,10 @@
-from discord import Embed
+from utils import AluCog, ExtCategory, const
 
-from utils import AluCog, CategoryPage, const
-
-
-class JebaitedCategory(CategoryPage, name='Jebaited', emote=const.Emote.KURU):
-    ...
-
-
-category = JebaitedCategory()
+category = ExtCategory(
+    name='Jebaited',
+    emote=const.Emote.KURU,
+    description='Jebaited',
+)
 
 
 class JebaitedCog(AluCog):

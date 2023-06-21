@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence, TypedDict
+import itertools
+from typing import TYPE_CHECKING, Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence
 
 import discord
 from discord import app_commands
 from discord.ext import commands, menus
 
-from utils import AluCog, AluContext, CategoryPage, aluloop, const, pagination
+from utils import AluCog, AluContext, ExtCategory, aluloop, const, pagination
 from utils.formats import human_timedelta
 
 from .._category import MetaCog
@@ -15,38 +16,40 @@ if TYPE_CHECKING:
     from utils import AluBot
 
 
-class PagesDict(TypedDict):
-    category: CategoryPage
-    cog_pages: List[CogPage]
-
-
 class CogPage(NamedTuple):
-    cog: AluCog | commands.Cog
+    cog: Literal['_front_page'] | AluCog | commands.Cog  # dirty way to handle front page
     cmds: Sequence[commands.Command]
     page_num: int  # page per cog so mostly 0
 
 
 class HelpPageSource(menus.ListPageSource):
-    def __init__(self, data: PagesDict):
-        entries = [data['category']] + data['cog_pages']
+    def __init__(self, data: Dict[ExtCategory, List[CogPage]]):
+        entries = list(itertools.chain.from_iterable(data.values()))
         super().__init__(entries=entries, per_page=1)
 
-    async def format_page(self, menu: HelpPages, entries: CategoryPage | CogPage):
+    async def format_page(self, menu: HelpPages, entries: CogPage):
+        cog, cmds, page_num = entries
+
         e = discord.Embed(colour=const.Colour.prpl())
         e.set_footer(text=f'With love, {menu.help_cmd.context.bot.user.display_name}')
 
-        if isinstance(entries, CategoryPage):
-            e = entries.help_embed(e, menu.ctx_ntr.client)
+        if cog == '_front_page':
+            bot = menu.ctx_ntr.client
+            e.description = (
+                f'{bot.user.name} is an ultimate multi-purpose bot !\n\n'
+                'Use dropdown menu below to select a category.'
+            )
+            e.add_field(name=f'{bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
+            e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
+            e.add_field(name='Bot Owner', value=f'@{bot.owner}')
             return e
-        elif isinstance(entries, CogPage):
-            cog, cmds, page_num = entries
 
-            e.title = cog.qualified_name
+        e.title = cog.qualified_name
 
-            desc = cog.description + '\n\n'
-            desc += chr(10).join(['\n'.join(await menu.help_cmd.get_the_answer(c)) for c in cmds])
-            e.description = desc[:4000]
-            return e
+        desc = cog.description + '\n\n'
+        desc += chr(10).join(['\n'.join(await menu.help_cmd.get_the_answer(c)) for c in cmds])
+        e.description = desc[:4000]  # idk #TODO: this is bad
+        return e
 
 
 class HelpSelect(discord.ui.Select):
@@ -57,21 +60,23 @@ class HelpSelect(discord.ui.Select):
         self.__fill_options()
 
     def __fill_options(self) -> None:
-        categories = {cat: pages['category'] for cat, pages in self.paginator.help_data.items()}
-
-        categories = dict(sorted(categories.items(), key=lambda x: categories[x[0]].name))
-
-        for key, category in categories.items():
+        pages_per_category: Mapping[ExtCategory, int] = {}
+        total = 0
+        for category, cog_pages in self.paginator.help_data.items():
+            pages_per_category[category] = total
+            total += len(cog_pages)
+        
+        for category, starting_page in pages_per_category.items():
             self.add_option(
                 label=category.name,
                 emoji=category.emote,
-                description='...',
-                value=key,
+                description=category.description,
+                value=str(starting_page),
             )
 
     async def callback(self, ntr: discord.Interaction[AluBot]):
-        pages = HelpPages(ntr, self.paginator.help_cmd, self.paginator.help_data, self.values[0])
-        await pages.start(edit_response=True)
+        page_to_open = int(self.values[0])
+        await self.paginator.show_page(ntr, page_to_open)
 
 
 class HelpPages(pagination.Paginator):
@@ -81,13 +86,11 @@ class HelpPages(pagination.Paginator):
         self,
         ctx: AluContext | discord.Interaction[AluBot],
         help_cmd: AluHelp,
-        help_data: Dict[str, PagesDict],
-        category: str,
+        help_data: Dict[ExtCategory, List[CogPage]],
     ):
         self.help_cmd: AluHelp = help_cmd
-        self.help_data: Dict[str, PagesDict] = help_data
-        self.category: str = category
-        super().__init__(ctx, HelpPageSource(help_data[category]))
+        self.help_data: Dict[ExtCategory, List[CogPage]] = help_data
+        super().__init__(ctx, HelpPageSource(help_data))
 
         self.add_item(HelpSelect(self))
 
@@ -96,7 +99,7 @@ class AluHelp(commands.HelpCommand):
     context: AluContext
 
     # todo: idk
-    def __init__(self, starting_category: str = 'exts.meta._category') -> None:
+    def __init__(self) -> None:
         super().__init__(
             verify_checks=False,  # TODO: idk we need to decide this
             command_attrs={
@@ -105,7 +108,6 @@ class AluHelp(commands.HelpCommand):
                 'usage': '[command/section]',
             },
         )
-        self.starting_category: str = starting_category
 
     async def get_the_answer(self, c, answer=None, deep=0):
         if answer is None:
@@ -155,11 +157,11 @@ class AluHelp(commands.HelpCommand):
 
         return f'\N{BLACK CIRCLE} {signature()}{aliases()}{cd()}\n{check()}{help_str()}'
 
-    def get_bot_mapping(self) -> Dict[CategoryPage, Dict[AluCog | commands.Cog, List[commands.Command]]]:
+    def get_bot_mapping(self) -> Dict[ExtCategory, Dict[AluCog | commands.Cog, List[commands.Command]]]:
         """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
 
         # TODO: include solo slash commands and Context Menu commands.
-        categories = self.context.bot.ext_categories
+        categories = self.context.bot.category_cogs
 
         mapping = {category: {cog: cog.get_commands() for cog in cog_list} for category, cog_list in categories.items()}
         # todo: think how to sort front page to front
@@ -167,22 +169,21 @@ class AluHelp(commands.HelpCommand):
 
     async def send_bot_help(
         self,
-        mapping: Dict[CategoryPage, Dict[AluCog | commands.Cog, List[commands.Command]]],
+        mapping: Dict[ExtCategory, Dict[AluCog | commands.Cog, List[commands.Command]]],
     ):
         await self.context.typing()
 
-        help_data: Dict[str, PagesDict] = dict()
-        for category, cog_cmd_dict in mapping.items():
-            cat_value = category.value
-            help_data[cat_value] = {'category': category, 'cog_pages': []}
+        index_category = ExtCategory(name='Index page', emote='\N{SWAN}', description='Index page')
+        index_pages = [CogPage(cog='_front_page', cmds=[], page_num=0)]
+        help_data: Dict[ExtCategory, List[CogPage]] = {index_category: index_pages}
 
+        for category, cog_cmd_dict in mapping.items():
             for cog, cmds in cog_cmd_dict.items():
                 filtered = await self.filter_commands(cmds, sort=True)
                 # if filtered:
-                help_data[cat_value]['cog_pages'].append(CogPage(cog=cog, cmds=filtered, page_num=0))
+                help_data.setdefault(category, []).append(CogPage(cog=cog, cmds=filtered, page_num=0))
 
-        print(help_data)
-        pages = HelpPages(self.context, self, help_data, self.starting_category)
+        pages = HelpPages(self.context, self, help_data)
         await pages.start()
 
 

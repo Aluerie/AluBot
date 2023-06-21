@@ -90,14 +90,16 @@ class CategoryPage:
         return self.__class__.__module__
 
 
-class NoneCategory(CategoryPage, name='No category', emote='\N{THINKING FACE}'):
-    @property
-    def help_embed(self) -> discord.Embed:
-        e = discord.Embed()
-        e.title = self.name
-        e.description = 'The sections/commands there do not have a category assigned to them'
-        e.set_footer(text='Maybe intended. maybe dev fault, maybe beta^tm features.')
-        return e
+class NoneCategory(
+    CategoryPage,
+    name='No category',
+    emote='\N{THINKING FACE}',
+    description=(
+        'The sections/commands there do not have a category assigned to them.\n'
+        'Maybe intended. maybe dev fault, maybe beta^tm features.'
+    ),
+):
+    ...
 
 
 none_category = NoneCategory()

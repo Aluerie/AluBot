@@ -34,18 +34,17 @@ class HelpPageSource(menus.ListPageSource):
     async def format_page(self, menu: HelpPages, entries: CategoryPage | CogPage):
         e = discord.Embed(colour=const.Colour.prpl())
         e.set_footer(text=f'With love, {menu.help_cmd.context.bot.user.display_name}')
-        
+
         if isinstance(entries, CategoryPage):
             e = entries.help_embed(e, menu.ctx_ntr.client)
             return e
         elif isinstance(entries, CogPage):
             cog, cmds, page_num = entries
 
-            
             e.title = cog.qualified_name
 
             desc = cog.description + '\n\n'
-            desc += '\n'.join(menu.help_cmd.get_command_signature(c) for c in cmds)
+            desc += chr(10).join(['\n'.join(await menu.help_cmd.get_the_answer(c)) for c in cmds])
             e.description = desc
             return e
 
@@ -107,6 +106,16 @@ class AluHelp(commands.HelpCommand):
             },
         )
         self.starting_category: str = starting_category
+
+    async def get_the_answer(self, c, answer: list[str] = [], deep=0) -> List[str]:
+        if getattr(c, 'commands', None) is not None:
+            for x in await self.filter_commands(c.commands, sort=True):
+                await self.get_the_answer(x, answer=answer, deep=deep + 1)
+            if deep > 0:
+                answer.append('')
+        else:
+            answer.append(self.get_command_signature(c))
+        return answer
 
     def get_command_signature(self, command: commands.Command) -> str:
         def signature():

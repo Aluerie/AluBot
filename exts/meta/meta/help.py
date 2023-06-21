@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence
+from typing import TYPE_CHECKING, Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence, Tuple
 
 import discord
 from discord import app_commands
@@ -60,15 +60,16 @@ class HelpSelect(discord.ui.Select):
         self.__fill_options()
 
     def __fill_options(self) -> None:
-        pages_per_category: Mapping[ExtCategory, int] = {}
+        pages_per_category: Mapping[ExtCategory, Tuple[int, int]] = {}
         total = 0
         for category, cog_pages in self.paginator.help_data.items():
-            pages_per_category[category] = total
+            total_cmds = sum(len(i.cmds) for i in cog_pages)
+            pages_per_category[category] = total, total_cmds
             total += len(cog_pages)
-        
-        for category, starting_page in pages_per_category.items():
+
+        for category, (starting_page, total_commands) in pages_per_category.items():
             self.add_option(
-                label=category.name,
+                label=f'{category.name} ({total_commands})...page {starting_page}',
                 emoji=category.emote,
                 description=category.description,
                 value=str(starting_page),

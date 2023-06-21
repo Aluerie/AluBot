@@ -23,7 +23,7 @@ class UmbraSyncCommandCog(DevBaseCog):
     their very precious `?tag ass` on me in discord.py server.
     """
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def sync(
         self,
         ctx: AluContext,

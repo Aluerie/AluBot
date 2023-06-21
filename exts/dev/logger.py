@@ -10,7 +10,7 @@ import discord
 from discord.ext import tasks
 
 from utils import formats
-from ._base import DevBaseCog
+from ._category import DevBaseCog
 
 if TYPE_CHECKING:
     from utils import AluBot

@@ -107,8 +107,12 @@ class AluHelp(commands.HelpCommand):
         )
         self.starting_category: str = starting_category
 
-    async def get_the_answer(self, c, answer: list[str] = [], deep=0) -> List[str]:
+    async def get_the_answer(self, c, answer=None, deep=0):
+        if answer is None:
+            answer = []
         if getattr(c, 'commands', None) is not None:
+            if c.brief == const.Emote.slash:
+                answer.append(self.get_command_signature(c))
             for x in await self.filter_commands(c.commands, sort=True):
                 await self.get_the_answer(x, answer=answer, deep=deep + 1)
             if deep > 0:

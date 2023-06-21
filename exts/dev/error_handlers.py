@@ -9,7 +9,7 @@ from discord.ext import commands
 
 from utils import AluContext, const, errors
 
-from ._base import DevBaseCog
+from ._category import DevBaseCog
 
 if TYPE_CHECKING:
     from utils import AluBot

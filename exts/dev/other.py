@@ -9,7 +9,7 @@ from discord.ext import commands
 from exts import INITIAL_EXTENSIONS, get_extensions
 from utils import AluContext, const
 
-from ._base import DevBaseCog
+from ._category import DevBaseCog
 
 if TYPE_CHECKING:
     pass

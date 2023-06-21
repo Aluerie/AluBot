@@ -81,7 +81,7 @@ class Other(AluCog):
     ):
         """Send `text` to `#channel` from bot's name.
 
-        For text command you can also reply to a message without specifying text`for bot to copy it.
+        For text command you can also reply to a message without specifying text for bot to copy it.
 
         Parameters
         ----------

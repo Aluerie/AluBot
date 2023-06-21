@@ -8,11 +8,11 @@ from .twitch_check import DotaTwitchAccountCheck
 
 
 class Dota2FPC(
-    FPCCog,
     DotaNotifs,
     DotaPostMatchEdit,
     DotaNotifsSettings,
     DotaTwitchAccountCheck,
+    FPCCog,
     emote=const.Emote.DankLove,
 ):
     """

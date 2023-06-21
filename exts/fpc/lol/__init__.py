@@ -9,12 +9,12 @@ from .twitch_check import LoLTwitchAccountCheck
 
 
 class LoLFPC(
-    FPCCog,
     LoLNotifs,
     LoLFeedPostMatchEdit,
     LoLNotifsSettings,
     LoLSummonerNameCheck,
     LoLTwitchAccountCheck,
+    FPCCog,
     emote=const.Emote.PogChampPepe,
 ):
     """

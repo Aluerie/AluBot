@@ -79,7 +79,7 @@ class CategoryPage:
         cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
         cls.description = description
 
-    def help_embed(self, embed: discord.Embed) -> discord.Embed:
+    def help_embed(self, embed: discord.Embed, bot: Optional[AluBot] = None) -> discord.Embed:
         e = embed
         e.title = f'{self.name} {self.emote}'
         e.description = self.description

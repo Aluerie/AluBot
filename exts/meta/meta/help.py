@@ -36,7 +36,7 @@ class HelpPageSource(menus.ListPageSource):
         e.set_footer(text=f'With love, {menu.help_cmd.context.bot.user.display_name}')
         
         if isinstance(entries, CategoryPage):
-            e = entries.help_embed(e)
+            e = entries.help_embed(e, menu.ctx_ntr.client)
             return e
         elif isinstance(entries, CogPage):
             cog, cmds, page_num = entries

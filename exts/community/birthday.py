@@ -16,6 +16,8 @@ from numpy.random import choice
 from utils import AluCog, const
 from utils.pagination import EnumeratedPages
 
+from ._category import CommunityCog
+
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext
 
@@ -107,7 +109,7 @@ class SetBirthdayFlags(commands.FlagConverter, case_insensitive=True):
     timezone: Optional[str]
 
 
-class Birthday(AluCog, emote=const.Emote.peepoHappyDank):
+class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     """Set your birthday and get congratulations from the bot.
 
     There is a special role in Eileen's server \

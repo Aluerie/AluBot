@@ -13,6 +13,8 @@ from utils.const import Colour, Emote, Guild
 from utils.formats import indent, ordinal
 from utils.pagination import EnumeratedPages
 
+from ._category import CommunityCog
+
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext
 
@@ -116,7 +118,7 @@ async def rank_user_cmd(ntr: discord.Interaction[AluBot], member: discord.Member
     await ntr.response.send_message(file=await rank_work(ntr, member), ephemeral=True)
 
 
-class ExperienceSystem(AluCog, name='Profile'):
+class ExperienceSystem(CommunityCog, name='Profile'):
     """Commands about member profiles
 
     There is a profile system in Irene\'s server: levelling experience,

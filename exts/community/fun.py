@@ -6,13 +6,15 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from utils import AluCog, const
+from utils import const
+
+from ._category import CommunityCog
 
 if TYPE_CHECKING:
     pass
 
 
-class CommunityFun(AluCog):
+class CommunityFun(CommunityCog):
     @staticmethod
     def non_community_check(message: discord.Message):
         if message.author.id in const.MY_BOTS:

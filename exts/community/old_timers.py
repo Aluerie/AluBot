@@ -9,6 +9,8 @@ from numpy.random import randint, seed
 from utils import AluCog
 from utils.const import DIGITS, Channel, Colour, Emote, Guild, Role, User
 
+from ._category import CommunityCog
+
 if TYPE_CHECKING:
     from asyncpg import Pool
 
@@ -119,7 +121,7 @@ async def get_rule_text(pool: Pool):
     return await get_the_thing(daily_reminders_txt, 'curr_timer', pool)
 
 
-class OldTimers(AluCog):
+class OldTimers(CommunityCog):
     async def cog_load(self) -> None:
         self.daily_reminders.start()
         self.daily_important_reminders.start()

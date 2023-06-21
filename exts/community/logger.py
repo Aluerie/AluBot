@@ -7,14 +7,16 @@ import discord
 import regex
 from discord.ext import commands, tasks
 
-from utils import AluCog, const
+from utils import const
 from utils.formats import inline_word_by_word_diff
+
+from ._category import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot
 
 
-class CommunityMemberLogging(AluCog):
+class CommunityMemberLogging(CommunityCog):
     async def cog_load(self) -> None:
         self.rolling_stones_check.start()
 
@@ -167,7 +169,7 @@ class CommunityMemberLogging(AluCog):
         await self.bot.wait_until_ready()
 
 
-class CommunityMessageLogging(AluCog):
+class CommunityMessageLogging(CommunityCog):
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if after.guild is None or after.guild.id != const.Guild.community:
@@ -205,7 +207,7 @@ class CommunityMessageLogging(AluCog):
         return await self.bot.community.logs.send(embed=e, files=files)
 
 
-class CommunityCommandLogging(AluCog):
+class CommunityCommandLogging(CommunityCog):
     ignored_users = [const.User.aluerie]
     included_guilds = [const.Guild.community]
 

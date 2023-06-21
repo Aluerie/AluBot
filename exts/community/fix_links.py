@@ -10,13 +10,15 @@ from discord import app_commands
 from discord.ext import commands
 
 from exts.utilities.fix_links import fix_link_worker
-from utils import AluCog, const, webhook, errors
+from utils import const, errors, webhook
+
+from ._category import CommunityCog
 
 if TYPE_CHECKING:
     pass
 
 
-class FixLinksCommunity(AluCog):
+class FixLinksCommunity(CommunityCog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.delete_mimic_ctx_menu = app_commands.ContextMenu(
@@ -32,7 +34,7 @@ class FixLinksCommunity(AluCog):
 
     async def delete_mimic_ctx_menu_callback(self, ntr: discord.Interaction[commands.Bot], message: discord.Message):
         if self.bot.mimic_message_user_mapping.get(message.id) == ntr.user.id:  # type: ignore # it's not int, it's Tuple[int, float]
-            #^ userid_ttl[0] represents both 
+            # ^ userid_ttl[0] represents both
             # the message in cache and belongs to the interaction author (user)
             await message.delete()
             e = discord.Embed(colour=const.Colour.prpl())

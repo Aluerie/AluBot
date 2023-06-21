@@ -8,6 +8,8 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from utils import AluCog, checks, const
 
+from ._category import CommunityCog
+
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
@@ -77,7 +79,7 @@ async def welcome_message(
     return content_text, e, bot.imgtools.img_to_file(image)
 
 
-class Welcome(AluCog):
+class Welcome(CommunityCog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         guild = self.bot.community.guild

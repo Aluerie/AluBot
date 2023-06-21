@@ -8,13 +8,15 @@ from discord.ext import commands, tasks
 
 from utils import AluCog, const
 
+from ._category import CommunityCog
+
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext
 
 ORIGINAL_NAME = '\N{CINEMA}streaming_room'
 
 
-class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=const.Emote.peepoMovie):
+class StreamChannelName(CommunityCog, name='\N{CINEMA}streaming_room Control', emote=const.Emote.peepoMovie):
     """Change streaming room title
 
     Get folks ready to watch your stream with a fancy title \
@@ -70,7 +72,9 @@ class StreamChannelName(AluCog, name='\N{CINEMA}streaming_room Control', emote=c
         """Sets title for **#\N{CINEMA}streaming_room** so people know what you are streaming"""
         new_name = f'\N{CINEMA}{text}'
         await self.bot.community.stream_room.edit(name=new_name)
-        e = discord.Embed(description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=const.Colour.prpl())
+        e = discord.Embed(
+            description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=const.Colour.prpl()
+        )
         await ctx.reply(embed=e)
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)

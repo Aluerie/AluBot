@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog
 from utils.const import Guild
+
+from ._category import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -16,7 +17,7 @@ MY_TWITCH_NAME = 'Aluerie'
 MY_TWITCH_ID = 180499648
 
 
-class TwitchCog(AluCog):
+class TwitchCog(CommunityCog):
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
         self.my_stream.start()

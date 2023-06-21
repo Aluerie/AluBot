@@ -8,11 +8,13 @@ from discord import app_commands
 
 from utils import AluCog, const
 
+from ._category import CommunityCog
+
 if TYPE_CHECKING:
     from utils import AluBot
 
 
-class Suggestions(AluCog, emote=const.Emote.peepoWTF):
+class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
     """Commands related to suggestions such as
 
     * setting up suggestion channel

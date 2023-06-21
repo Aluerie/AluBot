@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from utils import AluCog
 from utils.const import Colour, Emote
 from utils.formats import human_timedelta
+
+from ._category import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -94,7 +95,7 @@ class ConfView(discord.ui.View):
         await ntr.response.send_modal(ConfModal(title=btn.label))
 
 
-class Confession(AluCog):
+class Confession(CommunityCog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.bot.add_view(ConfView())  # Registers a View for persistent listening

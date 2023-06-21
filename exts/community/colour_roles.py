@@ -7,6 +7,8 @@ from discord.ext import commands
 
 from utils import AluCog, checks, const
 
+from ._category import CommunityCog
+
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext
 
@@ -71,7 +73,7 @@ class ColourRolesView(discord.ui.View):
         self.add_item(ColourRolesDropdown())
 
 
-class ColourRoles(AluCog):
+class ColourRoles(CommunityCog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.bot.add_view(ColourRolesView())

@@ -6,13 +6,15 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluGuildContext, const
+from utils import AluGuildContext, const
+
+from ._category import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot
 
 
-class ModerationCog(AluCog, emote=const.Emote.peepoPolice):
+class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
     """Commands to moderate servers with"""
 
     def __init__(self, *args, **kwargs):

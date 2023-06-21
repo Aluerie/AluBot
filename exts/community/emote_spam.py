@@ -9,14 +9,15 @@ import regex
 from discord.ext import commands, tasks
 from numpy.random import choice, randint
 
-from utils import AluCog
-from utils.const import Channel, Colour, Emote, Rgx
+from utils import AluCog, const
+
+from ._category import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot
 
 
-class EmoteSpam(AluCog):
+class EmoteSpam(CommunityCog):
     async def cog_load(self) -> None:
         self.emote_spam.start()
         self.offline_criminal_check.start()
@@ -26,7 +27,7 @@ class EmoteSpam(AluCog):
         self.offline_criminal_check.cancel()
 
     async def emote_spam_control(self, message: discord.Message, nqn_check: int = 1):
-        if message.channel.id == Channel.emote_spam:
+        if message.channel.id == const.Channel.emote_spam:
             channel: discord.TextChannel = message.channel  # type: ignore
             if len(message.embeds):
                 return await message.delete()
@@ -36,9 +37,9 @@ class EmoteSpam(AluCog):
             text = emoji.replace_emoji(message.content, replace='')
 
             # there is definitely a better way to regex it out
-            filters = [Rgx.whitespace, Rgx.emote_old, Rgx.nqn, Rgx.invis]
+            filters = [const.Rgx.whitespace, const.Rgx.emote_old, const.Rgx.nqn, const.Rgx.invis]
             if nqn_check == 0:
-                filters.remove(Rgx.nqn)
+                filters.remove(const.Rgx.nqn)
             for item in filters:
                 text = regex.sub(item, '', text)
 
@@ -49,10 +50,10 @@ class EmoteSpam(AluCog):
                     return
                 answer_text = (
                     "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
-                        message.author.mention, channel.mention, Emote.Ree
+                        message.author.mention, channel.mention, const.Emote.Ree
                     )
                 )
-                e = discord.Embed(title="Deleted message", description=message.content, color=Colour.prpl())
+                e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.prpl())
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 return 1
@@ -90,7 +91,7 @@ class EmoteSpam(AluCog):
             if message.author.id == self.bot.user.id:
                 return
             if await self.emote_spam_work(message):
-                text = f'Offline criminal found {Emote.peepoPolice}'
+                text = f'Offline criminal found {const.Emote.peepoPolice}'
                 await self.bot.community.bot_spam.send(content=text)
 
     @emote_spam.before_loop
@@ -116,20 +117,20 @@ class ComfySpam(AluCog):
     ]
 
     async def comfy_chat_control(self, message: discord.Message):
-        if message.channel.id == Channel.comfy_spam:
+        if message.channel.id == const.Channel.comfy_spam:
             channel: discord.TextChannel = message.channel  # type: ignore
             if len(message.embeds):
                 return await message.delete()
             text = str(message.content)
-            text = regex.sub(Rgx.whitespace, '', text)
+            text = regex.sub(const.Rgx.whitespace, '', text)
             for item in self.comfy_emotes:
                 text = text.replace(item, "")
             if text:
                 answer_text = (
                     "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! "
-                    "{2} {2} {2}".format(message.author.mention, channel.mention, Emote.Ree)
+                    "{2} {2} {2}".format(message.author.mention, channel.mention, const.Emote.Ree)
                 )
-                e = discord.Embed(title="Deleted message", description=message.content, color=Colour.prpl())
+                e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.prpl())
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 await message.delete()
@@ -148,7 +149,7 @@ class ComfySpam(AluCog):
     @tasks.loop(minutes=60)
     async def comfy_spam(self):
         if randint(1, 100 + 1) < 2:
-            await self.community.comfy_spam.send('{0} {0} {0}'.format(Emote.peepoComfy))
+            await self.community.comfy_spam.send('{0} {0} {0}'.format(const.Emote.peepoComfy))
 
     @tasks.loop(count=1)
     async def offline_criminal_check(self):
@@ -156,7 +157,7 @@ class ComfySpam(AluCog):
             if message.author.id == self.bot.user.id:
                 return
             if await self.comfy_chat_control(message):
-                text = f'Offline criminal found {Emote.peepoPolice}'
+                text = f'Offline criminal found {const.Emote.peepoPolice}'
                 await self.bot.community.bot_spam.send(content=text)
 
     @comfy_spam.before_loop

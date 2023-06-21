@@ -6,11 +6,13 @@ from typing import TYPE_CHECKING
 
 from utils import AluCog, aluloop
 
+from ._category import CommunityCog
+
 if TYPE_CHECKING:
     pass
 
 
-class StatsVoiceChannels(AluCog):
+class StatsVoiceChannels(CommunityCog):
     async def cog_load(self) -> None:
         self.my_time.start()
         self.refresh_member_stats.start()

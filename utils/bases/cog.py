@@ -9,7 +9,11 @@ from discord.ext import commands
 if TYPE_CHECKING:
     from bot import AluBot
 
-__all__ = ('AluCog', 'CategoryPage', 'none_category',)
+__all__ = (
+    'AluCog',
+    'CategoryPage',
+    'none_category',
+)
 
 
 class AluCog(commands.Cog):
@@ -63,14 +67,23 @@ class CategoryPage:
     if TYPE_CHECKING:
         name: str
         emote: Optional[discord.PartialEmoji]
+        description: str
 
-    def __init_subclass__(cls: Type[CategoryPage], name: str, emote: str) -> None:
+    def __init_subclass__(
+        cls: Type[CategoryPage],
+        name: str,
+        emote: str,
+        description: str = 'No description',
+    ) -> None:
         cls.name = name
         cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
+        cls.description = description
 
-    @property
-    def help_embed(self) -> discord.Embed:
-        raise NotImplemented
+    def help_embed(self, embed: discord.Embed) -> discord.Embed:
+        e = embed
+        e.title = f'{self.name} {self.emote}'
+        e.description = self.description
+        return e
 
     @property
     def value(self):

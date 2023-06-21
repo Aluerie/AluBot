@@ -4,11 +4,7 @@ from utils import AluCog, CategoryPage, const
 
 
 class InfoCategory(CategoryPage, name='Information', emote=const.Emote.KURU):
-    @property
-    def help_embed(self) -> Embed:
-        e = Embed(color=const.Colour.prpl())
-        e.description = 'wowzers'
-        return e
+    ...
 
 
 category = InfoCategory()

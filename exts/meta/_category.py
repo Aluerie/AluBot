@@ -3,12 +3,8 @@ from discord import Embed
 from utils import AluCog, CategoryPage, const
 
 
-class MetaCategory(CategoryPage, name='Meta', emote=const.Emote.KURU):
-    @property
-    def help_embed(self) -> Embed:
-        e = Embed(color=const.Colour.prpl())
-        e.description = 'Meta'
-        return e
+class MetaCategory(CategoryPage, name='About', emote=const.Emote.KURU):
+    ...
 
 
 category = MetaCategory()

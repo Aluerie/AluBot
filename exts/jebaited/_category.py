@@ -4,11 +4,7 @@ from utils import AluCog, CategoryPage, const
 
 
 class JebaitedCategory(CategoryPage, name='Jebaited', emote=const.Emote.KURU):
-    @property
-    def help_embed(self) -> Embed:
-        e = Embed(color=const.Colour.prpl())
-        e.description = 'Jebaited'
-        return e
+    ...
 
 
 category = JebaitedCategory()

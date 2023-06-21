@@ -32,12 +32,16 @@ class HelpPageSource(menus.ListPageSource):
         super().__init__(entries=entries, per_page=1)
 
     async def format_page(self, menu: HelpPages, entries: CategoryPage | CogPage):
+        e = discord.Embed(colour=const.Colour.prpl())
+        e.set_footer(text=f'With love, {menu.help_cmd.context.bot.user.display_name}')
+        
         if isinstance(entries, CategoryPage):
-            return entries.help_embed
+            e = entries.help_embed(e)
+            return e
         elif isinstance(entries, CogPage):
             cog, cmds, page_num = entries
 
-            e = discord.Embed(colour=const.Colour.prpl())
+            
             e.title = cog.qualified_name
 
             desc = cog.description + '\n\n'

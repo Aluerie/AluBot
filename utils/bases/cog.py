@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING, Any, Optional, Type
 
 import discord
@@ -8,10 +9,7 @@ from discord.ext import commands
 if TYPE_CHECKING:
     from bot import AluBot
 
-__all__ = (
-    'AluCog',
-    'ExtCategory',
-)
+__all__ = ('AluCog', 'CategoryPage', 'none_category',)
 
 
 class AluCog(commands.Cog):
@@ -31,9 +29,9 @@ class AluCog(commands.Cog):
         cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
         return super().__init_subclass__(**kwargs)
 
-    def __init__(self, bot: AluBot, category: Optional[ExtCategory] = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, bot: AluBot, category: Optional[CategoryPage] = None, *args: Any, **kwargs: Any) -> None:
         self.bot: AluBot = bot
-        self.category:  Optional[ExtCategory] = category
+        self.category: Optional[CategoryPage] = category
 
         next_in_mro = next(iter(self.__class__.__mro__))
         if hasattr(next_in_mro, "__is_jishaku__") or isinstance(next_in_mro, self.__class__):
@@ -51,7 +49,7 @@ class AluCog(commands.Cog):
         return self.bot.hideout
 
 
-class ExtCategory:
+class CategoryPage:
     """Extension Category
 
     This class is made purely for $help command purposes.
@@ -66,10 +64,27 @@ class ExtCategory:
         name: str
         emote: Optional[discord.PartialEmoji]
 
-    def __init_subclass__(cls: Type[ExtCategory], name: str, emote: str) -> None:
+    def __init_subclass__(cls: Type[CategoryPage], name: str, emote: str) -> None:
         cls.name = name
         cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
 
     @property
     def help_embed(self) -> discord.Embed:
         raise NotImplemented
+
+    @property
+    def value(self):
+        return self.__class__.__module__
+
+
+class NoneCategory(CategoryPage, name='No category', emote='\N{THINKING FACE}'):
+    @property
+    def help_embed(self) -> discord.Embed:
+        e = discord.Embed()
+        e.title = self.name
+        e.description = 'The sections/commands there do not have a category assigned to them'
+        e.set_footer(text='Maybe intended. maybe dev fault, maybe beta^tm features.')
+        return e
+
+
+none_category = NoneCategory()

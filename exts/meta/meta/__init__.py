@@ -7,7 +7,6 @@ from .other import OtherCog
 from .prefix import PrefixSetupCog
 from .setup_cog import SetupCommandCog
 
-
 class Meta(AluHelpCog, SetupCommandCog, OtherCog, PrefixSetupCog):
     """Commands-utilities related to Discord or the Bot itself."""
 

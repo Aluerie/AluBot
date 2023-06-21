@@ -1,9 +1,9 @@
 from discord import Embed
 
-from utils import AluCog, ExtCategory, const
+from utils import AluCog, CategoryPage, const
 
 
-class CommunityCategory(ExtCategory, name='Aluerie\'s Community', emote=const.Emote.KURU):
+class CommunityCategory(CategoryPage, name='Aluerie\'s Community', emote=const.Emote.KURU):
     @property
     def help_embed(self) -> Embed:
         e = Embed(color=const.Colour.prpl())

@@ -139,7 +139,7 @@ class MyHelpCommand(commands.HelpCommand):
     def get_command_signature(self, c: commands.Command):
         def signature():
             sign = f' `{c.signature}`' if c.signature else ''
-            name = c.name if not getattr(c, 'root_parent') else c.root_parent.name
+            name = c.name if not getattr(c, 'root_parent') else c.root_parent.name  # type:ignore
             app_command = self.context.bot.tree.get_app_command(name)
             if app_command:
                 cmd_mention = f"</{c.qualified_name}:{app_command.id}>"

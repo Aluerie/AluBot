@@ -3,17 +3,17 @@ from discord import Embed
 from utils import AluCog, CategoryPage, const
 
 
-class HideoutCategory(CategoryPage, name='Hideout', emote=const.Emote.KURU):
+class MetaCategory(CategoryPage, name='Meta', emote=const.Emote.KURU):
     @property
     def help_embed(self) -> Embed:
         e = Embed(color=const.Colour.prpl())
-        e.description = 'wowzers'
+        e.description = 'Meta'
         return e
 
 
-category = HideoutCategory()
+category = MetaCategory()
 
 
-class HideoutCog(AluCog):
+class MetaCog(AluCog):
     def __init__(self, bot):
         super().__init__(bot, category=category)

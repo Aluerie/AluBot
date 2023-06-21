@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import inspect
 import logging
 import os
 import traceback
@@ -22,14 +23,14 @@ from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 
-from .. import AluContext, ConfirmationView, cache, const, formats
+from .. import AluContext, ConfirmationView, cache, const, formats, none_category
 from .cmd_cache import MyCommandTree
 from .intents_perms import intents
 
 if TYPE_CHECKING:
     from exts.reminders.reminders import Reminder
 
-    from .. import AluCog, ExtCategory
+    from .. import AluCog, CategoryPage
 
 
 __all__ = ('AluBot',)
@@ -77,7 +78,8 @@ class AluBot(commands.Bot):
         self.config = config
         self.formats = formats
 
-        self.ext_categories: Dict[Optional[ExtCategory], List[AluCog | commands.Cog]] = {}
+        self.ext_categories: Dict[CategoryPage, List[AluCog | commands.Cog]] = {}
+        # self.ext_categories: Dict[str, List[AluCog | commands.Cog]] = {}
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
             timedelta=datetime.timedelta(days=7)
@@ -116,9 +118,22 @@ class AluBot(commands.Bot):
 
     async def add_cog(self, cog: AluCog | commands.Cog):
         await super().add_cog(cog)
+
         # jishaku does not have a category thus we have this weird typehint
-        category: Optional[ExtCategory] = getattr(cog, 'category', None)
+        category = getattr(cog, 'category', None)
+        if not category:
+            category = none_category
+
         self.ext_categories.setdefault(category, []).append(cog)
+
+    # __init__ version
+    # async def add_cog(self, cog: AluCog | commands.Cog):
+    #     await super().add_cog(cog)
+
+    #     frm = inspect.stack()[1]
+    #     mod = inspect.getmodule(frm[0])
+    #     ext = mod.__name__ if mod else 'utils.bases.cog'  # very weird way of saying None
+    #     self.ext_categories.setdefault(ext, []).append(cog)
 
     async def on_ready(self):
         if not hasattr(self, 'launch_time'):

@@ -1,13 +1,10 @@
-from discord import Embed
+from utils import AluCog, ExtCategory, const
 
-from utils import AluCog, CategoryPage, const
-
-
-class InfoCategory(CategoryPage, name='Information', emote=const.Emote.KURU):
-    ...
-
-
-category = InfoCategory()
+category = ExtCategory(
+    name='Information',
+    emote=const.Emote.KURU,
+    description='Information',
+)
 
 
 class InfoCog(AluCog):

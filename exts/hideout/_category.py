@@ -1,13 +1,10 @@
-from discord import Embed
+from utils import AluCog, ExtCategory, const
 
-from utils import AluCog, CategoryPage, const
-
-
-class HideoutCategory(CategoryPage, name='Hideout', emote=const.Emote.KURU):
-    ...
-
-
-category = HideoutCategory()
+category = ExtCategory(
+    name='Hideout',
+    emote=const.Emote.KURU,
+    description='Hideout trash',
+)
 
 
 class HideoutCog(AluCog):

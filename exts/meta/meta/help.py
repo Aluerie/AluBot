@@ -59,14 +59,15 @@ class HelpPageSource(menus.ListPageSource):
             return e
 
         emote = getattr(page.cog, 'emote', '')
-        e.title = f'{page.cog.qualified_name} {emote} (Section page {page.page_num + 1}/{page.page_len})'
+        triple_emote = '{0} {0} {0}'.format(emote)
+        e.title = f'{page.cog.qualified_name} {triple_emote} (Section page {page.page_num + 1}/{page.page_len})'
         emote_url = discord.PartialEmoji.from_str(page.category.emote)
+        author_text = f'Category: {page.category.name} (Category page {page.category_page + 1}/{page.category_len})'
         e.set_author(
-            name=f'Category: {page.category.name} (Category page {page.category_page + 1}/{page.category_len})',
+            name=author_text,
             icon_url=emote_url.url,
         )
-        desc = page.cog.description + '\n\n'
-        desc += '\n'.join(page.cmds)
+        desc = page.cog.description + '\n\n' + '\n'.join(page.cmds)
         e.description = desc[:4095]  # idk #TODO: this is bad
         return e
 

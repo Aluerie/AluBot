@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import datetime
+from typing import TYPE_CHECKING
 
 from discord.ext import tasks
 
-from utils import AluCog
+from .._category import FPCCog
 
 # need to import the last because in import above we activate 'lol' model
 from pyot.models import lol  # isort: skip
@@ -14,14 +14,14 @@ if TYPE_CHECKING:
     from utils import AluBot
 
 
-class LoLSummonerNameCheck(AluCog):
+class LoLSummonerNameCheck(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        
+
     async def cog_load(self) -> None:
         self.check_summoner_renames.start()
         return await super().cog_load()
-    
+
     @tasks.loop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.timezone.utc))
     async def check_summoner_renames(self):
         if datetime.datetime.now(datetime.timezone.utc).day != 17:

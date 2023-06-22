@@ -8,11 +8,11 @@ from .wolfram import WolframAlpha
 
 
 class Utilities(
+    UtilitiesCog,
     DevUtilities,
     LinkUtilities,
     ToolsCog,
     WolframAlpha,
-    UtilitiesCog,
     name='Utilities',
     emote=Emote.FeelsDankManLostHisHat,
 ):

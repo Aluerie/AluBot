@@ -16,8 +16,10 @@ from discord.ext import commands
 from PIL import Image, ImageColor
 from wordcloud import WordCloud
 
-from utils import AluCog, const
+from utils import const
 from utils.formats import format_dt_tdR, human_timedelta
+
+from ._category import InfoCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -35,7 +37,7 @@ async def account_age_ctx_menu(ntr: discord.Interaction, member: discord.Member)
     await ntr.response.send_message(f"{member.mention} is {human_timedelta(age)} old.", ephemeral=True)
 
 
-class Info(AluCog, name='Info', emote=const.Emote.PepoG):
+class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
     """Commands to get some useful info"""
 
     def __init__(self, *args, **kwargs):
@@ -216,7 +218,7 @@ class Info(AluCog, name='Info', emote=const.Emote.PepoG):
         await ctx.reply(embed=e)
 
 
-class StatsCommands(AluCog, name='Stats', emote=const.Emote.Smartge):
+class StatsCommands(InfoCog, name='Stats', emote=const.Emote.Smartge):
     """Some stats/infographics/diagrams/info
 
     More to come.

@@ -11,9 +11,9 @@ from discord.ext import commands, tasks
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
-from utils import AluCog
 from utils.dota import hero
 
+from .._category import FPCCog
 from ._models import ActiveMatch
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class DotaNotifs(AluCog):
+class DotaNotifs(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
         self.lobby_ids: Set[int] = set()
@@ -150,8 +150,7 @@ class DotaNotifs(AluCog):
                             AND NOT ds.channel_id=ANY(SELECT channel_id FROM dota_messages WHERE match_id=$3);
                         '''
                 channel_ids = [
-                    i
-                    for i, in await self.bot.pool.fetch(query, person.hero_id, user.name_lower, match.match_id)
+                    i for i, in await self.bot.pool.fetch(query, person.hero_id, user.name_lower, match.match_id)
                 ]
                 if channel_ids:
                     log.debug(f"DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}")
@@ -206,7 +205,7 @@ class DotaNotifs(AluCog):
 
         await self.preliminary_queries()
         self.top_source_dict = {}
-        for specific_games_flag in [False]: #, True]:
+        for specific_games_flag in [False]:  # , True]:
             #  there is kinda no point in True since all streamers we are subbed to are top100 players
             # there is also a small quirk that i separate dota_tools.autoparse with this
             # via result.specific_games arg

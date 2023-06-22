@@ -117,8 +117,9 @@ class AluHelp(commands.HelpCommand):
     context: AluContext
 
     # todo: idk
-    def __init__(self) -> None:
+    def __init__(self, show_hidden: bool = False) -> None:
         super().__init__(
+            show_hidden=show_hidden,
             verify_checks=False,  # TODO: idk we need to decide this
             command_attrs={
                 'hidden': False,
@@ -240,6 +241,12 @@ class AluHelpCog(MetaCog):
         # todo: starting category
         my_help = AluHelp()
         my_help.context = ctx = await AluContext.from_interaction(ntr)
+        await my_help.command_callback(ctx, command=command)
+
+    @commands.is_owner()
+    @commands.command(hidden=True)
+    async def devhelp(self, ctx: AluContext, *, command: Optional[str]):
+        my_help = AluHelp()
         await my_help.command_callback(ctx, command=command)
 
     @aluloop(count=1)

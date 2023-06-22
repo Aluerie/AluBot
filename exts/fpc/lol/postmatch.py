@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING, List
 from discord.ext import tasks
 from pyot.core.exceptions import NotFound
 
-from utils import AluCog
-
+from .._category import FPCCog
 from ._models import PostMatchPlayer
 
 # need to import the last because in import above we activate 'lol' model
@@ -20,7 +19,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class LoLFeedPostMatchEdit(AluCog):
+class LoLFeedPostMatchEdit(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
         self.postmatch_players: List[PostMatchPlayer] = []

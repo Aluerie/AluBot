@@ -5,13 +5,15 @@ from typing import TYPE_CHECKING, Optional, Sequence
 import discord
 from discord.ext import commands
 
-from utils import AluCog, const
+from utils import const
+
+from ._category import ConfigGuildCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext
 
 
-class Prefix(AluCog, name='Server settings for the bot', emote=const.Emote.PepoBeliever):
+class Prefix(ConfigGuildCog, name='Server settings for the bot', emote=const.Emote.PepoBeliever):
     """Change bot\'s config for the server
 
     More to come.

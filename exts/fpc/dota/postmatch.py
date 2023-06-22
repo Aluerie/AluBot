@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING, Dict, List
 import discord
 from discord.ext import commands, tasks
 
-from utils import AluCog
 from utils.const import Colour, MaterialPalette
 
+from .._category import FPCCog
 from ._models import OpendotaRequestMatch, PostMatchPlayerData
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class DotaPostMatchEdit(AluCog):
+class DotaPostMatchEdit(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
         self.postmatch_players: List[PostMatchPlayerData] = []

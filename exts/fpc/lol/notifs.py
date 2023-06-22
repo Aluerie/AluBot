@@ -9,9 +9,9 @@ from discord.ext import tasks
 from pyot.core.exceptions import NotFound, ServerError
 from pyot.utils.lol import champion
 
-from utils import AluCog
 from utils.lol.const import SOLO_RANKED_5v5_QUEUE_ENUM, platform_to_region
 
+from .._category import FPCCog
 from ._models import LiveMatch
 
 # need to import the last because in import above we activate 'lol' model
@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class LoLNotifs(AluCog):
+class LoLNotifs(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
         self.live_matches: List[LiveMatch] = []
@@ -79,9 +79,7 @@ class LoLNotifs(AluCog):
                             WHERE character_id=$1 AND player_name=$2
                             AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3);     
                         """
-                channel_ids = [
-                    i for i, in await self.bot.pool.fetch(query, p.champion_id, r.name_lower, live_game.id)
-                ]
+                channel_ids = [i for i, in await self.bot.pool.fetch(query, p.champion_id, r.name_lower, live_game.id)]
                 if channel_ids:
                     log.debug(f'LF | {r.display_name} - {await champion.key_by_id(p.champion_id)}')
                     self.live_matches.append(

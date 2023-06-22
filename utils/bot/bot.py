@@ -123,6 +123,12 @@ class AluBot(commands.Bot):
         category = getattr(cog, 'category', None)
         if not category or not isinstance(category, ExtCategory):
             category = none_category
+        if cog.__cog_name__ == 'Jishaku':
+            category = ExtCategory(
+                name='Jishaku',
+                emote=const.Emote.bedWTF,
+                description='Jishaku'
+            )
         
         self.category_cogs.setdefault(category, []).append(cog)
 

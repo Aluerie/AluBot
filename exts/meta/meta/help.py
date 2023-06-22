@@ -23,12 +23,14 @@ class CogPage:
         cmds: Sequence[str],
         category: ExtCategory,
         page_num: int = 0,  # page per cog so mostly 0
+        page_len: int = 0,
         category_page: int = 0,
         category_len: int = 1,
     ):
         self.cog: Literal['_front_page'] | AluCog | commands.Cog = cog
         self.cmds: Sequence[str] = cmds
         self.page_num: int = page_num  # page per cog so mostly 0
+        self.page_len: int = page_len
         self.category_page: int = category_page
         self.category_len: int = category_len
         self.category: ExtCategory = category
@@ -56,15 +58,16 @@ class HelpPageSource(menus.ListPageSource):
             e.set_thumbnail(url=bot.user.display_avatar)
             return e
 
-        e.title = page.cog.qualified_name
+        emote = getattr(page.cog, 'emote', '')
+        e.title = f'{page.cog.qualified_name} {emote} (Section page {page.page_num + 1}/{page.page_len})'
         emote_url = discord.PartialEmoji.from_str(page.category.emote)
         e.set_author(
-            name=f'Category: {page.category.name} (page {page.category_page + 1}/{page.category_len})',
+            name=f'Category: {page.category.name} (Category page {page.category_page + 1}/{page.category_len})',
             icon_url=emote_url.url,
         )
         desc = page.cog.description + '\n\n'
         desc += '\n'.join(page.cmds)
-        e.description = desc[:4000]  # idk #TODO: this is bad
+        e.description = desc[:4095]  # idk #TODO: this is bad
         return e
 
 
@@ -200,11 +203,13 @@ class AluHelp(commands.HelpCommand):
                 if filtered:
                     cmds_strings = list(itertools.chain.from_iterable([await self.get_the_answer(c) for c in filtered]))
                     cmds10 = [cmds_strings[i : i + 10] for i in range(0, len(cmds_strings), 10)]
+                    page_len = len(cmds10)
                     for counter, page_cmds in enumerate(cmds10):
                         page = CogPage(
                             cog=cog,
                             cmds=page_cmds,
                             page_num=counter,
+                            page_len=page_len,
                             category=category,
                         )
                         help_data.setdefault(category, []).append(page)

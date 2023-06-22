@@ -4,13 +4,15 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from utils import AluCog, const
+from utils import const
+
+from ._category import JebaitedCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 
-class LewdCog(AluCog, name='Lewd', emote=const.Emote.peepoStepOnMePls):
+class LewdCog(JebaitedCog, name='Lewd', emote=const.Emote.peepoStepOnMePls):
     """NSFW tier commands
 
     Horny, huh

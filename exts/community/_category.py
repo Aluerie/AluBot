@@ -7,6 +7,5 @@ category = ExtCategory(
 )
 
 
-class CommunityCog(AluCog):
-    def __init__(self, bot):
-        super().__init__(bot, category=category)
+class CommunityCog(AluCog, category=category):
+    ...

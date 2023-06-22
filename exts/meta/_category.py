@@ -7,6 +7,5 @@ category = ExtCategory(
 )
 
 
-class MetaCog(AluCog):
-    def __init__(self, bot):
-        super().__init__(bot, category=category)
+class MetaCog(AluCog, category=category):
+    ...

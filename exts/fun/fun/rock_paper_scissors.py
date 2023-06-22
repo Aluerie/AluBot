@@ -148,7 +148,9 @@ class RockPaperScissorsCommand(FunCog):
         e.add_field(name='Player 1', value=f'{player1.mention}')
         e.add_field(name='Player 2', value=f'{player2.mention}')
         e.add_field(
-            name='Game State Log', value='\N{BLACK CIRCLE} Both players need to choose their item', inline=False
+            name='Game State Log',
+            value='\N{BLACK CIRCLE} Both players need to choose their item',
+            inline=False,
         )
         view = RPSView(player1=player1, player2=player2)
         view.message = await ctx.reply(embed=e, view=view)

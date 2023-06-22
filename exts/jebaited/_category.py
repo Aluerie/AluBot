@@ -7,6 +7,5 @@ category = ExtCategory(
 )
 
 
-class JebaitedCog(AluCog):
-    def __init__(self, bot):
-        super().__init__(bot, category=category)
+class JebaitedCog(AluCog, category=category):
+    ...

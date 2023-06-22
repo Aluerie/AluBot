@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from utils import AluCog
+from ._category import JebaitedCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 
-class Timers(AluCog):
+class Timers(JebaitedCog):
     async def cog_load(self) -> None:
         pass
 
@@ -19,9 +19,10 @@ class Timers(AluCog):
 
     @commands.hybrid_group()
     async def timer(self, ctx: AluContext):
+        '''new timer'''
         await ctx.scnf()
 
-    @timer.group()
+    @timer.command()
     async def create(self, ctx: AluContext, category: str, frequency: str, probability: float):
         pass
 

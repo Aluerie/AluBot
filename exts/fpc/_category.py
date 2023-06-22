@@ -7,6 +7,5 @@ category = ExtCategory(
 )
 
 
-class FPCCog(AluCog):
-    def __init__(self, bot):
-        super().__init__(bot, category=category)
+class FPCCog(AluCog, category=category):
+    ...

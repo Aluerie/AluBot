@@ -7,6 +7,5 @@ category = ExtCategory(
 )
 
 
-class HideoutCog(AluCog):
-    def __init__(self, bot):
-        super().__init__(bot, category=category)
+class HideoutCog(AluCog, category=category):
+    ...

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 from typing import TYPE_CHECKING, Any, NamedTuple, Optional, Type
 
 import discord
@@ -27,15 +26,26 @@ class AluCog(commands.Cog):
 
     if TYPE_CHECKING:
         emote: Optional[discord.PartialEmoji]
+        category: ExtCategory
 
-    def __init_subclass__(cls: Type[AluCog], **kwargs: Any) -> None:
-        emote = kwargs.pop("emote", None)
+    def __init_subclass__(
+        cls: Type[AluCog],
+        emote: Optional[str] = None,
+        category: Optional[ExtCategory] = None,
+        **kwargs: Any,
+    ) -> None:
         cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
+        parent_category: Optional[ExtCategory] = getattr(cls, 'category', None)
+        if isinstance(parent_category, ExtCategory):
+            cls.category = category or parent_category or none_category
+        elif parent_category is None:
+            cls.category = category or none_category
+        else:
+            raise TypeError('`parent_category` is not of ExtCategory class when subclassing AluCog.')
         return super().__init_subclass__(**kwargs)
 
-    def __init__(self, bot: AluBot, category: Optional[ExtCategory] = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         self.bot: AluBot = bot
-        self.category: Optional[ExtCategory] = category
 
         next_in_mro = next(iter(self.__class__.__mro__))
         if hasattr(next_in_mro, "__is_jishaku__") or isinstance(next_in_mro, self.__class__):
@@ -53,47 +63,11 @@ class AluCog(commands.Cog):
         return self.bot.hideout
 
 
-# class CategoryPage:
-#     """Extension Category
-
-#     This class is made purely for $help command purposes.
-
-#     emote - to go to Select menu.
-#     name - to go as category choice in Select menu.
-#     description - to go as description in Select menu.
-#     help_embed - to go as front page embed for the said category.
-#     """
-
-#     if TYPE_CHECKING:
-#         name: str
-#         emote: Optional[discord.PartialEmoji]
-#         description: str
-
-#     def __init_subclass__(
-#         cls: Type[CategoryPage],
-#         name: str,
-#         emote: str,
-#         description: str = 'No description',
-#     ) -> None:
-#         cls.name = name
-#         cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
-#         cls.description = description
-
-#     def help_embed(self, embed: discord.Embed, bot: Optional[AluBot] = None) -> discord.Embed:
-#         e = embed
-#         e.title = f'{self.name} {self.emote}'
-#         e.description = self.description
-#         return e
-
-#     @property
-#     def value(self):
-#         return self.__class__.__module__
-
 class ExtCategory(NamedTuple):
     name: str
     emote: str
     description: str
-    
+
 
 none_category = ExtCategory(
     name='No category',

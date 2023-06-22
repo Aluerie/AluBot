@@ -14,9 +14,6 @@ category = ExtCategory(
 )
 
 
-class DevBaseCog(AluCog):
-    def __init__(self, bot):
-        super().__init__(bot, category=category)
-
+class DevBaseCog(AluCog, category=category):
     async def cog_check(self, ctx: AluContext) -> bool:
         return await self.bot.is_owner(ctx.author)

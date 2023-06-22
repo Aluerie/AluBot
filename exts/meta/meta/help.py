@@ -20,14 +20,14 @@ class CogPage:
     def __init__(
         self,
         cog: Literal['_front_page'] | AluCog | commands.Cog,  # dirty way to handle front page
-        cmds: Sequence[commands.Command],
+        cmds: Sequence[str],
         category: ExtCategory,
         page_num: int = 0,  # page per cog so mostly 0
         category_page: int = 0,
         category_len: int = 1,
     ):
         self.cog: Literal['_front_page'] | AluCog | commands.Cog = cog
-        self.cmds: Sequence[commands.Command] = cmds
+        self.cmds: Sequence[str] = cmds
         self.page_num: int = page_num  # page per cog so mostly 0
         self.category_page: int = category_page
         self.category_len: int = category_len
@@ -63,7 +63,7 @@ class HelpPageSource(menus.ListPageSource):
             icon_url=emote_url.url,
         )
         desc = page.cog.description + '\n\n'
-        desc += chr(10).join(['\n'.join(await menu.help_cmd.get_the_answer(c)) for c in page.cmds])
+        desc += '\n'.join(page.cmds)
         e.description = desc[:4000]  # idk #TODO: this is bad
         return e
 
@@ -132,12 +132,12 @@ class AluHelp(commands.HelpCommand):
         if answer is None:
             answer = []
         if getattr(c, 'commands', None) is not None:
-            if c.brief == const.Emote.slash:
-                answer.append(self.get_command_signature(c))
+            # if c.brief == const.Emote.slash:
+            #     answer.append(self.get_command_signature(c))
             for x in await self.filter_commands(c.commands, sort=True):
                 await self.get_the_answer(x, answer=answer, deep=deep + 1)
-            if deep > 0:
-                answer.append('')
+            # if deep > 0:
+            #     answer.append('')
         else:
             answer.append(self.get_command_signature(c))
         return answer
@@ -198,7 +198,8 @@ class AluHelp(commands.HelpCommand):
             for cog, cmds in cog_cmd_dict.items():
                 filtered = await self.filter_commands(cmds, sort=True)
                 if filtered:
-                    cmds10 = [filtered[i : i + 10] for i in range(0, len(filtered), 10)]
+                    cmds_strings = list(itertools.chain.from_iterable([await self.get_the_answer(c) for c in filtered]))
+                    cmds10 = [cmds_strings[i : i + 10] for i in range(0, len(cmds_strings), 10)]
                     for counter, page_cmds in enumerate(cmds10):
                         page = CogPage(
                             cog=cog,

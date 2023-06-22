@@ -10,11 +10,13 @@ from discord.ext import commands
 
 from utils import AluCog, checks, const, webhook
 
+from .._category import FunCog
+
 if TYPE_CHECKING:
     from utils import AluContext, AluGuildContext
 
 
-class Other(AluCog):
+class Other(FunCog):
     @commands.hybrid_command()
     async def coinflip(self, ctx: AluContext):
         """Flip a coin: Heads or Tails?"""

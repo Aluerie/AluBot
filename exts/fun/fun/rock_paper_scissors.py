@@ -9,6 +9,8 @@ from numpy.random import choice
 
 from utils import AluCog, const
 
+from .._category import FunCog
+
 if TYPE_CHECKING:
     from utils import AluGuildContext
 
@@ -132,7 +134,7 @@ class RPSView(discord.ui.View):
         await self.rps_button_callback(ntr, RPSChoice.Scissors)
 
 
-class RockPaperScissorsCommand(AluCog):
+class RockPaperScissorsCommand(FunCog):
     @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps', 'rock_paper_scissors'])
     async def rps(self, ctx: AluGuildContext, user: discord.Member | discord.User):
         """Rock Paper Scissors game with @member"""

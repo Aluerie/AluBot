@@ -88,7 +88,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
     )
 
     @checks.hybrid.is_manager()
-    @ext_lol.group()
+    @ext_lol.group(name='channel')
     async def ext_lol_channel(self, ctx: AluGuildContext):
         """Group command about LoL channel, for actual commands use it together with subcommands"""
         await ctx.scnf()
@@ -352,7 +352,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
     )
 
     @checks.hybrid.is_manager()
-    @ext_lol.group(name='champ')
+    @ext_lol.group(name='champion', aliases=['champ'])
     async def ext_lol_champ(self, ctx: AluGuildContext):
         """Group command about LoL champs, for actual commands use it together with subcommands"""
         await ctx.scnf()

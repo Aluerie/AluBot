@@ -67,6 +67,7 @@ class ExtCategory(NamedTuple):
     name: str
     emote: str
     description: str
+    sort_back: bool = False
 
 
 none_category = ExtCategory(

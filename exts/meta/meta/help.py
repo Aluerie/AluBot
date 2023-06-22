@@ -212,7 +212,7 @@ class AluHelp(commands.HelpCommand):
                 page.category_len = cog_len
                 page.category_page = counter
 
-        help_data = dict(sorted(help_data.items(), key=lambda x: x[0].name))
+        help_data = dict(sorted(help_data.items(), key=lambda x: (not x[0].sort_back, x[0].name)))
 
         index_category = ExtCategory(name='Index page', emote='\N{SWAN}', description='Index page')
         index_pages = [CogPage(cog='_front_page', cmds=[], page_num=0, category=index_category)]

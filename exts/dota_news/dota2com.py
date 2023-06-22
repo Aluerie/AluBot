@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Dict, Literal, Optional
 
 import discord
 from discord.ext import commands, tasks
@@ -24,12 +24,12 @@ class Dota2Com(AluCog):
         self.patch_checker.cancel()
 
     @commands.is_owner()
-    @commands.command(name='patchday', aliases=['patch_day'])
+    @commands.command(name='patchday', aliases=['patch_day'], hidden=True)
     async def patch_day(self, ctx: AluContext, yes_no: Optional[bool]):
         """Start checking for Dota 2 patches more/less frequently from dota2.com page."""
         is_today_patch_day = not self.is_today_patch_day if yes_no is None else yes_no
         new_frequency = {'seconds': 10} if is_today_patch_day else {'minutes': 10}
-        self.patch_checker.change_interval(**new_frequency)
+        self.patch_checker.change_interval(**new_frequency)  # type: ignore
         e = discord.Embed(colour=const.Colour.prpl())
         t = ','.join([f'{k}={v}' for k, v in new_frequency.items()])  # seconds=30
         e.description = f"Changed frequency to `{t}`"

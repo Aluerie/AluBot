@@ -7,7 +7,9 @@ from discord import app_commands
 from discord.ext import commands
 from gtts import gTTS
 
-from utils import AluCog, const
+from utils import const
+
+from ._category import VoiceChatCog
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -32,7 +34,7 @@ class LanguageCollection:
     Literal = Literal['fr', 'en', 'ru', 'es', 'pt', 'cn', 'uk']
 
 
-class TextToSpeech(AluCog, name='Text To Speech', emote=const.Emote.Ree):
+class TextToSpeech(VoiceChatCog, name='Text To Speech', emote=const.Emote.Ree):
     """Text To Speech commands.
 
     Make the bot talk in voice chat.

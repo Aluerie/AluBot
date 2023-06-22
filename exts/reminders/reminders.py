@@ -20,10 +20,12 @@ from discord import app_commands
 from discord.ext import commands
 from typing_extensions import Annotated
 
-from utils import AluCog, AluContext, formats, times
+from utils import AluContext, formats, times
 from utils.const import Colour, Emote
 from utils.database import DRecord
 from utils.pagination import EnumeratedPages
+
+from ._category import RemindersCog
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -165,7 +167,7 @@ class Timer:
         return None
 
 
-class Reminder(AluCog, emote=Emote.DankG):
+class Reminder(RemindersCog, emote=Emote.DankG):
     """Remind yourself of something at sometime"""
 
     def __init__(self, *args, **kwargs):
@@ -331,16 +333,13 @@ class Reminder(AluCog, emote=Emote.DankG):
         *,
         when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')],
     ):
-        """Reminds you of something after a certain amount of time.
-
-        The input can be any direct date (i.e. DD/MM/YYYY) or a human
-        readable offset. Example
-
-        - 'next thursday at 3pm do something funny'
-        - 'do the dishes tomorrow'
-        - 'in 50 minutes do the thing'
-        - '2d unmute someone'
-
+        """Reminds you of something after a certain amount of time. \
+        The input can be any direct date (i.e. DD/MM/YYYY) or a human \
+        readable offset. Examples:
+        * "next thursday at 3pm do something funny"
+        * "do the dishes tomorrow"
+        * "in 50 minutes do the thing"
+        * "2d unmute someone"
         Times are assumed in UTC.
         """
         await self.remind_helper(ctx, dt=when.dt, text=when.arg)

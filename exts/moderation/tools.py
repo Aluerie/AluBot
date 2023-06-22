@@ -8,12 +8,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, checks, const
+from utils import checks, const
 from utils.converters import Snowflake
 from utils.formats import Plural
 
+from ._category import ModerationCog
+
 if TYPE_CHECKING:
-    from utils import AluGuildContext, AluContext
+    from utils import AluContext, AluGuildContext
 
 
 class PurgeFlags(commands.FlagConverter):
@@ -45,7 +47,7 @@ class PurgeFlags(commands.FlagConverter):
     )
 
 
-class ModerationTools(AluCog):
+class ModerationTools(ModerationCog):
     @commands.hybrid_command(aliases=['remove'], usage='[search] [flags...]')
     @commands.guild_only()
     @checks.hybrid.is_mod()

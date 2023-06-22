@@ -1,5 +1,6 @@
 from utils.const import Emote
 
+from .._category import UtilitiesCog
 from .dev_utils import DevUtilities
 from .fix_links import LinkUtilities
 from .tools import ToolsCog
@@ -11,8 +12,9 @@ class Utilities(
     LinkUtilities,
     ToolsCog,
     WolframAlpha,
+    UtilitiesCog,
     name='Utilities',
-    emote=Emote.FeelsDankManLostHisHat
+    emote=Emote.FeelsDankManLostHisHat,
 ):
     """
     Utilities

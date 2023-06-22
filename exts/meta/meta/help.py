@@ -21,19 +21,17 @@ class CogPage:
         self,
         cog: Literal['_front_page'] | AluCog | commands.Cog,  # dirty way to handle front page
         cmds: Sequence[commands.Command],
+        category: ExtCategory,
         page_num: int = 0,  # page per cog so mostly 0
         category_page: int = 0,
         category_len: int = 1,
-        category_name: str = '',
-        category_emote: str = '',
     ):
         self.cog: Literal['_front_page'] | AluCog | commands.Cog = cog
         self.cmds: Sequence[commands.Command] = cmds
         self.page_num: int = page_num  # page per cog so mostly 0
         self.category_page: int = category_page
         self.category_len: int = category_len
-        self.category_name: str = category_name
-        self.category_emote: str = category_emote
+        self.category: ExtCategory = category
 
 
 class HelpPageSource(menus.ListPageSource):
@@ -59,9 +57,9 @@ class HelpPageSource(menus.ListPageSource):
             return e
 
         e.title = page.cog.qualified_name
-        emote_url = discord.PartialEmoji.from_str(page.category_emote)
+        emote_url = discord.PartialEmoji.from_str(page.category.emote)
         e.set_author(
-            name=f'Category: {page.category_name} (page {page.category_page + 1}/{page.category_len})',
+            name=f'Category: {page.category.name} (page {page.category_page + 1}/{page.category_len})',
             icon_url=emote_url.url,
         )
         desc = page.cog.description + '\n\n'
@@ -194,7 +192,7 @@ class AluHelp(commands.HelpCommand):
         await self.context.typing()
 
         index_category = ExtCategory(name='Index page', emote='\N{SWAN}', description='Index page')
-        index_pages = [CogPage(cog='_front_page', cmds=[], page_num=0)]
+        index_pages = [CogPage(cog='_front_page', cmds=[], page_num=0, category=index_category)]
         help_data: Dict[ExtCategory, List[CogPage]] = {index_category: index_pages}
 
         for category, cog_cmd_dict in mapping.items():
@@ -205,8 +203,7 @@ class AluHelp(commands.HelpCommand):
                         cog=cog,
                         cmds=filtered,
                         page_num=0,
-                        category_name=category.name,
-                        category_emote=category.emote,
+                        category=category,
                     )
                     help_data.setdefault(category, []).append(page)
 

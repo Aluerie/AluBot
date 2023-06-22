@@ -16,14 +16,24 @@ if TYPE_CHECKING:
     from utils import AluBot
 
 
-class CogPage(NamedTuple):
-    cog: Literal['_front_page'] | AluCog | commands.Cog  # dirty way to handle front page
-    cmds: Sequence[commands.Command]
-    page_num: int = 0  # page per cog so mostly 0
-    category_page: int = 0
-    category_len: int = 1
-    category_name: str = ''
-    category_emote: str = ''
+class CogPage:
+    def __init__(
+        self,
+        cog: Literal['_front_page'] | AluCog | commands.Cog,  # dirty way to handle front page
+        cmds: Sequence[commands.Command],
+        page_num: int = 0,  # page per cog so mostly 0
+        category_page: int = 0,
+        category_len: int = 1,
+        category_name: str = '',
+        category_emote: str = '',
+    ):
+        self.cog: Literal['_front_page'] | AluCog | commands.Cog = cog
+        self.cmds: Sequence[commands.Command] = cmds
+        self.page_num: int = page_num  # page per cog so mostly 0
+        self.category_page: int = category_page
+        self.category_len: int = category_len
+        self.category_name: str = category_name
+        self.category_emote: str = category_emote
 
 
 class HelpPageSource(menus.ListPageSource):
@@ -31,13 +41,11 @@ class HelpPageSource(menus.ListPageSource):
         entries = list(itertools.chain.from_iterable(data.values()))
         super().__init__(entries=entries, per_page=1)
 
-    async def format_page(self, menu: HelpPages, entries: CogPage):
-        cog, cmds, page_num, category_page, category_len, category_name, category_emote = entries
-
+    async def format_page(self, menu: HelpPages, page: CogPage):
         e = discord.Embed(colour=const.Colour.prpl())
         e.set_footer(text=f'With love, {menu.help_cmd.context.bot.user.display_name}')
 
-        if cog == '_front_page':
+        if page.cog == '_front_page':
             bot = menu.ctx_ntr.client
             e.title = f'{bot.user.name}\'s Help Menu'
             e.description = (
@@ -50,14 +58,14 @@ class HelpPageSource(menus.ListPageSource):
             e.set_thumbnail(url=bot.user.display_avatar)
             return e
 
-        e.title = cog.qualified_name
-        emote_url = discord.PartialEmoji.from_str(category_emote)
+        e.title = page.cog.qualified_name
+        emote_url = discord.PartialEmoji.from_str(page.category_emote)
         e.set_author(
-            name=f'Category: {category_name} (page {category_page + 1}/{category_len})',
+            name=f'Category: {page.category_name} (page {page.category_page + 1}/{page.category_len})',
             icon_url=emote_url.url,
         )
-        desc = cog.description + '\n\n'
-        desc += chr(10).join(['\n'.join(await menu.help_cmd.get_the_answer(c)) for c in cmds])
+        desc = page.cog.description + '\n\n'
+        desc += chr(10).join(['\n'.join(await menu.help_cmd.get_the_answer(c)) for c in page.cmds])
         e.description = desc[:4000]  # idk #TODO: this is bad
         return e
 
@@ -190,20 +198,23 @@ class AluHelp(commands.HelpCommand):
         help_data: Dict[ExtCategory, List[CogPage]] = {index_category: index_pages}
 
         for category, cog_cmd_dict in mapping.items():
-            cog_len = len(cog_cmd_dict)
-            for counter, (cog, cmds) in enumerate(cog_cmd_dict.items()):
+            for cog, cmds in cog_cmd_dict.items():
                 filtered = await self.filter_commands(cmds, sort=True)
                 if filtered:
                     page = CogPage(
                         cog=cog,
                         cmds=filtered,
                         page_num=0,
-                        category_page=counter,
-                        category_len=cog_len,
                         category_name=category.name,
                         category_emote=category.emote,
                     )
                     help_data.setdefault(category, []).append(page)
+
+        for category, cog_pages in help_data.items():
+            cog_len = len(cog_pages)
+            for counter, page in enumerate(cog_pages):
+                page.category_len = cog_len
+                page.category_page = counter
 
         pages = HelpPages(self.context, self, help_data)
         await pages.start()

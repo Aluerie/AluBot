@@ -68,7 +68,7 @@ class HelpSelect(discord.ui.Select):
 
         for category, starting_page in pages_per_category.items():
             self.add_option(
-                label=f'{category.name.ljust(20, ".")}page {starting_page}',
+                label=f'`{category.name.ljust(50, ".")}page {starting_page}`',
                 emoji=category.emote,
                 description=category.description,
                 value=str(starting_page),

@@ -192,9 +192,7 @@ class AluHelp(commands.HelpCommand):
     ):
         await self.context.typing()
 
-        index_category = ExtCategory(name='Index page', emote='\N{SWAN}', description='Index page')
-        index_pages = [CogPage(cog='_front_page', cmds=[], page_num=0, category=index_category)]
-        help_data: Dict[ExtCategory, List[CogPage]] = {index_category: index_pages}
+        help_data: Dict[ExtCategory, List[CogPage]] = {}
 
         for category, cog_cmd_dict in mapping.items():
             for cog, cmds in cog_cmd_dict.items():
@@ -214,6 +212,12 @@ class AluHelp(commands.HelpCommand):
                 page.category_len = cog_len
                 page.category_page = counter
 
+        help_data = dict(sorted(help_data.items(), key=lambda x: x[0].name))
+
+        index_category = ExtCategory(name='Index page', emote='\N{SWAN}', description='Index page')
+        index_pages = [CogPage(cog='_front_page', cmds=[], page_num=0, category=index_category)]
+
+        help_data = {index_category: index_pages} | help_data
         pages = HelpPages(self.context, self, help_data)
         await pages.start()
 
@@ -246,7 +250,8 @@ class AluHelpCog(MetaCog):
     @commands.is_owner()
     @commands.command(hidden=True)
     async def devhelp(self, ctx: AluContext, *, command: Optional[str]):
-        my_help = AluHelp()
+        my_help = AluHelp(show_hidden=True)
+        my_help.context = ctx
         await my_help.command_callback(ctx, command=command)
 
     @aluloop(count=1)

@@ -9,7 +9,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from exts.utilities.fix_links import fix_link_worker
+from exts.utilities.utilities.fix_links import fix_link_worker
 from utils import const, errors, webhook
 
 from ._category import CommunityCog

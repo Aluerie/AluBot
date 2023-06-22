@@ -58,8 +58,8 @@ class HelpPageSource(menus.ListPageSource):
             e.set_thumbnail(url=bot.user.display_avatar)
             return e
 
-        emote = getattr(page.cog, 'emote', '') or ''
-        triple_emote = '{0} {0} {0}'.format(emote)
+        emote = getattr(page.cog, 'emote', None)
+        triple_emote = '{0} {0} {0}'.format(emote) if emote else ''
         e.title = f'{page.cog.qualified_name} {triple_emote} (Section page {page.page_num + 1}/{page.page_len})'
         emote_url = discord.PartialEmoji.from_str(page.category.emote)
         author_text = f'Category: {page.category.name} (Category page {page.category_page + 1}/{page.category_len})'

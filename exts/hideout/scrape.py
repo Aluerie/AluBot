@@ -12,11 +12,13 @@ from utils import AluCog
 from utils.const import Colour, Guild
 from utils.lol.const import LOL_LOGO
 
+from ._category import HideoutCog
+
 if TYPE_CHECKING:
     pass
 
 
-class Insider(AluCog):
+class Insider(HideoutCog):
     def cog_load(self) -> None:
         self.insider_checker.start()
 
@@ -57,7 +59,7 @@ class Insider(AluCog):
         await self.bot.wait_until_ready()
 
 
-class LoLCom(AluCog):
+class LoLCom(HideoutCog):
     async def cog_load(self) -> None:
         self.patch_checker.start()
 

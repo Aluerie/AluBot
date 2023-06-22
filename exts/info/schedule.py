@@ -9,9 +9,11 @@ from bs4 import BeautifulSoup
 from discord import app_commands
 from discord.ext import commands, menus
 
-from utils import AluCog, cache, const, pagination
+from utils import cache, const, pagination
 from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_custom, format_dt_tdR
+
+from ._category import InfoCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
@@ -272,7 +274,7 @@ class SchedulePages(pagination.Paginator):
         self.add_item(ScheduleSelect(ctx.user, soup, query))
 
 
-class Schedule(AluCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
+class Schedule(InfoCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
     """Check Pro Matches schedule.
 
     Currently, the bot supports Dota 2 and football.

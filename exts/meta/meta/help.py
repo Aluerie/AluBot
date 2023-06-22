@@ -60,16 +60,15 @@ class HelpSelect(discord.ui.Select):
         self.__fill_options()
 
     def __fill_options(self) -> None:
-        pages_per_category: Mapping[ExtCategory, Tuple[int, int]] = {}
+        pages_per_category: Mapping[ExtCategory, int] = {}
         total = 0
         for category, cog_pages in self.paginator.help_data.items():
-            total_cmds = sum(len(i.cmds) for i in cog_pages)
-            pages_per_category[category] = total, total_cmds
+            pages_per_category[category] = total
             total += len(cog_pages)
 
-        for category, (starting_page, total_commands) in pages_per_category.items():
+        for category, starting_page in pages_per_category.items():
             self.add_option(
-                label=f'{category.name} ({total_commands})...page {starting_page}',
+                label=f'{category.name.ljust(20, ".")}page {starting_page}',
                 emoji=category.emote,
                 description=category.description,
                 value=str(starting_page),
@@ -181,8 +180,8 @@ class AluHelp(commands.HelpCommand):
         for category, cog_cmd_dict in mapping.items():
             for cog, cmds in cog_cmd_dict.items():
                 filtered = await self.filter_commands(cmds, sort=True)
-                # if filtered:
-                help_data.setdefault(category, []).append(CogPage(cog=cog, cmds=filtered, page_num=0))
+                if filtered:
+                    help_data.setdefault(category, []).append(CogPage(cog=cog, cmds=filtered, page_num=0))
 
         pages = HelpPages(self.context, self, help_data)
         await pages.start()

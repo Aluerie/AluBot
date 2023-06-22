@@ -9,11 +9,13 @@ from discord.ext import commands
 
 from utils import AluCog, const
 
+from ._category import HideoutCog
+
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 
-class PersonalCommands(AluCog):
+class PersonalCommands(HideoutCog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if member.guild == self.bot.hideout.guild:  # and member.bot:

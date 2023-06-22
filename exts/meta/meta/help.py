@@ -198,13 +198,15 @@ class AluHelp(commands.HelpCommand):
             for cog, cmds in cog_cmd_dict.items():
                 filtered = await self.filter_commands(cmds, sort=True)
                 if filtered:
-                    page = CogPage(
-                        cog=cog,
-                        cmds=filtered,
-                        page_num=0,
-                        category=category,
-                    )
-                    help_data.setdefault(category, []).append(page)
+                    cmds10 = [filtered[i : i + 10] for i in range(0, len(filtered), 10)]
+                    for counter, page_cmds in enumerate(cmds10):
+                        page = CogPage(
+                            cog=cog,
+                            cmds=page_cmds,
+                            page_num=counter,
+                            category=category,
+                        )
+                        help_data.setdefault(category, []).append(page)
 
         for category, cog_pages in help_data.items():
             cog_len = len(cog_pages)

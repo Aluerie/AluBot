@@ -20,11 +20,11 @@ venv/
 prefixes.json
 
 # beta test
-/cogs/beta.py
+/exts/beta.py
 _test.py
 
 # config secrets
 /config.py
 
 # Temporary ignore
-/cogs/template.py
+/exts/template.py

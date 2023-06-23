@@ -1,6 +1,13 @@
 from enum import StrEnum
 
 
+class Slash(StrEnum):
+    """Slash mentions strings."""
+
+    feedback = '</feedback:1060350834367549541>'
+    help = '</help:971447382787108919>'
+
+
 class Emote(StrEnum):
     """Emote strings."""
 

@@ -359,9 +359,10 @@ class BugTracker(AluCog):
                 batches_to_send.append([(em, file)])
 
         for i in batches_to_send:
-            msg = await self.community.bugtracker_news.send(embeds=[e for (e, _) in i], files=[f for (_, f) in i if f])
-            # todo: if we implement custom for public then we need to only publish from my own server
-            #  or just remove the following `.publish()` line at all
+            msg = await self.community.bugtracker_news.send(
+                embeds=[e for (e, _) in i],
+                files=list(dict.fromkeys([f for (_, f) in i if f])), # duplicates of files go outside of embeds :(
+            )
             await msg.publish()
 
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'

@@ -159,7 +159,8 @@ class OtherCog(AluCog):
     @commands.command(name='feedback')
     @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
     async def ext_feedback(self, ctx: AluContext, *, details: str):
-        """Give feedback about the bot directly to the bot developer. \
+        """Give feedback about the bot directly to the bot developer.
+        
         This is a quick way to request features or bug fixes. \
         The bot will DM you about the status of your request if possible/needed.
         You can also open issues/PR on [GitHub](https://github.com/Aluerie/AluBot).

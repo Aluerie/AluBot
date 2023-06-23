@@ -19,21 +19,23 @@ if TYPE_CHECKING:
 class CogPage:
     def __init__(
         self,
-        cog: Literal['_front_page'] | AluCog | commands.Cog,  # dirty way to handle front page
-        cmds: Sequence[commands.Command],
+        section: Literal['_front_page'] | AluCog | commands.Cog,  # dirty way to handle front page
         category: ExtCategory,
-        page_num: int = 0,
-        page_len: int = 0,
-        category_page: int = 0,
-        category_len: int = 1,
+        page_commands: Sequence[commands.Command],
+        section_total_commands: int = 0,
+        section_page_number: int = 0,
+        section_total_pages: int = 1,
+        category_page_number: int = 0,
+        category_total_pages: int = 1,
     ):
-        self.cog: Literal['_front_page'] | AluCog | commands.Cog = cog
-        self.cmds: Sequence[commands.Command] = cmds
-        self.page_num: int = page_num  # page per cog so mostly 0
-        self.page_len: int = page_len
-        self.category_page: int = category_page
-        self.category_len: int = category_len
+        self.section: Literal['_front_page'] | AluCog | commands.Cog = section
         self.category: ExtCategory = category
+        self.page_commands: Sequence[commands.Command] = page_commands
+        self.section_total_commands: int = section_total_commands
+        self.section_page_number: int = section_page_number
+        self.section_total_pages: int = section_total_pages
+        self.category_page_number: int = category_page_number
+        self.category_total_pages: int = category_total_pages
 
 
 class HelpPageSource(menus.ListPageSource):
@@ -45,7 +47,7 @@ class HelpPageSource(menus.ListPageSource):
         e = discord.Embed(colour=const.Colour.prpl())
         e.set_footer(text=f'With love, {menu.help_cmd.context.bot.user.display_name}')
 
-        if page.cog == '_front_page':
+        if page.section == '_front_page':
             bot = menu.ctx_ntr.client
             owner = bot.owner
             e.title = f'{bot.user.name}\'s Help Menu'
@@ -60,17 +62,23 @@ class HelpPageSource(menus.ListPageSource):
             e.set_author(name=f'Made by {owner.display_name}', icon_url=owner.display_avatar)
             return e
 
-        emote = getattr(page.cog, 'emote', None)
+        emote = getattr(page.section, 'emote', None)
         triple_emote = '{0} {0} {0}'.format(emote) if emote else ''
-        e.title = f'{page.cog.qualified_name} {triple_emote} (Section page {page.page_num + 1}/{page.page_len})'
+        e.title = (
+            f'{page.section.qualified_name} {triple_emote} - {page.section_total_commands} commands'
+            f'(Section page {page.section_page_number + 1}/{page.section_total_pages})'
+        )
         emote_url = discord.PartialEmoji.from_str(page.category.emote)
-        author_text = f'Category: {page.category.name} (Category page {page.category_page + 1}/{page.category_len})'
+        author_text = (
+            f'Category: {page.category.name} '
+            f'(Category page {page.category_page_number + 1}/{page.category_total_pages})'
+        )
         e.set_author(name=author_text, icon_url=emote_url.url)
-        e.description = page.cog.description
-        for c in page.cmds:
+        e.description = page.section.description
+        for c in page.page_commands:
             e.add_field(
                 name=menu.help_cmd.get_command_signature(c),
-                value=menu.help_cmd.get_command_value(c),
+                value=menu.help_cmd.get_command_short_help(c),
                 inline=False,
             )
         return e
@@ -172,10 +180,10 @@ class AluHelp(commands.HelpCommand):
                 return ' | aliases: ' + '; '.join([f'`{ali}`' for ali in command.aliases])
             return ''
 
-        def cd():
-            if command.cooldown is not None:
-                return f' | cd: {command.cooldown.rate} per {human_timedelta(command.cooldown.per, strip=True, suffix=False)}'
-            return ''
+        # def cd():
+        #     if command.cooldown is not None:
+        #         return f' | cd: {command.cooldown.rate} per {human_timedelta(command.cooldown.per, strip=True, suffix=False)}'
+        #     return ''
 
         def check():
             if command.checks:
@@ -184,9 +192,9 @@ class AluHelp(commands.HelpCommand):
                 return f"**!** {', '.join(res)}\n"
             return ''
 
-        return f'\N{BLACK CIRCLE} {signature()}{aliases()}{cd()}\n{check()}'
+        return f'\N{BLACK CIRCLE} {signature()}{aliases()}\n{check()}'
 
-    def get_command_value(self, command: commands.Command) -> str:
+    def get_command_short_help(self, command: commands.Command) -> str:
         # help string
         help_str = command.help or 'No documentation'
         split = help_str.split('\n', 1)
@@ -216,17 +224,20 @@ class AluHelp(commands.HelpCommand):
             for cog, cmds in cog_cmd_dict.items():
                 filtered = await self.filter_commands(cmds)  # , sort=True)
                 if filtered:
-                    cmds_strings = list(
+                    cmds_unpacked = list(
                         itertools.chain.from_iterable([await self.unpack_commands(c) for c in filtered])
                     )
-                    cmds10 = [cmds_strings[i : i + 10] for i in range(0, len(cmds_strings), 10)]
+                    amount_of_cmds = len(cmds_unpacked)
+                    chunk_size = 7
+                    cmds10 = [cmds_unpacked[i : i + chunk_size] for i in range(0, amount_of_cmds, chunk_size)]
                     page_len = len(cmds10)
                     for counter, page_cmds in enumerate(cmds10):
                         page = CogPage(
-                            cog=cog,
-                            cmds=page_cmds,
-                            page_num=counter,
-                            page_len=page_len,
+                            section=cog,
+                            page_commands=page_cmds,
+                            section_total_commands=amount_of_cmds,
+                            section_page_number=counter,
+                            section_total_pages=page_len,
                             category=category,
                         )
                         help_data.setdefault(category, []).append(page)
@@ -234,13 +245,13 @@ class AluHelp(commands.HelpCommand):
         for category, cog_pages in help_data.items():
             cog_len = len(cog_pages)
             for counter, page in enumerate(cog_pages):
-                page.category_len = cog_len
-                page.category_page = counter
+                page.category_total_pages = cog_len
+                page.category_page_number = counter
 
         help_data = dict(sorted(help_data.items(), key=lambda x: (int(x[0].sort_back), x[0].name)))
 
         index_category = ExtCategory(name='Index page', emote='\N{SWAN}', description='Index page')
-        index_pages = [CogPage(cog='_front_page', cmds=[], page_num=0, category=index_category)]
+        index_pages = [CogPage(section='_front_page', page_commands=[], section_page_number=0, category=index_category)]
 
         help_data = {index_category: index_pages} | help_data
         pages = HelpPages(self.context, self, help_data)

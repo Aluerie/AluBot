@@ -70,13 +70,13 @@ class ErrorHandlers(DevBaseCog):
                 desc = f'{error}'
             case commands.BadArgument() | commands.CheckFailure() | errors.AluBotException():
                 # These errors are generally raised in code by myself or by my code with an explanation text as `error`
-                # AluBotException subclassed exceptions are all mine. 
+                # AluBotException subclassed exceptions are all mine.
                 desc = f'{error}'
             case app_commands.CommandNotFound():
                 desc = (
                     # TODO: maybe link our server there or create a new server for the bot support?
-                    '**Sorry, but somehow this slash command does not exist anymore.**'
-                    '\nIf you think this command should exist, please ask about it using `/feedback` command.'
+                    '**Sorry, but somehow this slash command does not exist anymore.**\n'
+                    f'If you think this command should exist, please ask about it using {const.Slash.feedback} command.'
                 )
             case app_commands.CommandSignatureMismatch():
                 warn_developers = True
@@ -232,7 +232,7 @@ class ErrorHandlers(DevBaseCog):
     async def on_app_command_error(self, ntr: discord.Interaction, error: app_commands.AppCommandError, /):
         """|coro|
 
-        A handler called when an error is raised while invoking an app_command. 
+        A handler called when an error is raised while invoking an app_command.
         This includes slash commands, context menu commands.
 
         Parameters

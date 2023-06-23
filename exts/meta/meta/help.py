@@ -54,6 +54,8 @@ class HelpPageSource(menus.ListPageSource):
                 f'Hi! {bot.user.name} is an ultimate multi-purpose bot! \N{PURPLE HEART}\n\n'
                 f'\N{BLACK CIRCLE} Use {const.Slash.help}` <command>` for more info on a command.\n'
                 f'\N{BLACK CIRCLE} Use {const.Slash.help}` <section>` to go to that section page.\n'
+                '\N{BLACK CIRCLE} Alternatively to^ press \N{WHITE QUESTION MARK ORNAMENT} button to find command/section.'
+                '\N{BLACK CIRCLE} For legend used in this help menu press \N{BLACK QUESTION MARK ORNAMENT} button.'
                 '\N{BLACK CIRCLE} Use the dropdown menu below to select a category.'
             )
             e.set_thumbnail(url=bot.user.display_avatar)
@@ -68,7 +70,7 @@ class HelpPageSource(menus.ListPageSource):
 
             return e
 
-        emote = getattr(page.section, 'emote', None)
+        emote = getattr(page.section, 'emote', None) or ''
         e.title = (
             f'{page.section.qualified_name} {emote} - {page.section_total_commands} commands '
             f'(Section page {page.section_page_number + 1}/{page.section_total_pages})'
@@ -276,7 +278,7 @@ class AluHelp(commands.HelpCommand):
         for category, cog_cmd_dict in mapping.items():
             for cog, cmds in cog_cmd_dict.items():
                 if requested_cog == cog:
-                    starting_page = page_counter
+                    starting_page = page_counter + 1
 
                 filtered = await self.filter_commands(cmds)  # , sort=True)
                 if filtered:
@@ -313,7 +315,7 @@ class AluHelp(commands.HelpCommand):
         help_data = {index_category: index_pages} | help_data
 
         pages = HelpPages(self.context, self, help_data)
-        await pages.start(page_number=starting_page + 1)
+        await pages.start(page_number=starting_page)
 
     async def send_bot_help(
         self,

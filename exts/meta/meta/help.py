@@ -54,13 +54,13 @@ class HelpPageSource(menus.ListPageSource):
                 f'Hi! {bot.user.name} is an ultimate multi-purpose bot! \N{PURPLE HEART}\n\n'
                 f'\N{BLACK CIRCLE} Use {const.Slash.help}` <command>` for more info on a command.\n'
                 f'\N{BLACK CIRCLE} Use {const.Slash.help}` <section>` to go to that section page.\n'
-                '\N{BLACK CIRCLE} Alternatively to^ press \N{WHITE QUESTION MARK ORNAMENT} button to find command/section.\n'
-                '\N{BLACK CIRCLE} For legend used in this help menu press \N{BLACK QUESTION MARK ORNAMENT} button.\n'
+                '\N{BLACK CIRCLE} Alternatively to^ you can try searching with \N{RIGHT-POINTING MAGNIFYING GLASS} button.\n'
+                '\N{BLACK CIRCLE} For legend used in the help menu press \N{WHITE QUESTION MARK ORNAMENT} button.\n'
                 '\N{BLACK CIRCLE} Use the dropdown menu below to select a category.'
             )
             e.set_thumbnail(url=bot.user.display_avatar)
             e.set_author(name=f'Made by @{owner.display_name}', icon_url=owner.display_avatar)
-            e.set_footer(text=f'With love, {menu.help_cmd.context.bot.user.display_name}')
+            e.set_footer(text=f'With love, {bot.user.display_name}', icon_url=bot.user.display_avatar)
 
             menu.clear_items()
             menu.fill_items()
@@ -88,7 +88,7 @@ class HelpPageSource(menus.ListPageSource):
                 value=menu.help_cmd.get_command_short_help(c),
                 inline=False,
             )
-        e.set_footer(text=page.category.description)
+        e.set_footer(text=page.category.description, icon_url=menu.ctx_ntr.client.user.display_avatar)
         menu.clear_items()
         menu.fill_items()
         return e
@@ -138,17 +138,11 @@ class HelpPages(pagination.Paginator):
 
     def fill_items(self):
         if self.source.is_paginating():  # Copied a bit from super().fill_items
-            for item in [
-                self.legend_page,
-                self.previous_page,
-                self.index,
-                self.next_page,
-                self.find_command_or_section_page,
-            ]:
+            for item in [self.legend_page, self.previous_page, self.index, self.next_page, self.search]:
                 self.add_item(item)
             self.add_item(HelpSelect(self))
 
-    @discord.ui.button(label="\N{BLACK QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
     async def legend_page(self, ntr: discord.Interaction[AluBot], _btn: discord.ui.Button):
         """Show legend page."""
         e = discord.Embed(title='Legend used in the Help menu.')
@@ -175,10 +169,10 @@ class HelpPages(pagination.Paginator):
         e.set_footer(text=f'With love, {ntr.client.user.display_name}')
         await ntr.response.send_message(embed=e, ephemeral=True)
 
-    @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
-    async def find_command_or_section_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):
-        """Show modal which leads to basically invoking /help <command>/<section>"""
-        await self.show_page(ntr, 0)
+    # @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
+    # async def find_command_or_section_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+    #     """Show modal which leads to basically invoking /help <command>/<section>"""
+    #     await self.show_page(ntr, 0)
 
 
 class AluHelp(commands.HelpCommand):

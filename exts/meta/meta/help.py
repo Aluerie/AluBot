@@ -191,7 +191,7 @@ class AluHelp(commands.HelpCommand):
         help_str = command.help or 'No documentation'
         split = help_str.split('\n', 1)
         extra_info = ' [...]' if len(split) > 1 else ''
-        help_str = help_str + extra_info
+        help_str = split[0] + extra_info
         return help_str
 
     def get_bot_mapping(self) -> Dict[ExtCategory, Dict[AluCog | commands.Cog, List[commands.Command]]]:

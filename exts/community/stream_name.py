@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 ORIGINAL_NAME = '\N{CINEMA}streaming_room'
 
 
-class StreamChannelName(CommunityCog, name='\N{CINEMA}streaming_room Control', emote=const.Emote.peepoMovie):
+class StreamChannelName(CommunityCog, name='\N{CINEMA}streaming\\_room Control', emote=const.Emote.peepoMovie):
     """Change streaming room title
 
     Get folks ready to watch your stream with a fancy title \

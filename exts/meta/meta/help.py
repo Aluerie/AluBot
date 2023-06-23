@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Dict, List, Literal, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Dict, List, Literal, Mapping, Optional, Sequence, Tuple
 
 import discord
 from discord import app_commands
@@ -20,15 +20,15 @@ class CogPage:
     def __init__(
         self,
         cog: Literal['_front_page'] | AluCog | commands.Cog,  # dirty way to handle front page
-        cmds: Sequence[str],
+        cmds: Sequence[commands.Command],
         category: ExtCategory,
-        page_num: int = 0,  # page per cog so mostly 0
+        page_num: int = 0,
         page_len: int = 0,
         category_page: int = 0,
         category_len: int = 1,
     ):
         self.cog: Literal['_front_page'] | AluCog | commands.Cog = cog
-        self.cmds: Sequence[str] = cmds
+        self.cmds: Sequence[commands.Command] = cmds
         self.page_num: int = page_num  # page per cog so mostly 0
         self.page_len: int = page_len
         self.category_page: int = category_page
@@ -47,15 +47,17 @@ class HelpPageSource(menus.ListPageSource):
 
         if page.cog == '_front_page':
             bot = menu.ctx_ntr.client
+            owner = bot.owner
             e.title = f'{bot.user.name}\'s Help Menu'
             e.description = (
                 f'{bot.user.name} is an ultimate multi-purpose bot !\n\n'
                 'Use dropdown menu below to select a category.'
             )
-            e.add_field(name=f'{bot.owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
+            e.add_field(name=f'{owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
             e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
-            e.add_field(name='Bot Owner', value=f'@{bot.owner}')
+            e.add_field(name='Bot Owner', value=f'@{owner}')
             e.set_thumbnail(url=bot.user.display_avatar)
+            e.set_author(name=f'Made by {owner.display_name}', icon_url=owner.display_avatar)
             return e
 
         emote = getattr(page.cog, 'emote', None)
@@ -64,8 +66,13 @@ class HelpPageSource(menus.ListPageSource):
         emote_url = discord.PartialEmoji.from_str(page.category.emote)
         author_text = f'Category: {page.category.name} (Category page {page.category_page + 1}/{page.category_len})'
         e.set_author(name=author_text, icon_url=emote_url.url)
-        desc = page.cog.description + '\n\n' + '\n'.join(page.cmds)
-        e.description = desc[:4095]  # idk #TODO: this is bad
+        e.description = page.cog.description
+        for c in page.cmds:
+            e.add_field(
+                name=menu.help_cmd.get_command_signature(c),
+                value=menu.help_cmd.get_command_value(c),
+                inline=False,
+            )
         return e
 
 
@@ -129,18 +136,23 @@ class AluHelp(commands.HelpCommand):
             },
         )
 
-    async def get_the_answer(self, c, answer=None, deep=0):
+    async def unpack_commands(
+        self, command: commands.Command, answer: Optional[list[commands.Command]] = None, deep: int = 0
+    ) -> List[commands.Command]:
+        """If a command is a group then unpack those until their very-last children.
+
+        examples:
+        /help -> [/help]
+        /tag (create delete owner etc) -> [/tag create, /tag delete, /tag delete, /tag etc]
+        same for 3depth children.
+        """
         if answer is None:
-            answer = []
-        if getattr(c, 'commands', None) is not None:
-            # if c.brief == const.Emote.slash:
-            #     answer.append(self.get_command_signature(c))
-            for x in await self.filter_commands(c.commands, sort=True):
-                await self.get_the_answer(x, answer=answer, deep=deep + 1)
-            # if deep > 0:
-            #     answer.append('')
+            answer = []  # so the array only exists inside the command.
+        if getattr(command, 'commands', None) is not None:  # maybe we should isinstance(commands.Group)
+            for x in await self.filter_commands(command.commands):  # , sort=True): # type: ignore
+                await self.unpack_commands(x, answer=answer, deep=deep + 1)
         else:
-            answer.append(self.get_command_signature(c))
+            answer.append(command)
         return answer
 
     def get_command_signature(self, command: commands.Command) -> str:
@@ -172,10 +184,15 @@ class AluHelp(commands.HelpCommand):
                 return f"**!** {', '.join(res)}\n"
             return ''
 
-        def help_str():
-            return command.help or 'No documentation'
+        return f'\N{BLACK CIRCLE} {signature()}{aliases()}{cd()}\n{check()}'
 
-        return f'\N{BLACK CIRCLE} {signature()}{aliases()}{cd()}\n{check()}{help_str()}'
+    def get_command_value(self, command: commands.Command) -> str:
+        # help string
+        help_str = command.help or 'No documentation'
+        split = help_str.split('\n', 1)
+        extra_info = ' [...]' if len(split) > 1 else ''
+        help_str = help_str + extra_info
+        return help_str
 
     def get_bot_mapping(self) -> Dict[ExtCategory, Dict[AluCog | commands.Cog, List[commands.Command]]]:
         """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
@@ -197,9 +214,11 @@ class AluHelp(commands.HelpCommand):
 
         for category, cog_cmd_dict in mapping.items():
             for cog, cmds in cog_cmd_dict.items():
-                filtered = await self.filter_commands(cmds, sort=True)
+                filtered = await self.filter_commands(cmds)  # , sort=True)
                 if filtered:
-                    cmds_strings = list(itertools.chain.from_iterable([await self.get_the_answer(c) for c in filtered]))
+                    cmds_strings = list(
+                        itertools.chain.from_iterable([await self.unpack_commands(c) for c in filtered])
+                    )
                     cmds10 = [cmds_strings[i : i + 10] for i in range(0, len(cmds_strings), 10)]
                     page_len = len(cmds10)
                     for counter, page_cmds in enumerate(cmds10):

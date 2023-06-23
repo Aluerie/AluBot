@@ -28,6 +28,9 @@ class BetaTestCog(AluCog, name='BetaTest'):
 
     @aluloop(count=1)
     async def beta_task(self):
+        e = discord.Embed(description='xd')
+        e.add_field(name=f'</seta:1120127123085070427> `xd rofl |`', value='</seta:1120127123085070427>')
+        await self.hideout.spam.send(embed=e)
         pass
 
     @commands.command()

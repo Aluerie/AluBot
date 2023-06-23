@@ -54,8 +54,8 @@ class HelpPageSource(menus.ListPageSource):
                 f'Hi! {bot.user.name} is an ultimate multi-purpose bot! \N{PURPLE HEART}\n\n'
                 f'\N{BLACK CIRCLE} Use {const.Slash.help}` <command>` for more info on a command.\n'
                 f'\N{BLACK CIRCLE} Use {const.Slash.help}` <section>` to go to that section page.\n'
-                '\N{BLACK CIRCLE} Alternatively to^ press \N{WHITE QUESTION MARK ORNAMENT} button to find command/section.'
-                '\N{BLACK CIRCLE} For legend used in this help menu press \N{BLACK QUESTION MARK ORNAMENT} button.'
+                '\N{BLACK CIRCLE} Alternatively to^ press \N{WHITE QUESTION MARK ORNAMENT} button to find command/section.\n'
+                '\N{BLACK CIRCLE} For legend used in this help menu press \N{BLACK QUESTION MARK ORNAMENT} button.\n'
                 '\N{BLACK CIRCLE} Use the dropdown menu below to select a category.'
             )
             e.set_thumbnail(url=bot.user.display_avatar)

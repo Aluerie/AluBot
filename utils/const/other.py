@@ -11,8 +11,10 @@ class Slash(StrEnum):
 class Emote(StrEnum):
     """Emote strings."""
 
+    # comments mean that this emote is used in help command for something so i don't reuse it by accident
+
     # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
-    peepoComfy = '<:_:726438781208756288>'
+    peepoComfy = '<:_:726438781208756288>' # Category: Community
 
     # HIDEOUT SERVER, NON-ANIMATED EMOTES ##############################################################################
 
@@ -31,7 +33,6 @@ class Emote(StrEnum):
     DankZzz = '<:_:1107467287398723656>'
     FeelsDankMan = '<:_:1107471658861735958>'
     FeelsDankManLostHisHat = '<:_:1107471692013502504>'
-    github_logo = '<:_:1081677464637550662>'
     Jebaited = '<:_:1107467775749914644>'
     Lewd = '<:_:976604430059331684>'
     peepoBlushDank = '<:_:1107471683448754287>'
@@ -54,6 +55,10 @@ class Emote(StrEnum):
     slash = '<:_:823159274954817566>'
     Smartge = '<:_:1107471679644512396>'
     TwoBButt = '<:_:853729747846168576>'
+
+    # logo emotes 
+    github_logo = '<:_:1081677464637550662>'
+    AluerieServer = '<:_:1121891520048533535>'
 
     # HIDEOUT SERVER, ANIMATED EMOTES ##################################################################################
     DankL = '<a:_:1107481467912736859>'

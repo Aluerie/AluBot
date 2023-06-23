@@ -16,18 +16,10 @@ import pygit2
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluContext, const
-from utils.bot.intents_perms import permissions
+from utils import AluCog, AluContext, Url, const
 
 if TYPE_CHECKING:
     pass
-
-
-class Url(discord.ui.View):
-    # TODO : make a helper class out of it
-    def __init__(self, url: str, label: str = 'Open', emoji: Optional[str] = None):
-        super().__init__()
-        self.add_item(discord.ui.Button(label=label, emoji=emoji, url=url))
 
 
 async def count_lines(
@@ -203,10 +195,7 @@ class OtherCog(AluCog):
         You can also press "Add to Server" button in my profile.
         """
 
-        url = discord.utils.oauth_url(self.bot.client_id, permissions=permissions)
-        v = discord.ui.View(timeout=1)
-        v.add_item(discord.ui.Button(emoji="\N{SWAN}", label="Invite Link", url=url))
-        await ctx.reply(view=v)
+        await ctx.reply(view=Url(self.bot.invite_link, emoji="\N{SWAN}", label="Invite Link"))
 
     @commands.hybrid_command(help="Checks the bot\'s ping to Discord")
     async def ping(self, ctx: AluContext):
@@ -288,7 +277,7 @@ class OtherCog(AluCog):
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
     async def source(self, ctx: AluContext, *, command: Optional[str] = None):
         """Links to the bots code, or a specific command's"""
-        source_url = ctx.bot.repo
+        source_url = ctx.bot.repo_url
         branch = "master"
 
         license_url = f"{source_url}/blob/master/LICENSE"

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import sys
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -102,20 +103,20 @@ class ErrorHandlers(DevBaseCog):
             #     desc = f'You provided way too many values ({len(error.values)}) for this flag:\n`{error.flag.name}`'
             # case commands.errors.MissingRequiredFlag():
             #     desc = f'Please, provide this flag:\n`{error.flag.name}`'
-            # case commands.MissingRequiredArgument():
-            #     desc = f'Please, provide this argument:\n`{error.param.name}`'
-            #     if (
-            #         getattr(error.param, 'converter', None)
-            #         and inspect.isclass(error.param.converter)
-            #         and issubclass(error.param.converter, commands.FlagConverter)
-            #     ):
-            #         desc += (
-            #             '\n\nThis is flag based argument. '
-            #             'Remember, commands with those are used together with flag-keywords , i.e.\n'
-            #             '`$dota stream add twitch: gorgc steam: 123`\n'
-            #             'meaning you need to specify that `twitch:` flag is `gorgc` '
-            #             'similarly how you type `from: @Eileen` in Discord Search feature'
-            #         )
+            case commands.MissingRequiredArgument():
+                desc = f'Please, provide this argument:\n`{error.param.name}`'
+                if (  # todo: this is wonky, we probably should just overwrite it on command basis for more clarity
+                    getattr(error.param, 'converter', None)
+                    and inspect.isclass(error.param.converter)
+                    and issubclass(error.param.converter, commands.FlagConverter)
+                ):
+                    desc += (
+                        '\n\nThis is flag based argument. '
+                        'Remember, commands with those are used together with flag-keywords , i.e.\n'
+                        '`$dota stream add twitch: gorgc steam: 123`\n'
+                        'meaning you need to specify that `twitch:` flag is `gorgc` '
+                        'similarly how you type `from: @Eileen` in Discord Search feature'
+                    )
             # case commands.TooManyArguments():
             #     desc = 'Please, double check your arguments for the command'
             # case commands.MessageNotFound():

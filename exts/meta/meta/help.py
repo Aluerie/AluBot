@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Dict, List, Literal, Mapping, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Dict, List, Literal, Mapping, Optional, Sequence, Tuple, Union
 
 import discord
 from discord import app_commands
 from discord.ext import commands, menus
 
 from utils import AluCog, AluContext, ExtCategory, aluloop, const, pagination
-from utils.formats import human_timedelta
 
 from .._category import MetaCog
 
@@ -45,27 +44,33 @@ class HelpPageSource(menus.ListPageSource):
 
     async def format_page(self, menu: HelpPages, page: CogPage):
         e = discord.Embed(colour=const.Colour.prpl())
-        e.set_footer(text=f'With love, {menu.help_cmd.context.bot.user.display_name}')
 
         if page.section == '_front_page':
             bot = menu.ctx_ntr.client
             owner = bot.owner
             e.title = f'{bot.user.name}\'s Help Menu'
             e.description = (
-                f'{bot.user.name} is an ultimate multi-purpose bot !\n\n'
-                'Use dropdown menu below to select a category.'
+                f'\N{HEAVY BLACK HEART}\N{VARIATION SELECTOR-16} '
+                f'Hi! {bot.user.name} is an ultimate multi-purpose bot! \N{PURPLE HEART}\n\n'
+                f'\N{BLACK CIRCLE} Use {const.Slash.help}` <command>` for more info on a command.\n'
+                f'\N{BLACK CIRCLE} Use {const.Slash.help}` <section>` to go to that section page.\n'
+                '\N{BLACK CIRCLE} Use the dropdown menu below to select a category.'
             )
-            e.add_field(name=f'{owner.name}\'s server', value='[Link](https://discord.gg/K8FuDeP)')
-            e.add_field(name='GitHub', value='[Link](https://github.com/Aluerie/AluBot)')
-            e.add_field(name='Bot Owner', value=f'@{owner}')
             e.set_thumbnail(url=bot.user.display_avatar)
-            e.set_author(name=f'Made by {owner.display_name}', icon_url=owner.display_avatar)
+            e.set_author(name=f'Made by @{owner.display_name}', icon_url=owner.display_avatar)
+            e.set_footer(text=f'With love, {menu.help_cmd.context.bot.user.display_name}')
+
+            menu.clear_items()
+            menu.fill_items()
+            menu.add_item(discord.ui.Button(emoji=const.Emote.github_logo, label='GitHub', url=bot.repo_url))
+            menu.add_item(discord.ui.Button(emoji=const.Emote.FeelsDankMan, label='Invite me', url=bot.invite_link))
+            menu.add_item(discord.ui.Button(emoji=const.Emote.AluerieServer, label='Community', url=bot.server_url))
+
             return e
 
         emote = getattr(page.section, 'emote', None)
-        triple_emote = '{0} {0} {0}'.format(emote) if emote else ''
         e.title = (
-            f'{page.section.qualified_name} {triple_emote} - {page.section_total_commands} commands'
+            f'{page.section.qualified_name} {emote} - {page.section_total_commands} commands '
             f'(Section page {page.section_page_number + 1}/{page.section_total_pages})'
         )
         emote_url = discord.PartialEmoji.from_str(page.category.emote)
@@ -81,12 +86,15 @@ class HelpPageSource(menus.ListPageSource):
                 value=menu.help_cmd.get_command_short_help(c),
                 inline=False,
             )
+        e.set_footer(text=page.category.description)
+        menu.clear_items()
+        menu.fill_items()
         return e
 
 
 class HelpSelect(discord.ui.Select):
     def __init__(self, paginator: HelpPages):
-        super().__init__(placeholder='Choose help category')
+        super().__init__(placeholder='\N{UNICORN FACE} Choose help category')
         self.paginator: HelpPages = paginator
 
         self.__fill_options()
@@ -126,7 +134,49 @@ class HelpPages(pagination.Paginator):
         self.help_data: Dict[ExtCategory, List[CogPage]] = help_data
         super().__init__(ctx, HelpPageSource(help_data))
 
-        self.add_item(HelpSelect(self))
+    def fill_items(self):
+        if self.source.is_paginating():  # Copied a bit from super().fill_items
+            for item in [
+                self.legend_page,
+                self.previous_page,
+                self.index,
+                self.next_page,
+                self.find_command_or_section_page,
+            ]:
+                self.add_item(item)
+            self.add_item(HelpSelect(self))
+
+    @discord.ui.button(label="\N{BLACK QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
+    async def legend_page(self, ntr: discord.Interaction[AluBot], _btn: discord.ui.Button):
+        """Show legend page."""
+        e = discord.Embed(title='Legend used in the Help menu.')
+        e.description = (
+            'If you have troubles figuring out how to use some of text commands then you should try using slash commands'
+            ' because everything there has a small explanation text. '
+            'Nevertheless, this help menu also shows signatures for text, a.k.a. prefix commands.'
+            'Reading those is pretty simple.'
+        )
+
+        fields = (
+            ('<argument>', 'This means the argument is __**required**__.'),
+            ('[argument]', 'This means the argument is __**optional**__.'),
+            ("`[argument='default']`", "Means that this argument is __**optional**__ and has a default value"),
+            ('[A|B|C]', 'This means that it can be __**either A, B or C**__.'),
+            ('[argument...]', 'This means you can have multiple arguments.\n'),
+            (
+                'Note',
+                'Now that you know the basics, it should be noted that...\n' '__**You do not type in the brackets!**__',
+            ),
+        )
+        for name, value in fields:
+            e.add_field(name=name, value=value, inline=False)
+        e.set_footer(text=f'With love, {ntr.client.user.display_name}')
+        await ntr.response.send_message(embed=e, ephemeral=True)
+
+    @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
+    async def find_command_or_section_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+        """Show modal which leads to basically invoking /help <command>/<section>"""
+        await self.show_page(ntr, 0)
 
 
 class AluHelp(commands.HelpCommand):
@@ -212,16 +262,22 @@ class AluHelp(commands.HelpCommand):
         # todo: think how to sort front page to front
         return mapping
 
-    async def send_bot_help(
+    async def send_help_menu(
         self,
         mapping: Dict[ExtCategory, Dict[AluCog | commands.Cog, List[commands.Command]]],
+        *,
+        requested_cog: Optional[Union[AluCog, commands.Cog]] = None,
     ):
         await self.context.typing()
 
         help_data: Dict[ExtCategory, List[CogPage]] = {}
 
+        starting_page, page_counter = 0, 0  # used to get to the section page we might need from the cog command.
         for category, cog_cmd_dict in mapping.items():
             for cog, cmds in cog_cmd_dict.items():
+                if requested_cog == cog:
+                    starting_page = page_counter
+
                 filtered = await self.filter_commands(cmds)  # , sort=True)
                 if filtered:
                     cmds_unpacked = list(
@@ -241,6 +297,7 @@ class AluHelp(commands.HelpCommand):
                             category=category,
                         )
                         help_data.setdefault(category, []).append(page)
+                        page_counter += 1
 
         for category, cog_pages in help_data.items():
             cog_len = len(cog_pages)
@@ -254,8 +311,19 @@ class AluHelp(commands.HelpCommand):
         index_pages = [CogPage(section='_front_page', page_commands=[], section_page_number=0, category=index_category)]
 
         help_data = {index_category: index_pages} | help_data
+
         pages = HelpPages(self.context, self, help_data)
-        await pages.start()
+        await pages.start(page_number=starting_page + 1)
+
+    async def send_bot_help(
+        self,
+        mapping: Dict[ExtCategory, Dict[AluCog | commands.Cog, List[commands.Command]]],
+    ):
+        await self.send_help_menu(mapping)
+
+    async def send_cog_help(self, cog: Union[AluCog, commands.Cog]):
+        mapping = self.get_bot_mapping()
+        await self.send_help_menu(mapping, requested_cog=cog)
 
 
 class AluHelpCog(MetaCog):

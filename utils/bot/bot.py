@@ -25,7 +25,7 @@ from utils.twitch import TwitchClient
 
 from .. import AluContext, ConfirmationView, ExtCategory, cache, const, formats, none_category
 from .cmd_cache import MyCommandTree
-from .intents_perms import intents
+from .intents_perms import intents, permissions
 
 if TYPE_CHECKING:
     from exts.reminders.reminders import Reminder
@@ -71,8 +71,9 @@ class AluBot(commands.Bot):
         self.test: bool = test
         self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
 
-        self.repo = 'https://github.com/Aluerie/AluBot'
-        self.developer = 'Aluerie'
+        self.repo_url = 'https://github.com/Aluerie/AluBot'
+        self.developer = 'Aluerie' # it's my git name, in case i change discord
+        self.server_url = 'https://discord.gg/K8FuDeP'
 
         # modules
         self.config = config
@@ -124,12 +125,8 @@ class AluBot(commands.Bot):
         if not category or not isinstance(category, ExtCategory):
             category = none_category
         if cog.__cog_name__ == 'Jishaku':
-            category = ExtCategory(
-                name='Jishaku',
-                emote=const.Emote.bedWTF,
-                description='Jishaku'
-            )
-        
+            category = ExtCategory(name='Jishaku', emote=const.Emote.bedWTF, description='Jishaku')
+
         self.category_cogs.setdefault(category, []).append(cog)
 
     # __init__ version
@@ -389,3 +386,7 @@ class AluBot(commands.Bot):
     @property
     def community(self) -> const.CommunityGuild:
         return const.CommunityGuild(self)
+    
+    @property
+    def invite_link(self) -> str:
+        return discord.utils.oauth_url(self.client_id, permissions=permissions)

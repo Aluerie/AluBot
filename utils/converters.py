@@ -1,9 +1,17 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import inspect
+import re
+from typing import TYPE_CHECKING, Tuple
 
+import discord
+from discord import app_commands
 from discord.ext import commands
+from PIL import ImageColor
 from typing_extensions import Self
+
+from . import const
+from .bases import AluBotException
 
 if TYPE_CHECKING:
     from .bases import AluContext
@@ -81,3 +89,76 @@ class Snowflake:
             if param:
                 raise commands.BadArgument(f'{param.name} argument expected a Discord ID not {argument!r}')
             raise commands.BadArgument(f'expected a Discord ID not {argument!r}')
+
+
+class InvalidColour(AluBotException):
+    """Exception for custom cases of AluColourConverter."""
+
+    __slots__: Tuple[str, ...] = ()
+
+
+class AluColourConverter(commands.ColourConverter):
+    """Some super overloaded colour converted made for /colour command."""
+
+    async def convert(self, ctx: AluContext, argument: str) -> discord.Colour:
+        # TODO: we will rename command: for below, probably so be careful.
+        error_footer = f'\n\nTo see supported colour formats by the bot - use {const.Slash.help}` command: colour`'
+
+        # my custom situations/desires.
+        if argument == 'prpl':
+            # my fav colour, of course.
+            return const.Colour.prpl()
+
+        # Material Palette
+        m = re.match(r"mp\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", argument)
+        if m:
+            colour_name = m.group(1)
+            shade = int(m.group(2))
+            try:
+                return getattr(const.MaterialPalette, colour_name)(shade)
+            except AttributeError:
+                methods = [m[0] for m in inspect.getmembers(const.MaterialPalette, predicate=inspect.ismethod)]
+                raise InvalidColour(
+                    f'Provided colour name is incorrect.\n\n'
+                    'MaterialUI Google Palette supports the following colour names:'
+                    f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
+                )
+            except ValueError:
+                raise InvalidColour(
+                    'Provided shade value is incorrect.\n\n'
+                    'MaterialUI Google Palette supports the following shades values:'
+                    f'\n{", ".join(f"`{v}`" for v in const.MaterialPalette.shades)}{error_footer}'
+                )
+
+        # Material Accent Palette
+        m = re.match(r"map\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", argument)
+        if m:
+            colour_name = m.group(1)
+            shade = int(m.group(2))
+            try:
+                return getattr(const.MaterialAccentPalette, colour_name)(shade)
+            except AttributeError:
+                methods = [m[0] for m in inspect.getmembers(const.MaterialPalette, predicate=inspect.ismethod)]
+                raise InvalidColour(
+                    f'Provided colour name is incorrect.\n\n'
+                    'MaterialAccentUI Google Palette supports the following colour names:'
+                    f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
+                )
+            except ValueError:
+                raise InvalidColour(
+                    'Provided shade value is incorrect.\n\n'
+                    'MaterialAccentUI Google Palette supports the following shades values:'
+                    f'\n{", ".join(f"`{v}`" for v in const.MaterialAccentPalette.shades)}{error_footer}'
+                )
+
+        # ImageColor
+        try:
+            rgb: Tuple[int, int, int] = ImageColor.getcolor(argument, "RGB")  # type:ignore
+            return discord.Colour.from_rgb(*rgb)
+        except ValueError:
+            pass
+
+        try:
+            return await super().convert(ctx, argument)
+        except commands.BadColourArgument:
+            raise InvalidColour(f'Colour {argument} is invalid.{error_footer}')

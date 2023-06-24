@@ -177,7 +177,7 @@ class DotaNotifs(FPCCog):
             assert isinstance(ch, discord.TextChannel)
             em, img_file = await match.notif_embed_and_file(self.bot)
             log.debug("LF | Successfully made embed+file")
-            owner_name = ch.guild.owner.name if ch.guild.owner else 'Somebody'
+            owner_name = ch.guild.owner.display_name if ch.guild.owner else 'Somebody'
             em.title = f"{owner_name}'s fav hero + player spotted"
             msg = await ch.send(embed=em, file=img_file)
             query = """ INSERT INTO dota_matches (match_id) 

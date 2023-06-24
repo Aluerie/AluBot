@@ -281,17 +281,16 @@ class OtherCog(AluCog):
         branch = "master"
 
         license_url = f"{source_url}/blob/master/LICENSE"
-        e = discord.Embed(title='MPL Conditions', url=license_url, colour=0x612783)
-        e.set_author(name='Code is licensed under MPL', url=license_url)
+        e = discord.Embed(title='Mozilla Public License 2.0', url=license_url, colour=0x612783)
+        e.set_author(name='Code is licensed under MPL v2', url=license_url)
         e.description = (
-            "\N{BLACK CIRCLE} Disclose source\n"
-            "\N{BLACK CIRCLE} License and copyright notice\n"
-            "\N{BLACK CIRCLE} Same license (file)\n"
-            "------------------------------------"
+            f'\N{BLACK CIRCLE} Remember to follow all license nerdy conditions, '
+            'especially [this one]({license_url}#L160-L168). Also:'
         )
+        e.set_image(url='https://i.imgur.com/kGFsKcc.png')
 
         if command is None:
-            view = Url(source_url, label="Repository link", emoji=const.Emote.github_logo)
+            view = Url(source_url, label="GitHub Repo", emoji=const.Emote.github_logo)
             return await ctx.reply(embed=e, view=view)
 
         if command == "help":
@@ -322,7 +321,7 @@ class OtherCog(AluCog):
             branch = "master"
 
         final_url = f"{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}"
-        e.set_footer(text=f"{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
+        e.set_footer(text=f"Found source code here:\n{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
 
         view = Url(final_url, label=f"Source code for command \"{str(obj)}\"", emoji=const.Emote.github_logo)
         await ctx.reply(embed=e, view=view)

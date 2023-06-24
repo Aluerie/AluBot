@@ -109,7 +109,7 @@ class LoLNotifs(FPCCog):
             log.debug('LF | Successfully made embed+file')
             assert isinstance(ch, discord.TextChannel)
 
-            owner_name = ch.guild.owner.name if ch.guild.owner else 'Somebody'
+            owner_name = ch.guild.owner.display_name if ch.guild.owner else 'Somebody'
             em.title = f"{owner_name}'s fav champ + player spotted"
             msg = await ch.send(embed=em, file=img_file)
 

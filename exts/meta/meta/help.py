@@ -321,6 +321,14 @@ class AluHelp(commands.HelpCommand):
         mapping = self.get_bot_mapping()
         await self.send_help_menu(mapping, requested_cog=cog)
 
+    async def send_command_help(self, command: commands.Command):
+        return await super().send_command_help(command)
+
+    async def send_group_help(self, group: commands.Group):
+        return await super().send_group_help(group)
+
+    async def send_error_message(self, error: str):
+        return await super().send_error_message(error)
 
 class AluHelpCog(MetaCog):
     """Help command."""

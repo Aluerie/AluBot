@@ -6,7 +6,7 @@ import platform
 import re
 import socket
 import warnings
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Annotated, List, Union
 
 import discord
 import psutil
@@ -16,7 +16,7 @@ from discord.ext import commands
 from PIL import Image, ImageColor
 from wordcloud import WordCloud
 
-from utils import const
+from utils import const, converters
 from utils.formats import format_dt_tdR, human_timedelta
 
 from ._category import InfoCog
@@ -111,41 +111,27 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
         usage='<formatted_colour_string>',
     )
     @app_commands.describe(colour='Colour in any of supported formats')
-    async def colour(self, ctx, *, colour: str):
+    async def colour(self, ctx, *, colour: Annotated[discord.Colour, converters.AluColourConverter]):
         """Get info about colour in specified <formatted_colour_string>
 
         The bot supports the following string formats:
 
-        \N{BULLET} Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`
+        \N{BULLET} Hexadecimal specifiers: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`, `0x<hex>`, `#<hex>`, `0x#<hex>`
         \N{BULLET} RGB: `rgb(red, green, blue)` where the colour values are integers or percentages
         \N{BULLET} Hue-Saturation-Lightness (HSL): `hsl(hue, saturation%, lightness%)`
         \N{BULLET} Hue-Saturation-Value (HSV): `hsv(hue, saturation%, value%)`
-        \N{BULLET} Common HTML color names: `red`, `Blue`
-        \N{BULLET} Extra: MaterialUI Google Palette: `mu(colour_name, shade)`
-        \N{BULLET} Extra: MateriaAccentUI Google Palette: `mu(colour_name, shade)`
+        \N{BULLET} Common HTML or discord color names: `red`, `Blue`
+        \N{BULLET} Extra: MaterialUI Google Palette: `mp(colour_name, shade)`
+        \N{BULLET} Extra: MateriaAccentUI Google Palette: `map(colour_name, shade)`
         \N{BULLET} Last but not least: `prpl` for favourite Aluerie\'s colour
         """
-        if colour == 'prpl':
-            colour = '#9678B6'
-
-        m = re.match(r"mu\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour)
-        if m:
-            colour = hex(const.MaterialPalette.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
-
-        m = re.match(r"mua\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", colour)
-        if m:
-            colour = hex(const.MaterialAccentPalette.colors_dict[m.group(1)][int(m.group(2))]).replace('0x', '#')
-
-        rgb = ImageColor.getcolor(colour, "RGB")
-
-        def rgb2hex(r, g, b):
-            return "#{:02x}{:02x}{:02x}".format(r, g, b)
+        rgb = colour.to_rgb()
 
         img = Image.new('RGB', (300, 300), rgb)
         file = ctx.bot.imgtools.img_to_file(img, filename='colour.png')
         e = discord.Embed(color=discord.Colour.from_rgb(*rgb), title='Colour info')
         e.description = (
-            f'Hex triplet: `{rgb2hex(*rgb)}`\n'
+            'Hex triplet: `#{:02x}{:02x}{:02x}`\n'.format(*rgb)
             + 'RGB: `({}, {}, {})`\n'.format(*rgb)
             + 'HSV: `({:.2f}, {:.2f}, {})`\n'.format(*colorsys.rgb_to_hsv(*rgb))
             + 'HLS: `({:.2f}, {}, {:.2f})`\n'.format(*colorsys.rgb_to_hls(*rgb))
@@ -154,8 +140,8 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
         await ctx.reply(embed=e, file=file)
 
     @colour.autocomplete('colour')
-    async def colour_callback(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
-        colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mu(', 'mua('] + list(ImageColor.colormap.keys())
+    async def colour_autocomplete(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+        colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mp(', 'map('] + list(ImageColor.colormap.keys())
         return [
             app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
         ][:25]
@@ -174,7 +160,8 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
             ctx.is_error_handled = True
             e = discord.Embed(description=self.colour.callback.__doc__, colour=const.Colour.error())
             e.set_author(
-                name='WrongColourFormat', url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html'
+                name='WrongColourFormat',
+                url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html',
             )
             await ctx.reply(embed=e, ephemeral=True)
 

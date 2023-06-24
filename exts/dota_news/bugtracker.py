@@ -83,6 +83,7 @@ class Action:
         created_at: datetime.datetime,
         actor: NamedUser.NamedUser,
         issue_number: int,
+        **kwargs,
     ):
         self.event_type: EventBase = enum_type
         self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.timezone.utc)

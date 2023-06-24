@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import random
 from typing import TYPE_CHECKING, Optional
 
 import discord
 import emoji
 import regex
 from discord.ext import commands, tasks
-from numpy.random import choice, randint
 
 from utils import AluCog, const
 
@@ -26,12 +26,12 @@ class EmoteSpam(CommunityCog):
         self.emote_spam.cancel()
         self.offline_criminal_check.cancel()
 
-    async def is_message_allowed(self, message: discord.Message, nqn_check: int = 1) -> Optional[bool]:
+    async def is_message_allowed(self, message: discord.Message, nqn_check: int = 1) -> bool:
         if message.channel.id == const.Channel.emote_spam:
             if len(message.embeds) or len(message.stickers) or len(message.attachments):
                 return False
 
-            text = emoji.replace_emoji(message.content, replace='') # standard emojis
+            text = emoji.replace_emoji(message.content, replace='')  # standard emojis
 
             # there is definitely a better way to regex it out
             filters = [const.Rgx.whitespace, const.Rgx.emote_old, const.Rgx.nqn, const.Rgx.invis]
@@ -40,21 +40,18 @@ class EmoteSpam(CommunityCog):
             for item in filters:
                 text = regex.sub(item, '', text)
 
-            if text:
-                return False
-            else:
-                return True
+            return not bool(text)  # if there is some text left then it's forbidden.  
+        else:
+            return True
 
     async def delete_the_message(self, message: discord.Message):
         try:
             await message.delete()
         except discord.NotFound:
-            return 
+            return
         channel: discord.TextChannel = message.channel  # type: ignore # channel is secured
-        answer_text = (
-            "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
-                message.author.mention, channel.mention, const.Emote.Ree
-            )
+        answer_text = "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
+            message.author.mention, channel.mention, const.Emote.Ree
         )
         e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.prpl())
         e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
@@ -67,7 +64,7 @@ class EmoteSpam(CommunityCog):
         if is_allowed:
             await asyncio.sleep(10)
             is_allowed = await self.is_message_allowed(message, nqn_check=0)
-        
+
         if not is_allowed:
             await self.delete_the_message(message)
 
@@ -81,13 +78,14 @@ class EmoteSpam(CommunityCog):
 
     @tasks.loop(minutes=63)
     async def emote_spam(self):
-        if randint(1, 100 + 1) < 2:
-            while True:
-                guild_list = self.bot.guilds
-                rand_guild = choice(guild_list)  # type: ignore # TODO:FIX
-                rand_emoji = choice(rand_guild.emojis)
-                if rand_emoji.is_usable():
-                    break
+        if random.randint(1, 100 + 1) < 2:
+            while(True):
+                rand_guild = random.choice(self.bot.guilds)
+                if rand_guild.emojis:
+                    # We need to do this loop in case some servers do not upload any emotes.
+                    rand_emoji = random.choice(rand_guild.emojis)
+                    if rand_emoji.is_usable():
+                        break
             await self.bot.community.emote_spam.send('{0} {0} {0}'.format(str(rand_emoji)))
 
     @tasks.loop(count=1)
@@ -154,7 +152,7 @@ class ComfySpam(AluCog):
 
     @tasks.loop(minutes=60)
     async def comfy_spam(self):
-        if randint(1, 100 + 1) < 2:
+        if random.randint(1, 100 + 1) < 2:
             await self.community.comfy_spam.send('{0} {0} {0}'.format(const.Emote.peepoComfy))
 
     @tasks.loop(count=1)

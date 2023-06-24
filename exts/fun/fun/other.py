@@ -46,7 +46,8 @@ class Other(FunCog):
             if rand_guild.emojis:
                 # We need to do this loop in case some servers do not upload any emotes.
                 rand_emoji = random.choice(rand_guild.emojis)
-                break
+                if rand_emoji.is_usable():
+                    break
         
         answer_text = f'{str(rand_emoji)} ' * 3
         channel = self.community.emote_spam

@@ -68,7 +68,7 @@ class FixLinksCommunity(CommunityCog):
             mimic = webhook.MimicUserWebhook.from_message(bot=self.bot, message=message)
             msg = await mimic.send_user_message(message.author, message=message, content=fixed_links)
             await message.delete()
-            await asyncio.sleep(1)
+            await asyncio.sleep(2.7)
 
             # Okay discord is a bit stupid and does not allow hyperlinks from website embeds
             # this is why I will have to do the job myself.

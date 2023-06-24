@@ -56,7 +56,7 @@ class HelpPageSource(menus.ListPageSource):
                 f'\N{BLACK CIRCLE} Use {const.Slash.help}` <section>` to go to that section page.\n'
                 '\N{BLACK CIRCLE} Alternatively to^ you can try searching with \N{RIGHT-POINTING MAGNIFYING GLASS} button.\n'
                 '\N{BLACK CIRCLE} For legend used in the help menu press \N{WHITE QUESTION MARK ORNAMENT} button.\n'
-                '\N{BLACK CIRCLE} Use the dropdown menu below to select a category.'
+                '\N{BLACK CIRCLE} Use the dropdown menu below to select a category \N{UNICORN FACE}.'
             )
             e.set_thumbnail(url=bot.user.display_avatar)
             e.set_author(name=f'Made by @{owner.display_name}', icon_url=owner.display_avatar)

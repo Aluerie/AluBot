@@ -66,13 +66,14 @@ class AluBot(commands.Bot):
             intents=intents,
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=MyCommandTree,
+            case_insensitive=True,  # todo: this isn't applied to command groups; maybe make new base class?
         )
         self.client_id: int = config.TEST_DISCORD_CLIENT_ID if test else config.DISCORD_CLIENT_ID
         self.test: bool = test
         self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
 
         self.repo_url = 'https://github.com/Aluerie/AluBot'
-        self.developer = 'Aluerie' # it's my git name, in case i change discord
+        self.developer = 'Aluerie'  # it's my git name, in case i change discord
         self.server_url = 'https://discord.gg/K8FuDeP'
 
         # modules
@@ -386,7 +387,7 @@ class AluBot(commands.Bot):
     @property
     def community(self) -> const.CommunityGuild:
         return const.CommunityGuild(self)
-    
+
     @property
     def invite_link(self) -> str:
         return discord.utils.oauth_url(self.client_id, permissions=permissions)

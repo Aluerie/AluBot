@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import discord
 import emoji
@@ -26,15 +26,12 @@ class EmoteSpam(CommunityCog):
         self.emote_spam.cancel()
         self.offline_criminal_check.cancel()
 
-    async def emote_spam_control(self, message: discord.Message, nqn_check: int = 1):
+    async def is_message_allowed(self, message: discord.Message, nqn_check: int = 1) -> Optional[bool]:
         if message.channel.id == const.Channel.emote_spam:
-            channel: discord.TextChannel = message.channel  # type: ignore
-            if len(message.embeds):
-                return await message.delete()
-            # emoji_regex = get_emoji_regexp()
-            # text = emoji_regex.sub('', msg.content)  # standard emotes
+            if len(message.embeds) or len(message.stickers) or len(message.attachments):
+                return False
 
-            text = emoji.replace_emoji(message.content, replace='')
+            text = emoji.replace_emoji(message.content, replace='') # standard emojis
 
             # there is definitely a better way to regex it out
             filters = [const.Rgx.whitespace, const.Rgx.emote_old, const.Rgx.nqn, const.Rgx.invis]
@@ -44,33 +41,42 @@ class EmoteSpam(CommunityCog):
                 text = regex.sub(item, '', text)
 
             if text:
-                try:
-                    await message.delete()
-                except discord.NotFound:
-                    return
-                answer_text = (
-                    "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
-                        message.author.mention, channel.mention, const.Emote.Ree
-                    )
-                )
-                e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.prpl())
-                e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
-                await self.bot.community.bot_spam.send(answer_text, embed=e)
-                return 1
+                return False
             else:
-                return 0
+                return True
 
-    async def emote_spam_work(self, message):
-        await self.emote_spam_control(message, nqn_check=1)
-        await asyncio.sleep(10)
-        await self.emote_spam_control(message, nqn_check=0)
+    async def delete_the_message(self, message: discord.Message):
+        try:
+            await message.delete()
+        except discord.NotFound:
+            return 
+        channel: discord.TextChannel = message.channel  # type: ignore # channel is secured
+        answer_text = (
+            "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
+                message.author.mention, channel.mention, const.Emote.Ree
+            )
+        )
+        e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.prpl())
+        e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+        if s := message.stickers:
+            e.set_thumbnail(url=s[0].url)
+        await self.bot.community.bot_spam.send(answer_text, embed=e)
+
+    async def emote_spam_work(self, message: discord.Message):
+        is_allowed = await self.is_message_allowed(message, nqn_check=1)
+        if is_allowed:
+            await asyncio.sleep(10)
+            is_allowed = await self.is_message_allowed(message, nqn_check=0)
+        
+        if not is_allowed:
+            await self.delete_the_message(message)
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         await self.emote_spam_work(message)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, _before, after):
+    async def on_message_edit(self, _before: discord.Message, after: discord.Message):
         await self.emote_spam_work(after)
 
     @tasks.loop(minutes=63)

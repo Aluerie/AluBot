@@ -40,8 +40,14 @@ class Other(FunCog):
     @commands.hybrid_command()
     async def do_emote_spam(self, ctx: AluContext):
         """Send 3x random emote into emote spam channel"""
-        rand_guild = random.choice(self.bot.guilds)
-        rand_emoji = random.choice(rand_guild.emojis)
+
+        while(True):
+            rand_guild = random.choice(self.bot.guilds)
+            if rand_guild.emojis:
+                # We need to do this loop in case some servers do not upload any emotes.
+                rand_emoji = random.choice(rand_guild.emojis)
+                break
+        
         answer_text = f'{str(rand_emoji)} ' * 3
         channel = self.community.emote_spam
         await channel.send(answer_text)

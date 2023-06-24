@@ -185,8 +185,12 @@ class ErrorHandlers(DevBaseCog):
             cmd_kwargs = ' '.join([f'`{k}`: `{v}`' for k, v in ctx.kwargs.items()])
 
             if ctx.interaction:
-                msg = await ctx.interaction.original_response()
-                jump_url, cmd_text = msg.jump_url, f'/{ctx.command.qualified_name}'
+                try:
+                    msg = await ctx.interaction.original_response()
+                    jump_url = msg.jump_url
+                except:
+                    jump_url = ''
+                cmd_text = f'/{ctx.command.qualified_name}'
             else:
                 jump_url, cmd_text = ctx.message.jump_url, ctx.message.content
 

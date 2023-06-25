@@ -3,7 +3,7 @@ from utils import AluCog, ExtCategory, const
 category = ExtCategory(
     name='Fun',
     emote=const.Emote.FeelsDankMan,
-    description='Fun',
+    description='Commands to have fun with',
 )
 
 

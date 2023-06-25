@@ -139,6 +139,13 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
         e.set_thumbnail(url=f'attachment://{file.filename}')
         await ctx.reply(embed=e, file=file)
 
+    @colour.autocomplete('colour')
+    async def autocomplete(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+        colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mp(', 'map('] + list(ImageColor.colormap.keys())
+        return [
+            app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
+        ][:25]
+    
     @commands.is_owner()
     @commands.command(
         name='sysinfo',

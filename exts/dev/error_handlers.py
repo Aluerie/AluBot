@@ -30,7 +30,7 @@ class ErrorHandlers(DevBaseCog):
         tree.on_error = self._old_tree_error
 
     async def error_handler_worker(
-        self, ctx: AluContext, error: Exception, _type: Literal['on_app_command_error', 'on_command_error']
+        self, ctx: AluContext, error: BaseException, _type: Literal['on_app_command_error', 'on_command_error']
     ):
         """|coro|
 
@@ -65,6 +65,12 @@ class ErrorHandlers(DevBaseCog):
             case commands.HybridCommandError() | commands.CommandInvokeError() | app_commands.CommandInvokeError() | commands.ConversionError():
                 # we aren't interested in the chain traceback.
                 return await self.error_handler_worker(ctx, error.original, _type=_type)
+            case app_commands.TransformerError():
+                maybe_original_error = error.__cause__
+                if maybe_original_error:
+                    return await self.error_handler_worker(ctx, maybe_original_error, _type=_type)
+                else:
+                    desc = f'{error}'
             case errors.ErroneousUsage():
                 # raised by myself but it's not an error per se, thus i dont give error type to the user.
                 error_type = None

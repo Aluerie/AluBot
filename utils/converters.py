@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import inspect
 import re
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, Any, List, Tuple
 
 import discord
 from discord import app_commands
 from discord.ext import commands
+from discord.interactions import Interaction
 from PIL import ImageColor
 from typing_extensions import Self
 
@@ -97,7 +98,7 @@ class InvalidColour(AluBotException):
     __slots__: Tuple[str, ...] = ()
 
 
-class AluColourConverter(commands.ColourConverter, app_commands.Transformer):
+class AluColourConverter(commands.ColourConverter):  # , app_commands.Transformer):
     """Some super overloaded colour converted made for /colour command."""
 
     async def convert(self, ctx: AluContext, argument: str) -> discord.Colour:
@@ -164,8 +165,12 @@ class AluColourConverter(commands.ColourConverter, app_commands.Transformer):
         except commands.BadColourArgument:
             raise InvalidColour(f'Colour `{argument}` is invalid.{error_footer}')
 
-    async def autocomplete(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
-        colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mp(', 'map('] + list(ImageColor.colormap.keys())
-        return [
-            app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
-        ][:25]
+    # async def transform(self, interaction: discord.Interaction, value: str):
+    #     return await self.convert(interaction, value)  # type: ignore
+    # # todo: do it properly (idk how but for now should be fine since super().convert does not use ctx)
+
+    # async def autocomplete(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+    #     colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mp(', 'map('] + list(ImageColor.colormap.keys())
+    #     return [
+    #         app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
+    #     ][:25]

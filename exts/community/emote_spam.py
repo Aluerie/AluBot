@@ -104,7 +104,7 @@ class EmoteSpam(CommunityCog):
         await self.bot.wait_until_ready()
 
 
-class ComfySpam(AluCog):
+class ComfySpam(CommunityCog):
     async def cog_load(self) -> None:
         self.comfy_spam.start()
         self.offline_criminal_check.start()

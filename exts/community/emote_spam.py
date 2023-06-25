@@ -150,7 +150,7 @@ class ComfySpam(CommunityCog):
     async def on_message_edit(self, _before: discord.Message, after: discord.Message):
         await self.comfy_chat_control(after)
 
-    @tasks.loop(minutes=60)
+    @tasks.loop(minutes=62)
     async def comfy_spam(self):
         if random.randint(1, 100 + 1) < 2:
             await self.community.comfy_spam.send('{0} {0} {0}'.format(const.Emote.peepoComfy))

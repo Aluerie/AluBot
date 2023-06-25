@@ -139,32 +139,6 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
         e.set_thumbnail(url=f'attachment://{file.filename}')
         await ctx.reply(embed=e, file=file)
 
-    @colour.autocomplete('colour')
-    async def colour_autocomplete(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
-        colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mp(', 'map('] + list(ImageColor.colormap.keys())
-        return [
-            app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
-        ][:25]
-
-    @colour.error
-    async def colour_error(self, ctx, error):
-        if isinstance(
-            error, (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError)
-        ):
-            error = error.original
-            if isinstance(error, (commands.CommandInvokeError, app_commands.CommandInvokeError)):
-                error = error.original
-
-        if isinstance(error, (ValueError, KeyError)):
-            # todo: new error type implement
-            ctx.is_error_handled = True
-            e = discord.Embed(description=self.colour.callback.__doc__, colour=const.Colour.error())
-            e.set_author(
-                name='WrongColourFormat',
-                url='https://pillow.readthedocs.io/en/stable/reference/ImageColor.html',
-            )
-            await ctx.reply(embed=e, ephemeral=True)
-
     @commands.is_owner()
     @commands.command(
         name='sysinfo',

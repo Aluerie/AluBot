@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 import re
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, List, Tuple
 
 import discord
 from discord import app_commands
@@ -97,12 +97,12 @@ class InvalidColour(AluBotException):
     __slots__: Tuple[str, ...] = ()
 
 
-class AluColourConverter(commands.ColourConverter):
+class AluColourConverter(commands.ColourConverter, app_commands.Transformer):
     """Some super overloaded colour converted made for /colour command."""
 
     async def convert(self, ctx: AluContext, argument: str) -> discord.Colour:
         # TODO: we will rename command: for below, probably so be careful.
-        error_footer = f'\n\nTo see supported colour formats by the bot - use {const.Slash.help}` command: colour`'
+        error_footer = f'\n\nTo see supported colour formats by the bot - use "{const.Slash.help}` command: colour`"'
 
         # my custom situations/desires.
         if argument == 'prpl':
@@ -153,6 +153,7 @@ class AluColourConverter(commands.ColourConverter):
 
         # ImageColor
         try:
+            # https://pillow.readthedocs.io/en/stable/reference/ImageColor.html
             rgb: Tuple[int, int, int] = ImageColor.getcolor(argument, "RGB")  # type:ignore
             return discord.Colour.from_rgb(*rgb)
         except ValueError:
@@ -161,4 +162,10 @@ class AluColourConverter(commands.ColourConverter):
         try:
             return await super().convert(ctx, argument)
         except commands.BadColourArgument:
-            raise InvalidColour(f'Colour {argument} is invalid.{error_footer}')
+            raise InvalidColour(f'Colour `{argument}` is invalid.{error_footer}')
+
+    async def autocomplete(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+        colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mp(', 'map('] + list(ImageColor.colormap.keys())
+        return [
+            app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
+        ][:25]

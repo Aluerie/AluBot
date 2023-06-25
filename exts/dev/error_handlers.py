@@ -62,7 +62,7 @@ class ErrorHandlers(DevBaseCog):
         warn_developers = False
         include_traceback = True
         match error:
-            case commands.HybridCommandError() | commands.CommandInvokeError() | app_commands.CommandInvokeError():
+            case commands.HybridCommandError() | commands.CommandInvokeError() | app_commands.CommandInvokeError() | commands.ConversionError():
                 # we aren't interested in the chain traceback.
                 return await self.error_handler_worker(ctx, error.original, _type=_type)
             case errors.ErroneousUsage():
@@ -281,6 +281,20 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
     if exception is None:
         # technically bad, but typing-wise for `self.send_exception` it's fine so whatever.
         exception = TypeError('Somehow `on_error` fired with exception being `None`.')
+
+    # Silence command errors that somehow get bubbled up far enough here
+    # if isinstance(exception, commands.CommandInvokeError):
+    #     return
+
+    # ridiculous attempt to eliminate 404 that appear for Hybrid commands for my own usage.
+    # that I can't really remove via on_command_error since they appear before we can do something about it.
+    # maybe we need some rewrite about it tho; like ignore all discord.HTTPException
+    if (
+        isinstance(args[0], AluContext)
+        and args[0].author.id == const.User.aluerie
+        and isinstance(exception, discord.NotFound)
+    ):
+        return
 
     # Event Arguments
     e = discord.Embed(title=f'`{event}`', colour=const.Colour.error_handler())

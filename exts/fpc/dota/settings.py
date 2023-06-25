@@ -75,14 +75,14 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         return await super().cog_load()
 
     # dota ##############################################
-
+    
     slh_dota = app_commands.Group(
         name="dota",
         description="Group command about DotaFeed",
         default_permissions=discord.Permissions(manage_guild=True),
         guild_only=True
     )
-
+    
     @checks.hybrid.is_manager()
     @commands.group(name="dota")
     async def ext_dota(self, ctx: AluGuildContext):

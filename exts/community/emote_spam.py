@@ -53,7 +53,7 @@ class EmoteSpam(CommunityCog):
         answer_text = "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
             message.author.mention, channel.mention, const.Emote.Ree
         )
-        e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.prpl())
+        e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.error())
         e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
         if s := message.stickers:
             e.set_thumbnail(url=s[0].url)

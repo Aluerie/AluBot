@@ -138,6 +138,7 @@ class RockPaperScissorsCommand(FunCog):
     @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps', 'rock_paper_scissors'])
     async def rps(self, ctx: AluGuildContext, user: discord.Member | discord.User):
         """Rock Paper Scissors game with @member"""
+        
         if user == ctx.author:
             raise commands.BadArgument('You cannot challenge yourself in a Rock Paper Scissors game')
         if user.bot and ctx.guild and user != ctx.guild.me:

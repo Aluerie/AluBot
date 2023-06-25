@@ -28,7 +28,7 @@ class BetaTestCog(AluCog, name='BetaTest'):
 
     @aluloop(count=1)
     async def beta_task(self):
-        return
+        await self.hideout.spam.send('1')
 
     @commands.command()
     async def ceta(self, ctx: AluContext):

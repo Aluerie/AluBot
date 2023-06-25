@@ -49,7 +49,7 @@ class EmoteSpam(CommunityCog):
             await message.delete()
         except discord.NotFound:
             return
-        channel: discord.TextChannel = message.channel  # type: ignore # channel is secured
+        channel: discord.TextChannel = message.channel  # type: ignore # emote_spam channel is secured
         answer_text = "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
             message.author.mention, channel.mention, const.Emote.Ree
         )

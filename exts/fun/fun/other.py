@@ -20,6 +20,7 @@ class Other(FunCog):
     @commands.hybrid_command()
     async def coinflip(self, ctx: AluContext):
         """Flip a coin: Heads or Tails?"""
+        
         word = 'Heads' if random.randint(0, 1) == 0 else 'Tails'
         return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
 

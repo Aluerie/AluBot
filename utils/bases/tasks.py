@@ -34,8 +34,9 @@ class AluLoop(tasks.Loop):
         time: Union[datetime.time, Sequence[datetime.time]],
         count: int | None,
         reconnect: bool,
+        name: Optional[str],
     ) -> None:
-        super().__init__(coro, seconds, hours, minutes, time, count, reconnect)
+        super().__init__(coro, seconds, hours, minutes, time, count, reconnect, name)
         self._before_loop = self._base_before_loop
 
     async def _base_before_loop(self, *args: Any) -> None:
@@ -85,6 +86,7 @@ def aluloop(
     time: Union[datetime.time, Sequence[datetime.time]] = MISSING,
     count: Optional[int] = None,
     reconnect: bool = True,
+    name: Optional[str] = None,
 ):
     def decorator(func) -> AluLoop:
         return AluLoop(
@@ -95,6 +97,7 @@ def aluloop(
             count=count,
             time=time,
             reconnect=reconnect,
+            name=name,
         )
 
     return decorator

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 import discord
 import feedparser
 
-from config import DOTA_NEWS_WEBHOOK
+from config import DOTA_NEWS_WEBHOOK #, PINK_TEST_WEBHOOK
 from utils import AluCog, aluloop, const
 
 if TYPE_CHECKING:
@@ -29,7 +29,12 @@ class Dota2RSS(AluCog):
 
     @discord.utils.cached_property
     def news_webhook(self) -> discord.Webhook:
-        hook = discord.Webhook.from_url(url=DOTA_NEWS_WEBHOOK, session=self.bot.session)
+        hook = discord.Webhook.from_url(
+            url=DOTA_NEWS_WEBHOOK, # PINK_TEST_WEBHOOK,
+            client=self.bot,
+            session=self.bot.session,
+            bot_token=self.bot.http.token,
+        )
         return hook
 
     @aluloop(minutes=1)
@@ -42,10 +47,8 @@ class Dota2RSS(AluCog):
             return
 
         url = entry.link
-
         title = entry.title
-        
-        # msg = await self.hideout.spam.send(content=f'**{entry.title}**\n{url}')
+
         msg = await self.news_webhook.send(content=f'**{entry.title}**\n{url}', wait=True)
         await msg.publish()
 

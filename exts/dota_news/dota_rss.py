@@ -29,17 +29,12 @@ class Dota2RSS(AluCog):
 
     @discord.utils.cached_property
     def news_webhook(self) -> discord.Webhook:
-        if self.bot.test:
-            url = PINK_TEST_WEBHOOK
-        else:
-            url = DOTA_NEWS_WEBHOOK
-        hook = discord.Webhook.from_url(
-            url=url,
+        return discord.Webhook.from_url(
+            url=PINK_TEST_WEBHOOK, #if self.bot.test else DOTA_NEWS_WEBHOOK,
             client=self.bot,
             session=self.bot.session,
             bot_token=self.bot.http.token,
         )
-        return hook
 
     @aluloop(minutes=1)
     async def rss_watcher(self):
@@ -59,7 +54,7 @@ class Dota2RSS(AluCog):
         # just checking how we are late
         dt = datetime.datetime.strptime(entry.published, '%a, %d %b %Y %H:%M:%S %z').astimezone(datetime.UTC)
         e = discord.Embed(title=title, url=url, colour=const.MaterialPalette.purple(shade=600))
-        e.description = f'Timedelta between `entry.published` and `msg.created_at` is\n{msg.created_at - dt}'
+        e.description = f'Timedelta between `entry.published` and `msg.created_at` is\n```\n{msg.created_at - dt}```'
         await self.hideout.spam.send(embed=e)
 
         query = 'UPDATE botvars SET last_dota_rss_link=$1 WHERE id=TRUE'

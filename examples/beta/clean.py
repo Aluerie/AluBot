@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from beta.all_imports import *
+from examples.beta.imports import *
+
 
 class BetaTestCog(AluCog, name='BetaTest'):
     def __init__(self, bot: AluBot, *args, **kwargs):

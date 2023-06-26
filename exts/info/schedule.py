@@ -228,10 +228,15 @@ class SchedulePageSource(menus.ListPageSource):
         dt_now = datetime.datetime.now(datetime.timezone.utc)
 
         # find the longest team versus string like "Secret - PSG.LGD"
-        longest_teams = max(matches, key=lambda x: len(x.teams))
-        max_amount_of_chars = len(longest_teams.teams)
-
+        
         desc = f'Applied filter: `{self.query}`\n' if self.query is not None else ''
+        if not matches:
+            desc += 'No matches was found for such category/query.'
+            e.description = desc
+            return e
+
+        match_with_longest_teams = max(matches, key=lambda x: len(x.teams))
+        max_amount_of_chars = len(match_with_longest_teams.teams)
         desc += f'`{"Datetime now ".ljust(max_amount_of_chars, " ")}`{format_dt_custom(dt_now, "t", "d")}\n'
 
         # matches.sort(key=lambda x: (x.league, x.dt))

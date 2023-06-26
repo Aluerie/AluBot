@@ -6,6 +6,7 @@
 
 __pycache__/
 
+# BatChest I heckin love ipython notebooks
 .ipynb_checkpoints
 *.ipynb
 

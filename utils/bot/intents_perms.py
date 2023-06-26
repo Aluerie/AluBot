@@ -23,7 +23,7 @@ let's make a table for what we actually need those intents.
 # +-------------------------------+---------------------------+---------------------------+---------------------------+
 # | Intents                       | Public                    | Community                 | Hideout                   |
 # +===============================+===========================+===========================+===========================+
-# | Guilds                        |                        | on_guild_channel_create - give all perks to Aluerie | <- |
+# | Guilds                        | It is highly advisable to leave this intent enabled for your bot to function. |<|<|
 i.guilds = True
 
 i.members = True

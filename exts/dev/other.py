@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Awaitable, Callable, List, Literal
+from typing import TYPE_CHECKING, List, Literal
 
 import discord
 from discord.ext import commands
 
-from exts import INITIAL_EXTENSIONS, get_extensions
 from utils import AluContext, const
 
 from ._category import DevBaseCog
@@ -41,6 +40,7 @@ class AdminTools(DevBaseCog):
     @trustee.command(hidden=True)
     async def add(self, ctx: AluContext, user_id: int):
         """Grant trustee privilege to a user with `user_id`.
+
         Trustees can use commands that interact with the bot database.
         """
         await self.trustee_add_remove(ctx, user_id=user_id, mode="add")
@@ -57,73 +57,6 @@ class AdminTools(DevBaseCog):
         msg = '\n'.join([f'\N{BLACK CIRCLE} {ctx.bot.get_user(i)} - `{i}`' for i in trusted_ids])
         e = discord.Embed(color=const.Colour.prpl(), title='List of trustees', description=msg)
         await ctx.reply(embed=e)
-
-    @commands.command(name="extensions", hidden=True)
-    async def extensions(self, ctx: AluContext):
-        """Shows available extensions to load/reload/unload."""
-        exts = [f"\N{BLACK CIRCLE} {ext[5:] if ext.startswith('exts.') else ext}" for ext in self.bot.extensions.keys()]
-        e = discord.Embed(title="Available Extensions", description="\n".join(exts), colour=const.Colour.prpl())
-        await ctx.reply(embed=e)
-
-    async def load_unload_reload_job(self, ctx: AluContext, module: str, *, job_func: Callable[[str], Awaitable[None]]):
-        try:
-            # so we do `$unload beta` instead of `$unload beta.py`
-            m = module.lower()
-            filename = f"exts.{m}" if m not in INITIAL_EXTENSIONS else m
-            await job_func(filename)
-        except commands.ExtensionError as error:
-            e = discord.Embed(description=f"{error}", colour=const.Colour.error())
-            e.set_author(name=error.__class__.__name__)
-            await ctx.reply(embed=e)
-        else:
-            await ctx.message.add_reaction(const.Emote.DankApprove)
-
-    @commands.command(name="load", hidden=True)
-    async def load(self, ctx: AluContext, *, module: str):
-        """Loads a module."""
-        await self.load_unload_reload_job(ctx, module, job_func=self.bot.load_extension)
-
-    @commands.command(name="unload", hidden=True)
-    async def unload(self, ctx: AluContext, *, module: str):
-        """Unloads a module."""
-        await self.load_unload_reload_job(ctx, module, job_func=self.bot.unload_extension)
-
-    @commands.group(name="reload", hidden=True, invoke_without_command=True)
-    async def reload(self, ctx: AluContext, *, module: str):
-        """Reloads a module."""
-        await self.load_unload_reload_job(ctx, module, job_func=self.reload_or_load_extension)
-
-    async def reload_or_load_extension(self, module: str) -> None:
-        try:
-            await self.bot.reload_extension(module)
-            return
-        except commands.ExtensionNotLoaded as reload_err:
-        #     reload_error = reload_err
-        # try:
-            await self.bot.load_extension(module)
-            return
-        # except commands.ExtensionError as load_error:
-        #     e = discord.Embed(description=f"{load_error}\n {reload_error}", colour=const.Colour.error())
-        #     e.set_author(name=f'{load_error.__class__.__name__} {reload_error.__class__.__name__}')
-        #     e.set_footer(text='Both reload and load failed.')
-        #     # TODO: hmm
-        #     await ctx.reply(embed=e)
-
-    @reload.command(name="all", hidden=True)
-    async def reload_all(self, ctx: AluContext):
-        """Reloads all modules"""
-        # TODO: rewrite this
-        cogs_to_reload = get_extensions(ctx.bot.test)
-
-        add_reaction = True
-        for cog in cogs_to_reload:
-            try:
-                await self.reload_or_load_extension(cog)
-            except commands.ExtensionError as error:
-                await ctx.reply(f"{error.__class__.__name__}: {error}")
-                add_reaction = False
-        if add_reaction:
-            await ctx.message.add_reaction(const.Emote.DankApprove)
 
     async def send_guild_embed(self, guild: discord.Guild, join: bool):
         if join:
@@ -205,6 +138,7 @@ class AdminTools(DevBaseCog):
     #     query = f"COPY (SELECT * FROM {db_name}) TO '/.logs/{db_name}.csv' WITH CSV DELIMITER ',' HEADER;"
     #     await ctx.pool.execute(query)
     #     await ctx.reply('Done')
+
 
 async def setup(bot):
     await bot.add_cog(AdminTools(bot))

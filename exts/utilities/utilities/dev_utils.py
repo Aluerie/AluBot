@@ -33,9 +33,9 @@ class DevUtilities(AluCog):
         for c in characters[:10]:
             name, field_value = to_string(c)
             e.add_field(name=f'\N{BLACK CIRCLE} `{name}`', value=field_value, inline=False)
-            names.append(f'\\N{{{name}}}')
+            names.append(name)
         if len(characters) > 10:
             e.colour = Colour.error()
             e.set_footer(text='Output was too long. Displaying only first 10 chars.')
-        content = "```py\n" + ''.join(names) + "```"
+        content = "```js\n" + ''.join(names) + "```"  # js codeblock highlights {TEXT HERE} in teal :D 
         await ctx.send(content=content, embed=e)

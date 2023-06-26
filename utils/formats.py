@@ -224,8 +224,7 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle):
 
 
 def format_dt_tdR(dt: datetime.datetime) -> str:
-    """
-    My favourite discord timestamp combination.
+    """My favourite discord timestamp combination.
 
     Shortcut to combine t, d, R styles together.
     Discord will show something like this:

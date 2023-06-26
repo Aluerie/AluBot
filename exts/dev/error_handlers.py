@@ -285,7 +285,6 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
     # Exception Traceback
     (_exception_type, exception, _traceback) = sys.exc_info()
     if exception is None:
-        # technically bad, but typing-wise for `self.send_exception` it's fine so whatever.
         exception = TypeError('Somehow `on_error` fired with exception being `None`.')
 
     # Silence command errors that somehow get bubbled up far enough here

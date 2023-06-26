@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, List, Tuple
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.interactions import Interaction
 from PIL import ImageColor
 from typing_extensions import Self
 
@@ -139,7 +138,7 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
             try:
                 return getattr(const.MaterialAccentPalette, colour_name)(shade)
             except AttributeError:
-                methods = [m[0] for m in inspect.getmembers(const.MaterialPalette, predicate=inspect.ismethod)]
+                methods = [m[0] for m in inspect.getmembers(const.MaterialAccentPalette, predicate=inspect.ismethod)]
                 raise InvalidColour(
                     f'Provided colour name is incorrect.\n\n'
                     'MaterialAccentUI Google Palette supports the following colour names:'

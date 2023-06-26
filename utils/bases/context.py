@@ -13,11 +13,7 @@ if TYPE_CHECKING:
 
     from ..bot import AluBot
 
-__all__ = (
-    'AluContext',
-    'AluGuildContext',
-    'ConfirmationView'
-)
+__all__ = ('AluContext', 'AluGuildContext', 'ConfirmationView')
 
 
 class ConfirmationView(discord.ui.View):
@@ -130,22 +126,17 @@ class AluContext(commands.Context):
             e.set_footer(text=f'`{prefix}help {self.command.name}` for more info')
             return await self.reply(embed=e, ephemeral=True)
 
-    async def send_test(self):
-        await self.reply('test test')
-
     @staticmethod
-    def tick(semi_bool: bool | None):
-        emoji_dict = {True: '\N{WHITE HEAVY CHECK MARK}', False: '\N{CROSS MARK}', None: '\N{BLACK LARGE SQUARE}'}
-        return emoji_dict[semi_bool]
-        # match semi_bool:
-        #     case True:
-        #         return '\N{WHITE HEAVY CHECK MARK}'
-        #     case False:
-        #         return '\N{CROSS MARK}'
-        #     case _:
-        #         return '\N{BLACK LARGE SQUARE}'
+    def tick(semi_bool: bool | None) -> str:
+        match semi_bool:
+            case True:
+                return Tick.yes
+            case False:
+                return Tick.no
+            case _:
+                return Tick.black
 
-    async def try_tick_reaction(self, semi_bool: bool | None):
+    async def tick_reaction(self, semi_bool: bool | None):
         try:
             await self.message.add_reaction(self.tick(semi_bool))
         except:
@@ -153,6 +144,7 @@ class AluContext(commands.Context):
 
     @discord.utils.cached_property
     def replied_reference(self) -> Optional[discord.MessageReference]:
+        """Used to redirect reference to `ctx.message`'s reference."""
         ref = self.message.reference
         if ref and isinstance(ref.resolved, discord.Message):
             return ref.resolved.to_reference(fail_if_not_exists=False)  # maybe don't make it default
@@ -160,6 +152,7 @@ class AluContext(commands.Context):
 
     @discord.utils.cached_property
     def replied_message(self) -> Optional[discord.Message]:
+        """Used to get message from provided reference in `ctx.message`"""
         ref = self.message.reference
         if ref and isinstance(ref.resolved, discord.Message):
             return ref.resolved

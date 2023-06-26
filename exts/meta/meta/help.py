@@ -211,14 +211,14 @@ class AluHelp(commands.HelpCommand):
 
     def get_command_signature(self, command: commands.Command) -> str:
         def signature():
-            sign = f' `{command.signature}`' if command.signature else ''
-            name = command.name if not getattr(command, 'root_parent') else command.root_parent.name  # type:ignore
-            app_command = self.context.bot.tree.get_app_command(name)
+            app_command = self.context.bot.tree.get_app_command(command.qualified_name)
             if app_command:
-                cmd_mention = f"</{command.qualified_name}:{app_command.id}>"
+                cmd_mention = app_command.mention
             else:
                 prefix = getattr(self.context, 'clean_prefix', '$')
                 cmd_mention = f'`{prefix}{command.qualified_name}`'
+            
+            sign = f' `{command.signature}`' if command.signature else ''
             return f'{cmd_mention}{sign}'
 
         def aliases():

@@ -1,7 +1,3 @@
-"""
-Credits to @Soheab
-# https://gist.github.com/Soheab/fed903c25b1aae1f11a8ca8c33243131#file-bot_subclass
-"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
@@ -17,12 +13,15 @@ if TYPE_CHECKING:
     AppCommandStore = Dict[str, app_commands.AppCommand]  # name: AppCommand
 
 
-class MyCommandTree(app_commands.CommandTree):
+class AluAppCommandTree(app_commands.CommandTree):
     """Custom Command tree class to set up slash cmds mentions
 
     The class makes the tree store app_commands.AppCommand
     to access later for mentioning or anything
     """
+
+    # Credits to @Soheab and their `?tag slashid` in dpy server.
+    # https://gist.github.com/Soheab/fed903c25b1aae1f11a8ca8c33243131#file-bot_subclass
 
     def __init__(self, client: AluBot):
         super().__init__(client=client)

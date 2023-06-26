@@ -13,11 +13,7 @@ venv/
 
 *.ini
 
-.logs/
-.temp/
-
-/.db_backup
-prefixes.json
+.alubot/
 
 # beta test
 /exts/beta.py
@@ -25,6 +21,3 @@ _test.py
 
 # config secrets
 /config.py
-
-# Temporary ignore
-/exts/template.py

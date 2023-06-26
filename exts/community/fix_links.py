@@ -73,7 +73,7 @@ class FixLinksCommunity(CommunityCog):
             # Okay discord is a bit stupid and does not allow hyperlinks from website embeds
             # this is why I will have to do the job myself.
             links = []
-            colour = const.Colour.pink()
+            colour = discord.Colour.pink()
             for e in msg.embeds:
                 e = e.copy()
                 links += re.findall(const.REGEX_URL_LINK, str(e.description))

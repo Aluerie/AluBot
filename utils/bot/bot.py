@@ -24,7 +24,7 @@ from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 
 from .. import AluContext, ConfirmationView, ExtCategory, cache, const, formats, none_category
-from .cmd_cache import MyCommandTree
+from .app_cmd_cache import AluAppCommandTree
 from .intents_perms import intents, permissions
 
 if TYPE_CHECKING:
@@ -51,7 +51,7 @@ class AluBot(commands.Bot):
         prefixes: PrefixConfig
         reddit: Reddit
         steam: SteamClient
-        tree: MyCommandTree
+        tree: AluAppCommandTree
         twitch: TwitchClient
         user: discord.ClientUser
 
@@ -65,22 +65,20 @@ class AluBot(commands.Bot):
             activity=discord.Streaming(name=f"\N{PURPLE HEART} /help /setup", url='https://www.twitch.tv/aluerie'),
             intents=intents,
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
-            tree_cls=MyCommandTree,
+            tree_cls=AluAppCommandTree,
             case_insensitive=True,  # todo: this isn't applied to command groups; maybe make new base class?
         )
-        self.client_id: int = config.TEST_DISCORD_CLIENT_ID if test else config.DISCORD_CLIENT_ID
         self.test: bool = test
         self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
 
         self.repo_url = 'https://github.com/Aluerie/AluBot'
-        self.developer = 'Aluerie'  # it's my git name, in case i change discord
+        self.developer = 'Aluerie'  # it's my GitHub account name
         self.server_url = 'https://discord.gg/K8FuDeP'
 
         # modules
         self.config = config
         self.formats = formats
 
-        # self.category_lookup: Dict[str, discord.SelectOption] = dict()
         self.category_cogs: Dict[ExtCategory, List[AluCog | commands.Cog]] = dict()
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
@@ -97,7 +95,7 @@ class AluBot(commands.Bot):
         # ensure temp folder
         # TODO: maybe remove the concept of temp folder - don't save .mp3 file
         #  for now it is only used in tts.py for mp3 file
-        Path("./.temp/").mkdir(parents=True, exist_ok=True)
+        Path("./.alubot/temp/").mkdir(parents=True, exist_ok=True)
 
         os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
@@ -129,15 +127,6 @@ class AluBot(commands.Bot):
             category = ExtCategory(name='Jishaku', emote=const.Emote.bedWTF, description='Jishaku')
 
         self.category_cogs.setdefault(category, []).append(cog)
-
-    # __init__ version
-    # async def add_cog(self, cog: AluCog | commands.Cog):
-    #     await super().add_cog(cog)
-
-    #     frm = inspect.stack()[1]
-    #     mod = inspect.getmodule(frm[0])
-    #     ext = mod.__name__ if mod else 'utils.bases.cog'  # very weird way of saying None
-    #     self.ext_categories.setdefault(ext, []).append(cog)
 
     async def on_ready(self):
         if not hasattr(self, 'launch_time'):
@@ -280,10 +269,11 @@ class AluBot(commands.Bot):
                 for page in paginator.pages:
                     await hook.send(page)
 
-            e = embed or discord.Embed(colour=const.Colour.error()).set_author(name=from_where)
+            e = embed or discord.Embed(colour=const.Colour.error(), description=from_where)
             await hook.send(embed=e)
         except Exception as error:
             log.info(error)
+            await self.hideout.spam.send(f'{const.Role.error_ping.mention} `send_traceback` failed with {error}.')
 
     async def send_traceback(
         self,
@@ -388,6 +378,10 @@ class AluBot(commands.Bot):
     def community(self) -> const.CommunityGuild:
         return const.CommunityGuild(self)
 
-    @property
+    @discord.utils.cached_property
     def invite_link(self) -> str:
-        return discord.utils.oauth_url(self.client_id, permissions=permissions)
+        return discord.utils.oauth_url(
+            self.user.id,
+            permissions=permissions,
+            scopes=("bot", "applications.commands"),
+        )

@@ -1,25 +1,6 @@
-"""
-Clean state for easier resetting of git-ignored `cogs/beta.py` file where I do various beta testings 
-"""
 from __future__ import annotations
 
-import asyncio
-import datetime
-import logging
-import os
-from typing import TYPE_CHECKING, Annotated, Any, Callable, Coroutine, List, Optional, Sequence, TypeVar, Union
-
-import discord
-from discord import app_commands
-from discord.ext import commands, menus
-
-from utils import AluCog, aluloop, const, errors
-
-log = logging.getLogger(__name__)
-
-if TYPE_CHECKING:
-    from utils import AluBot, AluContext
-
+from beta.all_imports import *
 
 class BetaTestCog(AluCog, name='BetaTest'):
     def __init__(self, bot: AluBot, *args, **kwargs):
@@ -28,7 +9,7 @@ class BetaTestCog(AluCog, name='BetaTest'):
 
     @aluloop(count=1)
     async def beta_task(self):
-        await self.hideout.spam.send('123')
+        pass
 
     @commands.command()
     async def ceta(self, ctx: AluContext):

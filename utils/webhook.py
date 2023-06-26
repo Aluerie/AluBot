@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Tuple, TypeAlias, Union
 
 import discord
 from discord.ext import commands
@@ -10,7 +10,9 @@ from . import errors
 if TYPE_CHECKING:
     from . import AluBot, AluContext
 
-    WebhookSourceChannel = Union[discord.ForumChannel, discord.VoiceChannel, discord.TextChannel, discord.StageChannel]
+    WebhookSourceChannel: TypeAlias = Union[
+        discord.ForumChannel, discord.VoiceChannel, discord.TextChannel, discord.StageChannel
+    ]
 
 
 class MimicUserWebhook:
@@ -111,7 +113,7 @@ class MimicUserWebhook:
             embed=embed,
             files=files,
             thread=discord.Object(id=self.thread.id) if self.thread else discord.utils.MISSING,
-            wait=True
+            wait=True,
         )
         self.bot.mimic_message_user_mapping[msg.id] = member.id
         return msg

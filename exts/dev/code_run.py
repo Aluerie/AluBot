@@ -97,7 +97,7 @@ class CodeRun(DevBaseCog):
         try:
             exec(to_compile, env)
         except Exception as error:
-            await ctx.try_tick_reaction(False)
+            await ctx.tick_reaction(False)
             return await ctx.send(f"```py\n{traceback.format_exc()}```")
 
         func = env["func"]  # <class 'function'>
@@ -107,11 +107,11 @@ class CodeRun(DevBaseCog):
                 ret = await func()
         except Exception as error:
             value = stdout.getvalue()
-            await ctx.try_tick_reaction(False)
+            await ctx.tick_reaction(False)
             await ctx.send(f"```py\n{value}{traceback.format_exc()}\n```")
         else:
             value = stdout.getvalue()
-            await ctx.try_tick_reaction(True)
+            await ctx.tick_reaction(True)
 
             if ret is None:
                 if value:

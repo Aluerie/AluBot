@@ -9,6 +9,7 @@ import json
 import os
 import uuid
 from json import JSONDecodeError
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type, TypeVar, Union
 
 if TYPE_CHECKING:
@@ -27,7 +28,8 @@ class Config(Generic[_T]):
         *,
         encoder: Optional[Type[json.JSONEncoder]] = None,
     ):
-        self.filename = filename
+        Path(".alubot/cfg/").mkdir(parents=True, exist_ok=True)
+        self.filename = f".alubot/cfg/{filename}"
         self.pool = pool
         self.encoder = encoder
         self.loop = asyncio.get_running_loop()
@@ -53,7 +55,7 @@ class Config(Generic[_T]):
         ...
 
     def _dump(self):
-        temp = f'{uuid.uuid4()}-{self.filename}.tmp'
+        temp = f'{self.filename}-{uuid.uuid4()}.tmp'
         with open(temp, 'w', encoding='utf-8') as tmp:
             json.dump(self._json.copy(), tmp, ensure_ascii=True, cls=self.encoder, separators=(',', ':'))
         # atomically move the file

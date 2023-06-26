@@ -10,7 +10,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from exts.utilities.utilities.fix_links import fix_link_worker
-from utils import const, errors, webhook
+from utils import const, errors, mimic
 
 from ._category import CommunityCog
 
@@ -65,7 +65,7 @@ class FixLinksCommunity(CommunityCog):
             return
 
         try:
-            mimic = webhook.MimicUserWebhook.from_message(bot=self.bot, message=message)
+            mimic = mimic.MimicUserWebhook.from_message(bot=self.bot, message=message)
             msg = await mimic.send_user_message(message.author, message=message, content=fixed_links)
             await message.delete()
             await asyncio.sleep(2.7)

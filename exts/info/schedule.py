@@ -231,7 +231,7 @@ class SchedulePageSource(menus.ListPageSource):
         
         desc = f'Applied filter: `{self.query}`\n' if self.query is not None else ''
         if not matches:
-            desc += 'No matches was found for such category/query.'
+            desc += 'No matches were found for the category/query.'
             e.description = desc
             return e
 

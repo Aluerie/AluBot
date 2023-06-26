@@ -25,14 +25,21 @@ let's make a table for what we actually need those intents.
 # +===============================+===========================+===========================+===========================+
 # | Guilds                        | It is highly advisable to leave this intent enabled for your bot to function. |<|<|
 i.guilds = True
-
+# | Members                       |                           | Logging                                             |<|
 i.members = True
-i.bans = True
+# | Moderation                    |                           | Logging                                             |<|
+i.moderation = True
+# | Emojis and Stickers           |                           | Logging                                             |<|
 i.emojis_and_stickers = True
+# | Voice States                  |                           | Logging                                             |<|
 i.voice_states = True
+# | Presences                     |                           | Live Stream Role                                    |<|
 i.presences = True
+# | Messages                      |                           | Logging                                             |<|
 i.messages = True
+# | Reactions                     |                           | Absolutely nothing                                  |<|
 i.reactions = True
+# | Message content               |                           | Message content                                     |<|
 i.message_content = True
 # +-------------------------------+---------------------------+---------------------------+---------------------------+
 intents = i

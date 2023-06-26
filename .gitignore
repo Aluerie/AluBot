@@ -15,3 +15,5 @@ cogs/
 
 config.py
 _test.py
+exts/beta.py
+.alubot/logs/yenbot.log

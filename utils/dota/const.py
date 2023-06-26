@@ -16,6 +16,6 @@ dota_player_colour_map = {
     9: "#A46900",
 }
 
-# this image is made by removing (R) from
-# https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
+
+# todo: remove this into favour of const.Logo.dota
 DOTA_LOGO = 'https://i.imgur.com/F8uMnWr.png'

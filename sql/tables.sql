@@ -137,3 +137,10 @@ CREATE TABLE IF NOT EXISTS valve_devs (
 CREATE TABLE IF NOT EXISTS autoparse (
     steam_id BIGINT PRIMARY KEY
 );
+
+CREATE TABLE IF NOT EXISTS bot_vars (
+    id: PRIMARY KEY BIGINT,
+    last_dota_news TEXT,
+    last_ms_insider_news TEXT,
+    last_lol_patch TEXT,
+)

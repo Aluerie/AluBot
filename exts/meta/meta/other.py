@@ -220,11 +220,11 @@ class OtherCog(AluCog):
         pings.append(PingTuple('\N{ELEPHANT}', 'Database', postgres_ms))
 
         average = sum([k.value for k in pings]) / len(pings)
-        pings.append(PingTuple('\N{PERMANENT PAPER SIGN}', 'Average', average))
+        pings.append(PingTuple('\N{PERMANENT PAPER SIGN}\N{VARIATION SELECTOR-16}', 'Average', average))
 
         longest_word_length = max([len(p.name) for p in pings])
 
-        strings = [f"{p.emoji} `{p.name.ljust(longest_word_length, ' ')} | {round(p.value, 3):.3f}ms`" for p in pings]
+        strings = [f"{p.emoji} `{p.name.ljust(longest_word_length, ' ')} | {round(p.value, 3):3.3f}ms`" for p in pings]
         answer = '\n'.join(strings)
 
         # await asyncio.sleep(0.7)

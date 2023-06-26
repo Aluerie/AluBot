@@ -8,9 +8,9 @@ import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pyot.utils.functools import async_property
 
-from utils.const import Channel, Colour, MaterialPalette
+from utils import const
 from utils.dota import ability, hero, item
-from utils.dota.const import DOTA_LOGO, ODOTA_API_URL, dota_player_colour_map
+from utils.dota.const import ODOTA_API_URL, dota_player_colour_map
 from utils.formats import human_timedelta
 
 if TYPE_CHECKING:
@@ -53,7 +53,11 @@ class Match:
         return f'/[Dbuff]({self.dbuff})/[ODota]({self.odota})/[Stratz]({self.stratz})'
 
 
-colour_twitch_status_dict = {'NoTwitch': MaterialPalette.gray(), 'Live': Colour.prpl(), 'Offline': Colour.twitch()}
+colour_twitch_status_dict = {
+    'NoTwitch': const.MaterialPalette.gray(),
+    'Live': const.Colour.prpl(),
+    'Offline': const.Colour.twitch(),
+}
 
 
 class ActiveMatch(Match):
@@ -99,7 +103,7 @@ class ActiveMatch(Match):
             self.img_url = 'https://i.imgur.com/kl0jDOu.png'  # lavender 640x360
             self.display_name = self.player_name
             self.url = ''
-            self.logo_url = DOTA_LOGO
+            self.logo_url = const.Logo.dota
             self.twitch_status = 'NoTwitch'
             self.vod_link = ''
         else:
@@ -224,8 +228,8 @@ class PostMatchPlayerData:
         draw = ImageDraw.Draw(img)
         w2, h2 = bot.imgtools.get_text_wh(self.outcome, font_kda)
         colour_dict = {
-            'Win': str(MaterialPalette.green(shade=800)),
-            'Loss': str(MaterialPalette.red(shade=900)),
+            'Win': str(const.MaterialPalette.green(shade=800)),
+            'Loss': str(const.MaterialPalette.red(shade=900)),
             'Not Scored': (255, 255, 255),
         }
         draw.text((0, height - h3 - h2), self.outcome, font=font_kda, align="center", fill=colour_dict[self.outcome])
@@ -295,7 +299,7 @@ class PostMatchPlayerData:
         e = msg.embeds[0]
         img_file = bot.imgtools.img_to_file(await self.edit_the_image(e.image.url, bot), filename='edited.png')
         e.set_image(url=f'attachment://{img_file.filename}')
-        if self.channel_id == Channel.repost:
+        if self.channel_id == const.Channel.repost:
             e.set_footer(text=f'{e.footer.text or ""} | {self.api_calls_done}')
         try:
             await msg.edit(embed=e, attachments=[img_file])

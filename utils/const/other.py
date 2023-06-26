@@ -126,6 +126,10 @@ class Picture(StrEnum):
 class Logo(StrEnum):
     python = "https://i.imgur.com/5BFecvA.png"
 
+    # this image is made by removing (R) from
+    # https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
+    dota = 'https://i.imgur.com/F8uMnWr.png'
+
 
 class Limit:
     class Embed:

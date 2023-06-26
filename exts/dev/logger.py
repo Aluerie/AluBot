@@ -10,6 +10,7 @@ import discord
 from discord.ext import tasks
 
 from utils import formats
+
 from ._category import DevBaseCog
 
 if TYPE_CHECKING:
@@ -44,10 +45,10 @@ class LoggerViaWebhook(DevBaseCog):
     @discord.utils.cached_property
     def logger_webhook(self) -> discord.Webhook:
         # TODO: if we find a better purpose then move this to the AluBot class
-        url = self.bot.config.SPAM_LOGS_WEBHOOK_URL
+        url = self.bot.config.SPAM_LOGS_WEBHOOK
         hook = discord.Webhook.from_url(url=url, session=self.bot.session)
         return hook
-    
+
     def add_record(self, record: logging.LogRecord) -> None:
         self._logging_queue.put_nowait(record)
 
@@ -70,6 +71,7 @@ class LoggerViaWebhook(DevBaseCog):
     async def logging_worker(self):
         record = await self._logging_queue.get()
         await self.send_log_record(record)
+
 
 async def setup(bot: AluBot):
     cog = LoggerViaWebhook(bot)

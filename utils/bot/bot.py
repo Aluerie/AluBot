@@ -215,9 +215,9 @@ class AluBot(commands.Bot):
     @discord.utils.cached_property
     def error_webhook(self) -> discord.Webhook:
         if self.test:
-            url = config.TEST_ERROR_HANDLER_WEBHOOK_URL
+            url = config.TEST_ERROR_HANDLER_WEBHOOK
         else:
-            url = config.ERROR_HANDLER_WEBHOOK_URL
+            url = config.ERROR_HANDLER_WEBHOOK
 
         hook = discord.Webhook.from_url(url=url, session=self.session)
         return hook

@@ -11,3 +11,7 @@ line_length = 120
 [tool.pyright]
 pythonVersion = "3.11"
 typeCheckingMode = "basic"
+
+[project]
+name = "AluBot"
+authors = [{name = "Aluerie"}]

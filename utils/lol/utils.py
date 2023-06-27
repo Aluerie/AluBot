@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, Dict
+from typing import TYPE_CHECKING, Optional
 
 from pyot.models import lol
 from pyot.utils.lol import cdragon, champion
@@ -76,7 +76,7 @@ class ChampionRolesCache(KeyCache):
             mid: float = 20,
             bot: float = 20,
             support: float = 20,
-        ) -> Dict[str, float]:
+        ) -> dict[str, float]:
             """Construct the dict for meraki function.
 
             Note all parameters in percent! Just like at www.leagueofgraphs.com
@@ -99,7 +99,7 @@ class ChampionRolesCache(KeyCache):
 champion_roles_cache = ChampionRolesCache()
 
 
-async def get_all_champ_names() -> List[str]:
+async def get_all_champ_names() -> list[str]:
     """Get all champion names in League of Legends"""
     data = await champion.champion_keys_cache.data
     return list(data['name_by_id'].values())
@@ -122,7 +122,7 @@ async def get_meraki_patch():
     return champion_roles_cache.meraki_patch
 
 
-async def get_role_mini_list(all_players_champ_ids) -> List[int]:
+async def get_role_mini_list(all_players_champ_ids) -> list[int]:
     try:
         champion_roles = await champion_roles_cache.data
         team1 = list(get_roles(champion_roles, all_players_champ_ids[:5]).values())

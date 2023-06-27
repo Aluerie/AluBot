@@ -8,7 +8,7 @@ import asyncio
 import datetime
 import logging
 import os
-from typing import TYPE_CHECKING, Annotated, Any, Callable, Coroutine, List, Optional, Sequence, TypeVar, Union
+from typing import TYPE_CHECKING, Annotated, Any, Callable, Coroutine,  Optional, Sequence, TypeVar, Union
 
 import discord
 from discord import app_commands

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
@@ -164,7 +164,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
         return f"`{platform_to_server(platform).upper()}` - `{account}` {Account(platform, account).links}"
 
     @staticmethod
-    async def get_lol_id(server: LiteralServer, account: str) -> Tuple[str, str, str]:
+    async def get_lol_id(server: LiteralServer, account: str) -> tuple[str, str, str]:
         try:
             platform = server_to_platform(server)
             player = await summoner.Summoner(name=account, platform=platform).get()
@@ -239,7 +239,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
 
     async def lol_player_add_autocomplete(
         self, ntr: discord.Interaction, current: str
-    ) -> List[app_commands.Choice[str]]:
+    ) -> list[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=True)
 
     @slh_lol_player.command(name='add')
@@ -289,7 +289,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
 
     async def player_remove_autocomplete(
         self, ntr: discord.Interaction, current: str
-    ) -> List[app_commands.Choice[str]]:
+    ) -> list[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=False)
 
     @slh_lol_player.command(name='remove')
@@ -361,7 +361,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
 
     async def lol_champ_add_autocomplete(
         self, ntr: discord.Interaction, current: str
-    ) -> List[app_commands.Choice[str]]:
+    ) -> list[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=True)
 
     @slh_lol_champ.command(name='add')
@@ -409,7 +409,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
 
     async def lol_champ_remove_autocomplete(
         self, ntr: discord.Interaction, current: str
-    ) -> List[app_commands.Choice[str]]:
+    ) -> list[app_commands.Choice[str]]:
         return await self.character_add_remove_autocomplete(ntr, current, mode_add=False)
 
     @slh_lol_champ.command(name='remove')

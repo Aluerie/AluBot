@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import random
 import re
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, checks, const, mimic
+from utils import checks, const, mimicry
 
 from .._category import FunCog
 
@@ -37,24 +37,6 @@ class Other(FunCog):
                 else:
                     for r in ['❔', '❕', '🤔']:
                         await message.add_reaction(r)
-
-    @commands.hybrid_command()
-    async def do_emote_spam(self, ctx: AluContext):
-        """Send 3x random emote into emote spam channel"""
-
-        while(True):
-            rand_guild = random.choice(self.bot.guilds)
-            if rand_guild.emojis:
-                # We need to do this loop in case some servers do not upload any emotes.
-                rand_emoji = random.choice(rand_guild.emojis)
-                if rand_emoji.is_usable():
-                    break
-        
-        answer_text = f'{str(rand_emoji)} ' * 3
-        channel = self.community.emote_spam
-        await channel.send(answer_text)
-        e = discord.Embed(colour=const.Colour.prpl(), description=f'I sent {answer_text} into {channel.mention}')
-        await ctx.reply(embed=e, ephemeral=True, delete_after=10)
 
     @commands.hybrid_command()
     async def apuband(self, ctx: AluContext):
@@ -121,7 +103,7 @@ class Other(FunCog):
             pass
 
     @staticmethod
-    def fancify_text(text: str, *, style: Dict[str, str]):
+    def fancify_text(text: str, *, style: dict[str, str]):
         patterns = [
             const.Rgx.user_mention,
             const.Rgx.role_mention,
@@ -140,7 +122,7 @@ class Other(FunCog):
     async def send_fancy_text(self, ctx: AluContext, answer: str):
         if ctx.guild:
             # TODO: I'm not sure what to do when permissions won't go our way
-            mimic = mimic.MimicUserWebhook.from_context(ctx)
+            mimic = mimicry.MimicUserWebhook.from_context(ctx)
 
             await mimic.send_user_message(ctx.author, content=answer)
 

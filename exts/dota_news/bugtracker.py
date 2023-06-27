@@ -6,7 +6,7 @@ import logging
 import re
 import textwrap
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord.ext import commands, tasks
@@ -117,22 +117,22 @@ class TimeLine:
     def __init__(self, issue: Issue.Issue):
         self.issue: Issue.Issue = issue
 
-        self.actions: List[Action] = []
-        self.authors: Set[NamedUser.NamedUser] = set()
+        self.actions: list[Action] = []
+        self.authors: set[NamedUser.NamedUser] = set()
 
     def add_action(self, action: Action):
         self.actions.append(action)
         self.authors.add(action.actor)
 
-    def sorted_points_list(self) -> List[Action]:
+    def sorted_points_list(self) -> list[Action]:
         return sorted(self.actions, key=lambda x: x.created_at, reverse=False)
 
     @property
-    def events(self) -> List[Event]:
+    def events(self) -> list[Event]:
         return [e for e in self.actions if isinstance(e, Event)]
 
     @property
-    def comments(self) -> List[Comment]:
+    def comments(self) -> list[Comment]:
         return [e for e in self.actions if isinstance(e, Comment)]
 
     @property
@@ -144,7 +144,7 @@ class TimeLine:
             last_comment_url = None
         return last_comment_url
 
-    def embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File]:
+    def embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
         title = textwrap.shorten(self.issue.title, width=const.Limit.Embed.title)
         e = discord.Embed(title=title, url=self.issue.html_url)
         if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
@@ -209,9 +209,9 @@ class BugTracker(AluCog):
         channel = self.hideout.spam if self.bot.test else self.community.bugtracker_news
         return channel
     
-    async def get_valve_devs(self) -> List[str]:
+    async def get_valve_devs(self) -> list[str]:
         query = 'SELECT login FROM valve_devs'
-        valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
+        valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
         return valve_devs
 
     @commands.is_owner()
@@ -264,7 +264,7 @@ class BugTracker(AluCog):
     @valve.command()
     async def list(self, ctx: AluContext):
         query = "SELECT login FROM valve_devs"
-        valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
+        valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
         e = discord.Embed(color=const.MaterialPalette.blue(), title='List of known Valve devs')
         valve_devs.sort()
         e.description = '\n'.join([f'\N{BLACK CIRCLE} {i}' for i in valve_devs])
@@ -282,7 +282,7 @@ class BugTracker(AluCog):
         # if self.bot.test:  # TESTING
         #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=2)
 
-        issue_dict: Dict[int, TimeLine] = dict()
+        issue_dict: dict[int, TimeLine] = dict()
         issues_list = repo.get_issues(sort='updated', state='all', since=dt)
 
         for i in issues_list:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, List, Literal
+from typing import TYPE_CHECKING, Literal
 
 import discord
 from discord.ext import commands
@@ -20,7 +20,7 @@ class AdminTools(DevBaseCog):
         # TODO: move this garbage to FPC or bot management.
         await ctx.scnf()
 
-    async def get_trusted_ids(self) -> List[int]:
+    async def get_trusted_ids(self) -> list[int]:
         query = "SELECT trusted_ids FROM botinfo WHERE id=$1"
         return await self.bot.pool.fetchval(query, const.Guild.community)
 

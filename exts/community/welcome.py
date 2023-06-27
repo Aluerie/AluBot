@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from utils import AluCog, checks, const
+from utils import const
 
 from ._category import CommunityCog
 
@@ -50,7 +50,7 @@ async def welcome_image(bot: AluBot, member: discord.User | discord.Member):
 
 async def welcome_message(
     bot: AluBot, member: discord.Member | discord.User, back: bool = False
-) -> Tuple[str, discord.Embed, discord.File]:
+) -> tuple[str, discord.Embed, discord.File]:
     image = await welcome_image(bot, member)
 
     if back:

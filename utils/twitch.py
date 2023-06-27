@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import twitchio
 from discord.ext.commands import BadArgument
@@ -36,7 +36,7 @@ class TwitchClient(twitchio.Client):
         else:
             raise BadArgument(f'Error checking stream `{user_id}`.\n User either does not exist or is banned.')
 
-    async def fpc_data_by_login(self, user_login: str) -> Tuple[int, str, str]:
+    async def fpc_data_by_login(self, user_login: str) -> tuple[int, str, str]:
         """Gets tuple (twitch_id, display_name) by user_login from one call to twitch client"""
         user: Optional[twitchio.User] = next(iter(await self.fetch_users(names=[user_login])), None)
         if user:
@@ -72,7 +72,7 @@ class TwitchClient(twitchio.Client):
         except IndexError:
             return ''
 
-    async def get_live_lol_player_ids(self, pool: Pool) -> List[int]:
+    async def get_live_lol_player_ids(self, pool: Pool) -> list[int]:
         """Get twitch ids for live League of Legends streams"""
         query = f"""SELECT twitch_id, name_lower
                     FROM lol_players

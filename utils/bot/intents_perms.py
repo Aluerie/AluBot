@@ -35,10 +35,10 @@ i.emojis_and_stickers = True
 i.voice_states = True
 # | Presences                     |                           | Live Stream Role                                    |<|
 i.presences = True
-# | Messages                      |                           | Logging                                             |<|
-i.messages = True
-# | Reactions                     |                           | Absolutely nothing                                  |<|
-i.reactions = True
+# | Guild Messages                |                           | Logging                                             |<|
+i.guild_messages = True
+# | DM Messages                   |                           | Logging                                             |<|
+i.dm_messages = True
 # | Message content               |                           | Message content                                     |<|
 i.message_content = True
 # +-------------------------------+---------------------------+---------------------------+---------------------------+

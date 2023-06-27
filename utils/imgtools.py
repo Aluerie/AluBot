@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from io import BytesIO, StringIO
-from typing import TYPE_CHECKING, Optional, Tuple, Union, overload
+from typing import TYPE_CHECKING, Optional, Union, overload
 
 import discord
 from PIL import Image, ImageOps
@@ -18,7 +18,7 @@ class ImgToolsClient:
         self.session: ClientSession = session
 
     @staticmethod
-    def get_text_wh(text: str, font: ImageFont.FreeTypeFont) -> Tuple[int, int]:
+    def get_text_wh(text: str, font: ImageFont.FreeTypeFont) -> tuple[int, int]:
         """Get text wh-dimensions for selected font
 
         Returns

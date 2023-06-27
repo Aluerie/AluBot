@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING
 
 import discord
 from PIL import Image, ImageDraw, ImageFont
@@ -66,11 +66,11 @@ class LiveMatch(Match):
         account_name: str,
         start_time: int,
         champ_id: int,
-        all_champ_ids: List[int],
+        all_champ_ids: list[int],
         twitch_id: int,
-        spells: List[Spell],
-        runes: List[Rune],
-        channel_ids: List[int],
+        spells: list[Spell],
+        runes: list[Rune],
+        channel_ids: list[int],
         account_id: str,
     ):
         super().__init__(match_id, platform, account_name)
@@ -143,7 +143,7 @@ class LiveMatch(Match):
         log.debug('I m here #6')
         return img
 
-    async def notif_embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File]:
+    async def notif_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
         ts = await bot.twitch.get_twitch_stream(self.twitch_id)
         img_file = bot.imgtools.img_to_file(
             await self.better_thumbnail(ts.preview_url, ts.display_name, bot),

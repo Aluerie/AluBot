@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Tuple, TypeAlias, Union
+from typing import TYPE_CHECKING, Optional, TypeAlias, Union
 
 import discord
 from discord.ext import commands
@@ -30,7 +30,7 @@ class MimicUserWebhook:
     @staticmethod
     def get_channel_thread(
         channel: discord.abc.MessageableChannel,
-    ) -> Tuple[WebhookSourceChannel, Optional[discord.Thread]]:
+    ) -> tuple[WebhookSourceChannel, Optional[discord.Thread]]:
         res_channel = channel
         match res_channel:
             case discord.Thread():

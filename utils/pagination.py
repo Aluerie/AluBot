@@ -27,7 +27,7 @@ Sources I used to create this file and files that are dependent on it:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import discord
 from discord.ext import menus
@@ -111,7 +111,7 @@ class Paginator(discord.ui.View):
             for item in [self.home_page, self.previous_page, self.index, self.next_page, self.search]:
                 self.add_item(item)
 
-    async def _get_kwargs_from_page(self, page: int) -> Dict[str, Any]:
+    async def _get_kwargs_from_page(self, page: int) -> dict[str, Any]:
         value = await discord.utils.maybe_coroutine(self.source.format_page, self, page)
         if isinstance(value, dict):
             return value
@@ -265,7 +265,7 @@ class EnumeratedPageSource(menus.ListPageSource):
         self.description_prefix = description_prefix
         self.no_enumeration = no_enumeration
 
-    async def format_page(self, menu: EnumeratedPages, entries: List[str]):
+    async def format_page(self, menu: EnumeratedPages, entries: list[str]):
         if not self.no_enumeration:
             start = menu.current_page_number * self.per_page
             rows = [f"`{i + 1}` {entry}" for i, entry in enumerate(entries, start=start)]
@@ -286,7 +286,7 @@ class EnumeratedPages(Paginator):
     def __init__(
         self,
         ctx_ntr: AluContext | discord.Interaction[AluBot],
-        entries: List[str],
+        entries: list[str],
         *,
         per_page: int,
         no_enumeration: Optional[bool] = False,

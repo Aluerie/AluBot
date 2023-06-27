@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, NamedTuple, Optional, Tuple
+from typing import TYPE_CHECKING, NamedTuple, Optional
 
 import discord
 from discord.ext import commands
@@ -46,7 +46,7 @@ class RPSView(discord.ui.View):
 
         self.players = (player1, player2)
 
-        self.choices: Dict[discord.User | discord.Member, RPSChoice] = {}
+        self.choices: dict[discord.User | discord.Member, RPSChoice] = {}
 
     async def on_timeout(self) -> None:
         e = self.message.embeds[0]
@@ -85,13 +85,13 @@ class RPSView(discord.ui.View):
             await ntr.response.send_message(embed=e, ephemeral=True)
             return False
 
-    def result_str(self) -> Tuple[str, Optional[discord.User | discord.Member]]:
+    def result_str(self) -> tuple[str, Optional[discord.User | discord.Member]]:
         choices_string = '\n'.join([f'{n.mention}: {c.emote_name}' for n, c in self.choices.items()])
 
         c1 = self.choices[self.player1]
         c2 = self.choices[self.player2]
 
-        def winning_choice(c1: RPSChoice, c2: RPSChoice) -> Tuple[str, str, Optional[discord.User | discord.Member]]:
+        def winning_choice(c1: RPSChoice, c2: RPSChoice) -> tuple[str, str, Optional[discord.User | discord.Member]]:
             if (c1.value.number + 1) % 3 == c2.value.number:  # Player2 won bcs their move is +1 bigger than ~player1
                 return f'{c2.emote_name} {c2.value.word} {c1.emote_name}', f'{self.player2.mention} wins', self.player2
             elif c1.value.number == c2.value.number:  # It's a draw bcs both players played the same move

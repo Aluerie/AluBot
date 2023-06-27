@@ -16,20 +16,22 @@ if TYPE_CHECKING:
 
 class CommunityFun(CommunityCog):
     @staticmethod
-    def non_community_check(message: discord.Message):
-        if message.author.id in const.MY_BOTS:
+    def community_check(msg: discord.Message):
+        if msg.guild and msg.guild.id == const.Guild.community and msg.author.id not in const.MY_BOTS:
             return True
-        if not message.guild or message.guild.id != const.Guild.community:
-            return True
-        return False
+        else:
+            return False
 
     @staticmethod
-    def non_channel_check(message: discord.Message, channel_id: int):
-        return message.author.id in const.MY_BOTS or message.channel.id != channel_id
+    def channel_check(msg: discord.Message, channel_id: int):
+        if msg.channel.id == channel_id and msg.author.id not in const.MY_BOTS:
+            return True
+        else:
+            return False
 
     @commands.Cog.listener('on_message')
     async def bots_in_lobby(self, message: discord.Message):
-        if self.non_channel_check(message, const.Channel.general):
+        if not self.channel_check(message, const.Channel.general):
             return
 
         if message.interaction is not None and message.interaction.type == discord.InteractionType.application_command:
@@ -44,22 +46,19 @@ class CommunityFun(CommunityCog):
 
     @commands.Cog.listener('on_message')
     async def weebs_out(self, message: discord.Message):
-        if self.non_channel_check(message, const.Channel.weebs):
+        if not self.channel_check(message, const.Channel.weebs):
             return
 
         if random.randint(1, 100 + 1) < 7:
             await message.channel.send(
                 '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
-                    '<a:WeebsOutOut:730882034167185448>',
-                    '<:WeebsOut:856985447985315860>',
-                    '<a:peepoWeebSmash:728671752414167080>',
-                    '<:peepoRiot:730883102678974491>',
+                    const.Emote.WeebsOutOut, const.Emote.WeebsOut, const.Emote.peepoWeebSmash, const.Emote.peepoRiot
                 )
             )
 
     @commands.Cog.listener('on_message')
     async def ree_the_oof(self, message: discord.Message):
-        if self.non_community_check(message):
+        if not self.community_check(message):
             return
 
         if "Oof" in message.content:
@@ -70,7 +69,7 @@ class CommunityFun(CommunityCog):
 
     @commands.Cog.listener('on_message')
     async def random_comfy_react(self, message: discord.Message):
-        if self.non_community_check(message):
+        if not self.community_check(message):
             return
 
         roll = random.randint(1, 300 + 1)
@@ -82,7 +81,7 @@ class CommunityFun(CommunityCog):
 
     @commands.Cog.listener('on_message')
     async def your_life(self, message: discord.Message):
-        if self.non_community_check(message):
+        if not self.community_check(message):
             return
 
         if random.randint(1, 170 + 1) < 2:

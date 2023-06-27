@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import discord
 from discord.ext import commands, menus
@@ -48,9 +48,9 @@ class SetupSelect(discord.ui.Select):
 
 
 class SetupPageSource(menus.ListPageSource):
-    def __init__(self, data: List[SetupFormatData]):
+    def __init__(self, data: list[SetupFormatData]):
         super().__init__(entries=data, per_page=1)
-        self.data: List[SetupFormatData] = data
+        self.data: list[SetupFormatData] = data
 
     async def format_page(self, menu: SetupPages, entries: SetupFormatData):
         cog = entries.cog
@@ -126,7 +126,7 @@ class SetupCog:
 class SetupCommandCog(AluCog):
     @commands.hybrid_command()
     async def setup(self, ctx: AluGuildContext):
-        setup_data: List[SetupFormatData] = [SetupFormatData(cog='front_page')]
+        setup_data: list[SetupFormatData] = [SetupFormatData(cog='front_page')]
         for cog_name, cog in self.bot.cogs.items():
             if getattr(cog, 'setup_info', None):
                 setup_data.append(SetupFormatData(cog=cog))

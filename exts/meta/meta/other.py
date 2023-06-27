@@ -6,7 +6,7 @@ import itertools
 import os
 import re
 import time
-from typing import TYPE_CHECKING, List, NamedTuple, Optional
+from typing import TYPE_CHECKING, NamedTuple, Optional
 
 import aiofiles
 import discord
@@ -199,7 +199,7 @@ class OtherCog(AluCog):
 
     @commands.hybrid_command(help="Checks the bot\'s ping to Discord")
     async def ping(self, ctx: AluContext):
-        pings: List[PingTuple] = []
+        pings: list[PingTuple] = []
 
         typing_start = time.monotonic()
         await ctx.typing()

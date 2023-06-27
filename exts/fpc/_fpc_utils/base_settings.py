@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from difflib import get_close_matches
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Optional, Union
 
 import discord
 from discord import app_commands
@@ -66,10 +66,10 @@ class FPCSettingsBase(FPCCog):
         game: str,
         game_mention: str,
         game_icon: str,
-        extra_account_info_columns: List[str],
+        extra_account_info_columns: list[str],
         character_name_by_id: Callable[[int], Awaitable[str]],
         character_id_by_name: Callable[[str], Awaitable[int]],
-        all_character_names: Callable[[], Awaitable[List[str]]],
+        all_character_names: Callable[[], Awaitable[list[str]]],
         character_word_plural: str,
         **kwargs,
     ) -> None:
@@ -78,10 +78,10 @@ class FPCSettingsBase(FPCCog):
         self.game: str = game
         self.game_mention: str = game_mention
         self.game_icon: str = game_icon
-        self.extra_account_info_columns: List[str] = extra_account_info_columns
+        self.extra_account_info_columns: list[str] = extra_account_info_columns
         self.character_name_by_id: Callable[[int], Awaitable[str]] = character_name_by_id
         self.character_id_by_name: Callable[[str], Awaitable[int]] = character_id_by_name
-        self.all_character_names: Callable[[], Awaitable[List[str]]] = all_character_names
+        self.all_character_names: Callable[[], Awaitable[list[str]]] = all_character_names
         self.character_gather_word: str = character_word_plural
 
     async def get_ctx(self, ctx_ntr: AluGuildContext | discord.Interaction[AluBot]) -> AluGuildContext:
@@ -426,7 +426,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.reply(embed=e)
 
     def construct_the_embed(
-        self, s_names: List[str], a_names: List[str], f_names: List[str], *, gather_word: str, mode_add: bool
+        self, s_names: list[str], a_names: list[str], f_names: list[str], *, gather_word: str, mode_add: bool
     ) -> discord.Embed:
         e = discord.Embed()
         e.set_author(name=self.game_mention, icon_url=self.game_icon)
@@ -447,8 +447,8 @@ class FPCSettingsBase(FPCCog):
     @staticmethod
     def get_names_list_from_locals(
         ctx: AluGuildContext | discord.Interaction[AluBot],
-        local_dict: Dict[str, Any],
-    ) -> List[str]:
+        local_dict: dict[str, Any],
+    ) -> list[str]:
         if isinstance(ctx, discord.Interaction):
             # if it's interaction then locals is dictionary with keys
             # "cog(self), ntr, name1, name2, ..." where each name is a string
@@ -463,7 +463,7 @@ class FPCSettingsBase(FPCCog):
         return names
 
     async def player_add_remove(
-        self, ctx_ntr: AluGuildContext | discord.Interaction[AluBot], local_dict: Dict[str, Any], *, mode_add: bool
+        self, ctx_ntr: AluGuildContext | discord.Interaction[AluBot], local_dict: dict[str, Any], *, mode_add: bool
     ) -> None:
         """
         Base function to add/remove players from user's favourite list.
@@ -536,7 +536,7 @@ class FPCSettingsBase(FPCCog):
 
     async def player_add_remove_autocomplete(
         self, ntr: discord.Interaction, current: str, *, mode_add: bool
-    ) -> List[app_commands.Choice[str]]:
+    ) -> list[app_commands.Choice[str]]:
         """Base function for player add/remove autocomplete"""
         assert ntr.guild
 
@@ -576,7 +576,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.reply(embed=e)
 
     async def character_add_remove(
-        self, ctx_ntr: AluGuildContext | discord.Interaction[AluBot], local_dict: Dict[str, Any], *, mode_add: bool
+        self, ctx_ntr: AluGuildContext | discord.Interaction[AluBot], local_dict: dict[str, Any], *, mode_add: bool
     ):
         """Base function for adding/removing characters such as heroes/champs from fav lists"""
         character_names = self.get_names_list_from_locals(ctx_ntr, local_dict)
@@ -589,7 +589,7 @@ class FPCSettingsBase(FPCCog):
         await self.is_fpc_channel_set(ctx, raise_=True)
 
         query = f'SELECT character_id FROM {self.game}_favourite_characters WHERE guild_id=$1'
-        fav_ids: List[int] = [r for r, in await ctx.client.pool.fetch(query, ctx.guild.id)]
+        fav_ids: list[int] = [r for r, in await ctx.client.pool.fetch(query, ctx.guild.id)]
 
         failed_names, success_and_already_ids = [], []
         for name in character_names:
@@ -622,11 +622,11 @@ class FPCSettingsBase(FPCCog):
 
     async def character_add_remove_autocomplete(
         self, ntr: discord.Interaction, current: str, *, mode_add: bool
-    ) -> List[app_commands.Choice[str]]:
+    ) -> list[app_commands.Choice[str]]:
         """Base function for character add/remove autocomplete"""
         query = f'SELECT character_id FROM {self.game}_favourite_characters WHERE guild_id=$1'
         assert ntr.guild
-        fav_ids: List[int] = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id)]
+        fav_ids: list[int] = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id)]
 
         fav_names = [await self.character_name_by_id(i) for i in fav_ids]
 
@@ -652,7 +652,7 @@ class FPCSettingsBase(FPCCog):
         ctx = await self.get_ctx(ctx_ntr)
         await ctx.typing()
         query = f'SELECT character_id FROM {self.game}_favourite_characters WHERE guild_id=$1'
-        fav_ids: List[int] = [r for r, in await ctx.client.pool.fetch(query, ctx.guild.id)]
+        fav_ids: list[int] = [r for r, in await ctx.client.pool.fetch(query, ctx.guild.id)]
         fav_names = [f'{await self.character_name_by_id(i)} - `{i}`' for i in fav_ids]
 
         e = discord.Embed(title=f'List of your favourite {self.character_gather_word}', colour=self.colour)

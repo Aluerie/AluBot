@@ -6,7 +6,7 @@ import re
 import zoneinfo
 from difflib import get_close_matches
 from functools import lru_cache
-from typing import TYPE_CHECKING, List, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 from discord import app_commands
@@ -128,7 +128,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         """Group command about birthdays, for actual commands use it together with subcommands"""
         await ctx.scnf()
 
-    async def timezone_autocomplete(self, _ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def timezone_autocomplete(self, _ntr: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         all_timezones = list(get_timezones())
         all_timezones += [f'GMT{sign}{h}:00' for sign, h in itertools.product(['-', '+'], range(0, 13))]
         # lazy monkey patch

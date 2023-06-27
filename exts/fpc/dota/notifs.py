@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING, Dict, List, Set, Union
+from typing import TYPE_CHECKING, Union
 
 import asyncpg
 import discord
@@ -26,11 +26,11 @@ log.setLevel(logging.INFO)
 class DotaNotifs(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        self.lobby_ids: Set[int] = set()
-        self.top_source_dict: Dict = {}
-        self.live_matches: List[ActiveMatch] = []
-        self.hero_fav_ids: List[int] = []
-        self.player_fav_ids: List[int] = []
+        self.lobby_ids: set[int] = set()
+        self.top_source_dict: dict = {}
+        self.live_matches: list[ActiveMatch] = []
+        self.hero_fav_ids: list[int] = []
+        self.player_fav_ids: list[int] = []
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()
@@ -68,7 +68,7 @@ class DotaNotifs(FPCCog):
         return await super().cog_unload()
 
     async def preliminary_queries(self):
-        async def get_all_fav_ids(table_name: str, column_name: str) -> List[int]:
+        async def get_all_fav_ids(table_name: str, column_name: str) -> list[int]:
             query = f"SELECT DISTINCT {column_name} FROM dota_favourite_{table_name}"
             rows = await self.bot.pool.fetch(query)
             return [r for r, in rows]

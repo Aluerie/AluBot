@@ -10,7 +10,7 @@ import os
 import uuid
 from json import JSONDecodeError
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -26,7 +26,7 @@ class Config(Generic[_T]):
         filename: str,
         pool: Optional[Pool] = None,
         *,
-        encoder: Optional[Type[json.JSONEncoder]] = None,
+        encoder: Optional[type[json.JSONEncoder]] = None,
     ):
         Path(".alubot/cfg/").mkdir(parents=True, exist_ok=True)
         self.filename = f".alubot/cfg/{filename}"
@@ -34,7 +34,7 @@ class Config(Generic[_T]):
         self.encoder = encoder
         self.loop = asyncio.get_running_loop()
         self.lock = asyncio.Lock()
-        self._json: Dict[str, Union[_T, Any]] = {}
+        self._json: dict[str, Union[_T, Any]] = {}
         if self.load_from_file():
             pass
         elif pool:
@@ -96,7 +96,7 @@ class Config(Generic[_T]):
     def __len__(self) -> int:
         return len(self._json)
 
-    def all(self) -> Dict[Any, Union[_T, Any]]:
+    def all(self) -> dict[Any, Union[_T, Any]]:
         return self._json
 
 

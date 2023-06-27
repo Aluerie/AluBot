@@ -4,7 +4,7 @@ import io
 import textwrap
 import traceback
 from contextlib import redirect_stdout
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import discord
 from discord.ext import commands
@@ -27,7 +27,7 @@ class CodeRun(DevBaseCog):
         self,
         ctx: AluContext,
         mentions: commands.Greedy[Union[discord.Member, discord.User, discord.abc.GuildChannel, discord.Role]],
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Returns the dict to be used in eval/REPL."""
         env = {
             "author": ctx.author,

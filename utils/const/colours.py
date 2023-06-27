@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal
+from typing import TYPE_CHECKING, Literal
 
 import discord
-from typing_extensions import Self
 
 if TYPE_CHECKING:
     pass

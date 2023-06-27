@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import menus
@@ -59,7 +59,7 @@ class CharacterPageSource(menus.ListPageSource):
         e.add_field(name='Gray Buttons\N{BLACK LARGE SQUARE}', value=f'Your non-favourite {menu.gather_word}.')
         return e
 
-    async def format_page(self, menu: CharacterPages, entries: List[Tuple[int, str]]):
+    async def format_page(self, menu: CharacterPages, entries: list[tuple[int, str]]):
         """
 
         ----
@@ -71,7 +71,7 @@ class CharacterPageSource(menus.ListPageSource):
         # or several menus
         query = f'SELECT character_id FROM {menu.game}_favourite_characters WHERE guild_id=$1'
         assert menu.ctx_ntr.guild
-        fav_ids: List[int] = [r for r, in await menu.ctx_ntr.client.pool.fetch(query, menu.ctx_ntr.guild.id)]
+        fav_ids: list[int] = [r for r, in await menu.ctx_ntr.client.pool.fetch(query, menu.ctx_ntr.guild.id)]
 
         menu.clear_items()
         menu.fill_items()

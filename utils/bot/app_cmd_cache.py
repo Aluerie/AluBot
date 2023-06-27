@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import discord
 from discord import app_commands
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from .bot import AluBot
 
-    AppCommandStore = Dict[str, app_commands.AppCommand]  # name: AppCommand
+    AppCommandStore = dict[str, app_commands.AppCommand]  # name: AppCommand
 
 
 class AluAppCommandTree(app_commands.CommandTree):
@@ -27,7 +27,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         super().__init__(client=client)
         self._global_app_commands: AppCommandStore = {}
         # guild_id: AppCommandStore
-        self._guild_app_commands: Dict[int, AppCommandStore] = {}
+        self._guild_app_commands: dict[int, AppCommandStore] = {}
 
     def find_app_command_by_names(
         self,
@@ -71,11 +71,11 @@ class AluAppCommandTree(app_commands.CommandTree):
             return search_dict(self._global_app_commands)
 
     @staticmethod
-    def _unpack_app_commands(commands: List[app_commands.AppCommand]) -> AppCommandStore:
+    def _unpack_app_commands(commands: list[app_commands.AppCommand]) -> AppCommandStore:
         ret: AppCommandStore = {}
 
         def unpack_options(
-            options: List[Union[app_commands.AppCommand, app_commands.AppCommandGroup, app_commands.Argument]]
+            options: list[Union[app_commands.AppCommand, app_commands.AppCommandGroup, app_commands.Argument]]
         ):
             for option in options:
                 if isinstance(option, app_commands.AppCommandGroup):
@@ -89,7 +89,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         return ret
 
     async def _update_cache(
-        self, commands: List[app_commands.AppCommand], guild: Optional[Union[Snowflake, int]] = None
+        self, commands: list[app_commands.AppCommand], guild: Optional[Union[Snowflake, int]] = None
     ) -> None:
         # because we support both int and Snowflake
         # we need to convert it to a Snowflake like object if it's an int
@@ -110,7 +110,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         await self._update_cache([res], guild=guild)
         return res
 
-    async def fetch_commands(self, *, guild: Optional[Snowflake] = None) -> List[app_commands.AppCommand]:
+    async def fetch_commands(self, *, guild: Optional[Snowflake] = None) -> list[app_commands.AppCommand]:
         res = await super().fetch_commands(guild=guild)
         await self._update_cache(res, guild=guild)
         return res
@@ -132,7 +132,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         if clear_app_commands_cache:
             self.clear_app_commands_cache(guild=guild)
 
-    async def sync(self, *, guild: Optional[Snowflake] = None) -> List[app_commands.AppCommand]:
+    async def sync(self, *, guild: Optional[Snowflake] = None) -> list[app_commands.AppCommand]:
         res = await super().sync(guild=guild)
         await self._update_cache(res, guild=guild)
         return res

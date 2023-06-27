@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal, NamedTuple, Optional, Sequence
+from typing import TYPE_CHECKING, Literal, NamedTuple, Optional, Sequence
 
 import discord
 from discord import app_commands
 from discord.ext import commands, menus, tasks
 
-from utils import AluCog, AluContext
+from utils import AluContext
 from utils.const import Colour, Emote
 from utils.formats import human_timedelta
 from utils.pagination import Paginator
@@ -21,10 +21,10 @@ class HelpFormatData(NamedTuple):
 
 
 class HelpPageSource(menus.ListPageSource):
-    def __init__(self, data: List[HelpFormatData], help_cmd: MyHelpCommand):
+    def __init__(self, data: list[HelpFormatData], help_cmd: MyHelpCommand):
         super().__init__(entries=data, per_page=1)
         self.help_cmd: MyHelpCommand = help_cmd
-        self.data: List[HelpFormatData] = data
+        self.data: list[HelpFormatData] = data
 
     async def format_page(self, menu: HelpPages, entries: HelpFormatData):
         cog, cmds = entries.cog, entries.cmds
@@ -175,7 +175,7 @@ class MyHelpCommand(commands.HelpCommand):
         sorted_list_of_keys = sorted(mapping, key=lambda x: getattr(x, "qualified_name", "No Category"))
         sorted_mapping = {k: mapping[k] for k in sorted_list_of_keys}
 
-        help_data: List[HelpFormatData] = [HelpFormatData(cog='front_page', cmds=None)]
+        help_data: list[HelpFormatData] = [HelpFormatData(cog='front_page', cmds=None)]
         for cog, cmds in sorted_mapping.items():
             if not getattr(cog, 'setup_info', None):
                 filtered = await self.filter_commands(cmds, sort=True)

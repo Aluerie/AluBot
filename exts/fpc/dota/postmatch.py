@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands, tasks
@@ -22,8 +22,8 @@ log.setLevel(logging.DEBUG)
 class DotaPostMatchEdit(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        self.postmatch_players: List[PostMatchPlayerData] = []
-        self.opendota_req_cache: Dict[int, OpendotaRequestMatch] = dict()
+        self.postmatch_players: list[PostMatchPlayerData] = []
+        self.opendota_req_cache: dict[int, OpendotaRequestMatch] = dict()
 
     async def cog_load(self) -> None:
         self.bot.ini_steam_dota()

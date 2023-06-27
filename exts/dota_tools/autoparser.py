@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Dict, List, Set
+from typing import TYPE_CHECKING
 
 import vdf
 from discord.ext import tasks
@@ -26,13 +26,13 @@ class OpenDotaAutoParser(AluCog):
 
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        self.active_matches: List[int] = [7165513460]
-        self.lobby_ids: Set[int] = set()
+        self.active_matches: list[int] = [7165513460]
+        self.lobby_ids: set[int] = set()
 
-        self.matches_to_parse: List[int] = []
-        self.opendota_req_cache: Dict[int, OpendotaRequestMatch] = dict()
+        self.matches_to_parse: list[int] = []
+        self.opendota_req_cache: dict[int, OpendotaRequestMatch] = dict()
 
-        self.steam_ids: List[int]
+        self.steam_ids: list[int]
 
     async def cog_load(self) -> None:
         self.bot.ini_steam_dota()

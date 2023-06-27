@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from discord.ext import tasks
 from pyot.core.exceptions import NotFound
@@ -22,7 +22,7 @@ log.setLevel(logging.DEBUG)
 class LoLFeedPostMatchEdit(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        self.postmatch_players: List[PostMatchPlayer] = []
+        self.postmatch_players: list[PostMatchPlayer] = []
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()

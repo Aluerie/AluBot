@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import unicodedata
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
@@ -21,7 +21,7 @@ class DevUtilities(AluCog):
         Only up to a 10 characters at a time though.
         """
 
-        def to_string(c: str) -> Tuple[str, str]:
+        def to_string(c: str) -> tuple[str, str]:
             digit = f'{ord(c):x}'
             name = unicodedata.name(c, None)
             name = f'\\N{{{name}}}' if name else 'Name not found.'

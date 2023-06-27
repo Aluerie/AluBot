@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, List, MutableMapping, NamedTuple, Optional
+from typing import TYPE_CHECKING, Any, MutableMapping, NamedTuple, Optional
 
 import discord
 from bs4 import BeautifulSoup
@@ -43,7 +43,7 @@ def scrape_schedule_data(
     soup: BeautifulSoup,
     schedule_mode: ScheduleModeEnum,
     query: Optional[str] = None,
-) -> List[Match]:
+) -> list[Match]:
     """Get data about Dota 2 matches in a structured dictionary.
 
     Note: We are scraping liquipedia.net, while I think there is API, that we can/should use.
@@ -59,7 +59,7 @@ def scrape_schedule_data(
 
     Returns
     -------
-    List[Match]
+    list[Match]
         data about Dota 2 matches in a structured dictionary.
     """
 
@@ -67,7 +67,7 @@ def scrape_schedule_data(
     only_next24 = schedule_mode.only_next24
     include_favourites = schedule_mode.include_favourites
 
-    matches: List[Match] = []
+    matches: list[Match] = []
     dt_now = datetime.datetime.now(datetime.timezone.utc)
 
     def work_func(toggle: int, part=1):
@@ -220,7 +220,7 @@ class SchedulePageSource(menus.ListPageSource):
         self.author: discord.User | discord.Member = author
         self.query: Optional[str] = query
 
-    async def format_page(self, menu: SchedulePages, matches: List[Match]):
+    async def format_page(self, menu: SchedulePages, matches: list[Match]):
         e = discord.Embed(title='Dota 2 Pro Matches Schedule', url=MATCHES_URL, colour=0x042B4C)
         e.set_author(name='Info from Liquipedia.net', icon_url=LIQUIPEDIA_ICON, url=MATCHES_URL)
         e.set_footer(text=self.schedule_enum.label_name, icon_url=DOTA_LOGO)

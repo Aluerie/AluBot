@@ -10,7 +10,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from exts.utilities.utilities.fix_links import fix_link_worker
-from utils import const, errors, mimic
+from utils import const, errors, mimicry
 
 from ._category import CommunityCog
 

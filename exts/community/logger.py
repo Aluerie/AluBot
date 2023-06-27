@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, Any
 
 import discord
 import regex
@@ -79,7 +79,7 @@ class CommunityMemberLogging(CommunityCog):
 
         # 99.99% of this event triggers on lonely changes so only one embed will be posted at a time
         # but docs say that multiple changes are possible at the same time so let's still count for it
-        embeds: List[discord.Embed] = []
+        embeds: list[discord.Embed] = []
 
         if before.name != after.name:
             e = self.before_after_embed(member, 'username', before.name, after.name)

@@ -6,7 +6,7 @@ import platform
 import re
 import socket
 import warnings
-from typing import TYPE_CHECKING, Annotated, List, Union
+from typing import TYPE_CHECKING, Annotated, Union
 
 import discord
 import psutil
@@ -140,7 +140,7 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
         await ctx.reply(embed=e, file=file)
 
     @colour.autocomplete('colour')
-    async def autocomplete(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def autocomplete(self, _: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mp(', 'map('] + list(ImageColor.colormap.keys())
         return [
             app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()

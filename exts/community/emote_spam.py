@@ -1,20 +1,21 @@
 from __future__ import annotations
 
 import asyncio
+import itertools
 import random
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import discord
 import emoji
 import regex
 from discord.ext import commands, tasks
 
-from utils import AluCog, const
+from utils import const, cache
 
 from ._category import CommunityCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from utils import AluBot, AluContext
 
 
 class EmoteSpam(CommunityCog):
@@ -40,7 +41,7 @@ class EmoteSpam(CommunityCog):
             for item in filters:
                 text = regex.sub(item, '', text)
 
-            return not bool(text)  # if there is some text left then it's forbidden.  
+            return not bool(text)  # if there is some text left then it's forbidden.
         else:
             return True
 
@@ -76,17 +77,41 @@ class EmoteSpam(CommunityCog):
     async def on_message_edit(self, _before: discord.Message, after: discord.Message):
         await self.emote_spam_work(after)
 
+    @cache.cache(maxsize=60*24, strategy=cache.Strategy.lru)
+    async def get_all_emotes(self) -> list[discord.Emoji]:
+        """Get all emotes available to the bot."""
+        return list(itertools.chain.from_iterable(guild.emojis for guild in self.bot.guilds))
+
+    async def get_random_emote(self) -> discord.Emoji:
+        """Get a random discord emote from one of discord servers the bot is in."""
+
+        # Note: hmm, maybe we need to do some privacy check?
+        # what if server owner doesn't want me to use their emotes.
+
+        all_emotes: list[discord.Emoji] = await self.get_all_emotes()
+        while True:
+            random_emote = random.choice(all_emotes)
+            if random_emote.is_usable():
+                # in theory we are f*ked if there is not a single usable emote,
+                # but my server will always have one :D
+                return random_emote
+
     @tasks.loop(minutes=63)
     async def emote_spam(self):
         if random.randint(1, 100 + 1) < 2:
-            while(True):
-                rand_guild = random.choice(self.bot.guilds)
-                if rand_guild.emojis:
-                    # We need to do this loop in case some servers do not upload any emotes.
-                    rand_emoji = random.choice(rand_guild.emojis)
-                    if rand_emoji.is_usable():
-                        break
-            await self.bot.community.emote_spam.send('{0} {0} {0}'.format(str(rand_emoji)))
+            emote = await self.get_random_emote()
+            await self.bot.community.emote_spam.send('{0} {0} {0}'.format(str(emote)))
+
+    @commands.hybrid_command()
+    async def do_emote_spam(self, ctx: AluContext):
+        """Send 3x random emote into emote spam channel"""
+
+        emote = await self.get_random_emote()
+        channel = self.community.emote_spam
+        content = '{0} {0} {0}'.format(str(emote))
+        await channel.send(content)
+        e = discord.Embed(colour=const.Colour.prpl(), description=f'I sent {content} into {channel.mention}')
+        await ctx.reply(embed=e, ephemeral=True, delete_after=60)
 
     @tasks.loop(count=1)
     async def offline_criminal_check(self):
@@ -96,7 +121,7 @@ class EmoteSpam(CommunityCog):
                 return
             if await self.emote_spam_work(message):
                 text = f'Offline criminal found {const.Emote.peepoPolice}'
-                await self.bot.community.bot_spam.send(content=text)
+                await self.community.bot_spam.send(content=text)
 
     @emote_spam.before_loop
     @offline_criminal_check.before_loop

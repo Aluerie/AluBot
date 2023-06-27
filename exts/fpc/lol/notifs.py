@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 import asyncpg
 import discord
@@ -27,8 +27,8 @@ log.setLevel(logging.INFO)
 class LoLNotifs(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        self.live_matches: List[LiveMatch] = []
-        self.all_live_match_ids: List[int] = []
+        self.live_matches: list[LiveMatch] = []
+        self.all_live_match_ids: list[int] = []
 
     async def cog_load(self) -> None:
         await self.bot.ini_twitch()

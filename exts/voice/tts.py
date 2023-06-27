@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Literal, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 import discord
 from discord import app_commands
@@ -42,7 +42,7 @@ class TextToSpeech(VoiceChatCog, name='Text To Speech', emote=const.Emote.Ree):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.connections: Dict[int, discord.VoiceClient] = {}  # guild.id to Voice we are connected to
+        self.connections: dict[int, discord.VoiceClient] = {}  # guild.id to Voice we are connected to
 
     # TODO: remake it into hybrid back
     tts_group = app_commands.Group(

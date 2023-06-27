@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 from discord.ext import commands
@@ -41,7 +41,7 @@ class UmbraSyncCommandCog(DevBaseCog):
 
         e = discord.Embed(colour=const.Colour.prpl())
 
-        async def sync_to_guild_list(guilds: commands.Greedy[discord.Guild] | List[discord.Guild]):
+        async def sync_to_guild_list(guilds: commands.Greedy[discord.Guild] | list[discord.Guild]):
             fmt = 0
             cmds = []
             for guild in guilds:

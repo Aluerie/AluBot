@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
-from typing import TYPE_CHECKING, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -76,10 +76,10 @@ class ActiveMatch(Match):
         start_time: int,
         player_name: str,
         hero_id: int,
-        hero_ids: List[int],
+        hero_ids: list[int],
         server_steam_id: int,
         twitchtv_id: Optional[int] = None,
-        channel_ids: List[int],
+        channel_ids: list[int],
     ):
         super().__init__(match_id)
         self.start_time = start_time
@@ -145,7 +145,7 @@ class ActiveMatch(Match):
         draw.text((0, 35 + h2 + 10), self.twitch_status, font=font, align="center", fill=str(self.colour))
         return img
 
-    async def notif_embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File]:
+    async def notif_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
         await self.get_twitch_data(bot.twitch)
         img_file = bot.imgtools.img_to_file(
             await self.better_thumbnail(bot),

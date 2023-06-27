@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import datetime
-import inspect
 import logging
 import os
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterable, Mapping, MutableMapping, Optional, Union
 
 import discord
 from aiohttp import ClientSession
@@ -69,7 +68,7 @@ class AluBot(commands.Bot):
             case_insensitive=True,  # todo: this isn't applied to command groups; maybe make new base class?
         )
         self.test: bool = test
-        self.odota_ratelimit: Dict[str, int] = {'monthly': -1, 'minutely': -1}
+        self.odota_ratelimit: dict[str, int] = {'monthly': -1, 'minutely': -1}
 
         self.repo_url = 'https://github.com/Aluerie/AluBot'
         self.developer = 'Aluerie'  # it's my GitHub account name
@@ -79,7 +78,7 @@ class AluBot(commands.Bot):
         self.config = config
         self.formats = formats
 
-        self.category_cogs: Dict[ExtCategory, List[AluCog | commands.Cog]] = dict()
+        self.category_cogs: dict[ExtCategory, list[AluCog | commands.Cog]] = dict()
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
             timedelta=datetime.timedelta(days=7)

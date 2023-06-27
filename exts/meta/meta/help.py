@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Dict, List, Literal, Mapping, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Literal, Mapping, Optional, Sequence, Union
 
 import discord
 from discord import app_commands
@@ -38,7 +38,7 @@ class CogPage:
 
 
 class HelpPageSource(menus.ListPageSource):
-    def __init__(self, data: Dict[ExtCategory, List[CogPage]]):
+    def __init__(self, data: dict[ExtCategory, list[CogPage]]):
         entries = list(itertools.chain.from_iterable(data.values()))
         super().__init__(entries=entries, per_page=1)
 
@@ -102,7 +102,7 @@ class HelpSelect(discord.ui.Select):
         self.__fill_options()
 
     def __fill_options(self) -> None:
-        pages_per_category: Mapping[ExtCategory, Tuple[int, int]] = {}
+        pages_per_category: Mapping[ExtCategory, tuple[int, int]] = {}
         total = 1
         for category, cog_pages in self.paginator.help_data.items():
             starting = total
@@ -130,10 +130,10 @@ class HelpPages(pagination.Paginator):
         self,
         ctx: AluContext | discord.Interaction[AluBot],
         help_cmd: AluHelp,
-        help_data: Dict[ExtCategory, List[CogPage]],
+        help_data: dict[ExtCategory, list[CogPage]],
     ):
         self.help_cmd: AluHelp = help_cmd
-        self.help_data: Dict[ExtCategory, List[CogPage]] = help_data
+        self.help_data: dict[ExtCategory, list[CogPage]] = help_data
         super().__init__(ctx, HelpPageSource(help_data))
 
     def fill_items(self):
@@ -197,7 +197,7 @@ class AluHelp(commands.HelpCommand):
 
     async def unpack_commands(
         self, command: commands.Command, answer: Optional[list[commands.Command]] = None, deep: int = 0
-    ) -> List[commands.Command]:
+    ) -> list[commands.Command]:
         """If a command is a group then unpack those until their very-last children.
 
         examples:
@@ -253,7 +253,7 @@ class AluHelp(commands.HelpCommand):
         help_str = split[0] + extra_info
         return help_str
 
-    def get_bot_mapping(self) -> Dict[ExtCategory, Dict[AluCog | commands.Cog, List[commands.Command]]]:
+    def get_bot_mapping(self) -> dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]]:
         """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
 
         # TODO: include solo slash commands and Context Menu commands.
@@ -265,13 +265,13 @@ class AluHelp(commands.HelpCommand):
 
     async def send_help_menu(
         self,
-        mapping: Dict[ExtCategory, Dict[AluCog | commands.Cog, List[commands.Command]]],
+        mapping: dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]],
         *,
         requested_cog: Optional[Union[AluCog, commands.Cog]] = None,
     ):
         await self.context.typing()
 
-        help_data: Dict[ExtCategory, List[CogPage]] = {}
+        help_data: dict[ExtCategory, list[CogPage]] = {}
 
         starting_page, page_counter = 0, 0  # used to get to the section page we might need from the cog command.
         for category, cog_cmd_dict in mapping.items():
@@ -318,7 +318,7 @@ class AluHelp(commands.HelpCommand):
 
     async def send_bot_help(
         self,
-        mapping: Dict[ExtCategory, Dict[AluCog | commands.Cog, List[commands.Command]]],
+        mapping: dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]],
     ):
         await self.send_help_menu(mapping)
 

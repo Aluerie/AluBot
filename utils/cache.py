@@ -13,7 +13,7 @@ import datetime
 import enum
 import time
 from functools import wraps
-from typing import Any, Callable, Coroutine, MutableMapping, Optional, Protocol, Tuple, TypeVar, overload
+from typing import Any, Callable, Coroutine, MutableMapping, Optional, Protocol, TypeVar, overload
 
 from lru import LRU
 

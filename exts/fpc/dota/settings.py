@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord import app_commands
@@ -258,7 +258,7 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
 
     # dota player add ##################################
 
-    async def player_add_autocomplete(self, ntr: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+    async def player_add_autocomplete(self, ntr: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=True)
 
     @slh_dota_player.command(name="add")
@@ -308,7 +308,7 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
 
     async def player_remove_autocomplete(
         self, ntr: discord.Interaction[AluBot], current: str
-    ) -> List[app_commands.Choice[str]]:
+    ) -> list[app_commands.Choice[str]]:
         return await self.player_add_remove_autocomplete(ntr, current, mode_add=False)
 
     @slh_dota_player.command(name="remove")

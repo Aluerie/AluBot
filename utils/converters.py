@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 import re
-from typing import TYPE_CHECKING, Any, List, Tuple
+from typing import TYPE_CHECKING, Any
 
 import discord
 from discord import app_commands
@@ -94,7 +94,7 @@ class Snowflake:
 class InvalidColour(AluBotException):
     """Exception for custom cases of AluColourConverter."""
 
-    __slots__: Tuple[str, ...] = ()
+    __slots__: tuple[str, ...] = ()
 
 
 class AluColourConverter(commands.ColourConverter):  # , app_commands.Transformer):

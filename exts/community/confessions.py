@@ -43,7 +43,9 @@ class ConfModal(discord.ui.Modal):
         e.set_footer(text="Use buttons below to make a new confession in this channel")
         if self.title == "Non-anonymous confession":
             e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
-        channel: discord.abc.Messageable = ntr.channel  # type: ignore # TODO: fix
+        channel = ntr.channel
+        assert isinstance(channel, discord.abc.MessageableChannel)
+        
         await channel.send(embeds=[e])
         saint_string = '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Emote.bubuChrist, '\N{CHURCH}', Emote.PepoBeliever)
         await channel.send(saint_string)

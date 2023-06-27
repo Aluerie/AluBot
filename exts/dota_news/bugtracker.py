@@ -29,10 +29,11 @@ GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
 
 
 class ActionBase:
-    def __init__(self, name: str, *, colour: int, word: str) -> None:
+    def __init__(self, name: str, *, colour: int, word: str, emote: str) -> None:
         self.name: str = name
         self.colour: int = colour
         self.word: str = word
+        self.emote: str = emote
 
     @property
     def file_path(self) -> str:
@@ -41,9 +42,6 @@ class ActionBase:
     def file(self, number: int) -> discord.File:
         # without a `number` we had a "bug" where the image would go outside embeds
         return discord.File(self.file_path, filename=f'{self.name}_{number}')
-
-    def emote(self, bot: AluBot) -> discord.Emoji | None:
-        return discord.utils.find(lambda m: m.name == self.name, bot.hideout.guild.emojis)
 
 
 class EventBase(ActionBase):
@@ -54,25 +52,20 @@ class CommentBase(ActionBase):
     pass
 
 
-# pictures are taken from 16px versions here https://primer.style/octicons/
-# and background circles are added with simple online editor https://iconscout.com/color-editor
-# make pics to be 128x128, so it's consistent for all sizes
 # I kindly ask you to have same matching names for
-# * variable below
+# * variables below
 # * PNG-picture in assets folder
 # * emote name in wink server
-
-
 class EventType(Enum):
-    assigned = EventBase('assigned', colour=0x21262D, word='self-assigned')
-    # Todo if valve one day decides to assign issues to each other then rework^^^
-    closed = EventBase('closed', colour=0x9B6CEA, word='closed')
-    reopened = EventBase('reopened', colour=0x238636, word='reopened')
+    assigned = EventBase('assigned', colour=0x21262D, word='self-assigned', emote=str(const.GitIssueEvent.assigned))
+    # todo: if valve one day decides to assign issues to each other then rework^^^
+    closed = EventBase('closed', colour=0x9B6CEA, word='closed', emote=str(const.GitIssueEvent.closed))
+    reopened = EventBase('reopened', colour=0x238636, word='reopened', emote=str(const.GitIssueEvent.reopened))
 
 
 class CommentType(Enum):
-    commented = CommentBase('commented', colour=0x4285F4, word='commented')
-    opened = CommentBase('opened', colour=0x52CC99, word='opened')
+    commented = CommentBase('commented', colour=0x4285F4, word='commented', emote=str(const.GitIssueEvent.commented))
+    opened = CommentBase('opened', colour=0x52CC99, word='opened', emote=str(const.GitIssueEvent.opened))
 
 
 class Action:
@@ -172,7 +165,7 @@ class TimeLine:
                 chunks, chunk_size = len(markdown_body), const.Limit.Embed.field_value
                 fields = [markdown_body[i : i + chunk_size] for i in range(0, chunks, chunk_size)]
                 for x in fields:
-                    e.add_field(name=f'{p.event_type.emote(bot)}{p.author_str}', value=x, inline=False)
+                    e.add_field(name=f'{p.event_type.emote}{p.author_str}', value=x, inline=False)
             e.set_author(
                 name=f'Bugtracker issue #{self.issue.number} update',
                 url=self.last_comment_url,
@@ -208,7 +201,7 @@ class BugTracker(AluCog):
     def news_channel(self):
         channel = self.hideout.spam if self.bot.test else self.community.bugtracker_news
         return channel
-    
+
     async def get_valve_devs(self) -> list[str]:
         query = 'SELECT login FROM valve_devs'
         valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
@@ -350,7 +343,7 @@ class BugTracker(AluCog):
 
         efs = [v.embed_and_file(self.bot) for v in issue_dict.values()]
 
-        batches_to_send: list[list[tuple[discord.Embed, discord.File]]]= []
+        batches_to_send: list[list[tuple[discord.Embed, discord.File]]] = []
         character_counter, embed_counter = 0, 0
         for em, file in efs:
             character_counter += len(em)

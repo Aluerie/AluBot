@@ -88,3 +88,14 @@ DIGITS = [
     '\N{DIGIT EIGHT}\N{COMBINING ENCLOSING KEYCAP}',
     '\N{DIGIT NINE}\N{COMBINING ENCLOSING KEYCAP}',
 ]
+
+
+class GitIssueEvent(StrEnum):
+    # pictures are taken from 16px versions here https://primer.style/octicons/
+    # and background circles are added with simple online editor https://iconscout.com/color-editor
+    # make pics to be 128x128, so it's consistent for all sizes
+    closed = '<:closed:1070403584010760243>'
+    assigned = '<:assigned:1070403582316269568>'
+    reopened = '<:reopened:1070403590646145034>'
+    commented = '<:commented:1070403505518559402>'
+    opened = '<:opened:1070403587638829116>'

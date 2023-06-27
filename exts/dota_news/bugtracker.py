@@ -38,9 +38,9 @@ class ActionBase:
     def file_path(self) -> str:
         return f'./assets/images/git/{self.name}.png'
 
-    @property
-    def file(self) -> discord.File:
-        return discord.File(self.file_path)
+    def file(self, number: int) -> discord.File:
+        # without a `number` we had a "bug" where the image would go outside embeds
+        return discord.File(self.file_path, filename=f'{self.name}_{number}')
 
     def emote(self, bot: AluBot) -> discord.Emoji | None:
         return discord.utils.find(lambda m: m.name == self.name, bot.hideout.guild.emojis)
@@ -144,7 +144,7 @@ class TimeLine:
             last_comment_url = None
         return last_comment_url
 
-    def embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File | None]:
+    def embed_and_file(self, bot: AluBot) -> Tuple[discord.Embed, discord.File]:
         title = textwrap.shorten(self.issue.title, width=const.Limit.Embed.title)
         e = discord.Embed(title=title, url=self.issue.html_url)
         if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
@@ -161,7 +161,7 @@ class TimeLine:
             url = comment.comment_url if comment else None
             e.set_author(name=lead_action.author_str, icon_url=lead_action.actor.avatar_url, url=url)
             e.description = comment.markdown_body if comment else ''
-            file = lead_action.event_type.file
+            file = lead_action.event_type.file(self.issue.number)
             e.set_thumbnail(url=f'attachment://{file.filename}')
         else:
             e.colour = 0x4078C0  # git colour, first in google :D
@@ -280,7 +280,7 @@ class BugTracker(AluCog):
         now = discord.utils.utcnow()
 
         # if self.bot.test:  # TESTING
-        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
+        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=2)
 
         issue_dict: Dict[int, TimeLine] = dict()
         issues_list = repo.get_issues(sort='updated', state='all', since=dt)
@@ -292,7 +292,6 @@ class BugTracker(AluCog):
                 for x in i.get_events()
                 if now > x.created_at.replace(tzinfo=datetime.timezone.utc) > dt
                 and x.actor  # apparently some people just delete their accounts after closing their issues, #6556 :D
-                # and x.actor.login in assignees
                 and x.event in [x.name for x in list(EventType)]
             ]
             for e in events:
@@ -351,7 +350,8 @@ class BugTracker(AluCog):
 
         efs = [v.embed_and_file(self.bot) for v in issue_dict.values()]
 
-        batches_to_send, character_counter, embed_counter = [], 0, 0
+        batches_to_send: list[list[tuple[discord.Embed, discord.File]]]= []
+        character_counter, embed_counter = 0, 0
         for em, file in efs:
             character_counter += len(em)
             embed_counter += 1
@@ -364,12 +364,12 @@ class BugTracker(AluCog):
                 character_counter, embed_counter = len(em), 1
                 batches_to_send.append([(em, file)])
 
-        for i in batches_to_send:
+        for batch in batches_to_send:
             msg = await self.news_channel.send(
-                embeds=[e for (e, _) in i],
-                files=list(dict.fromkeys([f for (_, f) in i if f])), # duplicates of files go outside of embeds :(
+                embeds=[embed for (embed, _file) in batch],
+                files=[file for (_embed, file) in batch],
             )
-            # await msg.publish()
+            await msg.publish()
 
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
         await self.bot.pool.execute(query, now, const.Guild.community)

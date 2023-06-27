@@ -204,6 +204,11 @@ class BugTracker(AluCog):
     async def cog_unload(self) -> None:
         self.git_comments_check.stop()  # .cancel()
 
+    @discord.utils.cached_property
+    def news_channel(self):
+        channel = self.hideout.spam # if self.bot.test else self.community.bugtracker_news
+        return channel
+    
     async def get_valve_devs(self) -> List[str]:
         query = 'SELECT login FROM valve_devs'
         valve_devs: List[str] = [i for i, in await self.bot.pool.fetch(query)]
@@ -275,7 +280,7 @@ class BugTracker(AluCog):
         now = discord.utils.utcnow()
 
         # if self.bot.test:  # TESTING
-        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
+        dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
 
         issue_dict: Dict[int, TimeLine] = dict()
         issues_list = repo.get_issues(sort='updated', state='all', since=dt)
@@ -360,11 +365,11 @@ class BugTracker(AluCog):
                 batches_to_send.append([(em, file)])
 
         for i in batches_to_send:
-            msg = await self.community.bugtracker_news.send(
+            msg = await self.news_channel.send(
                 embeds=[e for (e, _) in i],
                 files=list(dict.fromkeys([f for (_, f) in i if f])), # duplicates of files go outside of embeds :(
             )
-            await msg.publish()
+            # await msg.publish()
 
         query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
         await self.bot.pool.execute(query, now, const.Guild.community)

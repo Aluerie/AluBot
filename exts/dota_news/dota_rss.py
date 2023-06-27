@@ -19,24 +19,24 @@ class Dota2RSS(AluCog):
         self.url = 'https://store.steampowered.com/feeds/news/app/570/'
         self.latest_news_link: str = ''
 
-    async def cog_load(self):
+    async def cog_load(self) -> None:
         self.rss_watcher.start()
         query = 'SELECT last_dota_rss_link FROM botvars WHERE id=TRUE'
         self.latest_news_link = await self.bot.pool.fetchval(query)
 
-    async def cog_unload(self):
-        self.rss_watcher.stop()
+    async def cog_unload(self) -> None:
+        self.rss_watcher.cancel()
 
     @discord.utils.cached_property
     def news_webhook(self) -> discord.Webhook:
         return discord.Webhook.from_url(
-            url=PINK_TEST_WEBHOOK, #if self.bot.test else DOTA_NEWS_WEBHOOK,
+            url=PINK_TEST_WEBHOOK if self.bot.test else DOTA_NEWS_WEBHOOK,
             client=self.bot,
             session=self.bot.session,
             bot_token=self.bot.http.token,
         )
 
-    @aluloop(minutes=1)
+    @aluloop(seconds=30)
     async def rss_watcher(self):
         rss = feedparser.parse(self.url)
         entry = rss.entries[0]
@@ -46,6 +46,7 @@ class Dota2RSS(AluCog):
             return
 
         url = entry.link
+        self.latest_news_link = url
         title = entry.title
 
         msg = await self.news_webhook.send(content=f'**{entry.title}**\n{url}', wait=True)

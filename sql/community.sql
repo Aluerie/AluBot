@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS real_rules (
+    id SERIAL PRIMARY KEY,
+    content VARCHAR(2000) NOT NULL
+);

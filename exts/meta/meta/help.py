@@ -154,6 +154,11 @@ class HelpPages(pagination.Paginator):
         )
 
         fields = (
+            (
+                '[...]',
+                'This means that the command has more documentation to it, '
+                f'which you can see by using {const.Slash.help}` command: <command>`',
+            ),
             ('<argument>', 'This means the argument is __**required**__.'),
             ('[argument]', 'This means the argument is __**optional**__.'),
             ("`[argument='default']`", "Means that this argument is __**optional**__ and has a default value"),
@@ -217,7 +222,7 @@ class AluHelp(commands.HelpCommand):
             else:
                 prefix = getattr(self.context, 'clean_prefix', '$')
                 cmd_mention = f'`{prefix}{command.qualified_name}`'
-            
+
             sign = f' `{command.signature}`' if command.signature else ''
             return f'{cmd_mention}{sign}'
 
@@ -329,6 +334,7 @@ class AluHelp(commands.HelpCommand):
 
     async def send_error_message(self, error: str):
         return await super().send_error_message(error)
+
 
 class AluHelpCog(MetaCog):
     """Help command."""

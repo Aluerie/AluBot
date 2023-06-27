@@ -280,7 +280,7 @@ class BugTracker(AluCog):
         now = discord.utils.utcnow()
 
         # if self.bot.test:  # TESTING
-        dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
+        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
 
         issue_dict: Dict[int, TimeLine] = dict()
         issues_list = repo.get_issues(sort='updated', state='all', since=dt)

@@ -1,17 +1,17 @@
 """
-The structure of folders/cogs in this project as follows:
+The structure of folders/extensions in this project as follows:
 
 exts/
-    cog_category_folder/
-        _some_cog_utils_folder/
-        _some_cog_utils_file.py 
+    ext_category_folder/
+        _some_ext_utils_folder/
+        _some_ext_utils_file.py 
         # ^ those must start with "_" in order not to be confused with one of below:
-        package_folder_cog/
-            **package structure like cog**
-        one_file_cog.py
+        package_folder_ext/
+            **package structure like ext**
+        one_file_ext.py
     
     __init__.py  # this file
-    beta.py  # special beta test cog file.
+    beta.py  # special beta test ext file.
     zeta.py  # clean state of^
 
 This particular file aims to collect those files into Tuple of extensions so end result of 
@@ -19,13 +19,13 @@ This particular file aims to collect those files into Tuple of extensions so end
 >>> get_extensions(False) 
 >>> (
 >>>    'jishaku',
->>>    'cogs.fpc.dota',
->>>    'cogs.fpc.lol',
->>>    'cogs.community.welcome',
+>>>    'exts.fpc.dota',
+>>>    'exts.fpc.lol',
+>>>    'exts.community.welcome',
 >>>    ...
 >>> )
 
-where for usual cogs the name consists of the following parts `cogs.cog_category.cog_name`.
+where full name for usual extensions consists of the following parts `exts.ext_category.cog_name`.
 """
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ except ModuleNotFoundError:
 
 # EXTENSIONS
 
-INITIAL_EXTENSIONS = ("jishaku",)  # these don't need "cogs.{x}"
+INITIAL_EXTENSIONS = ("jishaku",)  # these don't need "exts.{x}"
 IGNORED_EXTENSIONS = ('beta')  # these are ignored in main bot.
 
 # Packages
@@ -57,8 +57,8 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
     Get tuple of extensions for bot to load.
 
     Note that this function is a bit more robust than needed according to description above.
-    This function can also catch package cogs in "cogs/" folder like beta.py
-    or like we had cog "cogs.fun" be one folder cog for a very long time (now it is "cogs.fun.fun")
+    This function can also catch package exts in "exts/" folder itself like beta.py
+    or like we had cog "exts.fun" be one folder cog for a very long time (now it is "exts.fun.fun")
 
     Parameters
     ----------

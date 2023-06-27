@@ -206,7 +206,7 @@ class BugTracker(AluCog):
 
     @discord.utils.cached_property
     def news_channel(self):
-        channel = self.hideout.spam # if self.bot.test else self.community.bugtracker_news
+        channel = self.hideout.spam if self.bot.test else self.community.bugtracker_news
         return channel
     
     async def get_valve_devs(self) -> List[str]:

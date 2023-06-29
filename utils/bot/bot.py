@@ -104,7 +104,7 @@ class AluBot(commands.Bot):
             try:
                 await self.load_extension(ext)
             except Exception as error:
-                msg = f'Failed to load extension {ext}.'
+                msg = f'Failed to load extension `{ext}`.'
                 await self.exc_manager.register_error(error, msg, where=msg)
 
     def get_pre(self, bot: AluBot, message: discord.Message) -> Iterable[str]:

@@ -29,10 +29,11 @@ def fix_link_worker(text_to_fix: str, omit_rest: bool = False) -> Optional[str]:
         'instagram.com': 'ddinstagram.com',
     }
 
-    urls, fixed_urls = [], []
+    wrong_urls, fixed_urls = [], []
     for site, fixed_site in fix_dict.items():
         r_site = site.replace('.', r'\.')  # dot in regex needs to be slashed
-        urls += re.findall(url_regex(r_site), text_to_fix)
+        urls = re.findall(url_regex(r_site), text_to_fix)
+        wrong_urls.extend(urls)
         fixed_urls += [u.replace(site, fixed_site) for u in urls]
 
     if not fixed_urls:
@@ -41,7 +42,7 @@ def fix_link_worker(text_to_fix: str, omit_rest: bool = False) -> Optional[str]:
         return '\n'.join(fixed_urls)
     else:
         answer = text_to_fix
-        for u, f in zip(urls, fixed_urls):
+        for u, f in zip(wrong_urls, fixed_urls):
             answer = answer.replace(u, f)
         return answer
 

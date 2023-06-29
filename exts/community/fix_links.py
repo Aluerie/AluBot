@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import asyncio
-import re
 from typing import TYPE_CHECKING
 
 import discord
@@ -9,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from exts.utilities.utilities.fix_links import fix_link_worker
-from utils import const, errors, mimicry
+from utils import const, errors, links, mimicry
 
 from ._category import CommunityCog
 
@@ -67,21 +65,7 @@ class FixLinksCommunity(CommunityCog):
         mimic = mimicry.MimicUserWebhook.from_message(bot=self.bot, message=message)
         msg = await mimic.send_user_message(message.author, message=message, content=fixed_links)
         await message.delete()
-        await asyncio.sleep(2.7)
-
-        # Okay discord is a bit stupid and does not allow hyperlinks from website embeds
-        # this is why I will have to do the job myself.
-        links = []
-        colour = discord.Colour.pink()
-        for e in msg.embeds:
-            e = e.copy()
-            links += re.findall(const.REGEX_URL_LINK, str(e.description))
-            colour = e.colour
-
-        if links:
-            e = discord.Embed(color=colour)
-            e.description = '\n'.join(links)
-            await mimic.send_user_message(message.author, embed=e)
+        await links.extra_send_fxtwitter_links(msg)
 
 
 async def setup(bot):

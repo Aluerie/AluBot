@@ -71,6 +71,7 @@ class Channel(ChannelEnum):
 
     dota_news = 724986688589267015
     bugtracker_news = 1119041743002800138
+    dota2tweets = 1124123142068109392
 
     stream_room = 766063288302698496
 
@@ -277,6 +278,10 @@ class CommunityGuild(SavedGuild):
     @property
     def bugtracker_news(self) -> discord.TextChannel:
         return self.get_channel(Channel.bugtracker_news, discord.TextChannel)
+
+    @property
+    def dota2tweets(self) -> discord.TextChannel:
+        return self.get_channel(Channel.dota2tweets, discord.TextChannel)
 
     @property
     def my_time(self) -> discord.VoiceChannel:

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import tasks
 
+from config import SPAM_LOGS_WEBHOOK
 from utils import formats
 
 from ._category import DevBaseCog
@@ -44,10 +45,7 @@ class LoggerViaWebhook(DevBaseCog):
 
     @discord.utils.cached_property
     def logger_webhook(self) -> discord.Webhook:
-        # TODO: if we find a better purpose then move this to the AluBot class
-        url = self.bot.config.SPAM_LOGS_WEBHOOK
-        hook = discord.Webhook.from_url(url=url, session=self.bot.session)
-        return hook
+        return discord.Webhook.from_url(url=SPAM_LOGS_WEBHOOK, session=self.bot.session)
 
     def add_record(self, record: logging.LogRecord) -> None:
         self._logging_queue.put_nowait(record)

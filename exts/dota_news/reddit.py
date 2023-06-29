@@ -99,7 +99,7 @@ class Reddit(AluCog):
 
     @userfeed.error
     async def userfeed_error(self, error):
-        await self.bot.send_traceback(error, where='Error in reddit userfeed')
+        await self.bot.exc_manager.register_error(error, 'Reddit userfeed', where='Reddit userfeed')
         await asyncio.sleep(60)
         self.userfeed.restart()
 

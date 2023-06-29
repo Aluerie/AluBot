@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Annotated, Awaitable, Callable
 import discord
 from discord.ext import commands
 
-from exts import INITIAL_EXTENSIONS, get_extensions
+from exts import EXTERNAL_EXTENSIONS, get_extensions
 from utils import AluContext, const
 
 from ._category import DevBaseCog
@@ -27,7 +27,7 @@ class ExtensionConverter(commands.Converter):
 
     async def convert(self, _ctx: AluContext, argument: str):
         m = argument.lower()
-        argument = f"exts.{m}" if m not in INITIAL_EXTENSIONS else m
+        argument = f"exts.{m}" if m not in EXTERNAL_EXTENSIONS else m
         return argument
 
 
@@ -54,7 +54,7 @@ class ReloadCog(DevBaseCog):
             tick = True
         except Exception as exc:
             txt = f'Job `{job_func.__name__}` for extension `{extension}` failed.'
-            await self.bot.send_exception(exc, from_where=txt)
+            await self.bot.exc_manager.register_error(exc, txt, where=txt)
             tick = False
 
         await ctx.tick_reaction(tick)
@@ -97,7 +97,7 @@ class ReloadCog(DevBaseCog):
                 statuses.append((False, emote, ext))
                 for exc in eg.exceptions:
                     txt = f'Job `{method.__name__}` for extension `{ext}` failed.'
-                    await self.bot.send_exception(exc, from_where=txt)
+                    await self.bot.exc_manager.register_error(exc, txt, where=txt)
                     # name, value
                     errors.append((f'{ctx.tick(False)} `{exc.__class__.__name__}`', f"{exc}"))
 

@@ -3,13 +3,10 @@ from __future__ import annotations
 import datetime
 import logging
 import os
-import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, MutableMapping, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Mapping, MutableMapping, Optional, Union
 
 import discord
-from aiohttp import ClientSession
-from asyncpg import Pool
 from asyncpraw import Reddit
 from discord.ext import commands
 from dota2.client import Dota2Client
@@ -23,10 +20,14 @@ from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 
 from .. import AluContext, ConfirmationView, ExtCategory, cache, const, formats, none_category
-from .app_cmd_cache import AluAppCommandTree
+from .app_cmd_tree import AluAppCommandTree
+from .exc_manager import AluExceptionManager
 from .intents_perms import intents, permissions
 
 if TYPE_CHECKING:
+    from aiohttp import ClientSession
+    from asyncpg import Pool
+
     from exts.reminders.reminders import Reminder
 
     from .. import AluCog
@@ -42,23 +43,23 @@ class AluBot(commands.Bot):
         bot_app_info: discord.AppInfo
         dota: Dota2Client
         github: Github
-        imgtools: ImgToolsClient
         launch_time: datetime.datetime
         logging_handler: Any
-        session: ClientSession
-        pool: Pool
         prefixes: PrefixConfig
         reddit: Reddit
         steam: SteamClient
         tree: AluAppCommandTree
         twitch: TwitchClient
         user: discord.ClientUser
-
         cogs: Mapping[str, AluCog]
+        old_tree_error: Callable[
+            [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
+        ]
 
-    def __init__(self, test=False):
+    def __init__(self, test=False, *, session: ClientSession, pool: Pool, **kwargs):
         main_prefix = '~' if test else '$'
         self.main_prefix = main_prefix
+        self.test: bool = test
         super().__init__(
             command_prefix=self.get_pre,
             activity=discord.Streaming(name=f"\N{PURPLE HEART} /help /setup", url='https://www.twitch.tv/aluerie'),
@@ -67,7 +68,12 @@ class AluBot(commands.Bot):
             tree_cls=AluAppCommandTree,
             case_insensitive=True,  # todo: this isn't applied to command groups; maybe make new base class?
         )
-        self.test: bool = test
+        self.pool: Pool = pool
+        self.session: ClientSession = session
+
+        self.exc_manager: AluExceptionManager = AluExceptionManager(self)
+        self.imgtools = ImgToolsClient(session=session)
+
         self.odota_ratelimit: dict[str, int] = {'monthly': -1, 'minutely': -1}
 
         self.repo_url = 'https://github.com/Aluerie/AluBot'
@@ -75,7 +81,6 @@ class AluBot(commands.Bot):
         self.server_url = 'https://discord.gg/K8FuDeP'
 
         # modules
-        self.config = config
         self.formats = formats
 
         self.category_cogs: dict[ExtCategory, list[AluCog | commands.Cog]] = dict()
@@ -85,15 +90,10 @@ class AluBot(commands.Bot):
         )
 
     async def setup_hook(self) -> None:
-        self.session = s = ClientSession()
-        self.imgtools = ImgToolsClient(session=s)
-
         self.prefixes = PrefixConfig(self.pool)
         self.bot_app_info = await self.application_info()
 
         # ensure temp folder
-        # TODO: maybe remove the concept of temp folder - don't save .mp3 file
-        #  for now it is only used in tts.py for mp3 file
         Path("./.alubot/temp/").mkdir(parents=True, exist_ok=True)
 
         os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
@@ -105,8 +105,7 @@ class AluBot(commands.Bot):
                 await self.load_extension(ext)
             except Exception as error:
                 msg = f'Failed to load extension {ext}.'
-                log.exception(msg)
-                await self.send_exception(error, from_where=msg)
+                await self.exc_manager.register_error(error, msg, where=msg)
 
     def get_pre(self, bot: AluBot, message: discord.Message) -> Iterable[str]:
         if message.guild is None:
@@ -210,116 +209,6 @@ class AluBot(commands.Bot):
     @property
     def reminder(self) -> Optional[Reminder]:
         return self.get_cog('Reminder')  # type: ignore
-
-    @discord.utils.cached_property
-    def error_webhook(self) -> discord.Webhook:
-        if self.test:
-            url = config.TEST_ERROR_HANDLER_WEBHOOK
-        else:
-            url = config.ERROR_HANDLER_WEBHOOK
-
-        hook = discord.Webhook.from_url(url=url, session=self.session)
-        return hook
-
-    async def send_exception(
-        self,
-        exception: BaseException,
-        *,
-        embed: Optional[discord.Embed] = None,
-        from_where: Optional[str] = None,
-        mention: bool = True,
-        include_traceback: bool = True,
-    ) -> None:
-        """
-        Send exception and its traceback to notify me via Discord webhook
-
-        Parameters
-        -----------
-        error: :class: Exception
-            Exception that the developers of AluBot are going to be notified about
-        embed: :class: discord.Embed
-            discord.Embed object to prettify the output with extra info
-            Note that specifiying embed will foreshadow `from_where` value.
-        from_where: :class: str
-            If there is no need for custom embed but you just want to attach
-            a simple string string telling where error has happened then you use `from_where`
-        mention: :class: bool
-            if `True` then the message will mention the bot developer
-        include_traceback: :class: bool
-            Whether include the traceback into the messages.
-        """
-        if from_where is not None and embed is not None:
-            raise TypeError('Cannot mix `from_where` and `embed` keyword arguments.')
-        if from_where is None and embed is None:
-            from_where = '`from_where` was not specified.'
-            # raise TypeError('Key arguments `from_where` and `embed` cannot be `None` at the same time.')
-
-        hook = self.error_webhook
-        try:
-            if mention:
-                await hook.send(const.Role.error_ping.mention)
-            if include_traceback:
-                traceback_content = "".join(traceback.format_exception(exception))
-
-                paginator = commands.Paginator(prefix='```py')
-                for line in traceback_content.split('\n'):
-                    paginator.add_line(line)
-
-                for page in paginator.pages:
-                    await hook.send(page)
-
-            e = embed or discord.Embed(colour=const.Colour.error(), description=from_where)
-            await hook.send(embed=e)
-        except Exception as error:
-            log.info(error)
-            await self.hideout.spam.send(f'{const.Role.error_ping.mention} `send_traceback` failed with {error}.')
-
-    async def send_traceback(
-        self,
-        error: Exception,
-        *,
-        where: str = 'not specified',
-        embed: Optional[discord.Embed] = None,
-        verbosity: int = 10,
-        mention: bool = True,
-    ) -> None:
-        """Function to send traceback into the discord channel.
-
-        destination:
-            where to send the traceback message
-        where:
-            Just a text prompt to include into the default embed
-            about where exactly error happened
-            if `embed` is specified then this is ignored essentially
-        embed:
-            When specifying `where` is not enough
-            you can make the whole embed instead of using default embed `where`
-        verbosity:
-            A parameter for `traceback.format_exception()`
-
-        Returns
-        --------
-        None
-        """
-        # TODO: remove this function in favour of new send_exception
-
-        etype, value, trace = type(error), error, error.__traceback__
-        traceback_content = "".join(traceback.format_exception(etype, value, trace, verbosity)).replace(
-            "``", "`\u200b`"
-        )
-
-        paginator = commands.Paginator(prefix='```py')
-        for line in traceback_content.split('\n'):
-            paginator.add_line(line)
-
-        e = embed or discord.Embed(colour=const.Colour.error()).set_author(name=where)
-        content = self.owner.mention if mention else ''
-
-        wh = self.error_webhook
-        await wh.send(content=content, embed=e)
-
-        for page in paginator.pages:
-            await wh.send(page)
 
     async def prompt(
         self,

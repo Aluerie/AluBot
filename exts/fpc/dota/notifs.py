@@ -7,10 +7,11 @@ from typing import TYPE_CHECKING, Union
 import asyncpg
 import discord
 import vdf
-from discord.ext import commands, tasks
+from discord.ext import commands
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
+from utils import aluloop
 from utils.dota import hero
 
 from .._category import FPCCog
@@ -199,7 +200,7 @@ class DotaNotifs(FPCCog):
                 """
         await self.bot.pool.execute(query, list(self.top_source_dict.keys()))
 
-    @tasks.loop(seconds=49)
+    @aluloop(seconds=49)
     async def dota_feed(self):
         log.debug(f"DF | --- Task is starting now ---")
 
@@ -224,15 +225,6 @@ class DotaNotifs(FPCCog):
 
         await self.declare_matches_finished()
         log.debug(f"DF | --- Task is finished ---")
-
-    @dota_feed.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
-
-    @dota_feed.error
-    async def dotafeed_error(self, error):
-        await self.bot.send_traceback(error, where="DotaFeed Notifs")
-        # self.dotafeed.restart()
 
 
 async def setup(bot):

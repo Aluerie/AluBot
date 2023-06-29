@@ -180,19 +180,21 @@ class Paginator(discord.ui.View):
         self._update_nav_labels(page_number)
 
         if isinstance(self.ctx_ntr, AluContext):
+            ctx = self.ctx_ntr
             if reply:
-                self.message = await self.ctx_ntr.reply(**kwargs, view=self, ephemeral=ephemeral)
+                self.message = await ctx.reply(**kwargs, view=self, ephemeral=ephemeral)
             else:
-                self.message = await self.ctx_ntr.send(**kwargs, view=self, ephemeral=ephemeral)
+                self.message = await ctx.send(**kwargs, view=self, ephemeral=ephemeral)
         elif isinstance(self.ctx_ntr, discord.Interaction):
-            if self.ctx_ntr.response.is_done():
-                self.message = await self.ctx_ntr.followup.send(**kwargs, view=self, ephemeral=ephemeral)
+            ntr = self.ctx_ntr
+            if ntr.response.is_done():
+                self.message = await ntr.followup.send(**kwargs, view=self, ephemeral=ephemeral)
             elif edit_response:
-                await self.ctx_ntr.response.edit_message(**kwargs, view=self)
-                self.message = await self.ctx_ntr.original_response()
+                await ntr.response.edit_message(**kwargs, view=self)
+                self.message = await ntr.original_response()
             else:
-                await self.ctx_ntr.response.send_message(**kwargs, view=self, ephemeral=ephemeral)
-                self.message = await self.ctx_ntr.original_response()
+                await ntr.response.send_message(**kwargs, view=self, ephemeral=ephemeral)
+                self.message = await ntr.original_response()
         else:
             raise RuntimeError("Cannot start a paginator without a context or interaction.")
 
@@ -212,13 +214,13 @@ class Paginator(discord.ui.View):
                 item.disabled = True  # type: ignore
             await self.message.edit(view=self)
 
-    # todo: change those for debugging reasons pepega
+    # todo: change those for debugging reasons pepega also change source in register error
     async def on_error(self, ntr: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item) -> None:
         if ntr.response.is_done():
             await ntr.followup.send(f"Some error occurred, sorry", ephemeral=True)
         else:
             await ntr.response.send_message(f"Some error occurred, sorry", ephemeral=True)
-        await ntr.client.send_traceback(error, where="Paginator")
+        await ntr.client.exc_manager.register_error(error, "Paginator Error")
 
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
     async def home_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):

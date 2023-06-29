@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from .. import const
-from . import app, ext
+from . import app, txt
 
 if TYPE_CHECKING:
     from .. import AluBot, AluContext
@@ -58,7 +58,7 @@ def is_trustee():
 def is_in_guilds(*guild_ids: int):
     def decorator(func: T) -> T:
         app.is_in_guilds(*guild_ids)
-        ext.is_in_guilds(*guild_ids)
+        txt.is_in_guilds(*guild_ids)
         return func
 
     return decorator

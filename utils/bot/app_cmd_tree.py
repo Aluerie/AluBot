@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, Union
 
 import discord
 from discord import app_commands
@@ -14,6 +14,11 @@ if TYPE_CHECKING:
 
 
 class AluAppCommandTree(app_commands.CommandTree):
+    if TYPE_CHECKING:
+        on_error: Callable[
+            [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
+        ]
+
     """Custom Command tree class to set up slash cmds mentions
 
     The class makes the tree store app_commands.AppCommand

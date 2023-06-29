@@ -45,7 +45,7 @@ class ConfModal(discord.ui.Modal):
             e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
         channel = ntr.channel
         assert isinstance(channel, discord.abc.MessageableChannel)
-        
+
         await channel.send(embeds=[e])
         saint_string = '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Emote.bubuChrist, '\N{CHURCH}', Emote.PepoBeliever)
         await channel.send(saint_string)
@@ -76,7 +76,7 @@ class ConfView(discord.ui.View):
             await ntr.response.send_message(embed=e, ephemeral=True)
         else:
             # await super().on_error(ntr, error, item) # original on_error
-            await ntr.client.send_traceback(error, where='Confessions')
+            await ntr.client.exc_manager.register_error(error, 'Confessions', where='Confessions')
 
     @discord.ui.button(
         label="Anonymous confession",

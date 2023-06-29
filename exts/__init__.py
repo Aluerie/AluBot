@@ -34,6 +34,8 @@ import os
 from pkgutil import iter_modules
 from typing import Tuple
 
+from base import BASE_EXTENSIONS
+
 try:
     import _test
 
@@ -45,8 +47,8 @@ except ModuleNotFoundError:
 
 # EXTENSIONS
 
-INITIAL_EXTENSIONS = ("jishaku",)  # these don't need "exts.{x}"
-IGNORED_EXTENSIONS = ('beta')  # these are ignored in main bot.
+EXTERNAL_EXTENSIONS = ("jishaku",)  # 3rd party extensions that don't need "exts.{x}"
+IGNORED_EXTENSIONS = 'beta'  # these are ignored in main bot.
 
 # Packages
 MY_PACKAGES = tuple(module.name for module in iter_modules(path=__path__))  # , prefix=f'{__package__}.'
@@ -57,7 +59,7 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
     Get tuple of extensions for bot to load.
 
     Note that this function is a bit more robust than needed according to description above.
-    This function can also catch package exts in "exts/" folder itself like beta.py
+    This function can also catch package exts in "exts/" folder itself like `beta.py`
     or like we had cog "exts.fun" be one folder cog for a very long time (now it is "exts.fun.fun")
 
     Parameters
@@ -82,15 +84,13 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
             test_exts, ignore_test = TEST_EXTENSIONS, IGNORE_TEST
 
         if not ignore_test:
-            return tuple(f'exts.{x}' if x not in INITIAL_EXTENSIONS else x for x in test_exts)
+            return BASE_EXTENSIONS + tuple(f'exts.{x}' if x not in EXTERNAL_EXTENSIONS else x for x in test_exts)
 
     # production giga-gathering option.
     all_folders = [f.name for f in os.scandir('exts') if f.is_dir() if not f.name.startswith('_')]
 
     ext_category_folders = [x for x in all_folders if x not in MY_PACKAGES]
-    uncategorised_exts = INITIAL_EXTENSIONS + tuple(
-        f'exts.{x}' for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS
-    )
+    uncategorised_exts = EXTERNAL_EXTENSIONS + tuple(f'exts.{x}' for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS)
 
     categorised_exts = tuple(
         module.name
@@ -99,5 +99,5 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
         if not module.name.rsplit('.', 1)[-1].startswith('_')
     )
 
-    extensions = uncategorised_exts + categorised_exts
+    extensions = BASE_EXTENSIONS + uncategorised_exts + categorised_exts
     return extensions

@@ -8,7 +8,7 @@ import asyncio
 import datetime
 import logging
 import os
-from typing import TYPE_CHECKING, Annotated, Any, Callable, Coroutine,  Optional, Sequence, TypeVar, Union
+from typing import TYPE_CHECKING, Annotated, Any, Callable, Coroutine, Optional, Sequence, TypeVar, Union
 
 import discord
 from discord import app_commands
@@ -20,3 +20,16 @@ log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
+
+
+class BetaCog(AluCog):
+    async def cog_load(self):
+        self.beta_task.start()
+
+    @property
+    def spam(self) -> discord.TextChannel:
+        """Even lazier shortcut"""
+        return self.hideout.spam
+
+    async def beta_task(self):
+        ...

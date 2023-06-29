@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-from examples.beta.imports import *
+from examples.beta.base import *
 
 
 class BetaTestCog(AluCog, name='BetaTest'):
-    def __init__(self, bot: AluBot, *args, **kwargs):
-        super().__init__(bot, *args, **kwargs)
-        self.beta_task.start()
-
     @aluloop(count=1)
     async def beta_task(self):
         pass
@@ -21,7 +17,7 @@ class BetaTestCog(AluCog, name='BetaTest'):
         await ctx.send('heta')
 
     @app_commands.command()
-    async def seta(self, ntr: discord.Interaction):
+    async def seta(self, ntr: discord.Interaction[AluBot]):
         await ntr.response.send_message('seta')
 
 

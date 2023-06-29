@@ -61,8 +61,6 @@ daily_reminders_txt = [
     'Hey chat, remember to smile \N{SLIGHTLY SMILING FACE}',
     'Hey chat, feel free to invite new cool people to this server {0} {0} {0}'.format(Emote.peepoComfy),
     'Hey chat, follow étiquette.',
-    f'Hey chat, if you ever forget what prefix/help-command bot you want to use have - just look at its nickname, '
-    f'for example, {User.nqn} - means its help command is `++help` and its prefix is `++`',
     f'Hey chat, if you ever see {User.alubot} offline (it should be always at the top of the members list online) - '
     'immediately ping me',
     f'Hey chat, if while watching my stream you see some cool moment - clip it and post to {Channel.clips}',

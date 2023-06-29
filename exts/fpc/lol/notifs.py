@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 
 import asyncpg
 import discord
-from discord.ext import tasks
-from pyot.core.exceptions import NotFound, ServerError
+from pyot.core.exceptions import NotFound as PyotNotFound, ServerError as PyotServerError
 from pyot.utils.lol import champion
 
+from utils import aluloop
 from utils.lol.const import SOLO_RANKED_5v5_QUEUE_ENUM, platform_to_region
 
 from .._category import FPCCog
@@ -57,10 +57,10 @@ class LoLNotifs(FPCCog):
         for r in await self.bot.pool.fetch(query, live_fav_player_ids):
             try:
                 live_game = await lol.spectator.CurrentGame(summoner_id=r.id, platform=r.platform).get()
-            except NotFound:
+            except PyotNotFound:
                 log.debug(f'Player {r.display_name} is not in the game on acc {r.account}')
                 continue
-            except ServerError:
+            except PyotServerError:
                 log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.display_name}')
                 continue
                 # e = Embed(colour=Colour.error())
@@ -134,7 +134,7 @@ class LoLNotifs(FPCCog):
                 """
         await self.bot.pool.execute(query, self.all_live_match_ids)
 
-    @tasks.loop(seconds=59)
+    @aluloop(seconds=59)
     async def lolfeed_notifs(self):
         log.debug(f'LF | --- Task is starting now ---')
         await self.fill_live_matches()
@@ -142,15 +142,6 @@ class LoLNotifs(FPCCog):
             await self.send_notifications(match)
         await self.declare_matches_finished()
         log.debug(f'LF | --- Task is finished ---')
-
-    @lolfeed_notifs.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
-
-    @lolfeed_notifs.error
-    async def lolfeed_notifs_error(self, error):
-        await self.bot.send_traceback(error, where='LoLFeed Notifs')
-        # self.lolfeed.restart()
 
 
 async def setup(bot: AluBot):

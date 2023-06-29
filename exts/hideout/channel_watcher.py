@@ -4,9 +4,9 @@ import asyncio
 from typing import TYPE_CHECKING
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-from utils import const
+from utils import aluloop, const
 
 from ._category import HideoutCog
 
@@ -56,7 +56,7 @@ class ChannelWatcher(HideoutCog):
             else:
                 self.sleep_task.start()
 
-    @tasks.loop(count=1)
+    @aluloop(count=1)
     async def sleep_task(self):
         await asyncio.sleep(self.sleep_time)  # let's assume the longest possible game+q time is ~50 mins
         channel: discord.TextChannel = self.bot.get_channel(self.ping_channel_id)  # type: ignore
@@ -66,14 +66,6 @@ class ChannelWatcher(HideoutCog):
         await channel.send(self.role_mention, embed=e)
         query = f'UPDATE botinfo SET {self.db_column}=FALSE WHERE id=$1'
         await self.bot.pool.execute(query, const.Guild.community)
-
-    @sleep_task.error
-    async def pass_check_error(self, error):
-        await self.bot.send_traceback(error, where=self.__cog_name__)
-
-    @sleep_task.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
 
 
 class EventPassWatcher(ChannelWatcher):

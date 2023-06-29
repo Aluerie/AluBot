@@ -10,10 +10,10 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 import discord
 from discord import app_commands
-from discord.ext import commands, tasks
+from discord.ext import commands
 from numpy.random import choice
 
-from utils import AluCog, const
+from utils import aluloop, const
 from utils.pagination import EnumeratedPages
 
 from ._category import CommunityCog
@@ -238,7 +238,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             e.description = f"Date: {bdate_str(row.bdate)}\nTimezone: {row.tzone}"
         await ctx.reply(embed=e)
 
-    @tasks.loop(hours=1)
+    @aluloop(hours=1)
     async def check_birthdays(self):
         query = 'SELECT id, bdate, tzone FROM users WHERE bdate IS NOT NULL'
         rows = await self.bot.pool.fetch(query)
@@ -286,15 +286,6 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             else:
                 if bday_rl in bperson.roles:
                     await bperson.remove_roles(bday_rl)
-
-    @check_birthdays.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
-
-    @check_birthdays.error
-    async def check_birthdays_error(self, error):
-        await self.bot.send_traceback(error, where='Birthdays check')
-        # self.dotafeed.restart()
 
     @birthday.command(name='list', hidden=True)
     async def birthday_list(self, ctx: AluGuildContext):

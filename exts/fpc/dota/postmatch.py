@@ -5,9 +5,9 @@ import logging
 from typing import TYPE_CHECKING
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-from utils.const import Colour, MaterialPalette
+from utils import aluloop, const
 
 from .._category import FPCCog
 from ._models import OpendotaRequestMatch, PostMatchPlayerData
@@ -65,7 +65,7 @@ class DotaPostMatchEdit(FPCCog):
                 query = "DELETE FROM dota_matches WHERE match_id=$1"
                 await self.bot.pool.execute(query, row.match_id)
 
-    @tasks.loop(minutes=1)
+    @aluloop(minutes=1)
     async def postmatch_edits(self):
         # log.debug('AG | --- Task is starting now ---')
         await self.fill_postmatch_players()
@@ -73,33 +73,20 @@ class DotaPostMatchEdit(FPCCog):
             await player.edit_the_embed(self.bot)
         # log.debug('AG | --- Task is finished ---')
 
-    @postmatch_edits.before_loop
-    async def postmatch_edits_before(self):
-        await self.bot.wait_until_ready()
-
-    @postmatch_edits.error
-    async def postmatch_edits_error(self, error):
-        await self.bot.send_traceback(error, where="DotaFeed PostGameEdit")
-        # self.dotafeed.restart()
-
     @commands.command(hidden=True, aliases=["odrl", "od_rl", "odota_ratelimit"])
     async def opendota_ratelimit(self, ctx: AluContext):
         """Send opendota rate limit numbers"""
-        e = discord.Embed(colour=Colour.prpl(), description=f"Odota limits: {self.bot.odota_ratelimit}")
+        e = discord.Embed(colour=const.Colour.prpl(), description=f"Odota limits: {self.bot.odota_ratelimit}")
         await ctx.reply(embed=e)
 
-    @tasks.loop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
+    @aluloop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
     async def daily_report(self):
-        e = discord.Embed(title="Daily Report", colour=MaterialPalette.black())
+        e = discord.Embed(title="Daily Report", colour=const.MaterialPalette.black())
         the_dict = self.bot.odota_ratelimit
         month, minute = int(the_dict['monthly']), int(the_dict['minutely'])
         e.description = f"Odota limits. monthly: {month} minutely: {minute}"
         content = f'{self.bot.owner_id}' if month < 10_000 else ''
         await self.hideout.daily_report.send(content=content, embed=e)  # type: ignore
-
-    @daily_report.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
 
 
 async def setup(bot: AluBot):

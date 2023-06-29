@@ -7,6 +7,7 @@ import traceback
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import aiohttp
 import asyncpg
 import click
 
@@ -34,9 +35,8 @@ async def bot_start(test: bool):
         log.exception('Could not set up PostgreSQL. Exiting.')
         return
 
-    async with AluBot(test) as bot:
-        bot.pool = pool
-        await bot.my_start()
+    async with aiohttp.ClientSession() as session, pool as pool, AluBot(test, session=session, pool=pool) as alubot:
+        await alubot.my_start()
 
 
 @click.group(invoke_without_command=True, options_metavar='[options]')

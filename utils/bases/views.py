@@ -20,8 +20,8 @@ class AluView(discord.ui.View):
         await super().on_error(ntr, error, item)
 
         # TODO: do a better job with embed
-        e = discord.Embed(description='Something is wrong with a view.')
-        await ntr.client.send_exception(error, embed=e)
+        e = discord.Embed(description='Something is wrong with a AluView object.')
+        await ntr.client.exc_manager.register_error(error, e, where='AluView error')
         if ntr.response.is_done():
             await ntr.followup.send(f"Sorry! something went wrong....", ephemeral=True)
         else:

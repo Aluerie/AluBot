@@ -62,7 +62,7 @@ class Other(FunCog):
         await ctx.reply(content=str(random.randint(1, max_roll_number + 1)))
 
     @commands.hybrid_command(usage='[channel=curr] [text=Allo]')
-    @commands.check_any(commands.has_permissions(manage_messages=True), commands.check(checks.ext.is_my_guild()))
+    @commands.check_any(commands.has_permissions(manage_messages=True), commands.check(checks.txt.is_my_guild()))
     @commands.bot_has_permissions(send_messages=True, manage_messages=True)
     async def echo(
         self,

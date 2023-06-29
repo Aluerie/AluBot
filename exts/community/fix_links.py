@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import datetime
 import re
 from typing import TYPE_CHECKING
 
@@ -33,6 +32,7 @@ class FixLinksCommunity(CommunityCog):
         self.bot.tree.remove_command(c.name, type=c.type)
 
     async def delete_mimic_ctx_menu_callback(self, ntr: discord.Interaction[commands.Bot], message: discord.Message):
+        # todo: why it's there, wrong cog
         if self.bot.mimic_message_user_mapping.get(message.id) == ntr.user.id:  # type: ignore # it's not int, it's Tuple[int, float]
             # ^ userid_ttl[0] represents both
             # the message in cache and belongs to the interaction author (user)
@@ -64,28 +64,24 @@ class FixLinksCommunity(CommunityCog):
         if not fixed_links:
             return
 
-        try:
-            mimic = mimic.MimicUserWebhook.from_message(bot=self.bot, message=message)
-            msg = await mimic.send_user_message(message.author, message=message, content=fixed_links)
-            await message.delete()
-            await asyncio.sleep(2.7)
+        mimic = mimicry.MimicUserWebhook.from_message(bot=self.bot, message=message)
+        msg = await mimic.send_user_message(message.author, message=message, content=fixed_links)
+        await message.delete()
+        await asyncio.sleep(2.7)
 
-            # Okay discord is a bit stupid and does not allow hyperlinks from website embeds
-            # this is why I will have to do the job myself.
-            links = []
-            colour = discord.Colour.pink()
-            for e in msg.embeds:
-                e = e.copy()
-                links += re.findall(const.REGEX_URL_LINK, str(e.description))
-                colour = e.colour
+        # Okay discord is a bit stupid and does not allow hyperlinks from website embeds
+        # this is why I will have to do the job myself.
+        links = []
+        colour = discord.Colour.pink()
+        for e in msg.embeds:
+            e = e.copy()
+            links += re.findall(const.REGEX_URL_LINK, str(e.description))
+            colour = e.colour
 
-            if links:
-                e = discord.Embed(color=colour)
-                e.description = '\n'.join(links)
-                await mimic.send_user_message(message.author, embed=e)
-
-        except Exception as err:
-            print(err)
+        if links:
+            e = discord.Embed(color=colour)
+            e.description = '\n'.join(links)
+            await mimic.send_user_message(message.author, embed=e)
 
 
 async def setup(bot):

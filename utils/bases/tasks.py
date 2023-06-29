@@ -64,15 +64,15 @@ class AluLoop(tasks.Loop):
         added sending webhook notifications to my spam
         """
         exception: Exception = args[-1]
-        log.error('Unhandled exception in internal background task %r.', self.coro.__name__, exc_info=exception)
+        # log.error('Unhandled exception in internal background task %r.', self.coro.__name__, exc_info=exception)
 
         # this will fail outside a cog
         # but all my tasks are inside cogs anyway.
         cog = args[0]
         if isinstance(cog, AluCog):
             # TODO: make a better embed out of this
-            e = Embed(description=f'Something happened in `{self.coro.__name__}`')
-            await cog.bot.send_exception(exception, embed=e)
+            e = Embed(description=f'Error in `{self.coro.__name__}`')
+            await cog.bot.exc_manager.register_error(exception, e, where=f'aluloop {self.coro.__name__}')
 
 
 # Slight note, if `discord.ext.tasks` gets extra cool features

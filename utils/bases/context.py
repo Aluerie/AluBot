@@ -68,6 +68,9 @@ class AluContext(commands.Context):
         self.pool: Pool = self.bot.pool
         self.is_error_handled: bool = False
 
+    def __repr__(self) -> str:
+        return f'<AluContext cmd={self.command} ntr={self.tick(bool(self.interaction))} author={self.author}>'
+
     # to match interaction
     @property
     def client(self) -> AluBot:
@@ -114,16 +117,16 @@ class AluContext(commands.Context):
             # for c in self.command.walk_commands():
             #    print(get_command_signature(c))
 
-            self.command: commands.Group
-            for c in self.command.commands:
-                if getattr(c, 'commands', None):
-                    ans += '\n' + '\n'.join(f'`{get_command_signature(x)}`' for x in c.commands)  # type: ignore
-                else:
-                    ans += f'\n`{get_command_signature(c)}`'
+            if isinstance(self.command, commands.Group):
+                for c in self.command.commands:
+                    if getattr(c, 'commands', None):
+                        ans += '\n' + '\n'.join(f'`{get_command_signature(x)}`' for x in c.commands)  # type: ignore
+                    else:
+                        ans += f'\n`{get_command_signature(c)}`'
 
             e = discord.Embed(colour=Colour.error(), description=ans)
             e.set_author(name='SubcommandNotFound')
-            e.set_footer(text=f'`{prefix}help {self.command.name}` for more info')
+            e.set_footer(text=f'`{prefix}help {self.command}` for more info')
             return await self.reply(embed=e, ephemeral=True)
 
     @staticmethod

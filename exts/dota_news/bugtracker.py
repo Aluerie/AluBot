@@ -41,7 +41,7 @@ class ActionBase:
 
     def file(self, number: int) -> discord.File:
         # without a `number` we had a "bug" where the image would go outside embeds
-        return discord.File(self.file_path, filename=f'{self.name}_{number}')
+        return discord.File(self.file_path, filename=f'{self.name}_{number}.png')
 
 
 class EventBase(ActionBase):
@@ -385,7 +385,7 @@ class BugTracker(AluCog):
                 self.git_comments_check.restart()
                 return
 
-        await self.bot.send_exception(error, from_where='Dota2 BugTracker comments task')
+        await self.bot.exc_manager.register_error(error, 'Dota2 BugTracker comments task')
         # self.git_comments_check.restart()
 
 

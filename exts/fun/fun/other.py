@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import random
 import re
 from typing import TYPE_CHECKING, Optional
@@ -36,7 +37,8 @@ class Other(FunCog):
                     return
                 else:
                     for r in ['❔', '❕', '🤔']:
-                        await message.add_reaction(r)
+                        with contextlib.suppress(discord.HTTPException):
+                            await message.add_reaction(r)
 
     @commands.hybrid_command()
     async def apuband(self, ctx: AluContext):

@@ -41,6 +41,9 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
         desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
     elif isinstance(error, commands.CommandOnCooldown):
         desc = f"Please retry in `{ctx.bot.formats.human_timedelta(error.retry_after, brief=True)}`"
+    # elif isinstance(error, errors.SilentError):
+    #     # this will fail the interaction hmm
+    #     return
     else:
         # error is unhandled/unclear and thus developers need to be notified about it.
         where = f'on_command_error {ctx.clean_prefix}{ctx.command.qualified_name}' if ctx.command else 'non-cmd ctx'

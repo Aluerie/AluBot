@@ -4,7 +4,7 @@ import datetime
 from typing import TYPE_CHECKING, Any
 
 import discord
-import regex
+import re
 from discord.ext import commands, tasks
 
 from utils import const
@@ -194,7 +194,7 @@ class CommunityMessageLogging(CommunityCog):
     async def on_message_delete(self, message: discord.Message):
         if message.author.bot or (message.guild and message.guild.id != const.Guild.community):
             return
-        if regex.search(const.Rgx.bug_check, message.content):  # bug_check
+        if re.search(const.Rgx.bug_check, message.content):  # bug_check
             return
         if message.content.startswith('$'):
             return

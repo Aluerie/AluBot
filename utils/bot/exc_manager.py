@@ -9,12 +9,14 @@ import datetime
 import logging
 import os
 import traceback
+from contextlib import AbstractAsyncContextManager
+from types import TracebackType
 from typing import TYPE_CHECKING, Generator, NamedTuple, Optional, Union
 
 import discord
 
 from config import ERROR_HANDLER_WEBHOOK, TEST_ERROR_HANDLER_WEBHOOK
-from utils import AluContext, const
+from utils import AluContext, const, errors
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -257,3 +259,45 @@ class AluExceptionManager:
 
             self._most_recent = discord.utils.utcnow()
             return await self.send_error(traceback_string, packet)
+
+
+class HandleHTTPException(AbstractAsyncContextManager):
+    """Context manger to handle HTTP Exceptions.
+
+    This is useful for handling errors that are not critical, but
+    still need to be reported to the user.
+
+    Parameters
+    ----------
+    destination: :class:`discord.abc.Messageable`
+        The destination channel to send the error to.
+    title: Optional[:class:`str`]
+        The title of the embed. Defaults to ``'An unexpected error occurred!'``.
+    """
+
+    __slots__ = ('destination', 'title')
+
+    def __init__(self, destination: discord.abc.Messageable, *, title: Optional[str] = None):
+        self.destination = destination
+        self.title = title
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[type[BaseException]] = None,
+        exc_val: Optional[BaseException] = None,
+        exc_tb: Optional[TracebackType] = None,
+    ) -> bool:
+        if exc_val is not None and isinstance(exc_val, discord.HTTPException) and exc_type:
+            embed = discord.Embed(
+                title=self.title or 'An unexpected error occurred!',
+                description=f'{exc_type.__name__}: {exc_val.text}',
+                colour=discord.Colour.red(),
+            )
+
+            await self.destination.send(embed=embed)
+            raise errors.SilentError
+
+        return False

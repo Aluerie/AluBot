@@ -385,7 +385,8 @@ class BugTracker(AluCog):
                 self.git_comments_check.restart()
                 return
 
-        await self.bot.exc_manager.register_error(error, 'Dota2 BugTracker comments task')
+        txt = 'Dota2 BugTracker task'
+        await self.bot.exc_manager.register_error(error, txt, where=txt)
         # self.git_comments_check.restart()
 
 

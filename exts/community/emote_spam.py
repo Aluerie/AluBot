@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import discord
 import emoji
-import regex
+import re
 from discord.ext import commands, tasks
 
 from utils import const, cache
@@ -39,7 +39,7 @@ class EmoteSpam(CommunityCog):
             if nqn_check == 0:
                 filters.remove(const.Rgx.nqn)
             for item in filters:
-                text = regex.sub(item, '', text)
+                text = re.sub(item, '', text)
 
             return not bool(text)  # if there is some text left then it's forbidden.
         else:
@@ -151,7 +151,7 @@ class ComfySpam(CommunityCog):
             if len(message.embeds):
                 return await message.delete()
             text = str(message.content)
-            text = regex.sub(const.Rgx.whitespace, '', text)
+            text = re.sub(const.Rgx.whitespace, '', text)
             for item in self.comfy_emotes:
                 text = text.replace(item, "")
             if text:

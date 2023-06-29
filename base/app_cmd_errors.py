@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 import discord
@@ -19,7 +20,7 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
     # if command is not None:
     #     if command._has_any_error_handlers():
     #         return
-    
+
     if isinstance(error, app_commands.CommandInvokeError):
         error = error.original
 
@@ -35,6 +36,11 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
         desc = f'{error}'
     elif isinstance(error, app_commands.CommandOnCooldown):
         desc = f"Please retry in `{ntr.client.formats.human_timedelta(error.retry_after, brief=True)}`"
+    # elif isinstance(error, errors.SilentError):
+    #     # this will fail the interaction hmm
+    #     cmd = f'/{ntr.command.qualified_name}' if ntr.command else '?-cmd ntr'
+    #     logging.debug(f'Ignoring silent command error raised in application command {cmd}', exc_info=False)
+    #     return
     elif isinstance(error, app_commands.CommandSignatureMismatch):
         # TODO: WARN DEVS make title too
         desc = (

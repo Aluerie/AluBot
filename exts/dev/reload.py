@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import importlib
 import os
 import re
@@ -122,7 +123,8 @@ class ReloadCog(DevBaseCog):
             await ctx.reply(content=content, embed=embed)
         else:
             # no errors thus let's not clutter my spam channel with output^
-            await ctx.message.add_reaction(ctx.tick(True))
+            with contextlib.suppress(discord.HTTPException):
+                await ctx.message.add_reaction(ctx.tick(True))
 
     @reload.command(name="all", hidden=True)
     async def reload_all(self, ctx: AluContext):

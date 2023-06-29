@@ -46,3 +46,9 @@ class ErroneousUsage(AluBotException):
     We don't set_author in error_handler for this one."""
 
     __slots__: Tuple[str, ...] = ()
+
+
+class SilentError(AluBotException):
+    """Error that will be specifically ignored by command handlers."""
+
+    __slots__: Tuple[str, ...] = ()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING, Any, Optional, Sequence, Union, overload
 
 import discord
@@ -140,10 +141,8 @@ class AluContext(commands.Context):
                 return Tick.black
 
     async def tick_reaction(self, semi_bool: bool | None):
-        try:
+        with contextlib.suppress(discord.HTTPException):
             await self.message.add_reaction(self.tick(semi_bool))
-        except:
-            pass
 
     @discord.utils.cached_property
     def replied_reference(self) -> Optional[discord.MessageReference]:

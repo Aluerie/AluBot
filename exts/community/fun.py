@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import random
 from typing import TYPE_CHECKING
 
@@ -64,8 +65,9 @@ class CommunityFun(CommunityCog):
         if "Oof" in message.content:
             try:
                 await message.add_reaction(const.Emote.Ree)
-            except discord.errors.Forbidden:
-                await message.delete()
+            except discord.HTTPException:
+                with contextlib.suppress(discord.HTTPException):
+                    await message.delete()
 
     @commands.Cog.listener('on_message')
     async def random_comfy_react(self, message: discord.Message):
@@ -76,7 +78,7 @@ class CommunityFun(CommunityCog):
         if roll < 2:
             try:
                 await message.add_reaction(const.Emote.peepoComfy)
-            except Exception:
+            except discord.HTTPException:
                 return
 
     @commands.Cog.listener('on_message')

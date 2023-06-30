@@ -248,8 +248,9 @@ class AluContext(commands.Context):
     ) -> discord.Message:
         ...
 
+    # Literal copy of .reply from the library but with `.to_reference(fail_if_not_exists=False)`"""
+    @discord.utils.copy_doc(commands.Context.reply)
     async def reply(self, content: Optional[str] = None, **kwargs: Any):
-        """Literal copy of .reply from the library but with `.to_reference(fail_if_not_exists=False)`"""
         if self.interaction is None:
             return await super().send(content, reference=self.message.to_reference(fail_if_not_exists=False), **kwargs)
         else:

@@ -5,7 +5,7 @@ import logging
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
 
-from discord import Embed
+import discord
 from discord.ext import tasks
 from discord.utils import MISSING
 
@@ -71,13 +71,14 @@ class AluLoop(tasks.Loop):
         cog = args[0]
         if isinstance(cog, AluCog):
             # TODO: make a better embed out of this
-            e = Embed(description=f'Error in `{self.coro.__name__}`')
+            e = discord.Embed(description=f'Error in `{self.coro.__name__}`')
             await cog.bot.exc_manager.register_error(exception, e, where=f'aluloop {self.coro.__name__}')
 
 
 # Slight note, if `discord.ext.tasks` gets extra cool features
 # which will be represented in a change of `tasks.loop` decorator/its signature
 # which we do not import/inherit so check out for updates in discord.py
+@discord.utils.copy_doc(tasks.loop)
 def aluloop(
     *,
     seconds: float = MISSING,

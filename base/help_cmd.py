@@ -189,7 +189,7 @@ class AluHelp(commands.HelpCommand):
             command_attrs={
                 'hidden': False,
                 'help': 'Show `help` menu for the bot.',
-                'usage': '[command/section]',
+                'usage': '[command/section/category]',
             },
         )
 

@@ -47,7 +47,6 @@ except ModuleNotFoundError:
 
 # EXTENSIONS
 
-EXTERNAL_EXTENSIONS = ("jishaku",)  # 3rd party extensions that don't need "exts.{x}"
 IGNORED_EXTENSIONS = 'beta'  # these are ignored in main bot.
 
 # Packages
@@ -84,13 +83,13 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
             test_exts, ignore_test = TEST_EXTENSIONS, IGNORE_TEST
 
         if not ignore_test:
-            return BASE_EXTENSIONS + tuple(f'exts.{x}' if x not in EXTERNAL_EXTENSIONS else x for x in test_exts)
+            return BASE_EXTENSIONS + tuple(f'exts.{x}' for x in test_exts)
 
     # production giga-gathering option.
     all_folders = [f.name for f in os.scandir('exts') if f.is_dir() if not f.name.startswith('_')]
 
     ext_category_folders = [x for x in all_folders if x not in MY_PACKAGES]
-    uncategorised_exts = EXTERNAL_EXTENSIONS + tuple(f'exts.{x}' for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS)
+    uncategorised_exts = tuple(f'exts.{x}' for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS)
 
     categorised_exts = tuple(
         module.name

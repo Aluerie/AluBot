@@ -42,7 +42,7 @@ class Dota2Tweets(AluCog):
 
         # send tweet urls if any
         if tweet_urls:
-            msg = await self.news_channel.send('\n'.join(tweet_urls))
+            msg = await self.news_channel.send('Daily twitter update.\n' + '\n'.join(tweet_urls))
             await msg.publish()
             msg2 = await links.extra_send_fxtwitter_links(msg)
             if msg2:

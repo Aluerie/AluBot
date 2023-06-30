@@ -100,12 +100,41 @@ class AluBot(commands.Bot):
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
         os.environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
 
+        failed = False
         for ext in get_extensions(self.test):
             try:
                 await self.load_extension(ext)
             except Exception as error:
+                failed = True
                 msg = f'Failed to load extension `{ext}`.'
                 await self.exc_manager.register_error(error, msg, where=msg)
+
+        if self.test and not failed:
+            self.loop.create_task(self.try_hideout_auto_sync())
+
+    async def try_hideout_auto_sync(self):
+        # safeguard. Need the app id.
+        await self.wait_until_ready()
+
+        guild = discord.Object(id=self.hideout.id)
+        self.tree.copy_global_to(guild=guild)
+
+        all_cmds = self.tree._get_all_commands(guild=guild)
+
+        new_payloads = [(guild.id, cmd.to_dict()) for cmd in all_cmds]
+
+        query = 'SELECT payload FROM auto_sync WHERE guild_id = $1'
+        db_payloads = [r["payload"] for r in await self.pool.fetch(query, guild.id)]
+
+        updated_payloads = [p for _, p in new_payloads if p not in db_payloads]
+        outdated_payloads = [p for p in db_payloads if p not in [p for _, p in new_payloads]]
+        not_synced = updated_payloads + outdated_payloads
+
+        if not_synced:
+            await self.pool.execute("DELETE FROM auto_sync WHERE guild_id = $1", guild.id)
+            await self.pool.executemany("INSERT INTO auto_sync (guild_id, payload) VALUES ($1, $2)", new_payloads)
+
+            await self.tree.sync(guild=guild)
 
     def get_pre(self, bot: AluBot, message: discord.Message) -> Iterable[str]:
         if message.guild is None:
@@ -121,8 +150,6 @@ class AluBot(commands.Bot):
         category = getattr(cog, 'category', None)
         if not category or not isinstance(category, ExtCategory):
             category = none_category
-        if cog.__cog_name__ == 'Jishaku':
-            category = ExtCategory(name='Jishaku', emote=const.Emote.bedWTF, description='Jishaku')
 
         self.category_cogs.setdefault(category, []).append(cog)
 

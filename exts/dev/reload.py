@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Annotated, Awaitable, Callable
 import discord
 from discord.ext import commands
 
-from exts import EXTERNAL_EXTENSIONS, get_extensions
+from exts import get_extensions
 from utils import AluContext, const
 
 from ._category import DevBaseCog
@@ -26,10 +26,10 @@ class ExtensionConverter(commands.Converter):
 
     Yes. Lazy."""
 
+    # currently does not handle base extensions
     async def convert(self, _ctx: AluContext, argument: str):
         m = argument.lower()
-        argument = f"exts.{m}" if m not in EXTERNAL_EXTENSIONS else m
-        return argument
+        return f"exts.{m}"
 
 
 class ReloadCog(DevBaseCog):
@@ -123,8 +123,11 @@ class ReloadCog(DevBaseCog):
             await ctx.reply(content=content, embed=embed)
         else:
             # no errors thus let's not clutter my spam channel with output^
-            with contextlib.suppress(discord.HTTPException):
+            try:
                 await ctx.message.add_reaction(ctx.tick(True))
+            except discord.HTTPException:
+                with contextlib.suppress(discord.HTTPException):
+                    await ctx.send(ctx.tick(True))
 
     @reload.command(name="all", hidden=True)
     async def reload_all(self, ctx: AluContext):

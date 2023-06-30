@@ -24,12 +24,12 @@ class AluHelpCog(MetaCog):
             bot.help_command.cog = self
 
     @app_commands.command(name='help')
-    @app_commands.describe(command='Command name to get help about.')
-    async def slash_help(self, ntr: discord.Interaction, *, command: Optional[str]):
+    @app_commands.describe(query='Command/Section/Category name to get help about.')
+    async def slash_help(self, ntr: discord.Interaction, *, query: Optional[str]):
         """Show help menu for the bot."""
         ctx = await AluContext.from_interaction(ntr)
-        if command:
-            await ctx.send_help(command)
+        if query:
+            await ctx.send_help(query)
         else:
             await ctx.send_help()
         # todo: starting category
@@ -39,10 +39,11 @@ class AluHelpCog(MetaCog):
 
     @commands.is_owner()
     @commands.command(hidden=True)
-    async def devhelp(self, ctx: AluContext, *, command: Optional[str]):
+    async def devhelp(self, ctx: AluContext, *, query: Optional[str]):
+        """Show dev help menu for the bot."""
         my_help = AluHelp(show_hidden=True)
         my_help.context = ctx
-        await my_help.command_callback(ctx, command=command)
+        await my_help.command_callback(ctx, command=query)
 
 
 async def setup(bot: AluBot):

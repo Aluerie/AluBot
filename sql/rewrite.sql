@@ -4,3 +4,8 @@ CREATE TABLE IF NOT EXISTS botvars (
     CONSTRAINT only_one_row CHECK (id)
 );
 
+CREATE TABLE auto_sync (
+    guild_id BIGINT,
+    payload JSONB
+);
+

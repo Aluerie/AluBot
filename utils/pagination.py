@@ -220,7 +220,8 @@ class Paginator(discord.ui.View):
             await ntr.followup.send(f"Some error occurred, sorry", ephemeral=True)
         else:
             await ntr.response.send_message(f"Some error occurred, sorry", ephemeral=True)
-        await ntr.client.exc_manager.register_error(error, "Paginator Error")
+        msg = "Paginator Error"
+        await ntr.client.exc_manager.register_error(error, msg, where=msg)
 
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
     async def home_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):

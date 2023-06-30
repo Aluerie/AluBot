@@ -41,6 +41,9 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
         desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
     elif isinstance(error, commands.CommandOnCooldown):
         desc = f"Please retry in `{ctx.bot.formats.human_timedelta(error.retry_after, brief=True)}`"
+    elif isinstance(error, commands.NotOwner):
+        desc = f'Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command.'
+
     # elif isinstance(error, errors.SilentError):
     #     # this will fail the interaction hmm
     #     return

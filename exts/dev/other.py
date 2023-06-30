@@ -79,7 +79,8 @@ class AdminTools(DevBaseCog):
         total = guild.member_count or 1
         e.add_field(name="Members", value=total)
         e.add_field(name="Bots", value=f"{bots} ({bots / total:.2%})")
-        e.timestamp = guild.me.joined_at
+        if guild.me:
+            e.timestamp = guild.me.joined_at
         await self.bot.hideout.global_logs.send(embed=e)
 
     @commands.Cog.listener()

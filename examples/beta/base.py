@@ -14,15 +14,21 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus
 
-from utils import AluCog, aluloop, const, errors
+from utils import AluCog, ExtCategory, aluloop, const, errors
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
+category = ExtCategory(
+    name='Beta Features',
+    emote=const.Emote.bedWTF,
+    description='Beta Features',
+)
 
-class BetaCog(AluCog):
+
+class BetaCog(AluCog, category=category):
     async def cog_load(self):
         self.beta_task.start()
 

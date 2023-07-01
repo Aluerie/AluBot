@@ -75,6 +75,8 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
     Tuple[str, ...]
         tuple of extensions for bot to load
     """
+
+    # get only extensions for testing
     if test:
         if reload:
             importlib.reload(_test)
@@ -93,8 +95,8 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
 
     categorised_exts = tuple(
         module.name
-        for sf in ext_category_folders
-        for module in iter_modules(path=[f'exts/{sf}'], prefix=f'exts.{sf}.')
+        for folder in ext_category_folders
+        for module in iter_modules(path=[f'exts/{folder}'], prefix=f'exts.{folder}.')
         if not module.name.rsplit('.', 1)[-1].startswith('_')
     )
 

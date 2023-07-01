@@ -14,6 +14,13 @@ Just some glossary so that I try to keep consistent terminology across the proje
     These commands are made with `@commands.hybrid_command`. They make both txt and app commands in one go if the code structure/signature allow it.
 * ctx command
     `ctx` based command. This includes both txt commands and hybrid commands because they take `ctx` of type `AluContext` as their context-argument.
+* community
+    The discord server for Aluerie's community. Some features of the bot are specifically designed for it.
+* hideout
+    My personal one-man discord server. I do most of the testing here. Also some features of the bot are specifically designed for it.
+
+> Note
+> For both "community" and hideout there are `AluCog.hideout/AluCog.community` shortcuts. Also in `AluBot` subclass.
 
 ## Notes
 

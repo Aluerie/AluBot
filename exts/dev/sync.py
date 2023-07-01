@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Optional
+import datetime
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import discord
 from discord.ext import commands
 
-from utils import const
+from utils import aluloop, const, errors
 
 from ._category import DevBaseCog
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from utils import AluBot, AluContext
 
 
 class UmbraSyncCommandCog(DevBaseCog):
@@ -18,31 +19,29 @@ class UmbraSyncCommandCog(DevBaseCog):
     (A BIT MODIFIED THO, SORRY UMBRA)
 
     `?tag usc` which abbreviates to `?tag umbra sync command`.
-
-    This command is used to sync app_commands so people don't use
-    their very precious `?tag ass` on me in discord.py server.
     """
 
     @commands.command(hidden=True)
     async def sync(
         self,
         ctx: AluContext,
-        guilds: commands.Greedy[discord.Guild],
+        guilds: commands.Greedy[discord.Object],
         spec: Optional[Literal["~", "*", "^", "trust"]] = None,
     ) -> None:
-        """Sync command. Usage examples:
+        """Sync AppCommandTree.
+
+        Usage examples:
         * `$sync` -> global sync
-        * `$sync ~` -> sync current guild
+        * `$sync ~` -> sync current guild (only its guild-bound commands)
         * `$sync *` -> copies all global app commands to current guild and syncs
-        * `$sync ^` -> clears all commands from the current guild target and syncs (removes guild commands)
+        * `$sync ^` -> clears all commands from the current guild target and syncs (removes guild-bound commands)
         * `$sync id_1 id_2` -> syncs guilds with id 1 and 2
         * `$sync trust` -> sync trusted guilds
         """
 
-        e = discord.Embed(colour=const.Colour.prpl())
-
-        async def sync_to_guild_list(guilds: commands.Greedy[discord.Guild] | list[discord.Guild]):
-            fmt = 0
+        # sync to a list of guilds
+        async def sync_to_guild_list(guilds: list[discord.Object]) -> tuple[str, str]:
+            ret = 0
             cmds = []
             for guild in guilds:
                 try:
@@ -50,37 +49,76 @@ class UmbraSyncCommandCog(DevBaseCog):
                 except discord.HTTPException:
                     pass
                 else:
-                    fmt += 1
-            return f"Synced the tree to `{fmt}/{len(guilds)}` guilds."
+                    ret += 1
+            return (f'`{ret}/{len(guilds)}` guilds', "Synced guild-bound commands to a list of guilds.")
 
         if spec == "trust":
-            guild_list = [
-                y for y in (ctx.bot.get_guild(guild_id) for guild_id in const.TRUSTED_GUILDS) if y is not None
-            ]
-            e.description = await sync_to_guild_list(guild_list)
+            guild_list = [discord.Object(id=guild_id) for guild_id in const.TRUSTED_GUILDS]
+            title, desc = await sync_to_guild_list(guild_list)
         elif guilds:
-            e.description = await sync_to_guild_list(guilds)
+            title, desc = await sync_to_guild_list(guilds)
+
+        # sync to current guild
         elif spec:
-            if ctx.guild:
-                match spec:
-                    case "~":
-                        synced = await ctx.bot.tree.sync(guild=ctx.guild)
-                    case "*":
-                        ctx.bot.tree.copy_global_to(guild=ctx.guild)
-                        synced = await ctx.bot.tree.sync(guild=ctx.guild)
-                    case "^":
-                        ctx.bot.tree.clear_commands(guild=ctx.guild)
-                        await ctx.bot.tree.sync(guild=ctx.guild)
-                        synced = []
-                e.description = f"Synced `{len(synced)}` commands to the current guild."
-            else:
-                # todo: maybe raise different error
-                raise commands.BadArgument("You used `$sync` command with a spec outside of guild")
+            if not ctx.guild:
+                raise errors.BadArgument(f"You used `{ctx.clean_prefix}sync` with a spec outside of a guild")
+
+            match spec:
+                case "~":
+                    # no pre-sync action needed.
+                    desc = "Synced guild-bound (`@app_commands.guilds(...`) commands to the current guild."
+                case "*":
+                    ctx.bot.tree.copy_global_to(guild=ctx.guild)
+                    desc = "Copied all global commands to the current guild as guild-bound and synced."
+                case "^":
+                    ctx.bot.tree.clear_commands(guild=ctx.guild)
+                    desc = "Cleared guild-bound commands from the current guild."
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+            title = f'`{len(synced)}` commands'
+
+        # global sync then
         else:
             synced = await ctx.bot.tree.sync()
-            e.description = f"Synced `{len(synced)}` commands globally."
+            title, desc = f"`{len(synced)}` commands", "Synced globally."
+
+        # send the result
+        e = discord.Embed(colour=const.Colour.prpl(), title=title, description=desc)
         await ctx.reply(embed=e)
+
+
+class DailyAutoSync(DevBaseCog):
+    """Run syncing app cmd tree once a day per restart.
+
+    `?tag ass` and all. But I'm stupid and forget to sync the tree manually.
+    So let the bot sync on the very first 3am per restart. Not that big of a deal.
+    """
+
+    # todo: comment this cog out when I stop being active with development of the bot
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+        super().__init__(bot, *args, **kwargs)
+        self.is_synced: list[None | int] = [None, self.community.id, self.hideout.id]
+
+    async def cog_load(self):
+        self.one_time_sync.start()
+
+    async def cog_unload(self):
+        self.one_time_sync.cancel()
+
+    @aluloop(time=datetime.time(hour=3, minute=33, second=33, tzinfo=datetime.timezone.utc))
+    async def one_time_sync(self):
+        if not self.is_synced:
+            to_sync = self.is_synced.pop(0)
+            if to_sync:
+                synced = await self.bot.tree.sync(guild=discord.Object(id=to_sync))
+                desc = f"Synced `{len(synced)}` guild`{to_sync}`-bound commands in autosync."
+            else:
+                synced = await self.bot.tree.sync()
+                desc = f"Synced `{len(synced)}` commands globally in daily autosync."
+
+            e = discord.Embed(color=0x234234, description=desc)
+            await self.hideout.daily_report.send(embed=e)
 
 
 async def setup(bot):
     await bot.add_cog(UmbraSyncCommandCog(bot))
+    await bot.add_cog(DailyAutoSync(bot))

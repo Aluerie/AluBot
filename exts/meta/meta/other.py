@@ -63,7 +63,7 @@ async def count_others(
     return line_count
 
 
-def format_commit(commit):
+def format_commit(commit: pygit2.Commit):
     short, _, _ = commit.message.partition("\n")
     short = short[0:40] + "..." if len(short) > 40 else short
     short_sha2 = commit.hex[0:6]

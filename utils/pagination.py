@@ -11,18 +11,6 @@ Sources I used to create this file and files that are dependent on it:
     - https://gist.github.com/Shashank3736/44c124dcaa5c4fdddc0300bec575dc08
 * RoboDanny's meta/pagination files (license MPL v2 from Rapptz/RoboDanny)
     - https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/paginator.py
-* In past, before implementing `discord.ext.menus` version - my code was
-    based of @krittick's `ext.pages` from `pycord` library (The MIT License (MIT))
-    (Yes-yes-yes-yes, don't bully me - I was using `pycord` while
-    `discord.py` was taking "an indefinite break" - let's call it like that).
-    Unfortunately, @krittick had to leave py-cord team and nobody maintained `ext.pages` since.
-    By that time `discord.py` library came back to life and quickly became
-    arguably the best python library for discord API wrapping (again).
-    Thus, I decided to switch back to `discord.py` and so to bring pagination code
-    from `py-cord's .ext.pages` here as well.
-    But you can still see elements from there in my code. So mentioning the source for posterity:
-
-    - https://github.com/Pycord-Development/pycord/blob/master/discord/ext/pages/pagination.py
 """
 
 from __future__ import annotations
@@ -221,7 +209,7 @@ class Paginator(discord.ui.View):
         else:
             await ntr.response.send_message(f"Some error occurred, sorry", ephemeral=True)
         msg = "Paginator Error"
-        await ntr.client.exc_manager.register_error(error, msg, where=msg)
+        await ntr.client.exc_manager.register_error(error, ntr, where=msg)
 
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
     async def home_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):

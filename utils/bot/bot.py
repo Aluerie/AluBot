@@ -109,10 +109,34 @@ class AluBot(commands.Bot):
                 msg = f'Failed to load extension `{ext}`.'
                 await self.exc_manager.register_error(error, msg, where=msg)
 
-        if self.test and not failed:
-            self.loop.create_task(self.try_hideout_auto_sync())
+        if self.test:
 
-    async def try_hideout_auto_sync(self):
+            async def try_auto_sync_with_logging():
+                try:
+                    result = await self.try_hideout_auto_sync()
+                except Exception as err:
+                    log.error('Autosync: failed %s.', const.Tick.no, exc_info=err)
+                else:
+                    if result:
+                        log.info('Autosync: success %s.', const.Tick.yes)
+                    else:
+                        log.info('Autosync: not needed %s.', const.Tick.black)
+
+            if not failed:
+                self.loop.create_task(try_auto_sync_with_logging())
+            else:
+                log.info('Autosync: cancelled %s One or more cogs failed to load.', const.Tick.no)
+
+    async def try_hideout_auto_sync(self) -> bool:
+        """Try auto copy-global+sync for hideout guild."""
+
+        # Inspired by:
+        # licensed MPL v2 from DuckBot-Discord/DuckBot `try_autosync``
+        # https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/bot.py
+
+        # tag ass, and all. But strictly for convenient development purposes.
+        # let's try min-maxing auto-sync in my hideout/debug guild in my test bot.
+
         # safeguard. Need the app id.
         await self.wait_until_ready()
 
@@ -135,6 +159,9 @@ class AluBot(commands.Bot):
             await self.pool.executemany("INSERT INTO auto_sync (guild_id, payload) VALUES ($1, $2)", new_payloads)
 
             await self.tree.sync(guild=guild)
+            return True
+        else:
+            return False
 
     def get_pre(self, bot: AluBot, message: discord.Message) -> Iterable[str]:
         if message.guild is None:
@@ -190,15 +217,9 @@ class AluBot(commands.Bot):
         if self.steam.connected is False:
             log.debug(f"dota2info: client.connected {self.steam.connected}")
             if self.test:
-                steam_login, steam_password = (
-                    config.TEST_STEAM_USERNAME,
-                    config.TEST_STEAM_PASSWORD,
-                )
+                steam_login, steam_password = (config.TEST_STEAM_USERNAME, config.TEST_STEAM_PASSWORD)
             else:
-                steam_login, steam_password = (
-                    config.STEAM_USERNAME,
-                    config.STEAM_PASSWORD,
-                )
+                steam_login, steam_password = (config.STEAM_USERNAME, config.STEAM_PASSWORD)
 
             if self.steam.login(username=steam_login, password=steam_password):
                 self.steam.change_status(persona_state=7)

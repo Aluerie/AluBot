@@ -1,8 +1,7 @@
-from .wolfram import WolframAlphaCog
-
 from utils.const import Emote
 
 from .._base import EducationalCog
+from .wolfram import WolframAlphaCog
 
 
 class Mathematics(

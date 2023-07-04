@@ -9,7 +9,7 @@ from discord.ext import commands
 from exts.utilities.utilities.fix_links import fix_link_worker
 from utils import const, errors, links, mimicry
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     pass

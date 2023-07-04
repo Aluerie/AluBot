@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from utils import AluContext, const
 
-from ._category import DevBaseCog
+from ._base import DevBaseCog
 
 if TYPE_CHECKING:
     pass

@@ -13,7 +13,7 @@ from utils.const import Colour, Emote, Guild
 from utils.formats import indent, ordinal
 from utils.pagination import EnumeratedPages
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext

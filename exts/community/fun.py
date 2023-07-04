@@ -9,7 +9,7 @@ from discord.ext import commands
 
 from utils import const
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     pass

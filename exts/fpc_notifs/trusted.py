@@ -9,7 +9,7 @@ from discord.ext import commands
 from utils import checks, const
 from utils.lol.const import LiteralServerUpper
 
-from ._category import FPCCog
+from ._base import FPCCog
 
 if TYPE_CHECKING:
     from exts.fpc.dota.settings import DotaNotifsSettings

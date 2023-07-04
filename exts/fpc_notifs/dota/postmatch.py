@@ -9,7 +9,7 @@ from discord.ext import commands
 
 from utils import aluloop, const
 
-from .._category import FPCCog
+from .._base import FPCCog
 from ._models import OpendotaRequestMatch, PostMatchPlayerData
 
 if TYPE_CHECKING:

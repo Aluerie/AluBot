@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from utils import AluCog, aluloop
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     pass

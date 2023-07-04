@@ -13,7 +13,7 @@ from utils import cache, const, pagination
 from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_custom, format_dt_tdR
 
-from ._category import InfoCog
+from ._base import InfoCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from utils import const
 
-from ._category import JebaitedCog
+from ._base import JebaitedCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

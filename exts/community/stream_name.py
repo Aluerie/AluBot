@@ -8,7 +8,7 @@ from discord.ext import commands, tasks
 
 from utils import AluCog, const
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext

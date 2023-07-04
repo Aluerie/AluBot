@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from utils import const, checks
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluContext

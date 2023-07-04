@@ -25,7 +25,7 @@ from utils.const import Colour, Emote
 from utils.database import DRecord
 from utils.pagination import EnumeratedPages
 
-from ._category import RemindersCog
+from ._base import RemindersCog
 
 if TYPE_CHECKING:
     from typing_extensions import Self

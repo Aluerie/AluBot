@@ -7,7 +7,7 @@ from pyot.core.exceptions import NotFound
 
 from utils import aluloop
 
-from .._category import FPCCog
+from .._base import FPCCog
 from ._models import PostMatchPlayer
 
 # need to import the last because in import above we activate 'lol' model

@@ -11,7 +11,7 @@ from discord.ext import commands
 
 from utils.converters import Codeblock
 
-from ._category import DevBaseCog
+from ._base import DevBaseCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

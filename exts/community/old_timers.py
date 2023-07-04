@@ -9,7 +9,7 @@ from numpy.random import randint, seed
 from utils import AluCog
 from utils.const import DIGITS, Channel, Colour, Emote, Guild, Role, User
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from asyncpg import Pool

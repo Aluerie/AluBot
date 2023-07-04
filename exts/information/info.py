@@ -19,7 +19,7 @@ from wordcloud import WordCloud
 from utils import const, converters
 from utils.formats import format_dt_tdR, human_timedelta
 
-from ._category import InfoCog
+from ._base import InfoCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

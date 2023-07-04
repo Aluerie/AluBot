@@ -10,7 +10,7 @@ from discord.ext import commands, tasks
 from utils import const
 from utils.formats import inline_word_by_word_diff
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot

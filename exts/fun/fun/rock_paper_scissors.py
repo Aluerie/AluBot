@@ -9,7 +9,7 @@ from numpy.random import choice
 
 from utils import AluCog, const
 
-from .._category import FunCog
+from .._base import FunCog
 
 if TYPE_CHECKING:
     from utils import AluGuildContext

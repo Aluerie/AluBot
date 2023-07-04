@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from ._category import JebaitedCog
+from ._base import JebaitedCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

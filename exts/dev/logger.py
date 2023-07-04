@@ -12,7 +12,7 @@ from discord.ext import tasks
 from config import SPAM_LOGS_WEBHOOK
 from utils import formats
 
-from ._category import DevBaseCog
+from ._base import DevBaseCog
 
 if TYPE_CHECKING:
     from utils import AluBot

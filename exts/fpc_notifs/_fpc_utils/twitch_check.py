@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from discord.ext import tasks
 
-from .._category import FPCCog
+from .._base import FPCCog
 
 if TYPE_CHECKING:
     from utils import AluBot

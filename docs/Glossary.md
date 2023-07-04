@@ -18,6 +18,8 @@ Just some glossary so that I try to keep consistent terminology across the proje
     The discord server for Aluerie's community. Some features of the bot are specifically designed for it.
 * hideout
     My personal one-man discord server. I do most of the testing here. Also some features of the bot are specifically designed for it.
+* context menu
+    In docs it's called `app_commands.ContextMenu`, so I guess we have to suffer with this. We have so much meaning to the word ctx connected to `Context` related-stuff defined above that I feel like it doesn't make sense to call this "ctx menu", so let's call it "context menu" as in full words.
 
 > Note
 > For both "community" and hideout there are `AluCog.hideout/AluCog.community` shortcuts. Also in `AluBot` subclass.

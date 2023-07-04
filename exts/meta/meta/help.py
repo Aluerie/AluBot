@@ -9,7 +9,7 @@ from discord.ext import commands
 from base.help_cmd import AluHelp
 from utils import AluContext, aluloop, const
 
-from .._category import MetaCog
+from .._base import MetaCog
 
 if TYPE_CHECKING:
     from utils import AluBot

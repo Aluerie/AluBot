@@ -15,7 +15,7 @@ from discord.ext import commands
 from exts import get_extensions
 from utils import AluContext, const
 
-from ._category import DevBaseCog
+from ._base import DevBaseCog
 
 if TYPE_CHECKING:
     pass

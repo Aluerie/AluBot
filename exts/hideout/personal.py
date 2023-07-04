@@ -9,7 +9,7 @@ from discord.ext import commands
 
 from utils import AluCog, const
 
-from ._category import HideoutCog
+from ._base import HideoutCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluContext

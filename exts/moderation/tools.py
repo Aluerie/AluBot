@@ -12,7 +12,7 @@ from utils import checks, const
 from utils.converters import Snowflake
 from utils.formats import Plural
 
-from ._category import ModerationCog
+from ._base import ModerationCog
 
 if TYPE_CHECKING:
     from utils import AluContext, AluGuildContext

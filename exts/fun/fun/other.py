@@ -11,7 +11,7 @@ from discord.ext import commands
 
 from utils import checks, const, mimicry
 
-from .._category import FunCog
+from .._base import FunCog
 
 if TYPE_CHECKING:
     from utils import AluContext, AluGuildContext

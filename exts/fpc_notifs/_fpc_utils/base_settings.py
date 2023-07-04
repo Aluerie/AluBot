@@ -10,7 +10,7 @@ from discord.ext import commands
 from utils import AluCog, AluGuildContext, const
 from utils.pagination import EnumeratedPages
 
-from .._category import FPCCog
+from .._base import FPCCog
 from .views import CharacterPages, CharacterPageSource
 
 if TYPE_CHECKING:

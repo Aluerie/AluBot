@@ -14,7 +14,7 @@ from steam.enums import emsg
 from utils import aluloop
 from utils.dota import hero
 
-from .._category import FPCCog
+from .._base import FPCCog
 from ._models import ActiveMatch
 
 if TYPE_CHECKING:

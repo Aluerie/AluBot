@@ -11,7 +11,7 @@ from pyot.utils.lol import champion
 from utils import aluloop
 from utils.lol.const import SOLO_RANKED_5v5_QUEUE_ENUM, platform_to_region
 
-from .._category import FPCCog
+from .._base import FPCCog
 from ._models import LiveMatch
 
 # need to import the last because in import above we activate 'lol' model

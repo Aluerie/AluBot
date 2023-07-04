@@ -9,7 +9,7 @@ from gtts import gTTS
 
 from utils import const
 
-from ._category import VoiceChatCog
+from ._base import VoiceChatCog
 
 if TYPE_CHECKING:
     from utils import AluBot

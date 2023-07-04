@@ -12,7 +12,7 @@ from utils import AluCog
 from utils.const import Colour, Guild
 from utils.lol.const import LOL_LOGO
 
-from ._category import HideoutCog
+from ._base import HideoutCog
 
 if TYPE_CHECKING:
     pass

@@ -1,18 +1,14 @@
 from utils.const import Emote
 
-from .._category import UtilitiesCog
+from .._base import UtilitiesCog
 from .dev_utils import DevUtilities
 from .fix_links import LinkUtilities
-from .tools import ToolsCog
-from .wolfram import WolframAlpha
 
 
 class Utilities(
     UtilitiesCog,
     DevUtilities,
     LinkUtilities,
-    ToolsCog,
-    WolframAlpha,
     name='Utilities',
     emote=Emote.FeelsDankManLostHisHat,
 ):

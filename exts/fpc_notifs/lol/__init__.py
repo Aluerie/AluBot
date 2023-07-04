@@ -1,6 +1,6 @@
 from utils import const
 
-from .._category import FPCCog
+from .._base import FPCCog
 from .notifs import LoLNotifs
 from .postmatch import LoLFeedPostMatchEdit
 from .settings import LoLNotifsSettings

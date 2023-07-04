@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from discord.ext import tasks
 
-from .._category import FPCCog
+from .._base import FPCCog
 
 # need to import the last because in import above we activate 'lol' model
 from pyot.models import lol  # isort: skip

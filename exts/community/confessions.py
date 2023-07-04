@@ -8,7 +8,7 @@ from discord.ext import commands
 from utils.const import Colour, Emote
 from utils.formats import human_timedelta
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot

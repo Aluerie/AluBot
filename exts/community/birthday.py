@@ -16,7 +16,7 @@ from numpy.random import choice
 from utils import aluloop, const
 from utils.pagination import EnumeratedPages
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext

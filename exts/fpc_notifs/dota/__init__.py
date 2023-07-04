@@ -1,6 +1,6 @@
 from utils import AluBot, const
 
-from .._category import FPCCog
+from .._base import FPCCog
 from .notifs import DotaNotifs
 from .postmatch import DotaPostMatchEdit
 from .settings import DotaNotifsSettings

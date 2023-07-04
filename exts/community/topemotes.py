@@ -12,7 +12,7 @@ from utils import const
 from utils.formats import indent
 from utils.pagination import EnumeratedPages
 
-from ._category import CommunityCog
+from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from asyncpg import Pool

@@ -7,7 +7,7 @@ from discord.ext import commands
 
 from utils import const
 
-from ._category import ConfigGuildCog
+from ._base import ConfigGuildCog
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext

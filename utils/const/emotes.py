@@ -7,62 +7,54 @@ class Emote(StrEnum):
     # comments mean that this emote is used in help command for something so i don't reuse it by accident
 
     # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
-    WeebsOutOut = '<a:_:730882034167185448>'
-    peepoWeebSmash = '<a:_:728671752414167080>'
-
-    # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
     peepoComfy = '<:_:726438781208756288>'  # Category: Community
-    WeebsOut = '<:_:856985447985315860>'
-    peepoRiot = '<:_:730883102678974491>'
 
-    # HIDEOUT SERVER, NON-ANIMATED EMOTES ##############################################################################
+    # Emote Server 1
 
-    bedNerdge = '<:_:1106748389565153300>'
-    bubuAyaya = '<:_:764835239138164756>'
-    bubuChrist = '<:_:847805078769631262>'
-    bubuGun = '<:_:847805078543007755>'
-    bubuSip = '<:_:865033396189921290>'
-    DankApprove = '<:_:1107470723448057886>'
-    DankFix = '<:_:1107470989895417897>' # Category: Jishaku
-    DankG = '<:_:998012133948276857>'
-    DankHey = '<:_:1107475426076532828>'
-    DankHatTooBig = '<:_:1106645924974972978>'
-    DankLove = '<:_:1107467504290385950>'
-    DankMadgeThreat = '<:_:1107475989312835614>'
-    DankZzz = '<:_:1107467287398723656>'
-    FeelsDankMan = '<:_:1107471658861735958>'
-    FeelsDankManLostHisHat = '<:_:1107471692013502504>'
-    Jebaited = '<:_:1107467775749914644>'
-    Lewd = '<:_:976604430059331684>'
-    peepoBlushDank = '<:_:1107471683448754287>'
-    peepoBusiness = '<:_:998157352098340934>'
-    # peepoComfy = '<:_:1107471654944260096>' # let's use from community
-    peepoHappyDank = '<:_:1107471671520133202>'
-    peepoMovie = '<:_:998163742741246003>'
-    peepoNiceDay = '<:_:1107477683568382076>'
-    peepoPolice = '<:_:1107475416559661126>'
-    peepoRoseDank = '<:_:1107475422276497508>'
-    peepoStepOnMePls = '<:_:1107471687466889267>'
-    peepoWTF = '<:_:1106723199128965140>'
-    PepoBeliever = '<:_:1107471650678657064>'
-    PepoDetective = '<:_:1107471667711709184>'
-    PepoG = '<:_:1106749219181699082>'
-    PepoRules = '<:_:1107471675538284585>'
-    PogChampPepe = '<:_:1107471663169290260>'
-    bedWTF = '<:_:999813662036459610>' # Category: Beta Features
-    Ree = '<:_:1107471646115254292>'
-    slash = '<:_:823159274954817566>'
-    Smartge = '<:_:1107471679644512396>'
-    TwoBButt = '<:_:853729747846168576>'
+    # non animated
+    DankApprove = '<:DankApprove:1125591734332706907>'
+    DankFix = '<:DankFix:1125591737939791963>'  # Category: Jishaku
+    DankG = '<:DankG:1125591639256211596>'
+    DankHatTooBig = '<:DankHatTooBig:1125591656192806922>'
+    DankHey = '<:DankHey:1125591893871448095>'
+    DankLove = '<:DankLove:1125591725931515976>'
+    DankMadgeThreat = '<:DankMadgeThreat:1125591898241892482>'
+    DankZzz = '<:DankZzz:1125591722487984208>'
+    FeelsDankMan = '<:FeelsDankMan:1125591801785503884>'
+    FeelsDankManLostHisHat = '<:FeelsDankManLostHisHat:1125591840427618384>'
+    Jebaited = '<:Jebaited:1125591730163552328>'  # Category: Jebaited
+    Lewd = '<:Lewd:1125591635296796792>'
+    PepoBeliever = '<:PepoBeliever:1125591746265501716>'
+    PepoDetective = '<:PepoDetective:1125591814188044298>'
+    PepoG = '<:PepoG:1125591718373371914>'
+    PepoRules = '<:PepoRules:1125591823348416542>'
+    PogChampPepe = '<:PogChampPepe:1125591805363236934>'
+    Ree = '<:Ree:1125591742712918146>'
+    Smartge = '<:Smartge:1125591827425263617>'
+    WeebsOut = '<:WeebsOut:1125598043455115264>'
+    bedNerdge = '<:bedNerdge:1125591713386352692>'
+    bedWTF = '<:bedWTF:1125591651495194694>'  # Category: Beta
+    bubuAYAYA = '<:bubuAYAYA:1125591624710357013>'
+    bubuChrist = '<:bubuChrist:1125591632268496979>'
+    bubuGun = '<:bubuGun:1125591628996948048>'
+    peepoBlushDank = '<:peepoBlushDank:1125591832240328786>'
+    peepoBusiness = '<:peepoBusiness:1125591642729091113>'
+    # peepoComfy = '<:peepoComfy:1125591750665318420>' # we will use the one from community
+    peepoHappyDank = '<:peepoHappyDank:1125591819137335304>'
+    peepoMovie = '<:peepoMovie:1125591645853859901>'
+    peepoNiceDay = '<:peepoNiceDay:1125591903488987236>'
+    peepoPolice = '<:peepoPolice:1125591845540462693>'
+    peepoRiot = '<:peepoRiot:1125597699778035713>'
+    peepoRoseDank = '<:peepoRoseDank:1125591890037854299>'
+    peepoStepOnMePls = '<:peepoStepOnMePls:1125591836057145396>'
+    peepoWTF = '<:peepoWTF:1125591659846058035>'
 
-    # logo emotes
-    github_logo = '<:_:1081677464637550662>'
-    AluerieServer = '<:_:1121891520048533535>'
-
-    # HIDEOUT SERVER, ANIMATED EMOTES ##################################################################################
-    DankL = '<a:_:1107481467912736859>'
-    SmogeInTheRain = '<a:_:1107481464024608859>'
-    KURU = '<a:_:1119329607754203327>'
+    # animated
+    DankL = '<a:DankL:1125591914524184667>'
+    KURU = '<a:KURU:1125591919574138940>'
+    SmogeInTheRain = '<a:SmogeInTheRain:1125591908656361574>'
+    WeebsOutOut = '<a:WeebsOutOut:1125597169957748826>'
+    peepoWeebSmash = '<a:peepoWeebSmash:1125597172675653662>'
 
     # COMMON EMOTES ####################################################################################################
     Offline = '\N{LARGE RED CIRCLE}'
@@ -94,8 +86,13 @@ class GitIssueEvent(StrEnum):
     # pictures are taken from 16px versions here https://primer.style/octicons/
     # and background circles are added with simple online editor https://iconscout.com/color-editor
     # make pics to be 128x128, so it's consistent for all sizes
-    closed = '<:closed:1070403584010760243>'
-    assigned = '<:assigned:1070403582316269568>'
-    reopened = '<:reopened:1070403590646145034>'
-    commented = '<:commented:1070403505518559402>'
-    opened = '<:opened:1070403587638829116>'
+    reopened = '<:reopened:1125588760269164587>'
+    opened = '<:opened:1125588763087753307>'
+    closed = '<:closed:1125588765759508552>'
+    assigned = '<:assigned:1125588768070578196>'
+    commented = '<:commented:1125588770679431258>'
+
+
+class EmoteLogo(StrEnum):
+    github_logo = '<:github_logo:1125588758197178439>'
+    AluerieServer = '<:AluerieServer:1125600089109442661>'

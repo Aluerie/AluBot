@@ -290,7 +290,7 @@ class OtherCog(AluCog):
         e.set_image(url='https://i.imgur.com/kGFsKcc.png')
 
         if command is None:
-            view = Url(source_url, label="GitHub Repo", emoji=const.Emote.github_logo)
+            view = Url(source_url, label="GitHub Repo", emoji=const.EmoteLogo.github_logo)
             return await ctx.reply(embed=e, view=view)
 
         if command == "help":
@@ -323,5 +323,5 @@ class OtherCog(AluCog):
         final_url = f"{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}"
         e.set_footer(text=f"Found source code here:\n{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
 
-        view = Url(final_url, label=f"Source code for command \"{str(obj)}\"", emoji=const.Emote.github_logo)
+        view = Url(final_url, label=f"Source code for command \"{str(obj)}\"", emoji=const.EmoteLogo.github_logo)
         await ctx.reply(embed=e, view=view)

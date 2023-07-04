@@ -45,6 +45,13 @@ class Guild:
     # friends
     stone = 773607529879699497
 
+    # emotes
+
+    emote1 = 1123901376435589173
+    
+    brand1 = 1125050799572131982
+    brand2 = 1125050890777268355
+
 
 MY_GUILDS = [Guild.hideout, Guild.community]
 TRUSTED_GUILDS = [Guild.hideout, Guild.stone]

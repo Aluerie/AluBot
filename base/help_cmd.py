@@ -62,9 +62,9 @@ class HelpPageSource(menus.ListPageSource):
 
             menu.clear_items()
             menu.fill_items()
-            menu.add_item(discord.ui.Button(emoji=const.Emote.github_logo, label='GitHub', url=bot.repo_url))
+            menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.github_logo, label='GitHub', url=bot.repo_url))
             menu.add_item(discord.ui.Button(emoji=const.Emote.FeelsDankMan, label='Invite me', url=bot.invite_link))
-            menu.add_item(discord.ui.Button(emoji=const.Emote.AluerieServer, label='Community', url=bot.server_url))
+            menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.AluerieServer, label='Community', url=bot.server_url))
 
             return e
 

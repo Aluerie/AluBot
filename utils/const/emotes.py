@@ -47,6 +47,7 @@ class Emote(StrEnum):
     peepoRiot = '<:peepoRiot:1125597699778035713>'
     peepoRoseDank = '<:peepoRoseDank:1125591890037854299>'
     peepoStepOnMePls = '<:peepoStepOnMePls:1125591836057145396>'
+    peepoWater = '<:peepoWater:1125720123722973285>'
     peepoWTF = '<:peepoWTF:1125591659846058035>'
 
     # animated

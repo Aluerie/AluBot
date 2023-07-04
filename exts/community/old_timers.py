@@ -64,7 +64,7 @@ daily_reminders_txt = [
     f'Hey chat, if you ever see {User.alubot} offline (it should be always at the top of the members list online) - '
     'immediately ping me',
     f'Hey chat, if while watching my stream you see some cool moment - clip it and post to {Channel.clips}',
-    'Hey chat, remember to stay hydrated ! {0} {0} {0}'.format(Emote.bubuSip),
+    'Hey chat, remember to stay hydrated ! {0} {0} {0}'.format(Emote.peepoWater),
     f'Hey chat, if you have any problems then {Role.discord_mods} can solve it! Especially if it is about this server',
 ]
 

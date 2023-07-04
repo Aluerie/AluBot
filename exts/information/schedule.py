@@ -138,7 +138,7 @@ select_options = [
         value='2',
     ),
     discord.SelectOption(
-        emoji=const.Emote.bubuAyaya, label="Featured", description="Featured games by Liquidpedia", value='3'
+        emoji=const.Emote.bubuAYAYA, label="Featured", description="Featured games by Liquidpedia", value='3'
     ),
     discord.SelectOption(emoji=const.Emote.PepoG, label="Full Schedule", description="All pro games!", value='4'),
     discord.SelectOption(

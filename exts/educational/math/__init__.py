@@ -1,4 +1,4 @@
-from wolfram import WolframAlphaCog
+from .wolfram import WolframAlphaCog
 
 from utils.const import Emote
 

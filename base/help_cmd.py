@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus
 
-from utils import AluCog, AluContext, ExtCategory, aluloop, const, pagination
+from utils import AluCog, AluContext, ExtCategory, aluloop, const, pages
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -121,7 +121,7 @@ class HelpSelect(discord.ui.Select):
         await self.paginator.show_page(ntr, page_to_open)
 
 
-class HelpPages(pagination.Paginator):
+class HelpPages(pages.Paginator):
     source: HelpPageSource
 
     def __init__(

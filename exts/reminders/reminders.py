@@ -23,7 +23,7 @@ from typing_extensions import Annotated
 from utils import AluContext, formats, times
 from utils.const import Colour, Emote
 from utils.database import DRecord
-from utils.pagination import EnumeratedPages
+from utils.pages import EnumeratedPages
 
 from ._base import RemindersCog
 

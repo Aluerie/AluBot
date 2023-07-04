@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from utils import AluCog
 from utils.const import Colour, Emote, Guild
 from utils.formats import indent, ordinal
-from utils.pagination import EnumeratedPages
+from utils.pages import EnumeratedPages
 
 from ._base import CommunityCog
 

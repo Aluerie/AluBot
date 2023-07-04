@@ -1,9 +1,9 @@
 from utils import AluCog, ExtCategory, const
 
 category = ExtCategory(
-    name='FPC',
+    name='FPC Notifications',
     emote=const.Emote.KURU,
-    description='Notifs about streamers picking your fav characters',
+    description='FPC (Favourite Player+Character) Notifications.',
 )
 
 

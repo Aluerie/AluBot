@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import menus
 
-from utils.pagination import Paginator
+from utils.pages import Paginator
 
 if TYPE_CHECKING:
     from utils import AluBot, AluGuildContext

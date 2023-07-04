@@ -9,7 +9,7 @@ from discord.ext import commands, menus, tasks
 from utils import AluContext
 from utils.const import Colour, Emote
 from utils.formats import human_timedelta
-from utils.pagination import Paginator
+from utils.pages import Paginator
 
 if TYPE_CHECKING:
     from utils import AluBot

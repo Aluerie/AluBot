@@ -8,7 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils import AluCog, AluGuildContext, const
-from utils.pagination import EnumeratedPages
+from utils.pages import EnumeratedPages
 
 from .._base import FPCCog
 from .views import CharacterPages, CharacterPageSource

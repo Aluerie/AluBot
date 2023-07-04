@@ -10,7 +10,7 @@ from discord.ext import commands, tasks
 
 from utils import const
 from utils.formats import indent
-from utils.pagination import EnumeratedPages
+from utils.pages import EnumeratedPages
 
 from ._base import CommunityCog
 

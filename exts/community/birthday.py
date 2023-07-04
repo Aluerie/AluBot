@@ -14,7 +14,7 @@ from discord.ext import commands
 from numpy.random import choice
 
 from utils import aluloop, const
-from utils.pagination import EnumeratedPages
+from utils.pages import EnumeratedPages
 
 from ._base import CommunityCog
 

@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from discord import app_commands
 from discord.ext import commands, menus
 
-from utils import cache, const, pagination
+from utils import cache, const, pages
 from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_custom, format_dt_tdR
 
@@ -192,16 +192,16 @@ class ScheduleSelect(discord.ui.Select):
 
     async def callback(self, ntr: discord.Interaction[AluBot]):
         sch_enum = ScheduleModeEnum(value=int(self.values[0]))
-        pages = SchedulePages(ntr, self.soup, sch_enum, self.query)
-        await pages.start(edit_response=True)
+        p = SchedulePages(ntr, self.soup, sch_enum, self.query)
+        await p.start(edit_response=True)
 
     async def interaction_check(self, ntr: discord.Interaction[AluBot]) -> bool:
         if ntr.user and ntr.user.id == self.author.id:
             return True
         else:
             sch_enum = ScheduleModeEnum(value=int(self.values[0]))
-            pages = SchedulePages(ntr, self.soup, sch_enum, self.query)
-            await pages.start(ephemeral=True)
+            p = SchedulePages(ntr, self.soup, sch_enum, self.query)
+            await p.start(ephemeral=True)
             return False
 
 
@@ -264,7 +264,7 @@ class SchedulePageSource(menus.ListPageSource):
         return e
 
 
-class SchedulePages(pagination.Paginator):
+class SchedulePages(pages.Paginator):
     source: SchedulePageSource
 
     def __init__(
@@ -316,8 +316,8 @@ class Schedule(InfoCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
         await ctx.typing()
         soup = await self.get_soup('dota2')
         schedule_enum = ScheduleModeEnum(value=schedule_mode)
-        pages = SchedulePages(ctx, soup, schedule_enum, query)
-        await pages.start()
+        p = SchedulePages(ctx, soup, schedule_enum, query)
+        await p.start()
 
     @commands.hybrid_command()
     async def fixtures(self, ctx: AluContext):

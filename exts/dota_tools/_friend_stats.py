@@ -16,7 +16,7 @@ from utils import const, checks
 
 from utils.dota import hero
 from utils.formats import indent
-from utils.pagination import EnumeratedPages
+from utils.pages import EnumeratedPages
 
 from ._utils import MatchHistoryData, fancy_ax, generate_data, gradient_fill, heroes_played_bar, mmr_by_hero_bar
 

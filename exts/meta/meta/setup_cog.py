@@ -7,7 +7,7 @@ from discord.ext import commands, menus
 
 from utils import AluCog, AluGuildContext
 from utils.const import Colour
-from utils.pagination import Paginator
+from utils.pages import Paginator
 
 if TYPE_CHECKING:
     pass

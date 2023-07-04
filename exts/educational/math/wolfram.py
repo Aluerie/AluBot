@@ -30,8 +30,8 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
         self.simple_url = f'{base}/simple?appid={WOLFRAM_TOKEN}&background=black&foreground=white&layout=labelbar&i='
         self.short_url = f"{base}/result?appid={WOLFRAM_TOKEN}&i="
 
-    @commands.hybrid_group()
-    async def wolfram(self, ctx: AluContext):
+    @commands.hybrid_group(name='wolfram')
+    async def wolfram_group(self, ctx: AluContext):
         """Group command for WolframAlpha commands."""
         await ctx.scnf()
 
@@ -44,7 +44,7 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
                 file=discord.File(fp=BytesIO(await resp.read()), filename="WolframAlpha.png"),
             )
 
-    @wolfram.command(name="long")
+    @wolfram_group.command(name="long")
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha.')
     async def wolfram_long(self, ctx: AluContext, *, query: str):
@@ -63,7 +63,7 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
         async with self.bot.session.get(question_url) as resp:
             await ctx.reply(f"```py\n{query}```{await resp.text()}")
 
-    @wolfram.command(name="short", aliases=['wa'])
+    @wolfram_group.command(name="short", aliases=['wa'])
     @commands.cooldown(2, 10, commands.BucketType.user)
     @app_commands.describe(query='Query for WolframAlpha.')
     async def wolfram_short(self, ctx: AluContext, *, query: str):

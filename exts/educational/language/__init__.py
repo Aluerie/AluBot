@@ -1,8 +1,7 @@
-from translation import TranslateCog
-
 from utils.const import Emote
 
 from .._base import EducationalCog
+from .translation import TranslateCog
 
 
 class Languages(

@@ -100,7 +100,7 @@ class EmoteAnalysis(CommunityCog, name='Emote stats'):
         #    return
 
         if not msg.author.bot or msg.webhook_id:
-            custom_emojis_ids = re.findall(const.Rgx.emote_stats_ids, msg.content)  # they are in str tho
+            custom_emojis_ids = re.findall(const.Regex.emote_stats_ids, msg.content)  # they are in str tho
             custom_emojis_ids = set(list(map(int, custom_emojis_ids)))
 
             for emote_id in custom_emojis_ids:

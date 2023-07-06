@@ -11,7 +11,7 @@ git+https://github.com/Gorialis/jishaku.git
 # steamio @ git+https://github.com/Gobot1234/steam.py@main
 # steam-ext-dota2 @ git+https://github.com/Gobot1234/steam-ext-dota2@main
 
-uvloop~=0.17.0; platform_system == 'Linux'  #ignore on windows bcs not available
+uvloop~=0.17.0; platform_system == 'Linux'  #ignore on windows because not available
 
 aiofiles~=0.8.0
 pillow==9.5.0

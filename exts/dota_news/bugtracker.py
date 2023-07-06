@@ -58,7 +58,6 @@ class CommentBase(ActionBase):
 # * emote name in wink server
 class EventType(Enum):
     assigned = EventBase('assigned', colour=0x21262D, word='self-assigned', emote=str(const.GitIssueEvent.assigned))
-    # todo: if valve one day decides to assign issues to each other then rework^^^
     closed = EventBase('closed', colour=0x9B6CEA, word='closed', emote=str(const.GitIssueEvent.closed))
     reopened = EventBase('reopened', colour=0x238636, word='reopened', emote=str(const.GitIssueEvent.reopened))
 

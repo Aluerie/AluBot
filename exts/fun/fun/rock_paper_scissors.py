@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+import random
 from enum import Enum
 from typing import TYPE_CHECKING, NamedTuple, Optional
 
 import discord
 from discord.ext import commands
-from numpy.random import choice
 
-from utils import AluCog, const
+from utils import const
 
 from .._base import FunCog
 
@@ -37,7 +37,7 @@ class RPSView(discord.ui.View):
         *,
         player1: discord.User | discord.Member,
         player2: discord.User | discord.Member,
-        message: discord.Message = None,  # type: ignore
+        message: discord.Message = None,  # type: ignore # secured to be discord.Message
     ):
         super().__init__()
         self.player1: discord.User | discord.Member = player1
@@ -54,7 +54,7 @@ class RPSView(discord.ui.View):
         await self.message.edit(embed=e, view=None)
 
     async def bot_choice_edit(self):
-        self.choices[self.player2] = choice(list(RPSChoice))  # type: ignore # TODO: FIX
+        self.choices[self.player2] = random.choice(list(RPSChoice))
         await self.edit_embed_player_choice(self.player2)
 
     @staticmethod
@@ -138,7 +138,7 @@ class RockPaperScissorsCommand(FunCog):
     @commands.hybrid_command(name='rock-paper-scissors', aliases=['rps', 'rock_paper_scissors'])
     async def rps(self, ctx: AluGuildContext, user: discord.Member | discord.User):
         """Rock Paper Scissors game with @member"""
-        
+
         if user == ctx.author:
             raise commands.BadArgument('You cannot challenge yourself in a Rock Paper Scissors game')
         if user.bot and ctx.guild and user != ctx.guild.me:

@@ -21,7 +21,7 @@ class Other(FunCog):
     @commands.hybrid_command()
     async def coinflip(self, ctx: AluContext):
         """Flip a coin: Heads or Tails?"""
-        
+
         word = 'Heads' if random.randint(0, 1) == 0 else 'Tails'
         return await ctx.reply(content=word, file=discord.File(f'assets/images/coinflip/{word}.png'))
 
@@ -107,11 +107,11 @@ class Other(FunCog):
     @staticmethod
     def fancify_text(text: str, *, style: dict[str, str]):
         patterns = [
-            const.Rgx.user_mention,
-            const.Rgx.role_mention,
-            const.Rgx.channel_mention,
-            const.Rgx.slash_mention,
-            const.Rgx.emote,
+            const.Regex.user_mention,
+            const.Regex.role_mention,
+            const.Regex.channel_mention,
+            const.Regex.slash_mention,
+            const.Regex.emote,
         ]
         combined_pattern = r'|'.join(patterns)
         mentions_or_emotes = re.findall(combined_pattern, text)
@@ -158,8 +158,8 @@ class Other(FunCog):
 
     @commands.hybrid_command()
     @app_commands.describe(text="Text to convert into fancy text")
-    async def fancify(self, ctx: AluContext, *, text: str): # cSpell:disable #fmt:off # black meeses it up x_x
-        """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼.""" 
+    async def fancify(self, ctx: AluContext, *, text: str):  # cSpell:disable #fmt:off # black meeses it up x_x
+        """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼."""
         # cSpell:enable #fmt:on
 
         style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy 𝓐-𝓩

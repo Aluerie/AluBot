@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import logging
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, Sequence, TypeVar, Union
 
 import discord
 from discord.ext import tasks
@@ -18,8 +18,11 @@ log = logging.getLogger(__name__)
 
 __all__ = ('aluloop',)
 
+_func = Callable[..., Coroutine[Any, Any, Any]]
+LF = TypeVar('LF', bound=_func)
 
-class AluLoop(tasks.Loop):
+
+class AluLoop(tasks.Loop[LF]):
     """
     Subclass for discord.ext.tasks.Loop
     for extra standard needed functionality
@@ -27,7 +30,7 @@ class AluLoop(tasks.Loop):
 
     def __init__(
         self,
-        coro: Any,
+        coro: LF,
         seconds: float,
         hours: float,
         minutes: float,
@@ -70,7 +73,6 @@ class AluLoop(tasks.Loop):
         # but all my tasks are inside cogs anyway.
         cog = args[0]
         if isinstance(cog, AluCog):
-            # TODO: make a better embed out of this
             e = discord.Embed(description=f'Error in `{self.coro.__name__}`')
             await cog.bot.exc_manager.register_error(exception, e, where=f'aluloop {self.coro.__name__}')
 

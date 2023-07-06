@@ -3,14 +3,14 @@ from __future__ import annotations
 import asyncio
 import itertools
 import random
+import re
 from typing import TYPE_CHECKING
 
 import discord
 import emoji
-import re
 from discord.ext import commands, tasks
 
-from utils import const, cache
+from utils import cache, const
 
 from ._base import CommunityCog
 
@@ -35,9 +35,9 @@ class EmoteSpam(CommunityCog):
             text = emoji.replace_emoji(message.content, replace='')  # standard emojis
 
             # there is definitely a better way to regex it out
-            filters = [const.Rgx.whitespace, const.Rgx.emote_old, const.Rgx.nqn, const.Rgx.invis]
+            filters = [const.Regex.whitespace, const.Regex.emote_old, const.Regex.nqn, const.Regex.invis]
             if nqn_check == 0:
-                filters.remove(const.Rgx.nqn)
+                filters.remove(const.Regex.nqn)
             for item in filters:
                 text = re.sub(item, '', text)
 
@@ -77,7 +77,7 @@ class EmoteSpam(CommunityCog):
     async def on_message_edit(self, _before: discord.Message, after: discord.Message):
         await self.emote_spam_work(after)
 
-    @cache.cache(maxsize=60*24, strategy=cache.Strategy.lru)
+    @cache.cache(maxsize=60 * 24, strategy=cache.Strategy.lru)
     async def get_all_emotes(self) -> list[discord.Emoji]:
         """Get all emotes available to the bot."""
         return list(itertools.chain.from_iterable(guild.emojis for guild in self.bot.guilds))
@@ -151,7 +151,7 @@ class ComfySpam(CommunityCog):
             if len(message.embeds):
                 return await message.delete()
             text = str(message.content)
-            text = re.sub(const.Rgx.whitespace, '', text)
+            text = re.sub(const.Regex.whitespace, '', text)
             for item in self.comfy_emotes:
                 text = text.replace(item, "")
             if text:

@@ -8,13 +8,16 @@ class Slash(StrEnum):
     help = '</help:971447382787108919>'
 
 
-class Rgx:
+class Regex:
     # these match/capture whole mentions/emote as in <a:blabla:123>
     user_mention = r'<@!?\d+>'
     role_mention = r'<@&\d+>'
     channel_mention = r'<#\d+>'
     slash_mention = r'</[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>'
     emote = r'<a?:[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>'
+
+    # matches the whole links in the string
+    url = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
     # old stuff
     whitespace = r"\s"  # whitespaces
@@ -25,10 +28,6 @@ class Rgx:
     emote_stats = r"<a?:[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>"
     emote_stats_ids = r"<a?:[a-zA-Z0-9_]{2,32}:([0-9]{18,22})>"
     invis = "[^!-~]+"  # IDK might be huge question mark
-
-
-# TODO: include above^
-REGEX_URL_LINK = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
 
 class Picture(StrEnum):

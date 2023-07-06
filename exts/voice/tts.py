@@ -7,12 +7,12 @@ from discord import app_commands
 from discord.ext import commands
 from gtts import gTTS
 
-from utils import const
+from utils import const, errors
 
 from ._base import VoiceChatCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from utils import AluBot, AluContext
 
 
 class LanguageData(NamedTuple):
@@ -44,37 +44,35 @@ class TextToSpeech(VoiceChatCog, name='Text To Speech', emote=const.Emote.Ree):
         super().__init__(*args, **kwargs)
         self.connections: dict[int, discord.VoiceClient] = {}  # guild.id to Voice we are connected to
 
-    # TODO: remake it into hybrid back
-    tts_group = app_commands.Group(
-        name="text-to-speech", description="Group command about TTS commands", guild_only=True
-    )
+    @app_commands.guild_only()
+    @commands.hybrid_group(name='text-to-speech')
+    async def tts_group(self, ctx: AluContext):
+        """Group command about Text-To-Speech commands."""
+        await ctx.scnf()
 
     @tts_group.command()
     @app_commands.describe(text="Enter text to speak", language="Choose language/accent")
-    async def speak(self, ntr: discord.Interaction, language: LanguageCollection.Literal = 'fr', *, text: str = 'Allo'):
+    async def speak(self, ctx: AluContext, language: LanguageCollection.Literal = 'fr', *, text: str = 'Allo'):
         """Make Text-To-Speech request into voice-chat."""
-        assert ntr.guild is not None
+        assert ctx.guild is not None
 
         lang: LanguageData = getattr(LanguageCollection, language)
 
-        if not (member := ntr.guild.get_member(ntr.user.id)):
-            # TODO: raise better error type
-            raise commands.BadArgument('Something went wrong.')
+        if not (member := ctx.guild.get_member(ctx.user.id)):
+            raise errors.SomethingWentWrong('Something went wrong.')
 
         if not (voice_state := member.voice):
-            # TODO: raise better error type
-            raise commands.BadArgument("You aren't in a voice channel!")
+            raise errors.ErroneousUsage("You aren't in a voice channel!")
 
-        if (voice_client := ntr.guild.voice_client) is not None:
-            vc = self.connections[ntr.guild.id]
+        if (voice_client := ctx.guild.voice_client) is not None:
+            vc = self.connections[ctx.guild.id]
             assert isinstance(voice_client, discord.VoiceClient)
             await voice_client.move_to(voice_state.channel)
         else:
             if not voice_state.channel:
-                # TODO: raise better error type
-                raise commands.BadArgument("You aren't connected to a voice channel!")
+                raise errors.ErroneousUsage("You aren't connected to a voice channel!")
             vc = await voice_state.channel.connect()  # Connect to the voice channel the author is in.
-            self.connections.update({ntr.guild.id: vc})  # Updating the cache with the guild and channel.
+            self.connections.update({ctx.guild.id: vc})  # Updating the cache with the guild and channel.
 
         assert isinstance(vc, discord.VoiceClient)
 
@@ -83,79 +81,77 @@ class TextToSpeech(VoiceChatCog, name='Text To Speech', emote=const.Emote.Ree):
         tts.save(audio_name)
         vc.play(discord.FFmpegPCMAudio(audio_name))
 
-        e = discord.Embed(title='Text-To-Speech request', description=text, colour=ntr.user.colour)
-        e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
+        e = discord.Embed(title='Text-To-Speech request', description=text, colour=ctx.user.colour)
+        e.set_author(name=ctx.user.display_name, icon_url=ctx.user.display_avatar.url)
         e.set_footer(text=f"{lang.code} Language: {lang.locale}")
-        await ntr.response.send_message(embed=e)
+        await ctx.reply(embed=e)
 
     @tts_group.command()
-    async def stop(self, ntr: discord.Interaction):
+    async def stop(self, ctx: AluContext):
         """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests."""
         try:
-            assert isinstance(ntr.guild, discord.Guild)
-            vc = self.connections[ntr.guild.id]
+            assert isinstance(ctx.guild, discord.Guild)
+            vc = self.connections[ctx.guild.id]
         except KeyError:
-            # TODO: raise better error type
-            raise commands.BadArgument("I'm not in voice channel")
+            raise errors.ErroneousUsage("I'm not in voice channel")
 
         if vc.is_playing():
             vc.stop()
-            e = discord.Embed(description='Stopped', colour=ntr.user.colour)
-            await ntr.response.send_message(embed=e)
+            e = discord.Embed(description='Stopped', colour=ctx.user.colour)
+            await ctx.reply(embed=e)
         else:
             e = discord.Embed(description="I don't think I was talking", colour=const.Colour.error())
-            await ntr.response.send_message(embed=e, ephemeral=True)
+            await ctx.reply(embed=e, ephemeral=True)
 
     @tts_group.command()
-    async def leave(self, ntr: discord.Interaction):
+    async def leave(self, ctx: AluContext):
         """Make bot leave voice channel."""
         try:
-            assert isinstance(ntr.guild, discord.Guild)
-            vc = self.connections[ntr.guild.id]
+            assert isinstance(ctx.guild, discord.Guild)
+            vc = self.connections[ctx.guild.id]
         except KeyError:
-            # TODO: raise better error type
-            raise commands.BadArgument("I'm not in a voice channel.")
+            raise errors.ErroneousUsage("I'm not in a voice channel.")
 
         await vc.disconnect()
-        e = discord.Embed(description=f'I left {vc.channel.mention}', colour=ntr.user.colour)
-        await ntr.response.send_message(embed=e)
+        e = discord.Embed(description=f'I left {vc.channel.mention}', colour=ctx.user.colour)
+        await ctx.reply(embed=e)
 
     @app_commands.guild_only()
-    @app_commands.command(name='bonjour')
-    async def bonjour(self, ntr: discord.Interaction):
-        """`Bonjour !` into both text/voice chats"""
-        content = f'Bonjour {const.Emote.bubuAyaya}'
+    @commands.hybrid_command(name='bonjour')
+    async def bonjour(self, ctx: AluContext):
+        """`Bonjour !` into both text/voice chats."""
+        content = f'Bonjour {const.Emote.bubuAYAYA}'
 
-        assert ntr.guild is not None
+        assert ctx.guild is not None
 
-        if not (member := ntr.guild.get_member(ntr.user.id)):
-            # TODO: raise better error type
-            raise commands.BadArgument('Something went wrong.')
+        if not (member := ctx.guild.get_member(ctx.user.id)):
+            raise errors.SomethingWentWrong('Something went wrong.')
 
         if not (voice_state := member.voice):
-            return await ntr.response.send_message(content=content)
+            return await ctx.reply(content=content)
 
-        if ntr.guild.voice_client is not None:
-            vc = self.connections[ntr.guild.id]
+        if ctx.guild.voice_client is not None:
+            vc = self.connections[ctx.guild.id]
             await vc.move_to(voice_state.channel)
         else:
             if not voice_state.channel:
-                # TODO: raise better error type
-                raise commands.BadArgument("You aren't connected to a voice channel!")
+                raise errors.ErroneousUsage("You aren't connected to a voice channel!")
             vc = await voice_state.channel.connect()  # Connect to the voice channel the author is in.
-            self.connections.update({ntr.guild.id: vc})  # Updating the cache with the guild and channel.
+            self.connections.update({ctx.guild.id: vc})  # Updating the cache with the guild and channel.
 
         tts = gTTS('Bonjour !', lang='fr', tld='fr')
         audio_name = "audio.mp3"
         tts.save(audio_name)
         vc.play(discord.FFmpegPCMAudio(audio_name))
-        await ntr.response.send_message(content=content)
+        await ctx.reply(content=content)
 
-    @commands.Cog.listener()
-    async def on_voice_state_update(
-        self, member: discord.Member, before: discord.VoiceState, _after: discord.VoiceState
+    @commands.Cog.listener(name='on_voice_state_update')
+    async def leave_when_everybody_else_disconnects(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        _after: discord.VoiceState,
     ):
-        # disconnect
         if before.channel is not None and len([m for m in before.channel.members if not m.bot]) == 0:
             vc = self.connections.get(member.guild.id, None)
             if vc is not None:

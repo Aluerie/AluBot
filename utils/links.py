@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from aiohttp.client_exceptions import ClientConnectorError
 
-from .const import REGEX_URL_LINK
+from .const import Regex
 
 if TYPE_CHECKING:
     from discord import Embed
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 async def replace_tco_links(session, embed: Embed) -> Embed:
     text = embed.description
     if text:
-        url_array = re.findall(REGEX_URL_LINK, str(text))
+        url_array = re.findall(Regex.url, str(text))
         try:
             for url in url_array:
                 async with session.get(url) as resp:
@@ -37,7 +37,7 @@ def move_link_to_title(embed: Embed) -> Embed:
 def get_links_from_str(string):
     # url_array = re.findall(REGEX_URL_LINK, str(string))
     # return [item for item in url_array if 'twitter' in item]
-    return re.findall(REGEX_URL_LINK, str(string))
+    return re.findall(Regex.url, str(string))
 
 
 async def extra_send_fxtwitter_links(message: discord.Message) -> Optional[discord.Message]:
@@ -54,7 +54,7 @@ async def extra_send_fxtwitter_links(message: discord.Message) -> Optional[disco
     links = []
     colour = discord.Colour.pink()
     for e in message.embeds:
-        links += re.findall(REGEX_URL_LINK, str(e.description))
+        links += re.findall(Regex.url, str(e.description))
         colour = e.colour
 
     if links:

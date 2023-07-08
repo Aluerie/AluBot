@@ -8,9 +8,8 @@ from discord import app_commands
 from discord.ext import commands
 from steam.steamid import EType, SteamID
 
-from utils import const, checks
+from utils import checks, const
 from utils.dota import hero
-from utils.dota.const import DOTA_LOGO
 
 from .._fpc_utils import FPCSettingsBase
 
@@ -61,7 +60,7 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
             colour=const.Colour.prpl(),
             game='dota',
             game_mention='Dota 2',
-            game_icon=DOTA_LOGO,
+            game_icon=const.Logo.dota,
             extra_account_info_columns=["friend_id"],
             character_id_by_name=hero.id_by_name,
             character_name_by_id=hero.name_by_id,
@@ -75,14 +74,14 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         return await super().cog_load()
 
     # dota ##############################################
-    
+
     slh_dota = app_commands.Group(
         name="dota",
         description="Group command about DotaFeed",
         default_permissions=discord.Permissions(manage_guild=True),
-        guild_only=True
+        guild_only=True,
     )
-    
+
     @checks.hybrid.is_manager()
     @commands.group(name="dota")
     async def ext_dota(self, ctx: AluGuildContext):
@@ -502,12 +501,12 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
 
     async def get_character_data(self):
         return await hero.hero_keys_cache.data
-    
+
     @slh_dota_hero.command(name='setup')
     async def slh_dota_hero_setup(self, ntr: discord.Interaction[AluBot]):
         """Interactive setup to add/remove heroes in/from your favourite list."""
         await self.character_setup(ntr)
-    
+
     @checks.hybrid.is_manager()
     @ext_dota_hero.command(name='setup')
     async def ext_dota_hero_setup(self, ctx: AluGuildContext):

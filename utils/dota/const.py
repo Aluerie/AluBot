@@ -15,7 +15,3 @@ dota_player_colour_map = {
     8: "#008321",
     9: "#A46900",
 }
-
-
-# todo: remove this into favour of const.Logo.dota
-DOTA_LOGO = 'https://i.imgur.com/F8uMnWr.png'

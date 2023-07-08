@@ -93,7 +93,7 @@ class Prefix(ConfigGuildCog, name='Server settings for the bot', emote=const.Emo
             for emote_after, emote_before in zip(diff_after_name, diff_before_name):
                 if not emote_after.managed and guild.id == const.Guild.community:
                     query = 'UPDATE emotes SET name=$1 WHERE id=$2'
-                    await self.bot.pool.execute(query, emote_after.id, str(emote_after))
+                    await self.bot.pool.execute(query, str(emote_after), emote_after.id)
                 e = discord.Embed(colour=0x1E90FF, description=f'[Image link]({emote_after.url})')
                 replaced_or_renamed_word = "replaced by" if emote_after.managed else "renamed into"
                 e.title = f'`:{emote_before.name}:` emote {replaced_or_renamed_word} `:{emote_after.name}:`'

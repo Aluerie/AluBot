@@ -44,7 +44,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             return
 
         if after.timed_out_until and before.is_timed_out() is False and after.is_timed_out() is True:  # member is muted
-            e = discord.Embed(colour=const.Colour.red())
+            e = discord.Embed(colour=discord.Colour.red())
             e.description = discord.utils.format_dt(after.timed_out_until, style="R")
 
             mute_actor_str = "Unknown"

@@ -10,7 +10,6 @@ from discord import app_commands
 from discord.ext import commands, menus
 
 from utils import cache, const, pages
-from utils.dota.const import DOTA_LOGO
 from utils.formats import format_dt_custom, format_dt_tdR
 
 from ._base import InfoCog
@@ -223,7 +222,7 @@ class SchedulePageSource(menus.ListPageSource):
     async def format_page(self, menu: SchedulePages, matches: list[Match]):
         e = discord.Embed(title='Dota 2 Pro Matches Schedule', url=MATCHES_URL, colour=0x042B4C)
         e.set_author(name='Info from Liquipedia.net', icon_url=LIQUIPEDIA_ICON, url=MATCHES_URL)
-        e.set_footer(text=self.schedule_enum.label_name, icon_url=DOTA_LOGO)
+        e.set_footer(text=self.schedule_enum.label_name, icon_url=const.Logo.dota)
 
         dt_now = datetime.datetime.now(datetime.timezone.utc)
 

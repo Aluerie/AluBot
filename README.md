@@ -60,13 +60,18 @@ I put a lot of information into GitHub [🏠 Wiki](https://github.com/Aluerie/Al
 
 ## 📖 Features
 
-All info in `/help` and `/setup` commands of the bot. This list has not been updated in a long time, but still (#TODO: update the list, heh):
+All info in `/help` command of the bot. The following list is far from being complete, but still (#TODO: update the list):
 
-- [X] maintains #🍋dota2_news
-  - [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates - comments from Valve employees  
-  - Steam DB's [GameTracking-Dota2](https://github.com/SteamDatabase/GameTracking-Dota2) updates and its analysis
-  - Twitter, Reddit comments/posts from known accounts
-- [X] #🔬lol_news announcement channel
+- [X] FPC (Favourite Player+Character) Notifications
+- [X] maintains #🍋dota2_news announcements
+  - [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates  
+  - steamcommunity.com Dota 2 news
+- [X] Fix twitter/instagram links with [fxtwitter.com](https://github.com/FixTweet/FixTweet)/[ddinstagram.com](https://ddinstagram.com/)
+- [X] In total over 100 useful/fun commands.
+- [X] And so much more (and even more to come).
+  
+---
+
 - [X] TextToSpeech
 - [X] Confessions
 - [X] Birthday role and congratulations
@@ -88,8 +93,6 @@ All info in `/help` and `/setup` commands of the bot. This list has not been upd
 - [X] NSFW
 - [X] Schedule for Dota 2 matches
 - [X] Stalking my Dota 2 profile (despite my "Expose data" setting is off)
-- [X] So in total Over 100 useful/fun commands.
-- [X] And so much more to come.
 
 ## 🤝 Reporting Bugs, Making Suggestions and Contributing
 

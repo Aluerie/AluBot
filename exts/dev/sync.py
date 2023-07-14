@@ -91,12 +91,17 @@ class DailyAutoSync(DevBaseCog):
 
     `?tag ass` and all. But I'm stupid and forget to sync the tree manually.
     So let the bot sync on the very first 3am per restart. Not that big of a deal.
+
+    Especially when I'm actively developing and really only spend time with testing bot.
     """
 
-    # todo: comment this cog out when I stop being active with development of the bot
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
-        self.is_synced: list[None | int] = [None, self.community.id, self.hideout.id]
+        self.sync_dict: dict[str, None | int] = {
+            'hideout-bound': self.hideout.id,
+            'community-bound': self.community.id,
+            'global': None,
+        }
 
     async def cog_load(self):
         self.one_time_sync.start()
@@ -106,17 +111,18 @@ class DailyAutoSync(DevBaseCog):
 
     @aluloop(time=datetime.time(hour=3, minute=33, second=33, tzinfo=datetime.timezone.utc))
     async def one_time_sync(self):
-        if not self.is_synced:
-            to_sync = self.is_synced.pop(0)
-            if to_sync:
-                synced = await self.bot.tree.sync(guild=discord.Object(id=to_sync))
-                desc = f"Synced `{len(synced)}` guild`{to_sync}`-bound commands in autosync."
-            else:
-                synced = await self.bot.tree.sync()
-                desc = f"Synced `{len(synced)}` commands globally in daily autosync."
+        if not self.sync_dict:
+            # 3 Days restart auto-sync is not needed.
+            return
 
-            e = discord.Embed(color=0x234234, description=desc)
-            await self.hideout.daily_report.send(embed=e)
+        guild_name, guild_id = self.sync_dict.popitem()  # brings last key, value pair in dict
+
+        guild = discord.Object(id=guild_id) if guild_id else None
+        synced = await self.bot.tree.sync(guild=guild)
+        desc = f"Synced `{len(synced)}` {guild_name} commands."
+
+        e = discord.Embed(color=0x234234, description=desc, title='3 Days auto-sync')
+        await self.hideout.daily_report.send(embed=e)
 
 
 async def setup(bot):

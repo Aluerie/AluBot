@@ -48,7 +48,7 @@ class Guild:
     # emotes
 
     emote1 = 1123901376435589173
-    
+
     brand1 = 1125050799572131982
     brand2 = 1125050890777268355
 
@@ -98,13 +98,8 @@ class Channel(ChannelEnum):
 
     repost = 971504469995049041
 
-    copy_dota_info = 873430376033452053
-    copy_dota_steam = 881843565251141632
-    copy_dota_tweets = 963954743644934184
-    copy_steam_beta = 1103038924068241511
-    copy_github = 1107050162628595742
-
-    forum = 1020566035377705001
+    dota_info = 873430376033452053
+    github_webhook = 1107050162628595742
 
     event_pass = 966316773869772860
 
@@ -360,10 +355,6 @@ class HideoutGuild(SavedGuild):
     @property
     def repost(self) -> discord.TextChannel:
         return self.get_channel(Channel.repost, discord.TextChannel)
-
-    @property
-    def copy_dota_tweets(self) -> discord.TextChannel:
-        return self.get_channel(Channel.copy_dota_tweets, discord.TextChannel)
 
     # roles ############################################################################################################
     @property

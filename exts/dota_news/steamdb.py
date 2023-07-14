@@ -73,10 +73,6 @@ class SteamDB(AluCog):
     def cog_load(self) -> None:
         self.bot.ini_github()
 
-    blocked_words = ["Steam Community", "Steam Store"]
-
-    whitelist_words = ["https://steamdb.info"]
-
     @property
     def news_channel(self) -> discord.TextChannel:
         return self.community.dota_news
@@ -91,13 +87,13 @@ class SteamDB(AluCog):
         )
 
     # this is a bit shady since I just blatantly copy their messages
-    # but Idk, I tried fetching Dota 2 news via different kinds of RSS 
+    # but Idk, I tried fetching Dota 2 news via different kinds of RSS
     # and my attempts were always 1-2 minutes later than steamdb
     # So until I find a better way or just ask them.
     @commands.Cog.listener('on_message')
     async def filter_steamdb_messages(self, message: discord.Message):
         match message.channel.id:
-            case const.Channel.copy_dota_info:
+            case const.Channel.dota_info:
                 if "https://steamdb.info" in message.content:
                     url, embeds, files = await get_gitdiff_embed()
                     message = await self.news_channel.send(content=f"<{url}>", embeds=embeds)
@@ -108,24 +104,6 @@ class SteamDB(AluCog):
                 if "https://steamcommunity.com" in message.content:
                     msg = await self.news_webhook.send(content=message.content, wait=True)
                     await msg.publish()
-            # case Channel.copy_dota_steam: # kinda no point, actually.
-            #     if block_function(msg.content, self.blocked_words, self.whitelist_words):
-            #         return
-            #     e = discord.Embed(colour=0x171A21, description=msg.content)
-            #     msg = await self.news_channel.send(embed=e)
-            #     await msg.publish()
-            # case Channel.copy_dota_tweets: # dont work anymore
-            #     await asyncio.sleep(2)
-            #     answer = await msg.channel.fetch_message(int(msg.id))
-            #     embeds = [await replace_tco_links(self.bot.session, item) for item in answer.embeds]
-            #     embeds = [move_link_to_title(embed) for embed in embeds]
-            #     if embeds:
-            #         msg = await self.news_channel.send(embeds=embeds)
-            #         await msg.publish()
-            case const.Channel.copy_steam_beta:  # no hype anymore
-                if "SteamClientBeta" in message.content:
-                    files = [await x.to_file() for x in message.attachments]
-                    msg = await self.hideout.repost.send(content=message.content, embeds=message.embeds, files=files)
 
 
 class TestGitFeed(AluCog):

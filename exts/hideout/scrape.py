@@ -6,11 +6,8 @@ from typing import TYPE_CHECKING
 import discord
 import feedparser
 from bs4 import BeautifulSoup
-from discord.ext import tasks
 
-from utils import AluCog
-from utils.const import Colour, Guild
-from utils.lol.const import LOL_LOGO
+from utils import aluloop, const
 
 from ._base import HideoutCog
 
@@ -25,7 +22,7 @@ class Insider(HideoutCog):
     def cog_unload(self) -> None:
         self.insider_checker.cancel()
 
-    @tasks.loop(minutes=10)
+    @aluloop(minutes=10)
     async def insider_checker(self):
         url = "https://blogs.windows.com/windows-insider/feed/"
         rss = feedparser.parse(url)
@@ -43,7 +40,7 @@ class Insider(HideoutCog):
                         AND insider_version IS DISTINCT FROM $1
                         RETURNING True
                     """
-        val = await self.bot.pool.fetchval(query, p.title, Guild.community)
+        val = await self.bot.pool.fetchval(query, p.title, const.Guild.community)
         if not val:
             return
 
@@ -51,12 +48,7 @@ class Insider(HideoutCog):
         e.set_image(
             url='https://blogs.windows.com/wp-content/themes/microsoft-stories-theme/img/theme/windows-placeholder.jpg'
         )
-        msg = await self.hideout.repost.send(embed=e)
-        # await msg.publish()
-
-    @insider_checker.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
+        await self.hideout.repost.send(embed=e)
 
 
 class LoLCom(HideoutCog):
@@ -66,7 +58,7 @@ class LoLCom(HideoutCog):
     async def cog_unload(self) -> None:
         self.patch_checker.cancel()
 
-    @tasks.loop(minutes=15)
+    @aluloop(minutes=15)
     async def patch_checker(self):
         url = "https://www.leagueoflegends.com/en-us/news/tags/patch-notes/"
         async with self.bot.session.get(url) as resp:
@@ -80,7 +72,7 @@ class LoLCom(HideoutCog):
                     AND lol_patch IS DISTINCT FROM $1
                     RETURNING True
                 """
-        val = await self.bot.pool.fetchval(query, new_patch_href, Guild.community)
+        val = await self.bot.pool.fetchval(query, new_patch_href, const.Guild.community)
         if not val:
             return
 
@@ -96,17 +88,13 @@ class LoLCom(HideoutCog):
             return None
 
         # maybe use ('a' ,{'class': 'skins cboxElement'})
-        img_url = patch_soup.find('h2', id='patch-patch-highlights').find_next('a').get('href')  # type: ignore # TODO:FIX
-        e = discord.Embed(title=content_if_property('og:title'), url=patch_url, colour=Colour.rspbrry())
+        img_url = patch_soup.find('h2', id='patch-patch-highlights').find_next('a').get('href')  # type: ignore
+        e = discord.Embed(title=content_if_property('og:title'), url=patch_url, colour=const.Colour.rspbrry())
         e.description = content_if_property("og:description")
         e.set_image(url=img_url)
         e.set_thumbnail(url=content_if_property('og:image'))
-        e.set_author(name='League of Legends', icon_url=LOL_LOGO)
+        e.set_author(name='League of Legends', icon_url=const.Logo.lol)
         await self.bot.hideout.repost.send(embed=e)
-
-    @patch_checker.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
 
 
 async def setup(bot):

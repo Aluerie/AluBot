@@ -12,8 +12,8 @@ from utils.lol.const import LiteralServerUpper
 from ._base import FPCCog
 
 if TYPE_CHECKING:
-    from exts.fpc.dota.settings import DotaNotifsSettings
-    from exts.fpc.lol.settings import LoLNotifsSettings
+    from exts.fpc_notifs.dota.settings import DotaNotifsSettings
+    from exts.fpc_notifs.lol.settings import LoLNotifsSettings
     from utils import AluBot
 
 

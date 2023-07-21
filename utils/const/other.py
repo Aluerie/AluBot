@@ -45,6 +45,8 @@ class Logo(StrEnum):
     # this image is made by removing (R) from
     # https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
     dota = 'https://i.imgur.com/F8uMnWr.png'
+    
+    lol = 'https://i.imgur.com/1DJa07b.png'
 
 
 class Limit:

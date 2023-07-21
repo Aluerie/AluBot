@@ -7,7 +7,6 @@ Glossary:
 from typing import Literal
 
 __all__ = (
-    'LOL_LOGO',
     'LiteralPlatform',
     'LiteralRegion',
     'LiteralServer',
@@ -19,40 +18,20 @@ __all__ = (
     'LOL_GAME_CATEGORY_TWITCH_ID',
 )
 
-LOL_LOGO = 'https://i.imgur.com/1DJa07b.png'
-_LOL_LOGO_OLD = 'https://i.imgur.com/MtT6oKS.png'
 
 # Literals
+
+# fmt: off
 LiteralPlatform = Literal['br1', 'eun1', 'euw1', 'jp1', 'kr', 'la1', 'la2', 'na1', 'oc1', 'ru', 'tr1']
 LiteralRegion = Literal['americas', 'asia', 'europe']
 LiteralServerUpper = Literal['BR', 'EUN', 'EUW', 'JP', 'KR', 'LAN', 'LAS', 'NA', 'OC', 'RU', 'TR']
 LiteralServer = Literal[
-    'BR',
-    'EUN',
-    'EUW',
-    'JP',
-    'KR',
-    'LAN',
-    'LAS',
-    'NA',
-    'OC',
-    'RU',
-    'TR',
-    'br',
-    'eun',
-    'euw',
-    'jp',
-    'kr',
-    'lan',
-    'las',
-    'na',
-    'oc',
-    'ru',
-    'tr',
+    'BR', 'br', 'EUN', 'eun', 'EUW', 'euw', 'JP', 'jp', 'KR', 'kr', 'LAN', 'lan', 'LAS', 'las', 'NA', 'na',
+    'OC', 'oc', 'RU', 'ru', 'TR', 'tr',
 ]
+# fmt: on
 
-
-platform_to_region_dict = {
+platform_to_region_dict: dict[LiteralPlatform, LiteralRegion] = {
     'br1': 'americas',
     'eun1': 'europe',
     'euw1': 'europe',
@@ -66,7 +45,7 @@ platform_to_region_dict = {
     'tr1': 'europe',
 }
 
-server_to_platform_dict = {
+server_to_platform_dict: dict[LiteralServer, LiteralPlatform] = {
     'br': 'br1',
     'eun': 'eun1',
     'euw': 'euw1',
@@ -85,12 +64,12 @@ platform_to_server_dict = {v: k for k, v in server_to_platform_dict.items()}
 
 def server_to_platform(server: LiteralServer) -> LiteralPlatform:
     """Convert server to platform."""
-    return server_to_platform_dict[server.lower()]
+    return server_to_platform_dict[server.lower()]  # type: ignore
 
 
 def platform_to_server(platform: LiteralPlatform) -> LiteralServer:
     """Convert platform to server"""
-    return platform_to_server_dict[platform.lower()]
+    return platform_to_server_dict[platform.lower()]  # type: ignore
 
 
 def platform_to_region(platform: LiteralPlatform) -> LiteralRegion:

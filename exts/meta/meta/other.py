@@ -123,7 +123,7 @@ class OtherCog(AluCog):
 
     @commands.command()
     async def hello(self, ctx: AluContext):
-        await ctx.reply(f'Hello {const.Emote.bubuAyaya}')
+        await ctx.reply(f'Hello {const.Emote.bubuAYAYA}')
 
     @staticmethod
     def get_feedback_embed(

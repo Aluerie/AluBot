@@ -28,7 +28,7 @@ class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
         """Suggest something for people to vote on in suggestion channel"""
         await ntr.response.defer()
 
-        channel = self.community.logs
+        channel = self.community.suggestions
         query = """ UPDATE botinfo 
                     SET suggestion_num=botinfo.suggestion_num+1 
                     WHERE id=$1 

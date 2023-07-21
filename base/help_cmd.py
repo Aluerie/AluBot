@@ -185,7 +185,7 @@ class AluHelp(commands.HelpCommand):
     def __init__(self, show_hidden: bool = False) -> None:
         super().__init__(
             show_hidden=show_hidden,
-            verify_checks=False,  # TODO: idk we need to decide this
+            verify_checks=False,
             command_attrs={
                 'hidden': False,
                 'help': 'Show `help` menu for the bot.',

@@ -10,7 +10,7 @@ from pyot.core.exceptions import NotFound
 from pyot.utils.lol import champion
 
 from utils import const, checks
-from utils.lol.const import LOL_LOGO, LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
+from utils.lol.const import LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
 from utils.lol.utils import get_all_champ_names, get_meraki_patch, get_pyot_meraki_champ_diff_list
 
 from .._fpc_utils import FPCSettingsBase
@@ -53,7 +53,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
             colour=const.Colour.rspbrry(),
             game='lol',
             game_mention='League of Legends',
-            game_icon=LOL_LOGO,
+            game_icon=const.Logo.lol,
             extra_account_info_columns=['platform', 'account'],
             character_name_by_id=champion.name_by_id,
             character_id_by_name=champion.id_by_name,

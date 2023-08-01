@@ -29,13 +29,13 @@ if TYPE_CHECKING:
 class ShortTime:
     compiled = re.compile(
         """
-        (?:(?P<years>[0-9])(?:years?|y))?             # e.g. 2y
-        (?:(?P<months>[0-9]{1,2})(?:months?|mo))?     # e.g. 2months
-        (?:(?P<weeks>[0-9]{1,4})(?:weeks?|w))?        # e.g. 10w
-        (?:(?P<days>[0-9]{1,5})(?:days?|d))?          # e.g. 14d
-        (?:(?P<hours>[0-9]{1,5})(?:hours?|h))?        # e.g. 12h
-        (?:(?P<minutes>[0-9]{1,5})(?:minutes?|m))?    # e.g. 10m
-        (?:(?P<seconds>[0-9]{1,5})(?:seconds?|s))?    # e.g. 15s
+           (?:(?P<years>[0-9])(?:years?|y))?                      # e.g. 2y
+           (?:(?P<months>[0-9]{1,2})(?:months?|mon?))?            # e.g. 2months
+           (?:(?P<weeks>[0-9]{1,4})(?:weeks?|w))?                 # e.g. 10w
+           (?:(?P<days>[0-9]{1,5})(?:days?|d))?                   # e.g. 14d
+           (?:(?P<hours>[0-9]{1,5})(?:hours?|hr?s?))?             # e.g. 12h
+           (?:(?P<minutes>[0-9]{1,5})(?:minutes?|m(?:ins?)?))?    # e.g. 10m
+           (?:(?P<seconds>[0-9]{1,5})(?:seconds?|s(?:ecs?)?))?    # e.g. 15s
         """,
         re.VERBOSE,
     )
@@ -114,9 +114,17 @@ class BadTimeTransform(app_commands.AppCommandError, AluBotException):
 
 class TimeTransformer(app_commands.Transformer):
     async def transform(self, interaction: discord.Interaction, value: str) -> datetime.datetime:
-        now = interaction.created_at
+        
+        # fix timezone thing
+        # tzinfo = datetime.timezone.utc
+        # reminder = interaction.client.get_cog('Reminder')
+        # if reminder is not None:
+        #     tzinfo = await reminder.get_tzinfo(interaction.user.id)
+
+        now = interaction.created_at #.astimezone(tzinfo)
         if not now.tzinfo:
             now = now.replace(tzinfo=datetime.timezone.utc)
+
         try:
             short = ShortTime(value, now=now)
         except commands.BadArgument:

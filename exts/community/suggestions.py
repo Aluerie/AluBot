@@ -4,9 +4,9 @@ import asyncio
 from typing import TYPE_CHECKING
 
 import discord
-from discord import app_commands
+from discord.ext import commands
 
-from utils import AluCog, const
+from utils import const
 
 from ._base import CommunityCog
 
@@ -15,51 +15,41 @@ if TYPE_CHECKING:
 
 
 class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
-    """Commands related to suggestions such as
+    @commands.Cog.listener()
+    async def on_thread_create(self, thread: discord.Thread) -> None:
+        if thread.parent_id != self.community.suggestions:
+            return
 
-    * setting up suggestion channel
-    * making said suggestions
-    """
+        message = thread.get_partial_message(thread.id)
+        try:
+            await message.pin()
+        except discord.HTTPException:
+            pass
 
-    @app_commands.guilds(const.Guild.community)
-    @app_commands.command()
-    @app_commands.describe(text='Suggestion text')
-    async def suggest(self, ntr: discord.Interaction, *, text: str):
-        """Suggest something for people to vote on in suggestion channel"""
-        await ntr.response.defer()
-
-        channel = self.community.suggestions
         query = """ UPDATE botinfo 
                     SET suggestion_num=botinfo.suggestion_num+1 
                     WHERE id=$1 
                     RETURNING suggestion_num;
                 """
-        number = await self.bot.pool.fetchval(query, const.Guild.community)
+        suggestion_num = await self.bot.pool.fetchval(query, const.Guild.community)
+        e = discord.Embed(colour=const.Colour.prpl(), title=f'Suggestion #{suggestion_num}')
 
-        title = f'Suggestion #{number}'
-        e = discord.Embed(color=const.Colour.prpl(), title=title, description=text)
-        e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
-
-        msg = await channel.send(embed=e)
-        await msg.add_reaction('\N{UPWARDS BLACK ARROW}')
-        await msg.add_reaction('\N{DOWNWARDS BLACK ARROW}')
-        suggestion_thread = await msg.create_thread(name=title, auto_archive_duration=7 * 24 * 60)
-        await suggestion_thread.send(
-            'Here you can discuss current suggestion.\n '
-            'Don\'t forget to upvote/downvote initial suggestion message with '
-            '\N{UPWARDS BLACK ARROW}\N{VARIATION SELECTOR-16} '
-            '\N{DOWNWARDS BLACK ARROW}\N{VARIATION SELECTOR-16} reactions.'
+        text = (
+            f'* upvote the pinned message with {const.Emote.DankApprove} reaction '
+            'if you like the suggestion and want it to be approved\n'
+            '* or downvote it with \N{CROSS MARK} if you really dislike the proposition.\n\n'
+            'OP, please, don\'t forget to use proper tags and provide as much info as needed, '
+            'i.e. 7tv link/gif file for a new emote suggestion.'
         )
-        e2 = discord.Embed(color=const.Colour.prpl())
-        e2.description = f'{ntr.user.mention}, sent your suggestion under #{number} into {channel.mention}'
-        e.set_footer(text='This message will be deleted in 10 seconds')
-        msg = await ntr.followup.send(embed=e2, ephemeral=True, wait=True)
+        e.add_field(name='Hey chat, don\'t forget to \n', value=text)
+        e.set_footer(text='Chat, please, discuss the suggestion in this thread.')
         try:
-            # follow up webhooks dont have `delete_after` in `.send` :(
-            await asyncio.sleep(10)
-            await msg.delete()
-        except:
-            pass
+            await thread.send(embed=e)
+        except discord.Forbidden as error:
+            # Race condition with Discord
+            if error.code == 40058:
+                await asyncio.sleep(2)
+                await thread.send(embed=e)
 
 
 async def setup(bot: AluBot):

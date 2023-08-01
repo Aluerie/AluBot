@@ -10,7 +10,7 @@ from discord.ext import commands
 
 from utils import checks, const
 from utils.converters import Snowflake
-from utils.formats import Plural
+from utils.formats import plural
 
 from ._base import ModerationCog
 
@@ -140,7 +140,7 @@ class ModerationTools(ModerationCog):
             search = 100
 
         if require_prompt:
-            confirm = await ctx.prompt(content=f'Are you sure you want to delete {Plural(search):message}?', timeout=30)
+            confirm = await ctx.prompt(content=f'Are you sure you want to delete {plural(search):message}?', timeout=30)
             if not confirm:
                 return await ctx.send('Aborting.')
 

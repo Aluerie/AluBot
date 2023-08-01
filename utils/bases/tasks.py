@@ -75,6 +75,7 @@ class AluLoop(tasks.Loop[LF]):
         if isinstance(cog, AluCog):
             e = discord.Embed(title=self.coro.__name__, colour=0xef7a85)
             e.set_author(name='Error in aluloop task')
+            e.set_footer(text='utils.bases.tasks > AluLoop._error')
             await cog.bot.exc_manager.register_error(exception, e, where=f'aluloop {self.coro.__name__}')
 
 

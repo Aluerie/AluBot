@@ -439,7 +439,7 @@ class Reminder(RemindersCog, emote=Emote.DankG):
             return await ctx.reply(embed=e)
 
         e = discord.Embed(colour=ctx.author.colour)
-        e.description = f'Are you sure you want to delete {formats.Plural(total):reminder}?'
+        e.description = f'Are you sure you want to delete {formats.plural(total):reminder}?'
         confirm = await ctx.prompt(embed=e)
         if not confirm:
             return await ctx.reply('Aborting', ephemeral=True)
@@ -455,7 +455,7 @@ class Reminder(RemindersCog, emote=Emote.DankG):
             self._task.cancel()
             self._task = self.bot.loop.create_task(self.dispatch_timers())
 
-        e.description = f'Successfully deleted {formats.Plural(total):reminder}.'
+        e.description = f'Successfully deleted {formats.plural(total):reminder}.'
         await ctx.reply(embed=e)
 
     @commands.Cog.listener()

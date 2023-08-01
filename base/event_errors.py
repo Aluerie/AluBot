@@ -56,6 +56,7 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
         args_str.append(f'[{index}]: {arg!r}')
     args_str.append('```')
     e.add_field(name='Args', value='\n'.join(args_str), inline=False)
+    e.set_footer(text='on_error (event error)')
 
     await self.exc_manager.register_error(exception, e, where=str(event))
 

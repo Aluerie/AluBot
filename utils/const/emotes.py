@@ -8,6 +8,7 @@ class Emote(StrEnum):
 
     # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
     peepoComfy = '<:_:726438781208756288>'  # Category: Community
+    UpvoteSuggestion = '<:DankApprove:853015071042961468>'  # it has to be from the community guild itself
 
     # Emote Server 1
 

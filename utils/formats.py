@@ -9,16 +9,17 @@ import difflib
 from enum import IntEnum
 from typing import TYPE_CHECKING, Optional, Sequence, Union
 
+from dateutil.relativedelta import relativedelta
+
 # remember that we can now use `from utils import formats` into `formats.format_dt` with this:
 # which is a bit more convenient.
-from discord.utils import format_dt, TimestampStyle
-from dateutil.relativedelta import relativedelta
+from discord.utils import TimestampStyle, format_dt
 
 if TYPE_CHECKING:
     pass
 
 
-class Plural:
+class plural:
     """
     Helper class to format tricky Plural nouns
 
@@ -121,22 +122,26 @@ def human_timedelta(
     now = source or datetime.datetime.now(datetime.timezone.utc)
     if now.tzinfo is None:
         now = now.replace(tzinfo=datetime.timezone.utc)
-    now = now.replace(microsecond=0)
+    now = now.replace(microsecond=0)  # Microsecond free zone
 
     match dt:
         case datetime.datetime():
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=datetime.timezone.utc)
-            dt = dt.replace(microsecond=0)
+            dt = dt.replace(microsecond=0)  # Microsecond free zone
         case datetime.timedelta():
             dt = now - dt
-            dt = dt.replace(microsecond=0)
+            dt = dt.replace(microsecond=0)  # Microsecond free zone
         case int() | float():
             dt = now - datetime.timedelta(seconds=dt)
         case _:
             raise TypeError(
                 'Parameter `dt` must be either of types: `datetime.datetime`, `datetime.timedelta`, `int` or `float`'
             )
+
+    # Make sure they're both in the timezone
+    now = now.astimezone(datetime.timezone.utc)
+    dt = dt.astimezone(datetime.timezone.utc)
 
     # This implementation uses `relativedelta` instead of the much more obvious
     # `divmod` approach with seconds because the seconds approach is not entirely
@@ -173,7 +178,7 @@ def human_timedelta(
             if weeks:
                 elem -= weeks * 7
                 if not brief:
-                    output.append(format(Plural(weeks), 'week'))
+                    output.append(format(plural(weeks), 'week'))
                 else:
                     output.append(f'{weeks}w')
 
@@ -183,7 +188,7 @@ def human_timedelta(
         if brief:
             output.append(f'{elem}{brief_attr}')
         else:
-            output.append(format(Plural(elem), attr))
+            output.append(format(plural(elem), attr))
 
     if accuracy is not None:
         output = output[:accuracy]

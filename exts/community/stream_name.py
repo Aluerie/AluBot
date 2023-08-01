@@ -31,7 +31,10 @@ class StreamChannelName(CommunityCog, name='\N{CINEMA}streaming\\_room Control',
 
     @commands.Cog.listener()
     async def on_voice_state_update(
-        self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
     ):
         if member.guild.id != self.community.id:
             return
@@ -71,7 +74,7 @@ class StreamChannelName(CommunityCog, name='\N{CINEMA}streaming\\_room Control',
     async def title(self, ctx: AluGuildContext, *, text: str):
         """Sets title for **#\N{CINEMA}streaming_room** so people know what you are streaming"""
         new_name = f'\N{CINEMA}{text}'
-        await self.bot.community.stream_room.edit(name=new_name)
+        await self.community.stream_room.edit(name=new_name)
         e = discord.Embed(
             description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=const.Colour.prpl()
         )
@@ -81,7 +84,7 @@ class StreamChannelName(CommunityCog, name='\N{CINEMA}streaming\\_room Control',
     @streaming_room.command(name='reset')
     async def reset(self, ctx: AluGuildContext):
         """Reset **#\N{CINEMA}streaming_room** title ;"""
-        await self.bot.community.stream_room.edit(name=ORIGINAL_NAME)
+        await self.community.stream_room.edit(name=ORIGINAL_NAME)
         e = discord.Embed(description=f'Title of **#{ORIGINAL_NAME}** has been reset', colour=const.Colour.prpl())
         await ctx.reply(embed=e)
 

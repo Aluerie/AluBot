@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import TYPE_CHECKING, Any, NamedTuple, Optional, Self
 
 import discord
@@ -59,6 +60,10 @@ def html_to_markdown(node: Any, *, include_spans: bool = False) -> str:
     return ''.join(text).strip()
 
 
+def inner_trim(s: str, *, _regex=re.compile(r'\s+')) -> str:
+    return _regex.sub(' ', s.strip())
+
+
 class FreeDictionaryDefinition(NamedTuple):
     definition: str
     example: Optional[str]
@@ -71,12 +76,13 @@ class FreeDictionaryDefinition(NamedTuple):
         number = node.find('b')
         definition: str = node.text or ''
         if number is not None:
-            tail = number.tail and number.tail.strip()
+            tail = number.tail
             node.remove(number)
             if tail:
                 definition = tail
 
         definition += html_to_markdown(node, include_spans=False)
+        definition = inner_trim(definition)
 
         example: Optional[str] = None
         example_nodes = node.xpath("./span[@class='illustration']")
@@ -177,7 +183,7 @@ class FreeDictionaryWord:
         if data_src == 'hm':
             child_nodes = node.xpath("./div[@class='pseg']")
         elif data_src == 'hc_dict':
-            child_nodes = node.findall('div')
+            child_nodes = node.xpath('./div[not(@class)]')
         elif data_src == 'rHouse':
             child_nodes = node
 

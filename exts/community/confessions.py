@@ -44,7 +44,7 @@ class ConfModal(discord.ui.Modal):
         if self.title == "Non-anonymous confession":
             e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
         channel = ntr.channel
-        assert isinstance(channel, discord.abc.MessageableChannel)
+        assert isinstance(channel, discord.TextChannel)
 
         await channel.send(embeds=[e])
         saint_string = '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Emote.bubuChrist, '\N{CHURCH}', Emote.PepoBeliever)

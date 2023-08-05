@@ -92,9 +92,7 @@ class LiveMatch(Match):
 
     @async_property
     async def roles_arr(self):
-        log.debug('LF | gathering the roles')
         res = await get_role_mini_list(self.all_champ_ids)
-        log.debug('LF | finished gathering the roles')
         return res
 
     @async_property
@@ -102,7 +100,6 @@ class LiveMatch(Match):
         return await icon_url_by_champ_id(self.champ_id)
 
     async def better_thumbnail(self, stream_preview_url: str, display_name: str, bot: AluBot) -> Image.Image:
-        log.debug('I m here #1')
         img = await bot.imgtools.url_to_img(stream_preview_url)
         width, height = img.size
         last_row_h = 50
@@ -111,20 +108,17 @@ class LiveMatch(Match):
         ImageDraw.Draw(rectangle)
         img.paste(rectangle)
         img.paste(rectangle, (0, last_row_y))
-        log.debug('I m here #2')
         champ_img_urls = [await icon_url_by_champ_id(champ_id) for champ_id in await self.roles_arr]
         champ_imgs = await bot.imgtools.url_to_img(champ_img_urls)
         for count, champ_img in enumerate(champ_imgs):
             champ_img = champ_img.resize((62, 62))
             extra_space = 0 if count < 5 else 20
             img.paste(champ_img, (count * 62 + extra_space, 0))
-        log.debug('I m here #3')
         font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 33)
         draw = ImageDraw.Draw(img)
         text = f'{display_name} - {await champion.name_by_id(self.champ_id)}'
         w2, h2 = bot.imgtools.get_text_wh(text, font)
         draw.text(((width - w2) / 2, 65), text, font=font, align="center")
-        log.debug('I m here #4')
         rune_img_urls = [(await r.get()).icon_abspath for r in self.runes]
         rune_imgs = await bot.imgtools.url_to_img(rune_img_urls)
         left = 0
@@ -133,14 +127,12 @@ class LiveMatch(Match):
                 rune_img = rune_img.resize((last_row_h, last_row_h))
             img.paste(rune_img, (left, height - rune_img.height), rune_img)
             left += rune_img.height
-        log.debug('I m here #5')
         spell_img_urls = [(await s.get()).icon_abspath for s in self.spells]
         spell_imgs = await bot.imgtools.url_to_img(spell_img_urls)
         left = width - 2 * last_row_h
         for count, spell_img in enumerate(spell_imgs):
             spell_img = spell_img.resize((last_row_h, last_row_h))
             img.paste(spell_img, (left + count * spell_img.width, height - spell_img.height))
-        log.debug('I m here #6')
         return img
 
     async def notif_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
@@ -149,7 +141,6 @@ class LiveMatch(Match):
             await self.better_thumbnail(ts.preview_url, ts.display_name, bot),
             filename=f'{ts.display_name.replace("_", "")}-is-playing-{await champion.key_by_id(self.champ_id)}.png',
         )
-        log.debug('LF | made a better thumbnail')
         e = discord.Embed(color=Colour.rspbrry(), url=ts.url)
         e.description = (
             f'Match `{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n'

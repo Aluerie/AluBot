@@ -31,24 +31,27 @@ warnings.filterwarnings(
 )
 
 
-async def account_age_ctx_menu(ntr: discord.Interaction, member: discord.Member):
-    """View the age of an account."""
-    age = datetime.datetime.now(datetime.timezone.utc) - member.created_at
-    await ntr.response.send_message(f"{member.mention} is {human_timedelta(age)} old.", ephemeral=True)
-
-
 class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
     """Commands to get some useful info"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.ctx_menu2 = app_commands.ContextMenu(name='View Account Age', callback=account_age_ctx_menu)
+        self.ctx_menu_avatar = app_commands.ContextMenu(
+            name='View User Avatar',
+            callback=self.view_user_avatar,
+        )
 
     async def cog_load(self) -> None:
-        self.bot.tree.add_command(self.ctx_menu2)
+        self.bot.tree.add_command(self.ctx_menu_avatar)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu2.name, type=self.ctx_menu2.type)
+        c = self.ctx_menu_avatar
+        self.bot.tree.remove_command(c.name, type=c.type)
+
+    async def view_user_avatar(self, ntr: discord.Interaction, user: discord.User):
+        e = discord.Embed(color=user.colour, title=f'Avatar for {user.display_name}')
+        e.set_image(url=user.display_avatar.url)
+        await ntr.response.send_message(embed=e, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -145,7 +148,7 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
         return [
             app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
         ][:25]
-    
+
     @commands.is_owner()
     @commands.command(
         name='sysinfo',

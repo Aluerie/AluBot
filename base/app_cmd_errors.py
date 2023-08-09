@@ -5,8 +5,11 @@ from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
+from discord.ext import commands
 
 from utils import const, errors
+
+from .ctx_cmd_errors import unexpected_error_embed
 
 if TYPE_CHECKING:
     from utils import AluBot
@@ -24,9 +27,14 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
     if isinstance(error, app_commands.CommandInvokeError):
         error = error.original
 
-    error_type = error.__class__.__name__
+    error_type: str | None = error.__class__.__name__
+    desc: str = 'No description'
+    unexpected_error: bool = False
 
-    if isinstance(error, errors.ErroneousUsage):
+    if isinstance(error, commands.BadArgument): #TODO: remove all those `commands.BadArgument`
+        desc = f'{error}'
+
+    elif isinstance(error, errors.ErroneousUsage):
         # raised by myself but it's not an error per se, thus i dont give error type to the user.
         error_type = None
         desc = f'{error}'
@@ -54,11 +62,7 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
             f'If you think this command should exist, please ask about it using {const.Slash.feedback} command.'
         )
     else:
-        desc = (
-            "I've notified my developer and we'll hopefully get it fixed soon.\n"
-            "Sorry for the inconvenience! {0} {0} {0}".format(const.Emote.DankL)
-        )
-
+        unexpected_error = True
         where = f'/{ntr.command.qualified_name}' if ntr.command else '?-cmd ntr'
         await ntr.client.exc_manager.register_error(error, ntr, where=f'on_app_command_error {where}')
 
@@ -70,10 +74,12 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
                 await ntr.response.send_message(':x', ephemeral=True)
             return
 
-    e = discord.Embed(colour=const.Colour.error())
-    if error_type:
+    if unexpected_error:
+        e = unexpected_error_embed()
+    else:
+        e = discord.Embed(colour=const.Colour.error())
         e.set_author(name=error_type)
-    e.description = desc
+        e.description = desc
     if not ntr.response.is_done():
         await ntr.response.send_message(embed=e, ephemeral=True)
     else:

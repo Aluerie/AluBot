@@ -37,6 +37,7 @@ class Picture(StrEnum):
         "https://cdn3.iconfinder.com/data/icons/"
         "social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
     )
+    dankfix = 'https://i.imgur.com/gzrPVLs.png'
 
 
 class Logo(StrEnum):

@@ -12,12 +12,25 @@ if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 
+def unexpected_error_embed() -> discord.Embed:
+    e = discord.Embed(colour=const.Colour.error())
+    e.set_author(name='Oups... Unexpected error!')
+    e.description = (
+        "I've notified my developer about the error and sent all the details. Hopefully, we'll get it fixed soon.\n"
+        "Sorry for the inconvenience! {0} {0} {0}".format(const.Emote.DankL)
+    )
+    e.set_thumbnail(url=const.Picture.dankfix)
+    return e
+
+
 async def on_command_error(ctx: AluContext, error: commands.CommandError | Exception):
     """Handler called when an error is raised while invoking a ctx command."""
     if ctx.is_error_handled is True:
         return
 
     error_type = error.__class__.__name__
+    desc = 'No description'
+    unexpected_error = False
 
     if isinstance(error, (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError)):
         # we aren't interested in the chain traceback.
@@ -49,14 +62,11 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
     #     return
     else:
         # error is unhandled/unclear and thus developers need to be notified about it.
+        unexpected_error = True
+
         where = f'on_command_error {ctx.clean_prefix}{ctx.command.qualified_name}' if ctx.command else 'non-cmd ctx'
         await ctx.bot.exc_manager.register_error(error, ctx, where=where)
 
-        error_type = 'Oups...Unexpected error!'
-        desc = (
-            "I've notified my developer and we'll hopefully get it fixed soon.\n"
-            "Sorry for the inconvenience! {0} {0} {0}".format(const.Emote.DankL)
-        )
         mention = ctx.channel.id != ctx.bot.hideout.spam_channel_id
         if not mention:
             # well, then I do not need "desc" embed as well
@@ -65,9 +75,12 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
                 await ctx.reply(':(', ephemeral=True)
             return
 
-    e = discord.Embed(colour=const.Colour.error(), description=desc)
-    if error_type:
-        e.set_author(name=error_type)
+    if unexpected_error:
+        e = unexpected_error_embed()
+    else:
+        e = discord.Embed(colour=const.Colour.error(), description=desc)
+        if error_type:
+            e.set_author(name=error_type)
     await ctx.reply(embed=e, ephemeral=True)
 
 

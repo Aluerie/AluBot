@@ -144,12 +144,13 @@ class AluExceptionManager:
                 e.set_footer(text=f'DM Channel\n{where}', icon_url=ctx.author.display_avatar)
 
             # arguments
-            if ctx.kwargs:
-                args_str = ['```py']
-                for name, value in ctx.kwargs.items():
-                    args_str.append(f'[{name}]: {value!r}')
-                args_str.append('```')
-                e.add_field(name='Command Args', value='\n'.join(args_str), inline=False)
+            args_str = ['```py']
+            for name, value in ctx.kwargs.items():
+                args_str.append(f'[{name}]: {value!r}')
+            else:
+                args_str.append('No arguments')
+            args_str.append('```')
+            e.add_field(name='Command Args', value='\n'.join(args_str), inline=False)
             # ids
             e.add_field(
                 name='Snowflake Ids',
@@ -188,12 +189,13 @@ class AluExceptionManager:
                 e.set_footer(text=f'DM Channel\n{where}', icon_url=ntr.user.display_avatar)
 
             # arguments
-            if ntr.namespace:
-                args_str = ['```py']
-                for name, value in ntr.namespace.__dict__.items():
-                    args_str.append(f'[{name}]: {value!r}')
-                args_str.append('```')
-                e.add_field(name='Command Args', value='\n'.join(args_str), inline=False)
+            args_str = ['```py']
+            for name, value in ntr.namespace.__dict__.items():
+                args_str.append(f'[{name}]: {value!r}')
+            else:
+                args_str.append(f'No arguments')
+            args_str.append('```')
+            e.add_field(name='Command Args', value='\n'.join(args_str), inline=False)
 
             # ids
             e.add_field(

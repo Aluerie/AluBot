@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-from utils import AluCog, const
+from utils import aluloop, const
 
 from ._base import CommunityCog
 
@@ -17,7 +17,7 @@ ORIGINAL_NAME = '\N{CINEMA}streaming_room'
 
 
 class StreamChannelName(CommunityCog, name='\N{CINEMA}streaming\\_room Control', emote=const.Emote.peepoMovie):
-    """Change streaming room title
+    """Change streaming room title.
 
     Get folks ready to watch your stream with a fancy title \
     so everybody knows what you are streaming.
@@ -29,8 +29,8 @@ class StreamChannelName(CommunityCog, name='\N{CINEMA}streaming\\_room Control',
     async def cog_unload(self) -> None:
         self.check_voice_members.cancel()
 
-    @commands.Cog.listener()
-    async def on_voice_state_update(
+    @commands.Cog.listener('on_voice_state_update')
+    async def community_voice_chat_logging(
         self,
         member: discord.Member,
         before: discord.VoiceState,
@@ -43,61 +43,68 @@ class StreamChannelName(CommunityCog, name='\N{CINEMA}streaming\\_room Control',
         if before.channel is None and after.channel is not None:  # joined the voice channel
             await member.add_roles(voice_role)
             e = discord.Embed(color=0x00FF7F)
-            e.set_author(name=f'{member.display_name} entered {after.channel.name}', icon_url=member.display_avatar.url)
-            return await after.channel.send(embed=e)
+            msg = f'{member.display_name} entered {after.channel.name}.'
+            e.set_author(name=msg, icon_url=member.display_avatar.url)
+            await after.channel.send(embed=e)
+            return
         if before.channel is not None and after.channel is None:  # quit the voice channel
             await member.remove_roles(voice_role)
             e = discord.Embed(color=0x800000)
-            e.set_author(name=f'{member.display_name} left {before.channel.name}', icon_url=member.display_avatar.url)
-            return await before.channel.send(embed=e)
+            msg = f'{member.display_name} left {before.channel.name}.'
+            e.set_author(name=msg, icon_url=member.display_avatar.url)
+            await before.channel.send(embed=e)
+            return
         if before.channel is not None and after.channel is not None:  # changed voice channels
             if before.channel.id != after.channel.id:
                 e = discord.Embed(color=0x6495ED)
-                e.set_author(
-                    name=f'{member.display_name} went from {before.channel.name} to {after.channel.name}',
-                    icon_url=member.display_avatar.url,
-                )
+                msg = f'{member.display_name} went from {before.channel.name} to {after.channel.name}.'
+                e.set_author(name=msg, icon_url=member.display_avatar.url)
                 await before.channel.send(embed=e)
-                return await after.channel.send(embed=e)
+                await after.channel.send(embed=e)
+                return
 
     @app_commands.guilds(const.Guild.community)
-    @commands.hybrid_group(name='streaming-room', aliases=['stream'])
+    @commands.hybrid_group(
+        name='streaming-room',
+        aliases=['stream'],
+        description="Commands about managing #\N{CINEMA}streaming_room voice channel title.",
+    )
     async def streaming_room(self, ctx: AluGuildContext):
-        """Group command about Dota, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        """Commands about managing **#\N{CINEMA}streaming_room** voice channel title."""
+        await ctx.send_help(ctx.command)
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
     @streaming_room.command(
-        name='title', description=f'Set title for #{ORIGINAL_NAME} so people know what you are streaming'
+        name='title',
+        description="Sets title for #\N{CINEMA}streaming_room so people know what you are streaming.",
     )
     @app_commands.describe(text=f'new title for #{ORIGINAL_NAME}')
     async def title(self, ctx: AluGuildContext, *, text: str):
-        """Sets title for **#\N{CINEMA}streaming_room** so people know what you are streaming"""
+        """Sets title for **#\N{CINEMA}streaming_room** so people know what you are streaming."""
         new_name = f'\N{CINEMA}{text}'
         await self.community.stream_room.edit(name=new_name)
-        e = discord.Embed(
-            description=f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**', colour=const.Colour.prpl()
-        )
+        e = discord.Embed(colour=const.Colour.prpl())
+        e.description = f'Changed title of **#{ORIGINAL_NAME}** to **#{new_name}**'
         await ctx.reply(embed=e)
 
     @commands.cooldown(1, 15 * 60, commands.BucketType.guild)
-    @streaming_room.command(name='reset')
+    @streaming_room.command(
+        name='reset',
+        description="Reset #\N{CINEMA}streaming_room title.",
+    )
     async def reset(self, ctx: AluGuildContext):
-        """Reset **#\N{CINEMA}streaming_room** title ;"""
+        """Reset **#\N{CINEMA}streaming_room** title."""
         await self.community.stream_room.edit(name=ORIGINAL_NAME)
-        e = discord.Embed(description=f'Title of **#{ORIGINAL_NAME}** has been reset', colour=const.Colour.prpl())
+        e = discord.Embed(colour=const.Colour.prpl())
+        e.description = f'Title of **#{ORIGINAL_NAME}** has been reset'
         await ctx.reply(embed=e)
 
-    @tasks.loop(count=1)
+    @aluloop(count=1)
     async def check_voice_members(self):
         voice_role = self.community.voice_role
         for member in voice_role.members:
             if member.voice is None:
                 await member.remove_roles(voice_role)
-
-    @check_voice_members.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
 
 
 async def setup(bot: AluBot):

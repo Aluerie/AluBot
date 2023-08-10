@@ -10,10 +10,9 @@ from discord.ext import commands, tasks
 from matplotlib import pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 
-from exts.fpc.dota._models import Match
 from config import DOTA_FRIEND_ID
-from utils import const, checks
-
+from exts.fpc.dota._models import Match
+from utils import checks, const
 from utils.dota import hero
 from utils.formats import indent
 from utils.pages import EnumeratedPages
@@ -111,7 +110,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     @checks.hybrid.is_my_guild()
     async def stalk(self, ctx: AluGuildContext):
         """Group command about stalking Aluerie, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        await ctx.send_help(ctx.command)
 
     @stalk.command(name='lm', description="View Aluerie's last played Dota 2 match", aliases=['lastmatch'])
     async def lm(self, ctx: AluGuildContext):
@@ -344,7 +343,7 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
     @checks.hybrid.is_my_guild()
     async def ranked(self, ctx: AluGuildContext):
         """Group command"""
-        await ctx.scnf()
+        await ctx.send_help(ctx.command)
 
     async def sync_work(self):
         self.request_player_match_history()
@@ -427,7 +426,9 @@ class GamerStats(commands.Cog, name='Stalk Aluerie\'s Gamer Stats'):
         axText = fancy_ax(axText)
 
         ax = fig.add_subplot(gs[2:5, 0:10])
-        gradient_fill(*await generate_data(self.bot.pool), color=str(const.Colour.twitch()), ax=ax, linewidth=5.0, marker='o')
+        gradient_fill(
+            *await generate_data(self.bot.pool), color=str(const.Colour.twitch()), ax=ax, linewidth=5.0, marker='o'
+        )
         ax.set_title('MMR Plot', x=0.5, y=0.92)
         ax.tick_params(axis="y", direction="in", pad=-42)
         ax.tick_params(axis="x", direction="in", pad=-25)

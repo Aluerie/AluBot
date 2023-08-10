@@ -125,8 +125,8 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
     @commands.hybrid_group()
     async def birthday(self, ctx: AluGuildContext):
-        """Group command about birthdays, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        """Commands about managing your birthday data."""
+        await ctx.send_help(ctx.command)
 
     async def timezone_autocomplete(self, _ntr: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         all_timezones = list(get_timezones())

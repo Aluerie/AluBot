@@ -8,7 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from utils import const, errors, formats, pages, aluloop
+from utils import const, errors, formats, pages, aluloop, checks
 
 from ._base import CommunityCog
 
@@ -92,7 +92,7 @@ class ExperienceSystem(CommunityCog, name='Profile', emote=const.Emote.bubuAYAYA
         self.view_user_rank = app_commands.ContextMenu(
             name="View User Server Rank",
             callback=self.context_menu_view_user_rank_callback,
-            guild_ids=const.MY_GUILDS,
+            guild_ids=[const.Guild.community],
         )
 
     async def cog_load(self) -> None:
@@ -132,13 +132,13 @@ class ExperienceSystem(CommunityCog, name='Profile', emote=const.Emote.bubuAYAYA
         return ctx.client.imgtools.img_to_file(image, filename='rank.png')
 
     @commands.hybrid_command(name='rank')
-    @app_commands.guilds(*const.MY_GUILDS)
+    @checks.hybrid.is_community()
     async def rank(self, ctx: AluGuildContext, member: discord.Member):
         """View member's rank and level in this server."""
         await ctx.reply(file=await self.rank_work(ctx, member), ephemeral=True)
 
     @commands.hybrid_command(name='leaderboard', aliases=['l'])
-    @app_commands.guilds(*const.MY_GUILDS)
+    @checks.hybrid.is_community()
     @app_commands.describe(sort_by='Choose how to sort leaderboard')
     async def leaderboard(self, ctx, sort_by: Literal['exp', 'rep'] = 'exp'):
         """View experience leaderboard for this server"""
@@ -221,7 +221,7 @@ class ExperienceSystem(CommunityCog, name='Profile', emote=const.Emote.bubuAYAYA
 
     @commands.hybrid_command(name='rep', description='Give +1 to @member reputation')
     @commands.cooldown(1, 60 * 60, commands.BucketType.user)
-    @app_commands.guilds(*const.MY_GUILDS)
+    @checks.hybrid.is_community()
     @app_commands.describe(member='Member to give rep to')
     async def rep(self, ctx, member: discord.Member):
         """Give +1 to `@member`'s reputation ;"""

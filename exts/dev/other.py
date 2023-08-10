@@ -17,8 +17,9 @@ if TYPE_CHECKING:
 class AdminTools(DevBaseCog):
     @commands.group(hidden=True)
     async def trustee(self, ctx: AluContext):
+        """Commands to assigning/removing trusted people."""
         # TODO: move this garbage to FPC or bot management.
-        await ctx.scnf()
+        await ctx.send_help(ctx.command)
 
     async def get_trusted_ids(self) -> list[int]:
         query = "SELECT trusted_ids FROM botinfo WHERE id=$1"
@@ -97,8 +98,8 @@ class AdminTools(DevBaseCog):
 
     @commands.group(name="guild", hidden=True)
     async def guild_group(self, ctx: AluContext):
-        """Group for guild commands. Use it together with subcommands"""
-        await ctx.scnf()
+        """Developer commands to control the guilds bot is in."""
+        await ctx.send_help(ctx.command)
 
     @guild_group.command(hidden=True)
     async def leave(self, ctx: AluContext, guild: discord.Guild):

@@ -47,8 +47,8 @@ class TextToSpeech(VoiceChatCog, name='Text To Speech', emote=const.Emote.Ree):
     @app_commands.guild_only()
     @commands.hybrid_group(name='text-to-speech')
     async def tts_group(self, ctx: AluContext):
-        """Group command about Text-To-Speech commands."""
-        await ctx.scnf()
+        """Text-To-Speech commands."""
+        await ctx.send_help(ctx.command)
 
     @tts_group.command()
     @app_commands.describe(text="Enter text to speak", language="Choose language/accent")

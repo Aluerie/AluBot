@@ -68,6 +68,10 @@ def is_my_guild():
     return is_in_guilds(*const.MY_GUILDS)
 
 
+def is_community():
+    return is_in_guilds(const.Guild.community)
+
+
 # for following `is_manager`, `is_mod`, `is_admin check` we could use `hybrid_permissions_check`
 # but I need to manually define docstring so /help command can catch it
 # Unfortunately, I don't know any other way

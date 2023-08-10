@@ -209,8 +209,8 @@ class BugTracker(AluCog):
     @commands.is_owner()
     @commands.group(name="valve", hidden=True)
     async def valve(self, ctx: AluContext):
-        """Group for valve devs commands. Use it together with subcommands"""
-        await ctx.scnf()
+        """Commands to retrieve or manually control a list of known Valve developers' github accounts."""
+        await ctx.send_help(ctx.command)
 
     @commands.is_owner()
     @valve.command()

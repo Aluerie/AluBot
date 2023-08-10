@@ -9,7 +9,7 @@ from discord.ext import commands
 from pyot.core.exceptions import NotFound
 from pyot.utils.lol import champion
 
-from utils import const, checks
+from utils import checks, const
 from utils.lol.const import LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
 from utils.lol.utils import get_all_champ_names, get_meraki_patch, get_pyot_meraki_champ_diff_list
 
@@ -70,7 +70,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
 
     slh_lol = app_commands.Group(
         name="lol",
-        description="Group command about LolFeed",
+        description="League of Legends FPC (Favourite Player+Character) commands.",
         default_permissions=discord.Permissions(manage_guild=True),
         guild_only=True,
     )
@@ -78,20 +78,20 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
     @checks.hybrid.is_manager()
     @commands.group(name='lol', aliases=['league'])
     async def ext_lol(self, ctx: AluGuildContext):
-        """Group command about LoL, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        """League of Legends FPC (Favourite Player+Character) commands."""
+        await ctx.send_help(ctx.command)
 
     # lol channel ##############################################
 
     slh_lol_channel = app_commands.Group(
-        name='channel', description='Group command about LoLFeed channel settings', parent=slh_lol
+        name='channel', description='Commands to manage your LoL FPC channel.', parent=slh_lol
     )
 
     @checks.hybrid.is_manager()
     @ext_lol.group(name='channel')
     async def ext_lol_channel(self, ctx: AluGuildContext):
-        """Group command about LoL channel, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        """Commands to manage your LoL FPC channel."""
+        await ctx.send_help(ctx.command)
 
     # lol channel set ##############################################
 
@@ -147,7 +147,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
     @ext_lol.group(name='database', aliases=['db'])
     async def ext_lol_database(self, ctx: AluGuildContext):
         """Group command about LoL database, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        await ctx.send_help(ctx.command)
 
     # helper functions ##############################################
 
@@ -233,7 +233,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
     @ext_lol.group(name='player', aliases=['streamer'])
     async def ext_lol_player(self, ctx: AluGuildContext):
         """Group command about LoL player, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        await ctx.send_help(ctx.command)
 
     # lol player add ##################################
 
@@ -355,7 +355,7 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
     @ext_lol.group(name='champion', aliases=['champ'])
     async def ext_lol_champ(self, ctx: AluGuildContext):
         """Group command about LoL champs, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        await ctx.send_help(ctx.command)
 
     # lol champ add ##################################
 
@@ -483,12 +483,12 @@ class LoLNotifsSettings(FPCSettingsBase, name='LoL'):
 
     async def get_character_data(self):
         return await champion.champion_keys_cache.data
-    
+
     @slh_lol_champ.command(name='setup')
     async def slh_lol_champ_setup(self, ntr: discord.Interaction[AluBot]):
         """Interactive setup to add/remove champions in/from your favourite list."""
         await self.character_setup(ntr)
-    
+
     @checks.hybrid.is_manager()
     @ext_lol_champ.command(name='setup')
     async def ext_lol_champ_setup(self, ctx: AluGuildContext):

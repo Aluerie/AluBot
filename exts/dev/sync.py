@@ -26,7 +26,7 @@ class UmbraSyncCommandCog(DevBaseCog):
         self,
         ctx: AluContext,
         guilds: commands.Greedy[discord.Object],
-        spec: Optional[Literal["~", "*", "^", "trust"]] = None,
+        spec: Optional[Literal["~", "*", "^", "trust", "my"]] = None,
     ) -> None:
         """Sync AppCommandTree.
 
@@ -54,6 +54,9 @@ class UmbraSyncCommandCog(DevBaseCog):
 
         if spec == "trust":
             guild_list = [discord.Object(id=guild_id) for guild_id in const.TRUSTED_GUILDS]
+            title, desc = await sync_to_guild_list(guild_list)
+        elif spec == "my":
+            guild_list = [discord.Object(id=guild_id) for guild_id in const.MY_GUILDS]
             title, desc = await sync_to_guild_list(guild_list)
         elif guilds:
             title, desc = await sync_to_guild_list(guilds)

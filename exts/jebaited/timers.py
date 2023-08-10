@@ -19,8 +19,8 @@ class Timers(JebaitedCog):
 
     @commands.hybrid_group()
     async def timer(self, ctx: AluContext):
-        '''new timer'''
-        await ctx.scnf()
+        """new timer"""
+        await ctx.send_help(ctx.command)
 
     @timer.command()
     async def create(self, ctx: AluContext, category: str, frequency: str, probability: float):

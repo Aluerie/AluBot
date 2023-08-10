@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, checks
+from utils import checks, const
 
 from ._base import CommunityCog
 
@@ -22,8 +22,8 @@ class CommunityRules(CommunityCog, name='Rules', emote=const.Emote.PepoRules):
     @commands.has_role(const.Role.discord_mods)
     @commands.hybrid_group(hidden=True)
     async def modrule(self, ctx: AluContext):
-        """Group command about rule modding, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        """Commands about editing community rules."""
+        await ctx.send_help(ctx.command)
 
     @modrule.command()
     async def add(self, ctx: AluContext, *, content: str):
@@ -44,7 +44,6 @@ class CommunityRules(CommunityCog, name='Rules', emote=const.Emote.PepoRules):
         rule_id, content = await self.bot.pool.fetch(query, number)
         await ctx.reply(f'{rule_id} {content}')
 
-        
     # @staticmethod
     # async def rule_work(ctx, num, dtb, min_number):
     #     try:

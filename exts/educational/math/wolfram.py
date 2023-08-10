@@ -32,8 +32,8 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
 
     @commands.hybrid_group(name='wolfram')
     async def wolfram_group(self, ctx: AluContext):
-        """Group command for WolframAlpha commands."""
-        await ctx.scnf()
+        """WolframAlpha Commands."""
+        await ctx.send_help(ctx.command)
 
     async def wa_long_worker(self, ctx: AluContext, *, query: str):
         await ctx.typing()

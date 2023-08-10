@@ -105,31 +105,6 @@ class AluContext(commands.Context):
             author_id=author_id,
         )
 
-    async def scnf(self):
-        if self.invoked_subcommand is None:
-            prefix = getattr(self, 'clean_prefix', '/')
-
-            def get_command_signature(command):
-                extra_space = '' if command.signature == '' else ' '
-                return f'{prefix}{command.qualified_name}{extra_space}{command.signature}'
-
-            ans = 'This command is used only with subcommands. Please, provide one of them:\n'
-
-            # for c in self.command.walk_commands():
-            #    print(get_command_signature(c))
-
-            if isinstance(self.command, commands.Group):
-                for c in self.command.commands:
-                    if getattr(c, 'commands', None):
-                        ans += '\n' + '\n'.join(f'`{get_command_signature(x)}`' for x in c.commands)  # type: ignore
-                    else:
-                        ans += f'\n`{get_command_signature(c)}`'
-
-            e = discord.Embed(colour=Colour.error(), description=ans)
-            e.set_author(name='SubcommandNotFound')
-            e.set_footer(text=f'`{prefix}help {self.command}` for more info')
-            return await self.reply(embed=e, ephemeral=True)
-
     @staticmethod
     def tick(semi_bool: bool | None) -> str:
         match semi_bool:

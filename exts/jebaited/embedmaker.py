@@ -41,8 +41,8 @@ class StartView(discord.ui.View):
 class EmbedMaker(JebaitedCog, name="Embed Maker", emote=const.Emote.DankZzz):
     @commands.hybrid_group(name="embed")
     async def embed_(self, ctx: AluContext):
-        """Group command about Embed Build, for actual commands use it together with subcommands"""
-        await ctx.scnf()
+        """Command about Embed Builder."""
+        await ctx.send_help(ctx.command)
 
     @embed_.command()
     async def make(self, ctx: AluContext):

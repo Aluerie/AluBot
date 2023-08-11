@@ -1,14 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-from utils import const
-from utils.formats import inline_word_by_word_diff
+from utils import aluloop, const, formats
 
 from ._base import CommunityCog
 
@@ -16,12 +16,12 @@ if TYPE_CHECKING:
     from utils import AluBot
 
 
-class CommunityMemberLogging(CommunityCog):
+class MemberLogging(CommunityCog):
     async def cog_load(self) -> None:
-        self.rolling_stones_check.start()
+        self.nicknames_database_check.start()
 
     async def cog_unload(self) -> None:
-        self.rolling_stones_check.cancel()
+        self.nicknames_database_check.cancel()
 
     def base_embed(self, member: discord.Member) -> discord.Embed:
         return discord.Embed(colour=member.colour).set_author(name=str(member), icon_url=member.display_avatar.url)
@@ -131,15 +131,19 @@ class CommunityMemberLogging(CommunityCog):
             e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
             return await self.bot.community.logs.send(embed=e)
 
-    async def rolling_stones_role_check(self, after: discord.Member):
-        rolling_stones_role = self.community.rolling_stone_role
-        if after.nick and 'Stone' in after.nick:
-            e = discord.Embed(colour=rolling_stones_role.colour)
-            e.description = f'{after.mention} gets lucky {rolling_stones_role.mention} role {const.Emote.PogChampPepe}'
-            await self.bot.community.bot_spam.send(embed=e)
-            await after.add_roles(rolling_stones_role)
-        else:
-            await after.remove_roles(rolling_stones_role)
+    ##############################################
+    ###           NICKNAME CHANGES             ###
+    ##############################################
+
+    async def update_database_and_announce(self, member_after: discord.Member, nickname_before: str | None):
+        query = 'UPDATE users SET name=$1 WHERE id=$2'
+        await self.bot.pool.execute(query, member_after.display_name, member_after.id)
+
+        e = self.before_after_embed(member_after, 'server nickname', nickname_before, member_after.nick)
+        await self.bot.community.bot_spam.send(embed=e)
+
+        # ROLLING STONES CHECK
+        await self.rolling_stones_role_check(member_after)
 
     @commands.Cog.listener('on_member_update')
     async def logger_member_nickname_update(self, before: discord.Member, after: discord.Member):
@@ -147,34 +151,69 @@ class CommunityMemberLogging(CommunityCog):
             return
 
         if before.nick != after.nick:
-            query = 'UPDATE users SET name=$1 WHERE id=$2'
-            await self.bot.pool.execute(query, after.display_name, after.id)
+            await self.update_database_and_announce(member_after=after, nickname_before=before.nick)
 
-            e = self.before_after_embed(after, 'server nickname', before.nick, after.nick)
+    async def rolling_stones_role_check(self, after: discord.Member):
+        """
+        Parameters
+        ----------
+        after: :class: discord.Member
+            member whose nickname gonna be checked for rolling stones eligibility
+        """
+        rolling_stones_role = self.community.rolling_stone_role
+        if not after.nick:
+            return
+
+        if 'Stone' in after.nick and after not in rolling_stones_role.members:
+            e = discord.Embed(colour=rolling_stones_role.colour)
+            e.description = f'{after.mention} gets lucky {rolling_stones_role.mention} role {const.Emote.PogChampPepe}'
             await self.bot.community.bot_spam.send(embed=e)
+            await after.add_roles(rolling_stones_role)
+        elif 'Stone' not in after.nick and after in rolling_stones_role.members:
+            await after.remove_roles(rolling_stones_role)
 
-            # ROLLING STONES CHECK
-            await self.rolling_stones_role_check(after)
+    @aluloop(hours=6)
+    async def nicknames_database_check(self):
+        async def update_heartbeat(dt: datetime.datetime):
+            query = "UPDATE botvars SET community_nickname_heartbeat=$1 WHERE id=$2"
+            await self.bot.pool.execute(query, dt, True)
 
-    @tasks.loop(time=datetime.time(hour=12, minute=57, tzinfo=datetime.timezone.utc))
-    async def rolling_stones_check(self):
-        guild = self.bot.community.guild
+        if self.nicknames_database_check.current_loop == 0:
+            # we need to check for nickname changes
+            guild = self.bot.community.guild
 
-        async for entry in guild.audit_logs(action=discord.AuditLogAction.member_update):
-            target: discord.Member = entry.target  # type: ignore
-            await self.rolling_stones_role_check(target)
+            query = "SELECT community_nickname_heartbeat FROM botvars WHERE id=$1"
+            heartbeat_dt: datetime.datetime = await self.bot.pool.fetchval(query, True)
+            heartbeat_dt.replace(tzinfo=datetime.timezone.utc)
 
-    @rolling_stones_check.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
+            # get missed time.
+            now = discord.utils.utcnow()
+            suspect_targets = [
+                entry.target
+                async for entry in guild.audit_logs(action=discord.AuditLogAction.member_update, after=heartbeat_dt)
+                if getattr(entry.after, 'nick', None) != getattr(entry.before, 'nick', None)
+                and isinstance(entry.target, discord.Member)
+            ]
+            suspect_targets = list(dict.fromkeys(suspect_targets))  # remove duplicates
+
+            for target in suspect_targets:
+                query = 'SELECT name FROM users WHERE id=$1'
+                database_display_name = await self.bot.pool.fetchval(query, target.id)
+
+                if database_display_name != target.display_name:
+                    await self.update_database_and_announce(member_after=target, nickname_before=database_display_name)
+
+            await update_heartbeat(now)
+        else:
+            await update_heartbeat(discord.utils.utcnow())
 
 
-class CommunityMessageLogging(CommunityCog):
+class MessageLogging(CommunityCog):
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if after.guild is None or after.guild.id != const.Guild.community:
             return
-        if before.author.bot is True:
+        if before.author.bot:
             return
         if before.content == after.content:  # most likely some link embed link action
             return
@@ -187,7 +226,9 @@ class CommunityMessageLogging(CommunityCog):
         # TODO: inline word by word doesn't really work well on emote changes too
         # for example if before is peepoComfy and after is dankComfy then it wont be obvious in the embed result
         # since discord formats emotes first.
-        e.description = f'[**Jump link**]({after.jump_url}) {inline_word_by_word_diff(before.content, after.content)}'
+        e.description = (
+            f'[**Jump link**]({after.jump_url}) {formats.inline_word_by_word_diff(before.content, after.content)}'
+        )
         await self.community.logs.send(embed=e)
 
     @commands.Cog.listener()
@@ -207,7 +248,7 @@ class CommunityMessageLogging(CommunityCog):
         return await self.bot.community.logs.send(embed=e, files=files)
 
 
-class CommunityCommandLogging(CommunityCog):
+class CommandLogging(CommunityCog):
     ignored_users = [const.User.aluerie]
     included_guilds = [const.Guild.community]
 
@@ -240,6 +281,62 @@ class CommunityCommandLogging(CommunityCog):
         await self.bot.community.logs.send(embed=e)
 
 
+class VoiceChatMembersLogging(CommunityCog):
+    async def cog_load(self) -> None:
+        self.check_voice_members.start()
+
+    async def cog_unload(self) -> None:
+        self.check_voice_members.cancel()
+
+    @commands.Cog.listener('on_voice_state_update')
+    async def community_voice_chat_logging(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
+        if member.guild.id != self.community.id:
+            return
+
+        voice_role = self.bot.community.voice_role
+        if before.channel is None and after.channel is not None:  # joined the voice channel
+            await member.add_roles(voice_role)
+            e = discord.Embed(color=0x00FF7F)
+            msg = f'{member.display_name} entered {after.channel.name}.'
+            e.set_author(name=msg, icon_url=member.display_avatar.url)
+            await after.channel.send(embed=e)
+            return
+        if before.channel is not None and after.channel is None:  # quit the voice channel
+            await member.remove_roles(voice_role)
+            e = discord.Embed(color=0x800000)
+            msg = f'{member.display_name} left {before.channel.name}.'
+            e.set_author(name=msg, icon_url=member.display_avatar.url)
+            await before.channel.send(embed=e)
+            return
+        if before.channel is not None and after.channel is not None:  # changed voice channels
+            if before.channel.id != after.channel.id:
+                e = discord.Embed(color=0x6495ED)
+                msg = f'{member.display_name} went from {before.channel.name} to {after.channel.name}.'
+                e.set_author(name=msg, icon_url=member.display_avatar.url)
+                await before.channel.send(embed=e)
+                await after.channel.send(embed=e)
+                return
+
+    @aluloop(count=1)
+    async def check_voice_members(self):
+        voice_role = self.community.voice_role
+
+        # check if voice role has members who left the voice chat
+        for member in voice_role.members:
+            if member.voice is None:
+                await member.remove_roles(voice_role)
+
+        # vice versa: check if there are people in voice chat who don't have a role
+        for voice_channel in self.community.guild.voice_channels:
+            for member in voice_channel.members:
+                await member.add_roles(voice_role)
+
+
 async def setup(bot: AluBot):
-    for c in (CommunityMemberLogging, CommunityMessageLogging, CommunityCommandLogging):
+    for c in (MemberLogging, MessageLogging, CommandLogging, VoiceChatMembersLogging):
         await bot.add_cog(c(bot))

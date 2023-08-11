@@ -3,7 +3,7 @@ from __future__ import annotations
 from examples.beta.base import *
 
 
-class BetaTestCog(AluCog, name='BetaTest'):
+class BetaTestCog(BetaCog, name='BetaTest'):
     @aluloop(count=1)
     async def beta_task(self):
         pass

@@ -331,7 +331,9 @@ class Reminder(RemindersCog, emote=Emote.DankG):
         self,
         ctx: AluContext,
         *,
-        when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')],
+        when_and_what: Annotated[
+            times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')
+        ],
     ):
         """Reminds you of something after a certain amount of time. \
         The input can be any direct date (i.e. DD/MM/YYYY) or a human \
@@ -342,7 +344,7 @@ class Reminder(RemindersCog, emote=Emote.DankG):
         * "2d unmute someone"
         Times are assumed in UTC.
         """
-        await self.remind_helper(ctx, dt=when.dt, text=when.arg)
+        await self.remind_helper(ctx, dt=when_and_what.dt, text=when_and_what.arg)
 
     @remind.command(name='list', ignore_extra=False)
     async def remind_list(self, ctx: AluContext):

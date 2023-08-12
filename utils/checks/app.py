@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 T = TypeVar('T')
 
+
 def is_in_guilds(*guild_ids: int):
     def decorator(func: T) -> T:
         app_commands.guild_only(func)
@@ -19,5 +20,14 @@ def is_in_guilds(*guild_ids: int):
 
     return decorator
 
+
 def is_my_guild():
     return is_in_guilds(*const.MY_GUILDS)
+
+
+def is_community():
+    def decorator(func: T) -> T:
+        app_commands.guilds(const.Guild.community)
+        return func
+
+    return decorator

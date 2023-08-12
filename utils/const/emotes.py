@@ -50,6 +50,8 @@ class Emote(StrEnum):
     peepoStepOnMePls = '<:peepoStepOnMePls:1125591836057145396>'
     peepoWater = '<:peepoWater:1125720123722973285>'
     peepoWTF = '<:peepoWTF:1125591659846058035>'
+    peepoRedCard = '<:peepoRedCard:1139905850077626399>'
+    peepoYellowCard = '<:peepoYellowCard:1139908316508729436>'
 
     # animated
     DankL = '<a:DankL:1125591914524184667>'

@@ -47,14 +47,18 @@ class Guild:
 
     # emotes
 
-    emote1 = 1123901376435589173
-
     brand1 = 1125050799572131982
     brand2 = 1125050890777268355
 
 
 MY_GUILDS = [Guild.hideout, Guild.community]
 TRUSTED_GUILDS = [Guild.hideout, Guild.stone]
+EMOTE_GUILDS = [
+    1123901376435589173,
+    1123901447277379644,
+    1123901514289774632,
+    1123901546409762896,
+]
 
 
 class Channel(ChannelEnum):

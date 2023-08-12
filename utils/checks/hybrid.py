@@ -69,7 +69,12 @@ def is_my_guild():
 
 
 def is_community():
-    return is_in_guilds(const.Guild.community)
+    def decorator(func: T) -> T:
+        app.is_community()
+        txt.is_community()
+        return func
+
+    return decorator
 
 
 # for following `is_manager`, `is_mod`, `is_admin check` we could use `hybrid_permissions_check`

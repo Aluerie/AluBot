@@ -59,6 +59,10 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
         desc = f"Please retry in `{ctx.bot.formats.human_timedelta(error.retry_after, brief=True)}`"
     elif isinstance(error, commands.NotOwner):
         desc = f'Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command.'
+    elif isinstance(error, commands.MissingRole):
+        desc = f'Sorry, only {error.missing_role} are able to use this command.'
+    elif isinstance(error, commands.CheckFailure):
+        desc = f'{error}'
 
     # elif isinstance(error, errors.SilentError):
     #     # this will fail the interaction hmm
@@ -159,8 +163,7 @@ case commands.MissingPermissions():
     desc = f'Missing permissions: {", ".join(error.missing_permissions)}'
 case commands.BotMissingPermissions():
     desc = f'Bot is missing permissions: {", ".join(error.missing_permissions)}'
-case commands.MissingRole():
-    desc = f'Missing role: <@&{error.missing_role}>'
+
 case commands.BotMissingRole():
     desc = f'Missing role: <@&{error.missing_role}'
 case commands.MissingAnyRole():
@@ -169,8 +172,6 @@ case commands.BotMissingAnyRole():
     desc = f'Missing roles: {", ".join([f"<@&{id_}>" for id_ in error.missing_roles])}'
 case commands.NSFWChannelRequired():
     desc = "Ask Aluerie to make that channel NSFW friendly"
-case commands.NotOwner():
-    desc = f'Sorry, only {ctx.bot.owner} as the bot owner is allowed to use this command.'
 case commands.PrivateMessageOnly():
     desc = (
         f"The command is only for usage in private messages with the bot. "

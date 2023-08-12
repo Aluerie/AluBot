@@ -114,14 +114,13 @@ class BadTimeTransform(app_commands.AppCommandError, AluBotException):
 
 class TimeTransformer(app_commands.Transformer):
     async def transform(self, interaction: discord.Interaction, value: str) -> datetime.datetime:
-        
         # fix timezone thing
         # tzinfo = datetime.timezone.utc
         # reminder = interaction.client.get_cog('Reminder')
         # if reminder is not None:
         #     tzinfo = await reminder.get_tzinfo(interaction.user.id)
 
-        now = interaction.created_at #.astimezone(tzinfo)
+        now = interaction.created_at  # .astimezone(tzinfo)
         if not now.tzinfo:
             now = now.replace(tzinfo=datetime.timezone.utc)
 
@@ -147,6 +146,9 @@ class FriendlyTimeResult:
     def __init__(self, dt: datetime.datetime):
         self.dt = dt
         self.arg = ''
+
+    def __repr__(self) -> str:
+        return f'<FriendlyTimeResult dt={self.dt} arg={self.arg}>'
 
     async def ensure_constraints(
         self, ctx: AluContext, uft: UserFriendlyTime, now: datetime.datetime, remaining: str

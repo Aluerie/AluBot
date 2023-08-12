@@ -21,13 +21,13 @@ if TYPE_CHECKING:
 
 class plural:
     """
-    Helper class to format tricky Plural nouns
+    Helper class to format tricky plural nouns
 
     Examples: ::
 
-        >>> format(Plural(1), 'child|children')  # '1 child'
-        >>> format(Plural(8), 'week|weeks')  # '8 weeks'
-        >>> f'{Plural(3):reminder}' # 3 reminders
+        >>> format(plural(1), 'child|children')  # '1 child'
+        >>> format(plural(8), 'week|weeks')  # '8 weeks'
+        >>> f'{plural(3):reminder}' # 3 reminders
     """
 
     # licensed MPL v2 from Rapptz/RoboDanny

@@ -87,7 +87,7 @@ class Channel(ChannelEnum):
     stream_room = 766063288302698496
 
     patch_notes = 731759693113851975
-    suggestions = 724994495581782076
+    suggestions = 1133711868612059147
 
     my_time = 788915790543323156
     total_people = 795743012789551104

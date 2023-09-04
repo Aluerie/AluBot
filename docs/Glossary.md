@@ -2,23 +2,31 @@
 
 Just some glossary so that I try to keep consistent terminology across the project since many discord.py related denominations can be described by multiple terms.
 
-## Terminology
+## Terminology, short-words and abbreviations
 
-* `ntr`
+* **`ntr`**
+
     my shortcut for `interaction`. Everybody calls `Context` as `ctx` so I thought to make 3 letter abbreviation for interaction as well, since it's also used in 90% of functions.
-* txt command [txt cmd]
+* **txt command [txt cmd]**
+
     Text/prefix command. The command that is getting invoked via typing message like `$help`.
-* app command [app cmd]
+* **app command [app cmd]**
+
     Slash/context menu command. These take `ntr` of type `discord.Interaction` as their context-argument.
-* hybrid command [hyb cmd]
-    These commands are made with `@commands.hybrid_command`. They make both txt and app commands in one go if the code structure/signature allow it.
-* ctx command
+* **hybrid command [hyb cmd]**
+
+    These commands are made with `@commands.hybrid_command` decorator. They make both `txt` and `app` commands in one go if the code structure/signature allow it.
+* **ctx command**
+
     `ctx` based command. This includes both txt commands and hybrid commands because they take `ctx` of type `AluContext` as their context-argument.
 * community
+
     The discord server for Aluerie's community. Some features of the bot are specifically designed for it.
 * hideout
+
     My personal one-man discord server. I do most of the testing here. Also some features of the bot are specifically designed for it.
 * context menu
+
     In docs it's called `app_commands.ContextMenu`, so I guess we have to suffer with this. We have so much meaning to the word ctx connected to `Context` related-stuff defined above that I feel like it doesn't make sense to call this "ctx menu", so let's call it "context menu" as in full words.
 
 > Note

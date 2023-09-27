@@ -274,8 +274,8 @@ class CommunityGuild(SavedGuild):
         return self.get_channel(Channel.patch_notes, discord.TextChannel)
 
     @property
-    def suggestions(self) -> discord.TextChannel:
-        return self.get_channel(Channel.suggestions, discord.TextChannel)
+    def suggestions(self) -> discord.ForumChannel:
+        return self.get_channel(Channel.suggestions, discord.ForumChannel)
 
     @property
     def dota_news(self) -> discord.TextChannel:

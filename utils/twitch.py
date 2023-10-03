@@ -46,16 +46,15 @@ class TwitchClient(twitchio.Client):
 
     async def last_vod_link(self, user_id: int, seconds_ago: int = 0, md: bool = True) -> str:
         """Get last vod link for user with `user_id` with timestamp as well"""
-        try:
-            video: twitchio.Video = next(
-                iter(await self.fetch_videos(user_id=user_id, period='day')), None  # type: ignore # ???
-            )
-
+        video: twitchio.Video = next(iter(await self.fetch_videos(user_id=user_id, period='day')), None)
+        if video:
             def get_time_from_hms(hms_time: str):
                 """Convert time after `?t=` in vod link into amount of seconds
 
                 03h51m08s -> 3 * 3600 + 51 * 60 + 8 = 13868
                 """
+
+                # todo: move those two into formats or something?
 
                 def regex_time(letter: str) -> int:
                     """h -> 3, m -> 51, s -> 8 for above example"""
@@ -69,7 +68,7 @@ class TwitchClient(twitchio.Client):
             duration = get_time_from_hms(video.duration)
             vod_url = f'{video.url}?t={human_timedelta(duration - seconds_ago, strip=True, suffix=False)}'
             return f'/[TwVOD]({vod_url})' if md else vod_url
-        except IndexError:
+        else:
             return ''
 
     async def get_live_lol_player_ids(self, pool: Pool) -> list[int]:

@@ -22,54 +22,54 @@ class TwitchClient(twitchio.Client):
 
     async def twitch_id_by_name(self, user_name: str) -> int:
         """Gets twitch_id by user_login"""
-        user: Optional[twitchio.User] = next(iter(await self.fetch_users(names=[user_name])), None)
-        if user:
-            return user.id
-        else:
+        user: twitchio.User | None = next(iter(await self.fetch_users(names=[user_name])), None)
+        if not user:
             raise BadArgument(f'Error checking stream `{user_name}`.\n User either does not exist or is banned.')
+
+        return user.id
 
     async def name_by_twitch_id(self, user_id: int) -> str:
         """Gets display_name by twitch_id"""
-        user: Optional[twitchio.User] = next(iter(await self.fetch_users(ids=[user_id])), None)
-        if user:
-            return user.display_name
-        else:
+        user: twitchio.User | None = next(iter(await self.fetch_users(ids=[user_id])), None)
+        if not user:
             raise BadArgument(f'Error checking stream `{user_id}`.\n User either does not exist or is banned.')
+
+        return user.display_name
 
     async def fpc_data_by_login(self, user_login: str) -> tuple[int, str, str]:
         """Gets tuple (twitch_id, display_name) by user_login from one call to twitch client"""
-        user: Optional[twitchio.User] = next(iter(await self.fetch_users(names=[user_login])), None)
-        if user:
-            return user.id, user.display_name, user.profile_image
-        else:
+        user: twitchio.User | None = next(iter(await self.fetch_users(names=[user_login])), None)
+        if not user:
             raise BadArgument(f'Error checking stream `{user_login}`.\n User either does not exist or is banned.')
+
+        return user.id, user.display_name, user.profile_image
 
     async def last_vod_link(self, user_id: int, seconds_ago: int = 0, md: bool = True) -> str:
         """Get last vod link for user with `user_id` with timestamp as well"""
-        video: twitchio.Video = next(iter(await self.fetch_videos(user_id=user_id, period='day')), None)
-        if video:
-            def get_time_from_hms(hms_time: str):
-                """Convert time after `?t=` in vod link into amount of seconds
-
-                03h51m08s -> 3 * 3600 + 51 * 60 + 8 = 13868
-                """
-
-                # todo: move those two into formats or something?
-
-                def regex_time(letter: str) -> int:
-                    """h -> 3, m -> 51, s -> 8 for above example"""
-                    pattern = r'\d+(?={})'.format(letter)
-                    units = re.search(pattern, hms_time)
-                    return int(units.group(0)) if units else 0
-
-                timeunit_dict = {'h': 3600, 'm': 60, 's': 1}
-                return sum([v * regex_time(letter) for letter, v in timeunit_dict.items()])
-
-            duration = get_time_from_hms(video.duration)
-            vod_url = f'{video.url}?t={human_timedelta(duration - seconds_ago, strip=True, suffix=False)}'
-            return f'/[TwVOD]({vod_url})' if md else vod_url
-        else:
+        video: twitchio.Video | None = next(iter(await self.fetch_videos(user_id=user_id, period='day')), None)
+        if not video:
             return ''
+
+        def get_time_from_hms(hms_time: str):
+            """Convert time after `?t=` in vod link into amount of seconds
+
+            03h51m08s -> 3 * 3600 + 51 * 60 + 8 = 13868
+            """
+
+            # todo: move those two into formats or something?
+
+            def regex_time(letter: str) -> int:
+                """h -> 3, m -> 51, s -> 8 for above example"""
+                pattern = r'\d+(?={})'.format(letter)
+                units = re.search(pattern, hms_time)
+                return int(units.group(0)) if units else 0
+
+            timeunit_dict = {'h': 3600, 'm': 60, 's': 1}
+            return sum([v * regex_time(letter) for letter, v in timeunit_dict.items()])
+
+        duration = get_time_from_hms(video.duration)
+        vod_url = f'{video.url}?t={human_timedelta(duration - seconds_ago, strip=True, suffix=False)}'
+        return f'/[TwVOD]({vod_url})' if md else vod_url
 
     async def get_live_lol_player_ids(self, pool: Pool) -> list[int]:
         """Get twitch ids for live League of Legends streams"""

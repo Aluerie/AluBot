@@ -73,7 +73,7 @@ class EventPassWatcher(ChannelWatcher):
         super().__init__(
             bot,
             db_column='event_pass_is_live',
-            sleep_time=50 * 60,  # 50 minutes
+            sleep_time=60 * 60,  # 60 minutes
             watch_channel_id=const.Channel.event_pass,
             ping_channel_id=const.Channel.spam_me,
             role_mention=const.Role.event.mention,

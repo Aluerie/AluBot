@@ -224,7 +224,7 @@ class OtherCog(AluCog):
 
         longest_word_length = max([len(p.name) for p in pings])
 
-        strings = [f"{p.emoji} `{p.name.ljust(longest_word_length, ' ')} | {round(p.value, 3):3.3f}ms`" for p in pings]
+        strings = [f"{p.emoji} `{p.name.ljust(longest_word_length, ' ')} | {round(p.value, 3):07.3f}ms`" for p in pings]
         answer = '\n'.join(strings)
 
         # await asyncio.sleep(0.7)

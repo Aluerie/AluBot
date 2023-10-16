@@ -48,6 +48,10 @@ class ChannelWatcher(HideoutCog):
     async def on_message(self, message: discord.Message):
         if message.channel.id == self.watch_channel_id:
             if self.sleep_task.is_running():
+                # a bit of shit-code: check if my glorious embed indicates ending
+                if message.embeds[0].color == 0x6A1B9A:
+                    self.sleep_task.cancel()
+
                 self.sleep_task.restart()
                 if not self.watch_bool:
                     query = f'UPDATE botinfo SET {self.db_column}=TRUE WHERE id=$1'
@@ -75,24 +79,25 @@ class EventPassWatcher(ChannelWatcher):
             db_column='event_pass_is_live',
             sleep_time=60 * 60,  # 60 minutes
             watch_channel_id=const.Channel.event_pass,
-            ping_channel_id=const.Channel.spam_me,
+            ping_channel_id=const.Channel.look_spam,
             role_mention=const.Role.event.mention,
         )
 
 
 # looks like the era is over
 #
-# DROPS_CHANNEL = 1074010096566284288
-#
-# class DropsWatcher(ChannelWatcher):
-#     def __init__(self, bot: AluBot):
-#         super().__init__(
-#             bot,
-#             db_column='drops_watch_live',
-#             sleep_time=60 * 60 * 24 * 7,  # a week
-#             watch_channel_id=1074010096566284288,
-#             ping_channel_id=Channel.spam_me,
-#         )
+DROPS_CHANNEL = 1074010096566284288
+
+
+class DropsWatcher(ChannelWatcher):
+    def __init__(self, bot: AluBot):
+        super().__init__(
+            bot,
+            db_column='drops_watch_live',
+            sleep_time=60 * 60 * 24 * 7,  # a week
+            watch_channel_id=1074010096566284288,
+            ping_channel_id=const.Channel.look_spam,
+        )
 
 
 async def setup(bot: AluBot):

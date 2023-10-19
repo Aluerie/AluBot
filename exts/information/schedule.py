@@ -62,14 +62,10 @@ def scrape_schedule_data(
         data about Dota 2 matches in a structured dictionary.
     """
 
-    toggle_mode = schedule_mode.toggle_mode
-    only_next24 = schedule_mode.only_next24
-    include_favourites = schedule_mode.include_favourites
-
     matches: list[Match] = []
     dt_now = datetime.datetime.now(datetime.timezone.utc)
 
-    def work_func(toggle: int, part=1):
+    def work_func(toggle: int, part: int = 1, days_to_skip: int = 0):
         divs = soup.findAll("div", {"data-toggle-area-content": str(toggle)})
         rows = divs[-1].findAll("tbody")
         for row in rows:
@@ -82,9 +78,9 @@ def scrape_schedule_data(
             time_utc = row.select_one('.match-countdown').text.strip()
             dt = datetime.datetime.strptime(time_utc, '%B %d, %Y - %H:%M UTC').replace(tzinfo=datetime.timezone.utc)
 
-            if only_next24:
+            if schedule_mode.only_next24:
                 timedelta_obj = dt - dt_now
-                if timedelta_obj.days > 0:
+                if timedelta_obj.days > days_to_skip:
                     continue
 
             league: str = row.select_one('.match-filler').text.strip().replace(time_utc, '')
@@ -116,9 +112,13 @@ def scrape_schedule_data(
                 )
             )
 
-    work_func(toggle_mode, part=1)
-    if include_favourites:
-        work_func(1, part=2)
+    for days_to_skip in range(7):
+        work_func(schedule_mode.toggle_mode, part=1, days_to_skip=days_to_skip)
+        if schedule_mode.include_favourites:
+            work_func(1, part=2, days_to_skip=days_to_skip)
+
+        if matches:
+            break
 
     return matches
 
@@ -126,8 +126,8 @@ def scrape_schedule_data(
 select_options = [
     discord.SelectOption(
         emoji=const.Emote.PepoRules,
-        label="Next 24h: Featured + Favourite (Default)",
-        description="Featured games + some fav teams next 24 hours",
+        label="Next GameDay: Featured + Favourite",
+        description="Featured games + some fav teams closest game day",
         value='1',
     ),
     discord.SelectOption(
@@ -137,11 +137,22 @@ select_options = [
         value='2',
     ),
     discord.SelectOption(
-        emoji=const.Emote.bubuAYAYA, label="Featured", description="Featured games by Liquidpedia", value='3'
+        emoji=const.Emote.bubuAYAYA,
+        label="Featured",
+        description="Featured games by Liquidpedia",
+        value='3',
     ),
-    discord.SelectOption(emoji=const.Emote.PepoG, label="Full Schedule", description="All pro games!", value='4'),
     discord.SelectOption(
-        emoji=const.Emote.PepoDetective, label="Completed", description="Already finished games", value='5'
+        emoji=const.Emote.PepoG,
+        label="Full Schedule",
+        description="All pro games!",
+        value='4',
+    ),
+    discord.SelectOption(
+        emoji=const.Emote.PepoDetective,
+        label="Completed",
+        description="Already finished games",
+        value='5',
     ),
 ]
 
@@ -227,7 +238,7 @@ class SchedulePageSource(menus.ListPageSource):
         dt_now = datetime.datetime.now(datetime.timezone.utc)
 
         # find the longest team versus string like "Secret - PSG.LGD"
-        
+
         desc = f'Applied filter: `{self.query}`\n' if self.query is not None else ''
         if not matches:
             desc += 'No matches were found for the category/query.'

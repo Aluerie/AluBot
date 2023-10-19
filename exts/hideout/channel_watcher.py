@@ -49,7 +49,7 @@ class ChannelWatcher(HideoutCog):
         if message.channel.id == self.watch_channel_id:
             if self.sleep_task.is_running():
                 # a bit of shit-code: check if my glorious embed indicates ending
-                if message.embeds and message.embeds[0].color == 0x6A1B9A:
+                if message.embeds and message.embeds[0].footer.text == 'bypass alubot':
                     self.sleep_task.cancel()
 
                 self.sleep_task.restart()

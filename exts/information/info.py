@@ -101,13 +101,15 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
 
     @commands.hybrid_command(name='role')
     @app_commands.describe(role='Choose role to get info about')
-    async def role_info(self, ctx, *, role: discord.Role):
-        """View info about selected role."""
+    async def role_info(self, ctx: AluContext, *, role: discord.Role):
+        """View info about selected role.""" 
         e = discord.Embed(title="Role information", colour=role.colour)
-        msg = f'Role {role.mention}'
+        msg = f'Role {role.mention}\n'
         msg += '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
         e.description = msg
-        await ctx.reply(embed=e)
+        await ctx.reply(embed=e) 
+        #todo: make pagination about it^. 
+        # Also add stuff like colour code, amount of members and some garbage other bots include
 
     @commands.hybrid_command(
         aliases=['color'],

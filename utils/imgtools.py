@@ -96,15 +96,19 @@ class ImgToolsClient:
     async def url_to_file(
         self,
         url: Union[str, Sequence[str]],
-        filename: Optional[Union[str, Sequence[str]]] = None,
+        filename: Union[str, Sequence[str]] = 'FromAluBot.png',
         *,
         return_list: bool = False,
     ) -> Union[discord.File, Sequence[discord.File]]:
         if isinstance(url, str) and isinstance(filename, str):
             urls = [url]
-            filenames = [filename if filename else 'FromAluBot.png']
-        elif isinstance(url, Sequence) and all(isinstance(elem, str) for elem in url) \
-            and isinstance(filename, Sequence) and all(isinstance(elem, str) for elem in filename):
+            filenames = [filename]
+        elif (
+            isinstance(url, Sequence)
+            and all(isinstance(elem, str) for elem in url)
+            and isinstance(filename, Sequence)
+            and all(isinstance(elem, str) for elem in filename)
+        ):
             urls = url
             filenames = filename if filename else [f'{i}FromAluBot.png' for i in range(len(url))]
             if len(urls) != len(filename):

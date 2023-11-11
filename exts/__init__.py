@@ -42,6 +42,7 @@ try:
     TEST_EXTENSIONS = _test.TEST_EXTENSIONS
     IGNORE_TEST = _test.IGNORE_TEST
 except ModuleNotFoundError:
+    _test = None
     TEST_EXTENSIONS = tuple()
     IGNORE_TEST = True
 
@@ -77,7 +78,7 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
     """
 
     # get only extensions for testing
-    if test:
+    if test and _test:
         if reload:
             importlib.reload(_test)
             test_exts, ignore_test = _test.TEST_EXTENSIONS, _test.IGNORE_TEST

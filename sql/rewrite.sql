@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS botvars (
     id BOOLEAN NOT NULL PRIMARY KEY DEFAULT TRUE,
 
     community_nickname_heartbeat TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
-
+    lol_patch TEXT,
+    
     CONSTRAINT only_one_row CHECK (id)
 );
 

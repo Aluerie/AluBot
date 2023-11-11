@@ -13,20 +13,23 @@ if TYPE_CHECKING:
     pass
 
 
-class LoLCom(HideoutCog):
+class LeagueOfLegendsPatchChecker(HideoutCog):
     async def cog_load(self) -> None:
         self.patch_checker.start()
 
     async def cog_unload(self) -> None:
         self.patch_checker.cancel()
 
-    @aluloop(minutes=15)
+    @aluloop(minutes=20)
     async def patch_checker(self):
-        url = "https://www.leagueoflegends.com/en-us/news/tags/patch-notes/"
-        async with self.bot.session.get(url) as resp:
-            soup = BeautifulSoup(await resp.read(), 'html.parser')
+        # they keep patch related data in the following json's that we can pool
+        url = 'https://www.leagueoflegends.com/page-data/en-us/news/tags/patch-notes/page-data.json'
 
-        new_patch_href = soup.find_all("li")[0].a.get('href')
+        async with self.bot.session.get(url) as resp:
+            page_data = await resp.json()
+
+        # it's something like '/news/game-updates/patch-13-22-notes/'
+        new_patch_href = page_data['result']['data']['articles']['nodes'][0]['url']['url']
 
         query = """ UPDATE botinfo
                     SET lol_patch=$1
@@ -39,6 +42,12 @@ class LoLCom(HideoutCog):
             return
 
         patch_url = f'https://www.leagueoflegends.com{new_patch_href}'
+
+        # we could try getting fancy data like patch highlights from
+        # https://www.leagueoflegends.com/page-data/en-us/news/game-updates/patch-13-22-notes/page-data.json
+        # but they also keep everything in html string
+        # so it doesn't really matter, I guess?
+        # but here we can get meta tags
         async with self.bot.session.get(patch_url) as resp:
             patch_soup = BeautifulSoup(await resp.read(), 'html.parser')
         metas = patch_soup.find_all('meta')
@@ -60,4 +69,4 @@ class LoLCom(HideoutCog):
 
 
 async def setup(bot):
-    await bot.add_cog(LoLCom(bot))
+    await bot.add_cog(LeagueOfLegendsPatchChecker(bot))

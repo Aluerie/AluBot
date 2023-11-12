@@ -10,7 +10,7 @@ import discord
 from asyncpraw import Reddit
 from discord.ext import commands
 from dota2.client import Dota2Client
-from github import Github
+from githubkit import GitHub
 from steam.client import SteamClient
 
 import config
@@ -42,7 +42,7 @@ class AluBot(commands.Bot):
     if TYPE_CHECKING:
         bot_app_info: discord.AppInfo
         dota: Dota2Client
-        github: Github
+        github: GitHub
         launch_time: datetime.datetime
         logging_handler: Any
         prefixes: PrefixConfig
@@ -231,7 +231,7 @@ class AluBot(commands.Bot):
 
     def ini_github(self) -> None:
         if not hasattr(self, 'github'):
-            self.github = Github(config.GIT_PERSONAL_TOKEN)
+            self.github = GitHub(config.GIT_PERSONAL_TOKEN)
 
     def ini_reddit(self) -> None:
         if not hasattr(self, 'reddit'):

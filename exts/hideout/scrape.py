@@ -22,6 +22,10 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
 
     @aluloop(minutes=20)
     async def patch_checker(self):
+        # somewhat credits to 
+        # https://github.com/Querijn/BottyMcBotface/blob/master/src/VersionChecker.ts
+        # but really there is only two json links to get info from.
+
         # they keep patch related data in the following json's that we can pool
         url = 'https://www.leagueoflegends.com/page-data/en-us/news/tags/patch-notes/page-data.json'
 

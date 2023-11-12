@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import datetime
 import logging
 import re
@@ -9,14 +8,13 @@ from enum import Enum
 from typing import TYPE_CHECKING, Optional
 
 import discord
-from discord.ext import commands, tasks
-from github.GithubException import GithubException
+from discord.ext import commands
 from PIL import Image
 
-from utils import AluCog, const
+from utils import AluCog, aluloop, const
 
 if TYPE_CHECKING:
-    from github import Issue, NamedUser
+    from githubkit.rest import Issue, SimpleUser
 
     from utils import AluBot, AluContext
 
@@ -73,13 +71,13 @@ class Action:
         *,
         enum_type: EventBase,
         created_at: datetime.datetime,
-        actor: NamedUser.NamedUser,
+        actor: SimpleUser,
         issue_number: int,
         **kwargs,
     ):
         self.event_type: EventBase = enum_type
         self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.timezone.utc)
-        self.actor: NamedUser.NamedUser = actor
+        self.actor: SimpleUser = actor
         self.issue_number: int = issue_number
 
     @property
@@ -106,11 +104,11 @@ class Comment(Action):
 
 
 class TimeLine:
-    def __init__(self, issue: Issue.Issue):
-        self.issue: Issue.Issue = issue
+    def __init__(self, issue: Issue):
+        self.issue: Issue = issue
 
         self.actions: list[Action] = []
-        self.authors: set[NamedUser.NamedUser] = set()
+        self.authors: set[SimpleUser] = set()
 
     def add_action(self, action: Action):
         self.actions.append(action)
@@ -189,7 +187,6 @@ class BugTracker(AluCog):
 
     async def cog_load(self) -> None:
         self.bot.ini_github()
-        self.dota2gameplay_repo = self.bot.github.get_repo(GITHUB_REPO)
         self.valve_devs = await self.get_valve_devs()
         self.git_comments_check.start()
 
@@ -230,6 +227,7 @@ class BugTracker(AluCog):
                 success_logins.append(l)
             else:
                 error_logins.append(l)
+
         if success_logins:
             self.valve_devs.extend(success_logins)
             e = discord.Embed(color=const.MaterialPalette.green())
@@ -262,10 +260,9 @@ class BugTracker(AluCog):
         e.description = '\n'.join([f'\N{BLACK CIRCLE} {i}' for i in valve_devs])
         await ctx.reply(embed=e)
 
-    @tasks.loop(minutes=3)
+    @aluloop(minutes=3)
     async def git_comments_check(self):
         log.debug('BugTracker task started')
-        repo = self.dota2gameplay_repo
 
         query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
         dt: datetime.datetime = await self.bot.pool.fetchval(query, const.Guild.community)
@@ -275,68 +272,100 @@ class BugTracker(AluCog):
         #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=2)
 
         issue_dict: dict[int, TimeLine] = dict()
-        issues_list = repo.get_issues(sort='updated', state='all', since=dt)
 
-        for i in issues_list:
-            # Closed / Self-assigned / Reopened
-            events = [
-                x
-                for x in i.get_events()
-                if now > x.created_at.replace(tzinfo=datetime.timezone.utc) > dt
-                and x.actor  # apparently some people just delete their accounts after closing their issues, #6556 :D
-                and x.event in [x.name for x in list(EventType)]
-            ]
-            for e in events:
-                if (login := e.actor.login) in self.valve_devs:
-                    pass
-                elif login != e.issue.user.login:
-                    # if actor is not OP of the issue then we can consider
-                    # that this person is a valve dev
-                    self.valve_devs.append(login)
-                    query = """ INSERT INTO valve_devs (login) VALUES ($1)
-                                ON CONFLICT DO NOTHING;
-                            """
-                    await self.bot.pool.execute(query, login)
-                else:
-                    continue
+        # Closed / Self-assigned / Reopened Events
+        async for event in self.bot.github.paginate(
+            self.bot.github.rest.issues.async_list_events_for_repo,
+            owner="ValveSoftware",
+            repo="Dota2-Gameplay",
+            # it's sorted by updated time descending
+        ):
+            if not dt < event.created_at.replace(tzinfo=datetime.timezone.utc) < now:
+                continue
+            if not event.event in [x.name for x in list(EventType)]:
+                continue
+            if not event.actor or not event.issue or not event.issue.user:
+                continue
 
-                issue_dict.setdefault(e.issue.number, TimeLine(issue=e.issue)).add_action(
-                    Event(
-                        enum_type=(getattr(EventType, e.event)).value,
-                        created_at=e.created_at,
-                        actor=e.actor,
-                        issue_number=e.issue.number,
-                    )
+            if (login := event.actor.login) in self.valve_devs:
+                # it's confirmed that Valve dev is an actor of the event.
+                pass
+            elif login != event.issue.user.login:
+                # if actor is not OP of the issue then we can consider that this person is a valve dev
+                self.valve_devs.append(login)
+                query = """ INSERT INTO valve_devs (login) VALUES ($1)
+                            ON CONFLICT DO NOTHING;
+                        """
+                await self.bot.pool.execute(query, login)
+            else:
+                # looks like non-dev event
+                continue
+
+            issue_dict.setdefault(event.issue.number, TimeLine(issue=event.issue)).add_action(
+                Event(
+                    enum_type=(getattr(EventType, event.event)).value,
+                    created_at=event.created_at,
+                    actor=event.actor,
+                    issue_number=event.issue.number,
                 )
+            )
 
         # Issues opened by Valve devs
-        for i in issues_list:
-            if not dt < i.created_at.replace(tzinfo=datetime.timezone.utc) < now:
+        async for issue in self.bot.github.paginate(
+            self.bot.github.rest.issues.async_list_for_repo,
+            owner="ValveSoftware",
+            repo="Dota2-Gameplay",
+            sort='updated',
+            state='open',
+            since=dt,
+        ):
+            if not dt < issue.created_at.replace(tzinfo=datetime.timezone.utc) < now:
                 continue
-            if i.user.login in self.valve_devs:
-                issue_dict.setdefault(i.number, TimeLine(issue=i)).add_action(
+
+            if issue.user and issue.user.login in self.valve_devs:
+                issue_dict.setdefault(issue.number, TimeLine(issue=issue)).add_action(
                     Comment(
                         enum_type=CommentType.opened.value,
-                        created_at=i.created_at,
-                        actor=i.user,
-                        issue_number=i.number,
-                        comment_body=i.body,
+                        created_at=issue.created_at,
+                        actor=issue.user,
+                        issue_number=issue.number,
+                        comment_body=issue.body if issue.body else '',
                     )
                 )
 
         # Comments left by Valve devs
-        for c in [x for x in repo.get_issues_comments(sort='updated', since=dt) if x.user.login in self.valve_devs]:
-            # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
-            issue_num = int(c.issue_url.split('/')[-1])
+        async for comment in self.bot.github.paginate(
+            self.bot.github.rest.issues.async_list_comments_for_repo,
+            owner="ValveSoftware",
+            repo="Dota2-Gameplay",
+            sort='updated',
+            since=dt,
+        ):
+            if not comment.user or not comment.user.login in self.valve_devs:
+                continue
 
-            issue_dict.setdefault(issue_num, TimeLine(issue=repo.get_issue(issue_num))).add_action(
+            # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
+            issue_number = int(comment.issue_url.split('/')[-1])
+
+            issue_dict.setdefault(
+                issue_number,
+                TimeLine(  # if the issue is not in the dict then we need to async_get it ourselves
+                    issue=(
+                        await self.bot.github.rest.issues.async_get(
+                            owner='ValveSoftware',
+                            repo='Dota2-Gameplay',
+                            issue_number=issue_number,
+                        )
+                    ).parsed_data
+                ),
+            ).add_action(
                 Comment(
                     enum_type=CommentType.commented.value,
-                    created_at=c.created_at,
-                    actor=c.user,
-                    issue_number=issue_num,
-                    comment_body=c.body,
-                    comment_url=c.html_url,
+                    created_at=comment.created_at,
+                    actor=comment.user,
+                    issue_number=issue_number,
+                    comment_body=comment.body if comment.body else '',
+                    comment_url=comment.html_url,
                 )
             )
 
@@ -368,25 +397,21 @@ class BugTracker(AluCog):
         self.retries = 0
         log.debug('BugTracker task is finished')
 
-    @git_comments_check.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
+    # @git_comments_check.error
+    # async def git_comments_check_error(self, error):
+    #     if isinstance(error, GithubException):
+    #         if error.status == 502:
+    #             if self.retries == 0:
+    #                 e = discord.Embed(description='DotaBugtracker: Server Error 502')
+    #                 await self.hideout.spam.send(embed=e)
+    #             await asyncio.sleep(60 * 10 * 2**self.retries)
+    #             self.retries += 1
+    #             self.git_comments_check.restart()
+    #             return
 
-    @git_comments_check.error
-    async def git_comments_check_error(self, error):
-        if isinstance(error, GithubException):
-            if error.status == 502:
-                if self.retries == 0:
-                    e = discord.Embed(description='DotaBugtracker: Server Error 502')
-                    await self.hideout.spam.send(embed=e)
-                await asyncio.sleep(60 * 10 * 2**self.retries)
-                self.retries += 1
-                self.git_comments_check.restart()
-                return
-
-        txt = 'Dota2 BugTracker task'
-        await self.bot.exc_manager.register_error(error, txt, where=txt)
-        # self.git_comments_check.restart()
+    #     txt = 'Dota2 BugTracker task'
+    #     await self.bot.exc_manager.register_error(error, txt, where=txt)
+    #     # self.git_comments_check.restart()
 
 
 async def setup(bot: AluBot):

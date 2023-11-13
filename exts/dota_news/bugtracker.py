@@ -194,7 +194,7 @@ class BugTracker(AluCog):
         self.git_comments_check.stop()  # .cancel()
 
     @discord.utils.cached_property
-    def news_channel(self):
+    def news_channel(self) -> discord.TextChannel:
         channel = self.hideout.spam if self.bot.test else self.community.bugtracker_news
         return channel
 
@@ -343,7 +343,8 @@ class BugTracker(AluCog):
         ):
             if not comment.user or not comment.user.login in self.valve_devs:
                 continue
-
+            
+            # comment doesn't have issue object attached directly so we need to manually grab it
             # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
             issue_number = int(comment.issue_url.split('/')[-1])
 

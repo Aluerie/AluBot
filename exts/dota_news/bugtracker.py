@@ -1,6 +1,6 @@
 from __future__ import annotations
-import asyncio
 
+import asyncio
 import datetime
 import logging
 import re
@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord.ext import commands
-from PIL import Image
 from githubkit.exception import RequestFailed
+from PIL import Image
 
 from utils import AluCog, aluloop, const
 
@@ -110,11 +110,11 @@ class TimeLine:
         self.issue: Issue = issue
 
         self.actions: list[Action] = []
-        self.authors: set[SimpleUser] = set()
+        self.author_ids: set[int] = set()
 
     def add_action(self, action: Action):
         self.actions.append(action)
-        self.authors.add(action.actor)
+        self.author_ids.add(action.actor.id)
 
     def sorted_points_list(self) -> list[Action]:
         return sorted(self.actions, key=lambda x: x.created_at, reverse=False)
@@ -138,8 +138,8 @@ class TimeLine:
 
     def embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
         title = textwrap.shorten(self.issue.title, width=const.Limit.Embed.title)
-        e = discord.Embed(title=title, url=self.issue.html_url)
-        if len(self.events) < 2 and len(self.comments) < 2 and len(self.authors) < 2:
+        embed = discord.Embed(title=title, url=self.issue.html_url)
+        if len(self.events) < 2 and len(self.comments) < 2 and len(self.author_ids) < 2:
             # we just send a small embed
             # 1 author and 1 event with possible comment to it
             event = next(iter(self.events), None)  # first element in self.events or None if not exist
@@ -149,14 +149,14 @@ class TimeLine:
             if lead_action is None:
                 raise RuntimeError('Somehow lead_event is None')
 
-            e.colour = lead_action.event_type.colour
+            embed.colour = lead_action.event_type.colour
             url = comment.comment_url if comment else None
-            e.set_author(name=lead_action.author_str, icon_url=lead_action.actor.avatar_url, url=url)
-            e.description = comment.markdown_body if comment else ''
+            embed.set_author(name=lead_action.author_str, icon_url=lead_action.actor.avatar_url, url=url)
+            embed.description = comment.markdown_body if comment else ''
             file = lead_action.event_type.file(self.issue.number)
-            e.set_thumbnail(url=f'attachment://{file.filename}')
+            embed.set_thumbnail(url=f'attachment://{file.filename}')
         else:
-            e.colour = 0x4078C0  # git colour, first in google :D
+            embed.colour = 0x4078C0  # git colour, first in google :D
             pil_pics = []
             for p in self.sorted_points_list():
                 pil_pics.append(p.event_type.file_path)
@@ -164,8 +164,8 @@ class TimeLine:
                 chunks, chunk_size = len(markdown_body), const.Limit.Embed.field_value
                 fields = [markdown_body[i : i + chunk_size] for i in range(0, chunks, chunk_size)]
                 for x in fields:
-                    e.add_field(name=f'{p.event_type.emote}{p.author_str}', value=x, inline=False)
-            e.set_author(
+                    embed.add_field(name=f'{p.event_type.emote}{p.author_str}', value=x, inline=False)
+            embed.set_author(
                 name=f'Bugtracker issue #{self.issue.number} update',
                 url=self.last_comment_url,
                 icon_url='https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png',
@@ -178,8 +178,8 @@ class TimeLine:
                 dst.paste(im, (i * delta_x_y, i * delta_x_y), im)
 
             file = bot.imgtools.img_to_file(dst, filename=f'bugtracker_update_{self.issue.number}.png')
-            e.set_thumbnail(url=f'attachment://{file.filename}')
-        return e, file
+            embed.set_thumbnail(url=f'attachment://{file.filename}')
+        return embed, file
 
 
 class BugTracker(AluCog):
@@ -230,16 +230,20 @@ class BugTracker(AluCog):
             else:
                 error_logins.append(l)
 
+        def embed_answer(logins: list[str], color: discord.Color, description: str) -> discord.Embed:
+            e = discord.Embed(color=color)
+            logins_join = ', '.join(f'`{l}`' for l in logins)
+            e.description = f'{description}\n{logins_join}'
+            return e
+
         if success_logins:
             self.valve_devs.extend(success_logins)
-            e = discord.Embed(color=const.MaterialPalette.green())
-            answer = ', '.join(f'`{l}`' for l in logins)
-            e.description = f'Added user(-s) to the list of Valve devs.\n{answer}'
+            e = embed_answer(success_logins, const.MaterialPalette.green(), 'Added user(-s) to the list of Valve devs.')
             await ctx.reply(embed=e)
         if error_logins:
-            e = discord.Embed(color=const.MaterialPalette.red())
-            answer = ', '.join(f'`{l}`' for l in logins)
-            e.description = f'User(-s) were already in the list of Valve devs.\n{answer}'
+            e = embed_answer(
+                error_logins, const.MaterialPalette.red(), 'User(-s) were already in the list of Valve devs.'
+            )
             await ctx.reply(embed=e)
 
     @commands.is_owner()
@@ -345,7 +349,7 @@ class BugTracker(AluCog):
         ):
             if not comment.user or not comment.user.login in self.valve_devs:
                 continue
-            
+
             # comment doesn't have issue object attached directly so we need to manually grab it
             # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
             issue_number = int(comment.issue_url.split('/')[-1])

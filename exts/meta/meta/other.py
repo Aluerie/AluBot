@@ -240,7 +240,7 @@ class OtherCog(AluCog):
         e = discord.Embed(colour=const.Colour.bot_colour(), description=information.description)
         e.add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
 
-        e.set_author(name=f"Made by {information.owner}", icon_url=information.owner.display_avatar.url)
+        e.set_author(name=f"Made by @{information.owner}", icon_url=information.owner.display_avatar.url)
         # statistics
         total_members = 0
         total_unique = len(self.bot.users)
@@ -251,9 +251,9 @@ class OtherCog(AluCog):
                 continue
             total_members += guild.member_count or 1
 
-        avg = [(len([m for m in g.members if not m.bot]) / (g.member_count or 1)) * 100 for g in self.bot.guilds]
-        servers_stats = f"{guilds} total\n{round(sum(avg) / len(avg), 1)}% avg bot/human"
-        e.add_field(name="Servers", value=servers_stats)
+        # avg = [(len([m for m in g.members if not m.bot]) / (g.member_count or 1)) * 100 for g in self.bot.guilds]
+        # avg_slash_bot = f"{round(sum(avg) / len(avg), 1)}% avg bot/human"
+        e.add_field(name="Servers", value=f"{guilds} total")  # \n{avg_slash_bot}"
         e.add_field(name="Members", value=f"{total_members:,} total\n{total_unique:,} unique")
 
         memory_usage = psutil.Process().memory_full_info().uss / 1024**2

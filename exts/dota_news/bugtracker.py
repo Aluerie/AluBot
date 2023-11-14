@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 
 import datetime
 import logging
@@ -10,6 +11,7 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord.ext import commands
 from PIL import Image
+from githubkit.exception import RequestFailed
 
 from utils import AluCog, aluloop, const
 
@@ -398,21 +400,21 @@ class BugTracker(AluCog):
         self.retries = 0
         log.debug('BugTracker task is finished')
 
-    # @git_comments_check.error
-    # async def git_comments_check_error(self, error):
-    #     if isinstance(error, GithubException):
-    #         if error.status == 502:
-    #             if self.retries == 0:
-    #                 e = discord.Embed(description='DotaBugtracker: Server Error 502')
-    #                 await self.hideout.spam.send(embed=e)
-    #             await asyncio.sleep(60 * 10 * 2**self.retries)
-    #             self.retries += 1
-    #             self.git_comments_check.restart()
-    #             return
+    @git_comments_check.error
+    async def git_comments_check_error(self, error):
+        if isinstance(error, RequestFailed):
+            if error.response.status_code == 502:
+                if self.retries == 0:
+                    e = discord.Embed(description='DotaBugtracker: Server Error 502')
+                    await self.hideout.spam.send(embed=e)
+                await asyncio.sleep(60 * 10 * 2**self.retries)
+                self.retries += 1
+                self.git_comments_check.restart()
+                return
 
-    #     txt = 'Dota2 BugTracker task'
-    #     await self.bot.exc_manager.register_error(error, txt, where=txt)
-    #     # self.git_comments_check.restart()
+        txt = 'Dota2 BugTracker task'
+        await self.bot.exc_manager.register_error(error, txt, where=txt)
+        # self.git_comments_check.restart()
 
 
 async def setup(bot: AluBot):

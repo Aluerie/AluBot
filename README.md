@@ -29,8 +29,8 @@
 <https://aluerie.github.io/AluBot/>
 )
 
-Initial idea was to send me notifications  when my favourite  Dota 2/ League of Legends
-[twitch.tv](https://www.twitch.tv/) streamers pick my favourite heroes/champions.
+Initial idea was to send me notifications when my favourite  Dota 2/ League of Legends
+[twitch.tv](https://www.twitch.tv/) streamers pick my favourite heroes/champions and as games end edit the messages to include post-game information.
 
 However, the whole process grew into making *the ultimate multipurpose bot*
 with pretty much everything I ever needed ! Check List of features after the pic.

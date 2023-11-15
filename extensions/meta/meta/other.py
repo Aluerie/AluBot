@@ -87,7 +87,7 @@ class FeedbackModal(discord.ui.Modal, title='Submit Feedback'):
     details = discord.ui.TextInput(
         label='Details',
         placeholder='Leave a comment',
-        style=discord.Textensionstyle.long,
+        style=discord.TextStyle.long,
         required=False,
         max_length=4000,  # 4000 is max apparently, Limit.Embed.description,
     )

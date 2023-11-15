@@ -33,7 +33,7 @@ class ConfModal(discord.ui.Modal):
 
     conf = discord.ui.TextInput(
         label="Make confession to the server",
-        style=discord.Textensionstyle.long,
+        style=discord.TextStyle.long,
         placeholder='Type your confession text here',
         max_length=4000,
     )

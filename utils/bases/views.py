@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Optional
 import discord
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class AluView(discord.ui.View):

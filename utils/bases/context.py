@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from aiohttp import ClientSession
     from asyncpg import Pool
 
-    from ..bot import AluBot
+    from bot import AluBot
 
 __all__ = ('AluContext', 'AluGuildContext', 'ConfirmationView')
 

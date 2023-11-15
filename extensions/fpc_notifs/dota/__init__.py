@@ -1,4 +1,4 @@
-from utils import AluBot, const
+from utils import const
 
 from .._base import FPCCog
 from .notifs import DotaNotifs
@@ -20,5 +20,5 @@ class Dota2FPC(
     """
 
 
-async def setup(bot: AluBot):
+async def setup(bot):
     await bot.add_cog(Dota2FPC(bot))

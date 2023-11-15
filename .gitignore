@@ -17,7 +17,7 @@ venv/
 .alubot/
 
 # beta test
-/exts/beta.py
+/extensions/beta.py
 _test.py
 
 # config secrets

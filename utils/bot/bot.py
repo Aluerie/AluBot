@@ -14,7 +14,7 @@ from githubkit import GitHub
 from steam.client import SteamClient
 
 import config
-from exts import get_extensions
+from extensions import get_extensions
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from aiohttp import ClientSession
     from asyncpg import Pool
 
-    from exts.reminders.reminders import Reminder
+    from extensions.reminders.reminders import Reminder
 
     from .. import AluCog
 

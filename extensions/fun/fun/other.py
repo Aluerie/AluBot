@@ -9,7 +9,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import checks, const, mimicry
+from utils import checks, const, webhook_mimicry
 
 from .._base import FunCog
 
@@ -124,7 +124,7 @@ class Other(FunCog):
     async def send_fancy_text(self, ctx: AluContext, answer: str):
         if ctx.guild:
             # TODO: I'm not sure what to do when permissions won't go our way
-            mimic = mimicry.MimicUserWebhook.from_context(ctx)
+            mimic = webhook_mimicry.MimicUserWebhook.from_context(ctx)
 
             await mimic.send_user_message(ctx.author, content=answer)
 

@@ -6,8 +6,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from exts.utilities.utilities.fix_links import fix_link_worker
-from utils import const, errors, links, mimicry
+from extensions.utilities.utilities.fix_links import fix_link_worker
+from utils import const, errors, links, webhook_mimicry
 
 from ._base import CommunityCog
 
@@ -62,7 +62,7 @@ class FixLinksCommunity(CommunityCog):
         if not fixed_links:
             return
 
-        mimic = mimicry.MimicUserWebhook.from_message(bot=self.bot, message=message)
+        mimic = webhook_mimicry.MimicUserWebhook.from_message(bot=self.bot, message=message)
         msg = await mimic.send_user_message(message.author, message=message, content=fixed_links)
         await message.delete()
         await links.extra_send_fxtwitter_links(msg)

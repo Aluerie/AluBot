@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Annotated, Awaitable, Callable
 import discord
 from discord.ext import commands
 
-from exts import get_extensions
+from extensions import get_extensions
 from utils import AluContext, const
 
 from ._base import DevBaseCog
@@ -22,22 +22,22 @@ if TYPE_CHECKING:
 
 
 class ExtensionConverter(commands.Converter):
-    """Just so I don't type `$reload exts.fpc.dota` but `$reload fpc.dota`
+    """Just so I don't type `$reload extensions.fpc.dota` but `$reload fpc.dota`
 
     Yes. Lazy."""
 
     # currently does not handle base extensions
     async def convert(self, _ctx: AluContext, argument: str):
         m = argument.lower()
-        return f"exts.{m}"
+        return f"extensions.{m}"
 
 
 class ReloadCog(DevBaseCog):
     @commands.command(name="extensions", hidden=True)
     async def extensions(self, ctx: AluContext):
         """Shows available extensions to load/reload/unload."""
-        exts = [f"\N{BLACK CIRCLE} {ext}" for ext in self.bot.extensions.keys()]
-        e = discord.Embed(title="Loaded Extensions", description="\n".join(exts), colour=const.Colour.prpl())
+        extensions = [f"\N{BLACK CIRCLE} {ext}" for ext in self.bot.extensions.keys()]
+        e = discord.Embed(title="Loaded Extensions", description="\n".join(extensions), colour=const.Colour.prpl())
         await ctx.reply(embed=e)
 
     # SINGULAR LOAD UNLOAD RELOAD
@@ -84,8 +84,8 @@ class ReloadCog(DevBaseCog):
     # RELOAD ALL
 
     async def reload_all_worker(self, ctx: AluContext):
-        exts_to_reload = get_extensions(ctx.bot.test, reload=True)
-        exts_to_unload = [e for e in self.bot.extensions if e not in exts_to_reload]
+        extensions_to_reload = get_extensions(ctx.bot.test, reload=True)
+        extensions_to_unload = [e for e in self.bot.extensions if e not in extensions_to_reload]
 
         statuses: list[tuple[bool, str, str]] = []
         errors: list[tuple[str, str]] = []
@@ -102,16 +102,16 @@ class ReloadCog(DevBaseCog):
                     # name, value
                     errors.append((f'{ctx.tick(False)} `{exc.__class__.__name__}`', f"{exc}"))
 
-        for ext in exts_to_reload:
+        for ext in extensions_to_reload:
             emoji = '\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}'
             await do_the_job(ext, emoji, self.reload_or_load_extension)
-        for ext in exts_to_unload:
+        for ext in extensions_to_unload:
             emoji = '\N{OCTAGONAL SIGN}'
             await do_the_job(ext, emoji, self.bot.unload_extension)
 
         if errors:
             content = '\n'.join(
-                f'{ctx.tick(status)} - {emoji} `{ext if not ext.startswith("exts.") else ext[5:]}`'
+                f'{ctx.tick(status)} - {emoji} `{ext if not ext.startswith("extensions.") else ext[5:]}`'
                 for status, emoji, ext in statuses
             )
 
@@ -159,15 +159,15 @@ class ReloadCog(DevBaseCog):
 
         # since I'm using nested rather complex categorized folder structure
         # I'm afraid I need to fetch list of extensions.
-        exts = get_extensions(ctx.bot.test, reload=True)
+        extensions = get_extensions(ctx.bot.test, reload=True)
         for file in files:
             root, ext = os.path.splitext(file)
             if ext != '.py':
                 continue
 
-            if root.startswith('exts/'):
+            if root.startswith('extensions/'):
                 ext_name = root.replace('/', '.')
-                is_submodule = ext_name not in exts
+                is_submodule = ext_name not in extensions
                 ret.append((is_submodule, ext_name))
 
         # For reload order, the submodules should be reloaded first

@@ -1,7 +1,7 @@
 """
 The structure of folders/extensions in this project as follows:
 
-exts/
+extensions/
     ext_category_folder/
         _some_ext_utils_folder/
         _some_ext_utils_file.py 
@@ -19,13 +19,13 @@ This particular file aims to collect those files into Tuple of extensions so end
 >>> get_extensions(False) 
 >>> (
 >>>    'jishaku',
->>>    'exts.fpc.dota',
->>>    'exts.fpc.lol',
->>>    'exts.community.welcome',
+>>>    'extensions.fpc_notifs.dota',
+>>>    'extensions.fpc_notifs.lol',
+>>>    'extensions.community.welcome',
 >>>    ...
 >>> )
 
-where full name for usual extensions consists of the following parts `exts.ext_category.cog_name`.
+where full name for usual extensions consists of the following parts `extensions.ext_category.cog_name`.
 """
 from __future__ import annotations
 
@@ -59,8 +59,8 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
     Get tuple of extensions for bot to load.
 
     Note that this function is a bit more robust than needed according to description above.
-    This function can also catch package exts in "exts/" folder itself like `beta.py`
-    or like we had cog "exts.fun" be one folder cog for a very long time (now it is "exts.fun.fun")
+    This function can also catch package extensions in "extensions/" folder itself like `beta.py`
+    or like we had cog "extensions.fun" be one folder cog for a very long time (now it is "extensions.fun.fun")
 
     Parameters
     ----------
@@ -81,25 +81,25 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
     if test and _test:
         if reload:
             importlib.reload(_test)
-            test_exts, ignore_test = _test.TEST_EXTENSIONS, _test.IGNORE_TEST
+            test_extensions, ignore_test = _test.TEST_EXTENSIONS, _test.IGNORE_TEST
         else:
-            test_exts, ignore_test = TEST_EXTENSIONS, IGNORE_TEST
+            test_extensions, ignore_test = TEST_EXTENSIONS, IGNORE_TEST
 
         if not ignore_test:
-            return BASE_EXTENSIONS + tuple(f'exts.{x}' for x in test_exts)
+            return BASE_EXTENSIONS + tuple(f'extensions.{x}' for x in test_extensions)
 
     # production giga-gathering option.
-    all_folders = [f.name for f in os.scandir('exts') if f.is_dir() if not f.name.startswith('_')]
+    all_folders = [f.name for f in os.scandir('extensions') if f.is_dir() if not f.name.startswith('_')]
 
     ext_category_folders = [x for x in all_folders if x not in MY_PACKAGES]
-    uncategorised_exts = tuple(f'exts.{x}' for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS)
+    uncategorised_extensions = tuple(f'extensions.{x}' for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS)
 
-    categorised_exts = tuple(
+    categorised_extensions = tuple(
         module.name
         for folder in ext_category_folders
-        for module in iter_modules(path=[f'exts/{folder}'], prefix=f'exts.{folder}.')
+        for module in iter_modules(path=[f'extensions/{folder}'], prefix=f'extensions.{folder}.')
         if not module.name.rsplit('.', 1)[-1].startswith('_')
     )
 
-    extensions = BASE_EXTENSIONS + uncategorised_exts + categorised_exts
+    extensions = BASE_EXTENSIONS + uncategorised_extensions + categorised_extensions
     return extensions

@@ -1,5 +1,5 @@
 """
-The files in this folder are made for easier resetting of git-ignored `exts/beta.py` file 
+The files in this folder are made for easier resetting of git-ignored `extensions/beta.py` file 
 where I do various beta testings in the test version of the bot.
 """
 from __future__ import annotations

@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import inspect
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 from PIL import ImageColor
-from typing_extensions import Self
 
 from . import const
 from .bases import AluBotException

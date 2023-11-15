@@ -8,7 +8,7 @@ from discord.ext import tasks
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
-from exts.fpc_notifs.dota._models import OpendotaRequestMatch
+from extensions.fpc_notifs.dota._models import OpendotaRequestMatch
 from utils import AluCog
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ class OpenDotaAutoParser(AluCog):
                 self.active_matches += list(dict.fromkeys([m_id for m_id in m_ids if m_id not in self.active_matches]))
                 log.debug(f'to parse {self.matches_to_parse} active {self.active_matches}')
                 self.bot.dota.emit('autoparse_top_games_response')
-                #TODO: maybe put here friend_id conditions as a next conditional 
+                # TODO: maybe put here friend_id conditions as a next conditional
 
         query = 'SELECT steam_id FROM autoparse'
         self.steam_ids = [r for r, in await self.bot.pool.fetch(query)]

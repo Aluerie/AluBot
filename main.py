@@ -11,8 +11,8 @@ import aiohttp
 import asyncpg
 import click
 
+from bot import AluBot, setup_logging
 from config import POSTGRES_URL
-from utils import AluBot, setup_logging
 from utils.database import create_pool
 
 if TYPE_CHECKING:

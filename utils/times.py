@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Self, Union
 
 import discord
 import parsedatetime as pdt
@@ -21,8 +21,6 @@ from discord.ext import commands
 from .bases import AluBotException
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
-
     from .bases import AluContext
 
 

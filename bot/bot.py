@@ -15,11 +15,11 @@ from steam.client import SteamClient
 
 import config
 from extensions import get_extensions
+from utils import AluContext, ConfirmationView, ExtCategory, cache, const, formats, none_category
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
 from utils.twitch import TwitchClient
 
-from .. import AluContext, ConfirmationView, ExtCategory, cache, const, formats, none_category
 from .app_cmd_tree import AluAppCommandTree
 from .exc_manager import AluExceptionManager
 from .intents_perms import intents, permissions
@@ -29,8 +29,7 @@ if TYPE_CHECKING:
     from asyncpg import Pool
 
     from extensions.reminders.reminders import Reminder
-
-    from .. import AluCog
+    from utils import AluCog
 
 
 __all__ = ('AluBot',)

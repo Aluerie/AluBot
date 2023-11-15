@@ -24,7 +24,7 @@ from .bases import AluContext
 from .const import Colour, Emote
 
 if TYPE_CHECKING:
-    from .bot import AluBot
+    from bot import AluBot
 
 
 class IndexModal(discord.ui.Modal, title="Go to page"):

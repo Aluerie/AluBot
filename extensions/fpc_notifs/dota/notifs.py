@@ -11,6 +11,7 @@ from discord.ext import commands
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
+import config
 from utils import aluloop
 from utils.dota import hero
 
@@ -74,8 +75,8 @@ class DotaNotifs(FPCCog):
             rows = await self.bot.pool.fetch(query)
             return [r for r, in rows]
 
-        self.hero_fav_ids = await get_all_fav_ids("characters", 'character_id')
-        self.player_fav_ids = await get_all_fav_ids("players", 'player_name')
+        self.hero_fav_ids = await get_all_fav_ids("characters", "character_id")
+        self.player_fav_ids = await get_all_fav_ids("players", "player_name")
 
     async def get_args_for_top_source(self, specific_games_flag: bool) -> Union[None, dict]:
         # self.bot.steam_dota_login()
@@ -142,19 +143,33 @@ class DotaNotifs(FPCCog):
                             WHERE name_lower=(SELECT name_lower FROM dota_accounts WHERE friend_id=$1)
                         """
                 user = await self.bot.pool.fetchrow(query, person.account_id)
-                query = '''
+                query = """
                             SELECT ds.channel_id
                             FROM dota_favourite_characters dfc
                             JOIN dota_favourite_players dfp on dfc.guild_id = dfp.guild_id
                             JOIN dota_settings ds on ds.guild_id = dfc.guild_id
                             WHERE character_id=$1 AND player_name=$2
                             AND NOT ds.channel_id=ANY(SELECT channel_id FROM dota_messages WHERE match_id=$3);
-                        '''
+                        """
                 channel_ids = [
                     i for i, in await self.bot.pool.fetch(query, person.hero_id, user.name_lower, match.match_id)
                 ]
+                log.debug(f"DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}")
+                # print(match)
                 if channel_ids:
-                    log.debug(f"DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}")
+                    # sort hero ids until I figure out a better way
+                    hero_ids: list[int] = []
+                    url = (
+                        "https://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/"
+                        f"?key={config.STEAM_WEB_API_KEY}"
+                        f"&server_steam_id={match.server_steam_id}"
+                    )
+                    async with self.bot.session.get(url) as r:
+                        r_json = await r.json()
+                        # looks like these are sorted properly
+                        # but if not then sort it yourself with player["team_slot"] which is integer 0-4
+                        hero_ids = [player["heroid"] for team in r_json["teams"] for player in team["players"]]
+
                     self.live_matches.append(
                         ActiveMatch(
                             match_id=match.match_id,
@@ -162,7 +177,7 @@ class DotaNotifs(FPCCog):
                             player_name=user.display_name,
                             twitchtv_id=user.twitch_id,
                             hero_id=person.hero_id,
-                            hero_ids=[x.hero_id for x in match.players],
+                            hero_ids=hero_ids,  # [x.hero_id for x in match.players],
                             server_steam_id=match.server_steam_id,
                             channel_ids=channel_ids,
                         )
@@ -178,7 +193,7 @@ class DotaNotifs(FPCCog):
             assert isinstance(ch, discord.TextChannel)
             em, img_file = await match.notif_embed_and_file(self.bot)
             log.debug("LF | Successfully made embed+file")
-            owner_name = ch.guild.owner.display_name if ch.guild.owner else 'Somebody'
+            owner_name = ch.guild.owner.display_name if ch.guild.owner else "Somebody"
             em.title = f"{owner_name}'s fav hero + player spotted"
             msg = await ch.send(embed=em, file=img_file)
             query = """ INSERT INTO dota_matches (match_id) 

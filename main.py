@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     pass
 
 try:
-    import uvloop  # type: ignore
+    import uvloop  # type: ignore # not available on Windows
 except ImportError:
     pass
 else:

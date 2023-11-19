@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 
 GITHUB_REPO = "ValveSoftware/Dota2-Gameplay"
@@ -280,43 +280,50 @@ class BugTracker(AluCog):
         issue_dict: dict[int, TimeLine] = dict()
 
         # Closed / Self-assigned / Reopened Events
-        async for event in self.bot.github.paginate(
-            self.bot.github.rest.issues.async_list_events_for_repo,
-            owner="ValveSoftware",
-            repo="Dota2-Gameplay",
-            # it's sorted by updated time descending
-        ):
-            if event.created_at.replace(tzinfo=datetime.timezone.utc) < now:
-                continue
-            if not dt > event.created_at.replace(tzinfo=datetime.timezone.utc):
-                break
-            if not event.event in [x.name for x in list(EventType)]:
-                continue
-            if not event.actor or not event.issue or not event.issue.user:
-                continue
+        for page_number in range(1, 50):
+            async for event in self.bot.github.paginate(
+                self.bot.github.rest.issues.async_list_events_for_repo,
+                owner="ValveSoftware",
+                repo="Dota2-Gameplay",
+                # it's sorted by updated time descending
+                # unfortunately no since parameter.
+                # this is why we need to have this page_number workaround
+                page=page_number,
+            ):
+                if event.created_at.replace(tzinfo=datetime.timezone.utc) < dt:
+                    break
+                if event.created_at.replace(tzinfo=datetime.timezone.utc) < now:
+                    continue
+                if not event.event in [x.name for x in list(EventType)]:
+                    continue
+                if not event.actor or not event.issue or not event.issue.user:
+                    continue
 
-            if (login := event.actor.login) in self.valve_devs:
-                # it's confirmed that Valve dev is an actor of the event.
-                pass
-            elif login != event.issue.user.login:
-                # if actor is not OP of the issue then we can consider that this person is a valve dev
-                self.valve_devs.append(login)
-                query = """ INSERT INTO valve_devs (login) VALUES ($1)
-                            ON CONFLICT DO NOTHING;
-                        """
-                await self.bot.pool.execute(query, login)
-            else:
-                # looks like non-dev event
-                continue
+                if (login := event.actor.login) in self.valve_devs:
+                    # it's confirmed that Valve dev is an actor of the event.
+                    pass
+                elif login != event.issue.user.login:
+                    # if actor is not OP of the issue then we can consider that this person is a valve dev
+                    self.valve_devs.append(login)
+                    query = """ INSERT INTO valve_devs (login) VALUES ($1)
+                                ON CONFLICT DO NOTHING;
+                            """
+                    await self.bot.pool.execute(query, login)
+                else:
+                    # looks like non-dev event
+                    continue
 
-            issue_dict.setdefault(event.issue.number, TimeLine(issue=event.issue)).add_action(
-                Event(
-                    enum_type=(getattr(EventType, event.event)).value,
-                    created_at=event.created_at,
-                    actor=event.actor,
-                    issue_number=event.issue.number,
+                issue_dict.setdefault(event.issue.number, TimeLine(issue=event.issue)).add_action(
+                    Event(
+                        enum_type=(getattr(EventType, event.event)).value,
+                        created_at=event.created_at,
+                        actor=event.actor,
+                        issue_number=event.issue.number,
+                    )
                 )
-            )
+            else:
+                continue  # only executed if the inner loop did NOT break
+            break  # only executed if the inner loop DID break
 
         # Issues opened by Valve devs
         async for issue in self.bot.github.paginate(

@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from .. import const
-from . import app, txt
+from . import app, prefix
 
 if TYPE_CHECKING:
     from .. import AluBot, AluContext
@@ -40,7 +40,7 @@ def is_trustee():
     async def pred(ctx_ntr: AluContext | discord.Interaction[AluBot]) -> bool:
         """trustees only"""
         query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
-        trusted_ids: List[int] = await ctx_ntr.client.pool.fetchval(query, Guild.community)  # type: ignore
+        trusted_ids: list[int] = await ctx_ntr.client.pool.fetchval(query, const.Guild.community)
         if ctx_ntr.user.id in trusted_ids:
             return True
         else:
@@ -58,7 +58,7 @@ def is_trustee():
 def is_in_guilds(*guild_ids: int):
     def decorator(func: T) -> T:
         app.is_in_guilds(*guild_ids)
-        txt.is_in_guilds(*guild_ids)
+        prefix.is_in_guilds(*guild_ids)
         return func
 
     return decorator
@@ -71,7 +71,7 @@ def is_my_guild():
 def is_community():
     def decorator(func: T) -> T:
         app.is_community()
-        txt.is_community()
+        prefix.is_community()
         return func
 
     return decorator

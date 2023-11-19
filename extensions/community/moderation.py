@@ -27,7 +27,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             raise errors.ErroneousUsage("Don't bully bots, please")
 
     @commands.has_role(const.Role.discord_mods)
-    @checks.txt.is_community()
+    @checks.prefix.is_community()
     @commands.command()
     async def warn(self, ctx: AluGuildContext, member: discord.Member, *, reason: str = "No reason"):
         """Give member a warning."""
@@ -43,7 +43,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         await self.community.logs.send(embed=e)
 
     @commands.has_role(const.Role.discord_mods)
-    @checks.txt.is_community()
+    @checks.prefix.is_community()
     @commands.command()
     async def mute(
         self,

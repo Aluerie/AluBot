@@ -16,7 +16,7 @@ uvloop~=0.17.0; platform_system == 'Linux'  #ignore on windows because not avail
 aiofiles~=0.8.0
 pillow==9.5.0
 emoji==2.8.0
-numpy==1.25.0
+numpy==1.26.2
 aiohttp~=3.8.4
 # .....................
 steam~=1.4.4

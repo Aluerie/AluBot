@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import itertools
 import logging
 import re
 import textwrap
@@ -21,8 +22,10 @@ if TYPE_CHECKING:
     from utils import AluBot, AluContext
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
+# this might backfire but why the hell githubkit put GET REST logs as log.INFO, jesus christ.
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 GITHUB_REPO = "ValveSoftware/Dota2-Gameplay"
 GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
@@ -280,19 +283,22 @@ class BugTracker(AluCog):
         issue_dict: dict[int, TimeLine] = dict()
 
         # Closed / Self-assigned / Reopened Events
-        for page_number in range(1, 50):
+        for page_number in itertools.count(start=1, step=1):
             async for event in self.bot.github.paginate(
                 self.bot.github.rest.issues.async_list_events_for_repo,
                 owner="ValveSoftware",
                 repo="Dota2-Gameplay",
                 # it's sorted by updated time descending
-                # unfortunately no since parameter.
+                # unfortunately, no "since" parameter.
                 # this is why we need to have this page_number workaround
                 page=page_number,
             ):
                 if event.created_at.replace(tzinfo=datetime.timezone.utc) < dt:
+                    # we reached events that we are supposedly already checked
                     break
                 if event.created_at.replace(tzinfo=datetime.timezone.utc) < now:
+                    # these events got created after task start and before paginator
+                    # therefore we leave them untouched for the next batch
                     continue
                 if not event.event in [x.name for x in list(EventType)]:
                     continue
@@ -363,18 +369,8 @@ class BugTracker(AluCog):
             # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
             issue_number = int(comment.issue_url.split('/')[-1])
 
-            issue_dict.setdefault(
-                issue_number,
-                TimeLine(  # if the issue is not in the dict then we need to async_get it ourselves
-                    issue=(
-                        await self.bot.github.rest.issues.async_get(
-                            owner='ValveSoftware',
-                            repo='Dota2-Gameplay',
-                            issue_number=issue_number,
-                        )
-                    ).parsed_data
-                ),
-            ).add_action(
+            # if the issue is not in the dict then we need to async_get it ourselves
+            issue_dict.setdefault(issue_number, TimeLine(issue=await self.get_issue(issue_number))).add_action(
                 Comment(
                     enum_type=CommentType.commented.value,
                     created_at=comment.created_at,
@@ -428,6 +424,15 @@ class BugTracker(AluCog):
         txt = 'Dota2 BugTracker task'
         await self.bot.exc_manager.register_error(error, txt, where=txt)
         # self.git_comments_check.restart()
+
+    async def get_issue(self, issue_number: int):
+        return (
+            await self.bot.github.rest.issues.async_get(
+                owner='ValveSoftware',
+                repo='Dota2-Gameplay',
+                issue_number=issue_number,
+            )
+        ).parsed_data
 
 
 async def setup(bot: AluBot):

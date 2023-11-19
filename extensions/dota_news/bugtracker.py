@@ -286,8 +286,10 @@ class BugTracker(AluCog):
             repo="Dota2-Gameplay",
             # it's sorted by updated time descending
         ):
-            if not dt < event.created_at.replace(tzinfo=datetime.timezone.utc) < now:
+            if event.created_at.replace(tzinfo=datetime.timezone.utc) < now:
                 continue
+            if not dt > event.created_at.replace(tzinfo=datetime.timezone.utc):
+                break
             if not event.event in [x.name for x in list(EventType)]:
                 continue
             if not event.actor or not event.issue or not event.issue.user:

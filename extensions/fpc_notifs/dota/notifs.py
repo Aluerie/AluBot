@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from utils import AluBot
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 
 class DotaNotifs(FPCCog):
@@ -39,11 +39,11 @@ class DotaNotifs(FPCCog):
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def response(result):
-            # log.debug(
-            #     f"DF | top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
-            #     f"{result.start_game, result.game_list_index, len(result.game_list)} "
-            #     f"{result.game_list[0].players[0].account_id}"
-            # )
+            log.debug(
+                f"DF | top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
+                f"{result.start_game, result.game_list_index, len(result.game_list)} "
+                f"{result.game_list[0].players[0].account_id}"
+            )
             if not result.specific_games:
                 for match in result.game_list:
                     self.top_source_dict[match.match_id] = match
@@ -78,7 +78,7 @@ class DotaNotifs(FPCCog):
         self.player_fav_ids = await get_all_fav_ids("players", 'player_name')
 
     async def get_args_for_top_source(self, specific_games_flag: bool) -> Union[None, dict]:
-        self.bot.steam_dota_login()
+        # self.bot.steam_dota_login()
 
         if specific_games_flag:
             proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)

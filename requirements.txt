@@ -30,7 +30,7 @@ urllib3~=1.26.9
 wordcloud~=1.9.2
 matplotlib~=3.7.1
 githubkit
-gtts~=2.3.1
+gtts~=2.4.0
 ffmpeg
 unidiff~=0.7.4
 psutil==5.9.4

@@ -20,7 +20,7 @@ numpy==1.25.0
 aiohttp~=3.8.4
 # .....................
 steam~=1.4.4
-protobuf~=3.20.1 # any later version won't work
+protobuf~=4.25.1 # any later version won't work
 dota2~=1.1.0
 # .....................
 vdf~=3.3

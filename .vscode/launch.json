@@ -8,7 +8,7 @@
             "name": "YenBot",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "program": "__main__.py",
             "args": [
                 "-t"
             ],
@@ -19,7 +19,7 @@
             "name": "AluBot",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "program": "__main__.py",
             "args": [],
             "console": "integratedTerminal",
             //"justMyCode": true

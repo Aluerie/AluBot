@@ -12,7 +12,7 @@ from extensions.fpc_notifs.dota._models import OpendotaRequestMatch
 from utils import AluCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -43,11 +43,11 @@ class OpenDotaAutoParser(AluCog):
                 m_ids = [m.match_id for m in result.game_list]
                 self.matches_to_parse = list(dict.fromkeys([m_id for m_id in self.active_matches if m_id not in m_ids]))
                 self.active_matches += list(dict.fromkeys([m_id for m_id in m_ids if m_id not in self.active_matches]))
-                log.debug(f'to parse {self.matches_to_parse} active {self.active_matches}')
-                self.bot.dota.emit('autoparse_top_games_response')
+                log.debug(f"to parse {self.matches_to_parse} active {self.active_matches}")
+                self.bot.dota.emit("autoparse_top_games_response")
                 # TODO: maybe put here friend_id conditions as a next conditional
 
-        query = 'SELECT steam_id FROM autoparse'
+        query = "SELECT steam_id FROM autoparse"
         self.steam_ids = [r for r, in await self.bot.pool.fetch(query)]
 
         self.autoparse_task.start()
@@ -64,21 +64,21 @@ class OpenDotaAutoParser(AluCog):
         proto_msg.body.steamid_request.extend(self.steam_ids)  # type: ignore
         resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
         if resp is None:
-            print('resp is None, hopefully everything else will be fine tho;')
+            print("resp is None, hopefully everything else will be fine tho;")
             return
         for item in resp.rich_presence:
             if rp_bytes := item.rich_presence_kv:
                 # steamid = item.steamid_user
-                rp = vdf.binary_loads(rp_bytes)['RP']
+                rp = vdf.binary_loads(rp_bytes)["RP"]
                 # print(rp)
-                if lobby_id := int(rp.get('WatchableGameID', 0)):
+                if lobby_id := int(rp.get("WatchableGameID", 0)):
                     self.lobby_ids.add(lobby_id)
 
         # print(self.lobby_ids)
         # dota.on('ready', ready_function)
         if self.lobby_ids:
             self.bot.dota.request_top_source_tv_games(lobby_ids=list(self.lobby_ids))
-            self.bot.dota.wait_event('autoparse_top_games_response', timeout=8)
+            self.bot.dota.wait_event("autoparse_top_games_response", timeout=8)
         else:
             self.matches_to_parse = self.active_matches
 

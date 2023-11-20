@@ -14,7 +14,8 @@ from utils.dota import hero
 from .._fpc_utils import FPCSettingsBase
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluGuildContext
+    from bot import AluBot
+    from utils import AluGuildContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -58,8 +59,8 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
             bot,
             *args,
             colour=const.Colour.prpl(),
-            game='dota',
-            game_mention='Dota 2',
+            game="dota",
+            game_mention="Dota 2",
             game_icon=const.Logo.dota,
             extra_account_info_columns=["friend_id"],
             character_id_by_name=hero.id_by_name,
@@ -500,13 +501,13 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
     async def get_character_data(self):
         return await hero.hero_keys_cache.data
 
-    @slh_dota_hero.command(name='setup')
+    @slh_dota_hero.command(name="setup")
     async def slh_dota_hero_setup(self, ntr: discord.Interaction[AluBot]):
         """Interactive setup to add/remove heroes in/from your favourite list."""
         await self.character_setup(ntr)
 
     @checks.hybrid.is_manager()
-    @ext_dota_hero.command(name='setup')
+    @ext_dota_hero.command(name="setup")
     async def ext_dota_hero_setup(self, ctx: AluGuildContext):
         """Interactive setup to add/remove heroes in/from your favourite list."""
         await self.character_setup(ctx)

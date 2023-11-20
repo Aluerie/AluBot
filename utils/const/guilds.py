@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, TypeVar
 import discord
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 T = TypeVar("T")
 
@@ -23,19 +23,19 @@ class SnowflakeEnum(IntEnum):
 class ChannelEnum(SnowflakeEnum):
     @property
     def mention(self) -> str:
-        return f'<#{self.value}>'
+        return f"<#{self.value}>"
 
 
 class RoleEnum(SnowflakeEnum):
     @property
     def mention(self) -> str:
-        return f'<@&{self.value}>'
+        return f"<@&{self.value}>"
 
 
 class UserEnum(SnowflakeEnum):
     @property
     def mention(self) -> str:
-        return f'<@{self.value}>'
+        return f"<@{self.value}>"
 
 
 class Guild:
@@ -180,7 +180,7 @@ class SavedGuild:
         self.id: int = guild_id
 
     def __repr__(self) -> str:
-        return f'<{self.__class__.__name__} id={self.id}>'
+        return f"<{self.__class__.__name__} id={self.id}>"
 
     @property
     def guild(self) -> discord.Guild:

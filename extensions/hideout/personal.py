@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-import re
 from typing import TYPE_CHECKING
 
 import discord
-from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, const
+from utils import const
 
 from ._base import HideoutCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
 
 
 class PersonalCommands(HideoutCog):
@@ -22,13 +20,13 @@ class PersonalCommands(HideoutCog):
             # if somebody somehow enters it then also jail them lol
             await member.add_roles(self.bot.hideout.jailed_bots)
 
-    @commands.Cog.listener(name='on_message')
+    @commands.Cog.listener(name="on_message")
     async def personal_git_copy_paste(self, message: discord.Message):
         if message.channel.id == const.Channel.github_webhook:
             embeds = [e.copy() for e in message.embeds]
 
             for e in embeds:
-                if e.author and e.author.name != self.bot.developer:
+                if e.author and e.author.name not in [self.bot.developer, "dependabot[bot]"]:
                     await self.hideout.repost.send(embeds=embeds)
                     break
 

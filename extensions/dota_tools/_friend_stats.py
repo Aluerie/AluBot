@@ -20,7 +20,8 @@ from utils.pages import EnumeratedPages
 from ._utils import MatchHistoryData, fancy_ax, generate_data, gradient_fill, heroes_played_bar, mmr_by_hero_bar
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluGuildContext
+    from bot import AluBot
+    from utils import AluGuildContext
 
 log = logging.getLogger(__name__)
 # log.setLevel(logging.WARNING)

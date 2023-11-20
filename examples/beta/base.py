@@ -19,12 +19,13 @@ from utils import AluCog, ExtCategory, aluloop, const, errors
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 category = ExtCategory(
-    name='Beta Features',
+    name="Beta Features",
     emote=const.Emote.bedWTF,
-    description='Beta Features',
+    description="Beta Features",
 )
 
 

@@ -18,9 +18,9 @@ if TYPE_CHECKING:
     from pyot.models.lol import Rune, Spell
     from pyot.models.lol.match import MatchParticipantData
 
-    from utils import AluBot
+    from bot import AluBot
 
-__all__ = ('Account', 'Match', 'LiveMatch', 'PostMatchPlayer')
+__all__ = ("Account", "Match", "LiveMatch", "PostMatchPlayer")
 
 
 log = logging.getLogger(__name__)
@@ -38,17 +38,17 @@ class Account:
     def opgg(self) -> str:
         """op.gg link for the match"""
         server = platform_to_server(self.platform)
-        return f'https://{server}.op.gg/summoners/{server}/{self._stripped_acc_name}'
+        return f"https://{server}.op.gg/summoners/{server}/{self._stripped_acc_name}"
 
     @property
     def ugg(self) -> str:
         """u.gg link for the match"""
-        return f'https://u.gg/lol/profile/{self.platform}/{self._stripped_acc_name}'
+        return f"https://u.gg/lol/profile/{self.platform}/{self._stripped_acc_name}"
 
     @property
     def links(self) -> str:
         """all links at once"""
-        return f'/[Opgg]({self.opgg})/[Ugg]({self.ugg})'
+        return f"/[Opgg]({self.opgg})/[Ugg]({self.ugg})"
 
 
 class Match(Account):
@@ -114,9 +114,9 @@ class LiveMatch(Match):
             champ_img = champ_img.resize((62, 62))
             extra_space = 0 if count < 5 else 20
             img.paste(champ_img, (count * 62 + extra_space, 0))
-        font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 33)
+        font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
         draw = ImageDraw.Draw(img)
-        text = f'{display_name} - {await champion.name_by_id(self.champ_id)}'
+        text = f"{display_name} - {await champion.name_by_id(self.champ_id)}"
         w2, h2 = bot.imgtools.get_text_wh(text, font)
         draw.text(((width - w2) / 2, 65), text, font=font, align="center")
         rune_img_urls = [(await r.get()).icon_abspath for r in self.runes]
@@ -143,13 +143,13 @@ class LiveMatch(Match):
         )
         e = discord.Embed(color=Colour.rspbrry(), url=ts.url)
         e.description = (
-            f'Match `{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n'
-            f'{await bot.twitch.last_vod_link(ts.twitch_id, seconds_ago=self.long_ago)}{self.links}'
+            f"Match `{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n"
+            f"{await bot.twitch.last_vod_link(ts.twitch_id, seconds_ago=self.long_ago)}{self.links}"
         )
-        e.set_image(url=f'attachment://{img_file.filename}')
+        e.set_image(url=f"attachment://{img_file.filename}")
         e.set_thumbnail(url=await self.champ_icon_url)
         e.set_author(
-            name=f'{ts.display_name} - {await champion.name_by_id(self.champ_id)}', url=ts.url, icon_url=ts.logo_url
+            name=f"{ts.display_name} - {await champion.name_by_id(self.champ_id)}", url=ts.url, icon_url=ts.logo_url
         )
         return e, img_file
 
@@ -160,7 +160,7 @@ class PostMatchPlayer:
         self.message_id = message_id
 
         self.player_id = player_data.summoner_id
-        self.kda = f'{player_data.kills}/{player_data.deaths}/{player_data.assists}'
+        self.kda = f"{player_data.kills}/{player_data.deaths}/{player_data.assists}"
         self.outcome = "Win" if player_data.win else "Loss"
         self.items = player_data.items
 
@@ -169,16 +169,16 @@ class PostMatchPlayer:
         width, height = img.size
         last_row_h = 50
         _last_row_y = height - last_row_h
-        font = ImageFont.truetype('./assets/fonts/Inter-Black-slnt=0.ttf', 33)
+        font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
 
         draw = ImageDraw.Draw(img)
         w3, h3 = bot.imgtools.get_text_wh(self.kda, font)
         draw.text((0, height - last_row_h - h3), self.kda, font=font, align="right")
         w2, h2 = bot.imgtools.get_text_wh(self.outcome, font)
         colour_dict = {
-            'Win': str(MaterialPalette.green(shade=800)),
-            'Loss': str(MaterialPalette.red(shade=900)),
-            'No Scored': (255, 255, 255),
+            "Win": str(MaterialPalette.green(shade=800)),
+            "Loss": str(MaterialPalette.red(shade=900)),
+            "No Scored": (255, 255, 255),
         }
         draw.text(
             (0, height - last_row_h - h3 - h2 - 5),
@@ -207,8 +207,8 @@ class PostMatchPlayer:
             return
 
         e = msg.embeds[0]
-        img_file = bot.imgtools.img_to_file(await self.edit_the_image(e.image.url, bot), filename='edited.png')
-        e.set_image(url=f'attachment://{img_file.filename}')
+        img_file = bot.imgtools.img_to_file(await self.edit_the_image(e.image.url, bot), filename="edited.png")
+        e.set_image(url=f"attachment://{img_file.filename}")
         try:
             await msg.edit(embed=e, attachments=[img_file])
         except discord.Forbidden:

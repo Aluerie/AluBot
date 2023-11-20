@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import asyncio
 import datetime
 import re
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import discord
 from discord.ext import commands
@@ -13,7 +12,7 @@ from utils import aluloop, const, formats
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class MemberLogging(CommunityCog):
@@ -29,11 +28,11 @@ class MemberLogging(CommunityCog):
     def verb_word(self, before: Any, after: Any) -> str:
         # TODO: make global func out of it because we use it in many files it feels like.
         if before is None and after:
-            return 'set'
+            return "set"
         if before and after is None:
-            return 'removed'
+            return "removed"
         else:
-            return 'changed'
+            return "changed"
 
     def before_after_embed(
         self,
@@ -62,14 +61,14 @@ class MemberLogging(CommunityCog):
         """
         e = self.base_embed(member)
         e.description = (
-            f'{member.mention}\'s {attribute_locale} was {self.verb_word(before_field, after_field)} '
-            f'{const.Emote.PepoDetective}\n'
+            f"{member.mention}'s {attribute_locale} was {self.verb_word(before_field, after_field)} "
+            f"{const.Emote.PepoDetective}\n"
         )
-        e.add_field(name='Before', value=discord.utils.escape_markdown(before_field) if before_field else "`...`")
-        e.add_field(name='After', value=discord.utils.escape_markdown(after_field) if after_field else "`...`")
+        e.add_field(name="Before", value=discord.utils.escape_markdown(before_field) if before_field else "`...`")
+        e.add_field(name="After", value=discord.utils.escape_markdown(after_field) if after_field else "`...`")
         return e
 
-    @commands.Cog.listener('on_user_update')
+    @commands.Cog.listener("on_user_update")
     async def logger_on_user_update(self, before: discord.User, after: discord.User):
         # if self.community.guild.id not in before.mutual_guilds:
         #     return
@@ -82,18 +81,18 @@ class MemberLogging(CommunityCog):
         embeds: list[discord.Embed] = []
 
         if before.name != after.name:
-            e = self.before_after_embed(member, 'username', before.name, after.name)
+            e = self.before_after_embed(member, "username", before.name, after.name)
             embeds.append(e)
         elif before.discriminator != after.discriminator:
-            e = self.before_after_embed(member, 'discriminator', before.discriminator, after.discriminator)
+            e = self.before_after_embed(member, "discriminator", before.discriminator, after.discriminator)
             embeds.append(e)
         elif before.global_name != after.global_name:
-            e = self.before_after_embed(member, 'global display name', before.global_name, after.global_name)
+            e = self.before_after_embed(member, "global display name", before.global_name, after.global_name)
             embeds.append(e)
         elif before.avatar != after.avatar:
             # TODO: maybe invite logic for default avatar as in removed/set from zero
             # like duckbot, even tho it's already clear enough
-            e = self.before_after_embed(member, 'avatar', 'Thumbnail to the right', 'Image below')
+            e = self.before_after_embed(member, "avatar", "Thumbnail to the right", "Image below")
             e.set_thumbnail(url=before.display_avatar.url)
             e.set_image(url=after.display_avatar.url)
             embeds.append(e)
@@ -106,29 +105,29 @@ class MemberLogging(CommunityCog):
             extra_e = self.base_embed(member)
             for attr in changes:
                 # TODO: this will fail if 25+ fields
-                value = f'**Before**: {getattr(before, attr)}\n**After**: {getattr(after, attr)}'
-                extra_e.add_field(name=f'`{attr}`', value=value)
-            extra_e.set_footer(text=f'{before.id}')
+                value = f"**Before**: {getattr(before, attr)}\n**After**: {getattr(after, attr)}"
+                extra_e.add_field(name=f"`{attr}`", value=value)
+            extra_e.set_footer(text=f"{before.id}")
             await self.hideout.spam.send(embed=extra_e)
 
         # TODO: it will fail if there is more than 10 things
         await self.community.bot_spam.send(embeds=embeds)
 
-    @commands.Cog.listener('on_member_update')
+    @commands.Cog.listener("on_member_update")
     async def logger_member_roles_update(self, before: discord.Member, after: discord.Member):
         if before.guild.id != const.Guild.community:
             return
 
         added_role = list(set(after.roles) - set(before.roles))
         if added_role and added_role[0].id not in const.IGNORED_FOR_LOGS:
-            e = discord.Embed(description=f'**Role added:** {added_role[0].mention}', colour=0x00FF7F)
-            e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
+            e = discord.Embed(description=f"**Role added:** {added_role[0].mention}", colour=0x00FF7F)
+            e.set_author(name=f"{after.display_name}'s roles changed", icon_url=after.display_avatar.url)
             return await self.bot.community.logs.send(embed=e)
 
         removed_role = list(set(before.roles) - set(after.roles))
         if removed_role and removed_role[0].id not in const.IGNORED_FOR_LOGS:
-            e = discord.Embed(description=f'**Role removed:** {removed_role[0].mention}', colour=0x006400)
-            e.set_author(name=f'{after.display_name}\'s roles changed', icon_url=after.display_avatar.url)
+            e = discord.Embed(description=f"**Role removed:** {removed_role[0].mention}", colour=0x006400)
+            e.set_author(name=f"{after.display_name}'s roles changed", icon_url=after.display_avatar.url)
             return await self.bot.community.logs.send(embed=e)
 
     ##############################################
@@ -136,16 +135,16 @@ class MemberLogging(CommunityCog):
     ##############################################
 
     async def update_database_and_announce(self, member_after: discord.Member, nickname_before: str | None):
-        query = 'UPDATE users SET name=$1 WHERE id=$2'
+        query = "UPDATE users SET name=$1 WHERE id=$2"
         await self.bot.pool.execute(query, member_after.display_name, member_after.id)
 
-        e = self.before_after_embed(member_after, 'server nickname', nickname_before, member_after.nick)
+        e = self.before_after_embed(member_after, "server nickname", nickname_before, member_after.nick)
         await self.bot.community.bot_spam.send(embed=e)
 
         # ROLLING STONES CHECK
         await self.rolling_stones_role_check(member_after)
 
-    @commands.Cog.listener('on_member_update')
+    @commands.Cog.listener("on_member_update")
     async def logger_member_nickname_update(self, before: discord.Member, after: discord.Member):
         if before.bot:
             return
@@ -164,12 +163,12 @@ class MemberLogging(CommunityCog):
         if not after.nick:
             return
 
-        if 'Stone' in after.nick and after not in rolling_stones_role.members:
+        if "Stone" in after.nick and after not in rolling_stones_role.members:
             e = discord.Embed(colour=rolling_stones_role.colour)
-            e.description = f'{after.mention} gets lucky {rolling_stones_role.mention} role {const.Emote.PogChampPepe}'
+            e.description = f"{after.mention} gets lucky {rolling_stones_role.mention} role {const.Emote.PogChampPepe}"
             await self.bot.community.bot_spam.send(embed=e)
             await after.add_roles(rolling_stones_role)
-        elif 'Stone' not in after.nick and after in rolling_stones_role.members:
+        elif "Stone" not in after.nick and after in rolling_stones_role.members:
             await after.remove_roles(rolling_stones_role)
 
     @aluloop(hours=6)
@@ -191,13 +190,13 @@ class MemberLogging(CommunityCog):
             suspect_targets = [
                 entry.target
                 async for entry in guild.audit_logs(action=discord.AuditLogAction.member_update, after=heartbeat_dt)
-                if getattr(entry.after, 'nick', None) != getattr(entry.before, 'nick', None)
+                if getattr(entry.after, "nick", None) != getattr(entry.before, "nick", None)
                 and isinstance(entry.target, discord.Member)
             ]
             suspect_targets = list(dict.fromkeys(suspect_targets))  # remove duplicates
 
             for target in suspect_targets:
-                query = 'SELECT name FROM users WHERE id=$1'
+                query = "SELECT name FROM users WHERE id=$1"
                 database_display_name = await self.bot.pool.fetchval(query, target.id)
 
                 if database_display_name != target.display_name:
@@ -220,14 +219,14 @@ class MessageLogging(CommunityCog):
 
         channel: discord.abc.GuildChannel = after.channel  # type: ignore # it's secured to be .community channel
         e = discord.Embed(colour=0x00BFFF)
-        msg = f'{after.author.display_name} edit in #{channel.name}'
+        msg = f"{after.author.display_name} edit in #{channel.name}"
         e.set_author(name=msg, icon_url=after.author.display_avatar.url, url=after.jump_url)
         # TODO: if discord ever makes author field jumpable from mobile then remove [Jump Link] from below
         # TODO: inline word by word doesn't really work well on emote changes too
         # for example if before is peepoComfy and after is dankComfy then it wont be obvious in the embed result
         # since discord formats emotes first.
         e.description = (
-            f'[**Jump link**]({after.jump_url}) {formats.inline_word_by_word_diff(before.content, after.content)}'
+            f"[**Jump link**]({after.jump_url}) {formats.inline_word_by_word_diff(before.content, after.content)}"
         )
         await self.community.logs.send(embed=e)
 
@@ -237,12 +236,12 @@ class MessageLogging(CommunityCog):
             return
         if re.search(const.Regex.bug_check, message.content):  # bug_check
             return
-        if message.content.startswith('$'):
+        if message.content.startswith("$"):
             return
 
         channel: discord.abc.GuildChannel = message.channel  # type: ignore # it's secured to be .community channel
         e = discord.Embed(description=message.content, colour=0xB22222)
-        msg = f'{message.author.display_name}\'s del in #{channel}'
+        msg = f"{message.author.display_name}'s del in #{channel}"
         e.set_author(name=msg, icon_url=message.author.display_avatar.url)
         files = [await item.to_file() for item in message.attachments]
         return await self.bot.community.logs.send(embed=e, files=files)
@@ -259,24 +258,24 @@ class CommandLogging(CommunityCog):
         if not ctx.guild or ctx.guild.id not in self.included_guilds or ctx.author.id in self.ignored_users:
             return
 
-        cmd_kwargs = ' '.join([f'{k}: {v}' for k, v in ctx.kwargs.items()])
+        cmd_kwargs = " ".join([f"{k}: {v}" for k, v in ctx.kwargs.items()])
         if ctx.interaction:
             try:
                 jump_url = (await ctx.interaction.original_response()).jump_url
             except discord.NotFound:
                 jump_url = None
-            cmd_text = f'/{ctx.command.qualified_name}'
+            cmd_text = f"/{ctx.command.qualified_name}"
         else:
             jump_url = ctx.message.jump_url
             cmd_text = ctx.message.content
 
-        e = discord.Embed(description=f'{cmd_text}\n{cmd_kwargs}', colour=ctx.author.colour)
+        e = discord.Embed(description=f"{cmd_text}\n{cmd_kwargs}", colour=ctx.author.colour)
         if isinstance(ctx.channel, discord.DMChannel):
-            channel_name = 'DMs'
+            channel_name = "DMs"
         else:
-            channel_name = getattr(ctx.channel, 'name', 'somewhere \N{THINKING FACE}')
+            channel_name = getattr(ctx.channel, "name", "somewhere \N{THINKING FACE}")
 
-        msg = f'{ctx.author.display_name} used command in {channel_name}'
+        msg = f"{ctx.author.display_name} used command in {channel_name}"
         e.set_author(icon_url=ctx.author.display_avatar.url, name=msg, url=jump_url)
         await self.bot.community.logs.send(embed=e)
 
@@ -288,7 +287,7 @@ class VoiceChatMembersLogging(CommunityCog):
     async def cog_unload(self) -> None:
         self.check_voice_members.cancel()
 
-    @commands.Cog.listener('on_voice_state_update')
+    @commands.Cog.listener("on_voice_state_update")
     async def community_voice_chat_logging(
         self,
         member: discord.Member,
@@ -302,21 +301,21 @@ class VoiceChatMembersLogging(CommunityCog):
         if before.channel is None and after.channel is not None:  # joined the voice channel
             await member.add_roles(voice_role)
             e = discord.Embed(color=0x00FF7F)
-            msg = f'{member.display_name} entered {after.channel.name}.'
+            msg = f"{member.display_name} entered {after.channel.name}."
             e.set_author(name=msg, icon_url=member.display_avatar.url)
             await after.channel.send(embed=e)
             return
         if before.channel is not None and after.channel is None:  # quit the voice channel
             await member.remove_roles(voice_role)
             e = discord.Embed(color=0x800000)
-            msg = f'{member.display_name} left {before.channel.name}.'
+            msg = f"{member.display_name} left {before.channel.name}."
             e.set_author(name=msg, icon_url=member.display_avatar.url)
             await before.channel.send(embed=e)
             return
         if before.channel is not None and after.channel is not None:  # changed voice channels
             if before.channel.id != after.channel.id:
                 e = discord.Embed(color=0x6495ED)
-                msg = f'{member.display_name} went from {before.channel.name} to {after.channel.name}.'
+                msg = f"{member.display_name} went from {before.channel.name} to {after.channel.name}."
                 e.set_author(name=msg, icon_url=member.display_avatar.url)
                 await before.channel.send(embed=e)
                 await after.channel.send(embed=e)

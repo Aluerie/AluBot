@@ -11,7 +11,8 @@ from utils import aluloop, const, errors
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 
 class UmbraSyncCommandCog(DevBaseCog):
@@ -50,7 +51,7 @@ class UmbraSyncCommandCog(DevBaseCog):
                     pass
                 else:
                     ret += 1
-            return (f'`{ret}/{len(guilds)}` guilds', "Synced guild-bound commands to a list of guilds.")
+            return (f"`{ret}/{len(guilds)}` guilds", "Synced guild-bound commands to a list of guilds.")
 
         if spec == "trust":
             guild_list = [discord.Object(id=guild_id) for guild_id in const.TRUSTED_GUILDS]
@@ -77,7 +78,7 @@ class UmbraSyncCommandCog(DevBaseCog):
                     ctx.bot.tree.clear_commands(guild=ctx.guild)
                     desc = "Cleared guild-bound commands from the current guild."
             synced = await ctx.bot.tree.sync(guild=ctx.guild)
-            title = f'`{len(synced)}` commands'
+            title = f"`{len(synced)}` commands"
 
         # global sync then
         else:
@@ -101,9 +102,9 @@ class DailyAutoSync(DevBaseCog):
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         self.sync_dict: dict[str, None | int] = {
-            'hideout-bound': self.hideout.id,
-            'community-bound': self.community.id,
-            'global': None,
+            "hideout-bound": self.hideout.id,
+            "community-bound": self.community.id,
+            "global": None,
         }
 
     async def cog_load(self):
@@ -124,7 +125,7 @@ class DailyAutoSync(DevBaseCog):
         synced = await self.bot.tree.sync(guild=guild)
         desc = f"Synced `{len(synced)}` {guild_name} commands."
 
-        e = discord.Embed(color=0x234234, description=desc, title='3 Days auto-sync')
+        e = discord.Embed(color=0x234234, description=desc, title="3 Days auto-sync")
         await self.hideout.daily_report.send(embed=e)
 
 

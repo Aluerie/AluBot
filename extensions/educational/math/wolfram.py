@@ -14,7 +14,8 @@ from utils import const
 from .._base import EducationalCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 
 class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
@@ -26,18 +27,18 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        base = 'https://api.wolframalpha.com/v1'
-        self.simple_url = f'{base}/simple?appid={WOLFRAM_TOKEN}&background=black&foreground=white&layout=labelbar&i='
+        base = "https://api.wolframalpha.com/v1"
+        self.simple_url = f"{base}/simple?appid={WOLFRAM_TOKEN}&background=black&foreground=white&layout=labelbar&i="
         self.short_url = f"{base}/result?appid={WOLFRAM_TOKEN}&i="
 
-    @commands.hybrid_group(name='wolfram')
+    @commands.hybrid_group(name="wolfram")
     async def wolfram_group(self, ctx: AluContext):
         """WolframAlpha Commands."""
         await ctx.send_help(ctx.command)
 
     async def wa_long_worker(self, ctx: AluContext, *, query: str):
         await ctx.typing()
-        question_url = f'{self.simple_url}{urlparse.quote(query)}'
+        question_url = f"{self.simple_url}{urlparse.quote(query)}"
         async with self.bot.session.get(question_url) as resp:
             await ctx.reply(
                 content=f"```py\n{query}```",
@@ -46,12 +47,12 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
 
     @wolfram_group.command(name="long")
     @commands.cooldown(2, 10, commands.BucketType.user)
-    @app_commands.describe(query='Query for WolframAlpha.')
+    @app_commands.describe(query="Query for WolframAlpha.")
     async def wolfram_long(self, ctx: AluContext, *, query: str):
         """Get a long, detailed image-answer from WolframAlpha."""
         await self.wa_long_worker(ctx, query=query)
 
-    @commands.command(name='wolf')
+    @commands.command(name="wolf")
     @commands.cooldown(2, 10, commands.BucketType.user)
     async def wolfram_long_shortcut(self, ctx: AluContext, *, query: str):
         """Just a txt command shortcut for `wolfram long`."""
@@ -59,18 +60,18 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
 
     async def wa_short_worker(self, ctx: AluContext, *, query: str):
         await ctx.typing()
-        question_url = f'{self.short_url}{urlparse.quote(query)}'
+        question_url = f"{self.short_url}{urlparse.quote(query)}"
         async with self.bot.session.get(question_url) as resp:
             await ctx.reply(f"```py\n{query}```{await resp.text()}")
 
-    @wolfram_group.command(name="short", aliases=['wa'])
+    @wolfram_group.command(name="short", aliases=["wa"])
     @commands.cooldown(2, 10, commands.BucketType.user)
-    @app_commands.describe(query='Query for WolframAlpha.')
+    @app_commands.describe(query="Query for WolframAlpha.")
     async def wolfram_short(self, ctx: AluContext, *, query: str):
         """Get a quick, short answer from WolframAlpha."""
         await self.wa_short_worker(ctx, query=query)
 
-    @commands.command(name='wa')
+    @commands.command(name="wa")
     @commands.cooldown(2, 10, commands.BucketType.user)
     async def wolfram_short_shortcut(self, ctx: AluContext, *, query: str):
         """Just a txt command shortcut for `wolfram short`."""

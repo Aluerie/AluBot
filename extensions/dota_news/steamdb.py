@@ -25,7 +25,7 @@ from utils.github import human_commit
 from utils.imgtools import str_to_file
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 async def get_gitdiff_embed(test_num: int = 0):
@@ -90,7 +90,7 @@ class SteamDB(AluCog):
     # but Idk, I tried fetching Dota 2 news via different kinds of RSS
     # and my attempts were always 1-2 minutes later than steamdb
     # So until I find a better way or just ask them.
-    @commands.Cog.listener('on_message')
+    @commands.Cog.listener("on_message")
     async def filter_steamdb_messages(self, message: discord.Message):
         match message.channel.id:
             case const.Channel.dota_info:

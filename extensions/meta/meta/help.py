@@ -12,7 +12,7 @@ from utils import AluContext, aluloop, const
 from .._base import MetaCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class AluHelpCog(MetaCog):
@@ -23,8 +23,8 @@ class AluHelpCog(MetaCog):
         if bot.help_command:
             bot.help_command.cog = self
 
-    @app_commands.command(name='help')
-    @app_commands.describe(query='Command/Section/Category name to get help about.')
+    @app_commands.command(name="help")
+    @app_commands.describe(query="Command/Section/Category name to get help about.")
     async def slash_help(self, ntr: discord.Interaction, *, query: Optional[str]):
         """Show help menu for the bot."""
         ctx = await AluContext.from_interaction(ntr)

@@ -19,12 +19,13 @@ from utils import AluCog, aluloop, const
 if TYPE_CHECKING:
     from githubkit.rest import Issue, SimpleUser
 
-    from utils import AluBot, AluContext
+    from utils import AluContext
+    from bot import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-# this might backfire but why the hell githubkit put GET REST logs as log.INFO, jesus christ.
+# this might backfire but why the hell githubkit put GET REST logs from httpx as log.INFO, jesus christ.
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 GITHUB_REPO = "ValveSoftware/Dota2-Gameplay"

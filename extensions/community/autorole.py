@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class AutoRoleCog(CommunityCog):

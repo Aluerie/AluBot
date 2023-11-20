@@ -7,14 +7,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog, AluGuildContext, const
+from utils import AluGuildContext, const
 from utils.pages import EnumeratedPages
 
 from .._base import FPCCog
 from .views import CharacterPages, CharacterPageSource
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 __all__ = ('FPCSettingsBase',)
 

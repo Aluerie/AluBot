@@ -15,11 +15,11 @@ if TYPE_CHECKING:
     from extensions.fpc_notifs.lol.settings import LoLNotifsSettings
 
     from extensions.fpc_notifs.dota.settings import DotaNotifsSettings
-    from utils import AluBot
+    from bot import AluBot
 
 
 class FPCTrusted(FPCCog):
-    db = app_commands.Group(
+    database = app_commands.Group(
         name="database",
         description="Group command about managing database",
         guild_ids=const.TRUSTED_GUILDS,
@@ -29,15 +29,15 @@ class FPCTrusted(FPCCog):
     db_dota = app_commands.Group(
         name="dota",
         description="Group command about managing Dota 2 database",
-        parent=db,
+        parent=database,
     )
 
     def get_dota_tools_cog(self) -> DotaNotifsSettings:
         """Get dota tools cog"""
-        dota_cog: Optional[DotaNotifsSettings] = self.bot.get_cog('Dota2FPC')  # type:ignore
+        dota_cog: Optional[DotaNotifsSettings] = self.bot.get_cog("Dota2FPC")  # type:ignore
         if dota_cog is None:
             # todo: sort this out when we gonna do error handler refactor
-            raise commands.ExtensionNotLoaded(name='Dota 2 Cog is not loaded')
+            raise commands.ExtensionNotLoaded(name="Dota 2 Cog is not loaded")
         return dota_cog
 
     @checks.hybrid.is_trustee()
@@ -63,7 +63,7 @@ class FPCTrusted(FPCCog):
         await dota_cog.database_add(ntr, player_dict, account_dict)
 
     @checks.hybrid.is_trustee()
-    @db_dota.command(name='remove')
+    @db_dota.command(name="remove")
     async def db_dota_remove(self, ntr: discord.Interaction[AluBot], name: str, steam: Optional[str]):
         """Remove account/player from the database.
 
@@ -86,20 +86,20 @@ class FPCTrusted(FPCCog):
     db_lol = app_commands.Group(
         name="lol",
         description="Group command about managing Dota 2 database",
-        parent=db,
+        parent=database,
     )
 
     def get_lol_tools_cog(self) -> LoLNotifsSettings:
         """Get lol tools cog"""
         # TODO: you will change the name below - make it more reliable, idk how
-        lol_cog: Optional[LoLNotifsSettings] = self.bot.get_cog('LoLFPC')  # type:ignore
+        lol_cog: Optional[LoLNotifsSettings] = self.bot.get_cog("LoLFPC")  # type:ignore
         if lol_cog is None:
             # todo: sort this out when we gonna do error handler refactor
-            raise commands.ExtensionNotLoaded(name='LoLFPC is not loaded')
+            raise commands.ExtensionNotLoaded(name="LoLFPC is not loaded")
         return lol_cog
 
     @checks.hybrid.is_trustee()
-    @db_lol.command(name='add')
+    @db_lol.command(name="add")
     async def db_lol_add(self, ntr: discord.Interaction[AluBot], name: str, server: LiteralServerUpper, account: str):
         """Add player to the database.
 
@@ -120,7 +120,7 @@ class FPCTrusted(FPCCog):
         await lol_cog.database_add(ntr, player_dict, account_dict)
 
     @checks.hybrid.is_trustee()
-    @db_lol.command(name='remove')
+    @db_lol.command(name="remove")
     async def db_lol_remove(
         self, ntr: discord.Interaction[AluBot], name: str, server: Optional[LiteralServerUpper], account: Optional[str]
     ):
@@ -139,7 +139,7 @@ class FPCTrusted(FPCCog):
 
         lol_cog = self.get_lol_tools_cog()
         if bool(server) != bool(account):
-            raise commands.BadArgument('You need to provide both `server` and `account` to delete the specific account')
+            raise commands.BadArgument("You need to provide both `server` and `account` to delete the specific account")
         elif server and account:
             # todo: check type str | None for account
             lol_id, _, _ = await lol_cog.get_lol_id(server=server, account=account)

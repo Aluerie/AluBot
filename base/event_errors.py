@@ -9,7 +9,7 @@ from discord.ext import commands
 from utils import AluContext, const
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 old_on_error = commands.Bot.on_error
 
@@ -31,7 +31,7 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
     # Exception Traceback
     (_exception_type, exception, _traceback) = sys.exc_info()
     if exception is None:
-        exception = TypeError('Somehow `on_error` fired with exception being `None`.')
+        exception = TypeError("Somehow `on_error` fired with exception being `None`.")
 
     # Silence command errors that somehow get bubbled up far enough here
     # if isinstance(exception, commands.CommandInvokeError):
@@ -48,15 +48,15 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
         return
 
     # Event Arguments
-    e = discord.Embed(title=f'`{event}`', colour=const.Colour.error_handler())
-    e.set_author(name='Event Error')
+    e = discord.Embed(title=f"`{event}`", colour=const.Colour.error_handler())
+    e.set_author(name="Event Error")
 
-    args_str = ['```py']
+    args_str = ["```py"]
     for index, arg in enumerate(args):
-        args_str.append(f'[{index}]: {arg!r}')
-    args_str.append('```')
-    e.add_field(name='Args', value='\n'.join(args_str), inline=False)
-    e.set_footer(text='on_error (event error)')
+        args_str.append(f"[{index}]: {arg!r}")
+    args_str.append("```")
+    e.add_field(name="Args", value="\n".join(args_str), inline=False)
+    e.set_footer(text="on_error (event error)")
 
     await self.exc_manager.register_error(exception, e, where=str(event))
 

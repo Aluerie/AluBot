@@ -11,7 +11,7 @@ from utils import AluGuildContext, const, errors
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class DeveloperUtilities(DevBaseCog):
@@ -27,7 +27,7 @@ class DeveloperUtilities(DevBaseCog):
             for guild_id in const.EMOTE_GUILDS:
                 guild = self.bot.get_guild(guild_id)
                 if guild is None:
-                    raise errors.SomethingWentWrong('One of `EMOTE_GUILDS` is None')
+                    raise errors.SomethingWentWrong("One of `EMOTE_GUILDS` is None")
                 try:
                     new_emote = await guild.create_custom_emoji(
                         name=emote_to_yoink.name,
@@ -37,11 +37,11 @@ class DeveloperUtilities(DevBaseCog):
                     continue
                 else:
                     answer = f"```py\n{new_emote.name} = '{new_emote}'```"
-                    e = discord.Embed(title='Emote yoinked')
+                    e = discord.Embed(title="Emote yoinked")
                     e.set_thumbnail(url=new_emote.url)
                     await ctx.reply(answer, embed=e)
                     return
-            raise errors.SomethingWentWrong('We failed to add the emote to any of `EMOTE_GUILDS`')
+            raise errors.SomethingWentWrong("We failed to add the emote to any of `EMOTE_GUILDS`")
 
         if isinstance(emote, discord.PartialEmoji):
             await add_new_emote_to_emote_guilds(emote)

@@ -7,7 +7,8 @@ from discord.ext import commands
 from ._base import JebaitedCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 
 class Timers(JebaitedCog):

@@ -9,7 +9,8 @@ from discord.ext import commands
 from utils import const, errors
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 
 def unexpected_error_embed() -> discord.Embed:

@@ -4,13 +4,12 @@ import itertools
 from typing import TYPE_CHECKING, Literal, Mapping, Optional, Sequence, Union
 
 import discord
-from discord import app_commands
 from discord.ext import commands, menus
 
 from utils import AluCog, AluContext, ExtCategory, aluloop, const, pages
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class CogPage:

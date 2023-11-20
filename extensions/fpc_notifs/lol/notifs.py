@@ -18,7 +18,7 @@ from ._models import LiveMatch
 from pyot.models import lol  # isort: skip
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -43,7 +43,7 @@ class LoLNotifs(FPCCog):
     async def fill_live_matches(self):
         self.live_matches, self.all_live_match_ids = [], []
 
-        query = 'SELECT DISTINCT character_id FROM lol_favourite_characters'
+        query = "SELECT DISTINCT character_id FROM lol_favourite_characters"
         fav_champ_ids = [r for r, in await self.bot.pool.fetch(query)]  # row.unnest
 
         live_fav_player_ids = await self.bot.twitch.get_live_lol_player_ids(pool=self.bot.pool)
@@ -58,16 +58,16 @@ class LoLNotifs(FPCCog):
             try:
                 live_game = await lol.spectator.CurrentGame(summoner_id=r.id, platform=r.platform).get()
             except PyotNotFound:
-                log.debug(f'Player {r.display_name} is not in the game on acc {r.account}')
+                log.debug(f"Player {r.display_name} is not in the game on acc {r.account}")
                 continue
             except PyotServerError:
-                log.debug(f'ServerError `lolfeed.py`: {r.account} {r.platform} {r.display_name}')
+                log.debug(f"ServerError `lolfeed.py`: {r.account} {r.platform} {r.display_name}")
                 continue
                 # e = Embed(colour=Colour.error())
                 # e.description = f'ServerError `lolfeed.py`: {row.name} {row.platform} {row.accname}'
                 # await self.bot.get_channel(Channel.spam_me).send(embed=e)  # content=umntn(User.alu)
 
-            if not hasattr(live_game, 'queue_id') or live_game.queue_id != SOLO_RANKED_5v5_QUEUE_ENUM:
+            if not hasattr(live_game, "queue_id") or live_game.queue_id != SOLO_RANKED_5v5_QUEUE_ENUM:
                 continue
             self.all_live_match_ids.append(live_game.id)
             p = next((x for x in live_game.participants if x.summoner_id == r.id), None)
@@ -81,7 +81,7 @@ class LoLNotifs(FPCCog):
                         """
                 channel_ids = [i for i, in await self.bot.pool.fetch(query, p.champion_id, r.name_lower, live_game.id)]
                 if channel_ids:
-                    log.debug(f'LF | {r.display_name} - {await champion.key_by_id(p.champion_id)}')
+                    log.debug(f"LF | {r.display_name} - {await champion.key_by_id(p.champion_id)}")
                     self.live_matches.append(
                         LiveMatch(
                             match_id=live_game.id,
@@ -106,10 +106,10 @@ class LoLNotifs(FPCCog):
                 continue
 
             em, img_file = await match.notif_embed_and_file(self.bot)
-            log.debug('LF | Successfully made embed+file')
+            log.debug("LF | Successfully made embed+file")
             assert isinstance(ch, discord.TextChannel)
 
-            owner_name = ch.guild.owner.display_name if ch.guild.owner else 'Somebody'
+            owner_name = ch.guild.owner.display_name if ch.guild.owner else "Somebody"
             em.title = f"{owner_name}'s fav champ + player spotted"
             msg = await ch.send(embed=em, file=img_file)
 
@@ -123,7 +123,7 @@ class LoLNotifs(FPCCog):
                         VALUES ($1, $2, $3, $4)
                     """
             await self.bot.pool.execute(query, msg.id, ch.id, match.match_id, match.champ_id)
-            query = 'UPDATE lol_accounts SET last_edited=$1 WHERE id=$2'
+            query = "UPDATE lol_accounts SET last_edited=$1 WHERE id=$2"
             await self.bot.pool.execute(query, match.match_id, match.account_id)
 
     async def declare_matches_finished(self):
@@ -136,12 +136,12 @@ class LoLNotifs(FPCCog):
 
     @aluloop(seconds=59)
     async def lolfeed_notifs(self):
-        log.debug(f'LF | --- Task is starting now ---')
+        log.debug(f"LF | --- Task is starting now ---")
         await self.fill_live_matches()
         for match in self.live_matches:
             await self.send_notifications(match)
         await self.declare_matches_finished()
-        log.debug(f'LF | --- Task is finished ---')
+        log.debug(f"LF | --- Task is finished ---")
 
 
 async def setup(bot: AluBot):

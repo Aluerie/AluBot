@@ -11,7 +11,7 @@ from utils import const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
@@ -32,17 +32,17 @@ class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
                     RETURNING suggestion_num;
                 """
         suggestion_num = await self.bot.pool.fetchval(query, const.Guild.community)
-        e = discord.Embed(colour=const.Colour.prpl(), title=f'Suggestion #{suggestion_num}')
+        e = discord.Embed(colour=const.Colour.prpl(), title=f"Suggestion #{suggestion_num}")
 
         text = (
-            f'* upvote the pinned message with {const.Emote.DankApprove} reaction '
-            'if you like the suggestion and want it to be approved\n'
-            '* or downvote it with \N{CROSS MARK} if you really dislike the proposition.\n\n'
-            'OP, please, don\'t forget to use proper tags and provide as much info as needed, '
-            'i.e. 7tv link/gif file for a new emote suggestion.'
+            f"* upvote the pinned message with {const.Emote.DankApprove} reaction "
+            "if you like the suggestion and want it to be approved\n"
+            "* or downvote it with \N{CROSS MARK} if you really dislike the proposition.\n\n"
+            "OP, please, don't forget to use proper tags and provide as much info as needed, "
+            "i.e. 7tv link/gif file for a new emote suggestion."
         )
-        e.add_field(name='Hey chat, don\'t forget to \n', value=text)
-        e.set_footer(text='Chat, please, discuss the suggestion in this thread.')
+        e.add_field(name="Hey chat, don't forget to \n", value=text)
+        e.set_footer(text="Chat, please, discuss the suggestion in this thread.")
         try:
             await thread.send(embed=e)
         except discord.Forbidden as error:

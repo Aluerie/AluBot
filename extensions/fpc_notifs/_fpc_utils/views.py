@@ -8,7 +8,8 @@ from discord.ext import menus
 from utils.pages import Paginator
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluGuildContext
+    from bot import AluBot
+    from utils import AluGuildContext
 
 
 class CharacterButton(discord.ui.Button):

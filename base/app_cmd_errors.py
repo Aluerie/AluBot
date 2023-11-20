@@ -12,7 +12,7 @@ from utils import const, errors
 from .ctx_cmd_errors import unexpected_error_embed
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_commands.AppCommandError | Exception):
@@ -28,20 +28,20 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
         error = error.original
 
     error_type: str | None = error.__class__.__name__
-    desc: str = 'No description'
+    desc: str = "No description"
     unexpected_error: bool = False
 
-    if isinstance(error, commands.BadArgument): #TODO: remove all those `commands.BadArgument`
-        desc = f'{error}'
+    if isinstance(error, commands.BadArgument):  # TODO: remove all those `commands.BadArgument`
+        desc = f"{error}"
 
     elif isinstance(error, errors.ErroneousUsage):
         # raised by myself but it's not an error per se, thus i dont give error type to the user.
         error_type = None
-        desc = f'{error}'
+        desc = f"{error}"
     elif isinstance(error, errors.AluBotException):
         # These errors are generally raised in code by myself or by my code with an explanation text as `error`
         # AluBotException subclassed exceptions are all mine.
-        desc = f'{error}'
+        desc = f"{error}"
     elif isinstance(error, app_commands.CommandOnCooldown):
         desc = f"Please retry in `{ntr.client.formats.human_timedelta(error.retry_after, brief=True)}`"
     # elif isinstance(error, errors.SilentError):
@@ -58,20 +58,20 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
     elif isinstance(error, app_commands.CommandNotFound):
         desc = (  # TODO: WARN DEVS make title too
             # TODO: maybe link our server there or create a new server for the bot support?
-            '**Sorry, but somehow this slash command does not exist anymore.**\n'
-            f'If you think this command should exist, please ask about it using {const.Slash.feedback} command.'
+            "**Sorry, but somehow this slash command does not exist anymore.**\n"
+            f"If you think this command should exist, please ask about it using {const.Slash.feedback} command."
         )
     else:
         unexpected_error = True
-        where = f'/{ntr.command.qualified_name}' if ntr.command else '?-cmd ntr'
-        await ntr.client.exc_manager.register_error(error, ntr, where=f'on_app_command_error {where}')
+        where = f"/{ntr.command.qualified_name}" if ntr.command else "?-cmd ntr"
+        await ntr.client.exc_manager.register_error(error, ntr, where=f"on_app_command_error {where}")
 
         mention = ntr.channel_id != ntr.client.hideout.spam_channel_id
         if not mention:
             # well, then I do not need "desc" embed as well
             if not ntr.response.is_done():
                 # they error out unanswered anyway if not "is_done":/
-                await ntr.response.send_message(':x', ephemeral=True)
+                await ntr.response.send_message(":x", ephemeral=True)
             return
 
     if unexpected_error:

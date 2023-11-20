@@ -14,7 +14,7 @@ from ._models import PostMatchPlayer
 from pyot.models import lol  # isort: skip
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -41,14 +41,14 @@ class LoLFeedPostMatchEdit(FPCCog):
         query = "SELECT * FROM lol_matches WHERE is_finished=TRUE"
         for row in await self.bot.pool.fetch(query):
             try:
-                match = await lol.Match(id=f'{row.platform.upper()}_{row.match_id}', region=row.region).get()
+                match = await lol.Match(id=f"{row.platform.upper()}_{row.match_id}", region=row.region).get()
             except NotFound:
                 continue
             except ValueError as error:  # gosu incident ValueError: '' is not a valid platform
                 raise error
                 # continue
 
-            query = 'SELECT * FROM lol_messages WHERE match_id=$1'
+            query = "SELECT * FROM lol_messages WHERE match_id=$1"
             for r in await self.bot.pool.fetch(query, row.match_id):
                 for participant in match.info.participants:
                     if participant.champion_id == r.champ_id:
@@ -59,7 +59,7 @@ class LoLFeedPostMatchEdit(FPCCog):
                                 message_id=r.message_id,
                             )
                         )
-            query = 'DELETE FROM lol_matches WHERE match_id=$1'
+            query = "DELETE FROM lol_matches WHERE match_id=$1"
             await self.bot.pool.fetch(query, row.match_id)
 
     @aluloop(seconds=59)

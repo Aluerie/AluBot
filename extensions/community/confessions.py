@@ -11,7 +11,7 @@ from utils.formats import human_timedelta
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class ButtonOnCooldown(commands.CommandError):
@@ -34,7 +34,7 @@ class ConfModal(discord.ui.Modal):
     conf = discord.ui.TextInput(
         label="Make confession to the server",
         style=discord.TextStyle.long,
-        placeholder='Type your confession text here',
+        placeholder="Type your confession text here",
         max_length=4000,
     )
 
@@ -47,7 +47,7 @@ class ConfModal(discord.ui.Modal):
         assert isinstance(channel, discord.TextChannel)
 
         await channel.send(embeds=[e])
-        saint_string = '{0} {0} {0} {1} {1} {1} {2} {2} {2}'.format(Emote.bubuChrist, '\N{CHURCH}', Emote.PepoBeliever)
+        saint_string = "{0} {0} {0} {1} {1} {1} {2} {2} {2}".format(Emote.bubuChrist, "\N{CHURCH}", Emote.PepoBeliever)
         await channel.send(saint_string)
         await ntr.response.send_message(content=f"The Lord be with you {Emote.PepoBeliever}", ephemeral=True)
         if ntr.message:
@@ -76,7 +76,7 @@ class ConfView(discord.ui.View):
             await ntr.response.send_message(embed=e, ephemeral=True)
         else:
             # await super().on_error(ntr, error, item) # original on_error
-            await ntr.client.exc_manager.register_error(error, 'Confessions', where='Confessions')
+            await ntr.client.exc_manager.register_error(error, "Confessions", where="Confessions")
 
     @discord.ui.button(
         label="Anonymous confession",

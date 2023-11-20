@@ -17,7 +17,8 @@ from ._base import CommunityCog
 if TYPE_CHECKING:
     from asyncpg import Pool
 
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 
 def filter_emotes_condition(emote, mode):
@@ -44,7 +45,7 @@ async def get_sorted_emote_dict(mode, pool: Pool):
         else:
             return False
 
-    query = 'SELECT * FROM emotes'
+    query = "SELECT * FROM emotes"
     rows = await pool.fetch(query)
     for row in rows:
         if filter_mode(mode, row.animated):
@@ -62,7 +63,7 @@ async def topemotes_job(ctx: AluContext, mode):
 
     for cnt, key in enumerate(sorted_emote_dict, start=offset):
         new_array.append(
-            f'`{indent(cnt, cnt, offset, split_size)}` '
+            f"`{indent(cnt, cnt, offset, split_size)}` "
             f'{key}`{key.split(":")[1][:max_length].ljust(max_length, " ")}{sorted_emote_dict[key]}`'
         )
     pgs = EnumeratedPages(
@@ -72,13 +73,13 @@ async def topemotes_job(ctx: AluContext, mode):
         no_enumeration=True,
         colour=const.Colour.prpl(),
         title="Top emotes used last month",
-        footer_text=f'With love, {ctx.bot.user.display_name}',
+        footer_text=f"With love, {ctx.bot.user.display_name}",
         description_prefix=f'`{"Emote".ljust(max_length + 4, " ")}Usages`\n',
     )
     await pgs.start()
 
 
-class EmoteAnalysis(CommunityCog, name='Emote stats'):
+class EmoteAnalysis(CommunityCog, name="Emote stats"):
     """See stats on emote usage in Aluerie's server
 
     The bot keeps data for one month.
@@ -104,28 +105,28 @@ class EmoteAnalysis(CommunityCog, name='Emote stats'):
             custom_emojis_ids = set(list(map(int, custom_emojis_ids)))
 
             for emote_id in custom_emojis_ids:
-                query = 'UPDATE emotes SET month_array[30]=month_array[30]+1 WHERE id=$1;'
+                query = "UPDATE emotes SET month_array[30]=month_array[30]+1 WHERE id=$1;"
                 await self.bot.pool.execute(query, emote_id)
 
-    @commands.hybrid_command(name='topemotes', description='Show emotes usage stats')
-    @app_commands.describe(keyword='Possible keywords: `all`, `ani`, `nonani`')
-    async def topemotes(self, ctx, keyword: Literal['all', 'ani', 'nonani'] = 'all'):
+    @commands.hybrid_command(name="topemotes", description="Show emotes usage stats")
+    @app_commands.describe(keyword="Possible keywords: `all`, `ani`, `nonani`")
+    async def topemotes(self, ctx, keyword: Literal["all", "ani", "nonani"] = "all"):
         """Show emotes usage stats for `keyword` group ;\
         Possible keywords: `all`, `ani` for animated emotes, `nonani` for static emotes ;"""
         match keyword:
-            case 'all':
+            case "all":
                 await topemotes_job(ctx, 1)
-            case 'ani' | 'animated':
+            case "ani" | "animated":
                 await topemotes_job(ctx, 2)
-            case 'nonani' | 'static' | 'nonanimated':
+            case "nonani" | "static" | "nonanimated":
                 await topemotes_job(ctx, 3)
 
     @tasks.loop(time=datetime.time(hour=16, minute=43, tzinfo=datetime.timezone.utc))
     async def daily_emote_shift(self):
-        query = 'SELECT id, month_array FROM emotes'
+        query = "SELECT id, month_array FROM emotes"
         rows = await self.bot.pool.fetch(query)
         for row in rows:
-            query = 'UPDATE emotes SET month_array=$1 WHERE id=$2'
+            query = "UPDATE emotes SET month_array=$1 WHERE id=$2"
             await self.bot.pool.execute(query, row.month_array[1:] + [0], row.id)
 
     @daily_emote_shift.before_loop

@@ -12,14 +12,15 @@ from utils.translator import translate
 from .._base import EducationalCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 
 class TranslateCog(EducationalCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
         self.translate_context_menu = app_commands.ContextMenu(
-            name='Translate to English',
+            name="Translate to English",
             callback=self.translate_context_menu_callback,
         )
 
@@ -33,9 +34,9 @@ class TranslateCog(EducationalCog):
         # PS: TranslateError is handled in global ErrorHandler
         result = await translate(text, session=self.bot.session)
 
-        e = discord.Embed(title='Google Translate to English', colour=const.Colour.prpl())
+        e = discord.Embed(title="Google Translate to English", colour=const.Colour.prpl())
         e.description = result.translated
-        e.set_footer(text=f'Detected language: {result.source_lang}')
+        e.set_footer(text=f"Detected language: {result.source_lang}")
         return e
 
     async def translate_context_menu_callback(self, ntr: discord.Interaction, message: discord.Message):

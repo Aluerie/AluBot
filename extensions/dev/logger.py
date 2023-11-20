@@ -15,7 +15,7 @@ from utils import formats
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 log = logging.getLogger(__name__)
 
@@ -52,16 +52,16 @@ class LoggerViaWebhook(DevBaseCog):
 
     async def send_log_record(self, record: logging.LogRecord) -> None:
         # TODO: customize this
-        attributes = {'INFO': '\N{INFORMATION SOURCE}\ufe0f', 'WARNING': '\N{WARNING SIGN}\ufe0f'}
+        attributes = {"INFO": "\N{INFORMATION SOURCE}\ufe0f", "WARNING": "\N{WARNING SIGN}\ufe0f"}
 
-        emoji = attributes.get(record.levelname, '\N{CROSS MARK}')
+        emoji = attributes.get(record.levelname, "\N{CROSS MARK}")
         dt = datetime.datetime.utcfromtimestamp(record.created)
-        msg = textwrap.shorten(f'{emoji} {formats.format_dt(dt)} {record.message}', width=1990)
-        if record.name == 'discord.gateway':
-            username = 'Gateway'
-            avatar_url = 'https://i.imgur.com/4PnCKB3.png'
+        msg = textwrap.shorten(f"{emoji} {formats.format_dt(dt)} {record.message}", width=1990)
+        if record.name == "discord.gateway":
+            username = "Gateway"
+            avatar_url = "https://i.imgur.com/4PnCKB3.png"
         else:
-            username = f'{record.name} Logger'.replace('discord', 'dcord')
+            username = f"{record.name} Logger".replace("discord", "dcord")
             avatar_url = discord.utils.MISSING
         await self.logger_webhook.send(msg, username=username, avatar_url=avatar_url)
 

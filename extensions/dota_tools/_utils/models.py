@@ -14,7 +14,7 @@ from utils.dota import hero
 if TYPE_CHECKING:
     from asyncpg import Pool
 
-    from utils import AluBot
+    from bot import AluBot
 
 
 class MatchHistoryData:
@@ -77,10 +77,10 @@ class MatchHistoryData:
 
 
 def fancy_ax(ax):
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['left'].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.spines["left"].set_visible(False)
     return ax
 
 
@@ -134,11 +134,11 @@ def gradient_fill(x, y, fill_color=None, ax=None, **kwargs):
     z[:, :, -1] = np.linspace(0.3, alpha, 100)[:, None]
 
     xmin, xmax, ymin, ymax = x.min(), x.max(), y.min(), y.max()
-    im = ax.imshow(z, aspect='auto', extent=[xmin, xmax, ymin, ymax], origin='lower', zorder=zorder)
+    im = ax.imshow(z, aspect="auto", extent=[xmin, xmax, ymin, ymax], origin="lower", zorder=zorder)
 
     xy = np.column_stack([x, y])
     xy = np.vstack([[xmin, ymin], xy, [xmax, ymin], [xmin, ymin]])
-    clip_path = Polygon(xy, facecolor='none', edgecolor='none', closed=True)
+    clip_path = Polygon(xy, facecolor="none", edgecolor="none", closed=True)
     ax.add_patch(clip_path)
     im.set_clip_path(clip_path)
 
@@ -149,13 +149,13 @@ def gradient_fill(x, y, fill_color=None, ax=None, **kwargs):
 async def mmr_by_hero_bar(bot: AluBot, ax, hero_stats_dict: dict):
     hero_list = list(hero_stats_dict.keys())
     x_list = list(range(len(hero_stats_dict.keys())))
-    y_list = [(v['wins'] - v['losses']) * 30 for v in hero_stats_dict.values()]
+    y_list = [(v["wins"] - v["losses"]) * 30 for v in hero_stats_dict.values()]
 
     for count, (hero_id, y) in enumerate(zip(hero_list, y_list), start=0):
         hero_icon = await bot.imgtools.url_to_img(url=await hero.icon_url_by_id(hero_id))
         if y < 0:
             y = y - 1
-        plt.imshow(hero_icon, extent=[count - 0.5, count + 0.5, y, y + 30], aspect='auto')
+        plt.imshow(hero_icon, extent=[count - 0.5, count + 0.5, y, y + 30], aspect="auto")
 
     profit_color = [(str(Colour.twitch()) if p > 0 else str(MaterialPalette.purple(shade=200))) for p in y_list]
 
@@ -164,7 +164,7 @@ async def mmr_by_hero_bar(bot: AluBot, ax, hero_stats_dict: dict):
     ax.set_xticks([])
     ax.set_aspect(1 / 30)
     ax = fancy_ax(ax)
-    ax.set_title('MMR by hero', x=0.5, y=0.92)
+    ax.set_title("MMR by hero", x=0.5, y=0.92)
     ax.tick_params(axis="y", direction="in", pad=-22)
     ax.tick_params(axis="x", direction="in", pad=-15)
     ax.set_xlim(-1)
@@ -175,13 +175,13 @@ async def heroes_played_bar(bot: AluBot, ax, sorted_dict):
     hero_list = list(sorted_dict.keys())
 
     y_list = range(len(sorted_dict.keys()))
-    w_list = [(v['wins']) for v in sorted_dict.values()]
-    l_list = [(v['losses']) for v in sorted_dict.values()]
+    w_list = [(v["wins"]) for v in sorted_dict.values()]
+    l_list = [(v["losses"]) for v in sorted_dict.values()]
     sum_list = [x + y for x, y in zip(w_list, l_list)]
 
     for count, (hero_id, y) in enumerate(zip(hero_list, y_list)):
         hero_icon = await bot.imgtools.url_to_img(url=await hero.icon_url_by_id(hero_id))
-        plt.imshow(hero_icon, extent=[-1, 0, count - 0.5, count + 0.5], aspect='auto')
+        plt.imshow(hero_icon, extent=[-1, 0, count - 0.5, count + 0.5], aspect="auto")
 
     # profit_color = [('green' if p > 0 else 'red') for p in y_list]
 
@@ -192,7 +192,7 @@ async def heroes_played_bar(bot: AluBot, ax, sorted_dict):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     ax = fancy_ax(ax)
-    ax.set_title('Heroes Played', x=0.5, y=0.9)
+    ax.set_title("Heroes Played", x=0.5, y=0.9)
     plt.bar_label(ax.containers[1])
     ax.set_ylim(-2, max(y_list) + 3)
     ax.set_xlim(-1, max(sum_list) + 4)

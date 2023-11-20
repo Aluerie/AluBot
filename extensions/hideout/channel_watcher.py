@@ -11,7 +11,7 @@ from utils import aluloop, const
 from ._base import HideoutCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class ChannelWatcher(HideoutCog):
@@ -22,7 +22,7 @@ class ChannelWatcher(HideoutCog):
         sleep_time: int,
         watch_channel_id: int,
         ping_channel_id: int,
-        role_mention: str = '',
+        role_mention: str = "",
         *args,
         **kwargs,
     ):
@@ -36,7 +36,7 @@ class ChannelWatcher(HideoutCog):
         self.watch_bool: bool = True
 
     async def cog_load(self) -> None:
-        query = f'SELECT {self.db_column} FROM botinfo WHERE id=$1'
+        query = f"SELECT {self.db_column} FROM botinfo WHERE id=$1"
         self.watch_bool = p = await self.bot.pool.fetchval(query, const.Guild.community)
         if p:
             self.sleep_task.start()
@@ -49,12 +49,12 @@ class ChannelWatcher(HideoutCog):
         if message.channel.id == self.watch_channel_id:
             if self.sleep_task.is_running():
                 # a bit of shit-code: check if my glorious embed indicates ending
-                if message.embeds and message.embeds[0].footer.text == 'bypass alubot':
+                if message.embeds and message.embeds[0].footer.text == "bypass alubot":
                     self.sleep_task.cancel()
 
                 self.sleep_task.restart()
                 if not self.watch_bool:
-                    query = f'UPDATE botinfo SET {self.db_column}=TRUE WHERE id=$1'
+                    query = f"UPDATE botinfo SET {self.db_column}=TRUE WHERE id=$1"
                     await self.bot.pool.execute(query, const.Guild.community)
                     self.watch_bool = True
             else:
@@ -65,10 +65,10 @@ class ChannelWatcher(HideoutCog):
         await asyncio.sleep(self.sleep_time)  # let's assume the longest possible game+q time is ~50 mins
         channel: discord.TextChannel = self.bot.get_channel(self.ping_channel_id)  # type: ignore
         e = discord.Embed(colour=const.Colour.error(), title=self.__cog_name__)
-        e.description = 'The bot crashed but did not even send the message'
-        e.set_footer(text='Or maybe event just ended')
+        e.description = "The bot crashed but did not even send the message"
+        e.set_footer(text="Or maybe event just ended")
         await channel.send(self.role_mention, embed=e)
-        query = f'UPDATE botinfo SET {self.db_column}=FALSE WHERE id=$1'
+        query = f"UPDATE botinfo SET {self.db_column}=FALSE WHERE id=$1"
         await self.bot.pool.execute(query, const.Guild.community)
 
 
@@ -76,7 +76,7 @@ class EventPassWatcher(ChannelWatcher):
     def __init__(self, bot: AluBot):
         super().__init__(
             bot,
-            db_column='event_pass_is_live',
+            db_column="event_pass_is_live",
             sleep_time=60 * 60,  # 60 minutes
             watch_channel_id=const.Channel.event_pass,
             ping_channel_id=const.Channel.look_spam,
@@ -93,7 +93,7 @@ class DropsWatcher(ChannelWatcher):
     def __init__(self, bot: AluBot):
         super().__init__(
             bot,
-            db_column='drops_watch_live',
+            db_column="drops_watch_live",
             sleep_time=60 * 60 * 24 * 7,  # a week
             watch_channel_id=1074010096566284288,
             ping_channel_id=const.Channel.look_spam,

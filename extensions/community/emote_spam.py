@@ -15,7 +15,8 @@ from utils import cache, const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 
 class EmoteSpam(CommunityCog):
@@ -32,14 +33,14 @@ class EmoteSpam(CommunityCog):
             if len(message.embeds) or len(message.stickers) or len(message.attachments):
                 return False
 
-            text = emoji.replace_emoji(message.content, replace='')  # standard emojis
+            text = emoji.replace_emoji(message.content, replace="")  # standard emojis
 
             # there is definitely a better way to regex it out
             filters = [const.Regex.whitespace, const.Regex.emote_old, const.Regex.nqn, const.Regex.invis]
             if nqn_check == 0:
                 filters.remove(const.Regex.nqn)
             for item in filters:
-                text = re.sub(item, '', text)
+                text = re.sub(item, "", text)
 
             return not bool(text)  # if there is some text left then it's forbidden.
         else:
@@ -100,7 +101,7 @@ class EmoteSpam(CommunityCog):
     async def emote_spam(self):
         if random.randint(1, 100 + 1) < 2:
             emote = await self.get_random_emote()
-            await self.bot.community.emote_spam.send('{0} {0} {0}'.format(str(emote)))
+            await self.bot.community.emote_spam.send("{0} {0} {0}".format(str(emote)))
 
     @commands.hybrid_command()
     async def do_emote_spam(self, ctx: AluContext):
@@ -108,9 +109,9 @@ class EmoteSpam(CommunityCog):
 
         emote = await self.get_random_emote()
         channel = self.community.emote_spam
-        content = '{0} {0} {0}'.format(str(emote))
+        content = "{0} {0} {0}".format(str(emote))
         await channel.send(content)
-        e = discord.Embed(colour=const.Colour.prpl(), description=f'I sent {content} into {channel.mention}')
+        e = discord.Embed(colour=const.Colour.prpl(), description=f"I sent {content} into {channel.mention}")
         await ctx.reply(embed=e, ephemeral=True, delete_after=60)
 
     @tasks.loop(count=1)
@@ -120,7 +121,7 @@ class EmoteSpam(CommunityCog):
             if message.author.id == self.bot.user.id:
                 return
             if await self.emote_spam_work(message):
-                text = f'Offline criminal found {const.Emote.peepoPolice}'
+                text = f"Offline criminal found {const.Emote.peepoPolice}"
                 await self.community.bot_spam.send(content=text)
 
     @emote_spam.before_loop
@@ -151,7 +152,7 @@ class ComfySpam(CommunityCog):
             if len(message.embeds):
                 return await message.delete()
             text = str(message.content)
-            text = re.sub(const.Regex.whitespace, '', text)
+            text = re.sub(const.Regex.whitespace, "", text)
             for item in self.comfy_emotes:
                 text = text.replace(item, "")
             if text:
@@ -178,7 +179,7 @@ class ComfySpam(CommunityCog):
     @tasks.loop(minutes=62)
     async def comfy_spam(self):
         if random.randint(1, 100 + 1) < 2:
-            await self.community.comfy_spam.send('{0} {0} {0}'.format(const.Emote.peepoComfy))
+            await self.community.comfy_spam.send("{0} {0} {0}".format(const.Emote.peepoComfy))
 
     @tasks.loop(count=1)
     async def offline_criminal_check(self):
@@ -186,7 +187,7 @@ class ComfySpam(CommunityCog):
             if message.author.id == self.bot.user.id:
                 return
             if await self.comfy_chat_control(message):
-                text = f'Offline criminal found {const.Emote.peepoPolice}'
+                text = f"Offline criminal found {const.Emote.peepoPolice}"
                 await self.bot.community.bot_spam.send(content=text)
 
     @comfy_spam.before_loop

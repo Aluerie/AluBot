@@ -9,10 +9,11 @@ from utils import const
 from ._base import JebaitedCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 
-class LewdCog(JebaitedCog, name='Lewd', emote=const.Emote.peepoStepOnMePls):
+class LewdCog(JebaitedCog, name="Lewd", emote=const.Emote.peepoStepOnMePls):
     """NSFW tier commands
 
     Horny, huh
@@ -21,7 +22,7 @@ class LewdCog(JebaitedCog, name='Lewd', emote=const.Emote.peepoStepOnMePls):
     @commands.hybrid_command()
     async def lewd(self, ctx: AluContext):
         """[NSFW] Get a random horny picture."""
-        await ctx.reply('Coming soon {0} {0} {0}'.format(const.Emote.Jebaited))
+        await ctx.reply("Coming soon {0} {0} {0}".format(const.Emote.Jebaited))
 
 
 async def setup(bot: AluBot):

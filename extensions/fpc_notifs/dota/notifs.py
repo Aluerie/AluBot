@@ -19,10 +19,10 @@ from .._base import FPCCog
 from ._models import ActiveMatch
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class DotaNotifs(FPCCog):
@@ -154,7 +154,7 @@ class DotaNotifs(FPCCog):
                 channel_ids = [
                     i for i, in await self.bot.pool.fetch(query, person.hero_id, user.name_lower, match.match_id)
                 ]
-                log.debug(f"DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}")
+                log.info(f"DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}")
                 # print(match)
                 if channel_ids:
                     # sort hero ids until I figure out a better way

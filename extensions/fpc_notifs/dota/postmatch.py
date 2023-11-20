@@ -13,7 +13,8 @@ from .._base import FPCCog
 from ._models import OpendotaRequestMatch, PostMatchPlayerData
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -83,9 +84,9 @@ class DotaPostMatchEdit(FPCCog):
     async def daily_report(self):
         e = discord.Embed(title="Daily Report", colour=const.MaterialPalette.black())
         the_dict = self.bot.odota_ratelimit
-        month, minute = int(the_dict['monthly']), int(the_dict['minutely'])
+        month, minute = int(the_dict["monthly"]), int(the_dict["minutely"])
         e.description = f"Odota limits. monthly: {month} minutely: {minute}"
-        content = f'{self.bot.owner_id}' if month < 10_000 else ''
+        content = f"{self.bot.owner_id}" if month < 10_000 else ""
         await self.hideout.daily_report.send(content=content, embed=e)  # type: ignore
 
 

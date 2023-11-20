@@ -11,7 +11,7 @@ from utils import AluGuildContext, checks, const, errors, times
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 
 class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
@@ -37,7 +37,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         e.set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         e.set_thumbnail(url=discord.PartialEmoji.from_str(const.Emote.peepoYellowCard).url)
-        e.add_field(name='Reason', value=reason)
+        e.add_field(name="Reason", value=reason)
         msg = await ctx.reply(embed=e)
         e.url = msg.jump_url
         await self.community.logs.send(embed=e)
@@ -51,7 +51,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         member: discord.Member,
         *,
         until_when_and_reason: Annotated[
-            times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default='...')
+            times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="...")
         ],
     ):
         """Give member a mute."""
@@ -63,21 +63,21 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             try:
                 await member.edit(timed_out_until=dt, reason=reason)
             except discord.HTTPException as exc:
-                e = discord.Embed(colour=const.Colour.error(), title='Oups... Error during muting.')
+                e = discord.Embed(colour=const.Colour.error(), title="Oups... Error during muting.")
                 e.set_author(name=str(member), icon_url=member.display_avatar.url)
-                e.set_footer(text=f'Member ID: {member.id}')
-                e.description = 'If you think it\'s wrong then contact Aluerie.'
-                e.add_field(name='Error Message', value=f'```py\n{exc.text}\n```')
+                e.set_footer(text=f"Member ID: {member.id}")
+                e.description = "If you think it's wrong then contact Aluerie."
+                e.add_field(name="Error Message", value=f"```py\n{exc.text}\n```")
                 return await ctx.reply(embed=e)
         else:
-            raise errors.BadArgument('Discord does not allow muting people for more than 28 days.')
+            raise errors.BadArgument("Discord does not allow muting people for more than 28 days.")
 
         e = discord.Embed(title="Manual mute by a mod", colour=const.MaterialPalette.red(shade=600), description=reason)
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         e.set_footer(text=f"Muted by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         e.set_thumbnail(url=discord.PartialEmoji.from_str(const.Emote.peepoRedCard).url)
-        e.add_field(name='Muted Until', value=discord.utils.format_dt(dt, style="R"))
-        e.add_field(name='Reason', value=reason)
+        e.add_field(name="Muted Until", value=discord.utils.format_dt(dt, style="R"))
+        e.add_field(name="Reason", value=reason)
         msg = await ctx.reply(embed=e)
         e.url = msg.jump_url
         await self.community.logs.send(embed=e)
@@ -98,7 +98,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
                 if target.id == after.id and entry.after.timed_out_until == after.timed_out_until:
                     mute_actor_str = user.name
 
-            author_text = f'{after.display_name} is muted by {mute_actor_str} until'
+            author_text = f"{after.display_name} is muted by {mute_actor_str} until"
             e.set_author(name=author_text, icon_url=after.display_avatar.url)
             return await self.community.logs.send(embed=e)
 
@@ -106,7 +106,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         #     return
         # apparently discord limitation -> it does not ever happen
 
-    @commands.Cog.listener('on_guild_channel_create')
+    @commands.Cog.listener("on_guild_channel_create")
     async def give_aluerie_all_perms(self, channel: discord.abc.GuildChannel):
         if channel.guild.id != self.community.id:
             return
@@ -114,7 +114,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         sister_of_the_veil = self.community.sister_of_the_veil
         allow, deny = discord.Permissions.all(), discord.Permissions.none()
         all_perms = discord.PermissionOverwrite.from_pair(allow=allow, deny=deny)
-        reason = 'Give all permissions to Aluerie'
+        reason = "Give all permissions to Aluerie"
         await channel.set_permissions(sister_of_the_veil, overwrite=all_perms, reason=reason)
 
 

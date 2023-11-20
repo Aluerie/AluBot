@@ -8,9 +8,9 @@ from discord.ext import tasks
 from .._base import FPCCog
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
-__all__ = ('TwitchAccountCheckBase',)
+__all__ = ("TwitchAccountCheckBase",)
 
 
 class TwitchAccountCheckBase(FPCCog):
@@ -26,13 +26,13 @@ class TwitchAccountCheckBase(FPCCog):
         if datetime.datetime.now(datetime.timezone.utc).day != self.day:
             return
 
-        query = f'SELECT id, twitch_id, display_name FROM {self.table_name} WHERE twitch_id IS NOT NULL'
+        query = f"SELECT id, twitch_id, display_name FROM {self.table_name} WHERE twitch_id IS NOT NULL"
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
             display_name = await self.bot.twitch.name_by_twitch_id(row.twitch_id)
             if display_name != row.display_name:
-                query = f'UPDATE {self.table_name} SET display_name=$1, name_lower=$2 WHERE id=$3'
+                query = f"UPDATE {self.table_name} SET display_name=$1, name_lower=$2 WHERE id=$3"
                 await self.bot.pool.execute(query, display_name, display_name.lower(), row.id)
 
     @check_acc_renames.before_loop

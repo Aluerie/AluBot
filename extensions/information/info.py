@@ -17,12 +17,13 @@ from PIL import Image, ImageColor
 from wordcloud import WordCloud
 
 from utils import const, converters
-from utils.formats import format_dt_tdR, human_timedelta
+from utils.formats import format_dt_tdR
 
 from ._base import InfoCog
 
 if TYPE_CHECKING:
-    from utils import AluBot, AluContext
+    from bot import AluBot
+    from utils import AluContext
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
@@ -31,13 +32,13 @@ warnings.filterwarnings(
 )
 
 
-class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
+class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
     """Commands to get some useful info"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ctx_menu_avatar = app_commands.ContextMenu(
-            name='View User Avatar',
+            name="View User Avatar",
             callback=self.view_user_avatar,
         )
 
@@ -49,7 +50,7 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
         self.bot.tree.remove_command(c.name, type=c.type)
 
     async def view_user_avatar(self, ntr: discord.Interaction, user: discord.User):
-        e = discord.Embed(color=user.colour, title=f'Avatar for {user.display_name}')
+        e = discord.Embed(color=user.colour, title=f"Avatar for {user.display_name}")
         e.set_image(url=user.display_avatar.url)
         await ntr.response.send_message(embed=e, ephemeral=True)
 
@@ -68,7 +69,7 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
                 dst = d.seconds if (d := dt.dst()) else 0
                 e.description = (
                     f'"{pdate[0]}" in your timezone:\n {format_dt_tdR(dt)}\n'
-                    f'{dt.tzname()} is GMT {utc_offset / 3600:+.1f}, dst: { dst / 3600:+.1f}'
+                    f"{dt.tzname()} is GMT {utc_offset / 3600:+.1f}, dst: { dst / 3600:+.1f}"
                 )
                 await message.channel.send(embed=e)
 
@@ -82,40 +83,40 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
         async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id):
             if (added_role and added_role[0] == role) or (removed_role and removed_role[0] == role):
                 msg = channel.get_partial_message(msg_id)
-                e = discord.Embed(title=f'List of {role.name}', colour=const.Colour.prpl())
-                e.description = ''.join([f'{member.mention}\n' for member in role.members])
-                await msg.edit(content='', embed=e)
+                e = discord.Embed(title=f"List of {role.name}", colour=const.Colour.prpl())
+                e.description = "".join([f"{member.mention}\n" for member in role.members])
+                await msg.edit(content="", embed=e)
 
         await give_text_list(self.community.bots_role, self.community.bot_spam, 959982214827892737)
         await give_text_list(self.community.nsfw_bots_role, self.community.nsfw_bot_spam, 959982171492323388)
 
-    @commands.hybrid_command(name='gmt', aliases=['utc'], description="Show GMT(UTC) time")
+    @commands.hybrid_command(name="gmt", aliases=["utc"], description="Show GMT(UTC) time")
     async def gmt(self, ctx: AluContext):
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
-        e = discord.Embed(colour=const.Colour.prpl(), title='GMT(Greenwich Mean Time)')
-        e.set_footer(text=f'GMT is the same as UTC (Universal Time Coordinated)')
-        e.add_field(name='Time:', value=now_time).add_field(name='Date:', value=now_date)
+        e = discord.Embed(colour=const.Colour.prpl(), title="GMT(Greenwich Mean Time)")
+        e.set_footer(text=f"GMT is the same as UTC (Universal Time Coordinated)")
+        e.add_field(name="Time:", value=now_time).add_field(name="Date:", value=now_date)
         await ctx.reply(embed=e)
 
-    @commands.hybrid_command(name='role')
-    @app_commands.describe(role='Choose role to get info about')
+    @commands.hybrid_command(name="role")
+    @app_commands.describe(role="Choose role to get info about")
     async def role_info(self, ctx: AluContext, *, role: discord.Role):
-        """View info about selected role.""" 
+        """View info about selected role."""
         e = discord.Embed(title="Role information", colour=role.colour)
-        msg = f'Role {role.mention}\n'
-        msg += '\n'.join([f'{counter} {m.mention}' for counter, m in enumerate(role.members, start=1)])
+        msg = f"Role {role.mention}\n"
+        msg += "\n".join([f"{counter} {m.mention}" for counter, m in enumerate(role.members, start=1)])
         e.description = msg
-        await ctx.reply(embed=e) 
-        #todo: make pagination about it^. 
+        await ctx.reply(embed=e)
+        # todo: make pagination about it^.
         # Also add stuff like colour code, amount of members and some garbage other bots include
 
     @commands.hybrid_command(
-        aliases=['color'],
-        usage='<formatted_colour_string>',
+        aliases=["color"],
+        usage="<formatted_colour_string>",
     )
-    @app_commands.describe(colour='Colour in any of supported formats')
+    @app_commands.describe(colour="Colour in any of supported formats")
     async def colour(self, ctx, *, colour: Annotated[discord.Colour, converters.AluColourConverter]):
         """Get info about colour in specified <formatted_colour_string>
 
@@ -132,73 +133,73 @@ class Info(InfoCog, name='Info', emote=const.Emote.PepoG):
         """
         rgb = colour.to_rgb()
 
-        img = Image.new('RGB', (300, 300), rgb)
-        file = ctx.bot.imgtools.img_to_file(img, filename='colour.png')
-        e = discord.Embed(color=discord.Colour.from_rgb(*rgb), title='Colour info')
+        img = Image.new("RGB", (300, 300), rgb)
+        file = ctx.bot.imgtools.img_to_file(img, filename="colour.png")
+        e = discord.Embed(color=discord.Colour.from_rgb(*rgb), title="Colour info")
         e.description = (
-            'Hex triplet: `#{:02x}{:02x}{:02x}`\n'.format(*rgb)
-            + 'RGB: `({}, {}, {})`\n'.format(*rgb)
-            + 'HSV: `({:.2f}, {:.2f}, {})`\n'.format(*colorsys.rgb_to_hsv(*rgb))
-            + 'HLS: `({:.2f}, {}, {:.2f})`\n'.format(*colorsys.rgb_to_hls(*rgb))
+            "Hex triplet: `#{:02x}{:02x}{:02x}`\n".format(*rgb)
+            + "RGB: `({}, {}, {})`\n".format(*rgb)
+            + "HSV: `({:.2f}, {:.2f}, {})`\n".format(*colorsys.rgb_to_hsv(*rgb))
+            + "HLS: `({:.2f}, {}, {:.2f})`\n".format(*colorsys.rgb_to_hls(*rgb))
         )
-        e.set_thumbnail(url=f'attachment://{file.filename}')
+        e.set_thumbnail(url=f"attachment://{file.filename}")
         await ctx.reply(embed=e, file=file)
 
-    @colour.autocomplete('colour')
+    @colour.autocomplete("colour")
     async def autocomplete(self, _: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
-        colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mp(', 'map('] + list(ImageColor.colormap.keys())
+        colours = ["prpl", "rgb(", "hsl(", "hsv(", "mp(", "map("] + list(ImageColor.colormap.keys())
         return [
             app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
         ][:25]
 
     @commands.is_owner()
     @commands.command(
-        name='sysinfo',
-        description='Get system info about machine currently hosting the bot',
-        aliases=['systeminfo'],
+        name="sysinfo",
+        description="Get system info about machine currently hosting the bot",
+        aliases=["systeminfo"],
         hidden=True,
     )
     async def sysinfo(self, ctx: AluContext):
         """Get system info about machine currently hosting the bot"""
-        url = 'https://ipinfo.io/json'
+        url = "https://ipinfo.io/json"
         async with self.bot.session.get(url) as resp:
             data = await resp.json()
 
         e = discord.Embed(title="Bot Host Machine System Info", colour=const.Colour.prpl())
         e.description = (
-            f'\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n'
-            f'\N{BLACK CIRCLE} Machine: {platform.machine()}\n'
-            f'\N{BLACK CIRCLE} Platform: {platform.platform()}\n'
-            f'\N{BLACK CIRCLE} System: `{platform.system()}` release: `{platform.release()}`\n'
-            f'\N{BLACK CIRCLE} Version: `{platform.version()}`\n'
-            f'\N{BLACK CIRCLE} Processor: {platform.processor()}\n'
+            f"\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n"
+            f"\N{BLACK CIRCLE} Machine: {platform.machine()}\n"
+            f"\N{BLACK CIRCLE} Platform: {platform.platform()}\n"
+            f"\N{BLACK CIRCLE} System: `{platform.system()}` release: `{platform.release()}`\n"
+            f"\N{BLACK CIRCLE} Version: `{platform.version()}`\n"
+            f"\N{BLACK CIRCLE} Processor: {platform.processor()}\n"
         )
         e.add_field(
-            name='Current % | max values',
+            name="Current % | max values",
             value=(
                 # f'\N{BLACK CIRCLE} CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
-                f'\N{BLACK CIRCLE} RAM usage: \n{psutil.virtual_memory().percent}% | '
+                f"\N{BLACK CIRCLE} RAM usage: \n{psutil.virtual_memory().percent}% | "
                 f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
                 f'\N{BLACK CIRCLE} Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
-                f'{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB'
+                f"{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB"
             ),
         )
-        e.set_footer(text=f'AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}')
+        e.set_footer(text=f"AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}")
         if not self.bot.test:
             e.add_field(
-                name="Bot\'s Location judging by IP", value=f"· {data['country']} {data['region']} {data['city']}"
+                name="Bot's Location judging by IP", value=f"· {data['country']} {data['region']} {data['city']}"
             )
         await ctx.reply(embed=e)
 
 
-class StatsCommands(InfoCog, name='Stats', emote=const.Emote.Smartge):
+class StatsCommands(InfoCog, name="Stats", emote=const.Emote.Smartge):
     """Some stats/infographics/diagrams/info
 
     More to come.
     """
 
-    @commands.hybrid_command(name='wordcloud', usage='[channel(s)=curr] [member(s)=you] [limit=2000]')
-    @app_commands.describe(channel_or_and_member='List channel(-s) or/and member(-s)')
+    @commands.hybrid_command(name="wordcloud", usage="[channel(s)=curr] [member(s)=you] [limit=2000]")
+    @app_commands.describe(channel_or_and_member="List channel(-s) or/and member(-s)")
     async def wordcloud(
         self,
         ctx: AluContext,
@@ -215,18 +216,18 @@ class StatsCommands(InfoCog, name='Stats', emote=const.Emote.Smartge):
         members = [x for x in cm if isinstance(x, discord.Member)] or [ctx.author]
         channels = [x for x in cm if isinstance(x, discord.TextChannel)] or [ctx.channel]
 
-        text = ''
+        text = ""
         for ch in channels:
-            text += ''.join([f'{msg.content}\n' async for msg in ch.history(limit=limit) if msg.author in members])
+            text += "".join([f"{msg.content}\n" async for msg in ch.history(limit=limit) if msg.author in members])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
         e = discord.Embed(colour=const.Colour.prpl())
-        members = ', '.join([m.mention for m in members])
-        channels = ', '.join(
+        members = ", ".join([m.mention for m in members])
+        channels = ", ".join(
             [c.mention if isinstance(c, discord.TextChannel) else c.__class__.__name__ for c in channels]
         )
 
         e.description = f"Members: {members}\nChannels: {channels}\nLimit: {limit}"
-        file = self.bot.imgtools.img_to_file(wordcloud.to_image(), filename='wordcloud.png')
+        file = self.bot.imgtools.img_to_file(wordcloud.to_image(), filename="wordcloud.png")
         await ctx.reply(embed=e, file=file)
 
 

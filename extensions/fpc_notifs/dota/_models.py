@@ -14,7 +14,7 @@ from utils.dota.const import ODOTA_API_URL, dota_player_colour_map
 from utils.formats import human_timedelta
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
     from utils.twitch import TwitchClient
 
 

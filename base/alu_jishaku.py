@@ -7,7 +7,7 @@ from jishaku.cog import OPTIONAL_FEATURES, STANDARD_FEATURES
 from utils import AluCog, ExtCategory, const
 
 if TYPE_CHECKING:
-    from utils import AluBot
+    from bot import AluBot
 
 category = ExtCategory(
     name='Jishaku',

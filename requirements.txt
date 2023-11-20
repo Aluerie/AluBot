@@ -34,7 +34,7 @@ gtts~=2.4.0
 ffmpeg
 unidiff~=0.7.4
 psutil==5.9.4
-pygit2==1.12.2
+pygit2==1.13.2
 parsedatetime~=2.6
 python-dateutil~=2.8.2
 dateparser==1.1.8

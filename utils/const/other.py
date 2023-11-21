@@ -4,17 +4,17 @@ from enum import StrEnum
 class Slash(StrEnum):
     """Slash mentions strings."""
 
-    feedback = '</feedback:1060350834367549541>'
-    help = '</help:971447382787108919>'
+    feedback = "</feedback:1060350834367549541>"
+    help = "</help:971447382787108919>"
 
 
 class Regex:
     # these match/capture whole mentions/emote as in <a:blabla:123>
-    user_mention = r'<@!?\d+>'
-    role_mention = r'<@&\d+>'
-    channel_mention = r'<#\d+>'
-    slash_mention = r'</[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>'
-    emote = r'<a?:[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>'
+    user_mention = r"<@!?\d+>"
+    role_mention = r"<@&\d+>"
+    channel_mention = r"<#\d+>"
+    slash_mention = r"</[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>"
+    emote = r"<a?:[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>"
 
     # matches the whole links in the string
     url = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
@@ -31,13 +31,15 @@ class Regex:
 
 
 class Picture(StrEnum):
-    github = 'https://pics.freeicons.io/uploads/icons/png/4381378511600029534-512.png'
+    github = "https://pics.freeicons.io/uploads/icons/png/4381378511600029534-512.png"
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
     twitch = (
         "https://cdn3.iconfinder.com/data/icons/"
         "social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
     )
-    dankfix = 'https://i.imgur.com/gzrPVLs.png'
+    dankfix = "https://i.imgur.com/gzrPVLs.png"
+
+    frog = "https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png"
 
 
 class Logo(StrEnum):
@@ -45,9 +47,9 @@ class Logo(StrEnum):
 
     # this image is made by removing (R) from
     # https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
-    dota = 'https://i.imgur.com/F8uMnWr.png'
-    
-    lol = 'https://i.imgur.com/1DJa07b.png'
+    dota = "https://i.imgur.com/F8uMnWr.png"
+
+    lol = "https://i.imgur.com/1DJa07b.png"
 
 
 class Limit:

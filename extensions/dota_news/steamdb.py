@@ -19,7 +19,7 @@ import discord
 from discord.ext import commands
 from github import Github
 
-from config import DOTA_NEWS_WEBHOOK, GIT_PERSONAL_TOKEN, PINK_TEST_WEBHOOK
+from config import DOTA_NEWS_WEBHOOK, GIT_PERSONAL_TOKEN, TEST_SPAM_PINK_WEBHOOK
 from utils import AluCog, aluloop, const
 from utils.github import human_commit
 from utils.imgtools import str_to_file
@@ -80,7 +80,7 @@ class SteamDB(AluCog):
     @discord.utils.cached_property
     def news_webhook(self) -> discord.Webhook:
         return discord.Webhook.from_url(
-            url=PINK_TEST_WEBHOOK if self.bot.test else DOTA_NEWS_WEBHOOK,
+            url=TEST_SPAM_PINK_WEBHOOK if self.bot.test else DOTA_NEWS_WEBHOOK,
             client=self.bot,
             session=self.bot.session,
             bot_token=self.bot.http.token,

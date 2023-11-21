@@ -19,8 +19,8 @@ from utils import AluCog, aluloop, const
 if TYPE_CHECKING:
     from githubkit.rest import Issue, SimpleUser
 
-    from utils import AluContext
     from bot import AluBot
+    from utils import AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -41,11 +41,11 @@ class ActionBase:
 
     @property
     def file_path(self) -> str:
-        return f'./assets/images/git/{self.name}.png'
+        return f"./assets/images/git/{self.name}.png"
 
     def file(self, number: int) -> discord.File:
         # without a `number` we had a "bug" where the image would go outside embeds
-        return discord.File(self.file_path, filename=f'{self.name}_{number}.png')
+        return discord.File(self.file_path, filename=f"{self.name}_{number}.png")
 
 
 class EventBase(ActionBase):
@@ -61,14 +61,14 @@ class CommentBase(ActionBase):
 # * PNG-picture in assets folder
 # * emote name in wink server
 class EventType(Enum):
-    assigned = EventBase('assigned', colour=0x21262D, word='self-assigned', emote=str(const.GitIssueEvent.assigned))
-    closed = EventBase('closed', colour=0x9B6CEA, word='closed', emote=str(const.GitIssueEvent.closed))
-    reopened = EventBase('reopened', colour=0x238636, word='reopened', emote=str(const.GitIssueEvent.reopened))
+    assigned = EventBase("assigned", colour=0x21262D, word="self-assigned", emote=str(const.GitIssueEvent.assigned))
+    closed = EventBase("closed", colour=0x9B6CEA, word="closed", emote=str(const.GitIssueEvent.closed))
+    reopened = EventBase("reopened", colour=0x238636, word="reopened", emote=str(const.GitIssueEvent.reopened))
 
 
 class CommentType(Enum):
-    commented = CommentBase('commented', colour=0x4285F4, word='commented', emote=str(const.GitIssueEvent.commented))
-    opened = CommentBase('opened', colour=0x52CC99, word='opened', emote=str(const.GitIssueEvent.opened))
+    commented = CommentBase("commented", colour=0x4285F4, word="commented", emote=str(const.GitIssueEvent.commented))
+    opened = CommentBase("opened", colour=0x52CC99, word="opened", emote=str(const.GitIssueEvent.opened))
 
 
 class Action:
@@ -88,7 +88,7 @@ class Action:
 
     @property
     def author_str(self) -> str:
-        return f'@{self.actor.login} {self.event_type.word} bugtracker issue #{self.issue_number}'
+        return f"@{self.actor.login} {self.event_type.word} bugtracker issue #{self.issue_number}"
 
 
 class Event(Action):
@@ -103,10 +103,10 @@ class Comment(Action):
 
     @property
     def markdown_body(self) -> str:
-        url_regex = re.compile(fr'({GITHUB_REPO_URL}/issues/(\d+))')
-        body = url_regex.sub(r'[#\2](\1)', self.comment_body)
-        body = '\n'.join([line for line in body.splitlines() if line])
-        return body.replace('<br>', '')
+        url_regex = re.compile(rf"({GITHUB_REPO_URL}/issues/(\d+))")
+        body = url_regex.sub(r"[#\2](\1)", self.comment_body)
+        body = "\n".join([line for line in body.splitlines() if line])
+        return body.replace("<br>", "")
 
 
 class TimeLine:
@@ -151,38 +151,39 @@ class TimeLine:
 
             lead_action = event or comment
             if lead_action is None:
-                raise RuntimeError('Somehow lead_event is None')
+                raise RuntimeError("Somehow lead_event is None")
 
             embed.colour = lead_action.event_type.colour
             url = comment.comment_url if comment else None
             embed.set_author(name=lead_action.author_str, icon_url=lead_action.actor.avatar_url, url=url)
-            embed.description = comment.markdown_body if comment else ''
+            if comment:
+                embed.description = comment.markdown_body
             file = lead_action.event_type.file(self.issue.number)
-            embed.set_thumbnail(url=f'attachment://{file.filename}')
+            embed.set_thumbnail(url=f"attachment://{file.filename}")
         else:
             embed.colour = 0x4078C0  # git colour, first in google :D
-            pil_pics = []
+            pil_pics: list[str] = []
             for p in self.sorted_points_list():
                 pil_pics.append(p.event_type.file_path)
-                markdown_body = getattr(p, 'markdown_body', ' ')
+                markdown_body = getattr(p, "markdown_body", " ")
                 chunks, chunk_size = len(markdown_body), const.Limit.Embed.field_value
                 fields = [markdown_body[i : i + chunk_size] for i in range(0, chunks, chunk_size)]
                 for x in fields:
-                    embed.add_field(name=f'{p.event_type.emote}{p.author_str}', value=x, inline=False)
+                    embed.add_field(name=f"{p.event_type.emote}{p.author_str}", value=x, inline=False)
             embed.set_author(
-                name=f'Bugtracker issue #{self.issue.number} update',
+                name=f"Bugtracker issue #{self.issue.number} update",
                 url=self.last_comment_url,
-                icon_url='https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png',
+                icon_url=const.Picture.frog,
             )
             delta_x_y = 32
             size_x_y = 128 + (len(pil_pics) - 1) * delta_x_y  # 128 is images size
-            dst = Image.new('RGBA', (size_x_y, size_x_y), (0, 0, 0, 0))
+            dst = Image.new("RGBA", (size_x_y, size_x_y), (0, 0, 0, 0))
             for i, pic_name in enumerate(pil_pics):
                 im = Image.open(pic_name)
                 dst.paste(im, (i * delta_x_y, i * delta_x_y), im)
 
-            file = bot.imgtools.img_to_file(dst, filename=f'bugtracker_update_{self.issue.number}.png')
-            embed.set_thumbnail(url=f'attachment://{file.filename}')
+            file = bot.imgtools.img_to_file(dst, filename=f"bugtracker_update_{self.issue.number}.png")
+            embed.set_thumbnail(url=f"attachment://{file.filename}")
         return embed, file
 
 
@@ -205,7 +206,7 @@ class BugTracker(AluCog):
         return channel
 
     async def get_valve_devs(self) -> list[str]:
-        query = 'SELECT login FROM valve_devs'
+        query = "SELECT login FROM valve_devs"
         valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
         return valve_devs
 
@@ -236,17 +237,17 @@ class BugTracker(AluCog):
 
         def embed_answer(logins: list[str], color: discord.Color, description: str) -> discord.Embed:
             e = discord.Embed(color=color)
-            logins_join = ', '.join(f'`{l}`' for l in logins)
-            e.description = f'{description}\n{logins_join}'
+            logins_join = ", ".join(f"`{l}`" for l in logins)
+            e.description = f"{description}\n{logins_join}"
             return e
 
         if success_logins:
             self.valve_devs.extend(success_logins)
-            e = embed_answer(success_logins, const.MaterialPalette.green(), 'Added user(-s) to the list of Valve devs.')
+            e = embed_answer(success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs.")
             await ctx.reply(embed=e)
         if error_logins:
             e = embed_answer(
-                error_logins, const.MaterialPalette.red(), 'User(-s) were already in the list of Valve devs.'
+                error_logins, const.MaterialPalette.red(), "User(-s) were already in the list of Valve devs."
             )
             await ctx.reply(embed=e)
 
@@ -257,7 +258,7 @@ class BugTracker(AluCog):
         await self.bot.pool.execute(query, login)
         self.valve_devs.remove(login)
         e = discord.Embed(color=const.MaterialPalette.orange())
-        e.description = f'Removed user `{login}` from the list of Valve devs.'
+        e.description = f"Removed user `{login}` from the list of Valve devs."
         await ctx.reply(embed=e)
 
     @commands.is_owner()
@@ -265,21 +266,21 @@ class BugTracker(AluCog):
     async def list(self, ctx: AluContext):
         query = "SELECT login FROM valve_devs"
         valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
-        e = discord.Embed(color=const.MaterialPalette.blue(), title='List of known Valve devs')
+        e = discord.Embed(color=const.MaterialPalette.blue(), title="List of known Valve devs")
         valve_devs.sort()
-        e.description = '\n'.join([f'\N{BLACK CIRCLE} {i}' for i in valve_devs])
+        e.description = "\n".join([f"\N{BLACK CIRCLE} {i}" for i in valve_devs])
         await ctx.reply(embed=e)
 
     @aluloop(minutes=3)
     async def git_comments_check(self):
-        log.debug('BugTracker task started')
+        log.debug("BugTracker task started")
 
-        query = 'SELECT git_checked_dt FROM botinfo WHERE id=$1'
+        query = "SELECT git_checked_dt FROM botinfo WHERE id=$1"
         dt: datetime.datetime = await self.bot.pool.fetchval(query, const.Guild.community)
-        now = discord.utils.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
 
-        # if self.bot.test:  # TESTING
-        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=2)
+        # if self.bot.test:  # FORCE TESTING
+        #     dt = now - datetime.timedelta(hours=2)
 
         issue_dict: dict[int, TimeLine] = dict()
 
@@ -294,16 +295,22 @@ class BugTracker(AluCog):
                 # this is why we need to have this page_number workaround
                 page=page_number,
             ):
-                if event.created_at.replace(tzinfo=datetime.timezone.utc) < dt:
+                if not event.actor or not event.issue or not event.issue.user:
+                    # check if this is a valid issue event
+                    continue
+
+                event_created_at = event.created_at.replace(tzinfo=datetime.timezone.utc)
+                log.debug(
+                    "Found event: %s %s %s %s ", event.event, event.issue.number, event.actor.login, event_created_at
+                )
+                if event_created_at < dt:
                     # we reached events that we are supposedly already checked
                     break
-                if event.created_at.replace(tzinfo=datetime.timezone.utc) < now:
+                if event_created_at > now:
                     # these events got created after task start and before paginator
                     # therefore we leave them untouched for the next batch
                     continue
                 if not event.event in [x.name for x in list(EventType)]:
-                    continue
-                if not event.actor or not event.issue or not event.issue.user:
                     continue
 
                 if (login := event.actor.login) in self.valve_devs:
@@ -337,8 +344,8 @@ class BugTracker(AluCog):
             self.bot.github.rest.issues.async_list_for_repo,
             owner="ValveSoftware",
             repo="Dota2-Gameplay",
-            sort='updated',
-            state='open',
+            sort="updated",
+            state="open",
             since=dt,
         ):
             if not dt < issue.created_at.replace(tzinfo=datetime.timezone.utc) < now:
@@ -351,7 +358,7 @@ class BugTracker(AluCog):
                         created_at=issue.created_at,
                         actor=issue.user,
                         issue_number=issue.number,
-                        comment_body=issue.body if issue.body else '',
+                        comment_body=issue.body if issue.body else "",
                     )
                 )
 
@@ -360,7 +367,7 @@ class BugTracker(AluCog):
             self.bot.github.rest.issues.async_list_comments_for_repo,
             owner="ValveSoftware",
             repo="Dota2-Gameplay",
-            sort='updated',
+            sort="updated",
             since=dt,
         ):
             if not comment.user or not comment.user.login in self.valve_devs:
@@ -368,7 +375,7 @@ class BugTracker(AluCog):
 
             # comment doesn't have issue object attached directly so we need to manually grab it
             # just take numbers from url string ".../Dota2-Gameplay/issues/2524" with `.split`
-            issue_number = int(comment.issue_url.split('/')[-1])
+            issue_number = int(comment.issue_url.split("/")[-1])
 
             # if the issue is not in the dict then we need to async_get it ourselves
             issue_dict.setdefault(issue_number, TimeLine(issue=await self.get_issue(issue_number))).add_action(
@@ -377,7 +384,7 @@ class BugTracker(AluCog):
                     created_at=comment.created_at,
                     actor=comment.user,
                     issue_number=issue_number,
-                    comment_body=comment.body if comment.body else '',
+                    comment_body=comment.body if comment.body else "",
                     comment_url=comment.html_url,
                 )
             )
@@ -403,34 +410,34 @@ class BugTracker(AluCog):
                 embeds=[embed for (embed, _file) in batch],
                 files=[file for (_embed, file) in batch],
             )
-            await msg.publish()
+            # await msg.publish()
 
-        query = 'UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2'
+        query = "UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2"
         await self.bot.pool.execute(query, now, const.Guild.community)
         self.retries = 0
-        log.debug('BugTracker task is finished')
+        log.debug("BugTracker task is finished")
 
     @git_comments_check.error
     async def git_comments_check_error(self, error):
         if isinstance(error, RequestFailed):
             if error.response.status_code == 502:
                 if self.retries == 0:
-                    e = discord.Embed(description='DotaBugtracker: Server Error 502')
+                    e = discord.Embed(description="DotaBugtracker: Server Error 502")
                     await self.hideout.spam.send(embed=e)
                 await asyncio.sleep(60 * 10 * 2**self.retries)
                 self.retries += 1
                 self.git_comments_check.restart()
                 return
 
-        txt = 'Dota2 BugTracker task'
+        txt = "Dota2 BugTracker task"
         await self.bot.exc_manager.register_error(error, txt, where=txt)
         # self.git_comments_check.restart()
 
     async def get_issue(self, issue_number: int):
         return (
             await self.bot.github.rest.issues.async_get(
-                owner='ValveSoftware',
-                repo='Dota2-Gameplay',
+                owner="ValveSoftware",
+                repo="Dota2-Gameplay",
                 issue_number=issue_number,
             )
         ).parsed_data

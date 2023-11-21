@@ -15,14 +15,14 @@ from typing import TYPE_CHECKING, Generator, NamedTuple, Optional, Union
 
 import discord
 
-from config import ERROR_HANDLER_WEBHOOK, TEST_ERROR_HANDLER_WEBHOOK
+from config import MAIN_ERROR_HANDLER_WEBHOOK, TEST_ERROR_HANDLER_WEBHOOK
 from utils import AluContext, const, errors
 
 if TYPE_CHECKING:
     from bot import AluBot
 
 
-log = logging.getLogger('exception_manager')
+log = logging.getLogger("exception_manager")
 
 
 class ErrorInfoPacket(NamedTuple):
@@ -57,12 +57,12 @@ class AluExceptionManager:
     # https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/utils/errorhandler.py
 
     __slots__: tuple[str, ...] = (
-        'bot',
-        'cooldown',
-        'errors_cache',
-        '_lock',
-        '_most_recent',
-        'error_webhook',
+        "bot",
+        "cooldown",
+        "errors_cache",
+        "_lock",
+        "_most_recent",
+        "error_webhook",
     )
 
     def __init__(
@@ -79,7 +79,7 @@ class AluExceptionManager:
 
         self.errors_cache: dict[str, list[ErrorInfoPacket]] = {}
 
-        webhook_url = TEST_ERROR_HANDLER_WEBHOOK if self.bot.test else ERROR_HANDLER_WEBHOOK
+        webhook_url = TEST_ERROR_HANDLER_WEBHOOK if self.bot.test else MAIN_ERROR_HANDLER_WEBHOOK
         self.error_webhook: discord.Webhook = discord.Webhook.from_url(
             url=webhook_url,
             session=bot.session,
@@ -88,7 +88,7 @@ class AluExceptionManager:
         )
 
     def _yield_code_chunks(self, iterable: str, *, chunks_size: int = 2000) -> Generator[str, None, None]:
-        codeblocks: str = '```py\n{}```'
+        codeblocks: str = "```py\n{}```"
         max_chars_in_code = chunks_size - (len(codeblocks) - 2)  # chunks_size minus code blocker size
 
         for i in range(0, len(iterable), max_chars_in_code):
@@ -129,36 +129,36 @@ class AluExceptionManager:
         elif isinstance(source, AluContext):
             ctx = source  # I just can't type `source.command.qualified_name` lol
 
-            e = discord.Embed(colour=0x890620, title=f'`{ctx.clean_prefix}{ctx.command}`')
+            e = discord.Embed(colour=0x890620, title=f"`{ctx.clean_prefix}{ctx.command}`")
             e.url = ctx.message.jump_url
             e.description = ctx.message.content
 
             # metadata
-            author_text = f'@{ctx.author} triggered error in #{ctx.channel}'
+            author_text = f"@{ctx.author} triggered error in #{ctx.channel}"
             e.set_author(name=author_text, icon_url=ctx.author.display_avatar)
             if ctx.guild:
-                e.set_footer(text=f'{ctx.guild.name}\n{where}', icon_url=ctx.guild.icon)
+                e.set_footer(text=f"{ctx.guild.name}\n{where}", icon_url=ctx.guild.icon)
                 guild_id = ctx.guild.id
             else:
-                guild_id = 'DM Channel'
-                e.set_footer(text=f'DM Channel\n{where}', icon_url=ctx.author.display_avatar)
+                guild_id = "DM Channel"
+                e.set_footer(text=f"DM Channel\n{where}", icon_url=ctx.author.display_avatar)
 
             # arguments
-            args_str = ['```py']
+            args_str = ["```py"]
             for name, value in ctx.kwargs.items():
-                args_str.append(f'[{name}]: {value!r}')
+                args_str.append(f"[{name}]: {value!r}")
             else:
-                args_str.append('No arguments')
-            args_str.append('```')
-            e.add_field(name='Command Args', value='\n'.join(args_str), inline=False)
+                args_str.append("No arguments")
+            args_str.append("```")
+            e.add_field(name="Command Args", value="\n".join(args_str), inline=False)
             # ids
             e.add_field(
-                name='Snowflake Ids',
+                name="Snowflake Ids",
                 value=(
-                    '```py\n'
-                    f'author  = {ctx.author.id}\n'
-                    f'channel = {ctx.channel.id}\n'
-                    f'guild   = {guild_id}\n```'
+                    "```py\n"
+                    f"author  = {ctx.author.id}\n"
+                    f"channel = {ctx.channel.id}\n"
+                    f"guild   = {guild_id}\n```"
                 ),
             )
 
@@ -174,37 +174,37 @@ class AluExceptionManager:
 
             app_cmd = ntr.command
             if app_cmd:
-                e.title = f'`/{app_cmd.qualified_name}`'
+                e.title = f"`/{app_cmd.qualified_name}`"
             else:
-                e.title = 'Non cmd interaction'
+                e.title = "Non cmd interaction"
 
             # metadata
-            author_text = f'@{ntr.user} triggered error in #{ntr.channel}'
+            author_text = f"@{ntr.user} triggered error in #{ntr.channel}"
             e.set_author(name=author_text, icon_url=ntr.user.display_avatar)
             if ntr.guild:
-                e.set_footer(text=f'{ntr.guild.name}\n{where}', icon_url=ntr.guild.icon)
+                e.set_footer(text=f"{ntr.guild.name}\n{where}", icon_url=ntr.guild.icon)
                 guild_id = ntr.guild.id
             else:
-                guild_id = 'DM Channel'
-                e.set_footer(text=f'DM Channel\n{where}', icon_url=ntr.user.display_avatar)
+                guild_id = "DM Channel"
+                e.set_footer(text=f"DM Channel\n{where}", icon_url=ntr.user.display_avatar)
 
             # arguments
-            args_str = ['```py']
+            args_str = ["```py"]
             for name, value in ntr.namespace.__dict__.items():
-                args_str.append(f'[{name}]: {value!r}')
+                args_str.append(f"[{name}]: {value!r}")
             else:
-                args_str.append(f'No arguments')
-            args_str.append('```')
-            e.add_field(name='Command Args', value='\n'.join(args_str), inline=False)
+                args_str.append(f"No arguments")
+            args_str.append("```")
+            e.add_field(name="Command Args", value="\n".join(args_str), inline=False)
 
             # ids
             e.add_field(
-                name='Snowflake Ids',
+                name="Snowflake Ids",
                 value=(
-                    '```py\n'
-                    f'author  = {ntr.user.id}\n'
-                    f'channel = {ntr.channel_id}\n'
-                    f'guild   = {ntr.guild_id}\n```'
+                    "```py\n"
+                    f"author  = {ntr.user.id}\n"
+                    f"channel = {ntr.channel_id}\n"
+                    f"guild   = {ntr.guild_id}\n```"
                 ),
             )
             e.timestamp = dt = ntr.created_at
@@ -214,7 +214,7 @@ class AluExceptionManager:
             # shouldn't ever trigger
             # probably source is `None`, but let's leave it as "else" for some silly mistake too.
             e = discord.Embed(colour=const.Colour.error())
-            e.description = 'Something went wrong somewhere. Please make it so next time it says where here.'
+            e.description = "Something went wrong somewhere. Please make it so next time it says where here."
             e.timestamp = dt = discord.utils.utcnow()
             e.set_footer(text=where)
             return ErrorInfoPacket(embed=e, dt=dt, mention=True)
@@ -242,11 +242,11 @@ class AluExceptionManager:
         where: :class: Optional[str]
             string to put into logger.
         """
-        log.error('%s: %s.', error.__class__.__name__, where, exc_info=error)
+        log.error("%s: %s.", error.__class__.__name__, where, exc_info=error)
 
         # apparently there is https://github.com/vi3k6i5/flashtext for "the fastest replacement"
         # not sure if I want to add extra dependance
-        traceback_string = "".join(traceback.format_exception(error)).replace(os.getcwd(), 'AluBot')
+        traceback_string = "".join(traceback.format_exception(error)).replace(os.getcwd(), "AluBot")
         # .replace("``": "`\u200b`")
 
         packet = await self.get_info_packet(source=source, where=where)
@@ -256,7 +256,7 @@ class AluExceptionManager:
             if self._most_recent and (delta := packet.dt - self._most_recent) < self.cooldown:
                 # We have to wait
                 total_seconds = delta.total_seconds()
-                log.debug('Waiting %s seconds to send the error.', total_seconds)
+                log.debug("Waiting %s seconds to send the error.", total_seconds)
                 await asyncio.sleep(total_seconds)
 
             self._most_recent = discord.utils.utcnow()
@@ -277,7 +277,7 @@ class HandleHTTPException(AbstractAsyncContextManager):
         The title of the embed. Defaults to ``'An unexpected error occurred!'``.
     """
 
-    __slots__ = ('destination', 'title')
+    __slots__ = ("destination", "title")
 
     def __init__(self, destination: discord.abc.Messageable, *, title: Optional[str] = None):
         self.destination = destination
@@ -294,8 +294,8 @@ class HandleHTTPException(AbstractAsyncContextManager):
     ) -> bool:
         if exc_val is not None and isinstance(exc_val, discord.HTTPException) and exc_type:
             embed = discord.Embed(
-                title=self.title or 'An unexpected error occurred!',
-                description=f'{exc_type.__name__}: {exc_val.text}',
+                title=self.title or "An unexpected error occurred!",
+                description=f"{exc_type.__name__}: {exc_val.text}",
                 colour=discord.Colour.red(),
             )
 

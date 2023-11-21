@@ -184,7 +184,7 @@ class TimeLine:
 
             file = bot.imgtools.img_to_file(dst, filename=f"bugtracker_update_{self.issue.number}.png")
             embed.set_thumbnail(url=f"attachment://{file.filename}")
-        return embed, file
+        return (embed, file)
 
 
 class BugTracker(AluCog):
@@ -410,7 +410,7 @@ class BugTracker(AluCog):
                 embeds=[embed for (embed, _file) in batch],
                 files=[file for (_embed, file) in batch],
             )
-            # await msg.publish()
+            await msg.publish()
 
         query = "UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2"
         await self.bot.pool.execute(query, now, const.Guild.community)
@@ -418,7 +418,7 @@ class BugTracker(AluCog):
         log.debug("BugTracker task is finished")
 
     @git_comments_check.error
-    async def git_comments_check_error(self, error):
+    async def git_comments_check_error(self, error: BaseException):
         if isinstance(error, RequestFailed):
             if error.response.status_code == 502:
                 if self.retries == 0:

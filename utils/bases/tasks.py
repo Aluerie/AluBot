@@ -16,10 +16,10 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-__all__ = ('aluloop',)
+__all__ = ("aluloop",)
 
 _func = Callable[..., Coroutine[Any, Any, Any]]
-LF = TypeVar('LF', bound=_func)
+LF = TypeVar("LF", bound=_func)
 
 
 class AluLoop(tasks.Loop[LF]):
@@ -73,10 +73,10 @@ class AluLoop(tasks.Loop[LF]):
         # but all my tasks are inside cogs anyway.
         cog = args[0]
         if isinstance(cog, AluCog):
-            e = discord.Embed(title=self.coro.__name__, colour=0xef7a85)
-            e.set_author(name='Error in aluloop task')
-            e.set_footer(text='utils.bases.tasks > AluLoop._error')
-            await cog.bot.exc_manager.register_error(exception, e, where=f'aluloop {self.coro.__name__}')
+            e = discord.Embed(title=self.coro.__name__, colour=0xEF7A85)
+            e.set_author(name="Error in aluloop task")
+            e.set_footer(text="utils.bases.tasks > AluLoop._error")
+            await cog.bot.exc_manager.register_error(exception, e, where=f"aluloop {self.coro.__name__}")
 
 
 # Slight note, if `discord.ext.tasks` gets extra cool features
@@ -92,7 +92,7 @@ def aluloop(
     count: Optional[int] = None,
     reconnect: bool = True,
     name: Optional[str] = None,
-):
+) -> Callable[[LF], AluLoop[LF]]:
     def decorator(func) -> AluLoop:
         return AluLoop(
             func,

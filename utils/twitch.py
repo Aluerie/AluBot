@@ -73,7 +73,7 @@ class TwitchClient(twitchio.Client):
 
     async def get_live_lol_player_ids(self, pool: Pool) -> list[int]:
         """Get twitch ids for live League of Legends streams"""
-        query = f"""SELECT twitch_id, name_lower
+        query = """ SELECT twitch_id, name_lower
                     FROM lol_players
                     WHERE name_lower=ANY(
                         SELECT DISTINCT player_name FROM lol_favourite_players

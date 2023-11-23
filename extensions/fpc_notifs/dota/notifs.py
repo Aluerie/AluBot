@@ -48,7 +48,7 @@ class DotaNotifs(FPCCog):
             if not result.specific_games:
                 for match in result.game_list:
                     self.top_source_dict[match.match_id] = match
-                # not good: we have 10+ top_source_tv_events, but we send response on the very first one so it s not precise
+                
                 if len(self.top_source_dict) == 100:
                     self.bot.dota.emit("my_top_games_response")
                 # did not work
@@ -143,8 +143,7 @@ class DotaNotifs(FPCCog):
                             WHERE name_lower=(SELECT name_lower FROM dota_accounts WHERE friend_id=$1)
                         """
                 user = await self.bot.pool.fetchrow(query, person.account_id)
-                query = """
-                            SELECT ds.channel_id
+                query = """ SELECT ds.channel_id
                             FROM dota_favourite_characters dfc
                             JOIN dota_favourite_players dfp on dfc.guild_id = dfp.guild_id
                             JOIN dota_settings ds on ds.guild_id = dfc.guild_id

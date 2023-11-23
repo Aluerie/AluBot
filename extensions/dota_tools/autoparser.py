@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class OpenDotaAutoParser(AluCog):

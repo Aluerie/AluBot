@@ -45,7 +45,6 @@ class AluBot(commands.Bot):
         launch_time: datetime.datetime
         logging_handler: Any
         prefixes: PrefixConfig
-        reddit: Reddit
         steam: SteamClient
         tree: AluAppCommandTree
         twitch: TwitchClient
@@ -231,16 +230,6 @@ class AluBot(commands.Bot):
     def ini_github(self) -> None:
         if not hasattr(self, 'github'):
             self.github = GitHub(config.GIT_PERSONAL_TOKEN)
-
-    def ini_reddit(self) -> None:
-        if not hasattr(self, 'reddit'):
-            self.reddit = Reddit(
-                client_id=config.REDDIT_CLIENT_ID,
-                client_secret=config.REDDIT_CLIENT_SECRET,
-                password=config.REDDIT_PASSWORD,
-                user_agent=config.REDDIT_USER_AGENT,
-                username=config.REDDIT_USERNAME,
-            )
 
     async def ini_twitch(self) -> None:
         if not hasattr(self, 'twitch'):

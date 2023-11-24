@@ -47,8 +47,8 @@ lru_dict~=1.3.0
 lxml
 
 # dead packages that might come back?
-# asyncprawcore~=2.3.0
-# asyncpraw==7.7.0
-# tweepy[async]==4.14.0 # twitter is dead
+# asyncprawcore~=2.3.0  # reddit is dead
+# asyncpraw==7.7.0  # reddit is dead
+# tweepy[async]==4.14.0  # twitter is dead
 # webpreview~=1.7.2
 # pandas~=2.1.3

@@ -40,19 +40,19 @@ class DotaNotifs(FPCCog):
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def response(result):
-            log.debug(
-                f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
-                f"{result.start_game, result.game_list_index, len(result.game_list)} "
-                f"{result.game_list[0].players[0].account_id}"
-            )
             if not result.specific_games:
+                log.debug(
+                    f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
+                    f"{result.start_game, result.game_list_index, len(result.game_list)} "
+                    f"{result.game_list[0].players[0].account_id}"
+                )
                 for match in result.game_list:
                     self.top_source_dict[match.match_id] = match
-                
+
                 if len(self.top_source_dict) == 100:
                     self.bot.dota.emit("my_top_games_response")
-                # did not work
-                # self.bot.dispatch('my_top_games_response')
+                    # did not work
+                    # self.bot.dispatch("my_top_games_response")
 
         # self.bot.dota.on('top_source_tv_games', response)
 
@@ -63,7 +63,7 @@ class DotaNotifs(FPCCog):
 
     @commands.Cog.listener()
     async def on_my_top_games_response(self):
-        log.debug("double u tea ef ef")
+        print("double u tea ef ef")
 
     async def cog_unload(self) -> None:
         self.dota_feed.cancel()
@@ -153,9 +153,10 @@ class DotaNotifs(FPCCog):
                 channel_ids = [
                     i for i, in await self.bot.pool.fetch(query, person.hero_id, user.name_lower, match.match_id)
                 ]
-                log.info(f"DF | {user.display_name} - {await hero.name_by_id(person.hero_id)}")
+                log.info("%s - %s", user.display_name, await hero.name_by_id(person.hero_id))
                 # print(match)
                 if channel_ids:
+                    log.info("%s", channel_ids)
                     # sort hero ids until I figure out a better way
                     hero_ids: list[int] = []
                     url = (
@@ -176,7 +177,7 @@ class DotaNotifs(FPCCog):
                             player_name=user.display_name,
                             twitchtv_id=user.twitch_id,
                             hero_id=person.hero_id,
-                            hero_ids=hero_ids,  # [x.hero_id for x in match.players],
+                            hero_ids=hero_ids,  # [x.hero_id for x in match.players],  # old info
                             server_steam_id=match.server_steam_id,
                             channel_ids=channel_ids,
                         )
@@ -216,7 +217,7 @@ class DotaNotifs(FPCCog):
 
     @aluloop(seconds=49)
     async def dota_feed(self):
-        log.info(f"-- Task is starting now ---")
+        log.info(f"--- Task is starting now ---")
 
         await self.preliminary_queries()
         self.top_source_dict = {}

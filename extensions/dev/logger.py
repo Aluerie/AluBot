@@ -21,6 +21,12 @@ log = logging.getLogger(__name__)
 
 
 class LoggingHandler(logging.Handler):
+    """Extra logging handler to output info/warning/errors to a discord webhook.
+
+    * Just remember that `log.info` and above calls go spammed in a discord webhook so plan them accordingly.
+    * `log.debug` do not so use primarily them for debug logs 
+    """
+
     def __init__(self, cog: LoggerViaWebhook):
         self.cog: LoggerViaWebhook = cog
         super().__init__(logging.INFO)

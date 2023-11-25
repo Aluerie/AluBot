@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 
 class DotaNotifs(FPCCog):
@@ -41,15 +41,16 @@ class DotaNotifs(FPCCog):
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def response(result):
             if not result.specific_games:
-                log.debug(
-                    f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
-                    f"{result.start_game, result.game_list_index, len(result.game_list)} "
-                    f"{result.game_list[0].players[0].account_id}"
-                )
+                # log.debug(
+                #     f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
+                #     f"{result.start_game, result.game_list_index, len(result.game_list)} "
+                #     f"{result.game_list[0].players[0].account_id}"
+                # )
                 for match in result.game_list:
                     self.top_source_dict[match.match_id] = match
 
                 if len(self.top_source_dict) == 100:
+                    log.debug("Emitting my_top_games_response")
                     self.bot.dota.emit("my_top_games_response")
                     # did not work
                     # self.bot.dispatch("my_top_games_response")
@@ -153,10 +154,10 @@ class DotaNotifs(FPCCog):
                 channel_ids = [
                     i for i, in await self.bot.pool.fetch(query, person.hero_id, user.name_lower, match.match_id)
                 ]
-                log.info("%s - %s", user.display_name, await hero.name_by_id(person.hero_id))
+                log.debug("%s - %s", user.display_name, await hero.name_by_id(person.hero_id))
                 # print(match)
                 if channel_ids:
-                    log.info("%s", channel_ids)
+                    log.debug("%s", channel_ids)
                     # sort hero ids until I figure out a better way
                     hero_ids: list[int] = []
                     url = (
@@ -184,15 +185,15 @@ class DotaNotifs(FPCCog):
                     )
 
     async def send_notifications(self, match: ActiveMatch):
-        log.info("Sending DotaFeed notification")
+        log.debug("Sending DotaFeed notification")
         for ch_id in match.channel_ids:
             if (ch := self.bot.get_channel(ch_id)) is None:
-                log.info("The channel is None")
+                log.debug("The channel is None")
                 continue
 
             assert isinstance(ch, discord.TextChannel)
             em, img_file = await match.notif_embed_and_file(self.bot)
-            log.info("Successfully made embed+file")
+            log.debug("Successfully made embed+file")
             owner_name = ch.guild.owner.display_name if ch.guild.owner else "Somebody"
             em.title = f"{owner_name}'s fav hero + player spotted"
             msg = await ch.send(embed=em, file=img_file)
@@ -217,7 +218,7 @@ class DotaNotifs(FPCCog):
 
     @aluloop(seconds=49)
     async def dota_feed(self):
-        log.info(f"--- Task is starting now ---")
+        log.debug(f"--- Task is starting now ---")
 
         await self.preliminary_queries()
         self.top_source_dict = {}
@@ -228,18 +229,18 @@ class DotaNotifs(FPCCog):
             args = await self.get_args_for_top_source(specific_games_flag)
             if args:  # check args value is not empty
                 start_time = time.perf_counter()
-                log.info("calling request_top_source NOW ---")
+                log.debug("calling request_top_source NOW ---")
                 self.request_top_source(args)
                 # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
                 # await asyncio.to_thread(self.request_top_source, args)
-                log.info(f"top source request took {time.perf_counter() - start_time} secs")
-        log.info(f"len top_source_dict = {len(self.top_source_dict)}")
+                log.debug(f"top source request took {time.perf_counter() - start_time} secs")
+        log.debug(f"len top_source_dict = {len(self.top_source_dict)}")
         await self.analyze_top_source_response()
         for match in self.live_matches:
             await self.send_notifications(match)
 
         await self.declare_matches_finished()
-        log.info(f"--- Task is finished ---")
+        log.debug(f"--- Task is finished ---")
 
 
 async def setup(bot):

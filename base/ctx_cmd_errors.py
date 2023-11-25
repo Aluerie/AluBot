@@ -53,6 +53,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
             return
         if ctx.prefix == '~': 
             if ctx.message.content[1].isdigit():  # "$200 for this?" 2 is [1]
+                # prefix commands should not start with digits
                 return
         # TODO: make a fuzzy search in here to recommend the command that user wants
         desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"

@@ -1,0 +1,141 @@
+from __future__ import annotations
+
+from cgitb import text
+from token import OP
+from typing import TYPE_CHECKING, Optional
+
+import discord
+from discord import app_commands
+from discord.ext import commands
+
+from utils import const
+
+if TYPE_CHECKING:
+    from bot import AluBot
+    from utils import AluContext
+
+from .._base import MetaCog
+
+
+class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
+    summary = discord.ui.TextInput(
+        label="Summary",
+        placeholder="A brief explanation of what you want",
+        required=True,
+        max_length=const.Limit.Embed.title,
+    )
+    details = discord.ui.TextInput(
+        label="Details",
+        placeholder="Write as detailed description as possible...",
+        style=discord.TextStyle.long,
+        required=True,
+        max_length=4000,  # 4000 is max apparently for Views so we can't do Limit.Embed.description,
+    )
+
+    def __init__(self, cog: FeedbackCog) -> None:
+        super().__init__()
+        self.cog: FeedbackCog = cog
+
+    async def on_submit(self, ntr: discord.Interaction) -> None:
+        channel = self.cog.feedback_channel
+        if channel is None:
+            await ntr.response.send_message("Sorry, something went wrong \N{THINKING FACE}", ephemeral=True)
+            return
+
+        summary, details = str(self.summary), self.details.value
+        # feedback to global logs
+        e = self.cog.get_feedback_embed(ntr, summary=summary, details=details)
+        await channel.send(embed=e)
+        # success
+        e2 = self.cog.get_successfully_submitted_embed(summary=summary, details=details)
+        await ntr.response.send_message(embed=e2)
+
+
+class FeedbackCog(MetaCog):
+    @property
+    def feedback_channel(self) -> Optional[discord.TextChannel]:
+        # maybe add different channel
+        return self.bot.hideout.global_logs
+
+    @staticmethod
+    def get_feedback_embed(
+        ctx_ntr: AluContext | discord.Interaction,
+        *,
+        summary: str = "No feedback title was provided (prefix?)",
+        details: str = "No feedback details were provided",
+    ) -> discord.Embed:
+        e = discord.Embed(title=summary, description=details, colour=const.Colour.prpl())
+
+        if ctx_ntr.guild is not None:
+            e.add_field(name="Server", value=f"{ctx_ntr.guild.name}\nID: `{ctx_ntr.guild.id}`", inline=False)
+
+        if ctx_ntr.channel is not None:
+            e.add_field(name="Channel", value=f"#{ctx_ntr.channel}\nID: `{ctx_ntr.channel.id}`", inline=False)
+
+        e.timestamp = ctx_ntr.created_at
+
+        user = ctx_ntr.user
+        e.set_author(name=str(user), icon_url=user.display_avatar.url)
+        e.set_footer(text=f"Author ID: `{user.id}`")
+        return e
+
+    @staticmethod
+    def get_successfully_submitted_embed(
+        summary: Optional[str] = None,
+        details: Optional[str] = None,
+    ) -> discord.Embed:
+        e = discord.Embed(colour=const.Colour.prpl(), title = summary, description = details)
+        e.set_author(name="Successfully submitted feedback")
+        return e
+
+    @commands.command(name="feedback")
+    @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
+    async def prefix_feedback(self, ctx: AluContext, *, details: str):
+        """Give feedback about the bot directly to the bot developer.
+        
+        This is a quick way to request features or bug fixes. \
+        The bot will DM you about the status of your request if possible/needed.
+        You can also open issues/PR on [GitHub](https://github.com/Aluerie/AluBot).
+        """
+
+        channel = self.feedback_channel
+        if channel is None:
+            return
+
+        e = self.get_feedback_embed(ctx, details=details)
+        await channel.send(embed=e)
+        e2 = self.get_successfully_submitted_embed(details=details)
+        await ctx.send(embed=e2)
+
+    @app_commands.command(name="feedback")
+    async def slash_feedback(self, ntr: discord.Interaction):
+        """Give feedback about the bot directly to the bot developer."""
+        await ntr.response.send_modal(FeedbackModal(self))
+
+    @commands.is_owner()
+    @commands.command(aliases=["pm"], hidden=True)
+    async def dm(self, ctx: AluContext, user: discord.User, *, content: str):
+        """Write direct message to {user}.
+
+        Meant to be used by the bots developers to contact feedback submitters.
+        """
+
+        # dm the user
+        e = discord.Embed(colour=const.Colour.prpl(), title="Message from a developer")
+        e.set_author(name=str(ctx.author), icon_url=ctx.author.display_avatar.url)
+        e.description = content
+        footer_text = (
+            "This message is sent to you in DMs because you had previously submitted feedback or "
+            "I found a bug in a command you used, I do not monitor this DM.\n"
+            "Use `/feedback` again if you *need* to answer my message."
+        )
+        e.set_footer(text=footer_text)
+        await user.send(embed=e)
+
+        # success message to the bot dev
+        e2 = discord.Embed(colour=const.Colour.prpl(), description="DM successfully sent.")
+        await ctx.send(embed=e2)
+
+
+async def setup(bot: AluBot):
+    await bot.add_cog(FeedbackCog(bot))

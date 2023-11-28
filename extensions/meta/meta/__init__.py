@@ -2,12 +2,14 @@ import discord
 
 from utils.const import Emote
 
+from .feedback import FeedbackCog
 from .help import AluHelpCog
 from .other import OtherCog
 from .prefix import PrefixSetupCog
 from .setup_cog import SetupCommandCog
 
-class Meta(AluHelpCog, SetupCommandCog, OtherCog, PrefixSetupCog):
+
+class Meta(AluHelpCog, SetupCommandCog, OtherCog, FeedbackCog, PrefixSetupCog):
     """Commands-utilities related to Discord or the Bot itself."""
 
     @property

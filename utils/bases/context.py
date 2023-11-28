@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import datetime
 from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, Sequence, TypeVar, Union, overload
 
 import discord
@@ -13,6 +14,7 @@ if TYPE_CHECKING:
     from asyncpg import Pool
 
     from bot import AluBot
+
 T = TypeVar("T")
 __all__ = ("AluContext", "AluGuildContext", "ConfirmationView")
 
@@ -111,15 +113,23 @@ class AluContext(commands.Context):
     def __repr__(self) -> str:
         return f"<AluContext cmd={self.command} ntr={self.tick(bool(self.interaction))} author={self.author}>"
 
-    # to match interaction
+    # The following attributes are here just to match discord.Interaction properties
+    # Just so we don't need to do `if isinstance(discord.Interaction):` checks every time
+    # when there is a silly mismatch
+
     @property
     def client(self) -> AluBot:
         return self.bot
 
-    # to match interaction
     @property
     def user(self) -> discord.User | discord.Member:
         return self.author
+
+    @property
+    def created_at(self) -> datetime.datetime:
+        return self.message.created_at
+
+    # Continue
 
     @property
     def session(self) -> ClientSession:

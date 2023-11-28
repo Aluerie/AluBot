@@ -119,6 +119,8 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         e = discord.Embed(colour=ctx.author.colour)
         e.set_author(name=f"Reminder for {ctx.author.display_name} is created", icon_url=ctx.author.display_avatar)
         e.description = f"in {delta} — {formats.format_dt_tdR(dt)}\n{text}"
+        if zone is None:
+            e.set_footer(text=f'\N{ELECTRIC LIGHT BULB} You can set your timezone with "{ctx.prefix}timezone set')
         await ctx.reply(embed=e)
 
     @commands.hybrid_group(aliases=["reminder", "remindme"], usage="<when>")
@@ -189,6 +191,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         )
         await pgs.start()
 
+    # TODO: finish this?
     # async def remind_delete_id_autocomplete(
     #         self,
     #         ntr: discord.Interaction,

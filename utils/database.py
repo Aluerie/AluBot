@@ -1,12 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import json
+from typing import TYPE_CHECKING
 
 import asyncpg
 
 from config import POSTGRES_URL
-
 
 if TYPE_CHECKING:
     pass
@@ -15,9 +14,23 @@ if TYPE_CHECKING:
 class DRecord(asyncpg.Record):
     """DRecord - Dot Record
 
-    Same as `asyncpg.Record`, but allows dot-notations
-    such as `record.id` instead of `record['id']`.
+        Same as `asyncpg.Record`, but allows dot-notations
+        such as `record.id` instead of `record['id']`.
+
+    Can also be used to type-hint the record.
+    ```py
+    class MyRecord(DRecord): #( asyncpg.Record):
+        id: int
+        name: str
+        created_at: datetime.datetime
+
+    r: MyRecord = ...
+    reveal_type(r.id) # int
+    ```
     """
+
+    # Maybe typing situation will get better with
+    # https://github.com/MagicStack/asyncpg/pull/577
 
     def __getattr__(self, name: str):
         return self[name]
@@ -32,11 +45,11 @@ async def create_pool() -> asyncpg.Pool:
 
     async def init(con):
         await con.set_type_codec(
-            'jsonb',
-            schema='pg_catalog',
+            "jsonb",
+            schema="pg_catalog",
             encoder=_encode_jsonb,
             decoder=_decode_jsonb,
-            format='text',
+            format="text",
         )
 
     return await asyncpg.create_pool(
@@ -47,7 +60,4 @@ async def create_pool() -> asyncpg.Pool:
         max_size=20,
         record_class=DRecord,
         statement_cache_size=0,
-    ) # type: ignore
-
-
-
+    )  # type: ignore

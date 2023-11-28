@@ -1,52 +1,41 @@
-"""
-# This code is licensed MPL v2 from Rapptz/RoboDanny
-
-Most of the code below is inspired/looked/learnt from @Rapptz\'s RoboDanny
-https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/reminder.py
-It's too good not to learn from for a pleb programmer like me.
-I had to rewrite half of the bot after reading @Danny's `reminder.py` :D
-"""
 from __future__ import annotations
 
-import asyncio
 import datetime
 import logging
 import textwrap
-from typing import TYPE_CHECKING, Annotated, Any, Optional, Self, Sequence, Union
+from typing import TYPE_CHECKING, Annotated, Any, TypedDict
 
-import asyncpg
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluContext, formats, times
-from utils.const import Colour, Emote
-from utils.database import DRecord
-from utils.pages import EnumeratedPages
+from utils import AluContext, const, formats, pages, times
 
 from ._base import RemindersCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, Timer
+
+    class RemindTimerData(TypedDict):
+        author_id: int
+        channel_id: int
+        text: str
+        message_id: int
+
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-def is_aware(d: datetime.datetime) -> bool:
-    return d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None
-
-
 class SnoozeModal(discord.ui.Modal, title="Snooze"):
     duration = discord.ui.TextInput(label="Duration", placeholder="10 minutes", default="10 minutes", min_length=2)
 
-    def __init__(self, parent: ReminderView, cog: Reminder, timer: Timer) -> None:
+    def __init__(self, parent: ReminderView, timer: Timer) -> None:
         super().__init__()
         self.parent: ReminderView = parent
-        self.timer: Timer = timer
-        self.cog: Reminder = cog
+        self.timer: Timer[RemindTimerData] = timer
 
-    async def on_submit(self, ntr: discord.Interaction) -> None:
+    async def on_submit(self, ntr: discord.Interaction[AluBot]) -> None:
         try:
             when = times.FutureTime(str(self.duration)).dt
         except commands.BadArgument:  # Exception
@@ -57,12 +46,18 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         self.parent.snooze.disabled = True
         await ntr.response.edit_message(view=self.parent)
 
-        refreshed = await self.cog.create_timer(
-            when, self.timer.event, *self.timer.args, **self.timer.kwargs, created=ntr.created_at
+        zone = await ntr.client.get_timezone(ntr.user.id)
+        refreshed = await ntr.client.create_timer(
+            event=self.timer.event,
+            expires_at=when,
+            created_at=ntr.created_at,
+            timezone=zone or "UTC",
+            data=self.timer.data,
         )
-        author_id, _, message = self.timer.args
+        author_id = self.timer.data.get("author_id")
+        text = self.timer.data.get("text")
         delta = formats.human_timedelta(when, source=refreshed.created_at)
-        msg = f"Alright <@{author_id}>, I've snoozed your reminder for {delta}: {message}"
+        msg = f"Alright <@{author_id}>, I've snoozed your reminder for {delta}: {text}"
         await ntr.followup.send(msg, ephemeral=True)
 
 
@@ -72,9 +67,9 @@ class SnoozeButton(discord.ui.Button["ReminderView"]):
         self.timer: Timer = timer
         self.cog: Reminder = cog
 
-    async def callback(self, interaction: discord.Interaction) -> Any:
+    async def callback(self, ntr: discord.Interaction) -> Any:
         assert self.view is not None
-        await interaction.response.send_modal(SnoozeModal(self.view, self.cog, self.timer))
+        await ntr.response.send_modal(SnoozeModal(self.view, self.timer))
 
 
 class ReminderView(discord.ui.View):
@@ -87,9 +82,9 @@ class ReminderView(discord.ui.View):
         self.add_item(discord.ui.Button(url=url, label="Go to original message"))
         self.add_item(self.snooze)
 
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if interaction.user.id != self.author_id:
-            await interaction.response.send_message("This snooze button is not for you, sorry!", ephemeral=True)
+    async def interaction_check(self, ntr: discord.Interaction) -> bool:
+        if ntr.user.id != self.author_id:
+            await ntr.response.send_message("This snooze button is not for you, sorry!", ephemeral=True)
             return False
         return True
 
@@ -98,202 +93,27 @@ class ReminderView(discord.ui.View):
         await self.message.edit(view=self)
 
 
-class RemindRecord(DRecord):
-    id: int
-    event: str
-    expires: datetime.datetime
-    created: datetime.datetime
-    extra: dict[str, Any]
-
-    # cannot create Record instances for proper typing though :thinking:
-
-
-class Timer:
-    __slots__ = ("id", "event", "expires", "created_at", "args", "kwargs")
-
-    def __init__(self, *, record: Union[RemindRecord, dict]):
-        self.id: int = record["id"]
-
-        extra = record["extra"]
-        self.event: str = record["event"]
-        self.expires: datetime.datetime = record["expires"]
-        self.created_at: datetime.datetime = record["created"]
-        self.args: Sequence[Any] = extra.get("args", [])
-        self.kwargs: dict[str, Any] = extra.get("kwargs", {})
-
-    def __eq__(self, other: object) -> bool:
-        try:
-            return self.id == other.id  # type: ignore
-        except AttributeError:
-            return False
-
-    def __hash__(self) -> int:
-        return hash(self.id)
-
-    def __repr__(self) -> str:
-        return f"<Timer event={self.event} expires={self.expires} created={self.created_at}>"
-
-    @classmethod
-    def temporary(
-        cls,
-        *,
-        event: str,
-        expires: datetime.datetime,
-        created: datetime.datetime,
-        args: Sequence[Any],
-        kwargs: dict[str, Any],
-    ) -> Self:
-        """Initiate the timer without the database before deciding to put it in"""
-        pseudo_record = {
-            "id": None,
-            "event": event,
-            "expires": expires,
-            "created": created,
-            "extra": {"args": args, "kwargs": kwargs},
-        }
-        return cls(record=pseudo_record)
-
-    @property
-    def format_dt_R(self) -> str:
-        return discord.utils.format_dt(self.created_at.replace(tzinfo=datetime.timezone.utc), style="R")
-
-    @property
-    def author_id(self) -> Optional[int]:
-        if self.args:
-            return int(self.args[0])
-        return None
-
-
-class Reminder(RemindersCog, emote=Emote.DankG):
+class Reminder(RemindersCog, emote=const.Emote.DankG):
     """Remind yourself of something at sometime"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self._have_data = asyncio.Event()
-        self._current_timer: Optional[Timer] = None
-        self._task = self.bot.loop.create_task(self.dispatch_timers())
-
-    async def cog_unload(self) -> None:
-        self._task.cancel()
-
-    async def get_active_timer(self, *, days: int = 7) -> Optional[Timer]:
-        query = "SELECT * FROM reminders WHERE expires < (CURRENT_DATE + $1::interval) ORDER BY expires LIMIT 1;"
-        record = await self.bot.pool.fetchrow(query, datetime.timedelta(days=days))
-        return Timer(record=record) if record else None
-
-    async def wait_for_active_timers(self, *, days: int = 7) -> Timer:
-        timer = await self.get_active_timer(days=days)
-        log.debug(f"RE | {timer}")
-        if timer is not None:
-            self._have_data.set()
-            return timer
-
-        self._have_data.clear()
-        self._current_timer = None
-        await self._have_data.wait()
-
-        return await self.get_active_timer(days=days)  # type: ignore  # bcs at this point we always have data
-
-    async def call_timer(self, timer: Timer) -> None:
-        query = "DELETE FROM reminders WHERE id=$1"
-        await self.bot.pool.execute(query, timer.id)
-
-        event_name = f"{timer.event}_timer_complete"
-        self.bot.dispatch(event_name, timer)
-
-    async def dispatch_timers(self) -> None:
-        """Dispatch timers"""
-        try:
-            while not self.bot.is_closed():
-                # can `asyncio.sleep` only for up to ~48 days reliably,
-                # so we cap it at 40 days, see: http://bugs.python.org/issue20493
-                timer = self._current_timer = await self.wait_for_active_timers(days=40)
-                log.debug(f"RE | {timer}")
-                now = discord.utils.utcnow()  # timezone-aware
-
-                if timer.expires >= now:
-                    to_sleep = (timer.expires - now).total_seconds()
-                    await asyncio.sleep(to_sleep)
-
-                await self.call_timer(timer)
-        except asyncio.CancelledError:
-            raise
-        except (OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError):
-            self._task.cancel()
-            self._task = self.bot.loop.create_task(self.dispatch_timers())
-
-    async def short_timer_optimisation(self, seconds: float, timer: Timer) -> None:
-        await asyncio.sleep(seconds)
-        event_name = f"{timer.event}_timer_complete"
-        self.bot.dispatch(event_name, timer)
-
-    async def create_timer(self, when: datetime.datetime, event: str, /, *args: Any, **kwargs: Any) -> Timer:
-        """Creates a timer.
-
-        Parameters
-        -----------
-        when: datetime.datetime
-            When the timer should fire.
-        event: str
-            The name of the event to trigger.
-            Will transform to 'on_{event}_timer_complete'.
-        *args
-            Arguments to pass to the event
-        **kwargs
-            Keyword arguments to pass to the event
-        created: datetime.datetime
-            Special keyword-only argument to use as the creation time.
-            Should make the time-deltas a bit more consistent.
-
-        Note
-        ------
-        Arguments and keyword arguments must be JSON serializable.
-
-        Returns
-        --------
-        :class:`Timer`
-        """
-
-        now = kwargs.pop("created", discord.utils.utcnow())
-
-        timer = Timer.temporary(event=event, args=args, kwargs=kwargs, expires=when, created=now)
-        delta = (when - now).total_seconds()
-        if delta <= 60:
-            # a shortcut for small timers
-            self.bot.loop.create_task(self.short_timer_optimisation(delta, timer))
-            return timer
-
-        query = """ INSERT INTO reminders (event, extra, expires, created)
-                    VALUES ($1, $2::jsonb, $3, $4)
-                    RETURNING id;
-                """
-        row = await self.bot.pool.fetchrow(query, event, {"args": args, "kwargs": kwargs}, when, now)
-        timer.id = row[0]
-
-        # only set the data check if it can be waited on
-        if delta <= (86400 * 40):  # 40 days
-            self._have_data.set()
-
-        # check if this timer is earlier than our currently run timer
-        if self._current_timer and when < self._current_timer.expires:
-            # cancel the task and re-run it
-            self._task.cancel()
-            self._task = self.bot.loop.create_task(self.dispatch_timers())
-
-        return timer
 
     async def remind_helper(self, ctx: AluContext, *, dt: datetime.datetime, text: str):
         """Remind helper so we don't duplicate"""
+        if len(text) >= 1500:
+            return await ctx.send("Reminder must be fewer than 1500 characters.")
 
-        timer = await self.create_timer(
-            dt,
-            "reminder",
-            ctx.author.id,
-            ctx.channel.id,
-            text,
-            created=ctx.message.created_at,
-            message_id=ctx.message.id,
+        zone = await self.bot.get_timezone(ctx.author.id)
+        data: RemindTimerData = {
+            "author_id": ctx.author.id,
+            "channel_id": ctx.channel.id,
+            "text": text,
+            "message_id": ctx.message.id,
+        }
+        timer = await self.bot.create_timer(
+            event="reminder",
+            expires_at=dt,
+            created_at=ctx.message.created_at,
+            timezone=zone or "UTC",
+            data=data,
         )
         delta = formats.human_timedelta(dt, source=timer.created_at)
         e = discord.Embed(colour=ctx.author.colour)
@@ -359,7 +179,7 @@ class Reminder(RemindersCog, emote=Emote.DankG):
             shorten = textwrap.shorten(message, width=512)
             string_list.append(f"\N{BLACK CIRCLE} {_id}: {formats.format_dt_tdR(expires)}\n{shorten}")
 
-        pgs = EnumeratedPages(
+        pgs = pages.EnumeratedPages(
             ctx,
             string_list,
             per_page=10,
@@ -404,20 +224,19 @@ class Reminder(RemindersCog, emote=Emote.DankG):
                     AND event = 'reminder'
                     AND extra #>> '{args,0}' = $2;
                 """
-
         status = await ctx.pool.execute(query, id, str(ctx.author.id))
         if status == "DELETE 0":
-            e = discord.Embed(description="Could not delete any reminders with that ID.", colour=Colour.error())
+            e = discord.Embed(description="Could not delete any reminders with that ID.", colour=const.Colour.error())
             e.set_author(name="IDError")
             return await ctx.reply(embed=e)
 
         # if the current timer is being deleted
-        if self._current_timer and self._current_timer.id == id:
+        if self.bot._current_timer and self.bot._current_timer.id == id:
             # cancel the task and re-run it
             self._task.cancel()
-            self._task = self.bot.loop.create_task(self.dispatch_timers())
+            self._task = self.bot.loop.create_task(self.bot.dispatch_timers())
 
-        e = discord.Embed(description="Successfully deleted reminder.", colour=Colour.prpl())
+        e = discord.Embed(description="Successfully deleted reminder.", colour=const.Colour.prpl())
         await ctx.reply(embed=e)
 
     @remind.command(name="clear", ignore_extra=False)
@@ -425,12 +244,10 @@ class Reminder(RemindersCog, emote=Emote.DankG):
         """Clears all reminders you have set."""
 
         # For UX purposes this has to be two queries.
-
         query = """ SELECT COUNT(*) FROM reminders
                     WHERE event = 'reminder'
                     AND extra #>> '{args,0}' = $1;
                 """
-
         author_id = str(ctx.author.id)
         total: int = await ctx.pool.fetchval(query, author_id)
         if total == 0:
@@ -450,26 +267,33 @@ class Reminder(RemindersCog, emote=Emote.DankG):
         await ctx.pool.execute(query, author_id)
 
         # Check if the current timer is the one being cleared and cancel it if so
-        if self._current_timer and self._current_timer.author_id == ctx.author.id:
-            self._task.cancel()
-            self._task = self.bot.loop.create_task(self.dispatch_timers())
+        current_timer = self.bot._current_timer
+        if current_timer and current_timer.event == "reminder" and current_timer.data:
+            author_id = current_timer.data.get("author_id")
+            if author_id == ctx.author.id:
+                self._task.cancel()
+                self._task = self.bot.loop.create_task(self.bot.dispatch_timers())
 
         e.description = f"Successfully deleted {formats.plural(total):reminder}."
         await ctx.reply(embed=e)
 
     @commands.Cog.listener()
-    async def on_reminder_timer_complete(self, timer: Timer):
-        log.debug("RE | on_reminder_timer_complete starts now")
-        author_id, channel_id, message = timer.args
+    async def on_reminder_timer_complete(self, timer: Timer[RemindTimerData]):
+        log.debug('Timer Event "on_reminder_timer_complete" starts now')
+
+        author_id = timer.data["author_id"]
+        channel_id = timer.data["channel_id"]
+        text = timer.data["text"]
+        message_id = timer.data["message_id"]
 
         try:
             channel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
         except discord.HTTPException:
+            log.warning("Discarding channel %s as it's not found.", channel_id)
             return
 
         guild_id = channel.guild.id if isinstance(channel, (discord.TextChannel, discord.Thread)) else "@me"
-        message_id = timer.kwargs.get("message_id")
-        msg = f"<@{author_id}>, {timer.format_dt_R}: {message}"
+        content = f"<@{author_id}>, {timer.format_dt_R}\n{text}"
         view = discord.utils.MISSING
 
         if message_id:
@@ -477,7 +301,7 @@ class Reminder(RemindersCog, emote=Emote.DankG):
             view = ReminderView(url=url, timer=timer, cog=self, author_id=author_id)
 
         try:
-            msg = await channel.send(msg, view=view)  # type: ignore
+            msg = await channel.send(content, view=view)  # type: ignore
         except discord.HTTPException:
             return
         else:

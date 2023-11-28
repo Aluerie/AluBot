@@ -168,9 +168,15 @@ class DotaNotifs(FPCCog):
                     log.debug(url)
                     async with self.bot.session.get(url) as r:
                         r_json = await r.json()
-                        # looks like these are sorted properly
-                        # but if not then sort it yourself with player["team_slot"] which is integer 0-4
-                        hero_ids = [player["heroid"] for team in r_json["teams"] for player in team["players"]]
+                        if r.status == 200:
+                            # looks like these are sorted properly
+                            # but if not then sort it yourself with player["team_slot"] which is integer 0-4
+                            hero_ids = [player["heroid"] for team in r_json["teams"] for player in team["players"]]
+                        else:
+                            # web api is down so we need to default to orderless ?
+                            # TODO: kinda need more testing
+                            log.debug("Steam WebAPI failed to produce proper team slot order.")
+                            hero_ids = [x.hero_id for x in match.players]
 
                     self.live_matches.append(
                         ActiveMatch(
@@ -179,7 +185,7 @@ class DotaNotifs(FPCCog):
                             player_name=user.display_name,
                             twitchtv_id=user.twitch_id,
                             hero_id=person.hero_id,
-                            hero_ids=hero_ids,  # [x.hero_id for x in match.players],  # old info
+                            hero_ids=hero_ids,
                             server_steam_id=match.server_steam_id,
                             channel_ids=channel_ids,
                         )
@@ -210,6 +216,7 @@ class DotaNotifs(FPCCog):
             await self.bot.pool.execute(query, msg.id, ch.id, match.match_id, match.hero_id, match.twitch_status)
 
     async def declare_matches_finished(self):
+        log.debug("Declaring finished matches")
         query = """ UPDATE dota_matches 
                     SET is_finished=TRUE
                     WHERE NOT match_id=ANY($1)

@@ -1,7 +1,7 @@
 """
 Implementation for Cache. 
 
-## Orignal source:
+## Original source:
 * RoboDanny's cogs.utils.cache (license MPL v2 from Rapptz/RoboDanny)
     https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/cache.py
 #"""
@@ -17,7 +17,7 @@ from typing import Any, Callable, Coroutine, MutableMapping, Optional, Protocol,
 
 from lru import LRU
 
-R = TypeVar('R')
+R = TypeVar("R")
 
 
 # Can't use ParamSpec due to https://github.com/python/typing/discussions/946
@@ -55,7 +55,7 @@ class ExpiringCache(dict):
         elif seconds is None and timedelta is not None:
             ttl = timedelta.total_seconds()
         else:
-            raise TypeError('You either specified both `seconds` and `timedelta`, or they are both `None`.')
+            raise TypeError("You either specified both `seconds` and `timedelta`, or they are both `None`.")
 
         self.__ttl: float = ttl
         super().__init__()
@@ -63,25 +63,33 @@ class ExpiringCache(dict):
     def __verify_cache_integrity(self):
         # Have to do this in two steps...
         current_time = time.monotonic()
-        to_remove = [k for (k, (v, t)) in self.items() if current_time > (t + self.__ttl)]
+        to_remove = [k for (k, (v, t)) in super().items() if current_time > (t + self.__ttl)]
         for k in to_remove:
             del self[k]
 
-    def get(self, key: str, default: Optional[Any] = None):  # is it correct signature ?
-        self.__verify_cache_integrity()
-        value_and_ttl = super().get(key, default)
-        return value_and_ttl[0] if value_and_ttl else None
-    
+    def get(self, key: str, default: Any = None):
+        v = super().get(key, default)
+        if v is default:
+            return default
+        return v[0]
+
     def __contains__(self, key: str):
         self.__verify_cache_integrity()
         return super().__contains__(key)
 
     def __getitem__(self, key: str):
         self.__verify_cache_integrity()
-        return super().__getitem__(key)[0]
+        v, _ = super().__getitem__(key)
+        return v
 
     def __setitem__(self, key: str, value: Any):
         super().__setitem__(key, (value, time.monotonic()))
+
+    def values(self):
+        return map(lambda x: x[0], super().values())
+
+    def items(self):
+        return map(lambda x: (x[0], x[1][0]), super().items())
 
 
 class Strategy(enum.Enum):
@@ -111,10 +119,10 @@ def cache(
             # we do care what 'self' parameter is when we __repr__ it
             def _true_repr(o):
                 if o.__class__.__repr__ is object.__repr__:
-                    return f'<{o.__class__.__module__}.{o.__class__.__name__}>'
+                    return f"<{o.__class__.__module__}.{o.__class__.__name__}>"
                 return repr(o)
 
-            key = [f'{func.__module__}.{func.__name__}']
+            key = [f"{func.__module__}.{func.__name__}"]
             key.extend(_true_repr(o) for o in args)
             if not ignore_kwargs:
                 for k, v in kwargs.items():
@@ -122,13 +130,13 @@ def cache(
                     # I want to pass asyncpg.Connection objects to the parameters
                     # however, they use default __repr__ and I do not care what
                     # connection is passed in, so I needed a bypass.
-                    if k == 'connection' or k == 'pool':
+                    if k == "connection" or k == "pool":
                         continue
 
                     key.append(_true_repr(k))
                     key.append(_true_repr(v))
 
-            return ':'.join(key)
+            return ":".join(key)
 
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any):

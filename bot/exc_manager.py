@@ -19,7 +19,7 @@ from config import MAIN_ERROR_HANDLER_WEBHOOK, TEST_ERROR_HANDLER_WEBHOOK
 from utils import AluContext, const, errors
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from .bot import AluBot
 
 
 log = logging.getLogger("exception_manager")

@@ -3,11 +3,11 @@ from __future__ import annotations
 import datetime
 import logging
 import os
+import zoneinfo
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Mapping, MutableMapping, Optional, Union
 
 import discord
-from asyncpraw import Reddit
 from discord.ext import commands
 from dota2.client import Dota2Client
 from githubkit import GitHub
@@ -23,21 +23,28 @@ from utils.twitch import TwitchClient
 from .app_cmd_tree import AluAppCommandTree
 from .exc_manager import AluExceptionManager
 from .intents_perms import intents, permissions
+from .timer import TimerManager
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
     from asyncpg import Pool
 
-    from extensions.reminders.reminders import Reminder
     from utils import AluCog
 
 
-__all__ = ('AluBot',)
+__all__ = ("AluBot",)
 
 log = logging.getLogger(__name__)
 
 
-class AluBot(commands.Bot):
+class AluBotHelper(TimerManager):
+    """Extra class to help with MRO Nerdge"""
+
+    def __init__(self, *, bot: AluBot) -> None:
+        super().__init__(bot=bot)
+
+
+class AluBot(commands.Bot, AluBotHelper):
     if TYPE_CHECKING:
         bot_app_info: discord.AppInfo
         dota: Dota2Client
@@ -55,12 +62,12 @@ class AluBot(commands.Bot):
         ]
 
     def __init__(self, test=False, *, session: ClientSession, pool: Pool, **kwargs):
-        main_prefix = '~' if test else '$'
+        main_prefix = "~" if test else "$"
         self.main_prefix = main_prefix
         self.test: bool = test
         super().__init__(
             command_prefix=self.get_pre,
-            activity=discord.Streaming(name=f"\N{PURPLE HEART} /help /setup", url='https://www.twitch.tv/aluerie'),
+            activity=discord.Streaming(name=f"\N{PURPLE HEART} /help /setup", url="https://www.twitch.tv/aluerie"),
             intents=intents,
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=AluAppCommandTree,
@@ -72,11 +79,11 @@ class AluBot(commands.Bot):
         self.exc_manager: AluExceptionManager = AluExceptionManager(self)
         self.imgtools = ImgToolsClient(session=session)
 
-        self.odota_ratelimit: dict[str, int] = {'monthly': -1, 'minutely': -1}
+        self.odota_ratelimit: dict[str, int] = {"monthly": -1, "minutely": -1}
 
-        self.repo_url = 'https://github.com/Aluerie/AluBot'
-        self.developer = 'Aluerie'  # it's my GitHub account name
-        self.server_url = 'https://discord.gg/K8FuDeP'
+        self.repo_url = "https://github.com/Aluerie/AluBot"
+        self.developer = "Aluerie"  # it's my GitHub account name
+        self.server_url = "https://discord.gg/K8FuDeP"
 
         # modules
         self.formats = formats
@@ -104,8 +111,12 @@ class AluBot(commands.Bot):
                 await self.load_extension(ext)
             except Exception as error:
                 failed = True
-                msg = f'Failed to load extension `{ext}`.'
+                msg = f"Failed to load extension `{ext}`."
                 await self.exc_manager.register_error(error, msg, where=msg)
+
+        # we could go with attribute option like exceptions manager
+        # but let's keep its methods nearby
+        super(AluBotHelper, self).__init__(bot=self)
 
         if self.test:
 
@@ -113,17 +124,17 @@ class AluBot(commands.Bot):
                 try:
                     result = await self.try_hideout_auto_sync()
                 except Exception as err:
-                    log.error('Autosync: failed %s.', const.Tick.no, exc_info=err)
+                    log.error("Autosync: failed %s.", const.Tick.no, exc_info=err)
                 else:
                     if result:
-                        log.info('Autosync: success %s.', const.Tick.yes)
+                        log.info("Autosync: success %s.", const.Tick.yes)
                     else:
-                        log.info('Autosync: not needed %s.', const.Tick.black)
+                        log.info("Autosync: not needed %s.", const.Tick.black)
 
             if not failed:
                 self.loop.create_task(try_auto_sync_with_logging())
             else:
-                log.info('Autosync: cancelled %s One or more cogs failed to load.', const.Tick.no)
+                log.info("Autosync: cancelled %s One or more cogs failed to load.", const.Tick.no)
 
     async def try_hideout_auto_sync(self) -> bool:
         """Try auto copy-global+sync for hideout guild."""
@@ -145,7 +156,7 @@ class AluBot(commands.Bot):
 
         new_payloads = [(guild.id, cmd.to_dict()) for cmd in all_cmds]
 
-        query = 'SELECT payload FROM auto_sync WHERE guild_id = $1'
+        query = "SELECT payload FROM auto_sync WHERE guild_id = $1"
         db_payloads = [r["payload"] for r in await self.pool.fetch(query, guild.id)]
 
         updated_payloads = [p for _, p in new_payloads if p not in db_payloads]
@@ -172,22 +183,22 @@ class AluBot(commands.Bot):
         await super().add_cog(cog)
 
         # jishaku does not have a category thus we have this weird typehint
-        category = getattr(cog, 'category', None)
+        category = getattr(cog, "category", None)
         if not category or not isinstance(category, ExtCategory):
             category = none_category
 
         self.category_cogs.setdefault(category, []).append(cog)
 
     async def on_ready(self):
-        if not hasattr(self, 'launch_time'):
+        if not hasattr(self, "launch_time"):
             self.launch_time = discord.utils.utcnow()
-        log.info(f'Logged in as {self.user}')
+        log.info(f"Logged in as {self.user}")
 
     async def close(self) -> None:
         await super().close()
-        if hasattr(self, 'session'):
+        if hasattr(self, "session"):
             await self.session.close()
-        if hasattr(self, 'twitch'):
+        if hasattr(self, "twitch"):
             pass
             await self.twitch.close()
 
@@ -206,7 +217,7 @@ class AluBot(commands.Bot):
         return self.bot_app_info.owner
 
     def ini_steam_dota(self) -> None:
-        if not hasattr(self, 'steam') or not hasattr(self, 'dota'):
+        if not hasattr(self, "steam") or not hasattr(self, "dota"):
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
             self.steam_dota_login()
@@ -221,30 +232,26 @@ class AluBot(commands.Bot):
 
             if self.steam.login(username=steam_login, password=steam_password):
                 self.steam.change_status(persona_state=7)
-                log.info('We successfully logged invis mode into Steam')
+                log.info("We successfully logged invis mode into Steam")
                 self.dota.launch()
             else:
-                log.warning('Logging into Steam failed')
+                log.warning("Logging into Steam failed")
                 return
 
     def ini_github(self) -> None:
-        if not hasattr(self, 'github'):
+        if not hasattr(self, "github"):
             self.github = GitHub(config.GIT_PERSONAL_TOKEN)
 
     async def ini_twitch(self) -> None:
-        if not hasattr(self, 'twitch'):
+        if not hasattr(self, "twitch"):
             self.twitch = TwitchClient(config.TWITCH_TOKEN)
             await self.twitch.connect()
 
     def update_odota_ratelimit(self, headers) -> None:
-        monthly = headers.get('X-Rate-Limit-Remaining-Month')
-        minutely = headers.get('X-Rate-Limit-Remaining-Minute')
+        monthly = headers.get("X-Rate-Limit-Remaining-Month")
+        minutely = headers.get("X-Rate-Limit-Remaining-Minute")
         if monthly is not None or minutely is not None:
-            self.odota_ratelimit = {'monthly': monthly, 'minutely': minutely}
-
-    @property
-    def reminder(self) -> Optional[Reminder]:
-        return self.get_cog('Reminder')  # type: ignore
+            self.odota_ratelimit = {"monthly": monthly, "minutely": minutely}
 
     async def prompt(
         self,
@@ -280,7 +287,7 @@ class AluBot(commands.Bot):
         ----
         """
         if content is None and embed is None:
-            raise TypeError('Either content or embed should be provided')
+            raise TypeError("Either content or embed should be provided")
 
         author_id = author_id or ctx_ntr.user.id
         view = ConfirmationView(timeout=timeout, delete_after=delete_after, author_id=author_id)
@@ -309,3 +316,15 @@ class AluBot(commands.Bot):
             permissions=permissions,
             scopes=("bot", "applications.commands"),
         )
+
+    @cache.cache()
+    async def get_timezone(self, user_id: int, /) -> Optional[str]:
+        query = "SELECT timezone from user_settings WHERE id = $1;"
+        record = await self.bot.pool.fetchrow(query, user_id)
+        return record["timezone"] if record else None
+
+    async def get_tzinfo(self, user_id: int, /) -> datetime.tzinfo:
+        tz = await self.get_timezone(user_id)
+        if tz is None:
+            return datetime.timezone.utc
+        return zoneinfo.ZoneInfo(tz) or datetime.timezone.utc

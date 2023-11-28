@@ -31,19 +31,19 @@ def get_timezones():
 gratz_bank = [
     "I hope your special day will bring you lots of happiness, love, and fun. You deserve them a lot. Enjoy!",
     "All things are sweet and bright. May you have a lovely birthday Night.",
-    "Don’t ever change! Stay as amazing as you are, my friend",
-    "Let’s light the candles and celebrate this special day of your life. Happy birthday.",
+    "Don't ever change! Stay as amazing as you are, my friend",
+    "Let's light the candles and celebrate this special day of your life. Happy birthday.",
     "Here's to the sweetest and loveliest person I know. Happy birthday!",
     "Happy birthday to my best friend, the one I care about the most!",
     "Wherever your feet may take, whatever endeavor you lay hands on. It will always be successful. Happy birthday.",
     "May this special day bring you endless joy and tons of precious memories!",
-    "You are very special and that’s why you need to float with lots of smiles on your lovely face. Happy birthday.",
-    "It’s as simple as ABC; today makes more sense because of you, Happy birthday.",
+    "You are very special and that's why you need to float with lots of smiles on your lovely face. Happy birthday.",
+    "It's as simple as ABC; today makes more sense because of you, Happy birthday.",
     "Let your all the dreams to be on fire and light your birthday candles with that. Have a gorgeous birthday.",
     "May you continue to improve as a person with each passing year. Wishing you a very happy birthday.",
     "Today is the birthday of the person who is spreading joy and positivity all around. May your birthday "
     "and your life be as wonderful as you are!",
-    "Happy birthday! Here’s to a bright, healthy and exciting future!",
+    "Happy birthday! Here's to a bright, healthy and exciting future!",
     "The joy is in the air because your special day is here!",
     "Your birthday only comes once a year, so make sure this is the most memorable one ever and have a colorful day.",
     "Today I wish you a fun time, shared with your dear ones, and a lifelong happiness!",
@@ -52,7 +52,7 @@ gratz_bank = [
     "Wishing you a wonderful day and all the most amazing things on your Big Day!",
     "Life is tough but birthdays are smooth because I will finally have a chance to smile at you. Happy birthday.",
     "May your birthday be full of happy hours and special moments to remember for a long long time!",
-    "Soon you’re going to start a new year of your life and "
+    "Soon you're going to start a new year of your life and "
     "I hope this coming year will bring every success you deserve. Happy birthday.",
     "Wishing you a memorable day and an adventurous year, Happy birthday",
     "Hope your birthday is as wonderful and extraordinary as you are.",

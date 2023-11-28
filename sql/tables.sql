@@ -56,14 +56,6 @@ CREATE TABLE IF NOT EXISTS guilds (
     birthday_role BIGINT
 );
 
-CREATE TABLE IF NOT EXISTS reminders (
-    id SERIAL PRIMARY KEY,
-    event TEXT,
-    expires TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
-    created TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
-    extra JSONB DEFAULT ('{}'::jsonb)
-);
-
 CREATE TABLE IF NOT EXISTS afknotes (
     id INTEGER PRIMARY KEY,
     name TEXT

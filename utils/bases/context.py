@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union, overload
+from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, Sequence, TypeVar, Union, overload
 
 import discord
 from discord.ext import commands
@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from asyncpg import Pool
 
     from bot import AluBot
-
-__all__ = ('AluContext', 'AluGuildContext', 'ConfirmationView')
+T = TypeVar("T")
+__all__ = ("AluContext", "AluGuildContext", "ConfirmationView")
 
 
 class ConfirmationView(discord.ui.View):
@@ -30,7 +30,7 @@ class ConfirmationView(discord.ui.View):
             return True
         else:
             e = discord.Embed(colour=Colour.error())
-            e.description = 'Sorry! This confirmation dialog is not for you.'
+            e.description = "Sorry! This confirmation dialog is not for you."
             await ntr.response.send_message(embed=e, ephemeral=True)
             return False
 
@@ -49,13 +49,52 @@ class ConfirmationView(discord.ui.View):
             await ntr.edit_original_response(view=self)
         self.stop()
 
-    @discord.ui.button(emoji=Tick.yes, label='Confirm', style=discord.ButtonStyle.green)
+    @discord.ui.button(emoji=Tick.yes, label="Confirm", style=discord.ButtonStyle.green)
     async def confirm(self, ntr: discord.Interaction, _: discord.ui.Button):
         await self.button_callback(ntr, True)
 
-    @discord.ui.button(emoji=Tick.no, label='Cancel', style=discord.ButtonStyle.red)
+    @discord.ui.button(emoji=Tick.no, label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, ntr: discord.Interaction, _: discord.ui.Button):
         await self.button_callback(ntr, False)
+
+
+class DisambiguatorView(discord.ui.View, Generic[T]):
+    message: discord.Message
+    selected: T
+
+    def __init__(self, ctx: AluContext, data: list[T], entry: Callable[[T], Any]):
+        super().__init__()
+        self.ctx: AluContext = ctx
+        self.data: list[T] = data
+
+        options = []
+        for i, x in enumerate(data):
+            opt = entry(x)
+            if not isinstance(opt, discord.SelectOption):
+                opt = discord.SelectOption(label=str(opt))
+            opt.value = str(i)
+            options.append(opt)
+
+        select = discord.ui.Select(options=options)
+
+        select.callback = self.on_select_submit
+        self.select = select
+        self.add_item(select)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.ctx.author.id:
+            await interaction.response.send_message("This select menu is not meant for you, sorry.", ephemeral=True)
+            return False
+        return True
+
+    async def on_select_submit(self, interaction: discord.Interaction):
+        index = int(self.select.values[0])
+        self.selected = self.data[index]
+        await interaction.response.defer()
+        if not self.message.flags.ephemeral:
+            await self.message.delete()
+
+        self.stop()
 
 
 class AluContext(commands.Context):
@@ -70,7 +109,7 @@ class AluContext(commands.Context):
         self.is_error_handled: bool = False
 
     def __repr__(self) -> str:
-        return f'<AluContext cmd={self.command} ntr={self.tick(bool(self.interaction))} author={self.author}>'
+        return f"<AluContext cmd={self.command} ntr={self.tick(bool(self.interaction))} author={self.author}>"
 
     # to match interaction
     @property
@@ -104,6 +143,23 @@ class AluContext(commands.Context):
             delete_after=delete_after,
             author_id=author_id,
         )
+
+    async def disambiguate(self, matches: list[T], entry: Callable[[T], Any], *, ephemeral: bool = False) -> T:
+        if len(matches) == 0:
+            raise ValueError("No results found.")
+
+        if len(matches) == 1:
+            return matches[0]
+
+        if len(matches) > 25:
+            raise ValueError("Too many results... sorry.")
+
+        view = DisambiguatorView(self, matches, entry)
+        view.message = await self.send(
+            "There are too many matches... Which one did you mean?", view=view, ephemeral=ephemeral
+        )
+        await view.wait()
+        return view.selected
 
     @staticmethod
     def tick(semi_bool: bool | None) -> str:
@@ -223,7 +279,7 @@ class AluContext(commands.Context):
     ) -> discord.Message:
         ...
 
-    # Literal copy of .reply from the library but with `.to_reference(fail_if_not_exists=False)`"""
+    # Literal copy of .reply from the library but with `.to_reference(fail_if_not_exists=False)`
     @discord.utils.copy_doc(commands.Context.reply)
     async def reply(self, content: Optional[str] = None, **kwargs: Any):
         if self.interaction is None:

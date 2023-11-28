@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 __all__ = ('Match', 'ActiveMatch', 'PostMatchPlayerData', 'OpendotaRequestMatch')
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 
 class Match:
@@ -146,6 +146,7 @@ class ActiveMatch(Match):
         return img
 
     async def notif_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
+        log.debug("Creating embed+file for notification")
         await self.get_twitch_data(bot.twitch)
         img_file = bot.imgtools.img_to_file(
             await self.better_thumbnail(bot),

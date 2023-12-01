@@ -283,7 +283,7 @@ class TimerManager:
             Special keyword-only argument to use as the creation time.
             Should make the time-deltas a bit more consistent.
         timezone: str
-            Special keyword-only argument to use as the timezone for the
+            IANA alias. Special keyword-only argument to use as the timezone for the
             expiry time. This automatically adjusts the expiry time to be
             in the future, should it be in the past.
 
@@ -432,3 +432,7 @@ class TimerManager:
 
         rows = await self.bot.pool.fetch(f"SELECT * FROM timers")
         return [Timer(record=row) for row in rows]
+
+    def rerun_the_task(self):
+        self._task.cancel()
+        self._task = self.bot.loop.create_task(self.bot.dispatch_timers())

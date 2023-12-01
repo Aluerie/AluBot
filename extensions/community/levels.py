@@ -255,7 +255,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         for row in rows:
             guild = self.community.guild
             person = guild.get_member(row.id)
-            if person is None and discord.utils.utcnow() - row.lastseen > datetime.timedelta(days=30):
+            if person is None and discord.utils.utcnow() - row.lastseen > datetime.timedelta(days=90):
                 query = "DELETE FROM users WHERE id=$1"
                 await self.bot.pool.execute(query, row.id)
                 e = discord.Embed(description=f"id = {row.id}", colour=0xE6D690)

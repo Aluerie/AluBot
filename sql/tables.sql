@@ -16,8 +16,6 @@ CREATE TABLE IF NOT EXISTS users (
     exp INTEGER DEFAULT (0),
     cur INTEGER DEFAULT (0),
     rep INTEGER DEFAULT (0),
-    tzone TEXT,
-    bdate TIMESTAMPTZ,
     msg_count BIGINT DEFAULT (0),
     can_make_tags BOOLEAN DEFAULT TRUE,
     inlvl BOOLEAN DEFAULT TRUE

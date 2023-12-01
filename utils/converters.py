@@ -1,19 +1,33 @@
 from __future__ import annotations
 
+import datetime
 import inspect
 import re
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Optional, Self
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 from PIL import ImageColor
 
+from utils import fuzzy
+
 from . import const
 from .bases import AluBotException
+from .timezones import TimeZone, TransformTimeZone
 
 if TYPE_CHECKING:
+    from bot import AluBot
+
     from .bases import AluContext
+
+__all__ = (
+    "my_bool",
+    "Codeblock",
+    "Snowflake",
+    "AluColourConverter",
+    "DateTimezonePicker",
+)
 
 
 def my_bool(argument: str):
@@ -42,7 +56,7 @@ class Codeblock:
             - if it is not codeblock
     """
 
-    def __init__(self, code: str, language: str = ''):
+    def __init__(self, code: str, language: str = ""):
         self.code: str = code
         self.language: str = language
 
@@ -58,19 +72,19 @@ class Codeblock:
         # the code is either ```{lang}\n{code}```, `{code}` or `code`
         # yes we can put some backticks or whitespaces to pass some badly formatted codeblock,
         # > we do not bother with `commands.BadArgument` but instead let SyntaxError be triggered.
-        if argument.startswith('```'):  # ```py\nprint('code')```
-            backticks = '```'
-            split = argument.split('\n', maxsplit=1)
+        if argument.startswith("```"):  # ```py\nprint('code')```
+            backticks = "```"
+            split = argument.split("\n", maxsplit=1)
             code = split[1]
             language = split[0].removeprefix(backticks)
-        elif argument.startswith('`'):  # `print('code')`
-            backticks = '`'
+        elif argument.startswith("`"):  # `print('code')`
+            backticks = "`"
             code = argument[1:]
-            language = ''
+            language = ""
         else:  # print('code')
-            backticks = ''
+            backticks = ""
             code = argument
-            language = ''
+            language = ""
 
         code = code.rstrip().removesuffix(backticks).rstrip()
         return cls(code=code, language=language)
@@ -86,8 +100,8 @@ class Snowflake:
         except ValueError:
             param = ctx.current_parameter
             if param:
-                raise commands.BadArgument(f'{param.name} argument expected a Discord ID not {argument!r}')
-            raise commands.BadArgument(f'expected a Discord ID not {argument!r}')
+                raise commands.BadArgument(f"{param.name} argument expected a Discord ID not {argument!r}")
+            raise commands.BadArgument(f"expected a Discord ID not {argument!r}")
 
 
 class InvalidColour(AluBotException):
@@ -104,7 +118,7 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
         error_footer = f'\n\nTo see supported colour formats by the bot - use "{const.Slash.help}` command: colour`"'
 
         # my custom situations/desires.
-        if argument == 'prpl':
+        if argument == "prpl":
             # my fav colour, of course.
             return const.Colour.prpl()
 
@@ -118,14 +132,14 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
             except AttributeError:
                 methods = [m[0] for m in inspect.getmembers(const.MaterialPalette, predicate=inspect.ismethod)]
                 raise InvalidColour(
-                    f'Provided colour name is incorrect.\n\n'
-                    'MaterialUI Google Palette supports the following colour names:'
+                    f"Provided colour name is incorrect.\n\n"
+                    "MaterialUI Google Palette supports the following colour names:"
                     f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
                 )
             except ValueError:
                 raise InvalidColour(
-                    'Provided shade value is incorrect.\n\n'
-                    'MaterialUI Google Palette supports the following shades values:'
+                    "Provided shade value is incorrect.\n\n"
+                    "MaterialUI Google Palette supports the following shades values:"
                     f'\n{", ".join(f"`{v}`" for v in const.MaterialPalette.shades)}{error_footer}'
                 )
 
@@ -139,14 +153,14 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
             except AttributeError:
                 methods = [m[0] for m in inspect.getmembers(const.MaterialAccentPalette, predicate=inspect.ismethod)]
                 raise InvalidColour(
-                    f'Provided colour name is incorrect.\n\n'
-                    'MaterialAccentUI Google Palette supports the following colour names:'
+                    f"Provided colour name is incorrect.\n\n"
+                    "MaterialAccentUI Google Palette supports the following colour names:"
                     f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
                 )
             except ValueError:
                 raise InvalidColour(
-                    'Provided shade value is incorrect.\n\n'
-                    'MaterialAccentUI Google Palette supports the following shades values:'
+                    "Provided shade value is incorrect.\n\n"
+                    "MaterialAccentUI Google Palette supports the following shades values:"
                     f'\n{", ".join(f"`{v}`" for v in const.MaterialAccentPalette.shades)}{error_footer}'
                 )
 
@@ -161,7 +175,7 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
         try:
             return await super().convert(ctx, argument)
         except commands.BadColourArgument:
-            raise InvalidColour(f'Colour `{argument}` is invalid.{error_footer}')
+            raise InvalidColour(f"Colour `{argument}` is invalid.{error_footer}")
 
     # async def transform(self, interaction: discord.Interaction, value: str):
     #     return await self.convert(interaction, value)  # type: ignore
@@ -172,3 +186,67 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
     #     return [
     #         app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
     #     ][:25]
+
+
+class MonthNumber(commands.Converter, app_commands.Transformer):
+    mapping: dict[str, int] = {
+        "January": 1,
+        "February": 2,
+        "March": 3,
+        "April": 4,
+        "May": 5,
+        "June": 6,
+        "July": 7,
+        "August": 8,
+        "September": 9,
+        "October": 10,
+        "November": 11,
+        "December": 12,
+    }
+
+    def worker(self, argument: str) -> int:
+        if argument in self.mapping:
+            return self.mapping[argument]
+
+        # fuzzy search
+        keys = fuzzy.finder(argument, self.mapping.keys())
+        if len(keys) == 1:
+            return self.mapping[keys[0]]
+        else:
+            raise commands.BadArgument(f"Couldn't understand month spelling out of {argument!r}")
+
+    async def convert(self, _ctx: AluContext, argument: str) -> int:
+        return self.worker(argument)
+
+    async def transform(self, _ntr: discord.Interaction, value: str) -> int:
+        return self.worker(value)
+
+    async def autocomplete(self, _ntr: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice]:
+        if not arg:
+            month_names = self.mapping.keys()
+        else:
+            month_names = fuzzy.finder(arg, self.mapping.keys())
+        return [app_commands.Choice(name=name, value=name) for name in month_names]
+
+
+class DateTimezonePicker(commands.FlagConverter, case_insensitive=True):
+    day: commands.Range[int, 1, 31] = commands.flag(description="Day, number from 1 till 31.")
+    month: app_commands.Transform[int, MonthNumber] = commands.flag(description="Month, type name like 'September'.")
+
+    # year is default 1900 because datetime.strptime puts 1900 as default when no year is given
+    year: commands.Range[int, 1970] = commands.flag(default=1900, description="Year, number YYYY format.")
+    timezone: TimeZone = commands.flag(
+        converter=TransformTimeZone,
+        description="Timezone, pick from autocomplete to slash commands or try IANA alias or country/city names.",
+    )
+
+    def verify_date(self) -> datetime.datetime:
+        try:
+            return datetime.datetime(
+                day=self.day,
+                month=self.month,
+                year=self.year,
+                tzinfo=self.timezone.to_tzinfo(),
+            )
+        except ValueError:
+            raise commands.BadArgument("Invalid date given, please recheck the date.")

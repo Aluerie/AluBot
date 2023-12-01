@@ -46,7 +46,7 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         self.parent.snooze.disabled = True
         await ntr.response.edit_message(view=self.parent)
 
-        zone = await ntr.client.get_timezone(ntr.user.id)
+        zone = await ntr.client.tz_manager.get_timezone(ntr.user.id)
         refreshed = await ntr.client.create_timer(
             event=self.timer.event,
             expires_at=when,
@@ -96,12 +96,15 @@ class ReminderView(discord.ui.View):
 class Reminder(RemindersCog, emote=const.Emote.DankG):
     """Remind yourself of something at sometime"""
 
+    async def cog_load(self) -> None:
+        self.bot.initiate_tz_manager()
+
     async def remind_helper(self, ctx: AluContext, *, dt: datetime.datetime, text: str):
         """Remind helper so we don't duplicate"""
         if len(text) >= 1500:
             return await ctx.send("Reminder must be fewer than 1500 characters.")
 
-        zone = await self.bot.get_timezone(ctx.author.id)
+        zone = await self.bot.tz_manager.get_timezone(ctx.author.id)
         data: RemindTimerData = {
             "author_id": ctx.author.id,
             "channel_id": ctx.channel.id,
@@ -169,9 +172,9 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     async def remind_list(self, ctx: AluContext):
         """Shows a list of your current reminders"""
         query = """ SELECT id, expires, extra #>> '{args,2}'
-                    FROM reminders
+                    FROM timers
                     WHERE event = 'reminder'
-                    AND extra #>> '{args,0}' = $1
+                    AND data #>> '{author_id}' = $1
                     ORDER BY expires
                 """
         records = await ctx.pool.fetch(query, str(ctx.author.id))
@@ -201,7 +204,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     #     query = """ SELECT id, expires, extra #>> '{args,2}'
     #                 FROM reminders
     #                 WHERE event = 'reminder'
-    #                 AND extra #>> '{args,0}' = $1
+    #                 AND data #>> '{author_id}' = $1
     #                 ORDER BY similarity(extra #>> '{args, 2}', $2) DESC
     #                 LIMIT 10
     #             """
@@ -222,10 +225,10 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
 
         You must own the reminder to delete it, obviously.
         """
-        query = """ DELETE FROM reminders
+        query = """ DELETE FROM timers
                     WHERE id=$1
                     AND event = 'reminder'
-                    AND extra #>> '{args,0}' = $2;
+                    AND data #>> '{author_id}' = $2;
                 """
         status = await ctx.pool.execute(query, id, str(ctx.author.id))
         if status == "DELETE 0":
@@ -236,8 +239,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         # if the current timer is being deleted
         if self.bot._current_timer and self.bot._current_timer.id == id:
             # cancel the task and re-run it
-            self._task.cancel()
-            self._task = self.bot.loop.create_task(self.bot.dispatch_timers())
+            self.bot.rerun_the_task()
 
         e = discord.Embed(description="Successfully deleted reminder.", colour=const.Colour.prpl())
         await ctx.reply(embed=e)
@@ -247,9 +249,9 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         """Clears all reminders you have set."""
 
         # For UX purposes this has to be two queries.
-        query = """ SELECT COUNT(*) FROM reminders
+        query = """ SELECT COUNT(*) FROM timers
                     WHERE event = 'reminder'
-                    AND extra #>> '{args,0}' = $1;
+                    AND data #>> '{author_id}' = $1;
                 """
         author_id = str(ctx.author.id)
         total: int = await ctx.pool.fetchval(query, author_id)
@@ -263,9 +265,9 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         if not confirm:
             return await ctx.reply("Aborting", ephemeral=True)
 
-        query = """ DELETE FROM reminders 
+        query = """ DELETE FROM timers
                     WHERE event = 'reminder' 
-                    AND extra #>> '{args,0}' = $1;
+                    AND data #>> '{author_id}' = $1;
                 """
         await ctx.pool.execute(query, author_id)
 
@@ -274,8 +276,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         if current_timer and current_timer.event == "reminder" and current_timer.data:
             author_id = current_timer.data.get("author_id")
             if author_id == ctx.author.id:
-                self._task.cancel()
-                self._task = self.bot.loop.create_task(self.bot.dispatch_timers())
+                self.bot.rerun_the_task()
 
         e.description = f"Successfully deleted {formats.plural(total):reminder}."
         await ctx.reply(embed=e)

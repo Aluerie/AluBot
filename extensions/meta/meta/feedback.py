@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from cgitb import text
-from token import OP
 from typing import TYPE_CHECKING, Optional
 
 import discord
@@ -84,7 +82,7 @@ class FeedbackCog(MetaCog):
         summary: Optional[str] = None,
         details: Optional[str] = None,
     ) -> discord.Embed:
-        e = discord.Embed(colour=const.Colour.prpl(), title = summary, description = details)
+        e = discord.Embed(colour=const.Colour.prpl(), title=summary, description=details)
         e.set_author(name="Successfully submitted feedback")
         return e
 
@@ -100,6 +98,7 @@ class FeedbackCog(MetaCog):
 
         channel = self.feedback_channel
         if channel is None:
+            await ctx.reply("Sorry, something went wrong \N{THINKING FACE}", ephemeral=True)
             return
 
         e = self.get_feedback_embed(ctx, details=details)

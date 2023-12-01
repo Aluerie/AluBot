@@ -18,6 +18,7 @@ from extensions import get_extensions
 from utils import AluContext, ConfirmationView, ExtCategory, cache, const, formats, none_category
 from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
+from utils.timezones import TimezoneManager
 from utils.twitch import TwitchClient
 
 from .app_cmd_tree import AluAppCommandTree
@@ -60,6 +61,7 @@ class AluBot(commands.Bot, AluBotHelper):
         old_tree_error: Callable[
             [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
         ]
+        tz_manager: TimezoneManager
 
     def __init__(self, test=False, *, session: ClientSession, pool: Pool, **kwargs):
         main_prefix = "~" if test else "$"
@@ -247,6 +249,10 @@ class AluBot(commands.Bot, AluBotHelper):
             self.twitch = TwitchClient(config.TWITCH_TOKEN)
             await self.twitch.connect()
 
+    def initiate_tz_manager(self) -> None:
+        if not hasattr(self, "tz_manager"):
+            self.tz_manager = TimezoneManager(self)
+
     def update_odota_ratelimit(self, headers) -> None:
         monthly = headers.get("X-Rate-Limit-Remaining-Month")
         minutely = headers.get("X-Rate-Limit-Remaining-Minute")
@@ -316,15 +322,3 @@ class AluBot(commands.Bot, AluBotHelper):
             permissions=permissions,
             scopes=("bot", "applications.commands"),
         )
-
-    @cache.cache()
-    async def get_timezone(self, user_id: int, /) -> Optional[str]:
-        query = "SELECT timezone from user_settings WHERE id = $1;"
-        record = await self.bot.pool.fetchrow(query, user_id)
-        return record["timezone"] if record else None
-
-    async def get_tzinfo(self, user_id: int, /) -> datetime.tzinfo:
-        tz = await self.get_timezone(user_id)
-        if tz is None:
-            return datetime.timezone.utc
-        return zoneinfo.ZoneInfo(tz) or datetime.timezone.utc

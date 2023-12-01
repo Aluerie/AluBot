@@ -25,7 +25,8 @@ if TYPE_CHECKING:
 
 
 class ShortTime:
-    compiled = re.compile("""
+    compiled = re.compile(
+        """
             (?:(?P<years>[0-9])(?:years?|y))?                      # e.g. 2y
             (?:(?P<months>[0-9]{1,2})(?:months?|mon?))?            # e.g. 2months
             (?:(?P<weeks>[0-9]{1,4})(?:weeks?|w))?                 # e.g. 10w
@@ -53,7 +54,7 @@ class ShortTime:
 
         data = {k: int(v) for k, v in match.groupdict(default=0).items()}
         now = now or datetime.datetime.now(datetime.timezone.utc)
-        self.dt = now + relativedelta(**data)
+        self.dt = now + relativedelta(**data)  # type: ignore #todo: investigate
 
     @classmethod
     async def convert(cls, ctx: AluContext, argument: str) -> Self:
@@ -187,13 +188,13 @@ class UserFriendlyTime(commands.Converter):
         regex = ShortTime.compiled
         now = ctx.message.created_at
 
-        tzinfo = await ctx.bot.get_tzinfo(ctx.author.id)
+        tzinfo = await ctx.bot.tz_manager.get_tzinfo(ctx.author.id)
 
         match = regex.match(argument)
         if match is not None and match.group(0):
             data = {k: int(v) for k, v in match.groupdict(default=0).items()}
             remaining = argument[match.end() :].strip()
-            dt = now + relativedelta(**data)
+            dt = now + relativedelta(**data)  # type: ignore #todo: investigate
             result = FriendlyTimeResult(dt.astimezone(tzinfo))
             await result.ensure_constraints(ctx, self, now, remaining)
             return result

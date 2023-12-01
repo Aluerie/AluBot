@@ -330,8 +330,6 @@ class TimerManager:
             self._have_data.set()
 
         # check if this timer is earlier than our currently run timer
-        if self._current_timer:
-            print(expires_at, self._current_timer.expires_at)
         if self._current_timer and expires_at < self._current_timer.expires_at:
             # cancel the task and re-run it
             self._task.cancel()
@@ -394,7 +392,6 @@ class TimerManager:
 
         filtered_clause = [f"data #>> ARRAY['{key}'] = ${i}" for (i, key) in enumerate(kwargs.keys(), start=2)]
         query = f"SELECT * FROM timers WHERE event = $1 AND {' AND '.join(filtered_clause)} LIMIT 1"
-        print(query)
         record: Optional[TimerRecord] = await self.bot.pool.fetchrow(query, event, *kwargs.values())
         return Timer(record=record) if record else None
 

@@ -10,7 +10,8 @@ from discord.ext import commands
 from utils import aluloop, const
 
 from .._base import FPCCog
-from ._models import OpendotaRequestMatch, PostMatchPlayerData
+from ._models import PostMatchPlayerData
+from ._opendota import OpendotaRequestMatch
 
 if TYPE_CHECKING:
     from bot import AluBot

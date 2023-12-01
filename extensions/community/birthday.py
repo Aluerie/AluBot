@@ -2,26 +2,22 @@ from __future__ import annotations
 
 import datetime
 import random
-import re
 import zoneinfo
-from concurrent.futures.thread import BrokenThreadPool
-from os import name
-from typing import TYPE_CHECKING, Literal, NamedTuple, Optional, TypedDict
+from typing import TYPE_CHECKING, Optional, TypedDict
 
 import discord
-from discord import app_commands, user
+from discord import app_commands
 from discord.ext import commands
 
 from bot.timer import Timer
-from utils import aluloop, checks, const, converters, formats, pages
-from utils.timezones import TimeZone
+from utils import checks, const, converters, formats, pages
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from bot import AluBot
     from bot.timer import TimerRecord
-    from utils import AluContext, AluGuildContext
+    from utils import AluGuildContext
 
 
 CONGRATULATION_TEXT_BANK = (
@@ -77,6 +73,13 @@ CONGRATULATION_TEXT_BANK = (
 GIF_URLS_BANK = (
     "https://media.tenor.com/1xto23A6M6UAAAAC/happy-birthday-office.gif",
     "https://media.tenor.com/CgwgbFV8tzUAAAAC/the-office-birthday-fun.gif",
+    "https://media.tenor.com/ufuYtIqIsIgAAAAC/friends-birthday.gif",
+    "https://media.tenor.com/J6VTVKf270UAAAAC/leonardo-dicaprio-cheers.gif",
+    "https://tenor.com/view/barbie-margot-robbie-drive-singing-vibing-gif-17226440665477418355",
+    "https://media.tenor.com/ZRTc4ocgdN4AAAAC/birthday-travolta.gif",
+    "https://media.tenor.com/4UhjvIJLNSoAAAAC/bday-friends.gif",
+    "https://media.tenor.com/zrpw1WuYPBUAAAAC/its-the-biggest-night-of-the-year-eric-cartman.gif",
+    "https://media.tenor.com/KnWD3xyzkV4AAAAd/happy-birthday-gifts.gif",
 )
 
 
@@ -167,7 +170,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             "year": birthday.year,
         }
 
-        end_of_today = datetime.datetime.now(birthday.timezone.to_tzinfo()).replace(hour=23, minute=59, second=59)
+        end_of_today = datetime.datetime.now(birthday.timezone.to_tzinfo()).replace(hour=0, minute=0, second=0)
         expires_at = dt.replace(hour=0, minute=0, second=1, year=end_of_today.year)
         if expires_at < end_of_today:
             # the birthday already happened this year
@@ -261,9 +264,9 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 return
         else:
             birthday_role = self.community.birthday_role
-            if birthday_role in member.roles:
-                # I guess the notification already happened
-                return
+            # if birthday_role in member.roles:
+            #     # I guess the notification already happened
+            #     return
 
             await member.add_roles(birthday_role)
 
@@ -274,11 +277,12 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 content += f"\n{member.display_name} is now {now.year - year} years old !"
 
             e = discord.Embed(title=f"CONGRATULATIONS !!! {const.Emote.peepoRoseDank * 3}", color=member.color)
+            e.set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
+            e.description = get_congratulation_text()
             footer_text = f"Their birthday is {birthday_string(now.replace(year=year))}; timezone: {timer.timezone}\n"
             e.set_footer(text=footer_text)
             e.set_thumbnail(url=member.display_avatar.url)
             e.set_image(url=get_congratulation_gif())
-            e.add_field(name=f"Dear {member.display_name}!", inline=False, value=get_congratulation_text())
 
             await self.birthday_channel.send(content=content, embed=e)
 

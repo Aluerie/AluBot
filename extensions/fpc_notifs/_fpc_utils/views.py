@@ -28,13 +28,13 @@ class CharacterButton(discord.ui.Button):
 
         if self.is_fav:
             # delete from the favourites list
-            query = f'''DELETE FROM {self.game}_favourite_characters WHERE guild_id=$1 AND character_id=$2'''
+            query = f"""DELETE FROM {self.game}_favourite_characters WHERE guild_id=$1 AND character_id=$2"""
         else:
             # add to the favourites list
-            query = f'''INSERT INTO {self.game}_favourite_characters (guild_id, character_id) 
+            query = f"""INSERT INTO {self.game}_favourite_characters (guild_id, character_id) 
                         VALUES ($1, $2)
                         ON CONFLICT DO NOTHING
-                    '''
+                    """
 
         await ntr.client.pool.execute(query, ntr.guild.id, self.character_id)
         self.is_fav = not self.is_fav
@@ -49,15 +49,15 @@ class CharacterPageSource(menus.ListPageSource):
 
     def character_page_embed(self, menu: CharacterPages) -> discord.Embed:
         e = discord.Embed(colour=menu.colour)
-        e.title = f'Your favourite {menu.gather_word} list interactive setup'
+        e.title = f"Your favourite {menu.gather_word} list interactive setup"
 
         e.description = (
-            f'Below there is a pagination menu representing each character from {menu.game}. '
-            'Button\'s colour shows if it\'s chosen as your favourite. '
-            'Press the buttons to mark/demark as favourites.'
+            f"Below there is a pagination menu representing each character from {menu.game}. "
+            "Button's colour shows if it's chosen as your favourite. "
+            "Press the buttons to mark/demark as favourites."
         )
-        e.add_field(name='Green Buttons\N{LARGE GREEN SQUARE}', value=f'Your favourite {menu.gather_word}.')
-        e.add_field(name='Gray Buttons\N{BLACK LARGE SQUARE}', value=f'Your non-favourite {menu.gather_word}.')
+        e.add_field(name="Green Buttons\N{LARGE GREEN SQUARE}", value=f"Your favourite {menu.gather_word}.")
+        e.add_field(name="Gray Buttons\N{BLACK LARGE SQUARE}", value=f"Your non-favourite {menu.gather_word}.")
         return e
 
     async def format_page(self, menu: CharacterPages, entries: list[tuple[int, str]]):
@@ -70,7 +70,7 @@ class CharacterPageSource(menus.ListPageSource):
         # unfortunately we have to fetch fav characters each format page
         # in case they are bad acting with using both slash commands
         # or several menus
-        query = f'SELECT character_id FROM {menu.game}_favourite_characters WHERE guild_id=$1'
+        query = f"SELECT character_id FROM {menu.game}_favourite_characters WHERE guild_id=$1"
         assert menu.ctx_ntr.guild
         fav_ids: list[int] = [r for r, in await menu.ctx_ntr.client.pool.fetch(query, menu.ctx_ntr.guild.id)]
 
@@ -90,7 +90,12 @@ class CharacterPages(Paginator):
     source: CharacterPageSource
 
     def __init__(
-        self, ctx: AluGuildContext, source: CharacterPageSource, game: str, colour: discord.Colour, gather_word: str
+        self,
+        ctx: AluGuildContext,
+        source: CharacterPageSource,
+        game: str,
+        colour: discord.Colour,
+        gather_word: str,
     ):
         super().__init__(ctx, source)
         self.game: str = game

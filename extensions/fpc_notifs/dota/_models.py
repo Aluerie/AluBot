@@ -17,7 +17,11 @@ if TYPE_CHECKING:
     from utils.twitch import TwitchClient
 
 
-__all__ = ("Match", "ActiveMatch", "PostMatchPlayerData")
+__all__ = (
+    "Match",
+    "ActiveMatch",
+    "PostMatchPlayerData",
+)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -68,6 +72,8 @@ class ActiveMatch(Match):
     colour: discord.Colour
     twitch_status: str
 
+    hero_name: str
+
     def __init__(
         self,
         *,
@@ -92,10 +98,6 @@ class ActiveMatch(Match):
     @property
     def long_ago(self) -> int:
         return int(discord.utils.utcnow().timestamp()) - self.start_time
-
-    @discord.utils.cached_property
-    async def hero_name(self):
-        return await hero.name_by_id(self.hero_id)
 
     async def get_twitch_data(self, twitch: TwitchClient):
         if self.twitchtv_id is None:
@@ -136,7 +138,7 @@ class ActiveMatch(Match):
 
         font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
         draw = ImageDraw.Draw(img)
-        text = f"{self.display_name} - {await self.hero_name}"
+        text = f"{self.display_name} - {self.hero_name}"
         w2, h2 = bot.imgtools.get_text_wh(text, font)
         draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
@@ -146,12 +148,16 @@ class ActiveMatch(Match):
 
     async def notif_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
         log.debug("Creating embed+file for notification")
+
+        # settings hero_name since ours is async and cant be done in init
+        self.hero_name = await hero.name_by_id(self.hero_id)
+
         await self.get_twitch_data(bot.twitch)
         img_file = bot.imgtools.img_to_file(
             await self.better_thumbnail(bot),
             filename=(
                 f'{self.twitch_status}-{self.display_name.replace("_", "")}-'
-                f'{(await self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
+                f'{(self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
             ),
         )
         e = discord.Embed(colour=self.colour, url=self.url)
@@ -161,7 +167,7 @@ class ActiveMatch(Match):
         )
         e.set_image(url=f"attachment://{img_file.filename}")
         e.set_thumbnail(url=await hero.img_url_by_id(self.hero_id))
-        e.set_author(name=f"{self.display_name} - {await self.hero_name}", url=self.url, icon_url=self.logo_url)
+        e.set_author(name=f"{self.display_name} - {self.hero_name}", url=self.url, icon_url=self.logo_url)
         e.set_footer(text=f"watch_server {self.server_steam_id}")
         return e, img_file
 

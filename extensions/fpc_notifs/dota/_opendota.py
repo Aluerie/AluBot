@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 __all__ = ("OpendotaRequestMatch",)
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class OpendotaNotOK(Exception):

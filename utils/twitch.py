@@ -24,7 +24,7 @@ class TwitchClient(twitchio.Client):
     def __init__(self, bot: AluBot):
         super().__init__(
             token=config.TWITCH_BOT_TOKEN,
-            # client_secret=config.TWITCH_CLIENT_SECRET,
+            client_secret=config.TWITCH_CLIENT_SECRET,
         )
 
         self.discord_bot: AluBot = bot

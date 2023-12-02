@@ -47,28 +47,29 @@ class TwitchCog(CommunityCog):
         e.set_author(name=f"{stream.display_name} just went live on Twitch!", icon_url=stream.logo_url, url=stream.url)
         e.set_thumbnail(url=stream.logo_url)
         e.set_image(url=f"attachment://{file.filename}")
-        await self.community.logs.send(content=content, embed=e, file=file)
+        await self.community.stream_notifs.send(content=content, embed=e, file=file)
 
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
         if before.bot or before.activities == after.activities or before.id == self.bot.owner_id:
             return
 
-        guild = self.community.guild
-        if after.guild != guild:
+        if after.guild.id != const.Guild.community:
+            # not community
             return
 
-        stream_rl = self.community.live_stream_role
+        live_streaming_role = self.community.live_stream_role
 
         stream_after = None
         for item in after.activities:
             if isinstance(item, discord.Streaming):
                 stream_after = item
 
-        if stream_rl not in after.roles and stream_after is not None:  # friend started the stream
-            await after.add_roles(stream_rl)
-        elif stream_rl in after.roles and stream_after is None:  # friend ended the stream
-            await after.remove_roles(stream_rl)
+        # todo: voice chat role like thing as in check when the bot dies/goes back to live
+        if live_streaming_role not in after.roles and stream_after is not None:  # friend started the stream
+            await after.add_roles(live_streaming_role)
+        elif live_streaming_role in after.roles and stream_after is None:  # friend ended the stream
+            await after.remove_roles(live_streaming_role)
         else:
             return
 

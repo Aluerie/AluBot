@@ -19,7 +19,7 @@ aiofiles~=23.2.1
 pillow==10.1.0
 emoji==2.8.0
 numpy==1.26.2
-aiohttp~=3.9.0
+aiohttp~=3.9.1
 # .....................
 # steam stuff
 steam~=1.4.4

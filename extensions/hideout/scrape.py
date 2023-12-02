@@ -7,7 +7,7 @@ import discord
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-from utils import const
+from utils import aluloop, const
 
 from ._base import HideoutCog
 
@@ -26,6 +26,15 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
     patch_news_json = "https://www.leagueoflegends.com/page-data/en-us/news/tags/patch-notes/page-data.json"
 
     async def cog_load(self) -> None:
+        self.initiate_league_patch_check_timer.start()
+
+    async def cog_unload(self) -> None:
+        self.initiate_league_patch_check_timer.cancel()
+
+    @aluloop(count=1)
+    async def initiate_league_patch_check_timer(self):
+        # we have to do this quirk bcs if we put this into cog load
+        # it will not have TimerManager initiated yet.
         query = "SELECT id FROM timers WHERE event = $1"
         value = await self.bot.pool.fetchval(query, "league_patch_check")
         if value:
@@ -43,7 +52,7 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
             data=data,
         )
 
-    @commands.Cog.listener("on_birthday_timer_complete")
+    @commands.Cog.listener("on_league_patch_check_timer_complete")
     async def league_patch_checker(self, timer: Timer[LeaguePatchCheckTimerData]):
         last_patch_href = timer.data["last_patch_href"]
 

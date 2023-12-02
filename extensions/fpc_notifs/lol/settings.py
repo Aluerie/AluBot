@@ -64,7 +64,7 @@ class LoLNotifsSettings(FPCSettingsBase, name="LoL"):
         )
 
     async def cog_load(self) -> None:
-        await self.bot.ini_twitch()
+        await self.bot.initiate_twitch()
         return await super().cog_load()
 
     # lol ##############################################

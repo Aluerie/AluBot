@@ -26,7 +26,7 @@ class LoLFeedPostMatchEdit(FPCCog):
         self.postmatch_players: list[PostMatchPlayer] = []
 
     async def cog_load(self) -> None:
-        await self.bot.ini_twitch()
+        await self.bot.initiate_twitch()
         self.postmatch_edits.start()
         return await super().cog_load()
 

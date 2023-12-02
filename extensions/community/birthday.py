@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import random
 import zoneinfo
+from re import I
 from typing import TYPE_CHECKING, Optional, TypedDict
 
 import discord
@@ -75,7 +76,7 @@ GIF_URLS_BANK = (
     "https://media.tenor.com/CgwgbFV8tzUAAAAC/the-office-birthday-fun.gif",
     "https://media.tenor.com/ufuYtIqIsIgAAAAC/friends-birthday.gif",
     "https://media.tenor.com/J6VTVKf270UAAAAC/leonardo-dicaprio-cheers.gif",
-    "https://tenor.com/view/barbie-margot-robbie-drive-singing-vibing-gif-17226440665477418355",
+    "https://media.tenor.com/7xCchAIgDXMAAAAC/barbie-margot-robbie.gif",
     "https://media.tenor.com/ZRTc4ocgdN4AAAAC/birthday-travolta.gif",
     "https://media.tenor.com/4UhjvIJLNSoAAAAC/bday-friends.gif",
     "https://media.tenor.com/zrpw1WuYPBUAAAAC/its-the-biggest-night-of-the-year-eric-cartman.gif",
@@ -176,21 +177,19 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             # the birthday already happened this year
             expires_at = dt.replace(year=end_of_today.year + 1)
 
+        # clear the previous birthday data before adding a new one
         await self.remove_birthday_helper(ctx.author.id)
-        timer = await self.bot.create_timer(
+        timer: Timer[BirthdayTimerData] = await self.bot.create_timer(
             event="birthday",
             expires_at=expires_at,
-            created_at=ctx.message.created_at,
             timezone=birthday.timezone.key,
             data=data,
         )
 
-        delta = formats.human_timedelta(expires_at, source=timer.created_at)
-
         e = discord.Embed(colour=ctx.author.colour, title="Your birthday is successfully set")
         e.add_field(name="Data", value=birthday_string(dt))
         e.add_field(name="Timezone", value=birthday.timezone.label)
-        e.add_field(name="Next congratulations incoming", value=delta)
+        e.add_field(name="Next congratulations incoming", value=formats.format_dt(expires_at, "R"))
         e.set_footer(text="Important! By submitting this information you agree it can be shown to anyone.")
         await ctx.reply(embed=e)
 
@@ -263,6 +262,12 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 # don't continue the timer
                 return
         else:
+            # Send notification
+
+            if self.community.blacklisted in member.roles:
+                # the person is blacklisted from using the bot features.
+                return
+
             birthday_role = self.community.birthday_role
             # if birthday_role in member.roles:
             #     # I guess the notification already happened

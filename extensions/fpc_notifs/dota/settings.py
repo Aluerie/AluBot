@@ -71,7 +71,7 @@ class DotaNotifsSettings(FPCSettingsBase, name="Dota 2"):
         )
 
     async def cog_load(self) -> None:
-        await self.bot.ini_twitch()
+        await self.bot.initiate_twitch()
         return await super().cog_load()
 
     # dota ##############################################

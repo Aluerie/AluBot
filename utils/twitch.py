@@ -6,33 +6,47 @@ from typing import TYPE_CHECKING, Optional
 
 import twitchio
 from discord.ext.commands import BadArgument
+from twitchio.ext import eventsub
 
+import config
 from utils.formats import human_timedelta
 from utils.lol.const import LOL_GAME_CATEGORY_TWITCH_ID
 
 if TYPE_CHECKING:
     from asyncpg import Pool
 
+    from bot import AluBot
+
 log = logging.getLogger(__name__)
 
 
 class TwitchClient(twitchio.Client):
-    def __init__(self, token: str):
-        super().__init__(token)
+    def __init__(self, bot: AluBot):
+        super().__init__(
+            token=config.TWITCH_BOT_TOKEN,
+            # client_secret=config.TWITCH_CLIENT_SECRET,
+        )
+
+        self.discord_bot: AluBot = bot
+        self.eventsub: eventsub.EventSubWSClient = eventsub.EventSubWSClient(self)
+
+    async def event_eventsub_notification(self, event: eventsub.NotificationEvent) -> None:
+        if isinstance(event.data, eventsub.CustomRewardRedemptionAddUpdateData):  # eventsub.StreamOnlineData):
+            self.discord_bot.dispatch("twitchio_stream_start", event.data)
 
     async def twitch_id_by_name(self, user_name: str) -> int:
-        """Gets twitch_id by user_login"""
+        """Get twitch_id by user_login"""
         user: twitchio.User | None = next(iter(await self.fetch_users(names=[user_name])), None)
         if not user:
-            raise BadArgument(f'Error checking stream `{user_name}`.\n User either does not exist or is banned.')
+            raise BadArgument(f"Error checking stream `{user_name}`.\n User either does not exist or is banned.")
 
         return user.id
 
     async def name_by_twitch_id(self, user_id: int) -> str:
-        """Gets display_name by twitch_id"""
+        """Get display_name by twitch_id"""
         user: twitchio.User | None = next(iter(await self.fetch_users(ids=[user_id])), None)
         if not user:
-            raise BadArgument(f'Error checking stream `{user_id}`.\n User either does not exist or is banned.')
+            raise BadArgument(f"Error checking stream `{user_id}`.\n User either does not exist or is banned.")
 
         return user.display_name
 
@@ -40,15 +54,15 @@ class TwitchClient(twitchio.Client):
         """Gets tuple (twitch_id, display_name) by user_login from one call to twitch client"""
         user: twitchio.User | None = next(iter(await self.fetch_users(names=[user_login])), None)
         if not user:
-            raise BadArgument(f'Error checking stream `{user_login}`.\n User either does not exist or is banned.')
+            raise BadArgument(f"Error checking stream `{user_login}`.\n User either does not exist or is banned.")
 
         return user.id, user.display_name, user.profile_image
 
     async def last_vod_link(self, user_id: int, seconds_ago: int = 0, md: bool = True) -> str:
         """Get last vod link for user with `user_id` with timestamp as well"""
-        video: twitchio.Video | None = next(iter(await self.fetch_videos(user_id=user_id, period='day')), None)
+        video: twitchio.Video | None = next(iter(await self.fetch_videos(user_id=user_id, period="day")), None)
         if not video:
-            return ''
+            return ""
 
         def get_time_from_hms(hms_time: str):
             """Convert time after `?t=` in vod link into amount of seconds
@@ -60,16 +74,16 @@ class TwitchClient(twitchio.Client):
 
             def regex_time(letter: str) -> int:
                 """h -> 3, m -> 51, s -> 8 for above example"""
-                pattern = r'\d+(?={})'.format(letter)
+                pattern = r"\d+(?={})".format(letter)
                 units = re.search(pattern, hms_time)
                 return int(units.group(0)) if units else 0
 
-            timeunit_dict = {'h': 3600, 'm': 60, 's': 1}
+            timeunit_dict = {"h": 3600, "m": 60, "s": 1}
             return sum([v * regex_time(letter) for letter, v in timeunit_dict.items()])
 
         duration = get_time_from_hms(video.duration)
-        vod_url = f'{video.url}?t={human_timedelta(duration - seconds_ago, strip=True, suffix=False)}'
-        return f'/[TwVOD]({vod_url})' if md else vod_url
+        vod_url = f"{video.url}?t={human_timedelta(duration - seconds_ago, strip=True, suffix=False)}"
+        return f"/[TwVOD]({vod_url})" if md else vod_url
 
     async def get_live_lol_player_ids(self, pool: Pool) -> list[int]:
         """Get twitch ids for live League of Legends streams"""
@@ -97,7 +111,7 @@ class TwitchClient(twitchio.Client):
 
 
 class TwitchStream:
-    __slots__ = ('twitch_id', 'display_name', 'name', 'game', 'url', 'logo_url', 'online', 'title', 'preview_url')
+    __slots__ = ("twitch_id", "display_name", "name", "game", "url", "logo_url", "online", "title", "preview_url")
 
     if TYPE_CHECKING:
         display_name: str
@@ -119,42 +133,19 @@ class TwitchStream:
     def _update(self, user: twitchio.User, stream: Optional[twitchio.Stream]):
         self.display_name = user.display_name
         self.name = user.name
-        self.url = f'https://www.twitch.tv/{self.display_name}'
+        self.url = f"https://www.twitch.tv/{self.display_name}"
         self.logo_url = user.profile_image
 
         if stream:
             self.online = True
             self.game = stream.game_name
             self.title = stream.title
-            self.preview_url = stream.thumbnail_url.replace('{width}', '640').replace('{height}', '360')
+            self.preview_url = stream.thumbnail_url.replace("{width}", "640").replace("{height}", "360")
         else:
             self.online = False
-            self.game = 'Offline'
-            self.title = 'Offline'
+            self.game = "Offline"
+            self.title = "Offline"
             if n := user.offline_image:
                 self.preview_url = f'{"-".join(n.split("-")[:-1])}-640x360.{n.split(".")[-1]}'
             else:
-                self.preview_url = f'https://static-cdn.jtvnw.net/previews-ttv/live_user_{self.name}-640x360.jpg'
-
-
-async def main():
-    from config import TWITCH_TOKEN
-
-    tc = TwitchClient(token=TWITCH_TOKEN)
-    await tc.connect()
-    tw_id = await tc.twitch_id_by_name('gorgc')
-    print(await tc.get_twitch_stream(tw_id))
-
-    await tc.close()
-
-
-if __name__ == '__main__':
-    import asyncio
-
-    logging.basicConfig()
-    log.setLevel(logging.DEBUG)
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
-    # loop.close()
+                self.preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{self.name}-640x360.jpg"

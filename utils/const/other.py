@@ -1,5 +1,8 @@
 from enum import StrEnum
 
+MY_TWITCH_CHANNEL_NAME = "Aluerie"
+MY_TWITCH_CHANNEL_ID = 180499648
+
 
 class Slash(StrEnum):
     """Slash mentions strings."""
@@ -9,7 +12,7 @@ class Slash(StrEnum):
 
 
 class Regex:
-    # these match/capture whole mentions/emote as in <a:blabla:123>
+    # these match/capture whole mentions/emote as in <a:bla:123>
     user_mention = r"<@!?\d+>"
     role_mention = r"<@&\d+>"
     channel_mention = r"<#\d+>"

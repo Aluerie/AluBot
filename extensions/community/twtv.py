@@ -1,29 +1,53 @@
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands, tasks
 
-from utils.const import Guild
+import config
+from utils import const, twitch
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
+    import twitchio
+    from twitchio.ext import eventsub
+
     from bot import AluBot
-
-
-MY_TWITCH_NAME = "Aluerie"
-MY_TWITCH_ID = 180499648
 
 
 class TwitchCog(CommunityCog):
     async def cog_load(self) -> None:
-        await self.bot.ini_twitch()
-        self.my_stream.start()
+        await self.bot.initiate_twitch()
 
-    def cog_unload(self) -> None:
-        self.my_stream.cancel()
+        # Twitch EventSub stuff...
+        # for testing we just use channel points redemptions since it's easy to do :D
+        await self.bot.twitch.eventsub.subscribe_channel_stream_start(  # subscribe_channel_points_redeemed(
+            broadcaster=const.MY_TWITCH_CHANNEL_ID,
+            token=config.TWITCH_ALUERIE_START_STREAM_USER_TOKEN,  # TWITCH_ALUERIE_CHANNEL_POINT_REDEMPTION_USER_TOKEN
+        )
+
+    @commands.Cog.listener("on_twitchio_stream_start")
+    async def twitch_tv_live_notifications(self, event: eventsub.StreamOnlineData) -> None:
+        # well, we only have notifications for my own stream so id is clear :D
+        # but otherwise we would need to get the id from
+        me: twitchio.User = await event.broadcaster.fetch()
+        me_live = next(iter(await self.bot.twitch.fetch_streams(user_ids=[me.id])), None)
+
+        stream = twitch.TwitchStream(me.id, me, me_live)
+
+        mention_role = self.community.stream_lover_role
+        content = f"{mention_role.mention} and chat, our Highness **@{stream.display_name}** just went live !"
+        file = await self.bot.imgtools.url_to_file(stream.preview_url, filename="twtvpreview.png")
+        last_vod_url = await self.bot.twitch.last_vod_link(const.MY_TWITCH_CHANNEL_ID)
+        desc = f"Playing {stream.game}\n/[Watch Stream]({stream.url}){last_vod_url}"
+        e = discord.Embed(colour=0x9146FF, title=f"{stream.title}", url=stream.url, description=desc)
+        e.set_author(name=f"{stream.display_name} just went live on Twitch!", icon_url=stream.logo_url, url=stream.url)
+        e.set_thumbnail(url=stream.logo_url)
+        e.set_image(url=f"attachment://{file.filename}")
+        await self.community.logs.send(content=content, embed=e, file=file)
 
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
@@ -47,33 +71,6 @@ class TwitchCog(CommunityCog):
             await after.remove_roles(stream_rl)
         else:
             return
-
-    @tasks.loop(minutes=2)
-    async def my_stream(self):
-        tw = await self.bot.twitch.get_twitch_stream(MY_TWITCH_ID)
-        query = """ UPDATE botinfo SET irene_is_live=$1 
-                    WHERE id=$2 
-                    AND irene_is_live IS DISTINCT FROM $1
-                    RETURNING True;
-                """
-        val = await self.bot.pool.fetchval(query, tw.online, Guild.community)
-
-        if not (val and tw.online):
-            return
-
-        mention_role = self.community.stream_lover_role
-        content = f"{mention_role.mention} and chat, our Highness **@{tw.display_name}** just went live !"
-        file = await self.bot.imgtools.url_to_file(tw.preview_url, filename="twtvpreview.png")
-        desc = f"Playing {tw.game}\n/[Watch Stream]({tw.url}){await self.bot.twitch.last_vod_link(MY_TWITCH_ID)}"
-        e = discord.Embed(colour=0x9146FF, title=f"{tw.title}", url=tw.url, description=desc)
-        e.set_author(name=f"{tw.display_name} just went live on Twitch!", icon_url=tw.logo_url, url=tw.url)
-        e.set_thumbnail(url=tw.logo_url)
-        e.set_image(url=f"attachment://{file.filename}")
-        await self.community.stream_notifs.send(content=content, embed=e, file=file)
-
-    @my_stream.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
 
 
 async def setup(bot: AluBot):

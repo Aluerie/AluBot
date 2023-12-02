@@ -3,7 +3,6 @@ from __future__ import annotations
 import datetime
 import logging
 import os
-import zoneinfo
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Mapping, MutableMapping, Optional, Union
 
@@ -118,6 +117,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
         # we could go with attribute option like exceptions manager
         # but let's keep its methods nearby
+        # needs to be done after cogs are loaded so all cog event listeners are ready
         super(AluBotHelper, self).__init__(bot=self)
 
         if self.test:
@@ -244,9 +244,9 @@ class AluBot(commands.Bot, AluBotHelper):
         if not hasattr(self, "github"):
             self.github = GitHub(config.GIT_PERSONAL_TOKEN)
 
-    async def ini_twitch(self) -> None:
+    async def initiate_twitch(self) -> None:
         if not hasattr(self, "twitch"):
-            self.twitch = TwitchClient(config.TWITCH_TOKEN)
+            self.twitch = TwitchClient(self)
             await self.twitch.connect()
 
     def initiate_tz_manager(self) -> None:

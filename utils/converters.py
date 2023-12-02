@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import inspect
 import re
-from typing import TYPE_CHECKING, Any, Optional, Self
+from typing import TYPE_CHECKING, Self
 
 import discord
 from discord import app_commands

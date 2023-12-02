@@ -31,7 +31,7 @@ class LoLNotifs(FPCCog):
         self.all_live_match_ids: list[int] = []
 
     async def cog_load(self) -> None:
-        await self.bot.ini_twitch()
+        await self.bot.initiate_twitch()
         self.lolfeed_notifs.add_exception_type(asyncpg.InternalServerError)
         self.lolfeed_notifs.start()
         return await super().cog_load()

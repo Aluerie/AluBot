@@ -35,7 +35,7 @@ class DotaNotifs(FPCCog):
         self.player_fav_ids: list[int] = []
 
     async def cog_load(self) -> None:
-        await self.bot.ini_twitch()
+        await self.bot.initiate_twitch()
         self.bot.ini_steam_dota()
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore

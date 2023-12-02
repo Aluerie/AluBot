@@ -113,17 +113,24 @@ class Role(RoleEnum):
     sister_of_the_veil = 821051642443071498
     bots = 724981475099017276
     nsfw_bots = 959955573405777981
-    voice = 761475276361826315
-    rolling_stone = 819096910848851988
     live_stream = 760082390059581471
-    birthday = 748586533627363469
-    stream_lover = 760082003495223298
     discord_mods = 855839522620047420
     level_zero = 852663921085251585
     birthday_lover = 1106342236100243499
 
     colour_category = 851786344354938880
     activity_category = 852199351808032788
+
+    ## activity roles
+    birthday = 748586533627363469
+    voice = 761475276361826315
+
+    ## special roles
+    blacklisted = 1180423070343757855
+    rolling_stone = 819096910848851988
+
+    ## notification roles
+    stream_lover = 760082003495223298
 
     # HIDEOUT
     event = 1090274008680902667
@@ -189,12 +196,12 @@ class SavedGuild:
             raise RuntimeError(f"{self} not in cache.")
         return guild
 
-    def get_channel(self, channel_id: int, typ: type[T]) -> T:
+    def get_channel(self, channel_id: int, channel_type: type[T]) -> T:
         channel = self.guild.get_channel(channel_id)
         if channel:
-            if isinstance(channel, typ):
+            if isinstance(channel, channel_type):
                 return channel
-            raise TypeError(f"Channel id={channel_id} was type: {type(channel)} expected: {typ}")
+            raise TypeError(f"Channel id={channel_id} was type: {type(channel)} expected: {channel_type}")
 
             # the other way for this is
             #   >>> # this line omitted from runtime when python is run with - O
@@ -333,6 +340,10 @@ class CommunityGuild(SavedGuild):
     @property
     def stream_lover_role(self) -> discord.Role:
         return self.get_role(Role.stream_lover)
+
+    @property
+    def blacklisted(self) -> discord.Role:
+        return self.get_role(Role.blacklisted)
 
 
 class HideoutGuild(SavedGuild):

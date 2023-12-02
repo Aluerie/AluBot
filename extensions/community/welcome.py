@@ -115,7 +115,7 @@ class Welcome(CommunityCog):
         if member.guild.id != const.Guild.community:
             return
         e = discord.Embed(description="{0} {0} {0}".format(const.Emote.SmogeInTheRain), colour=0x000000)
-        e.set_author(name="{0} just left the server".format(member.display_name), icon_url=member.display_avatar.url)
+        e.set_author(name=f"{member.display_name} just left the server", icon_url=member.display_avatar.url)
         e.set_footer(text=f"With love, {member.guild.me.display_name}")
         msg = await self.bot.community.welcome.send(embed=e)
         await msg.add_reaction(const.Emote.SmogeInTheRain)

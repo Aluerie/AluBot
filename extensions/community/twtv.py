@@ -23,10 +23,10 @@ class TwitchCog(CommunityCog):
         await self.bot.initiate_twitch()
 
         # Twitch EventSub stuff...
-        # for testing we just use channel points redemptions since it's easy to do :D
+        # for testing we just use channel points redemptions since it's easy to do with infinite points :D
         await self.bot.twitch.eventsub.subscribe_channel_stream_start(  # subscribe_channel_points_redeemed(
             broadcaster=const.MY_TWITCH_CHANNEL_ID,
-            token=config.TWITCH_ALUERIE_START_STREAM_USER_TOKEN,  # TWITCH_ALUERIE_CHANNEL_POINT_REDEMPTION_USER_TOKEN
+            token=config.TWITCH_ACCESS_TOKEN
         )
 
     @commands.Cog.listener("on_twitchio_stream_start")

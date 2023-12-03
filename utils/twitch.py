@@ -24,14 +24,14 @@ class TwitchClient(twitchio.Client):
     def __init__(self, bot: AluBot):
         super().__init__(
             token=config.TWITCH_BOT_TOKEN,
-            client_secret=config.TWITCH_CLIENT_SECRET,
+            # client_secret=config.TWITCH_CLIENT_SECRET,
         )
 
         self.discord_bot: AluBot = bot
         self.eventsub: eventsub.EventSubWSClient = eventsub.EventSubWSClient(self)
 
     async def event_eventsub_notification(self, event: eventsub.NotificationEvent) -> None:
-        if isinstance(event.data, eventsub.CustomRewardRedemptionAddUpdateData):  # eventsub.StreamOnlineData):
+        if isinstance(event.data, eventsub.StreamOnlineData):  # eventsub.CustomRewardRedemptionAddUpdateData):
             self.discord_bot.dispatch("twitchio_stream_start", event.data)
 
     async def twitch_id_by_name(self, user_name: str) -> int:

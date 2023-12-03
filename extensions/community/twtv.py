@@ -49,7 +49,7 @@ class TwitchCog(CommunityCog):
         e.set_image(url=f"attachment://{file.filename}")
         await self.community.stream_notifs.send(content=content, embed=e, file=file)
 
-    @commands.Cog.listener("twitchio_channel_points_redeem")
+    @commands.Cog.listener("on_twitchio_channel_points_redeem")
     async def twitch_tv_redeem_notifications(self, event: eventsub.CustomRewardRedemptionAddUpdateData) -> None:
         e = discord.Embed(colour=0x9146FF)
         e.description = f"{event.user.name} redeemed {event.reward.title} for {event.reward.cost} channel points"

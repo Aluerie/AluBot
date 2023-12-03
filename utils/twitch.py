@@ -22,10 +22,7 @@ log = logging.getLogger(__name__)
 
 class TwitchClient(twitchio.Client):
     def __init__(self, bot: AluBot):
-        super().__init__(
-            token=config.TWITCH_ACCESS_TOKEN,
-            client_secret=config.TWITCH_CLIENT_SECRET,
-        )
+        super().__init__(token=config.TWITCH_ACCESS_TOKEN)
 
         self.discord_bot: AluBot = bot
         self.eventsub: eventsub.EventSubWSClient = eventsub.EventSubWSClient(self)

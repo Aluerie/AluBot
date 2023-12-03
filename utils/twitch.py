@@ -30,13 +30,13 @@ class TwitchClient(twitchio.Client):
         self.discord_bot: AluBot = bot
         self.eventsub: eventsub.EventSubWSClient = eventsub.EventSubWSClient(self)
 
-    #     self.populate_cache.start()
-
-    # @routines.routine(iterations=1)
-
     async def event_eventsub_notification(self, event: eventsub.NotificationEvent) -> None:
-        if isinstance(event.data, eventsub.StreamOnlineData):  # eventsub.CustomRewardRedemptionAddUpdateData):
+        if isinstance(event.data, eventsub.StreamOnlineData):
             self.discord_bot.dispatch("twitchio_stream_start", event.data)
+
+        # testing with channel points
+        elif isinstance(event.data, eventsub.CustomRewardRedemptionAddUpdateData):
+            self.discord_bot.dispatch("twitchio_channel_points_redeem", event.data)
 
     async def twitch_id_by_name(self, user_name: str) -> int:
         """Get twitch_id by user_login"""

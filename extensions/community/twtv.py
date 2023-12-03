@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands, tasks
+from numpy import broadcast
 
 import config
 from utils import const, twitch
@@ -22,12 +23,11 @@ class TwitchCog(CommunityCog):
     async def cog_load(self) -> None:
         await self.bot.initiate_twitch()
 
-        # Twitch EventSub stuff...
-        # for testing we just use channel points redemptions since it's easy to do with infinite points :D
-        await self.bot.twitch.eventsub.subscribe_channel_stream_start(  # subscribe_channel_points_redeemed(
-            broadcaster=const.MY_TWITCH_CHANNEL_ID,
-            token=config.TWITCH_ACCESS_TOKEN
-        )
+        # Twitch EventSub
+        broadcaster, token = const.MY_TWITCH_CHANNEL_ID, config.TWITCH_ACCESS_TOKEN
+        await self.bot.twitch.eventsub.subscribe_channel_stream_start(broadcaster, token)
+        # testing with channel points since it's easy yo do :D
+        await self.bot.twitch.eventsub.subscribe_channel_points_redeemed(broadcaster, token)
 
     @commands.Cog.listener("on_twitchio_stream_start")
     async def twitch_tv_live_notifications(self, event: eventsub.StreamOnlineData) -> None:
@@ -48,6 +48,12 @@ class TwitchCog(CommunityCog):
         e.set_thumbnail(url=stream.logo_url)
         e.set_image(url=f"attachment://{file.filename}")
         await self.community.stream_notifs.send(content=content, embed=e, file=file)
+
+    @commands.Cog.listener("twitchio_channel_points_redeem")
+    async def twitch_tv_redeem_notifications(self, event: eventsub.CustomRewardRedemptionAddUpdateData) -> None:
+        e = discord.Embed(colour=0x9146FF)
+        e.description = f"{event.user.name} redeemed {event.reward.title} for {event.reward.cost} channel points"
+        await self.hideout.spam.send(embed=e)
 
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):

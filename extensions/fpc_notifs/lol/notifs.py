@@ -46,7 +46,7 @@ class LoLNotifs(FPCCog):
         query = "SELECT DISTINCT character_id FROM lol_favourite_characters"
         fav_champ_ids = [r for r, in await self.bot.pool.fetch(query)]  # row.unnest
 
-        live_fav_player_ids = await self.bot.twitch.get_live_lol_player_ids(pool=self.bot.pool)
+        live_fav_player_ids = await self.bot.twitch.get_live_lol_player_ids()
 
         query = f""" SELECT a.id, account, platform, display_name, p.name_lower, twitch_id, last_edited
                     FROM lol_accounts a

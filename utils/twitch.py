@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional
 
 import twitchio
 from discord.ext.commands import BadArgument
-from twitchio.ext import eventsub
+from twitchio.ext import eventsub, routines
 
 import config
 from utils.formats import human_timedelta
@@ -24,11 +24,14 @@ class TwitchClient(twitchio.Client):
     def __init__(self, bot: AluBot):
         super().__init__(
             token=config.TWITCH_BOT_TOKEN,
-            # client_secret=config.TWITCH_CLIENT_SECRET,
+            client_secret=config.TWITCH_CLIENT_SECRET,
         )
 
         self.discord_bot: AluBot = bot
         self.eventsub: eventsub.EventSubWSClient = eventsub.EventSubWSClient(self)
+    #     self.populate_cache.start()
+
+    # @routines.routine(iterations=1)
 
     async def event_eventsub_notification(self, event: eventsub.NotificationEvent) -> None:
         if isinstance(event.data, eventsub.StreamOnlineData):  # eventsub.CustomRewardRedemptionAddUpdateData):
@@ -85,7 +88,7 @@ class TwitchClient(twitchio.Client):
         vod_url = f"{video.url}?t={human_timedelta(duration - seconds_ago, strip=True, suffix=False)}"
         return f"/[TwVOD]({vod_url})" if md else vod_url
 
-    async def get_live_lol_player_ids(self, pool: Pool) -> list[int]:
+    async def get_live_lol_player_ids(self) -> list[int]:
         """Get twitch ids for live League of Legends streams"""
         query = """ SELECT twitch_id, name_lower
                     FROM lol_players
@@ -93,7 +96,7 @@ class TwitchClient(twitchio.Client):
                         SELECT DISTINCT player_name FROM lol_favourite_players
                     )
                 """
-        twitch_id_to_fav_id_dict = {r.twitch_id: r.name_lower for r in await pool.fetch(query)}
+        twitch_id_to_fav_id_dict = {r.twitch_id: r.name_lower for r in await self.discord_bot.pool.fetch(query)}
         if not twitch_id_to_fav_id_dict:
             # otherwise fetch_streams fetches top100 streams and we dont want that.
             return []

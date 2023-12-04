@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING
 
 import discord
-from discord.ext import commands, tasks
-from numpy import broadcast
+from discord.ext import commands
 
 import config
 from utils import const, twitch

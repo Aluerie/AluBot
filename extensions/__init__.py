@@ -40,15 +40,15 @@ try:
     import _test
 
     TEST_EXTENSIONS = _test.TEST_EXTENSIONS
-    IGNORE_TEST = _test.IGNORE_TEST
+    USE_ALL_EXTENSIONS = _test.USE_ALL_EXTENSIONS
 except ModuleNotFoundError:
     _test = None
     TEST_EXTENSIONS = tuple()
-    IGNORE_TEST = True
+    USE_ALL_EXTENSIONS = True
 
 # EXTENSIONS
 
-IGNORED_EXTENSIONS = 'beta'  # these are ignored in main bot.
+IGNORED_EXTENSIONS = "beta"  # these are ignored in main bot.
 
 # Packages
 MY_PACKAGES = tuple(module.name for module in iter_modules(path=__path__))  # , prefix=f'{__package__}.'
@@ -81,24 +81,24 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
     if test and _test:
         if reload:
             importlib.reload(_test)
-            test_extensions, ignore_test = _test.TEST_EXTENSIONS, _test.IGNORE_TEST
+            test_extensions, use_all_extensions = _test.TEST_EXTENSIONS, _test.USE_ALL_EXTENSIONS
         else:
-            test_extensions, ignore_test = TEST_EXTENSIONS, IGNORE_TEST
+            test_extensions, use_all_extensions = TEST_EXTENSIONS, USE_ALL_EXTENSIONS
 
-        if not ignore_test:
-            return BASE_EXTENSIONS + tuple(f'extensions.{x}' for x in test_extensions)
+        if not use_all_extensions:
+            return BASE_EXTENSIONS + tuple(f"extensions.{x}" for x in test_extensions)
 
     # production giga-gathering option.
-    all_folders = [f.name for f in os.scandir('extensions') if f.is_dir() if not f.name.startswith('_')]
+    all_folders = [f.name for f in os.scandir("extensions") if f.is_dir() if not f.name.startswith("_")]
 
     ext_category_folders = [x for x in all_folders if x not in MY_PACKAGES]
-    uncategorised_extensions = tuple(f'extensions.{x}' for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS)
+    uncategorised_extensions = tuple(f"extensions.{x}" for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS)
 
     categorised_extensions = tuple(
         module.name
         for folder in ext_category_folders
-        for module in iter_modules(path=[f'extensions/{folder}'], prefix=f'extensions.{folder}.')
-        if not module.name.rsplit('.', 1)[-1].startswith('_')
+        for module in iter_modules(path=[f"extensions/{folder}"], prefix=f"extensions.{folder}.")
+        if not module.name.rsplit(".", 1)[-1].startswith("_")
     )
 
     extensions = BASE_EXTENSIONS + uncategorised_extensions + categorised_extensions

@@ -36,7 +36,7 @@ class DotaNotifs(FPCCog):
 
     async def cog_load(self) -> None:
         await self.bot.initiate_twitch()
-        self.bot.ini_steam_dota()
+        await self.bot.ini_steam_dota()
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def response(result):
@@ -80,7 +80,7 @@ class DotaNotifs(FPCCog):
         self.player_fav_ids = await get_all_fav_ids("players", "player_name")
 
     async def get_args_for_top_source(self, specific_games_flag: bool) -> Union[None, dict]:
-        # self.bot.steam_dota_login()
+        await self.bot.steam_dota_login()
 
         if specific_games_flag:
             proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
@@ -241,7 +241,10 @@ class DotaNotifs(FPCCog):
                 self.request_top_source(args)
                 # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
                 # await asyncio.to_thread(self.request_top_source, args)
-                log.debug(f"top source request took {time.perf_counter() - start_time} secs")
+                top_source_end_time = time.perf_counter() - start_time
+                log.debug("top source request took %s secs", top_source_end_time)
+                if top_source_end_time > 8:
+                    await self.hideout.spam.send('dota notifs is dying')
         log.debug(f"len top_source_dict = {len(self.top_source_dict)}")
         await self.analyze_top_source_response()
         for match in self.live_matches:

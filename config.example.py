@@ -1,3 +1,9 @@
+"""Config variables file
+
+* Rename this file from `config.example.py` to `config.py`
+* Fill out the variables below.
+"""
+
 # /* cSpell:disable */
 
 # DISCORD (AluBot)

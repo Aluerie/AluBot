@@ -218,13 +218,13 @@ class AluBot(commands.Bot, AluBotHelper):
     def owner(self) -> discord.User:
         return self.bot_app_info.owner
 
-    def ini_steam_dota(self) -> None:
+    async def ini_steam_dota(self) -> None:
         if not hasattr(self, "steam") or not hasattr(self, "dota"):
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
-            self.steam_dota_login()
+            await self.steam_dota_login()
 
-    def steam_dota_login(self) -> None:
+    async def steam_dota_login(self) -> None:
         if self.steam.connected is False:
             log.debug(f"dota2info: client.connected {self.steam.connected}")
             if self.test:
@@ -232,13 +232,14 @@ class AluBot(commands.Bot, AluBotHelper):
             else:
                 steam_login, steam_password = (config.STEAM_USERNAME, config.STEAM_PASSWORD)
 
-            if self.steam.login(username=steam_login, password=steam_password):
-                self.steam.change_status(persona_state=7)
-                log.info("We successfully logged invis mode into Steam")
-                self.dota.launch()
-            else:
-                log.warning("Logging into Steam failed")
-                return
+            try:
+                if self.steam.login(username=steam_login, password=steam_password):
+                    self.steam.change_status(persona_state=7)
+                    log.info("We successfully logged invis mode into Steam")
+                    self.dota.launch()
+            except Exception as exc:
+                log.error("Logging into Steam failed")
+                await self.exc_manager.register_error(exc, source='steam login', where='steam login')
 
     def ini_github(self) -> None:
         if not hasattr(self, "github"):

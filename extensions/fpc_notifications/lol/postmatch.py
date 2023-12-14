@@ -24,7 +24,7 @@ log.setLevel(logging.DEBUG)
 
 
 class LoLFeedPostMatchEdit(FPCCog):
-    @commands.Cog.listener("on_lol_notification_match_finished")
+    @commands.Cog.listener("on_lol_fpc_notification_match_finished")
     async def edit_lol_notification_messages(self, match_rows: list[LoLMatchRecord]):
         for match_row in match_rows:
             try:
@@ -42,11 +42,11 @@ class LoLFeedPostMatchEdit(FPCCog):
             query = "SELECT * FROM lol_messages WHERE match_id=$1"
             message_rows: list[LoLMessageRecord] = await self.bot.pool.fetch(query, match_row.match_id)
 
-            for r in message_rows:
-                participant = next(p for p in match["info"]["participants"] if p["championId"] == r.champ_id)
+            for message_row in message_rows:
+                participant = next(p for p in match["info"]["participants"] if p["championId"] == message_row.champ_id)
                 post_match_player = PostMatchPlayer(
-                    channel_id=r.channel_id,
-                    message_id=r.message_id,
+                    channel_id=message_row.channel_id,
+                    message_id=message_row.message_id,
                     summoner_id=participant["summonerId"],
                     kda=f"{participant['kills']}/{participant['deaths']}/{participant['assists']}",
                     outcome="Win" if participant["win"] else "Loss",

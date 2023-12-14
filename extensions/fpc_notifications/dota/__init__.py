@@ -18,6 +18,10 @@ class Dota2FPC(
     """
     Dota 2 - Favourite player+character combo notifications.
     """
+    async def cog_load(self) -> None:
+        await self.bot.initiate_steam_dota()
+        await self.bot.initiate_twitch()
+        return await super().cog_load()
 
 
 async def setup(bot):

@@ -187,7 +187,7 @@ class LoLFPCNotifications(FPCCog):
                     WHERE NOT match_id=ANY($1)
                 """
         rows: list[LoLMatchRecord] = await self.bot.pool.fetch(query, self.live_match_ids)
-        self.bot.dispatch("lol_notification_match_finished", rows)
+        self.bot.dispatch("lol_fpc_notification_match_finished", rows)
 
     @aluloop(seconds=59)
     async def lol_fpc_notifications_task(self):

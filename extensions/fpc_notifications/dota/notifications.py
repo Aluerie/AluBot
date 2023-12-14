@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 import asyncpg
 import discord
@@ -18,6 +18,11 @@ from ._models import ActiveMatch
 if TYPE_CHECKING:
     from bot import AluBot
 
+    class DotaFPCMatchRecord(NamedTuple):  # todo: proper asyncpg typing
+        match_id: int
+        opendota_jobid: int
+
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
@@ -32,9 +37,6 @@ class DotaNotifs(FPCCog):
         self.player_fav_ids: list[int] = []
 
     async def cog_load(self) -> None:
-        await self.bot.initiate_twitch()
-        await self.bot.initiate_steam_dota()
-
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def response(result):
             if not result.specific_games:
@@ -171,16 +173,17 @@ class DotaNotifs(FPCCog):
                         (message_id, channel_id, match_id, character_id, twitch_status) 
                         VALUES ($1, $2, $3, $4, $5)
                     """
-            await self.bot.pool.execute(query, message.id, channel.id, match.match_id, match.hero_id, match.twitch_status)
+            await self.bot.pool.execute(
+                query, message.id, channel.id, match.match_id, match.hero_id, match.twitch_status
+            )
 
     async def declare_matches_finished(self):
         log.debug("Declaring finished matches")
-        query = """ UPDATE dota_matches 
-                    SET is_finished=TRUE
+        query = """ SELECT * FROM dota_matches 
                     WHERE NOT match_id=ANY($1)
-                    AND dota_matches.is_finished IS DISTINCT FROM TRUE
                 """
-        await self.bot.pool.execute(query, list(self.top_source_dict.keys()))
+        rows: list[DotaFPCMatchRecord] = await self.bot.pool.fetch(query, list(self.top_source_dict.keys()))
+        self.bot.dispatch("dota_fpc_notification_match_finished", rows)
 
     @aluloop(seconds=49)
     async def dota_feed(self):

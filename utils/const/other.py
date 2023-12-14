@@ -76,3 +76,16 @@ class League:
 
 class DOTA:
     HERO_DISCONNECT = "https://i.imgur.com/9n8oSge.png"
+
+    PLAYER_COLOUR_MAP = {
+        0: "#3375FF",
+        1: "#66FFBF",
+        2: "#BF00BF",
+        3: "#F3F00B",
+        4: "#FF6B00",
+        5: "#FE86C2",
+        6: "#A1B447",
+        7: "#65D9F7",
+        8: "#008321",
+        9: "#A46900",
+    }

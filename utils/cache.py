@@ -78,6 +78,11 @@ class KeysCache:
                 else:
                     raise
 
+    async def get_value_or_none(self, cache: str, key: Any) -> Any:
+        """Get a key value from cache"""
+        data = await self.get_data()
+        return data[cache].get(key, None)
+
 
 # Can't use ParamSpec due to https://github.com/python/typing/discussions/946
 class CacheProtocol(Protocol[R]):

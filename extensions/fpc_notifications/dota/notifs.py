@@ -183,7 +183,7 @@ class DotaNotifs(FPCCog):
                             match_id=match.match_id,
                             start_time=match.activate_time,
                             player_name=user.display_name,
-                            twitchtv_id=user.twitch_id,
+                            twitch_id=user.twitch_id,
                             hero_id=person.hero_id,
                             hero_ids=hero_ids,
                             server_steam_id=match.server_steam_id,
@@ -199,7 +199,7 @@ class DotaNotifs(FPCCog):
                 continue
 
             assert isinstance(ch, discord.TextChannel)
-            em, img_file = await match.notif_embed_and_file(self.bot)
+            em, img_file = await match.get_embed_and_file(self.bot)
             log.debug("Successfully made embed+file")
             owner_name = ch.guild.owner.display_name if ch.guild.owner else "Somebody"
             em.title = f"{owner_name}'s fav hero + player spotted"

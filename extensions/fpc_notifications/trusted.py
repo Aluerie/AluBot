@@ -12,10 +12,10 @@ from utils.lol.const import LiteralServerUpper
 from ._base import FPCCog
 
 if TYPE_CHECKING:
-    from extensions.fpc_notifs.lol.settings import LoLNotifsSettings
-
-    from extensions.fpc_notifs.dota.settings import DotaNotifsSettings
     from bot import AluBot
+
+    from .dota.settings import DotaNotifsSettings
+    from .lol.settings import LoLNotifsSettings
 
 
 class FPCTrusted(FPCCog):

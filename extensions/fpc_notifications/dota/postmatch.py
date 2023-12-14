@@ -72,7 +72,7 @@ class DotaPostMatchEdit(FPCCog):
         # log.debug('AG | --- Task is starting now ---')
         await self.fill_postmatch_players()
         for player in self.postmatch_players:
-            await player.edit_the_embed(self.bot)
+            await player.edit_notification_embed(self.bot)
         # log.debug('AG | --- Task is finished ---')
 
     @commands.command(hidden=True, aliases=["odrl", "od_rl", "odota_ratelimit"])

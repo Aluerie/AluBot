@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+import asyncio
+import datetime
 import logging
 import math
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional, TypedDict, override
 
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
-from utils import const
-from utils.dota import ability, hero, item
-from utils.dota.const import dota_player_colour_map
-from utils.formats import human_timedelta
+from utils import const, dota, formats
+
+from .._fpc_utils.base_postmatch import BasePostMatchPlayer
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -22,6 +23,23 @@ __all__ = (
     "ActiveMatch",
     "PostMatchPlayerData",
 )
+type LiteralTwitchStatus = Literal["NoTwitch", "Offline", "Live"]
+
+
+class TwitchData(TypedDict):
+    preview_url: str
+    display_name: str
+    url: str
+    logo_url: str
+    twitch_status: LiteralTwitchStatus
+    vod_url: str
+
+
+TWITCH_STATUS_TO_COLOUR: dict[LiteralTwitchStatus, discord.Colour] = {
+    "NoTwitch": const.MaterialPalette.gray(),
+    "Live": const.Colour.prpl(),
+    "Offline": const.Colour.twitch(),
+}
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -56,24 +74,7 @@ class Match:
         return f"/[Dbuff]({self.dbuff})/[ODota]({self.odota})/[Stratz]({self.stratz})"
 
 
-colour_twitch_status_dict = {
-    "NoTwitch": const.MaterialPalette.gray(),
-    "Live": const.Colour.prpl(),
-    "Offline": const.Colour.twitch(),
-}
-
-
 class ActiveMatch(Match):
-    img_url: str
-    display_name: str
-    url: str
-    logo_url: str
-    vod_link: str
-    colour: discord.Colour
-    twitch_status: str
-
-    hero_name: str
-
     def __init__(
         self,
         *,
@@ -83,96 +84,124 @@ class ActiveMatch(Match):
         hero_id: int,
         hero_ids: list[int],
         server_steam_id: int,
-        twitchtv_id: Optional[int] = None,
+        twitch_id: Optional[int] = None,
         channel_ids: list[int],
     ):
         super().__init__(match_id)
-        self.start_time = start_time
-        self.player_name = player_name
-        self.hero_id = hero_id
-        self.hero_ids = hero_ids
-        self.server_steam_id = server_steam_id
-        self.twitchtv_id = twitchtv_id
-        self.channel_ids = channel_ids
+        self.start_time: int = start_time
+        self.player_name: str = player_name
+        self.hero_id: int = hero_id
+        self.hero_ids: list[int] = hero_ids
+        self.server_steam_id: int = server_steam_id
+        self.twitch_id: Optional[int] = twitch_id
+        self.channel_ids: list[int] = channel_ids
 
     @property
     def long_ago(self) -> int:
-        return int(discord.utils.utcnow().timestamp()) - self.start_time
+        return int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - self.start_time
 
-    async def get_twitch_data(self, twitch: TwitchClient):
-        if self.twitchtv_id is None:
-            self.img_url = "https://i.imgur.com/kl0jDOu.png"  # lavender 640x360
-            self.display_name = self.player_name
-            self.url = ""
-            self.logo_url = const.Logo.dota
-            self.twitch_status = "NoTwitch"
-            self.vod_link = ""
+    async def get_twitch_data(self, twitch: TwitchClient) -> TwitchData:
+        if self.twitch_id is None:
+            return {
+                "preview_url": "https://i.imgur.com/kl0jDOu.png",  # lavender 640x360
+                "display_name": self.player_name,
+                "url": "",
+                "logo_url": const.Logo.dota,
+                "twitch_status": "NoTwitch",
+                "vod_url": "",
+            }
         else:
-            ts = await twitch.get_twitch_stream(self.twitchtv_id)
-            self.img_url = ts.preview_url
-            self.display_name = ts.display_name
-            self.logo_url = ts.logo_url
-            self.url = ts.url
-            if ts.online:
-                self.twitch_status = "Live"
-                self.vod_link = await twitch.last_vod_link(self.twitchtv_id, seconds_ago=self.long_ago)
+            stream = await twitch.get_twitch_stream(self.twitch_id)
+            if stream.online:
+                twitch_status = "Live"
+                vod_url = await twitch.last_vod_link(self.twitch_id, seconds_ago=self.long_ago)
             else:
-                self.twitch_status = "Offline"
-                self.vod_link = ""
-        self.colour = colour_twitch_status_dict[self.twitch_status]
+                twitch_status = "Offline"
+                vod_url = ""
 
-    async def better_thumbnail(self, bot: AluBot) -> Image.Image:
-        img = await bot.transposer.url_to_image(self.img_url)
-        width, _height = img.size
-        rectangle = Image.new("RGB", (width, 70), str(self.colour))
-        ImageDraw.Draw(rectangle)
-        img.paste(rectangle)
+            return {
+                "preview_url": stream.preview_url,
+                "display_name": stream.display_name,
+                "url": stream.url,
+                "logo_url": stream.logo_url,
+                "twitch_status": twitch_status,
+                "vod_url": vod_url,
+            }
 
-        for count, hero_id in enumerate(self.hero_ids):
-            hero_img = await bot.transposer.url_to_image(await hero.img_url_by_id(hero_id))
-            # h_width, h_height = heroImg.size
-            hero_img = hero_img.resize((62, 35))
-            hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=dota_player_colour_map.get(count, "#FF0000"))
-            extra_space = 0 if count < 5 else 20
-            img.paste(hero_img, (count * 62 + extra_space, 0))
+    async def get_notification_image(
+        self,
+        twitch_data: TwitchData,
+        hero_name: str,
+        colour: discord.Colour,
+        bot: AluBot,
+    ) -> Image.Image:
+        # prepare stuff for the following PIL procedures
+        img = await bot.transposer.url_to_image(twitch_data["preview_url"])
+        hero_images = [await bot.transposer.url_to_image(await dota.hero.img_by_id(id)) for id in self.hero_ids]
 
-        font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
-        draw = ImageDraw.Draw(img)
-        text = f"{self.display_name} - {self.hero_name}"
-        w2, h2 = bot.transposer.get_text_wh(text, font)
-        draw.text(((width - w2) / 2, 35), text, font=font, align="center")
+        def build_notification_image() -> Image.Image:
+            width, height = img.size
+            rectangle = Image.new("RGB", (width, 70), str(colour))
+            ImageDraw.Draw(rectangle)
+            img.paste(rectangle)
 
-        w2, h2 = bot.transposer.get_text_wh(text, font)
-        draw.text((0, 35 + h2 + 10), self.twitch_status, font=font, align="center", fill=str(self.colour))
-        return img
+            # hero top-bar images
+            for count, hero_image in enumerate(hero_images):
+                hero_image = hero_image.resize((62, 35))
+                hero_image = ImageOps.expand(
+                    hero_image,
+                    border=(0, 3, 0, 0),
+                    fill=const.DOTA.PLAYER_COLOUR_MAP.get(count, "#FF0000"),
+                )
+                extra_space = 0 if count < 5 else 20
+                img.paste(hero_image, (count * 62 + extra_space, 0))
 
-    async def notif_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
-        log.debug("Creating embed+file for notification")
+            # middle text "Player - Hero"
+            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
+            draw = ImageDraw.Draw(img)
+            text = f"{twitch_data['display_name']} - {hero_name}"
+            w2, h2 = bot.transposer.get_text_wh(text, font)
+            draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
-        # settings hero_name since ours is async and cant be done in init
-        self.hero_name = await hero.name_by_id(self.hero_id)
+            w2, h2 = bot.transposer.get_text_wh(text, font)
+            draw.text(
+                xy=(0, 35 + h2 + 10), text=twitch_data["twitch_status"], font=font, align="center", fill=str(colour)
+            )
+            return img
 
-        await self.get_twitch_data(bot.twitch)
-        img_file = bot.transposer.image_to_file(
-            await self.better_thumbnail(bot),
-            filename=(
-                f'{self.twitch_status}-{self.display_name.replace("_", "")}-'
-                f'{(self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
-            ),
+        return await asyncio.to_thread(build_notification_image)
+
+    async def get_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
+        log.debug("Creating embed + file for Notification match")
+
+        hero_name = await dota.hero.name_by_id(self.hero_id)
+        twitch_data = await self.get_twitch_data(bot.twitch)
+        colour = TWITCH_STATUS_TO_COLOUR[twitch_data["twitch_status"]]
+
+        notification_image = await self.get_notification_image(twitch_data, hero_name, colour, bot)
+        filename = (
+            f'{twitch_data["twitch_status"]}-{twitch_data["display_name"].replace("_", "")}-'
+            f'{(hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
         )
-        e = discord.Embed(colour=self.colour, url=self.url)
-        e.description = (
-            f"`/match {self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n"
-            f"{self.vod_link}{self.links}"
+        image_file = bot.transposer.image_to_file(notification_image, filename=filename)
+
+        embed = discord.Embed(colour=colour, url=twitch_data["url"])
+        embed.description = (
+            f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, strip=True)}\n"
+            f"{twitch_data['vod_url']}{self.links}"
         )
-        e.set_image(url=f"attachment://{img_file.filename}")
-        e.set_thumbnail(url=await hero.img_url_by_id(self.hero_id))
-        e.set_author(name=f"{self.display_name} - {self.hero_name}", url=self.url, icon_url=self.logo_url)
-        e.set_footer(text=f"watch_server {self.server_steam_id}")
-        return e, img_file
+        embed.set_image(url=f"attachment://{image_file.filename}")
+        embed.set_thumbnail(url=await dota.hero.img_by_id(self.hero_id))
+        embed.set_author(
+            name=f"{twitch_data['display_name']} - {hero_name}",
+            url=twitch_data["url"],
+            icon_url=twitch_data["logo_url"],
+        )
+        embed.set_footer(text=f"watch_server {self.server_steam_id}")
+        return embed, image_file
 
 
-class PostMatchPlayerData:
+class PostMatchPlayerData(BasePostMatchPlayer):
     """
     Class
     """
@@ -183,131 +212,141 @@ class PostMatchPlayerData:
         player_data: dict,
         channel_id: int,
         message_id: int,
-        twitch_status: Literal["NoTwitch", "Offline", "Online"],
+        twitch_status: LiteralTwitchStatus,
         api_calls_done: int,
     ):
-        self.channel_id = channel_id
-        self.message_id = message_id
-        self.twitch_status = twitch_status
-        self.api_calls_done = api_calls_done
+        super().__init__(channel_id=channel_id, message_id=message_id)
 
-        self.colour = colour_twitch_status_dict[self.twitch_status]
+        self.twitch_status: LiteralTwitchStatus = twitch_status
+        self.api_calls_done: int = api_calls_done
 
         self.match_id: int = player_data["match_id"]
         self.hero_id: int = player_data["hero_id"]
-        self.outcome = "Win" if player_data["win"] else "Loss"
+        self.outcome: str = "Win" if player_data["win"] else "Loss"  # todo: typing for player_data
         self.ability_upgrades_arr = player_data["ability_upgrades_arr"]
         self.items = [player_data[f"item_{i}"] for i in range(6)]
         self.kda = f'{player_data["kills"]}/{player_data["deaths"]}/{player_data["assists"]}'
-        self.purchase_log = player_data["purchase_log"]
-        self.aghs_blessing = False
-        self.aghs_shard = False
+        self.purchase_log: list = player_data["purchase_log"]
+        self.aghanim_blessing = False
+        self.aghanim_shard = False
         permanent_buffs = player_data["permanent_buffs"] or []  # [] if it is None
         for pb in permanent_buffs:
             if pb["permanent_buff"] == 12:
-                self.aghs_shard = True
+                self.aghanim_shard = True
             if pb["permanent_buff"] == 2:
-                self.aghs_blessing = True
+                self.aghanim_blessing = True
 
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
         return f"<{self.__class__.__name__} {pairs}>"
 
-    async def edit_the_image(self, img_url, bot: AluBot):
-        img = await bot.transposer.url_to_image(img_url)
+    @override
+    async def edit_notification_image(self, attachment: discord.Attachment, bot: AluBot) -> Image.Image:
+        img = await bot.transposer.attachment_to_image(attachment)
+        colour = TWITCH_STATUS_TO_COLOUR[self.twitch_status]
 
-        width, height = img.size
-        last_row_h = 50
+        # items and aghanim shard/blessing
+        async def get_item_timing(item_id: int) -> str:
+            for purchase in reversed(self.purchase_log):
+                if item_id == await dota.item.id_by_key(purchase["key"]):
+                    self.purchase_log.remove(purchase)
+                    return f"{math.ceil(purchase['time']/60)}m"
+            return "?m"
 
-        rectangle = Image.new("RGB", (width, last_row_h), str(self.colour))
-        ImageDraw.Draw(rectangle)
+        item_list: list[tuple[Image.Image, str]] = []
+        for item_id in self.items:
+            image = await bot.transposer.url_to_image(await dota.item.icon_by_id(item_id))
+            timing = await get_item_timing(item_id)
+            item_list.append((image, timing))
 
-        last_row_y = height - last_row_h
-        img.paste(rectangle, (0, last_row_y))
+        # reverse so we have proper order in the embed like
+        # shard blessing item0 item1 item3 item4 item5 item6
+        # because we will start drawing items from the end this way
+        item_list = item_list[::-1]
 
-        font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 26)
+        if self.aghanim_blessing:
+            image = await bot.transposer.url_to_image(
+                dota.ability.lazy_aghs_bless_url
+            )  # todo: can we not hard code it ?
+            timing = await get_item_timing(271)
+            item_list.append((image, timing))
 
-        draw = ImageDraw.Draw(img)
-        w3, h3 = bot.transposer.get_text_wh(self.kda, font_kda)
-        draw.text((0, height - h3), self.kda, font=font_kda, align="right")
+        if self.aghanim_shard:
+            image = await bot.transposer.url_to_image(dota.ability.lazy_aghs_shard_url)
+            timing = await get_item_timing(609)
+            item_list.append((image, timing))
 
-        draw = ImageDraw.Draw(img)
-        w2, h2 = bot.transposer.get_text_wh(self.outcome, font_kda)
-        colour_dict = {
-            "Win": str(const.MaterialPalette.green(shade=800)),
-            "Loss": str(const.MaterialPalette.red(shade=900)),
-            "Not Scored": (255, 255, 255),
-        }
-        draw.text((0, height - h3 - h2), self.outcome, font=font_kda, align="center", fill=colour_dict[self.outcome])
+        ability_icon_urls = [await dota.ability.icon_by_id(id) for id in self.ability_upgrades_arr]
+        ability_icon_images = [await bot.transposer.url_to_image(url) for url in ability_icon_urls]
 
-        font_m = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
+        talent_names = []
+        for ability_upgrade in self.ability_upgrades_arr:
+            talent_name = await dota.ability.talent_by_id(ability_upgrade)
+            if talent_name is not None:
+                talent_names.append(talent_name)
 
-        async def item_timing_text(item_id, x_left):
-            for i in reversed(self.purchase_log):
-                if item_id == await item.id_by_key(i["key"]):
-                    text = f"{math.ceil(i['time']/60)}m"
-                    w7, h7 = bot.transposer.get_text_wh(text, font_m)
-                    draw.text((x_left, height - h7), text, font=font_m, align="left")
-                    return
+        def build_notification_image() -> Image.Image:
+            width, height = img.size
+            information_height = 50
+            information_y = height - information_height
+            rectangle = Image.new("RGB", (width, information_height), str(colour))
+            ImageDraw.Draw(rectangle)
+            img.paste(rectangle, (0, information_y))
 
-        left_i = width - 69 * 6
-        for count, itemId in enumerate(self.items):
-            hero_img = await bot.transposer.url_to_image(await item.iconurl_by_id(itemId))
-            # h_width, h_height = heroImg.size # naturally in (88, 64)
-            hero_img = hero_img.resize((69, 50))  # 69/50 - to match 88/64
-            curr_left = left_i + count * hero_img.width
-            img.paste(hero_img, (curr_left, height - hero_img.height))
-            await item_timing_text(itemId, curr_left)
-
-        ability_h = 37
-        for count, abilityId in enumerate(self.ability_upgrades_arr):
-            abil_img = await bot.transposer.url_to_image(await ability.iconurl_by_id(abilityId))
-            abil_img = abil_img.resize((ability_h, ability_h))
-            img.paste(abil_img, (count * ability_h, last_row_y - abil_img.height))
-
-        talent_strs = []
-        for x in self.ability_upgrades_arr:
-            if (dname := await ability.name_by_id(x)) is not None:
-                talent_strs.append(dname)
-
-        font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 12)
-        for count, txt in enumerate(talent_strs):
+            # kda text
+            font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 26)
             draw = ImageDraw.Draw(img)
-            w4, h4 = bot.transposer.get_text_wh(txt, font)
-            draw.text((width - w4, last_row_y - 30 * 2 - 22 * count), txt, font=font, align="right")
-        right = left_i
-        if self.aghs_blessing:
-            bless_img = await bot.transposer.url_to_image(ability.lazy_aghs_bless_url)
-            bless_img = bless_img.resize((48, 35))
-            img.paste(bless_img, (right - bless_img.width, height - bless_img.height))
-            await item_timing_text(271, right - bless_img.width)
-            right -= bless_img.width
-        if self.aghs_shard:
-            shard_img = await bot.transposer.url_to_image(ability.lazy_aghs_shard_url)
-            shard_img = shard_img.resize((48, 35))
-            img.paste(shard_img, (right - shard_img.width, height - shard_img.height))
-            await item_timing_text(609, right - shard_img.width)
+            kda_text_w, kda_text_h = bot.transposer.get_text_wh(self.kda, font_kda)
+            draw.text((0, height - kda_text_h), self.kda, font=font_kda, align="right")
 
-        # img.show()
-        return img
+            # outcome text
+            draw = ImageDraw.Draw(img)
+            outcome_text_w, outcome_text_h = bot.transposer.get_text_wh(self.outcome, font_kda)
+            colour_dict = {
+                "Win": str(const.MaterialPalette.green(shade=800)),
+                "Loss": str(const.MaterialPalette.red(shade=900)),
+                "Not Scored": (255, 255, 255),
+            }
+            draw.text(
+                xy=(0, height - kda_text_h - outcome_text_h),
+                text=self.outcome,
+                font=font_kda,
+                align="center",
+                fill=colour_dict[self.outcome],
+            )
 
-    async def edit_the_embed(self, bot: AluBot):
-        ch = bot.get_channel(self.channel_id)
-        if ch is None:
-            return  # wrong bot, I guess
+            # items and aghanim shard/blessing
+            font_item_timing = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
 
-        try:
-            assert isinstance(ch, discord.TextChannel)
-            msg = await ch.fetch_message(self.message_id)
-        except discord.NotFound:
-            return
+            for count, (item_image, item_timing) in enumerate(item_list):
+                left = width - count * item_image.width
+                # item image
+                item_image = item_image.resize((69, 50))  # 69/50 - to match 88/64 which is natural size
+                img.paste(item_image, (left, height - item_image.height))
 
-        e = msg.embeds[0]
-        img_file = bot.transposer.image_to_file(await self.edit_the_image(e.image.url, bot), filename="edited.png")
-        e.set_image(url=f"attachment://{img_file.filename}")
-        if self.channel_id == const.Channel.repost:
-            e.set_footer(text=f'{e.footer.text or ""} | {self.api_calls_done}')
-        try:
-            await msg.edit(embed=e, attachments=[img_file])
-        except discord.Forbidden:
-            return
+                # item timing
+                item_timing_text_w, item_timing_text_h = bot.transposer.get_text_wh(item_timing, font_item_timing)
+                draw.text((left, height - item_timing_text_h), item_timing, font=font_item_timing, align="left")
+
+            # abilities
+            ability_h = 37
+            for count, ability_image in enumerate(ability_icon_images):
+                ability_image = ability_image.resize((ability_h, ability_h))
+                img.paste(ability_image, (count * ability_h, information_y - ability_image.height))
+
+            # talents
+            talent_font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 12)
+            for count, talent_text in enumerate(talent_names):
+                draw = ImageDraw.Draw(img)
+                talent_text_w, talent_text_h = bot.transposer.get_text_wh(talent_text, talent_font)
+                draw.text(
+                    xy=(width - talent_text_w, information_y - 30 * 2 - 22 * count),
+                    text=talent_text,
+                    font=talent_font,
+                    align="right",
+                )
+
+            # img.show()
+            return img
+
+        return await asyncio.to_thread(build_notification_image)

@@ -208,7 +208,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
                     font=font,
                 )
 
-                hero_img = await self.bot.transposer.url_to_image(await hero.img_url_by_id(x.hero_id))
+                hero_img = await self.bot.transposer.url_to_image(await hero.img_by_id(x.hero_id))
                 hero_img = hero_img.resize((h_width, h_height))
                 img.paste(hero_img, (col0 + col1 + col2, int(cell_h * c)))
 
@@ -495,7 +495,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
             fontsize=12,
         )
         axRain = fancy_ax(axRain)
-        hero_icon = await self.bot.transposer.url_to_image(await hero.img_url_by_id(last_match["hero_id"]))
+        hero_icon = await self.bot.transposer.url_to_image(await hero.img_by_id(last_match["hero_id"]))
         hero_icon.putalpha(200)
 
         axRain.imshow(hero_icon, extent=[-30, 30, -20, 20], aspect="auto")

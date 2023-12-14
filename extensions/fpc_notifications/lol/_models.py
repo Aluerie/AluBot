@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, override
 
 import discord
 from PIL import Image, ImageDraw, ImageFont
@@ -11,6 +11,8 @@ from PIL import Image, ImageDraw, ImageFont
 from utils import const, lol
 from utils.formats import human_timedelta
 from utils.lol.const import LiteralPlatform, platform_to_server
+
+from .._fpc_utils.base_postmatch import BasePostMatchPlayer
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -92,7 +94,11 @@ class LoLNotificationMatch(Match):
         return int(datetime.datetime.now(datetime.timezone.utc).timestamp() - timestamp_seconds)
 
     async def get_notification_image(
-        self, stream_preview_url: str, display_name: str, champion_name: str, bot: AluBot
+        self,
+        stream_preview_url: str,
+        display_name: str,
+        champion_name: str,
+        bot: AluBot,
     ) -> Image.Image:
         # prepare stuff for the following PIL procedures
         img = await bot.transposer.url_to_image(stream_preview_url)
@@ -104,7 +110,7 @@ class LoLNotificationMatch(Match):
         summoner_icon_urls = [await lol.summoner_spell.icon_by_id(id) for id in self.summoner_spell_ids]
         summoner_icon_images = [await bot.transposer.url_to_image(url) for url in summoner_icon_urls]
 
-        def build_notification_image():
+        def build_notification_image() -> Image.Image:
             width, height = img.size
             information_row = 50
             rectangle = Image.new("RGB", (width, 100), str(const.Colour.rspbrry()))
@@ -147,10 +153,12 @@ class LoLNotificationMatch(Match):
         stream = await bot.twitch.get_twitch_stream(self.twitch_id)
         champion_name = await lol.champion.name_by_id(self.champion_id)
 
-        thumbnail = await self.get_notification_image(stream.preview_url, stream.display_name, champion_name, bot)
+        notification_image = await self.get_notification_image(
+            stream.preview_url, stream.display_name, champion_name, bot
+        )
 
         filename = f'{stream.display_name.replace("_", "")}-playing-{champion_name}.png'
-        image_file = bot.transposer.image_to_file(thumbnail, filename=filename)
+        image_file = bot.transposer.image_to_file(notification_image, filename=filename)
 
         embed = discord.Embed(color=const.Colour.rspbrry(), url=stream.url)
         embed.description = (
@@ -163,7 +171,7 @@ class LoLNotificationMatch(Match):
         return embed, image_file
 
 
-class PostMatchPlayer:
+class PostMatchPlayer(BasePostMatchPlayer):
     def __init__(
         self,
         *,
@@ -174,13 +182,13 @@ class PostMatchPlayer:
         outcome: str,
         item_ids: list[int],
     ):
-        self.channel_id = channel_id
-        self.message_id = message_id
+        super().__init__(channel_id=channel_id, message_id=message_id)
         self.summoner_id: str = summoner_id
         self.kda: str = kda
         self.outcome: str = outcome
         self.item_ids: list[int] = item_ids
 
+    @override
     async def edit_notification_image(self, attachment: discord.Attachment, bot: AluBot):
         img = await bot.transposer.attachment_to_image(attachment)
         item_icon_urls = [await lol.item.icon_by_id(item_id) for item_id in self.item_ids if item_id]
@@ -220,27 +228,3 @@ class PostMatchPlayer:
             return img
 
         return await asyncio.to_thread(build_notification_image)
-
-    async def edit_notification_embed(self, bot: AluBot) -> None:
-        ch: Optional[discord.TextChannel] = bot.get_channel(self.channel_id)  # type:ignore
-        if ch is None:
-            # todo: ???
-            return
-
-        try:
-            message = await ch.fetch_message(self.message_id)
-        except discord.NotFound:
-            return
-
-        embed = message.embeds[0]
-        attachment = message.attachments[0]
-
-        image_file = bot.transposer.image_to_file(
-            await self.edit_notification_image(attachment, bot),
-            filename=f"edited-{attachment.filename}.png",
-        )
-        embed.set_image(url=f"attachment://{image_file.filename}")
-        try:
-            await message.edit(embed=embed, attachments=[image_file])
-        except discord.Forbidden:
-            return

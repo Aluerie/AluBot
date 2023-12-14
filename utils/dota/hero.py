@@ -1,42 +1,40 @@
 from typing import List
 
-from utils.cache_my import KeyCache
-
-from .const import *
+from ..cache import KeysCache
+from ..const import DOTA
 
 __all__ = (
-    # 'hero_keys_cache', # maybe
-    'id_by_name',
-    'id_by_npcname',
-    'icon_url_by_id',
-    'name_by_id',
-    'img_url_by_id',
+    "id_by_name",
+    "id_by_npcname",
+    "icon_by_id",
+    "name_by_id",
+    "img_by_id",
 )
 
 
-class HeroKeyCache(KeyCache):
+class HeroKeysCache(KeysCache):
     # TODO: if type_checking: so we have typed dict and autocomplete on  hero_keys_cache.data['id_by_npcname']
     # instead of unknown unknown
     async def fill_data(self) -> dict:
-        url = f'{ODOTA_API_URL}/constants/heroes'
-        hero_dict = await self.get_resp_json(url=url)
+        url = f"https://api.opendota.com/api/constants/heroes"
+        hero_dict = await self.get_response_json(url=url)
         data = {
-            'id_by_npcname': {'': 0},
-            'id_by_name': {'bot_game': 0},
-            'name_by_id': {0: 'bot_game'},
-            'img_url_by_id': {0: DISCONNECT_ICON},
-            'icon_url_by_id': {0: DISCONNECT_ICON},
+            "id_by_npcname": {"": 0},
+            "id_by_name": {"bot_game": 0},
+            "name_by_id": {0: "bot_game"},
+            "img_by_id": {0: DOTA.HERO_DISCONNECT},
+            "icon_by_id": {0: DOTA.HERO_DISCONNECT},
         }
         for _, hero in hero_dict.items():
-            data['id_by_npcname'][hero['name']] = hero['id']
-            data['id_by_name'][hero['localized_name'].lower()] = hero['id']
-            data['name_by_id'][hero['id']] = hero['localized_name']
-            data['img_url_by_id'][hero['id']] = f"{STEAM_CDN_URL}{hero['img']}"
-            data['icon_url_by_id'][hero['id']] = f"{STEAM_CDN_URL}{hero['icon']}"
+            data["id_by_npcname"][hero["name"]] = hero["id"]
+            data["id_by_name"][hero["localized_name"].lower()] = hero["id"]
+            data["name_by_id"][hero["id"]] = hero["localized_name"]
+            data["img_by_id"][hero["id"]] = f"https://cdn.cloudflare.steamstatic.com{hero['img']}"
+            data["icon_by_id"][hero["id"]] = f"https://cdn.cloudflare.steamstatic.com{hero['icon']}"
         return data
 
 
-hero_keys_cache = HeroKeyCache()
+hero_keys_cache = HeroKeysCache()
 
 
 async def id_by_npcname(value: str) -> int:
@@ -44,8 +42,7 @@ async def id_by_npcname(value: str) -> int:
 
     example: 'npc_dota_hero_antimage' -> 1
     """
-    data = await hero_keys_cache.data
-    return data['id_by_npcname'][value]
+    return await hero_keys_cache.get("id_by_npcname", value)
 
 
 async def id_by_name(value: str) -> int:
@@ -53,8 +50,7 @@ async def id_by_name(value: str) -> int:
 
     Example: 'Anti-Mage' -> 1
     """
-    data = await hero_keys_cache.data
-    return data['id_by_name'][value.lower()]
+    return await hero_keys_cache.get("id_by_name", value.lower())
 
 
 async def name_by_id(value: int) -> str:
@@ -62,39 +58,36 @@ async def name_by_id(value: int) -> str:
 
     Example: 1 -> 'Anti-Mage'
     """
-    data = await hero_keys_cache.data
-    return data['name_by_id'][value]
+    return await hero_keys_cache.get("name_by_id", value)
 
 
-async def img_url_by_id(value: int) -> str:
-    """Get hero icon utl id by id.
+async def img_by_id(value: int) -> str:
+    """Get hero top-bar image url id by id.
 
     Example: 1 -> 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png?'
     """
-    data = await hero_keys_cache.data
-    return data['img_url_by_id'][value]
+    return await hero_keys_cache.get("img_by_id", value)
 
 
-async def icon_url_by_id(value: int) -> str:
-    """Get hero icon utl id by id.
+async def icon_by_id(value: int) -> str:
+    """Get hero minimap icon url by id.
 
     Example: 1 -> 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/icons/antimage.png?'
     """
-    data = await hero_keys_cache.data
-    return data['icon_url_by_id'][value]
+    return await hero_keys_cache.get("icon_by_id", value)
 
 
-async def get_all_hero_names() -> List[str]:
+async def all_hero_names() -> List[str]:
     """Get all hero names in Dota 2"""
-    data = await hero_keys_cache.data
-    hero_dict = data['name_by_id']
+    data = await hero_keys_cache.get_data()
+    hero_dict = data["name_by_id"]
     hero_dict.pop(0, None)
     return sorted(list(hero_dict.values()))
 
 
-async def get_all_hero_ids() -> List[int]:
+async def all_hero_ids() -> List[int]:
     """Get all hero ids in Dota 2"""
-    data = await hero_keys_cache.data
-    hero_dict = data['name_by_id']
+    data = await hero_keys_cache.get_data()
+    hero_dict = data["name_by_id"]
     hero_dict.pop(0, None)
     return list(hero_dict.keys())

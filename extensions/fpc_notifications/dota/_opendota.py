@@ -3,8 +3,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
-from utils.dota.const import ODOTA_API_URL
-
 if TYPE_CHECKING:
     from bot import AluBot
 
@@ -51,7 +49,7 @@ class OpendotaRequestMatch:
         Make opendota request parsing API call
         @return job_id as integer or False in case of not ok response
         """
-        async with bot.session.post(f"{ODOTA_API_URL}/request/{self.match_id}") as resp:
+        async with bot.session.post(f"https://api.opendota.com/api/request/{self.match_id}") as resp:
             log.debug(f"OK: {resp.ok} json: {await resp.json()} " f"tries: {self.tries} fails: {self.fails}")
             bot.update_odota_ratelimit(resp.headers)
             self.api_calls_done += 1
@@ -69,7 +67,7 @@ class OpendotaRequestMatch:
         @return job_id as integer or False in case of not ok response
         @raise OpendotaNotOK
         """
-        async with bot.session.get(f"{ODOTA_API_URL}/request/{self.job_id}") as resp:
+        async with bot.session.get(f"https://api.opendota.com/api/request/{self.job_id}") as resp:
             log.debug(
                 f"OK: {resp.ok} json: {await resp.json()} job_id: {self.job_id} "
                 f"tries: {self.tries} fails: {self.fails}"
@@ -83,7 +81,7 @@ class OpendotaRequestMatch:
 
     async def get_matches(self, bot: AluBot) -> dict:
         """Make opendota request match data API call"""
-        async with bot.session.get(f"{ODOTA_API_URL}/matches/{self.match_id}") as resp:
+        async with bot.session.get(f"https://api.opendota.com/api/matches/{self.match_id}") as resp:
             log.debug(
                 f"OK: {resp.ok} match_id: {self.match_id} job_id: {self.job_id} "
                 f"tries: {self.tries} fails: {self.fails}"

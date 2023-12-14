@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)  # todo: change to info
+log.setLevel(logging.INFO)  # todo: change to info
 
 
 class LoLFPCNotifications(FPCCog):

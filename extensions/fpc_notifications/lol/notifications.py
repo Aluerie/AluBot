@@ -183,7 +183,7 @@ class LoLFPCNotifications(FPCCog):
             await self.bot.pool.execute(query, match.match_id, match.summoner_id)
 
     async def declare_matches_finished(self):
-        query = """ SELECT lol_matches m
+        query = """ SELECT * FROM lol_matches
                     WHERE NOT match_id=ANY($1)
                 """
         rows: list[LoLMatchRecord] = await self.bot.pool.fetch(query, self.live_match_ids)

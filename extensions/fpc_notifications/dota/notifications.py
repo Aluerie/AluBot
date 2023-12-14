@@ -144,12 +144,12 @@ class DotaNotifs(FPCCog):
                             WHERE lower_name=(SELECT lower_name FROM dota_accounts WHERE friend_id=$1)
                         """
                 user = await self.bot.pool.fetchrow(query, person.account_id)
-                query = """ SELECT ds.channel_id
-                            FROM dota_favourite_characters dfc
-                            JOIN dota_favourite_players dfp on dfc.guild_id = dfp.guild_id
-                            JOIN dota_settings ds on ds.guild_id = dfc.guild_id
-                            WHERE character_id=$1 AND player_name=$2
-                            AND NOT ds.channel_id=ANY(SELECT channel_id FROM dota_messages WHERE match_id=$3);
+                query = """ SELECT s.channel_id
+                            FROM dota_favourite_characters c
+                            JOIN dota_favourite_players p on c.guild_id = p.guild_id
+                            JOIN dota_settings s on s.guild_id = c.guild_id
+                            WHERE character_id=$1 AND p.lower_name=$2
+                            AND NOT s.channel_id=ANY(SELECT channel_id FROM dota_messages WHERE match_id=$3);
                         """
                 channel_ids = [
                     i for i, in await self.bot.pool.fetch(query, person.hero_id, user.lower_name, match.match_id)

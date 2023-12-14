@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from bot import AluBot
 
     class LiveAccountRow(NamedTuple):  # TODO: proper asyncpg typing
-        summoner_id: str
+        id: str
         account_name: str
         platform: str
         display_name: str
@@ -52,7 +52,7 @@ class LoLFPCNotifications(FPCCog):
         return await super().cog_unload()
 
     async def get_live_lol_player_lower_names(self) -> list[str]:
-        """Get `name_lower` for favourite League of Legends streams that are currently live."""
+        """Get `lower_name` for favourite League of Legends streams that are currently live."""
         query = """ SELECT twitch_id, lower_name
                     FROM lol_players
                     WHERE lower_name=ANY(SELECT DISTINCT lower_name FROM lol_favourite_players)
@@ -92,7 +92,7 @@ class LoLFPCNotifications(FPCCog):
                 log.debug("%s", r)
                 try:
                     game = await riot_api_client.get_lol_spectator_v4_active_game_by_summoner(
-                        summoner_id=r.summoner_id,
+                        summoner_id=r.id,
                         region=r.platform,  # todo: region = platform xd
                     )
                 except aiohttp.ClientResponseError as exc:

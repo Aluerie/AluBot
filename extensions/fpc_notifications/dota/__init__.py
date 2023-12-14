@@ -1,7 +1,7 @@
 from utils import const
 
 from .._base import FPCCog
-from .notifs import DotaNotifs
+from .notifications import DotaNotifs
 from .postmatch import DotaPostMatchEdit
 from .settings import DotaNotifsSettings
 from .twitch_check import DotaTwitchAccountCheck

@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 
 from config import DOTA_FRIEND_ID
-from extensions.fpc_notifs.dota._models import Match
+from extensions.fpc_notifications.dota._models import Match
 from utils import checks, const
 from utils.dota import hero
 from utils.formats import indent

@@ -19,8 +19,8 @@ This particular file aims to collect those files into Tuple of extensions so end
 >>> get_extensions(False) 
 >>> (
 >>>    'jishaku',
->>>    'extensions.fpc_notifs.dota',
->>>    'extensions.fpc_notifs.lol',
+>>>    'extensions.fpc_notifications.dota',
+>>>    'extensions.fpc_notifications.lol',
 >>>    'extensions.community.welcome',
 >>>    ...
 >>> )

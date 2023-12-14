@@ -86,7 +86,7 @@ class DotaNotifs(FPCCog):
             proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
             proto_msg.header.routing_appid = 570  # type: ignore
 
-            query = "SELECT id FROM dota_accounts WHERE name_lower=ANY($1)"
+            query = "SELECT id FROM dota_accounts WHERE lower_name=ANY($1)"
             steam_ids = [i for i, in await self.bot.pool.fetch(query, self.player_fav_ids)]
             proto_msg.body.steamid_request.extend(steam_ids)  # type: ignore
             resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
@@ -133,15 +133,15 @@ class DotaNotifs(FPCCog):
 
     async def analyze_top_source_response(self):
         self.live_matches = []
-        query = "SELECT friend_id FROM dota_accounts WHERE name_lower=ANY($1)"
+        query = "SELECT friend_id FROM dota_accounts WHERE lower_name=ANY($1)"
         friend_ids = [f for f, in await self.bot.pool.fetch(query, self.player_fav_ids)]
 
         for match in self.top_source_dict.values():
             our_persons = [x for x in match.players if x.account_id in friend_ids and x.hero_id in self.hero_fav_ids]
             for person in our_persons:
-                query = """ SELECT name_lower, display_name, twitch_id 
+                query = """ SELECT lower_name, display_name, twitch_id 
                             FROM dota_players 
-                            WHERE name_lower=(SELECT name_lower FROM dota_accounts WHERE friend_id=$1)
+                            WHERE lower_name=(SELECT lower_name FROM dota_accounts WHERE friend_id=$1)
                         """
                 user = await self.bot.pool.fetchrow(query, person.account_id)
                 query = """ SELECT ds.channel_id
@@ -152,7 +152,7 @@ class DotaNotifs(FPCCog):
                             AND NOT ds.channel_id=ANY(SELECT channel_id FROM dota_messages WHERE match_id=$3);
                         """
                 channel_ids = [
-                    i for i, in await self.bot.pool.fetch(query, person.hero_id, user.name_lower, match.match_id)
+                    i for i, in await self.bot.pool.fetch(query, person.hero_id, user.lower_name, match.match_id)
                 ]
                 log.debug("%s - %s", user.display_name, await hero.name_by_id(person.hero_id))
                 # print(match)

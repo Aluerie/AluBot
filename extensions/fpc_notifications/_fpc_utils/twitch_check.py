@@ -32,7 +32,7 @@ class TwitchAccountCheckBase(FPCCog):
         for row in rows:
             display_name = await self.bot.twitch.name_by_twitch_id(row.twitch_id)
             if display_name != row.display_name:
-                query = f"UPDATE {self.table_name} SET display_name=$1, name_lower=$2 WHERE id=$3"
+                query = f"UPDATE {self.table_name} SET display_name=$1, lower_name=$2 WHERE id=$3"
                 await self.bot.pool.execute(query, display_name, display_name.lower(), row.id)
 
     @check_acc_renames.before_loop

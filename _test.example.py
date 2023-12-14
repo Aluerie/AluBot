@@ -20,8 +20,8 @@ TEST_EXTENSIONS = (
     # 'community.fix_links',
     # 'info.schedule',
     "community.twtv",
-    # 'fpc_notifs.dota',
-    # 'fpc_notifs.trusted'
+    # 'fpc_notifications.dota',
+    # 'fpc_notifications.trusted'
     # 'meta.meta',
     # 'educational.language'
     # "beta",

@@ -77,7 +77,7 @@ class DotaNotifs(FPCCog):
             return [r for r, in rows]
 
         self.hero_fav_ids = await get_all_fav_ids("characters", "character_id")
-        self.player_fav_ids = await get_all_fav_ids("players", "player_name")
+        self.player_fav_ids = await get_all_fav_ids("players", "lower_name")
 
     async def get_args_for_top_source(self, specific_games_flag: bool) -> Union[None, dict]:
         await self.bot.steam_dota_login()

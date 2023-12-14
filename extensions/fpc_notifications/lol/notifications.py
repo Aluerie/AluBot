@@ -80,7 +80,7 @@ class LoLFPCNotifications(FPCCog):
 
         live_lower_names = await self.get_live_lol_player_lower_names()
 
-        query = """ SELECT a.summoner_id, account_name, platform, display_name, p.lower_name, twitch_id, last_edited
+        query = """ SELECT a.id, account_name, platform, display_name, p.lower_name, twitch_id, last_edited
                     FROM lol_accounts a
                     JOIN lol_players p
                     ON a.lower_name = p.lower_name

@@ -72,4 +72,4 @@ def platform_to_server(platform: LiteralPlatform) -> LiteralServer:
 
 def platform_to_region(platform: LiteralPlatform) -> LiteralRegion:
     """Convert platform to routing"""
-    return platform_to_region_dict[platform]
+    return platform_to_region_dict[platform.lower()]  # type: ignore

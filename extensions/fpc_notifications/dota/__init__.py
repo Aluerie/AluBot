@@ -1,14 +1,14 @@
 from utils import const
 
 from .._base import FPCCog
-from .notifications import DotaNotifs
+from .notifications import Dota2FPCNotifications
 from .postmatch import DotaPostMatchEdit
 from .settings import DotaNotifsSettings
 from .twitch_check import DotaTwitchAccountCheck
 
 
 class Dota2FPC(
-    DotaNotifs,
+    Dota2FPCNotifications,
     DotaPostMatchEdit,
     DotaNotifsSettings,
     DotaTwitchAccountCheck,
@@ -18,6 +18,7 @@ class Dota2FPC(
     """
     Dota 2 - Favourite player+character combo notifications.
     """
+
     async def cog_load(self) -> None:
         await self.bot.initiate_steam_dota()
         await self.bot.initiate_twitch()

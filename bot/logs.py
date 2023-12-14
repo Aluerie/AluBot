@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import platform
 from contextlib import contextmanager
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -11,7 +12,17 @@ import discord
 if TYPE_CHECKING:
     pass
 
-__all__ = ('setup_logging',)
+__all__ = ("setup_logging",)
+
+ASCII_STARTING_UP_ART = r"""
+     _    _       ____        _     ____  _             _   _             
+    / \  | |_   _| __ )  ___ | |_  / ___|| |_ __ _ _ __| |_(_)_ __   __ _ 
+   / _ \ | | | | |  _ \ / _ \| __| \___ \| __/ _` | '__| __| | '_ \ / _` |
+  / ___ \| | |_| | |_) | (_) | |_   ___) | || (_| | |  | |_| | | | | (_| |
+ /_/   \_\_|\__,_|____/ \___/ \__| |____/ \__\__,_|_|   \__|_|_| |_|\__, |
+                                                                    |___/ 
+            [ ALUBOT IS STARTING NOW ]
+"""
 
 
 @contextmanager
@@ -30,13 +41,17 @@ def setup_logging(test: bool):
         # File Handler
         file_handler = RotatingFileHandler(
             filename=f'.alubot/logs/{"alubot" if not test else "yenbot"}.log',
-            encoding='utf-8',
-            mode='w',
+            encoding="utf-8",
+            mode="w",
             maxBytes=16 * 1024 * 1024,  # 16 MiB
             backupCount=5,  # Rotate through 5 files
         )
         file_handler.setFormatter(get_log_fmt(file_handler))
         log.addHandler(file_handler)
+
+        if platform.system() == "Linux":
+            # so start-ups in logs are way more noticeable
+            log.info(ASCII_STARTING_UP_ART)
 
         yield
     finally:
@@ -58,18 +73,18 @@ class MyColourFormatter(logging.Formatter):
     # 1 means bold, 2 means dim, 0 means reset, and 4 means underline.
 
     LEVEL_COLOURS = [
-        (logging.DEBUG, '\x1b[40;1m'),
-        (logging.INFO, '\x1b[34;1m'),
-        (logging.WARNING, '\x1b[33;1m'),
-        (logging.ERROR, '\x1b[31m'),
-        (logging.CRITICAL, '\x1b[41m'),
+        (logging.DEBUG, "\x1b[40;1m"),
+        (logging.INFO, "\x1b[34;1m"),
+        (logging.WARNING, "\x1b[33;1m"),
+        (logging.ERROR, "\x1b[31m"),
+        (logging.CRITICAL, "\x1b[41m"),
     ]
 
     FORMATS = {
         level: logging.Formatter(
-            f'\x1b[37;1m%(asctime)s\x1b[0m | {colour}%(levelname)-7s\x1b[0m | '
-            f'\x1b[35m%(name)-26s\x1b[0m | %(lineno)-4d | %(funcName)-30s | %(message)s',
-            '%H:%M:%S %d/%m',
+            f"\x1b[37;1m%(asctime)s\x1b[0m | {colour}%(levelname)-7s\x1b[0m | "
+            f"\x1b[35m%(name)-26s\x1b[0m | %(lineno)-4d | %(funcName)-30s | %(message)s",
+            "%H:%M:%S %d/%m",
         )
         for level, colour in LEVEL_COLOURS
     }
@@ -82,7 +97,7 @@ class MyColourFormatter(logging.Formatter):
         # Override the traceback to always print in red
         if record.exc_info:
             text = formatter.formatException(record.exc_info)
-            record.exc_text = f'\x1b[31m{text}\x1b[0m'
+            record.exc_text = f"\x1b[31m{text}\x1b[0m"
 
         output = formatter.format(record)
 
@@ -100,9 +115,9 @@ def get_log_fmt(handler: logging.Handler):
         formatter = MyColourFormatter()
     else:
         formatter = logging.Formatter(
-            '{asctime} | {levelname:<7} | {name:<23} | {lineno:<4} | {funcName:<30} | {message}',
-            '%H:%M:%S %d/%m',
-            style='{',
+            "{asctime} | {levelname:<7} | {name:<23} | {lineno:<4} | {funcName:<30} | {message}",
+            "%H:%M:%S %d/%m",
+            style="{",
         )
 
     return formatter

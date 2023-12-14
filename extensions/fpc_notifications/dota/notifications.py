@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class DotaNotifs(FPCCog):
+class Dota2FPCNotifications(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
         self.lobby_ids: set[int] = set()
@@ -39,6 +39,9 @@ class DotaNotifs(FPCCog):
     async def cog_load(self) -> None:
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def response(result):
+            # remember the quirk that
+            # result.specific_games = my friends games
+            # not result.specific_games = top100 mmr games
             if not result.specific_games:
                 # log.debug(
                 #     f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
@@ -211,4 +214,4 @@ class DotaNotifs(FPCCog):
 
 
 async def setup(bot):
-    await bot.add_cog(DotaNotifs(bot))
+    await bot.add_cog(Dota2FPCNotifications(bot))

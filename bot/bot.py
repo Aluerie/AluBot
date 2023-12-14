@@ -42,15 +42,15 @@ class AluBotHelper(TimerManager):
 class AluBot(commands.Bot, AluBotHelper):
     if TYPE_CHECKING:
         user: discord.ClientUser
-    #     bot_app_info: discord.AppInfo
-    #     launch_time: datetime.datetime
-    #     logging_handler: Any
-    #     prefixes: PrefixConfig
-    #     tree: AluAppCommandTree
-    #     cogs: Mapping[str, AluCog]
-    #     old_tree_error: Callable[
-    #         [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
-    #     ]
+        #     bot_app_info: discord.AppInfo
+        #     launch_time: datetime.datetime
+        logging_handler: Any
+        #     prefixes: PrefixConfig
+        #     tree: AluAppCommandTree
+        #     cogs: Mapping[str, AluCog]
+        old_tree_error: Callable[
+            [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
+        ]
 
     def __init__(self, test=False, *, session: ClientSession, pool: Pool, **kwargs):
         main_prefix = "~" if test else "$"
@@ -62,7 +62,6 @@ class AluBot(commands.Bot, AluBotHelper):
             intents=intents,
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=AluAppCommandTree,
-            case_insensitive=True,  # todo: this isn't applied to command groups; maybe make new base class?
         )
         self.pool: Pool = pool
         self.session: ClientSession = session

@@ -39,12 +39,14 @@ class OpenDotaAutoParser(AluCog):
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def autoparse_response(result):
             if result.specific_games:
+                # remember the quirk that 
+                # result.specific_games = my friends games
+                # not result.specific_games = top100 mmr games
                 m_ids = [m.match_id for m in result.game_list]
                 self.matches_to_parse = list(dict.fromkeys([m_id for m_id in self.active_matches if m_id not in m_ids]))
                 self.active_matches += list(dict.fromkeys([m_id for m_id in m_ids if m_id not in self.active_matches]))
                 log.debug(f"to parse {self.matches_to_parse} active {self.active_matches}")
                 self.bot.dota.emit("autoparse_top_games_response")
-                # TODO: maybe put here friend_id conditions as a next conditional
 
         query = "SELECT steam_id FROM autoparse"
         self.steam_ids = [r for r, in await self.bot.pool.fetch(query)]

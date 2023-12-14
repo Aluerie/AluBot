@@ -288,35 +288,15 @@ class PostMatchPlayerData(BasePostMatchPlayer):
             rectangle = Image.new("RGB", (width, information_height), str(colour))
             ImageDraw.Draw(rectangle)
             img.paste(rectangle, (0, information_y))
-
-            # kda text
-            font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
             draw = ImageDraw.Draw(img)
-            kda_text_w, kda_text_h = bot.transposer.get_text_wh(self.kda, font_kda)
-            draw.text((0, height - kda_text_h - information_height), self.kda, font=font_kda, align="right")
-
-            # outcome text
-            draw = ImageDraw.Draw(img)
-            outcome_text_w, outcome_text_h = bot.transposer.get_text_wh(self.outcome, font_kda)
-            colour_dict = {
-                "Win": str(const.MaterialPalette.green(shade=800)),
-                "Loss": str(const.MaterialPalette.red(shade=900)),
-                "Not Scored": (255, 255, 255),
-            }
-            draw.text(
-                xy=(0, height - kda_text_h - outcome_text_h),
-                text=self.outcome,
-                font=font_kda,
-                align="center",
-                fill=colour_dict[self.outcome],
-            )
 
             # items and aghanim shard/blessing
             font_item_timing = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
 
+            item_h = 50
             for count, (item_image, item_timing) in enumerate(item_list):
                 # item image
-                item_image = item_image.resize((69, 50))  # 69/50 - to match 88/64 which is natural size
+                item_image = item_image.resize((69, item_h))  # 69/50 - to match 88/64 which is natural size
                 left = width - (count + 1) * item_image.width
                 img.paste(item_image, (left, height - item_image.height))
 
@@ -333,7 +313,6 @@ class PostMatchPlayerData(BasePostMatchPlayer):
             # talents
             talent_font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 12)
             for count, talent_text in enumerate(talent_names):
-                draw = ImageDraw.Draw(img)
                 talent_text_w, talent_text_h = bot.transposer.get_text_wh(talent_text, talent_font)
                 draw.text(
                     xy=(width - talent_text_w, information_y - 30 * 2 - 22 * count),
@@ -341,6 +320,27 @@ class PostMatchPlayerData(BasePostMatchPlayer):
                     font=talent_font,
                     align="right",
                 )
+
+            # kda text
+            font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
+
+            kda_text_w, kda_text_h = bot.transposer.get_text_wh(self.kda, font_kda)
+            draw.text((0, height - kda_text_h - information_height - item_h), self.kda, font=font_kda, align="right")
+
+            # outcome text
+            outcome_text_w, outcome_text_h = bot.transposer.get_text_wh(self.outcome, font_kda)
+            colour_dict = {
+                "Win": str(const.MaterialPalette.green(shade=800)),
+                "Loss": str(const.MaterialPalette.red(shade=900)),
+                "Not Scored": (255, 255, 255),
+            }
+            draw.text(
+                xy=(0, height - kda_text_h - outcome_text_h - information_height - item_h),
+                text=self.outcome,
+                font=font_kda,
+                align="center",
+                fill=colour_dict[self.outcome],
+            )
 
             # img.show()
             return img

@@ -141,6 +141,7 @@ class ActiveMatch(Match):
         hero_images = [await bot.transposer.url_to_image(await dota.hero.img_by_id(id)) for id in self.hero_ids]
 
         def build_notification_image() -> Image.Image:
+            log.debug("Building Notification Image")
             width, height = img.size
             rectangle = Image.new("RGB", (width, 70), str(colour))
             ImageDraw.Draw(rectangle)
@@ -165,9 +166,7 @@ class ActiveMatch(Match):
             draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
             w2, h2 = bot.transposer.get_text_wh(text, font)
-            draw.text(
-                xy=(0, 35 + h2 + 10), text=self.twitch_status, font=font, align="center", fill=str(colour)
-            )
+            draw.text(xy=(0, 35 + h2 + 10), text=self.twitch_status, font=font, align="center", fill=str(colour))
             return img
 
         return await asyncio.to_thread(build_notification_image)

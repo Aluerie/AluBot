@@ -121,7 +121,6 @@ class DotaNotifs(FPCCog):
                         f"?key={config.STEAM_WEB_API_KEY}"
                         f"&server_steam_id={match.server_steam_id}"
                     )
-                    log.debug(url)
                     async with self.bot.session.get(url) as r:
                         r_json = await r.json()
                         if r.status == 200:

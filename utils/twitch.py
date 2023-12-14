@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, TypedDict
 
 import twitchio
 from discord.ext.commands import BadArgument
@@ -13,6 +13,17 @@ from utils.formats import human_timedelta
 
 if TYPE_CHECKING:
     from bot import AluBot
+
+    class StreamData(TypedDict):
+        display_name: str
+        name: str
+        url: str
+        logo_url: str
+        online: bool
+        game: str
+        title: str
+        preview_url: str
+
 
 log = logging.getLogger(__name__)
 
@@ -96,51 +107,43 @@ class TwitchStream:
     we fill it ourselves.
     """
 
-    __slots__ = (
-        "twitch_id",
-        "display_name",
-        "name",
-        "game",
-        "url",
-        "logo_url",
-        "online",
-        "title",
-        "preview_url",
-    )
-
-    if TYPE_CHECKING:
-        display_name: str
-        name: str
-        game: str
-        url: str
-        logo_url: str
-        online: bool
-        title: str
-        preview_url: str
-
     def __init__(self, twitch_id: int, user: twitchio.User, stream: Optional[twitchio.Stream]):
         self.twitch_id = twitch_id
-        self._update(user, stream)
+        data = self._get_stream_data(user, stream)
+        self.display_name: str = data["display_name"]
+        self.name: str = data["name"]
+        self.url: str = data["url"]
+        self.logo_url: str = data["logo_url"]
+        self.online: bool = data["online"]
+        self.game: str = data["game"]
+        self.title: str = data["title"]
+        self.preview_url: str = data["preview_url"]
 
     def __repr__(self):
         return f"<Stream id={self.twitch_id} name={self.name} online={self.online} title={self.title}>"
 
-    def _update(self, user: twitchio.User, stream: Optional[twitchio.Stream]):
-        self.display_name = user.display_name
-        self.name = user.name
-        self.url = f"https://www.twitch.tv/{self.display_name}"
-        self.logo_url = user.profile_image
-
+    def _get_stream_data(self, user: twitchio.User, stream: Optional[twitchio.Stream]) -> StreamData:
         if stream:
-            self.online = True
-            self.game = stream.game_name
-            self.title = stream.title
-            self.preview_url = stream.thumbnail_url.replace("{width}", "640").replace("{height}", "360")
+            online = True
+            game = stream.game_name
+            title = stream.title
+            preview_url = stream.thumbnail_url.replace("{width}", "640").replace("{height}", "360")
         else:
-            self.online = False
-            self.game = "Offline"
-            self.title = "Offline"
+            online = False
+            game = "Offline"
+            title = "Offline"
             if n := user.offline_image:
-                self.preview_url = f'{"-".join(n.split("-")[:-1])}-640x360.{n.split(".")[-1]}'
+                preview_url = f'{"-".join(n.split("-")[:-1])}-640x360.{n.split(".")[-1]}'
             else:
-                self.preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{self.name}-640x360.jpg"
+                preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{self.name}-640x360.jpg"
+
+        return {
+            "display_name": user.display_name,
+            "name": user.name,
+            "url": f"https://www.twitch.tv/{user.display_name}",
+            "logo_url": user.profile_image,
+            "online": online,
+            "game": game,
+            "title": title,
+            "preview_url": preview_url,
+        }

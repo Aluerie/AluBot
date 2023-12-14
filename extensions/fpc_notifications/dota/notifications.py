@@ -115,7 +115,8 @@ class Dota2FPCNotifications(FPCCog):
                 channel_ids = [
                     i for i, in await self.bot.pool.fetch(query, person.hero_id, user.lower_name, match.match_id)
                 ]
-                log.debug("%s - %s", user.display_name, await hero.name_by_id(person.hero_id))
+                hero_name = await hero.name_by_id(person.hero_id)
+                log.debug("%s - %s", user.display_name, hero_name)
                 # print(match)
                 if channel_ids:
                     log.debug("%s", channel_ids)
@@ -148,6 +149,7 @@ class Dota2FPCNotifications(FPCCog):
                             hero_ids=hero_ids,
                             server_steam_id=match.server_steam_id,
                             channel_ids=channel_ids,
+                            hero_name=hero_name,
                         )
                     )
 

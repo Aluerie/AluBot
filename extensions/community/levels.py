@@ -20,8 +20,12 @@ LAST_SEEN_TIMEOUT = 60
 
 # fmt: off
 exp_lvl_table = [
-    5, 230, 600, 1080, 1660, 2260, 2980, 3730, 4620, 5550, 6520, 7530, 8580, 9805, 11055, 12330, 13630, 
-    14955, 16455, 18045, 19645, 21495, 23595, 25945, 28545, 32045, 36545, 42045, 48545, 56045,
+    5, 230, 600, 1080, 1660,  # 1-5
+    2260, 2980, 3730, 4620, 5550,  # 6-10
+    6520, 7530, 8580, 9805, 11055,  # 11-15
+    12330, 13630, 14955, 16455, 18045,  # 16-20
+    19645, 21495, 23595, 25945, 28545,  # 21-25
+    32045, 36545, 42045, 48545, 56045,  # 26-30
 ]
 # fmt: on
 
@@ -255,7 +259,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         for row in rows:
             guild = self.community.guild
             person = guild.get_member(row.id)
-            if person is None and discord.utils.utcnow() - row.lastseen > datetime.timedelta(days=90):
+            if person is None and discord.utils.utcnow() - row.lastseen > datetime.timedelta(days=100):
                 query = "DELETE FROM users WHERE id=$1"
                 await self.bot.pool.execute(query, row.id)
                 e = discord.Embed(description=f"id = {row.id}", colour=0xE6D690)

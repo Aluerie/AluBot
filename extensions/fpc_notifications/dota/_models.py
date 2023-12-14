@@ -81,6 +81,7 @@ class ActiveMatch(Match):
         server_steam_id: int,
         twitch_id: Optional[int] = None,
         channel_ids: list[int],
+        hero_name: str,
     ):
         super().__init__(match_id)
         self.start_time: int = start_time
@@ -90,12 +91,14 @@ class ActiveMatch(Match):
         self.server_steam_id: int = server_steam_id
         self.twitch_id: Optional[int] = twitch_id
         self.channel_ids: list[int] = channel_ids
+        self.hero_name: str = hero_name
 
     @property
     def long_ago(self) -> int:
         return int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - self.start_time
 
     async def get_twitch_data(self, twitch: TwitchClient) -> TwitchData:
+        log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
             return {
                 "preview_url": "https://i.imgur.com/kl0jDOu.png",  # lavender 640x360
@@ -127,19 +130,14 @@ class ActiveMatch(Match):
                 "colour": colour,
             }
 
-    async def get_notification_image(
-        self,
-        twitch_data: TwitchData,
-        hero_name: str,
-        colour: discord.Colour,
-        bot: AluBot,
-    ) -> Image.Image:
+    async def get_notification_image(self, twitch_data: TwitchData, colour: discord.Colour, bot: AluBot) -> Image.Image:
+        log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         img = await bot.transposer.url_to_image(twitch_data["preview_url"])
         hero_images = [await bot.transposer.url_to_image(await dota.hero.img_by_id(id)) for id in self.hero_ids]
 
         def build_notification_image() -> Image.Image:
-            log.debug("Building Notification Image")
+            log.debug("`build_notification_image` is starting")
             width, height = img.size
             rectangle = Image.new("RGB", (width, 70), str(colour))
             ImageDraw.Draw(rectangle)
@@ -159,7 +157,7 @@ class ActiveMatch(Match):
             # middle text "Player - Hero"
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
             draw = ImageDraw.Draw(img)
-            text = f"{twitch_data['display_name']} - {hero_name}"
+            text = f"{twitch_data['display_name']} - {self.hero_name}"
             w2, h2 = bot.transposer.get_text_wh(text, font)
             draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
@@ -174,13 +172,12 @@ class ActiveMatch(Match):
     async def get_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
         log.debug("Creating embed + file for Notification match")
 
-        hero_name = await dota.hero.name_by_id(self.hero_id)
         twitch_data = await self.get_twitch_data(bot.twitch)
 
-        notification_image = await self.get_notification_image(twitch_data, hero_name, twitch_data["colour"], bot)
+        notification_image = await self.get_notification_image(twitch_data, twitch_data["colour"], bot)
         filename = (
             f'{twitch_data["twitch_status"]}-{twitch_data["display_name"].replace("_", "")}-'
-            f'{(hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
+            f'{(self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
         )
         image_file = bot.transposer.image_to_file(notification_image, filename=filename)
 
@@ -192,7 +189,7 @@ class ActiveMatch(Match):
         embed.set_image(url=f"attachment://{image_file.filename}")
         embed.set_thumbnail(url=await dota.hero.img_by_id(self.hero_id))
         embed.set_author(
-            name=f"{twitch_data['display_name']} - {hero_name}",
+            name=f"{twitch_data['display_name']} - {self.hero_name}",
             url=twitch_data["url"],
             icon_url=twitch_data["logo_url"],
         )
@@ -261,9 +258,7 @@ class PostMatchPlayerData(BasePostMatchPlayer):
         item_list = item_list[::-1]
 
         if self.aghanim_blessing:
-            image = await bot.transposer.url_to_image(
-                dota.ability.lazy_aghs_bless_url
-            )  # todo: can we not hard code it ?
+            image = await bot.transposer.url_to_image(dota.ability.lazy_aghs_bless_url)  # todo: can not hard code it?
             timing = await get_item_timing(271)
             item_list.append((image, timing))
 
@@ -272,7 +267,8 @@ class PostMatchPlayerData(BasePostMatchPlayer):
             timing = await get_item_timing(609)
             item_list.append((image, timing))
 
-        ability_icon_urls = [await dota.ability.icon_by_id(id) for id in self.ability_upgrades_arr]
+        # we only want first 18 image upgrades
+        ability_icon_urls = [await dota.ability.icon_by_id(id) for id in self.ability_upgrades_arr[:18]]
         ability_icon_images = [await bot.transposer.url_to_image(url) for url in ability_icon_urls]
 
         talent_names = []
@@ -293,10 +289,9 @@ class PostMatchPlayerData(BasePostMatchPlayer):
             # items and aghanim shard/blessing
             font_item_timing = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
 
-            item_h = 50
             for count, (item_image, item_timing) in enumerate(item_list):
                 # item image
-                item_image = item_image.resize((69, item_h))  # 69/50 - to match 88/64 which is natural size
+                item_image = item_image.resize((69, information_height))  # 69/50 - to match 88/64 which is natural size
                 left = width - (count + 1) * item_image.width
                 img.paste(item_image, (left, height - item_image.height))
 
@@ -325,7 +320,7 @@ class PostMatchPlayerData(BasePostMatchPlayer):
             font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
 
             kda_text_w, kda_text_h = bot.transposer.get_text_wh(self.kda, font_kda)
-            draw.text((0, height - kda_text_h - information_height - item_h), self.kda, font=font_kda, align="right")
+            draw.text((0, height - kda_text_h - information_height - ability_h), self.kda, font=font_kda, align="right")
 
             # outcome text
             outcome_text_w, outcome_text_h = bot.transposer.get_text_wh(self.outcome, font_kda)
@@ -335,7 +330,7 @@ class PostMatchPlayerData(BasePostMatchPlayer):
                 "Not Scored": (255, 255, 255),
             }
             draw.text(
-                xy=(0, height - kda_text_h - outcome_text_h - information_height - item_h),
+                xy=(0, height - kda_text_h - outcome_text_h - information_height - ability_h),
                 text=self.outcome,
                 font=font_kda,
                 align="center",

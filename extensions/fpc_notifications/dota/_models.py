@@ -32,13 +32,9 @@ class TwitchData(TypedDict):
     url: str
     logo_url: str
     vod_url: str
+    twitch_status: LiteralTwitchStatus
+    colour: discord.Colour
 
-
-TWITCH_STATUS_TO_COLOUR: dict[LiteralTwitchStatus, discord.Colour] = {
-    "NoTwitch": const.MaterialPalette.gray(),
-    "Live": const.Colour.prpl(),
-    "Offline": const.Colour.twitch(),
-}
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -74,9 +70,6 @@ class Match:
 
 
 class ActiveMatch(Match):
-    if TYPE_CHECKING:
-        twitch_status: LiteralTwitchStatus
-
     def __init__(
         self,
         *,
@@ -104,22 +97,25 @@ class ActiveMatch(Match):
 
     async def get_twitch_data(self, twitch: TwitchClient) -> TwitchData:
         if self.twitch_id is None:
-            self.twitch_status = "NoTwitch"
             return {
                 "preview_url": "https://i.imgur.com/kl0jDOu.png",  # lavender 640x360
                 "display_name": self.player_name,
                 "url": "",
                 "logo_url": const.Logo.dota,
                 "vod_url": "",
+                "twitch_status": "NoTwitch",
+                "colour": const.MaterialPalette.gray(),
             }
         else:
             stream = await twitch.get_twitch_stream(self.twitch_id)
             if stream.online:
-                self.twitch_status = "Live"
+                twitch_status = "Live"
                 vod_url = await twitch.last_vod_link(self.twitch_id, seconds_ago=self.long_ago)
+                colour = const.Colour.prpl()
             else:
-                self.twitch_status = "Offline"
+                twitch_status = "Offline"
                 vod_url = ""
+                colour = const.Colour.twitch()
 
             return {
                 "preview_url": stream.preview_url,
@@ -127,6 +123,8 @@ class ActiveMatch(Match):
                 "url": stream.url,
                 "logo_url": stream.logo_url,
                 "vod_url": vod_url,
+                "twitch_status": twitch_status,
+                "colour": colour,
             }
 
     async def get_notification_image(
@@ -166,7 +164,9 @@ class ActiveMatch(Match):
             draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
             w2, h2 = bot.transposer.get_text_wh(text, font)
-            draw.text(xy=(0, 35 + h2 + 10), text=self.twitch_status, font=font, align="center", fill=str(colour))
+            draw.text(
+                xy=(0, 35 + h2 + 10), text=twitch_data["twitch_status"], font=font, align="center", fill=str(colour)
+            )
             return img
 
         return await asyncio.to_thread(build_notification_image)
@@ -176,16 +176,15 @@ class ActiveMatch(Match):
 
         hero_name = await dota.hero.name_by_id(self.hero_id)
         twitch_data = await self.get_twitch_data(bot.twitch)
-        colour = TWITCH_STATUS_TO_COLOUR[self.twitch_status]
 
-        notification_image = await self.get_notification_image(twitch_data, hero_name, colour, bot)
+        notification_image = await self.get_notification_image(twitch_data, hero_name, twitch_data["colour"], bot)
         filename = (
-            f'{self.twitch_status}-{twitch_data["display_name"].replace("_", "")}-'
+            f'{twitch_data["twitch_status"]}-{twitch_data["display_name"].replace("_", "")}-'
             f'{(hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
         )
         image_file = bot.transposer.image_to_file(notification_image, filename=filename)
 
-        embed = discord.Embed(colour=colour, url=twitch_data["url"])
+        embed = discord.Embed(colour=twitch_data["colour"], url=twitch_data["url"])
         embed.description = (
             f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, strip=True)}\n"
             f"{twitch_data['vod_url']}{self.links}"
@@ -212,12 +211,10 @@ class PostMatchPlayerData(BasePostMatchPlayer):
         player_data: dict,
         channel_id: int,
         message_id: int,
-        twitch_status: LiteralTwitchStatus,
         api_calls_done: int,
     ):
         super().__init__(channel_id=channel_id, message_id=message_id)
 
-        self.twitch_status: LiteralTwitchStatus = twitch_status
         self.api_calls_done: int = api_calls_done
 
         self.match_id: int = player_data["match_id"]
@@ -241,9 +238,8 @@ class PostMatchPlayerData(BasePostMatchPlayer):
         return f"<{self.__class__.__name__} {pairs}>"
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, bot: AluBot) -> Image.Image:
+    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour, bot: AluBot) -> Image.Image:
         img = await bot.transposer.url_to_image(embed_image_url)
-        colour = TWITCH_STATUS_TO_COLOUR[self.twitch_status]
 
         # items and aghanim shard/blessing
         async def get_item_timing(item_id: int) -> str:
@@ -294,10 +290,10 @@ class PostMatchPlayerData(BasePostMatchPlayer):
             img.paste(rectangle, (0, information_y))
 
             # kda text
-            font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 26)
+            font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
             draw = ImageDraw.Draw(img)
             kda_text_w, kda_text_h = bot.transposer.get_text_wh(self.kda, font_kda)
-            draw.text((0, height - kda_text_h), self.kda, font=font_kda, align="right")
+            draw.text((0, height - kda_text_h - information_height), self.kda, font=font_kda, align="right")
 
             # outcome text
             draw = ImageDraw.Draw(img)

@@ -51,7 +51,6 @@ CREATE TABLE IF NOT EXISTS lol_matches (
     match_id BIGINT PRIMARY KEY,
     platform TEXT NOT NULL,
     region TEXT NOT NULL,
-    is_finished BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS lol_messages (

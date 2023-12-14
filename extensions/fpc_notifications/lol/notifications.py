@@ -29,7 +29,6 @@ if TYPE_CHECKING:
         match_id: int
         platform: str
         region: str
-        is_finished: bool
 
 
 log = logging.getLogger(__name__)

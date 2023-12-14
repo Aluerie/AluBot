@@ -47,7 +47,6 @@ CREATE TABLE IF NOT EXISTS dota_accounts (
 
 CREATE TABLE IF NOT EXISTS dota_matches (
     match_id BIGINT PRIMARY KEY,
-    is_finished BOOLEAN DEFAULT FALSE,
     opendota_jobid BIGINT
 );
 
@@ -56,7 +55,6 @@ CREATE TABLE IF NOT EXISTS dota_messages (
     channel_id BIGINT NOT NULL,
     match_id BIGINT NOT NULL,
     character_id INTEGER NOT NULL,
-    twitch_status TEXT NOT NULL,
 
     CONSTRAINT fk_match
         FOREIGN KEY (match_id)

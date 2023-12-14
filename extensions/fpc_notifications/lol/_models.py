@@ -189,7 +189,7 @@ class PostMatchPlayer(BasePostMatchPlayer):
         self.item_ids: list[int] = item_ids
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, bot: AluBot):
+    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour, bot: AluBot) -> Image.Image:
         img = await bot.transposer.url_to_image(embed_image_url)
         item_icon_urls = [await lol.item.icon_by_id(item_id) for item_id in self.item_ids if item_id]
         item_icon_images = [await bot.transposer.url_to_image(url) for url in item_icon_urls]

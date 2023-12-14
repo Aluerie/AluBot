@@ -56,7 +56,6 @@ class DotaPostMatchEdit(FPCCog):
                                 player_data=player,
                                 channel_id=message_row.channel_id,
                                 message_id=message_row.message_id,
-                                twitch_status=message_row.twitch_status,
                                 api_calls_done=cache_item.api_calls_done,
                             )
                             await post_match_player.edit_notification_embed(self.bot)

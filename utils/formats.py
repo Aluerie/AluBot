@@ -223,8 +223,6 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle):
     +-------------+----------------------------+-----------------+
     | R           | 5 years ago                | Relative Time   |
     +-------------+----------------------------+-----------------+"""
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
     return ' '.join([format_dt(dt, letter) for letter in style_letters])
 
 

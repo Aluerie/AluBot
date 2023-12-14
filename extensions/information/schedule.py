@@ -27,16 +27,16 @@ class Match(NamedTuple):
     dt: datetime.datetime
 
     def __repr__(self) -> str:
-        return f'<{self.league}, {self.teams}>'
+        return f"<{self.league}, {self.teams}>"
 
 
 fav_teams = []
 
-MATCHES_URL = 'https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches'
+MATCHES_URL = "https://liquipedia.net/dota2/Liquipedia:Upcoming_and_ongoing_matches"
 LIQUIPEDIA_ICON = (
-    'https://liquipedia.net/commons/extensions/TeamLiquidIntegration/resources/pagelogo/liquipedia_icon_menu.png'
+    "https://liquipedia.net/commons/extensions/TeamLiquidIntegration/resources/pagelogo/liquipedia_icon_menu.png"
 )
-LIQUIPEDIA_BASE_URL = 'https://liquipedia.net'
+LIQUIPEDIA_BASE_URL = "https://liquipedia.net"
 
 
 def scrape_schedule_data(
@@ -70,22 +70,28 @@ def scrape_schedule_data(
         divs = soup.findAll("div", {"data-toggle-area-content": str(toggle)})
         rows = divs[-1].findAll("tbody")
         for row in rows:
-            twitch_handle = row.find(class_="timer-object").get('data-stream-twitch')
-            twitch_url = f'https://liquipedia.net/dota2/Special:Stream/twitch/{twitch_handle}'
+            timer = row.find(class_="timer-object")
+            twitch_handle = timer.get("data-stream-twitch")
+            twitch_url = f"https://liquipedia.net/dota2/Special:Stream/twitch/{twitch_handle}"
 
-            team1 = row.select_one('.team-left').text.strip().replace('`', '.')
-            team2 = row.select_one('.team-right').text.strip().replace('`', '.')
+            timestamp = timer.get("data-timestamp")
+            # data_tz = timer.find("abbr").get("data-tz")
+            # hours, minutes = data_tz.split(":")
 
-            time_utc = row.select_one('.match-countdown').text.strip()
-            dt = datetime.datetime.strptime(time_utc, '%B %d, %Y - %H:%M UTC').replace(tzinfo=datetime.timezone.utc)
+            # timestamp is given in local machine time
+            dt = datetime.datetime.fromtimestamp(int(timestamp)).astimezone(datetime.timezone.utc)
+
+            team1 = row.select_one(".team-left").text.strip().replace("`", ".")
+            team2 = row.select_one(".team-right").text.strip().replace("`", ".")
 
             if schedule_mode.only_next24:
                 timedelta_obj = dt - dt_now
                 if timedelta_obj.days > days_to_skip:
                     continue
 
-            league: str = row.select_one('.match-filler').text.strip().replace(time_utc, '')
-            league_url = row.find(class_="league-icon-small-image").find('a').get('href')
+            league = row.find(class_="league-icon-small-image").find("a")
+            league_title = league.get("title")
+            league_url = league.get("href")
 
             if part == 1 and query is not None:
                 do_we_post = 0
@@ -105,9 +111,9 @@ def scrape_schedule_data(
 
             matches.append(
                 Match(
-                    league=league.lstrip(),
+                    league=league_title,
                     league_url=league_url,
-                    teams=f'{team1} - {team2}',
+                    teams=f"{team1} - {team2}",
                     twitch_url=twitch_url,
                     dt=dt,
                 )
@@ -129,31 +135,31 @@ select_options = [
         emoji=const.Emote.PepoRules,
         label="Next GameDay: Featured + Favourite",
         description="Featured games + some fav teams closest game day",
-        value='1',
+        value="1",
     ),
     discord.SelectOption(
         emoji=const.Emote.peepoHappyDank,
         label="Next 24h: Featured",
         description="Featured games next 24 hours",
-        value='2',
+        value="2",
     ),
     discord.SelectOption(
         emoji=const.Emote.bubuAYAYA,
         label="Featured",
         description="Featured games by Liquidpedia",
-        value='3',
+        value="3",
     ),
     discord.SelectOption(
         emoji=const.Emote.PepoG,
         label="Full Schedule",
         description="All pro games!",
-        value='4',
+        value="4",
     ),
     discord.SelectOption(
         emoji=const.Emote.PepoDetective,
         label="Completed",
         description="Already finished games",
-        value='5',
+        value="5",
     ),
 ]
 
@@ -196,7 +202,7 @@ class ScheduleModeEnum(Enum):
 
 class ScheduleSelect(discord.ui.Select):
     def __init__(self, author: discord.User | discord.Member, soup: BeautifulSoup, query: Optional[str] = None):
-        super().__init__(options=select_options, placeholder='\N{SPIRAL CALENDAR PAD}Select schedule category')
+        super().__init__(options=select_options, placeholder="\N{SPIRAL CALENDAR PAD}Select schedule category")
         self.query: Optional[str] = query
         self.soup: BeautifulSoup = soup
         self.author: discord.User | discord.Member = author
@@ -232,17 +238,17 @@ class SchedulePageSource(menus.ListPageSource):
         self.query: Optional[str] = query
 
     async def format_page(self, menu: SchedulePages, matches: list[Match]):
-        e = discord.Embed(title='Dota 2 Pro Matches Schedule', url=MATCHES_URL, colour=0x042B4C)
-        e.set_author(name='Info from Liquipedia.net', icon_url=LIQUIPEDIA_ICON, url=MATCHES_URL)
+        e = discord.Embed(title="Dota 2 Pro Matches Schedule", url=MATCHES_URL, colour=0x042B4C)
+        e.set_author(name="Info from Liquipedia.net", icon_url=LIQUIPEDIA_ICON, url=MATCHES_URL)
         e.set_footer(text=self.schedule_enum.label_name, icon_url=const.Logo.dota)
 
         dt_now = datetime.datetime.now(datetime.timezone.utc)
 
         # find the longest team versus string like "Secret - PSG.LGD"
 
-        desc = f'Applied filter: `{self.query}`\n' if self.query is not None else ''
+        desc = f"Applied filter: `{self.query}`\n" if self.query is not None else ""
         if not matches:
-            desc += 'No matches were found for the category/query.'
+            desc += "No matches were found for the category/query."
             e.description = desc
             return e
 
@@ -263,7 +269,7 @@ class SchedulePageSource(menus.ListPageSource):
                 previous_match_dt = None
 
             if previous_match_dt and match.dt - previous_match_dt > datetime.timedelta(hours=6):
-                desc += '\n'
+                desc += "\n"
             previous_match_dt = match.dt
 
             desc += (
@@ -290,7 +296,7 @@ class SchedulePages(pages.Paginator):
         self.add_item(ScheduleSelect(ctx.user, soup, query))
 
 
-class Schedule(InfoCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
+class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
     """Check Pro Matches schedule.
 
     Currently, the bot supports Dota 2 and football.
@@ -305,12 +311,12 @@ class Schedule(InfoCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
             return soup
         else:
             async with self.bot.session.get(MATCHES_URL) as r:
-                soup = BeautifulSoup(await r.read(), 'html.parser')
+                soup = BeautifulSoup(await r.read(), "html.parser")
                 self.soup_cache[key] = soup
                 return soup
 
-    @commands.hybrid_command(aliases=['sch'])
-    @app_commands.rename(schedule_mode='filter')
+    @commands.hybrid_command(aliases=["sch"])
+    @app_commands.rename(schedule_mode="filter")
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in select_options])
     async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: Optional[str] = None):
         """Dota 2 Pro Matches Schedule
@@ -325,7 +331,7 @@ class Schedule(InfoCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
             Search filter, i.e. "EG" (or any other team/tourney names)
         """
         await ctx.typing()
-        soup = await self.get_soup('dota2')
+        soup = await self.get_soup("dota2")
         schedule_enum = ScheduleModeEnum(value=schedule_mode)
         p = SchedulePages(ctx, soup, schedule_enum, query)
         await p.start()
@@ -335,38 +341,38 @@ class Schedule(InfoCog, name='Schedules', emote=const.Emote.DankMadgeThreat):
         """Get football fixtures"""
         url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
         async with self.bot.session.get(url) as r:
-            soup = BeautifulSoup(await r.read(), 'html.parser')
-            fixtures = soup.find('of-match-cards-list')
+            soup = BeautifulSoup(await r.read(), "html.parser")
+            fixtures = soup.find("of-match-cards-list")
             if fixtures:
                 # game_week = fixtures.find('h3', attrs={'class': 'section-header__subtitle'})
                 # print(game_week.text)
                 # i dont actually know if the following type: ignore is safe
-                matches = fixtures.findAll('li', attrs={'class': 'simple-match-cards-list__match-card'})  # type: ignore
+                matches = fixtures.findAll("li", attrs={"class": "simple-match-cards-list__match-card"})  # type: ignore
                 match_strings = []
                 for match in matches:
                     team_content = match.findAll(
-                        'of-simple-match-card-team', attrs={'class': 'simple-match-card__team-content'}
+                        "of-simple-match-card-team", attrs={"class": "simple-match-card__team-content"}
                     )
-                    team1 = team_content[0].find('span', attrs={'class': 'simple-match-card-team__name'}).text
-                    team2 = team_content[1].find('span', attrs={'class': 'simple-match-card-team__name'}).text
-                    pre_match_data = match.find('span', attrs={'class': 'simple-match-card__pre-match'})
+                    team1 = team_content[0].find("span", attrs={"class": "simple-match-card-team__name"}).text
+                    team2 = team_content[1].find("span", attrs={"class": "simple-match-card-team__name"}).text
+                    pre_match_data = match.find("span", attrs={"class": "simple-match-card__pre-match"})
                     if pre_match_data is not None:
-                        match_time = match.find('span', attrs={'class': 'simple-match-card__pre-match'}).find('time')[
-                            'datetime'
+                        match_time = match.find("span", attrs={"class": "simple-match-card__pre-match"}).find("time")[
+                            "datetime"
                         ]
-                        dt = datetime.datetime.strptime(match_time, '%Y-%m-%dT%H:%M:%SZ').replace(
+                        dt = datetime.datetime.strptime(match_time, "%Y-%m-%dT%H:%M:%SZ").replace(
                             tzinfo=datetime.timezone.utc
                         )
-                        teams = f'{team1} - {team2}'.ljust(40, " ")
-                        match_strings.append(f'`{teams}` {format_dt_tdR(dt)}')
+                        teams = f"{team1} - {team2}".ljust(40, " ")
+                        match_strings.append(f"`{teams}` {format_dt_tdR(dt)}")
 
-                e = discord.Embed(colour=0xE0FA51, title='Premier League Fixtures', url=url)
-                e.description = '\n'.join(match_strings)
-                e.set_author(name='Info from onefootball.com', url=url, icon_url='https://i.imgur.com/pm2JgEW.jpg')
+                e = discord.Embed(colour=0xE0FA51, title="Premier League Fixtures", url=url)
+                e.description = "\n".join(match_strings)
+                e.set_author(name="Info from onefootball.com", url=url, icon_url="https://i.imgur.com/pm2JgEW.jpg")
                 await ctx.reply(embed=e)
             else:
                 e = discord.Embed(colour=const.Colour.error())
-                e.description = 'No matches found'
+                e.description = "No matches found"
                 await ctx.reply(embed=e, ephemeral=True)
 
 

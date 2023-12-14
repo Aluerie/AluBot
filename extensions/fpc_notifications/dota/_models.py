@@ -241,8 +241,8 @@ class PostMatchPlayerData(BasePostMatchPlayer):
         return f"<{self.__class__.__name__} {pairs}>"
 
     @override
-    async def edit_notification_image(self, attachment: discord.Attachment, bot: AluBot) -> Image.Image:
-        img = await bot.transposer.attachment_to_image(attachment)
+    async def edit_notification_image(self, embed_image_url: str, bot: AluBot) -> Image.Image:
+        img = await bot.transposer.url_to_image(embed_image_url)
         colour = TWITCH_STATUS_TO_COLOUR[self.twitch_status]
 
         # items and aghanim shard/blessing

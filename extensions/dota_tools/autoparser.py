@@ -4,12 +4,11 @@ import logging
 from typing import TYPE_CHECKING
 
 import vdf
-from discord.ext import tasks
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
 from extensions.fpc_notifications.dota._opendota import OpendotaRequestMatch
-from utils import AluCog
+from utils import AluCog, aluloop
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -80,7 +79,7 @@ class OpenDotaAutoParser(AluCog):
         else:
             self.matches_to_parse = self.active_matches
 
-    @tasks.loop(seconds=59)
+    @aluloop(seconds=59)
     async def autoparse_task(self):
         await self.get_active_matches()
         for match_id in self.matches_to_parse:
@@ -94,10 +93,6 @@ class OpenDotaAutoParser(AluCog):
             if cache_item.dict_ready:
                 self.opendota_req_cache.pop(match_id)
                 self.active_matches.remove(match_id)
-
-    @autoparse_task.before_loop
-    async def before(self):
-        await self.bot.wait_until_ready()
 
 
 async def setup(bot: AluBot):

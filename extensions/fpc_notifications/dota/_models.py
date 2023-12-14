@@ -31,7 +31,6 @@ class TwitchData(TypedDict):
     display_name: str
     url: str
     logo_url: str
-    twitch_status: LiteralTwitchStatus
     vod_url: str
 
 
@@ -75,6 +74,9 @@ class Match:
 
 
 class ActiveMatch(Match):
+    if TYPE_CHECKING:
+        twitch_status: LiteralTwitchStatus
+
     def __init__(
         self,
         *,
@@ -102,21 +104,21 @@ class ActiveMatch(Match):
 
     async def get_twitch_data(self, twitch: TwitchClient) -> TwitchData:
         if self.twitch_id is None:
+            self.twitch_status = "NoTwitch"
             return {
                 "preview_url": "https://i.imgur.com/kl0jDOu.png",  # lavender 640x360
                 "display_name": self.player_name,
                 "url": "",
                 "logo_url": const.Logo.dota,
-                "twitch_status": "NoTwitch",
                 "vod_url": "",
             }
         else:
             stream = await twitch.get_twitch_stream(self.twitch_id)
             if stream.online:
-                twitch_status = "Live"
+                self.twitch_status = "Live"
                 vod_url = await twitch.last_vod_link(self.twitch_id, seconds_ago=self.long_ago)
             else:
-                twitch_status = "Offline"
+                self.twitch_status = "Offline"
                 vod_url = ""
 
             return {
@@ -124,7 +126,6 @@ class ActiveMatch(Match):
                 "display_name": stream.display_name,
                 "url": stream.url,
                 "logo_url": stream.logo_url,
-                "twitch_status": twitch_status,
                 "vod_url": vod_url,
             }
 
@@ -165,7 +166,7 @@ class ActiveMatch(Match):
 
             w2, h2 = bot.transposer.get_text_wh(text, font)
             draw.text(
-                xy=(0, 35 + h2 + 10), text=twitch_data["twitch_status"], font=font, align="center", fill=str(colour)
+                xy=(0, 35 + h2 + 10), text=self.twitch_status, font=font, align="center", fill=str(colour)
             )
             return img
 
@@ -176,11 +177,11 @@ class ActiveMatch(Match):
 
         hero_name = await dota.hero.name_by_id(self.hero_id)
         twitch_data = await self.get_twitch_data(bot.twitch)
-        colour = TWITCH_STATUS_TO_COLOUR[twitch_data["twitch_status"]]
+        colour = TWITCH_STATUS_TO_COLOUR[self.twitch_status]
 
         notification_image = await self.get_notification_image(twitch_data, hero_name, colour, bot)
         filename = (
-            f'{twitch_data["twitch_status"]}-{twitch_data["display_name"].replace("_", "")}-'
+            f'{self.twitch_status}-{twitch_data["display_name"].replace("_", "")}-'
             f'{(hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
         )
         image_file = bot.transposer.image_to_file(notification_image, filename=filename)

@@ -120,7 +120,7 @@ class LoLFPCNotifications(FPCCog):
 
                 self.live_match_ids.append(game["gameId"])
 
-                player = next((x for x in game["participants"] if x["summonerId"] == r.summoner_id), None)
+                player = next((x for x in game["participants"] if x["summonerId"] == r.id), None)
 
                 if player and player["championId"] in favourite_champion_ids and r.last_edited != game["gameId"]:
                     query = """ SELECT ls.channel_id 

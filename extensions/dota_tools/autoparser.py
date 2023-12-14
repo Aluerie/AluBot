@@ -68,9 +68,7 @@ class OpenDotaAutoParser(AluCog):
             return
         for item in resp.rich_presence:
             if rp_bytes := item.rich_presence_kv:
-                # steamid = item.steamid_user
                 rp = vdf.binary_loads(rp_bytes)["RP"]
-                # print(rp)
                 if lobby_id := int(rp.get("WatchableGameID", 0)):
                     self.lobby_ids.add(lobby_id)
 

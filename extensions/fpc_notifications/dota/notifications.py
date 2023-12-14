@@ -2,14 +2,11 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import asyncpg
 import discord
-import vdf
 from discord.ext import commands
-from steam.core.msg import MsgProto
-from steam.enums import emsg
 
 import config
 from utils import aluloop
@@ -79,49 +76,8 @@ class DotaNotifs(FPCCog):
         self.hero_fav_ids = await get_all_fav_ids("characters", "character_id")
         self.player_fav_ids = await get_all_fav_ids("players", "lower_name")
 
-    async def get_args_for_top_source(self, specific_games_flag: bool) -> Union[None, dict]:
-        await self.bot.steam_dota_login()
-
-        if specific_games_flag:
-            proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
-            proto_msg.header.routing_appid = 570  # type: ignore
-
-            query = "SELECT id FROM dota_accounts WHERE lower_name=ANY($1)"
-            steam_ids = [i for i, in await self.bot.pool.fetch(query, self.player_fav_ids)]
-            proto_msg.body.steamid_request.extend(steam_ids)  # type: ignore
-            resp = self.bot.steam.send_message_and_wait(proto_msg, emsg.EMsg.ClientRichPresenceInfo, timeout=8)
-            if resp is None:
-                log.warning("resp is None, hopefully everything else will be fine tho;")
-                return None
-
-            # print(resp)
-
-            async def get_lobby_id_by_rp_kv(rp_bytes):
-                rp = vdf.binary_loads(rp_bytes)["RP"]
-                # print(rp)
-                if lobby_id := int(rp.get("WatchableGameID", 0)):
-                    if rp.get("param0", 0) == "#DOTA_lobby_type_name_ranked":
-                        if await hero.id_by_npcname(rp.get("param2", "#")[1:]) in self.hero_fav_ids:
-                            return lobby_id
-
-            lobby_ids = list(
-                dict.fromkeys(
-                    [
-                        y
-                        for x in resp.rich_presence
-                        if (x.rich_presence_kv and (y := await get_lobby_id_by_rp_kv(x.rich_presence_kv)) is not None)
-                    ]
-                )
-            )
-            if lobby_ids:
-                return {"lobby_ids": lobby_ids}
-            else:
-                return None
-        else:
-            return {"start_game": 90}
-
-    def request_top_source(self, args):
-        self.bot.dota.request_top_source_tv_games(**args)
+    def request_top_source(self):
+        self.bot.dota.request_top_source_tv_games(start_game=90)
         # there we are essentially blocking the bot which is bad
         # import asyncio
         self.bot.dota.wait_event("my_top_games_response", timeout=8)
@@ -230,22 +186,19 @@ class DotaNotifs(FPCCog):
 
         await self.preliminary_queries()
         self.top_source_dict = {}
-        for specific_games_flag in [False]:  # , True]:
-            #  there is kinda no point in True since all streamers we are subbed to are top100 players
-            # there is also a small quirk that i separate dota_tools.autoparse with this
-            # via result.specific_games arg
-            args = await self.get_args_for_top_source(specific_games_flag)
-            if args:  # check args value is not empty
-                start_time = time.perf_counter()
-                log.debug("calling request_top_source NOW ---")
-                self.request_top_source(args)
-                # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
-                # await asyncio.to_thread(self.request_top_source, args)
-                top_source_end_time = time.perf_counter() - start_time
-                log.debug("top source request took %s secs", top_source_end_time)
-                if top_source_end_time > 8:
-                    await self.hideout.spam.send("dota notifs is dying")
+
+        start_time = time.perf_counter()
+        log.debug("calling request_top_source NOW ---")
+        await self.bot.steam_dota_login()
+        self.request_top_source()
+        # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
+        # await asyncio.to_thread(self.request_top_source, args)
+        top_source_end_time = time.perf_counter() - start_time
+        log.debug("top source request took %s secs", top_source_end_time)
+        if top_source_end_time > 8:
+            await self.hideout.spam.send("dota notifs is dying")
         log.debug(f"len top_source_dict = {len(self.top_source_dict)}")
+
         await self.analyze_top_source_response()
         for match in self.live_matches:
             await self.send_notifications(match)

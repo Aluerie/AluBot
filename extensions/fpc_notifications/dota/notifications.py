@@ -147,18 +147,21 @@ class DotaNotifs(FPCCog):
                     )
 
     async def send_notifications(self, match: ActiveMatch):
-        log.debug("Sending DotaFeed notification")
-        for ch_id in match.channel_ids:
-            if (ch := self.bot.get_channel(ch_id)) is None:
+        log.debug("Dota 2 FPC's `send_notifications` is starting")
+        for channel_id in match.channel_ids:
+            channel = self.bot.get_channel(channel_id)
+            if channel is None:
                 log.debug("The channel is None")
                 continue
 
-            assert isinstance(ch, discord.TextChannel)
-            em, img_file = await match.get_embed_and_file(self.bot)
+            assert isinstance(channel, discord.TextChannel)
+            embed, image_file = await match.get_embed_and_file(self.bot)
             log.debug("Successfully made embed+file")
-            owner_name = ch.guild.owner.display_name if ch.guild.owner else "Somebody"
-            em.title = f"{owner_name}'s fav hero + player spotted"
-            msg = await ch.send(embed=em, file=img_file)
+            owner_name = channel.guild.owner.display_name if channel.guild.owner else "Somebody"
+            embed.title = f"{owner_name}'s fav hero + player spotted"
+            message = await channel.send(embed=embed, file=image_file)
+            log.debug("Notification was succesfully sent")
+
             query = """ INSERT INTO dota_matches (match_id) 
                         VALUES ($1) 
                         ON CONFLICT DO NOTHING
@@ -168,7 +171,7 @@ class DotaNotifs(FPCCog):
                         (message_id, channel_id, match_id, character_id, twitch_status) 
                         VALUES ($1, $2, $3, $4, $5)
                     """
-            await self.bot.pool.execute(query, msg.id, ch.id, match.match_id, match.hero_id, match.twitch_status)
+            await self.bot.pool.execute(query, message.id, channel.id, match.match_id, match.hero_id, match.twitch_status)
 
     async def declare_matches_finished(self):
         log.debug("Declaring finished matches")

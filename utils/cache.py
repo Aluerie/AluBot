@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import enum
+import logging
 import time
 from functools import wraps
 from typing import Any, Callable, Coroutine, Mapping, MutableMapping, Optional, Protocol, TypeVar
@@ -11,6 +12,9 @@ from aiohttp import ClientSession
 from lru import LRU
 
 from .bases.errors import SomethingWentWrong
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 R = TypeVar("R")
 
@@ -37,7 +41,10 @@ class KeysCache:
                 # let's hope that the previously cached data is still fine
                 return self.cached_data
             else:
-                raise SomethingWentWrong(f"Key Cache response error: {response.status} {await response.text()}")
+                status = response.status
+                response_text = await response.text()
+                log.debug(f"Key Cache response error: %s %s", status, response_text)
+                raise SomethingWentWrong(f"Key Cache response error: {status} {response_text}")
 
     async def fill_data(self) -> dict:
         """Fill self.cached_data with the data from various json data"""

@@ -321,7 +321,7 @@ class PostMatchPlayerData(BasePostMatchPlayer):
             for count, (item_image, item_timing) in enumerate(item_list):
                 # item image
                 item_image = item_image.resize((69, 50))  # 69/50 - to match 88/64 which is natural size
-                left = width - count * item_image.width
+                left = width - (count + 1) * item_image.width
                 img.paste(item_image, (left, height - item_image.height))
 
                 # item timing

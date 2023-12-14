@@ -123,7 +123,7 @@ class LoLFPCNotifications(FPCCog):
                 player = next((x for x in game["participants"] if x["summonerId"] == r.id), None)
 
                 if player and player["championId"] in favourite_champion_ids and r.last_edited != game["gameId"]:
-                    query = """ SELECT ls.channel_id 
+                    query = """ SELECT s.channel_id 
                                 FROM lol_favourite_characters c
                                 JOIN lol_favourite_players p on c.guild_id = p.guild_id
                                 JOIN lol_settings s on s.guild_id = c.guild_id

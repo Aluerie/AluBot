@@ -7,9 +7,6 @@ from discord.ext import tasks
 
 from .._base import FPCCog
 
-# need to import the last because in import above we activate 'lol' model
-from pyot.models import lol  # isort: skip
-
 if TYPE_CHECKING:
     from bot import AluBot
 
@@ -27,14 +24,16 @@ class LoLSummonerNameCheck(FPCCog):
         if datetime.datetime.now(datetime.timezone.utc).day != 17:
             return
 
-        query = "SELECT id, platform, accname FROM lolaccs"
+        query = "SELECT id, platform, account FROM lol_accounts"
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
-            person = await lol.summoner.Summoner(id=row.id, platform=row.platform).get()
-            if person.name != row.accname:
-                query = "UPDATE lolaccs SET accname=$1 WHERE id=$2"
-                await self.bot.pool.execute(query, person.name, row.id)
+            async with self.bot.riot_api_client as riot_api_client:
+                player = await riot_api_client.get_lol_summoner_v4_by_name(name=row.account, region=row.platform)
+
+            if player["name"] != row.account:
+                query = "UPDATE lol_accounts SET account=$1 WHERE id=$2"
+                await self.bot.pool.execute(query, player["name"], row.id)
 
     @check_summoner_renames.before_loop
     async def before(self):

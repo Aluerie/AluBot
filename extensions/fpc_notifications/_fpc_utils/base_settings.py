@@ -207,7 +207,7 @@ class FPCSettingsBase(FPCCog):
         """Base function for sending database list embed"""
         ctx = await self.get_ctx(ctx_ntr)
         await ctx.typing()
-        query = f"SELECT player_name FROM {self.game}_favourite_players WHERE guild_id=$1"
+        query = f"SELECT lower_name FROM {self.game}_favourite_players WHERE guild_id=$1"
         favourite_player_list = [r for r, in await ctx.client.pool.fetch(query, ctx.guild.id)]
 
         columns = ", ".join(
@@ -513,14 +513,14 @@ class FPCSettingsBase(FPCCog):
         ]
 
         if mode_add:
-            query = f"""INSERT INTO {self.game}_favourite_players (guild_id, player_name) VALUES ($1, $2)"""
+            query = f"""INSERT INTO {self.game}_favourite_players (guild_id, lower_name) VALUES ($1, $2)"""
             await ctx.client.pool.executemany(query, [(ctx.guild.id, name) for name in success_ids])
 
             e = self.construct_the_embed(
                 success_names, already_names, failed_names, gather_word="players", mode_add=mode_add
             )
         else:
-            query = f"""DELETE FROM {self.game}_favourite_players WHERE guild_id=$1 AND player_name=ANY($2)"""
+            query = f"""DELETE FROM {self.game}_favourite_players WHERE guild_id=$1 AND lower_name=ANY($2)"""
             await ctx.client.pool.execute(query, ctx.guild.id, already_ids)
 
             e = self.construct_the_embed(
@@ -540,7 +540,7 @@ class FPCSettingsBase(FPCCog):
         """Base function for player add/remove autocomplete"""
         assert ntr.guild
 
-        query = f"SELECT player_name FROM {self.game}_favourite_players WHERE guild_id=$1"
+        query = f"SELECT lower_name FROM {self.game}_favourite_players WHERE guild_id=$1"
         fav_ids = [r for r, in await self.bot.pool.fetch(query, ntr.guild.id)]
         clause = "NOT" if mode_add else ""
         query = f"""SELECT display_name

@@ -79,7 +79,7 @@ class TimeZoneTransformer(app_commands.Transformer):
     and in hybrid if we need autocomplete to work
     """
 
-    async def transform(self, interaction: discord.Interaction, value: str) -> TimeZone:
+    async def transform(self, interaction: discord.Interaction[AluBot], value: str) -> TimeZone:
         ctx = await AluContext.from_interaction(interaction)
         return await TimeZone.convert(ctx, value)
 

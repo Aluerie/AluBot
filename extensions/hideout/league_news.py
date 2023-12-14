@@ -87,7 +87,7 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
                 .find_next("a")  # type: ignore
                 .get("href")  # type: ignore
             )
-            files = [await self.bot.imgtools.url_to_file(patch_highlights_image_url)]
+            files = [await self.bot.transposer.url_to_file(patch_highlights_image_url)]
         except:
             # means we got None in somewhere above instead of a proper url.
             # and need to investigate why

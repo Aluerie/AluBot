@@ -152,7 +152,7 @@ async def mmr_by_hero_bar(bot: AluBot, ax, hero_stats_dict: dict):
     y_list = [(v["wins"] - v["losses"]) * 30 for v in hero_stats_dict.values()]
 
     for count, (hero_id, y) in enumerate(zip(hero_list, y_list), start=0):
-        hero_icon = await bot.imgtools.url_to_img(url=await hero.icon_url_by_id(hero_id))
+        hero_icon = await bot.transposer.url_to_image(url=await hero.icon_url_by_id(hero_id))
         if y < 0:
             y = y - 1
         plt.imshow(hero_icon, extent=[count - 0.5, count + 0.5, y, y + 30], aspect="auto")
@@ -180,7 +180,7 @@ async def heroes_played_bar(bot: AluBot, ax, sorted_dict):
     sum_list = [x + y for x, y in zip(w_list, l_list)]
 
     for count, (hero_id, y) in enumerate(zip(hero_list, y_list)):
-        hero_icon = await bot.imgtools.url_to_img(url=await hero.icon_url_by_id(hero_id))
+        hero_icon = await bot.transposer.url_to_image(url=await hero.icon_url_by_id(hero_id))
         plt.imshow(hero_icon, extent=[-1, 0, count - 0.5, count + 0.5], aspect="auto")
 
     # profit_color = [('green' if p > 0 else 'red') for p in y_list]

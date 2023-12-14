@@ -35,7 +35,7 @@ class OpenDotaAutoParser(AluCog):
         self.steam_ids: list[int]
 
     async def cog_load(self) -> None:
-        self.bot.ini_steam_dota()
+        await self.bot.initiate_steam_dota()
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def autoparse_response(result):

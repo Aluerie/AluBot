@@ -28,7 +28,7 @@ class DotaPostMatchEdit(FPCCog):
         self.opendota_req_cache: dict[int, OpendotaRequestMatch] = dict()
 
     async def cog_load(self) -> None:
-        self.bot.ini_steam_dota()
+        self.bot.initiate_steam_dota()
         self.postmatch_edits.start()
         self.daily_report.start()
         return await super().cog_load()

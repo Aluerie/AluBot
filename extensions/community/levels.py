@@ -8,7 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from utils import const, errors, formats, pages, aluloop, checks
+from utils import aluloop, checks, const, errors, formats, pages
 
 from ._base import CommunityCog
 
@@ -28,7 +28,7 @@ exp_lvl_table = [
 
 async def rank_image(bot: AluBot, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_str, member):
     image = Image.open("./assets/images/profile/welcome.png", mode="r")
-    avatar = await bot.imgtools.url_to_img(member.display_avatar.url)
+    avatar = await bot.transposer.url_to_image(member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
 
     width, height = image.size
@@ -63,7 +63,7 @@ async def rank_image(bot: AluBot, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, pla
     d.text((width / 4, height * 4 / 6), f"{rep} REP", fill=(255, 255, 255), font=font)
 
     msg = f"{exp}/{next_lvl_exp} EXP"
-    w4, h4 = bot.imgtools.get_text_wh(msg, font)
+    w4, h4 = bot.transposer.get_text_wh(msg, font)
     d.text((width - w4, height * 5 / 6), msg, fill=(255, 255, 255), font=font)
     return image
 
@@ -130,7 +130,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         image = await rank_image(
             ctx.client, lvl, row.exp, row.rep, next_lvl_exp, prev_lvl_exp, formats.ordinal(place), member
         )
-        return ctx.client.imgtools.img_to_file(image, filename="rank.png")
+        return ctx.client.transposer.image_to_file(image, filename="rank.png")
 
     @commands.hybrid_command(name="rank")
     @checks.hybrid.is_community()

@@ -7,15 +7,13 @@ Glossary:
 from typing import Literal
 
 __all__ = (
-    'LiteralPlatform',
-    'LiteralRegion',
-    'LiteralServer',
-    'LiteralServerUpper',
-    'server_to_platform',
-    'platform_to_server',
-    'platform_to_region',
-    'SOLO_RANKED_5v5_QUEUE_ENUM',
-    'LOL_GAME_CATEGORY_TWITCH_ID',
+    "LiteralPlatform",
+    "LiteralRegion",
+    "LiteralServer",
+    "LiteralServerUpper",
+    "server_to_platform",
+    "platform_to_server",
+    "platform_to_region",
 )
 
 
@@ -32,31 +30,31 @@ LiteralServer = Literal[
 # fmt: on
 
 platform_to_region_dict: dict[LiteralPlatform, LiteralRegion] = {
-    'br1': 'americas',
-    'eun1': 'europe',
-    'euw1': 'europe',
-    'jp1': 'asia',
-    'kr': 'asia',
-    'la1': 'americas',
-    'la2': 'americas',
-    'na1': 'americas',
-    'oc1': 'asia',
-    'ru': 'europe',
-    'tr1': 'europe',
+    "br1": "americas",
+    "eun1": "europe",
+    "euw1": "europe",
+    "jp1": "asia",
+    "kr": "asia",
+    "la1": "americas",
+    "la2": "americas",
+    "na1": "americas",
+    "oc1": "asia",
+    "ru": "europe",
+    "tr1": "europe",
 }
 
 server_to_platform_dict: dict[LiteralServer, LiteralPlatform] = {
-    'br': 'br1',
-    'eun': 'eun1',
-    'euw': 'euw1',
-    'jp': 'jp1',
-    'kr': 'kr',
-    'lan': 'la1',
-    'las': 'la2',
-    'na': 'na1',
-    'oc': 'oc1',
-    'ru': 'ru',
-    'tr': 'tr1',
+    "br": "br1",
+    "eun": "eun1",
+    "euw": "euw1",
+    "jp": "jp1",
+    "kr": "kr",
+    "lan": "la1",
+    "las": "la2",
+    "na": "na1",
+    "oc": "oc1",
+    "ru": "ru",
+    "tr": "tr1",
 }
 
 platform_to_server_dict = {v: k for k, v in server_to_platform_dict.items()}
@@ -75,11 +73,3 @@ def platform_to_server(platform: LiteralPlatform) -> LiteralServer:
 def platform_to_region(platform: LiteralPlatform) -> LiteralRegion:
     """Convert platform to routing"""
     return platform_to_region_dict[platform]
-
-
-# https://static.developer.riotgames.com/docs/lol/queues.json
-# says 420 is 5v5 Ranked Solo games
-SOLO_RANKED_5v5_QUEUE_ENUM = 420
-
-# just manually figured out
-LOL_GAME_CATEGORY_TWITCH_ID = '21779'  # for some reason it's a string

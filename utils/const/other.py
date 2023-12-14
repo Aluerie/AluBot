@@ -1,8 +1,5 @@
 from enum import StrEnum
 
-MY_TWITCH_CHANNEL_NAME = "Aluerie"
-MY_TWITCH_CHANNEL_ID = 180499648
-
 
 class Slash(StrEnum):
     """Slash mentions strings."""
@@ -33,7 +30,7 @@ class Regex:
     invis = "[^!-~]+"  # IDK might be huge question mark
 
 
-class Picture(StrEnum):
+class PICTURE(StrEnum):
     github = "https://pics.freeicons.io/uploads/icons/png/4381378511600029534-512.png"
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
     twitch = (
@@ -48,10 +45,9 @@ class Picture(StrEnum):
 class Logo(StrEnum):
     python = "https://i.imgur.com/5BFecvA.png"
 
-    # this image is made by removing (R) from
+    # the next image is made by removing (R) from
     # https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
     dota = "https://i.imgur.com/F8uMnWr.png"
-
     lol = "https://i.imgur.com/1DJa07b.png"
 
 
@@ -64,3 +60,19 @@ class Limit:
         field_amount = 25
         field_name = 256
         field_value = 1024
+
+
+class Twitch:
+    my_channel_name = "Aluerie"
+    my_channel_id = 180499648
+    lol_game_category_id = "21779"
+
+
+class League:
+    # https://static.developer.riotgames.com/docs/lol/queues.json
+    # says 420 is 5v5 Ranked Solo games
+    SOLO_RANKED_5v5_QUEUE_ENUM = 420
+
+
+class DOTA:
+    HERO_DISCONNECT = "https://i.imgur.com/9n8oSge.png"

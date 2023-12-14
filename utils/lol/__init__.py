@@ -1,3 +1,5 @@
-from pyot.conf.utils import import_confs
-
-import_confs("utils.lol.pyotconf")
+from .champion import *
+from .item import *
+from .roles import *
+from .rune import *
+from .summoner_spell import *

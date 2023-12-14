@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 async def welcome_image(bot: AluBot, member: discord.User | discord.Member):
     image = Image.open("./assets/images/profile/welcome.png", mode="r")
-    avatar = await bot.imgtools.url_to_img(member.display_avatar.url)
+    avatar = await bot.transposer.url_to_image(member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
 
     width, height = image.size
@@ -39,12 +39,12 @@ async def welcome_image(bot: AluBot, member: discord.User | discord.Member):
     font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 80)
     d = ImageDraw.Draw(image)
     msg = member.display_name
-    w1, h1 = bot.imgtools.get_text_wh(msg, font)
+    w1, h1 = bot.transposer.get_text_wh(msg, font)
     d.text(((width - w1) / 1 - 10, (height - h1) / 1 - 10), msg, fill=(255, 255, 255), font=font)
 
     font = ImageFont.truetype("./assets/fonts/MonsieurLaDoulaise-Regular.ttf", 90)
     msg = "Welcome !"
-    w2, h2 = bot.imgtools.get_text_wh(msg, font)
+    w2, h2 = bot.transposer.get_text_wh(msg, font)
     d.text(((width - w2) / 1 - 10, (height - h2) / 1 - 10 - h1 - 10), msg, fill=(255, 255, 255), font=font)
     return image
 
@@ -58,7 +58,7 @@ async def welcome_message(
         wave_emote, the_word = const.Emote.DankLove, "BACK"
     else:
         wave_emote, the_word = const.Emote.DankHey, ""
-    content_text = "**💜 Welcome {2} to Aluerie \'s server, {0} !** {1} {1} {1}".format(
+    content_text = "**💜 Welcome {2} to Aluer\'s server, {0} !** {1} {1} {1}".format(
         member.mention, wave_emote, the_word
     )
 
@@ -77,7 +77,7 @@ async def welcome_message(
 
     e = discord.Embed(description=description, color=const.Colour.prpl())
     e.set_footer(text=f"With love, {bot.community.guild.me.display_name}")
-    return content_text, e, bot.imgtools.img_to_file(image)
+    return content_text, e, bot.transposer.image_to_file(image)
 
 
 class Welcome(CommunityCog):

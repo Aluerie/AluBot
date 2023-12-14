@@ -8,17 +8,12 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Mapping, M
 
 import discord
 from discord.ext import commands
-from dota2.client import Dota2Client
-from githubkit import GitHub
-from steam.client import SteamClient
 
 import config
 from extensions import get_extensions
 from utils import AluContext, ConfirmationView, ExtCategory, cache, const, formats, none_category
-from utils.imgtools import ImgToolsClient
 from utils.jsonconfig import PrefixConfig
-from utils.timezones import TimezoneManager
-from utils.twitch import TwitchClient
+from utils.transposer import TransposeClient
 
 from .app_cmd_tree import AluAppCommandTree
 from .exc_manager import AluExceptionManager
@@ -46,21 +41,16 @@ class AluBotHelper(TimerManager):
 
 class AluBot(commands.Bot, AluBotHelper):
     if TYPE_CHECKING:
-        bot_app_info: discord.AppInfo
-        dota: Dota2Client
-        github: GitHub
-        launch_time: datetime.datetime
-        logging_handler: Any
-        prefixes: PrefixConfig
-        steam: SteamClient
-        tree: AluAppCommandTree
-        twitch: TwitchClient
         user: discord.ClientUser
-        cogs: Mapping[str, AluCog]
-        old_tree_error: Callable[
-            [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
-        ]
-        tz_manager: TimezoneManager
+    #     bot_app_info: discord.AppInfo
+    #     launch_time: datetime.datetime
+    #     logging_handler: Any
+    #     prefixes: PrefixConfig
+    #     tree: AluAppCommandTree
+    #     cogs: Mapping[str, AluCog]
+    #     old_tree_error: Callable[
+    #         [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
+    #     ]
 
     def __init__(self, test=False, *, session: ClientSession, pool: Pool, **kwargs):
         main_prefix = "~" if test else "$"
@@ -78,7 +68,7 @@ class AluBot(commands.Bot, AluBotHelper):
         self.session: ClientSession = session
 
         self.exc_manager: AluExceptionManager = AluExceptionManager(self)
-        self.imgtools = ImgToolsClient(session=session)
+        self.transposer: TransposeClient = TransposeClient(session=session)
 
         self.odota_ratelimit: dict[str, int] = {"monthly": -1, "minutely": -1}
 
@@ -92,7 +82,7 @@ class AluBot(commands.Bot, AluBotHelper):
         self.category_cogs: dict[ExtCategory, list[AluCog | commands.Cog]] = dict()
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
-            timedelta=datetime.timedelta(days=7)
+            seconds=datetime.timedelta(days=7).seconds
         )
 
     async def setup_hook(self) -> None:
@@ -218,8 +208,23 @@ class AluBot(commands.Bot, AluBotHelper):
     def owner(self) -> discord.User:
         return self.bot_app_info.owner
 
-    async def ini_steam_dota(self) -> None:
+    # INITIATE EXTRA CLIENTS FUNCTIONS #################################################################################
+
+    # The following functions are `initiate_something`
+    # which initiate some ~heavy clients under bot namespace
+    # they should be used in cogs which need to work with them, i.e. dota notifications should call
+    # initiate steam, dota and twitch
+    #
+    # note that I import inside the functions which is against pep8 but apparently it is not so bad:
+    # pep8 answer: https://stackoverflow.com/a/1188672/19217368
+    # points to import inside the function: https://stackoverflow.com/a/1188693/19217368
+    # and I exactly want these^
+
+    async def initiate_steam_dota(self) -> None:
         if not hasattr(self, "steam") or not hasattr(self, "dota"):
+            from dota2.client import Dota2Client
+            from steam.client import SteamClient
+
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
             await self.steam_dota_login()
@@ -239,19 +244,31 @@ class AluBot(commands.Bot, AluBotHelper):
                     self.dota.launch()
             except Exception as exc:
                 log.error("Logging into Steam failed")
-                await self.exc_manager.register_error(exc, source='steam login', where='steam login')
+                await self.exc_manager.register_error(exc, source="steam login", where="steam login")
 
     def ini_github(self) -> None:
         if not hasattr(self, "github"):
+            from githubkit import GitHub
+
             self.github = GitHub(config.GIT_PERSONAL_TOKEN)
+
+    def initiate_riot_api_client(self) -> None:
+        if not hasattr(self, "riot_api_client"):
+            from pulsefire.clients import RiotAPIClient
+
+            self.riot_api_client = RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY})
 
     async def initiate_twitch(self) -> None:
         if not hasattr(self, "twitch"):
+            from utils.twitch import TwitchClient
+
             self.twitch = TwitchClient(self)
             await self.twitch.connect()
 
     def initiate_tz_manager(self) -> None:
         if not hasattr(self, "tz_manager"):
+            from utils.timezones import TimezoneManager
+
             self.tz_manager = TimezoneManager(self)
 
     def update_odota_ratelimit(self, headers) -> None:

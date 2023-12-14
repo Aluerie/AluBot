@@ -54,3 +54,5 @@ lxml
 # tweepy[async]==4.14.0  # twitter is dead
 # webpreview~=1.7.2
 # pandas~=2.1.3
+
+ipykernel; platform_system == 'Windows'  # I like to mess around in ipynb-notebooks

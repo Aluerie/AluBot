@@ -15,12 +15,12 @@ if TYPE_CHECKING:
 
 def unexpected_error_embed() -> discord.Embed:
     e = discord.Embed(colour=const.Colour.error())
-    e.set_author(name='Oups... Unexpected error!')
+    e.set_author(name="Oups... Unexpected error!")
     e.description = (
         "I've notified my developer about the error and sent all the details. Hopefully, we'll get it fixed soon.\n"
         "Sorry for the inconvenience! {0} {0} {0}".format(const.Emote.DankL)
     )
-    e.set_thumbnail(url=const.Picture.dankfix)
+    e.set_thumbnail(url=const.PICTURE.dankfix)
     return e
 
 
@@ -30,7 +30,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
         return
 
     error_type = error.__class__.__name__
-    desc = 'No description'
+    desc = "No description"
     unexpected_error = False
 
     if isinstance(error, (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError)):
@@ -39,19 +39,19 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
     elif isinstance(error, errors.ErroneousUsage):
         # raised by myself but it's not an error per se, thus i dont give error type to the user.
         error_type = None
-        desc = f'{error}'
+        desc = f"{error}"
     elif isinstance(error, errors.AluBotException):
         # These errors are generally raised in code by myself or by my code with an explanation text as `error`
         # AluBotException subclassed exceptions are all mine.
-        desc = f'{error}'
+        desc = f"{error}"
     elif isinstance(error, commands.BadArgument):
-        desc = f'{error}'
+        desc = f"{error}"
     elif isinstance(error, commands.MissingRequiredArgument):
-        desc = f'Please, provide this argument:\n`{error.param.name}`'
+        desc = f"Please, provide this argument:\n`{error.param.name}`"
     elif isinstance(error, commands.CommandNotFound):
-        if ctx.prefix in ['/', f'<@{ctx.bot.user.id}> ', f'<@!{ctx.bot.user.id}> ']:
+        if ctx.prefix in ["/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "]:
             return
-        if ctx.prefix == '~': 
+        if ctx.prefix == "~":
             if ctx.message.content[1].isdigit():  # "$200 for this?" 2 is [1]
                 # prefix commands should not start with digits
                 return
@@ -60,11 +60,11 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
     elif isinstance(error, commands.CommandOnCooldown):
         desc = f"Please retry in `{ctx.bot.formats.human_timedelta(error.retry_after, brief=True)}`"
     elif isinstance(error, commands.NotOwner):
-        desc = f'Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command.'
+        desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
     elif isinstance(error, commands.MissingRole):
-        desc = f'Sorry, only {error.missing_role} are able to use this command.'
+        desc = f"Sorry, only {error.missing_role} are able to use this command."
     elif isinstance(error, commands.CheckFailure):
-        desc = f'{error}'
+        desc = f"{error}"
 
     # elif isinstance(error, errors.SilentError):
     #     # this will fail the interaction hmm
@@ -73,7 +73,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
         # error is unhandled/unclear and thus developers need to be notified about it.
         unexpected_error = True
 
-        where = f'on_command_error {ctx.clean_prefix}{ctx.command.qualified_name}' if ctx.command else 'non-cmd ctx'
+        where = f"on_command_error {ctx.clean_prefix}{ctx.command.qualified_name}" if ctx.command else "non-cmd ctx"
         await ctx.bot.exc_manager.register_error(error, ctx, where=where)
 
         mention = ctx.channel.id != ctx.bot.hideout.spam_channel_id
@@ -81,7 +81,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
             # well, then I do not need "desc" embed as well
             if ctx.interaction and not ctx.interaction.response.is_done():
                 # they error out unanswered anyway if not "is_done":/
-                await ctx.reply(':(', ephemeral=True)
+                await ctx.reply(":(", ephemeral=True)
             return
 
     if unexpected_error:

@@ -227,7 +227,7 @@ class StatsCommands(InfoCog, name="Stats", emote=const.Emote.Smartge):
         )
 
         e.description = f"Members: {members}\nChannels: {channels}\nLimit: {limit}"
-        file = self.bot.imgtools.img_to_file(wordcloud.to_image(), filename="wordcloud.png")
+        file = self.bot.transposer.image_to_file(wordcloud.to_image(), filename="wordcloud.png")
         await ctx.reply(embed=e, file=file)
 
 

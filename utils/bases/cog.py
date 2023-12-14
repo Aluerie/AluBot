@@ -61,6 +61,10 @@ class AluCog(commands.Cog):
     @property
     def hideout(self):
         return self.bot.hideout
+    
+    # @property
+    # def pool(self):
+    #     return self.bot.pool
 
 
 class ExtCategory(NamedTuple):

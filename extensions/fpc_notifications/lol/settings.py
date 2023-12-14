@@ -3,21 +3,16 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Optional
 
+import aiohttp
 import discord
 from discord import app_commands
 from discord.ext import commands
-from pyot.core.exceptions import NotFound
-from pyot.utils.lol import champion
 
-from utils import checks, const
+from utils import checks, const, lol
 from utils.lol.const import LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
-from utils.lol.utils import get_all_champ_names, get_meraki_patch, get_pyot_meraki_champ_diff_list
 
 from .._fpc_utils import FPCSettingsBase
 from ._models import Account
-
-# need to import the last because in import above we activate 'lol' model
-from pyot.models.lol import summoner  # isort: skip
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -55,10 +50,10 @@ class LoLNotifsSettings(FPCSettingsBase, name="LoL"):
             game="lol",
             game_mention="League of Legends",
             game_icon=const.Logo.lol,
-            extra_account_info_columns=["platform", "account"],
-            character_name_by_id=champion.name_by_id,
-            character_id_by_name=champion.id_by_name,
-            all_character_names=get_all_champ_names,
+            extra_account_info_columns=["platform", "account_name"],
+            character_name_by_id=lol.champion.name_by_id,
+            character_id_by_name=lol.champion.id_by_name,
+            all_character_names=lol.all_champion_names,
             character_word_plural="champs",
             **kwargs,
         )
@@ -164,16 +159,15 @@ class LoLNotifsSettings(FPCSettingsBase, name="LoL"):
         account = kwargs.pop("account")
         return f"`{platform_to_server(platform).upper()}` - `{account}` {Account(platform, account).links}"
 
-    @staticmethod
-    async def get_lol_id(server: LiteralServer, account: str) -> tuple[str, str, str]:
+    async def get_lol_id(self, server: LiteralServer, account: str) -> tuple[str, str, str]:
         try:
             platform = server_to_platform(server)
-            player = await summoner.Summoner(name=account, platform=platform).get()
-            return player.id, player.platform, player.name
-        except NotFound:
+            async with self.bot.riot_api_client as riot_api_client:
+                player = await riot_api_client.get_lol_summoner_v4_by_name(name=account, region=platform)
+            return player["id"], platform, player["name"]
+        except aiohttp.ClientResponseError:
             raise commands.BadArgument(
-                f"Error checking league account with name `{account}` for `{server}` server: \n"
-                f"This account does not exist."
+                f"Error checking league account `{account}` for `{server}` server: \n" f"This account does not exist."
             )
 
     async def get_account_dict(self, *, server: LiteralServer, account: str) -> dict:
@@ -480,11 +474,6 @@ class LoLNotifsSettings(FPCSettingsBase, name="LoL"):
         """
         await self.spoil(ctx, spoil)
 
-    # character setup
-
-    async def get_character_data(self):
-        return await champion.champion_keys_cache.data
-
     @slh_lol_champ.command(name="setup")
     async def slh_lol_champ_setup(self, ntr: discord.Interaction[AluBot]):
         """Interactive setup to add/remove champions in/from your favourite list."""
@@ -501,10 +490,12 @@ class LoLNotifsSettings(FPCSettingsBase, name="LoL"):
     @commands.command(hidden=True)
     async def meraki(self, ctx: AluGuildContext):
         """Show list of champions that are missing from Meraki JSON."""
-        champ_ids = await get_pyot_meraki_champ_diff_list()
-        champ_str = [f"\N{BLACK CIRCLE} {await champion.key_by_id(i)} - `{i}`" for i in champ_ids] or ["None missing"]
+        champ_ids = await lol.roles.get_missing_from_meraki_champion_ids()
+        champ_str = [f"\N{BLACK CIRCLE} {await lol.champion.key_by_id(i)} - `{i}`" for i in champ_ids] or [
+            "None missing"
+        ]
 
-        meraki_patch = await get_meraki_patch()
+        meraki_patch = await lol.roles.get_meraki_patch()
 
         e = discord.Embed(title="List of champs missing from Meraki JSON", colour=const.Colour.rspbrry())
         e.description = "\n".join(champ_str)

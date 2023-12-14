@@ -173,7 +173,7 @@ class TimeLine:
             embed.set_author(
                 name=f"Bugtracker issue #{self.issue.number} update",
                 url=self.last_comment_url,
-                icon_url=const.Picture.frog,
+                icon_url=const.PICTURE.frog,
             )
             delta_x_y = 32
             size_x_y = 128 + (len(pil_pics) - 1) * delta_x_y  # 128 is images size
@@ -182,7 +182,7 @@ class TimeLine:
                 im = Image.open(pic_name)
                 dst.paste(im, (i * delta_x_y, i * delta_x_y), im)
 
-            file = bot.imgtools.img_to_file(dst, filename=f"bugtracker_update_{self.issue.number}.png")
+            file = bot.transposer.image_to_file(dst, filename=f"bugtracker_update_{self.issue.number}.png")
             embed.set_thumbnail(url=f"attachment://{file.filename}")
         return (embed, file)
 

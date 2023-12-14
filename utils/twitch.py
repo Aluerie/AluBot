@@ -6,15 +6,12 @@ from typing import TYPE_CHECKING, Optional
 
 import twitchio
 from discord.ext.commands import BadArgument
-from twitchio.ext import eventsub, routines
+from twitchio.ext import eventsub
 
 import config
 from utils.formats import human_timedelta
-from utils.lol.const import LOL_GAME_CATEGORY_TWITCH_ID
 
 if TYPE_CHECKING:
-    from asyncpg import Pool
-
     from bot import AluBot
 
 log = logging.getLogger(__name__)
@@ -86,25 +83,6 @@ class TwitchClient(twitchio.Client):
         vod_url = f"{video.url}?t={human_timedelta(duration - seconds_ago, strip=True, suffix=False)}"
         return f"/[TwVOD]({vod_url})" if md else vod_url
 
-    async def get_live_lol_player_ids(self) -> list[int]:
-        """Get twitch ids for live League of Legends streams"""
-        query = """ SELECT twitch_id, name_lower
-                    FROM lol_players
-                    WHERE name_lower=ANY(
-                        SELECT DISTINCT player_name FROM lol_favourite_players
-                    )
-                """
-        twitch_id_to_fav_id_dict = {r.twitch_id: r.name_lower for r in await self.discord_bot.pool.fetch(query)}
-        if not twitch_id_to_fav_id_dict:
-            # otherwise fetch_streams fetches top100 streams and we dont want that.
-            return []
-        live_twitch_ids = [
-            i.user.id
-            for i in await self.fetch_streams(user_ids=list(twitch_id_to_fav_id_dict.keys()))
-            if i.game_id == LOL_GAME_CATEGORY_TWITCH_ID
-        ]
-        return [twitch_id_to_fav_id_dict[i] for i in live_twitch_ids]
-
     async def get_twitch_stream(self, twitch_id: int) -> TwitchStream:
         user = next(iter(await self.fetch_users(ids=[twitch_id])))
         stream = next(iter(await self.fetch_streams(user_ids=[twitch_id])), None)  # None if offline
@@ -112,7 +90,23 @@ class TwitchClient(twitchio.Client):
 
 
 class TwitchStream:
-    __slots__ = ("twitch_id", "display_name", "name", "game", "url", "logo_url", "online", "title", "preview_url")
+    """My own helping class that unites twitchio.User and twitch.Stream together
+
+    and has needed attributes, i.e. since offline users don't have `.game` data
+    we fill it ourselves.
+    """
+
+    __slots__ = (
+        "twitch_id",
+        "display_name",
+        "name",
+        "game",
+        "url",
+        "logo_url",
+        "online",
+        "title",
+        "preview_url",
+    )
 
     if TYPE_CHECKING:
         display_name: str

@@ -6,23 +6,23 @@ CREATE TABLE IF NOT EXISTS dota_settings (
 );
 
 CREATE TABLE IF NOT EXISTS dota_players (
-    name_lower TEXT PRIMARY KEY NOT NULL UNIQUE,
+    lower_name TEXT PRIMARY KEY NOT NULL UNIQUE,
     display_name TEXT NOT NULL,
     twitch_id BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS dota_favourite_players (
     guild_id BIGINT,
-    player_name TEXT NOT NULL,
+    lower_name TEXT NOT NULL,
 
-    PRIMARY KEY(guild_id, player_name),
+    PRIMARY KEY(guild_id, lower_name),
 
     CONSTRAINT fk_guild_id
         FOREIGN KEY (guild_id)
         REFERENCES dota_settings(guild_id) ON DELETE CASCADE,
     CONSTRAINT fk_player
-        FOREIGN KEY (player_name)
-        REFERENCES dota_players(name_lower) ON DELETE CASCADE
+        FOREIGN KEY (lower_name)
+        REFERENCES dota_players(lower_name) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS dota_favourite_characters (
@@ -37,12 +37,12 @@ CREATE TABLE IF NOT EXISTS dota_favourite_characters (
 );
 
 CREATE TABLE IF NOT EXISTS dota_accounts (
-    id BIGINT PRIMARY KEY,
+    id BIGINT PRIMARY KEY, -- id = steam id ; name "id" to be the same with "lol_accounts"
     friend_id BIGINT,
-    name_lower TEXT NOT NULL,
+    lower_name TEXT NOT NULL,
     CONSTRAINT fk_player
-        FOREIGN KEY (name_lower)
-        REFERENCES dota_players(name_lower) ON DELETE CASCADE
+        FOREIGN KEY (lower_name)
+        REFERENCES dota_players(lower_name) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS dota_matches (

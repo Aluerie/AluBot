@@ -24,7 +24,7 @@ class TwitchCog(CommunityCog):
         # Twitch EventSub
         # these are supposed to be broadcaster/user access token for streamers we sub to
         # since we are subbing to event of myself then my own access token is fine
-        broadcaster, token = const.MY_TWITCH_CHANNEL_ID, config.TWITCH_ACCESS_TOKEN
+        broadcaster, token = const.Twitch.my_channel_id, config.TWITCH_ACCESS_TOKEN
         await self.bot.twitch.eventsub.subscribe_channel_stream_start(broadcaster, token)
         # testing with channel points since it's easy yo do :D
         await self.bot.twitch.eventsub.subscribe_channel_points_redeemed(broadcaster, token)
@@ -40,8 +40,8 @@ class TwitchCog(CommunityCog):
 
         mention_role = self.community.stream_lover_role
         content = f"{mention_role.mention} and chat, our Highness **@{stream.display_name}** just went live !"
-        file = await self.bot.imgtools.url_to_file(stream.preview_url, filename="twtvpreview.png")
-        last_vod_url = await self.bot.twitch.last_vod_link(const.MY_TWITCH_CHANNEL_ID)
+        file = await self.bot.transposer.url_to_file(stream.preview_url, filename="twtvpreview.png")
+        last_vod_url = await self.bot.twitch.last_vod_link(const.Twitch.my_channel_id)
         desc = f"Playing {stream.game}\n/[Watch Stream]({stream.url}){last_vod_url}"
         e = discord.Embed(colour=0x9146FF, title=f"{stream.title}", url=stream.url, description=desc)
         e.set_author(name=f"{stream.display_name} just went live on Twitch!", icon_url=stream.logo_url, url=stream.url)

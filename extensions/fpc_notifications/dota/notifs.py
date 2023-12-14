@@ -36,7 +36,7 @@ class DotaNotifs(FPCCog):
 
     async def cog_load(self) -> None:
         await self.bot.initiate_twitch()
-        await self.bot.ini_steam_dota()
+        await self.bot.initiate_steam_dota()
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def response(result):
@@ -244,7 +244,7 @@ class DotaNotifs(FPCCog):
                 top_source_end_time = time.perf_counter() - start_time
                 log.debug("top source request took %s secs", top_source_end_time)
                 if top_source_end_time > 8:
-                    await self.hideout.spam.send('dota notifs is dying')
+                    await self.hideout.spam.send("dota notifs is dying")
         log.debug(f"len top_source_dict = {len(self.top_source_dict)}")
         await self.analyze_top_source_response()
         for match in self.live_matches:

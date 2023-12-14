@@ -6,23 +6,23 @@ CREATE TABLE IF NOT EXISTS lol_settings (
 );
 
 CREATE TABLE IF NOT EXISTS lol_players (
-    name_lower TEXT PRIMARY KEY NOT NULL UNIQUE,
+    lower_name TEXT PRIMARY KEY NOT NULL UNIQUE,
     display_name TEXT NOT NULL,
     twitch_id BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS lol_favourite_players (
     guild_id BIGINT,
-    player_name TEXT NOT NULL,
+    lower_name TEXT NOT NULL,
 
-    PRIMARY KEY(guild_id, player_name),
+    PRIMARY KEY(guild_id, lower_name),
 
     CONSTRAINT fk_guild_id
         FOREIGN KEY (guild_id)
         REFERENCES lol_settings(guild_id) ON DELETE CASCADE,
     CONSTRAINT fk_player
-        FOREIGN KEY (player_name)
-        REFERENCES lol_players(name_lower) ON DELETE CASCADE
+        FOREIGN KEY (lower_name)
+        REFERENCES lol_players(lower_name) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS lol_favourite_characters (
@@ -37,14 +37,14 @@ CREATE TABLE IF NOT EXISTS lol_favourite_characters (
 );
 
 CREATE TABLE IF NOT EXISTS lol_accounts (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY, -- id = summoner id ; name "id" to be the same with "dota_accounts"
     platform TEXT NOT NULL,
-    account TEXT NOT NULL,
-    name_lower TEXT NOT NULL,
+    account_name TEXT NOT NULL,
+    lower_name TEXT NOT NULL,
     last_edited BIGINT, -- this column is needed bcs Riot API is not precise
     CONSTRAINT fk_player
-        FOREIGN KEY (name_lower)
-        REFERENCES lol_players(name_lower) ON DELETE CASCADE
+        FOREIGN KEY (lower_name)
+        REFERENCES lol_players(lower_name) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS lol_matches (

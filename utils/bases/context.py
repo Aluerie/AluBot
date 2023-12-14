@@ -99,7 +99,7 @@ class DisambiguatorView(discord.ui.View, Generic[T]):
         self.stop()
 
 
-class AluContext(commands.Context):
+class AluContext(commands.Context['AluBot']):
     """The subclassed Context to allow some extra functionality."""
 
     if TYPE_CHECKING:

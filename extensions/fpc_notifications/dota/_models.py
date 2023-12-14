@@ -122,14 +122,14 @@ class ActiveMatch(Match):
         self.colour = colour_twitch_status_dict[self.twitch_status]
 
     async def better_thumbnail(self, bot: AluBot) -> Image.Image:
-        img = await bot.imgtools.url_to_img(self.img_url)
+        img = await bot.transposer.url_to_image(self.img_url)
         width, _height = img.size
         rectangle = Image.new("RGB", (width, 70), str(self.colour))
         ImageDraw.Draw(rectangle)
         img.paste(rectangle)
 
         for count, hero_id in enumerate(self.hero_ids):
-            hero_img = await bot.imgtools.url_to_img(await hero.img_url_by_id(hero_id))
+            hero_img = await bot.transposer.url_to_image(await hero.img_url_by_id(hero_id))
             # h_width, h_height = heroImg.size
             hero_img = hero_img.resize((62, 35))
             hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=dota_player_colour_map.get(count, "#FF0000"))
@@ -139,10 +139,10 @@ class ActiveMatch(Match):
         font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
         draw = ImageDraw.Draw(img)
         text = f"{self.display_name} - {self.hero_name}"
-        w2, h2 = bot.imgtools.get_text_wh(text, font)
+        w2, h2 = bot.transposer.get_text_wh(text, font)
         draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
-        w2, h2 = bot.imgtools.get_text_wh(text, font)
+        w2, h2 = bot.transposer.get_text_wh(text, font)
         draw.text((0, 35 + h2 + 10), self.twitch_status, font=font, align="center", fill=str(self.colour))
         return img
 
@@ -153,7 +153,7 @@ class ActiveMatch(Match):
         self.hero_name = await hero.name_by_id(self.hero_id)
 
         await self.get_twitch_data(bot.twitch)
-        img_file = bot.imgtools.img_to_file(
+        img_file = bot.transposer.image_to_file(
             await self.better_thumbnail(bot),
             filename=(
                 f'{self.twitch_status}-{self.display_name.replace("_", "")}-'
@@ -214,7 +214,7 @@ class PostMatchPlayerData:
         return f"<{self.__class__.__name__} {pairs}>"
 
     async def edit_the_image(self, img_url, bot: AluBot):
-        img = await bot.imgtools.url_to_img(img_url)
+        img = await bot.transposer.url_to_image(img_url)
 
         width, height = img.size
         last_row_h = 50
@@ -228,11 +228,11 @@ class PostMatchPlayerData:
         font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 26)
 
         draw = ImageDraw.Draw(img)
-        w3, h3 = bot.imgtools.get_text_wh(self.kda, font_kda)
+        w3, h3 = bot.transposer.get_text_wh(self.kda, font_kda)
         draw.text((0, height - h3), self.kda, font=font_kda, align="right")
 
         draw = ImageDraw.Draw(img)
-        w2, h2 = bot.imgtools.get_text_wh(self.outcome, font_kda)
+        w2, h2 = bot.transposer.get_text_wh(self.outcome, font_kda)
         colour_dict = {
             "Win": str(const.MaterialPalette.green(shade=800)),
             "Loss": str(const.MaterialPalette.red(shade=900)),
@@ -246,13 +246,13 @@ class PostMatchPlayerData:
             for i in reversed(self.purchase_log):
                 if item_id == await item.id_by_key(i["key"]):
                     text = f"{math.ceil(i['time']/60)}m"
-                    w7, h7 = bot.imgtools.get_text_wh(text, font_m)
+                    w7, h7 = bot.transposer.get_text_wh(text, font_m)
                     draw.text((x_left, height - h7), text, font=font_m, align="left")
                     return
 
         left_i = width - 69 * 6
         for count, itemId in enumerate(self.items):
-            hero_img = await bot.imgtools.url_to_img(await item.iconurl_by_id(itemId))
+            hero_img = await bot.transposer.url_to_image(await item.iconurl_by_id(itemId))
             # h_width, h_height = heroImg.size # naturally in (88, 64)
             hero_img = hero_img.resize((69, 50))  # 69/50 - to match 88/64
             curr_left = left_i + count * hero_img.width
@@ -261,7 +261,7 @@ class PostMatchPlayerData:
 
         ability_h = 37
         for count, abilityId in enumerate(self.ability_upgrades_arr):
-            abil_img = await bot.imgtools.url_to_img(await ability.iconurl_by_id(abilityId))
+            abil_img = await bot.transposer.url_to_image(await ability.iconurl_by_id(abilityId))
             abil_img = abil_img.resize((ability_h, ability_h))
             img.paste(abil_img, (count * ability_h, last_row_y - abil_img.height))
 
@@ -273,17 +273,17 @@ class PostMatchPlayerData:
         font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 12)
         for count, txt in enumerate(talent_strs):
             draw = ImageDraw.Draw(img)
-            w4, h4 = bot.imgtools.get_text_wh(txt, font)
+            w4, h4 = bot.transposer.get_text_wh(txt, font)
             draw.text((width - w4, last_row_y - 30 * 2 - 22 * count), txt, font=font, align="right")
         right = left_i
         if self.aghs_blessing:
-            bless_img = await bot.imgtools.url_to_img(ability.lazy_aghs_bless_url)
+            bless_img = await bot.transposer.url_to_image(ability.lazy_aghs_bless_url)
             bless_img = bless_img.resize((48, 35))
             img.paste(bless_img, (right - bless_img.width, height - bless_img.height))
             await item_timing_text(271, right - bless_img.width)
             right -= bless_img.width
         if self.aghs_shard:
-            shard_img = await bot.imgtools.url_to_img(ability.lazy_aghs_shard_url)
+            shard_img = await bot.transposer.url_to_image(ability.lazy_aghs_shard_url)
             shard_img = shard_img.resize((48, 35))
             img.paste(shard_img, (right - shard_img.width, height - shard_img.height))
             await item_timing_text(609, right - shard_img.width)
@@ -303,7 +303,7 @@ class PostMatchPlayerData:
             return
 
         e = msg.embeds[0]
-        img_file = bot.imgtools.img_to_file(await self.edit_the_image(e.image.url, bot), filename="edited.png")
+        img_file = bot.transposer.image_to_file(await self.edit_the_image(e.image.url, bot), filename="edited.png")
         e.set_image(url=f"attachment://{img_file.filename}")
         if self.channel_id == const.Channel.repost:
             e.set_footer(text=f'{e.footer.text or ""} | {self.api_calls_done}')

@@ -1,11 +1,3 @@
-"""
-Implementation for Cache. 
-
-## Original source:
-* RoboDanny's cogs.utils.cache (license MPL v2 from Rapptz/RoboDanny)
-    https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/cache.py
-#"""
-
 from __future__ import annotations
 
 import asyncio
@@ -13,11 +5,78 @@ import datetime
 import enum
 import time
 from functools import wraps
-from typing import Any, Callable, Coroutine, MutableMapping, Optional, Protocol, TypeVar, overload
+from typing import Any, Callable, Coroutine, Mapping, MutableMapping, Optional, Protocol, TypeVar
 
+from aiohttp import ClientSession
 from lru import LRU
 
+from .bases.errors import SomethingWentWrong
+
 R = TypeVar("R")
+
+
+class KeysCache:
+    """KeysCache
+
+    This class caches the data from public json-urls
+    for a certain amount of time just so we have somewhat up-to-date data
+    and don't spam GET requests too often.
+    """
+
+    def __init__(self) -> None:
+        self.cached_data: dict[Any, Any] = {}
+        self.lock: asyncio.Lock = asyncio.Lock()
+        self.last_updated: datetime.datetime = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)
+
+    async def get_response_json(self, url: str) -> Any:
+        """Get response.json() from url with data"""
+        async with ClientSession().get(url) as response:
+            if response.ok:
+                return await response.json()
+            elif any(self.cached_data.values()):
+                # let's hope that the previously cached data is still fine
+                return self.cached_data
+            else:
+                raise SomethingWentWrong(f"Key Cache response error: {response.status} {await response.text()}")
+
+    async def fill_data(self) -> dict:
+        """Fill self.cached_data with the data from various json data"""
+        ...
+
+    @property
+    def need_updating(self) -> bool:
+        return datetime.datetime.now(datetime.timezone.utc) - self.last_updated < datetime.timedelta(hours=6)
+
+    async def get_data(self, force_update: bool = False):
+        """Get data and update the cache if needed"""
+        if self.need_updating and not force_update:
+            return self.cached_data
+
+        async with self.lock:
+            if self.need_updating and not force_update:
+                return self.cached_data
+
+            self.cached_data = await self.fill_data()
+            self.last_updated = datetime.datetime.now(datetime.timezone.utc)
+        return self.cached_data
+
+    async def get(self, cache: str, key: Any, default: Optional[Any] = None) -> Any:
+        """Get a key value from cache"""
+        data = await self.get_data()
+        try:
+            return data[cache].get(key)
+        except KeyError:
+            # let's try to update cache in case it's a new patch
+            # and hope the data is up-to-date in those json-files elsa return default
+            data = await self.get_data(force_update=True)
+
+            try:
+                return data[cache].get(key)
+            except KeyError:
+                if default:
+                    return default
+                else:
+                    raise
 
 
 # Can't use ParamSpec due to https://github.com/python/typing/discussions/946
@@ -41,23 +100,8 @@ class CacheProtocol(Protocol[R]):
 
 
 class ExpiringCache(dict):
-    @overload
-    def __init__(self, *, timedelta: datetime.timedelta):
-        ...
-
-    @overload
-    def __init__(self, *, seconds: float):
-        ...
-
-    def __init__(self, seconds: Optional[float] = None, timedelta: Optional[datetime.timedelta] = None):
-        if seconds is not None and timedelta is None:
-            ttl = seconds
-        elif seconds is None and timedelta is not None:
-            ttl = timedelta.total_seconds()
-        else:
-            raise TypeError("You either specified both `seconds` and `timedelta`, or they are both `None`.")
-
-        self.__ttl: float = ttl
+    def __init__(self, seconds: float):
+        self.__ttl: float = seconds
         super().__init__()
 
     def __verify_cache_integrity(self):

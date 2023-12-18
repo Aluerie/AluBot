@@ -36,7 +36,7 @@ githubkit
 gtts~=2.4.0
 ffmpeg
 unidiff~=0.7.5
-psutil==5.9.6
+psutil==5.9.7
 pygit2==1.13.3
 parsedatetime~=2.6
 python-dateutil~=2.8.2

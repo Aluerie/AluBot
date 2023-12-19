@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from io import BytesIO, StringIO
 from typing import TYPE_CHECKING
 
@@ -12,6 +13,9 @@ if TYPE_CHECKING:
     from aiohttp import ClientSession
     from matplotlib.figure import Figure
     from PIL import ImageFont
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 class TransposeClient:
@@ -77,6 +81,7 @@ class TransposeClient:
 
     async def url_to_image(self, url: str) -> Image.Image:
         """Convert URL to PIL.Image.Image"""
+        log.debug(url)
         async with self.session.get(url) as response:
             # if not response.ok:
             #     raise SomethingWentWrong(f"url_to_img: could not download file from {url}")

@@ -58,10 +58,12 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         *,
         text: str = "Allo",
     ):
-        if not (voice_state := ctx.author.voice):
+        voice_state = ctx.author.voice
+        if not voice_state:
             raise errors.ErroneousUsage("You aren't in a voice channel!")
 
-        if (voice_client := ctx.guild.voice_client) is not None:
+        voice_client = ctx.guild.voice_client
+        if voice_client is not None:
             vc = self.connections[ctx.guild.id]
             assert isinstance(voice_client, discord.VoiceClient)
             await voice_client.move_to(voice_state.channel)
@@ -122,7 +124,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
     async def bonjour(self, ctx: AluGuildContext):
         """`Bonjour !` into both text/voice chats."""
         try:
-            await self.speak_worker(ctx, LanguageCollection.fr, text='Bonjour !')
+            await self.speak_worker(ctx, LanguageCollection.fr, text="Bonjour !")
         except errors.ErroneousUsage:
             pass
         await ctx.reply(content=f"Bonjour {const.Emote.bubuAYAYA}")

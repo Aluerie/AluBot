@@ -12,7 +12,10 @@ BLACK_TILE = "https://i.imgur.com/TtOovu5.png"
 class ItemKeysCache(KeysCache):
     async def fill_data(self) -> dict:
         item_dict = await self.get_response_json(url="https://api.opendota.com/api/constants/items")
-        data = {"icon_by_id": {0: BLACK_TILE}, "id_by_key": {}}  # black tile
+        data = {
+            "icon_by_id": {0: BLACK_TILE},
+            "id_by_key": {},
+        }  # black tile
         for key, item in item_dict.items():
             data["icon_by_id"][item["id"]] = f"https://cdn.cloudflare.steamstatic.com{item['img']}"
             data["id_by_key"][key] = item["id"]

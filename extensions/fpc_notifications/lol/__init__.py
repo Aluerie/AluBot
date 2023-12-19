@@ -23,7 +23,6 @@ class LoLFPC(
 
     async def cog_load(self) -> None:
         await self.bot.initiate_twitch()
-        self.bot.initiate_riot_api_client()
         return await super().cog_load()
 
 

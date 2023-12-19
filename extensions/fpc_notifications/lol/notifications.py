@@ -6,7 +6,9 @@ from typing import TYPE_CHECKING, Mapping, NamedTuple
 import aiohttp
 import asyncpg
 import discord
+from pulsefire.clients import RiotAPIClient
 
+import config
 from utils import aluloop, const, lol
 from utils.lol.const import platform_to_region
 
@@ -86,7 +88,7 @@ class LoLFPCNotifications(FPCCog):
                     WHERE p.lower_name=ANY($1)
                 """
         rows: list[LiveAccountRow] = await self.bot.pool.fetch(query, live_lower_names)
-        async with self.bot.riot_api_client as riot_api_client:
+        async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
             for r in rows:
                 log.debug("%s", r)
                 try:

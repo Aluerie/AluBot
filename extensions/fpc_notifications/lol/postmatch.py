@@ -5,6 +5,9 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import aiohttp
 from discord.ext import commands
+from pulsefire.clients import RiotAPIClient
+
+import config
 
 from .._base import FPCCog
 from ._models import PostMatchPlayer
@@ -28,7 +31,7 @@ class LoLFeedPostMatchEdit(FPCCog):
     async def edit_lol_notification_messages(self, match_rows: list[LoLMatchRecord]):
         for match_row in match_rows:
             try:
-                async with self.bot.riot_api_client as riot_api_client:
+                async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
                     match = await riot_api_client.get_lol_match_v5_match(
                         id=f"{match_row.platform.upper()}_{match_row.match_id}",
                         region=match_row.region,

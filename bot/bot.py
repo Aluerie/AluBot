@@ -251,12 +251,6 @@ class AluBot(commands.Bot, AluBotHelper):
 
             self.github = GitHub(config.GIT_PERSONAL_TOKEN)
 
-    def initiate_riot_api_client(self) -> None:
-        if not hasattr(self, "riot_api_client"):
-            from pulsefire.clients import RiotAPIClient
-
-            self.riot_api_client = RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY})
-
     async def initiate_twitch(self) -> None:
         if not hasattr(self, "twitch"):
             from utils.twitch import TwitchClient

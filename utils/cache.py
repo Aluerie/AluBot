@@ -74,7 +74,7 @@ class KeysCache:
         """Get a key value from cache"""
         data = await self.get_data()
         try:
-            log.debug(cache, key, data[cache].get(key)) # todo: remove
+            log.debug("KeyCache item %s %s %s", cache, key, data[cache].get(key)) # todo: comment
             return data[cache].get(key)
         except KeyError:
             # let's try to update cache in case it's a new patch

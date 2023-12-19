@@ -248,7 +248,9 @@ class PostMatchPlayerData(BasePostMatchPlayer):
 
         item_list: list[tuple[Image.Image, str]] = []
         for item_id in self.items:
-            image = await bot.transposer.url_to_image(await dota.item.icon_by_id(item_id))
+            item_icon_url = await dota.item.icon_by_id(item_id)
+            log.debug("item id %s %s", item_id, item_icon_url)
+            image = await bot.transposer.url_to_image(item_icon_url)
             timing = await get_item_timing(item_id)
             item_list.append((image, timing))
 

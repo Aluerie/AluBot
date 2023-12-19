@@ -34,10 +34,13 @@ class KeysCache:
 
     async def get_response_json(self, url: str) -> Any:
         """Get response.json() from url with data"""
-        async with ClientSession().get(url) as response:
-            if response.ok:
-                return await response.json()
-            elif any(self.cached_data.values()):
+        async with ClientSession() as session:
+            async with session.get(url) as response:
+                if response.ok:
+                    return await response.json()
+
+            # response not ok
+            if any(self.cached_data.values()):
                 # let's hope that the previously cached data is still fine
                 return self.cached_data
             else:
@@ -54,7 +57,7 @@ class KeysCache:
     def need_updating(self) -> bool:
         return datetime.datetime.now(datetime.timezone.utc) - self.last_updated < datetime.timedelta(hours=6)
 
-    async def get_data(self, force_update: bool = False):
+    async def get_data(self, force_update: bool = False) -> dict[Any, Any]:
         """Get data and update the cache if needed"""
         if self.need_updating and not force_update:
             return self.cached_data
@@ -71,6 +74,7 @@ class KeysCache:
         """Get a key value from cache"""
         data = await self.get_data()
         try:
+            log.debug(data[cache].get(key)) # todo: remove
             return data[cache].get(key)
         except KeyError:
             # let's try to update cache in case it's a new patch

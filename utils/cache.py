@@ -73,17 +73,16 @@ class KeysCache:
     async def get(self, cache: str, key: Any, default: Optional[Any] = None) -> Any:
         """Get a key value from cache"""
         data = await self.get_data()
-        log.debug("data: %s", data)
         try:
-            log.debug("KeyCache item %s %s %s", cache, key, data[cache].get(key)) # todo: comment
-            return data[cache].get(key)
+            # log.debug("KeyCache item %s %s %s", cache, key, data[cache].get(key))
+            return data[cache][key]
         except KeyError:
             # let's try to update cache in case it's a new patch
             # and hope the data is up-to-date in those json-files elsa return default
             data = await self.get_data(force_update=True)
 
             try:
-                return data[cache].get(key)
+                return data[cache][key]
             except KeyError:
                 if default:
                     return default

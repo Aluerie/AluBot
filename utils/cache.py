@@ -73,6 +73,7 @@ class KeysCache:
     async def get(self, cache: str, key: Any, default: Optional[Any] = None) -> Any:
         """Get a key value from cache"""
         data = await self.get_data()
+        log.debug("data: %s", data)
         try:
             log.debug("KeyCache item %s %s %s", cache, key, data[cache].get(key)) # todo: comment
             return data[cache].get(key)

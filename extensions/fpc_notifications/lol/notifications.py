@@ -18,7 +18,7 @@ from ._models import LoLNotificationMatch
 if TYPE_CHECKING:
     from bot import AluBot
 
-    class LiveAccountRow(NamedTuple):  # TODO: proper asyncpg typing
+    class LiveAccountRow(NamedTuple):
         id: str
         account_name: str
         platform: str

@@ -11,6 +11,13 @@ if TYPE_CHECKING:
     pass
 
 
+# TODO: PROPER ASYNCPG TYPING ACROSS THE WHOLE PROJECT
+# hopefully somewhen asyncpg releases proper typing tools so
+# * wait until then
+# * rework all asyncpg typing so instead of our NamedTuple we can use something proper
+# note that currently I'm using NamedTuple over DRecord bcs DRecord allows not-specified attributes too 
+# so it's not precise typing wise
+
 class DRecord(asyncpg.Record):
     """DRecord - Dot Record
 

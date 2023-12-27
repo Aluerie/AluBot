@@ -4,7 +4,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Mapping, MutableMapping, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, MutableMapping, Optional, Union
 
 import discord
 from discord.ext import commands

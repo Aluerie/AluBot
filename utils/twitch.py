@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Optional, TypedDict
+from typing import TYPE_CHECKING, Optional, TypedDict, override
 
+import discord
 import twitchio
 from discord.ext.commands import BadArgument
 from twitchio.ext import eventsub
 
 import config
-from utils.formats import human_timedelta
+from . import const, formats
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -43,9 +44,16 @@ class TwitchClient(twitchio.Client):
         elif isinstance(event.data, eventsub.CustomRewardRedemptionAddUpdateData):
             self.discord_bot.dispatch("twitchio_channel_points_redeem", event.data)
 
+    @override
+    async def event_error(self, error: Exception, data: Optional[str] = None):
+        embed = discord.Embed(colour=const.Colour.twitch(), title='Twitch Client Error')
+        if data:
+            embed.description = data[2048:]
+        await self.discord_bot.exc_manager.register_error(error, source=embed, where='Twitch Client')
+
     async def twitch_id_by_name(self, user_name: str) -> int:
         """Get twitch_id by user_login"""
-        user: twitchio.User | None = next(iter(await self.fetch_users(names=[user_name])), None)
+        user = next(iter(await self.fetch_users(names=[user_name])), None)
         if not user:
             raise BadArgument(f"Error checking stream `{user_name}`.\n User either does not exist or is banned.")
 
@@ -53,7 +61,7 @@ class TwitchClient(twitchio.Client):
 
     async def name_by_twitch_id(self, user_id: int) -> str:
         """Get display_name by twitch_id"""
-        user: twitchio.User | None = next(iter(await self.fetch_users(ids=[user_id])), None)
+        user = next(iter(await self.fetch_users(ids=[user_id])), None)
         if not user:
             raise BadArgument(f"Error checking stream `{user_id}`.\n User either does not exist or is banned.")
 
@@ -61,7 +69,7 @@ class TwitchClient(twitchio.Client):
 
     async def fpc_data_by_login(self, user_login: str) -> tuple[int, str, str]:
         """Gets tuple (twitch_id, display_name) by user_login from one call to twitch client"""
-        user: twitchio.User | None = next(iter(await self.fetch_users(names=[user_login])), None)
+        user = next(iter(await self.fetch_users(names=[user_login])), None)
         if not user:
             raise BadArgument(f"Error checking stream `{user_login}`.\n User either does not exist or is banned.")
 
@@ -91,7 +99,7 @@ class TwitchClient(twitchio.Client):
             return sum([v * regex_time(letter) for letter, v in timeunit_dict.items()])
 
         duration = get_time_from_hms(video.duration)
-        vod_url = f"{video.url}?t={human_timedelta(duration - seconds_ago, strip=True, suffix=False)}"
+        vod_url = f"{video.url}?t={formats.human_timedelta(duration - seconds_ago, strip=True, suffix=False)}"
         return f"/[TwVOD]({vod_url})" if md else vod_url
 
     async def get_twitch_stream(self, twitch_id: int) -> TwitchStream:

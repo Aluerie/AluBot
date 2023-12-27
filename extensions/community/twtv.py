@@ -31,8 +31,6 @@ class TwitchCog(CommunityCog):
 
     @commands.Cog.listener("on_twitchio_stream_start")
     async def twitch_tv_live_notifications(self, event: eventsub.StreamOnlineData) -> None:
-        # well, we only have notifications for my own stream so id is clear :D
-        # but otherwise we would need to get the id from
         me: twitchio.User = await event.broadcaster.fetch()
         me_live = next(iter(await self.bot.twitch.fetch_streams(user_ids=[me.id])), None)
 

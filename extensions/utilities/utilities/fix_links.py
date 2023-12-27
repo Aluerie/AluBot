@@ -21,17 +21,18 @@ def fix_link_worker(text_to_fix: str, omit_rest: bool = False) -> Optional[str]:
     """Fix embeds for twitter/instagram/more to come with better embeds."""
 
     def url_regex(x: str) -> str:
-        return fr"http[s]?://(?:www\.)?{x}(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+        return rf"http[s]?://(?:www\.)?{x}(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
     fix_dict = {
         # social network: better embed site,
-        'twitter.com': 'fxtwitter.com',
-        'instagram.com': 'ddinstagram.com',
+        "x.com": "fxtwitter.com",
+        "twitter.com": "fxtwitter.com",
+        "instagram.com": "ddinstagram.com",
     }
 
     wrong_urls, fixed_urls = [], []
     for site, fixed_site in fix_dict.items():
-        r_site = site.replace('.', r'\.')  # dot in regex needs to be slashed
+        r_site = site.replace(".", r"\.")  # dot in regex needs to be slashed
         urls = re.findall(url_regex(r_site), text_to_fix)
         wrong_urls.extend(urls)
         fixed_urls += [u.replace(site, fixed_site) for u in urls]
@@ -39,7 +40,7 @@ def fix_link_worker(text_to_fix: str, omit_rest: bool = False) -> Optional[str]:
     if not fixed_urls:
         return None
     elif omit_rest:
-        return '\n'.join(fixed_urls)
+        return "\n".join(fixed_urls)
     else:
         answer = text_to_fix
         for u, f in zip(wrong_urls, fixed_urls):
@@ -51,7 +52,7 @@ class LinkUtilities(AluCog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fix_link_ctx_menu = app_commands.ContextMenu(
-            name='Fix Twitter/Insta link', callback=self.fix_link_ctx_menu_callback
+            name="Fix Twitter/Insta link", callback=self.fix_link_ctx_menu_callback
         )
 
     def cog_load(self) -> None:
@@ -71,7 +72,7 @@ class LinkUtilities(AluCog):
         await ntr.response.send_message(content)
 
     @commands.hybrid_command()
-    @app_commands.describe(link="Enter Twitter/Instagram link to \"fix\"")
+    @app_commands.describe(link='Enter Twitter/Instagram link to "fix"')
     async def fix_links(self, ctx: AluContext, *, link: str):
         """Fix twitter/instagram links with better embeds."""
         content = self.cog_fix_link_worker(link)

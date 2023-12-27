@@ -19,7 +19,8 @@ class FixLinksCommunity(CommunityCog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.delete_mimic_ctx_menu = app_commands.ContextMenu(
-            name='Delete Mimic message', callback=self.delete_mimic_ctx_menu_callback
+            name="Delete Mimic message",
+            callback=self.delete_mimic_ctx_menu_callback,
         )
 
     def cog_load(self) -> None:
@@ -31,25 +32,25 @@ class FixLinksCommunity(CommunityCog):
 
     async def delete_mimic_ctx_menu_callback(self, ntr: discord.Interaction[commands.Bot], message: discord.Message):
         # todo: why it's there, wrong cog
-        if self.bot.mimic_message_user_mapping.get(message.id) == ntr.user.id:  # type: ignore # it's not int, it's Tuple[int, float]
+        if self.bot.mimic_message_user_mapping.get(message.id) == ntr.user.id:
             # ^ userid_ttl[0] represents both
             # the message in cache and belongs to the interaction author (user)
             await message.delete()
             e = discord.Embed(colour=const.Colour.prpl())
-            e.description = 'Successfully deleted your Mimic message.'
+            e.description = "Successfully deleted your Mimic message."
             await ntr.response.send_message(embed=e, ephemeral=True)
             return
         elif not message.webhook_id:
-            raise errors.UserError('This message was not mimicked by my MimicUser functionality.')
+            raise errors.UserError("This message was not mimicked by my MimicUser functionality.")
         else:
             raise errors.SomethingWentWrong(
-                'Either this message\n'
-                '* was not mimicked by me\n'
-                '* expired from cache (7 days)\n'
-                '* or cache was reset (because of reboot). \nSorry. You have to ask moderators to delete it.'
+                "Either this message\n"
+                "* was not mimicked by me\n"
+                "* expired from cache (7 days)\n"
+                "* or cache was reset (because of reboot). \nSorry. You have to ask moderators to delete it."
             )
 
-    @commands.Cog.listener('on_message')
+    @commands.Cog.listener("on_message")
     async def fix_links(self, message: discord.Message):
         if not message.guild:
             return

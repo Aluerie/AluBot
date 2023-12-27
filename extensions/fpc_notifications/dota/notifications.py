@@ -18,7 +18,7 @@ from ._models import ActiveMatch
 if TYPE_CHECKING:
     from bot import AluBot
 
-    class DotaFPCMatchRecord(NamedTuple):  # todo: proper asyncpg typing
+    class DotaFPCMatchRecord(NamedTuple):
         match_id: int
         opendota_jobid: int
 

@@ -39,14 +39,13 @@ class ConfModal(discord.ui.Modal):
     )
 
     async def on_submit(self, ntr: discord.Interaction):
-        e = discord.Embed(title=self.title, colour=Colour.prpl(), description=self.conf.value)
-        e.set_footer(text="Use buttons below to make a new confession in this channel")
+        embed = discord.Embed(title=self.title, colour=Colour.prpl(), description=self.conf.value)
         if self.title == "Non-anonymous confession":
-            e.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
+            embed.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
         channel = ntr.channel
         assert isinstance(channel, discord.TextChannel)
 
-        await channel.send(embeds=[e])
+        await channel.send(embeds=[embed])
         saint_string = "{0} {0} {0} {1} {1} {1} {2} {2} {2}".format(Emote.bubuChrist, "\N{CHURCH}", Emote.PepoBeliever)
         await channel.send(saint_string)
         await ntr.response.send_message(content=f"The Lord be with you {Emote.PepoBeliever}", ephemeral=True)

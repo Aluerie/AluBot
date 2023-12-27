@@ -30,34 +30,34 @@ class CommunityFun(CommunityCog):
         else:
             return False
 
-    @commands.Cog.listener('on_message')
+    @commands.Cog.listener("on_message")
     async def bots_in_lobby(self, message: discord.Message):
         if not self.channel_check(message, const.Channel.general):
             return
 
         if message.interaction is not None and message.interaction.type == discord.InteractionType.application_command:
-            text = 'Slash-commands'
+            text = "Slash-commands"
         elif message.author.bot and not message.webhook_id:
-            text = 'Bots'
+            text = "Bots"
         else:
             return
         await message.channel.send(
-            '{0} in {1} ! {2} {2} {2}'.format(text, const.Channel.general.mention, const.Emote.Ree)
+            "{0} in {1} ! {2} {2} {2}".format(text, const.Channel.general.mention, const.Emote.Ree)
         )
 
-    @commands.Cog.listener('on_message')
+    @commands.Cog.listener("on_message")
     async def weebs_out(self, message: discord.Message):
         if not self.channel_check(message, const.Channel.weebs):
             return
 
         if random.randint(1, 100 + 1) < 7:
             await message.channel.send(
-                '{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}'.format(
+                "{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}".format(
                     const.Emote.WeebsOutOut, const.Emote.WeebsOut, const.Emote.peepoWeebSmash, const.Emote.peepoRiot
                 )
             )
 
-    @commands.Cog.listener('on_message')
+    @commands.Cog.listener("on_message")
     async def ree_the_oof(self, message: discord.Message):
         if not self.community_check(message):
             return
@@ -69,7 +69,7 @@ class CommunityFun(CommunityCog):
                 with contextlib.suppress(discord.HTTPException):
                     await message.delete()
 
-    @commands.Cog.listener('on_message')
+    @commands.Cog.listener("on_message")
     async def random_comfy_react(self, message: discord.Message):
         if not self.community_check(message):
             return
@@ -81,7 +81,7 @@ class CommunityFun(CommunityCog):
             except discord.HTTPException:
                 return
 
-    @commands.Cog.listener('on_message')
+    @commands.Cog.listener("on_message")
     async def your_life(self, message: discord.Message):
         if not self.community_check(message):
             return
@@ -89,8 +89,8 @@ class CommunityFun(CommunityCog):
         if random.randint(1, 170 + 1) < 2:
             try:
                 sliced_text = message.content.split()
-                if len(sliced_text) > 2:
-                    answer_text = f"Your life {' '.join(sliced_text[2:])}"
+                if 13 > len(sliced_text) > 2:
+                    answer_text = "Your life " + " ".join(sliced_text[2:])
                     await message.channel.send(answer_text)
             except Exception:
                 return

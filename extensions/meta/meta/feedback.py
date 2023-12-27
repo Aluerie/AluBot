@@ -47,6 +47,9 @@ class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
         # success
         e2 = self.cog.get_successfully_submitted_embed(summary=summary, details=details)
         await ntr.response.send_message(embed=e2)
+        # send copy of the embed to the user
+        e3 = self.cog.get_feedback_copy_embed(summary=summary, details=details)
+        await ntr.user.send(embed=e3)
 
 
 class FeedbackCog(MetaCog):
@@ -54,6 +57,21 @@ class FeedbackCog(MetaCog):
     def feedback_channel(self) -> Optional[discord.TextChannel]:
         # maybe add different channel
         return self.bot.hideout.global_logs
+
+    @staticmethod
+    def get_feedback_copy_embed(
+        summary: str = "No feedback title was provided (prefix?)",
+        details: str = "No feedback details were provided",
+    ) -> discord.Embed:
+        e = discord.Embed(title=summary, description=details, colour=const.Colour.prpl())
+
+        e.set_footer(
+            text=(
+                "This copy of your own feedback was sent to you just so "
+                "if the developers answer it (here via the bot) - you can remember your previous message."
+            )
+        )
+        return e
 
     @staticmethod
     def get_feedback_embed(
@@ -105,6 +123,9 @@ class FeedbackCog(MetaCog):
         await channel.send(embed=e)
         e2 = self.get_successfully_submitted_embed(details=details)
         await ctx.send(embed=e2)
+        # send copy of the embed to the user
+        e3 = self.get_feedback_copy_embed(details=details)
+        await ctx.author.send(embed=e3)
 
     @app_commands.command(name="feedback")
     async def slash_feedback(self, ntr: discord.Interaction):

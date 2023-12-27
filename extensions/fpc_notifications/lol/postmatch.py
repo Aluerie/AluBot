@@ -15,7 +15,7 @@ from ._models import PostMatchPlayer
 if TYPE_CHECKING:
     from .notifications import LoLMatchRecord
 
-    class LoLMessageRecord(NamedTuple):  # TODO: proper asyncpg typing
+    class LoLMessageRecord(NamedTuple):
         message_id: int
         channel_id: int
         match_id: int

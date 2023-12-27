@@ -188,13 +188,10 @@ class TimeLine:
 
 
 class BugTracker(AluCog):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.retries: int = 0  # todo: find better solution
-
     async def cog_load(self) -> None:
         self.bot.ini_github()
         self.valve_devs = await self.get_valve_devs()
+        self.git_comments_check.add_exception_type(RequestError, RequestFailed)
         self.git_comments_check.start()
 
     async def cog_unload(self) -> None:
@@ -236,20 +233,20 @@ class BugTracker(AluCog):
                 error_logins.append(l)
 
         def embed_answer(logins: list[str], color: discord.Color, description: str) -> discord.Embed:
-            e = discord.Embed(color=color)
+            embed = discord.Embed(color=color)
             logins_join = ", ".join(f"`{l}`" for l in logins)
-            e.description = f"{description}\n{logins_join}"
-            return e
+            embed.description = f"{description}\n{logins_join}"
+            return embed
 
         if success_logins:
             self.valve_devs.extend(success_logins)
-            e = embed_answer(success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs.")
-            await ctx.reply(embed=e)
+            embed = embed_answer(success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs.")
+            await ctx.reply(embed=embed)
         if error_logins:
-            e = embed_answer(
+            embed = embed_answer(
                 error_logins, const.MaterialPalette.red(), "User(-s) were already in the list of Valve devs."
             )
-            await ctx.reply(embed=e)
+            await ctx.reply(embed=embed)
 
     @commands.is_owner()
     @valve.command()
@@ -389,60 +386,32 @@ class BugTracker(AluCog):
                 )
             )
 
-        efs = [v.embed_and_file(self.bot) for v in issue_dict.values()]
+        embed_and_files = [v.embed_and_file(self.bot) for v in issue_dict.values()]
 
         batches_to_send: list[list[tuple[discord.Embed, discord.File]]] = []
         character_counter, embed_counter = 0, 0
-        for em, file in efs:
-            character_counter += len(em)
+        for embed, file in embed_and_files:
+            character_counter += len(embed)
             embed_counter += 1
             if character_counter < const.Limit.Embed.sum_all and embed_counter < 10 + 1:
                 try:
-                    batches_to_send[-1].append((em, file))
+                    batches_to_send[-1].append((embed, file))
                 except IndexError:
-                    batches_to_send.append([(em, file)])
+                    batches_to_send.append([(embed, file)])
             else:
-                character_counter, embed_counter = len(em), 1
-                batches_to_send.append([(em, file)])
+                character_counter, embed_counter = len(embed), 1
+                batches_to_send.append([(embed, file)])
 
         for batch in batches_to_send:
-            msg = await self.news_channel.send(
+            message = await self.news_channel.send(
                 embeds=[embed for (embed, _file) in batch],
                 files=[file for (_embed, file) in batch],
             )
-            await msg.publish()
+            await message.publish()
 
         query = "UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2"
         await self.bot.pool.execute(query, now, const.Guild.community)
-        self.retries = 0
         log.debug("BugTracker task is finished")
-
-    @git_comments_check.error
-    async def git_comments_check_error(self, error: BaseException):
-        """Error handling for bug tracker task
-
-        This tries to restart the task if error is known.
-        """
-
-        async def sleep_and_restart():
-            await asyncio.sleep(60 * 10 * 2**self.retries)
-            self.retries += 1
-            self.git_comments_check.restart()
-
-        if isinstance(error, RequestFailed):
-            if error.response.status_code == 502:
-                if self.retries == 0:
-                    e = discord.Embed(description="DotaBugtracker: Server Error 502")
-                    await self.hideout.spam.send(embed=e)
-                await sleep_and_restart()
-                return
-        elif isinstance(error, RequestError):
-            await sleep_and_restart()
-            return
-
-        txt = "Dota2 BugTracker task"
-        await self.bot.exc_manager.register_error(error, txt, where=txt)
-        # self.git_comments_check.restart()
 
     async def get_issue(self, issue_number: int):
         return (

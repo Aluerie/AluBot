@@ -174,7 +174,7 @@ class LoLNotifsSettings(FPCSettingsBase, name="LoL"):
 
     async def get_account_dict(self, *, server: LiteralServer, account: str) -> dict:
         lol_id, platform, account = await self.get_lol_id(server, account)
-        return {"id": lol_id, "platform": platform, "account": account}
+        return {"id": lol_id, "platform": platform, "account_name": account}
 
     # lol database list ##################################
 

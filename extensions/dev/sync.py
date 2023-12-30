@@ -113,7 +113,7 @@ class DailyAutoSync(DevBaseCog):
     async def cog_unload(self):
         self.one_time_sync.cancel()
 
-    @aluloop(time=datetime.time(hour=3, minute=33, second=33, tzinfo=datetime.timezone.utc))
+    @aluloop(count=3, minutes=10)
     async def one_time_sync(self):
         if not self.sync_dict:
             # 3 Days restart auto-sync is not needed.
@@ -123,10 +123,10 @@ class DailyAutoSync(DevBaseCog):
 
         guild = discord.Object(id=guild_id) if guild_id else None
         synced = await self.bot.tree.sync(guild=guild)
-        desc = f"Synced `{len(synced)}` {guild_name} commands."
+        # desc = f"Synced `{len(synced)}` {guild_name} commands."
 
-        e = discord.Embed(color=0x234234, description=desc, title="3 Days auto-sync")
-        await self.hideout.daily_report.send(embed=e)
+        # e = discord.Embed(color=0x234234, description=desc, title="3 Days auto-sync")
+        # await self.hideout.daily_report.send(embed=e)
 
 
 async def setup(bot):

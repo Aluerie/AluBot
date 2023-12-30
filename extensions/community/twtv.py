@@ -23,7 +23,7 @@ class TwitchCog(CommunityCog):
 
         # Twitch EventSub
         # these are supposed to be broadcaster/user access token for streamers we sub to
-        # since we are subbing to event of myself then my own access token is fine
+        # since we are subbing to event of myself only then my own access token is fine
         broadcaster, token = const.Twitch.my_channel_id, config.TWITCH_ACCESS_TOKEN
         await self.bot.twitch.eventsub.subscribe_channel_stream_start(broadcaster, token)
         # testing with channel points since it's easy yo do :D
@@ -41,11 +41,19 @@ class TwitchCog(CommunityCog):
         file = await self.bot.transposer.url_to_file(stream.preview_url, filename="twtvpreview.png")
         last_vod_url = await self.bot.twitch.last_vod_link(const.Twitch.my_channel_id)
         desc = f"Playing {stream.game}\n/[Watch Stream]({stream.url}){last_vod_url}"
-        e = discord.Embed(colour=0x9146FF, title=f"{stream.title}", url=stream.url, description=desc)
-        e.set_author(name=f"{stream.display_name} just went live on Twitch!", icon_url=stream.logo_url, url=stream.url)
-        e.set_thumbnail(url=stream.logo_url)
-        e.set_image(url=f"attachment://{file.filename}")
-        await self.community.stream_notifs.send(content=content, embed=e, file=file)
+        embed = discord.Embed(colour=0x9146FF, title=f"{stream.title}", url=stream.url, description=desc)
+        embed.set_author(
+            name=f"{stream.display_name} just went live on Twitch!", icon_url=stream.logo_url, url=stream.url
+        )
+
+        # game art thumbnail
+        game = next(iter(await self.bot.twitch.fetch_games(names=[stream.game])), None)
+        if game:
+            embed.set_thumbnail(url=game.art_url(285, 380))
+
+        embed.set_thumbnail(url=stream.logo_url)
+        embed.set_image(url=f"attachment://{file.filename}")
+        await self.community.stream_notifs.send(content=content, embed=embed, file=file)
 
     @commands.Cog.listener("on_twitchio_channel_points_redeem")
     async def twitch_tv_redeem_notifications(self, event: eventsub.CustomRewardRedemptionAddUpdateData) -> None:

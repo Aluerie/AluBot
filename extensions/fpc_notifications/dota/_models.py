@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from utils import const, dota, formats
 
-from .._fpc_utils.base_postmatch import BasePostMatchPlayer
+from .._fpc_utils.base_models import BasePostMatchPlayer
 
 if TYPE_CHECKING:
     from bot import AluBot

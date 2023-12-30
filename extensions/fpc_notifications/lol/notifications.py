@@ -13,10 +13,12 @@ from utils import aluloop, const, lol
 from utils.lol.const import platform_to_region
 
 from .._base import FPCCog
-from ._models import LoLNotificationMatch
+from ._models import LoLNotificationMatch, PostMatchPlayer
 
 if TYPE_CHECKING:
     from bot import AluBot
+
+    from .notifications import LoLMatchRecord
 
     class LiveAccountRow(NamedTuple):
         id: str
@@ -31,6 +33,12 @@ if TYPE_CHECKING:
         match_id: int
         platform: str
         region: str
+
+    class LoLMessageRecord(NamedTuple):
+        message_id: int
+        channel_id: int
+        match_id: int
+        champ_id: int
 
 
 log = logging.getLogger(__name__)
@@ -89,12 +97,12 @@ class LoLFPCNotifications(FPCCog):
                 """
         rows: list[LiveAccountRow] = await self.bot.pool.fetch(query, live_lower_names)
         async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
-            for r in rows:
-                log.debug("%s", r)
+            for row in rows:
+                log.debug("%s", row)
                 try:
                     game = await riot_api_client.get_lol_spectator_v4_active_game_by_summoner(
-                        summoner_id=r.id,
-                        region=r.platform,  # todo: region = platform xd
+                        summoner_id=row.id,
+                        region=row.platform,  # todo: region = platform xd
                     )
                 except aiohttp.ClientResponseError as exc:
                     # we have to do try/except because discord.ext.tasks has aiohttp errors as
@@ -102,13 +110,15 @@ class LoLFPCNotifications(FPCCog):
                     # and pulsefire unfortunately raises aiohttp errors.
                     # I do not to remove them from valid_exceptions.
                     if exc.status == 404:
-                        log.debug("Player %s is not in the active game on account %s", r.display_name, r.account_name)
+                        log.debug(
+                            "Player %s is not in the active game on account %s", row.display_name, row.account_name
+                        )
                     else:
                         e = discord.Embed(colour=const.Colour.error())
                         e.add_field(
                             name="`lol_spectator_v4_active_game_by_summoner` Error", value=f"Status: {exc.status}"
                         )
-                        e.add_field(name="Account", value=f"{r.account_name} {r.platform} {r.display_name}")
+                        e.add_field(name="Account", value=f"{row.account_name} {row.platform} {row.display_name}")
                         e.set_footer(text="fill_live_matches in league notifications")
                         await self.hideout.spam.send(embed=e)
                     continue
@@ -121,9 +131,9 @@ class LoLFPCNotifications(FPCCog):
 
                 self.live_match_ids.append(game["gameId"])
 
-                player = next((x for x in game["participants"] if x["summonerId"] == r.id), None)
+                player = next((x for x in game["participants"] if x["summonerId"] == row.id), None)
 
-                if player and player["championId"] in favourite_champion_ids and r.last_edited != game["gameId"]:
+                if player and player["championId"] in favourite_champion_ids and row.last_edited != game["gameId"]:
                     query = """ SELECT s.channel_id 
                                 FROM lol_favourite_characters c
                                 JOIN lol_favourite_players p on c.guild_id = p.guild_id
@@ -132,11 +142,11 @@ class LoLFPCNotifications(FPCCog):
                                 AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3);     
                             """
                     channel_id_rows = await self.bot.pool.fetch(
-                        query, player["championId"], r.lower_name, game["gameId"]
+                        query, player["championId"], row.lower_name, game["gameId"]
                     )
                     channel_ids = [channel_id for channel_id, in channel_id_rows]
                     if channel_ids:
-                        log.debug("Notif %s - %s", r.display_name, await lol.champion.key_by_id(player["championId"]))
+                        log.debug("Notif %s - %s", row.display_name, await lol.champion.key_by_id(player["championId"]))
                         self.notification_matches.append(
                             LoLNotificationMatch(
                                 match_id=game["gameId"],
@@ -145,7 +155,7 @@ class LoLFPCNotifications(FPCCog):
                                 start_time=game["gameStartTime"],
                                 champion_id=player["championId"],
                                 all_champion_ids=[p["championId"] for p in game["participants"]],
-                                twitch_id=r.twitch_id,
+                                twitch_id=row.twitch_id,
                                 summoner_spell_ids=(player["spell1Id"], player["spell2Id"]),
                                 rune_ids=player["perks"]["perkIds"],
                                 channel_ids=channel_ids,
@@ -188,7 +198,7 @@ class LoLFPCNotifications(FPCCog):
                     WHERE NOT match_id=ANY($1)
                 """
         rows: list[LoLMatchRecord] = await self.bot.pool.fetch(query, self.live_match_ids)
-        self.bot.dispatch("lol_fpc_notification_match_finished", rows)
+        await self.edit_lol_notification_messages(rows)
 
     @aluloop(seconds=59)
     async def lol_fpc_notifications_task(self):
@@ -198,6 +208,39 @@ class LoLFPCNotifications(FPCCog):
             await self.send_notifications(match)
         await self.declare_matches_finished()
         log.debug(f"--- LoL FPC Notifications Task is finished ---")
+
+    # POST MATCH EDITS
+
+    async def edit_lol_notification_messages(self, match_rows: list[LoLMatchRecord]):
+        for match_row in match_rows:
+            try:
+                async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
+                    match = await riot_api_client.get_lol_match_v5_match(
+                        id=f"{match_row.platform.upper()}_{match_row.match_id}",
+                        region=match_row.region,
+                    )
+            except aiohttp.ClientResponseError as exc:
+                if exc.status == 404:
+                    continue
+                else:
+                    raise
+
+            query = "SELECT * FROM lol_messages WHERE match_id=$1"
+            message_rows: list[LoLMessageRecord] = await self.bot.pool.fetch(query, match_row.match_id)
+
+            for message_row in message_rows:
+                participant = next(p for p in match["info"]["participants"] if p["championId"] == message_row.champ_id)
+                post_match_player = PostMatchPlayer(
+                    channel_id=message_row.channel_id,
+                    message_id=message_row.message_id,
+                    summoner_id=participant["summonerId"],
+                    kda=f"{participant['kills']}/{participant['deaths']}/{participant['assists']}",
+                    outcome="Win" if participant["win"] else "Loss",
+                    item_ids=[participant[f"item{i}"] for i in range(0, 6 + 1)],
+                )
+                await post_match_player.edit_notification_embed(self.bot)
+            query = "DELETE FROM lol_matches WHERE match_id=$1"
+            await self.bot.pool.fetch(query, match_row.match_id)
 
 
 async def setup(bot: AluBot):

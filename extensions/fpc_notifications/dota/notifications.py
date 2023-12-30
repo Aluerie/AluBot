@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 import time
 from typing import TYPE_CHECKING, NamedTuple
@@ -9,14 +10,18 @@ import discord
 from discord.ext import commands
 
 import config
-from utils import aluloop
+from utils import aluloop, const
 from utils.dota import hero
 
 from .._base import FPCCog
-from ._models import ActiveMatch
+from ._models import ActiveMatch, PostMatchPlayerData
+from ._opendota import OpendotaRequestMatch
 
 if TYPE_CHECKING:
     from bot import AluBot
+    from utils import AluContext
+
+    from .notifications import DotaFPCMatchRecord
 
     class DotaFPCMatchRecord(NamedTuple):
         match_id: int
@@ -35,6 +40,9 @@ class Dota2FPCNotifications(FPCCog):
         self.live_matches: list[ActiveMatch] = []
         self.hero_fav_ids: list[int] = []
         self.player_fav_ids: list[int] = []
+        self.opendota_req_cache: dict[int, OpendotaRequestMatch] = dict()
+
+        self.is_postmatch_edits_running: bool = True
 
     async def cog_load(self) -> None:
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
@@ -61,7 +69,11 @@ class Dota2FPCNotifications(FPCCog):
 
         # maybe asyncpg.PostgresConnectionError
         self.dota_feed.add_exception_type(asyncpg.InternalServerError)
+        self.dota_feed.clear_exception_types()  # todo: idk doc, this is sketchy
         self.dota_feed.start()
+
+        self.daily_report.start()
+
         return await super().cog_load()
 
     @commands.Cog.listener()
@@ -70,6 +82,7 @@ class Dota2FPCNotifications(FPCCog):
 
     async def cog_unload(self) -> None:
         self.dota_feed.cancel()
+        self.daily_report.stop()
         return await super().cog_unload()
 
     async def preliminary_queries(self):
@@ -186,9 +199,15 @@ class Dota2FPCNotifications(FPCCog):
                     WHERE NOT match_id=ANY($1)
                 """
         rows: list[DotaFPCMatchRecord] = await self.bot.pool.fetch(query, list(self.top_source_dict.keys()))
-        self.bot.dispatch("dota_fpc_notification_match_finished", rows)
+        try:
+            await self.edit_dota_notification_messages(rows)
+        except Exception as exc:
+            self.is_postmatch_edits_running = False
+            await self.bot.exc_manager.register_error(
+                exc, source="Dota 2 FPC Post Match Edits", where="Dota 2 FPC Post Match Edits"
+            )
 
-    @aluloop(seconds=49)
+    @aluloop(seconds=59)
     async def dota_feed(self):
         log.debug(f"--- Task is starting now ---")
 
@@ -211,8 +230,55 @@ class Dota2FPCNotifications(FPCCog):
         for match in self.live_matches:
             await self.send_notifications(match)
 
-        await self.declare_matches_finished()
+        if self.is_postmatch_edits_running:
+            await self.declare_matches_finished()
         log.debug(f"--- Task is finished ---")
+
+    # POST MATCH EDITS
+
+    async def edit_dota_notification_messages(self, match_rows: list[DotaFPCMatchRecord]):
+        for match_row in match_rows:
+            cache_item = self.opendota_req_cache.get(match_row.match_id, None)
+
+            if not cache_item:
+                self.opendota_req_cache[match_row.match_id] = cache_item = OpendotaRequestMatch(
+                    match_row.match_id, match_row.opendota_jobid
+                )
+
+            player_dict_list = await cache_item.workflow(self.bot)
+            if player_dict_list:
+                query = "SELECT * FROM dota_messages WHERE match_id=$1"
+                for message_row in await self.bot.pool.fetch(query, match_row.match_id):
+                    for player in player_dict_list:
+                        if player["hero_id"] == message_row.character_id:
+                            post_match_player = PostMatchPlayerData(
+                                player_data=player,
+                                channel_id=message_row.channel_id,
+                                message_id=message_row.message_id,
+                                api_calls_done=cache_item.api_calls_done,
+                            )
+                            await post_match_player.edit_notification_embed(self.bot)
+            if cache_item.dict_ready:
+                self.opendota_req_cache.pop(match_row.match_id)
+                query = "DELETE FROM dota_matches WHERE match_id=$1"
+                await self.bot.pool.execute(query, match_row.match_id)
+
+    # OPENDOTA RATE LIMITS
+
+    @commands.command(hidden=True, aliases=["odrl", "od_rl", "odota_ratelimit"])
+    async def opendota_ratelimit(self, ctx: AluContext):
+        """Send opendota rate limit numbers"""
+        e = discord.Embed(colour=const.Colour.prpl(), description=f"Odota limits: {self.bot.odota_ratelimit}")
+        await ctx.reply(embed=e)
+
+    @aluloop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
+    async def daily_report(self):
+        e = discord.Embed(title="Daily Report", colour=const.MaterialPalette.black())
+        the_dict = self.bot.odota_ratelimit
+        month, minute = int(the_dict["monthly"]), int(the_dict["minutely"])
+        e.description = f"Odota limits. monthly: {month} minutely: {minute}"
+        content = f"{self.bot.owner_id}" if month < 10_000 else ""
+        await self.hideout.daily_report.send(content=content, embed=e)
 
 
 async def setup(bot):

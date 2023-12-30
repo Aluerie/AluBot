@@ -2,14 +2,12 @@ from utils import const
 
 from .._base import FPCCog
 from .notifications import Dota2FPCNotifications
-from .postmatch import DotaPostMatchEdit
 from .settings import DotaNotifsSettings
 from .twitch_check import DotaTwitchAccountCheck
 
 
 class Dota2FPC(
     Dota2FPCNotifications,
-    DotaPostMatchEdit,
     DotaNotifsSettings,
     DotaTwitchAccountCheck,
     FPCCog,

@@ -2,7 +2,6 @@ from utils import const
 
 from .._base import FPCCog
 from .notifications import LoLFPCNotifications
-from .postmatch import LoLFeedPostMatchEdit
 from .settings import LoLNotifsSettings
 from .summoner_check import LoLSummonerNameCheck
 from .twitch_check import LoLTwitchAccountCheck
@@ -10,7 +9,6 @@ from .twitch_check import LoLTwitchAccountCheck
 
 class LoLFPC(
     LoLFPCNotifications,
-    LoLFeedPostMatchEdit,
     LoLNotifsSettings,
     LoLSummonerNameCheck,
     LoLTwitchAccountCheck,

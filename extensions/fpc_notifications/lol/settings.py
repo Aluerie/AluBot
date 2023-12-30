@@ -7,7 +7,9 @@ import aiohttp
 import discord
 from discord import app_commands
 from discord.ext import commands
+from pulsefire.clients import RiotAPIClient
 
+import config
 from utils import checks, const, lol
 from utils.lol.const import LiteralServer, LiteralServerUpper, platform_to_server, server_to_platform
 
@@ -150,19 +152,19 @@ class LoLNotifsSettings(FPCSettingsBase, name="LoL"):
     @staticmethod
     def cmd_usage_str(**kwargs):
         platform = kwargs.pop("platform")
-        account = kwargs.pop("account")
+        account = kwargs.pop("account_name")
         return f"server: {platform_to_server(platform).upper()} account: {account}"
 
     @staticmethod
     def player_acc_string(**kwargs):
         platform = kwargs.pop("platform")
-        account = kwargs.pop("account")
+        account = kwargs.pop("account_name")
         return f"`{platform_to_server(platform).upper()}` - `{account}` {Account(platform, account).links}"
 
     async def get_lol_id(self, server: LiteralServer, account: str) -> tuple[str, str, str]:
         try:
             platform = server_to_platform(server)
-            async with self.bot.riot_api_client as riot_api_client:
+            async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
                 player = await riot_api_client.get_lol_summoner_v4_by_name(name=account, region=platform)
             return player["id"], platform, player["name"]
         except aiohttp.ClientResponseError:
@@ -497,14 +499,14 @@ class LoLNotifsSettings(FPCSettingsBase, name="LoL"):
 
         meraki_patch = await lol.roles.get_meraki_patch()
 
-        e = discord.Embed(title="List of champs missing from Meraki JSON", colour=const.Colour.rspbrry())
-        e.description = "\n".join(champ_str)
-        e.add_field(
+        embed = discord.Embed(title="List of champs missing from Meraki JSON", colour=const.Colour.rspbrry())
+        embed.description = "\n".join(champ_str)
+        embed.add_field(
             name="Links",
             value=(
                 f"• [GitHub](https://github.com/meraki-analytics/role-identification)\n"
                 f"• [Json](https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)"
             ),
         )
-        e.add_field(name="Meraki last updated", value=f"Patch {meraki_patch}")
-        await ctx.reply(embed=e)
+        embed.add_field(name="Meraki last updated", value=f"Patch {meraki_patch}")
+        await ctx.reply(embed=embed)

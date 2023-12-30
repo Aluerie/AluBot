@@ -12,7 +12,7 @@ from utils import const, lol
 from utils.formats import human_timedelta
 from utils.lol.const import LiteralPlatform, platform_to_server
 
-from .._fpc_utils.base_postmatch import BasePostMatchPlayer
+from .._fpc_utils.base_models import BasePostMatchPlayer
 
 if TYPE_CHECKING:
     from bot import AluBot

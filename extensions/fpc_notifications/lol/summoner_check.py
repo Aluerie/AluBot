@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import datetime
+import logging
 from typing import TYPE_CHECKING, NamedTuple
 
+import aiohttp
 from pulsefire.clients import RiotAPIClient
 
 import config
@@ -18,6 +20,10 @@ if TYPE_CHECKING:
         account_name: str
 
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+
+
 class LoLSummonerNameCheck(FPCCog):
     async def cog_load(self) -> None:
         self.check_summoner_renames.start()
@@ -31,13 +37,20 @@ class LoLSummonerNameCheck(FPCCog):
         query = "SELECT id, platform, account_name FROM lol_accounts"
         rows: list[AccountRow] = await self.bot.pool.fetch(query)
 
-        for row in rows:
-            async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
-                player = await riot_api_client.get_lol_summoner_v4_by_name(
-                    name=row.account_name,
-                    region=row.platform,
-                )
+        async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
+            for row in rows:
+                try:
+                    player = await riot_api_client.get_lol_summoner_v4_by_id(
+                        region=row.platform,
+                        id=row.id,
+                    )
+                except aiohttp.ClientResponseError as exc:
+                    if exc.status == 404:
+                        log.info("Failed to get summoner under previous name %s", row.account_name)
+                        continue
+                    else:
+                        raise
 
-            if player["name"] != row.account_name:
-                query = "UPDATE lol_accounts SET account_name=$1 WHERE id=$2"
-                await self.bot.pool.execute(query, player["name"], row.id)
+                if player["name"] != row.account_name:
+                    query = "UPDATE lol_accounts SET account_name=$1 WHERE id=$2"
+                    await self.bot.pool.execute(query, player["name"], row.id)

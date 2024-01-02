@@ -17,7 +17,7 @@ git+https://github.com/Gorialis/jishaku.git
 uvloop~=0.19.0; platform_system == 'Linux'  # ignore on non-Linux - because not available
 
 aiofiles~=23.2.1
-pillow==10.1.0
+pillow==10.2.0
 emoji==2.9.0
 numpy==1.26.2
 aiohttp~=3.9.1

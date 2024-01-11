@@ -1,16 +1,15 @@
 from utils import const
 
 from .._base import FPCCog
-from .notifications import Dota2FPCNotifications
-from .settings import DotaNotifsSettings
+from .notifications import DotaFPCNotifications
+from .settings import DotaFPCSettings
 from .twitch_check import DotaTwitchAccountCheck
 
 
-class Dota2FPC(
-    Dota2FPCNotifications,
-    DotaNotifsSettings,
+class DotaFPC(
+    DotaFPCNotifications,
+    DotaFPCSettings,
     DotaTwitchAccountCheck,
-    FPCCog,
     emote=const.Emote.DankLove,
 ):
     """
@@ -24,4 +23,4 @@ class Dota2FPC(
 
 
 async def setup(bot):
-    await bot.add_cog(Dota2FPC(bot))
+    await bot.add_cog(DotaFPC(bot))

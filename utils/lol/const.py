@@ -1,75 +1,68 @@
 """
 Glossary:
-* platform - RiotGames routing platform names with numbers like `na1`. Name matches PyOT docs.
-* region - RiotGames routing region names like `americas`. Name matches PyOT docs.
-* server - Normal regions like 'na' in lower case. Name does not exist in PyOT docs.
+* platform 
+    RiotGames routing platform names with numbers like `na1`.
+* continent 
+    RiotGames routing continent names like `americas`.
+* region 
+    Garbage term, because Riot API uses it as both platform and region.
+    So in pulsefire riot api client calls we use both continent and platform for `region=` keyword argument.
+* server 
+    Normal human-readable server abbreviations like 'na'. 
+    Name does not exist in riot api calls and only used for display purposes.
 """
 from typing import Literal
 
 __all__ = (
     "LiteralPlatform",
-    "LiteralRegion",
+    "LiteralContinent",
     "LiteralServer",
-    "LiteralServerUpper",
-    "server_to_platform",
-    "platform_to_server",
-    "platform_to_region",
+    "PLATFORM_TO_CONTINENT",
+    "SERVER_TO_PLATFORM",
+    "PLATFORM_TO_SERVER",
+    "SERVER_TO_CONTINENT",
 )
 
 
-# Literals
+LiteralPlatform = Literal[
+    "BR1", "EUN1", "EUW1", "JP1", "KR", "LA1", "LA2", "NA1", "OC1", "PH2", "RU", "SG2", "TH2", "TR1", "TW2", "VN2"
+] #todo: maybe fix all other regions
+LiteralContinent = Literal["AMERICAS", "ASIA", "EUROPE"]
+LiteralServer = Literal["BR", "EUN", "EUW", "JP", "KR", "LAN", "LAS", "NA", "OC", "RU", "TR"]
 
-# fmt: off
-LiteralPlatform = Literal['br1', 'eun1', 'euw1', 'jp1', 'kr', 'la1', 'la2', 'na1', 'oc1', 'ru', 'tr1']
-LiteralRegion = Literal['americas', 'asia', 'europe']
-LiteralServerUpper = Literal['BR', 'EUN', 'EUW', 'JP', 'KR', 'LAN', 'LAS', 'NA', 'OC', 'RU', 'TR']
-LiteralServer = Literal[
-    'BR', 'br', 'EUN', 'eun', 'EUW', 'euw', 'JP', 'jp', 'KR', 'kr', 'LAN', 'lan', 'LAS', 'las', 'NA', 'na',
-    'OC', 'oc', 'RU', 'ru', 'TR', 'tr',
-]
-# fmt: on
 
-platform_to_region_dict: dict[LiteralPlatform, LiteralRegion] = {
-    "br1": "americas",
-    "eun1": "europe",
-    "euw1": "europe",
-    "jp1": "asia",
-    "kr": "asia",
-    "la1": "americas",
-    "la2": "americas",
-    "na1": "americas",
-    "oc1": "asia",
-    "ru": "europe",
-    "tr1": "europe",
+PLATFORM_TO_CONTINENT: dict[LiteralPlatform, LiteralContinent] = {
+    "BR1": "AMERICAS",
+    "EUN1": "EUROPE",
+    "EUW1": "EUROPE",
+    "JP1": "ASIA",
+    "KR": "ASIA",
+    "LA1": "AMERICAS",
+    "LA2": "AMERICAS",
+    "NA1": "AMERICAS",
+    "OC1": "ASIA",
+    "RU": "EUROPE",
+    "TR1": "EUROPE",
 }
 
-server_to_platform_dict: dict[LiteralServer, LiteralPlatform] = {
-    "br": "br1",
-    "eun": "eun1",
-    "euw": "euw1",
-    "jp": "jp1",
-    "kr": "kr",
-    "lan": "la1",
-    "las": "la2",
-    "na": "na1",
-    "oc": "oc1",
-    "ru": "ru",
-    "tr": "tr1",
+SERVER_TO_PLATFORM: dict[LiteralServer, LiteralPlatform] = {
+    "BR": "BR1",
+    "EUN": "EUN1",
+    "EUW": "EUW1",
+    "JP": "JP1",
+    "KR": "KR",
+    "LAN": "LA1",
+    "LAS": "LA2",
+    "NA": "NA1",
+    "OC": "OC1",
+    "RU": "RU",
+    "TR": "TR1",
 }
 
-platform_to_server_dict = {v: k for k, v in server_to_platform_dict.items()}
+PLATFORM_TO_SERVER: dict[LiteralPlatform, LiteralServer] = {
+    platform: server for server, platform in SERVER_TO_PLATFORM.items()
+}
 
-
-def server_to_platform(server: LiteralServer) -> LiteralPlatform:
-    """Convert server to platform."""
-    return server_to_platform_dict[server.lower()]  # type: ignore
-
-
-def platform_to_server(platform: LiteralPlatform) -> LiteralServer:
-    """Convert platform to server"""
-    return platform_to_server_dict[platform.lower()]  # type: ignore
-
-
-def platform_to_region(platform: LiteralPlatform) -> LiteralRegion:
-    """Convert platform to routing"""
-    return platform_to_region_dict[platform.lower()]  # type: ignore
+SERVER_TO_CONTINENT: dict[LiteralServer, LiteralContinent] = {
+    server: PLATFORM_TO_CONTINENT[platform] for server, platform in SERVER_TO_PLATFORM.items()
+}

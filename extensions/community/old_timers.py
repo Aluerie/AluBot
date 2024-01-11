@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import tasks
-from numpy.random import randint, seed
+import random
 
 from utils.const import DIGITS, Channel, Colour, Emote, Guild, Role, User
 
@@ -14,9 +14,6 @@ if TYPE_CHECKING:
     from asyncpg import Pool
 
     from bot import AluBot
-
-
-seed(None)
 
 
 async def get_the_thing(txt_list, name, pool: Pool):
@@ -140,7 +137,7 @@ class OldTimers(CommunityCog):
         return False
 
     async def timer_work(self, title, Colour, description, rlimit=2, msg_num=10):
-        if randint(1, 100 + 1) > rlimit or await self.check_amount_messages(msg_amount=msg_num):
+        if random.randint(0, 100) > rlimit or await self.check_amount_messages(msg_amount=msg_num):
             return
         e = discord.Embed(title=title, color=Colour, description=description)
         return await self.community.general.send(embed=e)
@@ -163,7 +160,7 @@ class OldTimers(CommunityCog):
 
     @tasks.loop(minutes=107)
     async def daily_gif_reminders(self):
-        if randint(1, 100 + 1) > 2 or await self.check_amount_messages():
+        if random.randint(0, 100) > 2 or await self.check_amount_messages():
             return
         await self.community.general.send(await get_gif_text(self.bot.pool))
 

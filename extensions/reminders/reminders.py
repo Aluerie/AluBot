@@ -184,7 +184,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             shorten = textwrap.shorten(message, width=512)
             string_list.append(f"\N{BLACK CIRCLE} {_id}: {formats.format_dt_tdR(expires)}\n{shorten}")
 
-        pgs = pages.EnumeratedPages(
+        pgs = pages.EnumeratedPaginator(
             ctx,
             string_list,
             per_page=10,

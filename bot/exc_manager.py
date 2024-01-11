@@ -4,6 +4,7 @@ ex_manager.py - yes, it is for managing my exes.
 
 from __future__ import annotations
 
+import inspect
 import asyncio
 import datetime
 import logging
@@ -111,6 +112,7 @@ class AluExceptionManager:
         self,
         source: Optional[Union[discord.Interaction[AluBot], AluContext, discord.Embed, str]],
         where: str,
+        extra: Optional[str],
     ) -> ErrorInfoPacket:
         """Get info packet"""
 
@@ -170,12 +172,12 @@ class AluExceptionManager:
         elif isinstance(source, discord.Interaction):
             ntr = source
 
-            e = discord.Embed(colour=0x2C0703)
-
             app_cmd = ntr.command
             if app_cmd:
+                e = discord.Embed(colour=0x2C0703)
                 e.title = f"`/{app_cmd.qualified_name}`"
             else:
+                e = discord.Embed(colour=0x2A0553)
                 e.title = "Non cmd interaction"
 
             # metadata
@@ -197,15 +199,18 @@ class AluExceptionManager:
             args_str.append("```")
             e.add_field(name="Command Args", value="\n".join(args_str), inline=False)
 
+            if extra:
+                e.add_field(name="Extra Data", value=extra)
+
             # ids
             e.add_field(
                 name="Snowflake Ids",
-                value=(
-                    "```py\n"
-                    f"author  = {ntr.user.id}\n"
-                    f"channel = {ntr.channel_id}\n"
-                    f"guild   = {ntr.guild_id}\n```"
+                value=inspect.cleandoc(f"""```py
+                    author  = {ntr.user.id}
+                    channel = {ntr.channel_id}
+                    guild   = {ntr.guild_id}```"""
                 ),
+                inline=False,
             )
             e.timestamp = dt = ntr.created_at
             mention = ntr.channel_id != ntr.client.hideout.spam_channel_id
@@ -225,6 +230,7 @@ class AluExceptionManager:
         source: Union[discord.Interaction[AluBot], AluContext, discord.Embed, str],
         *,
         where: str,
+        extra: Optional[str] = None,
     ):
         """Register, analyse error and put it into queue to send to developers
 
@@ -239,8 +245,17 @@ class AluExceptionManager:
             * `AluContext` for txt commands.
             * `discord.Embed` for custom situations like tasks.
             * `str` for custom situations like tasks.
-        where: :class: Optional[str]
-            string to put into logger.
+        where: :class: str
+            String to describe where the error happened.
+            This is put into log.error message for clearness.
+            Also this is put into footer of the embed if the `source` object doesn't clearly represent
+            "where" the error has happened.
+        extra: :class: str
+            Extra data string where the whole data can't be described only by just `source` object,
+            so it comes externally from the error handler.
+
+            The example of this is error handler in views, where I pass information on view/item objects
+            as an extra_data string. This info gets added into extra field in embed.
         """
         log.error("%s: %s.", error.__class__.__name__, where, exc_info=error)
 
@@ -249,7 +264,7 @@ class AluExceptionManager:
         traceback_string = "".join(traceback.format_exception(error)).replace(os.getcwd(), "AluBot")
         # .replace("``": "`\u200b`")
 
-        packet = await self.get_info_packet(source=source, where=where)
+        packet = await self.get_info_packet(source=source, where=where, extra=extra)
         # self.errors_cache.setdefault(traceback_string, [info_packet]).append(info_packet)
 
         async with self._lock:
@@ -259,7 +274,7 @@ class AluExceptionManager:
                 log.debug("Waiting %s seconds to send the error.", total_seconds)
                 await asyncio.sleep(total_seconds)
 
-            self._most_recent = discord.utils.utcnow()
+            self._most_recent = datetime.datetime.now(datetime.timezone.utc)
             return await self.send_error(traceback_string, packet)
 
 

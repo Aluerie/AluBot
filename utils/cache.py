@@ -94,6 +94,11 @@ class KeysCache:
         data = await self.get_data()
         return data[cache].get(key, None)
 
+    async def get_cache(self, cache: str):
+        # todo: idk typing is pain here
+        data = await self.get_data()
+        return data[cache]
+
 
 # Can't use ParamSpec due to https://github.com/python/typing/discussions/946
 class CacheProtocol(Protocol[R]):

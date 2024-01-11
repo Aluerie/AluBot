@@ -100,9 +100,9 @@ All info in `/help` command of the bot. The following list is far from being com
 - TL;DR^: Feel free to
   - open a GitHub Issue/PR
   - use `/feedback` bot command
-  - write [Aluerie ❤#6524](https://discordapp.com/users/312204139751014400) on discord
+  - write [@aluerie](https://discordapp.com/users/312204139751014400) on discord
   - look [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
-  - join our [discord server](https://discord.gg/K8FuDeP)
+  - join our [discord server](https://discord.gg/K8FuDeP) (it's just a server of mine though, not some "official alubot support")
 
 ## 🤗 Thanks
 

@@ -28,3 +28,9 @@ CREATE TABLE IF NOT EXISTS user_settings (
     id BIGINT PRIMARY KEY, -- The discord user ID
     timezone TEXT -- The IANA alias of the timezone
 );
+
+CREATE TABLE IF NOT EXISTS guild_settings (
+    id BIGINT,
+    name TEXT,
+    premium BOOLEAN DEFAULT FALSE,
+)

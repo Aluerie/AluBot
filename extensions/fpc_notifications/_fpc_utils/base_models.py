@@ -39,20 +39,20 @@ class BasePostMatchPlayer:
             return
 
         embed = message.embeds[0]
-        embed_image_url = embed.image.proxy_url
+        embed_image_url = embed.image.url
         colour = embed.colour
         if not embed_image_url:
             # todo: ???
-            raise SomethingWentWrong("embed.image.proxy_url is None in FPC Notifications")
+            raise SomethingWentWrong("embed.image.url is None in FPC Notifications")
         if not colour:
             # todo: ???
             raise SomethingWentWrong("`embed.colour` is None in FPC Notifications")
 
-        filename = embed_image_url.split("/")[-1]
-        image_file = bot.transposer.image_to_file(
-            await self.edit_notification_image(embed_image_url, colour, bot),
-            filename=f"edited-{filename}.png",
-        )
+        old_filename = embed_image_url.split("/")[-1].split(".png")[0]  # regex-less solution, lol
+        new_filename = f"edited-{old_filename}.png"
+
+        new_image = await self.edit_notification_image(embed_image_url, colour, bot)
+        image_file = bot.transposer.image_to_file(new_image, filename=new_filename)
         embed.set_image(url=f"attachment://{image_file.filename}")
         try:
             await message.edit(embed=embed, attachments=[image_file])

@@ -1,18 +1,16 @@
 from utils import const
 
-from .._base import FPCCog
 from .notifications import LoLFPCNotifications
-from .settings import LoLNotifsSettings
+from .settings import LoLFPCSettings
 from .summoner_check import LoLSummonerNameCheck
 from .twitch_check import LoLTwitchAccountCheck
 
 
 class LoLFPC(
     LoLFPCNotifications,
-    LoLNotifsSettings,
+    LoLFPCSettings,
     LoLSummonerNameCheck,
     LoLTwitchAccountCheck,
-    FPCCog,
     emote=const.Emote.PogChampPepe,
 ):
     """

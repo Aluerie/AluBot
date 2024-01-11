@@ -180,20 +180,24 @@ class ActiveMatch(Match):
             f'{(self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
         )
         image_file = bot.transposer.image_to_file(notification_image, filename=filename)
-
-        embed = discord.Embed(colour=twitch_data["colour"], url=twitch_data["url"])
-        embed.description = (
-            f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, strip=True)}\n"
-            f"{twitch_data['vod_url']}{self.links}"
+        embed = (
+            discord.Embed(
+                colour=twitch_data["colour"],
+                url=twitch_data["url"],
+                description=(
+                    f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, strip=True)}\n"
+                    f"{twitch_data['vod_url']}{self.links}"
+                ),
+            )
+            .set_author(
+                name=f"{twitch_data['display_name']} - {self.hero_name}",
+                url=twitch_data["url"],
+                icon_url=twitch_data["logo_url"],
+            )
+            .set_thumbnail(url=await dota.hero.img_by_id(self.hero_id))
+            .set_image(url=f"attachment://{image_file.filename}")
+            .set_footer(text=f"watch_server {self.server_steam_id}")
         )
-        embed.set_image(url=f"attachment://{image_file.filename}")
-        embed.set_thumbnail(url=await dota.hero.img_by_id(self.hero_id))
-        embed.set_author(
-            name=f"{twitch_data['display_name']} - {self.hero_name}",
-            url=twitch_data["url"],
-            icon_url=twitch_data["logo_url"],
-        )
-        embed.set_footer(text=f"watch_server {self.server_steam_id}")
         return embed, image_file
 
 

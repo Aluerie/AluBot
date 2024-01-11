@@ -337,7 +337,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 date = row.expires_at.astimezone(zoneinfo.ZoneInfo(key=row.timezone)).replace(year=row.data["year"])
                 string_list.append(f"{birthday_string(date)}, {row.timezone} - {birthday_person.mention}")
 
-        pgs = pages.EnumeratedPages(
+        pgs = pages.EnumeratedPaginator(
             ctx,
             entries=string_list,
             per_page=20,

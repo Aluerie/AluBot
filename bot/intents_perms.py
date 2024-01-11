@@ -11,8 +11,8 @@ After all we are growing into multipurpose bot that can do everything.
 from discord import Intents, Permissions
 
 __all__ = (
-    'intents',
-    'permissions',
+    "intents",
+    "permissions",
 )
 
 
@@ -70,6 +70,8 @@ p.read_messages = True
 # +-------------------------------+---------------------------+---------------------------+---------------------------+
 # | Send Messages                 | Practically everywhere (i.e. FPC Notifications)                         | <- | <- |
 p.send_messages = True
+# | Send Messages in Threads      | Just so text commands responses can be in threads too                   | <- | <- |
+p.send_messages_in_threads = True
 # | Manage Messages               | /echo /purge commands, mimic user                                       | <- | <- |
 p.manage_messages = True
 # | Embed Links                   | Practically everywhere (i.e. FPC Notifications)                         | <- | <- |

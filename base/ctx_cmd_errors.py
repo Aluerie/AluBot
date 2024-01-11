@@ -14,17 +14,21 @@ if TYPE_CHECKING:
 
 
 def unexpected_error_embed() -> discord.Embed:
-    e = discord.Embed(colour=const.Colour.error())
-    e.set_author(name="Oups... Unexpected error!")
-    e.description = (
-        "I've notified my developer about the error and sent all the details. Hopefully, we'll get it fixed soon.\n"
-        "Sorry for the inconvenience! {0} {0} {0}".format(const.Emote.DankL)
+    return (
+        discord.Embed(
+            colour=const.Colour.error(),
+            description=(
+                "I've notified my developer about the error and sent all the details. "
+                "Hopefully, we'll get it fixed soon.\n"
+                "Sorry for the inconvenience! {0} {0} {0}".format(const.Emote.DankL)
+            ),
+        )
+        .set_thumbnail(url=const.PICTURE.dankfix)
+        .set_author(name="Oups... Unexpected error!")
     )
-    e.set_thumbnail(url=const.PICTURE.dankfix)
-    return e
 
 
-async def on_command_error(ctx: AluContext, error: commands.CommandError | Exception):
+async def on_command_error(ctx: AluContext, error: commands.CommandError | Exception) -> None:
     """Handler called when an error is raised while invoking a ctx command."""
     if ctx.is_error_handled is True:
         return
@@ -76,21 +80,23 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
         where = f"on_command_error {ctx.clean_prefix}{ctx.command.qualified_name}" if ctx.command else "non-cmd ctx"
         await ctx.bot.exc_manager.register_error(error, ctx, where=where)
 
-        mention = ctx.channel.id != ctx.bot.hideout.spam_channel_id
-        if not mention:
-            # well, then I do not need "desc" embed as well
-            if ctx.interaction and not ctx.interaction.response.is_done():
-                # they error out unanswered anyway if not "is_done":/
-                await ctx.reply(":(", ephemeral=True)
+        if ctx.channel.id == ctx.bot.hideout.spam_channel_id:
+            # means I'm developing and thus I don't need details embed
+            embed = discord.Embed(colour=const.Colour.error()).set_author(name=error.__class__.__name__)
+            await ctx.reply(embed=embed, ephemeral=True)
+            # # well, then I do not need "desc" embed as well
+            # if ctx.interaction and not ctx.interaction.response.is_done():
+            #     # they error out unanswered anyway if not "is_done":/
+            #     await ctx.reply(":(", ephemeral=True)
             return
 
     if unexpected_error:
-        e = unexpected_error_embed()
+        response_to_user_embed = unexpected_error_embed()
     else:
-        e = discord.Embed(colour=const.Colour.error(), description=desc)
+        response_to_user_embed = discord.Embed(colour=const.Colour.error(), description=desc)
         if error_type:
-            e.set_author(name=error_type)
-    await ctx.reply(embed=e, ephemeral=True)
+            response_to_user_embed.set_author(name=error_type)
+    await ctx.reply(embed=response_to_user_embed, ephemeral=True)
 
 
 async def setup(bot: AluBot):

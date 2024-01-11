@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Mapping, NamedTuple
+from typing import TYPE_CHECKING, Mapping, NamedTuple, TypedDict
 
 import aiohttp
 import asyncpg
@@ -10,7 +10,6 @@ from pulsefire.clients import RiotAPIClient
 
 import config
 from utils import aluloop, const, lol
-from utils.lol.const import platform_to_region
 
 from .._base import FPCCog
 from ._models import LoLNotificationMatch, PostMatchPlayer
@@ -20,29 +19,33 @@ if TYPE_CHECKING:
 
     from .notifications import LoLMatchRecord
 
-    class LiveAccountRow(NamedTuple):
-        id: str
-        account_name: str
+    class GetTwitchLivePlayerRow(TypedDict):
+        twitch_id: int
+        player_id: int
+
+    class LivePlayerAccountRow(TypedDict):
+        summoner_id: str
+        player_id: int
+        game_name: str
+        tag_line: str
         platform: str
         display_name: str
-        lower_name: str
         twitch_id: int
         last_edited: int
 
-    class LoLMatchRecord(NamedTuple):
+    class LoLMatchRecord(TypedDict):
         match_id: int
-        platform: str
-        region: str
+        platform: lol.LiteralPlatform
 
-    class LoLMessageRecord(NamedTuple):
+    class LoLMessageRecord(TypedDict):
         message_id: int
         channel_id: int
         match_id: int
-        champ_id: int
+        champion_id: int
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)  # todo: change to info
+log.setLevel(logging.DEBUG)  # todo: change to info
 
 
 class LoLFPCNotifications(FPCCog):
@@ -53,6 +56,7 @@ class LoLFPCNotifications(FPCCog):
 
     async def cog_load(self) -> None:
         self.lol_fpc_notifications_task.add_exception_type(asyncpg.InternalServerError)
+        self.lol_fpc_notifications_task.clear_exception_types()  # todo:?
         self.lol_fpc_notifications_task.start()
         return await super().cog_load()
 
@@ -60,25 +64,24 @@ class LoLFPCNotifications(FPCCog):
         self.lol_fpc_notifications_task.stop()  # .cancel()
         return await super().cog_unload()
 
-    async def get_live_lol_player_lower_names(self) -> list[str]:
-        """Get `lower_name` for favourite League of Legends streams that are currently live."""
-        query = """ SELECT twitch_id, lower_name
+    async def get_twitch_live_player_ids(self) -> list[int]:
+        """Get `player_id` for favourite League of Legends streams that are currently live on Twitch."""
+        query = """ SELECT twitch_id, player_id
                     FROM lol_players
-                    WHERE lower_name=ANY(SELECT DISTINCT lower_name FROM lol_favourite_players)
+                    WHERE player_id=ANY(SELECT DISTINCT player_id FROM lol_favourite_players)
                 """
-        twitch_id_to_lower_name: Mapping[int, str] = {
-            r.twitch_id: r.lower_name for r in await self.bot.pool.fetch(query)
-        }
-        if not twitch_id_to_lower_name:
+        rows: list[GetTwitchLivePlayerRow] = await self.bot.pool.fetch(query)
+        twitch_id_to_player_id = {row["twitch_id"]: row["player_id"] for row in rows}
+        if not twitch_id_to_player_id:
             # otherwise fetch_streams fetches top100 streams and we dont want that.
             return []
 
-        live_twitch_ids = [
-            i.user.id
-            for i in await self.bot.twitch.fetch_streams(user_ids=list(twitch_id_to_lower_name.keys()))
-            if i.game_id == const.Twitch.lol_game_category_id
+        live_player_ids = [
+            twitch_id_to_player_id[stream.user.id]
+            for stream in await self.bot.twitch.fetch_streams(user_ids=list(twitch_id_to_player_id.keys()))
+            if stream.game_id == const.Twitch.lol_game_category_id
         ]
-        return [twitch_id_to_lower_name[i] for i in live_twitch_ids]
+        return live_player_ids
 
     async def fill_notification_matches(self):
         self.notification_matches = []
@@ -87,22 +90,22 @@ class LoLFPCNotifications(FPCCog):
         query = "SELECT DISTINCT character_id FROM lol_favourite_characters"
         favourite_champion_ids = [r for r, in await self.bot.pool.fetch(query)]  # row.unnest
 
-        live_lower_names = await self.get_live_lol_player_lower_names()
+        live_twitch_ids = await self.get_twitch_live_player_ids()
 
-        query = """ SELECT a.id, account_name, platform, display_name, p.lower_name, twitch_id, last_edited
-                    FROM lol_accounts a
-                    JOIN lol_players p
-                    ON a.lower_name = p.lower_name
-                    WHERE p.lower_name=ANY($1)
-                """
-        rows: list[LiveAccountRow] = await self.bot.pool.fetch(query, live_lower_names)
+        query = """
+            SELECT a.summoner_id, a.player_id, game_name, tag_line, platform, display_name, twitch_id, last_edited
+            FROM lol_accounts a
+            JOIN lol_players p
+            ON a.player_id = p.player_id
+            WHERE p.player_id=ANY($1)
+        """
+        rows: list[LivePlayerAccountRow] = await self.bot.pool.fetch(query, live_twitch_ids)
         async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
             for row in rows:
-                log.debug("%s", row)
                 try:
                     game = await riot_api_client.get_lol_spectator_v4_active_game_by_summoner(
-                        summoner_id=row.id,
-                        region=row.platform,  # todo: region = platform xd
+                        summoner_id=row["summoner_id"],
+                        region=row["platform"],
                     )
                 except aiohttp.ClientResponseError as exc:
                     # we have to do try/except because discord.ext.tasks has aiohttp errors as
@@ -111,51 +114,64 @@ class LoLFPCNotifications(FPCCog):
                     # I do not to remove them from valid_exceptions.
                     if exc.status == 404:
                         log.debug(
-                            "Player %s is not in the active game on account %s", row.display_name, row.account_name
+                            "%s is not in the active game on account %s#%s",
+                            row["display_name"],
+                            row["game_name"],
+                            row["tag_line"],
                         )
                     else:
-                        e = discord.Embed(colour=const.Colour.error())
-                        e.add_field(
-                            name="`lol_spectator_v4_active_game_by_summoner` Error", value=f"Status: {exc.status}"
+                        error_embed = (
+                            discord.Embed(colour=const.Colour.error())
+                            .add_field(
+                                name="`lol_spectator_v4_active_game_by_summoner` Error",
+                                value=f"Status: {exc.status}",
+                            )
+                            .add_field(
+                                name="Account",
+                                value=f"{row['game_name']}#{row['tag_line']} {row['platform']} {row['display_name']}",
+                            )
+                            .set_footer(text="fill_live_matches in league notifications")
                         )
-                        e.add_field(name="Account", value=f"{row.account_name} {row.platform} {row.display_name}")
-                        e.set_footer(text="fill_live_matches in league notifications")
-                        await self.hideout.spam.send(embed=e)
+                        await self.hideout.spam.send(embed=error_embed)
                     continue
 
-                log.debug("%s", game["gameId"])
-
                 # continue game analysis
-                if not game["gameQueueConfigId"] != const.League.SOLO_RANKED_5v5_QUEUE_ENUM:
+                if game["gameQueueConfigId"] != const.League.SOLO_RANKED_5v5_QUEUE_ENUM:
                     continue
 
                 self.live_match_ids.append(game["gameId"])
 
-                player = next((x for x in game["participants"] if x["summonerId"] == row.id), None)
+                player = next((p for p in game["participants"] if p["summonerId"] == row["summoner_id"]), None)
 
-                if player and player["championId"] in favourite_champion_ids and row.last_edited != game["gameId"]:
-                    query = """ SELECT s.channel_id 
-                                FROM lol_favourite_characters c
-                                JOIN lol_favourite_players p on c.guild_id = p.guild_id
-                                JOIN lol_settings s on s.guild_id = c.guild_id
-                                WHERE character_id=$1 AND lower_name=$2
-                                AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3);     
-                            """
-                    channel_id_rows = await self.bot.pool.fetch(
-                        query, player["championId"], row.lower_name, game["gameId"]
+                if player and player["championId"] in favourite_champion_ids and row["last_edited"] != game["gameId"]:
+                    query = """ 
+                        SELECT s.channel_id 
+                        FROM lol_favourite_characters c
+                        JOIN lol_favourite_players p on c.guild_id = p.guild_id
+                        JOIN lol_settings s on s.guild_id = c.guild_id
+                        WHERE character_id=$1 AND player_id=$2
+                        AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3);     
+                    """
+                    channel_id_rows: list[tuple[int]] = await self.bot.pool.fetch(
+                        query, player["championId"], row["player_id"], game["gameId"]
                     )
                     channel_ids = [channel_id for channel_id, in channel_id_rows]
                     if channel_ids:
-                        log.debug("Notif %s - %s", row.display_name, await lol.champion.key_by_id(player["championId"]))
+                        log.debug(
+                            "Notif %s - %s", row["display_name"], await lol.champion.key_by_id(player["championId"])
+                        )
                         self.notification_matches.append(
                             LoLNotificationMatch(
                                 match_id=game["gameId"],
                                 platform=game["platformId"],  # type: ignore # pulsefire has it as a simple str
-                                account_name=player["summonerName"],  # todo: what does it show now?
+                                game_name=row[
+                                    "game_name"
+                                ],  # TODO: would be cool to get it from game object but currently it's not there.
+                                tag_line=row["tag_line"],
                                 start_time=game["gameStartTime"],
                                 champion_id=player["championId"],
                                 all_champion_ids=[p["championId"] for p in game["participants"]],
-                                twitch_id=row.twitch_id,
+                                twitch_id=row["twitch_id"],
                                 summoner_spell_ids=(player["spell1Id"], player["spell2Id"]),
                                 rune_ids=player["perks"]["perkIds"],
                                 channel_ids=channel_ids,
@@ -180,23 +196,23 @@ class LoLFPCNotifications(FPCCog):
             embed.title = f"{owner_name}'s fav champ + player spotted"
             msg = await channel.send(embed=embed, file=image_file)
 
-            query = """ INSERT INTO lol_matches (match_id, region, platform)
-                        VALUES ($1, $2, $3)
-                        ON CONFLICT DO NOTHING 
-                    """
-            await self.bot.pool.execute(query, match.match_id, platform_to_region(match.platform), match.platform)
-            query = """ INSERT INTO lol_messages
-                        (message_id, channel_id, match_id, champ_id) 
-                        VALUES ($1, $2, $3, $4)
-                    """
+            query = """
+                INSERT INTO lol_matches (match_id, platform)
+                VALUES ($1, $2)
+                ON CONFLICT DO NOTHING 
+            """
+            await self.bot.pool.execute(query, match.match_id, match.platform)
+            query = """
+                INSERT INTO lol_messages
+                (message_id, channel_id, match_id, champion_id) 
+                VALUES ($1, $2, $3, $4)
+            """
             await self.bot.pool.execute(query, msg.id, channel.id, match.match_id, match.champion_id)
-            query = "UPDATE lol_accounts SET last_edited=$1 WHERE id=$2"
+            query = "UPDATE lol_accounts SET last_edited=$1 WHERE summoner_id=$2"
             await self.bot.pool.execute(query, match.match_id, match.summoner_id)
 
     async def declare_matches_finished(self):
-        query = """ SELECT * FROM lol_matches
-                    WHERE NOT match_id=ANY($1)
-                """
+        query = "SELECT * FROM lol_matches WHERE NOT match_id=ANY($1)"
         rows: list[LoLMatchRecord] = await self.bot.pool.fetch(query, self.live_match_ids)
         await self.edit_lol_notification_messages(rows)
 
@@ -216,8 +232,8 @@ class LoLFPCNotifications(FPCCog):
             try:
                 async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
                     match = await riot_api_client.get_lol_match_v5_match(
-                        id=f"{match_row.platform.upper()}_{match_row.match_id}",
-                        region=match_row.region,
+                        id=f"{match_row['platform'].upper()}_{match_row['match_id']}",
+                        region=lol.PLATFORM_TO_CONTINENT[match_row['platform']],
                     )
             except aiohttp.ClientResponseError as exc:
                 if exc.status == 404:
@@ -226,13 +242,15 @@ class LoLFPCNotifications(FPCCog):
                     raise
 
             query = "SELECT * FROM lol_messages WHERE match_id=$1"
-            message_rows: list[LoLMessageRecord] = await self.bot.pool.fetch(query, match_row.match_id)
+            message_rows: list[LoLMessageRecord] = await self.bot.pool.fetch(query, match_row['match_id'])
 
             for message_row in message_rows:
-                participant = next(p for p in match["info"]["participants"] if p["championId"] == message_row.champ_id)
+                participant = next(
+                    p for p in match["info"]["participants"] if p["championId"] == message_row['champion_id']
+                )
                 post_match_player = PostMatchPlayer(
-                    channel_id=message_row.channel_id,
-                    message_id=message_row.message_id,
+                    channel_id=message_row['channel_id'],
+                    message_id=message_row['message_id'],
                     summoner_id=participant["summonerId"],
                     kda=f"{participant['kills']}/{participant['deaths']}/{participant['assists']}",
                     outcome="Win" if participant["win"] else "Loss",
@@ -240,7 +258,7 @@ class LoLFPCNotifications(FPCCog):
                 )
                 await post_match_player.edit_notification_embed(self.bot)
             query = "DELETE FROM lol_matches WHERE match_id=$1"
-            await self.bot.pool.fetch(query, match_row.match_id)
+            await self.bot.pool.fetch(query, match_row['match_id'])
 
 
 async def setup(bot: AluBot):

@@ -15,6 +15,8 @@ from dateutil.relativedelta import relativedelta
 # which is a bit more convenient.
 from discord.utils import TimestampStyle, format_dt
 
+from . import const
+
 if TYPE_CHECKING:
     pass
 
@@ -38,14 +40,14 @@ class plural:
 
     def __format__(self, format_spec: str) -> str:
         v = self.value
-        singular, sep, plural = format_spec.partition('|')
-        plural = plural or f'{singular}s'
+        singular, sep, plural = format_spec.partition("|")
+        plural = plural or f"{singular}s"
         if abs(v) != 1:
-            return f'{v} {plural}'
-        return f'{v} {singular}'
+            return f"{v} {plural}"
+        return f"{v} {singular}"
 
 
-def human_join(seq: Sequence[str], delim: str = ', ', final: str = 'or') -> str:
+def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
     """
     Join sequence of string in human-like format.
 
@@ -60,15 +62,15 @@ def human_join(seq: Sequence[str], delim: str = ', ', final: str = 'or') -> str:
 
     size = len(seq)
     if size == 0:
-        return ''
+        return ""
 
     if size == 1:
         return seq[0]
 
     if size == 2:
-        return f'{seq[0]} {final} {seq[1]}'
+        return f"{seq[0]} {final} {seq[1]}"
 
-    return delim.join(seq[:-1]) + f' {final} {seq[-1]}'
+    return delim.join(seq[:-1]) + f" {final} {seq[-1]}"
 
 
 def human_timedelta(
@@ -136,7 +138,7 @@ def human_timedelta(
             dt = now - datetime.timedelta(seconds=dt)
         case _:
             raise TypeError(
-                'Parameter `dt` must be either of types: `datetime.datetime`, `datetime.timedelta`, `int` or `float`'
+                "Parameter `dt` must be either of types: `datetime.datetime`, `datetime.timedelta`, `int` or `float`"
             )
 
     # Make sure they're both in the timezone
@@ -153,40 +155,40 @@ def human_timedelta(
     # then `?tag format timedelta` in dpy guild
     if dt > now:
         delta = relativedelta(dt, now)
-        output_suffix = ''
+        output_suffix = ""
     else:
         delta = relativedelta(now, dt)
-        output_suffix = ' ago' if suffix else ''
+        output_suffix = " ago" if suffix else ""
 
     attrs = [
-        ('year', 'y'),
-        ('month', 'mo'),
-        ('day', 'd'),
-        ('hour', 'h'),
-        ('minute', 'm'),
-        ('second', 's'),
+        ("year", "y"),
+        ("month", "mo"),
+        ("day", "d"),
+        ("hour", "h"),
+        ("minute", "m"),
+        ("second", "s"),
     ]
 
     output = []
     for attr, brief_attr in attrs:
-        elem = getattr(delta, attr + 's')
+        elem = getattr(delta, attr + "s")
         if not elem:
             continue
 
-        if attr == 'day':
+        if attr == "day":
             weeks = delta.weeks
             if weeks:
                 elem -= weeks * 7
                 if not brief:
-                    output.append(format(plural(weeks), 'week'))
+                    output.append(format(plural(weeks), "week"))
                 else:
-                    output.append(f'{weeks}w')
+                    output.append(f"{weeks}w")
 
         if elem <= 0:
             continue
 
         if brief:
-            output.append(f'{elem}{brief_attr}')
+            output.append(f"{elem}{brief_attr}")
         else:
             output.append(format(plural(elem), attr))
 
@@ -194,12 +196,12 @@ def human_timedelta(
         output = output[:accuracy]
 
     if len(output) == 0:
-        return 'now'
+        return "now"
     else:
         if not brief:
-            return human_join(output, final='and') + output_suffix
+            return human_join(output, final="and") + output_suffix
         else:
-            sep = '' if strip else ' '
+            sep = "" if strip else " "
             return sep.join(output) + output_suffix
 
 
@@ -223,7 +225,7 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle):
     +-------------+----------------------------+-----------------+
     | R           | 5 years ago                | Relative Time   |
     +-------------+----------------------------+-----------------+"""
-    return ' '.join([format_dt(dt, letter) for letter in style_letters])
+    return " ".join([format_dt(dt, letter) for letter in style_letters])
 
 
 def format_dt_tdR(dt: datetime.datetime) -> str:
@@ -234,7 +236,7 @@ def format_dt_tdR(dt: datetime.datetime) -> str:
 
     "22:57 17/05/2015 5 Years Ago"
     """
-    return format_dt_custom(dt, 't', 'd', 'R')
+    return format_dt_custom(dt, "t", "d", "R")
 
 
 def ordinal(n: Union[int, str]) -> str:
@@ -246,9 +248,9 @@ def ordinal(n: Union[int, str]) -> str:
     # ```
     n = int(n)
     if 11 <= (n % 100) <= 13:
-        suffix = 'th'
+        suffix = "th"
     else:
-        suffix = ['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]
+        suffix = ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
     return str(n) + suffix
 
 
@@ -256,17 +258,17 @@ def inline_diff(a, b):  # a = old_string, b = new_string
     matcher = difflib.SequenceMatcher(None, a, b)
 
     def process_tag(tag, i1, i2, j1, j2):
-        if tag == 'replace':
-            return '~~' + matcher.a[i1:i2] + ' ~~ __' + matcher.b[j1:j2] + '__'  # type: ignore
-        if tag == 'delete':
-            return '~~' + matcher.a[i1:i2] + '~~'  # type: ignore
-        if tag == 'equal':
+        if tag == "replace":
+            return "~~" + matcher.a[i1:i2] + " ~~ __" + matcher.b[j1:j2] + "__"  # type: ignore
+        if tag == "delete":
+            return "~~" + matcher.a[i1:i2] + "~~"  # type: ignore
+        if tag == "equal":
             return matcher.a[i1:i2]  # type: ignore
-        if tag == 'insert':
-            return '__' + matcher.b[j1:j2] + '__'  # type: ignore
+        if tag == "insert":
+            return "__" + matcher.b[j1:j2] + "__"  # type: ignore
         assert False, "Unknown tag %r" % tag
 
-    return ''.join(process_tag(*t) for t in matcher.get_opcodes())
+    return "".join(process_tag(*t) for t in matcher.get_opcodes())
 
 
 # https://stackoverflow.com/questions/39001097/match-changes-by-words-not-by-characters
@@ -275,19 +277,19 @@ def inline_word_by_word_diff(a, b):  # a = old_string, b = new_string #
     matcher = difflib.SequenceMatcher(None, a, b)
 
     def process_tag(tag, i1, i2, j1, j2):
-        a_str, b_str = ' '.join(matcher.a[i1:i2]), ' '.join(matcher.b[j1:j2])  # type: ignore
+        a_str, b_str = " ".join(matcher.a[i1:i2]), " ".join(matcher.b[j1:j2])  # type: ignore
         match tag:
-            case 'replace':
-                return f'~~{a_str}~~ __{b_str}__'
-            case 'delete':
-                return f'~~{a_str}~~'
-            case 'equal':
+            case "replace":
+                return f"~~{a_str}~~ __{b_str}__"
+            case "delete":
+                return f"~~{a_str}~~"
+            case "equal":
                 return a_str
-            case 'insert':
-                return f'__{b_str}__'
+            case "insert":
+                return f"__{b_str}__"
         assert False, "Unknown tag %r" % tag
 
-    return ' '.join(process_tag(*t) for t in matcher.get_opcodes())
+    return " ".join(process_tag(*t) for t in matcher.get_opcodes())
 
 
 def block_function(string, blocked_words, whitelist_words):
@@ -370,5 +372,15 @@ def ansi(
         array_join.append(background.value)
     if foreground:
         array_join.append(foreground.value)
-    final_format = ';'.join(list(map(str, array_join)))
-    return f'\u001b[{final_format}m{text}\u001b[0m'
+    final_format = ";".join(list(map(str, array_join)))
+    return f"\u001b[{final_format}m{text}\u001b[0m"
+
+
+def tick(semi_bool: bool | None) -> str:
+    match semi_bool:
+        case True:
+            return const.Tick.yes
+        case False:
+            return const.Tick.no
+        case _:
+            return const.Tick.black

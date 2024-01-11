@@ -55,7 +55,7 @@ class TimeZone(NamedTuple):
         timezones = tz_manager.find_timezones(argument)
 
         try:
-            return await ctx.disambiguate(timezones, lambda t: t.label, ephemeral=True)
+            return await ctx.bot.disambiguator.disambiguate(ctx, timezones, lambda t: t.label, ephemeral=True)
         except ValueError:
             raise commands.BadArgument(
                 f"Could not find timezone for input:```\n{argument!r}```\n"

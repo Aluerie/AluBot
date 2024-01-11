@@ -170,7 +170,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             )
             cnt += 1
 
-        pgs = pages.EnumeratedPages(
+        pgs = pages.EnumeratedPaginator(
             ctx,
             new_array,
             per_page=split_size,

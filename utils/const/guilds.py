@@ -52,7 +52,7 @@ class Guild:
 
 
 MY_GUILDS = [Guild.hideout, Guild.community]
-TRUSTED_GUILDS = [Guild.hideout, Guild.stone]
+PREMIUM_GUILDS = [Guild.community, Guild.hideout, Guild.stone]
 EMOTE_GUILDS = [
     1123901376435589173,
     1123901447277379644,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Optional, TypedDict
 
 from pulsefire.clients import CDragonClient
 
@@ -85,6 +85,11 @@ async def id_by_name(value: str) -> int:
     return await champion_keys_cache.get("id_by_name", value)
 
 
+async def id_by_name_or_none(value: str) -> Optional[int]:
+    """Get champion id by name"""
+    return await champion_keys_cache.get_value_or_none("id_by_name", value)
+
+
 async def key_by_id(value: int) -> str:  # todo: check if i use key shit at all
     """Get champion key by id"""
     return await champion_keys_cache.get("key_by_id", value)
@@ -98,6 +103,11 @@ async def key_by_name(value: str) -> str:
 async def name_by_id(value: int) -> str:
     """Get champion name by id"""
     return await champion_keys_cache.get("name_by_id", value)
+
+
+async def name_by_id_or_none(value: int) -> Optional[str]:
+    """Get champion name by id"""
+    return await champion_keys_cache.get_value_or_none("name_by_id", value)
 
 
 async def name_by_key(value: str) -> str:

@@ -11,9 +11,10 @@ from discord.ext import commands
 
 import config
 from extensions import get_extensions
-from utils import AluContext, ConfirmationView, ExtCategory, cache, const, formats, none_category
+from utils import AluContext, ExtCategory, cache, const, formats, none_category
 from utils.jsonconfig import PrefixConfig
 from utils.transposer import TransposeClient
+from utils.disambiguator import Disambiguator
 
 from .app_cmd_tree import AluAppCommandTree
 from .exc_manager import AluExceptionManager
@@ -68,6 +69,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
         self.exc_manager: AluExceptionManager = AluExceptionManager(self)
         self.transposer: TransposeClient = TransposeClient(session=session)
+        self.disambiguator: Disambiguator = Disambiguator()
 
         self.odota_ratelimit: dict[str, int] = {"monthly": -1, "minutely": -1}
 
@@ -190,7 +192,6 @@ class AluBot(commands.Bot, AluBotHelper):
         if hasattr(self, "session"):
             await self.session.close()
         if hasattr(self, "twitch"):
-            pass
             await self.twitch.close()
 
     async def my_start(self) -> None:
@@ -269,54 +270,6 @@ class AluBot(commands.Bot, AluBotHelper):
         minutely = headers.get("X-Rate-Limit-Remaining-Minute")
         if monthly is not None or minutely is not None:
             self.odota_ratelimit = {"monthly": monthly, "minutely": minutely}
-
-    async def prompt(
-        self,
-        ctx_ntr: AluContext | discord.Interaction[AluBot],
-        *,
-        content: str = discord.utils.MISSING,
-        embed: discord.Embed = discord.utils.MISSING,
-        timeout: float = 100.0,
-        delete_after: bool = False,
-        author_id: Optional[int] = None,
-    ) -> Optional[bool]:
-        """
-        An interactive reaction confirmation dialog.
-        Parameters
-        -----------
-        content: str
-            Text message to show along with the prompt.
-        embed:
-            Embed to show along with the prompt.
-        timeout: float
-            How long to wait before returning.
-        delete_after: bool
-            Whether to delete the confirmation message after we're done.
-        author_id: Optional[int]
-            The member who should respond to the prompt. Defaults to the author of the
-            Context's message.
-        Returns
-        --------
-        Optional[bool]
-            ``True`` if explicit confirm,
-            ``False`` if explicit deny,
-            ``None`` if deny due to timeout
-        ----
-        """
-        if content is None and embed is None:
-            raise TypeError("Either content or embed should be provided")
-
-        author_id = author_id or ctx_ntr.user.id
-        view = ConfirmationView(timeout=timeout, delete_after=delete_after, author_id=author_id)
-        if isinstance(ctx_ntr, AluContext):
-            view.message = await ctx_ntr.reply(content=content, embed=embed, view=view)
-        elif isinstance(ctx_ntr, discord.Interaction):
-            if not ctx_ntr.response.is_done():
-                view.message = await ctx_ntr.response.send_message(content=content, embed=embed, view=view)
-            else:
-                view.message = await ctx_ntr.followup.send(content=content, embed=embed, view=view)
-        await view.wait()
-        return view.value
 
     @property
     def hideout(self) -> const.HideoutGuild:

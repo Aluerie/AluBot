@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, Sequence, Ty
 import discord
 from discord.ext import commands
 
+from utils import formats
+
 from ..const import Colour, Tick
 
 if TYPE_CHECKING:
@@ -15,91 +17,14 @@ if TYPE_CHECKING:
 
     from bot import AluBot
 
-T = TypeVar("T")
-__all__ = ("AluContext", "AluGuildContext", "ConfirmationView")
+
+__all__ = (
+    "AluContext",
+    "AluGuildContext",
+)
 
 
-class ConfirmationView(discord.ui.View):
-    def __init__(self, *, timeout: float, author_id: int, delete_after: bool) -> None:
-        super().__init__(timeout=timeout)
-        self.value: Optional[bool] = None
-        self.delete_after: bool = delete_after
-        self.author_id: int = author_id
-        self.message: Optional[discord.Message] = None
-
-    async def interaction_check(self, ntr: discord.Interaction) -> bool:
-        if ntr.user and ntr.user.id == self.author_id:
-            return True
-        else:
-            e = discord.Embed(colour=Colour.error())
-            e.description = "Sorry! This confirmation dialog is not for you."
-            await ntr.response.send_message(embed=e, ephemeral=True)
-            return False
-
-    async def on_timeout(self) -> None:
-        if self.delete_after and self.message:
-            await self.message.delete()
-
-    async def button_callback(self, ntr: discord.Interaction, yes_no: bool):
-        self.value = yes_no
-        await ntr.response.defer()
-        if self.delete_after:
-            await ntr.delete_original_response()
-        else:
-            for item in self.children:
-                item.disabled = True  # type: ignore
-            await ntr.edit_original_response(view=self)
-        self.stop()
-
-    @discord.ui.button(emoji=Tick.yes, label="Confirm", style=discord.ButtonStyle.green)
-    async def confirm(self, ntr: discord.Interaction, _: discord.ui.Button):
-        await self.button_callback(ntr, True)
-
-    @discord.ui.button(emoji=Tick.no, label="Cancel", style=discord.ButtonStyle.red)
-    async def cancel(self, ntr: discord.Interaction, _: discord.ui.Button):
-        await self.button_callback(ntr, False)
-
-
-class DisambiguatorView(discord.ui.View, Generic[T]):
-    message: discord.Message
-    selected: T
-
-    def __init__(self, ctx: AluContext, data: list[T], entry: Callable[[T], Any]):
-        super().__init__()
-        self.ctx: AluContext = ctx
-        self.data: list[T] = data
-
-        options = []
-        for i, x in enumerate(data):
-            opt = entry(x)
-            if not isinstance(opt, discord.SelectOption):
-                opt = discord.SelectOption(label=str(opt))
-            opt.value = str(i)
-            options.append(opt)
-
-        select = discord.ui.Select(options=options)
-
-        select.callback = self.on_select_submit
-        self.select = select
-        self.add_item(select)
-
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if interaction.user.id != self.ctx.author.id:
-            await interaction.response.send_message("This select menu is not meant for you, sorry.", ephemeral=True)
-            return False
-        return True
-
-    async def on_select_submit(self, interaction: discord.Interaction):
-        index = int(self.select.values[0])
-        self.selected = self.data[index]
-        await interaction.response.defer()
-        if not self.message.flags.ephemeral:
-            await self.message.delete()
-
-        self.stop()
-
-
-class AluContext(commands.Context['AluBot']):
+class AluContext(commands.Context["AluBot"]):
     """The subclassed Context to allow some extra functionality."""
 
     if TYPE_CHECKING:
@@ -111,7 +36,7 @@ class AluContext(commands.Context['AluBot']):
         self.is_error_handled: bool = False
 
     def __repr__(self) -> str:
-        return f"<AluContext cmd={self.command} ntr={self.tick(bool(self.interaction))} author={self.author}>"
+        return f"<AluContext cmd={self.command} ntr={formats.tick(bool(self.interaction))} author={self.author}>"
 
     # The following attributes are here just to match discord.Interaction properties
     # Just so we don't need to do `if isinstance(discord.Interaction):` checks every time
@@ -135,55 +60,9 @@ class AluContext(commands.Context['AluBot']):
     def session(self) -> ClientSession:
         return self.bot.session
 
-    async def prompt(
-        self,
-        *,
-        content: str = discord.utils.MISSING,
-        embed: discord.Embed = discord.utils.MISSING,
-        timeout: float = 100.0,
-        delete_after: bool = True,
-        author_id: Optional[int] = None,
-    ) -> Optional[bool]:
-        """A shortcut to prompt function from bot class."""
-        return await self.bot.prompt(
-            self,
-            content=content,
-            embed=embed,
-            timeout=timeout,
-            delete_after=delete_after,
-            author_id=author_id,
-        )
-
-    async def disambiguate(self, matches: list[T], entry: Callable[[T], Any], *, ephemeral: bool = False) -> T:
-        if len(matches) == 0:
-            raise ValueError("No results found.")
-
-        if len(matches) == 1:
-            return matches[0]
-
-        if len(matches) > 25:
-            raise ValueError("Too many results... sorry.")
-
-        view = DisambiguatorView(self, matches, entry)
-        view.message = await self.send(
-            "There are too many matches... Which one did you mean?", view=view, ephemeral=ephemeral
-        )
-        await view.wait()
-        return view.selected
-
-    @staticmethod
-    def tick(semi_bool: bool | None) -> str:
-        match semi_bool:
-            case True:
-                return Tick.yes
-            case False:
-                return Tick.no
-            case _:
-                return Tick.black
-
     async def tick_reaction(self, semi_bool: bool | None):
         with contextlib.suppress(discord.HTTPException):
-            await self.message.add_reaction(self.tick(semi_bool))
+            await self.message.add_reaction(formats.tick(semi_bool))
 
     @discord.utils.cached_property
     def replied_reference(self) -> Optional[discord.MessageReference]:

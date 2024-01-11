@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import discord
 from discord.ext import menus
 
-from .bases import AluContext
+from .bases import AluContext, AluView
 from .const import Colour, Emote
 
 if TYPE_CHECKING:
@@ -82,14 +82,15 @@ class SearchModal(discord.ui.Modal, title="Search Page by query"):
     #     await self.paginator.goto_page(page_number=found_page, ntr=ntr)
 
 
-class Paginator(discord.ui.View):
+class Paginator(AluView):
     def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], source: menus.PageSource):
-        super().__init__()
+        super().__init__(
+            author_id=ctx_ntr.user.id,
+            view_name="Pagination Menu",
+        )
         self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
         self.source: menus.PageSource = source
-        self.message: Optional[discord.Message] = None
         self.current_page_number: int = 0
-        self.author: discord.User | discord.Member = ctx_ntr.user
 
         self.clear_items()
         self.fill_items()
@@ -186,53 +187,28 @@ class Paginator(discord.ui.View):
         else:
             raise RuntimeError("Cannot start a paginator without a context or interaction.")
 
-    async def interaction_check(self, ntr: discord.Interaction) -> bool:
-        if ntr.user and ntr.user.id in (self.ctx_ntr.client.owner_id, self.author.id):
-            return True
-        else:
-            e = discord.Embed(colour=Colour.error())
-            e.description = "This pagination menu cannot be controlled by you ! {0} {0} {0}".format(Emote.peepoWTF)
-            await ntr.response.send_message(embed=e, ephemeral=True)
-            return False
-
-    async def on_timeout(self) -> None:
-        if self.message:
-            for item in self.children:
-                # item in self.children is Select/Button which have ``.disable`` but typehinted as Item
-                item.disabled = True  # type: ignore
-            await self.message.edit(view=self)
-
-    # todo: change those for debugging reasons pepega also change source in register error
-    async def on_error(self, ntr: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item) -> None:
-        if ntr.response.is_done():
-            await ntr.followup.send(f"Some error occurred, sorry", ephemeral=True)
-        else:
-            await ntr.response.send_message(f"Some error occurred, sorry", ephemeral=True)
-        msg = "Paginator Error"
-        await ntr.client.exc_manager.register_error(error, ntr, where=msg)
-
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
-    async def home_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+    async def home_page(self, ntr: discord.Interaction, _: discord.ui.Button):
         """Show the very first page, kinda standard"""
         await self.show_page(ntr, 0)
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.red)
-    async def previous_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+    async def previous_page(self, ntr: discord.Interaction, _: discord.ui.Button):
         """Go to previous page"""
         await self.show_checked_page(ntr, self.current_page_number - 1)
 
     @discord.ui.button(label="/", style=discord.ButtonStyle.gray)
-    async def index(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+    async def index(self, ntr: discord.Interaction, _: discord.ui.Button):
         """Choose page using modal; this button also has label to show current_page/maximum"""
         await ntr.response.send_modal(IndexModal(self))
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.green)
-    async def next_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+    async def next_page(self, ntr: discord.Interaction, _: discord.ui.Button):
         """Go to next page"""
         await self.show_checked_page(ntr, self.current_page_number + 1)
 
     @discord.ui.button(label="\N{RIGHT-POINTING MAGNIFYING GLASS}", style=discord.ButtonStyle.blurple)
-    async def search(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+    async def search(self, ntr: discord.Interaction, _: discord.ui.Button):
         """Fuzzy search in all pages and go the page with most likely similarity"""
         # todo: implement PaginatorSearchModal
         await ntr.response.send_message("sorry, the search feature is disabled for now", ephemeral=True)
@@ -240,7 +216,7 @@ class Paginator(discord.ui.View):
     @discord.ui.button(
         label="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}", style=discord.ButtonStyle.blurple
     )
-    async def refresh(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+    async def refresh(self, ntr: discord.Interaction, _: discord.ui.Button):
         """Refresh current page.
 
         Useful for dynamic things like SetupView where people can change
@@ -256,7 +232,7 @@ class EnumeratedPageSource(menus.ListPageSource):
         self.description_prefix = description_prefix
         self.no_enumeration = no_enumeration
 
-    async def format_page(self, menu: EnumeratedPages, entries: list[str]):
+    async def format_page(self, menu: EnumeratedPaginator, entries: list[str]):
         if not self.no_enumeration:
             start = menu.current_page_number * self.per_page
             rows = [f"`{i + 1}` {entry}" for i, entry in enumerate(entries, start=start)]
@@ -267,7 +243,7 @@ class EnumeratedPageSource(menus.ListPageSource):
         return menu.embed
 
 
-class EnumeratedPages(Paginator):
+class EnumeratedPaginator(Paginator):
     """Replacement for my old `ctx.send_pages()` function.
 
     This serves to organise pagination for hit-parade kind of deal,

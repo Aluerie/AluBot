@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from PIL import ImageFont
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class TransposeClient:

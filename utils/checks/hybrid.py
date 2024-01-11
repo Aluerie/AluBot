@@ -2,22 +2,23 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, TypeVar
 
-import discord
 from discord import app_commands
 from discord.ext import commands
 
 from .. import const
-from . import app, prefix
 
 if TYPE_CHECKING:
-    from .. import AluBot, AluContext
+    from .. import AluContext
 
-T = TypeVar('T')
+T = TypeVar("T")
+
+
+# Permissions
 
 
 def hybrid_has_permissions(**perms: bool) -> Callable[[T], T]:
     def decorator(func: T) -> T:
-        commands.check_any(commands.has_permissions(**perms), commands.is_owner())  # let bot owner surpass those too
+        commands.has_permissions(**perms)(func)
         app_commands.default_permissions(**perms)(func)
         return func
 
@@ -36,29 +37,22 @@ def is_admin():
     return hybrid_has_permissions(administrator=True)
 
 
-def is_trustee():
-    async def pred(ctx_ntr: AluContext | discord.Interaction[AluBot]) -> bool:
-        """trustees only"""
-        query = 'SELECT trusted_ids FROM botinfo WHERE id=$1'
-        trusted_ids: list[int] = await ctx_ntr.client.pool.fetchval(query, const.Guild.community)
-        if ctx_ntr.user.id in trusted_ids:
+# In Guilds
+
+
+def is_in_guilds(
+    *guild_ids: int,
+    error_text: str = "Sorry! This command is not usable outside of specific servers.",
+):
+    def predicate(ctx: AluContext) -> bool:
+        if ctx.guild and ctx.guild.id in guild_ids:
             return True
         else:
-            raise commands.CheckFailure(message='Sorry, only trusted people can use this command')
+            raise commands.CheckFailure(error_text)
 
     def decorator(func: T) -> T:
-        commands.check(pred)(func)
-        app_commands.check(pred)(func)  # if it's only `app_commands.command` then ^commands wont be triggered.
-        app_commands.default_permissions(manage_guild=True)(func)
-        return func
-
-    return decorator
-
-
-def is_in_guilds(*guild_ids: int):
-    def decorator(func: T) -> T:
-        app.is_in_guilds(*guild_ids)
-        prefix.is_in_guilds(*guild_ids)
+        commands.check(predicate)(func)
+        app_commands.guilds(*guild_ids)(func)
         return func
 
     return decorator
@@ -69,9 +63,47 @@ def is_my_guild():
 
 
 def is_community():
+    return is_in_guilds(const.Guild.community)
+
+
+def is_hideout():
+    return is_in_guilds(const.Guild.hideout)
+
+
+def is_premium_guild():
+    # async def predicate(ctx: AluContext) -> bool:
+    #     """only premium servers"""
+    #     if not ctx.guild:
+    #         raise commands.CheckFailure("Sorry! This command can only be used within premium servers.")
+
+    #     query = "SELECT premium FROM guild_settings WHERE guild_id=$1"
+    #     premium: bool = await ctx.pool.fetchval(query, ctx.guild.id)
+    #     if not premium:
+    #         raise commands.CheckFailure(
+    #             "Sorry! This server is not a premium server thus doesn't have access to premium features/commands."
+    #         )
+    #     return True
+
+    # def decorator(func: T) -> T:
+    #     commands.check(predicate)(func)
+    #     return func
+
+    # Note to possible future:
+    # if my bot actually becomes popular and premium thing will be a database subscription
+    # then we will need to rework this concept into something where all premium commands get added everywhere
+    # as in without `app_commands.guilds(*guild_ids)`
+    # and when non-premium guild calls it - they get a response saying they are not premium guild
+    # kinda like all existing bots. This is super annoying tho from a user perspective so maybe
+    # hopefully discord comes with some better solution for this.
+
+    return is_in_guilds(*const.PREMIUM_GUILDS)
+
+
+def is_premium_guild_manager():
     def decorator(func: T) -> T:
-        app.is_community()
-        prefix.is_community()
+        is_premium_guild()(func)
+        commands.has_permissions(manage_guild=True)(func)
+        app_commands.default_permissions(manage_guild=True)(func)
         return func
 
     return decorator

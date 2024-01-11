@@ -112,7 +112,7 @@ class EmoteSpam(CommunityCog):
         content = "{0} {0} {0}".format(str(emote))
         await channel.send(content)
         e = discord.Embed(colour=const.Colour.prpl(), description=f"I sent {content} into {channel.mention}")
-        await ctx.reply(embed=e, ephemeral=True, delete_after=60)
+        await ctx.reply(embed=e, ephemeral=True, delete_after=10)
 
     @tasks.loop(count=1)
     async def offline_criminal_check(self):

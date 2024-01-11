@@ -10,7 +10,7 @@ from discord.ext import commands, tasks
 
 from utils import const
 from utils.formats import indent
-from utils.pages import EnumeratedPages
+from utils.pages import EnumeratedPaginator
 
 from ._base import CommunityCog
 
@@ -66,7 +66,7 @@ async def topemotes_job(ctx: AluContext, mode):
             f"`{indent(cnt, cnt, offset, split_size)}` "
             f'{key}`{key.split(":")[1][:max_length].ljust(max_length, " ")}{sorted_emote_dict[key]}`'
         )
-    pgs = EnumeratedPages(
+    pgs = EnumeratedPaginator(
         ctx,
         new_array,
         per_page=split_size,

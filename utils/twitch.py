@@ -10,7 +10,8 @@ from discord.ext.commands import BadArgument
 from twitchio.ext import eventsub
 
 import config
-from . import const, formats
+
+from . import const, errors, formats
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -36,6 +37,8 @@ class TwitchClient(twitchio.Client):
         self.discord_bot: AluBot = bot
         self.eventsub: eventsub.EventSubWSClient = eventsub.EventSubWSClient(self)
 
+    # EVENT SUB ########################################################################################################
+
     async def event_eventsub_notification(self, event: eventsub.NotificationEvent) -> None:
         if isinstance(event.data, eventsub.StreamOnlineData):
             self.discord_bot.dispatch("twitchio_stream_start", event.data)
@@ -44,26 +47,34 @@ class TwitchClient(twitchio.Client):
         elif isinstance(event.data, eventsub.CustomRewardRedemptionAddUpdateData):
             self.discord_bot.dispatch("twitchio_channel_points_redeem", event.data)
 
+    # OVERRIDE #########################################################################################################
+
     @override
     async def event_error(self, error: Exception, data: Optional[str] = None):
-        embed = discord.Embed(colour=const.Colour.twitch(), title='Twitch Client Error')
+        embed = discord.Embed(colour=const.Colour.twitch(), title="Twitch Client Error")
         if data:
             embed.description = data[2048:]
-        await self.discord_bot.exc_manager.register_error(error, source=embed, where='Twitch Client')
+        await self.discord_bot.exc_manager.register_error(error, source=embed, where="Twitch Client")
 
-    async def twitch_id_by_name(self, user_name: str) -> int:
+    # UTILITIES ########################################################################################################
+
+    async def get_twitch_user(self, user_name: str) -> twitchio.User:
         """Get twitch_id by user_login"""
         user = next(iter(await self.fetch_users(names=[user_name])), None)
         if not user:
-            raise BadArgument(f"Error checking stream `{user_name}`.\n User either does not exist or is banned.")
+            raise errors.BadArgument(
+                f"Error checking stream with name `{user_name}`.\n User either does not exist or is banned."
+            )
 
-        return user.id
+        return user
 
     async def name_by_twitch_id(self, user_id: int) -> str:
         """Get display_name by twitch_id"""
         user = next(iter(await self.fetch_users(ids=[user_id])), None)
         if not user:
-            raise BadArgument(f"Error checking stream `{user_id}`.\n User either does not exist or is banned.")
+            raise errors.BadArgument(
+                f"Error checking stream with id `{user_id}`.\n User either does not exist or is banned."
+            )
 
         return user.display_name
 
@@ -73,7 +84,7 @@ class TwitchClient(twitchio.Client):
         if not user:
             raise BadArgument(f"Error checking stream `{user_login}`.\n User either does not exist or is banned.")
 
-        return user.id, user.display_name, user.profile_image
+        return 
 
     async def last_vod_link(self, user_id: int, seconds_ago: int = 0, md: bool = True) -> str:
         """Get last vod link for user with `user_id` with timestamp as well"""

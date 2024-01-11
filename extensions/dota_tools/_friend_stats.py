@@ -15,9 +15,9 @@ from extensions.fpc_notifications.dota._models import Match
 from utils import checks, const
 from utils.dota import hero
 from utils.formats import indent
-from utils.pages import EnumeratedPages
+from utils.pages import EnumeratedPaginator
 
-from ._utils import MatchHistoryData, fancy_ax, generate_data, gradient_fill, heroes_played_bar, mmr_by_hero_bar
+from ._models import MatchHistoryData, fancy_ax, generate_data, gradient_fill, heroes_played_bar, mmr_by_hero_bar
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -101,7 +101,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         return discord.PartialEmoji.from_str(const.Emote.TwoBButt)
 
     async def cog_load(self) -> None:
-        self.bot.initiate_steam_dota()
+        await self.bot.initiate_steam_dota()
         self.match_history_refresh.start()
 
     async def cog_unload(self) -> None:

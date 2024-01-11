@@ -20,8 +20,8 @@ class HeroKeysCache(KeysCache):
         hero_dict = await self.get_response_json(url=url)
         data = {
             "id_by_npcname": {"": 0},
-            "id_by_name": {"bot_game": 0},
-            "name_by_id": {0: "bot_game"},
+            "id_by_name": {"Unknown": 0},
+            "name_by_id": {0: "Unknown"},
             "img_by_id": {0: DOTA.HERO_DISCONNECT},
             "icon_by_id": {0: DOTA.HERO_DISCONNECT},
         }

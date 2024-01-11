@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import logging
 import time
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, TypedDict
 
 import asyncpg
 import discord
@@ -23,20 +23,25 @@ if TYPE_CHECKING:
 
     from .notifications import DotaFPCMatchRecord
 
-    class DotaFPCMatchRecord(NamedTuple):
+    class DotaFPCMatchRecord(TypedDict):
         match_id: int
         opendota_jobid: int
+
+    class PlayerQuery(TypedDict):
+        player_id: int
+        display_name: str
+        twitch_id: int
 
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class Dota2FPCNotifications(FPCCog):
+class DotaFPCNotifications(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
         self.lobby_ids: set[int] = set()
-        self.top_source_dict: dict = {}
+        self.top_source_dict: dict = {}  # todo: type-hint this properly via named tuple i guess
         self.live_matches: list[ActiveMatch] = []
         self.hero_fav_ids: list[int] = []
         self.player_fav_ids: list[int] = []
@@ -92,7 +97,7 @@ class Dota2FPCNotifications(FPCCog):
             return [r for r, in rows]
 
         self.hero_fav_ids = await get_all_fav_ids("characters", "character_id")
-        self.player_fav_ids = await get_all_fav_ids("players", "lower_name")
+        self.player_fav_ids = await get_all_fav_ids("players", "player_id")
 
     def request_top_source(self):
         self.bot.dota.request_top_source_tv_games(start_game=90)
@@ -107,29 +112,29 @@ class Dota2FPCNotifications(FPCCog):
 
     async def analyze_top_source_response(self):
         self.live_matches = []
-        query = "SELECT friend_id FROM dota_accounts WHERE lower_name=ANY($1)"
+        query = "SELECT friend_id FROM dota_accounts WHERE player_id=ANY($1)"
         friend_ids = [f for f, in await self.bot.pool.fetch(query, self.player_fav_ids)]
 
         for match in self.top_source_dict.values():
             our_persons = [x for x in match.players if x.account_id in friend_ids and x.hero_id in self.hero_fav_ids]
             for person in our_persons:
-                query = """ SELECT lower_name, display_name, twitch_id 
+                query = """ SELECT player_id, display_name, twitch_id 
                             FROM dota_players 
-                            WHERE lower_name=(SELECT lower_name FROM dota_accounts WHERE friend_id=$1)
+                            WHERE player_id=(SELECT player_id FROM dota_accounts WHERE friend_id=$1)
                         """
-                user = await self.bot.pool.fetchrow(query, person.account_id)
+                user: PlayerQuery = await self.bot.pool.fetchrow(query, person.account_id)
                 query = """ SELECT s.channel_id
                             FROM dota_favourite_characters c
                             JOIN dota_favourite_players p on c.guild_id = p.guild_id
                             JOIN dota_settings s on s.guild_id = c.guild_id
-                            WHERE character_id=$1 AND p.lower_name=$2
+                            WHERE character_id=$1 AND p.player_id=$2
                             AND NOT s.channel_id=ANY(SELECT channel_id FROM dota_messages WHERE match_id=$3);
                         """
-                channel_ids = [
-                    i for i, in await self.bot.pool.fetch(query, person.hero_id, user.lower_name, match.match_id)
+                channel_ids: list[int] = [
+                    i for i, in await self.bot.pool.fetch(query, person.hero_id, user["player_id"], match.match_id)
                 ]
                 hero_name = await hero.name_by_id(person.hero_id)
-                log.debug("%s - %s", user.display_name, hero_name)
+                log.debug("%s - %s", user["display_name"], hero_name)
                 # print(match)
                 if channel_ids:
                     log.debug("%s", channel_ids)
@@ -156,8 +161,8 @@ class Dota2FPCNotifications(FPCCog):
                         ActiveMatch(
                             match_id=match.match_id,
                             start_time=match.activate_time,
-                            player_name=user.display_name,
-                            twitch_id=user.twitch_id,
+                            player_name=user["display_name"],
+                            twitch_id=user["twitch_id"],
                             hero_id=person.hero_id,
                             hero_ids=hero_ids,
                             server_steam_id=match.server_steam_id,
@@ -238,17 +243,17 @@ class Dota2FPCNotifications(FPCCog):
 
     async def edit_dota_notification_messages(self, match_rows: list[DotaFPCMatchRecord]):
         for match_row in match_rows:
-            cache_item = self.opendota_req_cache.get(match_row.match_id, None)
+            cache_item = self.opendota_req_cache.get(match_row["match_id"], None)
 
             if not cache_item:
                 self.opendota_req_cache[match_row.match_id] = cache_item = OpendotaRequestMatch(
-                    match_row.match_id, match_row.opendota_jobid
+                    match_row["match_id"], match_row["opendota_jobid"]
                 )
 
             player_dict_list = await cache_item.workflow(self.bot)
             if player_dict_list:
                 query = "SELECT * FROM dota_messages WHERE match_id=$1"
-                for message_row in await self.bot.pool.fetch(query, match_row.match_id):
+                for message_row in await self.bot.pool.fetch(query, match_row["match_id"]):
                     for player in player_dict_list:
                         if player["hero_id"] == message_row.character_id:
                             post_match_player = PostMatchPlayerData(
@@ -259,27 +264,31 @@ class Dota2FPCNotifications(FPCCog):
                             )
                             await post_match_player.edit_notification_embed(self.bot)
             if cache_item.dict_ready:
-                self.opendota_req_cache.pop(match_row.match_id)
+                self.opendota_req_cache.pop(match_row["match_id"])
                 query = "DELETE FROM dota_matches WHERE match_id=$1"
-                await self.bot.pool.execute(query, match_row.match_id)
+                await self.bot.pool.execute(query, match_row["match_id"])
 
     # OPENDOTA RATE LIMITS
 
     @commands.command(hidden=True, aliases=["odrl", "od_rl", "odota_ratelimit"])
     async def opendota_ratelimit(self, ctx: AluContext):
         """Send opendota rate limit numbers"""
-        e = discord.Embed(colour=const.Colour.prpl(), description=f"Odota limits: {self.bot.odota_ratelimit}")
-        await ctx.reply(embed=e)
+        embed = discord.Embed(colour=const.Colour.prpl(), description=f"Odota limits: {self.bot.odota_ratelimit}")
+        await ctx.reply(embed=embed)
 
     @aluloop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
     async def daily_report(self):
-        e = discord.Embed(title="Daily Report", colour=const.MaterialPalette.black())
         the_dict = self.bot.odota_ratelimit
         month, minute = int(the_dict["monthly"]), int(the_dict["minutely"])
-        e.description = f"Odota limits. monthly: {month} minutely: {minute}"
+
         content = f"{self.bot.owner_id}" if month < 10_000 else ""
-        await self.hideout.daily_report.send(content=content, embed=e)
+        embed = discord.Embed(
+            title="Daily Report",
+            colour=const.MaterialPalette.black(),
+            description=f"Odota limits. monthly: {month} minutely: {minute}",
+        )
+        await self.hideout.daily_report.send(content=content, embed=embed)
 
 
 async def setup(bot):
-    await bot.add_cog(Dota2FPCNotifications(bot))
+    await bot.add_cog(DotaFPCNotifications(bot))

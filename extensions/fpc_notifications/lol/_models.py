@@ -10,7 +10,6 @@ from PIL import Image, ImageDraw, ImageFont
 
 from utils import const, lol
 from utils.formats import human_timedelta
-from utils.lol.const import LiteralPlatform, platform_to_server
 
 from .._fpc_utils.base_models import BasePostMatchPlayer
 
@@ -18,50 +17,48 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 
-__all__ = ("Account", "Match", "LoLNotificationMatch", "PostMatchPlayer")
+__all__ = (
+    "LoLNotificationAccount",
+    "LoLNotificationMatch",
+    "PostMatchPlayer",
+)
 
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class Account:
-    def __init__(self, platform: LiteralPlatform, account_name: str):
-        self.platform: LiteralPlatform = platform
-        self.account_name = account_name
-
-        self._stripped_acc_name = self.account_name.replace(" ", "")
+class LoLNotificationAccount:
+    def __init__(self, platform: lol.LiteralPlatform, game_name: str, tag_line: str):
+        self.platform: lol.LiteralPlatform = platform
+        self.game_name: str = game_name
+        self.tag_line: str = tag_line
 
     @property
     def opgg(self) -> str:  # todo: look how to do actual links to matches instead of accounts
-        """op.gg link for the match"""
-        server = platform_to_server(self.platform)
-        return f"https://{server}.op.gg/summoners/{server}/{self._stripped_acc_name}"
+        """op.gg link to the account."""
+        server = lol.PLATFORM_TO_SERVER[self.platform]
+        return f"https://op.gg/summoners/{server}/{self.game_name}-{self.tag_line}"
 
     @property
     def ugg(self) -> str:
-        """u.gg link for the match"""
-        return f"https://u.gg/lol/profile/{self.platform}/{self._stripped_acc_name}"
+        """u.gg link to the account."""
+        return f"https://u.gg/lol/profile/{self.platform}/{self.game_name}-{self.tag_line}"
 
     @property
     def links(self) -> str:
-        """all links at once"""
+        """all links at once in markdown hyperlink style."""
         return f"/[Opgg]({self.opgg})/[Ugg]({self.ugg})"
 
 
-class Match(Account):
-    def __init__(self, match_id: int, platform: LiteralPlatform, account_name: str):
-        super().__init__(platform, account_name)
-        self.match_id: int = match_id
-
-
-class LoLNotificationMatch(Match):
+class LoLNotificationMatch(LoLNotificationAccount):
     def __init__(
         self,
         *,
         match_id: int,
-        platform: LiteralPlatform,
-        account_name: str,
+        platform: lol.LiteralPlatform,
+        game_name: str,
+        tag_line: str,
         start_time: int,
         champion_id: int,
         all_champion_ids: list[int],
@@ -71,7 +68,9 @@ class LoLNotificationMatch(Match):
         channel_ids: list[int],
         summoner_id: str,
     ):
-        super().__init__(match_id, platform, account_name)
+        super().__init__(platform, game_name, tag_line)
+        self.match_id: int = match_id
+
         self.start_time: int = start_time
         self.champion_id: int = champion_id
         self.all_champion_ids: list[int] = all_champion_ids
@@ -128,7 +127,7 @@ class LoLNotificationMatch(Match):
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
             draw = ImageDraw.Draw(img)
             text = f"{display_name} - {champion_name}"
-            w2, _h2 = bot.transposer.get_text_wh(text, font)
+            w2, h2 = bot.transposer.get_text_wh(text, font)
             draw.text(xy=((width - w2) / 2, 65), text=text, font=font, align="center")
 
             # rune icons
@@ -162,7 +161,7 @@ class LoLNotificationMatch(Match):
 
         embed = discord.Embed(color=const.Colour.rspbrry(), url=stream.url)
         embed.description = (
-            f"Match `{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n"
+            f"Match `{self.platform.upper()}_{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n"
             f"{await bot.twitch.last_vod_link(stream.twitch_id, seconds_ago=self.long_ago)}{self.links}"
         )
         embed.set_image(url=f"attachment://{image_file.filename}")

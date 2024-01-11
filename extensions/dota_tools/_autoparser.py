@@ -25,7 +25,7 @@ class OpenDotaAutoParser(AluCog):
 
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        self.active_matches: list[int] = [7165513460]
+        self.active_matches: list[int] = []
         self.lobby_ids: set[int] = set()
 
         self.matches_to_parse: list[int] = []

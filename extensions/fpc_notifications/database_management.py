@@ -1,0 +1,133 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
+
+import discord
+from discord import app_commands
+from discord.ext import commands
+
+from utils import checks, errors, lol
+
+from ._base import FPCCog
+
+if TYPE_CHECKING:
+    from bot import AluBot
+    from utils import AluGuildContext
+
+    from .dota import DotaFPC
+    from .lol import LoLFPC
+
+# common flag descriptions
+NAME_FLAG_DESC = "Player name. if it's a twitch streamer then it should match their twitch handle."
+TWITCH_FLAG_DESC = "Is this person a twitch.tv streamer (under same name)?"
+
+# Dota 2 flag descriptions
+STEAM_FLAG_DESC = "Steam_id in any of 64/32/3/2 versions, friend_id or just steam profile link."
+
+# League of Legends flag descriptions
+SERVER_FLAG_DESC = 'Server where the account is from, i.e. "KR", "NA", "EUW".'
+GAME_NAME_FLAG_DESC = 'Riot ID name (without a hashtag or a tag), i.e. "Hide on bush", "Sneaky".'
+TAG_LINE_FLAG_DESC = 'Riot ID tag line (characters after a hashtag), i.e. "KR1", "NA69".'
+
+# Note that all classes below should implement .name attribute
+# Since our FPCAccount depends on the assumption that it exists.
+
+
+class AddDotaPlayerFlags(commands.FlagConverter):
+    name: str = commands.flag(description=NAME_FLAG_DESC)
+    steam: str = commands.flag(description=STEAM_FLAG_DESC)
+    twitch: bool = commands.flag(description=TWITCH_FLAG_DESC)
+
+
+class RemoveDotaPlayerFlags(commands.FlagConverter):
+    name: Optional[str] = commands.flag(description=NAME_FLAG_DESC, default=None)
+    steam: Optional[str] = commands.flag(description=STEAM_FLAG_DESC, default=None)
+
+
+class AddLoLPlayerFlags(commands.FlagConverter):
+    name: str = commands.flag(description=NAME_FLAG_DESC)
+    server: lol.LiteralServer = commands.flag(description=SERVER_FLAG_DESC)
+    game_name: str = commands.flag(description=GAME_NAME_FLAG_DESC)
+    tag_line: str = commands.flag(description=TAG_LINE_FLAG_DESC)
+
+
+class RemoveLoLPlayerFlags(commands.FlagConverter):
+    name: Optional[str] = commands.flag(description=NAME_FLAG_DESC, default=None)
+
+
+class FPCDatabaseManagement(FPCCog):
+    """FPC Database Management
+
+    Commands for bot owner(-s) to add/remove player accounts from the FPC database.
+    """
+
+    def get_fpc_settings_cog(self, cog_name: str) -> FPCCog:
+        """Get FPC Settings Cog"""
+        fpc_settings_cog: Optional[FPCCog] = self.bot.get_cog(cog_name)  # type:ignore
+        if fpc_settings_cog is None:
+            raise errors.ErroneousUsage(f"Cog `{cog_name}` is not loaded.")
+        return fpc_settings_cog
+
+    @checks.hybrid.is_hideout()
+    @commands.hybrid_group()
+    async def database(self, ctx: AluGuildContext):
+        """Group command about managing players/accounts bot's FPC database."""
+        await ctx.send_help()
+
+    @database.group(name="dota")
+    async def database_dota(self, ctx: AluGuildContext):
+        """Group command about managing Dota 2 players/accounts in the bot's FPC database."""
+        await ctx.send_help()
+
+    @property
+    def dota_fpc_settings_cog(self) -> DotaFPC:
+        """Get Dota 2 FPC Settings Cog"""
+        # __name__ only because clown like me changes class names every month across the whole bot.
+        return self.get_fpc_settings_cog("DotaFPC")  # type: ignore
+
+    @database_dota.command(name="add")
+    async def database_dota_add(self, ctx: AluGuildContext, flags: AddDotaPlayerFlags):
+        """Add Dota 2 player to the FPC database."""
+        await self.dota_fpc_settings_cog.database_add(ctx, flags)
+
+    @database_dota.command(name="remove")
+    async def database_dota_remove(self, ctx: AluGuildContext, player_name: str):
+        """Remove Dota 2 account/player from the database."""
+        await self.dota_fpc_settings_cog.database_remove(ctx, player_name)
+
+    @database_dota_remove.autocomplete("player_name")
+    async def database_dota_remove_autocomplete(
+        self, interaction: discord.Interaction[AluBot], current: str
+    ) -> list[app_commands.Choice[str]]:
+        return await self.dota_fpc_settings_cog.database_remove_autocomplete(interaction, current)
+
+    @database.group(name="lol")
+    async def database_lol(self, ctx: AluGuildContext):
+        """Group command about managing LoL 2 players/accounts in the bot's FPC database."""
+        await ctx.send_help()
+
+    @property
+    def lol_fpc_settings_cog(self) -> LoLFPC:
+        """Get LoL 2 FPC Settings Cog"""
+        # __name__ only because clown like me changes class names every month across the whole bot.
+        return self.get_fpc_settings_cog("LoLFPC")  # type: ignore
+
+    @database_lol.command(name="add")
+    async def database_lol_add(self, ctx: AluGuildContext, flags: AddLoLPlayerFlags):
+        """Add LoL player to the FPC database."""
+        await self.lol_fpc_settings_cog.database_add(ctx, flags)
+
+    @database_lol.command(name="remove")
+    async def database_lol_remove(self, ctx: AluGuildContext, player_name: str):
+        """Remove LoL account/player from the FPC database."""
+        await self.lol_fpc_settings_cog.database_remove(ctx, player_name)
+
+    @database_lol_remove.autocomplete("player_name")
+    async def database_lol_remove_autocomplete(
+        self, interaction: discord.Interaction[AluBot], current: str
+    ) -> list[app_commands.Choice[str]]:
+        return await self.lol_fpc_settings_cog.database_remove_autocomplete(interaction, current)
+
+
+async def setup(bot: AluBot):
+    await bot.add_cog(FPCDatabaseManagement(bot))

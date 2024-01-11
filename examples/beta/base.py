@@ -15,13 +15,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus
 
-from utils import AluCog, ExtCategory, aluloop, const, errors, timezones
+from bot import AluBot
+from utils import AluCog, AluContext, ExtCategory, aluloop, const, errors, timezones
 
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    pass
 
 category = ExtCategory(
     name="Beta Features",

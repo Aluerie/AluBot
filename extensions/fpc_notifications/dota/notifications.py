@@ -246,7 +246,7 @@ class DotaFPCNotifications(FPCCog):
             cache_item = self.opendota_req_cache.get(match_row["match_id"], None)
 
             if not cache_item:
-                self.opendota_req_cache[match_row.match_id] = cache_item = OpendotaRequestMatch(
+                self.opendota_req_cache[match_row['match_id']] = cache_item = OpendotaRequestMatch(
                     match_row["match_id"], match_row["opendota_jobid"]
                 )
 

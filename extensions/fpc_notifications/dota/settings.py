@@ -11,7 +11,7 @@ from steam.steamid import EType, SteamID
 from utils import checks, const
 from utils.dota import hero
 
-from .._fpc_utils import FPCAccount, FPCSettingsBase, GameData
+from .._fpc_utils import FPCAccount, FPCSettingsBase
 from ..database_management import AddDotaPlayerFlags
 
 if TYPE_CHECKING:
@@ -106,14 +106,12 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
         super().__init__(
             bot,
             *args,
-            game=GameData(
-                prefix="dota",
-                colour=const.Colour.prpl(),
-                display_name="Dota 2",
-                icon_url=const.Logo.dota,
-                character_singular_word='hero',
-                character_plural_word="heroes",
-            ),
+            prefix="dota",
+            colour=const.Colour.prpl(),
+            game_display_name="Dota 2",
+            game_icon_url=const.Logo.dota,
+            character_singular_word="hero",
+            character_plural_word="heroes",
             account_cls=DotaAccount,
             account_typed_dict_cls=DotaAccountDict,
             character_id_by_name=hero.id_by_name,

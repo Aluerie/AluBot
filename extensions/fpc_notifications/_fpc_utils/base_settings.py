@@ -15,14 +15,10 @@ from . import views
 if TYPE_CHECKING:
     from bot import AluBot
 
-    class DatabaseListRecord(TypedDict):
-        display_name: str
-        twitch_id: int
-
-    class PlayerDict(TypedDict):
-        display_name: str
-        twitch_id: Optional[int]
-        profile_image: str
+    # currently
+    # * `steam_id` are `int`
+    # * `summoner_id` are `str`
+    type AccountIDType = int | str
 
     class SetupPlayerQueryRow(TypedDict):
         player_id: int
@@ -39,47 +35,13 @@ if TYPE_CHECKING:
 
 __all__ = (
     "FPCSettingsBase",
-    "GameData",
     "FPCAccount",
 )
 
 
-class GameData(NamedTuple):
-    """General information about games like Dota 2, League of Legends
-    to throw around between FPC related Classes without much hassle.
-
-    Attributes
-    -----------
-    table_prefix: str
-        Code-name for the game, i.e. `lol`, `dota`.
-        Important notes.
-        1) It's assumed that SQL tables related to FPC are named accordingly to this prefix.
-        For example, Game accounts table should be named f'{self.game.table_prefix}_accounts'`,
-        i.e. `dota_accounts`.
-        2) name for slash command is assumed to be starting with `/{self.game.table_prefix} as well,
-        i.e. `/dota player setup`
-    colour: discord.Colour
-        The colour that will be used for all embeds related to this game notifications.
-    display_game: str
-        Display name of the game. This is used in response strings mentioning the game for user-end eyes.
-    icon_url: str
-        Display icon for the game. For example, this is used in footnote icons mentioning the game.
-    character_plural_word: str
-        Just a word to describe the characters for the game,
-        i.e. "heroes" for Dota 2, "champions" for LoL, "agents" for Valorant.
-    """
-
-    prefix: str
-    colour: discord.Colour
-    display_name: str
-    icon_url: str
-    character_singular_word: str  # todo: add to docs above and idk, is it the best way?
-    character_plural_word: str
-
-
 class FPCAccount:
     if TYPE_CHECKING:
-        id: str | int
+        id: AccountIDType
         player_display_name: str
         twitch_id: Optional[int]
         profile_image: str
@@ -165,11 +127,28 @@ class FPCSettingsBase(FPCCog):
 
     Attributes
     -----------
-    game: GameData
-        Tuple containing all the info about the game.
-        Look its own doc-string for more info.
+    prefix: str
+        Code-name for the game, i.e. `lol`, `dota`.
+        Important notes.
+        1) It's assumed that SQL tables related to FPC are named accordingly to this prefix.
+        For example, Game accounts table should be named f'{self.prefix}_accounts'`,
+        i.e. `dota_accounts`.
+        2) name for slash command is assumed to be starting with `/{self.prefix} as well,
+        i.e. `/dota player setup`
+    colour: discord.Colour
+        The colour that will be used for all embeds related to this game notifications.
+    game_display_name: str
+        Display name of the game. This is used in response strings mentioning the game for user-end eyes.
+    game_icon_url: str
+        Display icon for the game. For example, this is used in footnote icons mentioning the game.
+    character_singular_word: str
+        Gathering word to describe the characters for the game,
+        i.e. "hero" for Dota 2, "champion" for LoL, "agent" for Valorant.
+    character_plural_word: str
+        A plural form for the `character_singular_word` above.
+        Sometimes adding -s is not enough.
     extra_account_info_columns: List[str]
-        Extra column-names for columns in "{self.game}_accounts" table.
+        Extra column-names for columns in "{self.prefix}_accounts" table.
         For example, you need `platform` as region name in League of Legends in order to find the account.
     character_name_by_id: Callable[[int], Awaitable[str]]
         Function that gets character name by its id, i.e. 1 -> 'Anti-Mage'.
@@ -183,7 +162,12 @@ class FPCSettingsBase(FPCCog):
         self,
         bot: AluBot,
         *args,
-        game: GameData,
+        prefix: str,
+        colour: discord.Colour,
+        game_display_name: str,
+        game_icon_url: str,
+        character_singular_word: str,
+        character_plural_word: str,
         account_cls: type[FPCAccount],
         account_typed_dict_cls: type,
         character_name_by_id: Callable[[int], Awaitable[str]],
@@ -192,7 +176,12 @@ class FPCSettingsBase(FPCCog):
         **kwargs,
     ) -> None:
         super().__init__(bot, *args, **kwargs)
-        self.game: GameData = game
+        self.prefix: str = prefix
+        self.colour: discord.Colour = colour
+        self.game_display_name: str = game_display_name
+        self.game_icon_url: str = game_icon_url
+        self.character_singular_word: str = character_singular_word
+        self.character_plural_word: str = character_plural_word
 
         self.account_cls: type[FPCAccount] = account_cls
         self.account_table_columns: list[str] = list(account_typed_dict_cls.__annotations__.keys())
@@ -204,12 +193,12 @@ class FPCSettingsBase(FPCCog):
 
     # fpc database management related functions ########################################################################
 
-    async def check_if_account_already_in_database(self, account_id: int | str) -> None:
+    async def check_if_account_already_in_database(self, account_id: AccountIDType) -> None:
         query = f""" SELECT display_name
-                    FROM {self.game.prefix}_players
+                    FROM {self.prefix}_players
                     WHERE player_id = (
                         SELECT player_id
-                        FROM {self.game.prefix}_accounts
+                        FROM {self.prefix}_accounts
                         WHERE {self.account_id_column}=$1 
                     )
                 """
@@ -218,7 +207,7 @@ class FPCSettingsBase(FPCCog):
             raise errors.BadArgument(
                 "This account is already in the database.\n"
                 f"It is marked as {display_name}'s account.\n\n"
-                f"You might have wanted to use `/{self.game.prefix} setup players` and chose this player from here."
+                f"You might have wanted to use `/{self.prefix} setup players` and chose this player from here."
             )
 
     async def request_player(self, ctx: AluGuildContext, flags: commands.FlagConverter) -> None:
@@ -233,7 +222,7 @@ class FPCSettingsBase(FPCCog):
 
         confirm_embed = (
             discord.Embed(
-                colour=self.game.colour,
+                colour=self.colour,
                 title="Confirmation Prompt",
                 description=(
                     "Are you sure you want to request this streamer steam account to be added into the database?\n"
@@ -241,7 +230,7 @@ class FPCSettingsBase(FPCCog):
                 ),
             )
             .set_author(name="Request to add an account into the database")
-            .set_footer(text=self.game.display_name, icon_url=self.game.icon_url)
+            .set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
             .set_thumbnail(url=account.profile_image)
             .add_field(name=account.embed_player_name, value=account.embed_account_str)
         )
@@ -250,7 +239,7 @@ class FPCSettingsBase(FPCCog):
             return
 
         response_embed = discord.Embed(
-            colour=self.game.colour, title="Successfully made a request to add the account into the database"
+            colour=self.colour, title="Successfully made a request to add the account into the database"
         ).add_field(name=account.embed_player_name, value=account.embed_account_str)
         await ctx.reply(embed=response_embed)
 
@@ -259,7 +248,7 @@ class FPCSettingsBase(FPCCog):
         logs_embed.description = ""
         logs_embed.set_author(name=ctx.user, icon_url=ctx.user.display_avatar.url)
         logs_embed.add_field(
-            name="Command", value=f"/database {self.game.prefix} add {account.hint_database_add_command_args}"
+            name="Command", value=f"/database {self.prefix} add {account.hint_database_add_command_args}"
         )
         await self.hideout.global_logs.send(embed=logs_embed)
 
@@ -271,10 +260,10 @@ class FPCSettingsBase(FPCCog):
 
         await ctx.typing()
         account = await self.account_cls.create(self.bot, flags)
-        await self.check_if_account_already_in_database(account_id=account.id)
+        await self.check_if_account_already_in_database(account_id=getattr(account, self.account_id_column))
 
         query = f"""
-            INSERT INTO {self.game.prefix}_players 
+            INSERT INTO {self.prefix}_players 
             (display_name, twitch_id)
             VALUES ($1, $2)
             ON CONFLICT (display_name) DO NOTHING
@@ -286,13 +275,13 @@ class FPCSettingsBase(FPCCog):
         database_dict["player_id"] = player_id
         dollars = ", ".join(f"${i}" for i in range(1, len(database_dict.keys()) + 1))
         columns = ", ".join(database_dict.keys())
-        query = f"INSERT INTO {self.game.prefix}_accounts ({columns}) VALUES ({dollars})"
+        query = f"INSERT INTO {self.prefix}_accounts ({columns}) VALUES ({dollars})"
         await ctx.pool.execute(query, *database_dict.values())
 
         response_embed = (
-            discord.Embed(colour=self.game.colour, title=f"Successfully added the account to the database")
+            discord.Embed(colour=self.colour, title=f"Successfully added the account to the database")
             .add_field(name=account.embed_player_name, value=account.embed_account_str)
-            .set_author(name=self.game.display_name, icon_url=self.game.icon_url)
+            .set_author(name=self.game_display_name, icon_url=self.game_icon_url)
             .set_thumbnail(url=account.profile_image)
         )
         await ctx.reply(embed=response_embed)
@@ -311,14 +300,14 @@ class FPCSettingsBase(FPCCog):
 
         player_id, display_name = await self.get_player_tuple(player_name)
 
-        query = f"SELECT * FROM {self.game.prefix}_accounts WHERE player_id = $1"
+        query = f"SELECT * FROM {self.prefix}_accounts WHERE player_id = $1"
         rows: list[dict] = await ctx.pool.fetch(query, player_id)
-        account_ids_names: Mapping[int | str, str] = {
+        account_ids_names: Mapping[AccountIDType, str] = {
             row[self.account_id_column]: self.account_cls.simple_account_name_static(**row) for row in rows
         }
 
         view = views.DatabaseRemoveView(
-            ctx.author.id, self.game, player_id, display_name, account_ids_names, self.account_id_column
+            ctx.author.id, self, player_id, display_name, account_ids_names, self.account_id_column
         )
         await ctx.reply(view=view)
 
@@ -334,7 +323,7 @@ class FPCSettingsBase(FPCCog):
 
         await ctx.typing()
         # Get channel
-        query = f"SELECT channel_id FROM {self.game.prefix}_settings WHERE guild_id=$1"
+        query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
         channel_id: Optional[int] = await self.bot.pool.fetchval(query, ctx.guild.id)
 
         if channel_id:
@@ -346,32 +335,32 @@ class FPCSettingsBase(FPCCog):
             channel = None
 
         if channel:
-            desc = f"{self.game.display_name} FPC Notifications Channel is currently to {channel.mention}."
+            desc = f"{self.game_display_name} FPC Notifications Channel is currently to {channel.mention}."
         else:
-            desc = f"{self.game.display_name} FPC Notifications Channel is currently not set."
+            desc = f"{self.game_display_name} FPC Notifications Channel is currently not set."
 
         embed = discord.Embed(
-            colour=self.game.colour,
+            colour=self.colour,
             title="FPC (Favourite Player+Character) Channel Setup",
             description=desc,
-        ).set_footer(text=self.game.display_name, icon_url=self.game.icon_url)
-        channel_setup_view = views.FPCChannelSetupView(self.game, ctx.author.id)
+        ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
+        channel_setup_view = views.FPCChannelSetupView(self, ctx.author.id)
         await ctx.reply(embed=embed, view=channel_setup_view)
 
     async def is_fpc_channel_set(self, ctx: AluGuildContext) -> None:
         """Checks if the current guild has fpc channel set.
 
         It's somewhat needed because without it functions like `setup_characters`, `setup_players`
-        will fail with ForeignKeyViolationError since there is nothing in `{self.game.prefix}_settings` table.
+        will fail with ForeignKeyViolationError since there is nothing in `{self.prefix}_settings` table.
         """
 
-        query = f"SELECT channel_id FROM {self.game.prefix}_settings WHERE guild_id=$1"
+        query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
         channel_id: Optional[int] = await ctx.pool.fetchval(query, ctx.guild.id)
         if not channel_id:
             raise errors.ErroneousUsage(
                 "I'm sorry! You cannot use this command without setting up "
-                f"{self.game.display_name} FPC (Favourite Player+Character) channel first. "
-                f"Please, use `/{self.game.prefix} setup channel` to assign it."
+                f"{self.game_display_name} FPC (Favourite Player+Character) channel first. "
+                f"Please, use `/{self.prefix} setup channel` to assign it."
             )
 
     async def setup_misc(self, ctx: AluGuildContext):
@@ -385,7 +374,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.typing()
         await self.is_fpc_channel_set(ctx)
 
-        query = f"SELECT enabled, spoil FROM {self.game.prefix}_settings WHERE guild_id=$1"
+        query = f"SELECT enabled, spoil FROM {self.prefix}_settings WHERE guild_id=$1"
         row: SetupMiscQueryRow = await ctx.pool.fetchrow(query, ctx.guild.id)
 
         def state(bool: bool) -> str:  # todo: erm maybe like throw it together somewhere
@@ -394,7 +383,7 @@ class FPCSettingsBase(FPCCog):
 
         embed = (
             discord.Embed(
-                colour=self.game.colour,
+                colour=self.colour,
                 title="FPC (Favourite Player+Character) Misc Settings Setup",
                 description=(
                     "Below there is a list of settings with descriptions and their current state.\n"
@@ -431,7 +420,7 @@ class FPCSettingsBase(FPCCog):
             )
             .set_footer(text="Buttons below correspond embed fields above. Read them!")
         )
-        view = views.FPCSetupMiscView(self.game, embed, author_id=ctx.author.id)
+        view = views.FPCSetupMiscView(self, embed, author_id=ctx.author.id)
         await ctx.reply(embed=embed, view=view)
 
     async def get_character_name_by_id_cache(self) -> dict[int, str]:
@@ -468,7 +457,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.typing()
         await self.is_fpc_channel_set(ctx)
 
-        query = f"SELECT player_id, display_name FROM {self.game.prefix}_players"
+        query = f"SELECT player_id, display_name FROM {self.prefix}_players"
         rows: list[SetupPlayerQueryRow] = await ctx.pool.fetch(query)
 
         player_tuples: list[tuple[int, str]] = [(row["player_id"], row["display_name"]) for row in rows]
@@ -512,7 +501,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.typing()
         object_id, object_display_name = await get_object_tuple(name)
 
-        query = f"INSERT INTO {self.game.prefix}_favourite_{column}s (guild_id, {column}_id) VALUES ($1, $2)"
+        query = f"INSERT INTO {self.prefix}_favourite_{column}s (guild_id, {column}_id) VALUES ($1, $2)"
         try:
             await ctx.pool.execute(query, ctx.guild.id, object_id)
         except asyncpg.UniqueViolationError:
@@ -520,7 +509,7 @@ class FPCSettingsBase(FPCCog):
                 f"{object_name.capitalize()} {object_display_name} was already in your favourite list."
             )
 
-        embed = discord.Embed(colour=self.game.colour).add_field(
+        embed = discord.Embed(colour=self.colour).add_field(
             name=f"Succesfully added a {object_name} to your favourites.",
             value=object_display_name,
         )
@@ -553,11 +542,11 @@ class FPCSettingsBase(FPCCog):
         await ctx.typing()
         object_id, object_display_name = await get_object_tuple(name)
 
-        query = f"DELETE FROM {self.game.prefix}_favourite_{column}s WHERE guild_id=$1 AND {column}_id=$2"
+        query = f"DELETE FROM {self.prefix}_favourite_{column}s WHERE guild_id=$1 AND {column}_id=$2"
         result = await ctx.pool.execute(query, ctx.guild.id, object_id)
         if result == "DELETE 1":
             embed = discord.Embed(
-                colour=self.game.colour,
+                colour=self.colour,
                 title=f"Succesfully removed a {object_word} from your favourites.",
                 description=object_display_name,
             )
@@ -571,7 +560,7 @@ class FPCSettingsBase(FPCCog):
 
     async def get_player_tuple(self, player_name: str) -> tuple[int, str]:
         """Get player_id, display_name by their name from FPC database."""
-        query = f"SELECT player_id, display_name FROM {self.game.prefix}_players WHERE lower(display_name)=$1"
+        query = f"SELECT player_id, display_name FROM {self.prefix}_players WHERE lower(display_name)=$1"
         player_row: Optional[SetupPlayerQueryRow] = await self.bot.pool.fetchrow(query, player_name.lower())
         if player_row is None:
             raise errors.BadArgument(
@@ -592,7 +581,7 @@ class FPCSettingsBase(FPCCog):
         character_id = await self.character_id_by_name(character_name)
         if character_id is None:
             raise errors.BadArgument(
-                f"{self.game.character_singular_word.capitalize()} {character_name} does not exist. "
+                f"{self.character_singular_word.capitalize()} {character_name} does not exist. "
                 "Please, double check everything."
             )
         champion_display_name = await self.character_name_by_id(character_id)
@@ -601,20 +590,20 @@ class FPCSettingsBase(FPCCog):
     async def hideout_character_add(self, ctx: AluGuildContext, character_name: str):
         """Base function for `/{game}-fpc {character} add` Hideout-only command."""
         await self.hideout_add_worker(
-            ctx, character_name, self.get_character_tuple, "character", self.game.character_singular_word
+            ctx, character_name, self.get_character_tuple, "character", self.character_singular_word
         )
 
     async def hideout_character_remove(self, ctx: AluGuildContext, character_name: str):
         """Base function for `/{game}-fpc {character} remove` Hideout-only command."""
         await self.hideout_remove_worker(
-            ctx, character_name, self.get_character_tuple, "character", self.game.character_singular_word
+            ctx, character_name, self.get_character_tuple, "character", self.character_singular_word
         )
 
     async def get_player_list_embed(self, guild_id: int) -> discord.Embed:
         query = f"""
             SELECT display_name, twitch_id
-            FROM {self.game.prefix}_players
-            WHERE player_id=ANY(SELECT player_id FROM {self.game.prefix}_favourite_players WHERE guild_id=$1)
+            FROM {self.prefix}_players
+            WHERE player_id=ANY(SELECT player_id FROM {self.prefix}_favourite_players WHERE guild_id=$1)
         """
         rows: list[PlayerListQueryRow] = await self.bot.pool.fetch(query, guild_id)
         favourite_player_names = (
@@ -624,10 +613,10 @@ class FPCSettingsBase(FPCCog):
             or "Empty list"
         )
         return discord.Embed(
-            colour=self.game.colour,
+            colour=self.colour,
             title="List of your favourite players",
             description=favourite_player_names,
-        ).set_footer(text=self.game.display_name, icon_url=self.game.icon_url)
+        ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
 
     async def hideout_player_list(self, ctx: AluGuildContext):
         """Base function for `/{game}-fpc player list` Hideout-only command."""
@@ -636,7 +625,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.reply(embed=embed)
 
     async def get_character_list_embed(self, guild_id: int) -> discord.Embed:
-        query = f"SELECT character_id FROM {self.game.prefix}_favourite_characters WHERE guild_id=$1"
+        query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
         favourite_character_ids: list[int] = [
             character_id for character_id, in await self.bot.pool.fetch(query, guild_id)
         ]
@@ -644,8 +633,8 @@ class FPCSettingsBase(FPCCog):
             "\n".join([await self.character_name_by_id(i) for i in favourite_character_ids]) or "Empty list"
         )
         return discord.Embed(
-            colour=self.game.colour,
-            title=f"List of your favourite {self.game.character_plural_word}",
+            colour=self.colour,
+            title=f"List of your favourite {self.character_plural_word}",
             description=favourite_character_names,
         )
 
@@ -665,9 +654,9 @@ class FPCSettingsBase(FPCCog):
 
         query = f"""
             SELECT display_name 
-            FROM {self.game.prefix}_players
+            FROM {self.prefix}_players
             WHERE {'NOT' if mode_add_remove else ''} player_id=ANY(
-                SELECT player_id FROM {self.game.prefix}_favourite_players WHERE guild_id=$1
+                SELECT player_id FROM {self.prefix}_favourite_players WHERE guild_id=$1
             )
             ORDER BY similarity(display_name, $2) DESC
             LIMIT 6;
@@ -684,7 +673,7 @@ class FPCSettingsBase(FPCCog):
 
         assert ntr.guild
 
-        query = f"SELECT character_id FROM {self.game.prefix}_favourite_characters WHERE guild_id=$1"
+        query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
 
         favourite_character_ids: list[int] = [
             character_id for character_id, in await ntr.client.pool.fetch(query, ntr.guild.id)
@@ -713,7 +702,7 @@ class FPCSettingsBase(FPCCog):
 
         query = f"""
             SELECT display_name 
-            FROM {self.game.prefix}_players
+            FROM {self.prefix}_players
             ORDER BY similarity(display_name, $1) DESC
             LIMIT 6;
         """

@@ -12,7 +12,7 @@ from pulsefire.clients import RiotAPIClient
 import config
 from utils import checks, const, errors, lol
 
-from .._fpc_utils import FPCAccount, FPCSettingsBase, GameData
+from .._fpc_utils import FPCAccount, FPCSettingsBase
 from ..database_management import AddLoLPlayerFlags
 from ._models import LoLNotificationAccount
 
@@ -42,7 +42,6 @@ class LoLAccount(FPCAccount):
         summoner_id: str
         game_name: str
         tag_line: str
-        id: str
 
     @override
     async def set_game_specific_attrs(self, flags: AddLoLPlayerFlags):
@@ -75,7 +74,6 @@ class LoLAccount(FPCAccount):
                     f"`{flags.game_name}#{flags.tag_line}` in `{flags.server}` server, puuid: `{puuid}`"
                 )
             self.summoner_id = summoner["id"]
-            self.id = summoner["id"]
 
     @property
     @override
@@ -130,14 +128,12 @@ class LoLFPCSettings(FPCSettingsBase):
         super().__init__(
             bot,
             *args,
-            game=GameData(
-                prefix="lol",
-                colour=const.Colour.rspbrry(),
-                display_name="League of Legends",
-                icon_url=const.Logo.lol,
-                character_singular_word="champion",
-                character_plural_word="champions",
-            ),
+            prefix="lol",
+            colour=const.Colour.rspbrry(),
+            game_display_name="League of Legends",
+            game_icon_url=const.Logo.lol,
+            character_singular_word="champion",
+            character_plural_word="champions",
             account_cls=LoLAccount,
             account_typed_dict_cls=LoLAccountDict,
             character_name_by_id=lol.champion.name_by_id,

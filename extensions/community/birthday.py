@@ -135,19 +135,23 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
         dt = birthday.verify_date()
 
-        confirm_embed = discord.Embed(colour=0xF46344, title="Birthday Confirmation")
-        confirm_embed.description = "Do you confirm that this is the correct date/timezone for your birthday?"
-        confirm_embed.add_field(name="Date", value=birthday_string(dt))
-        confirm_embed.add_field(name="Timezone", value=birthday.timezone.label)
-        footer_text = (
-            "Please, double check the information! This is important because "
-            "as spam preventive measure users can only receive one congratulation per year."
+        confirm_embed = (
+            discord.Embed(
+                colour=0xF46344,
+                title="Birthday Confirmation",
+                description="Do you confirm that this is the correct date/timezone for your birthday?",
+            )
+            .add_field(name="Date", value=birthday_string(dt))
+            .add_field(name="Timezone", value=birthday.timezone.label)
+            .set_footer(
+                text=(
+                    "Please, double check the information! This is important because "
+                    "as spam preventive measure users can only receive one congratulation per year."
+                )
+            )
         )
-        confirm_embed.set_footer(text=footer_text)
-        confirm = await ctx.prompt(embed=confirm_embed)
-        if not confirm:
-            # todo: rework all those confirm = ... if not confirm into something more standardized and with embed too!
-            return await ctx.send("Aborting.")
+        if not await self.bot.disambiguator.confirm(ctx, embed=confirm_embed):
+            return
 
         # settle down timezone questions
         zone = await ctx.bot.tz_manager.get_timezone(ctx.author.id)
@@ -186,12 +190,14 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             data=data,
         )
 
-        e = discord.Embed(colour=ctx.author.colour, title="Your birthday is successfully set")
-        e.add_field(name="Data", value=birthday_string(dt))
-        e.add_field(name="Timezone", value=birthday.timezone.label)
-        e.add_field(name="Next congratulations incoming", value=formats.format_dt(expires_at, "R"))
-        e.set_footer(text="Important! By submitting this information you agree it can be shown to anyone.")
-        await ctx.reply(embed=e)
+        embed = (
+            discord.Embed(colour=ctx.author.colour, title="Your birthday is successfully set")
+            .add_field(name="Data", value=birthday_string(dt))
+            .add_field(name="Timezone", value=birthday.timezone.label)
+            .add_field(name="Next congratulations incoming", value=formats.format_dt(expires_at, "R"))
+            .set_footer(text="Important! By submitting this information you agree it can be shown to anyone.")
+        )
+        await ctx.reply(embed=embed)
 
     async def remove_birthday_helper(self, user_id: int):
         query = """ DELETE FROM timers

@@ -83,8 +83,8 @@ class ConfView(discord.ui.View):
         style=discord.ButtonStyle.primary,
         emoji=Emote.bubuChrist,
     )
-    async def button0_callback(self, ntr: discord.Interaction, btn: discord.ui.Button):
-        await ntr.response.send_modal(ConfModal(title=btn.label))
+    async def button0_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(ConfModal(title=button.label))
 
     @discord.ui.button(
         label="Non-anonymous confession",
@@ -92,8 +92,8 @@ class ConfView(discord.ui.View):
         style=discord.ButtonStyle.primary,
         emoji=Emote.PepoBeliever,
     )
-    async def button1_callback(self, ntr: discord.Interaction, btn: discord.ui.Button):
-        await ntr.response.send_modal(ConfModal(title=btn.label))
+    async def button1_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(ConfModal(title=button.label))
 
 
 class Confession(CommunityCog):

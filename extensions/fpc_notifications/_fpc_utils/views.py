@@ -34,7 +34,7 @@ class FPCChannelSetupView(AluView):
         placeholder="\N{BIRD} Select a new FPC notifications Channel",
         row=0,
     )
-    async def set_channel(self, ntr: discord.Interaction[AluBot], select: discord.ui.ChannelSelect):
+    async def set_channel(self, interaction: discord.Interaction[AluBot], select: discord.ui.ChannelSelect):
         chosen_channel = select.values[0]  # doesn't have all data thus we need to resolve
         channel = chosen_channel.resolve() or await chosen_channel.fetch()
 
@@ -56,14 +56,13 @@ class FPCChannelSetupView(AluView):
                     ON CONFLICT (guild_id) DO UPDATE
                         SET channel_id=$3;
                 """
-        await ntr.client.pool.execute(query, channel.guild.id, channel.guild.name, channel.id)
+        await interaction.client.pool.execute(query, channel.guild.id, channel.guild.name, channel.id)
 
         embed = discord.Embed(
             colour=self.game.colour,
-            title=f"{self.game.display_name} FPC (Favourite Player+Character) channel was set",
-            description=f"From now on I will send FPC Notifications to {channel.mention}.",
-        ).set_author(name=self.game.display_name, icon_url=self.game.icon_url)
-        return await ntr.response.send_message(embed=embed)
+            description=f"From now on I will send {self.game.display_name} FPC Notifications to {channel.mention}.",
+        )
+        return await interaction.response.send_message(embed=embed)
 
 
 class FPCSetupMiscView(AluView):

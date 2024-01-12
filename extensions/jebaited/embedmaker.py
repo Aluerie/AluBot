@@ -34,8 +34,8 @@ class StartView(discord.ui.View):
         self.message = message
 
     @discord.ui.button(label='Author', emoji='\N{LOWER LEFT FOUNTAIN PEN}', style=discord.ButtonStyle.blurple)
-    async def author_btn(self, ntr: discord.Interaction, _btn: discord.ui.Button):
-        await ntr.response.send_message("hello")
+    async def author_button(self, interaction: discord.Interaction, _button: discord.ui.Button):
+        await interaction.response.send_message("hello")
 
 
 class EmbedMaker(JebaitedCog, name="Embed Maker", emote=const.Emote.DankZzz):

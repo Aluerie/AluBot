@@ -48,15 +48,16 @@ class PrefixSetupView(discord.ui.View):
         self.paginator: SetupPages = paginator
 
     @discord.ui.button(emoji="\N{HEAVY DOLLAR SIGN}", label="Change prefix", style=discord.ButtonStyle.blurple)
-    async def set_prefix(self, ntr: discord.Interaction[AluBot], _btn: discord.ui.Button):
-        await ntr.response.send_modal(PrefixSetModal(self.cog, self.paginator))
+    async def set_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button):
+        await interaction.response.send_modal(PrefixSetModal(self.cog, self.paginator))
 
     @discord.ui.button(emoji="\N{BANKNOTE WITH DOLLAR SIGN}", label="Reset prefix", style=discord.ButtonStyle.blurple)
-    async def reset_prefix(self, ntr: discord.Interaction[AluBot], _btn: discord.ui.Button):
-        p = GuildPrefix(ntr.client, ntr.guild)
+    async def reset_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button):
+        assert interaction.guild
+        p = GuildPrefix(interaction.client, interaction.guild)
         e = await p.set_prefix()
-        await ntr.response.send_message(embed=e, ephemeral=True)
-        await self.paginator.show_page(ntr, self.paginator.current_page_number)
+        await interaction.response.send_message(embed=e, ephemeral=True)
+        await self.paginator.show_page(interaction, self.paginator.current_page_number)
 
 
 class GuildPrefix:

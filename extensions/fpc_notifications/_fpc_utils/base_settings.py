@@ -1,27 +1,13 @@
 from __future__ import annotations
 
-from difflib import get_close_matches
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    Literal,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Self,
-    TypedDict,
-    Union,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, NamedTuple, Optional, Self, TypedDict
 
 import asyncpg
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluGuildContext, checks, const, errors, formats, fuzzy, pages
+from utils import AluGuildContext, errors, formats, fuzzy
 
 from .._base import FPCCog
 from . import views

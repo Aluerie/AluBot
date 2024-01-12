@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class CogPage:
     def __init__(
         self,
-        section: Literal['_front_page'] | AluCog | commands.Cog,  # dirty way to handle front page
+        section: Literal["_front_page"] | AluCog | commands.Cog,  # dirty way to handle front page
         category: ExtCategory,
         page_commands: Sequence[commands.Command],
         section_total_commands: int = 0,
@@ -24,7 +24,7 @@ class CogPage:
         category_page_number: int = 0,
         category_total_pages: int = 1,
     ):
-        self.section: Literal['_front_page'] | AluCog | commands.Cog = section
+        self.section: Literal["_front_page"] | AluCog | commands.Cog = section
         self.category: ExtCategory = category
         self.page_commands: Sequence[commands.Command] = page_commands
         self.section_total_commands: int = section_total_commands
@@ -42,40 +42,40 @@ class HelpPageSource(menus.ListPageSource):
     async def format_page(self, menu: HelpPages, page: CogPage):
         e = discord.Embed(colour=const.Colour.prpl())
 
-        if page.section == '_front_page':
+        if page.section == "_front_page":
             bot = menu.ctx_ntr.client
             owner = bot.owner
-            e.title = f'{bot.user.name}\'s Help Menu'
+            e.title = f"{bot.user.name}'s Help Menu"
             e.description = (
-                f'\N{HEAVY BLACK HEART}\N{VARIATION SELECTOR-16} '
-                f'Hi! {bot.user.name} is an ultimate multi-purpose bot! \N{PURPLE HEART}\n\n'
-                f'\N{BLACK CIRCLE} Use {const.Slash.help}` <command>` for more info on a command.\n'
-                f'\N{BLACK CIRCLE} Use {const.Slash.help}` <section>` to go to that section page.\n'
-                '\N{BLACK CIRCLE} Alternatively to^ you can try searching with \N{RIGHT-POINTING MAGNIFYING GLASS} button.\n'
-                '\N{BLACK CIRCLE} For legend used in the help menu press \N{WHITE QUESTION MARK ORNAMENT} button.\n'
-                '\N{BLACK CIRCLE} Use the dropdown menu below to select a category \N{UNICORN FACE}.'
+                f"\N{HEAVY BLACK HEART}\N{VARIATION SELECTOR-16} "
+                f"Hi! {bot.user.name} is an ultimate multi-purpose bot! \N{PURPLE HEART}\n\n"
+                f"\N{BLACK CIRCLE} Use {const.Slash.help}` <command>` for more info on a command.\n"
+                f"\N{BLACK CIRCLE} Use {const.Slash.help}` <section>` to go to that section page.\n"
+                "\N{BLACK CIRCLE} Alternatively to^ you can try searching with \N{RIGHT-POINTING MAGNIFYING GLASS} button.\n"
+                "\N{BLACK CIRCLE} For legend used in the help menu press \N{WHITE QUESTION MARK ORNAMENT} button.\n"
+                "\N{BLACK CIRCLE} Use the dropdown menu below to select a category \N{UNICORN FACE}."
             )
             e.set_thumbnail(url=bot.user.display_avatar)
-            e.set_author(name=f'Made by @{owner.display_name}', icon_url=owner.display_avatar)
-            e.set_footer(text=f'With love, {bot.user.display_name}', icon_url=bot.user.display_avatar)
+            e.set_author(name=f"Made by @{owner.display_name}", icon_url=owner.display_avatar)
+            e.set_footer(text=f"With love, {bot.user.display_name}", icon_url=bot.user.display_avatar)
 
             menu.clear_items()
             menu.fill_items()
-            menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.github_logo, label='GitHub', url=bot.repo_url))
-            menu.add_item(discord.ui.Button(emoji=const.Emote.FeelsDankMan, label='Invite me', url=bot.invite_link))
-            menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.AluerieServer, label='Community', url=bot.server_url))
+            menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.github_logo, label="GitHub", url=bot.repo_url))
+            menu.add_item(discord.ui.Button(emoji=const.Emote.FeelsDankMan, label="Invite me", url=bot.invite_link))
+            menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.AluerieServer, label="Community", url=bot.server_url))
 
             return e
 
-        emote = getattr(page.section, 'emote', None) or ''
+        emote = getattr(page.section, "emote", None) or ""
         e.title = (
-            f'{page.section.qualified_name} {emote} - {page.section_total_commands} commands '
-            f'(Section page {page.section_page_number + 1}/{page.section_total_pages})'
+            f"{page.section.qualified_name} {emote} - {page.section_total_commands} commands "
+            f"(Section page {page.section_page_number + 1}/{page.section_total_pages})"
         )
         emote_url = discord.PartialEmoji.from_str(page.category.emote)
         author_text = (
-            f'Category: {page.category.name} '
-            f'(Category page {page.category_page_number + 1}/{page.category_total_pages})'
+            f"Category: {page.category.name} "
+            f"(Category page {page.category_page_number + 1}/{page.category_total_pages})"
         )
         e.set_author(name=author_text, icon_url=emote_url.url)
         e.description = page.section.description
@@ -93,7 +93,7 @@ class HelpPageSource(menus.ListPageSource):
 
 class HelpSelect(discord.ui.Select):
     def __init__(self, paginator: HelpPages):
-        super().__init__(placeholder='\N{UNICORN FACE} Choose help category')
+        super().__init__(placeholder="\N{UNICORN FACE} Choose help category")
         self.paginator: HelpPages = paginator
 
         self.__fill_options()
@@ -107,9 +107,9 @@ class HelpSelect(discord.ui.Select):
             pages_per_category[category] = starting, total - 1
 
         for category, (start, end) in pages_per_category.items():
-            pages_string = f'(page {start})' if start == end else f'(pages {start}-{end})'
+            pages_string = f"(page {start})" if start == end else f"(pages {start}-{end})"
             self.add_option(
-                label=f'{category.name} {pages_string}',
+                label=f"{category.name} {pages_string}",
                 emoji=category.emote,
                 description=category.description,
                 value=str(start - 1),  # we added 1 in total=1
@@ -140,39 +140,42 @@ class HelpPages(pages.Paginator):
             self.add_item(HelpSelect(self))
 
     @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
-    async def legend_page(self, ntr: discord.Interaction[AluBot], _btn: discord.ui.Button):
+    async def legend_page(self, ntr: discord.Interaction[AluBot], _button: discord.ui.Button):
         """Show legend page."""
-        e = discord.Embed(title='Legend used in the Help menu.')
-        e.description = (
-            'If you have troubles figuring out how to use some of text commands then you should try using slash commands'
-            ' because everything there has a small explanation text. '
-            'Nevertheless, this help menu also shows signatures for text, a.k.a. prefix commands.'
-            'Reading those is pretty simple.'
+        e = discord.Embed(
+            title="Legend used in the Help menu.",
+            description=(
+                "If you have troubles figuring out how to use some of text commands "
+                "then you should try using slash commands"
+                " because everything there has a small explanation text. "
+                "Nevertheless, this help menu also shows signatures for text, a.k.a. prefix commands."
+                "Reading those is pretty simple."
+            ),
         )
 
         fields = (
             (
-                '[...]',
-                'This means that the command has more documentation to it, '
-                f'which you can see by using {const.Slash.help}` command: <command>`',
+                "[...]",
+                "This means that the command has more documentation to it, "
+                f"which you can see by using {const.Slash.help}` command: <command>`",
             ),
-            ('<argument>', 'This means the argument is __**required**__.'),
-            ('[argument]', 'This means the argument is __**optional**__.'),
+            ("<argument>", "This means the argument is __**required**__."),
+            ("[argument]", "This means the argument is __**optional**__."),
             ("`[argument='default']`", "Means that this argument is __**optional**__ and has a default value"),
-            ('[A|B|C]', 'This means that it can be __**either A, B or C**__.'),
-            ('[argument...]', 'This means you can have multiple arguments.\n'),
+            ("[A|B|C]", "This means that it can be __**either A, B or C**__."),
+            ("[argument...]", "This means you can have multiple arguments.\n"),
             (
-                'Note',
-                'Now that you know the basics, it should be noted that...\n' '__**You do not type in the brackets!**__',
+                "Note",
+                "Now that you know the basics, it should be noted that...\n" "__**You do not type in the brackets!**__",
             ),
         )
         for name, value in fields:
             e.add_field(name=name, value=value, inline=False)
-        e.set_footer(text=f'With love, {ntr.client.user.display_name}')
+        e.set_footer(text=f"With love, {ntr.client.user.display_name}")
         await ntr.response.send_message(embed=e, ephemeral=True)
 
     # @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
-    # async def find_command_or_section_page(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+    # async def find_command_or_section_page(self, ntr: discord.Interaction, _button: discord.ui.Button):
     #     """Show modal which leads to basically invoking /help <command>/<section>"""
     #     await self.show_page(ntr, 0)
 
@@ -186,9 +189,9 @@ class AluHelp(commands.HelpCommand):
             show_hidden=show_hidden,
             verify_checks=False,
             command_attrs={
-                'hidden': False,
-                'help': 'Show `help` menu for the bot.',
-                'usage': '[command/section/category]',
+                "hidden": False,
+                "help": "Show `help` menu for the bot.",
+                "usage": "[command/section/category]",
             },
         )
 
@@ -204,7 +207,7 @@ class AluHelp(commands.HelpCommand):
         """
         if answer is None:
             answer = []  # so the array only exists inside the command.
-        if getattr(command, 'commands', None) is not None:  # maybe we should isinstance(commands.Group)
+        if getattr(command, "commands", None) is not None:  # maybe we should isinstance(commands.Group)
             for x in await self.filter_commands(command.commands):  # , sort=True): # type: ignore
                 await self.unpack_commands(x, answer=answer, deep=deep + 1)
         else:
@@ -217,16 +220,16 @@ class AluHelp(commands.HelpCommand):
             if app_command:
                 cmd_mention = app_command.mention
             else:
-                prefix = getattr(self.context, 'clean_prefix', '$')
-                cmd_mention = f'`{prefix}{command.qualified_name}`'
+                prefix = getattr(self.context, "clean_prefix", "$")
+                cmd_mention = f"`{prefix}{command.qualified_name}`"
 
-            sign = f' `{command.signature}`' if command.signature else ''
-            return f'{cmd_mention}{sign}'
+            sign = f" `{command.signature}`" if command.signature else ""
+            return f"{cmd_mention}{sign}"
 
         def aliases():
             if len(command.aliases):
-                return ' | aliases: ' + '; '.join([f'`{ali}`' for ali in command.aliases])
-            return ''
+                return " | aliases: " + "; ".join([f"`{ali}`" for ali in command.aliases])
+            return ""
 
         # def cd():
         #     if command.cooldown is not None:
@@ -235,18 +238,18 @@ class AluHelp(commands.HelpCommand):
 
         def check():
             if command.checks:
-                res = set(getattr(i, '__doc__') or "mods only" for i in command.checks)
+                res = set(getattr(i, "__doc__") or "mods only" for i in command.checks)
                 res = [f"*{i}*" for i in res]
                 return f"**!** {', '.join(res)}\n"
-            return ''
+            return ""
 
-        return f'\N{BLACK CIRCLE} {signature()}{aliases()}\n{check()}'
+        return f"\N{BLACK CIRCLE} {signature()}{aliases()}\n{check()}"
 
     def get_command_short_help(self, command: commands.Command) -> str:
         # help string
-        help_str = command.help or 'No documentation'
-        split = help_str.split('\n', 1)
-        extra_info = ' [...]' if len(split) > 1 else ''
+        help_str = command.help or "No documentation"
+        split = help_str.split("\n", 1)
+        extra_info = " [...]" if len(split) > 1 else ""
         help_str = split[0] + extra_info
         return help_str
 
@@ -305,8 +308,8 @@ class AluHelp(commands.HelpCommand):
 
         help_data = dict(sorted(help_data.items(), key=lambda x: (int(x[0].sort_back), x[0].name)))
 
-        index_category = ExtCategory(name='Index page', emote='\N{SWAN}', description='Index page')
-        index_pages = [CogPage(section='_front_page', page_commands=[], section_page_number=0, category=index_category)]
+        index_category = ExtCategory(name="Index page", emote="\N{SWAN}", description="Index page")
+        index_pages = [CogPage(section="_front_page", page_commands=[], section_page_number=0, category=index_category)]
 
         help_data = {index_category: index_pages} | help_data
 
@@ -361,9 +364,9 @@ class BaseHelpCog(AluCog):
             # announce to community/hideout that we logged in
             # from testing purposes it means we can use help with [proper slash mentions (if synced).
             e = discord.Embed(colour=const.Colour.prpl())
-            e.description = f'Logged in as {self.bot.user.name}'
+            e.description = f"Logged in as {self.bot.user.name}"
             await self.hideout.spam.send(embed=e)
-            e.set_footer(text='Finished updating/rebooting')
+            e.set_footer(text="Finished updating/rebooting")
             await self.community.bot_spam.send(embed=e)
 
 

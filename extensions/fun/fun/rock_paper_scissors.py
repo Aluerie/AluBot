@@ -58,8 +58,8 @@ class RPSView(discord.ui.View):
         await self.edit_embed_player_choice(self.player2)
 
     @staticmethod
-    def choice_name(btn_: discord.ui.Button):
-        return f'{btn_.emoji} {btn_.label}'
+    def choice_name(button: discord.ui.Button):
+        return f'{button.emoji} {button.label}'
 
     async def edit_embed_player_choice(self, player: discord.User | discord.Member):
         e = self.message.embeds[0].copy()
@@ -120,18 +120,18 @@ class RPSView(discord.ui.View):
             self.stop()
 
     @discord.ui.button(label=RPSChoice.Rock.name, emoji=RPSChoice.Rock.value.emote, style=discord.ButtonStyle.red)
-    async def rock_button(self, ntr: discord.Interaction, _btn: discord.ui.Button):
-        await self.rps_button_callback(ntr, RPSChoice.Rock)
+    async def rock_button(self, interaction: discord.Interaction, _button: discord.ui.Button):
+        await self.rps_button_callback(interaction, RPSChoice.Rock)
 
     @discord.ui.button(label=RPSChoice.Paper.name, emoji=RPSChoice.Paper.value.emote, style=discord.ButtonStyle.green)
-    async def paper_button(self, ntr: discord.Interaction, _btn: discord.ui.Button):
-        await self.rps_button_callback(ntr, RPSChoice.Paper)
+    async def paper_button(self, interaction: discord.Interaction, _button: discord.ui.Button):
+        await self.rps_button_callback(interaction, RPSChoice.Paper)
 
     @discord.ui.button(
         label=RPSChoice.Scissors.name, emoji=RPSChoice.Scissors.value.emote, style=discord.ButtonStyle.blurple
     )
-    async def scissors_button(self, ntr: discord.Interaction, _btn: discord.ui.Button):
-        await self.rps_button_callback(ntr, RPSChoice.Scissors)
+    async def scissors_button(self, interaction: discord.Interaction, _button: discord.ui.Button):
+        await self.rps_button_callback(interaction, RPSChoice.Scissors)
 
 
 class RockPaperScissorsCommand(FunCog):

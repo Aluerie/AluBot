@@ -58,8 +58,8 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
 
         async with self.bot.session.get(self.patch_news_json) as r_news:
             page_data = await r_news.json()
-            # it's something like '/news/game-updates/patch-13-22-notes/'
             newest_patch_href = page_data["result"]["data"]["articles"]["nodes"][0]["url"]["url"]
+            # ^^^ it's something like '/news/game-updates/patch-13-22-notes/'
             if newest_patch_href == last_patch_href:
                 sleep_time = datetime.timedelta(minutes=30)
             else:
@@ -93,11 +93,16 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
             # and need to investigate why
             files = []
 
-        e = discord.Embed(title=node["title"], colour=const.Colour.rspbrry())
-        e.url = f"https://www.leagueoflegends.com/en-us{newest_patch_href}"
-        e.set_thumbnail(url=node["banner"]["url"])
-        e.set_author(name="League of Legends", icon_url=const.Logo.lol)
-        await self.bot.hideout.repost.send(embed=e, files=files)
+        embed = (
+            discord.Embed(
+                colour=const.Colour.rspbrry(),
+                title=node["title"],
+                url=f"https://www.leagueoflegends.com/en-us{newest_patch_href}",
+            )
+            .set_author(name="League of Legends", icon_url=const.Logo.lol)
+            .set_thumbnail(url=node["banner"]["url"])
+        )
+        await self.bot.hideout.repost.send(embed=embed, files=files)
 
 
 async def setup(bot):

@@ -37,7 +37,8 @@ class UmbraSyncCommandCog(DevBaseCog):
         * `$sync *` -> copies all global app commands to current guild and syncs
         * `$sync ^` -> clears all commands from the current guild target and syncs (removes guild-bound commands)
         * `$sync id_1 id_2` -> syncs guilds with id 1 and 2
-        * `$sync trust` -> sync trusted guilds
+        * `$sync premium` -> sync premium guilds
+        * `$sync my` -> sync my guilds
         """
 
         # sync to a list of guilds
@@ -54,7 +55,7 @@ class UmbraSyncCommandCog(DevBaseCog):
             return (f"`{ret}/{len(guilds)}` guilds", "Synced guild-bound commands to a list of guilds.")
 
         if spec == "trust":
-            guild_list = [discord.Object(id=guild_id) for guild_id in const.TRUSTED_GUILDS]
+            guild_list = [discord.Object(id=guild_id) for guild_id in const.PREMIUM_GUILDS]
             title, desc = await sync_to_guild_list(guild_list)
         elif spec == "my":
             guild_list = [discord.Object(id=guild_id) for guild_id in const.MY_GUILDS]

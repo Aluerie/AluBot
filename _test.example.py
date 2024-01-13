@@ -19,9 +19,8 @@ TEST_EXTENSIONS = (
     # 'jebaited.embedmaker',
     # 'community.fix_links',
     # 'info.schedule',
-    "community.twtv",
+    "community.twitch_notifications",
     # 'fpc_notifications.dota',
-    # 'fpc_notifications.trusted'
     # 'meta.meta',
     # 'educational.language'
     # "beta",

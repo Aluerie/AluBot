@@ -89,3 +89,8 @@ class DOTA:
         8: "#008321",
         9: "#A46900",
     }
+
+    ATTR_BONUS_ICON = "https://static.wikia.nocookie.net/dota2_gamepedia/images/e/e2/Attribute_Bonus_icon.png"
+
+    lAZY_AGHS_BLESS = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/ultimate_scepter_2.png"
+    LAZY_AGHS_SHARD = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/aghanims_shard.png"

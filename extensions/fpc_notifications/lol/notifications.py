@@ -158,7 +158,9 @@ class LoLFPCNotifications(FPCCog):
                     channel_ids = [channel_id for channel_id, in channel_id_rows]
                     if channel_ids:
                         log.debug(
-                            "Notif %s - %s", row["display_name"], await lol.champion.key_by_id(player["championId"])
+                            "Notif %s - %s",
+                            row["display_name"],
+                            await self.bot.cdragon.champion.name_by_id(player["championId"]),
                         )
                         self.notification_matches.append(
                             LoLNotificationMatch(
@@ -233,7 +235,7 @@ class LoLFPCNotifications(FPCCog):
                 async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
                     match = await riot_api_client.get_lol_match_v5_match(
                         id=f"{match_row['platform'].upper()}_{match_row['match_id']}",
-                        region=lol.PLATFORM_TO_CONTINENT[match_row['platform']],
+                        region=lol.PLATFORM_TO_CONTINENT[match_row["platform"]],
                     )
             except aiohttp.ClientResponseError as exc:
                 if exc.status == 404:
@@ -242,15 +244,15 @@ class LoLFPCNotifications(FPCCog):
                     raise
 
             query = "SELECT * FROM lol_messages WHERE match_id=$1"
-            message_rows: list[LoLMessageRecord] = await self.bot.pool.fetch(query, match_row['match_id'])
+            message_rows: list[LoLMessageRecord] = await self.bot.pool.fetch(query, match_row["match_id"])
 
             for message_row in message_rows:
                 participant = next(
-                    p for p in match["info"]["participants"] if p["championId"] == message_row['champion_id']
+                    p for p in match["info"]["participants"] if p["championId"] == message_row["champion_id"]
                 )
                 post_match_player = PostMatchPlayer(
-                    channel_id=message_row['channel_id'],
-                    message_id=message_row['message_id'],
+                    channel_id=message_row["channel_id"],
+                    message_id=message_row["message_id"],
                     summoner_id=participant["summonerId"],
                     kda=f"{participant['kills']}/{participant['deaths']}/{participant['assists']}",
                     outcome="Win" if participant["win"] else "Loss",
@@ -258,7 +260,7 @@ class LoLFPCNotifications(FPCCog):
                 )
                 await post_match_player.edit_notification_embed(self.bot)
             query = "DELETE FROM lol_matches WHERE match_id=$1"
-            await self.bot.pool.fetch(query, match_row['match_id'])
+            await self.bot.pool.fetch(query, match_row["match_id"])
 
 
 async def setup(bot: AluBot):

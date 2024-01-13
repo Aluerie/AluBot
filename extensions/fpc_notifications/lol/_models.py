@@ -101,12 +101,12 @@ class LoLNotificationMatch(LoLNotificationAccount):
     ) -> Image.Image:
         # prepare stuff for the following PIL procedures
         img = await bot.transposer.url_to_image(stream_preview_url)
-        sorted_champion_ids = await lol.roles.sort_champions_by_roles(self.all_champion_ids)
-        champion_icon_urls = [await lol.champion.icon_by_id(id) for id in sorted_champion_ids]
+        sorted_champion_ids = await bot.meraki_roles.sort_champions_by_roles(self.all_champion_ids)
+        champion_icon_urls = [await bot.cdragon.champion.icon_by_id(id) for id in sorted_champion_ids]
         champion_icon_images = [await bot.transposer.url_to_image(url) for url in champion_icon_urls]
-        rune_icon_urls = [await lol.rune.icon_by_id(id) for id in self.rune_ids]
+        rune_icon_urls = [await bot.cdragon.rune.icon_by_id(id) for id in self.rune_ids]
         rune_icon_images = [await bot.transposer.url_to_image(url) for url in rune_icon_urls]
-        summoner_icon_urls = [await lol.summoner_spell.icon_by_id(id) for id in self.summoner_spell_ids]
+        summoner_icon_urls = [await bot.cdragon.summoner_spell.icon_by_id(id) for id in self.summoner_spell_ids]
         summoner_icon_images = [await bot.transposer.url_to_image(url) for url in summoner_icon_urls]
 
         def build_notification_image() -> Image.Image:
@@ -150,7 +150,7 @@ class LoLNotificationMatch(LoLNotificationAccount):
 
     async def get_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
         stream = await bot.twitch.get_twitch_stream(self.twitch_id)
-        champion_name = await lol.champion.name_by_id(self.champion_id)
+        champion_name = await bot.cdragon.champion.name_by_id(self.champion_id)
 
         notification_image = await self.get_notification_image(
             stream.preview_url, stream.display_name, champion_name, bot
@@ -165,7 +165,7 @@ class LoLNotificationMatch(LoLNotificationAccount):
             f"{await bot.twitch.last_vod_link(stream.twitch_id, seconds_ago=self.long_ago)}{self.links}"
         )
         embed.set_image(url=f"attachment://{image_file.filename}")
-        embed.set_thumbnail(url=await lol.champion.icon_by_id(self.champion_id))
+        embed.set_thumbnail(url=await bot.cdragon.champion.icon_by_id(self.champion_id))
         embed.set_author(name=f"{stream.display_name} - {champion_name}", url=stream.url, icon_url=stream.logo_url)
         return embed, image_file
 
@@ -188,9 +188,9 @@ class PostMatchPlayer(BasePostMatchPlayer):
         self.item_ids: list[int] = item_ids
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour, bot: AluBot) -> Image.Image:
+    async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour, bot: AluBot) -> Image.Image:
         img = await bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await lol.item.icon_by_id(item_id) for item_id in self.item_ids if item_id]
+        item_icon_urls = [await bot.cdragon.item.icon_by_id(item_id) for item_id in self.item_ids if item_id]
         item_icon_images = [await bot.transposer.url_to_image(url) for url in item_icon_urls]
 
         def build_notification_image():

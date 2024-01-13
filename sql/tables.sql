@@ -38,8 +38,6 @@ CREATE TABLE IF NOT EXISTS botinfo (
     curr_gif_timer INTEGER DEFAULT (0),
     curr_rule_timer INTEGER DEFAULT (0),
     git_checked_dt TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
-    trusted_ids BIGINT ARRAY,
-    irene_is_live INTEGER DEFAULT (0),
     dota_patch TEXT,
     event_pass_is_live BOOLEAN DEFAULT (FALSE),
     drop_watch_live BOOLEAN DEFAULT (FALSE)

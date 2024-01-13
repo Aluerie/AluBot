@@ -4,7 +4,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, MutableMapping, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, MutableMapping, Union
 
 import discord
 from discord.ext import commands
@@ -12,9 +12,11 @@ from discord.ext import commands
 import config
 from extensions import get_extensions
 from utils import AluContext, ExtCategory, cache, const, formats, none_category
+from utils.disambiguator import Disambiguator
 from utils.jsonconfig import PrefixConfig
 from utils.transposer import TransposeClient
-from utils.disambiguator import Disambiguator
+from utils.dota import DotaCache
+from utils.lol import CDragonCache, MerakiRolesCache
 
 from .app_cmd_tree import AluAppCommandTree
 from .exc_manager import AluExceptionManager
@@ -70,6 +72,11 @@ class AluBot(commands.Bot, AluBotHelper):
         self.exc_manager: AluExceptionManager = AluExceptionManager(self)
         self.transposer: TransposeClient = TransposeClient(session=session)
         self.disambiguator: Disambiguator = Disambiguator()
+
+        # Extra Caches of my own
+        self.dota_cache = DotaCache(session=session)
+        self.cdragon = CDragonCache(session=session)
+        self.meraki_roles = MerakiRolesCache(session=session, bot=self)
 
         self.odota_ratelimit: dict[str, int] = {"monthly": -1, "minutely": -1}
 

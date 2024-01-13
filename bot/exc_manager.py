@@ -118,8 +118,8 @@ class AluExceptionManager:
 
         if isinstance(source, str):
             dt = discord.utils.utcnow()
-            e = discord.Embed(colour=0xDA9F93, description=source, timestamp=dt).set_footer(text=where)
-            return ErrorInfoPacket(embed=e, dt=dt, mention=True)
+            embed = discord.Embed(colour=0xDA9F93, description=source, timestamp=dt).set_footer(text=where)
+            return ErrorInfoPacket(embed=embed, dt=dt, mention=True)
 
         if isinstance(source, discord.Embed):
             if not source.timestamp:
@@ -131,19 +131,19 @@ class AluExceptionManager:
         elif isinstance(source, AluContext):
             ctx = source  # I just can't type `source.command.qualified_name` lol
 
-            e = discord.Embed(colour=0x890620, title=f"`{ctx.clean_prefix}{ctx.command}`")
-            e.url = ctx.message.jump_url
-            e.description = ctx.message.content
+            embed = discord.Embed(colour=0x890620, title=f"`{ctx.clean_prefix}{ctx.command}`")
+            embed.url = ctx.message.jump_url
+            embed.description = ctx.message.content
 
             # metadata
             author_text = f"@{ctx.author} triggered error in #{ctx.channel}"
-            e.set_author(name=author_text, icon_url=ctx.author.display_avatar)
+            embed.set_author(name=author_text, icon_url=ctx.author.display_avatar)
             if ctx.guild:
-                e.set_footer(text=f"{ctx.guild.name}\n{where}", icon_url=ctx.guild.icon)
+                embed.set_footer(text=f"{ctx.guild.name}\n{where}", icon_url=ctx.guild.icon)
                 guild_id = ctx.guild.id
             else:
                 guild_id = "DM Channel"
-                e.set_footer(text=f"DM Channel\n{where}", icon_url=ctx.author.display_avatar)
+                embed.set_footer(text=f"DM Channel\n{where}", icon_url=ctx.author.display_avatar)
 
             # arguments
             args_str = ["```py"]
@@ -152,9 +152,9 @@ class AluExceptionManager:
             else:
                 args_str.append("No arguments")
             args_str.append("```")
-            e.add_field(name="Command Args", value="\n".join(args_str), inline=False)
+            embed.add_field(name="Command Args", value="\n".join(args_str), inline=False)
             # ids
-            e.add_field(
+            embed.add_field(
                 name="Snowflake Ids",
                 value=(
                     "```py\n"
@@ -164,65 +164,65 @@ class AluExceptionManager:
                 ),
             )
 
-            e.timestamp = dt = ctx.message.created_at
+            embed.timestamp = dt = ctx.message.created_at
 
             mention = ctx.channel.id != ctx.bot.hideout.spam_channel_id
-            return ErrorInfoPacket(embed=e, dt=dt, mention=mention)
+            return ErrorInfoPacket(embed=embed, dt=dt, mention=mention)
 
         elif isinstance(source, discord.Interaction):
-            ntr = source
+            interaction = source
 
-            app_cmd = ntr.command
+            app_cmd = interaction.command
             if app_cmd:
-                e = discord.Embed(colour=0x2C0703)
-                e.title = f"`/{app_cmd.qualified_name}`"
+                embed = discord.Embed(colour=0x2C0703)
+                embed.title = f"`/{app_cmd.qualified_name}`"
+
+                # arguments
+                args_str = ["```py"]
+                for name, value in interaction.namespace.__dict__.items():
+                    args_str.append(f"[{name}]: {value!r}")
+                else:
+                    args_str.append(f"No arguments")
+                args_str.append("```")
+                embed.add_field(name="Command Args", value="\n".join(args_str), inline=False)
             else:
-                e = discord.Embed(colour=0x2A0553)
-                e.title = "Non cmd interaction"
+                embed = discord.Embed(colour=0x2A0553)
+                embed.title = "Non cmd (View?) interaction"
 
             # metadata
-            author_text = f"@{ntr.user} triggered error in #{ntr.channel}"
-            e.set_author(name=author_text, icon_url=ntr.user.display_avatar)
-            if ntr.guild:
-                e.set_footer(text=f"{ntr.guild.name}\n{where}", icon_url=ntr.guild.icon)
-                guild_id = ntr.guild.id
+            author_text = f"@{interaction.user} triggered error in #{interaction.channel}"
+            embed.set_author(name=author_text, icon_url=interaction.user.display_avatar)
+            if interaction.guild:
+                embed.set_footer(text=f"{interaction.guild.name}\n{where}", icon_url=interaction.guild.icon)
+                guild_id = interaction.guild.id
             else:
                 guild_id = "DM Channel"
-                e.set_footer(text=f"DM Channel\n{where}", icon_url=ntr.user.display_avatar)
-
-            # arguments
-            args_str = ["```py"]
-            for name, value in ntr.namespace.__dict__.items():
-                args_str.append(f"[{name}]: {value!r}")
-            else:
-                args_str.append(f"No arguments")
-            args_str.append("```")
-            e.add_field(name="Command Args", value="\n".join(args_str), inline=False)
+                embed.set_footer(text=f"DM Channel\n{where}", icon_url=interaction.user.display_avatar)
 
             if extra:
-                e.add_field(name="Extra Data", value=extra)
+                embed.add_field(name="Extra Data", value=extra)
 
             # ids
-            e.add_field(
+            embed.add_field(
                 name="Snowflake Ids",
                 value=inspect.cleandoc(f"""```py
-                    author  = {ntr.user.id}
-                    channel = {ntr.channel_id}
-                    guild   = {ntr.guild_id}```"""
+                    author  = {interaction.user.id}
+                    channel = {interaction.channel_id}
+                    guild   = {interaction.guild_id}```"""
                 ),
                 inline=False,
             )
-            e.timestamp = dt = ntr.created_at
-            mention = ntr.channel_id != ntr.client.hideout.spam_channel_id
-            return ErrorInfoPacket(embed=e, dt=discord.utils.utcnow(), mention=mention)
+            embed.timestamp = dt = interaction.created_at
+            mention = interaction.channel_id != interaction.client.hideout.spam_channel_id
+            return ErrorInfoPacket(embed=embed, dt=discord.utils.utcnow(), mention=mention)
         else:
             # shouldn't ever trigger
             # probably source is `None`, but let's leave it as "else" for some silly mistake too.
-            e = discord.Embed(colour=const.Colour.error())
-            e.description = "Something went wrong somewhere. Please make it so next time it says where here."
-            e.timestamp = dt = discord.utils.utcnow()
-            e.set_footer(text=where)
-            return ErrorInfoPacket(embed=e, dt=dt, mention=True)
+            embed = discord.Embed(colour=const.Colour.error())
+            embed.description = "Something went wrong somewhere. Please make it so next time it says where here."
+            embed.timestamp = dt = discord.utils.utcnow()
+            embed.set_footer(text=where)
+            return ErrorInfoPacket(embed=embed, dt=dt, mention=True)
 
     async def register_error(
         self,

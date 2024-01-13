@@ -136,9 +136,8 @@ class LoLFPCSettings(FPCSettingsBase):
             character_plural_word="champions",
             account_cls=LoLAccount,
             account_typed_dict_cls=LoLAccountDict,
-            character_name_by_id=lol.champion.name_by_id,
-            character_id_by_name=lol.champion.id_by_name_or_none,
-            all_character_names=lol.all_champion_names,
+            character_name_by_id=bot.cdragon.champion.name_by_id,
+            character_id_by_name=bot.cdragon.champion.id_by_name_or_none,
             **kwargs,
         )
 
@@ -148,7 +147,7 @@ class LoLFPCSettings(FPCSettingsBase):
         """League of Legends FPC (Favourite Player+Character) commands."""
         await ctx.send_help()
 
-    @lol_group.group(name="request")  # todo: idk
+    @lol_group.group(name="request")
     async def lol_request(self, ctx: AluGuildContext):
         """League of Legends FPC (Favourite Player+Character) request commands."""
         await ctx.send_help()
@@ -176,7 +175,7 @@ class LoLFPCSettings(FPCSettingsBase):
         await self.setup_channel(ctx)
 
     async def get_character_name_by_id_cache(self) -> dict[int, str]:
-        return await lol.champion.champion_keys_cache.get_cache("name_by_id")
+        return await self.bot.cdragon.champion.get_cache("name_by_id")
 
     @lol_setup.command(name="champions")
     async def lol_setup_champions(self, ctx: AluGuildContext):
@@ -281,8 +280,8 @@ class LoLFPCSettings(FPCSettingsBase):
                 description=(
                     "\n".join(
                         [
-                            f"\N{BLACK CIRCLE} {await lol.champion.key_by_id(i)} - `{i}`"
-                            for i in await lol.roles.get_missing_from_meraki_champion_ids()
+                            f"\N{BLACK CIRCLE} {await self.bot.cdragon.champion.name_by_id(i)} - `{i}`"
+                            for i in await self.bot.meraki_roles.get_missing_from_meraki_champion_ids()
                         ]
                     )
                     or "None missing"
@@ -295,7 +294,7 @@ class LoLFPCSettings(FPCSettingsBase):
                     "• [Json](https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)"
                 ),
             )
-            .add_field(name="Meraki last updated", value=f"Patch {await lol.roles.get_meraki_patch()}")
+            .add_field(name="Meraki last updated", value=f"Patch {self.bot.meraki_roles.meraki_patch}")
         )
         await ctx.reply(embed=embed)
 

@@ -15,50 +15,6 @@ if TYPE_CHECKING:
 
 
 class AdminTools(DevBaseCog):
-    @commands.group(hidden=True)
-    async def trustee(self, ctx: AluContext):
-        """Commands to assigning/removing trusted people."""
-        # TODO: move this garbage to FPC or bot management.
-        await ctx.send_help(ctx.command)
-
-    async def get_trusted_ids(self) -> list[int]:
-        query = "SELECT trusted_ids FROM botinfo WHERE id=$1"
-        return await self.bot.pool.fetchval(query, const.Guild.community)
-
-    async def trustee_add_remove(self, ctx: AluContext, user_id: int, mode: Literal["add", "remov"]):
-        trusted_ids = await self.get_trusted_ids()
-        if mode == "add":
-            trusted_ids.append(user_id)
-        elif mode == "remov":
-            trusted_ids.remove(user_id)
-
-        query = "UPDATE botinfo SET trusted_ids=$1 WHERE id=$2"
-        await self.bot.pool.execute(query, trusted_ids, const.Guild.community)
-        e = discord.Embed(colour=const.Colour.prpl())
-        e.description = f"We {mode}ed user with id {user_id} to the list of trusted users"
-        await ctx.reply(embed=e)
-
-    @trustee.command(hidden=True)
-    async def add(self, ctx: AluContext, user_id: int):
-        """Grant trustee privilege to a user with `user_id`.
-
-        Trustees can use commands that interact with the bot database.
-        """
-        await self.trustee_add_remove(ctx, user_id=user_id, mode="add")
-
-    @trustee.command(hidden=True)
-    async def remove(self, ctx: AluContext, user_id: int):
-        """Remove trustee privilege from a user with `user_id`."""
-        await self.trustee_add_remove(ctx, user_id=user_id, mode="remov")
-
-    @trustee.command(name='list', hidden=True)
-    async def list_(self, ctx: AluContext):
-        """Get list of trusted users."""
-        trusted_ids = await self.get_trusted_ids()
-        msg = '\n'.join([f'\N{BLACK CIRCLE} {ctx.bot.get_user(i)} - `{i}`' for i in trusted_ids])
-        e = discord.Embed(color=const.Colour.prpl(), title='List of trustees', description=msg)
-        await ctx.reply(embed=e)
-
     async def send_guild_embed(self, guild: discord.Guild, join: bool):
         if join:
             word, colour = "joined", const.MaterialPalette.green(shade=500)

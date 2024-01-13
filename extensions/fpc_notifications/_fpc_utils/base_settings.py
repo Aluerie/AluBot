@@ -99,7 +99,7 @@ class FPCAccount:
 
     @staticmethod
     def embed_account_str_static(**kwargs: Any) -> str:
-        raise NotImplemented
+        raise NotImplementedError
 
     @property
     def embed_account_str(self) -> str:
@@ -154,8 +154,6 @@ class FPCSettingsBase(FPCCog):
         Function that gets character name by its id, i.e. 1 -> 'Anti-Mage'.
     character_id_by_name: Callable[[str], Awaitable[int]]
         Function that gets character id by its name, i.e. 'Anti-Mage' -> 1.
-    all_character_names: Callable[[], Awaitable[List[str]]]
-        Function that fetches a list of all characters from the game.
     """
 
     def __init__(
@@ -172,7 +170,6 @@ class FPCSettingsBase(FPCCog):
         account_typed_dict_cls: type,
         character_name_by_id: Callable[[int], Awaitable[str]],
         character_id_by_name: Callable[[str], Awaitable[Optional[int]]],
-        all_character_names: Callable[[], Awaitable[list[str]]],
         **kwargs,
     ) -> None:
         super().__init__(bot, *args, **kwargs)
@@ -189,8 +186,7 @@ class FPCSettingsBase(FPCCog):
 
         self.character_name_by_id: Callable[[int], Awaitable[str]] = character_name_by_id
         self.character_id_by_name: Callable[[str], Awaitable[Optional[int]]] = character_id_by_name
-        self.all_character_names: Callable[[], Awaitable[list[str]]] = all_character_names
-
+        
     # fpc database management related functions ########################################################################
 
     async def check_if_account_already_in_database(self, account_id: AccountIDType) -> None:
@@ -584,8 +580,8 @@ class FPCSettingsBase(FPCCog):
                 f"{self.character_singular_word.capitalize()} {character_name} does not exist. "
                 "Please, double check everything."
             )
-        champion_display_name = await self.character_name_by_id(character_id)
-        return character_id, champion_display_name
+        character_display_name = await self.character_name_by_id(character_id)
+        return character_id, character_display_name
 
     async def hideout_character_add(self, ctx: AluGuildContext, character_name: str):
         """Base function for `/{game}-fpc {character} add` Hideout-only command."""

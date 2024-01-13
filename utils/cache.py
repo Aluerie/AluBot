@@ -6,17 +6,32 @@ import enum
 import logging
 import time
 from functools import wraps
-from typing import Any, Callable, Coroutine, Mapping, MutableMapping, Optional, Protocol, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Coroutine,
+    MutableMapping,
+    Optional,
+    Protocol,
+    TypeVar,
+    TYPE_CHECKING,
+)
 
-from aiohttp import ClientSession
+
 from lru import LRU
-
+from aiohttp import ClientSession
 from .bases.errors import SomethingWentWrong
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
+if TYPE_CHECKING:
+    pass
+
 R = TypeVar("R")
+
+# CacheDict: TypeAlias = dict[Any, Any]
+# CachedDataT = TypeVar("CachedDataT", bound=CacheDict)
 
 
 class KeysCache:
@@ -27,14 +42,16 @@ class KeysCache:
     and don't spam GET requests too often.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, session: ClientSession) -> None:
+        self.session: ClientSession = session
+
         self.cached_data: dict[Any, Any] = {}
         self.lock: asyncio.Lock = asyncio.Lock()
         self.last_updated: datetime.datetime = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)
 
     async def get_response_json(self, url: str) -> Any:
         """Get response.json() from url with data"""
-        async with ClientSession() as session:
+        async with self.session as session:
             async with session.get(url) as response:
                 if response.ok:
                     return await response.json()
@@ -53,22 +70,25 @@ class KeysCache:
         """Fill self.cached_data with the data from various json data"""
         ...
 
+    async def update_data(self) -> dict:
+        self.cached_data = await self.fill_data()
+        self.last_updated = datetime.datetime.now(datetime.timezone.utc)
+        return self.cached_data
+
     @property
     def need_updating(self) -> bool:
-        return datetime.datetime.now(datetime.timezone.utc) - self.last_updated < datetime.timedelta(hours=6)
+        return datetime.datetime.now(datetime.timezone.utc) - self.last_updated > datetime.timedelta(hours=6)
 
-    async def get_data(self, force_update: bool = False) -> dict[Any, Any]:
+    async def get_data(self) -> dict:
         """Get data and update the cache if needed"""
-        if self.need_updating and not force_update:
+        if not self.need_updating:
             return self.cached_data
 
         async with self.lock:
-            if self.need_updating and not force_update:
+            if not self.need_updating:
                 return self.cached_data
 
-            self.cached_data = await self.fill_data()
-            self.last_updated = datetime.datetime.now(datetime.timezone.utc)
-        return self.cached_data
+            return await self.update_data()
 
     async def get(self, cache: str, key: Any, default: Optional[Any] = None) -> Any:
         """Get a key value from cache"""
@@ -79,7 +99,7 @@ class KeysCache:
         except KeyError:
             # let's try to update cache in case it's a new patch
             # and hope the data is up-to-date in those json-files elsa return default
-            data = await self.get_data(force_update=True)
+            data = await self.update_data()
 
             try:
                 return data[cache][key]
@@ -94,7 +114,7 @@ class KeysCache:
         data = await self.get_data()
         return data[cache].get(key, None)
 
-    async def get_cache(self, cache: str):
+    async def get_cache(self, cache: str) -> dict[Any, Any]:
         # todo: idk typing is pain here
         data = await self.get_data()
         return data[cache]

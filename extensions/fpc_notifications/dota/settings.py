@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional, TypedDict, override
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 import discord
 from discord import app_commands
@@ -9,7 +9,6 @@ from discord.ext import commands
 from steam.steamid import EType, SteamID
 
 from utils import checks, const
-from utils.dota import hero
 
 from .._fpc_utils import FPCAccount, FPCSettingsBase
 from ..database_management import AddDotaPlayerFlags
@@ -53,14 +52,19 @@ class DotaAccount(FPCAccount):
     def hint_database_add_command_args(self) -> str:
         return f"name: {self.player_display_name} steam: {self.friend_id} twitch: {self.is_twitch_streamer}"
 
+    @override
+    @staticmethod
+    def embed_account_str_static(steam_id: int, friend_id: int) -> str:
+        return (
+            f"`{steam_id}` - `{friend_id}`| "
+            f"[Steam](https://steamcommunity.com/profiles/{steam_id})"
+            f"/[Dotabuff](https://www.dotabuff.com/players/{friend_id})"
+        )
+
     @property
     @override
-    def embed_account_str(self):
-        return (
-            f"`{self.steam_id}` - `{self.friend_id}`| "
-            f"[Steam](https://steamcommunity.com/profiles/{self.steam_id})"
-            f"/[Dotabuff](https://www.dotabuff.com/players/{self.friend_id})"
-        )
+    def embed_account_str(self) -> str:
+        return self.embed_account_str_static(self.steam_id, self.friend_id)
 
     @override
     @staticmethod
@@ -114,9 +118,8 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
             character_plural_word="heroes",
             account_cls=DotaAccount,
             account_typed_dict_cls=DotaAccountDict,
-            character_id_by_name=hero.id_by_name,
-            character_name_by_id=hero.name_by_id,
-            all_character_names=hero.all_hero_names,
+            character_name_by_id=bot.dota_cache.hero.name_by_id,
+            character_id_by_name=bot.dota_cache.hero.id_by_name_or_none,
             **kwargs,
         )
 
@@ -154,7 +157,7 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
         await self.setup_channel(ctx)
 
     async def get_character_name_by_id_cache(self) -> dict[int, str]:
-        return await hero.hero_keys_cache.get_cache("name_by_id")
+        return await self.bot.dota_cache.hero.get_cache("name_by_id")
 
     @dota_setup.command(name="heroes")
     async def dota_setup_heroes(self, ctx: AluGuildContext):

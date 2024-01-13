@@ -134,7 +134,9 @@ class ActiveMatch(Match):
         log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         img = await bot.transposer.url_to_image(twitch_data["preview_url"])
-        hero_images = [await bot.transposer.url_to_image(await dota.hero.img_by_id(id)) for id in self.hero_ids]
+        hero_image_urls = [await bot.dota_cache.hero.img_by_id(id) for id in self.hero_ids]
+        log.debug("`hero_image_urls` = %s", hero_image_urls)
+        hero_images = [await bot.transposer.url_to_image(url) for url in hero_image_urls]
 
         def build_notification_image() -> Image.Image:
             log.debug("`build_notification_image` is starting")
@@ -194,7 +196,7 @@ class ActiveMatch(Match):
                 url=twitch_data["url"],
                 icon_url=twitch_data["logo_url"],
             )
-            .set_thumbnail(url=await dota.hero.img_by_id(self.hero_id))
+            .set_thumbnail(url=await bot.dota_cache.hero.img_by_id(self.hero_id))
             .set_image(url=f"attachment://{image_file.filename}")
             .set_footer(text=f"watch_server {self.server_steam_id}")
         )
@@ -245,14 +247,14 @@ class PostMatchPlayerData(BasePostMatchPlayer):
         # items and aghanim shard/blessing
         async def get_item_timing(item_id: int) -> str:
             for purchase in reversed(self.purchase_log):
-                if item_id == await dota.item.id_by_key(purchase["key"]):
+                if item_id == await bot.dota_cache.item.id_by_key(purchase["key"]):
                     self.purchase_log.remove(purchase)
                     return f"{math.ceil(purchase['time']/60)}m"
             return "?m"
 
         item_list: list[tuple[Image.Image, str]] = []
         for item_id in self.items:
-            item_icon_url = await dota.item.icon_by_id(item_id)
+            item_icon_url = await bot.dota_cache.item.icon_by_id(item_id)
             log.debug("item id %s %s", item_id, item_icon_url)
             image = await bot.transposer.url_to_image(item_icon_url)
             timing = await get_item_timing(item_id)
@@ -264,22 +266,22 @@ class PostMatchPlayerData(BasePostMatchPlayer):
         item_list = item_list[::-1]
 
         if self.aghanim_blessing:
-            image = await bot.transposer.url_to_image(dota.ability.lazy_aghs_bless_url)  # todo: can not hard code it?
+            image = await bot.transposer.url_to_image(const.DOTA.lAZY_AGHS_BLESS)
             timing = await get_item_timing(271)
             item_list.append((image, timing))
 
         if self.aghanim_shard:
-            image = await bot.transposer.url_to_image(dota.ability.lazy_aghs_shard_url)
+            image = await bot.transposer.url_to_image(const.DOTA.LAZY_AGHS_SHARD)
             timing = await get_item_timing(609)
             item_list.append((image, timing))
 
         # we only want first 18 image upgrades
-        ability_icon_urls = [await dota.ability.icon_by_id(id) for id in self.ability_upgrades_arr[:18]]
+        ability_icon_urls = [await bot.dota_cache.ability.icon_by_id(id) for id in self.ability_upgrades_arr[:18]]
         ability_icon_images = [await bot.transposer.url_to_image(url) for url in ability_icon_urls]
 
         talent_names = []
         for ability_upgrade in self.ability_upgrades_arr:
-            talent_name = await dota.ability.talent_by_id(ability_upgrade)
+            talent_name = await bot.dota_cache.ability.talent_by_id(ability_upgrade)
             if talent_name is not None:
                 talent_names.append(talent_name)
 

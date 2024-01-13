@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Mapping, NamedTuple, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
 import asyncpg
@@ -166,9 +166,8 @@ class LoLFPCNotifications(FPCCog):
                             LoLNotificationMatch(
                                 match_id=game["gameId"],
                                 platform=game["platformId"],  # type: ignore # pulsefire has it as a simple str
-                                game_name=row[
-                                    "game_name"
-                                ],  # TODO: would be cool to get it from game object but currently it's not there.
+                                game_name=row["game_name"],  
+                                # TODO: ^^^would be cool to get it from game object but currently it's not there.
                                 tag_line=row["tag_line"],
                                 start_time=game["gameStartTime"],
                                 champion_id=player["championId"],

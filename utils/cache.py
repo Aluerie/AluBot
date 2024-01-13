@@ -51,20 +51,21 @@ class KeysCache:
 
     async def get_response_json(self, url: str) -> Any:
         """Get response.json() from url with data"""
-        async with self.session as session:
-            async with session.get(url) as response:
-                if response.ok:
-                    return await response.json()
+        async with self.session.get(url) as response:
+            if response.ok:
+                # https://stackoverflow.com/a/48842348/19217368
+                # `content = None`` disables the check and kinda sets it to `content_type=response.content_type`
+                return await response.json(content_type=None)
 
-            # response not ok
-            if any(self.cached_data.values()):
-                # let's hope that the previously cached data is still fine
-                return self.cached_data
-            else:
-                status = response.status
-                response_text = await response.text()
-                log.debug(f"Key Cache response error: %s %s", status, response_text)
-                raise SomethingWentWrong(f"Key Cache response error: {status} {response_text}")
+        # response not ok
+        if any(self.cached_data.values()):
+            # let's hope that the previously cached data is still fine
+            return self.cached_data
+        else:
+            status = response.status
+            response_text = await response.text()
+            log.debug(f"Key Cache response error: %s %s", status, response_text)
+            raise SomethingWentWrong(f"Key Cache response error: {status} {response_text}")
 
     async def fill_data(self) -> dict:
         """Fill self.cached_data with the data from various json data"""

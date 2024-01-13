@@ -11,7 +11,6 @@ from discord.ext import commands
 
 import config
 from utils import aluloop, const
-from utils.dota import hero
 
 from .._base import FPCCog
 from ._models import ActiveMatch, PostMatchPlayerData
@@ -133,7 +132,7 @@ class DotaFPCNotifications(FPCCog):
                 channel_ids: list[int] = [
                     i for i, in await self.bot.pool.fetch(query, person.hero_id, user["player_id"], match.match_id)
                 ]
-                hero_name = await hero.name_by_id(person.hero_id)
+                hero_name = await self.bot.dota_cache.hero.name_by_id(person.hero_id)
                 log.debug("%s - %s", user["display_name"], hero_name)
                 # print(match)
                 if channel_ids:

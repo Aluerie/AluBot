@@ -134,6 +134,7 @@ class ActiveMatch(Match):
         log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         img = await bot.transposer.url_to_image(twitch_data["preview_url"])
+        log.debug("`self.hero_ids` = %s", self.hero_ids)
         hero_image_urls = [await bot.dota_cache.hero.img_by_id(id) for id in self.hero_ids]
         log.debug("`hero_image_urls` = %s", hero_image_urls)
         hero_images = [await bot.transposer.url_to_image(url) for url in hero_image_urls]

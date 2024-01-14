@@ -12,7 +12,7 @@ from discord.utils import MISSING
 from .cog import AluCog
 
 if TYPE_CHECKING:
-    pass
+    from bot import AluBot
 
 log = logging.getLogger(__name__)
 
@@ -69,14 +69,27 @@ class AluLoop(tasks.Loop[LF]):
         exception: Exception = args[-1]
         # log.error('Unhandled exception in internal background task %r.', self.coro.__name__, exc_info=exception)
 
-        # this will fail outside a cog
-        # but all my tasks are inside cogs anyway.
-        cog = args[0]
-        if isinstance(cog, AluCog):
-            e = discord.Embed(title=self.coro.__name__, colour=0xEF7A85)
-            e.set_author(name="Error in aluloop task")
-            e.set_footer(text="utils.bases.tasks > AluLoop._error")
-            await cog.bot.exc_manager.register_error(exception, e, where=f"aluloop {self.coro.__name__}")
+        embed = (
+            discord.Embed(title=self.coro.__name__, colour=0xEF7A85)
+            .set_author(name="Error in aluloop task")
+            .set_footer(text="utils.bases.tasks > AluLoop._error")
+        )
+
+        # this will fail outside a cog or a bot class
+        # but all my tasks are inside those anyway.
+        cog: AluCog = args[0]
+        try:  
+            # if isinstance(cog, AluCog):
+            # not that this code will work for task inside any class that has .bot as its attribute
+            # like we use it in cache class
+            await cog.bot.exc_manager.register_error(exception, embed, where=f"aluloop {self.coro.__name__}")
+        except AttributeError:
+            bot: AluBot = args[0]
+            # if isinstance(cog, AluBot):
+            # this will work for tasks inside the bot class
+            await bot.exc_manager.register_error(exception, embed, where=f"aluloop {self.coro.__name__}")
+        # otherwise we can't reach bot.exc_manager
+        # so maybe add some other webhook?
 
 
 # Slight note, if `discord.ext.tasks` gets extra cool features

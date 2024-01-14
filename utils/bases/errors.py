@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import logging
 
-import discord
-
 log = logging.getLogger(__name__)
 
 __all__: tuple[str, ...] = ('AluBotException', 'SomethingWentWrong', 'UserError')
 
 
-class AluBotException(discord.ClientException):
+class AluBotException(BaseException):
     """The base exception for AluBot. All other exceptions should inherit from this."""
 
     __slots__: tuple[str, ...] = ()

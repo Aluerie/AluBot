@@ -135,7 +135,7 @@ class AbilityKeyCache(KeysCache):
 
     async def icon_by_id(self, ability_id: int) -> str:
         """Get ability icon url by id"""
-        return await self.get("icon_by_id", ability_id, const.DOTA.HERO_DISCONNECT)
+        return await self.get("icon_by_id", ability_id)
 
     async def talent_by_id(self, talent_id: int) -> str:
         """Get ability name by its id

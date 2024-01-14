@@ -125,6 +125,7 @@ class LoLFPCSettings(FPCSettingsBase):
     """
 
     def __init__(self, bot: AluBot, *args, **kwargs):
+        bot.initiate_league_cache()
         super().__init__(
             bot,
             *args,
@@ -137,7 +138,7 @@ class LoLFPCSettings(FPCSettingsBase):
             account_cls=LoLAccount,
             account_typed_dict_cls=LoLAccountDict,
             character_name_by_id=bot.cdragon.champion.name_by_id,
-            character_id_by_name=bot.cdragon.champion.id_by_name_or_none,
+            character_id_by_name=bot.cdragon.champion.id_by_name,
             **kwargs,
         )
 

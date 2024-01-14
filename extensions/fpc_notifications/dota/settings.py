@@ -107,6 +107,7 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
     """
 
     def __init__(self, bot: AluBot, *args, **kwargs):
+        bot.initiate_dota_cache()
         super().__init__(
             bot,
             *args,
@@ -119,7 +120,7 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
             account_cls=DotaAccount,
             account_typed_dict_cls=DotaAccountDict,
             character_name_by_id=bot.dota_cache.hero.name_by_id,
-            character_id_by_name=bot.dota_cache.hero.id_by_name_or_none,
+            character_id_by_name=bot.dota_cache.hero.id_by_name,
             **kwargs,
         )
 

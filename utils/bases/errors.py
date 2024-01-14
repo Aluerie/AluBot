@@ -4,7 +4,15 @@ import logging
 
 log = logging.getLogger(__name__)
 
-__all__: tuple[str, ...] = ('AluBotException', 'SomethingWentWrong', 'UserError')
+__all__: tuple[str, ...] = (
+    "AluBotException",
+    "BadArgument",
+    "SomethingWentWrong",
+    "UserError",
+    "ErroneousUsage",
+    "SilentError",
+    "ResponseNotOK",
+)
 
 
 class AluBotException(BaseException):
@@ -47,5 +55,15 @@ class ErroneousUsage(AluBotException):
 
 class SilentError(AluBotException):
     """Error that will be specifically ignored by command handlers."""
+
+    __slots__: tuple[str, ...] = ()
+
+
+class ResponseNotOK(AluBotException):
+    """Raised we aiohttp session response is not OK
+
+    Sometimes we just specifically need to raise an error in those cases
+    when response from `self.bot.session.get(url)` is not OK.
+    I.e. Cache Updates."""
 
     __slots__: tuple[str, ...] = ()

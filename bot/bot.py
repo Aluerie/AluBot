@@ -11,12 +11,10 @@ from discord.ext import commands
 
 import config
 from extensions import get_extensions
-from utils import AluContext, ExtCategory, cache, const, formats, none_category
+from utils import EXT_CATEGORY_NONE, AluContext, ExtCategory, cache, const, formats
 from utils.disambiguator import Disambiguator
 from utils.jsonconfig import PrefixConfig
 from utils.transposer import TransposeClient
-from utils.dota import DotaCache
-from utils.lol import CDragonCache, MerakiRolesCache
 
 from .app_cmd_tree import AluAppCommandTree
 from .exc_manager import AluExceptionManager
@@ -72,11 +70,6 @@ class AluBot(commands.Bot, AluBotHelper):
         self.exc_manager: AluExceptionManager = AluExceptionManager(self)
         self.transposer: TransposeClient = TransposeClient(session=session)
         self.disambiguator: Disambiguator = Disambiguator()
-
-        # Extra Caches of my own
-        self.dota_cache = DotaCache(session=session)
-        self.cdragon = CDragonCache(session=session)
-        self.meraki_roles = MerakiRolesCache(session=session, bot=self)
 
         self.odota_ratelimit: dict[str, int] = {"monthly": -1, "minutely": -1}
 
@@ -185,7 +178,7 @@ class AluBot(commands.Bot, AluBotHelper):
         # jishaku does not have a category thus we have this weird typehint
         category = getattr(cog, "category", None)
         if not category or not isinstance(category, ExtCategory):
-            category = none_category
+            category = EXT_CATEGORY_NONE
 
         self.category_cogs.setdefault(category, []).append(cog)
 
@@ -226,6 +219,19 @@ class AluBot(commands.Bot, AluBotHelper):
     # pep8 answer: https://stackoverflow.com/a/1188672/19217368
     # points to import inside the function: https://stackoverflow.com/a/1188693/19217368
     # and I exactly want these^
+
+    def initiate_dota_cache(self) -> None:
+        if not hasattr(self, "dota_cache"):
+            from utils.dota import DotaCache
+
+            self.dota_cache = DotaCache(self)
+
+    def initiate_league_cache(self) -> None:
+        if not hasattr(self, "cdragon") or not hasattr(self, "meraki_roles"):
+            from utils.lol import CDragonCache, MerakiRolesCache
+
+            self.cdragon = CDragonCache(self)
+            self.meraki_roles = MerakiRolesCache(self)
 
     async def initiate_steam_dota(self) -> None:
         if not hasattr(self, "steam") or not hasattr(self, "dota"):

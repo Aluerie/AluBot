@@ -22,10 +22,9 @@ __all__ = ("MerakiRolesCache",)
 
 
 class MerakiRolesCache(KeysCache):
-    def __init__(self, session: ClientSession, bot: AluBot):
-        super().__init__(session=session)
-        self.meraki_patch: str = ""
-        self.bot: AluBot = bot
+    def __init__(self, bot: AluBot):
+        super().__init__(bot=bot)
+        self.meraki_patch: str = "Unknown"
 
     async def fill_data(self) -> dict:
         """My own analogy to `from roleidentification import pull_data`
@@ -56,7 +55,7 @@ class MerakiRolesCache(KeysCache):
         return data
 
     async def get_missing_from_meraki_champion_ids(self, data_meraki: Optional[dict] = None) -> set[int]:
-        data_meraki = data_meraki or await self.get_data()
+        data_meraki = data_meraki or await self.get_cached_data()
         name_by_id = await self.bot.cdragon.champion.get_cache('name_by_id')
         return set(name_by_id.keys()) - set(data_meraki.keys())
 
@@ -105,7 +104,7 @@ class MerakiRolesCache(KeysCache):
 
     async def sort_champions_by_roles(self, all_players_champ_ids: list[int]) -> list[int]:
         try:
-            champion_roles: dict[int, RoleDict] = await self.get_data()
+            champion_roles: dict[int, RoleDict] = await self.get_cached_data()
             team1 = list(get_roles(champion_roles, all_players_champ_ids[:5]).values())
             team2 = list(get_roles(champion_roles, all_players_champ_ids[5:]).values())
             sorted_list = team1 + team2

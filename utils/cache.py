@@ -1,124 +1,113 @@
 from __future__ import annotations
 
 import asyncio
-import datetime
 import enum
 import logging
+import random
 import time
 from functools import wraps
-from typing import (
-    Any,
-    Callable,
-    Coroutine,
-    MutableMapping,
-    Optional,
-    Protocol,
-    TypeVar,
-    TYPE_CHECKING,
-)
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, MutableMapping, Protocol, TypeVar
 
-
-from lru import LRU
 from aiohttp import ClientSession
-from .bases.errors import SomethingWentWrong
+from discord.utils import MISSING
+from lru import LRU
+
+from . import aluloop
+from .bases import errors
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 if TYPE_CHECKING:
-    pass
+    from bot import AluBot
 
 R = TypeVar("R")
-
-# CacheDict: TypeAlias = dict[Any, Any]
-# CachedDataT = TypeVar("CachedDataT", bound=CacheDict)
 
 
 class KeysCache:
     """KeysCache
 
-    This class caches the data from public json-urls
+    Caches the data from public json-urls
     for a certain amount of time just so we have somewhat up-to-date data
     and don't spam GET requests too often.
+
+    The cache get updated by the aluloop task in the AluBot class.
     """
 
-    def __init__(self, session: ClientSession) -> None:
-        self.session: ClientSession = session
+    def __init__(self, bot: AluBot) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        bot : AluBot
+            We need it just so @aluloop task can find exc_manager in case of exceptions.
+        """
+        self.bot: AluBot = bot
 
         self.cached_data: dict[Any, Any] = {}
         self.lock: asyncio.Lock = asyncio.Lock()
-        self.last_updated: datetime.datetime = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)
+
+        self.update_data.add_exception_type(errors.ResponseNotOK)
+        self.update_data.change_interval(hours=24, minutes=random.randint(1, 59))
+        self.update_data.start()
 
     async def get_response_json(self, url: str) -> Any:
         """Get response.json() from url with data"""
-        async with self.session.get(url) as response:
+        async with self.bot.session.get(url=url) as response:
             if response.ok:
                 # https://stackoverflow.com/a/48842348/19217368
-                # `content = None`` disables the check and kinda sets it to `content_type=response.content_type`
+                # `content = None` disables the check and kinda sets it to `content_type=response.content_type`
                 return await response.json(content_type=None)
 
         # response not ok
-        if any(self.cached_data.values()):
-            # let's hope that the previously cached data is still fine
-            return self.cached_data
-        else:
-            status = response.status
-            response_text = await response.text()
-            log.debug(f"Key Cache response error: %s %s", status, response_text)
-            raise SomethingWentWrong(f"Key Cache response error: {status} {response_text}")
+        # so we raise an error that is `add_exception_type`'ed so the task can run exp backoff
+        status = response.status
+        response_text = await response.text()
+        log.debug("Key Cache response error: %s %s", status, response_text)
+        raise errors.ResponseNotOK(f"Key Cache response error: {status} {response_text}")
 
-    async def fill_data(self) -> dict:
-        """Fill self.cached_data with the data from various json data"""
+    async def fill_data(self) -> dict[Any, Any]:
+        """Fill self.cached_data with the data from various json data
+
+        This function is supposed to be implemented by subclasses.
+        We get the data and sort it out into a convenient dictionary to cache.
+        """
         ...
 
-    async def update_data(self) -> dict:
-        self.cached_data = await self.fill_data()
-        self.last_updated = datetime.datetime.now(datetime.timezone.utc)
-        return self.cached_data
+    @aluloop()
+    async def update_data(self):
+        """The task responsible for keeping the data up-to-date."""
+        async with self.lock:
+            self.cached_data = await self.fill_data()
 
-    @property
-    def need_updating(self) -> bool:
-        return datetime.datetime.now(datetime.timezone.utc) - self.last_updated > datetime.timedelta(hours=6)
+    # methods to actually get the data from cache
 
-    async def get_data(self) -> dict:
-        """Get data and update the cache if needed"""
-        if not self.need_updating:
+    async def get_cached_data(self) -> dict[Any, Any]:
+        """Get the whole cached data"""
+        if self.cached_data:
+            return self.cached_data
+        else:
+            await self.update_data()
             return self.cached_data
 
-        async with self.lock:
-            if not self.need_updating:
-                return self.cached_data
-
-            return await self.update_data()
-
-    async def get(self, cache: str, key: Any, default: Optional[Any] = None) -> Any:
-        """Get a key value from cache"""
-        data = await self.get_data()
+    async def get_value(self, cache: str, key: Any) -> Any:
+        """Get value by the `key` from the sub-cache named `cache` in the `self.cached_data`."""
         try:
-            # log.debug("KeyCache item %s %s %s", cache, key, data[cache].get(key))
-            return data[cache][key]
+            return self.cached_data[cache][key]
         except KeyError:
-            # let's try to update cache in case it's a new patch
-            # and hope the data is up-to-date in those json-files elsa return default
-            data = await self.update_data()
-
-            try:
-                return data[cache][key]
-            except KeyError:
-                if default:
-                    return default
-                else:
-                    raise
-
-    async def get_value_or_none(self, cache: str, key: Any) -> Any:
-        """Get a key value from cache"""
-        data = await self.get_data()
-        return data[cache].get(key, None)
+            # let's try to update the cache in case it's a KeyError due to
+            # * new patch or something
+            # * the data is not initialized then we will get stuck in self.lock waiting for the data.
+            await self.update_data()
+            return self.cached_data[cache][key]
 
     async def get_cache(self, cache: str) -> dict[Any, Any]:
-        # todo: idk typing is pain here
-        data = await self.get_data()
-        return data[cache]
+        """Get the whole sub-cache dict."""
+        try:
+            return self.cached_data[cache]
+        except KeyError:
+            await self.update_data()
+            return self.cached_data[cache]
 
 
 # Can't use ParamSpec due to https://github.com/python/typing/discussions/946

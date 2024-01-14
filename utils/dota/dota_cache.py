@@ -6,7 +6,7 @@ from .. import const
 from ..cache import KeysCache
 
 if TYPE_CHECKING:
-    from aiohttp import ClientSession
+    from bot import AluBot
 
     class HeroKeysData(TypedDict):
         id_by_npcname: MutableMapping[str, int]
@@ -20,10 +20,10 @@ __all__ = ("DotaCache",)
 
 
 class DotaCache:
-    def __init__(self, session: ClientSession) -> None:
-        self.hero = HeroKeysCache(session)
-        self.ability = AbilityKeyCache(session)
-        self.item = ItemKeysCache(session)
+    def __init__(self, bot: AluBot) -> None:
+        self.hero = HeroKeysCache(bot)
+        self.ability = AbilityKeyCache(bot)
+        self.item = ItemKeysCache(bot)
 
 
 class HeroKeysCache(KeysCache):
@@ -49,47 +49,34 @@ class HeroKeysCache(KeysCache):
             data["icon_by_id"][hero["id"]] = f"https://cdn.cloudflare.steamstatic.com{hero['icon']}"
         return data
 
-    async def id_by_npcname(self, npcname: str) -> int:
-        """Get hero id by npc_name.
+    # Example of hero values to be transposed into each other
+    # id: 1
+    # name: "Anti-Mage"
+    # npcname: "npc_dota_hero_antimage"
+    # img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png?'
+    # ^^^ (referencing top bar image)
+    # icon: https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/icons/antimage.png?'
+    # ^^^ (referencing mini map icon)
 
-        Example: 'npc_dota_hero_antimage' -> 1
-        """
-        return await self.get("id_by_npcname", npcname)
+    async def id_by_npcname(self, npcname: str) -> int:
+        """Get hero id by npc_name."""
+        return await self.get_value("id_by_npcname", npcname)
 
     async def id_by_name(self, hero_name: str) -> int:
-        """Get hero id by localized to english name.
-
-        Example: 'Anti-Mage' -> 1
-        """
-        return await self.get("id_by_name", hero_name.lower())
-
-    async def id_by_name_or_none(self, hero_name: str) -> int:
-        """Get hero id by localized to english name.
-
-        Example: 'Anti-Mage' -> 1
-        """
-        return await self.get_value_or_none("id_by_name", hero_name.lower())
+        """Get hero id by localized English name."""
+        return await self.get_value("id_by_name", hero_name.lower())
 
     async def name_by_id(self, hero_id: int) -> str:
-        """Get hero id by name.
-
-        Example: 1 -> 'Anti-Mage'
-        """
-        return await self.get("name_by_id", hero_id)
+        """Get hero id by name."""
+        return await self.get_value("name_by_id", hero_id)
 
     async def img_by_id(self, hero_id: int) -> str:
-        """Get hero top-bar image url id by id.
-
-        Example: 1 -> 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png?'
-        """
-        return await self.get("img_by_id", hero_id)
+        """Get hero top-bar image url id by id."""
+        return await self.get_value("img_by_id", hero_id)
 
     async def icon_by_id(self, hero_id: int) -> str:
-        """Get hero minimap icon url by id.
-
-        Example: 1 -> 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/icons/antimage.png?'
-        """
-        return await self.get("icon_by_id", hero_id)
+        """Get hero minimap icon url by id."""
+        return await self.get_value("icon_by_id", hero_id)
 
 
 class AbilityKeyCache(KeysCache):
@@ -135,7 +122,7 @@ class AbilityKeyCache(KeysCache):
 
     async def icon_by_id(self, ability_id: int) -> str:
         """Get ability icon url by id"""
-        return await self.get("icon_by_id", ability_id)
+        return await self.get_value("icon_by_id", ability_id)
 
     async def talent_by_id(self, talent_id: int) -> str:
         """Get ability name by its id
@@ -143,32 +130,37 @@ class AbilityKeyCache(KeysCache):
         Currently only return data on talents and None for everything else,
         bcs we do not need anything else for now
         """
-        return await self.get_value_or_none("talent_by_id", talent_id)
+        return await self.get_value("talent_by_id", talent_id)
 
 
 class ItemKeysCache(KeysCache):
+    # ITEMS_URL = "https://api.opendota.com/api/constants/items"
+    ITEMS_URL = "https://raw.githubusercontent.com/odota/dotaconstants/master/build/items.json"
+
     async def fill_data(self) -> dict:
-        item_dict = await self.get_response_json(url="https://api.opendota.com/api/constants/items")
+        item_dict = await self.get_response_json(url=self.ITEMS_URL)
         data = {
             "icon_by_id": {0: "https://i.imgur.com/TtOovu5.png"},  # black tile
             "id_by_key": {},
-        }  # black tile
+        }
         for key, item in item_dict.items():
             data["icon_by_id"][item["id"]] = f"https://cdn.cloudflare.steamstatic.com{item['img']}"
             data["id_by_key"][key] = item["id"]
         return data
 
+    # Example of item values to be transposed into each other
+    # id: 265
+    # key: "infused_raindrop"
+    # icon: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/items/infused_raindrop_lg.png"
+
     async def icon_by_id(self, item_id: int) -> str:
-        """Get item icon url id by item id.
+        """Get item icon url id by item_id.
 
         example: 2 ->
         'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/items/blades_of_attack_lg.png'
         """
-        return await self.get("icon_by_id", item_id)
+        return await self.get_value("icon_by_id", item_id)
 
     async def id_by_key(self, item_key: str) -> int:
-        """Get item id by provided key.
-
-        example: "infused_raindrop" -> 265
-        """
-        return await self.get("id_by_key", item_key)
+        """Get item id by provided item_key."""
+        return await self.get_value("id_by_key", item_key)

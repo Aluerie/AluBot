@@ -9,9 +9,9 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 __all__ = (
-    'AluCog',
-    'ExtCategory',
-    'none_category',
+    "AluCog",
+    "ExtCategory",
+    "EXT_CATEGORY_NONE",
 )
 
 
@@ -35,13 +35,13 @@ class AluCog(commands.Cog):
         **kwargs: Any,
     ) -> None:
         cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
-        parent_category: Optional[ExtCategory] = getattr(cls, 'category', None)
+        parent_category: Optional[ExtCategory] = getattr(cls, "category", None)
         if isinstance(parent_category, ExtCategory):
-            cls.category = category or parent_category or none_category
+            cls.category = category or parent_category or EXT_CATEGORY_NONE
         elif parent_category is None:
-            cls.category = category or none_category
+            cls.category = category or EXT_CATEGORY_NONE
         else:
-            raise TypeError('`parent_category` is not of ExtCategory class when subclassing AluCog.')
+            raise TypeError("`parent_category` is not of ExtCategory class when subclassing AluCog.")
         return super().__init_subclass__(**kwargs)
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
@@ -61,7 +61,7 @@ class AluCog(commands.Cog):
     @property
     def hideout(self):
         return self.bot.hideout
-    
+
     # @property
     # def pool(self):
     #     return self.bot.pool
@@ -74,8 +74,8 @@ class ExtCategory(NamedTuple):
     sort_back: bool = False
 
 
-none_category = ExtCategory(
-    name='No category',
-    emote='\N{THINKING FACE}',
-    description='These commands belong nowhere, prob dev fault',
+EXT_CATEGORY_NONE = ExtCategory(
+    name="No category",
+    emote="\N{THINKING FACE}",
+    description="These commands belong nowhere, prob dev fault",
 )

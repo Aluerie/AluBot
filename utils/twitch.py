@@ -78,14 +78,6 @@ class TwitchClient(twitchio.Client):
 
         return user.display_name
 
-    async def fpc_data_by_login(self, user_login: str) -> tuple[int, str, str]:
-        """Gets tuple (twitch_id, display_name) by user_login from one call to twitch client"""
-        user = next(iter(await self.fetch_users(names=[user_login])), None)
-        if not user:
-            raise BadArgument(f"Error checking stream `{user_login}`.\n User either does not exist or is banned.")
-
-        return 
-
     async def last_vod_link(self, user_id: int, seconds_ago: int = 0, md: bool = True) -> str:
         """Get last vod link for user with `user_id` with timestamp as well"""
         video: twitchio.Video | None = next(iter(await self.fetch_videos(user_id=user_id, period="day")), None)
@@ -151,10 +143,12 @@ class TwitchStream:
             online = False
             game = "Offline"
             title = "Offline"
-            if n := user.offline_image:
-                preview_url = f'{"-".join(n.split("-")[:-1])}-640x360.{n.split(".")[-1]}'
+            if user.offline_image:
+                preview_url = (
+                    f'{"-".join(user.offline_image.split("-")[:-1])}-640x360.{user.offline_image.split(".")[-1]}'
+                )
             else:
-                preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{self.name}-640x360.jpg"
+                preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{user.name}-640x360.jpg"
 
         return {
             "display_name": user.display_name,

@@ -1,26 +1,23 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, MutableMapping, Optional, TypedDict
+from typing import TYPE_CHECKING
 
 from pulsefire.clients import CDragonClient
 
-from utils.cache import KeysCache
-
-from .. import const
 from ..cache import KeysCache
 
 if TYPE_CHECKING:
-    from aiohttp import ClientSession
+    from bot import AluBot
 
 __all__ = ("CDragonCache",)
 
 
 class CDragonCache:
-    def __init__(self, session: ClientSession):
-        self.champion = ChampionKeysCache(session)
-        self.rune = RuneKeysCache(session)
-        self.item = ItemKeysCache(session)
-        self.summoner_spell = SummonerSpellKeysCache(session)
+    def __init__(self, bot: AluBot):
+        self.champion = ChampionKeysCache(bot)
+        self.rune = RuneKeysCache(bot)
+        self.item = ItemKeysCache(bot)
+        self.summoner_spell = SummonerSpellKeysCache(bot)
 
 
 BASE_URL = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/"
@@ -63,19 +60,15 @@ class ChampionKeysCache(KeysCache):
 
     async def id_by_name(self, value: str) -> int:
         """Get champion id by name"""
-        return await self.get("id_by_name", value)
-
-    async def id_by_name_or_none(self, value: str) -> Optional[int]:
-        """Get champion id by name"""
-        return await self.get_value_or_none("id_by_name", value)
+        return await self.get_value("id_by_name", value)
 
     async def name_by_id(self, value: int) -> str:
         """Get champion name by id"""
-        return await self.get("name_by_id", value)
+        return await self.get_value("name_by_id", value)
 
     async def icon_by_id(self, champion_id: int) -> str:
         """Get champion icon url by id"""
-        return await self.get("icon_by_id", champion_id)
+        return await self.get_value("icon_by_id", champion_id)
 
 
 class ItemKeysCache(KeysCache):
@@ -91,7 +84,7 @@ class ItemKeysCache(KeysCache):
 
     async def icon_by_id(self, item_id: int) -> str:
         """Get item icon url by id"""
-        return await self.get("icon_by_id", item_id)
+        return await self.get_value("icon_by_id", item_id)
 
 
 class RuneKeysCache(KeysCache):
@@ -107,7 +100,7 @@ class RuneKeysCache(KeysCache):
 
     async def icon_by_id(self, rune_id: int) -> str:
         """Get rune icon url by id"""
-        return await self.get("icon_by_id", rune_id)
+        return await self.get_value("icon_by_id", rune_id)
 
 
 class SummonerSpellKeysCache(KeysCache):
@@ -123,4 +116,4 @@ class SummonerSpellKeysCache(KeysCache):
 
     async def icon_by_id(self, summoner_spell_id: int) -> str:
         """Get summoner spell icon url by id"""
-        return await self.get("icon_by_id", summoner_spell_id)
+        return await self.get_value("icon_by_id", summoner_spell_id)

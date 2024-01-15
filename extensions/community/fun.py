@@ -18,7 +18,11 @@ if TYPE_CHECKING:
 class CommunityFun(CommunityCog):
     @staticmethod
     def community_check(msg: discord.Message):
-        if msg.guild and msg.guild.id == const.Guild.community and msg.author.id not in const.MY_BOTS:
+        if (
+            msg.guild
+            and msg.guild.id == const.Guild.community
+            and not (msg.author.id in const.MY_BOTS or msg.webhook_id)  # webhook so we ignore dota-news or nqn bot
+        ):
             return True
         else:
             return False

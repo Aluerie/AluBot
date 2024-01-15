@@ -253,7 +253,7 @@ class AluBot(commands.Bot, AluBotHelper):
             try:
                 if self.steam.login(username=steam_login, password=steam_password):
                     self.steam.change_status(persona_state=7)
-                    log.info("We successfully logged invis mode into Steam")
+                    log.info("We successfully logged invis mode into Steam: %s", steam_login)
                     self.dota.launch()
             except Exception as exc:
                 log.error("Logging into Steam failed")

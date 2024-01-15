@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import logging
 import time
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, MutableMapping, TypedDict
 
 import asyncpg
 import discord
@@ -20,16 +21,22 @@ if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluContext
 
-    from .notifications import DotaFPCMatchRecord
-
-    class DotaFPCMatchRecord(TypedDict):
+    class DotaFPCMatchRow(TypedDict):
         match_id: int
         opendota_jobid: int
 
-    class PlayerQuery(TypedDict):
+    class DotaFPCMessageRow(TypedDict):
+        message_id: int
+        channel_id: int
+        match_id: int
+        character_id: int
+
+    class AnalyzeTopSourceResponsePlayerQueryRow(TypedDict):
         player_id: int
         display_name: str
         twitch_id: int
+
+    from . import _schemas
 
 
 log = logging.getLogger(__name__)
@@ -40,7 +47,7 @@ class DotaFPCNotifications(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
         self.lobby_ids: set[int] = set()
-        self.top_source_dict: dict = {}  # todo: type-hint this properly via named tuple i guess
+        self.top_source_dict: MutableMapping[int, _schemas.CSourceTVGameSmall] = {}
         self.live_matches: list[ActiveMatch] = []
         self.hero_fav_ids: list[int] = []
         self.player_fav_ids: list[int] = []
@@ -50,7 +57,7 @@ class DotaFPCNotifications(FPCCog):
 
     async def cog_load(self) -> None:
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
-        def response(result):
+        def response(result: _schemas.CMsgGCToClientFindTopSourceTVGamesResponse):
             # remember the quirk that
             # result.specific_games = my friends games
             # not result.specific_games = top100 mmr games
@@ -73,7 +80,7 @@ class DotaFPCNotifications(FPCCog):
 
         # maybe asyncpg.PostgresConnectionError
         self.dota_feed.add_exception_type(asyncpg.InternalServerError)
-        self.dota_feed.clear_exception_types()  # todo: idk doc, this is sketchy
+        self.dota_feed.clear_exception_types()
         self.dota_feed.start()
 
         self.daily_report.start()
@@ -121,7 +128,7 @@ class DotaFPCNotifications(FPCCog):
                             FROM dota_players 
                             WHERE player_id=(SELECT player_id FROM dota_accounts WHERE friend_id=$1)
                         """
-                user: PlayerQuery = await self.bot.pool.fetchrow(query, person.account_id)
+                user: AnalyzeTopSourceResponsePlayerQueryRow = await self.bot.pool.fetchrow(query, person.account_id)
                 query = """ SELECT s.channel_id
                             FROM dota_favourite_characters c
                             JOIN dota_favourite_players p on c.guild_id = p.guild_id
@@ -202,9 +209,9 @@ class DotaFPCNotifications(FPCCog):
         query = """ SELECT * FROM dota_matches 
                     WHERE NOT match_id=ANY($1)
                 """
-        rows: list[DotaFPCMatchRecord] = await self.bot.pool.fetch(query, list(self.top_source_dict.keys()))
+        match_rows: list[DotaFPCMatchRow] = await self.bot.pool.fetch(query, list(self.top_source_dict.keys()))
         try:
-            await self.edit_dota_notification_messages(rows)
+            await self.edit_dota_notification_messages(match_rows)
         except Exception as exc:
             self.is_postmatch_edits_running = False
             await self.bot.exc_manager.register_error(
@@ -223,7 +230,7 @@ class DotaFPCNotifications(FPCCog):
         await self.bot.steam_dota_login()
         self.request_top_source()
         # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
-        # await asyncio.to_thread(self.request_top_source, args)
+        # res = await asyncio.to_thread(self.request_top_source)
         top_source_end_time = time.perf_counter() - start_time
         log.debug("top source request took %s secs", top_source_end_time)
         if top_source_end_time > 8:
@@ -240,25 +247,26 @@ class DotaFPCNotifications(FPCCog):
 
     # POST MATCH EDITS
 
-    async def edit_dota_notification_messages(self, match_rows: list[DotaFPCMatchRecord]):
+    async def edit_dota_notification_messages(self, match_rows: list[DotaFPCMatchRow]):
         for match_row in match_rows:
             cache_item = self.opendota_req_cache.get(match_row["match_id"], None)
 
             if not cache_item:
-                self.opendota_req_cache[match_row['match_id']] = cache_item = OpendotaRequestMatch(
+                self.opendota_req_cache[match_row["match_id"]] = cache_item = OpendotaRequestMatch(
                     match_row["match_id"], match_row["opendota_jobid"]
                 )
 
             player_dict_list = await cache_item.workflow(self.bot)
             if player_dict_list:
                 query = "SELECT * FROM dota_messages WHERE match_id=$1"
-                for message_row in await self.bot.pool.fetch(query, match_row["match_id"]):
+                message_rows: list[DotaFPCMessageRow] = await self.bot.pool.fetch(query, match_row["match_id"])
+                for message_row in message_rows:
                     for player in player_dict_list:
-                        if player["hero_id"] == message_row.character_id:
+                        if player["hero_id"] == message_row["character_id"]:
                             post_match_player = PostMatchPlayerData(
                                 player_data=player,
-                                channel_id=message_row.channel_id,
-                                message_id=message_row.message_id,
+                                channel_id=message_row["channel_id"],
+                                message_id=message_row["message_id"],
                                 api_calls_done=cache_item.api_calls_done,
                             )
                             await post_match_player.edit_notification_embed(self.bot)

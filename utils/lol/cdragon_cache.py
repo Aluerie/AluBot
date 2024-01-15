@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict, MutableMapping
 
 from pulsefire.clients import CDragonClient
 
@@ -8,6 +8,12 @@ from ..cache import KeysCache
 
 if TYPE_CHECKING:
     from bot import AluBot
+
+    class ChampionCache(TypedDict):
+        id_by_name: MutableMapping[str, int]
+        name_by_id: MutableMapping[int, str]
+        icon_by_id: MutableMapping[int, str]
+
 
 __all__ = ("CDragonCache",)
 
@@ -33,11 +39,14 @@ def cdragon_asset_url(path: str) -> str:
 
 
 class ChampionKeysCache(KeysCache):
-    async def fill_data(self) -> dict:
+    if TYPE_CHECKING:
+        cached_data: ChampionCache
+
+    async def fill_data(self) -> ChampionCache:
         async with CDragonClient(default_params={"patch": "latest", "locale": "default"}) as cdragon_client:
             champion_summary = await cdragon_client.get_lol_v1_champion_summary()
 
-        data = {
+        data: ChampionCache = {
             "id_by_name": {},
             "name_by_id": {},
             "icon_by_id": {},
@@ -46,7 +55,7 @@ class ChampionKeysCache(KeysCache):
             if champion["id"] == -1:
                 continue
 
-            data["id_by_name"][champion["name"]] = champion["id"]
+            data["id_by_name"][champion["name"].lower()] = champion["id"]
             data["name_by_id"][champion["id"]] = champion["name"]
             data["icon_by_id"][champion["id"]] = cdragon_asset_url(champion["squarePortraitPath"])
 
@@ -54,17 +63,17 @@ class ChampionKeysCache(KeysCache):
 
     # example of champion values
     # id: 145
-    # name: "Kai'Sa",
+    # name: "Kai'Sa" (lower_name in cache "id_by_name": "kai'sa")
     # key: "Kaisa"  # also key eats spaces like "MissFortune"
     # icon_url: https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/145.png
 
-    async def id_by_name(self, value: str) -> int:
+    async def id_by_name(self, champion_name: str) -> int:
         """Get champion id by name"""
-        return await self.get_value("id_by_name", value)
+        return await self.get_value("id_by_name", champion_name.lower())
 
-    async def name_by_id(self, value: int) -> str:
+    async def name_by_id(self, champion_id: int) -> str:
         """Get champion name by id"""
-        return await self.get_value("name_by_id", value)
+        return await self.get_value("name_by_id", champion_id)
 
     async def icon_by_id(self, champion_id: int) -> str:
         """Get champion icon url by id"""

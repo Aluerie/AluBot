@@ -302,7 +302,7 @@ class FPCSetupPaginator(pages.Paginator):
 
         self.table_name: str = f"{cog.prefix}_favourite_{table_object_name}s "
         self.id_column_name: str = f"{table_object_name}_id"
-        self.special_button_cls = special_button_cls
+        self.special_button_cls: Optional[type[AccountListButton]] = special_button_cls
 
     @discord.ui.button(label="\N{PAGE WITH CURL}", style=discord.ButtonStyle.blurple)
     async def object_list(self, ntr: discord.Interaction, _: discord.ui.Button):

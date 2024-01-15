@@ -119,9 +119,8 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
             character_plural_word="heroes",
             account_cls=DotaAccount,
             account_typed_dict_cls=DotaAccountDict,
-            character_name_by_id=bot.dota_cache.hero.name_by_id,
-            character_id_by_name=bot.dota_cache.hero.id_by_name,
-            **kwargs,
+            character_cache=bot.dota_cache.hero,
+            ** kwargs,
         )
 
     @checks.hybrid.is_premium_guild_manager()
@@ -156,9 +155,6 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
     async def dota_setup_channel(self, ctx: AluGuildContext):
         """Setup/manage your Dota 2 FPC Notifications channel."""
         await self.setup_channel(ctx)
-
-    async def get_character_name_by_id_cache(self) -> dict[int, str]:
-        return await self.bot.dota_cache.hero.get_cache("name_by_id")
 
     @dota_setup.command(name="heroes")
     async def dota_setup_heroes(self, ctx: AluGuildContext):

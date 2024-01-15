@@ -37,9 +37,9 @@ class LoLAccountDict(TypedDict):
 
 class LoLAccount(FPCAccount):
     if TYPE_CHECKING:
+        summoner_id: str
         puuid: str
         platform: lol.LiteralPlatform
-        summoner_id: str
         game_name: str
         tag_line: str
 
@@ -137,8 +137,7 @@ class LoLFPCSettings(FPCSettingsBase):
             character_plural_word="champions",
             account_cls=LoLAccount,
             account_typed_dict_cls=LoLAccountDict,
-            character_name_by_id=bot.cdragon.champion.name_by_id,
-            character_id_by_name=bot.cdragon.champion.id_by_name,
+            character_cache=bot.cdragon.champion,
             **kwargs,
         )
 
@@ -174,9 +173,6 @@ class LoLFPCSettings(FPCSettingsBase):
     async def lol_setup_channel(self, ctx: AluGuildContext):
         """Setup/manage your LoL FPC Notifications channel."""
         await self.setup_channel(ctx)
-
-    async def get_character_name_by_id_cache(self) -> dict[int, str]:
-        return await self.bot.cdragon.champion.get_cache("name_by_id")
 
     @lol_setup.command(name="champions")
     async def lol_setup_champions(self, ctx: AluGuildContext):

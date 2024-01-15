@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, NamedTuple, Optional, Self, TypedDict
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, Optional, Self, TypedDict
 
 import asyncpg
 import discord
@@ -8,6 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils import AluGuildContext, errors, formats, fuzzy
+from utils.cache import KeysCache
 
 from .._base import FPCCog
 from . import views
@@ -41,7 +42,6 @@ __all__ = (
 
 class FPCAccount:
     if TYPE_CHECKING:
-        id: AccountIDType
         player_display_name: str
         twitch_id: Optional[int]
         profile_image: str
@@ -50,6 +50,32 @@ class FPCAccount:
         self.name: str = name
         self.is_twitch_streamer: bool = is_twitch_streamer
 
+    async def set_game_specific_attrs(self, flags: commands.FlagConverter):
+        raise NotImplementedError
+
+    def to_database_dict(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+    @property
+    def hint_database_add_command_args(self) -> str:
+        raise NotImplementedError
+
+    @staticmethod
+    def embed_account_str_static(**kwargs: Any) -> str:
+        raise NotImplementedError
+
+    @property
+    def embed_account_str(self) -> str:
+        raise NotImplementedError
+
+    @staticmethod
+    def simple_account_name_static(**kwargs: Any) -> str:
+        raise NotImplementedError
+
+    @property
+    def simple_account_name(self) -> str:
+        raise NotImplementedError
+    
     async def set_base_attrs(self, bot: AluBot):
         if self.is_twitch_streamer:
             twitch_user = await bot.twitch.get_twitch_user(self.name)
@@ -76,16 +102,6 @@ class FPCAccount:
         await self.set_game_specific_attrs(flags)
         return self
 
-    async def set_game_specific_attrs(self, flags: commands.FlagConverter):
-        raise NotImplementedError
-
-    def to_database_dict(self) -> dict[str, Any]:
-        raise NotImplementedError
-
-    @property
-    def hint_database_add_command_args(self) -> str:
-        raise NotImplementedError
-
     @staticmethod
     def embed_player_name_static(display_name: str, is_twitch_streamer: bool):
         if is_twitch_streamer:
@@ -96,22 +112,6 @@ class FPCAccount:
     @property
     def embed_player_name(self) -> str:
         return self.embed_player_name_static(self.player_display_name, self.is_twitch_streamer)
-
-    @staticmethod
-    def embed_account_str_static(**kwargs: Any) -> str:
-        raise NotImplementedError
-
-    @property
-    def embed_account_str(self) -> str:
-        raise NotImplementedError
-
-    @staticmethod
-    def simple_account_name_static(**kwargs: Any) -> str:
-        raise NotImplementedError
-
-    @property
-    def simple_account_name(self) -> str:
-        raise NotImplementedError
 
 
 class FPCSettingsBase(FPCCog):
@@ -154,6 +154,8 @@ class FPCSettingsBase(FPCCog):
         Function that gets character name by its id, i.e. 1 -> 'Anti-Mage'.
     character_id_by_name: Callable[[str], Awaitable[int]]
         Function that gets character id by its name, i.e. 'Anti-Mage' -> 1.
+    get_character_name_by_id_cache: Callable[[], Awaitable[dict[int, str]]]
+        Lambda function that gets "name_by_id" sub-dict from the game related cache.
     """
 
     def __init__(
@@ -168,11 +170,12 @@ class FPCSettingsBase(FPCCog):
         character_plural_word: str,
         account_cls: type[FPCAccount],
         account_typed_dict_cls: type,
-        character_name_by_id: Callable[[int], Awaitable[str]],
-        character_id_by_name: Callable[[str], Awaitable[Optional[int]]],
+        character_cache: KeysCache,
         **kwargs,
     ) -> None:
         super().__init__(bot, *args, **kwargs)
+
+        # game attrs
         self.prefix: str = prefix
         self.colour: discord.Colour = colour
         self.game_display_name: str = game_display_name
@@ -180,13 +183,18 @@ class FPCSettingsBase(FPCCog):
         self.character_singular_word: str = character_singular_word
         self.character_plural_word: str = character_plural_word
 
+        # account attrs
         self.account_cls: type[FPCAccount] = account_cls
         self.account_table_columns: list[str] = list(account_typed_dict_cls.__annotations__.keys())
         self.account_id_column: str = self.account_table_columns[0]
 
-        self.character_name_by_id: Callable[[int], Awaitable[str]] = character_name_by_id
-        self.character_id_by_name: Callable[[str], Awaitable[Optional[int]]] = character_id_by_name
-        
+        # cache attrs
+        self.character_name_by_id: Callable[[int], Awaitable[str]] = getattr(character_cache, "name_by_id")
+        self.character_id_by_name: Callable[[str], Awaitable[int]] = getattr(character_cache, "id_by_name")
+        self.character_name_by_id_cache: Callable[[], Awaitable[dict[int, str]]] = lambda: character_cache.get_cache(
+            "name_by_id"
+        )
+
     # fpc database management related functions ########################################################################
 
     async def check_if_account_already_in_database(self, account_id: AccountIDType) -> None:
@@ -214,7 +222,7 @@ class FPCSettingsBase(FPCCog):
 
         await ctx.typing()
         account = await self.account_cls.create(self.bot, flags)
-        await self.check_if_account_already_in_database(account_id=account.id)
+        await self.check_if_account_already_in_database(account_id=getattr(account, self.account_id_column))
 
         confirm_embed = (
             discord.Embed(
@@ -373,7 +381,7 @@ class FPCSettingsBase(FPCCog):
         query = f"SELECT enabled, spoil FROM {self.prefix}_settings WHERE guild_id=$1"
         row: SetupMiscQueryRow = await ctx.pool.fetchrow(query, ctx.guild.id)
 
-        def state(bool: bool) -> str:  # todo: erm maybe like throw it together somewhere
+        def state(bool: bool) -> str:
             word = "`on`" if bool else "`off`"
             return f"{word} {formats.tick(bool)}"
 
@@ -419,8 +427,8 @@ class FPCSettingsBase(FPCCog):
         view = views.FPCSetupMiscView(self, embed, author_id=ctx.author.id)
         await ctx.reply(embed=embed, view=view)
 
-    async def get_character_name_by_id_cache(self) -> dict[int, str]:
-        raise NotImplementedError
+    # async def get_character_name_by_id_cache(self) -> dict[int, str]:
+    #     raise NotImplementedError
 
     async def setup_characters(self, ctx: AluGuildContext):
         """Base function for `/{game} setup {characters}` command.
@@ -432,7 +440,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.typing()
         await self.is_fpc_channel_set(ctx)
 
-        name_by_id_cache = await self.get_character_name_by_id_cache()
+        name_by_id_cache = await self.character_name_by_id_cache()
         name_by_id_cache.pop(0, None)  # 0 id is special
 
         character_tuples: list[tuple[int, str]] = [
@@ -476,23 +484,24 @@ class FPCSettingsBase(FPCCog):
         name: str,
         get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]],
         column: str,
-        object_name: str,
+        object_word: str,
     ):
-        """_summary_
+        """Worker function for commands /{game}-fpc {character}/player add
 
         Parameters
         ----------
         ctx : AluGuildContext
-            _description_
-        object_id : int
-            _description_
-        display_name : str
-            _description_ proper name with capitalisation
+            Context
+        name : str
+            `name` from user input
+        get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]]
+            function to get `object_id`, `object_display_name` tuple, where object is character/player
         column : str
-            _description_ character player
-        object_name : str
-            _description_ hero champion player
-        """  # todo: docstring
+            Suffix of the table, also column in the database like "character", "player"
+            so it's "dota_favourite_characters" table with a column "character_id".
+        object_word : str
+            gathering word like "hero", "champion", "player"
+        """
 
         await ctx.typing()
         object_id, object_display_name = await get_object_tuple(name)
@@ -502,11 +511,11 @@ class FPCSettingsBase(FPCCog):
             await ctx.pool.execute(query, ctx.guild.id, object_id)
         except asyncpg.UniqueViolationError:
             raise errors.BadArgument(
-                f"{object_name.capitalize()} {object_display_name} was already in your favourite list."
+                f"{object_word.capitalize()} {object_display_name} was already in your favourite list."
             )
 
         embed = discord.Embed(colour=self.colour).add_field(
-            name=f"Succesfully added a {object_name} to your favourites.",
+            name=f"Succesfully added a {object_word} to your favourites.",
             value=object_display_name,
         )
         await ctx.reply(embed=embed)
@@ -519,21 +528,22 @@ class FPCSettingsBase(FPCCog):
         column: str,
         object_word: str,
     ):
-        """_summary_
+        """Worker function for commands /{game}-fpc {character}/player remove
 
         Parameters
         ----------
         ctx : AluGuildContext
-            _description_
-        object_id : int
-            _description_
-        display_name : str
-            _description_ proper name with capitalisation
+            Context
+        name : str
+            `name` from user input
+        get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]]
+            function to get `object_id`, `object_display_name` tuple, where object is character/player
         column : str
-            _description_ character player
-        object_name : str
-            _description_ hero champion player
-        """  # todo: docstring
+            Suffix of the table, also column in the database like "character", "player"
+            so it's "dota_favourite_characters" table with a column "character_id".
+        object_word : str
+            gathering word like "hero", "champion", "player"
+        """
 
         await ctx.typing()
         object_id, object_display_name = await get_object_tuple(name)
@@ -573,9 +583,9 @@ class FPCSettingsBase(FPCCog):
         await self.hideout_add_worker(ctx, player_name, self.get_player_tuple, "player", "player")
 
     async def get_character_tuple(self, character_name: str) -> tuple[int, str]:
-        # todo: probably need to move this out of here into cache or something
-        character_id = await self.character_id_by_name(character_name)
-        if character_id is None:
+        try:
+            character_id = await self.character_id_by_name(character_name)
+        except KeyError:
             raise errors.BadArgument(
                 f"{self.character_singular_word.capitalize()} {character_name} does not exist. "
                 "Please, double check everything."
@@ -675,9 +685,7 @@ class FPCSettingsBase(FPCCog):
             character_id for character_id, in await ntr.client.pool.fetch(query, ntr.guild.id)
         ]
 
-        name_by_id_cache = await self.get_character_name_by_id_cache()
-        # todo: when reworking this consider that we need surpass potential call to refresh everything here.
-        # todo: since it's too long
+        name_by_id_cache = await self.character_name_by_id_cache()
         name_by_id_cache.pop(0, None)  # 0 id is special
 
         if mode_add_remove:

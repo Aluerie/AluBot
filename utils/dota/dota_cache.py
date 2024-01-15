@@ -51,7 +51,7 @@ class HeroKeysCache(KeysCache):
 
     # Example of hero values to be transposed into each other
     # id: 1
-    # name: "Anti-Mage"
+    # name: "Anti-Mage" (lower_name in cache "id_by_name": "anti-mage")
     # npcname: "npc_dota_hero_antimage"
     # img: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png?'
     # ^^^ (referencing top bar image)

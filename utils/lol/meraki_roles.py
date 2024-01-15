@@ -61,7 +61,7 @@ class MerakiRolesCache(KeysCache):
 
     @staticmethod
     def construct_the_dict(
-        playrate: float = 10,
+        playrate: float = 10, # usually new champions (that are likely to be missing) have rather high playrate
         *,
         top: float = 20,
         jungle: float = 20,

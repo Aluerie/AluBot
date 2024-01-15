@@ -6,7 +6,7 @@ import logging
 import random
 import time
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, MutableMapping, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, MutableMapping, Protocol, TypeVar, TypeAlias
 
 from aiohttp import ClientSession
 from discord.utils import MISSING
@@ -23,8 +23,11 @@ if TYPE_CHECKING:
 
 R = TypeVar("R")
 
+CacheDict: TypeAlias = dict[Any, Any]
+CachedDataT = TypeVar("CachedDataT", bound=CacheDict)
 
-class KeysCache:
+
+class KeysCache[CachedDataT]:
     """KeysCache
 
     Caches the data from public json-urls
@@ -44,7 +47,7 @@ class KeysCache:
         """
         self.bot: AluBot = bot
 
-        self.cached_data: dict[Any, Any] = {}
+        self.cached_data: CacheDict = {}
         self.lock: asyncio.Lock = asyncio.Lock()
 
         self.update_data.add_exception_type(errors.ResponseNotOK)
@@ -66,7 +69,7 @@ class KeysCache:
         log.debug("Key Cache response error: %s %s", status, response_text)
         raise errors.ResponseNotOK(f"Key Cache response error: {status} {response_text}")
 
-    async def fill_data(self) -> dict[Any, Any]:
+    async def fill_data(self) -> CacheDict:
         """Fill self.cached_data with the data from various json data
 
         This function is supposed to be implemented by subclasses.
@@ -82,7 +85,7 @@ class KeysCache:
 
     # methods to actually get the data from cache
 
-    async def get_cached_data(self) -> dict[Any, Any]:
+    async def get_cached_data(self) -> CacheDict:
         """Get the whole cached data"""
         if self.cached_data:
             return self.cached_data

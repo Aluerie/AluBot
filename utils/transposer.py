@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import discord
 from PIL import Image
 
-from .bases.errors import SomethingWentWrong
+from .bases import errors
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -83,11 +83,12 @@ class TransposeClient:
         """Convert URL to PIL.Image.Image"""
         log.debug(url)
         async with self.session.get(url) as response:
-            # if not response.ok:
-            #     raise SomethingWentWrong(f"url_to_img: could not download file from {url}")
-            image_binary = BytesIO(await response.read())
-            image_binary.seek(0)
-            return Image.open(image_binary)
+            if response.ok:
+                return Image.open(await response.read())
+            else:
+                raise errors.ResponseNotOK(
+                    f"`transposer.url_to_image`: Status {response.status} - Could not download file from {url}"
+                )
 
     async def url_to_file(self, url: str, filename: str = "fromAluBot.png") -> discord.File:
         """Convert URL to discord.File"""

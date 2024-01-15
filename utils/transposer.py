@@ -92,6 +92,11 @@ class TransposeClient:
 
     async def url_to_file(self, url: str, filename: str = "fromAluBot.png") -> discord.File:
         """Convert URL to discord.File"""
-        async with self.session.get(url) as resp:
-            data = BytesIO(await resp.read())
-            return discord.File(data, filename)
+        async with self.session.get(url) as response:
+            if response.ok:
+                data = BytesIO(await response.read())
+                return discord.File(data, filename)
+            else:
+                raise errors.ResponseNotOK(
+                    f"`transposer.url_to_file`: Status {response.status} - Could not download file from {url}"
+                )

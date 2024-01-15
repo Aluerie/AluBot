@@ -75,7 +75,14 @@ class League:
 
 
 class DOTA:
-    HERO_DISCONNECT = "https://i.imgur.com/9n8oSge.png"
+    # remember the imgur 429 catastrophe 
+    # which means that we shouldn't host images on imgur ever
+    # because they rate-limit my bot
+    # otherwise `bot.transposer.url_to_image` will fail
+    
+    HERO_DISCONNECT = (
+        "https://raw.githubusercontent.com/Aluerie/AluBot/main/assets/images/imgur_hosted/DotaDisconnect.png"
+    )
 
     PLAYER_COLOUR_MAP = {
         0: "#3375FF",

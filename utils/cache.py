@@ -35,10 +35,26 @@ class KeysCache[CachedDataT]:
     and don't spam GET requests too often.
 
     The cache get updated by the aluloop task in the AluBot class.
+
+    Subclasses must implement
+    ```py
+        async def fill_data(self) -> CacheDict:
+    ```
+    and return Cache dictionary that is going to be put into self.cached_data.
+
+    The structure of `self.cached_data` can be anything but for the purposes of
+    dota_cache, cdragon cache it should be a dict so the key `champion_id` in the following example:
+    >>> champion = 910
+    >>> cdragon.champion.cached_data['name_by_id'][champion_id]
+    >>> "Hwei"
+    can be reached for the purposes of `get_value` function.
+
+    This is kinda implementation on "it just works" basis but oh well,
+    I'm not developing a library here, am I?
     """
 
     def __init__(self, bot: AluBot) -> None:
-        """_summary_
+        """__init__
 
         Parameters
         ----------
@@ -51,6 +67,8 @@ class KeysCache[CachedDataT]:
         self.lock: asyncio.Lock = asyncio.Lock()
 
         self.update_data.add_exception_type(errors.ResponseNotOK)
+        # random times just so we don't have a possibility of all cache being updated at the same time 
+        # and somehow yoink'ing the whole event loop
         self.update_data.change_interval(hours=24, minutes=random.randint(1, 59))
         self.update_data.start()
 

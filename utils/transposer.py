@@ -85,7 +85,9 @@ class TransposeClient:
         async with self.session.get(url) as response:
             # if not response.ok:
             #     raise SomethingWentWrong(f"url_to_img: could not download file from {url}")
-            return Image.open(BytesIO(await response.read()))
+            image_binary = BytesIO(await response.read())
+            image_binary.seek(0)
+            return Image.open(image_binary)
 
     async def url_to_file(self, url: str, filename: str = "fromAluBot.png") -> discord.File:
         """Convert URL to discord.File"""

@@ -63,7 +63,7 @@ class Limit:
 
 
 class Twitch:
-    my_channel_name = "Aluerie"
+    my_channel_name = "Irene_Adler__"
     my_channel_id = 180499648
     lol_game_category_id = "21779"
 

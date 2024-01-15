@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict, MutableMapping
+from typing import TYPE_CHECKING, MutableMapping, TypedDict
 
 from pulsefire.clients import CDragonClient
 

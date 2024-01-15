@@ -153,10 +153,12 @@ class DotaFPCNotifications(FPCCog):
                     )
                     async with self.bot.session.get(url) as r:
                         r_json = await r.json()
+                        log.debug("hero_ids, %s", [x.hero_id for x in match.players])
                         if r.status == 200:
                             # looks like these are sorted properly
                             # but if not then sort it yourself with player["team_slot"] which is integer 0-4
                             hero_ids = [player["heroid"] for team in r_json["teams"] for player in team["players"]]
+                            log.debug('web api hero_ids %s', hero_ids)
                         else:
                             # web api is down so we need to default to orderless ?
                             # TODO: kinda need more testing

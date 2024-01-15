@@ -291,6 +291,27 @@ class FPCSetupPaginator(pages.Paginator):
         get_object_list_embed: Callable[[int], Awaitable[discord.Embed]],
         special_button_cls: Optional[type[AccountListButton]] = None,
     ):
+        """_summary_
+
+        Parameters
+        ----------
+        ctx : AluGuildContext
+            Context
+        object_id_name_tuples : list[tuple[int, str]]
+            list of tuples to pass to source. Something like list of (hero_id, hero_name) tuples.
+        table_object_name : str
+            object's name in our SQL tables, i.e. "player", "character".
+        singular : str
+            _description_
+        plural : str
+            _description_
+        cog : FPCSettingsBase
+            _description_
+        get_object_list_embed : Callable[[int], Awaitable[discord.Embed]]
+            _description_
+        special_button_cls : Optional[type[AccountListButton]], optional
+            _description_, by default None
+        """
         super().__init__(
             ctx,
             source=FPCSetupPageSource(object_id_name_tuples),

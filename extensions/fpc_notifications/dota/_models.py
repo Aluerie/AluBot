@@ -101,7 +101,7 @@ class ActiveMatch(Match):
         log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
             return {
-                "preview_url": "https://i.imgur.com/kl0jDOu.png",  # lavender 640x360
+                "preview_url": const.PICTURE.LAVENDER640X360,
                 "display_name": self.player_name,
                 "url": "",
                 "logo_url": const.Logo.dota,

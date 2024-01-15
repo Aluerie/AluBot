@@ -183,17 +183,23 @@ class OtherCog(AluCog):
         branch = "master"
 
         license_url = f"{source_url}/blob/master/LICENSE"
-        e = discord.Embed(title="Mozilla Public License 2.0", url=license_url, colour=0x612783)
-        e.set_author(name="Code is licensed under MPL v2", url=license_url)
-        e.description = (
-            f"\N{BLACK CIRCLE} Remember to follow all license nerdy conditions, "
-            "especially [this one]({license_url}#L160-L168). Also:"
+        embed = (
+            discord.Embed(
+                colour=0x612783,
+                title="Mozilla Public License 2.0",
+                url=license_url,
+                description=(
+                    f"\N{BLACK CIRCLE} Remember to follow all license nerdy conditions, "
+                    "especially [this one]({license_url}#L160-L168). Also:"
+                ),
+            )
+            .set_author(name="Code is licensed under MPL v2", url=license_url)
+            .set_image(url="https://i.imgur.com/kGFsKcc.png")
         )
-        e.set_image(url="https://i.imgur.com/kGFsKcc.png")
 
         if command is None:
             view = Url(source_url, label="GitHub Repo", emoji=const.EmoteLogo.github_logo)
-            return await ctx.reply(embed=e, view=view)
+            return await ctx.reply(embed=embed, view=view)
 
         if command == "help":
             src = type(self.bot.help_command)
@@ -223,7 +229,7 @@ class OtherCog(AluCog):
             branch = "master"
 
         final_url = f"{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}"
-        e.set_footer(text=f"Found source code here:\n{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
+        embed.set_footer(text=f"Found source code here:\n{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
 
         view = Url(final_url, label=f'Source code for command "{str(obj)}"', emoji=const.EmoteLogo.github_logo)
-        await ctx.reply(embed=e, view=view)
+        await ctx.reply(embed=embed, view=view)

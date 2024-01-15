@@ -1,5 +1,7 @@
 from enum import StrEnum
 
+GITHUB_BOT_IMAGES = "https://raw.githubusercontent.com/Aluerie/AluBot/main/assets/images"
+
 
 class Slash(StrEnum):
     """Slash mentions strings."""
@@ -40,6 +42,7 @@ class PICTURE(StrEnum):
     dankfix = "https://i.imgur.com/gzrPVLs.png"
 
     frog = "https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png"
+    LAVENDER640X360 = f"{GITHUB_BOT_IMAGES}/hosted/Lavender640x360.png"
 
 
 class Logo(StrEnum):
@@ -75,14 +78,13 @@ class League:
 
 
 class DOTA:
-    # remember the imgur 429 catastrophe 
-    # which means that we shouldn't host images on imgur ever
+    # remember the imgur.com 429 catastrophe
+    # which means that we shouldn't host images there ever
     # because they rate-limit my bot
     # otherwise `bot.transposer.url_to_image` will fail
-    
-    HERO_DISCONNECT = (
-        "https://raw.githubusercontent.com/Aluerie/AluBot/main/assets/images/imgur_hosted/DotaDisconnect.png"
-    )
+
+    HERO_DISCONNECT = f"{GITHUB_BOT_IMAGES}/hosted/DotaDisconnect.png"
+    EMPTY_ITEM_TILE = f"{GITHUB_BOT_IMAGES}/hosted/Black_tile.png"
 
     PLAYER_COLOUR_MAP = {
         0: "#3375FF",

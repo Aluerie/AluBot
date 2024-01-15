@@ -140,7 +140,7 @@ class ItemKeysCache(KeysCache):
     async def fill_data(self) -> dict:
         item_dict = await self.get_response_json(url=self.ITEMS_URL)
         data = {
-            "icon_by_id": {0: "https://i.imgur.com/TtOovu5.png"},  # black tile
+            "icon_by_id": {0: const.DOTA.EMPTY_ITEM_TILE},
             "id_by_key": {},
         }
         for key, item in item_dict.items():

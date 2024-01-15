@@ -84,7 +84,7 @@ class TransposeClient:
         log.debug(url)
         async with self.session.get(url) as response:
             if response.ok:
-                return Image.open(await response.read())
+                return Image.open(BytesIO(await response.read()))
             else:
                 raise errors.ResponseNotOK(
                     f"`transposer.url_to_image`: Status {response.status} - Could not download file from {url}"
@@ -94,8 +94,7 @@ class TransposeClient:
         """Convert URL to discord.File"""
         async with self.session.get(url) as response:
             if response.ok:
-                data = BytesIO(await response.read())
-                return discord.File(data, filename)
+                return discord.File(BytesIO(await response.read()), filename)
             else:
                 raise errors.ResponseNotOK(
                     f"`transposer.url_to_file`: Status {response.status} - Could not download file from {url}"

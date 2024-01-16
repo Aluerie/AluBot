@@ -23,7 +23,7 @@ class AluJishaku(
     category=category
 ):
     """
-    The main frontend class for JIshaku.
+    My subclass to main frontend class for JIshaku.
 
     This implements all Features and is the main entry point for Jishaku.
     """

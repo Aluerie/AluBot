@@ -7,7 +7,7 @@ discord.py[speed, voice] @ git+https://github.com/Rapptz/discord.py.git
 git+https://github.com/Rapptz/discord-ext-menus
 
 # twitchio @ git+https://github.com/TwitchIO/TwitchIO.git
-twitchio[speed] @ git+https://github.com/TwitchIO/TwitchIO.git
+twitchio[speed] @ git+https://github.com/TwitchIO/TwitchIO.git@fix/eventsub-reconnect
 # py -m pip install "twitchio[speed] @ git+https://github.com/TwitchIO/TwitchIO.git" --extra-index-url https://pip.twitchio.dev
 
 git+https://github.com/meraki-analytics/role-identification.git

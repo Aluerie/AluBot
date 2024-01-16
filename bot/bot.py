@@ -243,6 +243,7 @@ class AluBot(commands.Bot, AluBotHelper):
             await self.steam_dota_login()
 
     async def steam_dota_login(self) -> None:
+        log.info("Trying to sign in into Steam/Dota Clients.")
         if self.steam.connected is False:
             log.debug(f"dota2info: client.connected {self.steam.connected}")
             if self.test:

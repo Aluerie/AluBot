@@ -120,7 +120,7 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
             account_cls=DotaAccount,
             account_typed_dict_cls=DotaAccountDict,
             character_cache=bot.dota_cache.hero,
-            ** kwargs,
+            **kwargs,
         )
 
     @checks.hybrid.is_premium_guild_manager()

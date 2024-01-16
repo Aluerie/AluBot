@@ -67,7 +67,7 @@ class KeysCache[CachedDataT]:
         self.lock: asyncio.Lock = asyncio.Lock()
 
         self.update_data.add_exception_type(errors.ResponseNotOK)
-        # random times just so we don't have a possibility of all cache being updated at the same time 
+        # random times just so we don't have a possibility of all cache being updated at the same time
         # and somehow yoink'ing the whole event loop
         self.update_data.change_interval(hours=24, minutes=random.randint(1, 59))
         self.update_data.start()
@@ -98,8 +98,11 @@ class KeysCache[CachedDataT]:
     @aluloop()
     async def update_data(self):
         """The task responsible for keeping the data up-to-date."""
+        
+        # log.debug("Trying to update Cache %s.", self.__class__.__name__)
         async with self.lock:
             self.cached_data = await self.fill_data()
+            log.debug("Cache %s is updated.", self.__class__.__name__)
 
     # methods to actually get the data from cache
 

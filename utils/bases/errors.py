@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 
+import discord
+
 log = logging.getLogger(__name__)
 
 __all__: tuple[str, ...] = (
@@ -15,7 +17,9 @@ __all__: tuple[str, ...] = (
 )
 
 
-class AluBotException(BaseException):
+# this should inherit at least Exception so `except Exception as e` in discord.py don't fail
+# maybe we will consider inheriting discord.DiscordException
+class AluBotException(Exception):  # discord.DiscordException):
     """The base exception for AluBot. All other exceptions should inherit from this."""
 
     __slots__: tuple[str, ...] = ()

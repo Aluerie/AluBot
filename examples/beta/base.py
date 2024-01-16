@@ -16,7 +16,7 @@ from discord import app_commands
 from discord.ext import commands, menus
 
 from bot import AluBot
-from utils import AluCog, AluContext, ExtCategory, aluloop, const, errors, timezones
+from utils import AluCog, AluContext, ExtCategory, aluloop, checks, const, errors, timezones
 
 log = logging.getLogger(__name__)
 

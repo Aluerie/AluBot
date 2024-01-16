@@ -23,5 +23,5 @@ jobs:
           cd ./AluBot
           git pull
           source venv/bin/activate
-          pip install -U -r ./requirements.txt
+          python3.12 -m pip install -U -r ./requirements.txt
           sudo systemctl restart alubot.service

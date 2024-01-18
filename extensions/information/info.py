@@ -1,23 +1,17 @@
 from __future__ import annotations
 
 import colorsys
-import datetime
-import platform
-import re
-import socket
 import warnings
 from typing import TYPE_CHECKING, Annotated, Union
 
 import discord
-import psutil
 from dateparser.search import search_dates
 from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageColor
 from wordcloud import WordCloud
 
-from utils import const, converters
-from utils.formats import format_dt_tdR
+from utils import const, converters, formats
 
 from ._base import InfoCog
 
@@ -68,7 +62,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
                 utc_offset = o.seconds if (o := dt.utcoffset()) else 0
                 dst = d.seconds if (d := dt.dst()) else 0
                 e.description = (
-                    f'"{pdate[0]}" in your timezone:\n {format_dt_tdR(dt)}\n'
+                    f'"{pdate[0]}" in your timezone:\n {formats.format_dt_tdR(dt)}\n'
                     f"{dt.tzname()} is GMT {utc_offset / 3600:+.1f}, dst: { dst / 3600:+.1f}"
                 )
                 await message.channel.send(embed=e)
@@ -151,45 +145,6 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         return [
             app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
         ][:25]
-
-    @commands.is_owner()
-    @commands.command(
-        name="sysinfo",
-        description="Get system info about machine currently hosting the bot",
-        aliases=["systeminfo"],
-        hidden=True,
-    )
-    async def sysinfo(self, ctx: AluContext):
-        """Get system info about machine currently hosting the bot"""
-        url = "https://ipinfo.io/json"
-        async with self.bot.session.get(url) as resp:
-            data = await resp.json()
-
-        e = discord.Embed(title="Bot Host Machine System Info", colour=const.Colour.prpl())
-        e.description = (
-            f"\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n"
-            f"\N{BLACK CIRCLE} Machine: {platform.machine()}\n"
-            f"\N{BLACK CIRCLE} Platform: {platform.platform()}\n"
-            f"\N{BLACK CIRCLE} System: `{platform.system()}` release: `{platform.release()}`\n"
-            f"\N{BLACK CIRCLE} Version: `{platform.version()}`\n"
-            f"\N{BLACK CIRCLE} Processor: {platform.processor()}\n"
-        )
-        e.add_field(
-            name="Current % | max values",
-            value=(
-                # f'\N{BLACK CIRCLE} CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n'
-                f"\N{BLACK CIRCLE} RAM usage: \n{psutil.virtual_memory().percent}% | "
-                f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
-                f'\N{BLACK CIRCLE} Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
-                f"{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB"
-            ),
-        )
-        e.set_footer(text=f"AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}")
-        if not self.bot.test:
-            e.add_field(
-                name="Bot's Location judging by IP", value=f"· {data['country']} {data['region']} {data['city']}"
-            )
-        await ctx.reply(embed=e)
 
 
 class StatsCommands(InfoCog, name="Stats", emote=const.Emote.Smartge):

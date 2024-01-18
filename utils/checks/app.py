@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from discord import app_commands
 
@@ -9,25 +9,14 @@ from .. import const
 if TYPE_CHECKING:
     pass
 
-T = TypeVar('T')
+
+def is_my_guild():
+    return app_commands.guilds(*const.MY_GUILDS)
 
 
-# def is_in_guilds(*guild_ids: int):
-#     def decorator(func: T) -> T:
-#         # app_commands.guild_only(func)
-#         app_commands.guilds(*guild_ids)
-#         return func
-
-#     return decorator
+def is_community():
+    return app_commands.guilds(const.Guild.community)
 
 
-# def is_my_guild():
-#     return is_in_guilds(*const.MY_GUILDS)
-
-
-# def is_community():
-#     def decorator(func: T) -> T:
-#         app_commands.guilds(const.Guild.community)
-#         return func
-
-#     return decorator
+def is_hideout():
+    return app_commands.guilds(const.Guild.hideout)

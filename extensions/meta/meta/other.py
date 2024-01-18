@@ -10,10 +10,8 @@ from typing import TYPE_CHECKING, NamedTuple, Optional
 
 import aiofiles
 import discord
-import pkg_resources
 import psutil
 import pygit2
-from discord import app_commands
 from discord.ext import commands
 
 from utils import AluCog, AluContext, Url, const
@@ -169,16 +167,17 @@ class OtherCog(AluCog):
         e.add_field(name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU")
         e.add_field(name="Command Stats", value="*stats coming soon*")
         # todo: implement command run total and total amount of slash/text commands in the bot maybe tasks
-        code_stats = (
-            f"Lines: {await count_lines('./', '.py'):,}\n"
-            f"Functions: {await count_others('./', '.py', 'def '):,}\n"
-            f"Classes: {await count_others('./', '.py', 'class '):,}"
-        )
-        e.add_field(name="Code stats", value=code_stats)
-        e.add_field(name="Last reboot", value=discord.utils.format_dt(self.bot.launch_time, style="R"))
 
-        version = pkg_resources.get_distribution("discord.py").version
-        e.set_footer(text=f"Made with discord.py v{version} \N{SPARKLING HEART}", icon_url=const.Logo.python)
+        e.add_field(
+            name="Code stats",
+            value=(
+                f"Lines: {await count_lines('./', '.py'):,}\n"
+                f"Functions: {await count_others('./', '.py', 'def '):,}\n"
+                f"Classes: {await count_others('./', '.py', 'class '):,}"
+            ),
+        )
+        e.add_field(name="Last reboot", value=discord.utils.format_dt(self.bot.launch_time, style="R"))
+        e.set_footer(text=f"Made with Love... and discord.py \N{SPARKLING HEART}", icon_url=const.Logo.python)
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")

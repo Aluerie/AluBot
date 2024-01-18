@@ -51,6 +51,7 @@ class DotaFPCNotifications(FPCCog):
 
         self.is_postmatch_edits_running: bool = True
 
+        self.allow_editing_matches: bool = True
         self.matches_to_edit: dict[int, int] = {}
         self.daily_opendota_ratelimit: str = "not set yet"
 
@@ -203,7 +204,7 @@ class DotaFPCNotifications(FPCCog):
             if match_id not in self.matches_to_edit:
                 self.matches_to_edit[match_id] = 0
 
-        if self.matches_to_edit and not self.task_to_edit_dota_fpc_messages.is_running():
+        if self.matches_to_edit and self.allow_editing_matches and not self.task_to_edit_dota_fpc_messages.is_running():
             self.task_to_edit_dota_fpc_messages.start()
 
     @aluloop(seconds=59)
@@ -318,7 +319,7 @@ class DotaFPCNotifications(FPCCog):
 
     @task_to_edit_dota_fpc_messages.after_loop
     async def stop_editing_task(self):
-        if not self.matches_to_edit:
+        if not self.matches_to_edit or self.task_to_edit_dota_fpc_messages.failed():
             self.task_to_edit_dota_fpc_messages.cancel()
 
     # OPENDOTA RATE LIMITS

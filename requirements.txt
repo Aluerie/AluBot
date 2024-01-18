@@ -28,7 +28,7 @@ gtts~=2.5.0
 ffmpeg
 
 # WebScrape
-beautifulsoup4~=4.12.2
+beautifulsoup4~=4.12.3
 lxml
 
 # DateParsing

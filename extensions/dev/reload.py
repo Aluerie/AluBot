@@ -13,7 +13,7 @@ import discord
 from discord.ext import commands
 
 from extensions import get_extensions
-from utils import AluContext, const
+from utils import AluContext, const, formats
 
 from ._base import DevBaseCog
 
@@ -54,7 +54,7 @@ class ReloadCog(DevBaseCog):
             await job_func(extension)
             tick = True
         except Exception as exc:
-            txt = f'Job `{job_func.__name__}` for extension `{extension}` failed.'
+            txt = f"Job `{job_func.__name__}` for extension `{extension}` failed."
             await self.bot.exc_manager.register_error(exc, txt, where=txt)
             tick = False
 
@@ -97,21 +97,21 @@ class ReloadCog(DevBaseCog):
             except* commands.ExtensionError as eg:
                 statuses.append((False, emote, ext))
                 for exc in eg.exceptions:
-                    txt = f'Job `{method.__name__}` for extension `{ext}` failed.'
+                    txt = f"Job `{method.__name__}` for extension `{ext}` failed."
                     await self.bot.exc_manager.register_error(exc, txt, where=txt)
                     # name, value
-                    errors.append((f'{ctx.tick(False)} `{exc.__class__.__name__}`', f"{exc}"))
+                    errors.append((f"{formats.tick(False)} `{exc.__class__.__name__}`", f"{exc}"))
 
         for ext in extensions_to_reload:
-            emoji = '\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}'
+            emoji = "\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}"
             await do_the_job(ext, emoji, self.reload_or_load_extension)
         for ext in extensions_to_unload:
-            emoji = '\N{OCTAGONAL SIGN}'
+            emoji = "\N{OCTAGONAL SIGN}"
             await do_the_job(ext, emoji, self.bot.unload_extension)
 
         if errors:
-            content = '\n'.join(
-                f'{ctx.tick(status)} - {emoji} `{ext if not ext.startswith("extensions.") else ext[5:]}`'
+            content = "\n".join(
+                f'{formats.tick(status)} - {emoji} `{ext if not ext.startswith("extensions.") else ext[5:]}`'
                 for status, emoji, ext in statuses
             )
 
@@ -124,17 +124,17 @@ class ReloadCog(DevBaseCog):
         else:
             # no errors thus let's not clutter my spam channel with output^
             try:
-                await ctx.message.add_reaction(ctx.tick(True))
+                await ctx.message.add_reaction(formats.tick(True))
             except discord.HTTPException:
                 with contextlib.suppress(discord.HTTPException):
-                    await ctx.send(ctx.tick(True))
+                    await ctx.send(formats.tick(True))
 
     @reload.command(name="all", hidden=True)
     async def reload_all(self, ctx: AluContext):
         """Reloads all modules"""
         await self.reload_all_worker(ctx)
 
-    @commands.command(name='t', hidden=True)
+    @commands.command(name="t", hidden=True)
     async def reload_all_shortcut(self, ctx: AluContext):
         """Extreme one-letter shortcut to `reload all` due to a high usage rate."""
         await self.reload_all_worker(ctx)
@@ -151,7 +151,7 @@ class ReloadCog(DevBaseCog):
 
         return [output.decode() for output in result]
 
-    _GIT_PULL_REGEX = re.compile(r'\s*(?P<filename>.+?)\s*\|\s*[0-9]+\s*[+-]+')
+    _GIT_PULL_REGEX = re.compile(r"\s*(?P<filename>.+?)\s*\|\s*[0-9]+\s*[+-]+")
 
     def find_modules_from_git(self, ctx: AluContext, output: str) -> list[tuple[int, str]]:
         files = self._GIT_PULL_REGEX.findall(output)
@@ -162,11 +162,11 @@ class ReloadCog(DevBaseCog):
         extensions = get_extensions(ctx.bot.test, reload=True)
         for file in files:
             root, ext = os.path.splitext(file)
-            if ext != '.py':
+            if ext != ".py":
                 continue
 
-            if root.startswith('extensions/'):
-                ext_name = root.replace('/', '.')
+            if root.startswith("extensions/"):
+                ext_name = root.replace("/", ".")
                 is_submodule = ext_name not in extensions
                 ret.append((is_submodule, ext_name))
 
@@ -176,22 +176,24 @@ class ReloadCog(DevBaseCog):
 
     async def reload_pull_worker(self, ctx: AluContext):
         async with ctx.typing():
-            stdout, _stderr = await self.run_process('git pull')
+            stdout, _stderr = await self.run_process("git pull")
 
         # progress and stuff is redirected to stderr in git pull
         # however, things like "fast forward" and files
         # along with the text "Already up to date" are in stdout
 
-        if stdout.startswith('Already up to date.'):
+        if stdout.startswith("Already up to date."):
             return await ctx.reply(stdout)
 
         modules = self.find_modules_from_git(ctx, stdout)
 
-        mods_text = '\n'.join(f'{index}. `{module}`' for index, (_, module) in enumerate(modules, start=1))
-        prompt_text = f'This will update the following modules, are you sure?\n{mods_text}'
-        confirm = await ctx.prompt(content=prompt_text)
-        if not confirm:
-            return await ctx.send('Aborting.')
+        mods_text = "\n".join(f"{index}. `{module}`" for index, (_, module) in enumerate(modules, start=1))
+        embed = discord.Embed(
+            colour=const.Colour.prpl(),
+            description=f"This will update the following modules, are you sure?\n{mods_text}",
+        )
+        if not await ctx.bot.disambiguator.confirm(ctx, embed=embed):
+            return
 
         statuses = []
         for is_submodule, module in modules:
@@ -215,14 +217,14 @@ class ReloadCog(DevBaseCog):
                 else:
                     statuses.append((True, module))
 
-        await ctx.send('\n'.join(f'{ctx.tick(status)}: `{module}`' for status, module in statuses))
+        await ctx.send("\n".join(f"{formats.tick(status)}: `{module}`" for status, module in statuses))
 
     @reload.command(name="pull", hidden=True)
     async def reload_pull(self, ctx: AluContext):
         """Reloads all modules, while pulling from git."""
         await self.reload_pull_worker(ctx)
 
-    @commands.command(name='p', hidden=True)
+    @commands.command(name="p", hidden=True)
     async def reload_pull_shortcut(self, ctx: AluContext):
         """Extreme one-letter shortcut to `reload pull`."""
         await self.reload_pull_worker(ctx)

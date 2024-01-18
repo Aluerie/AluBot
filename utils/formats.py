@@ -382,5 +382,7 @@ def tick(semi_bool: bool | None) -> str:
             return const.Tick.yes
         case False:
             return const.Tick.no
-        case _:
+        case None:
             return const.Tick.black
+        case _:
+            raise TypeError(f"`tick`: Expected True, False, None. Got {semi_bool.__class__.__name__}")

@@ -348,7 +348,7 @@ class FPCSettingsBase(FPCCog):
             title="FPC (Favourite Player+Character) Channel Setup",
             description=desc,
         ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
-        channel_setup_view = views.FPCChannelSetupView(self, ctx.author.id)
+        channel_setup_view = views.FPCSetupChannelView(self, ctx.author.id)
         await ctx.reply(embed=embed, view=channel_setup_view)
 
     async def is_fpc_channel_set(self, ctx: AluGuildContext) -> None:

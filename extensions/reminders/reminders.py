@@ -140,7 +140,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     @app_commands.describe(when="When to be reminded of something, in GMT", text="What to be reminded of")
     async def reminder_set(
         self,
-        ntr: discord.Interaction,
+        ntr: discord.Interaction[AluBot],
         when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
         text: str = "...",
     ):
@@ -225,11 +225,12 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
 
         You must own the reminder to delete it, obviously.
         """
-        query = """ DELETE FROM timers
-                    WHERE id=$1
-                    AND event = 'reminder'
-                    AND data #>> '{author_id}' = $2;
-                """
+        query = """
+            DELETE FROM timers
+            WHERE id=$1
+            AND event = 'reminder'
+            AND data #>> '{author_id}' = $2;
+        """
         status = await ctx.pool.execute(query, id, str(ctx.author.id))
         if status == "DELETE 0":
             e = discord.Embed(description="Could not delete any reminders with that ID.", colour=const.Colour.error())
@@ -249,26 +250,32 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         """Clears all reminders you have set."""
 
         # For UX purposes this has to be two queries.
-        query = """ SELECT COUNT(*) FROM timers
-                    WHERE event = 'reminder'
-                    AND data #>> '{author_id}' = $1;
-                """
+        query = """
+            SELECT COUNT(*) FROM timers
+            WHERE event = 'reminder'
+            AND data #>> '{author_id}' = $1;
+        """
         author_id = str(ctx.author.id)
         total: int = await ctx.pool.fetchval(query, author_id)
         if total == 0:
-            e = discord.Embed(description="You do not have any reminders to delete.", colour=ctx.author.colour)
-            return await ctx.reply(embed=e)
+            no_reminders_embed = discord.Embed(
+                colour=ctx.author.colour,
+                description="You do not have any reminders to delete.",
+            )
+            return await ctx.reply(embed=no_reminders_embed)
 
-        e = discord.Embed(colour=ctx.author.colour)
-        e.description = f"Are you sure you want to delete {formats.plural(total):reminder}?"
-        confirm = await ctx.prompt(embed=e)
-        if not confirm:
-            return await ctx.reply("Aborting", ephemeral=True)
+        confirm_embed = discord.Embed(
+            colour=ctx.author.colour,
+            description=f"Are you sure you want to delete {formats.plural(total):reminder}?",
+        )
+        if not await ctx.bot.disambiguator.confirm(ctx, embed=confirm_embed):
+            return
 
-        query = """ DELETE FROM timers
-                    WHERE event = 'reminder' 
-                    AND data #>> '{author_id}' = $1;
-                """
+        query = """
+            DELETE FROM timers
+            WHERE event = 'reminder' 
+            AND data #>> '{author_id}' = $1;
+        """
         await ctx.pool.execute(query, author_id)
 
         # Check if the current timer is the one being cleared and cancel it if so
@@ -278,8 +285,11 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             if author_id == ctx.author.id:
                 self.bot.rerun_the_task()
 
-        e.description = f"Successfully deleted {formats.plural(total):reminder}."
-        await ctx.reply(embed=e)
+        response_embed = discord.Embed(
+            colour=ctx.author.colour,
+            description=f"Successfully deleted {formats.plural(total):reminder}.",
+        )
+        await ctx.reply(embed=response_embed)
 
     @commands.Cog.listener()
     async def on_reminder_timer_complete(self, timer: Timer[RemindTimerData]):

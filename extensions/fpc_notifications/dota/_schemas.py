@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, Literal
 
 if TYPE_CHECKING:
     # CMsgGCToClientFindTopSourceTVGamesResponse
@@ -8,6 +8,8 @@ if TYPE_CHECKING:
     class Player(NamedTuple):
         account_id: int
         hero_id: int
+        team: Literal[0, 1]
+        team_slot: Literal[1, 2, 3, 4, 5]
 
     class CSourceTVGameSmall(NamedTuple):
         activate_time: int

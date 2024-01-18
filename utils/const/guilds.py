@@ -197,11 +197,12 @@ class SavedGuild:
         return guild
 
     def get_channel(self, channel_id: int, channel_type: type[T]) -> T:
-        channel = self.guild.get_channel(channel_id)
+        channel = self.bot.get_channel(channel_id)
         if channel:
             if isinstance(channel, channel_type):
                 return channel
-            raise TypeError(f"Channel id={channel_id} was type: {type(channel)} expected: {channel_type}")
+            else:
+                raise TypeError(f"Channel id={channel_id} was type: {type(channel)} expected: {channel_type}")
 
             # the other way for this is
             #   >>> # this line omitted from runtime when python is run with - O

@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 
 __all__ = (
     "Match",
-    "ActiveMatch",
-    "PostMatchPlayerData",
+    "DotaFPCMatchToSend",
+    "DotaFPCMatchToEdit",
 )
 type LiteralTwitchStatus = Literal["NoTwitch", "Offline", "Live"]
 
@@ -69,7 +69,7 @@ class Match:
         return f"/[Dbuff]({self.dbuff})/[ODota]({self.odota})/[Stratz]({self.stratz})"
 
 
-class ActiveMatch(Match):
+class DotaFPCMatchToSend(Match):
     def __init__(
         self,
         *,
@@ -134,9 +134,7 @@ class ActiveMatch(Match):
         log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         img = await bot.transposer.url_to_image(twitch_data["preview_url"])
-        log.debug("`self.hero_ids` = %s", self.hero_ids)
         hero_image_urls = [await bot.dota_cache.hero.img_by_id(id) for id in self.hero_ids]
-        log.debug("`hero_image_urls` = %s", hero_image_urls)
         hero_images = [await bot.transposer.url_to_image(url) for url in hero_image_urls]
 
         def build_notification_image() -> Image.Image:
@@ -204,60 +202,50 @@ class ActiveMatch(Match):
         return embed, image_file
 
 
-class PostMatchPlayerData(BasePostMatchPlayer):
+class DotaFPCMatchToEdit(BasePostMatchPlayer):
     """
     Class
     """
 
     def __init__(
         self,
+        bot: AluBot,
         *,
-        player_data: dict,
-        channel_id: int,
-        message_id: int,
-        api_calls_done: int,
+        player: dota.OpenDotaAPISchema.Player,
+        channel_message_tuples: list[tuple[int, int]],
     ):
-        super().__init__(channel_id=channel_id, message_id=message_id)
+        super().__init__(bot, channel_message_tuples=channel_message_tuples)
 
-        self.api_calls_done: int = api_calls_done
-
-        self.match_id: int = player_data["match_id"]
-        self.hero_id: int = player_data["hero_id"]
-        self.outcome: str = "Win" if player_data["win"] else "Loss"  # todo: typing for player_data
-        self.ability_upgrades_arr = player_data["ability_upgrades_arr"]
-        self.items = [player_data[f"item_{i}"] for i in range(6)]
-        self.kda = f'{player_data["kills"]}/{player_data["deaths"]}/{player_data["assists"]}'
-        self.purchase_log: list = player_data["purchase_log"]
-        self.aghanim_blessing = False
-        self.aghanim_shard = False
-        permanent_buffs = player_data["permanent_buffs"] or []  # [] if it is None
-        for pb in permanent_buffs:
-            if pb["permanent_buff"] == 12:
-                self.aghanim_shard = True
-            if pb["permanent_buff"] == 2:
-                self.aghanim_blessing = True
+        self.hero_id: int = player["hero_id"]
+        self.outcome: str = "Win" if player["win"] else "Loss"
+        self.ability_upgrades_ids: list[int] = player["ability_upgrades_arr"][:18]
+        self.item_ids: list[int] = [player[f"item_{i}"] for i in range(6)]
+        self.kda: str = f'{player["kills"]}/{player["deaths"]}/{player["assists"]}'
+        self.purchase_log: list[dota.OpenDotaAPISchema.PurchaseLogEvent] = player["purchase_log"]
+        self.aghanims_blessing: Literal[0, 1] = player["aghanims_scepter"]
+        self.aghanims_shard: Literal[0, 1] = player["aghanims_shard"]
+        self.neutral_item_id: int = player["item_neutral"]
 
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
         return f"<{self.__class__.__name__} {pairs}>"
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour, bot: AluBot) -> Image.Image:
-        img = await bot.transposer.url_to_image(embed_image_url)
+    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
+        img = await self.bot.transposer.url_to_image(embed_image_url)
 
         # items and aghanim shard/blessing
         async def get_item_timing(item_id: int) -> str:
             for purchase in reversed(self.purchase_log):
-                if item_id == await bot.dota_cache.item.id_by_key(purchase["key"]):
+                if item_id == await self.bot.dota_cache.item.id_by_key(purchase["key"]):
                     self.purchase_log.remove(purchase)
                     return f"{math.ceil(purchase['time']/60)}m"
             return "?m"
 
         item_list: list[tuple[Image.Image, str]] = []
-        for item_id in self.items:
-            item_icon_url = await bot.dota_cache.item.icon_by_id(item_id)
-            log.debug("item id %s %s", item_id, item_icon_url)
-            image = await bot.transposer.url_to_image(item_icon_url)
+        for item_id in self.item_ids:
+            item_icon_url = await self.bot.dota_cache.item.icon_by_id(item_id)
+            image = await self.bot.transposer.url_to_image(item_icon_url)
             timing = await get_item_timing(item_id)
             item_list.append((image, timing))
 
@@ -266,27 +254,31 @@ class PostMatchPlayerData(BasePostMatchPlayer):
         # because we will start drawing items from the end this way
         item_list = item_list[::-1]
 
-        if self.aghanim_blessing:
-            image = await bot.transposer.url_to_image(const.DOTA.lAZY_AGHS_BLESS)
+        if self.aghanims_blessing:
+            image = await self.bot.transposer.url_to_image(const.DOTA.lAZY_AGHS_BLESS)
             timing = await get_item_timing(271)
             item_list.append((image, timing))
 
-        if self.aghanim_shard:
-            image = await bot.transposer.url_to_image(const.DOTA.LAZY_AGHS_SHARD)
+        if self.aghanims_shard:
+            image = await self.bot.transposer.url_to_image(const.DOTA.LAZY_AGHS_SHARD)
             timing = await get_item_timing(609)
             item_list.append((image, timing))
 
+        neutral_item_url = await self.bot.dota_cache.item.icon_by_id(self.neutral_item_id)
+        neutral_item_image = await self.bot.transposer.url_to_image(neutral_item_url)
+
         # we only want first 18 image upgrades
-        ability_icon_urls = [await bot.dota_cache.ability.icon_by_id(id) for id in self.ability_upgrades_arr[:18]]
-        ability_icon_images = [await bot.transposer.url_to_image(url) for url in ability_icon_urls]
+        ability_icon_urls = [await self.bot.dota_cache.ability.icon_by_id(id) for id in self.ability_upgrades_ids]
+        ability_icon_images = [await self.bot.transposer.url_to_image(url) for url in ability_icon_urls]
 
         talent_names = []
-        for ability_upgrade in self.ability_upgrades_arr:
-            talent_name = await bot.dota_cache.ability.talent_by_id(ability_upgrade)
+        for ability_upgrade in self.ability_upgrades_ids:
+            talent_name = await self.bot.dota_cache.ability.talent_by_id(ability_upgrade)
             if talent_name is not None:
                 talent_names.append(talent_name)
 
         def build_notification_image() -> Image.Image:
+            log.debug("Building edited notification message.")
             width, height = img.size
             information_height = 50
             information_y = height - information_height
@@ -305,8 +297,11 @@ class PostMatchPlayerData(BasePostMatchPlayer):
                 img.paste(item_image, (left, height - item_image.height))
 
                 # item timing
-                item_timing_text_w, item_timing_text_h = bot.transposer.get_text_wh(item_timing, font_item_timing)
+                item_timing_text_w, item_timing_text_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
                 draw.text((left, height - item_timing_text_h), item_timing, font=font_item_timing, align="left")
+
+            neutral_item_image.resize((69, information_height))
+            img.paste(im=neutral_item_image, box=(0, height - neutral_item_image.height))
 
             # abilities
             ability_h = 37
@@ -317,7 +312,7 @@ class PostMatchPlayerData(BasePostMatchPlayer):
             # talents
             talent_font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 12)
             for count, talent_text in enumerate(talent_names):
-                talent_text_w, talent_text_h = bot.transposer.get_text_wh(talent_text, talent_font)
+                talent_text_w, talent_text_h = self.bot.transposer.get_text_wh(talent_text, talent_font)
                 draw.text(
                     xy=(width - talent_text_w, information_y - 30 * 2 - 22 * count),
                     text=talent_text,
@@ -328,11 +323,11 @@ class PostMatchPlayerData(BasePostMatchPlayer):
             # kda text
             font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
 
-            kda_text_w, kda_text_h = bot.transposer.get_text_wh(self.kda, font_kda)
+            kda_text_w, kda_text_h = self.bot.transposer.get_text_wh(self.kda, font_kda)
             draw.text((0, height - kda_text_h - information_height - ability_h), self.kda, font=font_kda, align="right")
 
             # outcome text
-            outcome_text_w, outcome_text_h = bot.transposer.get_text_wh(self.outcome, font_kda)
+            outcome_text_w, outcome_text_h = self.bot.transposer.get_text_wh(self.outcome, font_kda)
             colour_dict = {
                 "Win": str(const.MaterialPalette.green(shade=800)),
                 "Loss": str(const.MaterialPalette.red(shade=900)),

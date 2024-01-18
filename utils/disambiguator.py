@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 import discord
 
@@ -10,6 +10,8 @@ if TYPE_CHECKING:
     from bot import AluBot
 
     from . import AluContext
+
+    from discord.abc import Messageable
 
 
 __all__ = ("Disambiguator",)
@@ -40,9 +42,11 @@ class ConfirmationView(AluView):
 class DisambiguatorView[T](AluView):
     selected: T
 
-    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any]):
+    def __init__(
+        self, ctx_ntr: Union[AluContext, discord.Interaction[AluBot]], data: list[T], entry: Callable[[T], Any]
+    ):
         super().__init__(author_id=ctx_ntr.user.id, view_name="Select Menu")
-        self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
+        self.ctx_ntr: Union[AluContext, discord.Interaction[AluBot]] = ctx_ntr
         self.data: list[T] = data
 
         options = []
@@ -81,7 +85,7 @@ class Disambiguator:
 
     async def send_message(
         self,
-        ctx_ntr: AluContext | discord.Interaction[AluBot],
+        ctx_ntr: Union[AluContext, discord.Interaction[AluBot]],
         embed: discord.Embed,
         view: discord.ui.View = discord.utils.MISSING,
         ephemeral: bool = True,
@@ -94,10 +98,12 @@ class Disambiguator:
                 return await ctx_ntr.original_response()
             else:
                 return await ctx_ntr.followup.send(embed=embed, view=view, ephemeral=ephemeral, wait=True)
+        else:
+            raise TypeError(f"Expected Interaction or Context, got {ctx_ntr.__class__.__name__}")
 
     async def confirm(
         self,
-        ctx_ntr: AluContext | discord.Interaction[AluBot],
+        ctx_ntr: Union[AluContext, discord.Interaction[AluBot]],
         embed: discord.Embed,
         *,
         timeout: float = 120.0,
@@ -144,8 +150,10 @@ class Disambiguator:
             return view.value
 
         # we want to send universally applicable embed
-        cancel_embed = discord.Embed(colour=discord.Colour.yellow())
-        cancel_embed.description = f"{desc} Thus, canceling the operation."
+        cancel_embed = discord.Embed(
+            colour=discord.Colour.yellow(),
+            description=f"{desc} Thus, canceling the operation.",
+        )
         await self.send_message(ctx_ntr, cancel_embed)
         return view.value
 
@@ -153,7 +161,7 @@ class Disambiguator:
         T
     ](
         self,
-        ctx_ntr: AluContext | discord.Interaction[AluBot],
+        ctx_ntr: Union[AluContext, discord.Interaction[AluBot]],
         matches: list[T],
         entry: Callable[[T], Any],
         *,

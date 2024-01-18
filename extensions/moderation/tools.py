@@ -21,38 +21,38 @@ if TYPE_CHECKING:
 class PurgeFlags(commands.FlagConverter):
     user: Optional[discord.User] = commands.flag(description="Remove messages from this user", default=None)
     contains: Optional[str] = commands.flag(
-        description='Remove messages that contains this string (case sensitive)', default=None
+        description="Remove messages that contains this string (case sensitive)", default=None
     )
     prefix: Optional[str] = commands.flag(
-        description='Remove messages that start with this string (case sensitive)', default=None
+        description="Remove messages that start with this string (case sensitive)", default=None
     )
     suffix: Optional[str] = commands.flag(
-        description='Remove messages that end with this string (case sensitive)', default=None
+        description="Remove messages that end with this string (case sensitive)", default=None
     )
     after: Annotated[Optional[int], Snowflake] = commands.flag(
-        description='Search for messages that come after this message ID', default=None
+        description="Search for messages that come after this message ID", default=None
     )
     before: Annotated[Optional[int], Snowflake] = commands.flag(
-        description='Search for messages that come before this message ID', default=None
+        description="Search for messages that come before this message ID", default=None
     )
-    bot: bool = commands.flag(description='Remove messages from bots (not webhooks!)', default=False)
-    webhooks: bool = commands.flag(description='Remove messages from webhooks', default=False)
-    embeds: bool = commands.flag(description='Remove messages that have embeds', default=False)
-    files: bool = commands.flag(description='Remove messages that have attachments', default=False)
-    emoji: bool = commands.flag(description='Remove messages that have custom emoji', default=False)
-    reactions: bool = commands.flag(description='Remove messages that have reactions', default=False)
-    require: Literal['any', 'all'] = commands.flag(
+    bot: bool = commands.flag(description="Remove messages from bots (not webhooks!)", default=False)
+    webhooks: bool = commands.flag(description="Remove messages from webhooks", default=False)
+    embeds: bool = commands.flag(description="Remove messages that have embeds", default=False)
+    files: bool = commands.flag(description="Remove messages that have attachments", default=False)
+    emoji: bool = commands.flag(description="Remove messages that have custom emoji", default=False)
+    reactions: bool = commands.flag(description="Remove messages that have reactions", default=False)
+    require: Literal["any", "all"] = commands.flag(
         description='Whether any or all of the flags should be met before deleting messages. Defaults to "all"',
-        default='all',
+        default="all",
     )
 
 
 class ModerationTools(ModerationCog):
-    @commands.hybrid_command(aliases=['remove'], usage='[search] [flags...]')
+    @commands.hybrid_command(aliases=["remove"], usage="[search] [flags...]")
     @commands.guild_only()
     @checks.hybrid.is_mod()
     @commands.bot_has_permissions(manage_messages=True)
-    @app_commands.describe(search='How many messages to search for')
+    @app_commands.describe(search="How many messages to search for")
     async def purge(
         self, ctx: AluGuildContext, search: Optional[commands.Range[int, 1, 2000]] = None, *, flags: PurgeFlags
     ):
@@ -105,7 +105,7 @@ class ModerationTools(ModerationCog):
             predicates.append(lambda m: len(m.reactions))
 
         if flags.emoji:
-            custom_emoji = re.compile(r'<:(\w+):(\d+)>')
+            custom_emoji = re.compile(r"<:(\w+):(\d+)>")
             predicates.append(lambda m: custom_emoji.search(m.content))
 
         if flags.user:
@@ -126,7 +126,7 @@ class ModerationTools(ModerationCog):
             require_prompt = True
             predicates.append(lambda m: True)
 
-        op = all if flags.require == 'all' else any
+        op = all if flags.require == "all" else any
 
         def predicate(m: discord.Message) -> bool:
             r = op(p(m) for p in predicates)
@@ -140,9 +140,11 @@ class ModerationTools(ModerationCog):
             search = 100
 
         if require_prompt:
-            confirm = await ctx.prompt(content=f'Are you sure you want to delete {plural(search):message}?', timeout=30)
-            if not confirm:
-                return await ctx.send('Aborting.')
+            embed = discord.Embed(
+                color=const.Colour.prpl(), description=f"Are you sure you want to delete {plural(search):message}?"
+            )
+            if not await ctx.bot.disambiguator.confirm(ctx, embed=embed, timeout=30):
+                return
 
         before = discord.Object(id=flags.before) if flags.before else None
         after = discord.Object(id=flags.after) if flags.after else None
@@ -157,22 +159,22 @@ class ModerationTools(ModerationCog):
         try:
             deleted = await ctx.channel.purge(limit=search, before=before, after=after, check=predicate)
         except discord.Forbidden as e:
-            return await ctx.send('I do not have permissions to delete messages.')
+            return await ctx.send("I do not have permissions to delete messages.")
         except discord.HTTPException as e:
-            return await ctx.send(f'Error: {e} (try a smaller search?)')
+            return await ctx.send(f"Error: {e} (try a smaller search?)")
 
         spammers = Counter(m.author.display_name for m in deleted)
         deleted = len(deleted)
         messages = [f'{deleted} message{" was" if deleted == 1 else "s were"} removed.']
         if deleted:
-            messages.append('')
+            messages.append("")
             spammers = sorted(spammers.items(), key=lambda t: t[1], reverse=True)
-            messages.extend(f'**{name}**: {count}' for name, count in spammers)
+            messages.extend(f"**{name}**: {count}" for name, count in spammers)
 
-        to_send = '\n'.join(messages)
+        to_send = "\n".join(messages)
 
         if len(to_send) > 2000:
-            await ctx.reply(f'Successfully removed {deleted} messages.', delete_after=10)
+            await ctx.reply(f"Successfully removed {deleted} messages.", delete_after=10)
         else:
             await ctx.reply(to_send, delete_after=10)
 
@@ -180,12 +182,12 @@ class ModerationTools(ModerationCog):
     @commands.guild_only()
     @checks.hybrid.is_mod()
     async def spam_chat(self, ctx: AluContext):
-        '''Let the bot to spam the chat in case you want
+        """Let the bot to spam the chat in case you want
         to move some bad messages out of sight,
         but not clear/delete them, like some annoying/flashing images
         that aren't particularly offensive, just annoying.
-        '''
-        content = '\n'.join([const.Emote.DankHatTooBig for _ in range(20)])
+        """
+        content = "\n".join([const.Emote.DankHatTooBig for _ in range(20)])
         await ctx.reply(content=content)
 
 

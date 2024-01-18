@@ -15,6 +15,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus
 
+import config
 from bot import AluBot
 from utils import AluCog, AluContext, ExtCategory, aluloop, checks, const, errors, timezones
 

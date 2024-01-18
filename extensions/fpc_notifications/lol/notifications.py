@@ -12,7 +12,7 @@ import config
 from utils import aluloop, const, lol
 
 from .._base import FPCCog
-from ._models import LoLNotificationMatch, PostMatchPlayer
+from ._models import LoLFPCMatchToEdit, LoLFPCMatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -51,7 +51,7 @@ log.setLevel(logging.INFO)
 class LoLFPCNotifications(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
-        self.notification_matches: list[LoLNotificationMatch] = []
+        self.notification_matches: list[LoLFPCMatchToSend] = []
         self.live_match_ids: list[int] = []
 
     async def cog_load(self) -> None:
@@ -163,10 +163,10 @@ class LoLFPCNotifications(FPCCog):
                             await self.bot.cdragon.champion.name_by_id(player["championId"]),
                         )
                         self.notification_matches.append(
-                            LoLNotificationMatch(
+                            LoLFPCMatchToSend(
                                 match_id=game["gameId"],
                                 platform=game["platformId"],  # type: ignore # pulsefire has it as a simple str
-                                game_name=row["game_name"],  
+                                game_name=row["game_name"],
                                 # TODO: ^^^would be cool to get it from game object but currently it's not there.
                                 tag_line=row["tag_line"],
                                 start_time=game["gameStartTime"],
@@ -180,7 +180,7 @@ class LoLFPCNotifications(FPCCog):
                             )
                         )
 
-    async def send_notifications(self, match: LoLNotificationMatch):
+    async def send_notifications(self, match: LoLFPCMatchToSend):
         log.debug("Sending LoL FPC Notifications")
         for channel_id in match.channel_ids:
             channel = self.bot.get_channel(channel_id)
@@ -229,37 +229,40 @@ class LoLFPCNotifications(FPCCog):
     # POST MATCH EDITS
 
     async def edit_lol_notification_messages(self, match_rows: list[LoLMatchRecord]):
-        for match_row in match_rows:
-            try:
-                async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
-                    match = await riot_api_client.get_lol_match_v5_match(
-                        id=f"{match_row['platform'].upper()}_{match_row['match_id']}",
-                        region=lol.PLATFORM_TO_CONTINENT[match_row["platform"]],
+        async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
+            for match_row in match_rows:
+                try:
+                    match_id = f"{match_row['platform'].upper()}_{match_row['match_id']}"
+                    continent = lol.PLATFORM_TO_CONTINENT[match_row["platform"]]
+
+                    match = await riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)
+                    timeline = await riot_api_client.get_lol_match_v5_match_timeline(id=match_id, region=continent)
+
+                except aiohttp.ClientResponseError as exc:
+                    if exc.status == 404:
+                        continue
+                    else:
+                        raise
+
+                query = "SELECT * FROM lol_messages WHERE match_id=$1"
+                message_rows: list[LoLMessageRecord] = await self.bot.pool.fetch(query, match_row["match_id"])
+
+                for participant in match["info"]["participants"]:
+                    channel_message_tuples: list[tuple[int, int]] = [
+                        (message_row["channel_id"], message_row["message_id"])
+                        for message_row in message_rows
+                        if participant["championId"] == message_row["champion_id"]
+                    ]
+
+                    post_match_player = LoLFPCMatchToEdit(
+                        self.bot,
+                        participant=participant,
+                        timeline=timeline,
+                        channel_message_tuples=channel_message_tuples,
                     )
-            except aiohttp.ClientResponseError as exc:
-                if exc.status == 404:
-                    continue
-                else:
-                    raise
-
-            query = "SELECT * FROM lol_messages WHERE match_id=$1"
-            message_rows: list[LoLMessageRecord] = await self.bot.pool.fetch(query, match_row["match_id"])
-
-            for message_row in message_rows:
-                participant = next(
-                    p for p in match["info"]["participants"] if p["championId"] == message_row["champion_id"]
-                )
-                post_match_player = PostMatchPlayer(
-                    channel_id=message_row["channel_id"],
-                    message_id=message_row["message_id"],
-                    summoner_id=participant["summonerId"],
-                    kda=f"{participant['kills']}/{participant['deaths']}/{participant['assists']}",
-                    outcome="Win" if participant["win"] else "Loss",
-                    item_ids=[participant[f"item{i}"] for i in range(0, 6 + 1)],
-                )
-                await post_match_player.edit_notification_embed(self.bot)
-            query = "DELETE FROM lol_matches WHERE match_id=$1"
-            await self.bot.pool.fetch(query, match_row["match_id"])
+                    await post_match_player.edit_notification_embed()
+                query = "DELETE FROM lol_matches WHERE match_id=$1"
+                await self.bot.pool.fetch(query, match_row["match_id"])
 
 
 async def setup(bot: AluBot):

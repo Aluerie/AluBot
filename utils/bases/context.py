@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import contextlib
 import datetime
-from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, Sequence, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, Optional, Sequence, Union, overload
 
 import discord
 from discord.ext import commands
 
 from utils import formats
-
-from ..const import Colour, Tick
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession

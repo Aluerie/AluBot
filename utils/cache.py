@@ -6,7 +6,7 @@ import logging
 import random
 import time
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, MutableMapping, Protocol, TypeVar, TypeAlias
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, MutableMapping, Protocol, TypeAlias, TypeVar
 
 from aiohttp import ClientSession
 from discord.utils import MISSING
@@ -98,7 +98,7 @@ class KeysCache[CachedDataT]:
     @aluloop()
     async def update_data(self):
         """The task responsible for keeping the data up-to-date."""
-        
+
         # log.debug("Trying to update Cache %s.", self.__class__.__name__)
         async with self.lock:
             self.cached_data = await self.fill_data()
@@ -124,6 +124,15 @@ class KeysCache[CachedDataT]:
             # * the data is not initialized then we will get stuck in self.lock waiting for the data.
             await self.update_data()
             return self.cached_data[cache][key]
+
+    async def get_value_or_none(self, cache: str, key: Any) -> Any:
+        """Same as get but sometimes we don't want to refresh the data on KeyError since we expect to hit it.
+
+        For example, when we try to find Dota talent name, we query ability ids into it that aren't talents.
+        """
+
+        data = await self.get_cached_data()
+        return data[cache].get(key)
 
     async def get_cache(self, cache: str) -> dict[Any, Any]:
         """Get the whole sub-cache dict."""

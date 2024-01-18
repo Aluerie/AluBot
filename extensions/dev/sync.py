@@ -109,7 +109,8 @@ class DailyAutoSync(DevBaseCog):
         }
 
     async def cog_load(self):
-        self.one_time_sync.start()
+        if not self.bot.test:
+            self.one_time_sync.start()
 
     async def cog_unload(self):
         self.one_time_sync.cancel()

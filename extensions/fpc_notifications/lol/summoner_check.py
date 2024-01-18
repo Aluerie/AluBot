@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
 from pulsefire.clients import RiotAPIClient
@@ -14,10 +14,11 @@ from .._base import FPCCog
 
 if TYPE_CHECKING:
 
-    class AccountRow(NamedTuple):
-        id: str
+    class AccountRow(TypedDict):
+        puuid: str
         platform: str
-        account_name: str
+        game_name: str
+        tag_line: str
 
 
 log = logging.getLogger(__name__)
@@ -34,23 +35,27 @@ class LoLSummonerNameCheck(FPCCog):
         if datetime.datetime.now(datetime.timezone.utc).day != 17:
             return
 
-        query = "SELECT id, platform, account_name FROM lol_accounts"
+        query = "SELECT puuid, platform, game_name, tag_line FROM lol_accounts"
         rows: list[AccountRow] = await self.bot.pool.fetch(query)
 
         async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
             for row in rows:
                 try:
-                    player = await riot_api_client.get_lol_summoner_v4_by_id(
-                        region=row.platform,
-                        id=row.id,
+                    account = await riot_api_client.get_account_v1_by_puuid(
+                        region=row["platform"],
+                        puuid=row["puuid"],
                     )
                 except aiohttp.ClientResponseError as exc:
                     if exc.status == 404:
-                        log.info("Failed to get summoner under previous name %s", row.account_name)
+                        log.info("Failed to get summoner under previous name %s#%s", row["game_name"], row["tag_line"])
                         continue
                     else:
                         raise
 
-                if player["name"] != row.account_name:
-                    query = "UPDATE lol_accounts SET account_name=$1 WHERE id=$2"
-                    await self.bot.pool.execute(query, player["name"], row.id)
+                if account["gameName"] != row["game_name"] or account["tagLine"] != row["tag_line"]:
+                    query = """
+                        UPDATE lol_accounts 
+                        SET game_name = $1, tag_line = $2 
+                        WHERE puuid = $3
+                    """
+                    await self.bot.pool.execute(query, account["gameName"], account["tagLine"], account["puuid"])

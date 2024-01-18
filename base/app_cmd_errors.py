@@ -93,4 +93,3 @@ async def setup(bot: AluBot):
 
 async def teardown(bot: AluBot):
     bot.tree.on_error = bot.old_tree_error
-    del bot.logging_handler #todo the f is this

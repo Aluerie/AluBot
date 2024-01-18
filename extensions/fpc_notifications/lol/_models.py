@@ -14,13 +14,15 @@ from utils.formats import human_timedelta
 from .._fpc_utils.base_models import BasePostMatchPlayer
 
 if TYPE_CHECKING:
+    from pulsefire.schemas import RiotAPISchema
+
     from bot import AluBot
 
 
 __all__ = (
     "LoLNotificationAccount",
-    "LoLNotificationMatch",
-    "PostMatchPlayer",
+    "LoLFPCMatchToSend",
+    "LoLFPCMatchToEdit",
 )
 
 
@@ -51,7 +53,7 @@ class LoLNotificationAccount:
         return f"/[Opgg]({self.opgg})/[Ugg]({self.ugg})"
 
 
-class LoLNotificationMatch(LoLNotificationAccount):
+class LoLFPCMatchToSend(LoLNotificationAccount):
     def __init__(
         self,
         *,
@@ -170,60 +172,142 @@ class LoLNotificationMatch(LoLNotificationAccount):
         return embed, image_file
 
 
-class PostMatchPlayer(BasePostMatchPlayer):
+class LoLFPCMatchToEdit(BasePostMatchPlayer):
     def __init__(
         self,
+        bot: AluBot,
         *,
-        channel_id: int,
-        message_id: int,
-        summoner_id: str,
-        kda: str,
-        outcome: str,
-        item_ids: list[int],
+        participant: RiotAPISchema.LolMatchV5MatchInfoParticipant,
+        timeline: RiotAPISchema.LolMatchV5MatchTimeline,
+        channel_message_tuples: list[tuple[int, int]],
     ):
-        super().__init__(channel_id=channel_id, message_id=message_id)
-        self.summoner_id: str = summoner_id
-        self.kda: str = kda
-        self.outcome: str = outcome
-        self.item_ids: list[int] = item_ids
+        super().__init__(bot, channel_message_tuples=channel_message_tuples)
+
+        self.summoner_id: str = participant["summonerId"]
+        self.kda: str = f"{participant['kills']}/{participant['deaths']}/{participant['assists']}"
+        self.outcome: str = "Win" if participant["win"] else "Loss"
+        self.item_ids: list[int] = [participant[f"item{i}"] for i in range(0, 6 + 1)]
+
+        skill_build: list[int] = []  # list of 1, 2, 3, 4 numbers which correspond to Q, W, E, R skill build order
+        for frame in timeline["info"]["frames"]:
+            for event in frame["events"]:
+                if event["type"] == "SKILL_LEVEL_UP" and event.get("participantId") == participant["participantId"]:
+                    if skill_slot := event.get("skillSlot"):
+                        skill_build.append(skill_slot)
+
+        self.skill_build = skill_build
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour, bot: AluBot) -> Image.Image:
-        img = await bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await bot.cdragon.item.icon_by_id(item_id) for item_id in self.item_ids if item_id]
-        item_icon_images = [await bot.transposer.url_to_image(url) for url in item_icon_urls]
+    async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour) -> Image.Image:
+        img = await self.bot.transposer.url_to_image(embed_image_url)
+        item_icon_urls = [await self.bot.cdragon.item.icon_by_id(item_id) for item_id in self.item_ids if item_id]
+        item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
 
         def build_notification_image():
             width, height = img.size
-            information_row = 50
-            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
+            information_row = 50  # hard coded bcs of knowing code of MatchToSend
+            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 34)
             draw = ImageDraw.Draw(img)
 
-            # kda text
-            kda_text_w, kda_text_h = bot.transposer.get_text_wh(self.kda, font)
-            draw.text((0, height - information_row - kda_text_h), self.kda, font=font, align="right")
+            # Item Icons
+            items_row = information_row
+            left = width - len(item_icon_images) * items_row
+            for count, item_image in enumerate(item_icon_images):
+                item_image = item_image.resize((items_row, items_row))
+                img.paste(item_image, (left + count * item_image.width, height - items_row - item_image.height))
 
-            # outcome text
-            outcome_text_w, outcome_text_h = bot.transposer.get_text_wh(self.outcome, font)
+            # Skill Build
+            # I got these images by downloading .png from
+            # https://commons.wikimedia.org/wiki/Category:Emoji_One_BW
+            # and using Paint Bucket Tool to give it proper colours
+            # plus resized to 50x50 afterwards
+            skill_slot_mapping = {
+                1: "assets/images/local/Q.png",
+                2: "assets/images/local/W.png",
+                3: "assets/images/local/E.png",
+                4: "assets/images/local/R.png",
+            }
+            skill_order_row = 40
+            skill_slot_images = {
+                skill_slot: Image.open(path).resize((skill_order_row, skill_order_row))
+                for skill_slot, path in skill_slot_mapping.items()
+            }
+
+            for count, skill_slot in enumerate(self.skill_build):
+                skill_slot_image = skill_slot_images[skill_slot]
+                img.paste(
+                    im=skill_slot_image,
+                    box=(
+                        count * skill_slot_image.width,
+                        height - information_row - items_row - skill_slot_image.height,
+                    ),
+                )
+
+            # KDA Text
+            kda_text_w, kda_text_h = self.bot.transposer.get_text_wh(self.kda, font)
+            draw.text(
+                (0, height - information_row - items_row - skill_order_row - kda_text_h),
+                self.kda,
+                font=font,
+                align="right",
+            )
+
+            # Outcome Text
+            outcome_text_w, outcome_text_h = self.bot.transposer.get_text_wh(self.outcome, font)
             colour_dict = {
                 "Win": str(const.MaterialPalette.green(shade=800)),
                 "Loss": str(const.MaterialPalette.red(shade=900)),
                 "No Scored": (255, 255, 255),
             }
             draw.text(
-                xy=(0, height - information_row - kda_text_h - outcome_text_h - 5),
+                xy=(0, height - information_row - items_row - skill_order_row - kda_text_h - outcome_text_h - 5),
                 text=self.outcome,
                 font=font,
                 align="center",
                 fill=colour_dict[self.outcome],
             )
 
-            # item icons
-            left = width - len(item_icon_images) * information_row
-            for count, item_image in enumerate(item_icon_images):
-                item_image = item_image.resize((information_row, information_row))
-                img.paste(item_image, (left + count * item_image.width, height - information_row - item_image.height))
-
             return img
 
         return await asyncio.to_thread(build_notification_image)
+
+
+# BETA TESTING
+# Usage:
+# from .fpc_notifications.lol._models import beta_test_edit_notification_image
+# await beta_test_edit_notification_image(self)
+if TYPE_CHECKING:
+    from utils import AluCog
+
+
+async def beta_test_edit_notification_image(self: AluCog):
+    """Testing function for `edit_notification_image` from LoLFPCMatchToEdit class
+
+    Import this into `beta_task` for easy testing of how new elements alignment.
+    """
+    # I'm not sure if there is a better way to test stuff for discord bot since
+    # I can't just single out a function without initializing the whole bot class
+
+    from pulsefire.clients import RiotAPIClient
+
+    import config
+    from extensions.fpc_notifications.lol._models import LoLFPCMatchToEdit
+
+    self.bot.initiate_league_cache()
+    async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
+        match_id = "NA1_4895000741"
+        continent = "AMERICAS"
+        match = await riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)
+        timeline = await riot_api_client.get_lol_match_v5_match_timeline(id=match_id, region=continent)
+
+        post_match_player = LoLFPCMatchToEdit(
+            self.bot,
+            participant=match["info"]["participants"][3],
+            timeline=timeline,
+            channel_message_tuples=[(0, 0)],
+        )
+
+        new_image = await post_match_player.edit_notification_image(
+            const.PICTURE.LAVENDER640X360, discord.Colour.purple()
+        )
+        new_image.show()

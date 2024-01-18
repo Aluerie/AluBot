@@ -23,7 +23,13 @@ if TYPE_CHECKING:
         accounts: list[str]
 
 
-class FPCChannelSetupView(AluView):
+class FPCSetupChannelView(AluView):
+    """View for a command `/{game} setup channel`.
+    
+    This gives
+    * Dropdown menu to select a new channel for notifications.
+    """
+
     def __init__(self, cog: FPCSettingsBase, author_id: int):
         super().__init__(author_id=author_id)
         self.cog: FPCSettingsBase = cog
@@ -66,6 +72,14 @@ class FPCChannelSetupView(AluView):
 
 
 class FPCSetupMiscView(AluView):
+    """View for a command `/{game} setup misc`.
+    
+    This gives
+    * Button to disable/enable notifications for a time being
+    * Button to disable/enable spoil-ing post-match results
+    * Button to delete user's FPC data from the database
+    """
+
     def __init__(
         self,
         cog: FPCSettingsBase,
@@ -144,14 +158,18 @@ class FPCSetupMiscView(AluView):
 
 
 class AddRemoveButton(discord.ui.Button):
-    def __init__(self, label: str, is_favourite: bool, object_id: int, menu: FPCSetupPaginator):
+    """Green/Black Buttons to Remove from/Add to favourite list
+    for `/{game} setup players/{characters}` command's view.
+    """
+
+    def __init__(self, label: str, is_favourite: bool, object_id: int, menu: FPCSetupPlayersCharactersPaginator):
         super().__init__(
             style=discord.ButtonStyle.green if is_favourite else discord.ButtonStyle.gray,
             label=label,
         )
         self.is_favourite: bool = is_favourite
         self.object_id: int = object_id
-        self.menu: FPCSetupPaginator = menu
+        self.menu: FPCSetupPlayersCharactersPaginator = menu
 
     async def callback(self, ntr: discord.Interaction[AluBot]):
         assert ntr.guild
@@ -176,13 +194,17 @@ class AddRemoveButton(discord.ui.Button):
 
 
 class AccountListButton(discord.ui.Button):
-    def __init__(self, entries: list[tuple[int, str]], menu: FPCSetupPaginator):
+    """5th Button to Show account list for `/{game} setup players` command's view."""
+
+    def __init__(self, entries: list[tuple[int, str]], menu: FPCSetupPlayersCharactersPaginator):
         super().__init__(
             style=discord.ButtonStyle.blurple,
             label="\N{PENCIL}",
         )
         self.entries: list[tuple[int, str]] = entries
-        self.menu: FPCSetupPaginator = menu
+        self.menu: FPCSetupPlayersCharactersPaginator = menu
+        self.field_name: str = "\N{PENCIL} List of accounts of players shown on the page"
+        self.field_value: str = "Show list of accounts with links to their profiles and extra information."
 
     async def callback(self, ntr: discord.Interaction[AluBot]):
         assert ntr.guild
@@ -224,11 +246,13 @@ class AccountListButton(discord.ui.Button):
         await ntr.response.send_message(embed=embed, ephemeral=True)
 
 
-class FPCSetupPageSource(menus.ListPageSource):
+class FPCSetupPlayersCharactersPageSource(menus.ListPageSource):
+    """Page source for both commands `/{game} setup players/champions`."""
+
     def __init__(self, data: list[tuple[int, str]]):
         super().__init__(entries=data, per_page=20)
 
-    async def format_page(self, menu: FPCSetupPaginator, entries: list[tuple[int, str]]):
+    async def format_page(self, menu: FPCSetupPlayersCharactersPaginator, entries: list[tuple[int, str]]):
         """
         Create a page for `/{game} setup {characters/players}` command.
 
@@ -252,10 +276,33 @@ class FPCSetupPageSource(menus.ListPageSource):
 
         menu.clear_items()
 
+        embed = (
+            discord.Embed(
+                colour=menu.cog.colour,
+                title=f"Your favourite {menu.cog.game_display_name} {menu.plural} list interactive setup",
+                description=f"Pagination menu below represents all {menu.plural} from {menu.cog.game_display_name}.",
+            )
+            .add_field(
+                name="\N{LARGE GREEN SQUARE}/\N{BLACK LARGE SQUARE} Buttons",
+                value=(
+                    f"Press those buttons to mark/demark a a {menu.singular} as your favourite.\n"
+                    "Button's colour shows if it's currently chosen as your favourite. "
+                    "(\N{LARGE GREEN SQUARE} - yes, \N{BLACK LARGE SQUARE} - no)\n"
+                ),
+                inline=False,
+            )
+            .add_field(
+                name=f"{menu.object_list.label} your favourite {menu.plural} list Button",
+                value=f"Show your favourite {menu.plural} list.",
+                inline=False,
+            )
+        )
+
         if menu.special_button_cls is None:
             special_item = menu.search
         else:
             special_item = menu.special_button_cls(entries, menu)
+            embed.add_field(name=special_item.field_name, value=special_item.field_value)
         for item in [menu.object_list, menu.previous_page, menu.index, menu.next_page, special_item]:
             menu.add_item(item)
 
@@ -264,22 +311,12 @@ class FPCSetupPageSource(menus.ListPageSource):
             is_favourite = id in favourite_ids
             menu.add_item(AddRemoveButton(name, is_favourite, id, menu))
 
-        description = (
-            f"Pagination menu below represents all {menu.plural} from {menu.cog.game_display_name}.\n"
-            "\N{BLACK CIRCLE} Button's colour shows if it's chosen as your favourite. "
-            "(\N{LARGE GREEN SQUARE} - yes, \N{BLACK LARGE SQUARE} - no)\n"
-            "\N{BLACK CIRCLE} Press the \N{LARGE GREEN SQUARE}/\N{BLACK LARGE SQUARE} "
-            f"buttons to mark/demark a {menu.singular} as your favourite.\n"
-            f"\N{BLACK CIRCLE} Press {menu.object_list.label} to show your favourite {menu.plural} list.\n"
-        )
-        return discord.Embed(
-            colour=menu.cog.colour,
-            title=f"Your favourite {menu.cog.game_display_name} {menu.plural} list interactive setup",
-            description=description,
-        )
+        return embed
 
 
-class FPCSetupPaginator(pages.Paginator):
+class FPCSetupPlayersCharactersPaginator(pages.Paginator):
+    """A Parent Paginator class for both commands `/{game} setup players/champions`."""
+
     def __init__(
         self,
         ctx: AluGuildContext,
@@ -291,7 +328,7 @@ class FPCSetupPaginator(pages.Paginator):
         get_object_list_embed: Callable[[int], Awaitable[discord.Embed]],
         special_button_cls: Optional[type[AccountListButton]] = None,
     ):
-        """_summary_
+        """__init__
 
         Parameters
         ----------
@@ -302,22 +339,23 @@ class FPCSetupPaginator(pages.Paginator):
         table_object_name : str
             object's name in our SQL tables, i.e. "player", "character".
         singular : str
-            _description_
+            object's display name in singular form, i.e. "player", "hero", "champion"
         plural : str
-            _description_
+            object's display name in plural form, i.e. "players", "heroes", "champions"
         cog : FPCSettingsBase
-            _description_
+            the cog
         get_object_list_embed : Callable[[int], Awaitable[discord.Embed]]
-            _description_
+            this has to go separately because the cog has all the functions.
         special_button_cls : Optional[type[AccountListButton]], optional
-            _description_, by default None
+            button to replace the 5th button in pagination menu.
+            i.e. we want account list for /setup players command.
         """
         super().__init__(
             ctx,
-            source=FPCSetupPageSource(object_id_name_tuples),
+            source=FPCSetupPlayersCharactersPageSource(object_id_name_tuples),
         )
         self.singular: str = singular
-        self.plural: str = plural  # "heroes" #todo: docs
+        self.plural: str = plural
         self.cog: FPCSettingsBase = cog
         self.get_object_list_embed: Callable[[int], Awaitable[discord.Embed]] = get_object_list_embed
 
@@ -333,7 +371,16 @@ class FPCSetupPaginator(pages.Paginator):
         await ntr.response.send_message(embed=embed, ephemeral=True)
 
 
-class FPCSetupPlayersPaginator(FPCSetupPaginator):
+class FPCSetupPlayersPaginator(FPCSetupPlayersCharactersPaginator):
+    """A Paginator for `/{game} setup players` command.
+
+    This gives:
+    * pagination menu
+    * list of favourite players button
+    * buttons to mark/demark player as favourite
+    * button to view all accounts for presented embed
+    """
+
     def __init__(
         self,
         ctx: AluGuildContext,
@@ -352,7 +399,15 @@ class FPCSetupPlayersPaginator(FPCSetupPaginator):
         )
 
 
-class FPCSetupCharactersPaginator(FPCSetupPaginator):
+class FPCSetupCharactersPaginator(FPCSetupPlayersCharactersPaginator):
+    """A Paginator for `/{game} setup characters` command.
+
+    This gives:
+    * pagination menu
+    * list of favourite characters button
+    * buttons to mark/demark character as favourite
+    """
+
     def __init__(
         self,
         ctx: AluGuildContext,
@@ -374,6 +429,8 @@ class FPCSetupCharactersPaginator(FPCSetupPaginator):
 
 
 class RemoveAllAccountsButton(discord.ui.Button):
+    """Button to remove all specific player's accounts in  `/database {game} remove` command's view."""
+
     def __init__(self, cog: FPCSettingsBase, player_id: int, player_name: str):
         super().__init__(
             style=discord.ButtonStyle.red,
@@ -399,6 +456,8 @@ class RemoveAllAccountsButton(discord.ui.Button):
 
 
 class RemoveAccountButton(discord.ui.Button):
+    """Button to remove a specific player's account in  `/database {game} remove` command's view."""
+
     def __init__(
         self,
         emoji: str,
@@ -430,6 +489,13 @@ class RemoveAccountButton(discord.ui.Button):
 
 
 class DatabaseRemoveView(AluView):
+    """View for `/database {game} remove` command.
+
+    This shows
+    * Remove all accounts for the said player
+    * List of buttons to remove each known account for the said player.
+    """
+
     def __init__(
         self,
         author_id: int,

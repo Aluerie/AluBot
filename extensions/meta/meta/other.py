@@ -137,12 +137,17 @@ class OtherCog(AluCog):
     async def about(self, ctx: AluContext):
         """Information about the bot itself."""
         await ctx.defer()
-        information = await self.bot.application_info()
+        information = self.bot.bot_app_info
 
-        e = discord.Embed(colour=const.Colour.bot_colour(), description=information.description)
+        e = discord.Embed(
+            colour=const.Colour.bot_colour(),
+            description=information.description,
+        ).set_author(
+            name=f"Made by @{information.owner}",
+            icon_url=information.owner.display_avatar.url,
+        )
         e.add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
 
-        e.set_author(name=f"Made by @{information.owner}", icon_url=information.owner.display_avatar.url)
         # statistics
         total_members = 0
         total_unique = len(self.bot.users)
@@ -189,8 +194,8 @@ class OtherCog(AluCog):
                 title="Mozilla Public License 2.0",
                 url=license_url,
                 description=(
-                    f"\N{BLACK CIRCLE} Remember to follow all license nerdy conditions, "
-                    "especially [this one]({license_url}#L160-L168). Also:"
+                    "\N{BLACK CIRCLE} Remember to follow all license nerdy conditions, "
+                    f"especially [this one]({license_url}#L160-L168). Also:"
                 ),
             )
             .set_author(name="Code is licensed under MPL v2", url=license_url)

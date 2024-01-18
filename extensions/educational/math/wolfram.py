@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from io import BytesIO
 from typing import TYPE_CHECKING
 from urllib import parse as urlparse
 
-import discord
 from discord import app_commands
 from discord.ext import commands
 
 from config import WOLFRAM_TOKEN
-from utils import const
+from utils import const, errors
 
 from .._base import EducationalCog
 
@@ -39,11 +37,8 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
     async def wa_long_worker(self, ctx: AluContext, *, query: str):
         await ctx.typing()
         question_url = f"{self.simple_url}{urlparse.quote(query)}"
-        async with self.bot.session.get(question_url) as resp:
-            await ctx.reply(
-                content=f"```py\n{query}```",
-                file=discord.File(fp=BytesIO(await resp.read()), filename="WolframAlpha.png"),
-            )
+        file = await self.bot.transposer.url_to_file(question_url, filename="WolframAlpha.png")
+        await ctx.reply(content=f"```py\n{query}```", file=file)
 
     @wolfram_group.command(name="long")
     @commands.cooldown(2, 10, commands.BucketType.user)
@@ -61,8 +56,11 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
     async def wa_short_worker(self, ctx: AluContext, *, query: str):
         await ctx.typing()
         question_url = f"{self.short_url}{urlparse.quote(query)}"
-        async with self.bot.session.get(question_url) as resp:
-            await ctx.reply(f"```py\n{query}```{await resp.text()}")
+        async with self.bot.session.get(question_url) as response:
+            if response.ok:
+                await ctx.reply(f"```py\n{query}```{await response.text()}")
+            else:
+                raise errors.ResponseNotOK(f'Wolfram Response was not ok, Status {response.status},')
 
     @wolfram_group.command(name="short", aliases=["wa"])
     @commands.cooldown(2, 10, commands.BucketType.user)

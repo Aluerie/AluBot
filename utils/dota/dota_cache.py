@@ -130,7 +130,7 @@ class AbilityKeyCache(KeysCache):
         Currently only return data on talents and None for everything else,
         bcs we do not need anything else for now
         """
-        return await self.get_value("talent_by_id", talent_id)
+        return await self.get_value_or_none("talent_by_id", talent_id)
 
 
 class ItemKeysCache(KeysCache):

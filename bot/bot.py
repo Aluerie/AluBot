@@ -4,7 +4,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, MutableMapping, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Literal, MutableMapping, Union
 
 import discord
 from discord.ext import commands
@@ -53,9 +53,9 @@ class AluBot(commands.Bot, AluBotHelper):
             [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
         ]
 
-    def __init__(self, test=False, *, session: ClientSession, pool: Pool, **kwargs):
+    def __init__(self, test=False, *, session: ClientSession, pool: Pool, **kwargs: Any):
         main_prefix = "~" if test else "$"
-        self.main_prefix = main_prefix
+        self.main_prefix: Literal["~", "$"] = main_prefix
         self.test: bool = test
         super().__init__(
             command_prefix=self.get_pre,
@@ -70,8 +70,6 @@ class AluBot(commands.Bot, AluBotHelper):
         self.exc_manager: AluExceptionManager = AluExceptionManager(self)
         self.transposer: TransposeClient = TransposeClient(session=session)
         self.disambiguator: Disambiguator = Disambiguator()
-
-        self.odota_ratelimit: dict[str, int] = {"monthly": -1, "minutely": -1}
 
         self.repo_url = "https://github.com/Aluerie/AluBot"
         self.developer = "Aluerie"  # it's my GitHub account name
@@ -184,7 +182,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
     async def on_ready(self):
         if not hasattr(self, "launch_time"):
-            self.launch_time = discord.utils.utcnow()
+            self.launch_time = datetime.datetime.now(datetime.timezone.utc)
         log.info(f"Logged in as {self.user}")
 
     async def close(self) -> None:
@@ -278,12 +276,6 @@ class AluBot(commands.Bot, AluBotHelper):
             from utils.timezones import TimezoneManager
 
             self.tz_manager = TimezoneManager(self)
-
-    def update_odota_ratelimit(self, headers) -> None:
-        monthly = headers.get("X-Rate-Limit-Remaining-Month")
-        minutely = headers.get("X-Rate-Limit-Remaining-Minute")
-        if monthly is not None or minutely is not None:
-            self.odota_ratelimit = {"monthly": monthly, "minutely": minutely}
 
     @property
     def hideout(self) -> const.HideoutGuild:

@@ -5,9 +5,7 @@ import logging
 from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
-from pulsefire.clients import RiotAPIClient
 
-import config
 from utils import aluloop
 
 from .._base import FPCCog
@@ -38,7 +36,7 @@ class LoLSummonerNameCheck(FPCCog):
         query = "SELECT puuid, platform, game_name, tag_line FROM lol_accounts"
         rows: list[AccountRow] = await self.bot.pool.fetch(query)
 
-        async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
+        async with self.bot.acquire_riot_api_client() as riot_api_client:
             for row in rows:
                 try:
                     account = await riot_api_client.get_account_v1_by_puuid(

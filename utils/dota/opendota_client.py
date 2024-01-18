@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import orjson
 from pulsefire.clients import BaseClient
 from pulsefire.middlewares import http_error_middleware, json_response_middleware
 
@@ -22,7 +23,7 @@ class OpenDotaClient(BaseClient):
         default_headers: dict[str, str] = {},
         default_queries: dict[str, str] = {},
         middlewares: list[Middleware] = [
-            json_response_middleware(),
+            json_response_middleware(orjson.loads),
             http_error_middleware(),
         ],
     ) -> None:
@@ -43,7 +44,6 @@ class OpenDotaClient(BaseClient):
 
 if __name__ == "__main__":
     import asyncio
-
     import pprint
 
     async def test_opendota_client():

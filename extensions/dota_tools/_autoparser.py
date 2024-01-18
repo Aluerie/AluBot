@@ -34,12 +34,12 @@ class OpenDotaAutoParser(AluCog):
         self.steam_ids: list[int]
 
     async def cog_load(self) -> None:
-        await self.bot.initiate_steam_dota()
+        await self.bot.set_dota_attrs()
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
         def autoparse_response(result):
             if result.specific_games:
-                # remember the quirk that 
+                # remember the quirk that
                 # result.specific_games = my friends games
                 # not result.specific_games = top100 mmr games
                 m_ids = [m.match_id for m in result.game_list]

@@ -50,7 +50,7 @@ class FPCAccount:
         self.name: str = name
         self.is_twitch_streamer: bool = is_twitch_streamer
 
-    async def set_game_specific_attrs(self, flags: commands.FlagConverter):
+    async def set_game_specific_attrs(self, bot: AluBot, flags: commands.FlagConverter):
         raise NotImplementedError
 
     def to_database_dict(self) -> dict[str, Any]:
@@ -75,7 +75,7 @@ class FPCAccount:
     @property
     def simple_account_name(self) -> str:
         raise NotImplementedError
-    
+
     async def set_base_attrs(self, bot: AluBot):
         if self.is_twitch_streamer:
             twitch_user = await bot.twitch.get_twitch_user(self.name)
@@ -99,7 +99,7 @@ class FPCAccount:
 
         self = cls(name, is_twitch_streamer)
         await self.set_base_attrs(bot)
-        await self.set_game_specific_attrs(flags)
+        await self.set_game_specific_attrs(bot, flags)
         return self
 
     @staticmethod

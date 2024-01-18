@@ -292,7 +292,7 @@ class FPCSetupPlayersCharactersPageSource(menus.ListPageSource):
                 inline=False,
             )
             .add_field(
-                name=f"{menu.object_list.label} your favourite {menu.plural} list Button",
+                name=f"{menu.object_list.label} Your favourite {menu.plural} list Button",
                 value=f"Show your favourite {menu.plural} list.",
                 inline=False,
             )

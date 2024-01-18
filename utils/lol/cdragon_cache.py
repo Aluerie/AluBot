@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, MutableMapping, TypedDict
 
-from pulsefire.clients import CDragonClient
-
 from ..cache import KeysCache
 
 if TYPE_CHECKING:
@@ -43,7 +41,7 @@ class ChampionKeysCache(KeysCache):
         cached_data: ChampionCache
 
     async def fill_data(self) -> ChampionCache:
-        async with CDragonClient(default_params={"patch": "latest", "locale": "default"}) as cdragon_client:
+        async with self.bot.acquire_cdragon_client() as cdragon_client:
             champion_summary = await cdragon_client.get_lol_v1_champion_summary()
 
         data: ChampionCache = {
@@ -82,7 +80,7 @@ class ChampionKeysCache(KeysCache):
 
 class ItemKeysCache(KeysCache):
     async def fill_data(self) -> dict:
-        async with CDragonClient(default_params={"patch": "latest", "locale": "default"}) as cdragon_client:
+        async with self.bot.acquire_cdragon_client() as cdragon_client:
             items = await cdragon_client.get_lol_v1_items()
 
         data = {"icon_by_id": {}}
@@ -98,7 +96,7 @@ class ItemKeysCache(KeysCache):
 
 class RuneKeysCache(KeysCache):
     async def fill_data(self) -> dict:
-        async with CDragonClient(default_params={"patch": "latest", "locale": "default"}) as cdragon_client:
+        async with self.bot.acquire_cdragon_client() as cdragon_client:
             perks = await cdragon_client.get_lol_v1_perks()
 
         data = {"icon_by_id": {}}
@@ -114,7 +112,7 @@ class RuneKeysCache(KeysCache):
 
 class SummonerSpellKeysCache(KeysCache):
     async def fill_data(self) -> dict:
-        async with CDragonClient(default_params={"patch": "latest", "locale": "default"}) as cdragon_client:
+        async with self.bot.acquire_cdragon_client() as cdragon_client:
             summoner_spells = await cdragon_client.get_lol_v1_summoner_spells()
 
         data = {"icon_by_id": {}}

@@ -7,18 +7,14 @@ from typing import TYPE_CHECKING, MutableMapping, TypedDict
 
 import asyncpg
 import discord
-from discord.ext import commands, tasks
-from pulsefire.middlewares import http_error_middleware, json_response_middleware
+from discord.ext import commands
 
-from utils import aluloop, const, dota
+from utils import aluloop, const
 
 from .._base import FPCCog
 from ._models import DotaFPCMatchToEdit, DotaFPCMatchToSend
 
 if TYPE_CHECKING:
-    from aiohttp import ClientResponse
-    from pulsefire.middlewares import Invocation, MiddlewareCallable
-
     from bot import AluBot
     from utils import AluContext
 
@@ -53,7 +49,7 @@ class DotaFPCNotifications(FPCCog):
 
         self.allow_editing_matches: bool = True
         self.matches_to_edit: dict[int, int] = {}
-        self.daily_opendota_ratelimit: str = "not set yet"
+        
 
     async def cog_load(self) -> None:
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
@@ -175,8 +171,7 @@ class DotaFPCNotifications(FPCCog):
 
             assert isinstance(channel, discord.TextChannel)
             log.debug("Successfully made embed+file")
-            owner_name = channel.guild.owner.display_name if channel.guild.owner else "Somebody"
-            embed.title = f"{owner_name}'s fav hero + player spotted"
+
             message = await channel.send(embed=embed, file=image_file)
             log.debug("Notification was succesfully sent")
 
@@ -216,7 +211,7 @@ class DotaFPCNotifications(FPCCog):
 
         start_time = time.perf_counter()
         log.debug("calling request_top_source NOW ---")
-        await self.bot.steam_dota_login()
+        # await self.bot.steam_dota_login()
         self.request_top_source()
         # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
         # res = await asyncio.to_thread(self.request_top_source)
@@ -238,20 +233,6 @@ class DotaFPCNotifications(FPCCog):
 
     # POST MATCH EDITS
 
-    def set_daily_ratelimit_attr(self):
-        def constructor(next: MiddlewareCallable):
-            async def middleware(invocation: Invocation):
-                response: ClientResponse = await next(invocation)
-                daily_ratelimit = response.headers.get("X-Rate-Limit-Remaining-Day")
-                if daily_ratelimit is not None:
-                    self.daily_opendota_ratelimit = daily_ratelimit
-
-                return response
-
-            return middleware
-
-        return constructor
-
     @aluloop(minutes=5)
     async def task_to_edit_dota_fpc_messages(self):
         """Task responsible for editing Dota FPC Messages with PostMatch Result data
@@ -260,13 +241,7 @@ class DotaFPCNotifications(FPCCog):
         """
 
         log.debug("*** Starting Task to Edit Dota FPC Messages ***")
-        async with dota.OpenDotaClient(
-            middlewares=[
-                json_response_middleware(),
-                self.set_daily_ratelimit_attr(),
-                http_error_middleware(),
-            ]
-        ) as opendota_client:
+        async with self.bot.acquire_opendota_client() as opendota_client:
             for match_id in list(self.matches_to_edit):
                 self.matches_to_edit[match_id] += 1
                 loop_count = self.matches_to_edit[match_id]
@@ -338,7 +313,7 @@ class DotaFPCNotifications(FPCCog):
     async def opendota_daily_ratelimit(self, ctx: AluContext):
         """Send opendota rate limit numbers"""
         embed = discord.Embed(colour=const.Colour.prpl()).add_field(
-            name="Opendota Daily RateLimit", value=self.daily_opendota_ratelimit
+            name="Opendota Daily RateLimit", value=self.bot.daily_opendota_ratelimit
         )
         await ctx.reply(embed=embed)
 
@@ -350,11 +325,11 @@ class DotaFPCNotifications(FPCCog):
         This is why we also send @mention if ratelimit is critically low.
         """
 
-        content = f"<@{self.bot.owner_id}>" if int(self.daily_opendota_ratelimit) < 500 else ""
+        content = f"<@{self.bot.owner_id}>" if int(self.bot.daily_opendota_ratelimit) < 500 else ""
         embed = discord.Embed(
             title="Daily Report",
             colour=const.MaterialPalette.black(),
-            description=f"Opendota Daily RateLimit: `{self.daily_opendota_ratelimit}`",
+            description=f"Opendota Daily RateLimit: `{self.bot.daily_opendota_ratelimit}`",
         )
         await self.hideout.daily_report.send(content=content, embed=embed)
 

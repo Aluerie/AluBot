@@ -7,7 +7,6 @@ import aiohttp
 import discord
 from discord import app_commands
 from discord.ext import commands
-from pulsefire.clients import RiotAPIClient
 
 import config
 from utils import checks, const, errors, lol
@@ -44,8 +43,8 @@ class LoLAccount(FPCAccount):
         tag_line: str
 
     @override
-    async def set_game_specific_attrs(self, flags: AddLoLPlayerFlags):
-        async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
+    async def set_game_specific_attrs(self, bot: AluBot, flags: AddLoLPlayerFlags):
+        async with bot.acquire_riot_api_client() as riot_api_client:
             # RIOT ACCOUNT INFO
             try:
                 riot_account = await riot_api_client.get_account_v1_by_riot_id(
@@ -125,7 +124,7 @@ class LoLFPCSettings(FPCSettingsBase):
     """
 
     def __init__(self, bot: AluBot, *args, **kwargs):
-        bot.initiate_league_cache()
+        bot.initiate_pulsefire()
         super().__init__(
             bot,
             *args,

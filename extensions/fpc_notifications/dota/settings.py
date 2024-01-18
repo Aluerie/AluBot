@@ -32,7 +32,7 @@ class DotaAccount(FPCAccount):
         friend_id: int
 
     @override
-    async def set_game_specific_attrs(self, flags: AddDotaPlayerFlags):
+    async def set_game_specific_attrs(self, bot: AluBot, flags: AddDotaPlayerFlags):
         steam_id_obj = SteamID(flags.steam)
         if steam_id_obj.type != EType.Individual:
             steam_id_obj = SteamID.from_url(steam_string)  # type: ignore # ValvePython doesn't care about TypeHints
@@ -107,7 +107,7 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
     """
 
     def __init__(self, bot: AluBot, *args, **kwargs):
-        bot.initiate_dota_cache()
+        bot.initiate_opendota()
         super().__init__(
             bot,
             *args,

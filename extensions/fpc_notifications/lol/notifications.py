@@ -6,9 +6,7 @@ from typing import TYPE_CHECKING, TypedDict
 import aiohttp
 import asyncpg
 import discord
-from pulsefire.clients import RiotAPIClient
 
-import config
 from utils import aluloop, const, lol
 
 from .._base import FPCCog
@@ -100,7 +98,7 @@ class LoLFPCNotifications(FPCCog):
             WHERE p.player_id=ANY($1)
         """
         rows: list[LivePlayerAccountRow] = await self.bot.pool.fetch(query, live_twitch_ids)
-        async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
+        async with self.bot.acquire_riot_api_client() as riot_api_client:
             for row in rows:
                 try:
                     game = await riot_api_client.get_lol_spectator_v4_active_game_by_summoner(
@@ -229,7 +227,7 @@ class LoLFPCNotifications(FPCCog):
     # POST MATCH EDITS
 
     async def edit_lol_notification_messages(self, match_rows: list[LoLMatchRecord]):
-        async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
+        async with self.bot.acquire_riot_api_client() as riot_api_client:
             for match_row in match_rows:
                 try:
                     match_id = f"{match_row['platform'].upper()}_{match_row['match_id']}"

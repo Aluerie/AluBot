@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 class SteamDB(AluCog):
     def cog_load(self) -> None:
-        self.bot.ini_github()
+        self.bot.initiate_github()
 
     @property
     def news_channel(self) -> discord.TextChannel:

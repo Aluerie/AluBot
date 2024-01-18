@@ -189,7 +189,7 @@ class TimeLine:
 
 class BugTracker(AluCog):
     async def cog_load(self) -> None:
-        self.bot.ini_github()
+        self.bot.initiate_github()
         self.valve_devs = await self.get_valve_devs()
         self.git_comments_check.add_exception_type(RequestError, RequestFailed)
         self.git_comments_check.start()
@@ -240,7 +240,9 @@ class BugTracker(AluCog):
 
         if success_logins:
             self.valve_devs.extend(success_logins)
-            embed = embed_answer(success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs.")
+            embed = embed_answer(
+                success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs."
+            )
             await ctx.reply(embed=embed)
         if error_logins:
             embed = embed_answer(

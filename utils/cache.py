@@ -8,6 +8,7 @@ import time
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, MutableMapping, Protocol, TypeAlias, TypeVar
 
+import orjson
 from aiohttp import ClientSession
 from discord.utils import MISSING
 from lru import LRU
@@ -78,7 +79,7 @@ class KeysCache[CachedDataT]:
             if response.ok:
                 # https://stackoverflow.com/a/48842348/19217368
                 # `content = None` disables the check and kinda sets it to `content_type=response.content_type`
-                return await response.json(content_type=None)
+                return await response.json(content_type=None, loads=orjson.loads)
 
         # response not ok
         # so we raise an error that is `add_exception_type`'ed so the task can run exp backoff

@@ -208,37 +208,111 @@ class AluBot(commands.Bot, AluBotHelper):
 
     # INITIATE EXTRA CLIENTS FUNCTIONS #################################################################################
 
-    # The following functions are `initiate_something`
-    # which initiate some ~heavy clients under bot namespace
-    # they should be used in cogs which need to work with them, i.e. dota notifications should call
-    # initiate steam, dota and twitch
+    # The following functions are `set_something_attrs`
+    # which import some heavy modules and initiate some ~heavy clients under bot namespace
+    # they should be used in `cog_load` only for those cogs which need to work with them,
+    # i.e. fpc dota notifications should call `bot.set_dota_attrs` and `bot.set_twitch_attrs`
     #
     # note that I import inside the functions which is against pep8 but apparently it is not so bad:
     # pep8 answer: https://stackoverflow.com/a/1188672/19217368
     # points to import inside the function: https://stackoverflow.com/a/1188693/19217368
     # and I exactly want these^
 
-    def initiate_dota_cache(self) -> None:
+    def initiate_opendota(self) -> None:
         if not hasattr(self, "dota_cache"):
-            from utils.dota import DotaCache
+            import orjson
+            from pulsefire.middlewares import http_error_middleware, json_response_middleware
 
+            from utils.dota import DotaCache, OpenDotaClient
+
+            if TYPE_CHECKING:
+                from aiohttp import ClientResponse
+                from pulsefire.middlewares import Invocation, MiddlewareCallable
+
+            # OpenDota client
+            self.daily_opendota_ratelimit: str = "not set yet"
+
+            def set_daily_ratelimit_attr():
+                def constructor(next: MiddlewareCallable):
+                    async def middleware(invocation: Invocation):
+                        response: ClientResponse = await next(invocation)
+                        daily_ratelimit = response.headers.get("X-Rate-Limit-Remaining-Day")
+                        if daily_ratelimit is not None:
+                            self.daily_opendota_ratelimit = daily_ratelimit
+
+                        return response
+
+                    return middleware
+
+                return constructor
+
+            def acquire_opendota_client() -> OpenDotaClient:
+                return OpenDotaClient(
+                    middlewares=[
+                        json_response_middleware(orjson.loads),
+                        set_daily_ratelimit_attr(),
+                        http_error_middleware(),
+                    ]
+                )
+
+            self.acquire_opendota_client = acquire_opendota_client
+
+            # Cache
             self.dota_cache = DotaCache(self)
 
-    def initiate_league_cache(self) -> None:
+    def initiate_pulsefire(self) -> None:
         if not hasattr(self, "cdragon") or not hasattr(self, "meraki_roles"):
+            import orjson
+            from pulsefire.clients import CDragonClient, RiotAPIClient
+            from pulsefire.middlewares import http_error_middleware, json_response_middleware, rate_limiter_middleware
+            from pulsefire.ratelimiters import RiotAPIRateLimiter  # cSpell: ignore ratelimiters
+
             from utils.lol import CDragonCache, MerakiRolesCache
 
+            # PulseFire Clients
+            def acquire_riot_api_client() -> RiotAPIClient:
+                return RiotAPIClient(
+                    default_headers={"X-Riot-Token": config.RIOT_API_KEY},
+                    middlewares=[
+                        json_response_middleware(orjson.loads),
+                        http_error_middleware(),
+                        rate_limiter_middleware(RiotAPIRateLimiter()),
+                    ],
+                )
+
+            self.acquire_riot_api_client = acquire_riot_api_client
+
+            def acquire_cdragon_client() -> CDragonClient:
+                return CDragonClient(
+                    default_params={"patch": "latest", "locale": "default"},
+                    middlewares=[
+                        json_response_middleware(orjson.loads),
+                        http_error_middleware(),
+                    ],
+                )
+
+            self.acquire_cdragon_client = acquire_cdragon_client
+
+            # Caches
             self.cdragon = CDragonCache(self)
             self.meraki_roles = MerakiRolesCache(self)
 
     async def initiate_steam_dota(self) -> None:
-        if not hasattr(self, "steam") or not hasattr(self, "dota"):
+        if not hasattr(self, "steam"):
             from dota2.client import Dota2Client
             from steam.client import SteamClient
 
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
             await self.steam_dota_login()
+
+            @self.steam.on("disconnected")  # type: ignore
+            def try_to_reconnect_on_disconnect():
+                self.steam.reconnect()
+
+            @self.steam.on("error")  # type: ignore
+            def try_to_reconnect_on_error(error_result):
+                self.steam.reconnect()
 
     async def steam_dota_login(self) -> None:
         log.debug("Checking if steam is connected: %s", self.steam.connected)
@@ -258,7 +332,7 @@ class AluBot(commands.Bot, AluBotHelper):
                 log.error("Logging into Steam failed")
                 await self.exc_manager.register_error(exc, source="steam login", where="steam login")
 
-    def ini_github(self) -> None:
+    def initiate_github(self) -> None:
         if not hasattr(self, "github"):
             from githubkit import GitHub
 

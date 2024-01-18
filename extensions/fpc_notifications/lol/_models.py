@@ -288,13 +288,10 @@ async def beta_test_edit_notification_image(self: AluCog):
     # I'm not sure if there is a better way to test stuff for discord bot since
     # I can't just single out a function without initializing the whole bot class
 
-    from pulsefire.clients import RiotAPIClient
-
-    import config
     from extensions.fpc_notifications.lol._models import LoLFPCMatchToEdit
 
-    self.bot.initiate_league_cache()
-    async with RiotAPIClient(default_headers={"X-Riot-Token": config.RIOT_API_KEY}) as riot_api_client:
+    self.bot.initiate_pulsefire()
+    async with self.bot.acquire_riot_api_client() as riot_api_client:
         match_id = "NA1_4895000741"
         continent = "AMERICAS"
         match = await riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)

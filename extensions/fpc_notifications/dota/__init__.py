@@ -17,7 +17,7 @@ class DotaFPC(
     """
 
     async def cog_load(self) -> None:
-        await self.bot.initiate_steam_dota()
+        await self.bot.set_dota_attrs()
         await self.bot.initiate_twitch()
         return await super().cog_load()
 

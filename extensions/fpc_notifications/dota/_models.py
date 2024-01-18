@@ -184,6 +184,7 @@ class DotaFPCMatchToSend(Match):
         embed = (
             discord.Embed(
                 colour=twitch_data["colour"],
+                title=f"{twitch_data['display_name']} - {self.hero_name}",
                 url=twitch_data["url"],
                 description=(
                     f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, strip=True)}\n"
@@ -300,8 +301,8 @@ class DotaFPCMatchToEdit(BasePostMatchPlayer):
                 item_timing_text_w, item_timing_text_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
                 draw.text((left, height - item_timing_text_h), item_timing, font=font_item_timing, align="left")
 
-            neutral_item_image.resize((69, information_height))
-            img.paste(im=neutral_item_image, box=(0, height - neutral_item_image.height))
+            resized_neutral_item_image = neutral_item_image.resize((69, information_height))
+            img.paste(im=resized_neutral_item_image, box=(0, height - resized_neutral_item_image.height))
 
             # abilities
             ability_h = 37

@@ -44,9 +44,15 @@ class OpenDotaClient(BaseClient):
 if __name__ == "__main__":
     import asyncio
 
+    import pprint
+
     async def test_opendota_client():
         async with OpenDotaClient() as opendota_client:
-            match = await opendota_client.get_match(match_id=7542902225)
-            print(match["players"][2])
+            match = await opendota_client.get_match(match_id=7540506660)
+            for word in ["players", "picks_bans", "draft_timings", "cosmetics", "objectives"]:
+                match.pop(word)  # type: ignore
+            print(match["od_data"]["has_parsed"])
+            pprint.pprint(match)
+            # pprint.pprint(match["players"][2])
 
     asyncio.run(test_opendota_client())

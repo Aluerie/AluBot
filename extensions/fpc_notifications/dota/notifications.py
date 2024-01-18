@@ -281,7 +281,12 @@ class DotaFPCNotifications(FPCCog):
                     await self.hideout.spam.send(f"Failed to edit the match {match_id} with OpenDota.")
                 else:
                     match = await opendota_client.get_match(match_id=match_id)
-                    if match["od_data"]["has_parsed"]:
+                    if match["duration"] == 0:
+                        # if somebody abandons in draft but we managed to send the game out
+                        # then parser will fail on some stuff
+                        # idk if this is the best way to find
+                        await self.cleanup_match_to_edit(match_id)
+                    elif match["od_data"]["has_parsed"]:
                         # we are ready to send the notification
 
                         query = "SELECT * FROM dota_messages WHERE match_id=$1"
@@ -322,7 +327,7 @@ class DotaFPCNotifications(FPCCog):
         if not self.matches_to_edit:
             # nothing more to analyze
             self.task_to_edit_dota_fpc_messages.cancel()
-        
+
         if self.task_to_edit_dota_fpc_messages.failed():
             # in case of Exception let's disallow the task at all
             self.allow_editing_matches = False

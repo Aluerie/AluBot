@@ -101,7 +101,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         return discord.PartialEmoji.from_str(const.Emote.TwoBButt)
 
     async def cog_load(self) -> None:
-        await self.bot.set_dota_attrs()
+        await self.bot.initiate_steam_dota()
         self.match_history_refresh.start()
 
     async def cog_unload(self) -> None:

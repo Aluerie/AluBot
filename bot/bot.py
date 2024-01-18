@@ -211,7 +211,7 @@ class AluBot(commands.Bot, AluBotHelper):
     # The following functions are `set_something_attrs`
     # which import some heavy modules and initiate some ~heavy clients under bot namespace
     # they should be used in `cog_load` only for those cogs which need to work with them,
-    # i.e. fpc dota notifications should call `bot.set_dota_attrs` and `bot.set_twitch_attrs`
+    # i.e. fpc dota notifications should call `bot.initiate_steam_dota` and `bot.initiate_twitch`
     #
     # note that I import inside the functions which is against pep8 but apparently it is not so bad:
     # pep8 answer: https://stackoverflow.com/a/1188672/19217368

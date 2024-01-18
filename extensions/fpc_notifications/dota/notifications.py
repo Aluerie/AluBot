@@ -319,8 +319,13 @@ class DotaFPCNotifications(FPCCog):
 
     @task_to_edit_dota_fpc_messages.after_loop
     async def stop_editing_task(self):
-        if not self.matches_to_edit or self.task_to_edit_dota_fpc_messages.failed():
+        if not self.matches_to_edit:
+            # nothing more to analyze
             self.task_to_edit_dota_fpc_messages.cancel()
+        
+        if self.task_to_edit_dota_fpc_messages.failed():
+            # in case of Exception let's disallow the task at all
+            self.allow_editing_matches = False
 
     # OPENDOTA RATE LIMITS
 

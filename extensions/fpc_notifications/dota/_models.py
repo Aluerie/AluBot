@@ -362,9 +362,9 @@ class DotaFPCMatchToEditWithStratz(BasePostMatchPlayer):
                 self.purchase_log.append("")
 
         if self.aghanims_shard:
-            self.purchase_log.append("?")
+            self.purchase_log.append("?")  # todo: aghs shard timing
         if self.aghanims_blessing:
-            self.purchase_log.append("?")
+            self.purchase_log.append("?")  # todo: aghs blessing timing
 
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
@@ -377,17 +377,18 @@ class DotaFPCMatchToEditWithStratz(BasePostMatchPlayer):
         def build_notification_image() -> Image.Image:
             log.debug("Building edited notification message.")
             width, height = img.size
-            
+
             draw = ImageDraw.Draw(img)
 
             # items and aghanim shard/blessing
             font_item_timing = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
 
             for count, item_timing in enumerate(self.purchase_log):
-                # item timing
-                left = count * 69
-                item_timing_text_w, item_timing_text_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
-                draw.text((left, height - item_timing_text_h), item_timing, font=font_item_timing, align="left")
+                if item_timing:
+                    # item timing
+                    left = count * 69
+                    item_timing_w, item_timing_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
+                    draw.text((left, height - item_timing_h), item_timing, font=font_item_timing, align="left")
 
             # img.show()
             return img

@@ -94,6 +94,7 @@ class DevInformation(DevBaseCog):
     @system.command(name="logs")
     async def system_logs(self, ctx: AluContext):
         """(\N{GREY HEART} Hideout-Only) Get bot's logs."""
+        await ctx.typing()
         logs_file = discord.File("./.alubot/logs/alubot.log")
         await ctx.reply(file=logs_file)
 

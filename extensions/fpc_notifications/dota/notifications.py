@@ -274,11 +274,13 @@ class DotaFPCNotifications(FPCCog):
             try:
                 match = await opendota_client.get_match(match_id=match_id)
             except aiohttp.ClientResponseError as exc:
-                edit_log.debug("Stratz API Response Not OK with status %s", exc.status)
+                edit_log.debug("OpenDota API Response Not OK with status %s", exc.status)
                 return False
 
-            if not match.get("radiant_win"):
+            if "radiant_win" not in match:
                 # Somebody abandoned before the first blood or so game didn't count
+                # thus "radiant_win" key is not present
+                edit_log.debug("The stats for match %s did not count. Deleting the match.", match_id)
                 await self.cleanup_match_to_edit(match_id, friend_id)
                 return True
 

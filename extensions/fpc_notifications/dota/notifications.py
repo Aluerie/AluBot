@@ -239,6 +239,7 @@ class DotaFPCNotifications(FPCCog):
 
         start_time = time.perf_counter()
         log.debug("calling request_top_source NOW ---")
+        log.debug('Steam is connected: %s', self.bot.steam.connected)
         # await self.bot.steam_dota_login()
         self.request_top_source()
         # await self.bot.loop.run_in_executor(None, self.request_top_source, args)

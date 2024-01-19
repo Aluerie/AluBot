@@ -53,12 +53,14 @@ if TYPE_CHECKING:
                 "itemId": Optional[int],
             },
         )
+
         Stats = TypedDict(
             "MatchPlayerBuffEvent",
             {
                 "matchPlayerBuffEvent": list[BuffEvent],
             },
         )
+
         PurchaseEvent = TypedDict(
             "PurchaseEvent",
             {
@@ -66,50 +68,42 @@ if TYPE_CHECKING:
                 "itemId": int,
             },
         )
-        AbilityLearnEvent = TypedDict(
-            "AbilityLearnEvent",
-            {
-                "abilityId": int,
-            },
-        )
+
         PlaybackData = TypedDict(
             "PlaybackData",
             {
-                "abilityLearnEvents": list[AbilityLearnEvent],
                 "purchaseEvents": list[PurchaseEvent],
             },
         )
+
         Player = TypedDict(
             "Player",
             {
-                "isVictory": bool,
-                "heroId": int,
-                "kills": int,
-                "deaths": int,
-                "assists": int,
                 "item0Id": int,
                 "item1Id": int,
                 "item2Id": int,
                 "item3Id": int,
                 "item4Id": int,
                 "item5Id": int,
-                "neutral0Id": int,
                 "playbackData": PlaybackData,
                 "stats": Stats,
             },
         )
+
         Match = TypedDict(
             "Match",
             {
                 "players": list[Player],
             },
         )
+
         Data = TypedDict(
             "Data",
             {
                 "match": Match,
             },
         )
+        
         ResponseDict = TypedDict(
             "ResponseDict",
             {

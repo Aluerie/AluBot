@@ -19,10 +19,10 @@ class BasePostMatchPlayer:
         self,
         bot: AluBot,
         *,
-        channel_message_tuples: list[tuple[int, int]],
+        channel_message_tuples: set[tuple[int, int]],
     ):
         self.bot: AluBot = bot
-        self.channel_message_tuples: list[tuple[int, int]] = channel_message_tuples
+        self.channel_message_tuples: set[tuple[int, int]] = channel_message_tuples
 
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
         raise NotImplementedError

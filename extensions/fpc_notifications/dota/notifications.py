@@ -5,6 +5,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, MutableMapping, TypedDict
 
+import aiohttp
 import asyncpg
 import discord
 import orjson
@@ -14,17 +15,15 @@ import config
 from utils import aluloop, const
 
 from .._base import FPCCog
-from ._models import DotaFPCMatchToEdit, DotaFPCMatchToSend
+from ._models import DotaFPCMatchToEditWithOpenDota, DotaFPCMatchToEditWithStratz, DotaFPCMatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluContext
 
-    class DeclareMatchesFinishedQueryRow(TypedDict):
+    class DotaFPCMessage(TypedDict):
         match_id: int
         friend_id: int
-
-    class GetChannelMessageTuplesQueryRow(TypedDict):
         message_id: int
         channel_id: int
 
@@ -32,6 +31,14 @@ if TYPE_CHECKING:
         player_id: int
         display_name: str
         twitch_id: int
+
+    class MatchToEditSubDict(TypedDict):
+        loop_count: int
+        edited_with_opendota: bool
+        edited_with_stratz: bool
+        channel_message_tuples: set[tuple[int, int]]
+
+    type MatchToEdit = dict[tuple[int, int], MatchToEditSubDict]
 
     from . import _schemas
 
@@ -52,7 +59,9 @@ class DotaFPCNotifications(FPCCog):
         self.is_postmatch_edits_running: bool = True
 
         self.allow_editing_matches: bool = True
-        self.matches_to_edit: dict[tuple[int, int], int] = {}
+        self.matches_to_edit: MatchToEdit = {}
+        self.stratz_daily_remaining_ratelimit: str = "Not set yet"
+        self.stratz_daily_total_ratelimit: str = "Not set yet"
 
     async def cog_load(self) -> None:
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
@@ -84,7 +93,7 @@ class DotaFPCNotifications(FPCCog):
 
         self.task_to_edit_dota_fpc_messages.clear_exception_types()
 
-        self.opendota_daily_ratelimit_report.start()
+        self.daily_ratelimit_report.start()
         return await super().cog_load()
 
     @commands.Cog.listener()
@@ -94,7 +103,7 @@ class DotaFPCNotifications(FPCCog):
     async def cog_unload(self) -> None:
         self.task_to_send_dota_fpc_messages.cancel()
         self.task_to_edit_dota_fpc_messages.cancel()
-        self.opendota_daily_ratelimit_report.stop()
+        self.daily_ratelimit_report.stop()
         return await super().cog_unload()
 
     async def preliminary_queries(self):
@@ -199,12 +208,22 @@ class DotaFPCNotifications(FPCCog):
             return
 
         log.debug("Declaring finished matches")
-        query = "SELECT DISTINCT match_id, friend_id FROM dota_messages WHERE NOT match_id=ANY($1)"
-        match_rows: list[DeclareMatchesFinishedQueryRow] = await self.bot.pool.fetch(
-            query, list(self.top_source_dict.keys())
-        )
+        query = "SELECT * FROM dota_messages WHERE NOT match_id=ANY($1)"
+        finished_match_rows: list[DotaFPCMessage] = await self.bot.pool.fetch(query, list(self.top_source_dict.keys()))
 
-        self.matches_to_edit = {(match_row["match_id"], match_row["friend_id"]): 0 for match_row in match_rows}
+        for match_row in finished_match_rows:
+            uuid_tuple = (match_row["match_id"], match_row["friend_id"])
+            message_tuple = (match_row["channel_id"], match_row["message_id"])
+            if uuid_tuple not in self.matches_to_edit:
+                self.matches_to_edit[uuid_tuple] = {
+                    "loop_count": 0,
+                    "edited_with_opendota": False,
+                    "edited_with_stratz": False,
+                    "channel_message_tuples": set([message_tuple]),
+                }
+            else:
+                self.matches_to_edit[uuid_tuple]["channel_message_tuples"].add(message_tuple)
+
         if self.matches_to_edit and not self.task_to_edit_dota_fpc_messages.is_running():
             self.task_to_edit_dota_fpc_messages.start()
 
@@ -238,6 +257,104 @@ class DotaFPCNotifications(FPCCog):
         log.debug(f"--- Task is finished ---")
 
     # POST MATCH EDITS
+    async def edit_with_opendota(
+        self, match_id: int, friend_id: int, channel_message_tuples: set[tuple[int, int]]
+    ) -> bool:
+        async with self.bot.acquire_opendota_client() as opendota_client:
+            try:
+                match = await opendota_client.get_match(match_id=match_id)
+            except aiohttp.ClientResponseError as exc:
+                log.debug("Stratz API Response Not OK with status %s", exc.status)
+                return False
+
+            if match["duration"] == 0:
+                # if somebody abandons in draft but we managed to send the game out
+                # then parser will fail on some stuff
+                # idk if this is the best way to find
+                await self.cleanup_match_to_edit(match_id, friend_id)
+                return True
+
+            for player in match["players"]:
+                if player["account_id"] == friend_id:
+                    opendota_player = player
+                    break
+            else:
+                raise RuntimeError(f"Somehow the player {friend_id} is not in the match {match_id}")
+
+            match_to_edit_with_opendota = DotaFPCMatchToEditWithOpenDota(
+                self.bot,
+                player=opendota_player,
+                channel_message_tuples=channel_message_tuples,
+            )
+            await match_to_edit_with_opendota.edit_notification_embed()
+            return True
+
+    async def edit_with_stratz(
+        self, match_id: int, friend_id: int, channel_message_tuples: set[tuple[int, int]]
+    ) -> bool:
+        query = f"""{{
+            match(id: {match_id}) {{
+                players(steamAccountId: {friend_id}) {{
+                    item0Id
+                    item1Id
+                    item2Id
+                    item3Id
+                    item4Id
+                    item5Id
+                    playbackData {{
+                        purchaseEvents {{
+                            time
+                            itemId
+                        }}
+                    }}
+                    stats {{
+                        matchPlayerBuffEvent {{
+                            itemId
+                        }}
+                    }}
+                }}
+            }}
+        }}
+        """
+
+        async with self.bot.session.post(
+            "https://api.stratz.com/graphql",
+            headers={
+                "Authorization": f"Bearer {config.STRATZ_BEARER_TOKEN}",
+                "Content-Type": "application/json",
+            },
+            json={"query": query},
+        ) as response:
+            self.stratz_daily_remaining_ratelimit = response.headers["X-RateLimit-Remaining-Day"]
+            self.stratz_daily_total_ratelimit = response.headers["X-RateLimit-Limit-Day"]
+
+            if not response.ok:
+                log.debug("Stratz API Response Not OK with status %s", response.status)
+                return False
+
+            player_data: _schemas.StratzEditFPCMessageGraphQLSchema.ResponseDict = await response.json(
+                loads=orjson.loads
+            )
+
+            if player_data["data"]["match"] is None:
+                # if somebody abandons in draft but we managed to send the game out
+                # then parser will fail and declare None
+                return True
+
+            # we are ready to send the notification
+            fpc_match_to_edit = DotaFPCMatchToEditWithStratz(
+                self.bot,
+                player=player_data["data"]["match"]["players"][0],
+                channel_message_tuples=channel_message_tuples,
+            )
+            await fpc_match_to_edit.edit_notification_embed()
+            return True
+
+    async def cleanup_match_to_edit(self, match_id: int, friend_id: int):
+        """Remove match from `self.matches_to_edit` and database."""
+        self.matches_to_edit.pop((match_id, friend_id))
+        query = "DELETE FROM dota_messages WHERE match_id=$1 AND friend_id=$2"
+        await self.bot.pool.execute(query, match_id, friend_id)
 
     @aluloop(minutes=5)
     async def task_to_edit_dota_fpc_messages(self):
@@ -251,101 +368,35 @@ class DotaFPCNotifications(FPCCog):
         for tuple_uuid in list(self.matches_to_edit):
             match_id, friend_id = tuple_uuid
 
-            self.matches_to_edit[tuple_uuid] += 1
-            loop_count = self.matches_to_edit[tuple_uuid]
+            self.matches_to_edit[tuple_uuid]["loop_count"] += 1
+            match_to_edit = self.matches_to_edit[tuple_uuid]
 
-            if loop_count == 1:
-                # skip the first iteration so Stratz can catch-up on the data in next 5 minutes.
+            if match_to_edit["loop_count"] == 1:
+                # skip the first iteration so OpenDota can catch-up on the data in next 5 minutes.
                 # usually it's obviously behind Game Coordinator so first loop always fails anyway
                 continue
-            elif loop_count > 11:
+            elif match_to_edit["loop_count"] > 15:
                 # we had enough of fails with this match, let's move on.
                 await self.cleanup_match_to_edit(match_id, friend_id)
-                await self.hideout.spam.send(f"Failed to edit the match {match_id} with Stratz.")
+                await self.hideout.spam.send(f"Failed to edit the match {match_id} with Opendota or Stratz.")
             else:
-                query = f"""{{
-                    match(id: {match_id}) {{
-                        players(steamAccountId: {friend_id}) {{
-                            isVictory
-                            heroId
-                            kills
-                            deaths
-                            assists
-                            item0Id
-                            item1Id
-                            item2Id
-                            item3Id
-                            item4Id
-                            item5Id
-                            neutral0Id
-                            playbackData {{
-                                abilityLearnEvents {{
-                                    abilityId
-                                }}
-                                purchaseEvents {{
-                                    time
-                                    itemId
-                                }}
-                            }}
-                            stats {{
-                                matchPlayerBuffEvent {{
-                                    itemId
-                                }}
-                            }}
-                        }}
-                    }}
-                }}
-                """
+                # let's try editing
+                # OPENDOTA
+                if not match_to_edit["edited_with_opendota"]:
+                    match_to_edit["edited_with_opendota"] = await self.edit_with_opendota(
+                        match_id, friend_id, match_to_edit["channel_message_tuples"]
+                    )
+                # STRATZ
+                elif not match_to_edit["edited_with_stratz"]:
+                    match_to_edit["edited_with_stratz"] = await self.edit_with_stratz(
+                        match_id, friend_id, match_to_edit["channel_message_tuples"]
+                    )
 
-                async with self.bot.session.post(
-                    "https://api.stratz.com/graphql",
-                    headers={
-                        "Authorization": f"Bearer {config.STRATZ_BEARER_TOKEN}",
-                        "Content-Type": "application/json",
-                    },
-                    json={"query": query},
-                ) as response:
-                    if response.ok:
-                        player_data: _schemas.StratzEditFPCMessageGraphQLSchema.ResponseDict = await response.json(
-                            loads=orjson.loads
-                        )
-
-                        if player_data["data"]["match"] is None:
-                            # if somebody abandons in draft but we managed to send the game out
-                            # then parser will fail and declare None
-                            await self.cleanup_match_to_edit(match_id, friend_id)
-                        else:
-                            # we are ready to send the notification
-                            query = """
-                                SELECT channel_id, message_id 
-                                FROM dota_messages 
-                                WHERE match_id = $1 AND friend_id = $2
-                            """
-                            message_rows: list[GetChannelMessageTuplesQueryRow] = await self.bot.pool.fetch(
-                                query, match_id, friend_id
-                            )
-                            channel_message_tuples: list[tuple[int, int]] = [
-                                (message_row["channel_id"], message_row["message_id"]) for message_row in message_rows
-                            ]
-                            match_to_edit = DotaFPCMatchToEdit(
-                                self.bot,
-                                player=player_data["data"]["match"]["players"][0],
-                                channel_message_tuples=channel_message_tuples,
-                            )
-                            await match_to_edit.edit_notification_embed()
-                            await self.cleanup_match_to_edit(match_id, friend_id)
-                            log.info("Success: after %s loops we edited the message", loop_count)
-
-                    else:
-                        log.debug("Stratz API Response Not OK with status %s", response.status)
+                if match_to_edit["edited_with_stratz"] and match_to_edit["edited_with_opendota"]:
+                    await self.cleanup_match_to_edit(match_id, friend_id)
+                    log.info("Success: after %s loops we edited the message", match_to_edit["loop_count"])
 
         log.debug("*** Finished Task to Edit Dota FPC Messages ***")
-
-    async def cleanup_match_to_edit(self, match_id: int, friend_id: int):
-        """Remove match from `self.matches_to_edit` and database."""
-        self.matches_to_edit.pop((match_id, friend_id))
-        query = "DELETE FROM dota_messages WHERE match_id=$1 AND friend_id=$2"
-        await self.bot.pool.execute(query, match_id, friend_id)
 
     @task_to_edit_dota_fpc_messages.after_loop
     async def stop_editing_task(self):
@@ -357,31 +408,38 @@ class DotaFPCNotifications(FPCCog):
             # in case of Exception let's disallow the task at all
             self.allow_editing_matches = False
 
-    # OPENDOTA RATE LIMITS
+    # STRATZ RATE LIMITS
 
-    @commands.command(hidden=True, aliases=["odrl"])
-    async def opendota_daily_ratelimit(self, ctx: AluContext):
-        """Send opendota rate limit numbers"""
-        embed = discord.Embed(colour=const.Colour.prpl()).add_field(
-            name="Opendota Daily RateLimit", value=self.bot.daily_opendota_ratelimit
+    def get_ratelimit_embed(self) -> discord.Embed:
+        return (
+            discord.Embed(colour=discord.Colour.blue(), title="Daily Remaining RateLimits")
+            .add_field(
+                name="Stratz", value=f"{self.stratz_daily_remaining_ratelimit}/{self.stratz_daily_total_ratelimit}"
+            )
+            .add_field(name="OpenDota", value=self.bot.daily_opendota_ratelimit)
         )
-        await ctx.reply(embed=embed)
+
+    @commands.command(hidden=True)
+    async def ratelimits(self, ctx: AluContext):
+        """Send OpenDota/Stratz rate limit numbers"""
+        await ctx.reply(embed=self.get_ratelimit_embed())
 
     @aluloop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
-    async def opendota_daily_ratelimit_report(self):
-        """Send information about opendota daily limit to spam logs.
+    async def daily_ratelimit_report(self):
+        """Send information about Stratz daily limit to spam logs.
 
-        OpenDota has daily ratelimit of 2000 requests and it's kinda scary one, if parsing requests fail a lot.
+        Stratz has daily ratelimit of 10000 requests and it's kinda scary one, if parsing requests fail a lot.
         This is why we also send @mention if ratelimit is critically low.
         """
+        content = ""
+        try:
+            if int(self.bot.daily_opendota_ratelimit) < 500 or int(self.stratz_daily_remaining_ratelimit) < 1_000:
+                content = f"<@{self.bot.owner_id}>"
+        except ValueError:
+            # I guess, whatever ?
+            return
 
-        content = f"<@{self.bot.owner_id}>" if int(self.bot.daily_opendota_ratelimit) < 500 else ""
-        embed = discord.Embed(
-            title="Daily Report",
-            colour=const.MaterialPalette.black(),
-            description=f"Opendota Daily RateLimit: `{self.bot.daily_opendota_ratelimit}`",
-        )
-        await self.hideout.daily_report.send(content=content, embed=embed)
+        await self.hideout.daily_report.send(content=content, embed=self.get_ratelimit_embed())
 
 
 async def setup(bot):

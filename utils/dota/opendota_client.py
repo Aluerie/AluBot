@@ -48,13 +48,14 @@ if __name__ == "__main__":
 
     async def test_opendota_get_match():
         async with OpenDotaClient() as opendota_client:
-            match = await opendota_client.get_match(match_id=7544944551)
-            player = match["players"][5]
-            pprint.pprint(list(player.keys()))
-            pprint.pprint(player["account_id"])
-            # match.pop('players') # type: ignore
+            match = await opendota_client.get_match(match_id=7543594334)
+            # player = match["players"][5]
+            # pprint.pprint(list(player.keys()))
+            # pprint.pprint(player["account_id"])
+            for item in ["players", "teamfights", "radiant_xp_adv", "radiant_gold_adv", "picks_bans"]:
+                match.pop(item, None)  # type: ignore
             # pprint.pprint(match.keys())
-            # pprint.pprint(match["players"][2])
+            pprint.pprint(match)
 
     async def test_opendota_request_parse():
         async with OpenDotaClient() as opendota_client:

@@ -189,7 +189,7 @@ class LoLFPCSettings(FPCSettingsBase):
         await self.setup_misc(ctx)
 
     @checks.hybrid.is_hideout()
-    @commands.hybrid_group(name="lol-fpc")
+    @commands.hybrid_group(name="lolfpc")  # cspell: ignore lolfpc
     async def hideout_lol_group(self, ctx: AluGuildContext):
         """League of Legends FPC (Favourite Player+Character) Hideout-only commands."""
 

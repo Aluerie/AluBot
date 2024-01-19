@@ -172,7 +172,7 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
         await self.setup_misc(ctx)
 
     @checks.hybrid.is_hideout()
-    @commands.hybrid_group(name="dota-fpc")
+    @commands.hybrid_group(name="dotafpc")  # cspell: ignore dotafpc
     async def hideout_dota_group(self, ctx: AluGuildContext):
         """Dota 2 FPC (Favourite Player+Character) Hideout-only commands."""
         await ctx.send_help()

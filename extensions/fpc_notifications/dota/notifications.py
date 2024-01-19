@@ -270,10 +270,8 @@ class DotaFPCNotifications(FPCCog):
                 log.debug("Stratz API Response Not OK with status %s", exc.status)
                 return False
 
-            if match["duration"] == 0:
-                # if somebody abandons in draft but we managed to send the game out
-                # then parser will fail on some stuff
-                # idk if this is the best way to find
+            if not match.get("radiant_win"):
+                # Somebody abandoned before the first blood or so game didn't count
                 await self.cleanup_match_to_edit(match_id, friend_id)
                 return True
 
@@ -387,7 +385,7 @@ class DotaFPCNotifications(FPCCog):
                 # OPENDOTA
                 if not match_to_edit["edited_with_opendota"]:
                     match_to_edit["edited_with_opendota"] = await self.edit_with_opendota(
-                        match_id, friend_id, match_to_edit['hero_id'], match_to_edit["channel_message_tuples"]
+                        match_id, friend_id, match_to_edit["hero_id"], match_to_edit["channel_message_tuples"]
                     )
                 # STRATZ
                 elif not match_to_edit["edited_with_stratz"]:

@@ -40,14 +40,12 @@ with pretty much everything I ever needed ! Check List of features after the pic
 ## 🏓Table of Contents
 
 - [AluBot 💜](#alubot-)
-  - [🏓Table of Contents](#table-of-contents)
-  - [🏠 Wiki](#-wiki)
-  - [📖 Features](#-features)
-  - [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
-  - [🤗 Thanks](#-thanks)
-  - [🚀 Powered by](#-powered-by)
-
----
+    - [🏓Table of Contents](#table-of-contents)
+    - [🏠 Wiki](#-wiki)
+    - [📖 Features](#-features)
+    - [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
+    - [🤗 Thanks](#-thanks)
+    - [🚀 Powered by](#-powered-by)
 
 ## 🏠 [Wiki](<https://github.com/Aluerie/AluBot/wiki>)
 
@@ -65,8 +63,8 @@ All info in `/help` command of the bot. The following list is far from being com
 
 - [X] FPC (Favourite Player+Character) Notifications
 - [X] maintains #🍋dota2_news announcements
-  - [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates  
-  - steamcommunity.com Dota 2 news
+    - [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates  
+    - steamcommunity.com Dota 2 news
 - [X] Fix twitter/instagram links with [fxtwitter.com](https://github.com/FixTweet/FixTweet)/[ddinstagram.com](https://ddinstagram.com/)
 - [X] In total over 100 useful/fun commands.
 - [X] And so much more (and even more to come).
@@ -99,11 +97,11 @@ All info in `/help` command of the bot. The following list is far from being com
 
 - There are [Contributing guidelines](/.github/CONTRIBUTING.md)
 - TL;DR^: Feel free to
-  - open a GitHub Issue/PR
-  - use `/feedback` bot command
-  - write [@aluerie](https://discordapp.com/users/312204139751014400) on discord
-  - look [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
-  - join our [discord server](https://discord.gg/K8FuDeP) (it's just a server of mine though, not some "official alubot support")
+    - open a GitHub Issue/PR
+    - use `/feedback` bot command
+    - write [@aluerie](https://discordapp.com/users/312204139751014400) on discord
+    - look [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
+    - join our [discord server](https://discord.gg/K8FuDeP) (it's just a server of mine though, not some "official alubot support")
 
 ## 🤗 Thanks
 
@@ -114,16 +112,29 @@ Special thanks to the whole `discord.py` community for endless amount of educati
 ## 🚀 Powered by
 
 <table>
-  <tr>
-    <td><img style="float: right;" src="./assets/images/readme/Stratz.png" alt="Stratz" width="40"/></td>
-    <td><a href="[url](https://stratz.com/)">Stratz API</a></td>
-  </tr>
-  <tr>
-    <td><img style="float: right;" src="./assets/images/readme/Stratz.png" alt="Stratz" width="40"/></td>
-    <td><a href="[url](https://stratz.com/)">Stratz API</a></td>
-  </tr>
     <tr>
-    <td><img src="./assets/images/readme/Stratz.png" alt="Stratz" width="40"/></td>
-    <td><a href="[url](https://stratz.com/)">Stratz API</a></td>
-  </tr>
+        <td>
+            <a href="https://github.com/Rapptz/discord.py">
+                <img valign="bottom" src="./assets/images/readme/DiscordPy.png" alt="Discord.py" width="40" />
+            </a>
+        </td>
+        <td>
+            <a href="https://discordpy.readthedocs.io/en/latest/">Discord.py</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://stratz.com/">
+                <img valign="bottom" src="./assets/images/readme/Stratz.png" alt="Stratz" width="40" />
+        </td>
+        </a>
+        <td><a href="https://api.stratz.com/graphiql/">Stratz API</a></td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://opendota.com/">
+                <img valign="bottom" src="./assets/images/readme/OpenDota.png" alt="OpenDota" width="40" />
+        </td></a>
+        <td><a href="https://docs.opendota.com/">OpenDota API</a></td>
+    </tr>
 </table>

@@ -45,6 +45,7 @@ with pretty much everything I ever needed ! Check List of features after the pic
   - [📖 Features](#-features)
   - [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
   - [🤗 Thanks](#-thanks)
+  - [🚀 Powered by](#-powered-by)
 
 ---
 
@@ -109,3 +110,20 @@ All info in `/help` command of the bot. The following list is far from being com
 Thanks to everybody who has ever helped me with the bot in any way or form.
 
 Special thanks to the whole `discord.py` community for endless amount of educational value.
+
+## 🚀 Powered by
+
+<table>
+  <tr>
+    <td><img style="float: right;" src="./assets/images/readme/Stratz.png" alt="Stratz" width="40"/></td>
+    <td><a href="[url](https://stratz.com/)">Stratz API</a></td>
+  </tr>
+  <tr>
+    <td><img style="float: right;" src="./assets/images/readme/Stratz.png" alt="Stratz" width="40"/></td>
+    <td><a href="[url](https://stratz.com/)">Stratz API</a></td>
+  </tr>
+    <tr>
+    <td><img src="./assets/images/readme/Stratz.png" alt="Stratz" width="40"/></td>
+    <td><a href="[url](https://stratz.com/)">Stratz API</a></td>
+  </tr>
+</table>

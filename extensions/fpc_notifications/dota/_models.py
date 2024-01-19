@@ -377,11 +377,7 @@ class DotaFPCMatchToEditWithStratz(BasePostMatchPlayer):
         def build_notification_image() -> Image.Image:
             log.debug("Building edited notification message.")
             width, height = img.size
-            information_height = 50
-            information_y = height - information_height
-            rectangle = Image.new("RGB", (width, information_height), str(colour))
-            ImageDraw.Draw(rectangle)
-            img.paste(rectangle, (0, information_y))
+            
             draw = ImageDraw.Draw(img)
 
             # items and aghanim shard/blessing

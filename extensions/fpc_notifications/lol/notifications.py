@@ -15,7 +15,7 @@ from ._models import LoLFPCMatchToEdit, LoLFPCMatchToSend
 if TYPE_CHECKING:
     from bot import AluBot
 
-    from .notifications import LoLMatchRecord
+    from .notifications import DeclareMatchesFinishedQueryRow
 
     class GetTwitchLivePlayerRow(TypedDict):
         twitch_id: int
@@ -31,14 +31,13 @@ if TYPE_CHECKING:
         twitch_id: int
         last_edited: int
 
-    class LoLMatchRecord(TypedDict):
+    class DeclareMatchesFinishedQueryRow(TypedDict):
         match_id: int
         platform: lol.LiteralPlatform
 
-    class LoLMessageRecord(TypedDict):
+    class EditLolNotificationQueryRow(TypedDict):
         message_id: int
         channel_id: int
-        match_id: int
         champion_id: int
 
 
@@ -196,23 +195,17 @@ class LoLFPCNotifications(FPCCog):
             msg = await channel.send(embed=embed, file=image_file)
 
             query = """
-                INSERT INTO lol_matches (match_id, platform)
-                VALUES ($1, $2)
-                ON CONFLICT DO NOTHING 
-            """
-            await self.bot.pool.execute(query, match.match_id, match.platform)
-            query = """
                 INSERT INTO lol_messages
-                (message_id, channel_id, match_id, champion_id) 
+                (message_id, channel_id, match_id, platform, champion_id) 
                 VALUES ($1, $2, $3, $4)
             """
-            await self.bot.pool.execute(query, msg.id, channel.id, match.match_id, match.champion_id)
+            await self.bot.pool.execute(query, msg.id, channel.id, match.match_id, match.platform, match.champion_id)
             query = "UPDATE lol_accounts SET last_edited=$1 WHERE summoner_id=$2"
             await self.bot.pool.execute(query, match.match_id, match.summoner_id)
 
     async def declare_matches_finished(self):
-        query = "SELECT * FROM lol_matches WHERE NOT match_id=ANY($1)"
-        rows: list[LoLMatchRecord] = await self.bot.pool.fetch(query, self.live_match_ids)
+        query = "SELECT match_id, platform FROM lol_messages WHERE NOT match_id=ANY($1)"
+        rows: list[DeclareMatchesFinishedQueryRow] = await self.bot.pool.fetch(query, self.live_match_ids)
         await self.edit_lol_notification_messages(rows)
 
     @aluloop(seconds=59)
@@ -226,7 +219,7 @@ class LoLFPCNotifications(FPCCog):
 
     # POST MATCH EDITS
 
-    async def edit_lol_notification_messages(self, match_rows: list[LoLMatchRecord]):
+    async def edit_lol_notification_messages(self, match_rows: list[DeclareMatchesFinishedQueryRow]):
         async with self.bot.acquire_riot_api_client() as riot_api_client:
             for match_row in match_rows:
                 try:
@@ -242,8 +235,10 @@ class LoLFPCNotifications(FPCCog):
                     else:
                         raise
 
-                query = "SELECT * FROM lol_messages WHERE match_id=$1"
-                message_rows: list[LoLMessageRecord] = await self.bot.pool.fetch(query, match_row["match_id"])
+                query = "SELECT message_id, channel_id, champion_id FROM lol_messages WHERE match_id=$1"
+                message_rows: list[EditLolNotificationQueryRow] = await self.bot.pool.fetch(
+                    query, match_row["match_id"]
+                )
 
                 for participant in match["info"]["participants"]:
                     channel_message_tuples: list[tuple[int, int]] = [
@@ -259,7 +254,7 @@ class LoLFPCNotifications(FPCCog):
                         channel_message_tuples=channel_message_tuples,
                     )
                     await post_match_player.edit_notification_embed()
-                query = "DELETE FROM lol_matches WHERE match_id=$1"
+                query = "DELETE FROM lol_messages WHERE match_id=$1"
                 await self.bot.pool.fetch(query, match_row["match_id"])
 
 

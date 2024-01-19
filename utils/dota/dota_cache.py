@@ -147,7 +147,7 @@ class ItemKeysCache(KeysCache):
         for key, item in item_dict.items():
             data["icon_by_id"][item["id"]] = f"https://cdn.cloudflare.steamstatic.com{item['img']}"
             data["id_by_key"][key] = item["id"]
-            data["name_by_id"][item["id"]] = item["dname"]
+            data["name_by_id"][item["id"]] = item.get("dname", key)
         return data
 
     # Example of item values to be transposed into each other

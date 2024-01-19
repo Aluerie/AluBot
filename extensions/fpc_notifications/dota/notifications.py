@@ -344,7 +344,7 @@ class DotaFPCNotifications(FPCCog):
     async def cleanup_match_to_edit(self, match_id: int, friend_id: int):
         """Remove match from `self.matches_to_edit` and database."""
         self.matches_to_edit.pop((match_id, friend_id))
-        query = "DELETE FROM dota_matches WHERE match_id=$1 AND friend_id=$2"
+        query = "DELETE FROM dota_messages WHERE match_id=$1 AND friend_id=$2"
         await self.bot.pool.execute(query, match_id, friend_id)
 
     @task_to_edit_dota_fpc_messages.after_loop

@@ -125,10 +125,9 @@ class DailyAutoSync(DevBaseCog):
 
         guild = discord.Object(id=guild_id) if guild_id else None
         synced = await self.bot.tree.sync(guild=guild)
-        # desc = f"Synced `{len(synced)}` {guild_name} commands."
-
-        # e = discord.Embed(color=0x234234, description=desc, title="3 Days auto-sync")
-        # await self.hideout.daily_report.send(embed=e)
+        
+        embed = discord.Embed(color=0x234234, description=f"Synced `{len(synced)}` **{guild_name}** commands.",)
+        await self.hideout.spam_logs.send(embed=embed)
 
 
 async def setup(bot):

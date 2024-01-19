@@ -124,6 +124,13 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     </tr>
     <tr>
         <td>
+            <a href="https://dota2.readthedocs.io/en/stable/">
+                <img valign="bottom" src="./assets/images/readme/dota_logo_psd.png" alt="Dota 2" width="40" />
+        </td></a>
+        <td><a href="https://dota2.readthedocs.io/en/stable/">Dota 2 Game Coordinator  API</a></td>
+    </tr>
+    <tr>
+        <td>
             <a href="https://stratz.com/">
                 <img valign="bottom" src="./assets/images/readme/Stratz.png" alt="Stratz" width="40" />
         </td>
@@ -136,5 +143,12 @@ Special thanks to the whole `discord.py` community for endless amount of educati
                 <img valign="bottom" src="./assets/images/readme/Opendota.png" alt="OpenDota" width="40" />
         </td></a>
         <td><a href="https://docs.opendota.com/">OpenDota API</a></td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://developer.riotgames.com/">
+                <img valign="bottom" src="./assets/images/readme/riot-logo.png" alt="Riot Games" width="40" />
+        </td></a>
+        <td><a href="https://developer.riotgames.com/apis">Riot Games API</a></td>
     </tr>
 </table>

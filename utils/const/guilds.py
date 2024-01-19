@@ -95,6 +95,7 @@ class Channel(ChannelEnum):
 
     # HIDEOUT
     global_logs = 997149550324240465
+    spam_logs = 1075497084075130880
     daily_report = 1066406466778566801
 
     look_spam = 970823670702411810
@@ -355,6 +356,10 @@ class HideoutGuild(SavedGuild):
     @property
     def global_logs(self) -> discord.TextChannel:
         return self.get_channel(Channel.global_logs, discord.TextChannel)
+
+    @property
+    def spam_logs(self) -> discord.TextChannel:
+        return self.get_channel(Channel.spam_logs, discord.TextChannel)
 
     @property
     def daily_report(self) -> discord.TextChannel:

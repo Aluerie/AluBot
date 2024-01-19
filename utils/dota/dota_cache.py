@@ -148,6 +148,8 @@ class ItemKeysCache(KeysCache):
             data["icon_by_id"][item["id"]] = f"https://cdn.cloudflare.steamstatic.com{item['img']}"
             data["id_by_key"][key] = item["id"]
             data["name_by_id"][item["id"]] = item.get("dname", key)
+
+        data["id_by_name"] = {v.lower(): k for k, v in data["name_by_id"].items()}
         return data
 
     # Example of item values to be transposed into each other
@@ -168,6 +170,10 @@ class ItemKeysCache(KeysCache):
         """Get item id by provided item_key."""
         return await self.get_value("id_by_key", item_key)
 
-    async def name_by_id(self, item_id: int) -> int:
+    async def name_by_id(self, item_id: int) -> str:
         """Get item display name by provided item_id."""
         return await self.get_value("name_by_id", item_id)
+
+    async def id_by_name(self, item_name: str) -> int:
+        """Get item id by provided item_name."""
+        return await self.get_value("id_by_name", item_name.lower())

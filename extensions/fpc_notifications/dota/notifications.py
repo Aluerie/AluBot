@@ -199,10 +199,10 @@ class DotaFPCNotifications(FPCCog):
             log.debug("Notification was succesfully sent")
 
             query = """
-                INSERT INTO dota_messages (message_id, channel_id, match_id, friend_id) 
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO dota_messages (message_id, channel_id, match_id, friend_id, hero_id) 
+                VALUES ($1, $2, $3, $4, $5)
             """
-            await self.bot.pool.execute(query, message.id, channel.id, match.match_id, match.friend_id)
+            await self.bot.pool.execute(query, message.id, channel.id, match.match_id, match.friend_id, match.hero_id)
 
     async def declare_matches_finished(self):
         if not self.allow_editing_matches:

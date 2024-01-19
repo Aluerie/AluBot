@@ -197,7 +197,7 @@ class LoLFPCNotifications(FPCCog):
             query = """
                 INSERT INTO lol_messages
                 (message_id, channel_id, match_id, platform, champion_id) 
-                VALUES ($1, $2, $3, $4)
+                VALUES ($1, $2, $3, $4, $5)
             """
             await self.bot.pool.execute(query, msg.id, channel.id, match.match_id, match.platform, match.champion_id)
             query = "UPDATE lol_accounts SET last_edited=$1 WHERE summoner_id=$2"

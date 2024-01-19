@@ -91,6 +91,12 @@ class DevInformation(DevBaseCog):
         )
         await ctx.reply(embed=embed)
 
+    @system.command(name="logs")
+    async def system_logs(self, ctx: AluContext):
+        """(\N{GREY HEART} Hideout-Only) Get bot's logs."""
+        logs_file = discord.File("./.alubot/logs/alubot.log")
+        await ctx.reply(file=logs_file)
+
 
 async def setup(bot: AluBot):
     await bot.add_cog(DevInformation(bot))

@@ -51,5 +51,6 @@ CREATE TABLE IF NOT EXISTS dota_messages (
     message_id BIGINT PRIMARY KEY,
     channel_id BIGINT NOT NULL,
     match_id BIGINT NOT NULL,
-    friend_id INTEGER NOT NULL
+    friend_id INTEGER NOT NULL,
+    hero_id: INT NOT NULL
 );

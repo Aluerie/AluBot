@@ -47,7 +47,7 @@ class OpenDotaAPISchema:
         {
             "abandons": int,
             "ability_upgrades_arr": list[int],
-            "account_id": int,
+            "account_id": NotRequired[int],  # Anonymous - do not have accounts
             "aghanims_scepter": Literal[0, 1],
             "aghanims_shard": Literal[0, 1],
             "assists": int,

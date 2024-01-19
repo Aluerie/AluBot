@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         friend_id: int
         message_id: int
         channel_id: int
+        hero_id: int
 
     class AnalyzeTopSourceResponsePlayerQueryRow(TypedDict):
         player_id: int
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
         twitch_id: int
 
     class MatchToEditSubDict(TypedDict):
+        hero_id: int
         loop_count: int
         edited_with_opendota: bool
         edited_with_stratz: bool
@@ -216,6 +218,7 @@ class DotaFPCNotifications(FPCCog):
             message_tuple = (match_row["channel_id"], match_row["message_id"])
             if uuid_tuple not in self.matches_to_edit:
                 self.matches_to_edit[uuid_tuple] = {
+                    "hero_id": match_row["hero_id"],
                     "loop_count": 0,
                     "edited_with_opendota": False,
                     "edited_with_stratz": False,
@@ -258,7 +261,7 @@ class DotaFPCNotifications(FPCCog):
 
     # POST MATCH EDITS
     async def edit_with_opendota(
-        self, match_id: int, friend_id: int, channel_message_tuples: set[tuple[int, int]]
+        self, match_id: int, friend_id: int, hero_id: int, channel_message_tuples: set[tuple[int, int]]
     ) -> bool:
         async with self.bot.acquire_opendota_client() as opendota_client:
             try:
@@ -275,7 +278,7 @@ class DotaFPCNotifications(FPCCog):
                 return True
 
             for player in match["players"]:
-                if player["account_id"] == friend_id:
+                if player["hero_id"] == hero_id:
                     opendota_player = player
                     break
             else:
@@ -384,7 +387,7 @@ class DotaFPCNotifications(FPCCog):
                 # OPENDOTA
                 if not match_to_edit["edited_with_opendota"]:
                     match_to_edit["edited_with_opendota"] = await self.edit_with_opendota(
-                        match_id, friend_id, match_to_edit["channel_message_tuples"]
+                        match_id, friend_id, match_to_edit['hero_id'], match_to_edit["channel_message_tuples"]
                     )
                 # STRATZ
                 elif not match_to_edit["edited_with_stratz"]:

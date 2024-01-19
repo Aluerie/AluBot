@@ -47,18 +47,9 @@ CREATE TABLE IF NOT EXISTS dota_accounts (
         REFERENCES dota_players(player_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS dota_matches (
-    match_id BIGINT PRIMARY KEY,
-    opendota_jobid BIGINT
-);
-
 CREATE TABLE IF NOT EXISTS dota_messages (
     message_id BIGINT PRIMARY KEY,
     channel_id BIGINT NOT NULL,
     match_id BIGINT NOT NULL,
-    character_id INTEGER NOT NULL,
-
-    CONSTRAINT fk_match
-        FOREIGN KEY (match_id)
-            REFERENCES dota_matches(match_id) ON DELETE CASCADE
+    friend_id INTEGER NOT NULL
 );

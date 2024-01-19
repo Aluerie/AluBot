@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NamedTuple, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple, Optional, TypedDict
 
 if TYPE_CHECKING:
     # CMsgGCToClientFindTopSourceTVGamesResponse
@@ -44,3 +44,75 @@ if TYPE_CHECKING:
         game_list_index: int
         game_list: list[CSourceTVGameSmall]
         specific_games: bool
+
+    class StratzEditFPCMessageGraphQLSchema:
+        # this is my FPC Edit Message query schema
+        BuffEvent = TypedDict(
+            "BuffEvent",
+            {
+                "itemId": Optional[int],
+            },
+        )
+        Stats = TypedDict(
+            "MatchPlayerBuffEvent",
+            {
+                "matchPlayerBuffEvent": list[BuffEvent],
+            },
+        )
+        PurchaseEvent = TypedDict(
+            "PurchaseEvent",
+            {
+                "time": int,
+                "itemId": int,
+            },
+        )
+        AbilityLearnEvent = TypedDict(
+            "AbilityLearnEvent",
+            {
+                "abilityId": int,
+            },
+        )
+        PlaybackData = TypedDict(
+            "PlaybackData",
+            {
+                "abilityLearnEvents": list[AbilityLearnEvent],
+                "purchaseEvents": list[PurchaseEvent],
+            },
+        )
+        Player = TypedDict(
+            "Player",
+            {
+                "isVictory": bool,
+                "heroId": int,
+                "kills": int,
+                "deaths": int,
+                "assists": int,
+                "item0Id": int,
+                "item1Id": int,
+                "item2Id": int,
+                "item3Id": int,
+                "item4Id": int,
+                "item5Id": int,
+                "neutral0Id": int,
+                "playbackData": PlaybackData,
+                "stats": Stats,
+            },
+        )
+        Match = TypedDict(
+            "Match",
+            {
+                "players": list[Player],
+            },
+        )
+        Data = TypedDict(
+            "Data",
+            {
+                "match": Match,
+            },
+        )
+        ResponseDict = TypedDict(
+            "ResponseDict",
+            {
+                "data": Data,
+            },
+        )

@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from bot import AluBot
     from utils.twitch import TwitchClient
 
+    from . import _schemas
+
 
 __all__ = (
     "Match",
@@ -74,6 +76,7 @@ class DotaFPCMatchToSend(Match):
         self,
         *,
         match_id: int,
+        friend_id: int,
         start_time: int,
         player_name: str,
         hero_id: int,
@@ -84,6 +87,7 @@ class DotaFPCMatchToSend(Match):
         hero_name: str,
     ):
         super().__init__(match_id)
+        self.friend_id: int = friend_id
         self.start_time: int = start_time
         self.player_name: str = player_name
         self.hero_id: int = hero_id
@@ -212,20 +216,41 @@ class DotaFPCMatchToEdit(BasePostMatchPlayer):
         self,
         bot: AluBot,
         *,
-        player: dota.OpenDotaAPISchema.Player,
+        player: _schemas.StratzEditFPCMessageGraphQLSchema.Player,
         channel_message_tuples: list[tuple[int, int]],
     ):
         super().__init__(bot, channel_message_tuples=channel_message_tuples)
 
-        self.hero_id: int = player["hero_id"]
-        self.outcome: str = "Win" if player["win"] else "Loss"
-        self.ability_upgrades_ids: list[int] = player["ability_upgrades_arr"][:18]
-        self.item_ids: list[int] = [player[f"item_{i}"] for i in range(6)]
+        self.hero_id: int = player["heroId"]
+        self.outcome: str = "Win" if player["isVictory"] else "Loss"
+
+        self.ability_upgrades_ids: list[int] = [
+            a["abilityId"] for a in player["playbackData"]["abilityLearnEvents"][:18]
+        ]
+        self.item_ids: list[int] = [player[f"item{i}Id"] for i in range(6)]
+        self.neutral_item_id: int = player["neutral0Id"]
         self.kda: str = f'{player["kills"]}/{player["deaths"]}/{player["assists"]}'
-        self.purchase_log: list[dota.OpenDotaAPISchema.PurchaseLogEvent] = player["purchase_log"]
-        self.aghanims_blessing: Literal[0, 1] = player["aghanims_scepter"]
-        self.aghanims_shard: Literal[0, 1] = player["aghanims_shard"]
-        self.neutral_item_id: int = player["item_neutral"]
+
+        self.aghanims_shard: bool = False
+        self.aghanims_blessing: bool = False
+
+        for buff_event in player["stats"]["matchPlayerBuffEvent"]:
+            if buff_event["itemId"] == 609:  # hard coded value oh my god
+                self.aghanims_shard = True
+            elif buff_event["itemId"] == 108:  # hard coded value oh my god
+                self.aghanims_blessing = True
+
+        self.purchase_log: list[str] = []
+        # this^^^ should be 8 strings (6 items + aghs shard + blessing) len list as a result of below operations
+        for i in range(6):
+            item_id = player[f"item{i}Id"]
+            for purchase_event in reversed(player["playbackData"]["purchaseEvents"]):
+                if purchase_event["itemId"] == item_id:
+                    self.purchase_log.append(f"{math.ceil(purchase_event['time']/60)}m")
+                    player["playbackData"]["purchaseEvents"].remove(purchase_event)
+                    break
+            else:
+                self.purchase_log.append("")
 
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
@@ -235,34 +260,21 @@ class DotaFPCMatchToEdit(BasePostMatchPlayer):
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
 
-        # items and aghanim shard/blessing
-        async def get_item_timing(item_id: int) -> str:
-            for purchase in reversed(self.purchase_log):
-                if item_id == await self.bot.dota_cache.item.id_by_key(purchase["key"]):
-                    self.purchase_log.remove(purchase)
-                    return f"{math.ceil(purchase['time']/60)}m"
-            return "?m"
-
         item_list: list[tuple[Image.Image, str]] = []
-        for item_id in self.item_ids:
+        for count, item_id in enumerate(self.item_ids):
             item_icon_url = await self.bot.dota_cache.item.icon_by_id(item_id)
             image = await self.bot.transposer.url_to_image(item_icon_url)
-            timing = await get_item_timing(item_id)
+            timing = self.purchase_log[count]
             item_list.append((image, timing))
-
-        # reverse so we have proper order in the embed like
-        # shard blessing item0 item1 item3 item4 item5 item6
-        # because we will start drawing items from the end this way
-        item_list = item_list[::-1]
 
         if self.aghanims_blessing:
             image = await self.bot.transposer.url_to_image(const.DOTA.lAZY_AGHS_BLESS)
-            timing = await get_item_timing(271)
+            timing = ""
             item_list.append((image, timing))
 
         if self.aghanims_shard:
             image = await self.bot.transposer.url_to_image(const.DOTA.LAZY_AGHS_SHARD)
-            timing = await get_item_timing(609)
+            timing = ""
             item_list.append((image, timing))
 
         neutral_item_url = await self.bot.dota_cache.item.icon_by_id(self.neutral_item_id)
@@ -294,15 +306,15 @@ class DotaFPCMatchToEdit(BasePostMatchPlayer):
             for count, (item_image, item_timing) in enumerate(item_list):
                 # item image
                 item_image = item_image.resize((69, information_height))  # 69/50 - to match 88/64 which is natural size
-                left = width - (count + 1) * item_image.width
+                left = count * item_image.width
                 img.paste(item_image, (left, height - item_image.height))
 
                 # item timing
                 item_timing_text_w, item_timing_text_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
                 draw.text((left, height - item_timing_text_h), item_timing, font=font_item_timing, align="left")
 
-            resized_neutral_item_image = neutral_item_image.resize((69, information_height))
-            img.paste(im=resized_neutral_item_image, box=(0, height - resized_neutral_item_image.height))
+            resized_neutral_item_image = i = neutral_item_image.resize((69, information_height))
+            img.paste(im=i, box=(width - i.width, height - i.height))
 
             # abilities
             ability_h = 37

@@ -54,4 +54,7 @@ TEST_ERROR_HANDLER_WEBHOOK_URL = "https://discord.com/api/webhooks/something"
 # BOT CONSOLE LOGGER SPAM WEEBHOOK URL
 SPAM_LOGS_WEBHOOK_URL = "https://discord.com/api/webhooks/something"
 
+# STRATZ
+STRATZ_BEARER_TOKEN = ""
+
 # /* cSpell:enable */

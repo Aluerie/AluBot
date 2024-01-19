@@ -46,13 +46,18 @@ if __name__ == "__main__":
     import asyncio
     import pprint
 
-    async def test_opendota_client():
+    async def test_opendota_get_match():
         async with OpenDotaClient() as opendota_client:
-            match = await opendota_client.get_match(match_id=7540506660)
+            match = await opendota_client.get_match(match_id=7543622719)
             for word in ["players", "picks_bans", "draft_timings", "cosmetics", "objectives"]:
-                match.pop(word)  # type: ignore
+                match.pop(word, None)  # type: ignore
             print(match["od_data"]["has_parsed"])
             pprint.pprint(match)
             # pprint.pprint(match["players"][2])
 
-    asyncio.run(test_opendota_client())
+    async def test_opendota_request_parse():
+        async with OpenDotaClient() as opendota_client:
+            job = await opendota_client.request_parse(match_id=7543594334)
+            pprint.pprint(job)
+
+    asyncio.run(test_opendota_request_parse())

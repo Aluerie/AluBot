@@ -51,18 +51,10 @@ CREATE TABLE IF NOT EXISTS lol_accounts (
         REFERENCES lol_players(player_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS lol_matches (
-    match_id BIGINT PRIMARY KEY,
-    platform TEXT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS lol_messages (
     message_id BIGINT PRIMARY KEY,
     channel_id BIGINT NOT NULL,
     match_id BIGINT NOT NULL,
-    champion_id INTEGER NOT NULL,
-
-    CONSTRAINT fk_match
-        FOREIGN KEY (match_id)
-            REFERENCES lol_matches(match_id) ON DELETE CASCADE
+    platform TEXT NOT NULL,
+    champion_id INTEGER NOT NULL
 );

@@ -142,15 +142,18 @@ class ItemKeysCache(KeysCache):
         data = {
             "icon_by_id": {0: const.DOTA.EMPTY_ITEM_TILE},
             "id_by_key": {},
+            "name_by_id": {0: "Empty Slot"},
         }
         for key, item in item_dict.items():
             data["icon_by_id"][item["id"]] = f"https://cdn.cloudflare.steamstatic.com{item['img']}"
             data["id_by_key"][key] = item["id"]
+            data["name_by_id"][item["id"]] = item["dname"]
         return data
 
     # Example of item values to be transposed into each other
     # id: 265
     # key: "infused_raindrop"
+    # name: "Infused Raindrops"
     # icon: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/items/infused_raindrop_lg.png"
 
     async def icon_by_id(self, item_id: int) -> str:
@@ -164,3 +167,7 @@ class ItemKeysCache(KeysCache):
     async def id_by_key(self, item_key: str) -> int:
         """Get item id by provided item_key."""
         return await self.get_value("id_by_key", item_key)
+
+    async def name_by_id(self, item_id: int) -> int:
+        """Get item display name by provided item_id."""
+        return await self.get_value("name_by_id", item_id)

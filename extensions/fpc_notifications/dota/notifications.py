@@ -45,8 +45,11 @@ if TYPE_CHECKING:
     from . import _schemas
 
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+send_log = logging.getLogger("send_dota_fpc")
+send_log.setLevel(logging.WARN)
+
+edit_log = logging.getLogger("edit_dota_fpc")
+edit_log.setLevel(logging.DEBUG)
 
 
 class DotaFPCNotifications(FPCCog):
@@ -81,7 +84,7 @@ class DotaFPCNotifications(FPCCog):
                     self.top_source_dict[match.match_id] = match
 
                 if len(self.top_source_dict) == 100:
-                    log.debug("top_source_dict is ready: Emitting my_top_games_response")
+                    send_log.debug("top_source_dict is ready: Emitting my_top_games_response")
                     self.bot.dota.emit("my_top_games_response")
                     # did not work
                     # self.bot.dispatch("my_top_games_response")
@@ -162,7 +165,7 @@ class DotaFPCNotifications(FPCCog):
                     )
                 ]
                 hero_name = await self.bot.dota_cache.hero.name_by_id(player.hero_id)
-                log.debug("%s - %s", user["display_name"], hero_name)
+                send_log.debug("%s - %s", user["display_name"], hero_name)
 
                 if channel_ids:
                     hero_ids = [p.hero_id for p in sorted(match.players, key=lambda x: (x.team, x.team_slot))]
@@ -182,21 +185,21 @@ class DotaFPCNotifications(FPCCog):
                     )
 
     async def send_notifications(self, match: DotaFPCMatchToSend):
-        log.debug("Dota 2 FPC's `send_notifications` is starting")
+        send_log.debug("Dota 2 FPC's `send_notifications` is starting")
 
         embed, image_file = await match.get_embed_and_file(self.bot)
 
         for channel_id in match.channel_ids:
             channel = self.bot.get_channel(channel_id)
             if channel is None:
-                log.debug("The channel is None")
+                send_log.debug("The channel is None")
                 continue
 
             assert isinstance(channel, discord.TextChannel)
-            log.debug("Successfully made embed+file")
+            send_log.debug("Successfully made embed+file")
 
             message = await channel.send(embed=embed, file=image_file)
-            log.debug("Notification was succesfully sent")
+            send_log.debug("Notification was succesfully sent")
 
             query = """
                 INSERT INTO dota_messages (message_id, channel_id, match_id, friend_id, hero_id) 
@@ -209,7 +212,7 @@ class DotaFPCNotifications(FPCCog):
             # then we don't need this :D
             return
 
-        log.debug("Declaring finished matches")
+        send_log.debug("Declaring finished matches")
         query = "SELECT * FROM dota_messages WHERE NOT match_id=ANY($1)"
         finished_match_rows: list[DotaFPCMessage] = await self.bot.pool.fetch(query, list(self.top_source_dict.keys()))
 
@@ -227,25 +230,28 @@ class DotaFPCNotifications(FPCCog):
             else:
                 self.matches_to_edit[uuid_tuple]["channel_message_tuples"].add(message_tuple)
 
+        edit_log.debug(self.matches_to_edit)
         if self.matches_to_edit and not self.task_to_edit_dota_fpc_messages.is_running():
             self.task_to_edit_dota_fpc_messages.start()
 
     @aluloop(seconds=59)
     async def task_to_send_dota_fpc_messages(self):
-        log.debug(f"--- Task is starting now ---")
+        send_log.debug(f"--- Task is starting now ---")
 
         await self.preliminary_queries()
         self.top_source_dict = {}
 
         start_time = time.perf_counter()
-        log.debug("calling request_top_source NOW ---")
-        log.debug('Steam is connected: %s', self.bot.steam.connected)
+        send_log.debug("calling request_top_source NOW ---")
+        send_log.debug("Steam is connected: %s", self.bot.steam.connected)
         # await self.bot.steam_dota_login()
         self.request_top_source()
         # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
         # res = await asyncio.to_thread(self.request_top_source)
         top_source_end_time = time.perf_counter() - start_time
-        log.debug("top source request took %s secs with %s results", top_source_end_time, len(self.top_source_dict))
+        send_log.debug(
+            "top source request took %s secs with %s results", top_source_end_time, len(self.top_source_dict)
+        )
 
         await self.analyze_top_source_response()
         for match in self.live_matches:
@@ -258,7 +264,7 @@ class DotaFPCNotifications(FPCCog):
 
         if self.is_postmatch_edits_running:
             await self.declare_matches_finished()
-        log.debug(f"--- Task is finished ---")
+        send_log.debug(f"--- Task is finished ---")
 
     # POST MATCH EDITS
     async def edit_with_opendota(
@@ -268,7 +274,7 @@ class DotaFPCNotifications(FPCCog):
             try:
                 match = await opendota_client.get_match(match_id=match_id)
             except aiohttp.ClientResponseError as exc:
-                log.debug("Stratz API Response Not OK with status %s", exc.status)
+                edit_log.debug("Stratz API Response Not OK with status %s", exc.status)
                 return False
 
             if not match.get("radiant_win"):
@@ -331,7 +337,7 @@ class DotaFPCNotifications(FPCCog):
             self.stratz_daily_total_ratelimit = response.headers["X-RateLimit-Limit-Day"]
 
             if not response.ok:
-                log.debug("Stratz API Response Not OK with status %s", response.status)
+                edit_log.debug("Stratz API Response Not OK with status %s", response.status)
                 return False
 
             player_data: _schemas.StratzEditFPCMessageGraphQLSchema.ResponseDict = await response.json(
@@ -365,13 +371,14 @@ class DotaFPCNotifications(FPCCog):
         The data is featured from opendota. The parsing is requested if data is not ready.
         """
 
-        log.debug("*** Starting Task to Edit Dota FPC Messages ***")
+        edit_log.debug("*** Starting Task to Edit Dota FPC Messages ***")
 
         for tuple_uuid in list(self.matches_to_edit):
             match_id, friend_id = tuple_uuid
 
             self.matches_to_edit[tuple_uuid]["loop_count"] += 1
             match_to_edit = self.matches_to_edit[tuple_uuid]
+            edit_log.debug("Editing match %s friend %s loop %s", match_id, friend_id, match_to_edit["loop_count"])
 
             if match_to_edit["loop_count"] == 1:
                 # skip the first iteration so OpenDota can catch-up on the data in next 5 minutes.
@@ -388,17 +395,19 @@ class DotaFPCNotifications(FPCCog):
                     match_to_edit["edited_with_opendota"] = await self.edit_with_opendota(
                         match_id, friend_id, match_to_edit["hero_id"], match_to_edit["channel_message_tuples"]
                     )
+                    edit_log.debug("OpenDota editing: %s", match_to_edit["edited_with_opendota"])
                 # STRATZ
                 elif not match_to_edit["edited_with_stratz"]:
                     match_to_edit["edited_with_stratz"] = await self.edit_with_stratz(
                         match_id, friend_id, match_to_edit["channel_message_tuples"]
                     )
+                    edit_log.debug("OpenDota editing: %s", match_to_edit["edited_with_stratz"])
 
                 if match_to_edit["edited_with_stratz"] and match_to_edit["edited_with_opendota"]:
                     await self.cleanup_match_to_edit(match_id, friend_id)
-                    log.info("Success: after %s loops we edited the message", match_to_edit["loop_count"])
+                    edit_log.info("Success: after %s loops we edited the message", match_to_edit["loop_count"])
 
-        log.debug("*** Finished Task to Edit Dota FPC Messages ***")
+        edit_log.debug("*** Finished Task to Edit Dota FPC Messages ***")
 
     @task_to_edit_dota_fpc_messages.after_loop
     async def stop_editing_task(self):
@@ -416,9 +425,13 @@ class DotaFPCNotifications(FPCCog):
         return (
             discord.Embed(colour=discord.Colour.blue(), title="Daily Remaining RateLimits")
             .add_field(
-                name="Stratz", value=f"{self.stratz_daily_remaining_ratelimit}/{self.stratz_daily_total_ratelimit}"
+                name="Stratz",
+                value=f"{self.stratz_daily_remaining_ratelimit}/{self.stratz_daily_total_ratelimit}",
             )
-            .add_field(name="OpenDota", value=self.bot.daily_opendota_ratelimit)
+            .add_field(
+                name="OpenDota",
+                value=self.bot.daily_opendota_ratelimit,
+            )
         )
 
     @commands.command(hidden=True)

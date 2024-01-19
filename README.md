@@ -62,10 +62,19 @@ I put a lot of information into GitHub [🏠 Wiki](https://github.com/Aluerie/Al
 All info in `/help` command of the bot. The following list is far from being complete, but still (#TODO: update the list):
 
 - [X] FPC (Favourite Player+Character) Notifications
-- [X] maintains #🍋dota2_news announcements
-    - [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay) updates  
-    - steamcommunity.com Dota 2 news
-- [X] Fix twitter/instagram links with [fxtwitter.com](https://github.com/FixTweet/FixTweet)/[ddinstagram.com](https://ddinstagram.com/)
+
+    Sends you notifications when your <ins>F</ins>avourite <ins>P</ins>layers pick your favourite <ins>C</ins>haracters
+    (thus FPC abbreviation). Also edits messages to include post-game stats.
+
+    The following games are currently supported:
+    - Dota 2
+    - League Of Legends
+- [X] maintains Game News  announcement channels
+    - `#🐈bugtracker_news` tracks when Valve developers interact with [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay).
+    - `#🍋dota2_news with` Official [Dota 2](https://www.dota2.com/home) news
+- [X] Fix bad links in discord chat with Mimic™️ (just a feature name) technology. Currently fixes:
+    - Twitter links with the help of [fxtwitter.com](https://github.com/FixTweet/FixTweet)
+    - Instagram with [ddinstagram.com](https://ddinstagram.com/)
 - [X] In total over 100 useful/fun commands.
 - [X] And so much more (and even more to come).
   

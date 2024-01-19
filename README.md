@@ -133,7 +133,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     <tr>
         <td>
             <a href="https://opendota.com/">
-                <img valign="bottom" src="./assets/images/readme/OpenDota.png" alt="OpenDota" width="40" />
+                <img valign="bottom" src="./assets/images/readme/Opendota.png" alt="OpenDota" width="40" />
         </td></a>
         <td><a href="https://docs.opendota.com/">OpenDota API</a></td>
     </tr>

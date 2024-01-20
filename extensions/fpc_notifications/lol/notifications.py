@@ -208,7 +208,7 @@ class LoLFPCNotifications(FPCCog):
             SELECT match_id, champion_id, platform, ARRAY_AGG ((message_id, channel_id)) channel_message_tuples
             FROM lol_messages 
             WHERE NOT match_id=ANY($1)
-            GROUP BY match_id, champion_id
+            GROUP BY match_id, champion_id, platform
             """
         rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(query, self.live_match_ids)
         await self.edit_lol_notification_messages(rows)

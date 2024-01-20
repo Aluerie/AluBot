@@ -217,7 +217,7 @@ class DotaFPCNotifications(FPCCog):
             SELECT match_id, friend_id, hero_id, ARRAY_AGG ((message_id, channel_id)) channel_message_tuples
             FROM dota_messages 
             WHERE NOT match_id=ANY($1)
-            GROUP BY match_id, friend_id
+            GROUP BY match_id, friend_id, hero_id
         """
         current_match_to_edit_ids = [key[0] for key in self.matches_to_edit]
         currently_live_match_ids = list(self.top_source_dict.keys())

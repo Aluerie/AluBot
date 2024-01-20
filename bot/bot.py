@@ -206,19 +206,28 @@ class AluBot(commands.Bot, AluBotHelper):
     def owner(self) -> discord.User:
         return self.bot_app_info.owner
 
-    # INITIATE EXTRA CLIENTS FUNCTIONS #################################################################################
+    # INITIALIZE EXTRA ATTRIBUTES/CLIENTS/FUNCTIONS ####################################################################
 
-    # The following functions are `set_something_attrs`
-    # which import some heavy modules and initiate some ~heavy clients under bot namespace
-    # they should be used in `cog_load` only for those cogs which need to work with them,
-    # i.e. fpc dota notifications should call `bot.initiate_steam_dota` and `bot.initiate_twitch`
+    # The following functions are `initialize_something`
+    # which import some heavy modules and initialize some ~heavy clients under bot namespace
+    # they should be used in `__init__` or in `cog_load` only for those cogs which need to work with them,
+    # i.e. fpc dota notifications should call
+    # `bot.initialize_steam_dota`, `bot.initialize_opendota` and `bot.initialize_twitch`
     #
     # note that I import inside the functions which is against pep8 but apparently it is not so bad:
     # pep8 answer: https://stackoverflow.com/a/1188672/19217368
     # points to import inside the function: https://stackoverflow.com/a/1188693/19217368
     # and I exactly want these^
 
-    def initiate_opendota(self) -> None:
+    def initialize_opendota(self) -> None:
+        """Initialize opendota attrs
+
+        This allows access to
+        * OpenDota API pulsefire-like client
+        * CDragon Pulsefire client
+        * CDragon Cache with static game data
+        * MerakiAnalysis Cache with roles identification data
+        """
         if not hasattr(self, "dota_cache"):
             import orjson
             from pulsefire.middlewares import http_error_middleware, json_response_middleware
@@ -260,7 +269,16 @@ class AluBot(commands.Bot, AluBotHelper):
             # Cache
             self.dota_cache = DotaCache(self)
 
-    def initiate_pulsefire(self) -> None:
+    def initialize_pulsefire(self) -> None:
+        """Initialize pulsefire attrs
+
+        This allows access to
+        * Riot API Pulsefire client
+        * CDragon Pulsefire client
+        * CDragon Cache with static game data
+        * MerakiAnalysis Cache with roles identification data
+        """
+
         if not hasattr(self, "cdragon") or not hasattr(self, "meraki_roles"):
             import orjson
             from pulsefire.clients import CDragonClient, RiotAPIClient
@@ -297,14 +315,14 @@ class AluBot(commands.Bot, AluBotHelper):
             self.cdragon = CDragonCache(self)
             self.meraki_roles = MerakiRolesCache(self)
 
-    async def initiate_steam_dota(self) -> None:
+    async def initialize_steam_dota(self) -> None:
         if not hasattr(self, "steam"):
             from dota2.client import Dota2Client
             from steam.client import SteamClient
 
             self.steam = SteamClient()
             self.dota = Dota2Client(self.steam)
-            await self.steam_dota_login()
+            await self.login_into_steam_dota()
 
             @self.steam.on("disconnected")  # type: ignore
             def try_to_reconnect_on_disconnect():
@@ -314,7 +332,7 @@ class AluBot(commands.Bot, AluBotHelper):
             def try_to_reconnect_on_error(error_result):
                 self.steam.reconnect()
 
-    async def steam_dota_login(self) -> None:
+    async def login_into_steam_dota(self) -> None:
         log.debug("Checking if steam is connected: %s", self.steam.connected)
         if self.steam.connected is False:
             log.debug(f"dota2info: client.connected {self.steam.connected}")
@@ -332,20 +350,20 @@ class AluBot(commands.Bot, AluBotHelper):
                 log.error("Logging into Steam failed")
                 await self.exc_manager.register_error(exc, source="steam login", where="steam login")
 
-    def initiate_github(self) -> None:
+    def initialize_github(self) -> None:
         if not hasattr(self, "github"):
             from githubkit import GitHub
 
             self.github = GitHub(config.GIT_PERSONAL_TOKEN)
 
-    async def initiate_twitch(self) -> None:
+    async def initialize_twitch(self) -> None:
         if not hasattr(self, "twitch"):
             from utils.twitch import TwitchClient
 
             self.twitch = TwitchClient(self)
             await self.twitch.connect()
 
-    def initiate_tz_manager(self) -> None:
+    def initialize_tz_manager(self) -> None:
         if not hasattr(self, "tz_manager"):
             from utils.timezones import TimezoneManager
 

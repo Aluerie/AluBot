@@ -189,7 +189,7 @@ class TimeLine:
 
 class BugTracker(AluCog):
     async def cog_load(self) -> None:
-        self.bot.initiate_github()
+        self.bot.initialize_github()
         self.valve_devs = await self.get_valve_devs()
         self.git_comments_check.add_exception_type(RequestError, RequestFailed)
         self.git_comments_check.start()

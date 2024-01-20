@@ -33,6 +33,9 @@ class DevInformation(DevBaseCog):
     async def system_information(self, ctx: AluContext):
         """(\N{GREY HEART} Hideout-Only) Get system info about machine hosting the bot."""
 
+        # some data doesn't fit nicely with chained embed initialization format
+        cpu_freq = f"| {psutil.cpu_freq().current / 1000:.1f}GHz\n" if psutil.cpu_count() else ""
+
         embed = (
             discord.Embed(
                 colour=const.Colour.prpl(),
@@ -49,7 +52,7 @@ class DevInformation(DevBaseCog):
             .add_field(
                 name="Current % | max values",
                 value=(
-                    f"\N{BLACK CIRCLE} CPU usage: \n{psutil.cpu_percent()}% | {psutil.cpu_freq().current / 1000:.1f}GHz\n"
+                    f"\N{BLACK CIRCLE} CPU usage: \n{psutil.cpu_percent()}% {cpu_freq}"
                     f"\N{BLACK CIRCLE} RAM usage: \n{psutil.virtual_memory().percent}% | "
                     f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
                     f'\N{BLACK CIRCLE} Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '

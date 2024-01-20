@@ -35,10 +35,8 @@ class Regex:
 class PICTURE(StrEnum):
     github = "https://pics.freeicons.io/uploads/icons/png/4381378511600029534-512.png"
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
-    twitch = (
-        "https://cdn3.iconfinder.com/data/icons/"
-        "social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
-    )
+    twitch = "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
+    
     dankfix = "https://i.imgur.com/gzrPVLs.png"
 
     frog = "https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png"

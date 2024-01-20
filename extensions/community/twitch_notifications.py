@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 class TwitchCog(CommunityCog):
     async def cog_load(self) -> None:
-        await self.bot.initiate_twitch()
+        await self.bot.initialize_twitch()
 
         # Twitch EventSub
         # these are supposed to be broadcaster/user access token for streamers we sub to

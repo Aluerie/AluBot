@@ -101,7 +101,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         return discord.PartialEmoji.from_str(const.Emote.TwoBButt)
 
     async def cog_load(self) -> None:
-        await self.bot.initiate_steam_dota()
+        await self.bot.initialize_steam_dota()
         self.match_history_refresh.start()
 
     async def cog_unload(self) -> None:
@@ -295,7 +295,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
 
     def request_player_match_history(self, start_at_match_id=0, matches_requested=20):
         log.info("try_get_friend stats dota2info")
-        self.bot.steam_dota_login()
+        self.bot.login_into_steam_dota()
 
         def ready_function():
             log.info("ready_function friend stats")
@@ -316,7 +316,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
     def request_match_details(self, match_id=0, prev_mmr=0):
         log.info("try_get_friends_stats dota2info")
         self.current_match_data = None
-        self.bot.steam_dota_login()
+        self.bot.login_into_steam_dota()
 
         def ready_function():
             log.info("ready_function friend stats")

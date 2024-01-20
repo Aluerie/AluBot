@@ -290,7 +290,7 @@ async def beta_test_edit_notification_image(self: AluCog):
 
     from extensions.fpc_notifications.lol._models import LoLFPCMatchToEdit
 
-    self.bot.initiate_pulsefire()
+    self.bot.initialize_pulsefire()
     async with self.bot.acquire_riot_api_client() as riot_api_client:
         match_id = "NA1_4895000741"
         continent = "AMERICAS"

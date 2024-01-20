@@ -124,7 +124,7 @@ class LoLFPCSettings(FPCSettingsBase):
     """
 
     def __init__(self, bot: AluBot, *args, **kwargs):
-        bot.initiate_pulsefire()
+        bot.initialize_pulsefire()
         super().__init__(
             bot,
             *args,

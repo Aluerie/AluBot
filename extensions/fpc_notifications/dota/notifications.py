@@ -12,7 +12,7 @@ import orjson
 from discord.ext import commands
 
 import config
-from utils import aluloop, const
+from utils import aluloop
 
 from .._base import FPCCog
 from ._models import DotaFPCMatchToEditWithOpenDota, DotaFPCMatchToEditWithStratz, DotaFPCMatchToSend
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 
 
 send_log = logging.getLogger("send_dota_fpc")
-send_log.setLevel(logging.WARN)
+send_log.setLevel(logging.DEBUG)
 
 edit_log = logging.getLogger("edit_dota_fpc")
 edit_log.setLevel(logging.DEBUG)
@@ -55,14 +55,14 @@ edit_log.setLevel(logging.DEBUG)
 class DotaFPCNotifications(FPCCog):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, *args, **kwargs)
+        # Send Matches related attrs
         self.lobby_ids: set[int] = set()
         self.top_source_dict: MutableMapping[int, _schemas.CSourceTVGameSmall] = {}
         self.live_matches: list[DotaFPCMatchToSend] = []
         self.hero_fav_ids: list[int] = []
         self.player_fav_ids: list[int] = []
 
-        self.is_postmatch_edits_running: bool = True
-
+        # Edit Matches related attrs
         self.allow_editing_matches: bool = True
         self.matches_to_edit: MatchToEdit = {}
         self.stratz_daily_remaining_ratelimit: str = "Not set yet"
@@ -262,7 +262,7 @@ class DotaFPCNotifications(FPCCog):
             # likely spoiled result that gonna ruin "declare_matches_finished" so let's return
             return
 
-        if self.is_postmatch_edits_running:
+        if self.allow_editing_matches:
             await self.declare_matches_finished()
         send_log.debug(f"--- Task is finished ---")
 
@@ -272,19 +272,19 @@ class DotaFPCNotifications(FPCCog):
     ) -> bool:
         async with self.bot.acquire_opendota_client() as opendota_client:
             try:
-                match = await opendota_client.get_match(match_id=match_id)
+                opendota_match = await opendota_client.get_match(match_id=match_id)
             except aiohttp.ClientResponseError as exc:
                 edit_log.debug("OpenDota API Response Not OK with status %s", exc.status)
                 return False
 
-            if "radiant_win" not in match:
+            if "radiant_win" not in opendota_match:
                 # Somebody abandoned before the first blood or so game didn't count
                 # thus "radiant_win" key is not present
                 edit_log.debug("The stats for match %s did not count. Deleting the match.", match_id)
                 await self.cleanup_match_to_edit(match_id, friend_id)
                 return True
 
-            for player in match["players"]:
+            for player in opendota_match["players"]:
                 if player["hero_id"] == hero_id:
                     opendota_player = player
                     break
@@ -342,11 +342,11 @@ class DotaFPCNotifications(FPCCog):
                 edit_log.debug("Stratz API Response Not OK with status %s", response.status)
                 return False
 
-            player_data: _schemas.StratzEditFPCMessageGraphQLSchema.ResponseDict = await response.json(
+            stratz_data: _schemas.StratzEditFPCMessageGraphQLSchema.ResponseDict = await response.json(
                 loads=orjson.loads
             )
 
-            if player_data["data"]["match"] is None:
+            if stratz_data["data"]["match"] is None:
                 # if somebody abandons in draft but we managed to send the game out
                 # then parser will fail and declare None
                 return True
@@ -354,7 +354,7 @@ class DotaFPCNotifications(FPCCog):
             # we are ready to send the notification
             fpc_match_to_edit = DotaFPCMatchToEditWithStratz(
                 self.bot,
-                player=player_data["data"]["match"]["players"][0],
+                player=stratz_data["data"]["match"]["players"][0],
                 channel_message_tuples=channel_message_tuples,
             )
             await fpc_match_to_edit.edit_notification_embed()

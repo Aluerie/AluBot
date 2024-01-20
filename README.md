@@ -46,6 +46,7 @@ with pretty much everything I ever needed ! Check List of features after the pic
     - [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
     - [🤗 Thanks](#-thanks)
     - [🚀 Powered by](#-powered-by)
+    - [TODO: finish the table](#todo-finish-the-table)
 
 ## 🏠 [Wiki](<https://github.com/Aluerie/AluBot/wiki>)
 
@@ -70,7 +71,7 @@ All info in `/help` command of the bot. The following list is far from being com
     - Dota 2
     - League Of Legends
 - [X] maintains Game News  announcement channels
-    - `#🐈bugtracker_news` tracks when Valve developers interact with [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay).
+    - `#🐈bugtracker_news` tracks when Valve developers interact with the [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay).
     - `#🍋dota2_news with` Official [Dota 2](https://www.dota2.com/home) news
 - [X] Fix bad links in discord chat with Mimic™️ (just a feature name) technology. Currently fixes:
     - Twitter links with the help of [fxtwitter.com](https://github.com/FixTweet/FixTweet)
@@ -122,42 +123,96 @@ Special thanks to the whole `discord.py` community for endless amount of educati
 
 <table>
     <tr>
+        <th style="text-align: center;">Site</th>
+        <th style="text-align: center;">API Docs</th>
+        <th style="text-align: center;">Repo</th>
+        <th style="text-align: center;">Library/Wrapper Docs</th>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://discord.com/">
+                <img valign="bottom" src="./assets/images/readme/discord.png" alt="Discord" width="40" />
+            </a>
+        </td>
+        <td>
+            <a href="https://discord.com/developers/docs/intro">Discord Bot API</a>
+        </td>
         <td>
             <a href="https://github.com/Rapptz/discord.py">
                 <img valign="bottom" src="./assets/images/readme/DiscordPy.png" alt="Discord.py" width="40" />
             </a>
         </td>
         <td>
-            <a href="https://discordpy.readthedocs.io/en/latest/">Discord.py</a>
+            <a href="https://discordpy.readthedocs.io/en/latest/">discord.py</a>
         </td>
     </tr>
     <tr>
         <td>
-            <a href="https://dota2.readthedocs.io/en/stable/">
+            <a href="https://www.dota2.com/">
                 <img valign="bottom" src="./assets/images/readme/dota_logo_psd.png" alt="Dota 2" width="40" />
-        </td></a>
-        <td><a href="https://dota2.readthedocs.io/en/stable/">Dota 2 Game Coordinator  API</a></td>
+            </a>
+        </td>
+        <td>Dota 2 Game Coordinator  API</td>
+        <td>
+            <a href="https://github.com/ValvePython/dota2">
+                <img valign="bottom" src="./assets/images/readme/frog.png" alt="Dota 2" width="40" />
+            </a>
+        </td>
+        <td><a href="https://dota2.readthedocs.io/en/stable/">dota2</a>
+        (soon™️ to be replaced with <a href="https://steam-py.github.io/docs/latest/">steam.py</a>)</td>
     </tr>
     <tr>
         <td>
             <a href="https://stratz.com/">
                 <img valign="bottom" src="./assets/images/readme/Stratz.png" alt="Stratz" width="40" />
+            </a>
         </td>
-        </a>
-        <td><a href="https://api.stratz.com/graphiql/">Stratz API</a></td>
+        <td><a href="https://api.stratz.com/graphiql/">Stratz GraphQL API</a></td>
+        <td style="text-align: center;">
+        —
+        </td>
+        <td>Just aiohttp requests</a></td>
     </tr>
     <tr>
         <td>
             <a href="https://opendota.com/">
                 <img valign="bottom" src="./assets/images/readme/Opendota.png" alt="OpenDota" width="40" />
-        </td></a>
+            </a>
+        </td>
         <td><a href="https://docs.opendota.com/">OpenDota API</a></td>
+        <td style="text-align: center;">
+        —
+        </td>
+        <td>pulsefire-like client (see below)</a></td>
     </tr>
     <tr>
         <td>
             <a href="https://developer.riotgames.com/">
                 <img valign="bottom" src="./assets/images/readme/riot-logo.png" alt="Riot Games" width="40" />
-        </td></a>
+            </a>
+        </td>
         <td><a href="https://developer.riotgames.com/apis">Riot Games API</a></td>
+        <td>
+            <a href="https://github.com/iann838/pulsefire">
+                <img valign="bottom" src="./assets/images/readme/pulsefire.png" alt="Pulsefire" width="40" />
+            </a>
+        </td>
+        <td><a href="https://pulsefire.iann838.com/">pulsefire</a></td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://dev.twitch.tv/">
+                <img valign="bottom" src="./assets/images/readme/twitch.png" alt="Twitch" width="40" />
+            </a>
+        </td>
+        <td>
+            <a href="https://twitchio.dev/en/stable/">Twitch API</a>
+        </td>
     </tr>
 </table>
+
+## TODO: finish the table
+  
+- Github rest api
+- steam web api
+- wolfram api

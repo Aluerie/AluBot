@@ -19,7 +19,7 @@ from ._base import UserSettingsBaseCog
 
 class TimezoneSetting(UserSettingsBaseCog):
     async def cog_load(self) -> None:
-        self.bot.initiate_tz_manager()
+        self.bot.initialize_tz_manager()
 
     @commands.hybrid_group()
     async def timezone(self, ctx: AluContext):

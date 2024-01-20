@@ -97,7 +97,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     """Remind yourself of something at sometime"""
 
     async def cog_load(self) -> None:
-        self.bot.initiate_tz_manager()
+        self.bot.initialize_tz_manager()
 
     async def remind_helper(self, ctx: AluContext, *, dt: datetime.datetime, text: str):
         """Remind helper so we don't duplicate"""

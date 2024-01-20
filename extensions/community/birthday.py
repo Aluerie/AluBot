@@ -111,7 +111,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     """
 
     async def cog_load(self) -> None:
-        self.bot.initiate_tz_manager()
+        self.bot.initialize_tz_manager()
 
     @discord.utils.cached_property
     def birthday_channel(self) -> discord.TextChannel:

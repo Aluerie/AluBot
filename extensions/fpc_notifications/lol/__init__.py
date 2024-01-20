@@ -18,7 +18,7 @@ class LoLFPC(
     """
 
     async def cog_load(self) -> None:
-        await self.bot.initiate_twitch()
+        await self.bot.initialize_twitch()
         return await super().cog_load()
 
 

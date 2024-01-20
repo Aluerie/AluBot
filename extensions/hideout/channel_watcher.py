@@ -84,8 +84,6 @@ class EventPassWatcher(ChannelWatcher):
         )
 
 
-# looks like the era is over
-#
 DROPS_CHANNEL = 1074010096566284288
 
 

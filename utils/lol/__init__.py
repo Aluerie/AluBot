@@ -1,3 +1,3 @@
 from .cdragon_cache import *
-from .const import *
+from .regions import *
 from .meraki_roles import *

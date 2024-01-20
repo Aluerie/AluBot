@@ -241,7 +241,10 @@ class AccountListButton(discord.ui.Button):
             description="\n".join(
                 f"{player['name']}\n{chr(10).join(player['accounts'])}" for player in player_dict.values()
             ),
-        ).set_footer(text=self.menu.cog.game_display_name, icon_url=self.menu.cog.game_icon_url)
+        ).set_footer(
+            text=f'to request a new account/player to be added - use `/{self.menu.cog.prefix} request player` command', 
+            icon_url=self.menu.cog.game_icon_url
+        )
 
         await ntr.response.send_message(embed=embed, ephemeral=True)
 

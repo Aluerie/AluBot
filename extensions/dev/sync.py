@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import discord
+from discord import app_commands
 from discord.ext import commands
 
-from utils import aluloop, const, errors
+from utils import aluloop, checks, const, errors
 
 from ._base import DevBaseCog
 
@@ -16,79 +16,117 @@ if TYPE_CHECKING:
 
 
 class UmbraSyncCommandCog(DevBaseCog):
-    """A SPECIAL ONE-COMMAND COG FOR ONE AND ONLY, THE FAMOUS UMBRA SYNC COMMAND. HOLY MOLY!
-    (A BIT MODIFIED THO, SORRY UMBRA)
+    """A special one-command cog for famous umbra sync command. A bit modified though.
 
     `?tag usc` which abbreviates to `?tag umbra sync command`.
     """
 
-    @commands.command(hidden=True)
-    async def sync(
+    async def sync_to_guild_list(self, guilds: list[discord.Object]) -> str:
+        """Syncs app tree for the guilds."""
+        ret = 0
+        cmds = []
+        for guild in guilds:
+            try:
+                cmds += await self.bot.tree.sync(guild=guild)
+            except discord.HTTPException:
+                pass
+            else:
+                ret += 1
+        return f"Synced {cmds} guild-bound commands to `{ret}/{len(guilds)}` guilds."
+
+    async def sync_command_worker(
+        self, spec: Optional[str], current_guild: Optional[discord.Guild], guilds: list[discord.Object]
+    ) -> discord.Embed:
+        # SYNC LIST OF GUILDS
+        if spec == "premium":
+            guild_list = [discord.Object(id=guild_id) for guild_id in const.PREMIUM_GUILDS]
+            desc = await self.sync_to_guild_list(guild_list)
+        elif spec == "my":
+            guild_list = [discord.Object(id=guild_id) for guild_id in const.MY_GUILDS]
+            desc = await self.sync_to_guild_list(guild_list)
+        elif guilds:
+            desc = await self.sync_to_guild_list(guilds)
+
+        # SYNC METHODS ABOUT CURRENT GUILD
+        elif spec and spec != "global":
+            if not current_guild:
+                raise errors.BadArgument(f"You used `sync` command with a spec outside of a guild")
+
+            match spec:
+                case "current" | "~":
+                    # no pre-sync action needed.
+                    desc = "Synced `{0}` guild-bound commands to the current guild."
+                case "copy" | "*":
+                    self.bot.tree.copy_global_to(guild=current_guild)
+                    desc = "Copied `{0}` global commands to the current guild and synced."
+                case "clear" | "^":
+                    self.bot.tree.clear_commands(guild=current_guild)
+                    desc = "Cleared guild-bound commands from the current guild."
+                case _:
+                    raise errors.BadArgument(f"Unknown specification for `sync` command.")
+            synced = await self.bot.tree.sync(guild=current_guild)
+            desc = desc.format(len(synced))
+
+        # GLOBAL SYNC THEN
+        else:
+            synced = await self.bot.tree.sync()
+            desc = f"Synced `{len(synced)}` commands globally."
+
+        # return the embed result
+        return discord.Embed(colour=const.Colour.prpl(), description=desc)
+
+    # Unfortunately, we need to split the commands bcs commands.Greedy can't be transferred to app_commands
+    @app_commands.command(name="sync")
+    @checks.app.is_hideout()
+    @app_commands.choices(
+        method=[
+            app_commands.Choice(name="Global Sync", value="global"),
+            app_commands.Choice(name="Current Guild", value="current"),
+            app_commands.Choice(name="Copy Global commands to Current Guild", value="copy"),
+            app_commands.Choice(name="Clear Current Guild", value="clear"),
+            app_commands.Choice(name="Sync Premium Guilds", value="premium"),
+            app_commands.Choice(name="Sync My Guilds", value="my"),
+            app_commands.Choice(name="Sync Specific Guilds", value="guilds"),
+        ]
+    )
+    async def slash_sync(self, interaction: discord.Interaction[AluBot], method: str):
+        """(\N{GREY HEART} Hideout-Only) Sync bot's app tree.
+
+        Parameters
+        ----------
+        method : app_commands.Choice[str]
+            Method to sync bot's commands with.
+        guild_id : Optional[int]
+            If you want to sync a specific guild then provide its ID.
+        """
+        if method == "guilds":
+            return await interaction.response.send_message(
+                f"Use prefix command `{self.bot.main_prefix}`sync guild1_id guild2_id ... ` Dumbass!"
+            )
+
+        embed = await self.sync_command_worker(method, interaction.guild, guilds=[])
+        await interaction.response.send_message(embed=embed)
+
+    @commands.command(name="sync", hidden=True)
+    async def prefix_sync(
         self,
         ctx: AluContext,
         guilds: commands.Greedy[discord.Object],
-        spec: Optional[Literal["~", "*", "^", "premium", "my"]] = None,
+        spec: Optional[Literal["global", "~", "current", "*", "copy", "^", "clear", "premium", "my"]] = None,
     ) -> None:
-        """Sync AppCommandTree.
+        """Sync bot's app tree.
 
         Usage examples:
         * `$sync` -> global sync
-        * `$sync ~` -> sync current guild (only its guild-bound commands)
-        * `$sync *` -> copies all global app commands to current guild and syncs
-        * `$sync ^` -> clears all commands from the current guild target and syncs (removes guild-bound commands)
+        * `$sync current/~` -> sync current guild (only its guild-bound commands)
+        * `$sync copy/*` -> copies all global app commands to current guild and syncs
+        * `$sync clear/^` -> clears all commands from the current guild target and syncs (removes guild-bound commands)
         * `$sync id_1 id_2` -> syncs guilds with id 1 and 2
         * `$sync premium` -> sync premium guilds
         * `$sync my` -> sync my guilds
         """
-
-        # sync to a list of guilds
-        async def sync_to_guild_list(guilds: list[discord.Object]) -> tuple[str, str]:
-            ret = 0
-            cmds = []
-            for guild in guilds:
-                try:
-                    cmds += await ctx.bot.tree.sync(guild=guild)
-                except discord.HTTPException:
-                    pass
-                else:
-                    ret += 1
-            return (f"`{ret}/{len(guilds)}` guilds", "Synced guild-bound commands to a list of guilds.")
-
-        if spec == "premium":
-            guild_list = [discord.Object(id=guild_id) for guild_id in const.PREMIUM_GUILDS]
-            title, desc = await sync_to_guild_list(guild_list)
-        elif spec == "my":
-            guild_list = [discord.Object(id=guild_id) for guild_id in const.MY_GUILDS]
-            title, desc = await sync_to_guild_list(guild_list)
-        elif guilds:
-            title, desc = await sync_to_guild_list(guilds)
-
-        # sync to current guild
-        elif spec:
-            if not ctx.guild:
-                raise errors.BadArgument(f"You used `{ctx.clean_prefix}sync` with a spec outside of a guild")
-
-            match spec:
-                case "~":
-                    # no pre-sync action needed.
-                    desc = "Synced guild-bound (`@app_commands.guilds(...`) commands to the current guild."
-                case "*":
-                    ctx.bot.tree.copy_global_to(guild=ctx.guild)
-                    desc = "Copied all global commands to the current guild as guild-bound and synced."
-                case "^":
-                    ctx.bot.tree.clear_commands(guild=ctx.guild)
-                    desc = "Cleared guild-bound commands from the current guild."
-            synced = await ctx.bot.tree.sync(guild=ctx.guild)
-            title = f"`{len(synced)}` commands"
-
-        # global sync then
-        else:
-            synced = await ctx.bot.tree.sync()
-            title, desc = f"`{len(synced)}` commands", "Synced globally."
-
-        # send the result
-        e = discord.Embed(colour=const.Colour.prpl(), title=title, description=desc)
-        await ctx.reply(embed=e)
+        embed = await self.sync_command_worker(spec, ctx.guild, guilds=guilds)
+        await ctx.reply(embed=embed)
 
 
 class DailyAutoSync(DevBaseCog):
@@ -125,8 +163,11 @@ class DailyAutoSync(DevBaseCog):
 
         guild = discord.Object(id=guild_id) if guild_id else None
         synced = await self.bot.tree.sync(guild=guild)
-        
-        embed = discord.Embed(color=0x234234, description=f"Synced `{len(synced)}` **{guild_name}** commands.",)
+
+        embed = discord.Embed(
+            color=0x234234,
+            description=f"Synced `{len(synced)}` **{guild_name}** commands.",
+        )
         await self.hideout.spam_logs.send(embed=embed)
 
 

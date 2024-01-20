@@ -1,6 +1,5 @@
 from utils import const
 
-from .._base import FPCCog
 from .notifications import DotaFPCNotifications
 from .settings import DotaFPCSettings
 from .twitch_check import DotaTwitchAccountCheck
@@ -11,9 +10,10 @@ class DotaFPC(
     DotaFPCSettings,
     DotaTwitchAccountCheck,
     emote=const.Emote.DankLove,
+    name="Dota 2 FPC",  # careful with this name since it's used in `database_management.py`
 ):
     """
-    Dota 2 - Favourite player+character combo notifications.
+    Dota 2 - __F__avourite __P__layer+__C__haracter combo notifications.
     """
 
     async def cog_load(self) -> None:

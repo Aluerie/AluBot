@@ -186,22 +186,46 @@ class LoLFPCMatchToEdit(BasePostMatchPlayer):
         self.summoner_id: str = participant["summonerId"]
         self.kda: str = f"{participant['kills']}/{participant['deaths']}/{participant['assists']}"
         self.outcome: str = "Win" if participant["win"] else "Loss"
-        self.item_ids: list[int] = [participant[f"item{i}"] for i in range(0, 6 + 1)]
 
-        skill_build: list[int] = []  # list of 1, 2, 3, 4 numbers which correspond to Q, W, E, R skill build order
+        self.trinket_item_id: int = participant["item6"]
+
+        self.skill_build: list[int] = []  # list of 1, 2, 3, 4 numbers which correspond to Q, W, E, R skill build order
+
+        item_ids: list[int] = [participant[f"item{i}"] for i in range(0, 5 + 1)]
+        self.sorted_item_ids: list[int] = []
+
         for frame in timeline["info"]["frames"]:
             for event in frame["events"]:
-                if event["type"] == "SKILL_LEVEL_UP" and event.get("participantId") == participant["participantId"]:
-                    if skill_slot := event.get("skillSlot"):
-                        skill_build.append(skill_slot)
+                if not event.get("participantId") == participant["participantId"]:
+                    # not our player
+                    continue
 
-        self.skill_build = skill_build
+                match event["type"]:
+                    # SKILL BUILD
+                    case "SKILL_LEVEL_UP":
+                        skill_slot = event.get("skillSlot")  # .get only bcs of NotRequired type-hinting
+                        if skill_slot:
+                            self.skill_build.append(skill_slot)
+
+                    # ITEM ORDER
+                    case "ITEM_PURCHASED":
+                        item_id = event.get("itemId")
+                        if item_id:
+                            if item_id not in self.sorted_item_ids:
+                                self.sorted_item_ids.append(item_id)
+                            else:
+                                # funky way to move existing item to the end of the list
+                                self.sorted_item_ids.append(item_id)
+                                self.sorted_item_ids.remove(item_id)
 
     @override
     async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await self.bot.cdragon.item.icon_by_id(item_id) for item_id in self.item_ids if item_id]
+        item_icon_urls = [await self.bot.cdragon.item.icon_by_id(id) for id in self.sorted_item_ids if id]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
+
+        trinket_icon_url = await self.bot.cdragon.item.icon_by_id(self.trinket_item_id)
+        trinket_icon_img = await self.bot.transposer.url_to_image(trinket_icon_url)
 
         def build_notification_image():
             width, height = img.size
@@ -211,10 +235,20 @@ class LoLFPCMatchToEdit(BasePostMatchPlayer):
 
             # Item Icons
             items_row = information_row
-            left = width - len(item_icon_images) * items_row
             for count, item_image in enumerate(item_icon_images):
+                left = count * items_row
                 item_image = item_image.resize((items_row, items_row))
-                img.paste(item_image, (left + count * item_image.width, height - items_row - item_image.height))
+                img.paste(
+                    im=item_image,
+                    box=(left, height - information_row - item_image.height),
+                )
+
+            # Trinket Icon
+            trinket_image = trinket_icon_img.resize((items_row, items_row))
+            img.paste(
+                im=trinket_image,
+                box=(width - trinket_image.width, height - information_row - trinket_image.height),
+            )
 
             # Skill Build
             # I got these images by downloading .png from
@@ -291,20 +325,18 @@ async def beta_test_edit_notification_image(self: AluCog):
     from extensions.fpc_notifications.lol._models import LoLFPCMatchToEdit
 
     self.bot.initialize_league_cache()
-    async with self.bot.riot_api_client() as riot_api_client:
-        match_id = "NA1_4895000741"
-        continent = "AMERICAS"
-        match = await riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)
-        timeline = await riot_api_client.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
-        post_match_player = LoLFPCMatchToEdit(
-            self.bot,
-            participant=match["info"]["participants"][3],
-            timeline=timeline,
-            channel_message_tuples=[(0, 0)],
-        )
+    match_id = "NA1_4895000741"
+    continent = "AMERICAS"
+    match = await self.bot.riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)
+    timeline = await self.bot.riot_api_client.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
-        new_image = await post_match_player.edit_notification_image(
-            const.PICTURE.LAVENDER640X360, discord.Colour.purple()
-        )
-        new_image.show()
+    post_match_player = LoLFPCMatchToEdit(
+        self.bot,
+        participant=match["info"]["participants"][3],
+        timeline=timeline,
+        channel_message_tuples=[(0, 0)],
+    )
+
+    new_image = await post_match_player.edit_notification_image(const.PICTURE.LAVENDER640X360, discord.Colour.purple())
+    new_image.show()

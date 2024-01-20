@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import platform
 import socket
+import sys
 from typing import TYPE_CHECKING
 
 import discord
@@ -23,8 +24,8 @@ if TYPE_CHECKING:
 
 
 class DevInformation(DevBaseCog):
-    @checks.app.is_hideout()
     @commands.hybrid_group(name="system", hidden=True)
+    @checks.app.is_hideout()
     async def system(self, ctx: AluContext):
         """Group command for /system subcommands."""
         await ctx.send_help()
@@ -83,14 +84,21 @@ class DevInformation(DevBaseCog):
             "dota2",
             "pulsefire",
         ]  # list of packages versions of which I'm interested the most
+        pv = sys.version_info
 
-        embed = discord.Embed(
-            colour=const.Colour.prpl(),
-            title="List of bot's Main Packages",
-            description="\n".join(
-                f"\N{BLACK CIRCLE} {package}: {pkg_resources.get_distribution(package).version}"
-                for package in curious_packages
-            ),
+        embed = (
+            discord.Embed(colour=const.Colour.prpl())
+            .add_field(
+                name="Python Version",
+                value=f"{pv.major}.{pv.minor}.{pv.micro} {pv.releaselevel} {pv.serial}",  # cspell: ignore releaselevel
+            )
+            .add_field(
+                name="List of bot's Main Packages",
+                value="\n".join(
+                    f"\N{BLACK CIRCLE} {package}: {pkg_resources.get_distribution(package).version}"
+                    for package in curious_packages
+                ),
+            )
         )
         await ctx.reply(embed=embed)
 

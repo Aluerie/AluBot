@@ -15,18 +15,22 @@ import config
 from utils import aluloop
 
 from .._base import FPCCog
-from ._models import DotaFPCMatchToEditWithOpenDota, DotaFPCMatchToEditWithStratz, DotaFPCMatchToSend
+from ._models import (
+    DotaFPCMatchToEditNotCounted,
+    DotaFPCMatchToEditWithOpenDota,
+    DotaFPCMatchToEditWithStratz,
+    DotaFPCMatchToSend,
+)
 
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluContext
 
-    class DotaFPCMessage(TypedDict):
+    class FindMatchesToEditQueryRow(TypedDict):
         match_id: int
         friend_id: int
-        message_id: int
-        channel_id: int
         hero_id: int
+        channel_message_tuples: list[tuple[int, int]]
 
     class AnalyzeTopSourceResponsePlayerQueryRow(TypedDict):
         player_id: int
@@ -38,7 +42,7 @@ if TYPE_CHECKING:
         loop_count: int
         edited_with_opendota: bool
         edited_with_stratz: bool
-        channel_message_tuples: set[tuple[int, int]]
+        channel_message_tuples: list[tuple[int, int]]
 
     type MatchToEdit = dict[tuple[int, int], MatchToEditSubDict]
 
@@ -207,28 +211,29 @@ class DotaFPCNotifications(FPCCog):
             """
             await self.bot.pool.execute(query, message.id, channel.id, match.match_id, match.friend_id, match.hero_id)
 
-    async def declare_matches_finished(self):
-        if not self.allow_editing_matches:
-            # then we don't need this :D
-            return
-
+    async def find_matches_to_edit(self):
         send_log.debug("Declaring finished matches")
-        query = "SELECT * FROM dota_messages WHERE NOT match_id=ANY($1)"
-        finished_match_rows: list[DotaFPCMessage] = await self.bot.pool.fetch(query, list(self.top_source_dict.keys()))
+        query = """
+            SELECT match_id, friend_id, hero_id, ARRAY_AGG ((message_id, channel_id)) channel_message_tuples
+            FROM dota_messages 
+            WHERE NOT match_id=ANY($1)
+            GROUP BY match_id, friend_id
+        """
+        current_match_to_edit_ids = [key[0] for key in self.matches_to_edit]
+        currently_live_match_ids = list(self.top_source_dict.keys())
+
+        finished_match_rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(
+            query, current_match_to_edit_ids + currently_live_match_ids
+        )
 
         for match_row in finished_match_rows:
-            uuid_tuple = (match_row["match_id"], match_row["friend_id"])
-            message_tuple = (match_row["channel_id"], match_row["message_id"])
-            if uuid_tuple not in self.matches_to_edit:
-                self.matches_to_edit[uuid_tuple] = {
-                    "hero_id": match_row["hero_id"],
-                    "loop_count": 0,
-                    "edited_with_opendota": False,
-                    "edited_with_stratz": False,
-                    "channel_message_tuples": set([message_tuple]),
-                }
-            else:
-                self.matches_to_edit[uuid_tuple]["channel_message_tuples"].add(message_tuple)
+            self.matches_to_edit[(match_row["match_id"], match_row["friend_id"])] = {
+                "hero_id": match_row["hero_id"],
+                "channel_message_tuples": match_row["channel_message_tuples"],
+                "loop_count": 0,
+                "edited_with_opendota": False,
+                "edited_with_stratz": False,
+            }
 
         edit_log.debug(self.matches_to_edit)
         if self.matches_to_edit and not self.task_to_edit_dota_fpc_messages.is_running():
@@ -259,16 +264,16 @@ class DotaFPCNotifications(FPCCog):
 
         if top_source_end_time > 8:
             await self.hideout.spam.send("dota notifs is dying")
-            # likely spoiled result that gonna ruin "declare_matches_finished" so let's return
+            # likely spoiled result that gonna ruin "find_matches_to_edit" so let's return
             return
 
         if self.allow_editing_matches:
-            await self.declare_matches_finished()
+            await self.find_matches_to_edit()
         send_log.debug(f"--- Task is finished ---")
 
     # POST MATCH EDITS
     async def edit_with_opendota(
-        self, match_id: int, friend_id: int, hero_id: int, channel_message_tuples: set[tuple[int, int]]
+        self, match_id: int, friend_id: int, hero_id: int, channel_message_tuples: list[tuple[int, int]]
     ) -> bool:
         try:
             opendota_match = await self.bot.opendota_client.get_match(match_id=match_id)
@@ -280,6 +285,11 @@ class DotaFPCNotifications(FPCCog):
             # Somebody abandoned before the first blood or so game didn't count
             # thus "radiant_win" key is not present
             edit_log.debug("The stats for match %s did not count. Deleting the match.", match_id)
+            not_counted_match_to_edit = DotaFPCMatchToEditNotCounted(
+                self.bot,
+                channel_message_tuples=channel_message_tuples,
+            )
+            await not_counted_match_to_edit.edit_notification_embed()
             await self.cleanup_match_to_edit(match_id, friend_id)
             return True
 
@@ -299,7 +309,7 @@ class DotaFPCNotifications(FPCCog):
         return True
 
     async def edit_with_stratz(
-        self, match_id: int, friend_id: int, channel_message_tuples: set[tuple[int, int]]
+        self, match_id: int, friend_id: int, channel_message_tuples: list[tuple[int, int]]
     ) -> bool:
         query = f"""{{
             match(id: {match_id}) {{

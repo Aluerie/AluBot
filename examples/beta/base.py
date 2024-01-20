@@ -9,6 +9,7 @@ import datetime
 import enum
 import logging
 import os
+import sys
 from typing import TYPE_CHECKING, Annotated, Any, Callable, Coroutine, Literal, Optional, Sequence, TypeVar, Union
 
 import discord

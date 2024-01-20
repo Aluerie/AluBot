@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import datetime
 import itertools
 import logging
@@ -208,14 +207,13 @@ class BugTracker(AluCog):
         return valve_devs
 
     @commands.is_owner()
-    @commands.group(name="valve", hidden=True)
-    async def valve(self, ctx: AluContext):
+    @commands.group(name="bugtracker", hidden=True)
+    async def bugtracker(self, ctx: AluContext):
         """Commands to retrieve or manually control a list of known Valve developers' github accounts."""
         await ctx.send_help(ctx.command)
 
-    @commands.is_owner()
-    @valve.command()
-    async def add(self, ctx: AluContext, *, login: str):
+    @bugtracker.command(name="add")
+    async def bugtracker_add(self, ctx: AluContext, *, login: str):
         logins = [b for x in login.split(",") if (b := x.lstrip().rstrip())]
         query = """ INSERT INTO valve_devs (login) VALUES ($1)
                     ON CONFLICT DO NOTHING
@@ -233,42 +231,43 @@ class BugTracker(AluCog):
                 error_logins.append(l)
 
         def embed_answer(logins: list[str], color: discord.Color, description: str) -> discord.Embed:
-            embed = discord.Embed(color=color)
             logins_join = ", ".join(f"`{l}`" for l in logins)
-            embed.description = f"{description}\n{logins_join}"
-            return embed
+            return discord.Embed(color=color, description=f"{description}\n{logins_join}")
 
+        embeds = []
         if success_logins:
             self.valve_devs.extend(success_logins)
-            embed = embed_answer(
-                success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs."
+            embeds.append(
+                embed_answer(success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs.")
             )
-            await ctx.reply(embed=embed)
         if error_logins:
-            embed = embed_answer(
-                error_logins, const.MaterialPalette.red(), "User(-s) were already in the list of Valve devs."
+            embeds.append(
+                (error_logins, const.MaterialPalette.red(), "User(-s) were already in the list of Valve devs.")
             )
-            await ctx.reply(embed=embed)
+        await ctx.reply(embeds=embeds)
 
-    @commands.is_owner()
-    @valve.command()
-    async def remove(self, ctx: AluContext, login: str):
+    @bugtracker.command(name="remove")
+    async def bugtracker_remove(self, ctx: AluContext, login: str):
         query = "DELETE FROM valve_devs WHERE login=$1"
         await self.bot.pool.execute(query, login)
         self.valve_devs.remove(login)
-        e = discord.Embed(color=const.MaterialPalette.orange())
-        e.description = f"Removed user `{login}` from the list of Valve devs."
-        await ctx.reply(embed=e)
+        embed = discord.Embed(
+            color=const.MaterialPalette.orange(),
+            description=f"Removed user `{login}` from the list of Valve devs.",
+        )
+        await ctx.reply(embed=embed)
 
-    @commands.is_owner()
-    @valve.command()
-    async def list(self, ctx: AluContext):
+    @bugtracker.command(name="list")
+    async def bugtracker_list(self, ctx: AluContext):
         query = "SELECT login FROM valve_devs"
         valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
-        e = discord.Embed(color=const.MaterialPalette.blue(), title="List of known Valve devs")
         valve_devs.sort()
-        e.description = "\n".join([f"\N{BLACK CIRCLE} {i}" for i in valve_devs])
-        await ctx.reply(embed=e)
+        embed = discord.Embed(
+            color=const.MaterialPalette.blue(),
+            title="List of known Valve devs",
+            description="\n".join([f"\N{BLACK CIRCLE} {i}" for i in valve_devs]),
+        )
+        await ctx.reply(embed=embed)
 
     @aluloop(minutes=3)
     async def git_comments_check(self):

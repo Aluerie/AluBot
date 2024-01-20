@@ -218,7 +218,7 @@ class DotaFPCMatchToEditWithOpenDota(BasePostMatchPlayer):
         bot: AluBot,
         *,
         player: dota.OpenDotaAPISchema.Player,
-        channel_message_tuples: set[tuple[int, int]],
+        channel_message_tuples: list[tuple[int, int]],
     ):
         super().__init__(bot, channel_message_tuples=channel_message_tuples)
 
@@ -334,7 +334,7 @@ class DotaFPCMatchToEditWithStratz(BasePostMatchPlayer):
         bot: AluBot,
         *,
         player: _schemas.StratzEditFPCMessageGraphQLSchema.Player,
-        channel_message_tuples: set[tuple[int, int]],
+        channel_message_tuples: list[tuple[int, int]],
     ):
         super().__init__(bot, channel_message_tuples=channel_message_tuples)
 
@@ -389,6 +389,39 @@ class DotaFPCMatchToEditWithStratz(BasePostMatchPlayer):
                     left = count * 69
                     item_timing_w, item_timing_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
                     draw.text((left, height - item_timing_h), item_timing, font=font_item_timing, align="left")
+
+            # img.show()
+            return img
+
+        return await asyncio.to_thread(build_notification_image)
+
+
+class DotaFPCMatchToEditNotCounted(BasePostMatchPlayer):
+    """
+    Class
+    """
+
+    def __init__(
+        self,
+        bot: AluBot,
+        *,
+        channel_message_tuples: list[tuple[int, int]],
+    ):
+        super().__init__(bot, channel_message_tuples=channel_message_tuples)
+
+    @override
+    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
+        img = await self.bot.transposer.url_to_image(embed_image_url)
+
+        def build_notification_image() -> Image.Image:
+            log.debug("Building edited notification message.")
+            width, height = img.size
+
+            draw = ImageDraw.Draw(img)
+            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
+            text = "Not Counted"
+            text_w, text_h = self.bot.transposer.get_text_wh(text, font)
+            draw.text(xy=(0, height - text_h), text=text, font=font, align="left")
 
             # img.show()
             return img

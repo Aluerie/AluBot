@@ -82,8 +82,7 @@ class FPCDatabaseManagement(FPCCog):
     @property
     def dota_fpc_settings_cog(self) -> DotaFPC:
         """Get Dota 2 FPC Settings Cog"""
-        # __name__ only because clown like me changes class names every month across the whole bot.
-        return self.get_fpc_settings_cog("DotaFPC")  # type: ignore
+        return self.get_fpc_settings_cog("Dota 2 FPC")  # type: ignore
 
     @database_dota.command(name="add")
     async def database_dota_add(self, ctx: AluGuildContext, flags: AddDotaPlayerFlags):
@@ -108,9 +107,8 @@ class FPCDatabaseManagement(FPCCog):
 
     @property
     def lol_fpc_settings_cog(self) -> LoLFPC:
-        """Get LoL 2 FPC Settings Cog"""
-        # __name__ only because clown like me changes class names every month across the whole bot.
-        return self.get_fpc_settings_cog("LoLFPC")  # type: ignore
+        """Get LoL FPC Settings Cog"""
+        return self.get_fpc_settings_cog("League of Legends FPC")  # type: ignore
 
     @database_lol.command(name="add")
     async def database_lol_add(self, ctx: AluGuildContext, flags: AddLoLPlayerFlags):

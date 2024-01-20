@@ -44,35 +44,34 @@ class LoLAccount(FPCAccount):
 
     @override
     async def set_game_specific_attrs(self, bot: AluBot, flags: AddLoLPlayerFlags):
-        async with bot.riot_api_client() as riot_api_client:
-            # RIOT ACCOUNT INFO
-            try:
-                riot_account = await riot_api_client.get_account_v1_by_riot_id(
-                    game_name=flags.game_name,
-                    tag_line=flags.tag_line,
-                    region=lol.SERVER_TO_CONTINENT[flags.server],
-                )
-            except aiohttp.ClientResponseError:
-                raise errors.BadArgument(
-                    "Error `get_account_v1_by_riot_id` for "
-                    f"`{flags.game_name}#{flags.tag_line}` in `{flags.server}` server.\n"
-                    "This account probably does not exist."
-                )
+        # RIOT ACCOUNT INFO
+        try:
+            riot_account = await bot.riot_api_client.get_account_v1_by_riot_id(
+                game_name=flags.game_name,
+                tag_line=flags.tag_line,
+                region=lol.SERVER_TO_CONTINENT[flags.server],
+            )
+        except aiohttp.ClientResponseError:
+            raise errors.BadArgument(
+                "Error `get_account_v1_by_riot_id` for "
+                f"`{flags.game_name}#{flags.tag_line}` in `{flags.server}` server.\n"
+                "This account probably does not exist."
+            )
 
-            self.puuid = puuid = riot_account["puuid"]
-            self.platform = platform = lol.SERVER_TO_PLATFORM[flags.server]
-            self.game_name = riot_account["gameName"]
-            self.tag_line = riot_account["tagLine"]
+        self.puuid = puuid = riot_account["puuid"]
+        self.platform = platform = lol.SERVER_TO_PLATFORM[flags.server]
+        self.game_name = riot_account["gameName"]
+        self.tag_line = riot_account["tagLine"]
 
-            # SUMMONER INFO
-            try:
-                summoner = await riot_api_client.get_lol_summoner_v4_by_puuid(puuid=puuid, region=platform)
-            except aiohttp.ClientResponseError:
-                raise errors.BadArgument(
-                    f"Error `get_lol_summoner_v4_by_puuid` for riot account\n"
-                    f"`{flags.game_name}#{flags.tag_line}` in `{flags.server}` server, puuid: `{puuid}`"
-                )
-            self.summoner_id = summoner["id"]
+        # SUMMONER INFO
+        try:
+            summoner = await bot.riot_api_client.get_lol_summoner_v4_by_puuid(puuid=puuid, region=platform)
+        except aiohttp.ClientResponseError:
+            raise errors.BadArgument(
+                f"Error `get_lol_summoner_v4_by_puuid` for riot account\n"
+                f"`{flags.game_name}#{flags.tag_line}` in `{flags.server}` server, puuid: `{puuid}`"
+            )
+        self.summoner_id = summoner["id"]
 
     @property
     @override

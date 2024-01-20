@@ -36,7 +36,7 @@ class LoLSummonerNameCheck(FPCCog):
         query = "SELECT puuid, platform, game_name, tag_line FROM lol_accounts"
         rows: list[AccountRow] = await self.bot.pool.fetch(query)
 
-        async with self.bot.acquire_riot_api_client() as riot_api_client:
+        async with self.bot.riot_api_client() as riot_api_client:
             for row in rows:
                 try:
                     account = await riot_api_client.get_account_v1_by_puuid(

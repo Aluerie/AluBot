@@ -270,34 +270,33 @@ class DotaFPCNotifications(FPCCog):
     async def edit_with_opendota(
         self, match_id: int, friend_id: int, hero_id: int, channel_message_tuples: set[tuple[int, int]]
     ) -> bool:
-        async with self.bot.acquire_opendota_client() as opendota_client:
-            try:
-                opendota_match = await opendota_client.get_match(match_id=match_id)
-            except aiohttp.ClientResponseError as exc:
-                edit_log.debug("OpenDota API Response Not OK with status %s", exc.status)
-                return False
+        try:
+            opendota_match = await self.bot.opendota_client.get_match(match_id=match_id)
+        except aiohttp.ClientResponseError as exc:
+            edit_log.debug("OpenDota API Response Not OK with status %s", exc.status)
+            return False
 
-            if "radiant_win" not in opendota_match:
-                # Somebody abandoned before the first blood or so game didn't count
-                # thus "radiant_win" key is not present
-                edit_log.debug("The stats for match %s did not count. Deleting the match.", match_id)
-                await self.cleanup_match_to_edit(match_id, friend_id)
-                return True
-
-            for player in opendota_match["players"]:
-                if player["hero_id"] == hero_id:
-                    opendota_player = player
-                    break
-            else:
-                raise RuntimeError(f"Somehow the player {friend_id} is not in the match {match_id}")
-
-            match_to_edit_with_opendota = DotaFPCMatchToEditWithOpenDota(
-                self.bot,
-                player=opendota_player,
-                channel_message_tuples=channel_message_tuples,
-            )
-            await match_to_edit_with_opendota.edit_notification_embed()
+        if "radiant_win" not in opendota_match:
+            # Somebody abandoned before the first blood or so game didn't count
+            # thus "radiant_win" key is not present
+            edit_log.debug("The stats for match %s did not count. Deleting the match.", match_id)
+            await self.cleanup_match_to_edit(match_id, friend_id)
             return True
+
+        for player in opendota_match["players"]:
+            if player["hero_id"] == hero_id:
+                opendota_player = player
+                break
+        else:
+            raise RuntimeError(f"Somehow the player {friend_id} is not in the match {match_id}")
+
+        match_to_edit_with_opendota = DotaFPCMatchToEditWithOpenDota(
+            self.bot,
+            player=opendota_player,
+            channel_message_tuples=channel_message_tuples,
+        )
+        await match_to_edit_with_opendota.edit_notification_embed()
+        return True
 
     async def edit_with_stratz(
         self, match_id: int, friend_id: int, channel_message_tuples: set[tuple[int, int]]

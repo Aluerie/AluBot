@@ -168,9 +168,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
             </a>
         </td>
         <td><a href="https://api.stratz.com/graphiql/">Stratz GraphQL API</a></td>
-        <td style="text-align: center;">
-        —
-        </td>
+        <td style="text-align: center;">—</td>
         <td>Just aiohttp requests</a></td>
     </tr>
     <tr>
@@ -180,9 +178,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
             </a>
         </td>
         <td><a href="https://docs.opendota.com/">OpenDota API</a></td>
-        <td style="text-align: center;">
-        —
-        </td>
+        <td style="text-align: center;">—</td>
         <td>pulsefire-like client (see below)</a></td>
     </tr>
     <tr>

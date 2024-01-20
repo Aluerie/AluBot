@@ -185,13 +185,6 @@ class AluBot(commands.Bot, AluBotHelper):
             self.launch_time = datetime.datetime.now(datetime.timezone.utc)
         log.info(f"Logged in as {self.user}")
 
-    async def close(self) -> None:
-        await super().close()
-        if hasattr(self, "session"):
-            await self.session.close()
-        if hasattr(self, "twitch"):
-            await self.twitch.close()
-
     async def my_start(self) -> None:
         token = config.TEST_TOKEN if self.test else config.MAIN_TOKEN
         # token = cfg.MAIN_TOKEN
@@ -219,26 +212,22 @@ class AluBot(commands.Bot, AluBotHelper):
     # points to import inside the function: https://stackoverflow.com/a/1188693/19217368
     # and I exactly want these^
 
-    def initialize_opendota(self) -> None:
-        """Initialize opendota attrs
+    async def initialize_dota_pulsefire_clients(self) -> None:
+        """Initialize dota pulsefire-like clients
 
         This allows access to
-        * OpenDota API pulsefire-like client
-        * CDragon Pulsefire client
-        * CDragon Cache with static game data
-        * MerakiAnalysis Cache with roles identification data
+        * OpenDota pulsefire client
         """
-        if not hasattr(self, "dota_cache"):
+        if not hasattr(self, "opendota_client"):
             import orjson
             from pulsefire.middlewares import http_error_middleware, json_response_middleware
 
-            from utils.dota import DotaCache, OpenDotaClient
+            from utils.dota import OpenDotaClient
 
             if TYPE_CHECKING:
                 from aiohttp import ClientResponse
                 from pulsefire.middlewares import Invocation, MiddlewareCallable
 
-            # OpenDota client
             self.daily_opendota_ratelimit: str = "not set yet"
 
             def set_daily_ratelimit_attr():
@@ -255,63 +244,70 @@ class AluBot(commands.Bot, AluBotHelper):
 
                 return constructor
 
-            def acquire_opendota_client() -> OpenDotaClient:
-                return OpenDotaClient(
-                    middlewares=[
-                        json_response_middleware(orjson.loads),
-                        set_daily_ratelimit_attr(),
-                        http_error_middleware(),
-                    ]
-                )
+            self.opendota_client = OpenDotaClient(
+                middlewares=[
+                    json_response_middleware(orjson.loads),
+                    set_daily_ratelimit_attr(),
+                    http_error_middleware(),
+                ]
+            )
+            await self.opendota_client.__aenter__()
 
-            self.acquire_opendota_client = acquire_opendota_client
+    def initialize_dota_cache(self) -> None:
+        """Initialize dota cache attrs
 
-            # Cache
+        This allows access to
+        * OpenDota Dota Constants cache with static data
+        """
+        if not hasattr(self, "dota_cache"):
+            from utils.dota import DotaCache
+
             self.dota_cache = DotaCache(self)
 
-    def initialize_pulsefire(self) -> None:
-        """Initialize pulsefire attrs
+    async def initialize_league_pulsefire_clients(self) -> None:
+        """Initialize league caches
 
         This allows access to
         * Riot API Pulsefire client
         * CDragon Pulsefire client
-        * CDragon Cache with static game data
-        * MerakiAnalysis Cache with roles identification data
         """
 
-        if not hasattr(self, "cdragon") or not hasattr(self, "meraki_roles"):
+        if not hasattr(self, "riot_api_client"):
             import orjson
             from pulsefire.clients import CDragonClient, RiotAPIClient
             from pulsefire.middlewares import http_error_middleware, json_response_middleware, rate_limiter_middleware
             from pulsefire.ratelimiters import RiotAPIRateLimiter  # cSpell: ignore ratelimiters
 
+            self.riot_api_client = RiotAPIClient(
+                default_headers={"X-Riot-Token": config.RIOT_API_KEY},
+                middlewares=[
+                    json_response_middleware(orjson.loads),
+                    http_error_middleware(),
+                    rate_limiter_middleware(RiotAPIRateLimiter()),
+                ],
+            )
+            await self.riot_api_client.__aenter__()
+
+            self.cdragon_client = CDragonClient(
+                default_params={"patch": "latest", "locale": "default"},
+                middlewares=[
+                    json_response_middleware(orjson.loads),
+                    http_error_middleware(),
+                ],
+            )
+            await self.cdragon_client.__aenter__()
+
+    def initialize_league_cache(self) -> None:
+        """Initialize league caches
+
+        This allows access to
+        * CDragon Cache with static game data
+        * MerakiAnalysis Cache with roles identification data
+        """
+
+        if not hasattr(self, "cdragon"):
             from utils.lol import CDragonCache, MerakiRolesCache
 
-            # PulseFire Clients
-            def acquire_riot_api_client() -> RiotAPIClient:
-                return RiotAPIClient(
-                    default_headers={"X-Riot-Token": config.RIOT_API_KEY},
-                    middlewares=[
-                        json_response_middleware(orjson.loads),
-                        http_error_middleware(),
-                        rate_limiter_middleware(RiotAPIRateLimiter()),
-                    ],
-                )
-
-            self.acquire_riot_api_client = acquire_riot_api_client
-
-            def acquire_cdragon_client() -> CDragonClient:
-                return CDragonClient(
-                    default_params={"patch": "latest", "locale": "default"},
-                    middlewares=[
-                        json_response_middleware(orjson.loads),
-                        http_error_middleware(),
-                    ],
-                )
-
-            self.acquire_cdragon_client = acquire_cdragon_client
-
-            # Caches
             self.cdragon = CDragonCache(self)
             self.meraki_roles = MerakiRolesCache(self)
 
@@ -368,6 +364,19 @@ class AluBot(commands.Bot, AluBotHelper):
             from utils.timezones import TimezoneManager
 
             self.tz_manager = TimezoneManager(self)
+
+    async def close(self) -> None:
+        await super().close()
+        if hasattr(self, "session"):
+            await self.session.close()
+        if hasattr(self, "twitch"):
+            await self.twitch.close()
+        if hasattr(self, "riot_api_client"):
+            await self.riot_api_client.__aexit__()
+        if hasattr(self, "cdragon_client"):
+            await self.cdragon_client.__aexit__()
+        if hasattr(self, "opendota_client"):
+            await self.opendota_client.__aexit__()
 
     @property
     def hideout(self) -> const.HideoutGuild:

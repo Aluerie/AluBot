@@ -44,7 +44,7 @@ class LoLAccount(FPCAccount):
 
     @override
     async def set_game_specific_attrs(self, bot: AluBot, flags: AddLoLPlayerFlags):
-        async with bot.acquire_riot_api_client() as riot_api_client:
+        async with bot.riot_api_client() as riot_api_client:
             # RIOT ACCOUNT INFO
             try:
                 riot_account = await riot_api_client.get_account_v1_by_riot_id(
@@ -124,7 +124,7 @@ class LoLFPCSettings(FPCSettingsBase):
     """
 
     def __init__(self, bot: AluBot, *args, **kwargs):
-        bot.initialize_pulsefire()
+        bot.initialize_league_cache()
         super().__init__(
             bot,
             *args,

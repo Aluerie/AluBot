@@ -290,8 +290,8 @@ async def beta_test_edit_notification_image(self: AluCog):
 
     from extensions.fpc_notifications.lol._models import LoLFPCMatchToEdit
 
-    self.bot.initialize_pulsefire()
-    async with self.bot.acquire_riot_api_client() as riot_api_client:
+    self.bot.initialize_league_cache()
+    async with self.bot.riot_api_client() as riot_api_client:
         match_id = "NA1_4895000741"
         continent = "AMERICAS"
         match = await riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)

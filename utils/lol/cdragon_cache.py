@@ -41,8 +41,7 @@ class ChampionKeysCache(KeysCache):
         cached_data: ChampionCache
 
     async def fill_data(self) -> ChampionCache:
-        async with self.bot.acquire_cdragon_client() as cdragon_client:
-            champion_summary = await cdragon_client.get_lol_v1_champion_summary()
+        champion_summary = await self.bot.cdragon_client.get_lol_v1_champion_summary()
 
         data: ChampionCache = {
             "id_by_name": {},
@@ -80,8 +79,7 @@ class ChampionKeysCache(KeysCache):
 
 class ItemKeysCache(KeysCache):
     async def fill_data(self) -> dict:
-        async with self.bot.acquire_cdragon_client() as cdragon_client:
-            items = await cdragon_client.get_lol_v1_items()
+        items = await self.bot.cdragon_client.get_lol_v1_items()
 
         data = {"icon_by_id": {}}
         for item in items:
@@ -96,8 +94,7 @@ class ItemKeysCache(KeysCache):
 
 class RuneKeysCache(KeysCache):
     async def fill_data(self) -> dict:
-        async with self.bot.acquire_cdragon_client() as cdragon_client:
-            perks = await cdragon_client.get_lol_v1_perks()
+        perks = await self.bot.cdragon_client.get_lol_v1_perks()
 
         data = {"icon_by_id": {}}
         for perk in perks:
@@ -112,8 +109,7 @@ class RuneKeysCache(KeysCache):
 
 class SummonerSpellKeysCache(KeysCache):
     async def fill_data(self) -> dict:
-        async with self.bot.acquire_cdragon_client() as cdragon_client:
-            summoner_spells = await cdragon_client.get_lol_v1_summoner_spells()
+        summoner_spells = await self.bot.cdragon_client.get_lol_v1_summoner_spells()
 
         data = {"icon_by_id": {}}
         for spell in summoner_spells:

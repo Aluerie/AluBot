@@ -107,7 +107,7 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
     """
 
     def __init__(self, bot: AluBot, *args, **kwargs):
-        bot.initialize_opendota()
+        bot.initialize_dota_cache()
         super().__init__(
             bot,
             *args,

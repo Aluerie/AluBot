@@ -97,85 +97,85 @@ class LoLFPCNotifications(FPCCog):
             WHERE p.player_id=ANY($1)
         """
         rows: list[LivePlayerAccountRow] = await self.bot.pool.fetch(query, live_twitch_ids)
-        async with self.bot.acquire_riot_api_client() as riot_api_client:
-            for row in rows:
-                try:
-                    game = await riot_api_client.get_lol_spectator_v4_active_game_by_summoner(
-                        summoner_id=row["summoner_id"],
-                        region=row["platform"],
+
+        for row in rows:
+            try:
+                game = await self.bot.riot_api_client.get_lol_spectator_v4_active_game_by_summoner(
+                    summoner_id=row["summoner_id"],
+                    region=row["platform"],
+                )
+            except aiohttp.ClientResponseError as exc:
+                # we have to do try/except because discord.ext.tasks has aiohttp errors as
+                # _valid_exceptions which means it just restarts the loop instead of raising the error
+                # and pulsefire unfortunately raises aiohttp errors.
+                # I do not to remove them from valid_exceptions.
+                if exc.status == 404:
+                    log.debug(
+                        "%s is not in the active game on account %s#%s",
+                        row["display_name"],
+                        row["game_name"],
+                        row["tag_line"],
                     )
-                except aiohttp.ClientResponseError as exc:
-                    # we have to do try/except because discord.ext.tasks has aiohttp errors as
-                    # _valid_exceptions which means it just restarts the loop instead of raising the error
-                    # and pulsefire unfortunately raises aiohttp errors.
-                    # I do not to remove them from valid_exceptions.
-                    if exc.status == 404:
-                        log.debug(
-                            "%s is not in the active game on account %s#%s",
-                            row["display_name"],
-                            row["game_name"],
-                            row["tag_line"],
+                else:
+                    error_embed = (
+                        discord.Embed(colour=const.Colour.error())
+                        .add_field(
+                            name="`lol_spectator_v4_active_game_by_summoner` Error",
+                            value=f"Status: {exc.status}",
                         )
-                    else:
-                        error_embed = (
-                            discord.Embed(colour=const.Colour.error())
-                            .add_field(
-                                name="`lol_spectator_v4_active_game_by_summoner` Error",
-                                value=f"Status: {exc.status}",
-                            )
-                            .add_field(
-                                name="Account",
-                                value=f"{row['game_name']}#{row['tag_line']} {row['platform']} {row['display_name']}",
-                            )
-                            .set_footer(text="fill_live_matches in league notifications")
+                        .add_field(
+                            name="Account",
+                            value=f"{row['game_name']}#{row['tag_line']} {row['platform']} {row['display_name']}",
                         )
-                        await self.hideout.spam.send(embed=error_embed)
-                    continue
-
-                # continue game analysis
-                if game["gameQueueConfigId"] != const.League.SOLO_RANKED_5v5_QUEUE_ENUM:
-                    continue
-
-                self.live_match_ids.append(game["gameId"])
-
-                player = next((p for p in game["participants"] if p["summonerId"] == row["summoner_id"]), None)
-
-                if player and player["championId"] in favourite_champion_ids and row["last_edited"] != game["gameId"]:
-                    query = """ 
-                        SELECT s.channel_id 
-                        FROM lol_favourite_characters c
-                        JOIN lol_favourite_players p on c.guild_id = p.guild_id
-                        JOIN lol_settings s on s.guild_id = c.guild_id
-                        WHERE character_id=$1 AND player_id=$2
-                        AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3);     
-                    """
-                    channel_id_rows: list[tuple[int]] = await self.bot.pool.fetch(
-                        query, player["championId"], row["player_id"], game["gameId"]
+                        .set_footer(text="fill_live_matches in league notifications")
                     )
-                    channel_ids = [channel_id for channel_id, in channel_id_rows]
-                    if channel_ids:
-                        log.debug(
-                            "Notif %s - %s",
-                            row["display_name"],
-                            await self.bot.cdragon.champion.name_by_id(player["championId"]),
+                    await self.hideout.spam.send(embed=error_embed)
+                continue
+
+            # continue game analysis
+            if game["gameQueueConfigId"] != const.League.SOLO_RANKED_5v5_QUEUE_ENUM:
+                continue
+
+            self.live_match_ids.append(game["gameId"])
+
+            player = next((p for p in game["participants"] if p["summonerId"] == row["summoner_id"]), None)
+
+            if player and player["championId"] in favourite_champion_ids and row["last_edited"] != game["gameId"]:
+                query = """ 
+                    SELECT s.channel_id 
+                    FROM lol_favourite_characters c
+                    JOIN lol_favourite_players p on c.guild_id = p.guild_id
+                    JOIN lol_settings s on s.guild_id = c.guild_id
+                    WHERE character_id=$1 AND player_id=$2
+                    AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3);     
+                """
+                channel_id_rows: list[tuple[int]] = await self.bot.pool.fetch(
+                    query, player["championId"], row["player_id"], game["gameId"]
+                )
+                channel_ids = [channel_id for channel_id, in channel_id_rows]
+                if channel_ids:
+                    log.debug(
+                        "Notif %s - %s",
+                        row["display_name"],
+                        await self.bot.cdragon.champion.name_by_id(player["championId"]),
+                    )
+                    self.notification_matches.append(
+                        LoLFPCMatchToSend(
+                            match_id=game["gameId"],
+                            platform=game["platformId"],  # type: ignore # pulsefire has it as a simple str
+                            game_name=row["game_name"],
+                            # TODO: ^^^would be cool to get it from game object but currently it's not there.
+                            tag_line=row["tag_line"],
+                            start_time=game["gameStartTime"],
+                            champion_id=player["championId"],
+                            all_champion_ids=[p["championId"] for p in game["participants"]],
+                            twitch_id=row["twitch_id"],
+                            summoner_spell_ids=(player["spell1Id"], player["spell2Id"]),
+                            rune_ids=player["perks"]["perkIds"],  # type: ignore # not required key, wtf ?
+                            channel_ids=channel_ids,
+                            summoner_id=player["summonerId"],
                         )
-                        self.notification_matches.append(
-                            LoLFPCMatchToSend(
-                                match_id=game["gameId"],
-                                platform=game["platformId"],  # type: ignore # pulsefire has it as a simple str
-                                game_name=row["game_name"],
-                                # TODO: ^^^would be cool to get it from game object but currently it's not there.
-                                tag_line=row["tag_line"],
-                                start_time=game["gameStartTime"],
-                                champion_id=player["championId"],
-                                all_champion_ids=[p["championId"] for p in game["participants"]],
-                                twitch_id=row["twitch_id"],
-                                summoner_spell_ids=(player["spell1Id"], player["spell2Id"]),
-                                rune_ids=player["perks"]["perkIds"],
-                                channel_ids=channel_ids,
-                                summoner_id=player["summonerId"],
-                            )
-                        )
+                    )
 
     async def send_notifications(self, match: LoLFPCMatchToSend):
         log.debug("Sending LoL FPC Notifications")
@@ -220,42 +220,39 @@ class LoLFPCNotifications(FPCCog):
     # POST MATCH EDITS
 
     async def edit_lol_notification_messages(self, match_rows: list[DeclareMatchesFinishedQueryRow]):
-        async with self.bot.acquire_riot_api_client() as riot_api_client:
-            for match_row in match_rows:
-                try:
-                    match_id = f"{match_row['platform'].upper()}_{match_row['match_id']}"
-                    continent = lol.PLATFORM_TO_CONTINENT[match_row["platform"]]
+        for match_row in match_rows:
+            try:
+                match_id = f"{match_row['platform'].upper()}_{match_row['match_id']}"
+                continent = lol.PLATFORM_TO_CONTINENT[match_row["platform"]]
 
-                    match = await riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)
-                    timeline = await riot_api_client.get_lol_match_v5_match_timeline(id=match_id, region=continent)
+                match = await self.bot.riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)
+                timeline = await self.bot.riot_api_client.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
-                except aiohttp.ClientResponseError as exc:
-                    if exc.status == 404:
-                        continue
-                    else:
-                        raise
+            except aiohttp.ClientResponseError as exc:
+                if exc.status == 404:
+                    continue
+                else:
+                    raise
 
-                query = "SELECT message_id, channel_id, champion_id FROM lol_messages WHERE match_id=$1"
-                message_rows: list[EditLolNotificationQueryRow] = await self.bot.pool.fetch(
-                    query, match_row["match_id"]
+            query = "SELECT message_id, channel_id, champion_id FROM lol_messages WHERE match_id=$1"
+            message_rows: list[EditLolNotificationQueryRow] = await self.bot.pool.fetch(query, match_row["match_id"])
+
+            for participant in match["info"]["participants"]:
+                channel_message_tuples: list[tuple[int, int]] = [
+                    (message_row["channel_id"], message_row["message_id"])
+                    for message_row in message_rows
+                    if participant["championId"] == message_row["champion_id"]
+                ]
+
+                post_match_player = LoLFPCMatchToEdit(
+                    self.bot,
+                    participant=participant,
+                    timeline=timeline,
+                    channel_message_tuples=channel_message_tuples,
                 )
-
-                for participant in match["info"]["participants"]:
-                    channel_message_tuples: list[tuple[int, int]] = [
-                        (message_row["channel_id"], message_row["message_id"])
-                        for message_row in message_rows
-                        if participant["championId"] == message_row["champion_id"]
-                    ]
-
-                    post_match_player = LoLFPCMatchToEdit(
-                        self.bot,
-                        participant=participant,
-                        timeline=timeline,
-                        channel_message_tuples=channel_message_tuples,
-                    )
-                    await post_match_player.edit_notification_embed()
-                query = "DELETE FROM lol_messages WHERE match_id=$1"
-                await self.bot.pool.fetch(query, match_row["match_id"])
+                await post_match_player.edit_notification_embed()
+            query = "DELETE FROM lol_messages WHERE match_id=$1"
+            await self.bot.pool.fetch(query, match_row["match_id"])
 
 
 async def setup(bot: AluBot):

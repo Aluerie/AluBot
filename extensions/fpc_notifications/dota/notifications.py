@@ -68,7 +68,6 @@ class DotaFPCNotifications(FPCNotificationsBase):
         # Send Matches related attrs
         self.lobby_ids: set[int] = set()
         self.top_source_dict: MutableMapping[int, _schemas.CSourceTVGameSmall] = {}
-        self.live_matches: list[DotaFPCMatchToSend] = []
         self.hero_fav_ids: list[int] = []
         self.player_fav_ids: list[int] = []
 
@@ -137,8 +136,6 @@ class DotaFPCNotifications(FPCNotificationsBase):
         return [f for f, in await self.bot.pool.fetch(query, player_ids)]
 
     async def analyze_top_source_response(self):
-        self.live_matches = []
-
         query = "SELECT DISTINCT character_id FROM dota_favourite_characters"
         favourite_hero_ids: list[int] = [r for r, in await self.bot.pool.fetch(query)]
 
@@ -273,9 +270,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
         # ANALYZING
         start_time = time.perf_counter()
         await self.analyze_top_source_response()
-        send_log.debug(
-            "Analyzing took %.5f secs with %s live matches", time.perf_counter() - start_time, len(self.live_matches)
-        )
+        send_log.debug("Analyzing took %.5f secs", time.perf_counter() - start_time)
 
         if top_source_end_time > 8:
             await self.hideout.spam.send("dota notifs is dying")
@@ -287,7 +282,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
             start_time = time.perf_counter()
             await self.mark_matches_to_edit()
             send_log.debug(
-                "Marking took %.5f secs with %s live matches",
+                "Marking took %.5f secs - %s matches to edit",
                 time.perf_counter() - start_time,
                 len(self.matches_to_edit),
             )
@@ -326,29 +321,30 @@ class DotaFPCNotifications(FPCNotificationsBase):
     async def edit_with_stratz(
         self, match_id: int, friend_id: int, channel_message_tuples: list[tuple[int, int]]
     ) -> bool:
-        query = f"""{{
-            match(id: {match_id}) {{
-                players(steamAccountId: {friend_id}) {{
+        query = """
+        {
+            match(id: $match_id) {
+                players(steamAccountId: $friend_id) {
                     item0Id
                     item1Id
                     item2Id
                     item3Id
                     item4Id
                     item5Id
-                    playbackData {{
-                        purchaseEvents {{
+                    playbackData {
+                        purchaseEvents {
                             time
                             itemId
-                        }}
-                    }}
-                    stats {{
-                        matchPlayerBuffEvent {{
+                        }
+                    }
+                    stats {
+                        matchPlayerBuffEvent {
                             itemId
-                        }}
-                    }}
-                }}
-            }}
-        }}
+                        }
+                    }
+                }
+            }
+        }
         """
 
         async with self.bot.session.post(
@@ -357,7 +353,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
                 "Authorization": f"Bearer {config.STRATZ_BEARER_TOKEN}",
                 "Content-Type": "application/json",
             },
-            json={"query": query},
+            json={"query": query, "variables": {"match_id": match_id, "friend_id": friend_id}},
         ) as response:
             self.stratz_daily_remaining_ratelimit = response.headers["X-RateLimit-Remaining-Day"]
             self.stratz_daily_total_ratelimit = response.headers["X-RateLimit-Limit-Day"]

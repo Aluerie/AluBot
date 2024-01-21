@@ -252,7 +252,7 @@ class LoLFPCSettings(FPCSettingsBase):
     @app_commands.autocomplete(champion_name=hideout_lol_champion_remove_autocomplete)
     async def hideout_lol_champion_remove(self, ctx: AluGuildContext, champion_name: str):
         """Remove a League of Legends champion into your favourite FPC champions list."""
-        await self.hideout_character_add(ctx, champion_name)
+        await self.hideout_character_remove(ctx, champion_name)
 
     @hideout_lol_player.command(name="list")
     async def hideout_lol_player_list(self, ctx: AluGuildContext):

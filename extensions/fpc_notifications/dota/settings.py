@@ -233,7 +233,7 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
     @app_commands.autocomplete(hero_name=hideout_dota_hero_remove_autocomplete)
     async def hideout_dota_hero_remove(self, ctx: AluGuildContext, hero_name: str):
         """Remove a Dota 2 hero into your favourite FPC heroes list."""
-        await self.hideout_character_add(ctx, hero_name)
+        await self.hideout_character_remove(ctx, hero_name)
 
     @hideout_dota_player.command(name="list")
     async def hideout_dota_player_list(self, ctx: AluGuildContext):

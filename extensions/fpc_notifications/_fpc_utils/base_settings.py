@@ -592,7 +592,7 @@ class FPCSettingsBase(FPCCog):
 
     async def hideout_player_remove(self, ctx: AluGuildContext, player_name: str):
         """Base function for `/{game}-fpc player remove` Hideout-only command."""
-        await self.hideout_add_worker(ctx, player_name, self.get_player_tuple, "player", "player")
+        await self.hideout_remove_worker(ctx, player_name, self.get_player_tuple, "player", "player")
 
     async def get_character_tuple(self, character_name: str) -> tuple[int, str]:
         try:

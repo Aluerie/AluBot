@@ -11,11 +11,10 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from utils import const, dota, formats
 
-from .._fpc_utils.base_models import BasePostMatchPlayer
+from .._fpc_utils import BaseMatchToEdit, BaseMatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot
-    from utils.twitch import TwitchClient
 
     from . import _schemas
 
@@ -72,9 +71,10 @@ class Match:
         return f"/[Dbuff]({self.dbuff})/[ODota]({self.odota})/[Stratz]({self.stratz})"
 
 
-class DotaFPCMatchToSend(Match):
+class DotaFPCMatchToSend(BaseMatchToSend, Match):
     def __init__(
         self,
+        bot: AluBot,
         *,
         match_id: int,
         friend_id: int,
@@ -84,10 +84,11 @@ class DotaFPCMatchToSend(Match):
         hero_ids: list[int],
         server_steam_id: int,
         twitch_id: Optional[int] = None,
-        channel_ids: list[int],
         hero_name: str,
     ):
-        super().__init__(match_id)
+        super().__init__(bot)
+        super(BaseMatchToSend).__init__(match_id=match_id)
+
         self.friend_id: int = friend_id
         self.start_time: int = start_time
         self.player_name: str = player_name
@@ -95,14 +96,13 @@ class DotaFPCMatchToSend(Match):
         self.hero_ids: list[int] = hero_ids
         self.server_steam_id: int = server_steam_id
         self.twitch_id: Optional[int] = twitch_id
-        self.channel_ids: list[int] = channel_ids
         self.hero_name: str = hero_name
 
     @property
     def long_ago(self) -> int:
         return int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - self.start_time
 
-    async def get_twitch_data(self, twitch: TwitchClient) -> TwitchData:
+    async def get_twitch_data(self) -> TwitchData:
         log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
             return {
@@ -115,10 +115,10 @@ class DotaFPCMatchToSend(Match):
                 "colour": const.MaterialPalette.gray(),
             }
         else:
-            stream = await twitch.get_twitch_stream(self.twitch_id)
+            stream = await self.bot.twitch.get_twitch_stream(self.twitch_id)
             if stream.online:
                 twitch_status = "Live"
-                vod_url = await twitch.last_vod_link(self.twitch_id, seconds_ago=self.long_ago)
+                vod_url = await self.bot.twitch.last_vod_link(self.twitch_id, seconds_ago=self.long_ago)
                 colour = const.Colour.prpl()
             else:
                 twitch_status = "Offline"
@@ -135,12 +135,12 @@ class DotaFPCMatchToSend(Match):
                 "colour": colour,
             }
 
-    async def get_notification_image(self, twitch_data: TwitchData, colour: discord.Colour, bot: AluBot) -> Image.Image:
+    async def get_notification_image(self, twitch_data: TwitchData, colour: discord.Colour) -> Image.Image:
         log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
-        img = await bot.transposer.url_to_image(twitch_data["preview_url"])
-        hero_image_urls = [await bot.dota_cache.hero.img_by_id(id) for id in self.hero_ids]
-        hero_images = [await bot.transposer.url_to_image(url) for url in hero_image_urls]
+        img = await self.bot.bot.transposer.url_to_image(twitch_data["preview_url"])
+        hero_image_urls = [await self.bot.bot.dota_cache.hero.img_by_id(id) for id in self.hero_ids]
+        hero_images = [await self.bot.bot.transposer.url_to_image(url) for url in hero_image_urls]
 
         def build_notification_image() -> Image.Image:
             log.debug("`build_notification_image` is starting")
@@ -164,10 +164,10 @@ class DotaFPCMatchToSend(Match):
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
             draw = ImageDraw.Draw(img)
             text = f"{twitch_data['display_name']} - {self.hero_name}"
-            w2, h2 = bot.transposer.get_text_wh(text, font)
+            w2, h2 = self.bot.bot.transposer.get_text_wh(text, font)
             draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
-            w2, h2 = bot.transposer.get_text_wh(text, font)
+            w2, h2 = self.bot.bot.transposer.get_text_wh(text, font)
             draw.text(
                 xy=(0, 35 + h2 + 10), text=twitch_data["twitch_status"], font=font, align="center", fill=str(colour)
             )
@@ -175,17 +175,18 @@ class DotaFPCMatchToSend(Match):
 
         return await asyncio.to_thread(build_notification_image)
 
-    async def get_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
+    @override
+    async def get_embed_and_file(self) -> tuple[discord.Embed, discord.File]:
         log.debug("Creating embed + file for Notification match")
 
-        twitch_data = await self.get_twitch_data(bot.twitch)
+        twitch_data = await self.get_twitch_data()
 
-        notification_image = await self.get_notification_image(twitch_data, twitch_data["colour"], bot)
+        notification_image = await self.get_notification_image(twitch_data, twitch_data["colour"])
         filename = (
             f'{twitch_data["twitch_status"]}-{twitch_data["display_name"].replace("_", "")}-'
             f'{(self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
         )
-        image_file = bot.transposer.image_to_file(notification_image, filename=filename)
+        image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
         embed = (
             discord.Embed(
                 colour=twitch_data["colour"],
@@ -201,14 +202,22 @@ class DotaFPCMatchToSend(Match):
                 url=twitch_data["url"],
                 icon_url=twitch_data["logo_url"],
             )
-            .set_thumbnail(url=await bot.dota_cache.hero.img_by_id(self.hero_id))
+            .set_thumbnail(url=await self.bot.dota_cache.hero.img_by_id(self.hero_id))
             .set_image(url=f"attachment://{image_file.filename}")
             .set_footer(text=f"watch_server {self.server_steam_id}")
         )
         return embed, image_file
 
+    @override
+    async def insert_into_game_messages(self, message_id: int, channel_id: int):
+        query = """
+            INSERT INTO dota_messages (message_id, channel_id, match_id, friend_id, hero_id) 
+            VALUES ($1, $2, $3, $4, $5)
+        """
+        await self.bot.pool.execute(query, message_id, channel_id, self.match_id, self.friend_id, self.hero_id)
 
-class DotaFPCMatchToEditWithOpenDota(BasePostMatchPlayer):
+
+class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
     """
     Class
     """
@@ -218,9 +227,8 @@ class DotaFPCMatchToEditWithOpenDota(BasePostMatchPlayer):
         bot: AluBot,
         *,
         player: dota.OpenDotaAPISchema.Player,
-        channel_message_tuples: list[tuple[int, int]],
     ):
-        super().__init__(bot, channel_message_tuples=channel_message_tuples)
+        super().__init__(bot)
 
         self.outcome: str = "Win" if player["win"] else "Loss"
         self.kda: str = f'{player["kills"]}/{player["deaths"]}/{player["assists"]}'
@@ -324,7 +332,7 @@ class DotaFPCMatchToEditWithOpenDota(BasePostMatchPlayer):
         return await asyncio.to_thread(build_notification_image)
 
 
-class DotaFPCMatchToEditWithStratz(BasePostMatchPlayer):
+class DotaFPCMatchToEditWithStratz(BaseMatchToEdit):
     """
     Class
     """
@@ -334,9 +342,8 @@ class DotaFPCMatchToEditWithStratz(BasePostMatchPlayer):
         bot: AluBot,
         *,
         player: _schemas.StratzEditFPCMessageGraphQLSchema.Player,
-        channel_message_tuples: list[tuple[int, int]],
     ):
-        super().__init__(bot, channel_message_tuples=channel_message_tuples)
+        super().__init__(bot)
 
         self.item_ids: list[int] = [player[f"item{i}Id"] for i in range(6)]
 
@@ -396,18 +403,16 @@ class DotaFPCMatchToEditWithStratz(BasePostMatchPlayer):
         return await asyncio.to_thread(build_notification_image)
 
 
-class DotaFPCMatchToEditNotCounted(BasePostMatchPlayer):
+class DotaFPCMatchToEditNotCounted(BaseMatchToEdit):
     """
     Class
     """
 
     def __init__(
         self,
-        bot: AluBot,
-        *,
-        channel_message_tuples: list[tuple[int, int]],
+        bot: AluBot
     ):
-        super().__init__(bot, channel_message_tuples=channel_message_tuples)
+        super().__init__(bot)
 
     @override
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:

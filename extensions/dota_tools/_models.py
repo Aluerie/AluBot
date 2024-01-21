@@ -67,10 +67,11 @@ class MatchHistoryData:
 
             mmr = new_mmr(last_recorded_match.mmr)
 
-            query = """ INSERT INTO dotahistory 
-                        (hero_id, winloss, mmr, role, dtime)
-                        VALUES ($1, $2, $3, $4, $5)
-                    """
+            query = """
+                INSERT INTO dotahistory 
+                (hero_id, winloss, mmr, role, dtime)
+                VALUES ($1, $2, $3, $4, $5)
+            """
             await self.pool.execute(
                 query, self.id, self.hero_id, self.winloss, mmr, self.role, datetime.fromtimestamp(self.start_time)
             )
@@ -85,10 +86,7 @@ def fancy_ax(ax):
 
 
 async def generate_data(pool: Pool):
-    query = """ SELECT mmr
-                FROM dotahistory
-                ORDER BY id DESC 
-            """
+    query = "SELECT mmr FROM dotahistory ORDER BY id DESC"
     rows = await pool.fetch(query)
 
     mmrs = np.array([row.mmr for row in rows])

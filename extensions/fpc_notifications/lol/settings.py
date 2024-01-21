@@ -8,7 +8,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-import config
 from utils import checks, const, errors, lol
 
 from .._fpc_utils import FPCAccount, FPCSettingsBase
@@ -49,7 +48,10 @@ class LoLAccount(FPCAccount):
             riot_account = await bot.riot_api_client.get_account_v1_by_riot_id(
                 game_name=flags.game_name,
                 tag_line=flags.tag_line,
-                region=lol.SERVER_TO_CONTINENT[flags.server],
+                region=lol.SERVER_TO_CONTINENT[flags.server], 
+                # todo: in theory we can use continent closest to me bcs they all share the same data
+                # for account_v1 endpoint
+                # so check response time to this request
             )
         except aiohttp.ClientResponseError:
             raise errors.BadArgument(

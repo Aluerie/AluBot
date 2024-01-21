@@ -244,11 +244,12 @@ class TimerManager:
         Optional[:class:`Timer`]
             The timer that is expired and should be dispatched.
         """
-        query = """ SELECT * FROM timers
-                    WHERE (expires_at AT TIME ZONE 'UTC' AT TIME ZONE timezone) < (CURRENT_TIMESTAMP + $1::interval)
-                    ORDER BY expires_at
-                    LIMIT 1;
-                """
+        query = """
+            SELECT * FROM timers
+            WHERE (expires_at AT TIME ZONE 'UTC' AT TIME ZONE timezone) < (CURRENT_TIMESTAMP + $1::interval)
+            ORDER BY expires_at
+            LIMIT 1;
+        """
         record: TimerRecord[TimerMapping] = await self.bot.pool.fetchrow(query, datetime.timedelta(days=days))
         if record:
             timer = Timer(record=record)
@@ -318,10 +319,11 @@ class TimerManager:
             self.bot.loop.create_task(self.short_timer_optimisation(delta, timer))
             return timer
 
-        query = """ INSERT INTO timers (event, data, expires_at, created_at, timezone)
-                    VALUES ($1, $2::jsonb, $3, $4, $5)
-                    RETURNING id;
-                """
+        query = """
+            INSERT INTO timers (event, data, expires_at, created_at, timezone)
+            VALUES ($1, $2::jsonb, $3, $4, $5)
+            RETURNING id;
+        """
         row = await self.bot.pool.fetchrow(query, event, data, expires_at, created_at, timezone)
         timer.id = row[0]
 

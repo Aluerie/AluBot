@@ -171,12 +171,13 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     @remind.command(name="list", ignore_extra=False)
     async def remind_list(self, ctx: AluContext):
         """Shows a list of your current reminders"""
-        query = """ SELECT id, expires, extra #>> '{args,2}'
-                    FROM timers
-                    WHERE event = 'reminder'
-                    AND data #>> '{author_id}' = $1
-                    ORDER BY expires
-                """
+        query = """
+            SELECT id, expires, extra #>> '{args,2}'
+            FROM timers
+            WHERE event = 'reminder'
+            AND data #>> '{author_id}' = $1
+            ORDER BY expires
+        """
         records = await ctx.pool.fetch(query, str(ctx.author.id))
 
         string_list = []

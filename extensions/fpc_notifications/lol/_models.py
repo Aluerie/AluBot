@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 from utils import const, lol
 from utils.formats import human_timedelta
 
-from .._fpc_utils.base_models import BasePostMatchPlayer
+from .._fpc_utils import BaseMatchToEdit, BaseMatchToSend
 
 if TYPE_CHECKING:
     from pulsefire.schemas import RiotAPISchema
@@ -53,9 +53,10 @@ class LoLNotificationAccount:
         return f"/[Opgg]({self.opgg})/[Ugg]({self.ugg})"
 
 
-class LoLFPCMatchToSend(LoLNotificationAccount):
+class LoLFPCMatchToSend(BaseMatchToSend, LoLNotificationAccount):
     def __init__(
         self,
+        bot: AluBot,
         *,
         match_id: int,
         platform: lol.LiteralPlatform,
@@ -67,10 +68,11 @@ class LoLFPCMatchToSend(LoLNotificationAccount):
         twitch_id: int,
         summoner_spell_ids: tuple[int, int],
         rune_ids: list[int],
-        channel_ids: list[int],
         summoner_id: str,
     ):
-        super().__init__(platform, game_name, tag_line)
+        super().__init__(bot)
+        super(BaseMatchToSend).__init__(platform, game_name, tag_line)
+
         self.match_id: int = match_id
 
         self.start_time: int = start_time
@@ -79,7 +81,6 @@ class LoLFPCMatchToSend(LoLNotificationAccount):
         self.twitch_id: int = twitch_id
         self.summoner_spell_ids: tuple[int, int] = summoner_spell_ids
         self.rune_ids: list[int] = rune_ids
-        self.channel_ids: list[int] = channel_ids
         self.summoner_id: str = summoner_id
 
     @property
@@ -99,17 +100,16 @@ class LoLFPCMatchToSend(LoLNotificationAccount):
         stream_preview_url: str,
         display_name: str,
         champion_name: str,
-        bot: AluBot,
     ) -> Image.Image:
         # prepare stuff for the following PIL procedures
-        img = await bot.transposer.url_to_image(stream_preview_url)
-        sorted_champion_ids = await bot.meraki_roles.sort_champions_by_roles(self.all_champion_ids)
-        champion_icon_urls = [await bot.cdragon.champion.icon_by_id(id) for id in sorted_champion_ids]
-        champion_icon_images = [await bot.transposer.url_to_image(url) for url in champion_icon_urls]
-        rune_icon_urls = [await bot.cdragon.rune.icon_by_id(id) for id in self.rune_ids]
-        rune_icon_images = [await bot.transposer.url_to_image(url) for url in rune_icon_urls]
-        summoner_icon_urls = [await bot.cdragon.summoner_spell.icon_by_id(id) for id in self.summoner_spell_ids]
-        summoner_icon_images = [await bot.transposer.url_to_image(url) for url in summoner_icon_urls]
+        img = await self.bot.transposer.url_to_image(stream_preview_url)
+        sorted_champion_ids = await self.bot.meraki_roles.sort_champions_by_roles(self.all_champion_ids)
+        champion_icon_urls = [await self.bot.cdragon.champion.icon_by_id(id) for id in sorted_champion_ids]
+        champion_icon_images = [await self.bot.transposer.url_to_image(url) for url in champion_icon_urls]
+        rune_icon_urls = [await self.bot.cdragon.rune.icon_by_id(id) for id in self.rune_ids]
+        rune_icon_images = [await self.bot.transposer.url_to_image(url) for url in rune_icon_urls]
+        summoner_icon_urls = [await self.bot.cdragon.summoner_spell.icon_by_id(id) for id in self.summoner_spell_ids]
+        summoner_icon_images = [await self.bot.transposer.url_to_image(url) for url in summoner_icon_urls]
 
         def build_notification_image() -> Image.Image:
             width, height = img.size
@@ -129,7 +129,7 @@ class LoLFPCMatchToSend(LoLNotificationAccount):
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
             draw = ImageDraw.Draw(img)
             text = f"{display_name} - {champion_name}"
-            w2, h2 = bot.transposer.get_text_wh(text, font)
+            w2, h2 = self.bot.transposer.get_text_wh(text, font)
             draw.text(xy=((width - w2) / 2, 65), text=text, font=font, align="center")
 
             # rune icons
@@ -150,38 +150,47 @@ class LoLFPCMatchToSend(LoLNotificationAccount):
 
         return await asyncio.to_thread(build_notification_image)
 
-    async def get_embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
-        stream = await bot.twitch.get_twitch_stream(self.twitch_id)
-        champion_name = await bot.cdragon.champion.name_by_id(self.champion_id)
+    async def get_embed_and_file(self) -> tuple[discord.Embed, discord.File]:
+        stream = await self.bot.twitch.get_twitch_stream(self.twitch_id)
+        champion_name = await self.bot.cdragon.champion.name_by_id(self.champion_id)
 
-        notification_image = await self.get_notification_image(
-            stream.preview_url, stream.display_name, champion_name, bot
-        )
+        notification_image = await self.get_notification_image(stream.preview_url, stream.display_name, champion_name)
 
         filename = f'{stream.display_name.replace("_", "")}-playing-{champion_name}.png'
-        image_file = bot.transposer.image_to_file(notification_image, filename=filename)
+        image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
 
         embed = discord.Embed(color=const.Colour.rspbrry(), url=stream.url)
         embed.description = (
             f"Match `{self.platform.upper()}_{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n"
-            f"{await bot.twitch.last_vod_link(stream.twitch_id, seconds_ago=self.long_ago)}{self.links}"
+            f"{await self.bot.twitch.last_vod_link(stream.twitch_id, seconds_ago=self.long_ago)}{self.links}"
         )
         embed.set_image(url=f"attachment://{image_file.filename}")
-        embed.set_thumbnail(url=await bot.cdragon.champion.icon_by_id(self.champion_id))
+        embed.set_thumbnail(url=await self.bot.cdragon.champion.icon_by_id(self.champion_id))
         embed.set_author(name=f"{stream.display_name} - {champion_name}", url=stream.url, icon_url=stream.logo_url)
         return embed, image_file
 
+    @override
+    async def insert_into_game_messages(self, message_id: int, channel_id: int):
+        query = """
+            INSERT INTO lol_messages
+            (message_id, channel_id, match_id, platform, champion_id) 
+            VALUES ($1, $2, $3, $4, $5)
+        """
+        await self.bot.pool.execute(query, message_id, channel_id, self.match_id, self.platform, self.champion_id)
 
-class LoLFPCMatchToEdit(BasePostMatchPlayer):
+        query = "UPDATE lol_accounts SET last_edited=$1 WHERE summoner_id=$2"
+        await self.bot.pool.execute(query, self.match_id, self.summoner_id)
+
+
+class LoLFPCMatchToEdit(BaseMatchToEdit):
     def __init__(
         self,
         bot: AluBot,
         *,
         participant: RiotAPISchema.LolMatchV5MatchInfoParticipant,
         timeline: RiotAPISchema.LolMatchV5MatchTimeline,
-        channel_message_tuples: list[tuple[int, int]],
     ):
-        super().__init__(bot, channel_message_tuples=channel_message_tuples)
+        super().__init__(bot)
 
         self.summoner_id: str = participant["summonerId"]
         self.kda: str = f"{participant['kills']}/{participant['deaths']}/{participant['assists']}"
@@ -210,7 +219,7 @@ class LoLFPCMatchToEdit(BasePostMatchPlayer):
                     # ITEM ORDER
                     case "ITEM_PURCHASED":
                         item_id = event.get("itemId")
-                        if item_id:
+                        if item_id and item_id in item_ids:
                             if item_id not in self.sorted_item_ids:
                                 self.sorted_item_ids.append(item_id)
                             else:
@@ -335,7 +344,6 @@ async def beta_test_edit_notification_image(self: AluCog):
         self.bot,
         participant=match["info"]["participants"][3],
         timeline=timeline,
-        channel_message_tuples=[(0, 0)],
     )
 
     new_image = await post_match_player.edit_notification_image(const.PICTURE.LAVENDER640X360, discord.Colour.purple())

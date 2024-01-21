@@ -215,10 +215,11 @@ class BugTracker(AluCog):
     @bugtracker.command(name="add")
     async def bugtracker_add(self, ctx: AluContext, *, login: str):
         logins = [b for x in login.split(",") if (b := x.lstrip().rstrip())]
-        query = """ INSERT INTO valve_devs (login) VALUES ($1)
-                    ON CONFLICT DO NOTHING
-                    RETURNING True;
-                """
+        query = """
+            INSERT INTO valve_devs (login) VALUES ($1)
+            ON CONFLICT DO NOTHING
+            RETURNING True;
+        """
 
         error_logins = []
         success_logins = []
@@ -317,9 +318,10 @@ class BugTracker(AluCog):
                 elif login != event.issue.user.login:
                     # if actor is not OP of the issue then we can consider that this person is a valve dev
                     self.valve_devs.append(login)
-                    query = """ INSERT INTO valve_devs (login) VALUES ($1)
-                                ON CONFLICT DO NOTHING;
-                            """
+                    query = """
+                        INSERT INTO valve_devs (login) VALUES ($1)
+                        ON CONFLICT DO NOTHING;
+                    """
                     await self.bot.pool.execute(query, login)
                 else:
                     # looks like non-dev event

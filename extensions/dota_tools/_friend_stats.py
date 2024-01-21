@@ -441,11 +441,12 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         ax = fig.add_subplot(gs[5:8, 6:10])
         ax = await heroes_played_bar(self.bot, ax, sorted_dict)
 
-        query = """ SELECT mmr 
-                    FROM dotahistory
-                    ORDER BY id DESC 
-                    LIMIT 1;
-                """
+        query = """
+            SELECT mmr 
+            FROM dotahistory
+            ORDER BY id DESC 
+            LIMIT 1;
+        """
         final_mmr = await self.bot.pool.fetchval(query)
 
         query = "SELECT count(*) FROM dotahistory"
@@ -468,11 +469,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
             axRain.get_yaxis().set_visible(False)
             axRain = fancy_ax(axRain)
 
-        query = """ SELECT *
-                    FROM dotahistory
-                    ORDER BY id DESC 
-                    LIMIT 1
-                """
+        query = "SELECT * FROM dotahistory ORDER BY id DESC LIMIT 1"
         last_match = await self.bot.pool.fetchrow(query)
 
         axRain = fig.add_subplot(gs[1, 8:10], ylim=(-30, 30))

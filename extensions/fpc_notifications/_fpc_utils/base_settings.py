@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     class SetupMiscQueryRow(TypedDict):
         enabled: bool
         spoil: bool
+        only_twitch_live: bool
 
 
 __all__ = (
@@ -198,14 +199,15 @@ class FPCSettingsBase(FPCCog):
     # fpc database management related functions ########################################################################
 
     async def check_if_account_already_in_database(self, account_id: AccountIDType) -> None:
-        query = f""" SELECT display_name
-                    FROM {self.prefix}_players
-                    WHERE player_id = (
-                        SELECT player_id
-                        FROM {self.prefix}_accounts
-                        WHERE {self.account_id_column}=$1 
-                    )
-                """
+        query = f"""
+            SELECT display_name
+            FROM {self.prefix}_players
+            WHERE player_id = (
+                SELECT player_id
+                FROM {self.prefix}_accounts
+                WHERE {self.account_id_column}=$1 
+            )
+        """
         display_name: Optional[str] = await self.bot.pool.fetchval(query, account_id)
         if display_name:
             raise errors.BadArgument(
@@ -378,7 +380,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.typing()
         await self.is_fpc_channel_set(ctx)
 
-        query = f"SELECT enabled, spoil FROM {self.prefix}_settings WHERE guild_id=$1"
+        query = f"SELECT enabled, spoil, only_twitch_live FROM {self.prefix}_settings WHERE guild_id=$1"
         row: SetupMiscQueryRow = await ctx.pool.fetchrow(query, ctx.guild.id)
 
         def state(bool: bool) -> str:
@@ -410,9 +412,19 @@ class FPCSettingsBase(FPCCog):
                 name=f"\N{MICROSCOPE} Show Post-Match Results Setting: {state(row['spoil'])}",
                 value=(
                     "By default, the bot edits messages with post-game results to include stats like Win/Loss, "
-                    "KDA. However, if you don't like such behavior - toggle this setting."
+                    "KDA. However, if you don't like such behavior - toggle this setting. "
+                    "Note that the current ongoing match will still use old setting "
+                    "(i.e. only next notification will use the updated value)."
                 ),
                 inline=False,
+            )
+            .add_field(
+                name=f"\N{CLAPPER BOARD} Only Twitch Live Players Setting: {state(row['only_twitch_live'])}",
+                value=(
+                    "By default, the bot sends notifications no matter if a person is streaming or not at the moment. "
+                    "However, if you only want to catch [twitch.tv](https://www.twitch.tv/) streamers playing your "
+                    f"favourite {self.character_plural_word} live - toggle this setting."
+                ),
             )
             .add_field(
                 name="\N{WASTEBASKET} Delete Your Data and Stop Notifications",

@@ -200,10 +200,11 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         await ctx.reply(embed=embed)
 
     async def remove_birthday_helper(self, user_id: int):
-        query = """ DELETE FROM timers
-                    WHERE event = 'birthday' 
-                    AND data #>> '{user_id}' = $1;
-                """
+        query = """
+            DELETE FROM timers
+            WHERE event = 'birthday' 
+            AND data #>> '{user_id}' = $1;
+        """
         status = await self.bot.pool.execute(query, str(user_id))
 
         current_timer = self.bot._current_timer
@@ -233,10 +234,11 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     async def check(self, ctx: AluGuildContext, member: discord.Member = commands.Author):
         """Check your or somebody's birthday in database"""
 
-        query = """ SELECT * FROM timers
-                    WHERE event = 'birthday' 
-                    AND data #>> '{user_id}' = $1;
-                """
+        query = """
+            SELECT * FROM timers
+            WHERE event = 'birthday' 
+            AND data #>> '{user_id}' = $1;
+        """
         row: Optional[TimerRecord[BirthdayTimerData]] = await self.bot.pool.fetchrow(query, str(member.id))
 
         e = discord.Embed(colour=member.color)
@@ -330,10 +332,11 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         """Show list of birthdays in this server"""
         guild = self.community.guild
 
-        query = """ SELECT expires_at, timezone, data FROM timers
-                    WHERE event = 'birthday' 
-                    ORDER BY extract(MONTH FROM expires_at), extract(DAY FROM expires_at);
-                """
+        query = """
+            SELECT expires_at, timezone, data FROM timers
+            WHERE event = 'birthday' 
+            ORDER BY extract(MONTH FROM expires_at), extract(DAY FROM expires_at);
+        """
         rows: list[TimerRecord[BirthdayTimerData]] = await self.bot.pool.fetch(query)
 
         string_list = []

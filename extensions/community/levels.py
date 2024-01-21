@@ -154,11 +154,12 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         offset = 1
         cnt = offset
 
-        query = f"""SELECT id, exp, rep 
-                    FROM users 
-                    WHERE inlvl=TRUE
-                    ORDER BY {sort_by} DESC;
-                """
+        query = f"""
+            SELECT id, exp, rep 
+            FROM users 
+            WHERE inlvl=TRUE
+            ORDER BY {sort_by} DESC;
+        """
         rows = await self.bot.pool.fetch(query)
         for row in rows:  # type: ignore
             if (member := guild.get_member(row.id)) is None:
@@ -188,14 +189,15 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         if not message.guild or message.guild.id != const.Guild.community:
             return
 
-        query = """ WITH u AS (
-                        SELECT lastseen FROM users WHERE id=$1
-                    )           
-                    UPDATE users 
-                    SET msg_count=msg_count+1, lastseen=(now() at time zone 'utc')
-                    WHERE id=$1
-                    RETURNING (SELECT lastseen from u)
-                """
+        query = """
+            WITH u AS (
+                SELECT lastseen FROM users WHERE id=$1
+            )           
+            UPDATE users 
+            SET msg_count=msg_count+1, lastseen=(now() at time zone 'utc')
+            WHERE id=$1
+            RETURNING (SELECT lastseen from u)
+        """
         lastseen = await self.bot.pool.fetchval(query, message.author.id)
 
         author: discord.Member = message.author  # type: ignore

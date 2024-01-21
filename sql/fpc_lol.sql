@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS lol_settings (
     guild_name TEXT,
     channel_id BIGINT,
     enabled BOOLEAN DEFAULT TRUE,
-    spoil BOOLEAN DEFAULT TRUE
+    spoil BOOLEAN DEFAULT TRUE,
+    only_twitch_live BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS lol_players (

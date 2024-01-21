@@ -67,6 +67,7 @@ class Twitch:
     my_channel_name = "Irene_Adler__"
     my_channel_id = 180499648
     lol_game_category_id = "21779"
+    DOTA_GAME_CATEGORY_ID = "29595"
 
 
 class League:

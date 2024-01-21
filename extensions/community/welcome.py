@@ -90,11 +90,12 @@ class Welcome(CommunityCog):
         if member.bot:
             await member.add_roles(self.bot.community.bots_role)
         else:
-            query = """ INSERT INTO users (id, name) 
-                        VALUES ($1, $2) 
-                        ON CONFLICT DO NOTHING
-                        RETURNING True;
-                    """
+            query = """
+                INSERT INTO users (id, name) 
+                VALUES ($1, $2) 
+                ON CONFLICT DO NOTHING
+                RETURNING True;
+            """
             value = await self.bot.pool.fetchval(query, member.id, member.name)
             back = value is not True
 

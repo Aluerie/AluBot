@@ -36,24 +36,22 @@ class LoLSummonerNameCheck(FPCCog):
         query = "SELECT puuid, platform, game_name, tag_line FROM lol_accounts"
         rows: list[AccountRow] = await self.bot.pool.fetch(query)
 
-        async with self.bot.riot_api_client() as riot_api_client:
-            for row in rows:
-                try:
-                    account = await riot_api_client.get_account_v1_by_puuid(
-                        region=row["platform"],
-                        puuid=row["puuid"],
-                    )
-                except aiohttp.ClientResponseError as exc:
-                    if exc.status == 404:
-                        log.info("Failed to get summoner under previous name %s#%s", row["game_name"], row["tag_line"])
-                        continue
-                    else:
-                        raise
+        for row in rows:
+            try:
+                account = await self.bot.riot_api_client.get_account_v1_by_puuid(
+                    region=row["platform"], puuid=row["puuid"]
+                )
+            except aiohttp.ClientResponseError as exc:
+                if exc.status == 404:
+                    log.info("Failed to get summoner under previous name %s#%s", row["game_name"], row["tag_line"])
+                    continue
+                else:
+                    raise
 
-                if account["gameName"] != row["game_name"] or account["tagLine"] != row["tag_line"]:
-                    query = """
-                        UPDATE lol_accounts 
-                        SET game_name = $1, tag_line = $2 
-                        WHERE puuid = $3
-                    """
-                    await self.bot.pool.execute(query, account["gameName"], account["tagLine"], account["puuid"])
+            if account["gameName"] != row["game_name"] or account["tagLine"] != row["tag_line"]:
+                query = """
+                    UPDATE lol_accounts 
+                    SET game_name = $1, tag_line = $2 
+                    WHERE puuid = $3
+                """
+                await self.bot.pool.execute(query, account["gameName"], account["tagLine"], account["puuid"])

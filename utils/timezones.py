@@ -283,10 +283,11 @@ class TimezoneManager:
         return zoneinfo.ZoneInfo(tz) or datetime.timezone.utc
 
     async def set_timezone(self, user_id: int, timezone: TimeZone):
-        query = """ INSERT INTO user_settings (id, timezone)
-                    VALUES ($1, $2)
-                    ON CONFLICT (id) DO UPDATE SET timezone = $2;
-                """
+        query = """
+            INSERT INTO user_settings (id, timezone)
+            VALUES ($1, $2)
+            ON CONFLICT (id) DO UPDATE SET timezone = $2;
+        """
         await self.bot.pool.execute(query, user_id, timezone.key)
         self.get_timezone.invalidate(self, user_id)
 

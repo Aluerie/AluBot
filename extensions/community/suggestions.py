@@ -26,11 +26,12 @@ class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
         except discord.HTTPException:
             pass
 
-        query = """ UPDATE botinfo 
-                    SET suggestion_num=botinfo.suggestion_num+1 
-                    WHERE id=$1 
-                    RETURNING suggestion_num;
-                """
+        query = """
+            UPDATE botinfo 
+            SET suggestion_num=botinfo.suggestion_num+1 
+            WHERE id=$1 
+            RETURNING suggestion_num;
+        """
         suggestion_num = await self.bot.pool.fetchval(query, const.Guild.community)
         e = discord.Embed(colour=const.Colour.prpl(), title=f"Suggestion #{suggestion_num}")
 

@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 class FPCSetupChannelView(AluView):
     """View for a command `/{game} setup channel`.
-    
+
     This gives
     * Dropdown menu to select a new channel for notifications.
     """
@@ -57,11 +57,12 @@ class FPCSetupChannelView(AluView):
                 "Please, select a channel where I can do that so I'm able to send notifications in future."
             )
 
-        query = f"""INSERT INTO {self.cog.prefix}_settings (guild_id, guild_name, channel_id)
-                    VALUES ($1, $2, $3)
-                    ON CONFLICT (guild_id) DO UPDATE
-                        SET channel_id=$3;
-                """
+        query = f"""
+            INSERT INTO {self.cog.prefix}_settings (guild_id, guild_name, channel_id)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (guild_id) DO UPDATE
+                SET channel_id=$3;
+        """
         await interaction.client.pool.execute(query, channel.guild.id, channel.guild.name, channel.id)
 
         embed = discord.Embed(
@@ -73,7 +74,7 @@ class FPCSetupChannelView(AluView):
 
 class FPCSetupMiscView(AluView):
     """View for a command `/{game} setup misc`.
-    
+
     This gives
     * Button to disable/enable notifications for a time being
     * Button to disable/enable spoil-ing post-match results
@@ -114,6 +115,10 @@ class FPCSetupMiscView(AluView):
     @discord.ui.button(emoji="\N{MICROSCOPE}", label='Toggle "Show Post-Match Results Setting"')
     async def toggle_spoil(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button):
         await self.toggle_worker(interaction, "spoil", 1)
+
+    @discord.ui.button(emoji="\N{MICROSCOPE}", label='Toggle "Only Twitch Live Players Setting"')
+    async def toggle_twitch_live_only(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button):
+        await self.toggle_worker(interaction, "twitch_live_only(", 2)
 
     @discord.ui.button(
         label="Delete Your Data and Stop Notifications",
@@ -242,8 +247,8 @@ class AccountListButton(discord.ui.Button):
                 f"{player['name']}\n{chr(10).join(player['accounts'])}" for player in player_dict.values()
             ),
         ).set_footer(
-            text=f'to request a new account/player to be added - use `/{self.menu.cog.prefix} request player` command', 
-            icon_url=self.menu.cog.game_icon_url
+            text=f"to request a new account/player to be added - use `/{self.menu.cog.prefix} request player` command",
+            icon_url=self.menu.cog.game_icon_url,
         )
 
         await ntr.response.send_message(embed=embed, ephemeral=True)

@@ -29,6 +29,12 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
+def lol_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str) -> str:
+    opgg = f"https://op.gg/summoners/{lol.PLATFORM_TO_SERVER[platform]}/{game_name}-{tag_line}"
+    ugg = f"https://u.gg/lol/profile/{platform}/{game_name}-{tag_line}"
+    return f"/[Opgg]({opgg})/[Ugg]({ugg})"
+
+
 class LoLFPCMatchToSend(BaseMatchToSend):
     def __init__(
         self,
@@ -64,9 +70,7 @@ class LoLFPCMatchToSend(BaseMatchToSend):
     @property
     def links(self) -> str:
         """Links to stats sites in markdown format."""
-        opgg = f"https://op.gg/summoners/{lol.PLATFORM_TO_SERVER[self.platform]}/{self.game_name}-{self.tag_line}"
-        ugg = f"https://u.gg/lol/profile/{self.platform}/{self.game_name}-{self.tag_line}"
-        return f"/[Opgg]({opgg})/[Ugg]({ugg})"
+        return lol_links(self.platform, self.game_name, self.tag_line)
 
     @property
     def long_ago(self) -> int:

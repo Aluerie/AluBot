@@ -12,7 +12,7 @@ from utils import checks, const, errors, lol
 
 from .._fpc_utils import FPCAccount, FPCSettingsBase
 from ..database_management import AddLoLPlayerFlags
-from ._models import LoLNotificationAccount
+from ._models import lol_links
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -48,7 +48,7 @@ class LoLAccount(FPCAccount):
             riot_account = await bot.riot_api_client.get_account_v1_by_riot_id(
                 game_name=flags.game_name,
                 tag_line=flags.tag_line,
-                region=lol.SERVER_TO_CONTINENT[flags.server], 
+                region=lol.SERVER_TO_CONTINENT[flags.server],
                 # todo: in theory we can use continent closest to me bcs they all share the same data
                 # for account_v1 endpoint
                 # so check response time to this request
@@ -87,7 +87,7 @@ class LoLAccount(FPCAccount):
     @staticmethod
     def embed_account_str_static(platform: lol.LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any):
         server = lol.PLATFORM_TO_SERVER[platform]
-        links = LoLNotificationAccount(platform, game_name, tag_line).links
+        links = lol_links(platform, game_name, tag_line)
         return f"`{server}`: `{game_name} #{tag_line}` {links}"
 
     @property

@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "Match",
     "DotaFPCMatchToSend",
     "DotaFPCMatchToEditWithOpenDota",
     "DotaFPCMatchToEditWithStratz",
@@ -42,36 +41,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class Match:
-    def __init__(self, match_id: int):
-        self.match_id = match_id
-
-    @property
-    def dbuff(self) -> str:
-        """Dotabuff.com link for the match with `match_id`"""
-        return f"https://www.dotabuff.com/matches/{self.match_id}"
-
-    @property
-    def odota(self) -> str:
-        """Opendota.com link for the match with `match_id`"""
-        return f"https://www.opendota.com/matches/{self.match_id}"
-
-    @property
-    def stratz(self) -> str:
-        """Stratz.com link for `match_id`"""
-        return f"https://www.stratz.com/matches/{self.match_id}"
-
-    def replay(self, matchtime: int = 0) -> str:
-        """replay link which opens dota 2 client"""
-        return f"dota2://matchid={self.match_id}&matchtime={matchtime}"
-
-    @property
-    def links(self) -> str:
-        """all links at once"""
-        return f"/[Dbuff]({self.dbuff})/[ODota]({self.odota})/[Stratz]({self.stratz})"
-
-
-class DotaFPCMatchToSend(BaseMatchToSend, Match):
+class DotaFPCMatchToSend(BaseMatchToSend):
     def __init__(
         self,
         bot: AluBot,
@@ -87,8 +57,7 @@ class DotaFPCMatchToSend(BaseMatchToSend, Match):
         hero_name: str,
     ):
         super().__init__(bot)
-        super(BaseMatchToSend).__init__(match_id=match_id)
-
+        self.match_id: int = match_id
         self.friend_id: int = friend_id
         self.start_time: int = start_time
         self.player_name: str = player_name
@@ -97,6 +66,14 @@ class DotaFPCMatchToSend(BaseMatchToSend, Match):
         self.server_steam_id: int = server_steam_id
         self.twitch_id: Optional[int] = twitch_id
         self.hero_name: str = hero_name
+
+    @property
+    def links(self) -> str:
+        """Links to stats sites in markdown format."""
+        dotabuff = f"https://www.dotabuff.com/matches/{self.match_id}"
+        opendota = f"https://www.opendota.com/matches/{self.match_id}"
+        stratz = f"https://www.stratz.com/matches/{self.match_id}"
+        return f"/[Dotabuff]({dotabuff})/[Opendota]({opendota})/[Stratz]({stratz})"
 
     @property
     def long_ago(self) -> int:
@@ -204,7 +181,8 @@ class DotaFPCMatchToSend(BaseMatchToSend, Match):
             )
             .set_thumbnail(url=await self.bot.dota_cache.hero.img_by_id(self.hero_id))
             .set_image(url=f"attachment://{image_file.filename}")
-            .set_footer(text=f"watch_server {self.server_steam_id}")
+            # dota2://matchid also can take "&matchtime={matchtime}"
+            .set_footer(text=f"watch_server {self.server_steam_id} | dota2://matchid={self.match_id}")
         )
         return embed, image_file
 
@@ -408,10 +386,7 @@ class DotaFPCMatchToEditNotCounted(BaseMatchToEdit):
     Class
     """
 
-    def __init__(
-        self,
-        bot: AluBot
-    ):
+    def __init__(self, bot: AluBot):
         super().__init__(bot)
 
     @override

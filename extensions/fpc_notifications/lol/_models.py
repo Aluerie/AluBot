@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "LoLNotificationAccount",
     "LoLFPCMatchToSend",
     "LoLFPCMatchToEdit",
 )
@@ -30,30 +29,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class LoLNotificationAccount:
-    def __init__(self, platform: lol.LiteralPlatform, game_name: str, tag_line: str):
-        self.platform: lol.LiteralPlatform = platform
-        self.game_name: str = game_name
-        self.tag_line: str = tag_line
-
-    @property
-    def opgg(self) -> str:  # todo: look how to do actual links to matches instead of accounts
-        """op.gg link to the account."""
-        server = lol.PLATFORM_TO_SERVER[self.platform]
-        return f"https://op.gg/summoners/{server}/{self.game_name}-{self.tag_line}"
-
-    @property
-    def ugg(self) -> str:
-        """u.gg link to the account."""
-        return f"https://u.gg/lol/profile/{self.platform}/{self.game_name}-{self.tag_line}"
-
-    @property
-    def links(self) -> str:
-        """all links at once in markdown hyperlink style."""
-        return f"/[Opgg]({self.opgg})/[Ugg]({self.ugg})"
-
-
-class LoLFPCMatchToSend(BaseMatchToSend, LoLNotificationAccount):
+class LoLFPCMatchToSend(BaseMatchToSend):
     def __init__(
         self,
         bot: AluBot,
@@ -71,10 +47,12 @@ class LoLFPCMatchToSend(BaseMatchToSend, LoLNotificationAccount):
         summoner_id: str,
     ):
         super().__init__(bot)
-        super(BaseMatchToSend).__init__(platform, game_name, tag_line)
+
+        self.platform: lol.LiteralPlatform = platform
+        self.game_name: str = game_name
+        self.tag_line: str = tag_line
 
         self.match_id: int = match_id
-
         self.start_time: int = start_time
         self.champion_id: int = champion_id
         self.all_champion_ids: list[int] = all_champion_ids
@@ -82,6 +60,13 @@ class LoLFPCMatchToSend(BaseMatchToSend, LoLNotificationAccount):
         self.summoner_spell_ids: tuple[int, int] = summoner_spell_ids
         self.rune_ids: list[int] = rune_ids
         self.summoner_id: str = summoner_id
+
+    @property
+    def links(self) -> str:
+        """Links to stats sites in markdown format."""
+        opgg = f"https://op.gg/summoners/{lol.PLATFORM_TO_SERVER[self.platform]}/{self.game_name}-{self.tag_line}"
+        ugg = f"https://u.gg/lol/profile/{self.platform}/{self.game_name}-{self.tag_line}"
+        return f"/[Opgg]({opgg})/[Ugg]({ugg})"
 
     @property
     def long_ago(self) -> int:

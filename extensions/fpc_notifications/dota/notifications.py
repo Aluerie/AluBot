@@ -64,7 +64,7 @@ edit_log.setLevel(logging.DEBUG)
 
 class DotaFPCNotifications(FPCNotificationsBase):
     def __init__(self, bot: AluBot, *args, **kwargs):
-        super().__init__(bot, *args, **kwargs)
+        super().__init__(bot, prefix="dota", *args, **kwargs)
         # Send Matches related attrs
         self.lobby_ids: set[int] = set()
         self.top_source_dict: MutableMapping[int, _schemas.CSourceTVGameSmall] = {}

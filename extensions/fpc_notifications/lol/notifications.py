@@ -43,7 +43,7 @@ log.setLevel(logging.INFO)
 
 class LoLFPCNotifications(FPCNotificationsBase):
     def __init__(self, bot: AluBot, *args, **kwargs):
-        super().__init__(bot, *args, **kwargs)
+        super().__init__(bot, prefix='lol', *args, **kwargs)
         self.notification_matches: list[LoLFPCMatchToSend] = []
         self.live_match_ids: list[int] = []
 

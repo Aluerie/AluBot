@@ -380,7 +380,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.typing()
         await self.is_fpc_channel_set(ctx)
 
-        query = f"SELECT enabled, spoil, only_twitch_live FROM {self.prefix}_settings WHERE guild_id=$1"
+        query = f"SELECT enabled, spoil, twitch_live_only FROM {self.prefix}_settings WHERE guild_id=$1"
         row: SetupMiscQueryRow = await ctx.pool.fetchrow(query, ctx.guild.id)
 
         def state(bool: bool) -> str:

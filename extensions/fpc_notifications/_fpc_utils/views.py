@@ -118,7 +118,7 @@ class FPCSetupMiscView(AluView):
 
     @discord.ui.button(emoji="\N{MICROSCOPE}", label='Toggle "Only Twitch Live Players Setting"')
     async def toggle_twitch_live_only(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button):
-        await self.toggle_worker(interaction, "twitch_live_only(", 2)
+        await self.toggle_worker(interaction, "twitch_live_only", 2)
 
     @discord.ui.button(
         label="Delete Your Data and Stop Notifications",

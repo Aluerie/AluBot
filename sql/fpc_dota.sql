@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS dota_settings (
     channel_id BIGINT,
     enabled BOOLEAN DEFAULT TRUE,
     spoil BOOLEAN DEFAULT TRUE,
-    only_twitch_live BOOLEAN DEFAULT FALSE
+    twitch_live_only BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS dota_players (

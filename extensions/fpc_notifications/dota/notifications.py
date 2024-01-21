@@ -228,7 +228,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
     async def mark_matches_to_edit(self):
         send_log.debug("Declaring finished matches")
         query = """
-            SELECT match_id, friend_id, hero_id, ARRAY_AGG ((message_id, channel_id)) channel_message_tuples
+            SELECT match_id, friend_id, hero_id, ARRAY_AGG ((channel_id, message_id)) channel_message_tuples
             FROM dota_messages
             WHERE NOT match_id=ANY($1)
             GROUP BY match_id, friend_id, hero_id

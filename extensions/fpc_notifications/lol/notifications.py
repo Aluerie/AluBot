@@ -43,7 +43,7 @@ log.setLevel(logging.INFO)
 
 class LoLFPCNotifications(FPCNotificationsBase):
     def __init__(self, bot: AluBot, *args, **kwargs):
-        super().__init__(bot, prefix='lol', *args, **kwargs)
+        super().__init__(bot, prefix="lol", *args, **kwargs)
         self.notification_matches: list[LoLFPCMatchToSend] = []
         self.live_match_ids: list[int] = []
 
@@ -168,7 +168,7 @@ class LoLFPCNotifications(FPCNotificationsBase):
 
     async def edit_lol_notification_messages(self):
         query = """
-            SELECT match_id, champion_id, platform, ARRAY_AGG ((message_id, channel_id)) channel_message_tuples
+            SELECT match_id, champion_id, platform, ARRAY_AGG ((channel_id, message_id)) channel_message_tuples
             FROM lol_messages
             WHERE NOT match_id=ANY($1)
             GROUP BY match_id, champion_id, platform

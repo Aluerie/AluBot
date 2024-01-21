@@ -126,8 +126,8 @@ class LoLFPCNotifications(FPCNotificationsBase):
                     JOIN lol_settings s on s.guild_id = c.guild_id
                     WHERE character_id=$1 
                         AND player_id=$2
-                        AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3);  
-                        AND s.enabled = TRUE   
+                        AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3)  
+                        AND s.enabled = TRUE;
                 """
                 channel_spoil_tuples: list[tuple[int, bool]] = [
                     (channel_id, spoil)

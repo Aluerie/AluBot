@@ -187,9 +187,9 @@ class DotaFPCNotifications(FPCNotificationsBase):
                                 SELECT channel_id 
                                 FROM dota_messages 
                                 WHERE match_id = $3 AND friend_id=$4
-                            );
+                            )
                             AND s.twitch_live_only = $5
-                            AND s.enabled = TRUE
+                            AND s.enabled = TRUE;
                     """
 
                     channel_spoil_tuples: list[tuple[int, bool]] = [

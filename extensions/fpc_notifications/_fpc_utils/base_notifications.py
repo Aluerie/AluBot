@@ -89,7 +89,7 @@ class FPCNotificationsBase(FPCCog):
                 # apparently this error sometimes randomly triggers
                 # for even known channels that "should" be in cache
                 # todo: idk how to approach this NotFound problem
-                continue
+                raise
 
             assert isinstance(channel, discord.TextChannel)
             try:
@@ -99,7 +99,6 @@ class FPCNotificationsBase(FPCCog):
             else:
                 if spoil:
                     self.message_cache[message.id] = message
-
                     await match.insert_into_game_messages(message.id, channel.id)
 
     async def edit_notifications(self, match: BaseMatchToEdit, channel_message_tuples: list[tuple[int, int]]):
@@ -118,7 +117,7 @@ class FPCNotificationsBase(FPCCog):
                     # apparently this error sometimes randomly triggers
                     # for even known channels that "should" be in cache
                     # todo: idk how to approach this NotFound problem
-                    continue
+                    raise
 
                 assert isinstance(channel, discord.TextChannel)
                 try:

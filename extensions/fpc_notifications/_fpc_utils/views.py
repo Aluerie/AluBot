@@ -116,7 +116,7 @@ class FPCSetupMiscView(AluView):
     async def toggle_spoil(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button):
         await self.toggle_worker(interaction, "spoil", 1)
 
-    @discord.ui.button(emoji="\N{MICROSCOPE}", label='Toggle "Only Twitch Live Players Setting"')
+    @discord.ui.button(emoji="\N{CLAPPER BOARD}", label='Toggle "Only Twitch Live Players Setting"')
     async def toggle_twitch_live_only(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button):
         await self.toggle_worker(interaction, "twitch_live_only", 2)
 

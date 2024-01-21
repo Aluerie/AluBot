@@ -145,7 +145,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
         query = """
             SELECT twitch_live_only, ARRAY_AGG(player_id) player_ids
             FROM dota_favourite_players p
-            JOIN dota_settings s
+            JOIN dota_settings s ON s.guild_id = p.guild_id
             WHERE s.enabled = TRUE
             GROUP by twitch_live_only
         """

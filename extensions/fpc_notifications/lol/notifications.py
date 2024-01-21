@@ -71,8 +71,7 @@ class LoLFPCNotifications(FPCNotificationsBase):
         query = """
             SELECT a.summoner_id, a.player_id, game_name, tag_line, platform, display_name, twitch_id, last_edited
             FROM lol_accounts a
-            JOIN lol_players p
-            ON a.player_id = p.player_id
+            JOIN lol_players p ON a.player_id = p.player_id
             WHERE p.player_id=ANY($1)
         """
         rows: list[LivePlayerAccountRow] = await self.bot.pool.fetch(query, live_twitch_ids)

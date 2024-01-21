@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     class SetupMiscQueryRow(TypedDict):
         enabled: bool
         spoil: bool
-        only_twitch_live: bool
+        twitch_live_only: bool
 
 
 __all__ = (
@@ -419,7 +419,7 @@ class FPCSettingsBase(FPCCog):
                 inline=False,
             )
             .add_field(
-                name=f"\N{CLAPPER BOARD} Only Twitch Live Players Setting: {state(row['only_twitch_live'])}",
+                name=f"\N{CLAPPER BOARD} Only Twitch Live Players Setting: {state(row['twitch_live_only'])}",
                 value=(
                     "By default, the bot sends notifications no matter if a person is streaming or not at the moment. "
                     "However, if you only want to catch [twitch.tv](https://www.twitch.tv/) streamers playing your "

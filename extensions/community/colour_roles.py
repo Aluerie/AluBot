@@ -23,14 +23,14 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
             max_values=1,
         )
 
-    async def callback(self, ntr: discord.Interaction[AluBot]):
+    async def callback(self, interaction: discord.Interaction[AluBot]):
         if not len(self.values):
             e = discord.Embed()
             e.description = f"You've selected zero roles and thus I did nothing {const.Emote.peepoComfy}"
-            return await ntr.response.send_message(embed=e, ephemeral=True)
+            return await interaction.response.send_message(embed=e, ephemeral=True)
 
-        colour_category_role = ntr.client.community.guild.get_role(const.Role.colour_category)
-        activity_category_role = ntr.client.community.guild.get_role(const.Role.activity_category)
+        colour_category_role = interaction.client.community.guild.get_role(const.Role.colour_category)
+        activity_category_role = interaction.client.community.guild.get_role(const.Role.activity_category)
 
         def is_colour_role(role: discord.Role) -> bool:
             return activity_category_role < role < colour_category_role
@@ -44,16 +44,16 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
         except ValueError:
             e = discord.Embed(color=const.Colour.error())
             e.description = "You are trying to choose non-colour role, which I won't give."
-            await ntr.response.send_message(embed=e, ephemeral=True)
+            await interaction.response.send_message(embed=e, ephemeral=True)
         else:
-            member = ntr.client.community.guild.get_member(ntr.user.id)
+            member = interaction.client.community.guild.get_member(interaction.user.id)
             if member is not None:
                 if role in member.roles:
                     await member.remove_roles(role)
 
                     e = discord.Embed(color=role.color)
                     e.description = f"Removed {role.mention} colour role!"
-                    await ntr.response.send_message(embed=e, ephemeral=True)
+                    await interaction.response.send_message(embed=e, ephemeral=True)
                 else:
                     for r in member.roles:
                         if is_colour_role(r):
@@ -62,9 +62,9 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
 
                     e = discord.Embed(color=role.color)
                     e.description = f"Added {role.mention} colour role!"
-                    await ntr.response.send_message(embed=e, ephemeral=True)
+                    await interaction.response.send_message(embed=e, ephemeral=True)
             else:
-                return ntr.response.send_message("Something went wrong...", ephemeral=True)
+                return interaction.response.send_message("Something went wrong...", ephemeral=True)
 
 
 class ColourRolesView(discord.ui.View):

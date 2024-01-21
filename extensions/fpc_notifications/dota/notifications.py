@@ -322,7 +322,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
         self, match_id: int, friend_id: int, channel_message_tuples: list[tuple[int, int]]
     ) -> bool:
         query = """
-        {
+        query GetMatchData($match_id: Long!, $friend_id: Long!) {
             match(id: $match_id) {
                 players(steamAccountId: $friend_id) {
                     item0Id
@@ -346,7 +346,6 @@ class DotaFPCNotifications(FPCNotificationsBase):
             }
         }
         """
-
         async with self.bot.session.post(
             "https://api.stratz.com/graphql",
             headers={

@@ -664,11 +664,11 @@ class FPCSettingsBase(FPCCog):
         await ctx.reply(embed=embed)
 
     async def hideout_player_add_remove_autocomplete(
-        self, ntr: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
+        self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for player_name in `/{game}-fpc player add/remove`."""
 
-        assert ntr.guild
+        assert interaction.guild
 
         query = f"""
             SELECT display_name 
@@ -681,20 +681,18 @@ class FPCSettingsBase(FPCCog):
         """
         return [
             app_commands.Choice(name=name, value=name)
-            for name, in await ntr.client.pool.fetch(query, ntr.guild.id, current)
+            for name, in await interaction.client.pool.fetch(query, interaction.guild.id, current)
         ]
 
     async def hideout_character_add_remove_autocomplete(
-        self, ntr: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
+        self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for character_name in `/{game}-fpc {character} add/remove`."""
-
-        assert ntr.guild
 
         query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
 
         favourite_character_ids: list[int] = [
-            character_id for character_id, in await ntr.client.pool.fetch(query, ntr.guild.id)
+            character_id for character_id, in await interaction.client.pool.fetch(query, interaction.guild_id)
         ]
 
         name_by_id_cache = await self.character_name_by_id_cache()
@@ -712,7 +710,7 @@ class FPCSettingsBase(FPCCog):
         return [app_commands.Choice(name=name, value=name) for name in fuzzy_names[:25]]
 
     async def database_remove_autocomplete(
-        self, ntr: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for player_name in `/database {game} remove`."""
 
@@ -722,4 +720,6 @@ class FPCSettingsBase(FPCCog):
             ORDER BY similarity(display_name, $1) DESC
             LIMIT 6;
         """
-        return [app_commands.Choice(name=name, value=name) for name, in await ntr.client.pool.fetch(query, current)]
+        return [
+            app_commands.Choice(name=name, value=name) for name, in await interaction.client.pool.fetch(query, current)
+        ]

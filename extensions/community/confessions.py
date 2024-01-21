@@ -19,8 +19,8 @@ class ButtonOnCooldown(commands.CommandError):
         self.retry_after: float = retry_after
 
 
-def key(ntr: discord.Interaction):
-    return ntr.user
+def key(interaction: discord.Interaction):
+    return interaction.user
 
 
 # rate of 1 token per 30 minutes using our key function
@@ -59,23 +59,23 @@ class ConfView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    async def interaction_check(self, ntr: discord.Interaction) -> bool:
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
         # retry_after = self.cd.update_rate_limit(ntr) # returns retry_after which is nice
-        bucket = cd.get_bucket(ntr)
+        bucket = cd.get_bucket(interaction)
         if bucket and (retry_after := bucket.get_retry_after()):
             raise ButtonOnCooldown(retry_after)
         return True
 
-    async def on_error(self, ntr: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item):
+    async def on_error(self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item):
         if isinstance(error, ButtonOnCooldown):
             e = discord.Embed(colour=Colour.error()).set_author(name=error.__class__.__name__)
             e.description = (
                 "Sorry, you are on cooldown \n" f"Time left `{human_timedelta(error.retry_after, brief=True)}`"
             )
-            await ntr.response.send_message(embed=e, ephemeral=True)
+            await interaction.response.send_message(embed=e, ephemeral=True)
         else:
             # await super().on_error(ntr, error, item) # original on_error
-            await ntr.client.exc_manager.register_error(error, "Confessions", where="Confessions")
+            await interaction.client.exc_manager.register_error(error, "Confessions", where="Confessions")
 
     @discord.ui.button(
         label="Anonymous confession",

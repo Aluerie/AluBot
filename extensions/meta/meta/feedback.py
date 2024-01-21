@@ -34,22 +34,22 @@ class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
         super().__init__()
         self.cog: FeedbackCog = cog
 
-    async def on_submit(self, ntr: discord.Interaction) -> None:
+    async def on_submit(self, interaction: discord.Interaction) -> None:
         channel = self.cog.feedback_channel
         if channel is None:
-            await ntr.response.send_message("Sorry, something went wrong \N{THINKING FACE}", ephemeral=True)
+            await interaction.response.send_message("Sorry, something went wrong \N{THINKING FACE}", ephemeral=True)
             return
 
         summary, details = str(self.summary), self.details.value
         # feedback to global logs
-        e = self.cog.get_feedback_embed(ntr, summary=summary, details=details)
+        e = self.cog.get_feedback_embed(interaction, summary=summary, details=details)
         await channel.send(embed=e)
         # success
         e2 = self.cog.get_successfully_submitted_embed(summary=summary, details=details)
-        await ntr.response.send_message(embed=e2)
+        await interaction.response.send_message(embed=e2)
         # send copy of the embed to the user
         e3 = self.cog.get_feedback_copy_embed(summary=summary, details=details)
-        await ntr.user.send(embed=e3)
+        await interaction.user.send(embed=e3)
 
 
 class FeedbackCog(MetaCog):

@@ -109,8 +109,10 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         c = self.view_user_rank
         self.bot.tree.remove_command(c.name, type=c.type)
 
-    async def context_menu_view_user_rank_callback(self, ntr: discord.Interaction[AluBot], member: discord.Member):
-        await ntr.response.send_message(file=await self.rank_work(ntr, member), ephemeral=True)
+    async def context_menu_view_user_rank_callback(
+        self, interaction: discord.Interaction[AluBot], member: discord.Member
+    ):
+        await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
 
     async def rank_work(
         self,

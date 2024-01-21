@@ -47,7 +47,7 @@ class AluBot(commands.Bot, AluBotHelper):
         #     launch_time: datetime.datetime
         logging_handler: Any
         #     prefixes: PrefixConfig
-        #     tree: AluAppCommandTree
+        tree: AluAppCommandTree
         #     cogs: Mapping[str, AluCog]
         old_tree_error: Callable[
             [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]

@@ -17,8 +17,8 @@ class BetaTestCog(BetaCog, name='BetaTest'):
         await ctx.send('heta')
 
     @app_commands.command()
-    async def seta(self, ntr: discord.Interaction[AluBot]):
-        await ntr.response.send_message('seta')
+    async def seta(self, interaction: discord.Interaction[AluBot]):
+        await interaction.response.send_message('seta')
 
 
 async def setup(bot: AluBot):

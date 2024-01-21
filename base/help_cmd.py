@@ -115,9 +115,9 @@ class HelpSelect(discord.ui.Select):
                 value=str(start - 1),  # we added 1 in total=1
             )
 
-    async def callback(self, ntr: discord.Interaction[AluBot]):
+    async def callback(self, interaction: discord.Interaction[AluBot]):
         page_to_open = int(self.values[0])
-        await self.paginator.show_page(ntr, page_to_open)
+        await self.paginator.show_page(interaction, page_to_open)
 
 
 class HelpPages(pages.Paginator):
@@ -175,7 +175,7 @@ class HelpPages(pages.Paginator):
         await ntr.response.send_message(embed=e, ephemeral=True)
 
     # @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
-    # async def find_command_or_section_page(self, ntr: discord.Interaction, _button: discord.ui.Button):
+    # async def find_command_or_section_page(self, interaction: discord.Interaction, _button: discord.ui.Button):
     #     """Show modal which leads to basically invoking /help <command>/<section>"""
     #     await self.show_page(ntr, 0)
 

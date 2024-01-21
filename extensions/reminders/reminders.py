@@ -35,22 +35,22 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         self.parent: ReminderView = parent
         self.timer: Timer[RemindTimerData] = timer
 
-    async def on_submit(self, ntr: discord.Interaction[AluBot]) -> None:
+    async def on_submit(self, interaction: discord.Interaction[AluBot]) -> None:
         try:
             when = times.FutureTime(str(self.duration)).dt
         except commands.BadArgument:  # Exception
             msg = 'Duration could not be parsed, sorry. Try something like "5 minutes" or "1 hour"'
-            await ntr.response.send_message(msg, ephemeral=True)
+            await interaction.response.send_message(msg, ephemeral=True)
             return
 
         self.parent.snooze.disabled = True
-        await ntr.response.edit_message(view=self.parent)
+        await interaction.response.edit_message(view=self.parent)
 
-        zone = await ntr.client.tz_manager.get_timezone(ntr.user.id)
-        refreshed = await ntr.client.create_timer(
+        zone = await interaction.client.tz_manager.get_timezone(interaction.user.id)
+        refreshed = await interaction.client.create_timer(
             event=self.timer.event,
             expires_at=when,
-            created_at=ntr.created_at,
+            created_at=interaction.created_at,
             timezone=zone or "UTC",
             data=self.timer.data,
         )
@@ -58,7 +58,7 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         text = self.timer.data.get("text")
         delta = formats.human_timedelta(when, source=refreshed.created_at)
         msg = f"Alright <@{author_id}>, I've snoozed your reminder for {delta}: {text}"
-        await ntr.followup.send(msg, ephemeral=True)
+        await interaction.followup.send(msg, ephemeral=True)
 
 
 class SnoozeButton(discord.ui.Button["ReminderView"]):
@@ -67,9 +67,9 @@ class SnoozeButton(discord.ui.Button["ReminderView"]):
         self.timer: Timer = timer
         self.cog: Reminder = cog
 
-    async def callback(self, ntr: discord.Interaction) -> Any:
+    async def callback(self, interaction: discord.Interaction) -> Any:
         assert self.view is not None
-        await ntr.response.send_modal(SnoozeModal(self.view, self.timer))
+        await interaction.response.send_modal(SnoozeModal(self.view, self.timer))
 
 
 class ReminderView(discord.ui.View):
@@ -198,7 +198,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     # TODO: finish this?
     # async def remind_delete_id_autocomplete(
     #         self,
-    #         ntr: discord.Interaction,
+    #         interaction: discord.Interaction,
     #         current: str
     # ) -> List[app_commands.Choice[str]]:
     #     """idk if it is a good idea"""

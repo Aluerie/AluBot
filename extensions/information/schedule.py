@@ -176,17 +176,17 @@ class ScheduleSelect(discord.ui.Select):
         self.soup: BeautifulSoup = soup
         self.author: discord.User | discord.Member = author
 
-    async def callback(self, ntr: discord.Interaction[AluBot]):
+    async def callback(self, interaction: discord.Interaction[AluBot]):
         sch_enum = ScheduleModeEnum(value=int(self.values[0]))
-        p = SchedulePages(ntr, self.soup, sch_enum, self.query)
+        p = SchedulePages(interaction, self.soup, sch_enum, self.query)
         await p.start(edit_response=True)
 
-    async def interaction_check(self, ntr: discord.Interaction[AluBot]) -> bool:
-        if ntr.user and ntr.user.id == self.author.id:
+    async def interaction_check(self, interaction: discord.Interaction[AluBot]) -> bool:
+        if interaction.user and interaction.user.id == self.author.id:
             return True
         else:
             schedule_enum = ScheduleModeEnum(value=int(self.values[0]))
-            p = SchedulePages(ntr, self.soup, schedule_enum, self.query)
+            p = SchedulePages(interaction, self.soup, schedule_enum, self.query)
             await p.start(ephemeral=True)
             return False
 
@@ -298,8 +298,6 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
 
         Parameters
         ----------
-        ntr: discord.Interaction
-            discord.Interaction
         schedule_mode:
             What matches to show
         query: Optional[str]

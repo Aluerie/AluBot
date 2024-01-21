@@ -202,9 +202,9 @@ class LoLFPCSettings(FPCSettingsBase):
         await ctx.send_help()
 
     async def hideout_lol_player_add_autocomplete(
-        self, ntr: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
-        return await self.hideout_player_add_remove_autocomplete(ntr, current, mode_add_remove=True)
+        return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
     @hideout_lol_player.command(name="add")
     @app_commands.describe(player_name="Player Name. Autocomplete suggestions exclude your favourite players.")
@@ -214,9 +214,9 @@ class LoLFPCSettings(FPCSettingsBase):
         await self.hideout_player_add(ctx, player_name)
 
     async def hideout_lol_player_remove_autocomplete(
-        self, ntr: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
-        return await self.hideout_player_add_remove_autocomplete(ntr, current, mode_add_remove=False)
+        return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
     @hideout_lol_player.command(name="remove")
     @app_commands.describe(player_name="Player Name. Autocomplete suggestions include only your favourite players.")
@@ -231,9 +231,9 @@ class LoLFPCSettings(FPCSettingsBase):
         await ctx.send_help()
 
     async def hideout_lol_champion_add_autocomplete(
-        self, ntr: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
-        return await self.hideout_character_add_remove_autocomplete(ntr, current, mode_add_remove=True)
+        return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
     @hideout_lol_champion.command(name="add")
     @app_commands.describe(champion_name="Champion Name. Autocomplete suggestions exclude your favourite champs.")
@@ -243,9 +243,9 @@ class LoLFPCSettings(FPCSettingsBase):
         await self.hideout_character_add(ctx, champion_name)
 
     async def hideout_lol_champion_remove_autocomplete(
-        self, ntr: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
-        return await self.hideout_character_add_remove_autocomplete(ntr, current, mode_add_remove=False)
+        return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
     @hideout_lol_champion.command(name="remove")
     @app_commands.describe(champion_name="Champion Name. Autocomplete suggestions only include your favourite champs.")

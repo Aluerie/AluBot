@@ -38,21 +38,21 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
         self.goto.max_length = len(m)
         self.goto.placeholder = f"Enter a number between 1 and {m}"
 
-    async def on_submit(self, ntr: discord.Interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         if self.paginator.is_finished():
             e = discord.Embed(colour=Colour.error(), description="Took too long")
-            await ntr.response.send_message(embed=e, ephemeral=True)
+            await interaction.response.send_message(embed=e, ephemeral=True)
             return
 
         value = str(self.goto.value)
         if not value.isdigit():
             e = discord.Embed(colour=Colour.error())
             e.description = f"Expected a page number between 1 and {self.max_pages_as_str}, not {value!r}"
-            await ntr.response.send_message(embed=e, ephemeral=True)
+            await interaction.response.send_message(embed=e, ephemeral=True)
             return
 
         new_page_number = int(self.goto.value) - 1
-        await self.paginator.show_page(ntr, new_page_number)
+        await self.paginator.show_page(interaction, new_page_number)
 
 
 class SearchModal(discord.ui.Modal, title="Search Page by query"):
@@ -62,7 +62,7 @@ class SearchModal(discord.ui.Modal, title="Search Page by query"):
         super().__init__()
         self.paginator: Paginator = paginator
 
-    # async def on_submit(self, ntr: discord.Interaction):
+    # async def on_submit(self, interaction: discord.Interaction):
     #     a = self.search.value
     #
     #     for idx, page in enumerate(self.paginator.pages):
@@ -188,42 +188,42 @@ class Paginator(AluView):
             raise RuntimeError("Cannot start a paginator without a context or interaction.")
 
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
-    async def home_page(self, ntr: discord.Interaction, _: discord.ui.Button):
+    async def home_page(self, interaction: discord.Interaction, _: discord.ui.Button):
         """Show the very first page, kinda standard"""
-        await self.show_page(ntr, 0)
+        await self.show_page(interaction, 0)
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.red)
-    async def previous_page(self, ntr: discord.Interaction, _: discord.ui.Button):
+    async def previous_page(self, interaction: discord.Interaction, _: discord.ui.Button):
         """Go to previous page"""
-        await self.show_checked_page(ntr, self.current_page_number - 1)
+        await self.show_checked_page(interaction, self.current_page_number - 1)
 
     @discord.ui.button(label="/", style=discord.ButtonStyle.gray)
-    async def index(self, ntr: discord.Interaction, _: discord.ui.Button):
+    async def index(self, interaction: discord.Interaction, _: discord.ui.Button):
         """Choose page using modal; this button also has label to show current_page/maximum"""
-        await ntr.response.send_modal(IndexModal(self))
+        await interaction.response.send_modal(IndexModal(self))
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.green)
-    async def next_page(self, ntr: discord.Interaction, _: discord.ui.Button):
+    async def next_page(self, interaction: discord.Interaction, _: discord.ui.Button):
         """Go to next page"""
-        await self.show_checked_page(ntr, self.current_page_number + 1)
+        await self.show_checked_page(interaction, self.current_page_number + 1)
 
     @discord.ui.button(label="\N{RIGHT-POINTING MAGNIFYING GLASS}", style=discord.ButtonStyle.blurple)
-    async def search(self, ntr: discord.Interaction, _: discord.ui.Button):
+    async def search(self, interaction: discord.Interaction, _: discord.ui.Button):
         """Fuzzy search in all pages and go the page with most likely similarity"""
         # todo: implement PaginatorSearchModal
-        await ntr.response.send_message("sorry, the search feature is disabled for now", ephemeral=True)
+        await interaction.response.send_message("sorry, the search feature is disabled for now", ephemeral=True)
 
     @discord.ui.button(
         label="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}", style=discord.ButtonStyle.blurple
     )
-    async def refresh(self, ntr: discord.Interaction, _: discord.ui.Button):
+    async def refresh(self, interaction: discord.Interaction, _: discord.ui.Button):
         """Refresh current page.
 
         Useful for dynamic things like SetupView where people can change
         stuff using other tools than view buttons,
         i.e. text/slash commands or just delete/change role in guild settings
         """
-        await self.show_page(ntr, self.current_page_number)
+        await self.show_page(interaction, self.current_page_number)
 
 
 class EnumeratedPageSource(menus.ListPageSource):

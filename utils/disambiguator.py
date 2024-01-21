@@ -11,8 +11,6 @@ if TYPE_CHECKING:
 
     from . import AluContext
 
-    from discord.abc import Messageable
-
 
 __all__ = ("Disambiguator",)
 
@@ -22,21 +20,21 @@ class ConfirmationView(AluView):
         super().__init__(author_id=author_id, view_name="Confirmation Prompt", timeout=timeout)
         self.value: Optional[bool] = None
 
-    async def button_callback(self, ntr: discord.Interaction, yes_no: bool):
+    async def button_callback(self, interaction: discord.Interaction, yes_no: bool):
         self.value = yes_no
-        await ntr.response.defer()
+        await interaction.response.defer()
         for item in self.children:
             item.disabled = True  # type: ignore
-        await ntr.edit_original_response(view=self)
+        await interaction.edit_original_response(view=self)
         self.stop()
 
     @discord.ui.button(emoji=const.Tick.yes, label="Confirm", style=discord.ButtonStyle.green)
-    async def confirm(self, ntr: discord.Interaction, _: discord.ui.Button):
-        await self.button_callback(ntr, True)
+    async def confirm(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await self.button_callback(interaction, True)
 
     @discord.ui.button(emoji=const.Tick.no, label="Cancel", style=discord.ButtonStyle.red)
-    async def cancel(self, ntr: discord.Interaction, _: discord.ui.Button):
-        await self.button_callback(ntr, False)
+    async def cancel(self, interaction: discord.Interaction, _: discord.ui.Button):
+        await self.button_callback(interaction, False)
 
 
 class DisambiguatorView[T](AluView):

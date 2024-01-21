@@ -15,7 +15,9 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 
-async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_commands.AppCommandError | Exception):
+async def on_app_command_error(
+    interaction: discord.Interaction[AluBot], error: app_commands.AppCommandError | Exception
+):
     """Handler called when an error is raised while invoking an app command."""
 
     # Hmm, idk I still want commands to go through this handler if any error occurs
@@ -43,7 +45,7 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
         # AluBotException subclassed exceptions are all mine.
         desc = f"{error}"
     elif isinstance(error, app_commands.CommandOnCooldown):
-        desc = f"Please retry in `{ntr.client.formats.human_timedelta(error.retry_after, brief=True)}`"
+        desc = f"Please retry in `{interaction.client.formats.human_timedelta(error.retry_after, brief=True)}`"
     # elif isinstance(error, errors.SilentError):
     #     # this will fail the interaction hmm
     #     cmd = f'/{ntr.command.qualified_name}' if ntr.command else '?-cmd ntr'
@@ -63,15 +65,15 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
         )
     else:
         unexpected_error = True
-        where = f"/{ntr.command.qualified_name}" if ntr.command else "?-cmd ntr"
-        await ntr.client.exc_manager.register_error(error, ntr, where=f"on_app_command_error {where}")
+        where = f"/{interaction.command.qualified_name}" if interaction.command else "?-cmd ntr"
+        await interaction.client.exc_manager.register_error(error, interaction, where=f"on_app_command_error {where}")
 
-        mention = ntr.channel_id != ntr.client.hideout.spam_channel_id
+        mention = interaction.channel_id != interaction.client.hideout.spam_channel_id
         if not mention:
             # well, then I do not need "desc" embed as well
-            if not ntr.response.is_done():
+            if not interaction.response.is_done():
                 # they error out unanswered anyway if not "is_done":/
-                await ntr.response.send_message(":x", ephemeral=True)
+                await interaction.response.send_message(":x", ephemeral=True)
             return
 
     if unexpected_error:
@@ -80,10 +82,10 @@ async def on_app_command_error(ntr: discord.Interaction[AluBot], error: app_comm
         e = discord.Embed(colour=const.Colour.error())
         e.set_author(name=error_type)
         e.description = desc
-    if not ntr.response.is_done():
-        await ntr.response.send_message(embed=e, ephemeral=True)
+    if not interaction.response.is_done():
+        await interaction.response.send_message(embed=e, ephemeral=True)
     else:
-        await ntr.followup.send(embed=e, ephemeral=True)
+        await interaction.followup.send(embed=e, ephemeral=True)
 
 
 async def setup(bot: AluBot):

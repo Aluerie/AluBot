@@ -46,7 +46,6 @@ with pretty much everything I ever needed ! Check List of features after the pic
     - [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
     - [🤗 Thanks](#-thanks)
     - [🚀 Powered by](#-powered-by)
-    - [TODO: finish the table](#todo-finish-the-table)
 
 ## 🏠 [Wiki](<https://github.com/Aluerie/AluBot/wiki>)
 
@@ -197,18 +196,72 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     </tr>
     <tr>
         <td>
-            <a href="https://dev.twitch.tv/">
+            <a href="https://twitch.tv/">
                 <img valign="bottom" src="./assets/images/readme/twitch.png" alt="Twitch" width="40" />
             </a>
         </td>
         <td>
-            <a href="https://twitchio.dev/en/stable/">Twitch API</a>
+            <a href="https://dev.twitch.tv/">Twitch API</a>
+        </td>
+        <td>
+            <a href="https://github.com/PythonistaGuild/TwitchIO">
+                <img valign="bottom" src="./assets/images/readme/twitchio.png" alt="Twitchio" width="40" />
+            </a>
+        </td>
+        <td>
+            <a href="https://twitchio.dev/en/stable/">twitchio</a>
+        </td>
+    </tr>
+        <tr>
+        <td>
+            <a href="https://twitch.tv/">
+                <img valign="bottom" src="./assets/images/readme/github.png" alt="Github" width="40" />
+            </a>
+        </td>
+        <td>
+            <a href="https://github.com/">GitHub API</a>
+        </td>
+        <td>
+            <a href="https://github.com/yanyongyu/githubkit">
+                <img valign="bottom" src="./assets/images/readme/githubkit.png" alt="Twitch" width="40" />
+            </a>
+        </td>
+        <td>
+            githubkit
+        </td>
+    </tr>
+    </tr>
+        <tr>
+        <td>
+            <a href="https://steamcommunity.com/">
+                <img valign="bottom" src="./assets/images/readme/steam.png" alt="Github" width="40" />
+            </a>
+        </td>
+        <td>
+            <a href="https://steamapi.xpaw.me/#IDOTA2MatchStats_570">Steam Web API</a>
+        </td>
+        <td style="text-align: center;">
+            —
+        </td>
+        <td>
+            pulsefire-like client (see above)
+        </td>
+    </tr>
+    </tr>
+        <tr>
+        <td>
+            <a href="https://www.wolframalpha.com/">
+                <img valign="bottom" src="./assets/images/readme/wolfram.png" alt="WolframAlpha" width="40" />
+            </a>
+        </td>
+        <td>
+            <a href="https://products.wolframalpha.com/api">WolframAlpha API</a>
+        </td>
+        <td style="text-align: center;">
+            —
+        </td>
+        <td>
+            Just aiohttp requests
         </td>
     </tr>
 </table>
-
-## TODO: finish the table
-  
-- Github rest api
-- steam web api
-- wolfram api

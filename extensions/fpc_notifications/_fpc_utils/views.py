@@ -176,8 +176,8 @@ class AddRemoveButton(discord.ui.Button):
         self.object_id: int = object_id
         self.menu: FPCSetupPlayersCharactersPaginator = menu
 
-    async def callback(self, ntr: discord.Interaction[AluBot]):
-        assert ntr.guild
+    async def callback(self, interaction: discord.Interaction[AluBot]):
+        assert interaction.guild
 
         if self.is_favourite:
             # delete from the favourites list
@@ -190,12 +190,12 @@ class AddRemoveButton(discord.ui.Button):
                 VALUES ($1, $2)
                 ON CONFLICT DO NOTHING
             """
-        await ntr.client.pool.execute(query, ntr.guild.id, self.object_id)
+        await interaction.client.pool.execute(query, interaction.guild.id, self.object_id)
 
         # Edit the message with buttons
         self.is_favourite = not self.is_favourite
         self.style = discord.ButtonStyle.green if self.is_favourite else discord.ButtonStyle.gray
-        await ntr.response.edit_message(view=self.menu)
+        await interaction.response.edit_message(view=self.menu)
 
 
 class AccountListButton(discord.ui.Button):
@@ -211,8 +211,8 @@ class AccountListButton(discord.ui.Button):
         self.field_name: str = "\N{PENCIL} List of accounts of players shown on the page"
         self.field_value: str = "Show list of accounts with links to their profiles and extra information."
 
-    async def callback(self, ntr: discord.Interaction[AluBot]):
-        assert ntr.guild
+    async def callback(self, interaction: discord.Interaction[AluBot]):
+        assert interaction.guild
 
         columns = "display_name, twitch_id, " + ", ".join(self.menu.cog.account_table_columns)
 
@@ -223,7 +223,7 @@ class AccountListButton(discord.ui.Button):
             ON p.player_id = a.player_id
             ORDER BY display_name
         """
-        rows: list[AccountListButtonQueryRow] = await ntr.client.pool.fetch(query) or []
+        rows: list[AccountListButtonQueryRow] = await interaction.client.pool.fetch(query) or []
 
         player_dict: dict[str, AccountListButtonPlayerSortDict] = {}
         for row in rows:
@@ -251,7 +251,7 @@ class AccountListButton(discord.ui.Button):
             icon_url=self.menu.cog.game_icon_url,
         )
 
-        await ntr.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class FPCSetupPlayersCharactersPageSource(menus.ListPageSource):

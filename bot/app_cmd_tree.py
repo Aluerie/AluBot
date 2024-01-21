@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class AluAppCommandTree(app_commands.CommandTree):
     if TYPE_CHECKING:
         on_error: Callable[
-            [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
+            [discord.Interaction[AluBot], app_commands.AppCommandError], Coroutine[Any, Any, None]
         ]
 
     """Custom Command tree class to set up slash cmds mentions

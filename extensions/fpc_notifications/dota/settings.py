@@ -171,6 +171,11 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
         """Manage your Dota 2 FPC misc settings."""
         await self.setup_misc(ctx)
 
+    @dota_setup.command(name="tutorial")
+    async def dota_tutorial(self, ctx: AluGuildContext):
+        """Guide to setup Dota 2 FPC Notifications."""
+        await self.tutorial(ctx)
+
     @checks.hybrid.is_hideout()
     @commands.hybrid_group(name="dotafpc")  # cspell: ignore dotafpc
     async def hideout_dota_group(self, ctx: AluGuildContext):

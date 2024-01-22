@@ -189,6 +189,11 @@ class LoLFPCSettings(FPCSettingsBase):
         """Manage your LoL FPC misc settings."""
         await self.setup_misc(ctx)
 
+    @lol_setup.command(name="tutorial")
+    async def lol_tutorial(self, ctx: AluGuildContext):
+        """Guide to setup League of Legends FPC Notifications."""
+        await self.tutorial(ctx)
+
     @checks.hybrid.is_hideout()
     @commands.hybrid_group(name="lolfpc")  # cspell: ignore lolfpc
     async def hideout_lol_group(self, ctx: AluGuildContext):

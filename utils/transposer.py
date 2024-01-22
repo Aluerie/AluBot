@@ -81,7 +81,7 @@ class TransposeClient:
 
     async def url_to_image(self, url: str) -> Image.Image:
         """Convert URL to PIL.Image.Image"""
-        log.debug(url)
+        log.info(url)
         async with self.session.get(url) as response:
             if response.ok:
                 return Image.open(BytesIO(await response.read()))

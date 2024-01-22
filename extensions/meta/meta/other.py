@@ -171,7 +171,7 @@ class OtherCog(AluCog):
         e.add_field(
             name="Code stats",
             value=(
-                f"Lines: {await count_lines('./', '.py'):,}\n"
+                f"Lines: {(await count_lines('./', '.py') + await count_lines('./', '.sql')):,}\n"
                 f"Functions: {await count_others('./', '.py', 'def '):,}\n"
                 f"Classes: {await count_others('./', '.py', 'class '):,}"
             ),

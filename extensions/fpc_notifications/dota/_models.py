@@ -440,4 +440,5 @@ async def beta_test_stratz_edit(self: AluCog):
     match_to_edit = DotaFPCMatchToEditWithStratz(self.bot, data=data)
 
     new_image = await match_to_edit.edit_notification_image(const.PICTURE.PLACEHOLDER640X360, discord.Colour.purple())
-    new_image.show()
+    # new_image.show()
+    return new_image

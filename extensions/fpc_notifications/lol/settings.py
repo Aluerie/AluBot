@@ -184,12 +184,12 @@ class LoLFPCSettings(FPCSettingsBase):
         """Setup/manage your LoL FPC favourite players list."""
         await self.setup_players(ctx)
 
-    @lol_setup.command(name="misc")
+    @lol_setup.command(name="miscellaneous", aliases=["misc"])
     async def lol_setup_misc(self, ctx: AluGuildContext):
         """Manage your LoL FPC misc settings."""
         await self.setup_misc(ctx)
 
-    @lol_setup.command(name="tutorial")
+    @lol_group.command(name="tutorial")
     async def lol_tutorial(self, ctx: AluGuildContext):
         """Guide to setup League of Legends FPC Notifications."""
         await self.tutorial(ctx)

@@ -110,7 +110,6 @@ class FPCNotificationsBase(FPCCog):
             try:
                 # try to find in cache
                 message = self.message_cache[message_id]
-                channel = message.channel
             except KeyError:
                 # we have to fetch it
                 try:
@@ -138,10 +137,10 @@ class FPCNotificationsBase(FPCCog):
 
                 old_filename = embed_image_url.split("/")[-1].split(".png")[0]  # regex-less solution, lol
 
-                # new_filename = f"edited-{old_filename}.png"
+                new_filename = f"edited-{old_filename}.png"
                 new_image = await match.edit_notification_image(embed_image_url, colour)
 
-                new_image_file = self.bot.transposer.image_to_file(new_image, filename=old_filename)
+                new_image_file = self.bot.transposer.image_to_file(new_image, filename=new_filename)
             else:
                 # already have the file object from some other channel message editing
                 # since the image should be same everywhere

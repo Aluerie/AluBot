@@ -370,7 +370,7 @@ class FPCSettingsBase(FPCCog):
             )
 
     async def setup_misc(self, ctx: AluGuildContext):
-        """Base function for `/{game} setup misc` command.
+        """Base function for `/{game} setup miscellaneous` command.
 
         This gives
         * Embed with current state of FPC settings
@@ -729,6 +729,7 @@ class FPCSettingsBase(FPCCog):
         await ctx.typing()
 
         embed = discord.Embed(
+            colour=self.colour,
             title="Tutorial",
             description=(
                 "This embed will explain how to set up __F__avourite __P__layers + __C__haracters Notifications "
@@ -740,11 +741,42 @@ class FPCSettingsBase(FPCCog):
         )
 
         cmd_field_tuples: list[tuple[str, str]] = [
-            ("setup channel", ("")),
-            ("setup players", ("")),
-            (f"setup {self.character_plural_word}", ""),
-            ("setup misc", ""),
-            ("player request", ""),
+            (
+                "setup channel",
+                (
+                    "First, we need to set up a channel for the bot to send Notifications in. "
+                    "The bot will send notifications here and then edit those messages if needed."
+                ),
+            ),
+            (
+                "setup players",
+                (
+                    "Second, you need to choose your __F__avourite __P__layers from the list of already known players."
+                    "Don't worry, if the list doesn't have a player you like "
+                    "- you will possibly be able to request adding them."
+                ),
+            ),
+            (
+                f"setup {self.character_plural_word}",
+                (
+                    "Third, you need to choose your __F__avourite __C__haracters from the list of "
+                    f"{self.game_display_name} {self.character_plural_word}."
+                ),
+            ),
+            (
+                "setup miscellaneous",
+                (
+                    "Forth, now you can fine-tune settings for the notifications. For example, turn off post-match "
+                    "editing or make the bot only send twitch-live games. Also, here you can delete your whole data."
+                ),
+            ),
+            (
+                "request player",
+                (
+                    "Fifth, as section#2 says - you can request players to be added to the bot database. "
+                    "Note, that due to high rate-limit nature of the bot - I only accept high mmr players/streamers."
+                ),
+            ),
         ]
 
         for count, (almost_qualified_name, field_value) in enumerate(cmd_field_tuples):

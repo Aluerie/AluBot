@@ -166,12 +166,12 @@ class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
         """Setup/manage your Dota 2 FPC favourite players list."""
         await self.setup_players(ctx)
 
-    @dota_setup.command(name="misc")
+    @dota_setup.command(name="miscellaneous", aliases=["misc"])
     async def dota_setup_misc(self, ctx: AluGuildContext):
         """Manage your Dota 2 FPC misc settings."""
         await self.setup_misc(ctx)
 
-    @dota_setup.command(name="tutorial")
+    @dota_group.command(name="tutorial")
     async def dota_tutorial(self, ctx: AluGuildContext):
         """Guide to setup Dota 2 FPC Notifications."""
         await self.tutorial(ctx)

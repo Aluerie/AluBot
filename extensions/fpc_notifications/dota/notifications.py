@@ -296,7 +296,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
             # thus "radiant_win" key is not present
             edit_log.debug("The stats for match %s did not count. Deleting the match.", match_id)
             not_counted_match_to_edit = DotaFPCMatchToEditNotCounted(self.bot)
-            await self.edit_notifications(not_counted_match_to_edit, channel_message_tuples)
+            await self.edit_notifications(not_counted_match_to_edit, channel_message_tuples, pop=True)
             await self.cleanup_match_to_edit(match_id, friend_id)
             return True
 
@@ -327,7 +327,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
 
         # we are ready to send the notification
         fpc_match_to_edit = DotaFPCMatchToEditWithStratz(self.bot, data=stratz_data)
-        await self.edit_notifications(fpc_match_to_edit, channel_message_tuples)
+        await self.edit_notifications(fpc_match_to_edit, channel_message_tuples, pop=True)
         return True
 
     async def cleanup_match_to_edit(self, match_id: int, friend_id: int):

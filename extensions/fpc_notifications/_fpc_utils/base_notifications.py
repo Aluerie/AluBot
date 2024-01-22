@@ -101,7 +101,9 @@ class FPCNotificationsBase(FPCCog):
                     self.message_cache[message.id] = message
                     await match.insert_into_game_messages(message.id, channel.id)
 
-    async def edit_notifications(self, match: BaseMatchToEdit, channel_message_tuples: list[tuple[int, int]]):
+    async def edit_notifications(
+        self, match: BaseMatchToEdit, channel_message_tuples: list[tuple[int, int]], pop: bool = False
+    ):
         new_image_file: Optional[discord.File] = None
 
         for channel_id, message_id in channel_message_tuples:
@@ -136,10 +138,10 @@ class FPCNotificationsBase(FPCCog):
 
                 old_filename = embed_image_url.split("/")[-1].split(".png")[0]  # regex-less solution, lol
 
-                new_filename = f"edited-{old_filename}.png"
+                # new_filename = f"edited-{old_filename}.png"
                 new_image = await match.edit_notification_image(embed_image_url, colour)
 
-                new_image_file = self.bot.transposer.image_to_file(new_image, filename=new_filename)
+                new_image_file = self.bot.transposer.image_to_file(new_image, filename=old_filename)
             else:
                 # already have the file object from some other channel message editing
                 # since the image should be same everywhere
@@ -147,6 +149,10 @@ class FPCNotificationsBase(FPCCog):
 
             embed.set_image(url=f"attachment://{new_image_file.filename}")
             try:
-                await message.edit(embed=embed, attachments=[new_image_file])
+                new_message = await message.edit(embed=embed, attachments=[new_image_file])
+                if pop:
+                    self.message_cache.pop(message.id, None)
+                else:
+                    self.message_cache[message.id] = new_message
             except discord.Forbidden:
                 raise

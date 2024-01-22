@@ -23,7 +23,7 @@ class UmbraSyncCommandCog(DevBaseCog):
 
     async def sync_to_guild_list(self, guilds: list[discord.Object]) -> str:
         """Syncs app tree for the guilds."""
-        ret = 0
+        successful_guild_syncs = 0
         cmds = []
         for guild in guilds:
             try:
@@ -31,8 +31,8 @@ class UmbraSyncCommandCog(DevBaseCog):
             except discord.HTTPException:
                 pass
             else:
-                ret += 1
-        return f"Synced {cmds} guild-bound commands to `{ret}/{len(guilds)}` guilds."
+                successful_guild_syncs += 1
+        return f"Synced {len(cmds)} guild-bound commands to `{successful_guild_syncs}/{len(guilds)}` guilds."
 
     async def sync_command_worker(
         self, spec: Optional[str], current_guild: Optional[discord.Guild], guilds: list[discord.Object]

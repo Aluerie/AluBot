@@ -217,41 +217,16 @@ class AluBot(commands.Bot, AluBotHelper):
 
         This allows access to
         * OpenDota pulsefire client
+        * Stratz pulsefire client
         """
         if not hasattr(self, "opendota_client"):
-            import orjson
-            from pulsefire.middlewares import http_error_middleware, json_response_middleware
+            from utils.dota import OpenDotaClient, StratzClient
 
-            from utils.dota import OpenDotaClient
-
-            if TYPE_CHECKING:
-                from aiohttp import ClientResponse
-                from pulsefire.middlewares import Invocation, MiddlewareCallable
-
-            self.daily_opendota_ratelimit: str = "not set yet"
-
-            def set_daily_ratelimit_attr():
-                def constructor(next: MiddlewareCallable):
-                    async def middleware(invocation: Invocation):
-                        response: ClientResponse = await next(invocation)
-                        daily_ratelimit = response.headers.get("X-Rate-Limit-Remaining-Day")
-                        if daily_ratelimit is not None:
-                            self.daily_opendota_ratelimit = daily_ratelimit
-
-                        return response
-
-                    return middleware
-
-                return constructor
-
-            self.opendota_client = OpenDotaClient(
-                middlewares=[
-                    json_response_middleware(orjson.loads),
-                    set_daily_ratelimit_attr(),
-                    http_error_middleware(),
-                ]
-            )
+            self.opendota_client = OpenDotaClient()
             await self.opendota_client.__aenter__()
+
+            self.stratz_client = StratzClient()
+            await self.stratz_client.__aenter__()
 
     def initialize_dota_cache(self) -> None:
         """Initialize dota cache attrs

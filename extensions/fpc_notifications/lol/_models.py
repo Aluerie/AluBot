@@ -192,7 +192,7 @@ class LoLFPCMatchToEdit(BaseMatchToEdit):
         item_ids: list[int] = [participant[f"item{i}"] for i in range(0, 5 + 1)]
         self.sorted_item_ids: list[int] = []
 
-        for frame in timeline["info"]["frames"]:
+        for frame in reversed(timeline["info"]["frames"]):
             for event in frame["events"]:
                 if not event.get("participantId") == participant["participantId"]:
                     # not our player
@@ -209,17 +209,13 @@ class LoLFPCMatchToEdit(BaseMatchToEdit):
                     case "ITEM_PURCHASED":
                         item_id = event.get("itemId")
                         if item_id and item_id in item_ids:
-                            if item_id not in self.sorted_item_ids:
-                                self.sorted_item_ids.append(item_id)
-                            else:
-                                # funky way to move existing item to the end of the list
-                                self.sorted_item_ids.append(item_id)
-                                self.sorted_item_ids.remove(item_id)
+                            self.sorted_item_ids.append(item_id)
+                            item_ids.remove(item_id)
 
     @override
     async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await self.bot.cdragon.item.icon_by_id(id) for id in self.sorted_item_ids if id]
+        item_icon_urls = [await self.bot.cdragon.item.icon_by_id(id) for id in reversed(self.sorted_item_ids) if id]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
 
         trinket_icon_url = await self.bot.cdragon.item.icon_by_id(self.trinket_item_id)
@@ -265,7 +261,7 @@ class LoLFPCMatchToEdit(BaseMatchToEdit):
                 for skill_slot, path in skill_slot_mapping.items()
             }
 
-            for count, skill_slot in enumerate(self.skill_build):
+            for count, skill_slot in enumerate(reversed(self.skill_build)):
                 skill_slot_image = skill_slot_images[skill_slot]
                 img.paste(
                     im=skill_slot_image,
@@ -304,10 +300,6 @@ class LoLFPCMatchToEdit(BaseMatchToEdit):
         return await asyncio.to_thread(build_notification_image)
 
 
-# BETA TESTING
-# Usage:
-# from .fpc_notifications.lol._models import beta_test_edit_notification_image
-# await beta_test_edit_notification_image(self)
 if TYPE_CHECKING:
     from utils import AluCog
 
@@ -317,21 +309,23 @@ async def beta_test_edit_notification_image(self: AluCog):
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """
-    # I'm not sure if there is a better way to test stuff for discord bot since
-    # I can't just single out a function without initializing the whole bot class
+    # BETA TESTING USAGE
+    # from .fpc_notifications.lol._models import beta_test_edit_notification_image
+    # await beta_test_edit_notification_image(self)
 
     from extensions.fpc_notifications.lol._models import LoLFPCMatchToEdit
 
+    await self.bot.initialize_league_pulsefire_clients()
     self.bot.initialize_league_cache()
 
-    match_id = "NA1_4895000741"
+    match_id = "NA1_4899995798"
     continent = "AMERICAS"
     match = await self.bot.riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)
     timeline = await self.bot.riot_api_client.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
     post_match_player = LoLFPCMatchToEdit(
         self.bot,
-        participant=match["info"]["participants"][3],
+        participant=match["info"]["participants"][0],
         timeline=timeline,
     )
 

@@ -167,8 +167,12 @@ Special thanks to the whole `discord.py` community for endless amount of educati
             </a>
         </td>
         <td><a href="https://api.stratz.com/graphiql/">Stratz GraphQL API</a></td>
-        <td style="text-align: center;">—</td>
-        <td>Just aiohttp requests</a></td>
+        <td>
+            <a href="https://github.com/iann838/pulsefire">
+                <img valign="bottom" src="./assets/images/readme/pulsefire.png" alt="Pulsefire" width="40" />
+            </a>
+        </td>
+        <td>pulsefire-like client (see below)</a></td>
     </tr>
     <tr>
         <td>
@@ -177,7 +181,11 @@ Special thanks to the whole `discord.py` community for endless amount of educati
             </a>
         </td>
         <td><a href="https://docs.opendota.com/">OpenDota API</a></td>
-        <td style="text-align: center;">—</td>
+        <td>
+            <a href="https://github.com/iann838/pulsefire">
+                <img valign="bottom" src="./assets/images/readme/pulsefire.png" alt="Pulsefire" width="40" />
+            </a>
+        </td>
         <td>pulsefire-like client (see below)</a></td>
     </tr>
     <tr>
@@ -240,8 +248,10 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         <td>
             <a href="https://steamapi.xpaw.me/#IDOTA2MatchStats_570">Steam Web API</a>
         </td>
-        <td style="text-align: center;">
-            —
+        <td>
+            <a href="https://github.com/iann838/pulsefire">
+                <img valign="bottom" src="./assets/images/readme/pulsefire.png" alt="Pulsefire" width="40" />
+            </a>
         </td>
         <td>
             pulsefire-like client (see above)

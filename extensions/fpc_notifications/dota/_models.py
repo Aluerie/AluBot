@@ -15,8 +15,7 @@ from .._fpc_utils import BaseMatchToEdit, BaseMatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot
-
-    from . import _schemas
+    from utils.dota import schemas
 
 
 __all__ = (
@@ -214,9 +213,12 @@ class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
         self.ability_upgrades_ids: list[int] = player["ability_upgrades_arr"][:18]
 
         self.item_ids: list[int] = [player[f"item_{i}"] for i in range(6)]
+        if player["aghanims_shard"]:
+            self.item_ids.append(const.DOTA.AGHANIMS_SHARD_ITEM_ID)
+        if player["aghanims_scepter"]:
+            self.item_ids.append(const.DOTA.AGHANIMS_BLESSING_ITEM_ID)
+
         self.neutral_item_id: int = player["item_neutral"]
-        self.aghanims_blessing: Literal[0, 1] = player["aghanims_scepter"]
-        self.aghanims_shard: Literal[0, 1] = player["aghanims_shard"]
 
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
@@ -228,12 +230,6 @@ class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
 
         item_icon_urls = [await self.bot.dota_cache.item.icon_by_id(item_id) for item_id in self.item_ids]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
-
-        if self.aghanims_shard:
-            item_icon_images.append(await self.bot.transposer.url_to_image(const.DOTA.LAZY_AGHS_SHARD))
-
-        if self.aghanims_blessing:
-            item_icon_images.append(await self.bot.transposer.url_to_image(const.DOTA.lAZY_AGHS_BLESS))
 
         neutral_item_url = await self.bot.dota_cache.item.icon_by_id(self.neutral_item_id)
         neutral_item_image = await self.bot.transposer.url_to_image(neutral_item_url)
@@ -251,10 +247,9 @@ class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
             log.debug("Building edited notification message.")
             width, height = img.size
             information_height = 50
-            information_y = height - information_height
             rectangle = Image.new("RGB", (width, information_height), str(colour))
             ImageDraw.Draw(rectangle)
-            img.paste(rectangle, (0, information_y))
+            img.paste(rectangle, (0, height - information_height))
             draw = ImageDraw.Draw(img)
 
             for count, item_image in enumerate(item_icon_images):
@@ -270,14 +265,14 @@ class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
             ability_h = 37
             for count, ability_image in enumerate(ability_icon_images):
                 ability_image = ability_image.resize((ability_h, ability_h))
-                img.paste(ability_image, (count * ability_h, information_y - ability_image.height))
+                img.paste(ability_image, (count * ability_h, height - information_height - ability_image.height))
 
             # talents
             talent_font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 12)
             for count, talent_text in enumerate(talent_names):
                 talent_text_w, talent_text_h = self.bot.transposer.get_text_wh(talent_text, talent_font)
                 draw.text(
-                    xy=(width - talent_text_w, information_y - 30 * 2 - 22 * count),
+                    xy=(width - talent_text_w, height - information_height - 30 * 2 - 22 * count),
                     text=talent_text,
                     font=talent_font,
                     align="right",
@@ -319,37 +314,28 @@ class DotaFPCMatchToEditWithStratz(BaseMatchToEdit):
         self,
         bot: AluBot,
         *,
-        player: _schemas.StratzEditFPCMessageGraphQLSchema.Player,
+        player: schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.Player,
     ):
         super().__init__(bot)
 
-        self.item_ids: list[int] = [player[f"item{i}Id"] for i in range(6)]
-
-        self.aghanims_shard: bool = False
-        self.aghanims_blessing: bool = False
+        item_ids: list[int] = [player[f"item{i}Id"] for i in range(6)]
 
         for buff_event in player["stats"]["matchPlayerBuffEvent"]:
-            if buff_event["itemId"] == 609:  # hard coded value oh my god
-                self.aghanims_shard = True
-            elif buff_event["itemId"] == 108:  # hard coded value oh my god
-                self.aghanims_blessing = True
+            item_id = buff_event.get("itemId")
+            if item_id:
+                item_ids.append(item_id)
 
-        self.purchase_log: list[str] = []
-        # this^^^ should be 8 strings (6 items + aghs shard + blessing) len list as a result of below operations
-        for i in range(6):
-            item_id = player[f"item{i}Id"]
-            for purchase_event in reversed(player["playbackData"]["purchaseEvents"]):
-                if purchase_event["itemId"] == item_id:
-                    self.purchase_log.append(f"{math.ceil(purchase_event['time']/60)}m")
-                    player["playbackData"]["purchaseEvents"].remove(purchase_event)
-                    break
-            else:
-                self.purchase_log.append("")
+        self.sorted_item_purchases: list[tuple[int, str]] = []
+        for purchase_event in reversed(player["playbackData"]["purchaseEvents"]):
+            item_id = purchase_event["itemId"]
+            if item_id in item_ids:
+                self.sorted_item_purchases.append((item_id, f"{math.ceil(purchase_event['time']/60)}m"))
+                item_ids.remove(item_id)
 
-        if self.aghanims_shard:
-            self.purchase_log.append("?")  # todo: aghs shard timing
-        if self.aghanims_blessing:
-            self.purchase_log.append("?")  # todo: aghs blessing timing
+        self.sorted_item_purchases.reverse()  # reverse back
+        self.sorted_item_purchases.extend([(item_id, "") for item_id in item_ids])
+
+        self.neutral_item_id: int = player["neutral0Id"]
 
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
@@ -358,22 +344,40 @@ class DotaFPCMatchToEditWithStratz(BaseMatchToEdit):
     @override
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
+        item_icon_urls = [await self.bot.dota_cache.item.icon_by_id(id) for id, timing in self.sorted_item_purchases]
+        item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
+
+        neutral_item_url = await self.bot.dota_cache.item.icon_by_id(self.neutral_item_id)
+        neutral_item_image = await self.bot.transposer.url_to_image(neutral_item_url)
 
         def build_notification_image() -> Image.Image:
             log.debug("Building edited notification message.")
             width, height = img.size
 
+            information_height = 50
+            rectangle = Image.new("RGB", (width, information_height), str(colour))
+            ImageDraw.Draw(rectangle)
+            img.paste(rectangle, (0, height - information_height))
             draw = ImageDraw.Draw(img)
+
+            for count, item_image in enumerate(item_icon_images):
+                # item image
+                item_image = item_image.resize((69, information_height))  # 69/50 - to match 88/64 which is natural size
+                left = count * item_image.width
+                img.paste(item_image, (left, height - item_image.height))
 
             # items and aghanim shard/blessing
             font_item_timing = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
 
-            for count, item_timing in enumerate(self.purchase_log):
+            for count, (item_id, item_timing) in enumerate(self.sorted_item_purchases):
                 if item_timing:
                     # item timing
                     left = count * 69
                     item_timing_w, item_timing_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
                     draw.text((left, height - item_timing_h), item_timing, font=font_item_timing, align="left")
+
+            resized_neutral_item_image = i = neutral_item_image.resize((69, information_height))
+            img.paste(im=i, box=(width - i.width, height - i.height))
 
             # img.show()
             return img

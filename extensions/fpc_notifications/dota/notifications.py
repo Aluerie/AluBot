@@ -52,7 +52,7 @@ if TYPE_CHECKING:
 
     type MatchToEdit = dict[tuple[int, int], MatchToEditSubDict]
 
-    from . import _schemas
+    from utils.dota import schemas
 
 
 send_log = logging.getLogger("send_dota_fpc")
@@ -67,7 +67,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
         super().__init__(bot, prefix="dota", *args, **kwargs)
         # Send Matches related attrs
         self.lobby_ids: set[int] = set()
-        self.top_source_dict: MutableMapping[int, _schemas.CSourceTVGameSmall] = {}
+        self.top_source_dict: MutableMapping[int, schemas.GameCoordinatorAPISchema.CSourceTVGameSmall] = {}
         self.hero_fav_ids: list[int] = []
         self.player_fav_ids: list[int] = []
 
@@ -79,7 +79,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
 
     async def cog_load(self) -> None:
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
-        def response(result: _schemas.CMsgGCToClientFindTopSourceTVGamesResponse):
+        def response(result: schemas.GameCoordinatorAPISchema.CMsgGCToClientFindTopSourceTVGamesResponse):
             # remember the quirk that
             # result.specific_games = my friends games
             # not result.specific_games = top100 mmr games
@@ -361,7 +361,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
                 edit_log.debug("Stratz API Response Not OK with status %s", response.status)
                 return False
 
-            stratz_data: _schemas.StratzEditFPCMessageGraphQLSchema.ResponseDict = await response.json(
+            stratz_data: schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.ResponseDict = await response.json(
                 loads=orjson.loads
             )
 
@@ -445,11 +445,11 @@ class DotaFPCNotifications(FPCNotificationsBase):
             discord.Embed(colour=discord.Colour.blue(), title="Daily Remaining RateLimits")
             .add_field(
                 name="Stratz",
-                value=f"{self.stratz_daily_remaining_ratelimit}/{self.stratz_daily_total_ratelimit}",
+                value=self.bot.stratz_client.rate_limiter.rate_limits_string,
             )
             .add_field(
                 name="OpenDota",
-                value=self.bot.daily_opendota_ratelimit,
+                value=self.bot.opendota_client.rate_limiter.rate_limits_string,
             )
         )
 
@@ -466,12 +466,12 @@ class DotaFPCNotifications(FPCNotificationsBase):
         This is why we also send @mention if ratelimit is critically low.
         """
         content = ""
-        try:
-            if int(self.bot.daily_opendota_ratelimit) < 500 or int(self.stratz_daily_remaining_ratelimit) < 1_000:
+        for ratio in [
+            self.bot.stratz_client.rate_limiter.rate_limits_ratio,
+            self.bot.opendota_client.rate_limiter.rate_limits_ratio,
+        ]:
+            if ratio < 0.1:
                 content = f"<@{self.bot.owner_id}>"
-        except ValueError:
-            # I guess, whatever ?
-            return
 
         await self.hideout.daily_report.send(content=content, embed=self.get_ratelimit_embed())
 

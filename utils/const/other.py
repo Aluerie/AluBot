@@ -36,7 +36,7 @@ class PICTURE(StrEnum):
     github = "https://pics.freeicons.io/uploads/icons/png/4381378511600029534-512.png"
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
     twitch = "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
-    
+
     dankfix = "https://i.imgur.com/gzrPVLs.png"
 
     frog = "https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png"
@@ -100,5 +100,6 @@ class DOTA:
 
     ATTR_BONUS_ICON = "https://static.wikia.nocookie.net/dota2_gamepedia/images/e/e2/Attribute_Bonus_icon.png"
 
-    lAZY_AGHS_BLESS = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/ultimate_scepter_2.png"
-    LAZY_AGHS_SHARD = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/aghanims_shard.png"
+    AGHANIMS_SCEPTER_ITEM_ID = 108
+    AGHANIMS_BLESSING_ITEM_ID = 271
+    AGHANIMS_SHARD_ITEM_ID = 609

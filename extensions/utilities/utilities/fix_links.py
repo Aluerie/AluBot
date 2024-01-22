@@ -67,9 +67,9 @@ class LinkUtilities(AluCog):
             raise commands.BadArgument('This message does not have any twitter/instagram links to "fix".')
         return res
 
-    async def fix_link_ctx_menu_callback(self, ntr: discord.Interaction, message: discord.Message):
+    async def fix_link_ctx_menu_callback(self, interaction: discord.Interaction, message: discord.Message):
         content = self.cog_fix_link_worker(message.content)
-        await ntr.response.send_message(content)
+        await interaction.response.send_message(content)
 
     @commands.hybrid_command()
     @app_commands.describe(link='Enter Twitter/Instagram link to "fix"')

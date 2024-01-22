@@ -26,19 +26,19 @@ class PrefixSetModal(discord.ui.Modal, title="New prefix setup"):
         self.cog: PrefixSetupCog = cog
         self.paginator: SetupPages = paginator
 
-    async def on_error(self, ntr: discord.Interaction, error: Exception, /) -> None:
+    async def on_error(self, interaction: discord.Interaction, error: Exception, /) -> None:
         e = discord.Embed(colour=Colour.error())
         if isinstance(error, commands.BadArgument):
             e.description = f"{error}"
         else:
             e.description = "Unknown error, sorry"
-        await ntr.response.send_message(embed=e, ephemeral=True)
+        await interaction.response.send_message(embed=e, ephemeral=True)
 
-    async def on_submit(self, ntr: discord.Interaction[AluBot]) -> None:
-        p: GuildPrefix = await GuildPrefix.construct(ntr.client, ntr.guild, str(self.prefix.value))
+    async def on_submit(self, interaction: discord.Interaction[AluBot]) -> None:
+        p: GuildPrefix = await GuildPrefix.construct(interaction.client, interaction.guild, str(self.prefix.value))
         e = await p.set_prefix()
-        await ntr.response.send_message(embed=e, ephemeral=True)
-        await self.paginator.show_page(ntr, self.paginator.current_page_number)
+        await interaction.response.send_message(embed=e, ephemeral=True)
+        await self.paginator.show_page(interaction, self.paginator.current_page_number)
 
 
 class PrefixSetupView(discord.ui.View):

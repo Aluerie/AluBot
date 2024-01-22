@@ -43,10 +43,11 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         c = self.ctx_menu_avatar
         self.bot.tree.remove_command(c.name, type=c.type)
 
-    async def view_user_avatar(self, ntr: discord.Interaction, user: discord.User):
-        e = discord.Embed(color=user.colour, title=f"Avatar for {user.display_name}")
-        e.set_image(url=user.display_avatar.url)
-        await ntr.response.send_message(embed=e, ephemeral=True)
+    async def view_user_avatar(self, interaction: discord.Interaction, user: discord.User):
+        embed = discord.Embed(color=user.colour, title=f"Avatar for {user.display_name}").set_image(
+            url=user.display_avatar.url
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

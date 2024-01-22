@@ -80,20 +80,24 @@ class FeedbackCog(MetaCog):
         summary: str = "No feedback title was provided (prefix?)",
         details: str = "No feedback details were provided",
     ) -> discord.Embed:
-        e = discord.Embed(title=summary, description=details, colour=const.Colour.prpl())
+        embed = (
+            discord.Embed(
+                colour=const.Colour.prpl(),
+                title=summary,
+                description=details,
+                timestamp=ctx_ntr.created_at,
+            )
+            .set_author(name=str(ctx_ntr.user), icon_url=ctx_ntr.user.display_avatar.url)
+            .set_footer(text=f"Author ID: `{ctx_ntr.user.id}`")
+        )
 
         if ctx_ntr.guild is not None:
-            e.add_field(name="Server", value=f"{ctx_ntr.guild.name}\nID: `{ctx_ntr.guild.id}`", inline=False)
+            embed.add_field(name="Server", value=f"{ctx_ntr.guild.name}\nID: `{ctx_ntr.guild.id}`", inline=False)
 
         if ctx_ntr.channel is not None:
-            e.add_field(name="Channel", value=f"#{ctx_ntr.channel}\nID: `{ctx_ntr.channel.id}`", inline=False)
+            embed.add_field(name="Channel", value=f"#{ctx_ntr.channel}\nID: `{ctx_ntr.channel.id}`", inline=False)
 
-        e.timestamp = ctx_ntr.created_at
-
-        user = ctx_ntr.user
-        e.set_author(name=str(user), icon_url=user.display_avatar.url)
-        e.set_footer(text=f"Author ID: `{user.id}`")
-        return e
+        return embed
 
     @staticmethod
     def get_successfully_submitted_embed(
@@ -128,9 +132,9 @@ class FeedbackCog(MetaCog):
         await ctx.author.send(embed=e3)
 
     @app_commands.command(name="feedback")
-    async def slash_feedback(self, ntr: discord.Interaction):
+    async def slash_feedback(self, interaction: discord.Interaction):
         """Give feedback about the bot directly to the bot developer."""
-        await ntr.response.send_modal(FeedbackModal(self))
+        await interaction.response.send_modal(FeedbackModal(self))
 
     @commands.is_owner()
     @commands.command(aliases=["pm"], hidden=True)

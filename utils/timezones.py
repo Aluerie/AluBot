@@ -83,8 +83,8 @@ class TimeZoneTransformer(app_commands.Transformer):
         ctx = await AluContext.from_interaction(interaction)
         return await TimeZone.convert(ctx, value)
 
-    async def autocomplete(self, ntr: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice[str]]:
-        tz_manager = ntr.client.tz_manager
+    async def autocomplete(self, interaction: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice[str]]:
+        tz_manager = interaction.client.tz_manager
 
         if not arg:
             return tz_manager._default_timezones

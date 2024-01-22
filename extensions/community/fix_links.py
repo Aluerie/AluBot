@@ -30,15 +30,17 @@ class FixLinksCommunity(CommunityCog):
         c = self.delete_mimic_ctx_menu
         self.bot.tree.remove_command(c.name, type=c.type)
 
-    async def delete_mimic_ctx_menu_callback(self, ntr: discord.Interaction[commands.Bot], message: discord.Message):
+    async def delete_mimic_ctx_menu_callback(
+        self, interaction: discord.Interaction[commands.Bot], message: discord.Message
+    ):
         # todo: why it's there, wrong cog
-        if self.bot.mimic_message_user_mapping.get(message.id) == ntr.user.id:
+        if self.bot.mimic_message_user_mapping.get(message.id) == interaction.user.id:
             # ^ userid_ttl[0] represents both
             # the message in cache and belongs to the interaction author (user)
             await message.delete()
             e = discord.Embed(colour=const.Colour.prpl())
             e.description = "Successfully deleted your Mimic message."
-            await ntr.response.send_message(embed=e, ephemeral=True)
+            await interaction.response.send_message(embed=e, ephemeral=True)
             return
         elif not message.webhook_id:
             raise errors.UserError("This message was not mimicked by my MimicUser functionality.")

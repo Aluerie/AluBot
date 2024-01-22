@@ -25,9 +25,9 @@ class AluHelpCog(MetaCog):
 
     @app_commands.command(name="help")
     @app_commands.describe(query="Command/Section/Category name to get help about.")
-    async def slash_help(self, ntr: discord.Interaction, *, query: Optional[str]):
+    async def slash_help(self, interaction: discord.Interaction[AluBot], *, query: Optional[str]):
         """Show help menu for the bot."""
-        ctx = await AluContext.from_interaction(ntr)
+        ctx = await AluContext.from_interaction(interaction)
         if query:
             await ctx.send_help(query)
         else:

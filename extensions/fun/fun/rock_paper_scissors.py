@@ -71,18 +71,18 @@ class RPSView(discord.ui.View):
         )
         await self.message.edit(embed=e)
 
-    async def interaction_check(self, ntr: discord.Interaction) -> bool:
-        if ntr.user and ntr.user in self.players:
-            if ntr.user.id in self.choices:
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user and interaction.user in self.players:
+            if interaction.user.id in self.choices:
                 e = discord.Embed(colour=const.Colour.error())
-                e.description = f'You\'ve already chosen **{self.choices[ntr.user.id]}**'
-                await ntr.response.send_message(embed=e, ephemeral=True)
+                e.description = f'You\'ve already chosen **{self.choices[interaction.user.id]}**'
+                await interaction.response.send_message(embed=e, ephemeral=True)
                 return False
             else:
                 return True
         else:
             e = discord.Embed(colour=const.Colour.error(), description='Sorry! This game dialog is not for you.')
-            await ntr.response.send_message(embed=e, ephemeral=True)
+            await interaction.response.send_message(embed=e, ephemeral=True)
             return False
 
     def result_str(self) -> tuple[str, Optional[discord.User | discord.Member]]:
@@ -103,12 +103,12 @@ class RPSView(discord.ui.View):
         ggwp = '\n\n**Good Game, Well Played {0} {0} {0}**'.format(const.Emote.DankL)
         return f'{choices_string}\n{winning_strings[0]}{ggwp}\n{winning_strings[1]}', winning_strings[2]
 
-    async def rps_button_callback(self, ntr: discord.Interaction, choice: RPSChoice):
-        self.choices[ntr.user] = choice
+    async def rps_button_callback(self, interaction: discord.Interaction, choice: RPSChoice):
+        self.choices[interaction.user] = choice
 
         e = discord.Embed(colour=const.Colour.prpl(), description=f'You\'ve chosen **{choice.emote_name}**')
-        await ntr.response.send_message(embed=e, ephemeral=True)
-        await self.edit_embed_player_choice(ntr.user)
+        await interaction.response.send_message(embed=e, ephemeral=True)
+        await self.edit_embed_player_choice(interaction.user)
 
         if len(self.choices) == 2:
             em_game = self.message.embeds[0].copy()

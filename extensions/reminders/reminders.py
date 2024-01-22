@@ -82,9 +82,9 @@ class ReminderView(discord.ui.View):
         self.add_item(discord.ui.Button(url=url, label="Go to original message"))
         self.add_item(self.snooze)
 
-    async def interaction_check(self, ntr: discord.Interaction) -> bool:
-        if ntr.user.id != self.author_id:
-            await ntr.response.send_message("This snooze button is not for you, sorry!", ephemeral=True)
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message("This snooze button is not for you, sorry!", ephemeral=True)
             return False
         return True
 
@@ -140,12 +140,12 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     @app_commands.describe(when="When to be reminded of something, in GMT", text="What to be reminded of")
     async def reminder_set(
         self,
-        ntr: discord.Interaction[AluBot],
+        interaction: discord.Interaction[AluBot],
         when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
         text: str = "...",
     ):
         """Sets a reminder to remind you of something at a specific time"""
-        ctx = await AluContext.from_interaction(ntr)
+        ctx = await AluContext.from_interaction(interaction)
         await self.remind_helper(ctx, dt=when, text=text)
 
     @remind.command(name="me", with_app_command=False)

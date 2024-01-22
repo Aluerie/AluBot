@@ -218,10 +218,10 @@ class MonthNumber(commands.Converter, app_commands.Transformer):
     async def convert(self, _ctx: AluContext, argument: str) -> int:
         return self.worker(argument)
 
-    async def transform(self, _ntr: discord.Interaction, value: str) -> int:
+    async def transform(self, _interaction: discord.Interaction, value: str) -> int:
         return self.worker(value)
 
-    async def autocomplete(self, _ntr: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice]:
+    async def autocomplete(self, _interaction: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice]:
         if not arg:
             month_names = self.mapping.keys()
         else:

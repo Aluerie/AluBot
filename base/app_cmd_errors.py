@@ -52,13 +52,13 @@ async def on_app_command_error(
     #     logging.debug(f'Ignoring silent command error raised in application command {cmd}', exc_info=False)
     #     return
     elif isinstance(error, app_commands.CommandSignatureMismatch):
-        # TODO: WARN DEVS make title too
+        # TODO: WARN DEVS, make title too
         desc = (
             f"**\N{WARNING SIGN} This command's signature is out of date!**\n"
             f"I've warned the developers about this and it will be fixed as soon as possible."
         )
     elif isinstance(error, app_commands.CommandNotFound):
-        desc = (  # TODO: WARN DEVS make title too
+        desc = (  # TODO: WARN DEVS, make title too
             # TODO: maybe link our server there or create a new server for the bot support?
             "**Sorry, but somehow this slash command does not exist anymore.**\n"
             f"If you think this command should exist, please ask about it using {const.Slash.feedback} command."

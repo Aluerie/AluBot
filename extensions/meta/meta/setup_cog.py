@@ -43,8 +43,8 @@ class SetupSelect(discord.ui.Select):
             self.add_option(label=cog_name, description=cog_desc, emoji=cog_emote, value=str(counter + 1))
             counter += 1
 
-    async def callback(self, ntr: discord.Interaction):
-        await self.paginator.show_page(ntr, int(self.values[0]))
+    async def callback(self, interaction: discord.Interaction):
+        await self.paginator.show_page(interaction, int(self.values[0]))
 
 
 class SetupPageSource(menus.ListPageSource):
@@ -102,10 +102,10 @@ class SetupPages(Paginator):
                 self.add_item(item)
 
     @discord.ui.button(label='\N{NOTEBOOK}', style=discord.ButtonStyle.blurple)
-    async def text_cmds(self, ntr: discord.Interaction, _btn: discord.ui.Button):
+    async def text_cmds(self, interaction: discord.Interaction, _btn: discord.ui.Button):
         """Toggle showing text commands embed in the setup paginator"""
         self.show_text_cmds = not self.show_text_cmds
-        await self.show_page(ntr, self.current_page_number)
+        await self.show_page(interaction, self.current_page_number)
 
 
 class SetupCog:

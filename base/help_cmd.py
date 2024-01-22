@@ -140,7 +140,7 @@ class HelpPages(pages.Paginator):
             self.add_item(HelpSelect(self))
 
     @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
-    async def legend_page(self, ntr: discord.Interaction[AluBot], _button: discord.ui.Button):
+    async def legend_page(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button):
         """Show legend page."""
         e = discord.Embed(
             title="Legend used in the Help menu.",
@@ -171,8 +171,8 @@ class HelpPages(pages.Paginator):
         )
         for name, value in fields:
             e.add_field(name=name, value=value, inline=False)
-        e.set_footer(text=f"With love, {ntr.client.user.display_name}")
-        await ntr.response.send_message(embed=e, ephemeral=True)
+        e.set_footer(text=f"With love, {interaction.client.user.display_name}")
+        await interaction.response.send_message(embed=e, ephemeral=True)
 
     # @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
     # async def find_command_or_section_page(self, interaction: discord.Interaction, _button: discord.ui.Button):

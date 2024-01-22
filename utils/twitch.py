@@ -78,7 +78,7 @@ class TwitchClient(twitchio.Client):
 
         return user.display_name
 
-    async def last_vod_link(self, user_id: int, seconds_ago: int = 0, md: bool = True) -> str:
+    async def last_vod_link(self, user_id: int, seconds_ago: int = 0, markdown: bool = True) -> str:
         """Get last vod link for user with `user_id` with timestamp as well"""
         video: twitchio.Video | None = next(iter(await self.fetch_videos(user_id=user_id, period="day")), None)
         if not video:
@@ -93,7 +93,7 @@ class TwitchClient(twitchio.Client):
             # todo: move those two into formats or something?
 
             def regex_time(letter: str) -> int:
-                """h -> 3, m -> 51, s -> 8 for above example"""
+                """regex_time('h') = 3, regex_time('m') = 51, regex_time('s') = 8 for above example"""
                 pattern = r"\d+(?={})".format(letter)
                 units = re.search(pattern, hms_time)
                 return int(units.group(0)) if units else 0
@@ -103,7 +103,7 @@ class TwitchClient(twitchio.Client):
 
         duration = get_time_from_hms(video.duration)
         vod_url = f"{video.url}?t={formats.human_timedelta(duration - seconds_ago, strip=True, suffix=False)}"
-        return f"/[TwVOD]({vod_url})" if md else vod_url
+        return f"/[VOD]({vod_url})" if markdown else vod_url
 
     async def get_twitch_stream(self, twitch_id: int) -> TwitchStream:
         user = next(iter(await self.fetch_users(ids=[twitch_id])))

@@ -38,21 +38,21 @@ class ConfModal(discord.ui.Modal):
         max_length=4000,
     )
 
-    async def on_submit(self, ntr: discord.Interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         embed = discord.Embed(title=self.title, colour=Colour.prpl(), description=self.conf.value)
         if self.title == "Non-anonymous confession":
-            embed.set_author(name=ntr.user.display_name, icon_url=ntr.user.display_avatar.url)
-        channel = ntr.channel
+            embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+        channel = interaction.channel
         assert isinstance(channel, discord.TextChannel)
 
         await channel.send(embeds=[embed])
         saint_string = "{0} {0} {0} {1} {1} {1} {2} {2} {2}".format(Emote.bubuChrist, "\N{CHURCH}", Emote.PepoBeliever)
         await channel.send(saint_string)
-        await ntr.response.send_message(content=f"The Lord be with you {Emote.PepoBeliever}", ephemeral=True)
-        if ntr.message:
-            await ntr.message.delete()
+        await interaction.response.send_message(content=f"The Lord be with you {Emote.PepoBeliever}", ephemeral=True)
+        if interaction.message:
+            await interaction.message.delete()
         await channel.send(view=ConfView())
-        cd.update_rate_limit(ntr)
+        cd.update_rate_limit(interaction)
 
 
 class ConfView(discord.ui.View):

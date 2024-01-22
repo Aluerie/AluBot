@@ -372,11 +372,11 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
         self.special_button_cls: Optional[type[AccountListButton]] = special_button_cls
 
     @discord.ui.button(label="\N{PAGE WITH CURL}", style=discord.ButtonStyle.blurple)
-    async def object_list(self, ntr: discord.Interaction, _: discord.ui.Button):
+    async def object_list(self, interaction: discord.Interaction, _: discord.ui.Button):
         """Show favourite object list."""
-        assert ntr.guild
-        embed = await self.get_object_list_embed(ntr.guild.id)
-        await ntr.response.send_message(embed=embed, ephemeral=True)
+        assert interaction.guild
+        embed = await self.get_object_list_embed(interaction.guild.id)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class FPCSetupPlayersPaginator(FPCSetupPlayersCharactersPaginator):
@@ -449,9 +449,9 @@ class RemoveAllAccountsButton(discord.ui.Button):
         self.player_id: int = player_id
         self.player_name: str = player_name
 
-    async def callback(self, ntr: discord.Interaction[AluBot]):
+    async def callback(self, interaction: discord.Interaction[AluBot]):
         query = f"DELETE FROM {self.cog.prefix}_players WHERE player_id=$1"
-        result: str = await ntr.client.pool.execute(query, self.player_id)
+        result: str = await interaction.client.pool.execute(query, self.player_id)
 
         if result != "DELETE 1":
             raise errors.BadArgument("Error deleting this player from the database.")
@@ -460,7 +460,7 @@ class RemoveAllAccountsButton(discord.ui.Button):
             name="Succesfully removed a player from the database",
             value=self.player_name,
         )
-        await ntr.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
 
 class RemoveAccountButton(discord.ui.Button):

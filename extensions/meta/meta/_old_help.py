@@ -96,8 +96,8 @@ class HelpSelect(discord.ui.Select):
             value=str(max_len - 1),
         )
 
-    async def callback(self, ntr: discord.Interaction):
-        await self.paginator.show_page(ntr, int(self.values[0]))
+    async def callback(self, interaction: discord.Interaction):
+        await self.paginator.show_page(interaction, int(self.values[0]))
 
 
 class HelpPages(Paginator):

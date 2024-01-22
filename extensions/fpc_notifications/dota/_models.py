@@ -73,7 +73,7 @@ class DotaFPCMatchToSend(BaseMatchToSend):
         dotabuff = f"https://www.dotabuff.com/matches/{self.match_id}"
         opendota = f"https://www.opendota.com/matches/{self.match_id}"
         stratz = f"https://www.stratz.com/matches/{self.match_id}"
-        return f"/[Dotabuff]({dotabuff})/[Opendota]({opendota})/[Stratz]({stratz})"
+        return f"/[Dbuff]({dotabuff})/[Odota]({opendota})/[Stratz]({stratz})"
 
     @property
     def long_ago(self) -> int:

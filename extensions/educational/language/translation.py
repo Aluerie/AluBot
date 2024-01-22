@@ -39,13 +39,13 @@ class TranslateCog(EducationalCog):
         e.set_footer(text=f"Detected language: {result.source_lang}")
         return e
 
-    async def translate_context_menu_callback(self, ntr: discord.Interaction, message: discord.Message):
+    async def translate_context_menu_callback(self, interaction: discord.Interaction, message: discord.Message):
         if len(text := message.content) == 0:
             raise errors.BadArgument(
                 "Sorry, but it seems, that this message doesn't have any text content to translate."
             )
         e = await self.translate_embed(text)
-        await ntr.response.send_message(embed=e, ephemeral=True)
+        await interaction.response.send_message(embed=e, ephemeral=True)
 
     @commands.hybrid_command()
     @app_commands.describe(text="Enter text to translate")

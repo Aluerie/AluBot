@@ -111,28 +111,28 @@ class Paginator(AluView):
         else:
             return {}
 
-    async def show_page(self, ntr: discord.Interaction, page_number: int) -> None:
+    async def show_page(self, interaction: discord.Interaction, page_number: int) -> None:
         page = await self.source.get_page(page_number)
         self.current_page_number = page_number
         kwargs = await self._get_kwargs_from_page(page)
         self._update_nav_labels(page_number)
         if kwargs:
-            if ntr.response.is_done():
+            if interaction.response.is_done():
                 if self.message:
                     await self.message.edit(**kwargs, view=self)
             else:
                 # print(kwargs)
-                await ntr.response.edit_message(**kwargs, view=self)
+                await interaction.response.edit_message(**kwargs, view=self)
 
-    async def show_checked_page(self, ntr: discord.Interaction, page_number: int) -> None:
+    async def show_checked_page(self, interaction: discord.Interaction, page_number: int) -> None:
         """Just so next/prev don't IndexError me and loop correctly"""
         max_pages = self.source.get_max_pages()
         try:
             if max_pages is None:
                 # if there is no max_pages - we can't check.
-                await self.show_page(ntr, page_number)
+                await self.show_page(interaction, page_number)
             else:
-                await self.show_page(ntr, page_number % max_pages)
+                await self.show_page(interaction, page_number % max_pages)
         except IndexError:
             # we can handle it
             pass
@@ -175,15 +175,15 @@ class Paginator(AluView):
             else:
                 self.message = await ctx.send(**kwargs, view=self, ephemeral=ephemeral)
         elif isinstance(self.ctx_ntr, discord.Interaction):
-            ntr = self.ctx_ntr
-            if ntr.response.is_done():
-                self.message = await ntr.followup.send(**kwargs, view=self, ephemeral=ephemeral)
+            interaction = self.ctx_ntr
+            if interaction.response.is_done():
+                self.message = await interaction.followup.send(**kwargs, view=self, ephemeral=ephemeral)
             elif edit_response:
-                await ntr.response.edit_message(**kwargs, view=self)
-                self.message = await ntr.original_response()
+                await interaction.response.edit_message(**kwargs, view=self)
+                self.message = await interaction.original_response()
             else:
-                await ntr.response.send_message(**kwargs, view=self, ephemeral=ephemeral)
-                self.message = await ntr.original_response()
+                await interaction.response.send_message(**kwargs, view=self, ephemeral=ephemeral)
+                self.message = await interaction.original_response()
         else:
             raise RuntimeError("Cannot start a paginator without a context or interaction.")
 

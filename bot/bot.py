@@ -206,6 +206,7 @@ class AluBot(commands.Bot, AluBotHelper):
     # they should be used in `__init__` or in `cog_load` only for those cogs which need to work with them,
     # i.e. fpc dota notifications should call
     # `bot.initialize_steam_dota`, `bot.initialize_opendota` and `bot.initialize_twitch`
+    # This is done exclusively so when I run only a few cogs on testing bot - I don't need to load all modules/clients.
     #
     # note that I import inside the functions which is against pep8 but apparently it is not so bad:
     # pep8 answer: https://stackoverflow.com/a/1188672/19217368
@@ -213,11 +214,10 @@ class AluBot(commands.Bot, AluBotHelper):
     # and I exactly want these^
 
     async def initialize_dota_pulsefire_clients(self) -> None:
-        """Initialize dota pulsefire-like clients
+        """Initialize Dota 2 pulsefire-like clients
 
-        This allows access to
-        * OpenDota pulsefire client
-        * Stratz pulsefire client
+        * OpenDota API pulsefire client
+        * Stratz API pulsefire client
         """
         if not hasattr(self, "opendota_client"):
             from utils.dota import OpenDotaClient, StratzClient
@@ -229,9 +229,8 @@ class AluBot(commands.Bot, AluBotHelper):
             await self.stratz_client.__aenter__()
 
     def initialize_dota_cache(self) -> None:
-        """Initialize dota cache attrs
+        """Initialize Dota 2 constants cache
 
-        This allows access to
         * OpenDota Dota Constants cache with static data
         """
         if not hasattr(self, "dota_cache"):
@@ -240,9 +239,8 @@ class AluBot(commands.Bot, AluBotHelper):
             self.dota_cache = DotaCache(self)
 
     async def initialize_league_pulsefire_clients(self) -> None:
-        """Initialize league caches
+        """Initialize League Of Legends pulsefire clients
 
-        This allows access to
         * Riot API Pulsefire client
         * CDragon Pulsefire client
         """
@@ -273,9 +271,8 @@ class AluBot(commands.Bot, AluBotHelper):
             await self.cdragon_client.__aenter__()
 
     def initialize_league_cache(self) -> None:
-        """Initialize league caches
+        """Initialize League of Legends caches
 
-        This allows access to
         * CDragon Cache with static game data
         * MerakiAnalysis Cache with roles identification data
         """
@@ -287,6 +284,11 @@ class AluBot(commands.Bot, AluBotHelper):
             self.meraki_roles = MerakiRolesCache(self)
 
     async def initialize_steam_dota(self) -> None:
+        """Initialize Steam and Dota 2 Clients
+        
+        * Dota 2 Client, allows communicating with Dota 2 Game Coordinator
+        * Steam Client, necessary step to login in for Dota 2.^
+        """
         if not hasattr(self, "steam"):
             from dota2.client import Dota2Client
             from steam.client import SteamClient
@@ -304,6 +306,7 @@ class AluBot(commands.Bot, AluBotHelper):
                 self.steam.reconnect()
 
     async def login_into_steam_dota(self) -> None:
+        """Login into Steam and Launch Dota 2."""
         log.debug("Checking if steam is connected: %s", self.steam.connected)
         if self.steam.connected is False:
             log.debug(f"dota2info: client.connected {self.steam.connected}")
@@ -322,12 +325,14 @@ class AluBot(commands.Bot, AluBotHelper):
                 await self.exc_manager.register_error(exc, source="steam login", where="steam login")
 
     def initialize_github(self) -> None:
+        """Initialize GitHub REST API Client"""
         if not hasattr(self, "github"):
             from githubkit import GitHub
 
             self.github = GitHub(config.GIT_PERSONAL_TOKEN)
 
     async def initialize_twitch(self) -> None:
+        """Initialize subclassed twitchio's Twitch Client."""
         if not hasattr(self, "twitch"):
             from utils.twitch import TwitchClient
 
@@ -335,12 +340,14 @@ class AluBot(commands.Bot, AluBotHelper):
             await self.twitch.connect()
 
     def initialize_tz_manager(self) -> None:
+        """Initialize TimeZone Manager."""
         if not hasattr(self, "tz_manager"):
             from utils.timezones import TimezoneManager
 
             self.tz_manager = TimezoneManager(self)
 
     async def close(self) -> None:
+        """Closes the connection to Discord while cleaning up other open sessions and clients."""
         await super().close()
         if hasattr(self, "session"):
             await self.session.close()
@@ -355,14 +362,17 @@ class AluBot(commands.Bot, AluBotHelper):
 
     @property
     def hideout(self) -> const.HideoutGuild:
+        """Shortcut to get Hideout guild, its channels and roles."""
         return const.HideoutGuild(self)
 
     @property
     def community(self) -> const.CommunityGuild:
+        """Shortcut to get Community guild, its channels and roles."""
         return const.CommunityGuild(self)
 
     @discord.utils.cached_property
     def invite_link(self) -> str:
+        """Get invite link for the bot."""
         return discord.utils.oauth_url(
             self.user.id,
             permissions=permissions,

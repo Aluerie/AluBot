@@ -411,7 +411,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
         """Send OpenDota/Stratz rate limit numbers"""
         await ctx.reply(embed=self.get_ratelimit_embed())
 
-    @aluloop(time=datetime.time(hour=2, minute=51, tzinfo=datetime.timezone.utc))
+    @aluloop(time=datetime.time(hour=23, minute=55, tzinfo=datetime.timezone.utc))
     async def daily_ratelimit_report(self):
         """Send information about Stratz daily limit to spam logs.
 

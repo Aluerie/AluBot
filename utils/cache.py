@@ -102,8 +102,9 @@ class KeysCache[CachedDataT]:
 
         # log.debug("Trying to update Cache %s.", self.__class__.__name__)
         async with self.lock:
+            start_time = time.perf_counter()
             self.cached_data = await self.fill_data()
-            log.debug("Cache %s is updated.", self.__class__.__name__)
+            log.debug("Cache %s is updated in %.5f", self.__class__.__name__, time.perf_counter() - start_time)
 
     # methods to actually get the data from cache
 

@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluGuildContext, errors, formats, fuzzy
+from utils import AluGuildContext, const, errors, formats, fuzzy
 from utils.cache import KeysCache
 
 from .._base import FPCCog
@@ -728,16 +728,21 @@ class FPCSettingsBase(FPCCog):
         """Base function for `/{game} tutorial` command."""
         await ctx.typing()
 
-        embed = discord.Embed(
-            colour=self.colour,
-            title="FPC Notifications Setup Tutorial",
-            description=(
-                "This embed will explain how to set up __F__avourite __P__layers + __C__haracters Notifications "
-                "(or shortly FPC Notifications). Just follow the easy intuitive steps below."
-            ),
-        ).set_footer(
-            text=self.game_display_name,
-            icon_url=self.game_icon_url,
+        file = discord.File("assets/images/local/fpc_tutorial.png")
+        embed = (
+            discord.Embed(
+                colour=self.colour,
+                title="FPC Notifications Setup Tutorial",
+                description=(
+                    "This embed will explain how to set up __F__avourite __P__layers + __C__haracters Notifications "
+                    "(or shortly FPC Notifications). Just follow the easy intuitive steps below."
+                ),
+            )
+            .set_footer(
+                text=self.game_display_name,
+                icon_url=self.game_icon_url,
+            )
+            .set_image(url=f"attachment://{file.filename}")
         )
 
         cmd_field_tuples: list[tuple[str, str]] = [
@@ -782,8 +787,10 @@ class FPCSettingsBase(FPCCog):
         for count, (almost_qualified_name, field_value) in enumerate(cmd_field_tuples, start=1):
             app_command = self.bot.tree.get_app_command(f"{self.prefix} {almost_qualified_name}", guild=ctx.guild)
             if app_command:
-                embed.add_field(name=f"{count} Use {app_command.mention}", value=field_value, inline=False)
+                embed.add_field(
+                    name=f"{const.DIGITS[count]}. Use {app_command.mention}", value=field_value, inline=False
+                )
             else:
                 raise RuntimeError("Somehow FPC related command is None.")
 
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=embed, file=file)

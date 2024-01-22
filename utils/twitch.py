@@ -90,8 +90,6 @@ class TwitchClient(twitchio.Client):
             03h51m08s -> 3 * 3600 + 51 * 60 + 8 = 13868
             """
 
-            # todo: move those two into formats or something?
-
             def regex_time(letter: str) -> int:
                 """regex_time('h') = 3, regex_time('m') = 51, regex_time('s') = 8 for above example"""
                 pattern = r"\d+(?={})".format(letter)

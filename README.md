@@ -223,7 +223,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         <tr>
         <td>
             <a href="https://twitch.tv/">
-                <img valign="bottom" src="./assets/images/readme/github.png" alt="Github" width="40" />
+                <img valign="bottom" src="./assets/images/readme/github-mark-white.png" alt="Github" width="40" />
             </a>
         </td>
         <td>
@@ -267,11 +267,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         <td>
             <a href="https://products.wolframalpha.com/api">WolframAlpha API</a>
         </td>
-        <td style="text-align: center;">
-            —
-        </td>
-        <td>
-            Just aiohttp requests
-        </td>
+        <td style="text-align: center;">—</td>
+        <td>Just aiohttp requests</td>
     </tr>
 </table>

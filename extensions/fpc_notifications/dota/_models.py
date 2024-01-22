@@ -180,9 +180,8 @@ class DotaFPCMatchToSend(BaseMatchToSend):
             )
             .set_thumbnail(url=await self.bot.dota_cache.hero.img_by_id(self.hero_id))
             .set_image(url=f"attachment://{image_file.filename}")
-            # dota2://matchid also can take "&matchtime={matchtime}"
-            .set_footer(text=f"watch_server {self.server_steam_id} | dota2://matchid={self.match_id}")
-        )
+            .set_footer(text=f"watch_server {self.server_steam_id}")
+        ) # | dota2://matchid={self.match_id}&matchtime={matchtime}") # but it's not really convenient.
         return embed, image_file
 
     @override
@@ -320,12 +319,16 @@ class DotaFPCMatchToEditWithStratz(BaseMatchToEdit):
 
         player = data["data"]["match"]["players"][0]
 
-        item_ids: list[int] = [player[f"item{i}Id"] for i in range(6)]
+        item_ids: list[int] = [player[f"item{i}Id"] or 0 for i in range(6)]
 
         for buff_event in player["stats"]["matchPlayerBuffEvent"]:
             item_id = buff_event.get("itemId")
             if item_id:
-                item_ids.append(item_id)
+                if item_id == const.DOTA.AGHANIMS_SCEPTER_ITEM_ID:
+                    # Stratz writes it like it's buff from aghs when it's a buff from a blessing, idk
+                    item_ids.append(const.DOTA.AGHANIMS_BLESSING_ITEM_ID)
+                else:
+                    item_ids.append(item_id)
 
         self.sorted_item_purchases: list[tuple[int, str]] = []
         for purchase_event in reversed(player["playbackData"]["purchaseEvents"]):
@@ -335,9 +338,11 @@ class DotaFPCMatchToEditWithStratz(BaseMatchToEdit):
                 item_ids.remove(item_id)
 
         self.sorted_item_purchases.reverse()  # reverse back
+        # add items for which we couldn't find item timings back
+        # this happens either bcs it was free (shard from tormentor) or Stratz API failed to parse properly.
         self.sorted_item_purchases.extend([(item_id, "") for item_id in item_ids])
 
-        self.neutral_item_id: int = player["neutral0Id"]
+        self.neutral_item_id: int = player["neutral0Id"] or 0
 
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])

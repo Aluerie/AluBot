@@ -82,7 +82,7 @@ class DotaFPCMatchToSend(BaseMatchToSend):
         log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
             return {
-                "preview_url": const.PICTURE.LAVENDER640X360,
+                "preview_url": const.PICTURE.PLACEHOLDER640X360,
                 "display_name": self.player_name,
                 "url": "",
                 "logo_url": const.Logo.dota,
@@ -439,5 +439,5 @@ async def beta_test_stratz_edit(self: AluCog):
 
     match_to_edit = DotaFPCMatchToEditWithStratz(self.bot, data=data)
 
-    new_image = await match_to_edit.edit_notification_image(const.PICTURE.LAVENDER640X360, discord.Colour.purple())
+    new_image = await match_to_edit.edit_notification_image(const.PICTURE.PLACEHOLDER640X360, discord.Colour.purple())
     new_image.show()

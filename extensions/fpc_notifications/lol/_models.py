@@ -329,5 +329,7 @@ async def beta_test_edit_notification_image(self: AluCog):
         timeline=timeline,
     )
 
-    new_image = await post_match_player.edit_notification_image(const.PICTURE.LAVENDER640X360, discord.Colour.purple())
+    new_image = await post_match_player.edit_notification_image(
+        const.PICTURE.PLACEHOLDER640X360, discord.Colour.purple()
+    )
     new_image.show()

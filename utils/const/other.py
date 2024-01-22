@@ -40,7 +40,7 @@ class PICTURE(StrEnum):
     dankfix = "https://i.imgur.com/gzrPVLs.png"
 
     frog = "https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png"
-    LAVENDER640X360 = f"{GITHUB_BOT_IMAGES}/hosted/Lavender640x360.png"
+    PLACEHOLDER640X360 = f"{GITHUB_BOT_IMAGES}/hosted/Lavender640x360.png"
 
 
 class Logo(StrEnum):

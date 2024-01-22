@@ -8,10 +8,8 @@ from typing import TYPE_CHECKING, MutableMapping, TypedDict
 import aiohttp
 import asyncpg
 import discord
-import orjson
 from discord.ext import commands
 
-import config
 from utils import aluloop, const
 
 from .._fpc_utils import FPCNotificationsBase
@@ -29,8 +27,6 @@ if TYPE_CHECKING:
     class AnalyzeGetPlayerIDsQueryRow(TypedDict):
         twitch_live_only: bool
         player_ids: list[int]
-
-    from .._fpc_utils.base_notifications import ChannelSpoilQueryRow
 
     class FindMatchesToEditQueryRow(TypedDict):
         match_id: int
@@ -66,10 +62,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, prefix="dota", *args, **kwargs)
         # Send Matches related attrs
-        self.lobby_ids: set[int] = set()
         self.top_source_dict: MutableMapping[int, schemas.GameCoordinatorAPISchema.CSourceTVGameSmall] = {}
-        self.hero_fav_ids: list[int] = []
-        self.player_fav_ids: list[int] = []
 
         # Edit Matches related attrs
         self.allow_editing_matches: bool = True
@@ -321,61 +314,21 @@ class DotaFPCNotifications(FPCNotificationsBase):
     async def edit_with_stratz(
         self, match_id: int, friend_id: int, channel_message_tuples: list[tuple[int, int]]
     ) -> bool:
-        query = """
-        query GetMatchData($match_id: Long!, $friend_id: Long!) {
-            match(id: $match_id) {
-                players(steamAccountId: $friend_id) {
-                    item0Id
-                    item1Id
-                    item2Id
-                    item3Id
-                    item4Id
-                    item5Id
-                    playbackData {
-                        purchaseEvents {
-                            time
-                            itemId
-                        }
-                    }
-                    stats {
-                        matchPlayerBuffEvent {
-                            itemId
-                        }
-                    }
-                }
-            }
-        }
-        """
-        async with self.bot.session.post(
-            "https://api.stratz.com/graphql",
-            headers={
-                "Authorization": f"Bearer {config.STRATZ_BEARER_TOKEN}",
-                "Content-Type": "application/json",
-            },
-            json={"query": query, "variables": {"match_id": match_id, "friend_id": friend_id}},
-        ) as response:
-            self.stratz_daily_remaining_ratelimit = response.headers["X-RateLimit-Remaining-Day"]
-            self.stratz_daily_total_ratelimit = response.headers["X-RateLimit-Limit-Day"]
+        try:
+            stratz_data = await self.bot.stratz_client.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
+        except aiohttp.ClientResponseError as exc:
+            edit_log.debug("Stratz API Response Not OK with status %s", exc.status)
+            return False
 
-            if not response.ok:
-                edit_log.debug("Stratz API Response Not OK with status %s", response.status)
-                return False
-
-            stratz_data: schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.ResponseDict = await response.json(
-                loads=orjson.loads
-            )
-
-            if stratz_data["data"]["match"] is None:
-                # if somebody abandons in draft but we managed to send the game out
-                # then parser will fail and declare None
-                return True
-
-            # we are ready to send the notification
-            fpc_match_to_edit = DotaFPCMatchToEditWithStratz(
-                self.bot, player=stratz_data["data"]["match"]["players"][0]
-            )
-            await self.edit_notifications(fpc_match_to_edit, channel_message_tuples)
+        if stratz_data["data"]["match"] is None:
+            # if somebody abandons in draft but we managed to send the game out
+            # then parser will fail and declare None
             return True
+
+        # we are ready to send the notification
+        fpc_match_to_edit = DotaFPCMatchToEditWithStratz(self.bot, data=stratz_data)
+        await self.edit_notifications(fpc_match_to_edit, channel_message_tuples)
+        return True
 
     async def cleanup_match_to_edit(self, match_id: int, friend_id: int):
         """Remove match from `self.matches_to_edit` and database."""

@@ -314,9 +314,11 @@ class DotaFPCMatchToEditWithStratz(BaseMatchToEdit):
         self,
         bot: AluBot,
         *,
-        player: schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.Player,
+        data: schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.ResponseDict,
     ):
         super().__init__(bot)
+
+        player = data["data"]["match"]["players"][0]
 
         item_ids: list[int] = [player[f"item{i}Id"] for i in range(6)]
 
@@ -411,3 +413,31 @@ class DotaFPCMatchToEditNotCounted(BaseMatchToEdit):
             return img
 
         return await asyncio.to_thread(build_notification_image)
+
+
+if TYPE_CHECKING:
+    from utils import AluCog
+
+
+async def beta_test_stratz_edit(self: AluCog):
+    """Testing function for `edit_notification_image` from LoLFPCMatchToEdit class
+
+    Import this into `beta_task` for easy testing of how new elements alignment.
+    """
+    # BETA TESTING USAGE
+    # from .fpc_notifications.dota._models import beta_test_stratz_edit
+    # await beta_test_stratz_edit(self)
+
+    from extensions.fpc_notifications.dota._models import DotaFPCMatchToEditWithStratz
+
+    await self.bot.initialize_dota_pulsefire_clients()
+    self.bot.initialize_dota_cache()
+
+    match_id = 7549006442
+    friend_id = 159020918
+    data = await self.bot.stratz_client.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
+
+    match_to_edit = DotaFPCMatchToEditWithStratz(self.bot, data=data)
+
+    new_image = await match_to_edit.edit_notification_image(const.PICTURE.LAVENDER640X360, discord.Colour.purple())
+    new_image.show()

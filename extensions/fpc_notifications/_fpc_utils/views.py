@@ -36,7 +36,7 @@ class FPCSetupChannelView(AluView):
 
     @discord.ui.select(
         cls=discord.ui.ChannelSelect,
-        channel_types=[discord.ChannelType.text],
+        channel_types=[discord.ChannelType.text, discord.ChannelType.news],
         placeholder="\N{BIRD} Select a new FPC notifications Channel",
         row=0,
     )

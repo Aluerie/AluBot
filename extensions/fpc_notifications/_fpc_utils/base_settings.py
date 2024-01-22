@@ -730,7 +730,7 @@ class FPCSettingsBase(FPCCog):
 
         embed = discord.Embed(
             colour=self.colour,
-            title="Tutorial",
+            title="FPC Notifications Setup Tutorial",
             description=(
                 "This embed will explain how to set up __F__avourite __P__layers + __C__haracters Notifications "
                 "(or shortly FPC Notifications). Just follow the easy intuitive steps below."
@@ -779,7 +779,7 @@ class FPCSettingsBase(FPCCog):
             ),
         ]
 
-        for count, (almost_qualified_name, field_value) in enumerate(cmd_field_tuples):
+        for count, (almost_qualified_name, field_value) in enumerate(cmd_field_tuples, start=1):
             app_command = self.bot.tree.get_app_command(f"{self.prefix} {almost_qualified_name}", guild=ctx.guild)
             if app_command:
                 embed.add_field(name=f"{count} Use {app_command.mention}", value=field_value, inline=False)

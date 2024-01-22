@@ -1,4 +1,4 @@
-from .._fpc_utils.twitch_check import TwitchAccountCheckBase
+from .._fpc_utils.base_twitch_check import TwitchAccountCheckBase
 
 
 class LoLTwitchAccountCheck(TwitchAccountCheckBase):

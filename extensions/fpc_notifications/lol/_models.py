@@ -41,7 +41,7 @@ class LoLFPCMatchToSend(BaseMatchToSend):
         bot: AluBot,
         *,
         match_id: int,
-        platform: lol.LiteralPlatform,
+        platform: str,
         game_name: str,
         tag_line: str,
         start_time: int,
@@ -54,7 +54,7 @@ class LoLFPCMatchToSend(BaseMatchToSend):
     ):
         super().__init__(bot)
 
-        self.platform: lol.LiteralPlatform = platform
+        self.platform: lol.LiteralPlatform = platform  # type: ignore
         self.game_name: str = game_name
         self.tag_line: str = tag_line
 

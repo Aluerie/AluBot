@@ -74,13 +74,16 @@ class LoLFPCNotifications(FPCNotificationsBase):
             JOIN lol_players p ON a.player_id = p.player_id
             WHERE p.player_id=ANY($1)
         """
-        rows: list[LivePlayerAccountRow] = await self.bot.pool.fetch(query, live_twitch_ids)
+        player_account_rows: list[LivePlayerAccountRow] = await self.bot.pool.fetch(query, live_twitch_ids)
 
-        for row in rows:
+        # todo: bring pulsefire TaskGroup here
+        # I'm not sure how to combine `player_account_rows`` with results from Semaphore though.
+        # https://pulsefire.iann838.com/usage/advanced/concurrent-requests/
+        for player_account_row in player_account_rows:
             try:
                 game = await self.bot.riot_api_client.get_lol_spectator_v4_active_game_by_summoner(
-                    summoner_id=row["summoner_id"],
-                    region=row["platform"],
+                    summoner_id=player_account_row["summoner_id"],
+                    region=player_account_row["platform"],
                 )
             except aiohttp.ClientResponseError as exc:
                 # we have to do try/except because discord.ext.tasks has aiohttp errors as
@@ -90,9 +93,9 @@ class LoLFPCNotifications(FPCNotificationsBase):
                 if exc.status == 404:
                     log.debug(
                         "%s is not in the active game on account %s#%s",
-                        row["display_name"],
-                        row["game_name"],
-                        row["tag_line"],
+                        player_account_row["display_name"],
+                        player_account_row["game_name"],
+                        player_account_row["tag_line"],
                     )
                 else:
                     error_embed = (
@@ -103,7 +106,7 @@ class LoLFPCNotifications(FPCNotificationsBase):
                         )
                         .add_field(
                             name="Account",
-                            value=f"{row['game_name']}#{row['tag_line']} {row['platform']} {row['display_name']}",
+                            value=f"{player_account_row['game_name']}#{player_account_row['tag_line']} {player_account_row['platform']} {player_account_row['display_name']}",
                         )
                         .set_footer(text="fill_live_matches in league notifications")
                     )
@@ -116,9 +119,15 @@ class LoLFPCNotifications(FPCNotificationsBase):
 
             self.live_match_ids.append(game["gameId"])
 
-            player = next((p for p in game["participants"] if p["summonerId"] == row["summoner_id"]), None)
+            player = next(
+                (p for p in game["participants"] if p["summonerId"] == player_account_row["summoner_id"]), None
+            )
 
-            if player and player["championId"] in favourite_champion_ids and row["last_edited"] != game["gameId"]:
+            if (
+                player
+                and player["championId"] in favourite_champion_ids
+                and player_account_row["last_edited"] != game["gameId"]
+            ):
                 query = """
                     SELECT s.channel_id, s.spoil
                     FROM lol_favourite_characters c
@@ -132,27 +141,28 @@ class LoLFPCNotifications(FPCNotificationsBase):
                 channel_spoil_tuples: list[tuple[int, bool]] = [
                     (channel_id, spoil)
                     for channel_id, spoil in await self.bot.pool.fetch(
-                        query, player["championId"], row["player_id"], game["gameId"]
+                        query, player["championId"], player_account_row["player_id"], game["gameId"]
                     )
                 ]
                 if channel_spoil_tuples:
                     log.debug(
                         "Notif %s - %s",
-                        row["display_name"],
+                        player_account_row["display_name"],
                         await self.bot.cdragon.champion.name_by_id(player["championId"]),
                     )
                     match_to_send = LoLFPCMatchToSend(
+                        self.bot,
                         match_id=game["gameId"],
-                        platform=game["platformId"],  # type: ignore # pulsefire has it as a simple str
-                        game_name=row["game_name"],
+                        platform=game["platformId"],
+                        game_name=player_account_row["game_name"],
                         # TODO: ^^^would be cool to get it from game object but currently it's not there.
-                        tag_line=row["tag_line"],
+                        tag_line=player_account_row["tag_line"],
                         start_time=game["gameStartTime"],
                         champion_id=player["championId"],
                         all_champion_ids=[p["championId"] for p in game["participants"]],
-                        twitch_id=row["twitch_id"],
+                        twitch_id=player_account_row["twitch_id"],
                         summoner_spell_ids=(player["spell1Id"], player["spell2Id"]),
-                        rune_ids=player["perks"]["perkIds"],  # type: ignore # not required key, wtf ?
+                        rune_ids=player["perks"]["perkIds"],  # type: ignore
                         summoner_id=player["summonerId"],
                     )
                     await self.send_notifications(match_to_send, channel_spoil_tuples)

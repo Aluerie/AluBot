@@ -63,6 +63,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
         super().__init__(bot, prefix="dota", *args, **kwargs)
         # Send Matches related attrs
         self.top_source_dict: MutableMapping[int, schemas.GameCoordinatorAPISchema.CSourceTVGameSmall] = {}
+        self.death_counter: int = 0
 
         # Edit Matches related attrs
         self.allow_editing_matches: bool = True
@@ -266,9 +267,12 @@ class DotaFPCNotifications(FPCNotificationsBase):
         send_log.debug("Analyzing took %.5f secs", time.perf_counter() - start_time)
 
         if top_source_end_time > 8:
-            await self.hideout.spam.send("dota notifs is dying")
+            self.death_counter += 1
+            await self.hideout.spam.send(f"dota notifs is dying {self.death_counter}")
             # likely spoiled result that gonna ruin "mark_matches_to_edit" so let's return
             return
+        else:
+            self.death_counter = 0
 
         # MARKING MATCHES FOR EDIT
         if self.allow_editing_matches:

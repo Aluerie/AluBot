@@ -108,15 +108,15 @@ class FPCSetupMiscView(AluView):
         self.embed.set_field_at(field_index, name=new_field_name, value=old_field_value, inline=False)
         await interaction.response.edit_message(embed=self.embed)
 
-    @discord.ui.button(emoji="\N{BLACK SQUARE FOR STOP}", label='Toggle "Receive Notifications Setting"')
+    @discord.ui.button(emoji="\N{BLACK SQUARE FOR STOP}", label='Toggle "Receive Notifications Setting"', row=0)
     async def toggle_enable(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button):
         await self.toggle_worker(interaction, "enabled", 0)
 
-    @discord.ui.button(emoji="\N{MICROSCOPE}", label='Toggle "Show Post-Match Results Setting"')
+    @discord.ui.button(emoji="\N{MICROSCOPE}", label='Toggle "Show Post-Match Results Setting"', row=1)
     async def toggle_spoil(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button):
         await self.toggle_worker(interaction, "spoil", 1)
 
-    @discord.ui.button(emoji="\N{CLAPPER BOARD}", label='Toggle "Only Twitch Live Players Setting"')
+    @discord.ui.button(emoji="\N{CLAPPER BOARD}", label='Toggle "Only Twitch Live Players Setting"', row=2)
     async def toggle_twitch_live_only(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button):
         await self.toggle_worker(interaction, "twitch_live_only", 2)
 
@@ -124,6 +124,7 @@ class FPCSetupMiscView(AluView):
         label="Delete Your Data and Stop Notifications",
         style=discord.ButtonStyle.red,
         emoji="\N{WASTEBASKET}",
+        row=3,
     )
     async def delete_data(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button):
         # Confirmation

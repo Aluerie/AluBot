@@ -181,7 +181,7 @@ class DotaFPCMatchToSend(BaseMatchToSend):
             .set_thumbnail(url=await self.bot.dota_cache.hero.img_by_id(self.hero_id))
             .set_image(url=f"attachment://{image_file.filename}")
             .set_footer(text=f"watch_server {self.server_steam_id}")
-        ) # | dota2://matchid={self.match_id}&matchtime={matchtime}") # but it's not really convenient.
+        )  # | dota2://matchid={self.match_id}&matchtime={matchtime}") # but it's not really convenient.
         return embed, image_file
 
     @override

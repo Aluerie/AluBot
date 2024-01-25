@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Literal, MutableMapping, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Literal, MutableMapping, Union, override
 
 import discord
 from discord.ext import commands
@@ -187,11 +188,25 @@ class AluBot(commands.Bot, AluBotHelper):
             await self.dota.wait_until_ready()
         log.info(f"Logged in as {self.user}")
 
-    async def my_start(self) -> None:
+    @override
+    async def start(self) -> None:
         token = config.TEST_TOKEN if self.test else config.MAIN_TOKEN
-        # token = cfg.MAIN_TOKEN
-        await super().start(token, reconnect=True)
 
+        # erm, bcs of my horrendous .test logic we need to do it in a weird way
+        # todo: is there anything better ? :D
+
+        if not self.test or "extensions.fpc_notifications.dota" in get_extensions(self.test):
+            from utils.dota.dota2client import Dota2Client
+
+            self.dota = Dota2Client(self)
+            await asyncio.gather(
+                super().start(token, reconnect=True),
+                self.dota.login(),
+            )
+        else:
+            await super().start(token, reconnect=True)
+
+    @override
     async def get_context(
         self, origin: Union[discord.Interaction, discord.Message], /, *, cls=AluContext
     ) -> AluContext:

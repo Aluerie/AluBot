@@ -31,17 +31,17 @@ async def bot_start(test: bool):
     try:
         pool = await create_pool()
     except Exception:
-        click.echo('Could not set up PostgreSQL. Exiting.', file=sys.stderr)
-        log.exception('Could not set up PostgreSQL. Exiting.')
+        click.echo("Could not set up PostgreSQL. Exiting.", file=sys.stderr)
+        log.exception("Could not set up PostgreSQL. Exiting.")
         return
 
     async with aiohttp.ClientSession() as session, pool as pool, AluBot(test, session=session, pool=pool) as alubot:
-        await alubot.my_start()
+        await alubot.start()
 
 
-@click.group(invoke_without_command=True, options_metavar='[options]')
+@click.group(invoke_without_command=True, options_metavar="[options]")
 @click.pass_context
-@click.option('--test', '-t', is_flag=True)
+@click.option("--test", "-t", is_flag=True)
 def main(click_ctx: click.Context, test: bool):
     """Launches the bot."""
 
@@ -50,7 +50,7 @@ def main(click_ctx: click.Context, test: bool):
             asyncio.run(bot_start(test))
 
 
-@main.group(short_help='database stuff', options_metavar='[options]')
+@main.group(short_help="database stuff", options_metavar="[options]")
 def db():
     pass
 
@@ -63,18 +63,18 @@ def create():
         async def run_create():
             connection: asyncpg.Connection = await asyncpg.connect(POSTGRES_URL)
             async with connection.transaction():
-                for f in Path('sql').iterdir():
-                    if f.is_file() and f.suffix == '.sql' and not f.name.startswith("_"):
-                        sql = f.read_text('utf-8')
+                for f in Path("sql").iterdir():
+                    if f.is_file() and f.suffix == ".sql" and not f.name.startswith("_"):
+                        sql = f.read_text("utf-8")
                         await connection.execute(sql)
 
         asyncio.run(run_create())
     except Exception:
         traceback.print_exc()
-        click.secho('failed to apply SQL due to error', fg='red')
+        click.secho("failed to apply SQL due to error", fg="red")
     else:
-        click.secho(f'Applied SQL tables', fg='green')
+        click.secho(f"Applied SQL tables", fg="green")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

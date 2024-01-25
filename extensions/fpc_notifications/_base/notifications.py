@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import logging
 from typing import TYPE_CHECKING, Any, Optional, TypedDict
 
 import discord
@@ -28,6 +29,9 @@ __all__ = (
     "BaseMatchToEdit",
     "FPCNotificationsBase",
 )
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 class BaseMatchToSend(abc.ABC):
@@ -138,6 +142,7 @@ class FPCNotificationsBase(FPCCog):
                 old_filename = embed_image_url.split("/")[-1].split(".png")[0]  # regex-less solution, lol
 
                 new_filename = f"edited-{old_filename}.png"
+                log.debug(new_filename)
                 new_image = await match.edit_notification_image(embed_image_url, colour)
 
                 new_image_file = self.bot.transposer.image_to_file(new_image, filename=new_filename)

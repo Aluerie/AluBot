@@ -1,10 +1,10 @@
 from __future__ import annotations
-import asyncio
 
+import asyncio
 import datetime
 import logging
 import time
-from typing import TYPE_CHECKING, MutableMapping, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
 import discord
@@ -21,10 +21,10 @@ from ._models import (
 )
 
 if TYPE_CHECKING:
+    from steam.ext.dota2 import LiveMatch
+
     from bot import AluBot
     from utils import AluContext
-
-    from steam.ext.dota2 import LiveMatch
 
     class AnalyzeGetPlayerIDsQueryRow(TypedDict):
         twitch_live_only: bool
@@ -64,7 +64,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, prefix="dota", *args, **kwargs)
         # Send Matches related attrs
-        self.top_source_dict: MutableMapping[int, schemas.GameCoordinatorAPISchema.CSourceTVGameSmall] = {}
+        self.live_match_ids: list[int] = []
         self.death_counter: int = 0
 
         # Edit Matches related attrs
@@ -202,6 +202,13 @@ class DotaFPCNotifications(FPCNotificationsBase):
         await self.analyze_top_source_response(live_matches)
         send_log.debug("Analyzing took %.5f secs", time.perf_counter() - start_time)
 
+        # another mini-death condition
+        if len(live_matches) < 100:
+            # this means it returned 90, 80, ..., or even 0 matches. But it did respond.
+            # still can ruin further logic
+            await self.hideout.spam.send(f"Dota 2 Game Coordinator only fetched {len(live_matches)} matches")
+            return
+
         # START EDITING TASK IF NEEDED
         if self.allow_editing_matches:
             self.live_match_ids = [match.id for match in live_matches]
@@ -212,7 +219,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
                 # if we are here - it means self.matches_to_edit is empty
                 start_time = time.perf_counter()
                 query = "SELECT match_id FROM dota_messages WHERE NOT match_id=ANY($1)"
-                match_ids_to_mark = [match_id for match_id, in await self.bot.pool.fetch(query)]
+                match_ids_to_mark = [match_id for match_id, in await self.bot.pool.fetch(query, self.live_match_ids)]
 
                 if match_ids_to_mark:
                     # we have messages to mark to edit
@@ -287,10 +294,9 @@ class DotaFPCNotifications(FPCNotificationsBase):
             GROUP BY match_id, friend_id, hero_id
         """
         current_match_to_edit_ids = [key[0] for key in self.matches_to_edit]
-        currently_live_match_ids = list(self.top_source_dict.keys())
 
         finished_match_rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(
-            query, current_match_to_edit_ids + currently_live_match_ids
+            query, current_match_to_edit_ids + self.live_match_ids
         )
 
         for match_row in finished_match_rows:

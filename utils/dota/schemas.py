@@ -179,6 +179,7 @@ class OpenDotaAPISchema:
         },
     )
 
+
 class StratzGraphQLQueriesSchema:
     class GetFPCMatchToEdit:
         # GET FPC MATCH TO EDIT

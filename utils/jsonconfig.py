@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union
 if TYPE_CHECKING:
     from asyncpg import Pool
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 class Config(Generic[_T]):
@@ -43,7 +43,7 @@ class Config(Generic[_T]):
 
     def load_from_file(self) -> bool:
         try:
-            with open(self.filename, 'r', encoding='utf-8') as f:
+            with open(self.filename, "r", encoding="utf-8") as f:
                 self._json = json.load(f)
                 return True
         except FileNotFoundError:
@@ -55,9 +55,9 @@ class Config(Generic[_T]):
         ...
 
     def _dump(self):
-        temp = f'{self.filename}-{uuid.uuid4()}.tmp'
-        with open(temp, 'w', encoding='utf-8') as tmp:
-            json.dump(self._json.copy(), tmp, ensure_ascii=True, cls=self.encoder, separators=(',', ':'))
+        temp = f"{self.filename}-{uuid.uuid4()}.tmp"
+        with open(temp, "w", encoding="utf-8") as tmp:
+            json.dump(self._json.copy(), tmp, ensure_ascii=True, cls=self.encoder, separators=(",", ":"))
         # atomically move the file
         os.replace(temp, self.filename)
 
@@ -107,17 +107,17 @@ class PrefixConfig(Config):
         pool: Pool
 
     def __init__(self, pool: Pool):
-        super().__init__(filename='prefixes.json', pool=pool)
+        super().__init__(filename="prefixes.json", pool=pool)
 
     async def load_from_database(self):
-        query = 'SELECT id, prefix FROM guilds'
+        query = "SELECT id, prefix FROM guilds"
         rows = await self.pool.fetch(query) or []
         self._json = {r.id: r.prefix for r in rows if r.prefix is not None}
 
     async def put_into_database(self, guild_id: int, new_prefix: str):
-        query = 'UPDATE guilds SET prefix=$1 WHERE id=$2'
+        query = "UPDATE guilds SET prefix=$1 WHERE id=$2"
         await self.pool.execute(query, new_prefix, guild_id)
 
     async def remove_from_database(self, guild_id: int):
-        query = 'UPDATE guilds SET prefix=NULL WHERE id=$1'
+        query = "UPDATE guilds SET prefix=NULL WHERE id=$1"
         await self.pool.execute(query, guild_id)

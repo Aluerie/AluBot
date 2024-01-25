@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 import logging
-from steam import PersonaState
+from typing import TYPE_CHECKING
 
 import discord
+from steam import PersonaState
 from steam.ext.dota2 import Client
 
 try:

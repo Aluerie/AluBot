@@ -119,7 +119,7 @@ class OpenDotaAPISchema:
     )
 
     ODData = TypedDict(
-        "OData",
+        "ODData",
         {
             "has_api": bool,
             "has_gcdata": bool,  # cSpell:ignore gcdata
@@ -166,7 +166,7 @@ class OpenDotaAPISchema:
 
     ### The following schemas are for POST /request/{match_id} endpoint
     ParseJob = TypedDict(
-        "RequestJob",
+        "ParseJob",
         {
             "jobId": int,
         },
@@ -190,7 +190,7 @@ class StratzGraphQLQueriesSchema:
         )
 
         Stats = TypedDict(
-            "MatchPlayerBuffEvent",
+            "Stats",
             {
                 "matchPlayerBuffEvent": list[BuffEvent],
             },

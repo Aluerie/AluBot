@@ -153,12 +153,11 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         </td>
         <td>Dota 2 Game Coordinator  API</td>
         <td>
-            <a href="https://github.com/ValvePython/dota2">
-                <img valign="bottom" src="./assets/images/readme/frog.png" alt="Dota 2" width="40" />
+            <a href="https://github.com/Gobot1234/steam.py">
+                <img valign="bottom" src="./assets/images/readme/steamio.png" alt="Dota 2" width="40" />
             </a>
         </td>
-        <td><a href="https://dota2.readthedocs.io/en/stable/">dota2</a>
-        (soon™️ to be replaced with <a href="https://steam-py.github.io/docs/latest/">steam.py</a>)</td>
+        <td><a href="https://steam-py.github.io/docs/latest/">steam.py</a></td>
     </tr>
     <tr>
         <td>

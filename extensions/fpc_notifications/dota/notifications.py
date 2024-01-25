@@ -183,7 +183,6 @@ class DotaFPCNotifications(FPCNotificationsBase):
 
         # REQUESTING
         start_time = time.perf_counter()
-        send_log.debug("Calling FindTopSourceTVGames NOW ---")
         try:
             live_matches = await self.bot.dota.top_live_matches()
         except asyncio.TimeoutError:
@@ -244,7 +243,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
         if "radiant_win" not in opendota_match:
             # Somebody abandoned before the first blood or so -> game didn't count
             # thus "radiant_win" key is not present
-            edit_log.debug("The stats for match %s did not count. Deleting the match.", match_id)
+            edit_log.debug("Opendota: match %s did not count. Deleting the match.", match_id)
             not_counted_match_to_edit = DotaFPCMatchToEditNotCounted(self.bot)
             await self.edit_notifications(not_counted_match_to_edit, channel_message_tuples, pop=True)
             await self.cleanup_match_to_edit(match_id, friend_id)
@@ -273,6 +272,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
         if stratz_data["data"]["match"] is None:
             # if somebody abandons in draft but we managed to send the game out
             # then parser will fail and declare None
+            edit_log.debug("Stratz: match %s did not count. Deleting the match.", match_id)
             return True
 
         # we are ready to send the notification
@@ -342,13 +342,13 @@ class DotaFPCNotifications(FPCNotificationsBase):
                     match_to_edit["edited_with_opendota"] = await self.edit_with_opendota(
                         match_id, friend_id, match_to_edit["hero_id"], match_to_edit["channel_message_tuples"]
                     )
-                    edit_log.debug("OpenDota editing: %s", match_to_edit["edited_with_opendota"])
+                    edit_log.debug("Edited with OpenDota: %s", match_to_edit["edited_with_opendota"])
                 # STRATZ
                 elif not match_to_edit["edited_with_stratz"]:
                     match_to_edit["edited_with_stratz"] = await self.edit_with_stratz(
                         match_id, friend_id, match_to_edit["channel_message_tuples"]
                     )
-                    edit_log.debug("OpenDota editing: %s", match_to_edit["edited_with_stratz"])
+                    edit_log.debug("Edited with Stratz: %s", match_to_edit["edited_with_stratz"])
 
                 if match_to_edit["edited_with_stratz"] and match_to_edit["edited_with_opendota"]:
                     await self.cleanup_match_to_edit(match_id, friend_id)

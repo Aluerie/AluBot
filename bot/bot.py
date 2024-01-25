@@ -183,6 +183,8 @@ class AluBot(commands.Bot, AluBotHelper):
     async def on_ready(self):
         if not hasattr(self, "launch_time"):
             self.launch_time = datetime.datetime.now(datetime.timezone.utc)
+        if hasattr(self, "dota"):
+            await self.dota.wait_until_ready()
         log.info(f"Logged in as {self.user}")
 
     async def my_start(self) -> None:
@@ -283,46 +285,16 @@ class AluBot(commands.Bot, AluBotHelper):
             self.cdragon = CDragonCache(self)
             self.meraki_roles = MerakiRolesCache(self)
 
-    async def initialize_steam_dota(self) -> None:
-        """Initialize Steam and Dota 2 Clients
-        
-        * Dota 2 Client, allows communicating with Dota 2 Game Coordinator
-        * Steam Client, necessary step to login in for Dota 2.^
+    async def initialize_dota(self) -> None:
+        """Initialize Dota 2 Client
+
+        * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
-        if not hasattr(self, "steam"):
-            from dota2.client import Dota2Client
-            from steam.client import SteamClient
+        if not hasattr(self, "dota"):
+            from utils.dota.dota2client import Dota2Client
 
-            self.steam = SteamClient()
-            self.dota = Dota2Client(self.steam)
-            await self.login_into_steam_dota()
-
-            @self.steam.on("disconnected")  # type: ignore
-            def try_to_reconnect_on_disconnect():
-                self.steam.reconnect()
-
-            @self.steam.on("error")  # type: ignore
-            def try_to_reconnect_on_error(error_result):
-                self.steam.reconnect()
-
-    async def login_into_steam_dota(self) -> None:
-        """Login into Steam and Launch Dota 2."""
-        log.debug("Checking if steam is connected: %s", self.steam.connected)
-        if self.steam.connected is False:
-            log.debug(f"dota2info: client.connected {self.steam.connected}")
-            if self.test:
-                steam_login, steam_password = (config.TEST_STEAM_USERNAME, config.TEST_STEAM_PASSWORD)
-            else:
-                steam_login, steam_password = (config.STEAM_USERNAME, config.STEAM_PASSWORD)
-
-            try:
-                if self.steam.login(username=steam_login, password=steam_password):
-                    self.steam.change_status(persona_state=7)
-                    log.info("We successfully logged invis mode into Steam: %s", steam_login)
-                    self.dota.launch()
-            except Exception as exc:
-                log.error("Logging into Steam failed")
-                await self.exc_manager.register_error(exc, source="steam login", where="steam login")
+            self.dota = Dota2Client(self)
+            await self.dota.login()
 
     def initialize_github(self) -> None:
         """Initialize GitHub REST API Client"""

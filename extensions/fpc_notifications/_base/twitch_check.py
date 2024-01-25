@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypedDict
 
 from utils import aluloop
 
-from .._base import FPCCog
+from . import FPCCog
 
 if TYPE_CHECKING:
     from bot import AluBot

@@ -7,7 +7,7 @@ import discord
 
 from utils import errors
 
-from .._base import FPCCog
+from . import FPCCog
 
 if TYPE_CHECKING:
     from PIL import Image

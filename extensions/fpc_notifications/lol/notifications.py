@@ -9,7 +9,7 @@ import discord
 
 from utils import aluloop, const, lol
 
-from .._fpc_utils import FPCNotificationsBase
+from .._base import FPCNotificationsBase
 from ._models import LoLFPCMatchToEdit, LoLFPCMatchToSend
 
 if TYPE_CHECKING:

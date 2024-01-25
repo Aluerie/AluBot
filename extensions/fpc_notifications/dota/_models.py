@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from utils import const, dota, formats
 
-from .._fpc_utils import BaseMatchToEdit, BaseMatchToSend
+from .._base import BaseMatchToEdit, BaseMatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -47,7 +47,7 @@ class DotaFPCMatchToSend(BaseMatchToSend):
         *,
         match_id: int,
         friend_id: int,
-        start_time: int,
+        start_time: datetime.datetime,
         player_name: str,
         hero_id: int,
         hero_ids: list[int],
@@ -58,7 +58,7 @@ class DotaFPCMatchToSend(BaseMatchToSend):
         super().__init__(bot)
         self.match_id: int = match_id
         self.friend_id: int = friend_id
-        self.start_time: int = start_time
+        self.start_time: datetime.datetime = start_time
         self.player_name: str = player_name
         self.hero_id: int = hero_id
         self.hero_ids: list[int] = hero_ids
@@ -76,7 +76,8 @@ class DotaFPCMatchToSend(BaseMatchToSend):
 
     @property
     def long_ago(self) -> int:
-        return int(datetime.datetime.now(datetime.timezone.utc).timestamp()) - self.start_time
+        now = datetime.datetime.now(datetime.timezone.utc)
+        return (now - self.start_time).seconds
 
     async def get_twitch_data(self) -> TwitchData:
         log.debug("`get_twitch_data` is starting")

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Generator, NamedTuple, Optional, Union
 
 import discord
 
-from config import MAIN_ERROR_HANDLER_WEBHOOK, TEST_ERROR_HANDLER_WEBHOOK
+import config
 from utils import AluContext, const, errors
 
 if TYPE_CHECKING:
@@ -80,7 +80,7 @@ class AluExceptionManager:
 
         self.errors_cache: dict[str, list[ErrorInfoPacket]] = {}
 
-        webhook_url = TEST_ERROR_HANDLER_WEBHOOK if self.bot.test else MAIN_ERROR_HANDLER_WEBHOOK
+        webhook_url = config.TEST_ERROR_HANDLER_WEBHOOK if self.bot.test else config.MAIN_ERROR_HANDLER_WEBHOOK
         self.error_webhook: discord.Webhook = discord.Webhook.from_url(
             url=webhook_url,
             session=bot.session,
@@ -131,9 +131,12 @@ class AluExceptionManager:
         elif isinstance(source, AluContext):
             ctx = source  # I just can't type `source.command.qualified_name` lol
 
-            embed = discord.Embed(colour=0x890620, title=f"`{ctx.clean_prefix}{ctx.command}`")
-            embed.url = ctx.message.jump_url
-            embed.description = ctx.message.content
+            embed = discord.Embed(
+                colour=0x890620,
+                title=f"`{ctx.clean_prefix}{ctx.command}`",
+                url=ctx.message.jump_url,
+                description=ctx.message.content,
+            )
 
             # metadata
             author_text = f"@{ctx.author} triggered error in #{ctx.channel}"
@@ -153,6 +156,7 @@ class AluExceptionManager:
                 args_str.append("No arguments")
             args_str.append("```")
             embed.add_field(name="Command Args", value="\n".join(args_str), inline=False)
+
             # ids
             embed.add_field(
                 name="Snowflake Ids",
@@ -165,7 +169,6 @@ class AluExceptionManager:
             )
 
             embed.timestamp = dt = ctx.message.created_at
-
             mention = ctx.channel.id != ctx.bot.hideout.spam_channel_id
             return ErrorInfoPacket(embed=embed, dt=dt, mention=mention)
 
@@ -205,7 +208,8 @@ class AluExceptionManager:
             # ids
             embed.add_field(
                 name="Snowflake Ids",
-                value=inspect.cleandoc(f"""```py
+                value=inspect.cleandoc(
+                    f"""```py
                     author  = {interaction.user.id}
                     channel = {interaction.channel_id}
                     guild   = {interaction.guild_id}```"""

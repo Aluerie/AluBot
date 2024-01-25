@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 
 import datetime
 import logging
@@ -6,13 +7,12 @@ import time
 from typing import TYPE_CHECKING, MutableMapping, TypedDict
 
 import aiohttp
-import asyncpg
 import discord
 from discord.ext import commands
 
 from utils import aluloop, const
 
-from .._fpc_utils import FPCNotificationsBase
+from .._base import FPCNotificationsBase
 from ._models import (
     DotaFPCMatchToEditNotCounted,
     DotaFPCMatchToEditWithOpenDota,
@@ -23,6 +23,8 @@ from ._models import (
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluContext
+
+    from steam.ext.dota2 import LiveMatch
 
     class AnalyzeGetPlayerIDsQueryRow(TypedDict):
         twitch_live_only: bool
@@ -68,68 +70,29 @@ class DotaFPCNotifications(FPCNotificationsBase):
         # Edit Matches related attrs
         self.allow_editing_matches: bool = True
         self.matches_to_edit: MatchToEdit = {}
-        self.stratz_daily_remaining_ratelimit: str = "Not set yet"
-        self.stratz_daily_total_ratelimit: str = "Not set yet"
 
     async def cog_load(self) -> None:
-        @self.bot.dota.on("top_source_tv_games")  # type: ignore
-        def response(result: schemas.GameCoordinatorAPISchema.CMsgGCToClientFindTopSourceTVGamesResponse):
-            # remember the quirk that
-            # result.specific_games = my friends games
-            # not result.specific_games = top100 mmr games
-            if not result.specific_games:
-                # log.debug(
-                #     f"top_source_tv_games resp ng: {result.num_games} sg: {result.specific_games} "
-                #     f"{result.start_game, result.game_list_index, len(result.game_list)} "
-                #     f"{result.game_list[0].players[0].account_id}"
-                # )
-                for match in result.game_list:
-                    self.top_source_dict[match.match_id] = match
+        # maybe asyncpg.PostgresConnectionError too
+        # self.task_to_send_dota_fpc_messages.add_exception_type(asyncpg.InternalServerError)
+        self.task_to_send_notifications.clear_exception_types()
+        self.task_to_send_notifications.start()
 
-                if len(self.top_source_dict) == 100:
-                    send_log.debug("top_source_dict is ready: Emitting my_top_games_response")
-                    self.bot.dota.emit("my_top_games_response")
-                    # did not work
-                    # self.bot.dispatch("my_top_games_response")
-
-        # self.bot.dota.on('top_source_tv_games', response)
-
-        # maybe asyncpg.PostgresConnectionError
-        self.task_to_send_dota_fpc_messages.add_exception_type(asyncpg.InternalServerError)
-        self.task_to_send_dota_fpc_messages.clear_exception_types()
-        self.task_to_send_dota_fpc_messages.start()
-
-        self.task_to_edit_dota_fpc_messages.clear_exception_types()
+        self.task_to_edit_messages.clear_exception_types()
 
         self.daily_ratelimit_report.start()
         return await super().cog_load()
 
-    @commands.Cog.listener()
-    async def on_my_top_games_response(self):
-        print("double u tea ef ef")
-
     async def cog_unload(self) -> None:
-        self.task_to_send_dota_fpc_messages.cancel()
-        self.task_to_edit_dota_fpc_messages.cancel()
+        self.task_to_send_notifications.cancel()
+        self.task_to_edit_messages.cancel()
         self.daily_ratelimit_report.stop()
         return await super().cog_unload()
-
-    def request_top_source(self):
-        self.bot.dota.request_top_source_tv_games(start_game=90)
-        # there we are essentially blocking the bot which is bad
-        # import asyncio
-        self.bot.dota.wait_event("my_top_games_response", timeout=8)
-
-        # the hack that does not work
-        # await asyncio.sleep(4)
-        # await self.bot.wait_for('my_top_games_response', timeout=4)
-        # also idea with asyncio.Event() or checking if top_source_dict is populated
 
     async def convert_player_id_to_friend_id(self, player_ids: list[int]) -> list[int]:
         query = "SELECT friend_id FROM dota_accounts WHERE player_id=ANY($1)"
         return [f for f, in await self.bot.pool.fetch(query, player_ids)]
 
-    async def analyze_top_source_response(self):
+    async def analyze_top_source_response(self, live_matches: list[LiveMatch]):
         query = "SELECT DISTINCT character_id FROM dota_favourite_characters"
         favourite_hero_ids: list[int] = [r for r, in await self.bot.pool.fetch(query)]
 
@@ -153,20 +116,19 @@ class DotaFPCNotifications(FPCNotificationsBase):
             else:
                 friend_id_cache[False] = await self.convert_player_id_to_friend_id(row["player_ids"])
 
-        for match in self.top_source_dict.values():
+        for match in live_matches:
             for twitch_live_only, friend_ids in friend_id_cache.items():
-                our_players = [
-                    p for p in match.players if p.account_id in friend_ids and p.hero_id in favourite_hero_ids
-                ]
+                our_players = [p for p in match.players if p.id in friend_ids and p.hero.id in favourite_hero_ids]
                 for player in our_players:
+                    account_id = player.id
+                    hero_id = player.hero.id
+
                     query = """
                         SELECT player_id, display_name, twitch_id 
                         FROM dota_players 
                         WHERE player_id=(SELECT player_id FROM dota_accounts WHERE friend_id=$1)
                     """
-                    user: AnalyzeTopSourceResponsePlayerQueryRow = await self.bot.pool.fetchrow(
-                        query, player.account_id
-                    )
+                    user: AnalyzeTopSourceResponsePlayerQueryRow = await self.bot.pool.fetchrow(query, account_id)
                     query = """
                         SELECT s.channel_id, s.spoil
                         FROM dota_favourite_characters c
@@ -187,27 +149,26 @@ class DotaFPCNotifications(FPCNotificationsBase):
                         (channel_id, spoil)
                         for channel_id, spoil in await self.bot.pool.fetch(
                             query,
-                            player.hero_id,
+                            hero_id,
                             user["player_id"],
-                            match.match_id,
-                            player.account_id,
+                            match.id,
+                            account_id,
                             twitch_live_only,
                         )
                     ]
 
                     if channel_spoil_tuples:
-                        hero_name = await self.bot.dota_cache.hero.name_by_id(player.hero_id)
+                        hero_name = await self.bot.dota_cache.hero.name_by_id(hero_id)
                         send_log.debug("%s - %s", user["display_name"], hero_name)
-                        hero_ids = [p.hero_id for p in sorted(match.players, key=lambda x: (x.team, x.team_slot))]
                         match_to_send = DotaFPCMatchToSend(
                             self.bot,
-                            match_id=match.match_id,
-                            friend_id=player.account_id,
-                            start_time=match.activate_time,
+                            match_id=match.id,
+                            friend_id=account_id,
+                            start_time=match.start_time,
                             player_name=user["display_name"],
                             twitch_id=user["twitch_id"],
-                            hero_id=player.hero_id,
-                            hero_ids=hero_ids,
+                            hero_id=hero_id,
+                            hero_ids=[hero.id for hero in match.heroes],
                             server_steam_id=match.server_steam_id,
                             hero_name=hero_name,
                         )
@@ -216,73 +177,51 @@ class DotaFPCNotifications(FPCNotificationsBase):
                         await self.send_notifications(match_to_send, channel_spoil_tuples)
                         send_log.debug("Sending took %.5f secs", time.perf_counter() - start_time)
 
-    async def mark_matches_to_edit(self):
-        send_log.debug("Declaring finished matches")
-        query = """
-            SELECT match_id, friend_id, hero_id, ARRAY_AGG ((channel_id, message_id)) channel_message_tuples
-            FROM dota_messages
-            WHERE NOT match_id=ANY($1)
-            GROUP BY match_id, friend_id, hero_id
-        """
-        current_match_to_edit_ids = [key[0] for key in self.matches_to_edit]
-        currently_live_match_ids = list(self.top_source_dict.keys())
-
-        finished_match_rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(
-            query, current_match_to_edit_ids + currently_live_match_ids
-        )
-
-        for match_row in finished_match_rows:
-            self.matches_to_edit[(match_row["match_id"], match_row["friend_id"])] = {
-                "hero_id": match_row["hero_id"],
-                "channel_message_tuples": match_row["channel_message_tuples"],
-                "loop_count": 0,
-                "edited_with_opendota": False,
-                "edited_with_stratz": False,
-            }
-
-        edit_log.debug(self.matches_to_edit)
-        if self.matches_to_edit and not self.task_to_edit_dota_fpc_messages.is_running():
-            self.task_to_edit_dota_fpc_messages.start()
-
     @aluloop(seconds=59)
-    async def task_to_send_dota_fpc_messages(self):
-        send_log.debug(f"--- Task is starting now ---")
-
-        self.top_source_dict = {}
+    async def task_to_send_notifications(self):
+        send_log.debug(f"--- Task to send Dota2 FPC Notifications is starting now ---")
 
         # REQUESTING
         start_time = time.perf_counter()
-        send_log.debug("Calling request_top_source NOW ---")
-        send_log.debug("Steam is connected: %s", self.bot.steam.connected)
-        # await self.bot.steam_dota_login()
-        self.request_top_source()
-        # await self.bot.loop.run_in_executor(None, self.request_top_source, args)
-        # res = await asyncio.to_thread(self.request_top_source)
-        top_source_end_time = time.perf_counter() - start_time
-        send_log.debug("Requesting took %.5f secs with %s results", top_source_end_time, len(self.top_source_dict))
-
-        # ANALYZING
-        start_time = time.perf_counter()
-        await self.analyze_top_source_response()
-        send_log.debug("Analyzing took %.5f secs", time.perf_counter() - start_time)
-
-        if top_source_end_time > 8:
+        send_log.debug("Calling FindTopSourceTVGames NOW ---")
+        try:
+            live_matches = await self.bot.dota.top_live_matches()
+        except asyncio.TimeoutError:
             self.death_counter += 1
-            await self.hideout.spam.send(f"dota notifs is dying {self.death_counter}")
-            # likely spoiled result that gonna ruin "mark_matches_to_edit" so let's return
+            await self.hideout.spam.send(f"Dota 2 Game Coordinator is dying: count {self.death_counter}")
+            # nothing to "mark_matches_to_edit" so let's return
             return
         else:
             self.death_counter = 0
 
-        # MARKING MATCHES FOR EDIT
+        top_source_end_time = time.perf_counter() - start_time
+        send_log.debug("Requesting took %.5f secs with %s results", top_source_end_time, len(live_matches))
+
+        # ANALYZING
+        start_time = time.perf_counter()
+        await self.analyze_top_source_response(live_matches)
+        send_log.debug("Analyzing took %.5f secs", time.perf_counter() - start_time)
+
+        # START EDITING TASK IF NEEDED
         if self.allow_editing_matches:
-            start_time = time.perf_counter()
-            await self.mark_matches_to_edit()
-            send_log.debug(
-                "Marking took %.5f secs - %s matches to edit",
-                time.perf_counter() - start_time,
-                len(self.matches_to_edit),
-            )
+            self.live_match_ids = [match.id for match in live_matches]
+            if self.task_to_edit_messages.is_running():
+                # no need to check - wait till it's done.
+                return
+            else:
+                # if we are here - it means self.matches_to_edit is empty
+                start_time = time.perf_counter()
+                query = "SELECT match_id FROM dota_messages WHERE NOT match_id=ANY($1)"
+                match_ids_to_mark = [match_id for match_id, in await self.bot.pool.fetch(query)]
+
+                if match_ids_to_mark:
+                    # we have messages to mark to edit
+                    self.task_to_edit_messages.start()
+                    send_log.debug(
+                        "Marking took %.5f secs - %s matches to edit",
+                        time.perf_counter() - start_time,
+                        len(match_ids_to_mark),
+                    )
         send_log.debug(f"--- Task is finished ---")
 
     # POST MATCH EDITS
@@ -296,7 +235,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
             return False
 
         if "radiant_win" not in opendota_match:
-            # Somebody abandoned before the first blood or so game didn't count
+            # Somebody abandoned before the first blood or so -> game didn't count
             # thus "radiant_win" key is not present
             edit_log.debug("The stats for match %s did not count. Deleting the match.", match_id)
             not_counted_match_to_edit = DotaFPCMatchToEditNotCounted(self.bot)
@@ -340,14 +279,40 @@ class DotaFPCNotifications(FPCNotificationsBase):
         query = "DELETE FROM dota_messages WHERE match_id=$1 AND friend_id=$2"
         await self.bot.pool.execute(query, match_id, friend_id)
 
+    async def mark_matches_to_edit(self):
+        query = """
+            SELECT match_id, friend_id, hero_id, ARRAY_AGG ((channel_id, message_id)) channel_message_tuples
+            FROM dota_messages
+            WHERE NOT match_id=ANY($1)
+            GROUP BY match_id, friend_id, hero_id
+        """
+        current_match_to_edit_ids = [key[0] for key in self.matches_to_edit]
+        currently_live_match_ids = list(self.top_source_dict.keys())
+
+        finished_match_rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(
+            query, current_match_to_edit_ids + currently_live_match_ids
+        )
+
+        for match_row in finished_match_rows:
+            self.matches_to_edit[(match_row["match_id"], match_row["friend_id"])] = {
+                "hero_id": match_row["hero_id"],
+                "channel_message_tuples": match_row["channel_message_tuples"],
+                "loop_count": 0,
+                "edited_with_opendota": False,
+                "edited_with_stratz": False,
+            }
+
     @aluloop(minutes=5)
-    async def task_to_edit_dota_fpc_messages(self):
+    async def task_to_edit_messages(self):
         """Task responsible for editing Dota FPC Messages with PostMatch Result data
 
-        The data is featured from opendota. The parsing is requested if data is not ready.
+        The data is featured from Opendota/Stratz.
         """
 
         edit_log.debug("*** Starting Task to Edit Dota FPC Messages ***")
+
+        # MARKING GAMES
+        await self.mark_matches_to_edit()
 
         for tuple_uuid in list(self.matches_to_edit):
             match_id, friend_id = tuple_uuid
@@ -385,13 +350,13 @@ class DotaFPCNotifications(FPCNotificationsBase):
 
         edit_log.debug("*** Finished Task to Edit Dota FPC Messages ***")
 
-    @task_to_edit_dota_fpc_messages.after_loop
+    @task_to_edit_messages.after_loop
     async def stop_editing_task(self):
         if not self.matches_to_edit:
             # nothing more to analyze
-            self.task_to_edit_dota_fpc_messages.cancel()
+            self.task_to_edit_messages.cancel()
 
-        if self.task_to_edit_dota_fpc_messages.failed():
+        if self.task_to_edit_messages.failed():
             # in case of Exception let's disallow the task at all
             self.allow_editing_matches = False
 

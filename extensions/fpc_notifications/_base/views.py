@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluGuildContext
 
-    from .base_settings import AccountIDType, FPCSettingsBase
+    from .settings import AccountIDType, FPCSettingsBase
 
     class AccountListButtonQueryRow(TypedDict):
         display_name: str

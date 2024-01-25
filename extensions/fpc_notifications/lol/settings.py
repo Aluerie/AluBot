@@ -10,7 +10,7 @@ from discord.ext import commands
 
 from utils import checks, const, errors, lol
 
-from .._fpc_utils import FPCAccount, FPCSettingsBase
+from .._base import FPCAccount, FPCSettingsBase
 from ..database_management import AddLoLPlayerFlags
 from ._models import lol_links
 

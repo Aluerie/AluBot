@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
-from typing import TYPE_CHECKING, Optional, override
+from typing import TYPE_CHECKING, override
 
 import discord
 from PIL import Image, ImageDraw, ImageFont
@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 from utils import const, lol
 from utils.formats import human_timedelta
 
-from .._fpc_utils import BaseMatchToEdit, BaseMatchToSend
+from .._base import BaseMatchToEdit, BaseMatchToSend
 
 if TYPE_CHECKING:
     from pulsefire.schemas import RiotAPISchema

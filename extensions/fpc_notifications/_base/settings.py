@@ -10,7 +10,7 @@ from discord.ext import commands
 from utils import AluGuildContext, const, errors, formats, fuzzy
 from utils.cache import KeysCache
 
-from .._base import FPCCog
+from . import FPCCog
 from . import views
 
 if TYPE_CHECKING:

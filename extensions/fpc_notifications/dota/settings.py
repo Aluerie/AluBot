@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Any, TypedDict, override
 import discord
 from discord import app_commands
 from discord.ext import commands
-from steam.steamid import EType, SteamID
+from steam import ID, InvalidID
 
 from utils import checks, const
 
-from .._fpc_utils import FPCAccount, FPCSettingsBase
+from .._base import FPCAccount, FPCSettingsBase
 from ..database_management import AddDotaPlayerFlags
 
 if TYPE_CHECKING:
@@ -33,19 +33,20 @@ class DotaAccount(FPCAccount):
 
     @override
     async def set_game_specific_attrs(self, bot: AluBot, flags: AddDotaPlayerFlags):
-        steam_id_obj = SteamID(flags.steam)
-        if steam_id_obj.type != EType.Individual:
-            steam_id_obj = SteamID.from_url(steam_string)  # type: ignore # ValvePython doesn't care about TypeHints
+        try:
+            steam_id = ID(flags.steam)
+        except InvalidID:
+            steam_id = await ID.from_url(flags.steam, session=bot.session)
 
-        if steam_id_obj is None or (hasattr(steam_id_obj, "type") and steam_id_obj.type != EType.Individual):
+        if steam_id is None:
             raise commands.BadArgument(
                 f"Error checking steam profile for {flags.steam}.\n"
                 "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
                 "or just give steam profile link to the bot."
             )
 
-        self.steam_id = steam_id_obj.as_64
-        self.friend_id = steam_id_obj.id
+        self.steam_id = steam_id.id64
+        self.friend_id = steam_id.id  # also known as id32
 
     @property
     @override

@@ -20,7 +20,7 @@ async def replace_tco_links(session, embed: Embed) -> Embed:
         try:
             for url in url_array:
                 async with session.get(url) as resp:
-                    link_for_embed = f'[Redirect link]({resp.url})'
+                    link_for_embed = f"[Redirect link]({resp.url})"
                     text = text.replace(url, link_for_embed)
         except ClientConnectorError:
             pass
@@ -30,7 +30,7 @@ async def replace_tco_links(session, embed: Embed) -> Embed:
 
 def move_link_to_title(embed: Embed) -> Embed:
     # embed.url = link
-    embed.title = 'Twitter link'
+    embed.title = "Twitter link"
     return embed
 
 
@@ -59,5 +59,5 @@ async def extra_send_fxtwitter_links(message: discord.Message) -> Optional[disco
 
     if links:
         e = discord.Embed(color=colour)
-        e.description = '\n'.join(links)
+        e.description = "\n".join(links)
         return await message.channel.send(embed=e)

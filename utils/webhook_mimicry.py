@@ -36,15 +36,15 @@ class MimicUserWebhook:
             case discord.Thread():
                 parent_channel = res_channel.parent
                 if parent_channel is None:
-                    raise TypeError('Somehow we are in a thread with no parent channel.')
+                    raise TypeError("Somehow we are in a thread with no parent channel.")
                 return parent_channel, res_channel
             case discord.DMChannel() | discord.GroupChannel():
-                raise TypeError('Such functionality is not available in DMs')
+                raise TypeError("Such functionality is not available in DMs")
             case discord.PartialMessageable():
                 # typechecker moments
                 # This type is returned in library in a very few places (only at `Client.get_partial_messageable()`?!)
                 # thus it's unlikely we get into this case
-                raise TypeError('Unknown error due to not enough data about the channel (PartialMessageable).')
+                raise TypeError("Unknown error due to not enough data about the channel (PartialMessageable).")
             case _:
                 return res_channel, None
 
@@ -75,9 +75,9 @@ class MimicUserWebhook:
 
     async def create_webhook(self) -> discord.Webhook:
         return await self.channel.create_webhook(
-            name=f'{self.bot.user.display_name}\'s Webhook',
+            name=f"{self.bot.user.display_name}'s Webhook",
             avatar=await self.bot.user.display_avatar.read(),
-            reason=f'To enable extra functionality from {self.bot.user.display_name}',
+            reason=f"To enable extra functionality from {self.bot.user.display_name}",
         )
 
     async def get_or_create(self) -> discord.Webhook:
@@ -85,11 +85,11 @@ class MimicUserWebhook:
         try:
             return await self.get_webhook() or await self.create_webhook()
         except discord.Forbidden:
-            raise commands.BotMissingPermissions(['manage_webhooks'])
+            raise commands.BotMissingPermissions(["manage_webhooks"])
         except discord.HTTPException:
             raise errors.SomethingWentWrong(
-                'An error occurred while creating the webhook for this channel. '
-                'Note you can only have 15 webhooks per channel.'
+                "An error occurred while creating the webhook for this channel. "
+                "Note you can only have 15 webhooks per channel."
             )
 
     async def send_user_message(
@@ -97,7 +97,7 @@ class MimicUserWebhook:
         member: discord.Member | discord.User,
         *,
         message: Optional[discord.Message] = None,
-        content: str = '',
+        content: str = "",
         embed: discord.Embed = discord.utils.MISSING,
     ):
         wh = await self.get_or_create()

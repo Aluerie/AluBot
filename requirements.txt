@@ -18,7 +18,7 @@ git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
 githubkit
-pygit2==1.13.3
+pygit2==1.14.0
 
 # TTS
 gtts~=2.5.0

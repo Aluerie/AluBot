@@ -54,7 +54,7 @@ if TYPE_CHECKING:
 
 
 send_log = logging.getLogger("send_dota_fpc")
-send_log.setLevel(logging.DEBUG)
+send_log.setLevel(logging.INFO)
 
 edit_log = logging.getLogger("edit_dota_fpc")
 edit_log.setLevel(logging.DEBUG)

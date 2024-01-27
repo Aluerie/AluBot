@@ -290,8 +290,8 @@ class GameCoordinatorAPISchema:
         ],
     )
 
-    CMsgGCToClientFindTopSourceTVGamesResponse = NamedTuple(
-        "CMsgGCToClientFindTopSourceTVGamesResponse",
+    GCToClientFindTopSourceTVGamesResponse = NamedTuple(
+        "GCToClientFindTopSourceTVGamesResponse",
         [
             ("search_key", str),
             ("league_id", int),

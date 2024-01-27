@@ -22,6 +22,7 @@ __all__ = (
     "DotaFPCMatchToSend",
     "DotaFPCMatchToEditWithOpenDota",
     "DotaFPCMatchToEditWithStratz",
+    "MatchToEditNotCounted",
 )
 type LiteralTwitchStatus = Literal["NoTwitch", "Offline", "Live"]
 
@@ -78,7 +79,6 @@ class DotaFPCMatchToSend(BaseMatchToSend):
     def long_ago(self) -> int:
         now = datetime.datetime.now(datetime.timezone.utc)
         return (now - self.start_time).seconds
-
 
     async def get_twitch_data(self) -> TwitchData:
         log.debug("`get_twitch_data` is starting")
@@ -394,7 +394,7 @@ class DotaFPCMatchToEditWithStratz(BaseMatchToEdit):
         return await asyncio.to_thread(build_notification_image)
 
 
-class DotaFPCMatchToEditNotCounted(BaseMatchToEdit):
+class MatchToEditNotCounted(BaseMatchToEdit):
     """
     Class
     """

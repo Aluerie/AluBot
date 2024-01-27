@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import orjson
+import json
 from typing import TYPE_CHECKING
 
 import asyncpg
@@ -15,8 +16,9 @@ if TYPE_CHECKING:
 # hopefully somewhen asyncpg releases proper typing tools so
 # * wait until then
 # * rework all asyncpg typing so instead of our NamedTuple we can use something proper
-# note that currently I'm using NamedTuple over DRecord bcs DRecord allows not-specified attributes too 
+# note that currently I'm using NamedTuple over DRecord bcs DRecord allows not-specified attributes too
 # so it's not precise typing wise
+
 
 class DRecord(asyncpg.Record):
     """DRecord - Dot Record
@@ -25,7 +27,7 @@ class DRecord(asyncpg.Record):
     such as `record.id` instead of `record['id']`.
 
     Can be to type-hint the record, but we should use TypedDict over it
-    because TypeHint doesn't allow keys outside its definition. 
+    because TypeHint doesn't allow keys outside its definition.
     ```py
     class MyRecord(DRecord): #( asyncpg.Record):
         id: int
@@ -46,7 +48,7 @@ class DRecord(asyncpg.Record):
 
 async def create_pool() -> asyncpg.Pool:
     def _encode_jsonb(value):
-        return orjson.dumps(value)
+        return orjson.dumps(value).decode("utf-8")
 
     def _decode_jsonb(value):
         return orjson.loads(value)

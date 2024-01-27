@@ -14,14 +14,15 @@ from utils import aluloop, const
 
 from .._base import BaseNotifications
 from ._models import (
-    DotaFPCMatchToEditNotCounted,
     DotaFPCMatchToEditWithOpenDota,
     DotaFPCMatchToEditWithStratz,
     DotaFPCMatchToSend,
+    MatchToEditNotCounted,
 )
 
 if TYPE_CHECKING:
-    from steam.ext.dota2 import LiveMatch
+    # from steam.ext.dota2 import LiveMatch # VALVE_SWITCH
+    from utils.dota import LiveMatch
 
     from bot import AluBot
     from utils import AluContext
@@ -244,7 +245,7 @@ class DotaFPCNotifications(BaseNotifications):
             # Somebody abandoned before the first blood or so -> game didn't count
             # thus "radiant_win" key is not present
             edit_log.debug("Opendota: match %s did not count. Deleting the match.", match_id)
-            not_counted_match_to_edit = DotaFPCMatchToEditNotCounted(self.bot)
+            not_counted_match_to_edit = MatchToEditNotCounted(self.bot)
             await self.edit_match(not_counted_match_to_edit, channel_message_tuples, pop=True)
             await self.cleanup_match_to_edit(match_id, friend_id)
             return True

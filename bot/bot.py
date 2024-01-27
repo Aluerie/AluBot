@@ -195,16 +195,16 @@ class AluBot(commands.Bot, AluBotHelper):
         # erm, bcs of my horrendous .test logic we need to do it in a weird way
         # todo: is there anything better ? :D
 
-        if not self.test or "extensions.fpc.dota" in get_extensions(self.test):
-            from utils.dota.dota2client import Dota2Client
+        # if not self.test or "extensions.fpc.dota" in get_extensions(self.test):
+        #     from utils.dota.dota2client import Dota2Client
 
-            self.dota = Dota2Client(self)
-            await asyncio.gather(
-                super().start(token, reconnect=True),
-                self.dota.login(),
-            )
-        else:
-            await super().start(token, reconnect=True)
+        #     self.dota = Dota2Client(self)
+        #     await asyncio.gather(
+        #         super().start(token, reconnect=True),
+        #         self.dota.login(),
+        #     )
+        # else:
+        await super().start(token, reconnect=True)  # VALVE_SWITCH
 
     @override
     async def get_context(
@@ -301,13 +301,24 @@ class AluBot(commands.Bot, AluBotHelper):
             self.cdragon = CDragonCache(self)
             self.meraki_roles = MerakiRolesCache(self)
 
+    # async def initialize_dota(self) -> None:
+    #     """Initialize Dota 2 Client
+
+    #     * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
+    #     """
+    #     if not hasattr(self, "dota"):
+    #         from utils.dota.dota2client import Dota2Client
+
+    #         self.dota = Dota2Client(self)
+    #         await self.dota.login()
+
     async def initialize_dota(self) -> None:
         """Initialize Dota 2 Client
 
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from utils.dota.dota2client import Dota2Client
+            from utils.dota.valvepythondota2 import Dota2Client
 
             self.dota = Dota2Client(self)
             await self.dota.login()
@@ -337,8 +348,8 @@ class AluBot(commands.Bot, AluBotHelper):
     async def close(self) -> None:
         """Closes the connection to Discord while cleaning up other open sessions and clients."""
         await super().close()
-        if hasattr(self, "dota"):
-            await self.dota.close()
+        # if hasattr(self, "dota"):
+        #     await self.dota.close() # VALVE SWITCH
         if hasattr(self, "session"):
             await self.session.close()
         if hasattr(self, "twitch"):

@@ -31,28 +31,33 @@ class TwitchCog(CommunityCog):
 
     @commands.Cog.listener("on_twitchio_stream_start")
     async def twitch_tv_live_notifications(self, event: eventsub.StreamOnlineData) -> None:
-        me: twitchio.User = await event.broadcaster.fetch()
-        me_live = next(iter(await self.bot.twitch.fetch_streams(user_ids=[me.id])), None)
+        streamer = await self.bot.twitch.fetch_streamer(event.broadcaster.id)
 
-        stream = twitch.TwitchStream(me.id, me, me_live)
-
-        mention_role = self.community.stream_lover_role
-        content = f"{mention_role.mention} and chat, our Highness **@{stream.display_name}** just went live !"
-        file = await self.bot.transposer.url_to_file(stream.preview_url, filename="twtvpreview.png")
-        last_vod_url = await self.bot.twitch.last_vod_link(const.Twitch.my_channel_id)
-        desc = f"Playing {stream.game}\n/[Watch Stream]({stream.url}){last_vod_url}"
-        embed = discord.Embed(colour=0x9146FF, title=f"{stream.title}", url=stream.url, description=desc)
-        embed.set_author(
-            name=f"{stream.display_name} just went live on Twitch!", icon_url=stream.logo_url, url=stream.url
+        content = (
+            f"{self.community.stream_lover_role.mention} and chat, "
+            + f"our Highness **@{streamer.display_name}** just went live !"
+        )
+        file = await self.bot.transposer.url_to_file(streamer.preview_url, filename="twtvpreview.png")
+        embed = (
+            discord.Embed(
+                colour=0x9146FF,
+                title=f"{streamer.title}",
+                url=streamer.url,
+                description=(f"Playing {streamer.game}\n/[Watch Stream]({streamer.url}){await streamer.vod_link()}"),
+            )
+            .set_author(
+                name=f"{streamer.display_name} just went live on Twitch!",
+                icon_url=streamer.avatar_url,
+                url=streamer.url,
+            )
+            .set_image(url=f"attachment://{file.filename}")
         )
 
-        # game art thumbnail
-        game = next(iter(await self.bot.twitch.fetch_games(names=[stream.game])), None)
-        if game:
-            embed.set_thumbnail(url=game.art_url(285, 380))
+        if game_art_url := await streamer.game_art_url():
+            embed.set_thumbnail(url=game_art_url)
+        else:
+            embed.set_thumbnail(url=streamer.avatar_url)
 
-        embed.set_thumbnail(url=stream.logo_url)
-        embed.set_image(url=f"attachment://{file.filename}")
         await self.community.stream_notifs.send(content=content, embed=embed, file=file)
 
     @commands.Cog.listener("on_twitchio_channel_points_redeem")

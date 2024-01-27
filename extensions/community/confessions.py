@@ -70,7 +70,7 @@ class ConfView(discord.ui.View):
         if isinstance(error, ButtonOnCooldown):
             e = discord.Embed(colour=Colour.error()).set_author(name=error.__class__.__name__)
             e.description = (
-                "Sorry, you are on cooldown \n" f"Time left `{human_timedelta(error.retry_after, brief=True)}`"
+                "Sorry, you are on cooldown \n" f"Time left `{human_timedelta(error.retry_after, mode='brief')}`"
             )
             await interaction.response.send_message(embed=e, ephemeral=True)
         else:

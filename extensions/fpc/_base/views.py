@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluGuildContext
 
-    from .settings import AccountIDType, FPCSettingsBase
+    from .settings import AccountIDType, BaseSettings
 
     class AccountListButtonQueryRow(TypedDict):
         display_name: str
@@ -30,9 +30,9 @@ class FPCSetupChannelView(AluView):
     * Dropdown menu to select a new channel for notifications.
     """
 
-    def __init__(self, cog: FPCSettingsBase, author_id: int):
+    def __init__(self, cog: BaseSettings, author_id: int):
         super().__init__(author_id=author_id)
-        self.cog: FPCSettingsBase = cog
+        self.cog: BaseSettings = cog
 
     @discord.ui.select(
         cls=discord.ui.ChannelSelect,
@@ -83,13 +83,13 @@ class FPCSetupMiscView(AluView):
 
     def __init__(
         self,
-        cog: FPCSettingsBase,
+        cog: BaseSettings,
         embed: discord.Embed,
         *,
         author_id: int,
     ):
         super().__init__(author_id=author_id)
-        self.cog: FPCSettingsBase = cog
+        self.cog: BaseSettings = cog
         self.embed: discord.Embed = embed
 
     async def toggle_worker(self, interaction: discord.Interaction[AluBot], setting: str, field_index: int):
@@ -230,7 +230,7 @@ class AccountListButton(discord.ui.Button):
         for row in rows:
             if row["display_name"] not in player_dict:
                 player_dict[row["display_name"]] = {
-                    "name": self.menu.cog.account_cls.embed_player_name_static(
+                    "name": self.menu.cog.account_cls.static_player_embed_name(
                         row["display_name"], bool(row["twitch_id"])
                     ),
                     "accounts": [],
@@ -238,7 +238,7 @@ class AccountListButton(discord.ui.Button):
 
             account_kwargs = {column: row[column] for column in self.menu.cog.account_table_columns}
             player_dict[row["display_name"]]["accounts"].append(
-                self.menu.cog.account_cls.embed_account_str_static(**account_kwargs)
+                self.menu.cog.account_cls.static_account_name_with_links(**account_kwargs)
             )
 
         embed = discord.Embed(
@@ -333,7 +333,7 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
         table_object_name: str,
         singular: str,
         plural: str,
-        cog: FPCSettingsBase,
+        cog: BaseSettings,
         get_object_list_embed: Callable[[int], Awaitable[discord.Embed]],
         special_button_cls: Optional[type[AccountListButton]] = None,
     ):
@@ -365,7 +365,7 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
         )
         self.singular: str = singular
         self.plural: str = plural
-        self.cog: FPCSettingsBase = cog
+        self.cog: BaseSettings = cog
         self.get_object_list_embed: Callable[[int], Awaitable[discord.Embed]] = get_object_list_embed
 
         self.table_name: str = f"{cog.prefix}_favourite_{table_object_name}s "
@@ -394,7 +394,7 @@ class FPCSetupPlayersPaginator(FPCSetupPlayersCharactersPaginator):
         self,
         ctx: AluGuildContext,
         player_tuples: list[tuple[int, str]],
-        cog: FPCSettingsBase,
+        cog: BaseSettings,
     ):
         super().__init__(
             ctx,
@@ -421,7 +421,7 @@ class FPCSetupCharactersPaginator(FPCSetupPlayersCharactersPaginator):
         self,
         ctx: AluGuildContext,
         character_tuples: list[tuple[int, str]],
-        cog: FPCSettingsBase,
+        cog: BaseSettings,
     ):
         super().__init__(
             ctx,
@@ -440,13 +440,13 @@ class FPCSetupCharactersPaginator(FPCSetupPlayersCharactersPaginator):
 class RemoveAllAccountsButton(discord.ui.Button):
     """Button to remove all specific player's accounts in  `/database {game} remove` command's view."""
 
-    def __init__(self, cog: FPCSettingsBase, player_id: int, player_name: str):
+    def __init__(self, cog: BaseSettings, player_id: int, player_name: str):
         super().__init__(
             style=discord.ButtonStyle.red,
             label=f"Remove all {player_name}'s accounts.",
             emoji="\N{POUTING FACE}",
         )
-        self.cog: FPCSettingsBase = cog
+        self.cog: BaseSettings = cog
         self.player_id: int = player_id
         self.player_name: str = player_name
 
@@ -470,7 +470,7 @@ class RemoveAccountButton(discord.ui.Button):
     def __init__(
         self,
         emoji: str,
-        cog: FPCSettingsBase,
+        cog: BaseSettings,
         account_id: AccountIDType,
         account_name: str,
         account_id_column: str,
@@ -480,7 +480,7 @@ class RemoveAccountButton(discord.ui.Button):
             label=account_name,
             emoji=emoji,
         )
-        self.cog: FPCSettingsBase = cog
+        self.cog: BaseSettings = cog
         self.account_id: AccountIDType = account_id
         self.account_id_column: str = account_id_column
 
@@ -508,7 +508,7 @@ class DatabaseRemoveView(AluView):
     def __init__(
         self,
         author_id: int,
-        cog: FPCSettingsBase,
+        cog: BaseSettings,
         player_id: int,
         player_name: str,
         account_ids_names: Mapping[AccountIDType, str],

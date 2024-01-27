@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import json
+import orjson
 from typing import TYPE_CHECKING
 
 import asyncpg
@@ -21,10 +21,11 @@ if TYPE_CHECKING:
 class DRecord(asyncpg.Record):
     """DRecord - Dot Record
 
-        Same as `asyncpg.Record`, but allows dot-notations
-        such as `record.id` instead of `record['id']`.
+    Same as `asyncpg.Record`, but allows dot-notations
+    such as `record.id` instead of `record['id']`.
 
-    Can also be used to type-hint the record.
+    Can be to type-hint the record, but we should use TypedDict over it
+    because TypeHint doesn't allow keys outside its definition. 
     ```py
     class MyRecord(DRecord): #( asyncpg.Record):
         id: int
@@ -45,10 +46,10 @@ class DRecord(asyncpg.Record):
 
 async def create_pool() -> asyncpg.Pool:
     def _encode_jsonb(value):
-        return json.dumps(value)
+        return orjson.dumps(value)
 
     def _decode_jsonb(value):
-        return json.loads(value)
+        return orjson.loads(value)
 
     async def init(con):
         await con.set_type_codec(

@@ -9,7 +9,7 @@ import discord
 
 from utils import aluloop, const, lol
 
-from .._base import FPCNotificationsBase
+from .._base import BaseNotifications
 from ._models import LoLFPCMatchToEdit, LoLFPCMatchToSend
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class LoLFPCNotifications(FPCNotificationsBase):
+class LoLFPCNotifications(BaseNotifications):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, prefix="lol", *args, **kwargs)
         self.notification_matches: list[LoLFPCMatchToSend] = []
@@ -165,7 +165,7 @@ class LoLFPCNotifications(FPCNotificationsBase):
                         rune_ids=player["perks"]["perkIds"],  # type: ignore
                         summoner_id=player["summonerId"],
                     )
-                    await self.send_notifications(match_to_send, channel_spoil_tuples)
+                    await self.send_match(match_to_send, channel_spoil_tuples)
 
     @aluloop(seconds=59)
     async def lol_fpc_notifications_task(self):
@@ -203,7 +203,7 @@ class LoLFPCNotifications(FPCNotificationsBase):
                 if participant["championId"] == match_row["champion_id"]:
                     # found our participant
                     match_to_edit = LoLFPCMatchToEdit(self.bot, participant=participant, timeline=timeline)
-                    await self.edit_notifications(match_to_edit, match_row["channel_message_tuples"])
+                    await self.edit_match(match_to_edit, match_row["channel_message_tuples"], pop=True)
             query = "DELETE FROM lol_messages WHERE match_id=$1"
             await self.bot.pool.fetch(query, match_row["match_id"])
 

@@ -10,7 +10,7 @@ from steam import ID, InvalidID
 
 from utils import checks, const
 
-from .._base import FPCAccount, FPCSettingsBase
+from .._base import Account, BaseSettings
 from ..database_management import AddDotaPlayerFlags
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ class DotaAccountDict(TypedDict):
     friend_id: int
 
 
-class DotaAccount(FPCAccount):
+class DotaAccount(Account):
     if TYPE_CHECKING:
         steam_id: int
         friend_id: int
@@ -55,7 +55,7 @@ class DotaAccount(FPCAccount):
 
     @override
     @staticmethod
-    def embed_account_str_static(steam_id: int, friend_id: int) -> str:
+    def static_account_name_with_links(steam_id: int, friend_id: int) -> str:
         return (
             f"`{steam_id}` - `{friend_id}`| "
             f"[Steam](https://steamcommunity.com/profiles/{steam_id})"
@@ -64,28 +64,28 @@ class DotaAccount(FPCAccount):
 
     @property
     @override
-    def embed_account_str(self) -> str:
-        return self.embed_account_str_static(self.steam_id, self.friend_id)
+    def account_string_with_links(self) -> str:
+        return self.static_account_name_with_links(self.steam_id, self.friend_id)
 
     @override
     @staticmethod
-    def simple_account_name_static(friend_id: int, **kwargs: Any) -> str:
+    def static_account_string(friend_id: int, **kwargs: Any) -> str:
         return f"{friend_id}"
 
     @property
     @override
-    def simple_account_name(self) -> str:
-        return self.simple_account_name_static(self.friend_id)
+    def account_string(self) -> str:
+        return self.static_account_string(self.friend_id)
 
     @override
-    def to_database_dict(self) -> DotaAccountDict:
+    def to_pseudo_record(self) -> DotaAccountDict:
         return {
             "steam_id": self.steam_id,
             "friend_id": self.friend_id,
         }
 
 
-class DotaFPCSettings(FPCSettingsBase, name="Dota 2"):
+class DotaFPCSettings(BaseSettings, name="Dota 2"):
     """Commands to set up fav hero + player notifs.
 
     These commands allow you to choose players from our database as your favorite \

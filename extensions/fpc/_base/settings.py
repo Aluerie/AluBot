@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, Optional, Self, TypedDict
 
 import asyncpg
@@ -10,8 +11,7 @@ from discord.ext import commands
 from utils import AluGuildContext, const, errors, formats, fuzzy
 from utils.cache import KeysCache
 
-from . import FPCCog
-from . import views
+from . import FPCCog, views
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -36,53 +36,70 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "FPCSettingsBase",
-    "FPCAccount",
+    "BaseSettings",
+    "Account",
 )
 
 
-class FPCAccount:
+class Account(abc.ABC):
     if TYPE_CHECKING:
         player_display_name: str
         twitch_id: Optional[int]
         profile_image: str
 
-    def __init__(self, name: str, is_twitch_streamer: bool = True) -> None:
-        self.name: str = name
+    def __init__(self, player_name: str, is_twitch_streamer: bool = True) -> None:
+        self.player_name: str = player_name
         self.is_twitch_streamer: bool = is_twitch_streamer
 
+    @abc.abstractmethod
     async def set_game_specific_attrs(self, bot: AluBot, flags: commands.FlagConverter):
-        raise NotImplementedError
+        """Set game specific attributes."""
 
-    def to_database_dict(self) -> dict[str, Any]:
-        raise NotImplementedError
+    @abc.abstractmethod
+    def to_pseudo_record(self) -> dict[str, Any]:
+        """Return dict mirroring what should be put into the database."""
 
     @property
+    @abc.abstractmethod
     def hint_database_add_command_args(self) -> str:
-        raise NotImplementedError
+        """Formatted args for `/database {game} add` command for easy copy&paste"""
 
     @staticmethod
-    def embed_account_str_static(**kwargs: Any) -> str:
-        raise NotImplementedError
+    @abc.abstractmethod
+    def static_account_name_with_links(**kwargs: Any) -> str:
+        """Static method for `account_string_with_links` so we can get it
+        when we don't need to initiate a full account
+        """
 
     @property
-    def embed_account_str(self) -> str:
-        raise NotImplementedError
+    @abc.abstractmethod
+    def account_string_with_links(self) -> str:
+        """Account string with links"""
 
+    # todo: i dont like it, why there is two things of those
+    # todo: maybe we need to do like Player Account and then PlayerAccount class?
     @staticmethod
-    def simple_account_name_static(**kwargs: Any) -> str:
-        raise NotImplementedError
+    @abc.abstractmethod
+    def static_account_string(**kwargs: Any) -> str:
+        """Static method for `account_string` so we can get it
+        when we don't need to initiate a full account
+        """
 
     @property
-    def simple_account_name(self) -> str:
-        raise NotImplementedError
+    @abc.abstractmethod
+    def account_string(self) -> str:
+        """Account string"""
 
     async def set_base_attrs(self, bot: AluBot):
         if self.is_twitch_streamer:
-            twitch_user = await bot.twitch.get_twitch_user(self.name)
+            twitch_user = next(iter(await bot.twitch.fetch_users(names=[self.player_name])), None)
+            if not twitch_user:
+                raise errors.BadArgument(
+                    f"Error checking twitch user `{self.player_name}`.\n User either does not exist or is banned."
+                )
             display_name, twitch_id, profile_image = twitch_user.display_name, twitch_user.id, twitch_user.profile_image
         else:
-            display_name, twitch_id, profile_image = self.name, None, discord.utils.MISSING
+            display_name, twitch_id, profile_image = self.player_name, None, discord.utils.MISSING
 
         self.player_display_name = display_name
         self.twitch_id = twitch_id
@@ -104,18 +121,18 @@ class FPCAccount:
         return self
 
     @staticmethod
-    def embed_player_name_static(display_name: str, is_twitch_streamer: bool):
+    def static_player_embed_name(display_name: str, is_twitch_streamer: bool):
         if is_twitch_streamer:
             return f"\N{BLACK CIRCLE} [{display_name}](https://www.twitch.tv/{display_name})"
         else:
             return f"\N{BLACK CIRCLE} {display_name}"
 
     @property
-    def embed_player_name(self) -> str:
-        return self.embed_player_name_static(self.player_display_name, self.is_twitch_streamer)
+    def player_embed_name(self) -> str:
+        return self.static_player_embed_name(self.player_display_name, self.is_twitch_streamer)
 
 
-class FPCSettingsBase(FPCCog):
+class BaseSettings(FPCCog):
     """Base class for cogs representing FPC (Favourite Player+Character) feature
     for different games:
 
@@ -169,7 +186,7 @@ class FPCSettingsBase(FPCCog):
         game_icon_url: str,
         character_singular_word: str,
         character_plural_word: str,
-        account_cls: type[FPCAccount],
+        account_cls: type[Account],
         account_typed_dict_cls: type,
         character_cache: KeysCache,
         **kwargs,
@@ -185,7 +202,7 @@ class FPCSettingsBase(FPCCog):
         self.character_plural_word: str = character_plural_word
 
         # account attrs
-        self.account_cls: type[FPCAccount] = account_cls
+        self.account_cls: type[Account] = account_cls
         self.account_table_columns: list[str] = list(account_typed_dict_cls.__annotations__.keys())
         self.account_id_column: str = self.account_table_columns[0]
 
@@ -236,17 +253,18 @@ class FPCSettingsBase(FPCCog):
                 ),
             )
             .set_author(name="Request to add an account into the database")
-            .set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
             .set_thumbnail(url=account.profile_image)
-            .add_field(name=account.embed_player_name, value=account.embed_account_str)
+            .add_field(name=account.player_embed_name, value=account.account_string_with_links)
+            .set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
         )
 
         if not await self.bot.disambiguator.confirm(ctx, embed=confirm_embed):
             return
 
         response_embed = discord.Embed(
-            colour=self.colour, title="Successfully made a request to add the account into the database"
-        ).add_field(name=account.embed_player_name, value=account.embed_account_str)
+            colour=self.colour,
+            title="Successfully made a request to add the account into the database",
+        ).add_field(name=account.player_embed_name, value=account.account_string_with_links)
         await ctx.reply(embed=response_embed)
 
         logs_embed = confirm_embed.copy()
@@ -277,7 +295,7 @@ class FPCSettingsBase(FPCCog):
         """
         player_id: int = await ctx.pool.fetchval(query, account.player_display_name, account.twitch_id)
 
-        database_dict = account.to_database_dict()
+        database_dict = account.to_pseudo_record()
         database_dict["player_id"] = player_id
         dollars = ", ".join(f"${i}" for i in range(1, len(database_dict.keys()) + 1))
         columns = ", ".join(database_dict.keys())
@@ -286,7 +304,7 @@ class FPCSettingsBase(FPCCog):
 
         response_embed = (
             discord.Embed(colour=self.colour, title=f"Successfully added the account to the database")
-            .add_field(name=account.embed_player_name, value=account.embed_account_str)
+            .add_field(name=account.player_embed_name, value=account.account_string_with_links)
             .set_author(name=self.game_display_name, icon_url=self.game_icon_url)
             .set_thumbnail(url=account.profile_image)
         )
@@ -309,7 +327,7 @@ class FPCSettingsBase(FPCCog):
         query = f"SELECT * FROM {self.prefix}_accounts WHERE player_id = $1"
         rows: list[dict] = await ctx.pool.fetch(query, player_id)
         account_ids_names: Mapping[AccountIDType, str] = {
-            row[self.account_id_column]: self.account_cls.simple_account_name_static(**row) for row in rows
+            row[self.account_id_column]: self.account_cls.static_account_string(**row) for row in rows
         }
 
         view = views.DatabaseRemoveView(
@@ -625,9 +643,7 @@ class FPCSettingsBase(FPCCog):
         """
         rows: list[PlayerListQueryRow] = await self.bot.pool.fetch(query, guild_id)
         favourite_player_names = (
-            "\n".join(
-                [FPCAccount.embed_player_name_static(row["display_name"], bool(row["twitch_id"])) for row in rows]
-            )
+            "\n".join([Account.static_player_embed_name(row["display_name"], bool(row["twitch_id"])) for row in rows])
             or "Empty list"
         )
         return discord.Embed(

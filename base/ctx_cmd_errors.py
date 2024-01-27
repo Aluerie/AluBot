@@ -62,7 +62,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
         # TODO: make a fuzzy search in here to recommend the command that user wants
         desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
     elif isinstance(error, commands.CommandOnCooldown):
-        desc = f"Please retry in `{ctx.bot.formats.human_timedelta(error.retry_after, brief=True)}`"
+        desc = f"Please retry in `{ctx.bot.formats.human_timedelta(error.retry_after, mode='brief')}`"
     elif isinstance(error, commands.NotOwner):
         desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
     elif isinstance(error, commands.MissingRole):

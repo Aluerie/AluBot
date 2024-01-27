@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import datetime
 import difflib
+import re
 from enum import IntEnum
-from typing import TYPE_CHECKING, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Literal, Optional, Sequence, Union
 
 from dateutil.relativedelta import relativedelta
 
@@ -40,7 +41,7 @@ class plural:
 
     def __format__(self, format_spec: str) -> str:
         v = self.value
-        singular, sep, plural = format_spec.partition("|")
+        singular, separator, plural = format_spec.partition("|")
         plural = plural or f"{singular}s"
         if abs(v) != 1:
             return f"{v} {plural}"
@@ -78,8 +79,7 @@ def human_timedelta(
     *,
     source: Optional[datetime.datetime] = None,
     accuracy: Optional[int] = 3,
-    brief: bool = False,
-    strip: bool = False,
+    mode: Literal["full", "brief", "strip"] = "full",
     suffix: bool = True,
 ) -> str:
     """
@@ -95,18 +95,18 @@ def human_timedelta(
 
     Parameters
     ----------
-    dt : datetime.datetime
+    dt
         if it is int/float/timedelta then it's assumed to be in the past (as in "dt: int = 5" -> 5 seconds ago)
-    source : Optional[datetime.datetime]
+    source
         Assumed as now if not given
-    accuracy : Optional[int]
+    accuracy
         How many unit of time words to return
-    brief : bool
+    brief
         if to abbreviate units of time as one letters such as 'seconds' -> 's'
         if `strip` is True then brief param is ignored.
-    strip: bool
+    strip
         if to strip the return time string from spaces like '22m33s ago'.
-    suffix : bool
+    suffix
         If to include 'ago' into return string for past times
 
     Returns
@@ -118,22 +118,14 @@ def human_timedelta(
     # licensed MPL v2 from Rapptz/RoboDanny
     # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 
-    if strip:
-        brief = True
-
-    now = source or datetime.datetime.now(datetime.timezone.utc)
-    if now.tzinfo is None:
-        now = now.replace(tzinfo=datetime.timezone.utc)
-    now = now.replace(microsecond=0)  # Microsecond free zone
+    now = source.astimezone(datetime.timezone.utc) if source else datetime.datetime.now(datetime.timezone.utc)
 
     match dt:
+        # todo: i dont like this garbage
         case datetime.datetime():
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=datetime.timezone.utc)
-            dt = dt.replace(microsecond=0)  # Microsecond free zone
+            dt = dt.astimezone(datetime.timezone.utc)
         case datetime.timedelta():
             dt = now - dt
-            dt = dt.replace(microsecond=0)  # Microsecond free zone
         case int() | float():
             dt = now - datetime.timedelta(seconds=dt)
         case _:
@@ -141,9 +133,8 @@ def human_timedelta(
                 "Parameter `dt` must be either of types: `datetime.datetime`, `datetime.timedelta`, `int` or `float`"
             )
 
-    # Make sure they're both in the timezone
-    now = now.astimezone(datetime.timezone.utc)
-    dt = dt.astimezone(datetime.timezone.utc)
+    now = now.replace(microsecond=0)
+    dt = dt.replace(microsecond=0)
 
     # This implementation uses `relativedelta` instead of the much more obvious
     # `divmod` approach with seconds because the seconds approach is not entirely
@@ -179,7 +170,7 @@ def human_timedelta(
             weeks = delta.weeks
             if weeks:
                 elem -= weeks * 7
-                if not brief:
+                if mode == "full":
                     output.append(format(plural(weeks), "week"))
                 else:
                     output.append(f"{weeks}w")
@@ -187,10 +178,10 @@ def human_timedelta(
         if elem <= 0:
             continue
 
-        if brief:
-            output.append(f"{elem}{brief_attr}")
-        else:
+        if mode == "full":
             output.append(format(plural(elem), attr))
+        else:
+            output.append(f"{elem}{brief_attr}")
 
     if accuracy is not None:
         output = output[:accuracy]
@@ -198,10 +189,10 @@ def human_timedelta(
     if len(output) == 0:
         return "now"
     else:
-        if not brief:
+        if mode == "full":
             return human_join(output, final="and") + output_suffix
         else:
-            sep = "" if strip else " "
+            sep = "" if mode == "strip" else " "
             return sep.join(output) + output_suffix
 
 
@@ -386,3 +377,34 @@ def tick(semi_bool: bool | None) -> str:
             return const.Tick.black
         case _:
             raise TypeError(f"`tick`: Expected True, False, None. Got {semi_bool.__class__.__name__}")
+
+
+def hms_to_seconds(hms_time: str) -> int:
+    """Convert time in hms format like "03h51m08s" to seconds
+
+    Example, `twitchio.Video.duration` have this in a such format so I need to convert it to seconds.
+    like this: "03h51m08s" -> 3 * 3600 + 51 * 60 + 8 = 13868
+    """
+
+    def letter_to_seconds(letter: str) -> int:
+        """regex_time('h') = 3, regex_time('m') = 51, regex_time('s') = 8 for above example"""
+        pattern = r"\d+(?={})".format(letter)
+        units = re.search(pattern, hms_time)
+        return int(units.group(0)) if units else 0
+
+    timeunit_dict = {"h": 3600, "m": 60, "s": 1}
+    return sum([v * letter_to_seconds(letter) for letter, v in timeunit_dict.items()])
+
+
+def divmod_timedelta(total_seconds: int | float) -> str:
+    """Easier human timedelta than `formats.human_timedelta`
+
+    But because of this, for accuracy sake, this only supports days, hours, minutes, seconds.
+    """
+
+    minutes, seconds = divmod(total_seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+
+    timeunit_dict = {"d": days, "h": hours, "m": minutes, "s": seconds}
+    return "".join(f"{letter}{number}" for letter, number in timeunit_dict.items() if number)

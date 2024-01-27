@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import abc
 import logging
 from typing import TYPE_CHECKING, Any, Optional, TypedDict
 
@@ -11,9 +10,9 @@ from utils import errors
 from . import FPCCog
 
 if TYPE_CHECKING:
-    from PIL import Image
-
     from bot import AluBot
+
+    from ._models import BaseMatchToEdit, BaseMatchToSend
 
     class GetTwitchLivePlayerRow(TypedDict):
         twitch_id: int
@@ -24,39 +23,13 @@ if TYPE_CHECKING:
         spoil: bool
 
 
-__all__ = (
-    "BaseMatchToSend",
-    "BaseMatchToEdit",
-    "FPCNotificationsBase",
-)
+__all__ = ("BaseNotifications",)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class BaseMatchToSend(abc.ABC):
-    def __init__(self, bot: AluBot) -> None:
-        self.bot: AluBot = bot
-
-    @abc.abstractmethod
-    async def get_embed_and_file(self) -> tuple[discord.Embed, discord.File]:
-        """Get embed and file"""
-
-    @abc.abstractmethod
-    async def insert_into_game_messages(self, message_id: int, channel_id: int):
-        """then we need to add it to messages table so we can edit it later"""
-
-
-class BaseMatchToEdit(abc.ABC):
-    def __init__(self, bot: AluBot):
-        self.bot: AluBot = bot
-
-    @abc.abstractmethod
-    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
-        """Edit"""
-
-
-class FPCNotificationsBase(FPCCog):
+class BaseNotifications(FPCCog):
     def __init__(self, bot: AluBot, prefix: str, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         self.prefix: str = prefix
@@ -83,7 +56,7 @@ class FPCNotificationsBase(FPCCog):
         ]
         return live_player_ids
 
-    async def send_notifications(self, match: BaseMatchToSend, channel_spoil_tuples: list[tuple[int, bool]]):
+    async def send_match(self, match: BaseMatchToSend, channel_spoil_tuples: list[tuple[int, bool]]):
         embed, image_file = await match.get_embed_and_file()
 
         for channel_id, spoil in channel_spoil_tuples:
@@ -105,7 +78,7 @@ class FPCNotificationsBase(FPCCog):
                     self.message_cache[message.id] = message
                     await match.insert_into_game_messages(message.id, channel.id)
 
-    async def edit_notifications(
+    async def edit_match(
         self, match: BaseMatchToEdit, channel_message_tuples: list[tuple[int, int]], pop: bool = False
     ):
         new_image_file: Optional[discord.File] = None

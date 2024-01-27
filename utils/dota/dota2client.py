@@ -28,15 +28,20 @@ __all__ = ("Dota2Client",)
 class Dota2Client(Client):
     def __init__(self, bot: AluBot):
         super().__init__(state=PersonaState.Invisible)
-        self.bot: AluBot = bot
+        self._bot: AluBot = bot
 
     async def login(self):
-        if self.bot.test:
+        if self._bot.test:
             username, password = (config.TEST_STEAM_USERNAME, config.TEST_STEAM_PASSWORD)
         else:
             username, password = (config.STEAM_USERNAME, config.STEAM_PASSWORD)
         await super().login(username, password)
         log.info("We successfully logged invis mode into Steam: %s", username)
+
+    async def on_ready(self) -> None:
+        if not self._bot.test:
+            embed = discord.Embed(colour=discord.Colour.blue(), description="Dota2Client: `on_ready`.")
+            await self._bot.hideout.spam.send(embed=embed)
 
     async def on_error(self, event: str, error: Exception, *args: object, **kwargs: object):
         embed = discord.Embed(
@@ -63,4 +68,4 @@ class Dota2Client(Client):
             kwargs_str.append("No kwargs")
         embed.add_field(name="Kwargs", value="\n".join(kwargs_str), inline=False)
 
-        await self.bot.exc_manager.register_error(error, source=embed, where="Dota2Client")
+        await self._bot.exc_manager.register_error(error, source=embed, where="Dota2Client")

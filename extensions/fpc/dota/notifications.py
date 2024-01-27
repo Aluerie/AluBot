@@ -12,7 +12,7 @@ from discord.ext import commands
 
 from utils import aluloop, const
 
-from .._base import FPCNotificationsBase
+from .._base import BaseNotifications
 from ._models import (
     DotaFPCMatchToEditNotCounted,
     DotaFPCMatchToEditWithOpenDota,
@@ -60,7 +60,7 @@ edit_log = logging.getLogger("edit_dota_fpc")
 edit_log.setLevel(logging.DEBUG)
 
 
-class DotaFPCNotifications(FPCNotificationsBase):
+class DotaFPCNotifications(BaseNotifications):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, prefix="dota", *args, **kwargs)
         # Send Matches related attrs
@@ -174,7 +174,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
                         )
                         # SENDING
                         start_time = time.perf_counter()
-                        await self.send_notifications(match_to_send, channel_spoil_tuples)
+                        await self.send_match(match_to_send, channel_spoil_tuples)
                         send_log.debug("Sending took %.5f secs", time.perf_counter() - start_time)
 
     @aluloop(seconds=59)
@@ -245,7 +245,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
             # thus "radiant_win" key is not present
             edit_log.debug("Opendota: match %s did not count. Deleting the match.", match_id)
             not_counted_match_to_edit = DotaFPCMatchToEditNotCounted(self.bot)
-            await self.edit_notifications(not_counted_match_to_edit, channel_message_tuples, pop=True)
+            await self.edit_match(not_counted_match_to_edit, channel_message_tuples, pop=True)
             await self.cleanup_match_to_edit(match_id, friend_id)
             return True
 
@@ -257,7 +257,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
             raise RuntimeError(f"Somehow the player {friend_id} is not in the match {match_id}")
 
         match_to_edit_with_opendota = DotaFPCMatchToEditWithOpenDota(self.bot, player=opendota_player)
-        await self.edit_notifications(match_to_edit_with_opendota, channel_message_tuples)
+        await self.edit_match(match_to_edit_with_opendota, channel_message_tuples)
         return True
 
     async def edit_with_stratz(
@@ -277,7 +277,7 @@ class DotaFPCNotifications(FPCNotificationsBase):
 
         # we are ready to send the notification
         fpc_match_to_edit = DotaFPCMatchToEditWithStratz(self.bot, data=stratz_data)
-        await self.edit_notifications(fpc_match_to_edit, channel_message_tuples, pop=True)
+        await self.edit_match(fpc_match_to_edit, channel_message_tuples, pop=True)
         return True
 
     async def cleanup_match_to_edit(self, match_id: int, friend_id: int):

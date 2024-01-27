@@ -10,7 +10,7 @@ from discord.ext import commands
 
 from utils import checks, const, errors, lol
 
-from .._base import FPCAccount, FPCSettingsBase
+from .._base import Account, BaseSettings
 from ..database_management import AddLoLPlayerFlags
 from ._models import lol_links
 
@@ -33,7 +33,8 @@ class LoLAccountDict(TypedDict):
     # last_edited: int
 
 
-class LoLAccount(FPCAccount):
+
+class LoLAccount(Account):
     if TYPE_CHECKING:
         summoner_id: str
         puuid: str
@@ -85,28 +86,28 @@ class LoLAccount(FPCAccount):
 
     @override
     @staticmethod
-    def embed_account_str_static(platform: lol.LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any):
+    def static_account_name_with_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any):
         server = lol.PLATFORM_TO_SERVER[platform]
         links = lol_links(platform, game_name, tag_line)
         return f"`{server}`: `{game_name} #{tag_line}` {links}"
 
     @property
     @override
-    def embed_account_str(self):
-        return self.embed_account_str_static(self.platform, self.game_name, self.tag_line)
+    def account_string_with_links(self):
+        return self.static_account_name_with_links(self.platform, self.game_name, self.tag_line)
 
     @override
     @staticmethod
-    def simple_account_name_static(game_name: str, tag_line: str, **kwargs: Any) -> str:
+    def static_account_string(game_name: str, tag_line: str, **kwargs: Any) -> str:
         return f"{game_name} #{tag_line}"
 
     @property
     @override
-    def simple_account_name(self) -> str:
-        return self.simple_account_name_static(self.game_name, self.tag_line)
+    def account_string(self) -> str:
+        return self.static_account_string(self.game_name, self.tag_line)
 
     @override
-    def to_database_dict(self) -> LoLAccountDict:
+    def to_pseudo_record(self) -> LoLAccountDict:
         return {
             "summoner_id": self.summoner_id,
             "puuid": self.puuid,
@@ -116,7 +117,7 @@ class LoLAccount(FPCAccount):
         }
 
 
-class LoLFPCSettings(FPCSettingsBase):
+class LoLFPCSettings(BaseSettings):
     """Commands to set up fav champ + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \

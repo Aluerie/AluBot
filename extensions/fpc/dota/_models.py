@@ -79,6 +79,7 @@ class DotaFPCMatchToSend(BaseMatchToSend):
         now = datetime.datetime.now(datetime.timezone.utc)
         return (now - self.start_time).seconds
 
+
     async def get_twitch_data(self) -> TwitchData:
         log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
@@ -92,10 +93,10 @@ class DotaFPCMatchToSend(BaseMatchToSend):
                 "colour": const.MaterialPalette.gray(),
             }
         else:
-            stream = await self.bot.twitch.get_twitch_stream(self.twitch_id)
-            if stream.online:
+            streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
+            if streamer.live:
                 twitch_status = "Live"
-                vod_url = await self.bot.twitch.last_vod_link(self.twitch_id, seconds_ago=self.long_ago)
+                vod_url = await streamer.vod_link(seconds_ago=self.long_ago)
                 colour = const.Colour.prpl()
             else:
                 twitch_status = "Offline"
@@ -103,10 +104,10 @@ class DotaFPCMatchToSend(BaseMatchToSend):
                 colour = const.Colour.twitch()
 
             return {
-                "preview_url": stream.preview_url,
-                "display_name": stream.display_name,
-                "url": stream.url,
-                "logo_url": stream.logo_url,
+                "preview_url": streamer.preview_url,
+                "display_name": streamer.display_name,
+                "url": streamer.url,
+                "logo_url": streamer.avatar_url,
                 "vod_url": vod_url,
                 "twitch_status": twitch_status,
                 "colour": colour,
@@ -115,9 +116,9 @@ class DotaFPCMatchToSend(BaseMatchToSend):
     async def get_notification_image(self, twitch_data: TwitchData, colour: discord.Colour) -> Image.Image:
         log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
-        img = await self.bot.bot.transposer.url_to_image(twitch_data["preview_url"])
-        hero_image_urls = [await self.bot.bot.dota_cache.hero.img_by_id(id) for id in self.hero_ids]
-        hero_images = [await self.bot.bot.transposer.url_to_image(url) for url in hero_image_urls]
+        img = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
+        hero_image_urls = [await self.bot.dota_cache.hero.img_by_id(id) for id in self.hero_ids]
+        hero_images = [await self.bot.transposer.url_to_image(url) for url in hero_image_urls]
 
         def build_notification_image() -> Image.Image:
             log.debug("`build_notification_image` is starting")
@@ -141,10 +142,10 @@ class DotaFPCMatchToSend(BaseMatchToSend):
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
             draw = ImageDraw.Draw(img)
             text = f"{twitch_data['display_name']} - {self.hero_name}"
-            w2, h2 = self.bot.bot.transposer.get_text_wh(text, font)
+            w2, h2 = self.bot.transposer.get_text_wh(text, font)
             draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
-            w2, h2 = self.bot.bot.transposer.get_text_wh(text, font)
+            w2, h2 = self.bot.transposer.get_text_wh(text, font)
             draw.text(
                 xy=(0, 35 + h2 + 10), text=twitch_data["twitch_status"], font=font, align="center", fill=str(colour)
             )
@@ -170,7 +171,7 @@ class DotaFPCMatchToSend(BaseMatchToSend):
                 title=f"{twitch_data['display_name']} - {self.hero_name}",
                 url=twitch_data["url"],
                 description=(
-                    f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, strip=True)}\n"
+                    f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, mode='strip')}\n"
                     f"{twitch_data['vod_url']}{self.links}"
                 ),
             )
@@ -434,7 +435,7 @@ async def beta_test_stratz_edit(self: AluCog):
     # from .fpc_notifications.dota._models import beta_test_stratz_edit
     # await beta_test_stratz_edit(self)
 
-    from extensions.fpc_notifications.dota._models import DotaFPCMatchToEditWithStratz
+    from extensions.fpc.dota._models import DotaFPCMatchToEditWithStratz
 
     await self.bot.initialize_dota_pulsefire_clients()
     self.bot.initialize_dota_cache()

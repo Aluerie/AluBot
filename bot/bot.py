@@ -195,7 +195,7 @@ class AluBot(commands.Bot, AluBotHelper):
         # erm, bcs of my horrendous .test logic we need to do it in a weird way
         # todo: is there anything better ? :D
 
-        if not self.test or "extensions.fpc_notifications.dota" in get_extensions(self.test):
+        if not self.test or "extensions.fpc.dota" in get_extensions(self.test):
             from utils.dota.dota2client import Dota2Client
 
             self.dota = Dota2Client(self)
@@ -216,14 +216,15 @@ class AluBot(commands.Bot, AluBotHelper):
     def owner(self) -> discord.User:
         return self.bot_app_info.owner
 
-    # INITIALIZE EXTRA ATTRIBUTES/CLIENTS/FUNCTIONS ####################################################################
+    # INITIALIZE EXTRA ATTRIBUTES/CLIENTS/FUNCTIONS
 
     # The following functions are `initialize_something`
     # which import some heavy modules and initialize some ~heavy clients under bot namespace
-    # they should be used in `__init__` or in `cog_load` only for those cogs which need to work with them,
+    # they should be used in `__init__` or in `cog_load` methods in cog classes that need to work with them,
     # i.e. fpc dota notifications should call
-    # `bot.initialize_steam_dota`, `bot.initialize_opendota` and `bot.initialize_twitch`
-    # This is done exclusively so when I run only a few cogs on testing bot - I don't need to load all modules/clients.
+    # `bot.initialize_dota`, `bot.initialize_dota_cache`, `bot.initialize_twitch`, etc.
+    # This is done exclusively so when I run only a few cogs on test bot
+    # I don't need to load those heavy modules/clients.
     #
     # note that I import inside the functions which is against pep8 but apparently it is not so bad:
     # pep8 answer: https://stackoverflow.com/a/1188672/19217368
@@ -336,6 +337,8 @@ class AluBot(commands.Bot, AluBotHelper):
     async def close(self) -> None:
         """Closes the connection to Discord while cleaning up other open sessions and clients."""
         await super().close()
+        if hasattr(self, "dota"):
+            await self.dota.close()
         if hasattr(self, "session"):
             await self.session.close()
         if hasattr(self, "twitch"):

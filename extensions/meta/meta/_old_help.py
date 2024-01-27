@@ -155,7 +155,7 @@ class MyHelpCommand(commands.HelpCommand):
 
         def cd():
             if c.cooldown is not None:
-                return f" | cd: {c.cooldown.rate} per {human_timedelta(c.cooldown.per, strip=True, suffix=False)}"
+                return f" | cd: {c.cooldown.rate} per {human_timedelta(c.cooldown.per, mode='strip', suffix=False)}"
             return ""
 
         def check():

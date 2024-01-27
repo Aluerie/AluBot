@@ -140,22 +140,26 @@ class LoLFPCMatchToSend(BaseMatchToSend):
         return await asyncio.to_thread(build_notification_image)
 
     async def get_embed_and_file(self) -> tuple[discord.Embed, discord.File]:
-        stream = await self.bot.twitch.get_twitch_stream(self.twitch_id)
+        streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
         champion_name = await self.bot.cdragon.champion.name_by_id(self.champion_id)
 
-        notification_image = await self.get_notification_image(stream.preview_url, stream.display_name, champion_name)
+        notification_image = await self.get_notification_image(
+            streamer.preview_url, streamer.display_name, champion_name
+        )
 
-        filename = f'{stream.display_name.replace("_", "")}-playing-{champion_name}.png'
+        filename = f'{streamer.display_name.replace("_", "")}-playing-{champion_name}.png'
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
 
-        embed = discord.Embed(color=const.Colour.rspbrry(), url=stream.url)
+        embed = discord.Embed(color=const.Colour.rspbrry(), url=streamer.url)
         embed.description = (
-            f"Match `{self.platform.upper()}_{self.match_id}` started {human_timedelta(self.long_ago, strip=True)}\n"
-            f"{await self.bot.twitch.last_vod_link(stream.twitch_id, seconds_ago=self.long_ago)}{self.links}"
+            f"Match `{self.platform.upper()}_{self.match_id}` started {human_timedelta(self.long_ago, mode='strip')}\n"
+            f"{await streamer.vod_link(seconds_ago=self.long_ago)}{self.links}"
         )
         embed.set_image(url=f"attachment://{image_file.filename}")
         embed.set_thumbnail(url=await self.bot.cdragon.champion.icon_by_id(self.champion_id))
-        embed.set_author(name=f"{stream.display_name} - {champion_name}", url=stream.url, icon_url=stream.logo_url)
+        embed.set_author(
+            name=f"{streamer.display_name} - {champion_name}", url=streamer.url, icon_url=streamer.avatar_url
+        )
         return embed, image_file
 
     @override
@@ -304,16 +308,16 @@ if TYPE_CHECKING:
     from utils import AluCog
 
 
-async def beta_test_edit_notification_image(self: AluCog):
-    """Testing function for `edit_notification_image` from LoLFPCMatchToEdit class
+async def beta_test_edit_image(self: AluCog):
+    """Testing function for `edit_image` from LoLFPCMatchToEdit class
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """
     # BETA TESTING USAGE
-    # from .fpc_notifications.lol._models import beta_test_edit_notification_image
-    # await beta_test_edit_notification_image(self)
+    # from .fpc.lol._models import beta_test_edit_image
+    # await beta_test_edit_image(self)
 
-    from extensions.fpc_notifications.lol._models import LoLFPCMatchToEdit
+    from extensions.fpc.lol._models import LoLFPCMatchToEdit
 
     await self.bot.initialize_league_pulsefire_clients()
     self.bot.initialize_league_cache()

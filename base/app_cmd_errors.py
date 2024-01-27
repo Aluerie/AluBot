@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, errors
+from utils import const, errors, formats
 
 from .ctx_cmd_errors import unexpected_error_embed
 
@@ -45,7 +45,7 @@ async def on_app_command_error(
         # AluBotException subclassed exceptions are all mine.
         desc = f"{error}"
     elif isinstance(error, app_commands.CommandOnCooldown):
-        desc = f"Please retry in `{interaction.client.formats.human_timedelta(error.retry_after, brief=True)}`"
+        desc = f"Please retry in `{formats.human_timedelta(error.retry_after, mode='full')}`"
     # elif isinstance(error, errors.SilentError):
     #     # this will fail the interaction hmm
     #     cmd = f'/{ntr.command.qualified_name}' if ntr.command else '?-cmd ntr'

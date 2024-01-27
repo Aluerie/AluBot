@@ -22,7 +22,7 @@ __all__ = (
     "DotaFPCMatchToSend",
     "DotaFPCMatchToEditWithOpenDota",
     "DotaFPCMatchToEditWithStratz",
-    "MatchToEditNotCounted",
+    "MatchToEditNotCounted"
 )
 type LiteralTwitchStatus = Literal["NoTwitch", "Offline", "Live"]
 

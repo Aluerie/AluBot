@@ -184,8 +184,8 @@ class AluBot(commands.Bot, AluBotHelper):
     async def on_ready(self):
         if not hasattr(self, "launch_time"):
             self.launch_time = datetime.datetime.now(datetime.timezone.utc)
-        if hasattr(self, "dota"):
-            await self.dota.wait_until_ready()
+        # if hasattr(self, "dota"):
+        #     await self.dota.wait_until_ready()
         log.info(f"Logged in as {self.user}")
 
     @override

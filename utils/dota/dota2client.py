@@ -40,6 +40,7 @@ class Dota2Client(Client):
 
     async def on_ready(self) -> None:
         if not self._bot.test:
+            await self._bot.wait_until_ready()
             embed = discord.Embed(colour=discord.Colour.blue(), description="Dota2Client: `on_ready`.")
             await self._bot.hideout.spam.send(embed=embed)
 

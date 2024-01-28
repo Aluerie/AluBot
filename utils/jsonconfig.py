@@ -28,8 +28,7 @@ class Config(Generic[_T]):
         *,
         encoder: Optional[type[json.JSONEncoder]] = None,
     ):
-        Path(".alubot/cfg/").mkdir(parents=True, exist_ok=True)
-        self.filename = f".alubot/cfg/{filename}"
+        self.filename = f".alubot/{filename}"
         self.pool = pool
         self.encoder = encoder
         self.loop = asyncio.get_running_loop()

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
+import re
 from typing import TYPE_CHECKING, override
 
 import discord
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "LoLFPCMatchToSend",
+    "MatchToSend",
     "LoLFPCMatchToEdit",
 )
 
@@ -37,7 +38,7 @@ def lol_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str) -> s
     return f"/[Opgg]({opgg})/[Ugg]({ugg})"
 
 
-class LoLFPCMatchToSend(BaseMatchToSend):
+class MatchToSend(BaseMatchToSend):
     def __init__(
         self,
         bot: AluBot,
@@ -141,20 +142,25 @@ class LoLFPCMatchToSend(BaseMatchToSend):
         champion_name = await self.bot.cdragon.champion.name_by_id(self.champion_id)
 
         notification_image = await self.notification_image(streamer.preview_url, streamer.display_name, champion_name)
-
-        filename = f'{streamer.display_name.replace("_", "")}-playing-{champion_name}.png'
+        title = f"{streamer.display_name} - {champion_name}"
+        filename = re.sub(r"[_' ]", "", title) + ".png"
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
 
-        embed = discord.Embed(color=const.Colour.rspbrry(), url=streamer.url)
-        embed.description = (
-            f"Match `{self.platform.upper()}_{self.match_id}` started {human_timedelta(self.long_ago, mode='strip')}\n"
-            f"{await streamer.vod_link(seconds_ago=self.long_ago)}{self.links}"
+        embed = (
+            discord.Embed(
+                color=const.Colour.rspbrry(),
+                title=title,
+                url=streamer.url,
+                description=(
+                    f"Match `{self.platform.upper()}_{self.match_id}` started {human_timedelta(self.long_ago, mode='strip')}\n"
+                    f"{await streamer.vod_link(seconds_ago=self.long_ago)}{self.links}"
+                ),
+            )
+            .set_author(name=title, url=streamer.url, icon_url=streamer.avatar_url)
+            .set_thumbnail(url=await self.bot.cdragon.champion.icon_by_id(self.champion_id))
+            .set_image(url=f"attachment://{image_file.filename}")
         )
-        embed.set_image(url=f"attachment://{image_file.filename}")
-        embed.set_thumbnail(url=await self.bot.cdragon.champion.icon_by_id(self.champion_id))
-        embed.set_author(
-            name=f"{streamer.display_name} - {champion_name}", url=streamer.url, icon_url=streamer.avatar_url
-        )
+
         return embed, image_file
 
     @override

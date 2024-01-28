@@ -76,7 +76,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         assert isinstance(vc, discord.VoiceClient)
 
         tts = gTTS(text, lang=lang.lang, tld=lang.tld)
-        audio_name = ".alubot/temp/audio.mp3"
+        audio_name = ".alubot/audio.mp3"
         tts.save(audio_name)
         vc.play(discord.FFmpegPCMAudio(audio_name))
 

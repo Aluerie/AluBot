@@ -80,11 +80,11 @@ class DevInformation(DevBaseCog):
         curious_packages = [
             "discord.py",
             "twitchio",
-            "steam",
+            "steam", # VALVE_SWITCH
             "dota2",
             "pulsefire",
         ]  # list of packages versions of which I'm interested the most
-        pv = sys.version_info
+        pv = sys.version_info  # python version 
 
         embed = (
             discord.Embed(colour=const.Colour.prpl())
@@ -106,7 +106,7 @@ class DevInformation(DevBaseCog):
     async def system_logs(self, ctx: AluContext):
         """(\N{GREY HEART} Hideout-Only) Get bot's logs."""
         await ctx.typing()
-        logs_file = discord.File("./.alubot/logs/alubot.log")
+        logs_file = discord.File(".alubot/alubot.log")
         await ctx.reply(file=logs_file)
 
 

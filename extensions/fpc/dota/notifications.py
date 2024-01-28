@@ -65,6 +65,7 @@ class DotaFPCNotifications(BaseNotifications):
         self.notification_sender.start()
 
         self.notification_editor.clear_exception_types()
+        self.notification_editor.start()
 
         self.daily_ratelimit_report.start()
         return await super().cog_load()

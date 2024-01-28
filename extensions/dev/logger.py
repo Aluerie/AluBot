@@ -24,7 +24,7 @@ class LoggingHandler(logging.Handler):
     """Extra logging handler to output info/warning/errors to a discord webhook.
 
     * Just remember that `log.info` and above calls go spammed in a discord webhook so plan them accordingly.
-    * `log.debug` do not so use primarily them for debug logs 
+    * `log.debug` do not so use primarily them for debug logs
     """
 
     def __init__(self, cog: LoggerViaWebhook):
@@ -56,19 +56,29 @@ class LoggerViaWebhook(DevBaseCog):
     def add_record(self, record: logging.LogRecord) -> None:
         self._logging_queue.put_nowait(record)
 
-    async def send_log_record(self, record: logging.LogRecord) -> None:
-        # TODO: customize this
-        attributes = {"INFO": "\N{INFORMATION SOURCE}\ufe0f", "WARNING": "\N{WARNING SIGN}\ufe0f"}
+    # TODO: ADD MORE STUFF
+    avatar_mapping = {
+        "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
+        "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
+        "bot.bot": "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
+    }
 
-        emoji = attributes.get(record.levelname, "\N{CROSS MARK}")
+    async def send_log_record(self, record: logging.LogRecord) -> None:
+        attributes = {
+            "INFO": "\N{INFORMATION SOURCE}\ufe0f",
+            "WARNING": "\N{WARNING SIGN}\ufe0f",
+            "ERROR": "\N{CROSS MARK}",
+        }
+
+        emoji = attributes.get(record.levelname, "\N{WHITE QUESTION MARK ORNAMENT}")
         dt = datetime.datetime.utcfromtimestamp(record.created)
         msg = textwrap.shorten(f"{emoji} {formats.format_dt(dt)} {record.message}", width=1990)
-        if record.name == "discord.gateway":
-            username = "Gateway"
-            avatar_url = "https://i.imgur.com/4PnCKB3.png"
-        else:
-            username = f"{record.name} Logger".replace("discord", "dcord")
-            avatar_url = discord.utils.MISSING
+
+        avatar_url = self.avatar_mapping.get(record.name, discord.utils.MISSING)
+        # Discord doesn't allow Webhooks names to contain "discord";
+        # so if the record.name comes from discord library - it gonna block it
+        # thus we replace letters. c is cyrillic, o is greek.
+        username = record.name.replace("discord", "disсοrd")
         await self.logger_webhook.send(msg, username=username, avatar_url=avatar_url)
 
     @tasks.loop(seconds=0.0)

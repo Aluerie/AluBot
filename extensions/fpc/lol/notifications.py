@@ -10,7 +10,7 @@ import discord
 from utils import aluloop, const, lol
 
 from .._base import BaseNotifications
-from ._models import LoLFPCMatchToEdit, LoLFPCMatchToSend
+from ._models import LoLFPCMatchToEdit, MatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -143,7 +143,7 @@ class LoLNotifications(BaseNotifications):
                         player_account_row["display_name"],
                         await self.bot.cdragon.champion.name_by_id(participant["championId"]),
                     )
-                    match_to_send = LoLFPCMatchToSend(self.bot, game, participant, player_account_row)
+                    match_to_send = MatchToSend(self.bot, game, participant, player_account_row)
                     await self.send_match(match_to_send, channel_spoil_tuples)
 
     @aluloop(seconds=59)

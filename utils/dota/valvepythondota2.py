@@ -11,13 +11,7 @@ from typing import TYPE_CHECKING
 from dota2.client import Dota2Client as Dota2Client_
 from steam.client import SteamClient
 
-try:
-    import config
-except ImportError:
-    import sys
-
-    sys.path.append("D:/LAPTOP/AluBot")
-    import config
+import config
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -58,10 +52,10 @@ class Dota2Client(Dota2Client_):
         try:
             if self.steam.login(username=username, password=password):
                 self.steam.change_status(persona_state=7)
-                log.info("We successfully logged invis mode into Steam: %s", username)
+                log.info("Logged in Steam as `%s`", username)
                 self.launch()
         except Exception as exc:
-            log.error("Logging into Steam failed")
+            log.error("Logging in Steam failed")
             await self._bot.exc_manager.register_error(exc, source="Steam login", where="Steam login")
 
     async def top_live_matches(self) -> list[LiveMatch]:
@@ -72,7 +66,7 @@ class Dota2Client(Dota2Client_):
         self.check_list = {i * 10 for i in range(0, 10)}
         self.matches = []
         self.send(EDOTAGCMsg.EMsgClientToGCFindTopSourceTVGames, {"start_game": 90})
-        # can it fix the blocking problem ? 
+        # can it fix the blocking problem ?
         # https://github.com/gfmio/asyncio-gevent?tab=readme-ov-file#converting-greenlets-to-asyncio-futures
         self.wait_event("live_matches_ready", timeout=4)
         if self.check_list:

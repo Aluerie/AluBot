@@ -27,8 +27,17 @@ class BaseMatchToSend(abc.ABC):
     if TYPE_CHECKING:
         status: str
 
-    def __init__(self, bot: AluBot) -> None:
+    def __init__(
+        self,
+        bot: AluBot,
+        # player_name: str,
+        # character_name: str,
+        # preview_url: str,
+    ) -> None:
         self.bot: AluBot = bot
+        # self.player_name: str = player_name
+        # self.character_name: str = character_name
+        # self.preview_url: str = preview_url
 
     @abc.abstractmethod
     async def notification_image(self) -> Image.Image:
@@ -41,6 +50,10 @@ class BaseMatchToSend(abc.ABC):
     @abc.abstractmethod
     async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
         """Get embed and file"""
+        # image = await self.notification_image()
+
+        # title = f"{self.player_name} - {self.character_name}"
+        # filename = twitch_data["twitch_status"] + "-" + re.sub(r"[_' ]", "", title) + ".png"
 
 
 class BaseMatchToEdit(abc.ABC):

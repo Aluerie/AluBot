@@ -67,5 +67,5 @@ Disclaimer: maybe some of these are bad. I'm learning.
 7. Recipe to backup the database.
 
     ```sql
-    COPY (SELECT * FROM {db_name}) TO '/.alubot/db_backup/{db_name}.csv' WITH CSV DELIMITER ',' HEADER
+    COPY (SELECT * FROM {db_name}) TO '/.alubot/{db_name}.csv' WITH CSV DELIMITER ',' HEADER
     ```

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import abc
 import logging
-from typing import TYPE_CHECKING, Any, Optional, TypedDict
+import re
+from typing import TYPE_CHECKING, Any, Optional, Self, TypedDict
 
 import discord
 
@@ -30,12 +31,16 @@ class BaseMatchToSend(abc.ABC):
         self.bot: AluBot = bot
 
     @abc.abstractmethod
-    async def get_embed_and_file(self) -> tuple[discord.Embed, discord.File]:
-        """Get embed and file"""
+    async def notification_image(self) -> Image.Image:
+        """Get notification image that will be `set_image` into embed."""
 
     @abc.abstractmethod
     async def insert_into_game_messages(self, message_id: int, channel_id: int) -> None:
         """Insert the match to messages table so we can edit it later"""
+
+    @abc.abstractmethod
+    async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
+        """Get embed and file"""
 
 
 class BaseMatchToEdit(abc.ABC):

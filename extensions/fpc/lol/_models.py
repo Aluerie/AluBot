@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
     from bot import AluBot
 
+    from .notifications import LivePlayerAccountRow
+
 
 __all__ = (
     "LoLFPCMatchToSend",
@@ -39,33 +41,26 @@ class LoLFPCMatchToSend(BaseMatchToSend):
     def __init__(
         self,
         bot: AluBot,
-        *,
-        match_id: int,
-        platform: str,
-        game_name: str,
-        tag_line: str,
-        start_time: int,
-        champion_id: int,
-        all_champion_ids: list[int],
-        twitch_id: int,
-        summoner_spell_ids: tuple[int, int],
-        rune_ids: list[int],
-        summoner_id: str,
+        game: RiotAPISchema.LolSpectatorV4Game,
+        participant: RiotAPISchema.LolSpectatorV4GameParticipant,
+        player_account_row: LivePlayerAccountRow,
     ):
         super().__init__(bot)
 
-        self.platform: lol.LiteralPlatform = platform  # type: ignore
-        self.game_name: str = game_name
-        self.tag_line: str = tag_line
+        self.match_id: int = game["gameId"]
+        self.platform: lol.LiteralPlatform = game["platformId"]  # type: ignore
 
-        self.match_id: int = match_id
-        self.start_time: int = start_time
-        self.champion_id: int = champion_id
-        self.all_champion_ids: list[int] = all_champion_ids
-        self.twitch_id: int = twitch_id
-        self.summoner_spell_ids: tuple[int, int] = summoner_spell_ids
-        self.rune_ids: list[int] = rune_ids
-        self.summoner_id: str = summoner_id
+        self.game_name: str = player_account_row["game_name"]
+        self.tag_line: str = player_account_row["tag_line"]
+        self.twitch_id: int = player_account_row["twitch_id"]
+
+        self.start_time: int = game["gameStartTime"]
+        self.all_champion_ids: list[int] = [p["championId"] for p in game["participants"]]
+
+        self.champion_id: int = participant["championId"]
+        self.summoner_spell_ids: tuple[int, int] = (participant["spell1Id"], participant["spell2Id"])
+        self.rune_ids: list[int] = participant["perks"]["perkIds"]  # type: ignore
+        self.summoner_id: str = participant["summonerId"]
 
     @property
     def links(self) -> str:
@@ -84,7 +79,8 @@ class LoLFPCMatchToSend(BaseMatchToSend):
         timestamp_seconds = round(self.start_time / 1000)  # the `self.start_time` is given in milliseconds
         return int(datetime.datetime.now(datetime.timezone.utc).timestamp() - timestamp_seconds)
 
-    async def get_notification_image(
+    @override
+    async def notification_image(
         self,
         stream_preview_url: str,
         display_name: str,
@@ -139,13 +135,12 @@ class LoLFPCMatchToSend(BaseMatchToSend):
 
         return await asyncio.to_thread(build_notification_image)
 
-    async def get_embed_and_file(self) -> tuple[discord.Embed, discord.File]:
+    @override
+    async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
         streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
         champion_name = await self.bot.cdragon.champion.name_by_id(self.champion_id)
 
-        notification_image = await self.get_notification_image(
-            streamer.preview_url, streamer.display_name, champion_name
-        )
+        notification_image = await self.notification_image(streamer.preview_url, streamer.display_name, champion_name)
 
         filename = f'{streamer.display_name.replace("_", "")}-playing-{champion_name}.png'
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)

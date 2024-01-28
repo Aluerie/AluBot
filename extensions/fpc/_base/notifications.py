@@ -57,7 +57,7 @@ class BaseNotifications(FPCCog):
         return live_player_ids
 
     async def send_match(self, match: BaseMatchToSend, channel_spoil_tuples: list[tuple[int, bool]]):
-        embed, image_file = await match.get_embed_and_file()
+        embed, image_file = await match.embed_and_file()
 
         for channel_id, spoil in channel_spoil_tuples:
             try:

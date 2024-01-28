@@ -1,13 +1,13 @@
 from utils import const
 
-from .notifications import LoLFPCNotifications
+from .notifications import LoLNotifications
 from .settings import LoLFPCSettings
 from .summoner_check import LoLSummonerNameCheck
 from .twitch_check import LoLTwitchAccountCheck
 
 
 class LoLFPC(
-    LoLFPCNotifications,
+    LoLNotifications,
     LoLFPCSettings,
     LoLSummonerNameCheck,
     LoLTwitchAccountCheck,

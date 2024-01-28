@@ -4,6 +4,7 @@ import asyncio
 import datetime
 import logging
 import math
+import re
 from typing import TYPE_CHECKING, Literal, Optional, TypedDict, override
 
 import discord
@@ -108,7 +109,7 @@ class MatchToSend(BaseMatchToSend):
                 "colour": colour,
             }
 
-    async def get_notification_image(self, twitch_data: TwitchData, colour: discord.Colour) -> Image.Image:
+    async def notification_image(self, twitch_data: TwitchData, colour: discord.Colour) -> Image.Image:
         log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         img = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
@@ -149,32 +150,26 @@ class MatchToSend(BaseMatchToSend):
         return await asyncio.to_thread(build_notification_image)
 
     @override
-    async def get_embed_and_file(self) -> tuple[discord.Embed, discord.File]:
+    async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
         log.debug("Creating embed + file for Notification match")
 
         twitch_data = await self.get_twitch_data()
 
-        notification_image = await self.get_notification_image(twitch_data, twitch_data["colour"])
-        filename = (
-            f'{twitch_data["twitch_status"]}-{twitch_data["display_name"].replace("_", "")}-'
-            f'{(self.hero_name).replace(" ", "").replace(chr(39), "")}.png'  # chr39 is "'"
-        )
+        notification_image = await self.notification_image(twitch_data, twitch_data["colour"])
+        title = f"{twitch_data['display_name']} - {self.hero_name}"
+        filename = twitch_data["twitch_status"] + "-" + re.sub(r"[_' ]", "", title) + ".png"
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
         embed = (
             discord.Embed(
                 colour=twitch_data["colour"],
-                title=f"{twitch_data['display_name']} - {self.hero_name}",
+                title=title,
                 url=twitch_data["url"],
                 description=(
                     f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, mode='strip')}\n"
                     f"{twitch_data['vod_url']}{self.links}"
                 ),
             )
-            .set_author(
-                name=f"{twitch_data['display_name']} - {self.hero_name}",
-                url=twitch_data["url"],
-                icon_url=twitch_data["logo_url"],
-            )
+            .set_author(name=title, url=twitch_data["url"], icon_url=twitch_data["logo_url"])
             .set_thumbnail(url=await self.bot.dota_cache.hero.img_by_id(self.hero_id))
             .set_image(url=f"attachment://{image_file.filename}")
             .set_footer(text=f"watch_server {self.server_steam_id}")

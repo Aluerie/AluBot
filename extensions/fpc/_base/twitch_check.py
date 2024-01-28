@@ -36,7 +36,10 @@ class TwitchAccountCheckBase(FPCCog):
         rows: list[CheckAccRenamesQueryRow] = await self.bot.pool.fetch(query)
 
         for row in rows:
-            display_name = await self.bot.twitch.name_by_twitch_id(row["twitch_id"])
-            if display_name != row["display_name"]:
+            user = next(iter(await self.bot.twitch.fetch_users(ids=[row["twitch_id"]])), None)
+
+            if user is None:
+                continue
+            elif user.display_name != row["display_name"]:
                 query = f"UPDATE {self.table_name} SET display_name=$1 WHERE player_id=$3"
-                await self.bot.pool.execute(query, display_name, row["player_id"])
+                await self.bot.pool.execute(query, user.display_name, row["player_id"])

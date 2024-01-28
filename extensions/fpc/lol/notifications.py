@@ -31,17 +31,12 @@ if TYPE_CHECKING:
         platform: lol.LiteralPlatform
         channel_message_tuples: list[tuple[int, int]]
 
-    class EditLolNotificationQueryRow(TypedDict):
-        message_id: int
-        channel_id: int
-        champion_id: int
-
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class LoLFPCNotifications(BaseNotifications):
+class LoLNotifications(BaseNotifications):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, prefix="lol", *args, **kwargs)
         self.live_match_ids: list[int] = []
@@ -117,13 +112,13 @@ class LoLFPCNotifications(BaseNotifications):
 
             self.live_match_ids.append(game["gameId"])
 
-            player = next(
+            participant = next(
                 (p for p in game["participants"] if p["summonerId"] == player_account_row["summoner_id"]), None
             )
 
             if (
-                player
-                and player["championId"] in favourite_champion_ids
+                participant
+                and participant["championId"] in favourite_champion_ids
                 and player_account_row["last_edited"] != game["gameId"]
             ):
                 query = """
@@ -139,30 +134,16 @@ class LoLFPCNotifications(BaseNotifications):
                 channel_spoil_tuples: list[tuple[int, bool]] = [
                     (channel_id, spoil)
                     for channel_id, spoil in await self.bot.pool.fetch(
-                        query, player["championId"], player_account_row["player_id"], game["gameId"]
+                        query, participant["championId"], player_account_row["player_id"], game["gameId"]
                     )
                 ]
                 if channel_spoil_tuples:
                     log.debug(
                         "Notif %s - %s",
                         player_account_row["display_name"],
-                        await self.bot.cdragon.champion.name_by_id(player["championId"]),
+                        await self.bot.cdragon.champion.name_by_id(participant["championId"]),
                     )
-                    match_to_send = LoLFPCMatchToSend(
-                        self.bot,
-                        match_id=game["gameId"],
-                        platform=game["platformId"],
-                        game_name=player_account_row["game_name"],
-                        # TODO: ^^^would be cool to get it from game object but currently it's not there.
-                        tag_line=player_account_row["tag_line"],
-                        start_time=game["gameStartTime"],
-                        champion_id=player["championId"],
-                        all_champion_ids=[p["championId"] for p in game["participants"]],
-                        twitch_id=player_account_row["twitch_id"],
-                        summoner_spell_ids=(player["spell1Id"], player["spell2Id"]),
-                        rune_ids=player["perks"]["perkIds"],  # type: ignore
-                        summoner_id=player["summonerId"],
-                    )
+                    match_to_send = LoLFPCMatchToSend(self.bot, game, participant, player_account_row)
                     await self.send_match(match_to_send, channel_spoil_tuples)
 
     @aluloop(seconds=59)
@@ -207,4 +188,4 @@ class LoLFPCNotifications(BaseNotifications):
 
 
 async def setup(bot: AluBot):
-    await bot.add_cog(LoLFPCNotifications(bot))
+    await bot.add_cog(LoLNotifications(bot))

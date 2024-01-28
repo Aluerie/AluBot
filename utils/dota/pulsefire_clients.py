@@ -193,6 +193,11 @@ class StratzClient(BaseClient):
         query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
             match(id: $match_id) {
                 players(steamAccountId: $friend_id) {
+                    isVictory
+                    heroId
+                    kills
+                    deaths
+                    assists
                     item0Id
                     item1Id
                     item2Id
@@ -201,6 +206,9 @@ class StratzClient(BaseClient):
                     item5Id
                     neutral0Id
                     playbackData {
+                        abilityLearnEvents {
+                            abilityId
+                        }
                         purchaseEvents {
                             time
                             itemId

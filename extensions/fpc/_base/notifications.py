@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import discord
 
@@ -78,10 +78,8 @@ class BaseNotifications(FPCCog):
                     self.message_cache[message.id] = message
                     await match.insert_into_game_messages(message.id, channel.id)
 
-    async def edit_match(
-        self, match: BaseMatchToEdit, channel_message_tuples: list[tuple[int, int]], pop: bool = False
-    ):
-        new_image_file: Optional[discord.File] = None
+    async def edit_match(self, match: BaseMatchToEdit, channel_message_tuples: list[tuple[int, int]]):
+        new_image_file: discord.File | None = None
 
         for channel_id, message_id in channel_message_tuples:
             try:
@@ -126,10 +124,8 @@ class BaseNotifications(FPCCog):
 
             embed.set_image(url=f"attachment://{new_image_file.filename}")
             try:
-                new_message = await message.edit(embed=embed, attachments=[new_image_file])
-                if pop:
-                    self.message_cache.pop(message.id, None)
-                else:
-                    self.message_cache[message.id] = new_message
+                await message.edit(embed=embed, attachments=[new_image_file])
             except discord.Forbidden:
                 raise
+            else:
+                self.message_cache.pop(message.id, None)

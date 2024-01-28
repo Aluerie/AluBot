@@ -24,7 +24,7 @@ git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
 githubkit
-pygit2==1.13.3
+pygit2==1.14.0
 
 # TTS
 gtts~=2.5.0
@@ -42,6 +42,12 @@ dateparser==1.2.0
 # Jupyter Notebooks (I like to mess with those on home PC)
 ipykernel; platform_system == 'Windows'
 
+# Bot's Base
+asyncpg~=0.29.0
+aiohttp~=3.9.1
+
+# Optimisation
+orjson
 uvloop~=0.19.0; platform_system == 'Linux'  # ignore on non-Linux - because not available
 
 # Uncategorised (or Other)
@@ -49,12 +55,10 @@ aiofiles~=23.2.1
 pillow==10.2.0
 emoji==2.10.0
 numpy==1.26.3
-aiohttp~=3.9.1
 urllib3~=2.1.0
 wordcloud~=1.9.3
 matplotlib~=3.8.2
 unidiff~=0.7.5
-psutil==5.9.7
-asyncpg~=0.29.0
+psutil==5.9.8
 click~=8.1.7
 lru_dict~=1.3.0

@@ -44,21 +44,19 @@ log.setLevel(logging.INFO)
 class LoLFPCNotifications(BaseNotifications):
     def __init__(self, bot: AluBot, *args, **kwargs):
         super().__init__(bot, prefix="lol", *args, **kwargs)
-        self.notification_matches: list[LoLFPCMatchToSend] = []
         self.live_match_ids: list[int] = []
 
     async def cog_load(self) -> None:
-        self.lol_fpc_notifications_task.add_exception_type(asyncpg.InternalServerError)
-        self.lol_fpc_notifications_task.clear_exception_types()
-        self.lol_fpc_notifications_task.start()
+        self.notification_worker.add_exception_type(asyncpg.InternalServerError)
+        self.notification_worker.clear_exception_types()
+        self.notification_worker.start()
         return await super().cog_load()
 
     async def cog_unload(self) -> None:
-        self.lol_fpc_notifications_task.stop()  # .cancel()
+        self.notification_worker.stop()  # .cancel()
         return await super().cog_unload()
 
-    async def fill_notification_matches(self):
-        self.notification_matches = []
+    async def send_notifications(self):
         self.live_match_ids = []
 
         query = "SELECT DISTINCT character_id FROM lol_favourite_characters"
@@ -168,21 +166,21 @@ class LoLFPCNotifications(BaseNotifications):
                     await self.send_match(match_to_send, channel_spoil_tuples)
 
     @aluloop(seconds=59)
-    async def lol_fpc_notifications_task(self):
+    async def notification_worker(self):
         log.debug(f"--- LoL FPC Notifications Task is starting now ---")
-        await self.fill_notification_matches()
-        await self.edit_lol_notification_messages()
+        await self.send_notifications()
+        await self.edit_notifications()
         log.debug(f"--- LoL FPC Notifications Task is finished ---")
 
     # POST MATCH EDITS
 
-    async def edit_lol_notification_messages(self):
+    async def edit_notifications(self):
         query = """
             SELECT match_id, champion_id, platform, ARRAY_AGG ((channel_id, message_id)) channel_message_tuples
             FROM lol_messages
             WHERE NOT match_id=ANY($1)
             GROUP BY match_id, champion_id, platform
-            """
+        """
         match_rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(query, self.live_match_ids)
 
         for match_row in match_rows:
@@ -203,7 +201,7 @@ class LoLFPCNotifications(BaseNotifications):
                 if participant["championId"] == match_row["champion_id"]:
                     # found our participant
                     match_to_edit = LoLFPCMatchToEdit(self.bot, participant=participant, timeline=timeline)
-                    await self.edit_match(match_to_edit, match_row["channel_message_tuples"], pop=True)
+                    await self.edit_match(match_to_edit, match_row["channel_message_tuples"])
             query = "DELETE FROM lol_messages WHERE match_id=$1"
             await self.bot.pool.fetch(query, match_row["match_id"])
 

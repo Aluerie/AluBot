@@ -18,12 +18,7 @@ if TYPE_CHECKING:
     from utils.dota import schemas
 
 
-__all__ = (
-    "DotaFPCMatchToSend",
-    "DotaFPCMatchToEditWithOpenDota",
-    "DotaFPCMatchToEditWithStratz",
-    "MatchToEditNotCounted"
-)
+__all__ = ("MatchToSend", "StratzMatchToEdit", "NotCountedMatchToEdit")
 type LiteralTwitchStatus = Literal["NoTwitch", "Offline", "Live"]
 
 
@@ -41,7 +36,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class DotaFPCMatchToSend(BaseMatchToSend):
+class MatchToSend(BaseMatchToSend):
     def __init__(
         self,
         bot: AluBot,
@@ -195,7 +190,7 @@ class DotaFPCMatchToSend(BaseMatchToSend):
         await self.bot.pool.execute(query, message_id, channel_id, self.match_id, self.friend_id, self.hero_id)
 
 
-class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
+class StratzMatchToEdit(BaseMatchToEdit):
     """
     Class
     """
@@ -203,23 +198,43 @@ class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
     def __init__(
         self,
         bot: AluBot,
-        *,
-        player: dota.OpenDotaAPISchema.Player,
+        data: schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.ResponseDict,
     ):
         super().__init__(bot)
 
-        self.outcome: str = "Win" if player["win"] else "Loss"
+        player = data["data"]["match"]["players"][0]
+
+        self.outcome: str = "Win" if player["isVictory"] else "Loss"
         self.kda: str = f'{player["kills"]}/{player["deaths"]}/{player["assists"]}'
 
-        self.ability_upgrades_ids: list[int] = player["ability_upgrades_arr"][:18]
+        self.ability_upgrades_ids: list[int] = [
+            event["abilityId"] for event in player["playbackData"]["abilityLearnEvents"][:18]
+        ]
 
-        self.item_ids: list[int] = [player[f"item_{i}"] for i in range(6)]
-        if player["aghanims_shard"]:
-            self.item_ids.append(const.DOTA.AGHANIMS_SHARD_ITEM_ID)
-        if player["aghanims_scepter"]:
-            self.item_ids.append(const.DOTA.AGHANIMS_BLESSING_ITEM_ID)
+        item_ids: list[int] = [player[f"item{i}Id"] or 0 for i in range(6)]
 
-        self.neutral_item_id: int = player["item_neutral"]
+        for buff_event in player["stats"]["matchPlayerBuffEvent"]:
+            item_id = buff_event.get("itemId")
+            if item_id:
+                if item_id == const.DOTA.AGHANIMS_SCEPTER_ITEM_ID:
+                    # Stratz writes it like it's buff from aghs when it's a buff from a blessing, idk
+                    item_ids.append(const.DOTA.AGHANIMS_BLESSING_ITEM_ID)
+                else:
+                    item_ids.append(item_id)
+
+        self.sorted_item_purchases: list[tuple[int, str]] = []
+        for purchase_event in reversed(player["playbackData"]["purchaseEvents"]):
+            item_id = purchase_event["itemId"]
+            if item_id in item_ids:
+                self.sorted_item_purchases.append((item_id, f"{math.ceil(purchase_event['time']/60)}m"))
+                item_ids.remove(item_id)
+
+        self.sorted_item_purchases.reverse()  # reverse back
+        # add items for which we couldn't find item timings back
+        # this happens either bcs it was free (shard from tormentor) or Stratz API failed to parse properly.
+        self.sorted_item_purchases.extend([(item_id, "") for item_id in item_ids])
+
+        self.neutral_item_id: int = player["neutral0Id"] or 0
 
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
@@ -228,8 +243,7 @@ class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
     @override
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
-
-        item_icon_urls = [await self.bot.dota_cache.item.icon_by_id(item_id) for item_id in self.item_ids]
+        item_icon_urls = [await self.bot.dota_cache.item.icon_by_id(id) for id, _ in self.sorted_item_purchases]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
 
         neutral_item_url = await self.bot.dota_cache.item.icon_by_id(self.neutral_item_id)
@@ -247,6 +261,7 @@ class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
         def build_notification_image() -> Image.Image:
             log.debug("Building edited notification message.")
             width, height = img.size
+
             information_height = 50
             rectangle = Image.new("RGB", (width, information_height), str(colour))
             ImageDraw.Draw(rectangle)
@@ -258,6 +273,16 @@ class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
                 item_image = item_image.resize((69, information_height))  # 69/50 - to match 88/64 which is natural size
                 left = count * item_image.width
                 img.paste(item_image, (left, height - item_image.height))
+
+            # items and aghanim shard/blessing
+            font_item_timing = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
+
+            for count, (item_id, item_timing) in enumerate(self.sorted_item_purchases):
+                if item_timing:
+                    # item timing
+                    left = count * 69
+                    item_timing_w, item_timing_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
+                    draw.text((left, height - item_timing_h), item_timing, font=font_item_timing, align="left")
 
             resized_neutral_item_image = i = neutral_item_image.resize((69, information_height))
             img.paste(im=i, box=(width - i.width, height - i.height))
@@ -306,101 +331,10 @@ class DotaFPCMatchToEditWithOpenDota(BaseMatchToEdit):
         return await asyncio.to_thread(build_notification_image)
 
 
-class DotaFPCMatchToEditWithStratz(BaseMatchToEdit):
+class NotCountedMatchToEdit(BaseMatchToEdit):
     """
     Class
     """
-
-    def __init__(
-        self,
-        bot: AluBot,
-        *,
-        data: schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.ResponseDict,
-    ):
-        super().__init__(bot)
-
-        player = data["data"]["match"]["players"][0]
-
-        item_ids: list[int] = [player[f"item{i}Id"] or 0 for i in range(6)]
-
-        for buff_event in player["stats"]["matchPlayerBuffEvent"]:
-            item_id = buff_event.get("itemId")
-            if item_id:
-                if item_id == const.DOTA.AGHANIMS_SCEPTER_ITEM_ID:
-                    # Stratz writes it like it's buff from aghs when it's a buff from a blessing, idk
-                    item_ids.append(const.DOTA.AGHANIMS_BLESSING_ITEM_ID)
-                else:
-                    item_ids.append(item_id)
-
-        self.sorted_item_purchases: list[tuple[int, str]] = []
-        for purchase_event in reversed(player["playbackData"]["purchaseEvents"]):
-            item_id = purchase_event["itemId"]
-            if item_id in item_ids:
-                self.sorted_item_purchases.append((item_id, f"{math.ceil(purchase_event['time']/60)}m"))
-                item_ids.remove(item_id)
-
-        self.sorted_item_purchases.reverse()  # reverse back
-        # add items for which we couldn't find item timings back
-        # this happens either bcs it was free (shard from tormentor) or Stratz API failed to parse properly.
-        self.sorted_item_purchases.extend([(item_id, "") for item_id in item_ids])
-
-        self.neutral_item_id: int = player["neutral0Id"] or 0
-
-    def __repr__(self) -> str:
-        pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
-        return f"<{self.__class__.__name__} {pairs}>"
-
-    @override
-    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
-        img = await self.bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await self.bot.dota_cache.item.icon_by_id(id) for id, timing in self.sorted_item_purchases]
-        item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
-
-        neutral_item_url = await self.bot.dota_cache.item.icon_by_id(self.neutral_item_id)
-        neutral_item_image = await self.bot.transposer.url_to_image(neutral_item_url)
-
-        def build_notification_image() -> Image.Image:
-            log.debug("Building edited notification message.")
-            width, height = img.size
-
-            information_height = 50
-            rectangle = Image.new("RGB", (width, information_height), str(colour))
-            ImageDraw.Draw(rectangle)
-            img.paste(rectangle, (0, height - information_height))
-            draw = ImageDraw.Draw(img)
-
-            for count, item_image in enumerate(item_icon_images):
-                # item image
-                item_image = item_image.resize((69, information_height))  # 69/50 - to match 88/64 which is natural size
-                left = count * item_image.width
-                img.paste(item_image, (left, height - item_image.height))
-
-            # items and aghanim shard/blessing
-            font_item_timing = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
-
-            for count, (item_id, item_timing) in enumerate(self.sorted_item_purchases):
-                if item_timing:
-                    # item timing
-                    left = count * 69
-                    item_timing_w, item_timing_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
-                    draw.text((left, height - item_timing_h), item_timing, font=font_item_timing, align="left")
-
-            resized_neutral_item_image = i = neutral_item_image.resize((69, information_height))
-            img.paste(im=i, box=(width - i.width, height - i.height))
-
-            # img.show()
-            return img
-
-        return await asyncio.to_thread(build_notification_image)
-
-
-class MatchToEditNotCounted(BaseMatchToEdit):
-    """
-    Class
-    """
-
-    def __init__(self, bot: AluBot):
-        super().__init__(bot)
 
     @override
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
@@ -435,7 +369,7 @@ async def beta_test_stratz_edit(self: AluCog):
     # from .fpc_notifications.dota._models import beta_test_stratz_edit
     # await beta_test_stratz_edit(self)
 
-    from extensions.fpc.dota._models import DotaFPCMatchToEditWithStratz
+    from extensions.fpc.dota._models import StratzMatchToEdit
 
     await self.bot.initialize_dota_pulsefire_clients()
     self.bot.initialize_dota_cache()
@@ -444,7 +378,7 @@ async def beta_test_stratz_edit(self: AluCog):
     friend_id = 159020918
     data = await self.bot.stratz_client.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
 
-    match_to_edit = DotaFPCMatchToEditWithStratz(self.bot, data=data)
+    match_to_edit = StratzMatchToEdit(self.bot, data)
 
     new_image = await match_to_edit.edit_notification_image(const.PICTURE.PLACEHOLDER640X360, discord.Colour.purple())
     # new_image.show()

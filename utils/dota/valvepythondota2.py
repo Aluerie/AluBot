@@ -72,6 +72,8 @@ class Dota2Client(Dota2Client_):
         self.check_list = {i * 10 for i in range(0, 10)}
         self.matches = []
         self.send(EDOTAGCMsg.EMsgClientToGCFindTopSourceTVGames, {"start_game": 90})
+        # can it fix the blocking problem ? 
+        # https://github.com/gfmio/asyncio-gevent?tab=readme-ov-file#converting-greenlets-to-asyncio-futures
         self.wait_event("live_matches_ready", timeout=4)
         if self.check_list:
             # we didn't cross out all checking `start_game`-s

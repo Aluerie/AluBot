@@ -35,6 +35,7 @@ category = ExtCategory(
 
 class BetaCog(AluCog, category=category):
     async def cog_load(self):
+        self.beta_task.clear_exception_types()
         self.beta_task.start()
 
     @property
@@ -42,5 +43,6 @@ class BetaCog(AluCog, category=category):
         """Even lazier shortcut"""
         return self.hideout.spam
 
+    @aluloop()
     async def beta_task(self):
         ...

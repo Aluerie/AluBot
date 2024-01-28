@@ -4,9 +4,13 @@ Slightly overcooked typing for OpenDota pulsefire-like client REST requests.
 Note that it can be outdated, wrong, incomplete. 
 """
 
-from typing import Any, Literal, Mapping, NamedTuple, NotRequired, Optional, TypedDict
+from typing import Literal, NamedTuple, NotRequired, Optional, TypedDict
 
-__all__ = ("OpenDotaAPISchema",)
+__all__ = (
+    "OpenDotaAPISchema",
+    "StratzGraphQLQueriesSchema",
+    "GameCoordinatorAPISchema",
+)
 
 
 class OpenDotaAPISchema:
@@ -205,9 +209,17 @@ class StratzGraphQLQueriesSchema:
             },
         )
 
+        AbilityLearnEvent = TypedDict(
+            "AbilityLearnEvent",
+            {
+                "abilityId": int,
+            },
+        )
+
         PlaybackData = TypedDict(
             "PlaybackData",
             {
+                "abilityLearnEvents": list[AbilityLearnEvent],
                 "purchaseEvents": list[PurchaseEvent],
             },
         )
@@ -215,6 +227,11 @@ class StratzGraphQLQueriesSchema:
         Player = TypedDict(
             "Player",
             {
+                "isVictory": bool,
+                "heroId": int,
+                "kills": int,
+                "deaths": int,
+                "assists": int,
                 "item0Id": int,
                 "item1Id": int,
                 "item2Id": int,

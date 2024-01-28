@@ -44,4 +44,4 @@ class BaseMatchToEdit(abc.ABC):
 
     @abc.abstractmethod
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
-        """Edit"""
+        """Edit the notification image."""

@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from extensions.utilities.utilities.fix_links import fix_link_worker
+from ext.utilities.utilities.fix_links import fix_link_worker
 from utils import const, errors, links, webhook_mimicry
 
 from ._base import CommunityCog

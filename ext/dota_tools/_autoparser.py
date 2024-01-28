@@ -7,7 +7,7 @@ import vdf
 from steam.core.msg import MsgProto
 from steam.enums import emsg
 
-from extensions.fpc_notifications.dota._opendota import OpendotaRequestMatch
+from ext.fpc_notifications.dota._opendota import OpendotaRequestMatch
 from utils import AluCog, aluloop
 
 if TYPE_CHECKING:

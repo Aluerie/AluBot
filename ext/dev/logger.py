@@ -61,6 +61,9 @@ class LoggerViaWebhook(DevBaseCog):
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
         "bot.bot": "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
+        "send_dota_fpc": "https://i.imgur.com/67ipDvY.png",
+        "edit_dota_fpc": "https://i.imgur.com/nkcvMa2.png",
+        "ext.dev.sync": "https://i.imgur.com/9fTiqxi.png",
     }
 
     async def send_log_record(self, record: logging.LogRecord) -> None:
@@ -75,9 +78,10 @@ class LoggerViaWebhook(DevBaseCog):
         msg = textwrap.shorten(f"{emoji} {formats.format_dt(dt)} {record.message}", width=1990)
 
         avatar_url = self.avatar_mapping.get(record.name, discord.utils.MISSING)
+
         # Discord doesn't allow Webhooks names to contain "discord";
-        # so if the record.name comes from discord library - it gonna block it
-        # thus we replace letters. c is cyrillic, o is greek.
+        # so if the record.name comes from discord.py library - it gonna block it
+        # thus we replace letters: c is cyrillic, o is greek.
         username = record.name.replace("discord", "disсοrd")
         await self.logger_webhook.send(msg, username=username, avatar_url=avatar_url)
 

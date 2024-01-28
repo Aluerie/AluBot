@@ -318,7 +318,7 @@ async def beta_test_edit_image(self: AluCog):
     # from .fpc.lol._models import beta_test_edit_image
     # await beta_test_edit_image(self)
 
-    from extensions.fpc.lol._models import LoLFPCMatchToEdit
+    from ext.fpc.lol._models import LoLFPCMatchToEdit
 
     await self.bot.initialize_league_pulsefire_clients()
     self.bot.initialize_league_cache()

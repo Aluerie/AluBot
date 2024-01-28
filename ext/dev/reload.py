@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Annotated, Awaitable, Callable
 import discord
 from discord.ext import commands
 
-from extensions import get_extensions
+from ext import get_extensions
 from utils import AluContext, const, formats
 
 from ._base import DevBaseCog
@@ -29,7 +29,7 @@ class ExtensionConverter(commands.Converter):
     # currently does not handle base extensions
     async def convert(self, _ctx: AluContext, argument: str):
         m = argument.lower()
-        return f"extensions.{m}"
+        return f"ext.{m}"
 
 
 class ReloadCog(DevBaseCog):
@@ -111,7 +111,7 @@ class ReloadCog(DevBaseCog):
 
         if errors:
             content = "\n".join(
-                f'{formats.tick(status)} - {emoji} `{ext if not ext.startswith("extensions.") else ext[5:]}`'
+                f'{formats.tick(status)} - {emoji} `{ext if not ext.startswith("ext.") else ext[5:]}`'
                 for status, emoji, ext in statuses
             )
 
@@ -165,7 +165,7 @@ class ReloadCog(DevBaseCog):
             if ext != ".py":
                 continue
 
-            if root.startswith("extensions/"):
+            if root.startswith("ext/"):
                 ext_name = root.replace("/", ".")
                 is_submodule = ext_name not in extensions
                 ret.append((is_submodule, ext_name))

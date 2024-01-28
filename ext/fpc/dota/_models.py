@@ -361,10 +361,10 @@ async def beta_test_stratz_edit(self: AluCog):
     Import this into `beta_task` for easy testing of how new elements alignment.
     """
     # BETA TESTING USAGE
-    # from .fpc_notifications.dota._models import beta_test_stratz_edit
+    # from .fpc.dota._models import beta_test_stratz_edit
     # await beta_test_stratz_edit(self)
 
-    from extensions.fpc.dota._models import StratzMatchToEdit
+    from ext.fpc.dota._models import StratzMatchToEdit
 
     await self.bot.initialize_dota_pulsefire_clients()
     self.bot.initialize_dota_cache()

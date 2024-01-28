@@ -1,32 +1,37 @@
 """
-The structure of folders/extensions in this project as follows:
+`Ext` Folder contains all extensions for the AluBot.
 
-extensions/
+* This folder has rather a short name just for shorter folder names in `logging`.
+* The structure of folders/extensions in this project as follows:
+
+ext/
     ext_category_folder/
+        # utility folders and files:
         _some_ext_utils_folder/
         _some_ext_utils_file.py 
         # ^ those must start with "_" in order not to be confused with one of below:
+        # actual extension folder and files:
         package_folder_ext/
             **package structure like ext**
         one_file_ext.py
     
     __init__.py  # this file
     beta.py  # special beta test ext file.
-    zeta.py  # clean state of^
 
 This particular file aims to collect those files into Tuple of extensions so end result of 
 `get_extensions(test)` should be something like
 >>> get_extensions(False) 
 >>> (
 >>>    'jishaku',
->>>    'extensions.fpc_notifications.dota',
->>>    'extensions.fpc_notifications.lol',
->>>    'extensions.community.welcome',
+>>>    'ext.fpc.dota',
+>>>    'ext.fpc.lol',
+>>>    'ext.community.welcome',
 >>>    ...
 >>> )
 
 where full name for usual extensions consists of the following parts `extensions.ext_category.cog_name`.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -86,18 +91,18 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
             test_extensions, use_all_extensions = TEST_EXTENSIONS, USE_ALL_EXTENSIONS
 
         if not use_all_extensions:
-            return BASE_EXTENSIONS + tuple(f"extensions.{x}" for x in test_extensions)
+            return BASE_EXTENSIONS + tuple(f"ext.{x}" for x in test_extensions)
 
     # production giga-gathering option.
-    all_folders = [f.name for f in os.scandir("extensions") if f.is_dir() if not f.name.startswith("_")]
+    all_folders = [f.name for f in os.scandir("ext") if f.is_dir() if not f.name.startswith("_")]
 
     ext_category_folders = [x for x in all_folders if x not in MY_PACKAGES]
-    uncategorised_extensions = tuple(f"extensions.{x}" for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS)
+    uncategorised_extensions = tuple(f"ext.{x}" for x in MY_PACKAGES if x not in IGNORED_EXTENSIONS)
 
     categorised_extensions = tuple(
         module.name
         for folder in ext_category_folders
-        for module in iter_modules(path=[f"extensions/{folder}"], prefix=f"extensions.{folder}.")
+        for module in iter_modules(path=[f"ext/{folder}"], prefix=f"ext.{folder}.")
         if not module.name.rsplit(".", 1)[-1].startswith("_")
     )
 

@@ -100,6 +100,8 @@ class UmbraSyncCommandCog(DevBaseCog):
             If you want to sync a specific guild then provide its ID.
         """
         if method == "guilds":
+            # it's not worth to mirror commands.Greedy argument into a slash command
+            # so just redirect yourself to a prefix $sync command.
             return await interaction.response.send_message(
                 f"Use prefix command `{self.bot.main_prefix}`sync guild1_id guild2_id ... ` Dumbass!"
             )

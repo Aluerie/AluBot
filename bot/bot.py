@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-import asyncio
 import datetime
 import logging
 import os
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Literal, MutableMapping, Union, override
 
 import discord
 from discord.ext import commands
 
 import config
-from extensions import get_extensions
+from ext import get_extensions
 from utils import EXT_CATEGORY_NONE, AluContext, ExtCategory, cache, const, formats
 from utils.disambiguator import Disambiguator
 from utils.jsonconfig import PrefixConfig
@@ -192,7 +190,7 @@ class AluBot(commands.Bot, AluBotHelper):
         # erm, bcs of my horrendous .test logic we need to do it in a weird way
         # todo: is there anything better ? :D
 
-        # if not self.test or "extensions.fpc.dota" in get_extensions(self.test):
+        # if not self.test or "ext.fpc.dota" in get_extensions(self.test):
         #     from utils.dota.dota2client import Dota2Client
 
         #     self.dota = Dota2Client(self)

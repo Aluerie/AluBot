@@ -191,8 +191,8 @@ class StratzClient(BaseClient):
     ) -> schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.ResponseDict:
         query = """
         query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
-            parsedDateTime
             match(id: $match_id) {
+                parsedDateTime
                 players(steamAccountId: $friend_id) {
                     isVictory
                     heroId

@@ -27,7 +27,7 @@ githubkit
 pygit2==1.14.0
 
 # TTS
-gtts~=2.5.0
+gtts~=2.5.1
 ffmpeg
 
 # WebScrape

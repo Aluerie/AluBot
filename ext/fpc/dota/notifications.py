@@ -111,23 +111,23 @@ class DotaFPCNotifications(BaseNotifications):
                     account_id = player.id
                     hero_id = player.hero.id
 
-                    query = """
+                    query = """--sql
                         SELECT player_id, display_name, twitch_id 
                         FROM dota_players 
-                        WHERE player_id=(SELECT player_id FROM dota_accounts WHERE friend_id=$1)
+                        WHERE player_id=(SELECT player_id FROM dota_accounts WHERE friend_id = $1);
                     """
                     user: AnalyzeTopSourceResponsePlayerQueryRow = await self.bot.pool.fetchrow(query, account_id)
-                    query = """
+                    query = """--sql
                         SELECT s.channel_id, s.spoil
                         FROM dota_favourite_characters c
                         JOIN dota_favourite_players p on c.guild_id = p.guild_id
                         JOIN dota_settings s on s.guild_id = c.guild_id
-                        WHERE character_id=$1 
-                            AND p.player_id=$2
+                        WHERE character_id = $1 
+                            AND p.player_id = $2
                             AND NOT s.channel_id = ANY(
                                 SELECT channel_id 
                                 FROM dota_messages 
-                                WHERE match_id = $3 AND friend_id=$4
+                                WHERE match_id = $3 AND friend_id = $4
                             )
                             AND s.twitch_live_only = $5
                             AND s.enabled = TRUE;
@@ -207,7 +207,7 @@ class DotaFPCNotifications(BaseNotifications):
         """
         if not self.top_live_matches:
             return
-        
+
         edit_log.debug("*** Starting Task to Edit Dota FPC Messages ***")
 
         query = """
@@ -225,7 +225,7 @@ class DotaFPCNotifications(BaseNotifications):
             if tuple_uuid not in self.retry_mapping:
                 self.retry_mapping[tuple_uuid] = 0
 
-            edit_log.debug("Editing (match, friend) = %s retry %s", tuple_uuid, self.retry_mapping[tuple_uuid])
+            edit_log.debug("Editing match = %s retry %s", tuple_uuid, self.retry_mapping[tuple_uuid])
 
             try:
                 stratz_data = await self.bot.stratz_client.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
@@ -239,6 +239,10 @@ class DotaFPCNotifications(BaseNotifications):
                 # then parser will fail and declare None
                 edit_log.debug("Stratz: match %s did not count. Deleting the match.", match_id)
                 match_to_edit = NotCountedMatchToEdit(self.bot)
+            elif stratz_data["data"]["match"]["parsedDateTime"] is None:
+                edit_log.debug("Parsing for match %s friend %s was not finished.", match_id, friend_id)
+                self.retry_mapping[tuple_uuid] += 1
+                continue
             else:
                 match_to_edit = StratzMatchToEdit(self.bot, stratz_data)
 

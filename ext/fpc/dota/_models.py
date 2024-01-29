@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Literal, Optional, TypedDict, override
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
-from utils import const, dota, formats
+from utils import const, dota, errors, formats
 
 from .._base import BaseMatchToEdit, BaseMatchToSend
 

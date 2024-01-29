@@ -261,9 +261,11 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         if member is None:
             # user is not in the guild anymore
             # so let's check if the user data is deleted from the database
-            query = "SELECT * FROM users WHERE id=$1"
-            row = await self.bot.pool.fetchrow(query, user_id)
-            if row:
+            query = """--sql
+                SELECT * FROM users WHERE id = $1;
+            """
+            user_row = await self.bot.pool.fetchrow(query, user_id)
+            if user_row:
                 # continue the timer for next year :D
                 pass
             else:

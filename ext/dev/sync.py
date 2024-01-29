@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import discord
@@ -13,6 +14,8 @@ from ._base import DevBaseCog
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluContext
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 class UmbraSyncCommandCog(DevBaseCog):
@@ -155,10 +158,10 @@ class DailyAutoSync(DevBaseCog):
     async def cog_unload(self):
         self.one_time_sync.cancel()
 
-    @aluloop(count=3, minutes=10)
+    @aluloop(count=4, minutes=10)
     async def one_time_sync(self):
-        if not self.sync_dict:
-            # 3 Days restart auto-sync is not needed.
+        if len(self.sync_dict) == 3:
+            # return on the very first iteration
             return
 
         guild_name, guild_id = self.sync_dict.popitem()  # brings last key, value pair in dict
@@ -166,11 +169,7 @@ class DailyAutoSync(DevBaseCog):
         guild = discord.Object(id=guild_id) if guild_id else None
         synced = await self.bot.tree.sync(guild=guild)
 
-        embed = discord.Embed(
-            color=0x234234,
-            description=f"Synced `{len(synced)}` **{guild_name}** commands.",
-        )
-        await self.hideout.spam_logs.send(embed=embed)
+        log.info(f"Synced `{len(synced)}` **{guild_name}** commands.")
 
 
 async def setup(bot):

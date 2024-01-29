@@ -71,8 +71,8 @@ class AluLoop(tasks.Loop[LF]):
 
         embed = (
             discord.Embed(title=self.coro.__name__, colour=0xEF7A85)
-            .set_author(name="Error in aluloop task")
-            .set_footer(text="utils.bases.tasks > AluLoop._error")
+            .set_author(name=f"{self.coro.__module__}: {self.coro.__class__}")
+            .set_footer(text="Error in aluloop task")
         )
 
         # this will fail outside a cog or a bot class

@@ -247,6 +247,7 @@ class StratzGraphQLQueriesSchema:
         Match = TypedDict(
             "Match",
             {
+                "parsedDateTime": int,
                 "players": list[Player],
             },
         )

@@ -73,6 +73,7 @@ class Dota2Client(Dota2Client_):
             self.deaths += 1
             # we didn't cross out all checking `start_game`-s
             if self.deaths > 4:
+                # my theory is that there is some de-sync happened
                 self.exit()
                 self.steam.logout()
                 await asyncio.sleep(10.0)

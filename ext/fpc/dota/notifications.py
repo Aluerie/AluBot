@@ -175,7 +175,8 @@ class DotaFPCNotifications(BaseNotifications):
             live_matches = await self.bot.dota.top_live_matches()
         except asyncio.TimeoutError:
             self.death_counter += 1
-            send_log.warning(f"Game Coordinator is dying: count `{self.death_counter}`")
+            await self.hideout.spam.send(f"Game Coordinator is dying: count `{self.death_counter}`")
+            # send_log.warning(f"Game Coordinator is dying: count `{self.death_counter}`")
             # nothing to "mark_matches_to_edit" so let's return
             return
         else:

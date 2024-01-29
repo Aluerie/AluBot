@@ -39,7 +39,7 @@ import os
 from pkgutil import iter_modules
 from typing import Tuple
 
-from base import BASE_EXTENSIONS
+from core import CORE_EXTENSIONS
 
 try:
     import _test
@@ -91,7 +91,7 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
             test_extensions, use_all_extensions = TEST_EXTENSIONS, USE_ALL_EXTENSIONS
 
         if not use_all_extensions:
-            return BASE_EXTENSIONS + tuple(f"ext.{x}" for x in test_extensions)
+            return CORE_EXTENSIONS + tuple(f"ext.{x}" for x in test_extensions)
 
     # production giga-gathering option.
     all_folders = [f.name for f in os.scandir("ext") if f.is_dir() if not f.name.startswith("_")]
@@ -106,5 +106,5 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
         if not module.name.rsplit(".", 1)[-1].startswith("_")
     )
 
-    extensions = BASE_EXTENSIONS + uncategorised_extensions + categorised_extensions
+    extensions = CORE_EXTENSIONS + uncategorised_extensions + categorised_extensions
     return extensions

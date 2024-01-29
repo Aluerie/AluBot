@@ -19,7 +19,7 @@ dota2 @ git+https://github.com/Aluerie/dota2.git  # my own fork with updated pro
 vdf~=3.4
 
 # League of Legends
-pulsefire~=2.0.2
+pulsefire~=2.0.3
 git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
@@ -27,7 +27,7 @@ githubkit
 pygit2==1.14.0
 
 # TTS
-gtts~=2.5.0
+gtts~=2.5.1
 ffmpeg
 
 # WebScrape
@@ -44,7 +44,7 @@ ipykernel; platform_system == 'Windows'
 
 # Bot's Base
 asyncpg~=0.29.0
-aiohttp~=3.9.1
+aiohttp~=3.9.2
 
 # Optimisation
 orjson

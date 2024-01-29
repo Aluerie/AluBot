@@ -46,7 +46,7 @@ class RemoveDotaPlayerFlags(commands.FlagConverter):
 
 class AddLoLPlayerFlags(commands.FlagConverter):
     name: str = commands.flag(description=NAME_FLAG_DESC)
-    server: lol.LiteralServer = commands.flag(description=SERVER_FLAG_DESC)
+    platform: lol.Platform = commands.flag(name='server', description=SERVER_FLAG_DESC, converter=lol.PlatformConverter)
     game_name: str = commands.flag(description=GAME_NAME_FLAG_DESC)
     tag_line: str = commands.flag(description=TAG_LINE_FLAG_DESC)
 
@@ -85,7 +85,7 @@ class FPCDatabaseManagement(FPCCog):
         return self.get_fpc_settings_cog("Dota 2 FPC")  # type: ignore
 
     @database_dota.command(name="add")
-    async def database_dota_add(self, ctx: AluGuildContext, flags: AddDotaPlayerFlags):
+    async def database_dota_add(self, ctx: AluGuildContext, *, flags: AddDotaPlayerFlags):
         """Add Dota 2 player to the FPC database."""
         await self.dota_fpc_settings_cog.database_add(ctx, flags)
 
@@ -111,7 +111,7 @@ class FPCDatabaseManagement(FPCCog):
         return self.get_fpc_settings_cog("League of Legends FPC")  # type: ignore
 
     @database_lol.command(name="add")
-    async def database_lol_add(self, ctx: AluGuildContext, flags: AddLoLPlayerFlags):
+    async def database_lol_add(self, ctx: AluGuildContext, *, flags: AddLoLPlayerFlags):
         """Add LoL player to the FPC database."""
         await self.lol_fpc_settings_cog.database_add(ctx, flags)
 

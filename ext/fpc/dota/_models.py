@@ -113,7 +113,7 @@ class MatchToSend(BaseMatchToSend):
         log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         img = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
-        hero_image_urls = [await self.bot.dota_cache.hero.img_by_id(id) for id in self.hero_ids]
+        hero_image_urls = [await self.bot.cache_dota.hero.img_by_id(id) for id in self.hero_ids]
         hero_images = [await self.bot.transposer.url_to_image(url) for url in hero_image_urls]
 
         def build_notification_image() -> Image.Image:
@@ -170,7 +170,7 @@ class MatchToSend(BaseMatchToSend):
                 ),
             )
             .set_author(name=title, url=twitch_data["url"], icon_url=twitch_data["logo_url"])
-            .set_thumbnail(url=await self.bot.dota_cache.hero.img_by_id(self.hero_id))
+            .set_thumbnail(url=await self.bot.cache_dota.hero.img_by_id(self.hero_id))
             .set_image(url=f"attachment://{image_file.filename}")
             .set_footer(text=f"watch_server {self.server_steam_id}")
         )  # | dota2://matchid={self.match_id}&matchtime={matchtime}") # but it's not really convenient.
@@ -238,18 +238,18 @@ class StratzMatchToEdit(BaseMatchToEdit):
     @override
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await self.bot.dota_cache.item.icon_by_id(id) for id, _ in self.sorted_item_purchases]
+        item_icon_urls = [await self.bot.cache_dota.item.icon_by_id(id) for id, _ in self.sorted_item_purchases]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
 
-        neutral_item_url = await self.bot.dota_cache.item.icon_by_id(self.neutral_item_id)
+        neutral_item_url = await self.bot.cache_dota.item.icon_by_id(self.neutral_item_id)
         neutral_item_image = await self.bot.transposer.url_to_image(neutral_item_url)
 
-        ability_icon_urls = [await self.bot.dota_cache.ability.icon_by_id(id) for id in self.ability_upgrades_ids]
+        ability_icon_urls = [await self.bot.cache_dota.ability.icon_by_id(id) for id in self.ability_upgrades_ids]
         ability_icon_images = [await self.bot.transposer.url_to_image(url) for url in ability_icon_urls]
 
         talent_names = []
         for ability_upgrade in self.ability_upgrades_ids:
-            talent_name = await self.bot.dota_cache.ability.talent_by_id(ability_upgrade)
+            talent_name = await self.bot.cache_dota.ability.talent_by_id(ability_upgrade)
             if talent_name is not None:
                 talent_names.append(talent_name)
 
@@ -367,11 +367,11 @@ async def beta_test_stratz_edit(self: AluCog):
     from ext.fpc.dota._models import StratzMatchToEdit
 
     await self.bot.initialize_dota_pulsefire_clients()
-    self.bot.initialize_dota_cache()
+    self.bot.initialize_cache_dota()
 
     match_id = 7549006442
     friend_id = 159020918
-    data = await self.bot.stratz_client.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
+    data = await self.bot.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
 
     match_to_edit = StratzMatchToEdit(self.bot, data)
 

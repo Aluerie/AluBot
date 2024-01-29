@@ -33,7 +33,8 @@ log.setLevel(logging.DEBUG)
 
 
 def lol_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str) -> str:
-    opgg = f"https://op.gg/summoners/{lol.PLATFORM_TO_SERVER[platform]}/{game_name}-{tag_line}"
+    opgg_name =  lol.Platform(platform).opgg_name
+    opgg = f"https://op.gg/summoners/{opgg_name}/{game_name}-{tag_line}"
     ugg = f"https://u.gg/lol/profile/{platform}/{game_name}-{tag_line}"
     return f"/[Opgg]({opgg})/[Ugg]({ugg})"
 
@@ -89,12 +90,12 @@ class MatchToSend(BaseMatchToSend):
     ) -> Image.Image:
         # prepare stuff for the following PIL procedures
         img = await self.bot.transposer.url_to_image(stream_preview_url)
-        sorted_champion_ids = await self.bot.meraki_roles.sort_champions_by_roles(self.all_champion_ids)
-        champion_icon_urls = [await self.bot.cdragon.champion.icon_by_id(id) for id in sorted_champion_ids]
+        sorted_champion_ids = await self.bot.cache_lol.role.sort_champions_by_roles(self.all_champion_ids)
+        champion_icon_urls = [await self.bot.cache_lol.champion.icon_by_id(id) for id in sorted_champion_ids]
         champion_icon_images = [await self.bot.transposer.url_to_image(url) for url in champion_icon_urls]
-        rune_icon_urls = [await self.bot.cdragon.rune.icon_by_id(id) for id in self.rune_ids]
+        rune_icon_urls = [await self.bot.cache_lol.rune.icon_by_id(id) for id in self.rune_ids]
         rune_icon_images = [await self.bot.transposer.url_to_image(url) for url in rune_icon_urls]
-        summoner_icon_urls = [await self.bot.cdragon.summoner_spell.icon_by_id(id) for id in self.summoner_spell_ids]
+        summoner_icon_urls = [await self.bot.cache_lol.summoner_spell.icon_by_id(id) for id in self.summoner_spell_ids]
         summoner_icon_images = [await self.bot.transposer.url_to_image(url) for url in summoner_icon_urls]
 
         def build_notification_image() -> Image.Image:
@@ -139,7 +140,7 @@ class MatchToSend(BaseMatchToSend):
     @override
     async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
         streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
-        champion_name = await self.bot.cdragon.champion.name_by_id(self.champion_id)
+        champion_name = await self.bot.cache_lol.champion.name_by_id(self.champion_id)
 
         notification_image = await self.notification_image(streamer.preview_url, streamer.display_name, champion_name)
         title = f"{streamer.display_name} - {champion_name}"
@@ -157,7 +158,7 @@ class MatchToSend(BaseMatchToSend):
                 ),
             )
             .set_author(name=title, url=streamer.url, icon_url=streamer.avatar_url)
-            .set_thumbnail(url=await self.bot.cdragon.champion.icon_by_id(self.champion_id))
+            .set_thumbnail(url=await self.bot.cache_lol.champion.icon_by_id(self.champion_id))
             .set_image(url=f"attachment://{image_file.filename}")
         )
 
@@ -220,10 +221,10 @@ class LoLFPCMatchToEdit(BaseMatchToEdit):
     @override
     async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await self.bot.cdragon.item.icon_by_id(id) for id in reversed(self.sorted_item_ids) if id]
+        item_icon_urls = [await self.bot.cache_lol.item.icon_by_id(id) for id in reversed(self.sorted_item_ids) if id]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
 
-        trinket_icon_url = await self.bot.cdragon.item.icon_by_id(self.trinket_item_id)
+        trinket_icon_url = await self.bot.cache_lol.item.icon_by_id(self.trinket_item_id)
         trinket_icon_img = await self.bot.transposer.url_to_image(trinket_icon_url)
 
         def build_notification_image():
@@ -321,12 +322,12 @@ async def beta_test_edit_image(self: AluCog):
     from ext.fpc.lol._models import LoLFPCMatchToEdit
 
     await self.bot.initialize_league_pulsefire_clients()
-    self.bot.initialize_league_cache()
+    self.bot.initialize_cache_league()
 
     match_id = "NA1_4899995798"
     continent = "AMERICAS"
-    match = await self.bot.riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)
-    timeline = await self.bot.riot_api_client.get_lol_match_v5_match_timeline(id=match_id, region=continent)
+    match = await self.bot.riot.get_lol_match_v5_match(id=match_id, region=continent)
+    timeline = await self.bot.riot.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
     post_match_player = LoLFPCMatchToEdit(
         self.bot,

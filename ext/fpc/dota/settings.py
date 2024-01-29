@@ -126,7 +126,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     """
 
     def __init__(self, bot: AluBot, *args, **kwargs):
-        bot.initialize_dota_cache()
+        bot.initialize_cache_dota()
         super().__init__(
             bot,
             *args,
@@ -138,7 +138,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
             character_plural_word="heroes",
             account_cls=DotaAccount,
             account_typed_dict_cls=DotaAccountDict,
-            character_cache=bot.dota_cache.hero,
+            character_cache=bot.cache_dota.hero,
             **kwargs,
         )
 
@@ -154,7 +154,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
         await ctx.send_help()
 
     @dota_request.command(name="player")
-    async def dota_request_player(self, ctx: AluGuildContext, flags: AddDotaPlayerFlags):
+    async def dota_request_player(self, ctx: AluGuildContext, *, flags: AddDotaPlayerFlags):
         """Request Dota 2 Player to be added into the bot's FPC database
         
         So you and other people can add the player into their favourite later and start \

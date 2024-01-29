@@ -723,7 +723,7 @@ class BaseSettings(FPCCog):
 
         choice_names = [name_by_id_cache[id] for id in choice_ids]
         fuzzy_names = fuzzy.finder(current, choice_names)
-        return [app_commands.Choice(name=name, value=name) for name in fuzzy_names[:25]]
+        return [app_commands.Choice(name=name, value=name) for name in fuzzy_names[:7]]
 
     async def database_remove_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str

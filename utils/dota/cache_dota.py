@@ -16,10 +16,10 @@ if TYPE_CHECKING:
         icon_by_id: MutableMapping[int, str]
 
 
-__all__ = ("DotaCache",)
+__all__ = ("CacheDota",)
 
 
-class DotaCache:
+class CacheDota:
     def __init__(self, bot: AluBot) -> None:
         self.hero = HeroKeysCache(bot)
         self.ability = AbilityKeyCache(bot)

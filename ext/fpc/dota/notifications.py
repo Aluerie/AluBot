@@ -146,7 +146,7 @@ class DotaFPCNotifications(BaseNotifications):
                     ]
 
                     if channel_spoil_tuples:
-                        hero_name = await self.bot.dota_cache.hero.name_by_id(hero_id)
+                        hero_name = await self.bot.cache_dota.hero.name_by_id(hero_id)
                         send_log.debug("%s - %s", user["display_name"], hero_name)
                         match_to_send = MatchToSend(
                             self.bot,
@@ -194,7 +194,7 @@ class DotaFPCNotifications(BaseNotifications):
         if len(live_matches) < 100:
             # this means it returned 90, 80, ..., or even 0 matches. Maybe corrupted result?
             # might ruin logic in editing
-            await self.hideout.spam.send(f"Dota 2 Game Coordinator only fetched {len(live_matches)} matches")
+            send_log.warn("GC only fetched %s matches", len(live_matches))
         else:
             self.top_live_matches = live_matches
 
@@ -229,7 +229,7 @@ class DotaFPCNotifications(BaseNotifications):
             edit_log.debug("Editing match = %s retry %s", tuple_uuid, self.retry_mapping[tuple_uuid])
 
             try:
-                stratz_data = await self.bot.stratz_client.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
+                stratz_data = await self.bot.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
             except aiohttp.ClientResponseError as exc:
                 edit_log.warning(
                     "Stratz API Resp for match `%s` friend `%s`: Not OK, status `%s`", match_id, friend_id, exc.status
@@ -242,7 +242,7 @@ class DotaFPCNotifications(BaseNotifications):
                 # then parser will fail and declare None
                 edit_log.info("Stratz: match %s did not count. Deleting the match.", match_id)
                 match_to_edit = NotCountedMatchToEdit(self.bot)
-            elif not stratz_data["data"]["match"]["isStats"]:
+            elif not stratz_data["data"]["match"]["statsDateTime"]:
                 edit_log.warning("Parsing for match %s friend %s was not finished.", match_id, friend_id)
                 self.retry_mapping[tuple_uuid] += 1
                 continue
@@ -263,7 +263,7 @@ class DotaFPCNotifications(BaseNotifications):
         return discord.Embed(
             colour=discord.Colour.blue(),
             title="Stratz RateLimits",
-            description=self.bot.stratz_client.rate_limiter.rate_limits_string,
+            description=self.bot.stratz.rate_limiter.rate_limits_string,
         )
 
     @commands.command(hidden=True)
@@ -280,7 +280,7 @@ class DotaFPCNotifications(BaseNotifications):
         """
 
         content = ""
-        if self.bot.stratz_client.rate_limiter.rate_limits_ratio < 0.1:
+        if self.bot.stratz.rate_limiter.rate_limits_ratio < 0.1:
             content = f"<@{self.bot.owner_id}>"
 
         await self.hideout.logger.send(content=content, embed=self.get_ratelimit_embed())

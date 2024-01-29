@@ -38,6 +38,20 @@ class LoggingHandler(logging.Handler):
 
 
 class LoggerViaWebhook(DevBaseCog):
+    # TODO: ADD MORE STUFF
+    AVATAR_MAPPING = {
+        "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
+        "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
+        "bot.bot": "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
+        "send_dota_fpc": "https://i.imgur.com/67ipDvY.png",
+        "edit_dota_fpc": "https://i.imgur.com/nkcvMa2.png",
+        "ext.dev.sync": "https://em-content.zobj.net/source/microsoft/378/counterclockwise-arrows-button_1f504.png",
+        "utils.dota.valvepythondota2": "https://i.imgur.com/D96bMgG.png",
+        "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
+        "exc_manager": "https://em-content.zobj.net/source/microsoft/378/sos-button_1f198.png",
+        "twitchio.ext.eventsub.ws": const.LOGO.TWITCH,
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._logging_queue = asyncio.Queue()
@@ -54,20 +68,6 @@ class LoggerViaWebhook(DevBaseCog):
 
     def add_record(self, record: logging.LogRecord) -> None:
         self._logging_queue.put_nowait(record)
-
-    # TODO: ADD MORE STUFF
-    AVATAR_MAPPING = {
-        "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
-        "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
-        "bot.bot": "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
-        "send_dota_fpc": "https://i.imgur.com/67ipDvY.png",
-        "edit_dota_fpc": "https://i.imgur.com/nkcvMa2.png",
-        "ext.dev.sync": "https://i.imgur.com/9fTiqxi.png",
-        "utils.dota.valvepythondota2": "https://i.imgur.com/D96bMgG.png",
-        "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
-        "exc_manager": "https://em-content.zobj.net/source/microsoft/378/sos-button_1f198.png",
-        "twitchio.ext.eventsub.ws": const.LOGO.TWITCH,
-    }
 
     async def send_log_record(self, record: logging.LogRecord) -> None:
         attributes = {

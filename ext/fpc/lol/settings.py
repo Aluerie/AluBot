@@ -37,7 +37,7 @@ class LoLAccount(Account):
     if TYPE_CHECKING:
         summoner_id: str
         puuid: str
-        platform: lol.LiteralPlatform
+        platform: lol.Platform
         game_name: str
         tag_line: str
 
@@ -45,55 +45,55 @@ class LoLAccount(Account):
     async def set_game_specific_attrs(self, bot: AluBot, flags: AddLoLPlayerFlags):
         # RIOT ACCOUNT INFO
         try:
-            riot_account = await bot.riot_api_client.get_account_v1_by_riot_id(
+            riot_account = await bot.riot.get_account_v1_by_riot_id(
                 game_name=flags.game_name,
                 tag_line=flags.tag_line,
-                region=lol.SERVER_TO_CONTINENT[flags.server],
-                # todo: in theory we can use continent closest to me bcs they all share the same data
+                region=flags.platform.continent,
+                # in theory we can use continent closest to me bcs they all share the same data
                 # for account_v1 endpoint
-                # so check response time to this request
+                # so check response time to this request (BUT WHATEVER)
             )
         except aiohttp.ClientResponseError:
             raise errors.BadArgument(
                 "Error `get_account_v1_by_riot_id` for "
-                f"`{flags.game_name}#{flags.tag_line}` in `{flags.server}` server.\n"
+                f"`{flags.game_name}#{flags.tag_line}` for `{flags.platform}` platform.\n"
                 "This account probably does not exist."
             )
 
         self.puuid = puuid = riot_account["puuid"]
-        self.platform = platform = lol.SERVER_TO_PLATFORM[flags.server]
+        self.platform = flags.platform
         self.game_name = riot_account["gameName"]
         self.tag_line = riot_account["tagLine"]
 
         # SUMMONER INFO
         try:
-            summoner = await bot.riot_api_client.get_lol_summoner_v4_by_puuid(puuid=puuid, region=platform)
+            summoner = await bot.riot.get_lol_summoner_v4_by_puuid(puuid=puuid, region=self.platform)
         except aiohttp.ClientResponseError:
             raise errors.BadArgument(
                 f"Error `get_lol_summoner_v4_by_puuid` for riot account\n"
-                f"`{flags.game_name}#{flags.tag_line}` in `{flags.server}` server, puuid: `{puuid}`"
+                f"`{flags.game_name}#{flags.tag_line}` in `{flags.platform}` platform, puuid: `{puuid}`"
             )
         self.summoner_id = summoner["id"]
 
     @property
     @override
     def hint_database_add_command_args(self) -> str:
-        server = lol.PLATFORM_TO_SERVER[self.platform].upper()
         return (
-            f"name: {self.player_display_name} game_name: {self.game_name} tag_line: {self.tag_line} server: {server}"
+            f"name: {self.player_display_name} game_name: {self.game_name} "
+            + f"tag_line: {self.tag_line} server: {self.platform.display_name}"
         )
 
     @override
     @staticmethod
     def static_account_name_with_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any):
-        server = lol.PLATFORM_TO_SERVER[platform]
+        opgg_name = lol.Platform(platform).opgg_name
         links = lol_links(platform, game_name, tag_line)
-        return f"`{server}`: `{game_name} #{tag_line}` {links}"
+        return f"`{opgg_name}`: `{game_name} #{tag_line}` {links}"
 
     @property
     @override
     def account_string_with_links(self):
-        return self.static_account_name_with_links(self.platform, self.game_name, self.tag_line)
+        return self.static_account_name_with_links(self.platform.value, self.game_name, self.tag_line)
 
     @override
     @staticmethod
@@ -110,7 +110,7 @@ class LoLAccount(Account):
         return {
             "summoner_id": self.summoner_id,
             "puuid": self.puuid,
-            "platform": self.platform,
+            "platform": self.platform.value,
             "game_name": self.game_name,
             "tag_line": self.tag_line,
         }
@@ -125,7 +125,7 @@ class LoLFPCSettings(BaseSettings):
     """
 
     def __init__(self, bot: AluBot, *args, **kwargs):
-        bot.initialize_league_cache()
+        bot.initialize_cache_league()
         super().__init__(
             bot,
             *args,
@@ -137,7 +137,7 @@ class LoLFPCSettings(BaseSettings):
             character_plural_word="champions",
             account_cls=LoLAccount,
             account_typed_dict_cls=LoLAccountDict,
-            character_cache=bot.cdragon.champion,
+            character_cache=bot.cache_lol.champion,
             **kwargs,
         )
 
@@ -153,7 +153,7 @@ class LoLFPCSettings(BaseSettings):
         await ctx.send_help()
 
     @lol_request.command(name="player")
-    async def lol_request_player(self, ctx: AluGuildContext, flags: AddLoLPlayerFlags):
+    async def lol_request_player(self, ctx: AluGuildContext, *, flags: AddLoLPlayerFlags):
         """Request LoL Player to be added into the bot's FPC database
 
         So you and other people can add the player into their favourite later and start \
@@ -282,8 +282,8 @@ class LoLFPCSettings(BaseSettings):
                 description=(
                     "\n".join(
                         [
-                            f"\N{BLACK CIRCLE} {await self.bot.cdragon.champion.name_by_id(i)} - `{i}`"
-                            for i in await self.bot.meraki_roles.get_missing_from_meraki_champion_ids()
+                            f"\N{BLACK CIRCLE} {await self.bot.cache_lol.champion.name_by_id(i)} - `{i}`"
+                            for i in await self.bot.cache_lol.role.get_missing_from_meraki_champion_ids()
                         ]
                     )
                     or "None missing"
@@ -296,7 +296,7 @@ class LoLFPCSettings(BaseSettings):
                     "• [Json](https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)"
                 ),
             )
-            .add_field(name="Meraki last updated", value=f"Patch {self.bot.meraki_roles.meraki_patch}")
+            .add_field(name="Meraki last updated", value=f"Patch {self.bot.cache_lol.role.meraki_patch}")
         )
         await ctx.reply(embed=embed)
 

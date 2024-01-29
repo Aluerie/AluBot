@@ -232,24 +232,24 @@ class AluBot(commands.Bot, AluBotHelper):
         * OpenDota API pulsefire client
         * Stratz API pulsefire client
         """
-        if not hasattr(self, "opendota_client"):
+        if not hasattr(self, "opendota"):
             from utils.dota import OpenDotaClient, StratzClient
 
-            self.opendota_client = OpenDotaClient()
-            await self.opendota_client.__aenter__()
+            self.opendota = OpenDotaClient()
+            await self.opendota.__aenter__()
 
-            self.stratz_client = StratzClient()
-            await self.stratz_client.__aenter__()
+            self.stratz = StratzClient()
+            await self.stratz.__aenter__()
 
-    def initialize_dota_cache(self) -> None:
+    def initialize_cache_dota(self) -> None:
         """Initialize Dota 2 constants cache
 
         * OpenDota Dota Constants cache with static data
         """
-        if not hasattr(self, "dota_cache"):
-            from utils.dota import DotaCache
+        if not hasattr(self, "cache_dota"):
+            from utils.dota import CacheDota
 
-            self.dota_cache = DotaCache(self)
+            self.cache_dota = CacheDota(self)
 
     async def initialize_league_pulsefire_clients(self) -> None:
         """Initialize League Of Legends pulsefire clients
@@ -258,13 +258,13 @@ class AluBot(commands.Bot, AluBotHelper):
         * CDragon Pulsefire client
         """
 
-        if not hasattr(self, "riot_api_client"):
+        if not hasattr(self, "riot"):
             import orjson
-            from pulsefire.clients import CDragonClient, RiotAPIClient
+            from pulsefire.clients import CDragonClient, MerakiCDNClient, RiotAPIClient
             from pulsefire.middlewares import http_error_middleware, json_response_middleware, rate_limiter_middleware
             from pulsefire.ratelimiters import RiotAPIRateLimiter  # cSpell: ignore ratelimiters
 
-            self.riot_api_client = RiotAPIClient(
+            self.riot = RiotAPIClient(
                 default_headers={"X-Riot-Token": config.RIOT_API_KEY},
                 middlewares=[
                     json_response_middleware(orjson.loads),
@@ -272,29 +272,36 @@ class AluBot(commands.Bot, AluBotHelper):
                     rate_limiter_middleware(RiotAPIRateLimiter()),
                 ],
             )
-            await self.riot_api_client.__aenter__()
+            await self.riot.__aenter__()
 
-            self.cdragon_client = CDragonClient(
+            self.cdragon = CDragonClient(
                 default_params={"patch": "latest", "locale": "default"},
                 middlewares=[
                     json_response_middleware(orjson.loads),
                     http_error_middleware(),
                 ],
             )
-            await self.cdragon_client.__aenter__()
+            await self.cdragon.__aenter__()
 
-    def initialize_league_cache(self) -> None:
+            self.meraki = MerakiCDNClient(
+                middlewares=[
+                    json_response_middleware(orjson.loads),
+                    http_error_middleware(),
+                ],
+            )
+            await self.meraki.__aenter__()
+
+    def initialize_cache_league(self) -> None:
         """Initialize League of Legends caches
 
         * CDragon Cache with static game data
         * MerakiAnalysis Cache with roles identification data
         """
 
-        if not hasattr(self, "cdragon"):
-            from utils.lol import CDragonCache, MerakiRolesCache
+        if not hasattr(self, "cache_lol"):
+            from utils.lol import CacheLoL
 
-            self.cdragon = CDragonCache(self)
-            self.meraki_roles = MerakiRolesCache(self)
+            self.cache_lol = CacheLoL(self)
 
     # async def initialize_dota(self) -> None:
     #     """Initialize Dota 2 Client
@@ -350,11 +357,11 @@ class AluBot(commands.Bot, AluBotHelper):
         if hasattr(self, "twitch"):
             await self.twitch.close()
         if hasattr(self, "riot_api_client"):
-            await self.riot_api_client.__aexit__()
+            await self.riot.__aexit__()
         if hasattr(self, "cdragon_client"):
-            await self.cdragon_client.__aexit__()
+            await self.cdragon.__aexit__()
         if hasattr(self, "opendota_client"):
-            await self.opendota_client.__aexit__()
+            await self.opendota.__aexit__()
 
     @property
     def hideout(self) -> const.HideoutGuild:

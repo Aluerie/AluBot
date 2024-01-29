@@ -192,7 +192,7 @@ class StratzClient(BaseClient):
         query = """
         query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
             match(id: $match_id) {
-                isStats
+                statsDateTime
                 players(steamAccountId: $friend_id) {
                     isVictory
                     heroId

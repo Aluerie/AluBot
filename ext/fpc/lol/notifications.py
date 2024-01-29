@@ -74,7 +74,7 @@ class LoLNotifications(BaseNotifications):
         # https://pulsefire.iann838.com/usage/advanced/concurrent-requests/
         for player_account_row in player_account_rows:
             try:
-                game = await self.bot.riot_api_client.get_lol_spectator_v4_active_game_by_summoner(
+                game = await self.bot.riot.get_lol_spectator_v4_active_game_by_summoner(
                     summoner_id=player_account_row["summoner_id"],
                     region=player_account_row["platform"],
                 )
@@ -134,7 +134,7 @@ class LoLNotifications(BaseNotifications):
                     log.debug(
                         "Notif %s - %s",
                         player_account_row["display_name"],
-                        await self.bot.cdragon.champion.name_by_id(participant["championId"]),
+                        await self.bot.cache_lol.champion.name_by_id(participant["championId"]),
                     )
                     match_to_send = MatchToSend(self.bot, game, participant, player_account_row)
                     await self.send_match(match_to_send, channel_spoil_tuples)
@@ -160,10 +160,10 @@ class LoLNotifications(BaseNotifications):
         for match_row in match_rows:
             try:
                 match_id = f"{match_row['platform'].upper()}_{match_row['match_id']}"
-                continent = lol.PLATFORM_TO_CONTINENT[match_row["platform"]]
+                continent = lol.Platform(match_row["platform"]).continent
 
-                match = await self.bot.riot_api_client.get_lol_match_v5_match(id=match_id, region=continent)
-                timeline = await self.bot.riot_api_client.get_lol_match_v5_match_timeline(id=match_id, region=continent)
+                match = await self.bot.riot.get_lol_match_v5_match(id=match_id, region=continent)
+                timeline = await self.bot.riot.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
             except aiohttp.ClientResponseError as exc:
                 if exc.status == 404:

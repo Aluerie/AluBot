@@ -5,4 +5,4 @@ This folder contains BASE_EXTENSIONS that are meant to be
 """
 from pkgutil import iter_modules
 
-BASE_EXTENSIONS = tuple(module.name for module in iter_modules(path=__path__, prefix=f'base.'))
+CORE_EXTENSIONS = tuple(module.name for module in iter_modules(path=__path__, prefix=f"core."))

@@ -38,9 +38,7 @@ class LoLSummonerNameCheck(FPCCog):
 
         for row in rows:
             try:
-                account = await self.bot.riot_api_client.get_account_v1_by_puuid(
-                    region=row["platform"], puuid=row["puuid"]
-                )
+                account = await self.bot.riot.get_account_v1_by_puuid(region=row["platform"], puuid=row["puuid"])
             except aiohttp.ClientResponseError as exc:
                 if exc.status == 404:
                     log.info("Failed to get summoner under previous name %s#%s", row["game_name"], row["tag_line"])

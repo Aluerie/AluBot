@@ -175,7 +175,7 @@ class DotaFPCNotifications(BaseNotifications):
             live_matches = await self.bot.dota.top_live_matches()
         except asyncio.TimeoutError:
             self.death_counter += 1
-            await self.hideout.spam.send(f"Dota 2 Game Coordinator is dying: count {self.death_counter}")
+            send_log.warning(f"Game Coordinator is dying: count `{self.death_counter}`")
             # nothing to "mark_matches_to_edit" so let's return
             return
         else:
@@ -239,7 +239,7 @@ class DotaFPCNotifications(BaseNotifications):
             if stratz_data["data"]["match"] is None:
                 # if somebody abandons in draft but we managed to send the game out
                 # then parser will fail and declare None
-                edit_log.debug("Stratz: match %s did not count. Deleting the match.", match_id)
+                edit_log.info("Stratz: match %s did not count. Deleting the match.", match_id)
                 match_to_edit = NotCountedMatchToEdit(self.bot)
             elif not stratz_data["data"]["match"]["isStats"]:
                 edit_log.warning("Parsing for match %s friend %s was not finished.", match_id, friend_id)
@@ -252,7 +252,7 @@ class DotaFPCNotifications(BaseNotifications):
 
             query = "DELETE FROM dota_messages WHERE match_id=$1 AND friend_id=$2"
             await self.bot.pool.execute(query, match_id, friend_id)
-            edit_log.info("Successfully edited the message after `%s` retries.", self.retry_mapping[tuple_uuid])
+            edit_log.info("Edited message after `%s` retries.", self.retry_mapping[tuple_uuid])
             self.retry_mapping.pop(tuple_uuid, None)
         edit_log.debug("*** Finished Task to Edit Dota FPC Messages ***")
 

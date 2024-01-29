@@ -71,7 +71,7 @@ class AluLoop(tasks.Loop[LF]):
 
         embed = (
             discord.Embed(title=self.coro.__name__, colour=0xEF7A85)
-            .set_author(name=f"{self.coro.__module__}: {self.coro.__class__}")
+            .set_author(name=f"{self.coro.__module__}: {self.coro.__qualname__}")
             .set_footer(text="Error in aluloop task")
         )
 

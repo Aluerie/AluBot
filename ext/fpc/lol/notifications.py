@@ -91,19 +91,12 @@ class LoLNotifications(BaseNotifications):
                         player_account_row["tag_line"],
                     )
                 else:
-                    error_embed = (
-                        discord.Embed(colour=const.Colour.error())
-                        .add_field(
-                            name="`lol_spectator_v4_active_game_by_summoner` Error",
-                            value=f"Status: {exc.status}",
-                        )
-                        .add_field(
-                            name="Account",
-                            value=f"{player_account_row['game_name']}#{player_account_row['tag_line']} {player_account_row['platform']} {player_account_row['display_name']}",
-                        )
-                        .set_footer(text="fill_live_matches in league notifications")
+                    log.warning(
+                        "`lol_spectator_v4_active_game_by_summoner` failed with %s for %s#%s",
+                        exc.status,
+                        player_account_row["game_name"],
+                        player_account_row["tag_line"],
                     )
-                    await self.hideout.spam.send(embed=error_embed)
                 continue
 
             # continue game analysis

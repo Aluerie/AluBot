@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import datetime
 import logging
 import textwrap
 from typing import TYPE_CHECKING
@@ -10,7 +9,7 @@ import discord
 from discord.ext import tasks
 
 from config import SPAM_LOGS_WEBHOOK
-from utils import formats
+from utils import const
 
 from ._base import DevBaseCog
 
@@ -57,13 +56,17 @@ class LoggerViaWebhook(DevBaseCog):
         self._logging_queue.put_nowait(record)
 
     # TODO: ADD MORE STUFF
-    avatar_mapping = {
+    AVATAR_MAPPING = {
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
         "bot.bot": "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
         "send_dota_fpc": "https://i.imgur.com/67ipDvY.png",
         "edit_dota_fpc": "https://i.imgur.com/nkcvMa2.png",
         "ext.dev.sync": "https://i.imgur.com/9fTiqxi.png",
+        "utils.dota.valvepythondota2": "https://i.imgur.com/D96bMgG.png",
+        "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
+        "exc_manager": "https://em-content.zobj.net/source/microsoft/378/sos-button_1f198.png",
+        "twitchio.ext.eventsub.ws": const.LOGO.TWITCH,
     }
 
     async def send_log_record(self, record: logging.LogRecord) -> None:
@@ -74,15 +77,14 @@ class LoggerViaWebhook(DevBaseCog):
         }
 
         emoji = attributes.get(record.levelname, "\N{WHITE QUESTION MARK ORNAMENT}")
-        dt = datetime.datetime.utcfromtimestamp(record.created)
-        msg = textwrap.shorten(f"{emoji} {formats.format_dt(dt)} {record.message}", width=1990)
+        msg = textwrap.shorten(f"{emoji} {record.message}", width=1995)
 
-        avatar_url = self.avatar_mapping.get(record.name, discord.utils.MISSING)
+        avatar_url = self.AVATAR_MAPPING.get(record.name, discord.utils.MISSING)
 
         # Discord doesn't allow Webhooks names to contain "discord";
         # so if the record.name comes from discord.py library - it gonna block it
         # thus we replace letters: c is cyrillic, o is greek.
-        username = record.name.replace("discord", "disсοrd")
+        username = record.name.replace("discord", "disсοrd")  # cSpell: ignore disсοrd
         await self.logger_webhook.send(msg, username=username, avatar_url=avatar_url)
 
     @tasks.loop(seconds=0.0)

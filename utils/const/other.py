@@ -35,7 +35,6 @@ class Regex:
 class PICTURE(StrEnum):
     github = "https://pics.freeicons.io/uploads/icons/png/4381378511600029534-512.png"
     heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
-    twitch = "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
 
     dankfix = "https://i.imgur.com/gzrPVLs.png"
 
@@ -43,13 +42,14 @@ class PICTURE(StrEnum):
     PLACEHOLDER640X360 = f"{GITHUB_BOT_IMAGES}/hosted/Lavender640x360.png"
 
 
-class Logo(StrEnum):
+class LOGO(StrEnum):
     python = "https://i.imgur.com/5BFecvA.png"
 
     # the next image is made by removing (R) from
     # https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
     dota = "https://i.imgur.com/F8uMnWr.png"
     lol = "https://i.imgur.com/1DJa07b.png"
+    TWITCH = "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
 
 
 class Limit:

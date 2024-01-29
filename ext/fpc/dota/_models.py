@@ -83,7 +83,7 @@ class MatchToSend(BaseMatchToSend):
                 "preview_url": const.PICTURE.PLACEHOLDER640X360,
                 "display_name": self.player_name,
                 "url": "",
-                "logo_url": const.Logo.dota,
+                "logo_url": const.LOGO.dota,
                 "vod_url": "",
                 "twitch_status": "NoTwitch",
                 "colour": const.MaterialPalette.gray(),

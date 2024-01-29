@@ -214,7 +214,7 @@ class SchedulePageSource(menus.ListPageSource):
                 url=MATCHES_URL,
             )
             .set_author(name="Info from Liquipedia.net", icon_url=LIQUIPEDIA_ICON, url=MATCHES_URL)
-            .set_footer(text=self.schedule_enum.label_name, icon_url=const.Logo.dota)
+            .set_footer(text=self.schedule_enum.label_name, icon_url=const.LOGO.dota)
         )
 
         dt_now = datetime.datetime.now(datetime.timezone.utc)

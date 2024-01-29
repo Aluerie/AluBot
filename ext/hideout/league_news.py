@@ -99,7 +99,7 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
                 title=node["title"],
                 url=f"https://www.leagueoflegends.com/en-us{newest_patch_href}",
             )
-            .set_author(name="League of Legends", icon_url=const.Logo.lol)
+            .set_author(name="League of Legends", icon_url=const.LOGO.lol)
             .set_thumbnail(url=node["banner"]["url"])
         )
         await self.bot.hideout.repost.send(embed=embed, files=files)

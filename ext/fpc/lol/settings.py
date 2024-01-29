@@ -33,7 +33,6 @@ class LoLAccountDict(TypedDict):
     # last_edited: int
 
 
-
 class LoLAccount(Account):
     if TYPE_CHECKING:
         summoner_id: str
@@ -133,7 +132,7 @@ class LoLFPCSettings(BaseSettings):
             prefix="lol",
             colour=const.Colour.rspbrry(),
             game_display_name="League of Legends",
-            game_icon_url=const.Logo.lol,
+            game_icon_url=const.LOGO.lol,
             character_singular_word="champion",
             character_plural_word="champions",
             account_cls=LoLAccount,

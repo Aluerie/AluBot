@@ -1,13 +1,13 @@
 """
-The pagination was quite a struggle.
+Pagination menus View classes
 
-Sources I used to create this file and files that are dependent on it:
+Sources I used to create this file:
 
 * pagination walk gist from InterStella0
     - https://gist.github.com/InterStella0/454cc51e05e60e63b81ea2e8490ef140
 * help walk gist from InterStella0
     - https://gist.github.com/InterStella0/b78488fb28cadf279dfd3164b9f0cf96$syn
-* past fork of it that still has View section
+* past fork of it^ that still has View section
     - https://gist.github.com/Shashank3736/44c124dcaa5c4fdddc0300bec575dc08
 * RoboDanny's meta/pagination files (license MPL v2 from Rapptz/RoboDanny)
     - https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/paginator.py

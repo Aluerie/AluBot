@@ -4,15 +4,15 @@ ex_manager.py - yes, it is for managing my exes.
 
 from __future__ import annotations
 
-import inspect
 import asyncio
 import datetime
+import inspect
 import logging
 import os
 import traceback
 from contextlib import AbstractAsyncContextManager
 from types import TracebackType
-from typing import TYPE_CHECKING, Generator, NamedTuple, Optional, Union
+from typing import TYPE_CHECKING, Generator, NamedTuple
 
 import discord
 
@@ -23,20 +23,20 @@ if TYPE_CHECKING:
     from .bot import AluBot
 
 
-log = logging.getLogger("exception_manager")
+log = logging.getLogger("exc_manager")
 
 
 class ErrorInfoPacket(NamedTuple):
     """
     Parameters
     ----------
-    embed: :class: discord.Embed
+    embed: discord.Embed
         embed to send in error notification to the devs
-    dt: :class: datetime.datetime
+    dt: datetime.datetime
         datetime.datetime to compare for rate-limit purposes
-    mention: :class: bool
+    mention: bool
         whether mention the devs.
-        Useful if I'm sitting in debug-spam channel so I don't get unnecessary ping.
+        Useful if I'm sitting in debug-spam channel so I don't get unnecessary pings.
     """
 
     embed: discord.Embed
@@ -51,6 +51,17 @@ class AluExceptionManager:
     * controls rate-limit of the said webhook
     * contains history of errors that was not fixed yet
     * allows users to track the said errors and get notification when it's fixed
+
+    Attributes
+    ----------
+    bot: AluBot
+        The bot instance.
+    cooldown: datetime.timedelta`
+        The cooldown between sending errors. This defaults to 5 seconds.
+    errors_cache: dict[str, list[ErrorInfoPacket]]
+        A mapping of tracebacks to their error information.
+    error_webhook: discord.Webhook
+        The error webhook used to send errors.
     """
 
     # Inspired by:
@@ -76,7 +87,7 @@ class AluExceptionManager:
         self.cooldown: datetime.timedelta = cooldown
 
         self._lock: asyncio.Lock = asyncio.Lock()
-        self._most_recent: Optional[datetime.datetime] = None
+        self._most_recent: datetime.datetime | None = None
 
         self.errors_cache: dict[str, list[ErrorInfoPacket]] = {}
 
@@ -95,8 +106,19 @@ class AluExceptionManager:
         for i in range(0, len(iterable), max_chars_in_code):
             yield codeblocks.format(iterable[i : i + max_chars_in_code])
 
-    async def send_error(self, traceback_string: str, packet: ErrorInfoPacket):
-        code_chunks = list(self._yield_code_chunks(traceback_string))
+    async def send_error(self, traceback: str, packet: ErrorInfoPacket):
+        """Send an error to the webhook and log it to the console.
+        It is not recommended to call this yourself, call `register_error` instead.
+
+        Parameters
+        ----------
+        traceback: str
+            The traceback of the error.
+        packet: ErrorInfoPacket
+            The additional information about the error.
+        """
+
+        code_chunks = list(self._yield_code_chunks(traceback))
 
         # hmm, this is honestly a bit too many sends for 5 seconds of rate limit :thinking:
         if packet.mention:
@@ -110,9 +132,9 @@ class AluExceptionManager:
 
     async def get_info_packet(
         self,
-        source: Optional[Union[discord.Interaction[AluBot], AluContext, discord.Embed, str]],
+        source: discord.Interaction[AluBot] | AluContext | discord.Embed | str | None,
         where: str,
-        extra: Optional[str],
+        extra: str | None,
     ) -> ErrorInfoPacket:
         """Get info packet"""
 
@@ -231,30 +253,30 @@ class AluExceptionManager:
     async def register_error(
         self,
         error: BaseException,
-        source: Union[discord.Interaction[AluBot], AluContext, discord.Embed, str],
+        source: discord.Interaction[AluBot] | AluContext | discord.Embed | str | None,
         *,
         where: str,
-        extra: Optional[str] = None,
+        extra: str | None = None,
     ):
         """Register, analyse error and put it into queue to send to developers
 
         Parameters
         -----------
-        error: :class: Exception
+        error: Exception
             Exception that the developers of AluBot are going to be notified about
-        source: :class: Optional[Union[discord.Interaction[AluBot], AluContext, discord.Embed, str]],
+        source: discord.Interaction[AluBot] | AluContext | discord.Embed | str | None,
             "source" object of the error. It's basically conditional context
             of where the error happened. Can be either
             * `discord.Interaction` for app commands and views.
             * `AluContext` for txt commands.
             * `discord.Embed` for custom situations like tasks.
             * `str` for custom situations like tasks.
-        where: :class: str
+        where: str
             String to describe where the error happened.
             This is put into log.error message for clearness.
             Also this is put into footer of the embed if the `source` object doesn't clearly represent
             "where" the error has happened.
-        extra: :class: str
+        extra: str | None
             Extra data string where the whole data can't be described only by just `source` object,
             so it comes externally from the error handler.
 
@@ -290,15 +312,28 @@ class HandleHTTPException(AbstractAsyncContextManager):
 
     Parameters
     ----------
-    destination: :class:`discord.abc.Messageable`
+    destination: discord.abc.Messageable
         The destination channel to send the error to.
-    title: Optional[:class:`str`]
+    title: str | None
         The title of the embed. Defaults to ``'An unexpected error occurred!'``.
+
+    Attributes
+    ----------
+    destination: discord.abc.Messageable
+        The destination channel to send the error to.
+    message: str | None
+        The string to put the embed title in.
+
+    Raises
+    ------
+    SilentCommandError
+        Error raised if an HTTPException is encountered. This
+        error is specifically ignored by the command error handler.
     """
 
     __slots__ = ("destination", "title")
 
-    def __init__(self, destination: discord.abc.Messageable, *, title: Optional[str] = None):
+    def __init__(self, destination: discord.abc.Messageable, *, title: str | None = None):
         self.destination = destination
         self.title = title
 
@@ -307,9 +342,9 @@ class HandleHTTPException(AbstractAsyncContextManager):
 
     async def __aexit__(
         self,
-        exc_type: Optional[type[BaseException]] = None,
-        exc_val: Optional[BaseException] = None,
-        exc_tb: Optional[TracebackType] = None,
+        exc_type: type[BaseException] | None = None,
+        exc_val: BaseException | None = None,
+        exc_tb: TracebackType | None = None,
     ) -> bool:
         if exc_val is not None and isinstance(exc_val, discord.HTTPException) and exc_type:
             embed = discord.Embed(

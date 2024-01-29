@@ -149,6 +149,7 @@ class DailyAutoSync(DevBaseCog):
             "hideout-bound": self.hideout.id,
             "community-bound": self.community.id,
             "global": None,
+            "skip": 1,
         }
 
     async def cog_load(self):
@@ -160,15 +161,14 @@ class DailyAutoSync(DevBaseCog):
 
     @aluloop(count=4, minutes=10)
     async def one_time_sync(self):
-        if len(self.sync_dict) == 3:
-            # return on the very first iteration
+        if "skip" in self.sync_dict:
+            # skip the very first iteration
+            self.sync_dict.pop("skip")
             return
 
         guild_name, guild_id = self.sync_dict.popitem()  # brings last key, value pair in dict
-
         guild = discord.Object(id=guild_id) if guild_id else None
         synced = await self.bot.tree.sync(guild=guild)
-
         log.info(f"Synced `{len(synced)}` **{guild_name}** commands.")
 
 

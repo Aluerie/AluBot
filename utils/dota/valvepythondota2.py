@@ -70,9 +70,16 @@ class Dota2Client(Dota2Client_):
         # https://github.com/gfmio/asyncio-gevent?tab=readme-ov-file#converting-greenlets-to-asyncio-futures
         self.wait_event("live_matches_ready", timeout=4)
         if self.check_list:
+            self.deaths += 1
             # we didn't cross out all checking `start_game`-s
+            if self.deaths > 4:
+                self.exit()
+                self.steam.logout()
+                await asyncio.sleep(10.0)
+                await self.login()
             raise asyncio.TimeoutError
         else:
+            self.deaths = 0
             return [LiveMatch(match) for match in self.matches]
 
     def _handle_top_source_tv(self, message: GameCoordinatorAPISchema.GCToClientFindTopSourceTVGamesResponse):

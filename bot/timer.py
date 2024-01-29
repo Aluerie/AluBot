@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
-from typing import TYPE_CHECKING, Any, Generic, Mapping, Optional, Self, TypeAlias, TypedDict, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Generic, Mapping, Self, TypeAlias, TypedDict, TypeVar
 
 import asyncpg
 import discord
@@ -58,7 +58,7 @@ class Timer(Generic[TimerDataT]):
     ----------
     id: Optional[int]
         If present, then it represents unique ID of the timer.
-    event: :class:`str`
+    event: str
         The event name to trigger when the timer expires.
         This also affects dispatched event name to be f""on_{timer.event}_timer_complete"".
         The listener can be formatted as follows (with example `.event` being named "reminder"):
@@ -66,24 +66,24 @@ class Timer(Generic[TimerDataT]):
         @commands.Cog.listener()  # or .listener("on_reminder_timer_complete")
             async def on_reminder_timer_complete(self, timer: Timer):
         ```
-    created_at: :class:`datetime.datetime`
+    created_at: datetime.datetime
         The datetime the timer was created.
-    expires_at: :class:`datetime.datetime`
+    expires_at: datetime.datetime
         The datetime the timer expires and triggers the event.
-    timezone: :class: `str`
+    timezone: str
         The timezone string for the `expires_at` attribute.
         PostgreSQL/AsyncPG structure essentially require us to have extra timezone string
         when working with aware `datetime.datetime` objects.
-    args: List[Any]
+    args: list[Any]
         A list of arguments to pass to the :meth:`TimerManager.create_timer` method.
-    kwargs: Dict[str, Any]
+    kwargs: dict[str, Any]
         A dictionary of keyword arguments to pass to the :meth:`TimerManager.create_timer` method.
     """
 
     __slots__ = ("id", "event", "expires_at", "created_at", "timezone", "data")
 
-    def __init__(self, *, record: Union[TimerRecord[TimerDataT], PseudoTimerRecord[TimerDataT]]) -> None:
-        self.id: Optional[int] = record["id"]
+    def __init__(self, *, record: TimerRecord[TimerDataT] | PseudoTimerRecord[TimerDataT]) -> None:
+        self.id: int | None = record["id"]
         self.event: str = record["event"]
         self.expires_at: datetime.datetime = record["expires_at"]
         self.created_at: datetime.datetime = record["created_at"]
@@ -153,7 +153,7 @@ class TimerManager:
         self.bot: AluBot = bot
 
         self._have_data = asyncio.Event()
-        self._current_timer: Optional[Timer[TimerMapping]] = None
+        self._current_timer: Timer[TimerMapping] | None = None
         self._task = self.bot.loop.create_task(self.dispatch_timers())
 
     async def dispatch_timers(self) -> None:
@@ -229,19 +229,19 @@ class TimerManager:
         event_name = f"{timer.event}_timer_complete"
         self.bot.dispatch(event_name, timer)
 
-    async def get_active_timer(self, *, days: int = 7) -> Optional[Timer[TimerMapping]]:
-        """|coro| Get the most current active timer in the database.
+    async def get_active_timer(self, *, days: int = 7) -> Timer[TimerMapping] | None:
+        """Get the most current active timer in the database.
 
         This timer is expired and should be dispatched.
 
         Parameters
         ----------
-        days: :class:`int`
+        days: int
             The number of days to look back.
 
         Returns
         -------
-        Optional[:class:`Timer`]
+        Timer | None
             The timer that is expired and should be dispatched.
         """
         query = """
@@ -262,8 +262,8 @@ class TimerManager:
         *,
         event: str,
         expires_at: datetime.datetime,
-        created_at: Optional[datetime.datetime] = None,
-        timezone: Optional[str] = None,
+        created_at: datetime.datetime | None = None,
+        timezone: str | None = None,
         data: TimerMapping,
     ) -> Timer:
         """|coro| Creates a timer.
@@ -294,7 +294,7 @@ class TimerManager:
 
         Returns
         --------
-        :class:`Timer`
+        Timer
         """
         log.debug("Creating %s timer for %s", event, expires_at)
 
@@ -344,38 +344,38 @@ class TimerManager:
         event_name = f"{timer.event}_timer_complete"
         self.bot.dispatch(event_name, timer)
 
-    async def get_timer_by_id(self, id: int) -> Optional[Timer[TimerMapping]]:
-        """|coro| Get a timer from its ID.
+    async def get_timer_by_id(self, id: int) -> Timer[TimerMapping] | None:
+        """Get a timer from its ID.
 
         Parameters
         ----------
-        id: :class:`int`
+        id: int
             The ID of the timer to get.
 
         Returns
         -------
-        Optional[:class:`Timer`]
+        Timer | None
             The timer that was fetched.
         """
 
         query = "SELECT * FROM timers WHERE id = $1"
-        record: Optional[TimerRecord[TimerMapping]] = await self.bot.pool.fetchrow(query, id)
+        record: TimerRecord[TimerMapping] | None = await self.bot.pool.fetchrow(query, id)
         return Timer(record=record) if record else None
 
     async def delete_timer_by_id(self, id: int) -> None:
-        """|coro| Delete a timer by its ID.
+        """Delete a timer by its ID.
 
         Parameters
         ----------
-        id: :class:`int`
+        id: int
             The ID of the timer to delete.
         """
 
         query = "DELETE * FROM timers WHERE id = $1"
         await self.bot.pool.execute(query, id)
 
-    async def get_timer_by_kwargs(self, event: str, /, **kwargs: Any) -> Optional[Timer]:
-        """|coro| Gets a timer from the database.
+    async def get_timer_by_kwargs(self, event: str, /, **kwargs: Any) -> Timer | None:
+        """Gets a timer from the database.
 
         Note you cannot find a database by its expiry or creation time.
 
@@ -388,13 +388,13 @@ class TimerManager:
 
         Returns
         --------
-        Optional[:class:`Timer`]
+        Timer | None
             The timer if found, otherwise None.
         """
 
         filtered_clause = [f"data #>> ARRAY['{key}'] = ${i}" for (i, key) in enumerate(kwargs.keys(), start=2)]
         query = f"SELECT * FROM timers WHERE event = $1 AND {' AND '.join(filtered_clause)} LIMIT 1"
-        record: Optional[TimerRecord] = await self.bot.pool.fetchrow(query, event, *kwargs.values())
+        record: TimerRecord | None = await self.bot.pool.fetchrow(query, event, *kwargs.values())
         return Timer(record=record) if record else None
 
     async def delete_timer_by_kwargs(self, event: str, /, **kwargs: Any) -> None:
@@ -421,12 +421,12 @@ class TimerManager:
             self._task = self.bot.loop.create_task(self.dispatch_timers())
 
     async def fetch_timers(self) -> list[Timer]:
-        """|coro| Fetch all timers from the database.
+        """Fetch all timers from the database.
 
         Returns
         -------
-        :class:`list`
-            A list of :class:`Timer` objects.
+        list
+            A list of `Timer` objects.
         """
 
         rows = await self.bot.pool.fetch(f"SELECT * FROM timers")

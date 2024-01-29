@@ -54,7 +54,7 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
 
         async def set_author(emotion, embedx: discord.Embed, act: discord.AuditLogAction):
             if emotion.managed:
-                embedx.set_author(name="Tw.tv Sub integration", icon_url=const.PICTURE.twitch)
+                embedx.set_author(name="Tw.tv Sub integration", icon_url=const.LOGO.TWITCH)
                 return
             else:
                 async for entry in guild.audit_logs(action=act):

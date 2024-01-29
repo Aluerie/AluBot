@@ -177,7 +177,7 @@ class OtherCog(AluCog):
             ),
         )
         e.add_field(name="Last reboot", value=discord.utils.format_dt(self.bot.launch_time, style="R"))
-        e.set_footer(text=f"Made with Love... and discord.py \N{SPARKLING HEART}", icon_url=const.Logo.python)
+        e.set_footer(text=f"Made with Love... and discord.py \N{SPARKLING HEART}", icon_url=const.LOGO.python)
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")

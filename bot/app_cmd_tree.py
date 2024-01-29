@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 import discord
 from discord import app_commands
@@ -37,8 +37,8 @@ class AluAppCommandTree(app_commands.CommandTree):
     def find_app_command_by_names(
         self,
         *qualified_name: str,
-        guild: Optional[Union[Snowflake, int]] = None,
-    ) -> Optional[app_commands.AppCommand]:
+        guild: Snowflake | int | None = None,
+    ) -> app_commands.AppCommand | None:
         commands_dict = self._global_app_commands
         if guild:
             guild_id = guild.id if not isinstance(guild, int) else guild
@@ -56,10 +56,10 @@ class AluAppCommandTree(app_commands.CommandTree):
 
     def get_app_command(
         self,
-        value: Union[str, int],
-        guild: Optional[Union[Snowflake, int]] = None,
-    ) -> Optional[app_commands.AppCommand]:
-        def search_dict(d: AppCommandStore) -> Optional[app_commands.AppCommand]:
+        value: str | int,
+        guild: Snowflake| int | None = None,
+    ) -> app_commands.AppCommand | None:
+        def search_dict(d: AppCommandStore) -> app_commands.AppCommand | None:
             for cmd_name, cmd in d.items():
                 if value == cmd_name or (str(value).isdigit() and int(value) == cmd.id):
                     return cmd
@@ -80,7 +80,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         ret: AppCommandStore = {}
 
         def unpack_options(
-            options: list[Union[app_commands.AppCommand, app_commands.AppCommandGroup, app_commands.Argument]]
+            options: list[app_commands.AppCommand | app_commands.AppCommandGroup | app_commands.Argument | None]
         ):
             for option in options:
                 if isinstance(option, app_commands.AppCommandGroup):
@@ -94,11 +94,11 @@ class AluAppCommandTree(app_commands.CommandTree):
         return ret
 
     async def _update_cache(
-        self, commands: list[app_commands.AppCommand], guild: Optional[Union[Snowflake, int]] = None
+        self, commands: list[app_commands.AppCommand], guild: Snowflake | int | None = None
     ) -> None:
         # because we support both int and Snowflake
         # we need to convert it to a Snowflake like object if it's an int
-        _guild: Optional[Snowflake] = None
+        _guild: Snowflake | None = None
         if guild is not None:
             if isinstance(guild, int):
                 _guild = discord.Object(guild)
@@ -110,17 +110,17 @@ class AluAppCommandTree(app_commands.CommandTree):
         else:
             self._global_app_commands = self._unpack_app_commands(commands)
 
-    async def fetch_command(self, command_id: int, /, *, guild: Optional[Snowflake] = None) -> app_commands.AppCommand:
+    async def fetch_command(self, command_id: int, /, *, guild: Snowflake | None = None) -> app_commands.AppCommand:
         res = await super().fetch_command(command_id, guild=guild)
         await self._update_cache([res], guild=guild)
         return res
 
-    async def fetch_commands(self, *, guild: Optional[Snowflake] = None) -> list[app_commands.AppCommand]:
+    async def fetch_commands(self, *, guild: Snowflake | None = None) -> list[app_commands.AppCommand]:
         res = await super().fetch_commands(guild=guild)
         await self._update_cache(res, guild=guild)
         return res
 
-    def clear_app_commands_cache(self, *, guild: Optional[Snowflake]) -> None:
+    def clear_app_commands_cache(self, *, guild: Snowflake | None) -> None:
         if guild:
             self._guild_app_commands.pop(guild.id, None)
         else:
@@ -129,15 +129,15 @@ class AluAppCommandTree(app_commands.CommandTree):
     def clear_commands(
         self,
         *,
-        guild: Optional[Snowflake],
-        type: Optional[discord.AppCommandType] = None,
+        guild: Snowflake | None,
+        type: discord.AppCommandType | None = None,
         clear_app_commands_cache: bool = True,
     ) -> None:
         super().clear_commands(guild=guild)
         if clear_app_commands_cache:
             self.clear_app_commands_cache(guild=guild)
 
-    async def sync(self, *, guild: Optional[Snowflake] = None) -> list[app_commands.AppCommand]:
+    async def sync(self, *, guild: Snowflake | None = None) -> list[app_commands.AppCommand]:
         res = await super().sync(guild=guild)
         await self._update_cache(res, guild=guild)
         return res

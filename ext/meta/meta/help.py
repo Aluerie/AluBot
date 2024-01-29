@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from base.help_cmd import AluHelp
+from core.help_cmd import AluHelp
 from utils import AluContext, aluloop, const
 
 from .._base import MetaCog

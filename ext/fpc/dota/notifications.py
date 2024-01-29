@@ -230,7 +230,9 @@ class DotaFPCNotifications(BaseNotifications):
             try:
                 stratz_data = await self.bot.stratz_client.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
             except aiohttp.ClientResponseError as exc:
-                edit_log.warning("Stratz API Resp for (match, friend) = %s: Not OK, status %s", tuple_uuid, exc.status)
+                edit_log.warning(
+                    "Stratz API Resp for match `%s` friend `%s`: Not OK, status `%s`", match_id, friend_id, exc.status
+                )
                 self.retry_mapping[tuple_uuid] += 1
                 continue
 
@@ -239,8 +241,8 @@ class DotaFPCNotifications(BaseNotifications):
                 # then parser will fail and declare None
                 edit_log.debug("Stratz: match %s did not count. Deleting the match.", match_id)
                 match_to_edit = NotCountedMatchToEdit(self.bot)
-            elif stratz_data["data"]["match"]["parsedDateTime"] is None:
-                edit_log.debug("Parsing for match %s friend %s was not finished.", match_id, friend_id)
+            elif not stratz_data["data"]["match"]["isStats"]:
+                edit_log.warning("Parsing for match %s friend %s was not finished.", match_id, friend_id)
                 self.retry_mapping[tuple_uuid] += 1
                 continue
             else:
@@ -250,7 +252,7 @@ class DotaFPCNotifications(BaseNotifications):
 
             query = "DELETE FROM dota_messages WHERE match_id=$1 AND friend_id=$2"
             await self.bot.pool.execute(query, match_id, friend_id)
-            edit_log.info("Successfully edited the message after %s retries.", self.retry_mapping[tuple_uuid])
+            edit_log.info("Successfully edited the message after `%s` retries.", self.retry_mapping[tuple_uuid])
             self.retry_mapping.pop(tuple_uuid, None)
         edit_log.debug("*** Finished Task to Edit Dota FPC Messages ***")
 
@@ -275,11 +277,12 @@ class DotaFPCNotifications(BaseNotifications):
         Stratz has daily ratelimit of 10000 requests and it's kinda scary one, if parsing requests fail a lot.
         This is why we also send @mention if ratelimit is critically low.
         """
+
         content = ""
         if self.bot.stratz_client.rate_limiter.rate_limits_ratio < 0.1:
             content = f"<@{self.bot.owner_id}>"
 
-        await self.hideout.daily_report.send(content=content, embed=self.get_ratelimit_embed())
+        await self.hideout.logger.send(content=content, embed=self.get_ratelimit_embed())
 
 
 async def setup(bot):

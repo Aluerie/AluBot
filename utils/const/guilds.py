@@ -95,11 +95,10 @@ class Channel(ChannelEnum):
 
     # HIDEOUT
     global_logs = 997149550324240465
-    spam_logs = 1075497084075130880
-    daily_report = 1066406466778566801
 
     look_spam = 970823670702411810
     test_spam = 1066379298363166791
+    logger = 1075497084075130880
 
     repost = 971504469995049041
 
@@ -354,20 +353,16 @@ class HideoutGuild(SavedGuild):
         return self.get_channel(Channel.global_logs, discord.TextChannel)
 
     @property
-    def spam_logs(self) -> discord.TextChannel:
-        return self.get_channel(Channel.spam_logs, discord.TextChannel)
-
-    @property
-    def daily_report(self) -> discord.TextChannel:
-        return self.get_channel(Channel.daily_report, discord.TextChannel)
-
-    @property
     def spam_channel_id(self) -> int:
         return Channel.test_spam if self.bot.test else Channel.look_spam
 
     @property
     def spam(self) -> discord.TextChannel:
         return self.get_channel(self.spam_channel_id, discord.TextChannel)
+
+    @property
+    def logger(self) -> discord.TextChannel:
+        return self.get_channel(Channel.logger, discord.TextChannel)
 
     @property
     def repost(self) -> discord.TextChannel:

@@ -62,6 +62,10 @@ class Dota2Client(Dota2Client_):
         log.debug("Steam is connected: %s", self.steam.connected)
         if not self.steam.connected:
             await self._bot.hideout.spam.send("Dota2Client: Steam is not connected.")
+            log.warning("Dota2Client: Steam is not connected.")
+            await asyncio.sleep(3.3)
+            await self.login()
+            await asyncio.sleep(3.3)
 
         self.check_list = {i * 10 for i in range(0, 10)}
         self.matches = []
@@ -72,12 +76,6 @@ class Dota2Client(Dota2Client_):
         if self.check_list:
             self.deaths += 1
             # we didn't cross out all checking `start_game`-s
-            if self.deaths > 4:
-                # my theory is that there is some de-sync happened
-                self.exit()
-                self.steam.logout()
-                await asyncio.sleep(10.0)
-                await self.login()
             raise asyncio.TimeoutError
         else:
             self.deaths = 0

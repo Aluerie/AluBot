@@ -24,7 +24,7 @@ class DeveloperUtilities(DevBaseCog):
         """
 
         async def add_new_emote_to_emote_guilds(emote_to_yoink: Union[discord.PartialEmoji, discord.Emoji]):
-            for guild_id in const.EMOTE_GUILDS:
+            for guild_id in const.EmoteGuilds.EMOTE:
                 guild = self.bot.get_guild(guild_id)
                 if guild is None:
                     raise errors.SomethingWentWrong("One of `EMOTE_GUILDS` is None")

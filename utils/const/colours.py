@@ -13,24 +13,6 @@ __all__ = (
     "MaterialAccentPalette",
 )
 
-# MAGENTA
-# magenta 0x9678B6
-# fuchsia 0x9678B6
-# violet 0x9678B6
-# darkorchid 0x9678B6
-# blueviolet 0x9678B6
-# darkviolet 0x9678B6
-# indigo 0x9678B6
-# mediumorchid 0x9678B6
-# midnightblue 0x9678B6
-# palevioletred 0x9678B6
-# purple 0x9678B6
-# rebeccapurple 0x9678B6
-# orchid 0x9678B6
-# plum 0x9678B6
-# lightslategrey 0x9678B6
-# darkslateblue 0x9678B6
-
 
 class Colour:
     """My chosen colours"""

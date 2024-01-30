@@ -29,14 +29,14 @@ class Other(FunCog):
     async def reply_non_command_mentions(self, message: discord.Message):
         """for now there is only blush and question marks"""
         if message.guild and message.guild.me in message.mentions:
-            if any([item in message.content.lower() for item in [""', "blush"]]):
+            if any([item in message.content.lower() for item in ["😊", "blush"]]):
                 await message.channel.send(f"{message.author.mention} {const.Emote.peepoBlushDank}")
             else:
                 ctx = await self.bot.get_context(message)
                 if ctx.command:
                     return
                 else:
-                    for r in ["❔", "❕", ""']:
+                    for r in ["❔", "❕", "🤔"]:
                         with contextlib.suppress(discord.HTTPException):
                             await message.add_reaction(r)
 
@@ -108,10 +108,10 @@ class Other(FunCog):
     def fancify_text(text: str, *, style: dict[str, str]):
         patterns = [
             const.Regex.USER_MENTION,
-            const.Regex.role_mention,
-            const.Regex.channel_mention,
-            const.Regex.slash_mention,
-            const.Regex.emote,
+            const.Regex.ROLE_MENTION,
+            const.Regex.CHANNEL_MENTION,
+            const.Regex.SLASH_MENTION,
+            const.Regex.EMOTE,
         ]
         combined_pattern = r"|".join(patterns)
         mentions_or_emotes = re.findall(combined_pattern, text)

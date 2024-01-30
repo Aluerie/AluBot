@@ -225,9 +225,9 @@ class DotaFPCNotifications(BaseNotifications):
         for match_row in match_rows:
             tuple_uuid = match_id, friend_id = match_row["match_id"], match_row["friend_id"]
             if tuple_uuid not in self.retry_mapping:
-                self.retry_mapping[tuple_uuid] = 0
+                self.retry_mapping[tuple_uuid] = 1
                 # Stratz 99% will not have data in the first 5 minutes so it's just a wasted call
-                # Thus lets skip the very first loop
+                # Thus lets skip the very first loop #0 (by assigning #1 to loop counter)
                 continue
 
             edit_log.debug("Editing match = %s retry %s", tuple_uuid, self.retry_mapping[tuple_uuid])

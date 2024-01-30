@@ -340,10 +340,12 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
             width, height = img.size
 
             draw = ImageDraw.Draw(img)
-            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
+            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 43)
             text = "Not Counted"
             text_w, text_h = self.bot.transposer.get_text_wh(text, font)
-            draw.text(xy=(0, height - text_h), text=text, font=font, align="left")
+            draw.text(
+                xy=(0, height - text_h), text=text, font=font, align="left", fill=str(discord.Colour.dark_orange())
+            )
 
             # img.show()
             return img
@@ -356,7 +358,7 @@ if TYPE_CHECKING:
 
 
 async def beta_test_stratz_edit(self: AluCog):
-    """Testing function for `edit_notification_image` from LoLFPCMatchToEdit class
+    """Testing function for `edit_notification_image` from LoL's MatchToEdit class
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """

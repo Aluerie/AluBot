@@ -162,7 +162,7 @@ class Paginator(AluView):
         edit_response: bool = False,
         reply: bool = True,
         page_number: int = 0,
-    ) -> None:
+    ) -> discord.Message:
         await self.source._prepare_once()
         page = await self.source.get_page(page_number)
         kwargs = await self._get_kwargs_from_page(page)
@@ -174,16 +174,18 @@ class Paginator(AluView):
                 self.message = await ctx.reply(**kwargs, view=self, ephemeral=ephemeral)
             else:
                 self.message = await ctx.send(**kwargs, view=self, ephemeral=ephemeral)
+            return self.message
         elif isinstance(self.ctx_ntr, discord.Interaction):
             interaction = self.ctx_ntr
             if interaction.response.is_done():
-                self.message = await interaction.followup.send(**kwargs, view=self, ephemeral=ephemeral)
+                self.message = await interaction.followup.send(**kwargs, view=self, ephemeral=ephemeral, wait=True)
             elif edit_response:
                 await interaction.response.edit_message(**kwargs, view=self)
                 self.message = await interaction.original_response()
             else:
                 await interaction.response.send_message(**kwargs, view=self, ephemeral=ephemeral)
                 self.message = await interaction.original_response()
+            return self.message
         else:
             raise RuntimeError("Cannot start a paginator without a context or interaction.")
 

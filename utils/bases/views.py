@@ -26,6 +26,8 @@ class AluView(discord.ui.View):
     view_name : str, optional
         _description_, by default "Interactive Element"
     """
+    if TYPE_CHECKING:
+        message: discord.Message | discord.InteractionMessage
 
     def __init__(
         self,
@@ -40,7 +42,6 @@ class AluView(discord.ui.View):
         # we could try doing __class__.__name__ stuff and add spaces, replace "view" with "interactive element"
         # but it might get tricky since like FPCSetupMiscView exists
         self.view_name: str = view_name
-        self.message: Optional[discord.Message | discord.InteractionMessage] = None
 
     async def interaction_check(self, interaction: discord.Interaction[AluBot]) -> bool:
         """Interaction check that blocks non-authors from clicking view items."""
@@ -66,7 +67,7 @@ class AluView(discord.ui.View):
         Requires us to assign message object to view so it can edit the message.
         """
 
-        if self.message:
+        if hasattr(self, "message"):
             for item in self.children:
                 # item in self.children is Select/Button which have ``.disable`` but typehinted as Item
                 item.disabled = True  # type: ignore

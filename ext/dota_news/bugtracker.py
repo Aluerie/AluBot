@@ -6,6 +6,7 @@ import logging
 import re
 import textwrap
 from enum import Enum
+from operator import attrgetter
 from typing import TYPE_CHECKING, Optional
 
 import discord
@@ -32,6 +33,21 @@ GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
 
 
 class ActionBase:
+    """_summary_
+
+    Attributes
+    ----------
+    name : str
+        Event's name. Matches github terminology from API.
+    colour : int
+        Colour to assign for embed when sending the bugtracker news message.
+    word : str
+        Verb to put into author string in the said embed.
+    emote : str
+        Emote to use in a special type of embed where there is many different events per one issue.
+        Emote differentiates "actions" from each other.
+    """
+
     def __init__(self, name: str, *, colour: int, word: str, emote: str) -> None:
         self.name: str = name
         self.colour: int = colour
@@ -40,18 +56,39 @@ class ActionBase:
 
     @property
     def file_path(self) -> str:
+        """Get path to the image file to put into thumbnail for the embed."""
         return f"./assets/images/git/{self.name}.png"
 
     def file(self, number: int) -> discord.File:
+        """Get discord.File linked to the action image."""
         # without a `number` we had a "bug" where the image would go outside embeds
         return discord.File(self.file_path, filename=f"{self.name}_{number}.png")
 
 
 class EventBase(ActionBase):
+    """Base class for github issue event
+
+    In a context of this file git issue "event" means stuff that doesn't have to have text with it, i.e.
+    closed, assigned, reopened.
+    """
+
     pass
 
 
 class CommentBase(ActionBase):
+    """Base class for github issue comment
+
+    In a context of this file git issue "comment" means stuff that has to have text with it, i.e.
+    commented, opened.
+
+    An often case for github developers is to leave a comment and do one of the events.
+    We will build a Timeline for each issue and then:
+        * if mentioned above case happens - we will try to combine
+        comments and event into one embed assuming they are related.
+        * if there is many more events - we will list them with emotes
+        * if there is only one - then easy life.
+    """
+
     pass
 
 
@@ -60,41 +97,65 @@ class CommentBase(ActionBase):
 # * PNG-picture in assets folder
 # * emote name in wink server
 class EventType(Enum):
+    """Kinda data-mapping for git issue events."""
+
     assigned = EventBase("assigned", colour=0x21262D, word="self-assigned", emote=str(const.GitIssueEvent.assigned))
     closed = EventBase("closed", colour=0x9B6CEA, word="closed", emote=str(const.GitIssueEvent.closed))
     reopened = EventBase("reopened", colour=0x238636, word="reopened", emote=str(const.GitIssueEvent.reopened))
 
 
 class CommentType(Enum):
+    """Kinda data-mapping for git issue comments."""
+
     commented = CommentBase("commented", colour=0x4285F4, word="commented", emote=str(const.GitIssueEvent.commented))
     opened = CommentBase("opened", colour=0x52CC99, word="opened", emote=str(const.GitIssueEvent.opened))
 
 
 class Action:
+    """Action. These are ordered properly in the Git Issue's Timeline.
+
+    Attributes
+    ----------
+    enum_type : EventBase | CommentBase
+        Action type to gather common data, like picture file path from it.
+    created_at : datetime.datetime
+        Datetime for when the action was taken place.
+    actor : SimpleUser
+        Github issue whom created the event/comment.
+    issue_number : int
+        GitHub issue number.
+    """
+
     def __init__(
         self,
         *,
-        enum_type: EventBase,
+        enum_type: EventBase | CommentBase,
         created_at: datetime.datetime,
         actor: SimpleUser,
         issue_number: int,
         **kwargs,
     ):
-        self.event_type: EventBase = enum_type
+        self.event_type: EventBase | CommentBase = enum_type
         self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.timezone.utc)
         self.actor: SimpleUser = actor
         self.issue_number: int = issue_number
 
     @property
     def author_str(self) -> str:
+        """Author string to put into the embed."""
         return f"@{self.actor.login} {self.event_type.word} bugtracker issue #{self.issue_number}"
 
 
 class Event(Action):
+    """Github Issue Timeline's Event"""
+
+    # this needs to be separate classes bcs `isinstance` check
     pass
 
 
 class Comment(Action):
+    """Github Issue Timeline's Comment"""
+
     def __init__(self, *, comment_body: str, comment_url: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         self.comment_body: str = comment_body
@@ -109,29 +170,48 @@ class Comment(Action):
 
 
 class TimeLine:
+    """Timeline representing collection of ordered Events and Comments.
+
+    Used to sort/order/combine said events/comments and create an embed out of it.
+
+    Attributes
+    ----------
+    issue : Issue
+        GItHub Issue to sort events/comments for the embed.
+    actions : list[Action]
+        List of those events/comments to sort later.
+    actor_ids : set[int]
+        ids of github actors who created those events/comments.
+    """
+
     def __init__(self, issue: Issue):
         self.issue: Issue = issue
 
         self.actions: list[Action] = []
-        self.author_ids: set[int] = set()
+        self.actor_ids: set[int] = set()
 
     def add_action(self, action: Action):
+        """Add action to the Timeline."""
         self.actions.append(action)
-        self.author_ids.add(action.actor.id)
+        self.actor_ids.add(action.actor.id)
 
     def sorted_points_list(self) -> list[Action]:
-        return sorted(self.actions, key=lambda x: x.created_at, reverse=False)
+        """Sort actions by created time."""
+        return sorted(self.actions, key=attrgetter("created_at"), reverse=False)
 
     @property
     def events(self) -> list[Event]:
+        """List of event actions."""
         return [e for e in self.actions if isinstance(e, Event)]
 
     @property
     def comments(self) -> list[Comment]:
+        """List of comment actions."""
         return [e for e in self.actions if isinstance(e, Comment)]
 
     @property
     def last_comment_url(self) -> Optional[str]:
+        """Get url for the last comment."""
         sorted_comments = sorted(self.comments, key=lambda x: x.created_at, reverse=False)
         try:
             last_comment_url = sorted_comments[-1].comment_url
@@ -140,9 +220,10 @@ class TimeLine:
         return last_comment_url
 
     def embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
+        """Get embed and file to send in the discord."""
         title = textwrap.shorten(self.issue.title, width=const.Limit.Embed.title)
         embed = discord.Embed(title=title, url=self.issue.html_url)
-        if len(self.events) < 2 and len(self.comments) < 2 and len(self.author_ids) < 2:
+        if len(self.events) < 2 and len(self.comments) < 2 and len(self.actor_ids) < 2:
             # we just send a small embed
             # 1 author and 1 event with possible comment to it
             event = next(iter(self.events), None)  # first element in self.events or None if not exist
@@ -187,21 +268,45 @@ class TimeLine:
 
 
 class BugTracker(AluCog):
+    """BugTracker News
+
+    Track Valve developers activity in the Dota2-Gameplay repository
+    and send a notification to #bugtracker-news in my discord server.
+
+    Useful to know what the devs are up to and to quickly test, respond to their actions.
+
+    A bit of privacy-abuse to track people's activity like that, but the repository is public and
+    the information is valuable and interesting,
+    and helpful to valve devs themselves since I can help asap when they ask for it.
+
+    So hopefully, it's not much of a problem. If there is - please, contact me.
+
+    Attributes
+    ----------
+    valve_devs : list[str]
+        The list of known Valve developers who ever interacted with the Bug Tracker.
+    bugtracker_news_worker : utils.bases.tasks.Loop
+        The main task of the cog that tracks, analyzes GitHub events and sends news messages.
+    """
+
     async def cog_load(self) -> None:
         self.bot.initialize_github()
-        self.valve_devs = await self.get_valve_devs()
-        self.git_comments_check.add_exception_type(RequestError, RequestFailed)
-        self.git_comments_check.start()
+        self.valve_devs: list[str] = await self.get_valve_devs()
+
+        self.bugtracker_news_worker.add_exception_type(RequestError, RequestFailed)
+        self.bugtracker_news_worker.start()
 
     async def cog_unload(self) -> None:
-        self.git_comments_check.stop()  # .cancel()
+        self.bugtracker_news_worker.stop()  # .cancel()
 
     @discord.utils.cached_property
     def news_channel(self) -> discord.TextChannel:
+        """Dota 2 Bug tracker news channel."""
         channel = self.hideout.spam if self.bot.test else self.community.bugtracker_news
         return channel
 
     async def get_valve_devs(self) -> list[str]:
+        """Get the list of known Valve developers."""
         query = "SELECT login FROM valve_devs"
         valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
         return valve_devs
@@ -209,11 +314,12 @@ class BugTracker(AluCog):
     @commands.is_owner()
     @commands.group(name="bugtracker", aliases=["valve"], hidden=True)
     async def bugtracker(self, ctx: AluContext):
-        """Commands to retrieve or manually control a list of known Valve developers' github accounts."""
+        """Commands to retrieve or manually control the list of known Valve developers' github accounts."""
         await ctx.send_help(ctx.command)
 
     @bugtracker.command(name="add")
     async def bugtracker_add(self, ctx: AluContext, *, login: str):
+        """Manually add a user login to the list of known Valve developers."""
         logins = [b for x in login.split(",") if (b := x.lstrip().rstrip())]
         query = """
             INSERT INTO valve_devs (login) VALUES ($1)
@@ -235,7 +341,7 @@ class BugTracker(AluCog):
             logins_join = ", ".join(f"`{l}`" for l in logins)
             return discord.Embed(color=color, description=f"{description}\n{logins_join}")
 
-        embeds = []
+        embeds: list[discord.Embed] = []
         if success_logins:
             self.valve_devs.extend(success_logins)
             embeds.append(
@@ -243,12 +349,15 @@ class BugTracker(AluCog):
             )
         if error_logins:
             embeds.append(
-                (error_logins, const.MaterialPalette.red(), "User(-s) were already in the list of Valve devs.")
+                embed_answer(
+                    error_logins, const.MaterialPalette.red(), "User(-s) were already in the list of Valve devs."
+                )
             )
         await ctx.reply(embeds=embeds)
 
     @bugtracker.command(name="remove")
     async def bugtracker_remove(self, ctx: AluContext, login: str):
+        """Manually remove a user login from the list of known Valve developers."""
         query = "DELETE FROM valve_devs WHERE login=$1"
         await self.bot.pool.execute(query, login)
         self.valve_devs.remove(login)
@@ -258,8 +367,9 @@ class BugTracker(AluCog):
         )
         await ctx.reply(embed=embed)
 
-    @bugtracker.command(name="list")
+    @bugtracker.command(name="list", aliases=["devs"])
     async def bugtracker_list(self, ctx: AluContext):
+        """Show the list of known Valve developers."""
         query = "SELECT login FROM valve_devs"
         valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
         valve_devs.sort()
@@ -271,8 +381,14 @@ class BugTracker(AluCog):
         await ctx.reply(embed=embed)
 
     @aluloop(minutes=3)
-    async def git_comments_check(self):
-        log.debug("BugTracker task started")
+    async def bugtracker_news_worker(self):
+        """The task to
+        * track GitHub events/comments in the Dota 2 Bug Tracker Repository
+        * analyze them and build Timelines
+        * send messages to news channel if Valve developers activity was spotted.
+        """
+
+        log.debug("^^^ BugTracker task started ^^^")
 
         query = "SELECT git_checked_dt FROM botinfo WHERE id=$1"
         dt: datetime.datetime = await self.bot.pool.fetchval(query, const.Guild.community)
@@ -414,9 +530,10 @@ class BugTracker(AluCog):
 
         query = "UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2"
         await self.bot.pool.execute(query, now, const.Guild.community)
-        log.debug("BugTracker task is finished")
+        log.debug("^^^ BugTracker task is finished ^^^")
 
     async def get_issue(self, issue_number: int):
+        """Shortcut to get a Dota 2 Bug Tracker issue by its number."""
         return (
             await self.bot.github.rest.issues.async_get(
                 owner="ValveSoftware",

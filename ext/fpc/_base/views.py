@@ -23,16 +23,26 @@ if TYPE_CHECKING:
         accounts: list[str]
 
 
-class FPCSetupChannelView(AluView):
+class FPCView(AluView):
+    def __init__(self, cog: BaseSettings, *, author_id: int | None):
+        super().__init__(
+            author_id=author_id,
+            view_name=f"{cog.game_display_name} Favourite Player+Character Setup menu",
+        )
+        self.cog: BaseSettings = cog
+
+    async def on_timeout(self) -> None:
+        await super().on_timeout()
+        self.cog.setup_messages_cache.pop(self.message.id, None)
+        return
+
+
+class SetupChannel(FPCView):
     """View for a command `/{game} setup channel`.
 
     This gives
     * Dropdown menu to select a new channel for notifications.
     """
-
-    def __init__(self, cog: BaseSettings, author_id: int):
-        super().__init__(author_id=author_id)
-        self.cog: BaseSettings = cog
 
     @discord.ui.select(
         cls=discord.ui.ChannelSelect,
@@ -72,7 +82,7 @@ class FPCSetupChannelView(AluView):
         return await interaction.response.send_message(embed=embed)
 
 
-class FPCSetupMiscView(AluView):
+class SetupMisc(FPCView):
     """View for a command `/{game} setup misc`.
 
     This gives
@@ -88,8 +98,7 @@ class FPCSetupMiscView(AluView):
         *,
         author_id: int,
     ):
-        super().__init__(author_id=author_id)
-        self.cog: BaseSettings = cog
+        super().__init__(cog, author_id=author_id)
         self.embed: discord.Embed = embed
 
     async def toggle_worker(self, interaction: discord.Interaction[AluBot], setting: str, field_index: int):
@@ -150,6 +159,15 @@ class FPCSetupMiscView(AluView):
 
         if not interaction.client.disambiguator.confirm(interaction, confirm_embed):
             return
+
+        # Disable all the active setup views so the user can't mess up the database
+        # code is copy of usual `on_timeout` habit
+        for message_id in list(self.cog.setup_messages_cache.keys()):
+            view = self.cog.setup_messages_cache.pop(message_id)
+            for item in view.children:
+                # item in self.children is Select/Button which have ``.disable`` but typehinted as Item
+                item.disabled = True  # type: ignore
+            await view.message.edit(view=view)
 
         # Disable the Channel
         query = f"DELETE FROM {self.cog.prefix}_settings WHERE guild_id=$1"
@@ -359,18 +377,24 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
             button to replace the 5th button in pagination menu.
             i.e. we want account list for /setup players command.
         """
+
         super().__init__(
             ctx,
             source=FPCSetupPlayersCharactersPageSource(object_id_name_tuples),
         )
+        self.cog: BaseSettings = cog
         self.singular: str = singular
         self.plural: str = plural
-        self.cog: BaseSettings = cog
         self.get_object_list_embed: Callable[[int], Awaitable[discord.Embed]] = get_object_list_embed
 
         self.table_name: str = f"{cog.prefix}_favourite_{table_object_name}s "
         self.id_column_name: str = f"{table_object_name}_id"
         self.special_button_cls: Optional[type[AccountListButton]] = special_button_cls
+
+    async def on_timeout(self) -> None:
+        await super().on_timeout()
+        self.cog.setup_messages_cache.pop(self.message.id, None)
+        return
 
     @discord.ui.button(label="\N{PAGE WITH CURL}", style=discord.ButtonStyle.blurple)
     async def object_list(self, interaction: discord.Interaction, _: discord.ui.Button):

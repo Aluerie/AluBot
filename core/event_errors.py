@@ -20,11 +20,11 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
 
     Parameters
     ----------
-    event: :class:`str`
+    event: str
         The name of the event that raised the exception.
-    args: :class:`Any`
+    args: Any
         The positional arguments for the event that raised the exception.
-    kwargs: :class:`Any`
+    kwargs: Any
         The keyword arguments for the event that raised the exception.
     """
 
@@ -48,15 +48,21 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
         return
 
     # Event Arguments
-    embed = discord.Embed(title=f"`{event}`", colour=const.Colour.error_handler())
-    embed.set_author(name="Event Error")
-
     args_str = ["```py"]
     for index, arg in enumerate(args):
         args_str.append(f"[{index}]: {arg!r}")
     args_str.append("```")
-    embed.add_field(name="Args", value="\n".join(args_str), inline=False)
-    embed.set_footer(text="on_error (event error)")
+
+    # Embed
+    embed = (
+        discord.Embed(
+            colour=const.Colour.error_handler(),
+            title=f"`{event}`",
+        )
+        .set_author(name="Event Error")
+        .add_field(name="Args", value="\n".join(args_str), inline=False)
+        .set_footer(text="on_error (event error)")
+    )
 
     await self.exc_manager.register_error(exception, embed, where=str(event))
 

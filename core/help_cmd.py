@@ -363,10 +363,11 @@ class BaseHelpCog(AluCog):
         if not self.bot.test:
             # announce to community/hideout that we logged in
             # from testing purposes it means we can use help with [proper slash mentions (if synced).
-            e = discord.Embed(colour=const.Colour.prpl(), description = f"Logged in as {self.bot.user.name}")
-            await self.hideout.spam.send(embed=e)
-            e.set_footer(text="Finished updating/rebooting")
-            await self.community.bot_spam.send(embed=e)
+            embed = discord.Embed(
+                colour=const.Colour.prpl(),
+                description=f"Logged in as {self.bot.user.name}",
+            ).set_footer(text="Finished updating/rebooting")
+            await self.community.bot_spam.send(embed=embed)
 
 
 async def setup(bot: AluBot):

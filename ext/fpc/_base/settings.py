@@ -15,6 +15,7 @@ from . import FPCCog, views
 
 if TYPE_CHECKING:
     from bot import AluBot
+    from utils import AluView
 
     # currently
     # * `steam_id` are `int`
@@ -213,6 +214,9 @@ class BaseSettings(FPCCog):
             "name_by_id"
         )
 
+        # setup messages cache
+        self.setup_messages_cache: dict[int, AluView] = {}
+
     # fpc database management related functions ########################################################################
 
     async def check_if_account_already_in_database(self, account_id: AccountIDType) -> None:
@@ -368,8 +372,10 @@ class BaseSettings(FPCCog):
             title="FPC (Favourite Player+Character) Channel Setup",
             description=desc,
         ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
-        channel_setup_view = views.FPCSetupChannelView(self, ctx.author.id)
-        await ctx.reply(embed=embed, view=channel_setup_view)
+        view = views.SetupChannel(self, author_id=ctx.author.id)
+        message = await ctx.reply(embed=embed, view=view)
+        view.message = message
+        self.setup_messages_cache[message.id] = view
 
     async def is_fpc_channel_set(self, ctx: AluGuildContext) -> None:
         """Checks if the current guild has fpc channel set.
@@ -454,8 +460,10 @@ class BaseSettings(FPCCog):
             )
             .set_footer(text="Buttons below correspond embed fields above. Read them!")
         )
-        view = views.FPCSetupMiscView(self, embed, author_id=ctx.author.id)
-        await ctx.reply(embed=embed, view=view)
+        view = views.SetupMisc(self, embed, author_id=ctx.author.id)
+        message = await ctx.reply(embed=embed, view=view)
+        view.message = message
+        self.setup_messages_cache[message.id] = view
 
     # async def get_character_name_by_id_cache(self) -> dict[int, str]:
     #     raise NotImplementedError
@@ -479,7 +487,9 @@ class BaseSettings(FPCCog):
         character_tuples.sort(key=lambda x: x[1])
 
         paginator = views.FPCSetupCharactersPaginator(ctx, character_tuples, self)
-        await paginator.start()
+        message = await paginator.start()
+        # paginator.message is already assigned
+        self.setup_messages_cache[message.id] = paginator
 
     async def setup_players(self, ctx: AluGuildContext):
         """Base function for `/{game} setup players` command.
@@ -498,7 +508,9 @@ class BaseSettings(FPCCog):
         player_tuples.sort(key=lambda x: x[1])
 
         paginator = views.FPCSetupPlayersPaginator(ctx, player_tuples, self)
-        await paginator.start()
+        message = await paginator.start()
+        # paginator.message is already assigned
+        self.setup_messages_cache[message.id] = paginator
 
     # HIDEOUT ONLY RELATED FUNCTIONS ###################################################################################
 

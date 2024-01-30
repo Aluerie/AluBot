@@ -99,9 +99,7 @@ class MemberLogging(CommunityCog):
         else:
             # Just for interest if it actually triggers for something else one future day
             # let's compare before and after by their attributes
-            b = before.__dict__
-            a = after.__dict__
-            changes = [attr for attr in b if b[attr] != a[attr]]
+            changes = [attr for attr in before.__dir__() if getattr(before, attr) != getattr(after, attr)]
             extra_e = self.base_embed(member)
             for attr in changes:
                 # TODO: this will fail if 25+ fields

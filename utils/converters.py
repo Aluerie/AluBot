@@ -118,9 +118,9 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
         error_footer = f'\n\nTo see supported colour formats by the bot - use "{const.Slash.help}` command: colour`"'
 
         # my custom situations/desires.
-        if argument == "prpl":
+        if argument in ("lavender purple", "prpl"):
             # my fav colour, of course.
-            return const.Colour.prpl()
+            return discord.Colour(const.Colour.blueviolet)
 
         # Material Palette
         m = re.match(r"mp\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", argument)

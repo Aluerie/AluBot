@@ -141,7 +141,8 @@ class ModerationTools(ModerationCog):
 
         if require_prompt:
             embed = discord.Embed(
-                color=const.Colour.prpl(), description=f"Are you sure you want to delete {plural(search):message}?"
+                color=const.Colour.blueviolet,
+                description=f"Are you sure you want to delete {plural(search):message}?",
             )
             if not await ctx.bot.disambiguator.confirm(ctx, embed=embed, timeout=30):
                 return

@@ -39,7 +39,7 @@ class DevInformation(DevBaseCog):
 
         embed = (
             discord.Embed(
-                colour=const.Colour.prpl(),
+                colour=const.Colour.blueviolet,
                 title="Bot Host Machine System Info",
                 description=(
                     f"\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n"
@@ -80,14 +80,14 @@ class DevInformation(DevBaseCog):
         curious_packages = [
             "discord.py",
             "twitchio",
-            "steam", # VALVE_SWITCH
+            "steam",  # VALVE_SWITCH
             "dota2",
             "pulsefire",
         ]  # list of packages versions of which I'm interested the most
-        pv = sys.version_info  # python version 
+        pv = sys.version_info  # python version
 
         embed = (
-            discord.Embed(colour=const.Colour.prpl())
+            discord.Embed(colour=const.Colour.blueviolet)
             .add_field(
                 name="Python Version",
                 value=f"{pv.major}.{pv.minor}.{pv.micro} {pv.releaselevel} {pv.serial}",  # cspell: ignore releaselevel

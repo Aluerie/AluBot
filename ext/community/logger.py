@@ -99,7 +99,11 @@ class MemberLogging(CommunityCog):
         else:
             # Just for interest if it actually triggers for something else one future day
             # let's compare before and after by their attributes
-            changes = [attr for attr in before.__dir__() if getattr(before, attr) != getattr(after, attr)]
+            changes = [
+                attr
+                for attr in before.__dir__()
+                if not attr.startswith("_") and getattr(before, attr) != getattr(after, attr)
+            ]
             extra_e = self.base_embed(member)
             for attr in changes:
                 # TODO: this will fail if 25+ fields
@@ -232,7 +236,7 @@ class MessageLogging(CommunityCog):
     async def on_message_delete(self, message: discord.Message):
         if message.author.bot or (message.guild and message.guild.id != const.Guild.community):
             return
-        if re.search(const.Regex.bug_check, message.content):  # bug_check
+        if re.search(const.Regex.BUG_CHECK, message.content):  # bug_check
             return
         if message.content.startswith("$"):
             return

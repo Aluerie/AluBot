@@ -214,7 +214,7 @@ class SchedulePageSource(menus.ListPageSource):
                 url=MATCHES_URL,
             )
             .set_author(name="Info from Liquipedia.net", icon_url=LIQUIPEDIA_ICON, url=MATCHES_URL)
-            .set_footer(text=self.schedule_enum.label_name, icon_url=const.LOGO.dota)
+            .set_footer(text=self.schedule_enum.label_name, icon_url=const.Logo.Dota)
         )
 
         dt_now = datetime.datetime.now(datetime.timezone.utc)
@@ -344,7 +344,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                 e.set_author(name="Info from onefootball.com", url=url, icon_url="https://i.imgur.com/pm2JgEW.jpg")
                 await ctx.reply(embed=e)
             else:
-                e = discord.Embed(colour=const.Colour.error())
+                e = discord.Embed(colour=const.Colour.maroon)
                 e.description = "No matches found"
                 await ctx.reply(embed=e, ephemeral=True)
 

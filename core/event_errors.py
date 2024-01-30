@@ -56,7 +56,7 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
     # Embed
     embed = (
         discord.Embed(
-            colour=const.Colour.error_handler(),
+            colour=0xA32952,
             title=f"`{event}`",
         )
         .set_author(name="Event Error")

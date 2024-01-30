@@ -34,7 +34,7 @@ class TranslateCog(EducationalCog):
         # PS: TranslateError is handled in global ErrorHandler
         result = await translate(text, session=self.bot.session)
 
-        e = discord.Embed(title="Google Translate to English", colour=const.Colour.prpl())
+        e = discord.Embed(title="Google Translate to English", colour=const.Colour.blueviolet)
         e.description = result.translated
         e.set_footer(text=f"Detected language: {result.source_lang}")
         return e

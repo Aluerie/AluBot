@@ -39,7 +39,7 @@ class DevUtilities(AluCog):
             embed.add_field(name=f"\N{BLACK CIRCLE} `{name}`", value=field_value, inline=False)
             names.append(name)
         if len(characters) > 10:
-            embed.colour = const.Colour.error()
+            embed.colour = const.Colour.maroon
             embed.set_footer(text="Output was too long. Displaying only first 10 chars.")
         content = "```js\n" + "".join(names) + "```"  # js codeblock highlights {TEXT HERE} in teal :D
         await ctx.send(content=content, embed=embed)

@@ -16,14 +16,14 @@ if TYPE_CHECKING:
 def unexpected_error_embed() -> discord.Embed:
     return (
         discord.Embed(
-            colour=const.Colour.error(),
+            colour=const.Colour.maroon,
             description=(
                 "I've notified my developer about the error and sent all the details. "
                 "Hopefully, we'll get it fixed soon.\n"
                 "Sorry for the inconvenience! {0} {0} {0}".format(const.Emote.DankL)
             ),
         )
-        .set_thumbnail(url=const.PICTURE.dankfix)
+        .set_thumbnail(url=const.Picture.DankFix)
         .set_author(name="Oups... Unexpected error!")
     )
 
@@ -82,7 +82,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
 
         if ctx.channel.id == ctx.bot.hideout.spam_channel_id:
             # means I'm developing and thus I don't need details embed
-            embed = discord.Embed(colour=const.Colour.error()).set_author(name=error.__class__.__name__)
+            embed = discord.Embed(colour=const.Colour.maroon).set_author(name=error.__class__.__name__)
             await ctx.reply(embed=embed, ephemeral=True)
             # # well, then I do not need "desc" embed as well
             # if ctx.interaction and not ctx.interaction.response.is_done():
@@ -93,7 +93,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
     if unexpected_error:
         response_to_user_embed = unexpected_error_embed()
     else:
-        response_to_user_embed = discord.Embed(colour=const.Colour.error(), description=desc)
+        response_to_user_embed = discord.Embed(colour=const.Colour.maroon, description=desc)
         if error_type:
             response_to_user_embed.set_author(name=error_type)
     await ctx.reply(embed=response_to_user_embed, ephemeral=True)

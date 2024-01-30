@@ -30,7 +30,7 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
         query = "UPDATE guilds SET emote_logs_id=$1 WHERE id=$2"
         await self.bot.pool.execute(query, ch.id, ctx.guild.id)
 
-        e = discord.Embed(title="Emote logging is turned on", colour=const.Colour.prpl())
+        e = discord.Embed(title="Emote logging is turned on", colour=const.Colour.blueviolet)
         e.description = f"Now I will log emote create/delete/rename actions in {ch.mention}. Go try it!"
         e.set_footer(text=f"With love, {ctx.guild.me.display_name}")
         e.set_thumbnail(url=ctx.guild.me.display_avatar.url)
@@ -54,7 +54,7 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
 
         async def set_author(emotion, embedx: discord.Embed, act: discord.AuditLogAction):
             if emotion.managed:
-                embedx.set_author(name="Tw.tv Sub integration", icon_url=const.LOGO.TWITCH)
+                embedx.set_author(name="Tw.tv Sub integration", icon_url=const.Logo.Twitch)
                 return
             else:
                 async for entry in guild.audit_logs(action=act):

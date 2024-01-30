@@ -8,50 +8,55 @@ if TYPE_CHECKING:
     pass
 
 __all__ = (
-    'Colour',
-    'MaterialPalette',
-    'MaterialAccentPalette',
+    "Colour",
+    "MaterialPalette",
+    "MaterialAccentPalette",
 )
+
+# MAGENTA
+# magenta 0x9678B6
+# fuchsia 0x9678B6
+# violet 0x9678B6
+# darkorchid 0x9678B6
+# blueviolet 0x9678B6
+# darkviolet 0x9678B6
+# indigo 0x9678B6
+# mediumorchid 0x9678B6
+# midnightblue 0x9678B6
+# palevioletred 0x9678B6
+# purple 0x9678B6
+# rebeccapurple 0x9678B6
+# orchid 0x9678B6
+# plum 0x9678B6
+# lightslategrey 0x9678B6
+# darkslateblue 0x9678B6
 
 
 class Colour:
     """My chosen colours"""
 
-    @staticmethod
-    def prpl() -> discord.Colour:
-        return discord.Colour(0x9678B6)
+    # names are lower-case because "Color Highlight" VSCode extension doesn't highlight words in any other case
+    # blueviolet - BlueViolet - blue_violet - blueViolet - BLUEVIOLET - BLUE_VIOLET ;
+    # that extension uses colour names from https://www.w3.org/TR/css-color-4/#valdef-color-indigo or something
+    # so when introducing new common colours - use something from there
 
-    @staticmethod
-    def rspbrry() -> discord.Colour:
-        return discord.Colour(0xC42C48)
+    # my colour is Lavender Purple (Purple Mountain Majesty)
+    # https://en.wikipedia.org/wiki/Lavender_(color)#Lavender_purple_(purple_mountain_majesty)
+    # but I just chose the name that is supported by the said extension in highlight and is close enough in value.
+    blueviolet = 0x9678B6
 
-    @staticmethod
-    def neon() -> discord.Colour:
-        return discord.Colour(0x4D4DFF)
+    palevioletred = 0xDB7093
 
-    @staticmethod
-    def error() -> discord.Colour:
-        return discord.Colour(0x800000)
+    slateblue = 0x6A5ACD
+    darkviolet = 0x9400D3
 
-    @staticmethod
-    def error_handler() -> discord.Colour:
-        return discord.Colour(0xA32952)
+    maroon = 0x800000  # used primarily for errors
 
-    @staticmethod
-    def olive() -> discord.Colour:
-        return discord.Colour(0x98BF64)
+    # other known colours
+    twitch = 0x9146FF
 
-    @staticmethod
-    def reddit() -> discord.Colour:
-        return discord.Colour(0xFF4500)
-
-    @staticmethod
-    def twitch() -> discord.Colour:
-        return discord.Colour(0x9146FF)
-
-    @staticmethod
-    def bot_colour() -> discord.Colour:
-        return discord.Colour(0x9400D3)
+    # raspberry = 0xC42C48
+    # neon = 0x4D4DFF
 
 
 # fmt: off
@@ -102,87 +107,87 @@ class MaterialPalette:
 
     @staticmethod
     def red(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['red'][shade])
+        return discord.Colour(material_palette["red"][shade])
 
     @staticmethod
     def pink(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['pink'][shade])
+        return discord.Colour(material_palette["pink"][shade])
 
     @staticmethod
     def purple(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['purple'][shade])
+        return discord.Colour(material_palette["purple"][shade])
 
     @staticmethod
     def deep_purple(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['deep_purple'][shade])
+        return discord.Colour(material_palette["deep_purple"][shade])
 
     @staticmethod
     def indigo(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['indigo'][shade])
+        return discord.Colour(material_palette["indigo"][shade])
 
     @staticmethod
     def blue(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['blue'][shade])
+        return discord.Colour(material_palette["blue"][shade])
 
     @staticmethod
     def light_blue(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['light_blue'][shade])
+        return discord.Colour(material_palette["light_blue"][shade])
 
     @staticmethod
     def cyan(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['cyan'][shade])
+        return discord.Colour(material_palette["cyan"][shade])
 
     @staticmethod
     def teal(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['teal'][shade])
+        return discord.Colour(material_palette["teal"][shade])
 
     @staticmethod
     def green(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['green'][shade])
+        return discord.Colour(material_palette["green"][shade])
 
     @staticmethod
     def light_green(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['light_green'][shade])
+        return discord.Colour(material_palette["light_green"][shade])
 
     @staticmethod
     def lime(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['lime'][shade])
+        return discord.Colour(material_palette["lime"][shade])
 
     @staticmethod
     def yellow(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['yellow'][shade])
+        return discord.Colour(material_palette["yellow"][shade])
 
     @staticmethod
     def amber(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['amber'][shade])
+        return discord.Colour(material_palette["amber"][shade])
 
     @staticmethod
     def orange(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['orange'][shade])
+        return discord.Colour(material_palette["orange"][shade])
 
     @staticmethod
     def deep_orange(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['deep_orange'][shade])
+        return discord.Colour(material_palette["deep_orange"][shade])
 
     @staticmethod
     def brown(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['brown'][shade])
+        return discord.Colour(material_palette["brown"][shade])
 
     @staticmethod
     def gray(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['gray'][shade])
+        return discord.Colour(material_palette["gray"][shade])
 
     @staticmethod
     def blue_gray(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['blue_gray'][shade])
+        return discord.Colour(material_palette["blue_gray"][shade])
 
     @staticmethod
     def black(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['black'][shade])
+        return discord.Colour(material_palette["black"][shade])
 
     @staticmethod
     def white(shade: ShadeLiteral = 500) -> discord.Colour:
-        return discord.Colour(material_palette['white'][shade])
+        return discord.Colour(material_palette["white"][shade])
 
 
 # fmt: off
@@ -223,75 +228,75 @@ class MaterialAccentPalette:
 
     if TYPE_CHECKING:
         AccentShadeLiteral = Literal[700, 400, 200, 100]
-    
+
     shades = map_shades
 
     @staticmethod
     def red(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['red'][shade])
+        return discord.Colour(material_palette["red"][shade])
 
     @staticmethod
     def pink(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['pink'][shade])
+        return discord.Colour(material_palette["pink"][shade])
 
     @staticmethod
     def purple(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['purple'][shade])
+        return discord.Colour(material_palette["purple"][shade])
 
     @staticmethod
     def deep_purple(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['deep_purple'][shade])
+        return discord.Colour(material_palette["deep_purple"][shade])
 
     @staticmethod
     def indigo(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['indigo'][shade])
+        return discord.Colour(material_palette["indigo"][shade])
 
     @staticmethod
     def blue(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['blue'][shade])
+        return discord.Colour(material_palette["blue"][shade])
 
     @staticmethod
     def light_blue(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['light_blue'][shade])
+        return discord.Colour(material_palette["light_blue"][shade])
 
     @staticmethod
     def cyan(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['cyan'][shade])
+        return discord.Colour(material_palette["cyan"][shade])
 
     @staticmethod
     def teal(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['teal'][shade])
+        return discord.Colour(material_palette["teal"][shade])
 
     @staticmethod
     def green(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['green'][shade])
+        return discord.Colour(material_palette["green"][shade])
 
     @staticmethod
     def light_green(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['light_green'][shade])
+        return discord.Colour(material_palette["light_green"][shade])
 
     @staticmethod
     def lime(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['lime'][shade])
+        return discord.Colour(material_palette["lime"][shade])
 
     @staticmethod
     def yellow(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['yellow'][shade])
+        return discord.Colour(material_palette["yellow"][shade])
 
     @staticmethod
     def amber(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['amber'][shade])
+        return discord.Colour(material_palette["amber"][shade])
 
     @staticmethod
     def orange(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['orange'][shade])
+        return discord.Colour(material_palette["orange"][shade])
 
     @staticmethod
     def deep_orange(shade: AccentShadeLiteral = 200) -> discord.Colour:
-        return discord.Colour(material_palette['deep_orange'][shade])
+        return discord.Colour(material_palette["deep_orange"][shade])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from PIL import Image
 
     x = MaterialPalette.purple()

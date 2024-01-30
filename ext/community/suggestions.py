@@ -33,7 +33,7 @@ class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
             RETURNING suggestion_num;
         """
         suggestion_num = await self.bot.pool.fetchval(query, const.Guild.community)
-        e = discord.Embed(colour=const.Colour.prpl(), title=f"Suggestion #{suggestion_num}")
+        e = discord.Embed(colour=const.Colour.blueviolet, title=f"Suggestion #{suggestion_num}")
 
         text = (
             f"* upvote the pinned message with {const.Emote.DankApprove} reaction "

@@ -370,11 +370,11 @@ def ansi(
 def tick(semi_bool: bool | None) -> str:
     match semi_bool:
         case True:
-            return const.Tick.yes
+            return const.Tick.Yes
         case False:
-            return const.Tick.no
+            return const.Tick.No
         case None:
-            return const.Tick.black
+            return const.Tick.Black
         case _:
             raise TypeError(f"`tick`: Expected True, False, None. Got {semi_bool.__class__.__name__}")
 

@@ -59,7 +59,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         for pdate in pdates:
             dt = pdate[1]
             if dt.tzinfo is not None:
-                e = discord.Embed(colour=const.Colour.prpl())
+                e = discord.Embed(colour=const.Colour.blueviolet)
                 utc_offset = o.seconds if (o := dt.utcoffset()) else 0
                 dst = d.seconds if (d := dt.dst()) else 0
                 e.description = (
@@ -78,7 +78,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id):
             if (added_role and added_role[0] == role) or (removed_role and removed_role[0] == role):
                 msg = channel.get_partial_message(msg_id)
-                e = discord.Embed(title=f"List of {role.name}", colour=const.Colour.prpl())
+                e = discord.Embed(title=f"List of {role.name}", colour=const.Colour.blueviolet)
                 e.description = "".join([f"{member.mention}\n" for member in role.members])
                 await msg.edit(content="", embed=e)
 
@@ -90,7 +90,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
-        e = discord.Embed(colour=const.Colour.prpl(), title="GMT(Greenwich Mean Time)")
+        e = discord.Embed(colour=const.Colour.blueviolet, title="GMT(Greenwich Mean Time)")
         e.set_footer(text=f"GMT is the same as UTC (Universal Time Coordinated)")
         e.add_field(name="Time:", value=now_time).add_field(name="Date:", value=now_date)
         await ctx.reply(embed=e)
@@ -176,7 +176,7 @@ class StatsCommands(InfoCog, name="Stats", emote=const.Emote.Smartge):
         for ch in channels:
             text += "".join([f"{msg.content}\n" async for msg in ch.history(limit=limit) if msg.author in members])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
-        e = discord.Embed(colour=const.Colour.prpl())
+        e = discord.Embed(colour=const.Colour.blueviolet)
         members = ", ".join([m.mention for m in members])
         channels = ", ".join(
             [c.mention if isinstance(c, discord.TextChannel) else c.__class__.__name__ for c in channels]

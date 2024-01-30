@@ -37,7 +37,7 @@ class ReloadCog(DevBaseCog):
     async def extensions(self, ctx: AluContext):
         """Shows available extensions to load/reload/unload."""
         extensions = [f"\N{BLACK CIRCLE} {ext}" for ext in self.bot.extensions.keys()]
-        e = discord.Embed(title="Loaded Extensions", description="\n".join(extensions), colour=const.Colour.prpl())
+        e = discord.Embed(title="Loaded Extensions", description="\n".join(extensions), colour=const.Colour.blueviolet)
         await ctx.reply(embed=e)
 
     # SINGULAR LOAD UNLOAD RELOAD
@@ -116,7 +116,7 @@ class ReloadCog(DevBaseCog):
             )
 
             # let's format errors into embeds. It might backfire because of 25 fields restrictions.
-            embed = discord.Embed(colour=const.Colour.error())
+            embed = discord.Embed(colour=const.Colour.maroon)
             for name, value in errors:
                 embed.add_field(name=name, value=value, inline=False)
 
@@ -189,7 +189,7 @@ class ReloadCog(DevBaseCog):
 
         mods_text = "\n".join(f"{index}. `{module}`" for index, (_, module) in enumerate(modules, start=1))
         embed = discord.Embed(
-            colour=const.Colour.prpl(),
+            colour=const.Colour.blueviolet,
             description=f"This will update the following modules, are you sure?\n{mods_text}",
         )
         if not await ctx.bot.disambiguator.confirm(ctx, embed=embed):

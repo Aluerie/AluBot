@@ -79,7 +79,7 @@ async def on_app_command_error(
     if unexpected_error:
         e = unexpected_error_embed()
     else:
-        e = discord.Embed(colour=const.Colour.error())
+        e = discord.Embed(colour=const.Colour.maroon)
         e.set_author(name=error_type)
         e.description = desc
     if not interaction.response.is_done():

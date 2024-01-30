@@ -63,7 +63,7 @@ class FeedbackCog(MetaCog):
         summary: str = "No feedback title was provided (prefix?)",
         details: str = "No feedback details were provided",
     ) -> discord.Embed:
-        e = discord.Embed(title=summary, description=details, colour=const.Colour.prpl())
+        e = discord.Embed(title=summary, description=details, colour=const.Colour.blueviolet)
 
         e.set_footer(
             text=(
@@ -82,7 +82,7 @@ class FeedbackCog(MetaCog):
     ) -> discord.Embed:
         embed = (
             discord.Embed(
-                colour=const.Colour.prpl(),
+                colour=const.Colour.blueviolet,
                 title=summary,
                 description=details,
                 timestamp=ctx_ntr.created_at,
@@ -104,7 +104,7 @@ class FeedbackCog(MetaCog):
         summary: Optional[str] = None,
         details: Optional[str] = None,
     ) -> discord.Embed:
-        e = discord.Embed(colour=const.Colour.prpl(), title=summary, description=details)
+        e = discord.Embed(colour=const.Colour.blueviolet, title=summary, description=details)
         e.set_author(name="Successfully submitted feedback")
         return e
 
@@ -145,7 +145,7 @@ class FeedbackCog(MetaCog):
         """
 
         # dm the user
-        e = discord.Embed(colour=const.Colour.prpl(), title="Message from a developer")
+        e = discord.Embed(colour=const.Colour.blueviolet, title="Message from a developer")
         e.set_author(name=str(ctx.author), icon_url=ctx.author.display_avatar.url)
         e.description = content
         footer_text = (
@@ -157,7 +157,7 @@ class FeedbackCog(MetaCog):
         await user.send(embed=e)
 
         # success message to the bot dev
-        e2 = discord.Embed(colour=const.Colour.prpl(), description="DM successfully sent.")
+        e2 = discord.Embed(colour=const.Colour.blueviolet, description="DM successfully sent.")
         await ctx.send(embed=e2)
 
 

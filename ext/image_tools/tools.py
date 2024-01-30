@@ -30,7 +30,7 @@ class ToolsCog(ImageToolsCog, name="Tools", emote=const.Emote.DankFix):
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags
         img.thumbnail(maxsize, Image.ANTIALIAS)
         file = self.bot.transposer.image_to_file(img, filename="converted.png", extension="PNG")
-        e = discord.Embed(colour=const.Colour.prpl(), description="Image was converted to `.png` format")
+        e = discord.Embed(colour=const.Colour.blueviolet, description="Image was converted to `.png` format")
         await ctx.reply(embed=e, file=file)
 
 

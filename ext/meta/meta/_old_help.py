@@ -29,7 +29,7 @@ class HelpPageSource(menus.ListPageSource):
     async def format_page(self, menu: HelpPages, entries: HelpFormatData):
         cog, cmds = entries.cog, entries.cmds
 
-        e = discord.Embed(colour=Colour.prpl())
+        e = discord.Embed(colour=Colour.blueviolet)
         e.set_footer(text=f"With love, {self.help_cmd.context.bot.user.name}")
 
         if cog == "front_page":
@@ -194,7 +194,7 @@ class MyHelpCommand(commands.HelpCommand):
         cog_name = getattr(cog, "qualified_name", "No Category")
         cog_desc = getattr(cog, "description", "No Description")
 
-        e = discord.Embed(colour=Colour.prpl(), title=cog_name)
+        e = discord.Embed(colour=Colour.blueviolet, title=cog_name)
         e.description = f"{cog_desc}\n\n{chr(10).join(command_signatures)}"
         e.set_footer(text=f"With love, {self.context.bot.user.display_name}")
         e.set_thumbnail(url=self.context.bot.user.display_avatar.url)
@@ -203,17 +203,17 @@ class MyHelpCommand(commands.HelpCommand):
     async def send_group_help(self, group):
         filtered = await self.filter_commands(group.commands, sort=True)
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
-        e = discord.Embed(color=Colour.prpl(), title=group.name, description=f"{chr(10).join(command_signatures)}")
+        e = discord.Embed(color=Colour.blueviolet, title=group.name, description=f"{chr(10).join(command_signatures)}")
         await self.context.reply(embed=e)
 
     async def send_command_help(self, command):
         e = discord.Embed(
-            title=command.qualified_name, color=Colour.prpl(), description=self.get_command_signature(command)
+            title=command.qualified_name, color=Colour.blueviolet, description=self.get_command_signature(command)
         )
         await self.context.reply(embed=e)
 
     async def send_error_message(self, error):
-        e = discord.Embed(title="Help Command Error", description=error, color=Colour.error())
+        e = discord.Embed(title="Help Command Error", description=error, color=Colour.maroon)
         e.set_footer(
             text=(
                 "Check the spelling of your desired command/category and "

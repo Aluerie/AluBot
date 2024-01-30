@@ -29,11 +29,11 @@ class StartView(discord.ui.View):
     ):
         super().__init__()
 
-        self.starting_embed = discord.Embed(title='Embed Maker', colour=const.Colour.prpl())
+        self.starting_embed = discord.Embed(title="Embed Maker", colour=const.Colour.blueviolet)
         self.embeds = [self.starting_embed]
         self.message = message
 
-    @discord.ui.button(label='Author', emoji='\N{LOWER LEFT FOUNTAIN PEN}', style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="Author", emoji="\N{LOWER LEFT FOUNTAIN PEN}", style=discord.ButtonStyle.blurple)
     async def author_button(self, interaction: discord.Interaction, _button: discord.ui.Button):
         await interaction.response.send_message("hello")
 

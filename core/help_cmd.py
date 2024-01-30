@@ -40,7 +40,7 @@ class HelpPageSource(menus.ListPageSource):
         super().__init__(entries=entries, per_page=1)
 
     async def format_page(self, menu: HelpPages, page: CogPage):
-        e = discord.Embed(colour=const.Colour.prpl())
+        e = discord.Embed(colour=const.Colour.blueviolet)
 
         if page.section == "_front_page":
             bot = menu.ctx_ntr.client
@@ -61,7 +61,7 @@ class HelpPageSource(menus.ListPageSource):
 
             menu.clear_items()
             menu.fill_items()
-            menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.github_logo, label="GitHub", url=bot.repo_url))
+            menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.GitHub, label="GitHub", url=bot.repo_url))
             menu.add_item(discord.ui.Button(emoji=const.Emote.FeelsDankMan, label="Invite me", url=bot.invite_link))
             menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.AluerieServer, label="Community", url=bot.server_url))
 
@@ -364,7 +364,7 @@ class BaseHelpCog(AluCog):
             # announce to community/hideout that we logged in
             # from testing purposes it means we can use help with [proper slash mentions (if synced).
             embed = discord.Embed(
-                colour=const.Colour.prpl(),
+                colour=const.Colour.blueviolet,
                 description=f"Logged in as {self.bot.user.name}",
             ).set_footer(text="Finished updating/rebooting")
             await self.community.bot_spam.send(embed=embed)

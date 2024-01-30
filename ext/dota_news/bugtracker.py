@@ -253,7 +253,7 @@ class TimeLine:
             embed.set_author(
                 name=f"Bugtracker issue #{self.issue.number} update",
                 url=self.last_comment_url,
-                icon_url=const.PICTURE.frog,
+                icon_url=const.Picture.Frog,
             )
             delta_x_y = 32
             size_x_y = 128 + (len(pil_pics) - 1) * delta_x_y  # 128 is images size

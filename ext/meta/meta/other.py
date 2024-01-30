@@ -138,7 +138,7 @@ class OtherCog(AluCog):
         information = self.bot.bot_app_info
 
         e = discord.Embed(
-            colour=const.Colour.bot_colour(),
+            colour=const.Colour.darkviolet,
             description=information.description,
         ).set_author(
             name=f"Made by @{information.owner}",
@@ -177,7 +177,7 @@ class OtherCog(AluCog):
             ),
         )
         e.add_field(name="Last reboot", value=discord.utils.format_dt(self.bot.launch_time, style="R"))
-        e.set_footer(text=f"Made with Love... and discord.py \N{SPARKLING HEART}", icon_url=const.LOGO.python)
+        e.set_footer(text=f"Made with Love... and discord.py \N{SPARKLING HEART}", icon_url=const.Logo.Python)
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
@@ -202,7 +202,7 @@ class OtherCog(AluCog):
         )
 
         if command is None:
-            view = Url(source_url, label="GitHub Repo", emoji=const.EmoteLogo.github_logo)
+            view = Url(source_url, label="GitHub Repo", emoji=const.EmoteLogo.GitHub)
             return await ctx.reply(embed=embed, view=view)
 
         if command == "help":
@@ -235,5 +235,5 @@ class OtherCog(AluCog):
         final_url = f"{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}"
         embed.set_footer(text=f"Found source code here:\n{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
 
-        view = Url(final_url, label=f'Source code for command "{str(obj)}"', emoji=const.EmoteLogo.github_logo)
+        view = Url(final_url, label=f'Source code for command "{str(obj)}"', emoji=const.EmoteLogo.GitHub)
         await ctx.reply(embed=embed, view=view)

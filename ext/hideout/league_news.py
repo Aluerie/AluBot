@@ -95,11 +95,11 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
 
         embed = (
             discord.Embed(
-                colour=const.Colour.rspbrry(),
+                colour=const.Colour.palevioletred,
                 title=node["title"],
                 url=f"https://www.leagueoflegends.com/en-us{newest_patch_href}",
             )
-            .set_author(name="League of Legends", icon_url=const.LOGO.lol)
+            .set_author(name="League of Legends", icon_url=const.Logo.Lol)
             .set_thumbnail(url=node["banner"]["url"])
         )
         await self.bot.hideout.repost.send(embed=embed, files=files)

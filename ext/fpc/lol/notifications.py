@@ -59,7 +59,7 @@ class LoLNotifications(BaseNotifications):
 
         query = "SELECT DISTINCT player_id FROM lol_favourite_players"
         favourite_player_ids = [r for r, in await self.bot.pool.fetch(query)]
-        live_twitch_ids = await self.get_twitch_live_player_ids(const.Twitch.lol_game_category_id, favourite_player_ids)
+        live_twitch_ids = await self.get_twitch_live_player_ids(const.Twitch.LOL_GAME_CATEGORY_ID, favourite_player_ids)
 
         query = """
             SELECT a.summoner_id, a.player_id, game_name, tag_line, platform, display_name, twitch_id, last_edited

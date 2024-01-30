@@ -244,7 +244,7 @@ class AluExceptionManager:
         else:
             # shouldn't ever trigger
             # probably source is `None`, but let's leave it as "else" for some silly mistake too.
-            embed = discord.Embed(colour=const.Colour.error())
+            embed = discord.Embed(colour=const.Colour.maroon)
             embed.description = "Something went wrong somewhere. Please make it so next time it says where here."
             embed.timestamp = dt = discord.utils.utcnow()
             embed.set_footer(text=where)

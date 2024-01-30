@@ -40,13 +40,13 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
 
     async def on_submit(self, interaction: discord.Interaction):
         if self.paginator.is_finished():
-            e = discord.Embed(colour=Colour.error(), description="Took too long")
+            e = discord.Embed(colour=Colour.maroon, description="Took too long")
             await interaction.response.send_message(embed=e, ephemeral=True)
             return
 
         value = str(self.goto.value)
         if not value.isdigit():
-            e = discord.Embed(colour=Colour.error())
+            e = discord.Embed(colour=Colour.maroon)
             e.description = f"Expected a page number between 1 and {self.max_pages_as_str}, not {value!r}"
             await interaction.response.send_message(embed=e, ephemeral=True)
             return

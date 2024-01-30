@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import random
 from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import tasks
-import random
 
 from utils.const import DIGITS, Channel, Colour, Emote, Guild, Role, User
 
@@ -144,15 +144,15 @@ class OldTimers(CommunityCog):
 
     @tasks.loop(minutes=107)
     async def daily_reminders(self):
-        await self.timer_work("Daily Message", Colour.prpl(), await get_a_text(self.bot.pool))
+        await self.timer_work("Daily Message", Colour.blueviolet, await get_a_text(self.bot.pool))
 
     @tasks.loop(minutes=109)
     async def daily_important_reminders(self):
-        await self.timer_work("Daily Important Message", Colour.rspbrry(), await get_important_text(self.bot.pool))
+        await self.timer_work("Daily Important Message", Colour.palevioletred, await get_important_text(self.bot.pool))
 
     @tasks.loop(minutes=167)
     async def daily_fact_reminders(self):
-        await self.timer_work("Daily Fact Message", Colour.neon(), await get_fact_text(self.bot.pool))
+        await self.timer_work("Daily Fact Message", Colour.slateblue, await get_fact_text(self.bot.pool))
 
     @tasks.loop(minutes=156)
     async def daily_rule_reminders(self):

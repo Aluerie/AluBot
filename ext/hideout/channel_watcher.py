@@ -64,7 +64,7 @@ class ChannelWatcher(HideoutCog):
     async def sleep_task(self):
         await asyncio.sleep(self.sleep_time)  # let's assume the longest possible game+q time is ~50 mins
         channel: discord.TextChannel = self.bot.get_channel(self.ping_channel_id)  # type: ignore
-        e = discord.Embed(colour=const.Colour.error(), title=self.__cog_name__)
+        e = discord.Embed(colour=const.Colour.maroon, title=self.__cog_name__)
         e.description = "The bot crashed but did not even send the message"
         e.set_footer(text="Or maybe event just ended")
         await channel.send(self.role_mention, embed=e)

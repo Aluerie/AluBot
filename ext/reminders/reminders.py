@@ -234,7 +234,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         """
         status = await ctx.pool.execute(query, id, str(ctx.author.id))
         if status == "DELETE 0":
-            e = discord.Embed(description="Could not delete any reminders with that ID.", colour=const.Colour.error())
+            e = discord.Embed(description="Could not delete any reminders with that ID.", colour=const.Colour.maroon)
             e.set_author(name="IDError")
             return await ctx.reply(embed=e)
 
@@ -243,7 +243,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             # cancel the task and re-run it
             self.bot.rerun_the_task()
 
-        e = discord.Embed(description="Successfully deleted reminder.", colour=const.Colour.prpl())
+        e = discord.Embed(description="Successfully deleted reminder.", colour=const.Colour.blueviolet)
         await ctx.reply(embed=e)
 
     @remind.command(name="clear", ignore_extra=False)

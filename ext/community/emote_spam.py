@@ -36,9 +36,9 @@ class EmoteSpam(CommunityCog):
             text = emoji.replace_emoji(message.content, replace="")  # standard emojis
 
             # there is definitely a better way to regex it out
-            filters = [const.Regex.whitespace, const.Regex.emote_old, const.Regex.nqn, const.Regex.invis]
+            filters = [const.Regex.WHITESPACE, const.Regex.EMOTE_OLD, const.Regex.NQN, const.Regex.INVIS]
             if nqn_check == 0:
-                filters.remove(const.Regex.nqn)
+                filters.remove(const.Regex.NQN)
             for item in filters:
                 text = re.sub(item, "", text)
 
@@ -55,7 +55,7 @@ class EmoteSpam(CommunityCog):
         answer_text = "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
             message.author.mention, channel.mention, const.Emote.Ree
         )
-        e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.error())
+        e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.maroon)
         e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
         if s := message.stickers:
             e.set_thumbnail(url=s[0].url)
@@ -111,7 +111,7 @@ class EmoteSpam(CommunityCog):
         channel = self.community.emote_spam
         content = "{0} {0} {0}".format(str(emote))
         await channel.send(content)
-        e = discord.Embed(colour=const.Colour.prpl(), description=f"I sent {content} into {channel.mention}")
+        e = discord.Embed(colour=const.Colour.blueviolet, description=f"I sent {content} into {channel.mention}")
         await ctx.reply(embed=e, ephemeral=True, delete_after=10)
 
     @tasks.loop(count=1)
@@ -152,7 +152,7 @@ class ComfySpam(CommunityCog):
             if len(message.embeds):
                 return await message.delete()
             text = str(message.content)
-            text = re.sub(const.Regex.whitespace, "", text)
+            text = re.sub(const.Regex.WHITESPACE, "", text)
             for item in self.comfy_emotes:
                 text = text.replace(item, "")
             if text:
@@ -160,7 +160,7 @@ class ComfySpam(CommunityCog):
                     "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! "
                     "{2} {2} {2}".format(message.author.mention, channel.mention, const.Emote.Ree)
                 )
-                e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.prpl())
+                e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.blueviolet)
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 await message.delete()

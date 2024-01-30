@@ -39,7 +39,7 @@ class ConfModal(discord.ui.Modal):
     )
 
     async def on_submit(self, interaction: discord.Interaction):
-        embed = discord.Embed(title=self.title, colour=Colour.prpl(), description=self.conf.value)
+        embed = discord.Embed(title=self.title, colour=Colour.blueviolet, description=self.conf.value)
         if self.title == "Non-anonymous confession":
             embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
         channel = interaction.channel
@@ -68,7 +68,7 @@ class ConfView(discord.ui.View):
 
     async def on_error(self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item):
         if isinstance(error, ButtonOnCooldown):
-            e = discord.Embed(colour=Colour.error()).set_author(name=error.__class__.__name__)
+            e = discord.Embed(colour=Colour.maroon).set_author(name=error.__class__.__name__)
             e.description = (
                 "Sorry, you are on cooldown \n" f"Time left `{human_timedelta(error.retry_after, mode='brief')}`"
             )

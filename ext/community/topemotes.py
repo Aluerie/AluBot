@@ -71,7 +71,7 @@ async def topemotes_job(ctx: AluContext, mode):
         new_array,
         per_page=split_size,
         no_enumeration=True,
-        colour=const.Colour.prpl(),
+        colour=const.Colour.blueviolet,
         title="Top emotes used last month",
         footer_text=f"With love, {ctx.bot.user.display_name}",
         description_prefix=f'`{"Emote".ljust(max_length + 4, " ")}Usages`\n',
@@ -101,7 +101,7 @@ class EmoteAnalysis(CommunityCog, name="Emote stats"):
         #    return
 
         if not msg.author.bot or msg.webhook_id:
-            custom_emojis_ids = re.findall(const.Regex.emote_stats_ids, msg.content)  # they are in str tho
+            custom_emojis_ids = re.findall(const.Regex.EMOTE_STATS_IDS, msg.content)  # they are in str tho
             custom_emojis_ids = set(list(map(int, custom_emojis_ids)))
 
             for emote_id in custom_emojis_ids:

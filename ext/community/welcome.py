@@ -58,7 +58,7 @@ async def welcome_message(
         wave_emote, the_word = const.Emote.DankLove, "BACK"
     else:
         wave_emote, the_word = const.Emote.DankHey, ""
-    content_text = "**💜 Welcome {2} to Aluerie\'s server, {0} !** {1} {1} {1}".format(
+    content_text = "**💜 Welcome {2} to Aluer\'s server, {0} !** {1} {1} {1}".format(
         member.mention, wave_emote, the_word
     )
 
@@ -75,7 +75,7 @@ async def welcome_message(
     else:
         description = f"Chat, it's a new bot in our server. Use it wisely {const.Emote.peepoComfy}"
 
-    e = discord.Embed(description=description, color=const.Colour.prpl())
+    e = discord.Embed(description=description, color=const.Colour.blueviolet)
     e.set_footer(text=f"With love, {bot.community.guild.me.display_name}")
     return content_text, e, bot.transposer.image_to_file(image)
 

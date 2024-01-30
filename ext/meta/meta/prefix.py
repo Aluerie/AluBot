@@ -27,7 +27,7 @@ class PrefixSetModal(discord.ui.Modal, title="New prefix setup"):
         self.paginator: SetupPages = paginator
 
     async def on_error(self, interaction: discord.Interaction, error: Exception, /) -> None:
-        e = discord.Embed(colour=Colour.error())
+        e = discord.Embed(colour=Colour.maroon)
         if isinstance(error, commands.BadArgument):
             e.description = f"{error}"
         else:
@@ -74,7 +74,7 @@ class GuildPrefix:
         return cls(bot, guild, prefix)
 
     def check_prefix(self) -> discord.Embed:
-        e = discord.Embed(colour=Colour.rspbrry())
+        e = discord.Embed(colour=Colour.palevioletred)
         e.description = f"Current prefix: `{self.prefix}`"
         return e
 
@@ -100,7 +100,7 @@ class GuildPrefix:
 
     async def set_prefix(self) -> discord.Embed:
         guild_id, new_prefix = self.guild.id, self.prefix
-        e = discord.Embed(colour=Colour.prpl())
+        e = discord.Embed(colour=Colour.blueviolet)
         if self.prefix == self.bot.main_prefix:
             if not self.bot.prefixes.get(guild_id):
                 e.description = f"The prefix was already our default `{new_prefix}` sign"
@@ -119,7 +119,7 @@ class PrefixSetupCog(AluCog, SetupCog, name="Prefix Setup"):
         return "\N{HEAVY DOLLAR SIGN}"
 
     async def setup_info(self):
-        e = discord.Embed(colour=Colour.prpl())
+        e = discord.Embed(colour=Colour.blueviolet)
         e.title = "Server Prefix Setup"
         e.description = (
             'You can choose server prefix with button "Change prefix" below. \n\n'

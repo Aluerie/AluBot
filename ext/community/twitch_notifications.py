@@ -24,7 +24,7 @@ class TwitchCog(CommunityCog):
         # Twitch EventSub
         # these are supposed to be broadcaster/user access token for streamers we sub to
         # since we are subbing to event of myself only then my own access token is fine
-        broadcaster, token = const.Twitch.my_channel_id, config.TWITCH_ACCESS_TOKEN
+        broadcaster, token = const.Twitch.MY_USER_ID, config.TWITCH_ACCESS_TOKEN
         await self.bot.twitch.eventsub.subscribe_channel_stream_start(broadcaster, token)
         # testing with channel points since it's easy yo do :D
         await self.bot.twitch.eventsub.subscribe_channel_points_redeemed(broadcaster, token)

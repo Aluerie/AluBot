@@ -76,7 +76,7 @@ class UmbraSyncCommandCog(DevBaseCog):
             desc = f"Synced `{len(synced)}` commands globally."
 
         # return the embed result
-        return discord.Embed(colour=const.Colour.prpl(), description=desc)
+        return discord.Embed(colour=const.Colour.blueviolet, description=desc)
 
     # Unfortunately, we need to split the commands bcs commands.Greedy can't be transferred to app_commands
     @app_commands.command(name="sync")

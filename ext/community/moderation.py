@@ -63,7 +63,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             try:
                 await member.edit(timed_out_until=dt, reason=reason)
             except discord.HTTPException as exc:
-                e = discord.Embed(colour=const.Colour.error(), title="Oups... Error during muting.")
+                e = discord.Embed(colour=const.Colour.maroon, title="Oups... Error during muting.")
                 e.set_author(name=str(member), icon_url=member.display_avatar.url)
                 e.set_footer(text=f"Member ID: {member.id}")
                 e.description = "If you think it's wrong then contact Aluerie."

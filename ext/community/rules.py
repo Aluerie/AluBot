@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from utils import AluContext
 
 
-class CommunityRules(CommunityCog, name='Rules', emote=const.Emote.PepoRules):
+class CommunityRules(CommunityCog, name="Rules", emote=const.Emote.PepoRules):
     """
     The Community Server has some strict rules.
     """
@@ -28,21 +28,21 @@ class CommunityRules(CommunityCog, name='Rules', emote=const.Emote.PepoRules):
     @modrule.command()
     async def add(self, ctx: AluContext, *, content: str):
         """Add new real rule to the server."""
-        query = 'INSERT INTO real_rules (content) VALUES ($1)'
+        query = "INSERT INTO real_rules (content) VALUES ($1)"
         await self.bot.pool.execute(query, content)
 
-        query = 'SELECT count(*) FROM real_rules'
+        query = "SELECT count(*) FROM real_rules"
         count = await self.bot.pool.fetchval(query)
 
-        e = discord.Embed(colour=const.Colour.prpl(), title=f'Rule {count} was added.', description=content)
+        e = discord.Embed(colour=const.Colour.blueviolet, title=f"Rule {count} was added.", description=content)
         await ctx.reply(embed=e)
 
     @modrule.command()
     async def remove(self, ctx: AluContext, number: int):
         """Remove rule from the server real rules."""
-        query = 'SELECT (id, content) FROM real_rules LIMIT $1 OFFSET $1'
+        query = "SELECT (id, content) FROM real_rules LIMIT $1 OFFSET $1"
         rule_id, content = await self.bot.pool.fetch(query, number)
-        await ctx.reply(f'{rule_id} {content}')
+        await ctx.reply(f"{rule_id} {content}")
 
     # @staticmethod
     # async def rule_work(ctx, num, dtb, min_number):

@@ -118,7 +118,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         """Aluerie's last played Dota 2 match id"""
         await ctx.typing()
         res = try_get_friend_stats(ctx.bot, start_at_match_id=0, matches_requested=1)
-        e = discord.Embed(description=f"`{res[0].match_id}`", colour=const.Colour.prpl())
+        e = discord.Embed(description=f"`{res[0].match_id}`", colour=const.Colour.blueviolet)
         e.set_author(name="Aluerie's last match id")
         return await ctx.reply(embed=e)
 
@@ -141,7 +141,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         for _ in range(5):
             for match in try_get_friend_stats(ctx.bot, start_at_match_id=start_at_match_id):
                 if match.start_time < morning_time:
-                    e = discord.Embed(colour=const.Colour.prpl())
+                    e = discord.Embed(colour=const.Colour.blueviolet)
                     e.set_author(name="Aluerie's WL for today")
                     max_len = max([len(key) for key in dict_answer])
                     ans = [
@@ -246,7 +246,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
 
         pages_list = []
         for item in files_list:
-            e = discord.Embed(title="Aluerie's Dota 2 match history", colour=const.Colour.prpl())
+            e = discord.Embed(title="Aluerie's Dota 2 match history", colour=const.Colour.blueviolet)
             e.set_image(url=f"attachment://{item.filename}")
             e.set_footer(text="for copypastable match_ids use `$stalk match_ids`")
             pages_list.append(pages.Page(embeds=[e], files=[item]))
@@ -257,7 +257,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
     async def dh_error(self, ctx: AluGuildContext, error):
         if isinstance(error.original, IndexError):
             ctx.is_error_handled = True
-            e = discord.Embed(colour=const.Colour.error())
+            e = discord.Embed(colour=const.Colour.maroon)
             e.description = "Oups, logging into steam took too long, please retry in a bit"
             e.set_author(name="SteamLoginError")
             e.set_footer(text="If this happens again, then @ Aluerie, please")
@@ -289,7 +289,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
             ctx,
             string_list,
             split_size=split_size,
-            colour=const.Colour.prpl(),
+            colour=const.Colour.blueviolet,
             title="Copypastable match ids",
         )
 
@@ -361,7 +361,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         """Sync information for Irene's ranked infographics"""
         await ctx.typing()
         await self.sync_work()
-        e = discord.Embed(description="Sync was done", colour=const.Colour.prpl())
+        e = discord.Embed(description="Sync was done", colour=const.Colour.blueviolet)
         await ctx.reply(embed=e)
 
     @tasks.loop(
@@ -428,7 +428,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
 
         ax = fig.add_subplot(gs[2:5, 0:10])
         gradient_fill(
-            *await generate_data(self.bot.pool), color=str(const.Colour.twitch()), ax=ax, linewidth=5.0, marker="o"
+            *await generate_data(self.bot.pool), color=str(const.Colour.twitch), ax=ax, linewidth=5.0, marker="o"
         )
         ax.set_title("MMR Plot", x=0.5, y=0.92)
         ax.tick_params(axis="y", direction="in", pad=-42)
@@ -499,7 +499,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         axRain.get_xaxis().set_visible(False)
         axRain.get_yaxis().set_visible(False)
         fig.patch.set_linewidth(4)
-        fig.patch.set_edgecolor(str(const.Colour.prpl()))
+        fig.patch.set_edgecolor(str(const.Colour.blueviolet))
         await ctx.reply(file=self.bot.transposer.plot_to_file(fig, filename="mmr.png"))
 
 

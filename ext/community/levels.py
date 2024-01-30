@@ -177,7 +177,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             ctx,
             new_array,
             per_page=split_size,
-            colour=const.Colour.prpl(),
+            colour=const.Colour.blueviolet,
             title="Server Leaderboard",
             footer_text=f"With love, {guild.me.display_name}",
         )
@@ -216,7 +216,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                 )
                 if not level_up_role or not previous_level_role:
                     raise ValueError("Roles were not found in the community guild")
-                e = discord.Embed(colour=const.Colour.prpl())
+                e = discord.Embed(colour=const.Colour.blueviolet)
                 e.description = "{0} just advanced to {1} ! " "{2} {2} {2}".format(
                     message.author.mention, level_up_role.mention, const.Emote.PepoG
                 )

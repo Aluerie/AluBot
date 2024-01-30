@@ -50,7 +50,7 @@ class Dota2Client(Client):
             title=f"Error in steam.py's {self.__class__.__name__}",
         ).set_author(
             name=f"Event: {event}",
-            icon_url=const.LOGO.dota,
+            icon_url=const.Logo.Dota,
         )
 
         # kwargs

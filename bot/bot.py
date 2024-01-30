@@ -111,17 +111,17 @@ class AluBot(commands.Bot, AluBotHelper):
                 try:
                     result = await self.try_hideout_auto_sync()
                 except Exception as err:
-                    log.error("Autosync: failed %s.", const.Tick.no, exc_info=err)
+                    log.error("Autosync: failed %s.", const.Tick.No, exc_info=err)
                 else:
                     if result:
-                        log.info("Autosync: success %s.", const.Tick.yes)
+                        log.info("Autosync: success %s.", const.Tick.Yes)
                     else:
-                        log.info("Autosync: not needed %s.", const.Tick.black)
+                        log.info("Autosync: not needed %s.", const.Tick.Black)
 
             if not failed:
                 self.loop.create_task(try_auto_sync_with_logging())
             else:
-                log.info("Autosync: cancelled %s One or more cogs failed to load.", const.Tick.no)
+                log.info("Autosync: cancelled %s One or more cogs failed to load.", const.Tick.No)
 
     async def try_hideout_auto_sync(self) -> bool:
         """Try auto copy-global+sync for hideout guild."""

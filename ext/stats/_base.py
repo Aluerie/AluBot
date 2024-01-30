@@ -7,5 +7,5 @@ category = ExtCategory(
 )
 
 
-class JebaitedCog(AluCog, category=category):
+class StatsCog(AluCog, category=category):
     ...

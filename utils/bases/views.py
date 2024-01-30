@@ -26,6 +26,7 @@ class AluView(discord.ui.View):
     view_name : str, optional
         _description_, by default "Interactive Element"
     """
+
     if TYPE_CHECKING:
         message: discord.Message | discord.InteractionMessage
 
@@ -55,7 +56,7 @@ class AluView(discord.ui.View):
         else:
             # we need to deny control to this non-author user
             embed = discord.Embed(
-                colour=const.Colour.error(),
+                colour=const.Colour.maroon,
                 description=f"Sorry! This {self.view_name} is not meant to be controlled by you.",
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -88,7 +89,7 @@ class AluView(discord.ui.View):
                 error, interaction, where=f"{item.view.__class__.__name__} error", extra=extra
             )
 
-        response_embed = discord.Embed(colour=const.Colour.error(), description=desc)
+        response_embed = discord.Embed(colour=const.Colour.maroon, description=desc)
         if not isinstance(error, errors.ErroneousUsage):
             response_embed.set_author(name=error.__class__.__name__)
 

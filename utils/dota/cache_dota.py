@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
     class HeroKeysData(TypedDict):
         id_by_npcname: MutableMapping[str, int]
+        npcname_by_id: MutableMapping[int, str]
         id_by_name: MutableMapping[str, int]
         name_by_id: MutableMapping[int, str]
         img_by_id: MutableMapping[int, str]
@@ -36,13 +37,15 @@ class HeroKeysCache(KeysCache):
         hero_dict = await self.get_response_json(url=url)
         data: HeroKeysData = {
             "id_by_npcname": {"": 0},
+            "npcname_by_id": {0: ""},
             "id_by_name": {"unknown": 0},
             "name_by_id": {0: "Unknown"},
-            "img_by_id": {0: const.DOTA.HERO_DISCONNECT},
-            "icon_by_id": {0: const.DOTA.HERO_DISCONNECT},
+            "img_by_id": {0: const.Dota.HERO_DISCONNECT},
+            "icon_by_id": {0: const.Dota.HERO_DISCONNECT},
         }
         for _, hero in hero_dict.items():
             data["id_by_npcname"][hero["name"]] = hero["id"]
+            data["npcname_by_id"][hero["id"]] = hero["name"]
             data["id_by_name"][hero["localized_name"].lower()] = hero["id"]
             data["name_by_id"][hero["id"]] = hero["localized_name"]
             data["img_by_id"][hero["id"]] = f"https://cdn.cloudflare.steamstatic.com{hero['img']}"
@@ -61,6 +64,10 @@ class HeroKeysCache(KeysCache):
     async def id_by_npcname(self, npcname: str) -> int:
         """Get hero id by npc_name."""
         return await self.get_value("id_by_npcname", npcname)
+
+    async def npcname_by_id(self, hero_id: int) -> str:
+        """Get npc_dota_hero_name by hero id."""
+        return await self.get_value("id_by_npcname", hero_id)
 
     async def id_by_name(self, hero_name: str) -> int:
         """Get hero id by localized English name."""
@@ -96,7 +103,7 @@ class AbilityKeyCache(KeysCache):
         hero_abilities = await self.get_response_json(self.HERO_ABILITIES_URL)
 
         data = {
-            "icon_by_id": {0: const.DOTA.HERO_DISCONNECT, 730: const.DOTA.ATTR_BONUS_ICON},
+            "icon_by_id": {0: const.Dota.HERO_DISCONNECT, 730: const.Dota.ATTR_BONUS_ICON},
             "talent_by_id": {730: None},
         }
         for hero_ability in hero_abilities.values():
@@ -109,7 +116,7 @@ class AbilityKeyCache(KeysCache):
                     data["icon_by_id"][ability_id] = f"https://cdn.cloudflare.steamstatic.com{img_url}"
                 else:
                     # todo: check if this ever proc
-                    data["icon_by_id"][ability_id] = const.DOTA.HERO_DISCONNECT
+                    data["icon_by_id"][ability_id] = const.Dota.HERO_DISCONNECT
 
             for talent in hero_ability["talents"]:
                 talent_name = talent["name"]
@@ -140,7 +147,7 @@ class ItemKeysCache(KeysCache):
     async def fill_data(self) -> dict:
         item_dict = await self.get_response_json(url=self.ITEMS_URL)
         data = {
-            "icon_by_id": {0: const.DOTA.EMPTY_ITEM_TILE},
+            "icon_by_id": {0: const.Dota.EMPTY_ITEM_TILE},
             "id_by_key": {},
             "name_by_id": {0: "Empty Slot"},
         }

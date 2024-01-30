@@ -50,9 +50,9 @@ class LoggerViaWebhook(DevBaseCog):
         "utils.dota.valvepythondota2": "https://i.imgur.com/D96bMgG.png",
         "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
         "exc_manager": "https://em-content.zobj.net/source/microsoft/378/sos-button_1f198.png",
-        "twitchio.ext.eventsub.ws": const.LOGO.TWITCH,
+        "twitchio.ext.eventsub.ws": const.Logo.Twitch,
         # "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
-        "ext.fpc.lol.notifications": const.LOGO.lol,
+        "ext.fpc.lol.notifications": const.Logo.Lol,
     }
 
     def __init__(self, *args, **kwargs):

@@ -62,7 +62,7 @@ class AdminTools(DevBaseCog):
         """'Make bot leave guild with named guild_id;"""
         if guild is not None:
             await guild.leave()
-            e = discord.Embed(colour=const.Colour.prpl())
+            e = discord.Embed(colour=const.Colour.blueviolet)
             e.description = f"Just left guild {guild.name} with id `{guild.id}`\n"
             await ctx.reply(embed=e)
         else:
@@ -71,7 +71,7 @@ class AdminTools(DevBaseCog):
     @guild_group.command(hidden=True)
     async def list(self, ctx: AluContext):
         """Show list of guilds the bot is in."""
-        e = discord.Embed(colour=const.Colour.prpl())
+        e = discord.Embed(colour=const.Colour.blueviolet)
         e.description = (
             f"The bot is in these guilds\n"
             f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"

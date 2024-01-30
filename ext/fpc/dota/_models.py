@@ -80,10 +80,10 @@ class MatchToSend(BaseMatchToSend):
         log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
             return {
-                "preview_url": const.PICTURE.PLACEHOLDER640X360,
+                "preview_url": const.Picture.Placeholder640X360,
                 "display_name": self.player_name,
                 "url": "",
-                "logo_url": const.LOGO.dota,
+                "logo_url": const.Logo.Dota,
                 "vod_url": "",
                 "twitch_status": "NoTwitch",
                 "colour": const.MaterialPalette.gray(),
@@ -93,11 +93,11 @@ class MatchToSend(BaseMatchToSend):
             if streamer.live:
                 twitch_status = "Live"
                 vod_url = await streamer.vod_link(seconds_ago=self.long_ago)
-                colour = const.Colour.prpl()
+                colour = const.Colour.blueviolet
             else:
                 twitch_status = "Offline"
                 vod_url = ""
-                colour = const.Colour.twitch()
+                colour = const.Colour.twitch
 
             return {
                 "preview_url": streamer.preview_url,
@@ -129,7 +129,7 @@ class MatchToSend(BaseMatchToSend):
                 hero_image = ImageOps.expand(
                     hero_image,
                     border=(0, 3, 0, 0),
-                    fill=const.DOTA.PLAYER_COLOUR_MAP.get(count, "#FF0000"),
+                    fill=const.Dota.PLAYER_COLOUR_MAP.get(count, "#FF0000"),
                 )
                 extra_space = 0 if count < 5 else 20
                 img.paste(hero_image, (count * 62 + extra_space, 0))
@@ -211,9 +211,9 @@ class StratzMatchToEdit(BaseMatchToEdit):
         for buff_event in player["stats"]["matchPlayerBuffEvent"]:
             item_id = buff_event.get("itemId")
             if item_id:
-                if item_id == const.DOTA.AGHANIMS_SCEPTER_ITEM_ID:
+                if item_id == const.Dota.AGHANIMS_SCEPTER_ITEM_ID:
                     # Stratz writes it like it's buff from aghs when it's a buff from a blessing, idk
-                    item_ids.append(const.DOTA.AGHANIMS_BLESSING_ITEM_ID)
+                    item_ids.append(const.Dota.AGHANIMS_BLESSING_ITEM_ID)
                 else:
                     item_ids.append(item_id)
 
@@ -377,6 +377,6 @@ async def beta_test_stratz_edit(self: AluCog):
 
     match_to_edit = StratzMatchToEdit(self.bot, data)
 
-    new_image = await match_to_edit.edit_notification_image(const.PICTURE.PLACEHOLDER640X360, discord.Colour.purple())
+    new_image = await match_to_edit.edit_notification_image(const.Picture.Placeholder640X360, discord.Colour.purple())
     # new_image.show()
     return new_image

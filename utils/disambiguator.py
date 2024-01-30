@@ -28,11 +28,11 @@ class ConfirmationView(AluView):
         await interaction.edit_original_response(view=self)
         self.stop()
 
-    @discord.ui.button(emoji=const.Tick.yes, label="Confirm", style=discord.ButtonStyle.green)
+    @discord.ui.button(emoji=const.Tick.Yes, label="Confirm", style=discord.ButtonStyle.green)
     async def confirm(self, interaction: discord.Interaction, _: discord.ui.Button):
         await self.button_callback(interaction, True)
 
-    @discord.ui.button(emoji=const.Tick.no, label="Cancel", style=discord.ButtonStyle.red)
+    @discord.ui.button(emoji=const.Tick.No, label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, _: discord.ui.Button):
         await self.button_callback(interaction, False)
 
@@ -142,7 +142,7 @@ class Disambiguator:
         if view.value is None:
             desc = "The Confirmation Prompt time-outed without receiving a response."
         elif not view.value:
-            desc = f"You pressed {const.Tick.yes}`Cancel`."
+            desc = f"You pressed {const.Tick.Yes}`Cancel`."
         else:
             # view.value is True so we just return it
             return view.value

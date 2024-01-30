@@ -220,7 +220,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         """Remove your birthday data and stop getting congratulations"""
         status = await self.remove_birthday_helper(ctx.author.id)
         if status == "DELETE 0":
-            e = discord.Embed(colour=const.Colour.error())
+            e = discord.Embed(colour=const.Colour.maroon)
             e.description = "Could not delete your birthday with that ID."
             e.set_author(name="DatabaseError")
             return await ctx.reply(embed=e)
@@ -353,7 +353,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             entries=string_list,
             per_page=20,
             title="Birthday List",
-            colour=const.Colour.prpl(),
+            colour=const.Colour.blueviolet,
             footer_text=f"DD/Month/YYYY format | With love, {guild.me.display_name}",
         )
         await pgs.start()

@@ -2,15 +2,22 @@ from enum import StrEnum
 
 
 class Emote(StrEnum):
-    """Emote strings."""
+    """Emote strings.
+
+    Names should match namings for discord emotes they represent.
+    """
 
     # comments mean that this emote is used in help command for something so i don't reuse it by accident
 
-    # COMMUNITY SERVER, NON-ANIMATED EMOTES ############################################################################
+    #########################################
+    # COMMUNITY SERVER, NON-ANIMATED EMOTES #
+    #########################################
     peepoComfy = "<:_:726438781208756288>"  # Category: Community
     UpvoteSuggestion = "<:DankApprove:853015071042961468>"  # it has to be from the community guild itself
 
-    # Emote Server 1
+    ##################
+    # Emote Server 1 #
+    ##################
 
     # non animated
     DankApprove = "<:DankApprove:1125591734332706907>"
@@ -60,18 +67,22 @@ class Emote(StrEnum):
     WeebsOutOut = "<a:WeebsOutOut:1125597169957748826>"
     peepoWeebSmash = "<a:peepoWeebSmash:1125597172675653662>"
 
-    # COMMON EMOTES ####################################################################################################
+    #################
+    # COMMON EMOTES #
+    #################
+
     Offline = "\N{LARGE RED CIRCLE}"
     Online = "\N{LARGE GREEN CIRCLE}"
 
 
 class Tick(StrEnum):
-    yes = "\N{WHITE HEAVY CHECK MARK}"
-    no = "\N{CROSS MARK}"
-    black = "\N{BLACK LARGE SQUARE}"
+    """Tick StrEnum, used to match True/False with yes/no emotes"""
+
+    Yes = "\N{WHITE HEAVY CHECK MARK}"
+    No = "\N{CROSS MARK}"
+    Black = "\N{BLACK LARGE SQUARE}"
 
 
-# EMOTE LISTS ######################################################################################################
 DIGITS = [
     "\N{DIGIT ZERO}\N{COMBINING ENCLOSING KEYCAP}",
     "\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP}",
@@ -87,17 +98,25 @@ DIGITS = [
 
 
 class GitIssueEvent(StrEnum):
+    """Emotes to showcase GitHub Issue Events with."""
+
     # pictures are taken from 16px versions here https://primer.style/octicons/
     # and background circles are added with a simple online editor https://iconscout.com/color-editor
     # make pics to be 128x128, so it's consistent for all sizes
-    # Hideout emotes
+    # =========================================================
+    # Emotes from B1-50 extra emote server, names match GitHub event names (and emote names)
+    # events
     reopened = "<:reopened:1125588760269164587>"
     opened = "<:opened:1125588763087753307>"
     closed = "<:closed:1125588765759508552>"
+    # comments
     assigned = "<:assigned:1125588768070578196>"
     commented = "<:commented:1125588770679431258>"
 
 
 class EmoteLogo(StrEnum):
-    github_logo = "<:github_logo:1125588758197178439>"
+    """Emotes to showcase some logos with."""
+
+    # Emotes from BXX extra emote servers, names match emote names in those servers (try to keep them PascalCase)
+    GitHub = "<:GitHub:1125588758197178439>"
     AluerieServer = "<:AluerieServer:1125600089109442661>"

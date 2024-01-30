@@ -33,7 +33,7 @@ log.setLevel(logging.DEBUG)
 
 
 def lol_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str) -> str:
-    opgg_name =  lol.Platform(platform).opgg_name
+    opgg_name = lol.Platform(platform).opgg_name
     opgg = f"https://op.gg/summoners/{opgg_name}/{game_name}-{tag_line}"
     ugg = f"https://u.gg/lol/profile/{platform}/{game_name}-{tag_line}"
     return f"/[Opgg]({opgg})/[Ugg]({ugg})"
@@ -101,7 +101,7 @@ class MatchToSend(BaseMatchToSend):
         def build_notification_image() -> Image.Image:
             width, height = img.size
             information_row = 50
-            rectangle = Image.new("RGB", (width, 100), str(const.Colour.rspbrry()))
+            rectangle = Image.new("RGB", (width, 100), str(const.Colour.palevioletred))
             ImageDraw.Draw(rectangle)
             img.paste(rectangle)
             img.paste(rectangle, (0, height - information_row))
@@ -149,7 +149,7 @@ class MatchToSend(BaseMatchToSend):
 
         embed = (
             discord.Embed(
-                color=const.Colour.rspbrry(),
+                color=const.Colour.palevioletred,
                 title=title,
                 url=streamer.url,
                 description=(
@@ -336,6 +336,6 @@ async def beta_test_edit_image(self: AluCog):
     )
 
     new_image = await post_match_player.edit_notification_image(
-        const.PICTURE.PLACEHOLDER640X360, discord.Colour.purple()
+        const.Picture.Placeholder640X360, discord.Colour.purple()
     )
     new_image.show()

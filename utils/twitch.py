@@ -56,17 +56,29 @@ class TwitchClient(twitchio.Client):
 
 
 class Streamer:
-    """My own helping class that unites twitchio.User and twitch.Stream together
+    """My own helping class that unites `twitchio.User` and `twitch.Stream together`
     Do not confuse "streamer" with "user" or "stream" terms. It's meant to be a concatenation.
 
     The problem is neither classes have full information.
 
     Attributes
     ----------
-    twitch_id
-        Twitch ID
-    name
-
+    id: int
+        Twitch user ID
+    display_name: str
+        Twitch user's display name with proper capitalisation
+    avatar_url: str
+        Profile image url, naming "avatar" is just to be somewhat consistent with discord.py
+    url: str
+        Link to the streamer
+    live: bool
+        Boolean whether the streamer is currently live/offline on twitch
+    game: str
+        Game name that is being streamed. "Offline" if stream is offline.
+    title: str
+        Stream's title. "Offline" if stream is offline.
+    preview_url: str
+        Thumbnail for the stream preview. Tries to use offline image if stream is offline.
     """
 
     if TYPE_CHECKING:
@@ -101,7 +113,7 @@ class Streamer:
         return f"<{self.__class__.__name__} {self.display_name} id={self.id} title={self.title}>"
 
     async def vod_link(self, *, seconds_ago: int = 0, markdown: bool = True) -> str:
-        """Get latest vod link, timestamped to timedelta ago"""
+        """Get latest vod link, timestamped to timedelta ago."""
         video = next(iter(await self._twitch.fetch_videos(user_id=self.id, period="day")), None)
         if not video:
             return ""
@@ -112,6 +124,7 @@ class Streamer:
         return f"/[VOD]({url})" if markdown else url
 
     async def game_art_url(self) -> str | None:
+        """Game Art Url."""
         if self.live:
             game = next(iter(await self._twitch.fetch_games(names=[self.game])), None)
             if game:

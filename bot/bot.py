@@ -256,6 +256,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
         * Riot API Pulsefire client
         * CDragon Pulsefire client
+        * Meraki Pulsefire client
         """
 
         if not hasattr(self, "riot"):
@@ -356,12 +357,18 @@ class AluBot(commands.Bot, AluBotHelper):
             await self.session.close()
         if hasattr(self, "twitch"):
             await self.twitch.close()
-        if hasattr(self, "riot_api_client"):
+        # League Pulsefire clients
+        if hasattr(self, "riot"):
             await self.riot.__aexit__()
-        if hasattr(self, "cdragon_client"):
+        if hasattr(self, "cdragon"):
             await self.cdragon.__aexit__()
-        if hasattr(self, "opendota_client"):
+        if hasattr(self, "meraki"):
+            await self.meraki.__aexit__()
+        # Dota Pulsefire clients
+        if hasattr(self, "opendota"):
             await self.opendota.__aexit__()
+        if hasattr(self, "stratz"):
+            await self.stratz.__aexit__()
 
     @property
     def hideout(self) -> const.HideoutGuild:

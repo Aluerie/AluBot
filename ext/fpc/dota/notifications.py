@@ -176,7 +176,7 @@ class DotaFPCNotifications(BaseNotifications):
         except asyncio.TimeoutError:
             self.death_counter += 1
             await self.hideout.spam.send(f"Game Coordinator is dying: count `{self.death_counter}`")
-            # send_log.warning(f"Game Coordinator is dying: count `{self.death_counter}`")
+            send_log.warning(f"Game Coordinator is dying: count `{self.death_counter}`")
             # nothing to "mark_matches_to_edit" so let's return
             return
         else:
@@ -191,9 +191,10 @@ class DotaFPCNotifications(BaseNotifications):
         send_log.debug("Analyzing took %.5f secs", time.perf_counter() - start_time)
 
         # another mini-death condition
-        if len(live_matches) < 100:
-            # this means it returned 90, 80, ..., or even 0 matches. Maybe corrupted result?
-            # might ruin logic in editing
+        if len(live_matches) < 90:  # 100
+            # this means it returned 80, 70, ..., or even 0 matches. 
+            # Thus we consider this result corrupted since it can ruin editing logic.
+            # We still forgive 90 though, should be fine.
             send_log.warn("GC only fetched %s matches", len(live_matches))
         else:
             self.top_live_matches = live_matches
@@ -225,6 +226,9 @@ class DotaFPCNotifications(BaseNotifications):
             tuple_uuid = match_id, friend_id = match_row["match_id"], match_row["friend_id"]
             if tuple_uuid not in self.retry_mapping:
                 self.retry_mapping[tuple_uuid] = 0
+                # Stratz 99% will not have data in the first 5 minutes so it's just a wasted call
+                # Thus lets skip the very first loop
+                continue
 
             edit_log.debug("Editing match = %s retry %s", tuple_uuid, self.retry_mapping[tuple_uuid])
 

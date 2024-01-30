@@ -87,9 +87,9 @@ class UmbraSyncCommandCog(DevBaseCog):
             app_commands.Choice(name="Current Guild", value="current"),
             app_commands.Choice(name="Copy Global commands to Current Guild", value="copy"),
             app_commands.Choice(name="Clear Current Guild", value="clear"),
-            app_commands.Choice(name="Sync Premium Guilds", value="premium"),
-            app_commands.Choice(name="Sync My Guilds", value="my"),
-            app_commands.Choice(name="Sync Specific Guilds", value="guilds"),
+            app_commands.Choice(name="Premium Guilds", value="premium"),
+            app_commands.Choice(name="My Guilds", value="my"),
+            app_commands.Choice(name="Specific Guilds", value="guilds"),
         ]
     )
     async def slash_sync(self, interaction: discord.Interaction[AluBot], method: str):

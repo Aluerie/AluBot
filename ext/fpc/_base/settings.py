@@ -15,7 +15,7 @@ from . import FPCCog, views
 
 if TYPE_CHECKING:
     from bot import AluBot
-    from utils import AluView
+    from utils import AluView, CONSTANTS
 
     # currently
     # * `steam_id` are `int`
@@ -190,6 +190,7 @@ class BaseSettings(FPCCog):
         account_cls: type[Account],
         account_typed_dict_cls: type,
         character_cache: KeysCache,
+        emote_cls: type[CONSTANTS],
         **kwargs,
     ) -> None:
         super().__init__(bot, *args, **kwargs)
@@ -209,10 +210,12 @@ class BaseSettings(FPCCog):
 
         # cache attrs
         self.character_name_by_id: Callable[[int], Awaitable[str]] = getattr(character_cache, "name_by_id")
+        self.character_alias_by_id: Callable[[int], Awaitable[str]] = getattr(character_cache, "alias_by_id")
         self.character_id_by_name: Callable[[str], Awaitable[int]] = getattr(character_cache, "id_by_name")
         self.character_name_by_id_cache: Callable[[], Awaitable[dict[int, str]]] = lambda: character_cache.get_cache(
             "name_by_id"
         )
+        self.emote_cls = emote_cls
 
         # setup messages cache
         self.setup_messages_cache: dict[int, AluView] = {}
@@ -467,6 +470,10 @@ class BaseSettings(FPCCog):
 
     # async def get_character_name_by_id_cache(self) -> dict[int, str]:
     #     raise NotImplementedError
+
+    async def get_character_emoji(self, character_id: int) -> str:
+        character_alias = await self.character_alias_by_id(character_id)
+        return getattr(self.emote_cls, character_alias)
 
     async def setup_characters(self, ctx: AluGuildContext):
         """Base function for `/{game} setup {characters}` command.

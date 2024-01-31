@@ -13,7 +13,7 @@ __all__ = (
     "MaterialAccentPalette",
 )
 
-
+# fmt: off
 class Colour:
     """My chosen colours"""
 
@@ -25,20 +25,20 @@ class Colour:
     # my colour is Lavender Purple (Purple Mountain Majesty)
     # https://en.wikipedia.org/wiki/Lavender_(color)#Lavender_purple_(purple_mountain_majesty)
     # but I just chose the name that is supported by the said extension in highlight and is close enough in value.
-    blueviolet = 0x9678B6
-
-    palevioletred = 0xDB7093
-
-    slateblue = 0x6A5ACD
-    darkviolet = 0x9400D3
-
-    maroon = 0x800000  # used primarily for errors
+    blueviolet    = 0x9678B6 # dota fpc
+    
+    palevioletred = 0xDB7093 # lol fpc
+    maroon        = 0x800000  # errors
+    
+    slateblue     = 0x6A5ACD
+    darkviolet    = 0x9400D3
 
     # other known colours
     twitch = 0x9146FF
 
     # raspberry = 0xC42C48
     # neon = 0x4D4DFF
+# fmt: on
 
 
 # fmt: off
@@ -282,5 +282,7 @@ if __name__ == "__main__":
     from PIL import Image
 
     x = MaterialPalette.purple()
-    rectangle = Image.new("RGB", (600, 300), str(x))
+    x = 0xDB7093
+
+    rectangle = Image.new("RGB", (600, 300), f"#{x:0>6x}")
     rectangle.show()

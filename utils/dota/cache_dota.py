@@ -65,6 +65,11 @@ class HeroKeysCache(KeysCache):
         """Get hero id by npc_name."""
         return await self.get_value("id_by_npcname", npcname)
 
+    async def alias_by_id(self, hero_id: int) -> str:
+        """Get alias by hero id.""" 
+        alias = await self.get_value("id_by_npcname", hero_id)
+        return alias[14:]
+    
     async def npcname_by_id(self, hero_id: int) -> str:
         """Get npc_dota_hero_name by hero id."""
         return await self.get_value("id_by_npcname", hero_id)

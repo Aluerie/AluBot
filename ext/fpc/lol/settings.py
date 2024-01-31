@@ -138,6 +138,7 @@ class LoLFPCSettings(BaseSettings):
             account_cls=LoLAccount,
             account_typed_dict_cls=LoLAccountDict,
             character_cache=bot.cache_lol.champion,
+            emote_cls=const.LoLChampions,
             **kwargs,
         )
 
@@ -297,6 +298,44 @@ class LoLFPCSettings(BaseSettings):
                 ),
             )
             .add_field(name="Meraki last updated", value=f"Patch {self.bot.cache_lol.role.meraki_patch}")
+        )
+        await ctx.reply(embed=embed)
+
+    @commands.is_owner()
+    @commands.command(name="create_champion_emote")
+    async def create_champion_emote(self, ctx: AluGuildContext, champion_name: str):
+        """Create a new discord emote for a League of Legends champion.
+
+        Useful when a new LoL champion gets added to the game, so we can just use this command,
+        copy-paste the answer to `utils.const` and be happy.
+        """
+
+        await ctx.typing()
+        cache_lol = self.bot.cache_lol.champion
+
+        champion_id = await cache_lol.id_by_name(champion_name)
+        # a bit cursed
+        alias = await cache_lol.alias_by_id(champion_id)
+        icon_url = await cache_lol.icon_by_id(champion_id)
+
+        guild_id = const.EmoteGuilds.LOL[3]
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
+            raise errors.SomethingWentWrong(f"Guild with id {guild_id} is `None`.")
+
+        async with self.bot.session.get(url=icon_url) as response:
+            if not response.ok:
+                raise errors.ResponseNotOK("Response for a new emote link wasn't okay")
+
+            new_emote = await guild.create_custom_emoji(name=alias, image=await response.read())
+
+        embed = discord.Embed(
+            colour=const.Colour.palevioletred,
+            title="New League of Legends 2 Champion emote was created",
+            description=f'```py\n{new_emote.name} = "{new_emote}"```',
+        ).add_field(
+            name=await cache_lol.name_by_id(champion_id),
+            value=str(new_emote),
         )
         await ctx.reply(embed=embed)
 

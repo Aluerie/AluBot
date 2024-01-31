@@ -15,6 +15,7 @@ if TYPE_CHECKING:
         id_by_name: MutableMapping[str, int]
         name_by_id: MutableMapping[int, str]
         icon_by_id: MutableMapping[int, str]
+        alias_by_id: MutableMapping[int, str]
 
     class RoleDict(TypedDict):
         TOP: float
@@ -55,17 +56,14 @@ class ChampionKeysCache(KeysCache):
     async def fill_data(self) -> ChampionCache:
         champion_summary = await self.bot.cdragon.get_lol_v1_champion_summary()
 
-        data: ChampionCache = {
-            "id_by_name": {},
-            "name_by_id": {},
-            "icon_by_id": {},
-        }
+        data: ChampionCache = {"id_by_name": {}, "name_by_id": {}, "icon_by_id": {}, "alias_by_id": {}}
         for champion in champion_summary:
             if champion["id"] == -1:
                 continue
 
             data["id_by_name"][champion["name"].lower()] = champion["id"]
             data["name_by_id"][champion["id"]] = champion["name"]
+            data["alias_by_id"][champion["id"]] = champion["alias"]
             data["icon_by_id"][champion["id"]] = cdragon_asset_url(champion["squarePortraitPath"])
 
         return data
@@ -83,6 +81,10 @@ class ChampionKeysCache(KeysCache):
     async def name_by_id(self, champion_id: int) -> str:
         """Get champion name by id"""
         return await self.get_value("name_by_id", champion_id)
+    
+    async def alias_by_id(self, champion_id: int) -> str:
+        """Get champion alias by id"""
+        return await self.get_value("alias_by_id", champion_id)
 
     async def icon_by_id(self, champion_id: int) -> str:
         """Get champion icon url by id"""

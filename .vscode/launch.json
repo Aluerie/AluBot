@@ -13,7 +13,7 @@
                 "-t"
             ],
             "console": "integratedTerminal",
-            "justMyCode": true
+            //"justMyCode": true
         },
         {
             "name": "AluBot",
@@ -22,7 +22,7 @@
             "program": "__main__.py",
             "args": [],
             "console": "integratedTerminal",
-            "justMyCode": true
+            //"justMyCode": true
         }
     ]
 }

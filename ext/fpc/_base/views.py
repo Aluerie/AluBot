@@ -186,8 +186,16 @@ class AddRemoveButton(discord.ui.Button):
     for `/{game} setup players/{characters}` command's view.
     """
 
-    def __init__(self, label: str, is_favourite: bool, object_id: int, menu: FPCSetupPlayersCharactersPaginator):
+    def __init__(
+        self,
+        label: str,
+        is_favourite: bool,
+        object_id: int,
+        menu: FPCSetupPlayersCharactersPaginator,
+        emoji: str | None = None,
+    ):
         super().__init__(
+            emoji=emoji,
             style=discord.ButtonStyle.green if is_favourite else discord.ButtonStyle.gray,
             label=label,
         )
@@ -336,7 +344,11 @@ class FPCSetupPlayersCharactersPageSource(menus.ListPageSource):
         for entry in entries:
             id, name = entry
             is_favourite = id in favourite_ids
-            menu.add_item(AddRemoveButton(name, is_favourite, id, menu))
+            if menu.get_emoji_name:
+                emoji = await menu.get_emoji_name(id)
+            else:
+                emoji = None
+            menu.add_item(AddRemoveButton(name, is_favourite, id, menu, emoji=emoji))
 
         return embed
 
@@ -353,7 +365,9 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
         plural: str,
         cog: BaseSettings,
         get_object_list_embed: Callable[[int], Awaitable[discord.Embed]],
-        special_button_cls: Optional[type[AccountListButton]] = None,
+        *,
+        special_button_cls: type[AccountListButton] | None = None,
+        get_emoji_name: Callable[[int], Awaitable[str]] | None = None,
     ):
         """__init__
 
@@ -390,6 +404,7 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
         self.table_name: str = f"{cog.prefix}_favourite_{table_object_name}s "
         self.id_column_name: str = f"{table_object_name}_id"
         self.special_button_cls: Optional[type[AccountListButton]] = special_button_cls
+        self.get_emoji_name: Callable[[int], Awaitable[str]] | None = get_emoji_name
 
     async def on_timeout(self) -> None:
         await super().on_timeout()
@@ -428,7 +443,7 @@ class FPCSetupPlayersPaginator(FPCSetupPlayersCharactersPaginator):
             "players",
             cog,
             cog.get_player_list_embed,
-            AccountListButton,
+            special_button_cls=AccountListButton,
         )
 
 
@@ -455,6 +470,7 @@ class FPCSetupCharactersPaginator(FPCSetupPlayersCharactersPaginator):
             cog.character_plural_word,
             cog,
             cog.get_character_list_embed,
+            get_emoji_name=cog.get_character_emoji,
         )
 
 

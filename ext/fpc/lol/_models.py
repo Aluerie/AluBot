@@ -101,7 +101,7 @@ class MatchToSend(BaseMatchToSend):
         def build_notification_image() -> Image.Image:
             width, height = img.size
             information_row = 50
-            rectangle = Image.new("RGB", (width, 100), const.Colour.palevioletred)
+            rectangle = Image.new("RGB", (width, 100), f"#{const.Colour.palevioletred:0>6x}")
             ImageDraw.Draw(rectangle)
             img.paste(rectangle)
             img.paste(rectangle, (0, height - information_row))
@@ -146,11 +146,11 @@ class MatchToSend(BaseMatchToSend):
         title = f"{streamer.display_name} - {champion_name}"
         filename = re.sub(r"[_' ]", "", title) + ".png"
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
-
+        champion_emoji = getattr(const.LoLChampions, await self.bot.cache_lol.champion.alias_by_id(self.champion_id))
         embed = (
             discord.Embed(
                 color=const.Colour.palevioletred,
-                title=title,
+                title=f"{title} {champion_emoji}",
                 url=streamer.url,
                 description=(
                     f"Match `{self.platform.upper()}_{self.match_id}` started {human_timedelta(self.long_ago, mode='strip')}\n"

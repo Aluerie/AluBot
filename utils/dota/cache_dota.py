@@ -66,13 +66,13 @@ class HeroKeysCache(KeysCache):
         return await self.get_value("id_by_npcname", npcname)
 
     async def alias_by_id(self, hero_id: int) -> str:
-        """Get alias by hero id.""" 
-        alias = await self.get_value("id_by_npcname", hero_id)
-        return alias[14:]
-    
+        """Get alias by hero id."""
+        alias = await self.get_value("npcname_by_id", hero_id)
+        return alias[14:]  # remove gibberish `npc_dota_hero_` prefix.
+
     async def npcname_by_id(self, hero_id: int) -> str:
         """Get npc_dota_hero_name by hero id."""
-        return await self.get_value("id_by_npcname", hero_id)
+        return await self.get_value("npcname_by_id", hero_id)
 
     async def id_by_name(self, hero_name: str) -> int:
         """Get hero id by localized English name."""

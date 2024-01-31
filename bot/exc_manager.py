@@ -44,7 +44,7 @@ class ErrorInfoPacket(NamedTuple):
     mention: bool
 
 
-class AluExceptionManager:
+class ExceptionManager:
     """Exception Manager that
 
     * should be used to send all unhandled errors to developers via webhooks.
@@ -54,13 +54,13 @@ class AluExceptionManager:
 
     Attributes
     ----------
-    bot: AluBot
+    bot : AluBot
         The bot instance.
-    cooldown: datetime.timedelta`
+    cooldown : datetime.timedelta
         The cooldown between sending errors. This defaults to 5 seconds.
-    errors_cache: dict[str, list[ErrorInfoPacket]]
+    errors_cache : dict[str, list[ErrorInfoPacket]]
         A mapping of tracebacks to their error information.
-    error_webhook: discord.Webhook
+    error_webhook : discord.Webhook
         The error webhook used to send errors.
     """
 

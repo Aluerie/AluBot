@@ -23,7 +23,11 @@ if TYPE_CHECKING:
 
     from . import schemas
 
-__all__ = ("OpenDotaClient", "StratzClient")
+__all__ = (
+    "OpenDotaClient",
+    "StratzClient",
+    "ODotaConstantsClient",
+)
 
 
 class DotaAPIsRateLimiter(BaseRateLimiter):
@@ -124,6 +128,46 @@ class OpenDotaAPIRateLimiter(DotaAPIsRateLimiter):
         return header_limits, header_counts
 
 
+class OpenDotaClient(BaseClient):
+    def __init__(self) -> None:
+        self.rate_limiter = OpenDotaAPIRateLimiter()
+        super().__init__(
+            base_url="https://api.opendota.com/api",
+            default_params={},
+            default_headers={},
+            default_queries={},
+            middlewares=[
+                json_response_middleware(orjson.loads),
+                http_error_middleware(),
+                rate_limiter_middleware(self.rate_limiter),
+            ],
+        )
+
+    async def get_match(self, *, match_id: int) -> schemas.OpenDotaAPI.Match:
+        return await self.invoke("GET", f"/matches/{match_id}")  # type: ignore
+
+    async def request_parse(self, *, match_id: int) -> schemas.OpenDotaAPI.ParseJob:
+        return await self.invoke("POST", f"/request/{match_id}")  # type: ignore
+
+
+class ODotaConstantsClient(BaseClient):
+    def __init__(self) -> None:
+        self.rate_limiter = OpenDotaAPIRateLimiter()
+        super().__init__(
+            base_url="https://raw.githubusercontent.com/odota/dotaconstants/master/build",
+            default_params={},
+            default_headers={},
+            default_queries={},
+            middlewares=[
+                json_response_middleware(orjson.loads),
+                http_error_middleware(),
+            ],
+        )
+
+    async def get_heroes(self) -> schemas.ODotaConstantsJson.Heroes:
+        return await self.invoke("GET", "/heroes.json")  # type: ignore
+
+
 class StratzAPIRateLimiter(DotaAPIsRateLimiter):
     def analyze_headers(self, headers):
         self.rate_limits_string = "\n".join(
@@ -146,28 +190,6 @@ class StratzAPIRateLimiter(DotaAPIsRateLimiter):
         return header_limits, header_counts
 
 
-class OpenDotaClient(BaseClient):
-    def __init__(self) -> None:
-        self.rate_limiter = OpenDotaAPIRateLimiter()
-        super().__init__(
-            base_url="https://api.opendota.com/api",
-            default_params={},
-            default_headers={},
-            default_queries={},
-            middlewares=[
-                json_response_middleware(orjson.loads),
-                http_error_middleware(),
-                rate_limiter_middleware(self.rate_limiter),
-            ],
-        )
-
-    async def get_match(self, *, match_id: int) -> schemas.OpenDotaAPISchema.Match:
-        return await self.invoke("GET", f"/matches/{match_id}")  # type: ignore
-
-    async def request_parse(self, *, match_id: int) -> schemas.OpenDotaAPISchema.ParseJob:
-        return await self.invoke("POST", f"/request/{match_id}")  # type: ignore
-
-
 class StratzClient(BaseClient):
     def __init__(self) -> None:
         self.rate_limiter = StratzAPIRateLimiter()
@@ -188,7 +210,7 @@ class StratzClient(BaseClient):
 
     async def get_fpc_match_to_edit(
         self, *, match_id: int, friend_id: int
-    ) -> schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.ResponseDict:
+    ) -> schemas.StratzGraphQL.GetFPCMatchToEdit.ResponseDict:
         query = """
         query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
             match(id: $match_id) {

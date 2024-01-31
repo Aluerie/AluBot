@@ -10,7 +10,7 @@ import discord
 from utils import aluloop, const, lol
 
 from .._base import BaseNotifications
-from ._models import LoLFPCMatchToEdit, MatchToSend
+from ._models import MatchToEdit, MatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -174,7 +174,7 @@ class LoLNotifications(BaseNotifications):
             for participant in match["info"]["participants"]:
                 if participant["championId"] == match_row["champion_id"]:
                     # found our participant
-                    match_to_edit = LoLFPCMatchToEdit(self.bot, participant=participant, timeline=timeline)
+                    match_to_edit = MatchToEdit(self.bot, participant=participant, timeline=timeline)
                     await self.edit_match(match_to_edit, match_row["channel_message_tuples"])
             query = "DELETE FROM lol_messages WHERE match_id=$1"
             await self.bot.pool.fetch(query, match_row["match_id"])

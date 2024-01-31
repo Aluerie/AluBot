@@ -16,7 +16,7 @@ from utils.jsonconfig import PrefixConfig
 from utils.transposer import TransposeClient
 
 from .app_cmd_tree import AluAppCommandTree
-from .exc_manager import AluExceptionManager
+from .exc_manager import ExceptionManager
 from .intents_perms import intents, permissions
 from .timer import TimerManager
 
@@ -66,7 +66,7 @@ class AluBot(commands.Bot, AluBotHelper):
         self.pool: Pool = pool
         self.session: ClientSession = session
 
-        self.exc_manager: AluExceptionManager = AluExceptionManager(self)
+        self.exc_manager: ExceptionManager = ExceptionManager(self)
         self.transposer: TransposeClient = TransposeClient(session=session)
         self.disambiguator: Disambiguator = Disambiguator()
 
@@ -127,7 +127,7 @@ class AluBot(commands.Bot, AluBotHelper):
         """Try auto copy-global+sync for hideout guild."""
 
         # Inspired by:
-        # licensed MPL v2 from DuckBot-Discord/DuckBot `try_autosync``
+        # licensed MPL v2 from DuckBot-Discord/DuckBot `try_autosync`
         # https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/bot.py
 
         # tag ass, and all. But strictly for convenient development purposes.
@@ -233,13 +233,16 @@ class AluBot(commands.Bot, AluBotHelper):
         * Stratz API pulsefire client
         """
         if not hasattr(self, "opendota"):
-            from utils.dota import OpenDotaClient, StratzClient
+            from utils.dota import ODotaConstantsClient, OpenDotaClient, StratzClient
 
             self.opendota = OpenDotaClient()
             await self.opendota.__aenter__()
 
             self.stratz = StratzClient()
             await self.stratz.__aenter__()
+
+            self.odota_constants = ODotaConstantsClient()
+            await self.odota_constants.__aenter__()
 
     def initialize_cache_dota(self) -> None:
         """Initialize Dota 2 constants cache
@@ -357,18 +360,11 @@ class AluBot(commands.Bot, AluBotHelper):
             await self.session.close()
         if hasattr(self, "twitch"):
             await self.twitch.close()
-        # League Pulsefire clients
-        if hasattr(self, "riot"):
-            await self.riot.__aexit__()
-        if hasattr(self, "cdragon"):
-            await self.cdragon.__aexit__()
-        if hasattr(self, "meraki"):
-            await self.meraki.__aexit__()
-        # Dota Pulsefire clients
-        if hasattr(self, "opendota"):
-            await self.opendota.__aexit__()
-        if hasattr(self, "stratz"):
-            await self.stratz.__aexit__()
+
+        # things to __aexit__()
+        for client in ["riot", "cdragon", "meraki", "opendota", "stratz", "odota_constants"]:
+            if hasattr(self, client):
+                await getattr(self, client).__aexit__()
 
     @property
     def hideout(self) -> const.HideoutGuild:

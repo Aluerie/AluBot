@@ -182,7 +182,7 @@ class BaseSettings(FPCCog):
         bot: AluBot,
         *args,
         prefix: str,
-        colour: discord.Colour,
+        colour: int,
         game_display_name: str,
         game_icon_url: str,
         character_singular_word: str,
@@ -196,7 +196,7 @@ class BaseSettings(FPCCog):
 
         # game attrs
         self.prefix: str = prefix
-        self.colour: discord.Colour = colour
+        self.colour: int = colour
         self.game_display_name: str = game_display_name
         self.game_icon_url: str = game_icon_url
         self.character_singular_word: str = character_singular_word

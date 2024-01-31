@@ -93,11 +93,11 @@ class MatchToSend(BaseMatchToSend):
             if streamer.live:
                 twitch_status = "Live"
                 vod_url = await streamer.vod_link(seconds_ago=self.long_ago)
-                colour = const.Colour.blueviolet
+                colour = discord.Colour(const.Colour.blueviolet)
             else:
                 twitch_status = "Offline"
                 vod_url = ""
-                colour = const.Colour.twitch
+                colour = discord.Colour(const.Colour.twitch)
 
             return {
                 "preview_url": streamer.preview_url,
@@ -193,7 +193,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
     def __init__(
         self,
         bot: AluBot,
-        data: schemas.StratzGraphQLQueriesSchema.GetFPCMatchToEdit.ResponseDict,
+        data: schemas.StratzGraphQL.GetFPCMatchToEdit.ResponseDict,
     ):
         super().__init__(bot)
 

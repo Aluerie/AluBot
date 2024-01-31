@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     "MatchToSend",
-    "LoLFPCMatchToEdit",
+    "MatchToEdit",
 )
 
 
@@ -101,7 +101,7 @@ class MatchToSend(BaseMatchToSend):
         def build_notification_image() -> Image.Image:
             width, height = img.size
             information_row = 50
-            rectangle = Image.new("RGB", (width, 100), str(const.Colour.palevioletred))
+            rectangle = Image.new("RGB", (width, 100), const.Colour.palevioletred)
             ImageDraw.Draw(rectangle)
             img.paste(rectangle)
             img.paste(rectangle, (0, height - information_row))
@@ -177,7 +177,7 @@ class MatchToSend(BaseMatchToSend):
         await self.bot.pool.execute(query, self.match_id, self.summoner_id)
 
 
-class LoLFPCMatchToEdit(BaseMatchToEdit):
+class MatchToEdit(BaseMatchToEdit):
     def __init__(
         self,
         bot: AluBot,
@@ -319,7 +319,7 @@ async def beta_test_edit_image(self: AluCog):
     # from .fpc.lol._models import beta_test_edit_image
     # await beta_test_edit_image(self)
 
-    from ext.fpc.lol._models import LoLFPCMatchToEdit
+    from ext.fpc.lol._models import MatchToEdit
 
     await self.bot.initialize_league_pulsefire_clients()
     self.bot.initialize_cache_league()
@@ -329,7 +329,7 @@ async def beta_test_edit_image(self: AluCog):
     match = await self.bot.riot.get_lol_match_v5_match(id=match_id, region=continent)
     timeline = await self.bot.riot.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
-    post_match_player = LoLFPCMatchToEdit(
+    post_match_player = MatchToEdit(
         self.bot,
         participant=match["info"]["participants"][0],
         timeline=timeline,

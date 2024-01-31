@@ -7,13 +7,13 @@ Note that it can be outdated, wrong, incomplete.
 from typing import Literal, NamedTuple, NotRequired, Optional, TypedDict
 
 __all__ = (
-    "OpenDotaAPISchema",
-    "StratzGraphQLQueriesSchema",
-    "GameCoordinatorAPISchema",
+    "OpenDotaAPI",
+    "StratzGraphQL",
+    "GameCoordinatorAPI",
 )
 
 
-class OpenDotaAPISchema:
+class OpenDotaAPI:
     ### The following schemas are for GET /matches/{match_id} endpoint
 
     PermanentBuff = TypedDict(
@@ -24,7 +24,6 @@ class OpenDotaAPISchema:
             "grant_time": int,
         },
     )
-
     BenchMarkData = TypedDict(
         "BenchMarkData",
         {
@@ -32,7 +31,6 @@ class OpenDotaAPISchema:
             "pct": float,
         },
     )
-
     BenchMarks = TypedDict(
         "BenchMarks",
         {
@@ -45,7 +43,6 @@ class OpenDotaAPISchema:
             "tower_damage": BenchMarkData,
         },
     )
-
     Player = TypedDict(
         "Player",
         {
@@ -111,7 +108,6 @@ class OpenDotaAPISchema:
             "xp_per_min": int,
         },
     )
-
     PickBan = TypedDict(
         "PickBan",
         {
@@ -121,7 +117,6 @@ class OpenDotaAPISchema:
             "order": int,
         },
     )
-
     ODData = TypedDict(
         "ODData",
         {
@@ -131,7 +126,6 @@ class OpenDotaAPISchema:
             "archive": bool,
         },
     )
-
     Match = TypedDict(
         "Match",
         {
@@ -175,7 +169,6 @@ class OpenDotaAPISchema:
             "jobId": int,
         },
     )
-
     RequestParse = TypedDict(
         "RequestParse",
         {
@@ -184,7 +177,7 @@ class OpenDotaAPISchema:
     )
 
 
-class StratzGraphQLQueriesSchema:
+class StratzGraphQL:
     class GetFPCMatchToEdit:
         # GET FPC MATCH TO EDIT
         BuffEvent = TypedDict(
@@ -193,14 +186,12 @@ class StratzGraphQLQueriesSchema:
                 "itemId": Optional[int],
             },
         )
-
         Stats = TypedDict(
             "Stats",
             {
                 "matchPlayerBuffEvent": list[BuffEvent],
             },
         )
-
         PurchaseEvent = TypedDict(
             "PurchaseEvent",
             {
@@ -208,14 +199,12 @@ class StratzGraphQLQueriesSchema:
                 "itemId": int,
             },
         )
-
         AbilityLearnEvent = TypedDict(
             "AbilityLearnEvent",
             {
                 "abilityId": int,
             },
         )
-
         PlaybackData = TypedDict(
             "PlaybackData",
             {
@@ -223,7 +212,6 @@ class StratzGraphQLQueriesSchema:
                 "purchaseEvents": list[PurchaseEvent],
             },
         )
-
         Player = TypedDict(
             "Player",
             {
@@ -243,7 +231,6 @@ class StratzGraphQLQueriesSchema:
                 "stats": Stats,
             },
         )
-
         Match = TypedDict(
             "Match",
             {
@@ -251,14 +238,12 @@ class StratzGraphQLQueriesSchema:
                 "players": list[Player],
             },
         )
-
         Data = TypedDict(
             "Data",
             {
                 "match": Match,
             },
         )
-
         ResponseDict = TypedDict(
             "ResponseDict",
             {
@@ -267,7 +252,7 @@ class StratzGraphQLQueriesSchema:
         )
 
 
-class GameCoordinatorAPISchema:
+class GameCoordinatorAPI:
     # all these types are fake and they only serve as a band-aid fix for
     # ValvePython being extremely bad at type-hinting
 
@@ -321,3 +306,46 @@ class GameCoordinatorAPISchema:
             ("specific_games", bool),
         ],
     )
+
+
+class ODotaConstantsJson:
+    # heroes.json
+    Hero = TypedDict(
+        "Hero",
+        {
+            "id": int,
+            "name": str,
+            "primary_attr": str,
+            "attack_type": str,
+            "roles": list[str],
+            "img": str,
+            "icon": str,
+            "base_health": int,
+            "base_health_regen": float,
+            "base_mana": int,
+            "base_mana_regen": int,
+            "base_armor": int,
+            "base_mr": int,
+            "base_attack_min": int,
+            "base_attack_max": int,
+            "base_str": int,
+            "base_agi": int,
+            "base_int": int,
+            "str_gain": float,
+            "agi_gain": float,
+            "int_gain": float,
+            "attack_range": int,
+            "projectile_speed": int,
+            "attack_rate": float,
+            "base_attack_time": int,
+            "attack_point": float,
+            "move_speed": int,
+            "turn_rate": float | None,
+            "cm_enabled": bool,
+            "legs": int | None,
+            "day_vision": int,
+            "night_vision": int,
+            "localized_name": str,
+        },
+    )
+    Heroes = dict[str, Hero]

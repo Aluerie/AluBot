@@ -8,7 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 from steam.steamid import EType, SteamID
 
-from utils import checks, const
+from utils import checks, const, errors
 
 from .._base import Account, BaseSettings
 from ..database_management import AddDotaPlayerFlags
@@ -104,7 +104,7 @@ class DotaAccount(Account):
 
 
 class DotaFPCSettings(BaseSettings, name="Dota 2"):
-    """Commands to set up fav hero + player notifs.
+    """Commands to set up fav hero + player notifications.
 
     These commands allow you to choose players from our database as your favorite \
     (or you can request adding them if missing) and choose your favorite Dota 2 heroes. \
@@ -268,6 +268,46 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     async def hideout_dota_hero_list(self, ctx: AluGuildContext):
         """Show a list of your favourite Dota 2 FPC heroes."""
         await self.hideout_character_list(ctx)
+
+    @commands.is_owner()
+    @commands.command(name="create_hero_emote")
+    async def create_hero_emote(self, ctx: AluGuildContext, hero_name: str):
+        """Create a new discord emote for a Dota 2 hero.
+        
+        Useful when a new Dota 2 hero gets added to the game, so we can just use this command,
+        copy-paste the answer to `utils.const` and be happy.
+        """
+        
+        await ctx.typing()
+
+        hero_id = await self.bot.cache_dota.hero.id_by_name(hero_name)
+
+        heroes_json = await self.bot.odota_constants.get_heroes()
+        hero_data = heroes_json[str(hero_id)]
+
+        guild_id = const.EmoteGuilds.DOTA[3]
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
+            raise errors.SomethingWentWrong(f"Guild with id {guild_id} is `None`.")
+
+        async with self.bot.session.get(url=hero_data["icon"]) as response:
+            if not response.ok:
+                raise errors.ResponseNotOK("Response for a new emote link wasn't okay")
+
+            new_emote = await guild.create_custom_emoji(
+                name=hero_data["name"][14:],  # cut the "npc_dota_hero_" gibberish
+                image=await response.read(),
+            )
+
+        embed = discord.Embed(
+            colour=const.Colour.blueviolet,
+            title="New Dota 2 Hero emote was created",
+            description=f'```py\n{new_emote.name} = "{new_emote}"```',
+        ).add_field(
+            name=await self.bot.cache_dota.hero.name_by_id(hero_id),
+            value=str(new_emote),
+        )
+        await ctx.reply(embed=embed)
 
 
 async def setup(bot: AluBot):

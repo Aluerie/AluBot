@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import logging
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional, Sequence, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Sequence, TypeVar
 
 import discord
 from discord.ext import tasks
@@ -34,10 +34,10 @@ class AluLoop(tasks.Loop[LF]):
         seconds: float,
         hours: float,
         minutes: float,
-        time: Union[datetime.time, Sequence[datetime.time]],
+        time: datetime.time | Sequence[datetime.time],
         count: int | None,
         reconnect: bool,
-        name: Optional[str],
+        name: str | None,
     ) -> None:
         super().__init__(coro, seconds, hours, minutes, time, count, reconnect, name)
         self._before_loop = self._base_before_loop
@@ -101,10 +101,10 @@ def aluloop(
     seconds: float = MISSING,
     minutes: float = MISSING,
     hours: float = MISSING,
-    time: Union[datetime.time, Sequence[datetime.time]] = MISSING,
-    count: Optional[int] = None,
+    time: datetime.time | Sequence[datetime.time] = MISSING,
+    count: int | None = None,
     reconnect: bool = True,
-    name: Optional[str] = None,
+    name: str | None = None,
 ) -> Callable[[LF], AluLoop[LF]]:
     def decorator(func) -> AluLoop:
         return AluLoop(

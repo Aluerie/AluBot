@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, MutableMapping, NamedTuple, Optional
+from typing import TYPE_CHECKING, Any, MutableMapping, NamedTuple
 
 import discord
 from bs4 import BeautifulSoup
@@ -39,7 +39,7 @@ LIQUIPEDIA_BASE_URL = "https://liquipedia.net"
 def scrape_schedule_data(
     soup: BeautifulSoup,
     schedule_mode: ScheduleModeEnum,
-    query: Optional[str] = None,
+    query: str | None = None,
 ) -> list[Match]:
     """Get data about Dota 2 matches in a structured dictionary.
 
@@ -47,11 +47,11 @@ def scrape_schedule_data(
 
     Parameters
     ----------
-    session: :class: `ClientSession`
+    session : ClientSession
         Session we will use to load the liquipedia page.
-    schedule_mode: :class: `ScheduleModeEnum`
+    schedule_mode : ScheduleModeEnum
         Enum that defines multiple conditions for the scrap/search/filtering matches.
-    query: :class: Optional[str] = None
+    query : str | None = None
         Text query we will limit results to.
 
     Returns
@@ -170,9 +170,9 @@ class ScheduleModeEnum(Enum):
 
 
 class ScheduleSelect(discord.ui.Select):
-    def __init__(self, author: discord.User | discord.Member, soup: BeautifulSoup, query: Optional[str] = None):
+    def __init__(self, author: discord.User | discord.Member, soup: BeautifulSoup, query: str | None = None):
         super().__init__(options=SELECT_OPTIONS, placeholder="\N{SPIRAL CALENDAR PAD} Select schedule category")
-        self.query: Optional[str] = query
+        self.query: str | None = query
         self.soup: BeautifulSoup = soup
         self.author: discord.User | discord.Member = author
 
@@ -197,14 +197,14 @@ class SchedulePageSource(menus.ListPageSource):
         author: discord.User | discord.Member,
         soup: BeautifulSoup,
         schedule_enum: ScheduleModeEnum,
-        query: Optional[str] = None,
+        query: str | None = None,
     ):
         initial_data = scrape_schedule_data(soup, schedule_enum, query)
         initial_data.sort(key=lambda x: (x.league, x.dt))
         super().__init__(entries=initial_data, per_page=20)
         self.schedule_enum = schedule_enum
         self.author: discord.User | discord.Member = author
-        self.query: Optional[str] = query
+        self.query: str | None = query
 
     async def format_page(self, menu: SchedulePages, matches: list[Match]):
         embed = (
@@ -264,7 +264,7 @@ class SchedulePages(pages.Paginator):
         ctx: AluContext | discord.Interaction[AluBot],
         soup: BeautifulSoup,
         schedule_enum: ScheduleModeEnum,
-        query: Optional[str] = None,
+        query: str | None = None,
     ):
         source = SchedulePageSource(ctx.user, soup, schedule_enum, query)
         super().__init__(ctx, source)
@@ -293,14 +293,14 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
     @commands.hybrid_command(aliases=["sch"])
     @app_commands.rename(schedule_mode="filter")
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in SELECT_OPTIONS])
-    async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: Optional[str] = None):
+    async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: str | None = None):
         """Dota 2 Pro Matches Schedule
 
         Parameters
         ----------
-        schedule_mode:
+        schedule_mode : int
             What matches to show
-        query: Optional[str]
+        query : str | None
             Search filter, i.e. "EG", "ESL" (or any other team/tournament names)
         """
         await ctx.typing()

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal
 
 import discord
 from discord import app_commands
@@ -116,7 +116,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
     async def rank_work(
         self,
-        ctx: Union[AluGuildContext, discord.Interaction[AluBot]],
+        ctx: AluGuildContext | discord.Interaction[AluBot],
         member: discord.Member,
     ):
         """Get file that is image for rank/levels information for desired member"""
@@ -210,10 +210,8 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             level = get_level(exp)
 
             if exp == get_exp_for_next_level(get_level(exp) - 1):
-                level_up_role: Optional[discord.Role] = discord.utils.get(message.guild.roles, name=f"Level #{level}")
-                previous_level_role: Optional[discord.Role] = discord.utils.get(
-                    message.guild.roles, name=f"Level #{level - 1}"
-                )
+                level_up_role = discord.utils.get(message.guild.roles, name=f"Level #{level}")
+                previous_level_role = discord.utils.get(message.guild.roles, name=f"Level #{level - 1}")
                 if not level_up_role or not previous_level_role:
                     raise ValueError("Roles were not found in the community guild")
                 e = discord.Embed(colour=const.Colour.blueviolet)

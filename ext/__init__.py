@@ -60,8 +60,7 @@ MY_PACKAGES = tuple(module.name for module in iter_modules(path=__path__))  # , 
 
 
 def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
-    """
-    Get tuple of extensions for bot to load.
+    """Get tuple of extensions for bot to load.
 
     Note that this function is a bit more robust than needed according to description above.
     This function can also catch package extensions in "extensions/" folder itself like `beta.py`
@@ -69,11 +68,11 @@ def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
 
     Parameters
     ----------
-    test: :class: `bool`
+    test : bool
         Whenever AluBot is used or its testing version YenBot.
         Maybe this whole production/testing part can be done better.
         If reader knows better - please, teach me.
-    reload: :class: `bool` = False
+    reload : bool = False
         If `_test` module with TEST_EXTENSIONS should be reloaded.
         Used to force reload in manual text commands like `$reload all`.
     Returns

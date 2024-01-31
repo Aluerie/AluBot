@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import TYPE_CHECKING, Any, Optional, Self, Union
+from typing import TYPE_CHECKING, Any, Self
 
 import discord
 import parsedatetime as pdt
@@ -42,7 +42,7 @@ class ShortTime:
 
     dt: datetime.datetime
 
-    def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
+    def __init__(self, argument: str, *, now: datetime.datetime | None = None):
         match = self.compiled.fullmatch(argument)
         if match is None or not match.group(0):
             match = self.discord_fmt.fullmatch(argument)
@@ -68,7 +68,7 @@ class HumanTime:
     constants = pdt.Constants(localeID="en_AU")
     calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE, constants=constants)
 
-    def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
+    def __init__(self, argument: str, *, now: datetime.datetime | None = None):
         now = now or datetime.datetime.now(datetime.timezone.utc)
         dt, status = self.calendar.parseDT(argument, sourceTime=now)
         dt = dt.replace(tzinfo=datetime.timezone.utc)
@@ -88,7 +88,7 @@ class HumanTime:
 
 
 class Time(HumanTime):
-    def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
+    def __init__(self, argument: str, *, now: datetime.datetime | None = None):
         try:
             o = ShortTime(argument, now=now)
         except Exception as e:
@@ -99,7 +99,7 @@ class Time(HumanTime):
 
 
 class FutureTime(Time):
-    def __init__(self, argument: str, *, now: Optional[datetime.datetime] = None):
+    def __init__(self, argument: str, *, now: datetime.datetime | None = None):
         super().__init__(argument, now=now)
 
         if self._past:
@@ -170,7 +170,7 @@ class UserFriendlyTime(commands.Converter):
 
     def __init__(
         self,
-        converter: Optional[Union[type[commands.Converter], commands.Converter]] = None,
+        converter: type[commands.Converter] | commands.Converter | None = None,
         *,
         default: Any = None,
     ):

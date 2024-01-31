@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Sequence, Union
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
 from core.help_cmd import AluHelp
-from utils import AluContext, aluloop, const
+from utils import AluContext
 
 from .._base import MetaCog
 
@@ -25,7 +25,7 @@ class AluHelpCog(MetaCog):
 
     @app_commands.command(name="help")
     @app_commands.describe(query="Command/Section/Category name to get help about.")
-    async def slash_help(self, interaction: discord.Interaction[AluBot], *, query: Optional[str]):
+    async def slash_help(self, interaction: discord.Interaction[AluBot], *, query: str | None):
         """Show help menu for the bot."""
         ctx = await AluContext.from_interaction(interaction)
         if query:
@@ -39,7 +39,7 @@ class AluHelpCog(MetaCog):
 
     @commands.is_owner()
     @commands.command(hidden=True)
-    async def devhelp(self, ctx: AluContext, *, query: Optional[str]):
+    async def devhelp(self, ctx: AluContext, *, query: str | None):
         """Show dev help menu for the bot."""
         my_help = AluHelp(show_hidden=True)
         my_help.context = ctx

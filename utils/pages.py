@@ -15,13 +15,13 @@ Sources I used to create this file:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import discord
 from discord.ext import menus
 
+from . import const
 from .bases import AluContext, AluView
-from .const import Colour, Emote
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -40,13 +40,13 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
 
     async def on_submit(self, interaction: discord.Interaction):
         if self.paginator.is_finished():
-            e = discord.Embed(colour=Colour.maroon, description="Took too long")
+            e = discord.Embed(colour=const.Colour.maroon, description="Took too long")
             await interaction.response.send_message(embed=e, ephemeral=True)
             return
 
         value = str(self.goto.value)
         if not value.isdigit():
-            e = discord.Embed(colour=Colour.maroon)
+            e = discord.Embed(colour=const.Colour.maroon)
             e.description = f"Expected a page number between 1 and {self.max_pages_as_str}, not {value!r}"
             await interaction.response.send_message(embed=e, ephemeral=True)
             return
@@ -229,7 +229,7 @@ class Paginator(AluView):
 
 
 class EnumeratedPageSource(menus.ListPageSource):
-    def __init__(self, entries, *, per_page: int, no_enumeration: Optional[bool] = False, description_prefix: str = ""):
+    def __init__(self, entries, *, per_page: int, no_enumeration: bool = False, description_prefix: str = ""):
         super().__init__(entries, per_page=per_page)
         self.description_prefix = description_prefix
         self.no_enumeration = no_enumeration
@@ -258,13 +258,13 @@ class EnumeratedPaginator(Paginator):
         entries: list[str],
         *,
         per_page: int,
-        no_enumeration: Optional[bool] = False,
-        title: Optional[str] = None,
+        no_enumeration: bool = False,
+        title: str | None = None,
         description_prefix: str = "",
-        colour: Optional[Union[int, discord.Colour]] = None,
-        footer_text: Optional[str] = None,
-        author_name: Optional[str] = None,
-        author_icon: Optional[str] = None,
+        colour: int | discord.Colour | None = None,
+        footer_text: str | None = None,
+        author_name: str | None = None,
+        author_icon: str | None = None,
     ):
         # todo: if we stumble into a problem where we have description limit
         # then we can rearrange entities with

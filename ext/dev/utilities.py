@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import discord
-from discord import app_commands
+
 from discord.ext import commands
 
 from utils import AluGuildContext, const, errors
@@ -17,13 +17,13 @@ if TYPE_CHECKING:
 class DeveloperUtilities(DevBaseCog):
     @commands.guild_only()
     @commands.command()
-    async def yoink(self, ctx: AluGuildContext, emote: Union[discord.PartialEmoji, str]):
+    async def yoink(self, ctx: AluGuildContext, emote: discord.PartialEmoji | str):
         """Yoink emote from current server to one of my emote servers for the bot.
 
         This is used to reduce annoyance of opening another account, copying files and copying id.
         """
 
-        async def add_new_emote_to_emote_guilds(emote_to_yoink: Union[discord.PartialEmoji, discord.Emoji]):
+        async def add_new_emote_to_emote_guilds(emote_to_yoink: discord.PartialEmoji | discord.Emoji):
             for guild_id in const.EmoteGuilds.EMOTE:
                 guild = self.bot.get_guild(guild_id)
                 if guild is None:

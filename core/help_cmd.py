@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Literal, Mapping, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Literal, Mapping, Sequence
 
 import discord
 from discord.ext import commands, menus
@@ -196,7 +196,7 @@ class AluHelp(commands.HelpCommand):
         )
 
     async def unpack_commands(
-        self, command: commands.Command, answer: Optional[list[commands.Command]] = None, deep: int = 0
+        self, command: commands.Command, answer: list[commands.Command] | None = None, deep: int = 0
     ) -> list[commands.Command]:
         """If a command is a group then unpack those until their very-last children.
 
@@ -267,7 +267,7 @@ class AluHelp(commands.HelpCommand):
         self,
         mapping: dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]],
         *,
-        requested_cog: Optional[Union[AluCog, commands.Cog]] = None,
+        requested_cog: AluCog | commands.Cog | None = None,
     ):
         await self.context.typing()
 
@@ -322,7 +322,7 @@ class AluHelp(commands.HelpCommand):
     ):
         await self.send_help_menu(mapping)
 
-    async def send_cog_help(self, cog: Union[AluCog, commands.Cog]):
+    async def send_cog_help(self, cog: AluCog | commands.Cog):
         mapping = self.get_bot_mapping()
         await self.send_help_menu(mapping, requested_cog=cog)
 
@@ -345,7 +345,7 @@ class BaseHelpCog(AluCog):
         bot.help_command.cog = self
         # note^ that when `meta` is loaded .cog = self will be overwritten
 
-        self._original_help_command: Optional[commands.HelpCommand] = bot.help_command
+        self._original_help_command: commands.HelpCommand | None = bot.help_command
 
     async def cog_load(self) -> None:
         self.load_help_info.start()

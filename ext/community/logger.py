@@ -158,7 +158,7 @@ class MemberLogging(CommunityCog):
         """
         Parameters
         ----------
-        after: :class: discord.Member
+        after : discord.Member
             member whose nickname gonna be checked for rolling stones eligibility
         """
         rolling_stones_role = self.community.rolling_stone_role

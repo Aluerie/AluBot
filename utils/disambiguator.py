@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable
 
 import discord
 
@@ -18,7 +18,7 @@ __all__ = ("Disambiguator",)
 class ConfirmationView(AluView):
     def __init__(self, *, author_id: int, timeout: float) -> None:
         super().__init__(author_id=author_id, view_name="Confirmation Prompt", timeout=timeout)
-        self.value: Optional[bool] = None
+        self.value: bool | None = None
 
     async def button_callback(self, interaction: discord.Interaction, yes_no: bool):
         self.value = yes_no
@@ -41,10 +41,10 @@ class DisambiguatorView[T](AluView):
     selected: T
 
     def __init__(
-        self, ctx_ntr: Union[AluContext, discord.Interaction[AluBot]], data: list[T], entry: Callable[[T], Any]
+        self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any]
     ):
         super().__init__(author_id=ctx_ntr.user.id, view_name="Select Menu")
-        self.ctx_ntr: Union[AluContext, discord.Interaction[AluBot]] = ctx_ntr
+        self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
         self.data: list[T] = data
 
         options = []
@@ -83,7 +83,7 @@ class Disambiguator:
 
     async def send_message(
         self,
-        ctx_ntr: Union[AluContext, discord.Interaction[AluBot]],
+        ctx_ntr: AluContext | discord.Interaction[AluBot],
         embed: discord.Embed,
         view: discord.ui.View = discord.utils.MISSING,
         ephemeral: bool = True,
@@ -101,13 +101,13 @@ class Disambiguator:
 
     async def confirm(
         self,
-        ctx_ntr: Union[AluContext, discord.Interaction[AluBot]],
+        ctx_ntr: AluContext | discord.Interaction[AluBot],
         embed: discord.Embed,
         *,
         timeout: float = 120.0,
-        author_id: Optional[int] = None,
+        author_id: int | None = None,
         ephemeral: bool = False,
-    ) -> Optional[bool]:
+    ) -> bool | None:
         """Confirmation Prompt: An interactive buttons-based Confirm/Cancel dialog.
 
         Example of usage:
@@ -159,7 +159,7 @@ class Disambiguator:
         T
     ](
         self,
-        ctx_ntr: Union[AluContext, discord.Interaction[AluBot]],
+        ctx_ntr: AluContext | discord.Interaction[AluBot],
         matches: list[T],
         entry: Callable[[T], Any],
         *,

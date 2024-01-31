@@ -11,7 +11,7 @@ import logging
 import os
 import random
 import sys
-from typing import TYPE_CHECKING, Annotated, Any, Callable, Coroutine, Literal, Optional, Sequence, TypeVar, Union
+from typing import TYPE_CHECKING, Annotated, Any, Callable, Coroutine, Literal, Sequence, TypeVar
 
 import discord
 from discord import app_commands

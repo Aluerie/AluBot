@@ -174,14 +174,14 @@ class SavedGuild:
     >>> self.bot.community.spam # typechecker knows it's discord.TextChannel
 
     For more look info look into subclasses below.
-    - :class:`~CommunityGuild`
-    - :class:`~HideoutGuild`
+    * CommunityGuild
+    * HideoutGuild
 
     Attributes
     ------------
-    bot: :class:`AluBot`
+    bot : AluBot
         The bot instance to initiate all snowflakes into discord Objects
-    id: :class:`int`
+    id : int
         Snowflake ID for the guild itself.
     """
 

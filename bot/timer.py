@@ -143,7 +143,7 @@ class TimerManager:
 
     Attributes
     ----------
-    bot: :class:`~.AluBot`
+    bot : AluBot
         The bot instance.
     """
 
@@ -157,7 +157,7 @@ class TimerManager:
         self._task = self.bot.loop.create_task(self.dispatch_timers())
 
     async def dispatch_timers(self) -> None:
-        """|coro| The main dispatch timers loop.
+        """The main dispatch timers loop.
 
         This will wait for the next timer to expire and dispatch the bot's event with its data.
         Please note if you use this class, you need to cancel the task when you're done with it.
@@ -185,18 +185,18 @@ class TimerManager:
             await self.bot.exc_manager.register_error(exc, source="TimerManager", where="dispatch_timers")
 
     async def wait_for_active_timers(self, *, days: int = 7) -> Timer[TimerMapping]:
-        """|coro| Wait for a timer that has expired.
+        """Wait for a timer that has expired.
 
         This will wait until a timer is expired and should be dispatched.
 
         Parameters
         ----------
-        days: :class:`int`
+        days : int
             Number of days to look into.
 
         Returns
         -------
-        :class:`Timer`
+        Timer[TimerMapping]
             The timer that is expired and should be dispatched.
         """
         timer = await self.get_active_timer(days=days)
@@ -216,7 +216,7 @@ class TimerManager:
 
         Parameters
         ----------
-        timer: :class:`Timer`
+        timer : Timer
             The timer to dispatch.
         """
         log.debug("Calling and Dispatching the timer %s with event %s", timer.id, timer.event)
@@ -266,27 +266,26 @@ class TimerManager:
         timezone: str | None = None,
         data: TimerMapping,
     ) -> Timer:
-        """|coro| Creates a timer.
+        """Creates a timer.
 
         Used to create a timer and put it into a database, or just dispatch it if it's a short timer.
 
         Parameters
         -----------
-        when: datetime.datetime
+        when : datetime.datetime
             When the timer should fire.
-        event: str
+        event : str
             The name of the event to trigger. Will transform to 'on_{event}_timer_complete'.
-        *args
-            Arguments to pass to the event
-        **kwargs
-            Keyword arguments to pass to the event
         created_at: datetime.datetime
             Special keyword-only argument to use as the creation time.
             Should make the time-deltas a bit more consistent.
-        timezone: str
+        timezone : str
             IANA alias. Special keyword-only argument to use as the timezone for the
             expiry time. This automatically adjusts the expiry time to be
             in the future, should it be in the past.
+        data : TimerMapping
+            data to pass to the timer to json it up and keep it in the database.
+            This should be used when dispatching timer event.
 
         Note
         ------
@@ -381,7 +380,7 @@ class TimerManager:
 
         Parameters
         -----------
-        event: str
+        event : str
             The name of the event to search for.
         **kwargs
             Keyword arguments to search for in the database.

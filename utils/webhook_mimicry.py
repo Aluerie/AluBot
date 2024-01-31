@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, TypeAlias, Union
+from typing import TYPE_CHECKING, TypeAlias
 
 import discord
 from discord.ext import commands
@@ -10,9 +10,9 @@ from . import errors
 if TYPE_CHECKING:
     from . import AluBot, AluContext
 
-    WebhookSourceChannel: TypeAlias = Union[
-        discord.ForumChannel, discord.VoiceChannel, discord.TextChannel, discord.StageChannel
-    ]
+    WebhookSourceChannel: TypeAlias = (
+        discord.ForumChannel | discord.VoiceChannel | discord.TextChannel | discord.StageChannel
+    )
 
 
 class MimicUserWebhook:
@@ -22,15 +22,15 @@ class MimicUserWebhook:
     for example, fix twitter/instagram links for them.
     """
 
-    def __init__(self, *, bot: AluBot, channel: WebhookSourceChannel, thread: Optional[discord.Thread]):
+    def __init__(self, *, bot: AluBot, channel: WebhookSourceChannel, thread: discord.Thread | None):
         self.bot: AluBot = bot
         self.channel: WebhookSourceChannel = channel
-        self.thread: Optional[discord.Thread] = thread
+        self.thread:discord.Thread | None = thread
 
     @staticmethod
     def get_channel_thread(
         channel: discord.abc.MessageableChannel,
-    ) -> tuple[WebhookSourceChannel, Optional[discord.Thread]]:
+    ) -> tuple[WebhookSourceChannel, discord.Thread | None]:
         res_channel = channel
         match res_channel:
             case discord.Thread():
@@ -96,7 +96,7 @@ class MimicUserWebhook:
         self,
         member: discord.Member | discord.User,
         *,
-        message: Optional[discord.Message] = None,
+        message: discord.Message | None = None,
         content: str = "",
         embed: discord.Embed = discord.utils.MISSING,
     ):

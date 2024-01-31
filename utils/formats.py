@@ -8,7 +8,7 @@ import datetime
 import difflib
 import re
 from enum import IntEnum
-from typing import TYPE_CHECKING, Literal, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Literal, Sequence
 
 from dateutil.relativedelta import relativedelta
 
@@ -75,10 +75,10 @@ def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
 
 
 def human_timedelta(
-    dt: Union[datetime.datetime, datetime.timedelta, int, float],
+    dt: datetime.datetime | datetime.timedelta | int | float,
     *,
-    source: Optional[datetime.datetime] = None,
-    accuracy: Optional[int] = 3,
+    source: datetime.datetime | None = None,
+    accuracy: int | None = 3,
     mode: Literal["full", "brief", "strip"] = "full",
     suffix: bool = True,
 ) -> str:
@@ -230,7 +230,7 @@ def format_dt_tdR(dt: datetime.datetime) -> str:
     return format_dt_custom(dt, "t", "d", "R")
 
 
-def ordinal(n: Union[int, str]) -> str:
+def ordinal(n: int | str) -> str:
     """Convert an integer into its ordinal representation, i.e. 0->'0th', '3'->'3rd'"""
     # Remember that there is always funny lambda possibility
     # ```py
@@ -343,8 +343,8 @@ class AnsiFMT(IntEnum):
 def ansi(
     text: str,
     *,
-    foreground: Optional[AnsiFG] = None,
-    background: Optional[AnsiBG] = None,
+    foreground: AnsiFG | None = None,
+    background: AnsiBG | None = None,
     bold: bool = False,
     underline: bool = False,
 ) -> str:

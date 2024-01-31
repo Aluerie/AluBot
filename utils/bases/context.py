@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import datetime
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union, overload
+from typing import TYPE_CHECKING, Any, Sequence, overload
 
 import discord
 from discord.ext import commands
@@ -63,7 +63,7 @@ class AluContext(commands.Context["AluBot"]):
             await self.message.add_reaction(formats.tick(semi_bool))
 
     @discord.utils.cached_property
-    def replied_reference(self) -> Optional[discord.MessageReference]:
+    def replied_reference(self) -> discord.MessageReference | None:
         """Used to redirect reference to `ctx.message`'s reference."""
         ref = self.message.reference
         if ref and isinstance(ref.resolved, discord.Message):
@@ -71,7 +71,7 @@ class AluContext(commands.Context["AluBot"]):
         return None
 
     @discord.utils.cached_property
-    def replied_message(self) -> Optional[discord.Message]:
+    def replied_message(self) -> discord.Message | None:
         """Used to get message from provided reference in `ctx.message`"""
         ref = self.message.reference
         if ref and isinstance(ref.resolved, discord.Message):
@@ -85,16 +85,16 @@ class AluContext(commands.Context["AluBot"]):
     @overload
     async def reply(
         self,
-        content: Optional[str] = ...,
+        content: str | None = ...,
         *,
         tts: bool = ...,
         embed: discord.Embed = ...,
         file: discord.File = ...,
-        stickers: Sequence[Union[discord.GuildSticker, discord.StickerItem]] = ...,
+        stickers: Sequence[discord.GuildSticker | discord.StickerItem] = ...,
         delete_after: float = ...,
-        nonce: Union[str, int] = ...,
+        nonce: str | int = ...,
         allowed_mentions: discord.AllowedMentions = ...,
-        reference: Union[discord.Message, discord.MessageReference, discord.PartialMessage] = ...,
+        reference: discord.Message | discord.MessageReference | discord.PartialMessage = ...,
         mention_author: bool = ...,
         view: discord.ui.View = ...,
         suppress_embeds: bool = ...,
@@ -106,16 +106,16 @@ class AluContext(commands.Context["AluBot"]):
     @overload
     async def reply(
         self,
-        content: Optional[str] = ...,
+        content: str | None = ...,
         *,
         tts: bool = ...,
         embed: discord.Embed = ...,
         files: Sequence[discord.File] = ...,
-        stickers: Sequence[Union[discord.GuildSticker, discord.StickerItem]] = ...,
+        stickers: Sequence[discord.GuildSticker | discord.StickerItem] = ...,
         delete_after: float = ...,
-        nonce: Union[str, int] = ...,
+        nonce: str | int = ...,
         allowed_mentions: discord.AllowedMentions = ...,
-        reference: Union[discord.Message, discord.MessageReference, discord.PartialMessage] = ...,
+        reference: discord.Message | discord.MessageReference | discord.PartialMessage = ...,
         mention_author: bool = ...,
         view: discord.ui.View = ...,
         suppress_embeds: bool = ...,
@@ -127,16 +127,16 @@ class AluContext(commands.Context["AluBot"]):
     @overload
     async def reply(
         self,
-        content: Optional[str] = ...,
+        content: str | None = ...,
         *,
         tts: bool = ...,
         embeds: Sequence[discord.Embed] = ...,
         file: discord.File = ...,
-        stickers: Sequence[Union[discord.GuildSticker, discord.StickerItem]] = ...,
+        stickers: Sequence[discord.GuildSticker | discord.StickerItem] = ...,
         delete_after: float = ...,
-        nonce: Union[str, int] = ...,
+        nonce: str | int = ...,
         allowed_mentions: discord.AllowedMentions = ...,
-        reference: Union[discord.Message, discord.MessageReference, discord.PartialMessage] = ...,
+        reference: discord.Message | discord.MessageReference | discord.PartialMessage = ...,
         mention_author: bool = ...,
         view: discord.ui.View = ...,
         suppress_embeds: bool = ...,
@@ -148,16 +148,16 @@ class AluContext(commands.Context["AluBot"]):
     @overload
     async def reply(
         self,
-        content: Optional[str] = ...,
+        content: str | None = ...,
         *,
         tts: bool = ...,
         embeds: Sequence[discord.Embed] = ...,
         files: Sequence[discord.File] = ...,
-        stickers: Sequence[Union[discord.GuildSticker, discord.StickerItem]] = ...,
+        stickers: Sequence[discord.GuildSticker | discord.StickerItem] = ...,
         delete_after: float = ...,
-        nonce: Union[str, int] = ...,
+        nonce: str | int = ...,
         allowed_mentions: discord.AllowedMentions = ...,
-        reference: Union[discord.Message, discord.MessageReference, discord.PartialMessage] = ...,
+        reference: discord.Message | discord.MessageReference | discord.PartialMessage = ...,
         mention_author: bool = ...,
         view: discord.ui.View = ...,
         suppress_embeds: bool = ...,
@@ -168,7 +168,7 @@ class AluContext(commands.Context["AluBot"]):
 
     # Literal copy of .reply from the library but with `.to_reference(fail_if_not_exists=False)`
     @discord.utils.copy_doc(commands.Context.reply)
-    async def reply(self, content: Optional[str] = None, **kwargs: Any):
+    async def reply(self, content: str | None = None, **kwargs: Any):
         if self.interaction is None:
             return await super().send(content, reference=self.message.to_reference(fail_if_not_exists=False), **kwargs)
         else:
@@ -179,5 +179,5 @@ class AluGuildContext(AluContext):
     if TYPE_CHECKING:
         author: discord.Member
         guild: discord.Guild
-        channel: Union[discord.VoiceChannel, discord.TextChannel, discord.Thread]
+        channel: discord.VoiceChannel | discord.TextChannel | discord.Thread
         me: discord.Member

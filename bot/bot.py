@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Literal, MutableMapping, Union, override
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Literal, MutableMapping, override
 
 import discord
 from discord.ext import commands
@@ -203,7 +203,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
     @override
     async def get_context(
-        self, origin: Union[discord.Interaction, discord.Message], /, *, cls=AluContext
+        self, origin: discord.Interaction | discord.Message, /, *, cls=AluContext
     ) -> AluContext:
         return await super().get_context(origin, cls=cls)
 

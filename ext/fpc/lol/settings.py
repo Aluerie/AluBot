@@ -11,13 +11,12 @@ from discord.ext import commands
 from utils import checks, const, errors, lol
 
 from .._base import Account, BaseSettings
+from ..database_management import AddLoLPlayerFlags  # noqa: TCH001
 from ._models import lol_links
 
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluGuildContext
-
-    from ..database_management import AddLoLPlayerFlags
 
 
 log = logging.getLogger(__name__)
@@ -60,9 +59,7 @@ class LoLAccount(Account):
                 f"`{flags.game_name}#{flags.tag_line}` for `{flags.platform}` platform.\n"
                 "This account probably does not exist."
             )
-            raise errors.BadArgument(
-                msg
-            )
+            raise errors.BadArgument(msg)
 
         self.puuid = puuid = riot_account["puuid"]
         self.platform = flags.platform
@@ -77,9 +74,7 @@ class LoLAccount(Account):
                 f"Error `get_lol_summoner_v4_by_puuid` for riot account\n"
                 f"`{flags.game_name}#{flags.tag_line}` in `{flags.platform}` platform, puuid: `{puuid}`"
             )
-            raise errors.BadArgument(
-                msg
-            )
+            raise errors.BadArgument(msg)
         self.summoner_id = summoner["id"]
 
     @property
@@ -92,7 +87,9 @@ class LoLAccount(Account):
 
     @override
     @staticmethod
-    def static_account_name_with_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any) -> str:
+    def static_account_name_with_links(
+        platform: lol.LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any
+    ) -> str:
         opgg_name = lol.Platform(platform).opgg_name
         links = lol_links(platform, game_name, tag_line)
         return f"`{opgg_name}`: `{game_name} #{tag_line}` {links}"

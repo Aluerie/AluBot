@@ -13,13 +13,12 @@ from utils import checks, const, errors
 from .._base import Account, BaseSettings
 
 # from steam import ID, InvalidID # VALVE_SWITCH
-
+from ..database_management import AddDotaPlayerFlags  # noqa: TCH001
 
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluGuildContext
 
-    from ..database_management import AddDotaPlayerFlags
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -63,9 +62,7 @@ class DotaAccount(Account):
                 "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
                 "or just give steam profile link to the bot."
             )
-            raise commands.BadArgument(
-                msg
-            )
+            raise commands.BadArgument(msg)
 
         self.steam_id = steam_id_obj.as_64
         self.friend_id = steam_id_obj.id

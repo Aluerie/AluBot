@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from typing import TYPE_CHECKING, Annotated, Any, Literal, Optional
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
 from utils import checks, const
+from utils.converters import Snowflake  # noqa TCH001
 from utils.formats import plural
 
 from ._base import ModerationCog
@@ -16,8 +17,8 @@ from ._base import ModerationCog
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from bot import AluBot
     from utils import AluContext, AluGuildContext
-    from utils.converters import Snowflake
 
 
 class PurgeFlags(commands.FlagConverter):
@@ -57,7 +58,7 @@ class ModerationTools(ModerationCog):
     @app_commands.describe(search="How many messages to search for")
     async def purge(
         self, ctx: AluGuildContext, search: commands.Range[int, 1, 2000] | None = None, *, flags: PurgeFlags
-    ):
+    ) -> None:
         """Removes messages that meet a criteria.
 
         This command uses a syntax similar to Discord's search bar.
@@ -161,9 +162,11 @@ class ModerationTools(ModerationCog):
         try:
             deleted = await ctx.channel.purge(limit=search, before=before, after=after, check=predicate)
         except discord.Forbidden:
-            return await ctx.send("I do not have permissions to delete messages.")
+            await ctx.send("I do not have permissions to delete messages.")
+            return
         except discord.HTTPException as e:
-            return await ctx.send(f"Error: {e} (try a smaller search?)")
+            await ctx.send(f"Error: {e} (try a smaller search?)")
+            return
 
         spammers = Counter(m.author.display_name for m in deleted)
         deleted = len(deleted)
@@ -193,5 +196,5 @@ class ModerationTools(ModerationCog):
         await ctx.reply(content=content)
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(ModerationTools(bot))

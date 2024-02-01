@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime  # noqa: TCH003
 import logging
 import textwrap
 from typing import TYPE_CHECKING, Annotated, Any, TypedDict
@@ -13,8 +14,6 @@ from utils import AluContext, const, formats, pages, times
 from ._base import RemindersCog
 
 if TYPE_CHECKING:
-    import datetime
-
     from bot import AluBot, Timer
 
     class RemindTimerData(TypedDict):

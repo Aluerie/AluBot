@@ -142,9 +142,10 @@ class MatchToSend(BaseMatchToSend):
             w2, h2 = self.bot.transposer.get_text_wh(text, font)
             draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
-            w2, h2 = self.bot.transposer.get_text_wh(text, font)
+            # twitch status
+            w3, h3= self.bot.transposer.get_text_wh(text, font)
             draw.text(
-                xy=(0, height - 100 - 10 - h2),
+                xy=(width - w3, height - 100 - 10 - h3),
                 text=twitch_data["twitch_status"],
                 font=font,
                 align="center",

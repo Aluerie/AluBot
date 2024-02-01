@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Coroutine
+from typing import TYPE_CHECKING, Any
 
 import discord
 from discord import app_commands
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
     from discord.abc import Snowflake
 
     from .bot import AluBot
@@ -15,9 +17,7 @@ if TYPE_CHECKING:
 
 class AluAppCommandTree(app_commands.CommandTree):
     if TYPE_CHECKING:
-        on_error: Callable[
-            [discord.Interaction[AluBot], app_commands.AppCommandError], Coroutine[Any, Any, None]
-        ]
+        on_error: Callable[[discord.Interaction[AluBot], app_commands.AppCommandError], Coroutine[Any, Any, None]]
 
     """Custom Command tree class to set up slash cmds mentions
 
@@ -28,7 +28,7 @@ class AluAppCommandTree(app_commands.CommandTree):
     # Credits to @Soheab and their `?tag slashid` in dpy server.
     # https://gist.github.com/Soheab/fed903c25b1aae1f11a8ca8c33243131#file-bot_subclass
 
-    def __init__(self, client: AluBot):
+    def __init__(self, client: AluBot) -> None:
         super().__init__(client=client)
         self._global_app_commands: AppCommandStore = {}
         # guild_id: AppCommandStore
@@ -57,7 +57,7 @@ class AluAppCommandTree(app_commands.CommandTree):
     def get_app_command(
         self,
         value: str | int,
-        guild: Snowflake| int | None = None,
+        guild: Snowflake | int | None = None,
     ) -> app_commands.AppCommand | None:
         def search_dict(d: AppCommandStore) -> app_commands.AppCommand | None:
             for cmd_name, cmd in d.items():
@@ -80,8 +80,8 @@ class AluAppCommandTree(app_commands.CommandTree):
         ret: AppCommandStore = {}
 
         def unpack_options(
-            options: list[app_commands.AppCommand | app_commands.AppCommandGroup | app_commands.Argument | None]
-        ):
+            options: list[app_commands.AppCommand | app_commands.AppCommandGroup | app_commands.Argument | None],
+        ) -> None:
             for option in options:
                 if isinstance(option, app_commands.AppCommandGroup):
                     ret[option.qualified_name] = option  # type: ignore
@@ -100,10 +100,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         # we need to convert it to a Snowflake like object if it's an int
         _guild: Snowflake | None = None
         if guild is not None:
-            if isinstance(guild, int):
-                _guild = discord.Object(guild)
-            else:
-                _guild = guild
+            _guild = discord.Object(guild) if isinstance(guild, int) else guild
 
         if _guild:
             self._guild_app_commands[_guild.id] = self._unpack_app_commands(commands)

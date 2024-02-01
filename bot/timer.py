@@ -3,21 +3,22 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
-from typing import TYPE_CHECKING, Any, Generic, Mapping, Self, TypeAlias, TypedDict, TypeVar
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, TypeVar
 
 import asyncpg
 import discord
 
-TimerMapping: TypeAlias = Mapping[str, Any]
+type TimerMapping = Mapping[str, Any]
 TimerDataT = TypeVar("TimerDataT", bound=TimerMapping)
 
 if TYPE_CHECKING:
-    from utils.database import DRecord
+    from utils.database import DotRecord
 
     from .bot import AluBot
 
     # currently somewhat pointless since this gives typing for attributes like .id instead of ["id"]
-    class TimerRecord(DRecord, Generic[TimerDataT]):
+    class TimerRecord(DotRecord, Generic[TimerDataT]):
         id: int
         event: str
         expires_at: datetime.datetime
@@ -135,7 +136,7 @@ class Timer(Generic[TimerDataT]):
 
     @property
     def format_dt_R(self) -> str:
-        return discord.utils.format_dt(self.created_at.replace(tzinfo=datetime.timezone.utc), style="R")
+        return discord.utils.format_dt(self.created_at.replace(tzinfo=datetime.UTC), style="R")
 
 
 class TimerManager:
@@ -169,7 +170,7 @@ class TimerManager:
                 # so we cap it at 40 days, see: http://bugs.python.org/issue20493
                 timer = self._current_timer = await self.wait_for_active_timers(days=40)
                 log.debug("Current_timer = %s", timer)
-                now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+                now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
 
                 if timer.expires_at >= now:
                     to_sleep = (timer.expires_at - now).total_seconds()
@@ -297,12 +298,12 @@ class TimerManager:
         """
         log.debug("Creating %s timer for %s", event, expires_at)
 
-        created_at = created_at or datetime.datetime.now(datetime.timezone.utc)
+        created_at = created_at or datetime.datetime.now(datetime.UTC)
         timezone = timezone or "UTC"
 
         # Remove timezone information since the database does not deal with it
-        expires_at = expires_at.astimezone(datetime.timezone.utc).replace(tzinfo=None)
-        created_at = created_at.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+        expires_at = expires_at.astimezone(datetime.UTC).replace(tzinfo=None)
+        created_at = created_at.astimezone(datetime.UTC).replace(tzinfo=None)
 
         timer = Timer.temporary(
             event=event,
@@ -428,7 +429,7 @@ class TimerManager:
             A list of `Timer` objects.
         """
 
-        rows = await self.bot.pool.fetch(f"SELECT * FROM timers")
+        rows = await self.bot.pool.fetch("SELECT * FROM timers")
         return [Timer(record=row) for row in rows]
 
     def rerun_the_task(self):

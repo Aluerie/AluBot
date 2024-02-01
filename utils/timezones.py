@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import zoneinfo
-from typing import TYPE_CHECKING, NamedTuple, Optional
+from typing import TYPE_CHECKING, NamedTuple
 
 import discord
 from discord import app_commands
@@ -96,7 +96,7 @@ class CLDRDataEntry(NamedTuple):
     description: str
     aliases: list[str]
     deprecated: bool
-    preferred: Optional[str]
+    preferred: str | None
 
 
 class TimezoneManager:
@@ -154,7 +154,7 @@ class TimezoneManager:
                 and not node.attrib["description"].startswith("POSIX")
             }
 
-            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            now_utc = datetime.datetime.now(datetime.UTC)
 
             for entry in entries.values():
                 # These use the first entry in the alias list as the "canonical" name to use when mapping the
@@ -164,10 +164,7 @@ class TimezoneManager:
                 # this is only used for display purposes, but it's not ideal.
                 if entry.preferred is not None:
                     preferred = entries.get(entry.preferred)
-                    if preferred is not None:
-                        alias = preferred.aliases[0]
-                    else:
-                        alias = entry.aliases[0]
+                    alias = preferred.aliases[0] if preferred is not None else entry.aliases[0]
                 else:
                     alias = entry.aliases[0]
 

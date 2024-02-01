@@ -46,7 +46,7 @@ class RemoveDotaPlayerFlags(commands.FlagConverter):
 
 class AddLoLPlayerFlags(commands.FlagConverter):
     name: str = commands.flag(description=NAME_FLAG_DESC)
-    platform: lol.Platform = commands.flag(name='server', description=SERVER_FLAG_DESC, converter=lol.PlatformConverter)
+    platform: lol.Platform = commands.flag(name="server", description=SERVER_FLAG_DESC, converter=lol.PlatformConverter)
     game_name: str = commands.flag(description=GAME_NAME_FLAG_DESC)
     tag_line: str = commands.flag(description=TAG_LINE_FLAG_DESC)
 

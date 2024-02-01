@@ -5,7 +5,6 @@ import logging
 import sys
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import aiohttp
 import asyncpg
@@ -15,18 +14,15 @@ from bot import AluBot, setup_logging
 from config import POSTGRES_URL
 from utils.database import create_pool
 
-if TYPE_CHECKING:
-    pass
-
 try:
     import uvloop  # type: ignore # not available on Windows
 except ImportError:
     pass
 else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # type: ignore
 
 
-async def bot_start(test: bool):
+async def start_the_bot(test: bool) -> None:
     log = logging.getLogger()
     try:
         pool = await create_pool()
@@ -42,26 +38,26 @@ async def bot_start(test: bool):
 @click.group(invoke_without_command=True, options_metavar="[options]")
 @click.pass_context
 @click.option("--test", "-t", is_flag=True)
-def main(click_ctx: click.Context, test: bool):
+def main(click_ctx: click.Context, test: bool) -> None:
     """Launches the bot."""
 
     if click_ctx.invoked_subcommand is None:
         with setup_logging(test):
-            asyncio.run(bot_start(test))
+            asyncio.run(start_the_bot(test))
 
 
 @main.group(short_help="database stuff", options_metavar="[options]")
-def db():
+def db() -> None:
     pass
 
 
 @db.command()
-def create():
+def create() -> None:
     """Creates the database tables."""
     try:
 
-        async def run_create():
-            connection: asyncpg.Connection = await asyncpg.connect(POSTGRES_URL)
+        async def run_create() -> None:
+            connection = await asyncpg.connect(POSTGRES_URL)
             async with connection.transaction():
                 for f in Path("sql").iterdir():
                     if f.is_file() and f.suffix == ".sql" and not f.name.startswith("_"):
@@ -73,7 +69,7 @@ def create():
         traceback.print_exc()
         click.secho("failed to apply SQL due to error", fg="red")
     else:
-        click.secho(f"Applied SQL tables", fg="green")
+        click.secho("Applied SQL tables", fg="green")
 
 
 if __name__ == "__main__":

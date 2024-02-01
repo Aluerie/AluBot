@@ -4,7 +4,7 @@ import io
 import textwrap
 import traceback
 from contextlib import redirect_stdout
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import discord
 from discord.ext import commands
@@ -21,13 +21,13 @@ if TYPE_CHECKING:
 class CodeRun(DevBaseCog):
     def __init__(self, bot: AluBot):
         super().__init__(bot)
-        self._last_result: Optional[Any] = None
+        self._last_result: Any = None
         self.sessions: set[int] = set()
 
     def get_var_dict_from_ctx(
         self,
         ctx: AluContext,
-        mentions: commands.Greedy[Union[discord.Member, discord.User, discord.abc.GuildChannel, discord.Role]],
+        mentions: commands.Greedy[discord.Member | discord.User | discord.abc.GuildChannel | discord.Role],
     ) -> dict[str, Any]:
         """Returns the dict to be used in eval/REPL."""
         env = {
@@ -73,9 +73,9 @@ class CodeRun(DevBaseCog):
     async def python(
         self,
         ctx: AluContext,
-        mentions: commands.Greedy[Union[discord.Member, discord.User, discord.abc.GuildChannel, discord.Role]],
+        mentions: commands.Greedy[discord.Member | discord.User | discord.abc.GuildChannel | discord.Role],
         *,
-        codeblock: Optional[Codeblock] = None,
+        codeblock: Codeblock | None = None,
     ):
         """Direct evaluation of Python code.
         It just puts your codeblock into `async def func():`, so

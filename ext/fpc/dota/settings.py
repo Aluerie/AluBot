@@ -274,11 +274,11 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     @commands.command(name="create_hero_emote")
     async def create_hero_emote(self, ctx: AluGuildContext, hero_name: str):
         """Create a new discord emote for a Dota 2 hero.
-        
+
         Useful when a new Dota 2 hero gets added to the game, so we can just use this command,
         copy-paste the answer to `utils.const` and be happy.
         """
-        
+
         await ctx.typing()
 
         hero_id = await self.bot.cache_dota.hero.id_by_name(hero_name)

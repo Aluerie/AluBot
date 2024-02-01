@@ -19,7 +19,7 @@ class SnowflakeEnum(IntEnum):
 
     @property
     def mention(self) -> str:
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class ChannelEnum(SnowflakeEnum):

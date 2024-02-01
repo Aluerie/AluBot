@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-import datetime
-from typing import TYPE_CHECKING, Any, Sequence, overload
+from typing import TYPE_CHECKING, Any, overload
 
 import discord
 from discord.ext import commands
@@ -10,10 +9,15 @@ from discord.ext import commands
 from utils import formats
 
 if TYPE_CHECKING:
+    import datetime
+    from collections.abc import Sequence
+
     from aiohttp import ClientSession
     from asyncpg import Pool
 
     from bot import AluBot
+
+    from ..database import DotRecord
 
 
 __all__ = (
@@ -28,9 +32,9 @@ class AluContext(commands.Context["AluBot"]):
     if TYPE_CHECKING:
         bot: AluBot
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.pool: Pool = self.bot.pool
+        self.pool: Pool[DotRecord] = self.bot.pool
         self.is_error_handled: bool = False
 
     def __repr__(self) -> str:

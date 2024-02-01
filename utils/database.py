@@ -1,59 +1,47 @@
+"""Database Utilities.
+
+Unfortunately, `asyncpg` typing is a nightmare. https://github.com/MagicStack/asyncpg/pull/577
+So here are some instructions that we follow across the project.
+
+* installed stubs from `pip install asyncpg-stubs` solve a problem of untyped pool's methods.
+
+However, we still want to type-hint query results.
+The current way for it is to combine a `TypedDict` with "# type: ignore" like
+
+```py
+class UserRow(TypedDict):
+    id: int
+    name: str
+
+async def beta_task(self) -> None:
+    query = "SELECT id, name FROM users WHERE id=$1"
+    row: UserRow = await self.bot.pool.fetchrow(query, const.User.aluerie)  # type: ignore # asyncpg
+    if row:
+        reveal_type(row)  # UserRow
+        reveal_type((row["id"]))  # int
+        reveal_type(row.get("xd", None))  # Any | None
+        reveal_type(row.id)  # Cannot access member "id" for type "UserRow"
+```
+"""
+
 from __future__ import annotations
 
-import orjson
-import json
-from typing import TYPE_CHECKING
+from typing import Any
 
 import asyncpg
+import orjson
 
 from config import POSTGRES_URL
 
-if TYPE_CHECKING:
-    pass
 
-
-# TODO: PROPER ASYNCPG TYPING ACROSS THE WHOLE PROJECT
-# hopefully somewhen asyncpg releases proper typing tools so
-# * wait until then
-# * rework all asyncpg typing so instead of our NamedTuple we can use something proper
-# note that currently I'm using NamedTuple over DRecord bcs DRecord allows not-specified attributes too
-# so it's not precise typing wise
-
-
-class DRecord(asyncpg.Record):
-    """DRecord - Dot Record
-
-    Same as `asyncpg.Record`, but allows dot-notations
-    such as `record.id` instead of `record['id']`.
-
-    Can be to type-hint the record, but we should use TypedDict over it
-    because TypeHint doesn't allow keys outside its definition.
-    ```py
-    class MyRecord(DRecord): #( asyncpg.Record):
-        id: int
-        name: str
-        created_at: datetime.datetime
-
-    r: MyRecord = ...
-    reveal_type(r.id) # int
-    ```
-    """
-
-    # Maybe typing situation will get better with
-    # https://github.com/MagicStack/asyncpg/pull/577
-
-    def __getattr__(self, name: str):
-        return self[name]
-
-
-async def create_pool() -> asyncpg.Pool:
-    def _encode_jsonb(value):
+async def create_pool() -> asyncpg.Pool[asyncpg.Record]:
+    def _encode_jsonb(value: Any) -> str:
         return orjson.dumps(value).decode("utf-8")
 
-    def _decode_jsonb(value):
+    def _decode_jsonb(value: str) -> Any:
         return orjson.loads(value)
 
-    async def init(con):
+    async def init(con: asyncpg.Connection[asyncpg.Record]) -> None:
         await con.set_type_codec(
             "jsonb",
             schema="pg_catalog",
@@ -68,6 +56,17 @@ async def create_pool() -> asyncpg.Pool:
         command_timeout=60,
         min_size=20,
         max_size=20,
-        record_class=DRecord,
+        record_class=DotRecord,
         statement_cache_size=0,
-    )  # type: ignore
+    )  # type: ignore # why does it think it can return None?
+
+
+class DotRecord(asyncpg.Record):
+    """Dot Record
+
+    Same as `asyncpg.Record`, but allows dot-notations
+    such as `record.id` instead of `record['id']`.
+    """
+
+    def __getattr__(self, name: str) -> Any:
+        return self[name]

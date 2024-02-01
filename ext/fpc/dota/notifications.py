@@ -78,11 +78,11 @@ class DotaFPCNotifications(BaseNotifications):
 
     async def convert_player_id_to_friend_id(self, player_ids: list[int]) -> list[int]:
         query = "SELECT friend_id FROM dota_accounts WHERE player_id=ANY($1)"
-        return [f for f, in await self.bot.pool.fetch(query, player_ids)]
+        return [f for (f,) in await self.bot.pool.fetch(query, player_ids)]
 
     async def analyze_top_source_response(self, live_matches: list[LiveMatch]):
         query = "SELECT DISTINCT character_id FROM dota_favourite_characters"
-        favourite_hero_ids: list[int] = [r for r, in await self.bot.pool.fetch(query)]
+        favourite_hero_ids: list[int] = [r for (r,) in await self.bot.pool.fetch(query)]
 
         query = """
             SELECT twitch_live_only, ARRAY_AGG(player_id) player_ids
@@ -192,7 +192,7 @@ class DotaFPCNotifications(BaseNotifications):
 
         # another mini-death condition
         if len(live_matches) < 90:  # 100
-            # this means it returned 80, 70, ..., or even 0 matches. 
+            # this means it returned 80, 70, ..., or even 0 matches.
             # Thus we consider this result corrupted since it can ruin editing logic.
             # We still forgive 90 though, should be fine.
             send_log.warn("GC only fetched %s matches", len(live_matches))

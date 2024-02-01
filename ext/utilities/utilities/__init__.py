@@ -9,7 +9,7 @@ class Utilities(
     UtilitiesCog,
     DevUtilities,
     LinkUtilities,
-    name='Utilities',
+    name="Utilities",
     emote=Emote.FeelsDankManLostHisHat,
 ):
     """

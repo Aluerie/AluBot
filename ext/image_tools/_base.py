@@ -1,9 +1,9 @@
 from utils import AluCog, ExtCategory, const
 
 category = ExtCategory(
-    name='Image Tools',
+    name="Image Tools",
     emote=const.Emote.KURU,
-    description='Image Tools',
+    description="Image Tools",
 )
 
 

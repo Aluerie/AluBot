@@ -163,7 +163,8 @@ class Other(FunCog):
         # cSpell:enable #fmt:on
 
         style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy 𝓐-𝓩
-            chr(0x00000061 + x): chr(0x0001D4EA + x) for x in range(26)  # a-z into fancy a-z (Black messes it up)
+            chr(0x00000061 + x): chr(0x0001D4EA + x)
+            for x in range(26)  # a-z into fancy a-z (Black messes it up)
         }
         answer = self.fancify_text(text, style=style)
         await self.send_fancy_text(ctx, answer)

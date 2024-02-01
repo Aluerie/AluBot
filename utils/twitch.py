@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import datetime
 import logging
-import re
-from typing import TYPE_CHECKING, Optional, TypedDict, override
+from typing import TYPE_CHECKING, override
 
 import discord
 import twitchio
-from discord.ext.commands import BadArgument
 from twitchio.ext import eventsub
 
 import config
@@ -22,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 class TwitchClient(twitchio.Client):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(token=config.TWITCH_ACCESS_TOKEN)
 
         self._bot: AluBot = bot
@@ -41,7 +38,7 @@ class TwitchClient(twitchio.Client):
     # OVERRIDE
 
     @override
-    async def event_error(self, error: Exception, data: Optional[str] = None):
+    async def event_error(self, error: Exception, data: str | None = None) -> None:
         embed = discord.Embed(colour=const.Colour.twitch, title="Twitch Client Error")
         if data:
             embed.description = data[2048:]
@@ -87,7 +84,7 @@ class Streamer:
         title: str
         preview_url: str
 
-    def __init__(self, _twitch: TwitchClient, user: twitchio.User, stream: twitchio.Stream | None):
+    def __init__(self, _twitch: TwitchClient, user: twitchio.User, stream: twitchio.Stream | None) -> None:
         self._twitch: TwitchClient = _twitch
 
         self.id: int = user.id
@@ -109,7 +106,7 @@ class Streamer:
             else:
                 self.preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{user.name}-640x360.jpg"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.display_name} id={self.id} title={self.title}>"
 
     async def vod_link(self, *, seconds_ago: int = 0, markdown: bool = True) -> str:

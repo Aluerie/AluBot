@@ -1,21 +1,25 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Mapping, Optional, Self, TypedDict
+from typing import TYPE_CHECKING, Any, Self, TypedDict
 
 import asyncpg
 import discord
 from discord import app_commands
-from discord.ext import commands
 
 from utils import AluGuildContext, const, errors, formats, fuzzy
-from utils.cache import KeysCache
 
 from . import FPCCog, views
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Mapping
+
+    from discord.ext import commands
+
     from bot import AluBot
-    from utils import AluView, CONSTANTS
+    from utils import CONSTANTS, AluView
+    from utils.cache import KeysCache
+    from utils.database import DotRecord
 
     # currently
     # * `steam_id` are `int`
@@ -45,7 +49,7 @@ __all__ = (
 class Account(abc.ABC):
     if TYPE_CHECKING:
         player_display_name: str
-        twitch_id: Optional[int]
+        twitch_id: int | None
         profile_image: str
 
     def __init__(self, player_name: str, is_twitch_streamer: bool = True) -> None:
@@ -53,7 +57,7 @@ class Account(abc.ABC):
         self.is_twitch_streamer: bool = is_twitch_streamer
 
     @abc.abstractmethod
-    async def set_game_specific_attrs(self, bot: AluBot, flags: commands.FlagConverter):
+    async def set_game_specific_attrs(self, bot: AluBot, flags: commands.FlagConverter) -> None:
         """Set game specific attributes."""
 
     @abc.abstractmethod
@@ -91,7 +95,7 @@ class Account(abc.ABC):
     def account_string(self) -> str:
         """Account string"""
 
-    async def set_base_attrs(self, bot: AluBot):
+    async def set_base_attrs(self, bot: AluBot) -> None:
         if self.is_twitch_streamer:
             twitch_user = next(iter(await bot.twitch.fetch_users(names=[self.player_name])), None)
             if not twitch_user:
@@ -180,7 +184,7 @@ class BaseSettings(FPCCog):
     def __init__(
         self,
         bot: AluBot,
-        *args,
+        *args: Any,
         prefix: str,
         colour: int,
         game_display_name: str,
@@ -189,9 +193,9 @@ class BaseSettings(FPCCog):
         character_plural_word: str,
         account_cls: type[Account],
         account_typed_dict_cls: type,
-        character_cache: KeysCache,
+        character_cache: KeysCache[Any],
         emote_cls: type[CONSTANTS],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(bot, *args, **kwargs)
 
@@ -229,10 +233,10 @@ class BaseSettings(FPCCog):
             WHERE player_id = (
                 SELECT player_id
                 FROM {self.prefix}_accounts
-                WHERE {self.account_id_column}=$1 
+                WHERE {self.account_id_column}=$1
             )
         """
-        display_name: Optional[str] = await self.bot.pool.fetchval(query, account_id)
+        display_name: str | None = await self.bot.pool.fetchval(query, account_id)
         if display_name:
             raise errors.BadArgument(
                 "This account is already in the database.\n"
@@ -294,7 +298,7 @@ class BaseSettings(FPCCog):
         await self.check_if_account_already_in_database(account_id=getattr(account, self.account_id_column))
 
         query = f"""
-            INSERT INTO {self.prefix}_players 
+            INSERT INTO {self.prefix}_players
             (display_name, twitch_id)
             VALUES ($1, $2)
             ON CONFLICT (display_name) DO NOTHING
@@ -310,7 +314,7 @@ class BaseSettings(FPCCog):
         await ctx.pool.execute(query, *database_dict.values())
 
         response_embed = (
-            discord.Embed(colour=self.colour, title=f"Successfully added the account to the database")
+            discord.Embed(colour=self.colour, title="Successfully added the account to the database")
             .add_field(name=account.player_embed_name, value=account.account_string_with_links)
             .set_author(name=self.game_display_name, icon_url=self.game_icon_url)
             .set_thumbnail(url=account.profile_image)
@@ -321,7 +325,7 @@ class BaseSettings(FPCCog):
         logs_embed.set_author(name=ctx.user, icon_url=ctx.user.display_avatar.url)
         await self.hideout.global_logs.send(embed=logs_embed)
 
-    async def database_remove(self, ctx: AluGuildContext, player_name: str):
+    async def database_remove(self, ctx: AluGuildContext, player_name: str) -> None:
         """Base function for `/database {game} remove` command
 
         This allows bot owner to remove player accounts from the bot's FPC database.
@@ -332,7 +336,7 @@ class BaseSettings(FPCCog):
         player_id, display_name = await self.get_player_tuple(player_name)
 
         query = f"SELECT * FROM {self.prefix}_accounts WHERE player_id = $1"
-        rows: list[dict] = await ctx.pool.fetch(query, player_id)
+        rows: list[dict[str, Any]] = await self.bot.pool.fetch(query, player_id)
         account_ids_names: Mapping[AccountIDType, str] = {
             row[self.account_id_column]: self.account_cls.static_account_string(**row) for row in rows
         }
@@ -344,7 +348,7 @@ class BaseSettings(FPCCog):
 
     # fpc settings related functions ###################################################################################
 
-    async def setup_channel(self, ctx: AluGuildContext):
+    async def setup_channel(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game} setup channel` command.
 
         This gives
@@ -355,7 +359,7 @@ class BaseSettings(FPCCog):
         await ctx.typing()
         # Get channel
         query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
-        channel_id: Optional[int] = await self.bot.pool.fetchval(query, ctx.guild.id)
+        channel_id: int | None = await self.bot.pool.fetchval(query, ctx.guild.id)
 
         if channel_id:
             channel = self.bot.get_channel(channel_id) or await self.bot.fetch_channel(channel_id)
@@ -388,7 +392,7 @@ class BaseSettings(FPCCog):
         """
 
         query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
-        channel_id: Optional[int] = await ctx.pool.fetchval(query, ctx.guild.id)
+        channel_id: int | None = await ctx.pool.fetchval(query, ctx.guild.id)
         if not channel_id:
             raise errors.ErroneousUsage(
                 "I'm sorry! You cannot use this command without setting up "
@@ -576,7 +580,7 @@ class BaseSettings(FPCCog):
         get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]],
         column: str,
         object_word: str,
-    ):
+    ) -> None:
         """Worker function for commands /{game}-fpc {character}/player remove
 
         Parameters
@@ -616,7 +620,7 @@ class BaseSettings(FPCCog):
     async def get_player_tuple(self, player_name: str) -> tuple[int, str]:
         """Get player_id, display_name by their name from FPC database."""
         query = f"SELECT player_id, display_name FROM {self.prefix}_players WHERE lower(display_name)=$1"
-        player_row: Optional[SetupPlayerQueryRow] = await self.bot.pool.fetchrow(query, player_name.lower())
+        player_row: SetupPlayerQueryRow | None = await self.bot.pool.fetchrow(query, player_name.lower())
         if player_row is None:
             raise errors.BadArgument(
                 f"There is no player named {player_name} in the database. Please, double check everything."
@@ -680,7 +684,7 @@ class BaseSettings(FPCCog):
     async def get_character_list_embed(self, guild_id: int) -> discord.Embed:
         query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
         favourite_character_ids: list[int] = [
-            character_id for character_id, in await self.bot.pool.fetch(query, guild_id)
+            character_id for (character_id,) in await self.bot.pool.fetch(query, guild_id)
         ]
         favourite_character_names = (
             "\n".join([await self.character_name_by_id(i) for i in favourite_character_ids]) or "Empty list"
@@ -706,7 +710,7 @@ class BaseSettings(FPCCog):
         assert interaction.guild
 
         query = f"""
-            SELECT display_name 
+            SELECT display_name
             FROM {self.prefix}_players
             WHERE {'NOT' if mode_add_remove else ''} player_id=ANY(
                 SELECT player_id FROM {self.prefix}_favourite_players WHERE guild_id=$1
@@ -716,7 +720,7 @@ class BaseSettings(FPCCog):
         """
         return [
             app_commands.Choice(name=name, value=name)
-            for name, in await interaction.client.pool.fetch(query, interaction.guild.id, current)
+            for (name,) in await interaction.client.pool.fetch(query, interaction.guild.id, current)
         ]
 
     async def hideout_character_add_remove_autocomplete(
@@ -727,7 +731,7 @@ class BaseSettings(FPCCog):
         query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
 
         favourite_character_ids: list[int] = [
-            character_id for character_id, in await interaction.client.pool.fetch(query, interaction.guild_id)
+            character_id for (character_id,) in await interaction.client.pool.fetch(query, interaction.guild_id)
         ]
 
         name_by_id_cache = await self.character_name_by_id_cache()
@@ -750,13 +754,14 @@ class BaseSettings(FPCCog):
         """Base function to define autocomplete for player_name in `/database {game} remove`."""
 
         query = f"""
-            SELECT display_name 
+            SELECT display_name
             FROM {self.prefix}_players
             ORDER BY similarity(display_name, $1) DESC
             LIMIT 6;
         """
         return [
-            app_commands.Choice(name=name, value=name) for name, in await interaction.client.pool.fetch(query, current)
+            app_commands.Choice(name=name, value=name)
+            for (name,) in await interaction.client.pool.fetch(query, current)
         ]
 
     async def tutorial(self, ctx: AluGuildContext):

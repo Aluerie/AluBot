@@ -23,10 +23,10 @@ class FixLinksCommunity(CommunityCog):
             callback=self.delete_mimic_ctx_menu_callback,
         )
 
-    def cog_load(self) -> None:
+    async def cog_load(self) -> None:
         self.bot.tree.add_command(self.delete_mimic_ctx_menu)
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         c = self.delete_mimic_ctx_menu
         self.bot.tree.remove_command(c.name, type=c.type)
 

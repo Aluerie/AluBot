@@ -1,9 +1,9 @@
 from utils import AluCog, ExtCategory, const
 
 category = ExtCategory(
-    name='Server Config',
+    name="Server Config",
     emote=const.Emote.peepoBusiness,
-    description='Server Config',
+    description="Server Config",
 )
 
 

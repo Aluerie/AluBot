@@ -12,5 +12,5 @@ class AutoRoleCog(CommunityCog):
     pass
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(AutoRoleCog(bot))

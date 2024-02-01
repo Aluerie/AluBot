@@ -23,7 +23,7 @@ class PersonalCommands(HideoutCog):
     @commands.Cog.listener(name="on_message")
     async def personal_git_copy_paste(self, message: discord.Message):
         if message.channel.id == const.Channel.github_webhook:
-            # Send me discord notifications when somebody except me or dependabot 
+            # Send me discord notifications when somebody except me or dependabot
             # spams my repository with updates
             embeds = [e.copy() for e in message.embeds]
 

@@ -4,7 +4,7 @@ Slightly overcooked typing for OpenDota pulsefire-like client REST requests.
 Note that it can be outdated, wrong, incomplete. 
 """
 
-from typing import Literal, NamedTuple, NotRequired, Optional, TypedDict
+from typing import Literal, NamedTuple, NotRequired, TypedDict
 
 __all__ = (
     "OpenDotaAPI",
@@ -87,7 +87,7 @@ class OpenDotaAPI:
             "lobby_type": int,
             "lose": Literal[0, 1],
             "moonshard": Literal[0, 1],  # cSpell: ignore moonshard
-            "name": Optional[str],
+            "name": str | None,
             "net_worth": int,
             "party_id": int,
             "party_size": int,
@@ -143,7 +143,7 @@ class OpenDotaAPI:
             "lobby_type": int,
             "match_id": int,
             "match_seq_num": int,
-            "metadata": Optional[str],
+            "metadata": str | None,
             "od_data": ODData,
             "patch": int,
             "picks_bans": list[PickBan],
@@ -183,7 +183,7 @@ class StratzGraphQL:
         BuffEvent = TypedDict(
             "BuffEvent",
             {
-                "itemId": Optional[int],
+                "itemId": int | None,
             },
         )
         Stats = TypedDict(

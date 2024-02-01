@@ -10,18 +10,13 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 category = ExtCategory(
-    name='Jishaku',
+    name="Jishaku",
     emote=const.Emote.DankFix,
-    description='Jishaku',
+    description="Jishaku",
 )
 
 
-class AluJishaku(
-    AluCog,
-    *STANDARD_FEATURES,
-    *OPTIONAL_FEATURES,
-    category=category
-):
+class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=category):
     """
     My subclass to main frontend class for JIshaku.
 

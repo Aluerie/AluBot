@@ -81,7 +81,7 @@ class ChampionKeysCache(KeysCache):
     async def name_by_id(self, champion_id: int) -> str:
         """Get champion name by id"""
         return await self.get_value("name_by_id", champion_id)
-    
+
     async def alias_by_id(self, champion_id: int) -> str:
         """Get champion alias by id"""
         return await self.get_value("alias_by_id", champion_id)

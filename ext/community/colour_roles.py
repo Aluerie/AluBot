@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class ColourRolesDropdown(discord.ui.RoleSelect):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             custom_id="colour_roles_dropdown",
             placeholder="Type \N{KEYBOARD} name of a colour and Select it.",

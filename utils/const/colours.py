@@ -13,6 +13,7 @@ __all__ = (
     "MaterialAccentPalette",
 )
 
+
 # fmt: off
 class Colour:
     """My chosen colours"""

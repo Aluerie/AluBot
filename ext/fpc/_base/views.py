@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Awaitable, Callable, Mapping, Optional, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import discord
 from discord.ext import menus
@@ -8,6 +8,8 @@ from discord.ext import menus
 from utils import AluView, const, errors, formats, pages
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Mapping
+
     from bot import AluBot
     from utils import AluGuildContext
 
@@ -24,7 +26,7 @@ if TYPE_CHECKING:
 
 
 class FPCView(AluView):
-    def __init__(self, cog: BaseSettings, *, author_id: int | None):
+    def __init__(self, cog: BaseSettings, *, author_id: int | None) -> None:
         super().__init__(
             author_id=author_id,
             view_name=f"{cog.game_display_name} Favourite Player+Character Setup menu",
@@ -103,8 +105,8 @@ class SetupMisc(FPCView):
 
     async def toggle_worker(self, interaction: discord.Interaction[AluBot], setting: str, field_index: int):
         query = f"""
-            UPDATE {self.cog.prefix}_settings 
-            SET {setting}=not({setting}) 
+            UPDATE {self.cog.prefix}_settings
+            SET {setting}=not({setting})
             WHERE guild_id = $1
             RETURNING {setting}
         """
@@ -176,7 +178,7 @@ class SetupMisc(FPCView):
         response_embed = discord.Embed(
             colour=discord.Colour.green(),
             title="FPC (Favourite Player+Character) channel removed.",
-            description=f"Notifications will not be sent anymore. Your data was deleted as well.",
+            description="Notifications will not be sent anymore. Your data was deleted as well.",
         ).set_author(name=self.cog.game_display_name, icon_url=self.cog.game_icon_url)
         await interaction.followup.send(embed=response_embed)
 
@@ -213,7 +215,7 @@ class AddRemoveButton(discord.ui.Button):
             # add to the favourites list
             query = f"""
                 INSERT INTO {self.menu.table_name}
-                (guild_id, {self.menu.id_column_name}) 
+                (guild_id, {self.menu.id_column_name})
                 VALUES ($1, $2)
                 ON CONFLICT DO NOTHING
             """
@@ -307,7 +309,7 @@ class FPCSetupPlayersCharactersPageSource(menus.ListPageSource):
         # or several menus
         query = f"SELECT {menu.id_column_name} FROM {menu.table_name} WHERE guild_id=$1"
         assert menu.ctx_ntr.guild
-        favourite_ids: list[int] = [r for r, in await menu.ctx_ntr.client.pool.fetch(query, menu.ctx_ntr.guild.id)]
+        favourite_ids: list[int] = [r for (r,) in await menu.ctx_ntr.client.pool.fetch(query, menu.ctx_ntr.guild.id)]
 
         menu.clear_items()
 
@@ -461,7 +463,7 @@ class FPCSetupCharactersPaginator(FPCSetupPlayersCharactersPaginator):
         ctx: AluGuildContext,
         character_tuples: list[tuple[int, str]],
         cog: BaseSettings,
-    ):
+    ) -> None:
         super().__init__(
             ctx,
             character_tuples,

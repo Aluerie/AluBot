@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import colorsys
 import warnings
-from typing import TYPE_CHECKING, Annotated, Union
+from typing import TYPE_CHECKING, Annotated
 
 import discord
 from dateparser.search import search_dates
@@ -126,7 +126,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         \N{BULLET} Extra: MateriaAccentUI Google Palette: `map(colour_name, shade)`
         \N{BULLET} Last but not least: `prpl` for favourite Aluerie\'s colour
         """
-        
+
         rgb = colour.to_rgb()
 
         img = Image.new("RGB", (300, 300), rgb)
@@ -160,7 +160,7 @@ class StatsCommands(InfoCog, name="Stats", emote=const.Emote.Smartge):
     async def wordcloud(
         self,
         ctx: AluContext,
-        channel_or_and_member: commands.Greedy[Union[discord.Member, discord.TextChannel]],
+        channel_or_and_member: commands.Greedy[discord.Member | discord.TextChannel],
         limit: commands.Range[int, 2000],
     ):
         """Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
@@ -188,6 +188,6 @@ class StatsCommands(InfoCog, name="Stats", emote=const.Emote.Smartge):
         await ctx.reply(embed=e, file=file)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Info(bot))
     await bot.add_cog(StatsCommands(bot))

@@ -2,6 +2,7 @@
 Inspired by RoboDanny's `config.py`. So all credit to Danny.
 Very educational though.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -9,8 +10,7 @@ import json
 import os
 import uuid
 from json import JSONDecodeError
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 if TYPE_CHECKING:
     from asyncpg import Pool
@@ -24,16 +24,16 @@ class Config(Generic[_T]):
     def __init__(
         self,
         filename: str,
-        pool: Optional[Pool] = None,
+        pool: Pool | None = None,
         *,
-        encoder: Optional[type[json.JSONEncoder]] = None,
+        encoder: type[json.JSONEncoder] | None = None,
     ):
         self.filename = f".alubot/{filename}"
         self.pool = pool
         self.encoder = encoder
         self.loop = asyncio.get_running_loop()
         self.lock = asyncio.Lock()
-        self._json: dict[str, Union[_T, Any]] = {}
+        self._json: dict[str, _T | Any] = {}
         if self.load_from_file():
             pass
         elif pool:
@@ -68,10 +68,10 @@ class Config(Generic[_T]):
         """Retrieves a config entry"""
         return self._json.get(str(key), default)
 
-    async def put_into_database(self, key: Any, value: Union[_T, Any]):
+    async def put_into_database(self, key: Any, value: _T | Any):
         ...
 
-    async def put(self, key: Any, value: Union[_T, Any]) -> None:
+    async def put(self, key: Any, value: _T | Any) -> None:
         """Edits a config entry"""
         self._json[str(key)] = value
         await self.put_into_database(key, value)
@@ -89,13 +89,13 @@ class Config(Generic[_T]):
     def __contains__(self, item: Any) -> bool:
         return str(item) in self._json
 
-    def __getitem__(self, item: Any) -> Union[_T, Any]:
+    def __getitem__(self, item: Any) -> _T | Any:
         return self._json[str(item)]
 
     def __len__(self) -> int:
         return len(self._json)
 
-    def all(self) -> dict[Any, Union[_T, Any]]:
+    def all(self) -> dict[Any, _T | Any]:
         return self._json
 
 

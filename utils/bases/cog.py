@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, NamedTuple, Optional, Type
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import discord
 from discord.ext import commands
 
 if TYPE_CHECKING:
     from bot import AluBot
+
+    from . import const
 
 __all__ = (
     "AluCog",
@@ -25,17 +27,17 @@ class AluCog(commands.Cog):
     """
 
     if TYPE_CHECKING:
-        emote: Optional[discord.PartialEmoji]
+        emote: discord.PartialEmoji | None
         category: ExtCategory
 
     def __init_subclass__(
-        cls: Type[AluCog],
-        emote: Optional[str] = None,
-        category: Optional[ExtCategory] = None,
+        cls: type[AluCog],
+        emote: str | None = None,
+        category: ExtCategory | None = None,
         **kwargs: Any,
     ) -> None:
         cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
-        parent_category: Optional[ExtCategory] = getattr(cls, "category", None)
+        parent_category: ExtCategory | None = getattr(cls, "category", None)
         if isinstance(parent_category, ExtCategory):
             cls.category = category or parent_category or EXT_CATEGORY_NONE
         elif parent_category is None:
@@ -55,11 +57,11 @@ class AluCog(commands.Cog):
 
     # shortcuts
     @property
-    def community(self):
+    def community(self) -> const.CommunityGuild:
         return self.bot.community
 
     @property
-    def hideout(self):
+    def hideout(self) -> const.HideoutGuild:
         return self.bot.hideout
 
     # @property

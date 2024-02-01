@@ -29,7 +29,7 @@ class TransposeClient:
 
     # The name is "transpose" because "convert"/"transform" have meanings in discord.py
 
-    def __init__(self, session: ClientSession):
+    def __init__(self, session: ClientSession) -> None:
         self.session: ClientSession = session
 
     @staticmethod
@@ -46,8 +46,8 @@ class TransposeClient:
 
         _ascent, descent = font.getmetrics()
 
-        text_width = font.getmask(text).getbbox()[2]
-        text_height = font.getmask(text).getbbox()[3] + descent
+        text_width: int = font.getmask(text).getbbox()[2]
+        text_height: int = font.getmask(text).getbbox()[3] + descent
 
         return text_width, text_height
 

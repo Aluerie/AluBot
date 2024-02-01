@@ -55,10 +55,10 @@ class LoLNotifications(BaseNotifications):
         self.live_match_ids = []
 
         query = "SELECT DISTINCT character_id FROM lol_favourite_characters"
-        favourite_champion_ids = [r for r, in await self.bot.pool.fetch(query)]  # row.unnest
+        favourite_champion_ids = [r for (r,) in await self.bot.pool.fetch(query)]  # row.unnest
 
         query = "SELECT DISTINCT player_id FROM lol_favourite_players"
-        favourite_player_ids = [r for r, in await self.bot.pool.fetch(query)]
+        favourite_player_ids = [r for (r,) in await self.bot.pool.fetch(query)]
         live_twitch_ids = await self.get_twitch_live_player_ids(const.Twitch.LOL_GAME_CATEGORY_ID, favourite_player_ids)
 
         query = """

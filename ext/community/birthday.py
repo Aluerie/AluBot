@@ -120,7 +120,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
     @checks.hybrid.is_community()
     @commands.hybrid_group()
-    async def birthday(self, ctx: AluGuildContext):
+    async def birthday(self, ctx: AluGuildContext) -> None:
         """Commands about managing your birthday data."""
         await ctx.send_help(ctx.command)
 
@@ -199,10 +199,10 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         )
         await ctx.reply(embed=embed)
 
-    async def remove_birthday_helper(self, user_id: int):
+    async def remove_birthday_helper(self, user_id: int) -> None:
         query = """
             DELETE FROM timers
-            WHERE event = 'birthday' 
+            WHERE event = 'birthday'
             AND data #>> '{user_id}' = $1;
         """
         status = await self.bot.pool.execute(query, str(user_id))
@@ -216,42 +216,46 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         return status
 
     @birthday.command(aliases=["del", "delete"])
-    async def remove(self, ctx: AluGuildContext):
+    async def remove(self, ctx: AluGuildContext) -> None:
         """Remove your birthday data and stop getting congratulations"""
         status = await self.remove_birthday_helper(ctx.author.id)
         if status == "DELETE 0":
-            e = discord.Embed(colour=const.Colour.maroon)
-            e.description = "Could not delete your birthday with that ID."
-            e.set_author(name="DatabaseError")
-            return await ctx.reply(embed=e)
+            embed = discord.Embed(
+                colour=const.Colour.maroon,
+                description="Could not delete your birthday with that ID.",
+            ).set_author(name="DatabaseError")
+            await ctx.reply(embed=embed)
+            return
 
-        e = discord.Embed(colour=ctx.author.color)
-        e.description = "Your birthday is successfully removed from the bot database"
-        await ctx.reply(embed=e, ephemeral=True)
+        embed = discord.Embed(
+            colour=ctx.author.color,
+            description="Your birthday is successfully removed from the bot database",
+        )
+        await ctx.reply(embed=embed, ephemeral=True)
 
     @birthday.command(usage="[member=you]")
     @app_commands.describe(member="Member of the server or you if not specified")
-    async def check(self, ctx: AluGuildContext, member: discord.Member = commands.Author):
+    async def check(self, ctx: AluGuildContext, member: discord.Member = commands.Author) -> None:
         """Check your or somebody's birthday in database"""
 
         query = """
             SELECT * FROM timers
-            WHERE event = 'birthday' 
+            WHERE event = 'birthday'
             AND data #>> '{user_id}' = $1;
         """
-        row: Optional[TimerRecord[BirthdayTimerData]] = await self.bot.pool.fetchrow(query, str(member.id))
+        row: TimerRecord[BirthdayTimerData] | None = await self.bot.pool.fetchrow(query, str(member.id))
 
         e = discord.Embed(colour=member.color)
         e.set_author(name=f"{member.display_name}'s birthday status", icon_url=member.display_avatar.url)
         if row is None:
-            e.description = f"It's not set yet."
+            e.description = "It's not set yet."
         else:
             e.add_field(name="Date", value=birthday_string(row.expires_at.replace(year=row.data["year"])))
-            e.add_field(name="Timezone", value=row.timezone)
+            e.add_field(name="Timezone", value=row["timezone"])
         await ctx.reply(embed=e)
 
     @commands.Cog.listener("on_birthday_timer_complete")
-    async def birthday_congratulations(self, timer: Timer[BirthdayTimerData]):
+    async def birthday_congratulations(self, timer: Timer[BirthdayTimerData]) -> None:
         user_id = timer.data["user_id"]
         year = timer.data["year"]
 
@@ -336,7 +340,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
         query = """
             SELECT expires_at, timezone, data FROM timers
-            WHERE event = 'birthday' 
+            WHERE event = 'birthday'
             ORDER BY extract(MONTH FROM expires_at), extract(DAY FROM expires_at);
         """
         rows: list[TimerRecord[BirthdayTimerData]] = await self.bot.pool.fetch(query)

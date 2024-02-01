@@ -6,11 +6,12 @@ import logging
 import random
 import time
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, MutableMapping, Protocol, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Protocol, TypeAlias, TypeVar
 
 import orjson
-from aiohttp import ClientSession
-from discord.utils import MISSING
+
+# from aiohttp import ClientSession
+# from discord.utils import MISSING
 from lru import LRU
 
 from . import aluloop
@@ -20,6 +21,8 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, MutableMapping
+
     from bot import AluBot
 
 R = TypeVar("R")

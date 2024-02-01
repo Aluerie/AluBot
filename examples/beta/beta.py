@@ -2,24 +2,26 @@ from __future__ import annotations
 
 from examples.beta.base import *
 
+# pyright: basic
 
-class BetaTestCog(BetaCog, name='BetaTest'):
+
+class BetaTest(BetaCog):
     @aluloop(count=1)
-    async def beta_task(self):
+    async def beta_task(self) -> None:
         pass
 
     @commands.command()
-    async def ceta(self, ctx: AluContext):
-        await ctx.send('ceta')
+    async def prefix(self, ctx: AluContext) -> None:
+        await ctx.send("prefix")
 
     @commands.hybrid_command()
-    async def heta(self, ctx: AluContext):
-        await ctx.send('heta')
+    async def hybrid(self, ctx: AluContext) -> None:
+        await ctx.send("hybrid")
 
     @app_commands.command()
-    async def seta(self, interaction: discord.Interaction[AluBot]):
-        await interaction.response.send_message('seta')
+    async def slash(self, interaction: discord.Interaction[AluBot]) -> None:
+        await interaction.response.send_message("slash")
 
 
-async def setup(bot: AluBot):
-    await bot.add_cog(BetaTestCog(bot))
+async def setup(bot: AluBot) -> None:
+    await bot.add_cog(BetaTest(bot))

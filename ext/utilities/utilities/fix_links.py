@@ -55,10 +55,10 @@ class LinkUtilities(AluCog):
             name="Fix Twitter/Insta link", callback=self.fix_link_ctx_menu_callback
         )
 
-    def cog_load(self) -> None:
+    async def cog_load(self) -> None:
         self.bot.tree.add_command(self.fix_link_ctx_menu)
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.fix_link_ctx_menu.name, type=self.fix_link_ctx_menu.type)
 
     def cog_fix_link_worker(self, text_to_fix: str) -> str:

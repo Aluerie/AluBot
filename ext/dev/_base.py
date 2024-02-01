@@ -8,9 +8,9 @@ if TYPE_CHECKING:
     from utils import AluContext
 
 category = ExtCategory(
-    name='Developer tools',
+    name="Developer tools",
     emote=const.Emote.DankFix,
-    description='Tools for developers only',
+    description="Tools for developers only",
 )
 
 

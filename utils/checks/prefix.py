@@ -9,12 +9,12 @@ from .. import const
 if TYPE_CHECKING:
     from .. import AluGuildContext
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def is_in_guilds(
     *guild_ids: int,
-    explanation: str = 'Sorry! This command is not usable outside of specific servers',
+    explanation: str = "Sorry! This command is not usable outside of specific servers",
 ):
     def predicate(ctx: AluGuildContext) -> bool:
         guild = ctx.guild
@@ -37,5 +37,5 @@ def is_my_guild():
 def is_community():
     return is_in_guilds(
         const.Guild.community,
-        explanation='Sorry! This command is not usable outside of Aluerie\'s Community Server.',
+        explanation="Sorry! This command is not usable outside of Aluerie's Community Server.",
     )

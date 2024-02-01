@@ -60,7 +60,7 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
             if response.ok:
                 await ctx.reply(f"```py\n{query}```{await response.text()}")
             else:
-                raise errors.ResponseNotOK(f'Wolfram Response was not ok, Status {response.status},')
+                raise errors.ResponseNotOK(f"Wolfram Response was not ok, Status {response.status},")
 
     @wolfram_group.command(name="short", aliases=["wa"])
     @commands.cooldown(2, 10, commands.BucketType.user)

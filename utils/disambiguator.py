@@ -40,9 +40,7 @@ class ConfirmationView(AluView):
 class DisambiguatorView[T](AluView):
     selected: T
 
-    def __init__(
-        self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any]
-    ):
+    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any]):
         super().__init__(author_id=ctx_ntr.user.id, view_name="Select Menu")
         self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
         self.data: list[T] = data
@@ -155,9 +153,7 @@ class Disambiguator:
         await self.send_message(ctx_ntr, cancel_embed)
         return view.value
 
-    async def disambiguate[
-        T
-    ](
+    async def disambiguate[T](
         self,
         ctx_ntr: AluContext | discord.Interaction[AluBot],
         matches: list[T],

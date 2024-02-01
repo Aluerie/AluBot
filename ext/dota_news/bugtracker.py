@@ -308,7 +308,7 @@ class BugTracker(AluCog):
     async def get_valve_devs(self) -> list[str]:
         """Get the list of known Valve developers."""
         query = "SELECT login FROM valve_devs"
-        valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
+        valve_devs: list[str] = [i for (i,) in await self.bot.pool.fetch(query)]
         return valve_devs
 
     @commands.is_owner()
@@ -371,7 +371,7 @@ class BugTracker(AluCog):
     async def bugtracker_list(self, ctx: AluContext):
         """Show the list of known Valve developers."""
         query = "SELECT login FROM valve_devs"
-        valve_devs: list[str] = [i for i, in await self.bot.pool.fetch(query)]
+        valve_devs: list[str] = [i for (i,) in await self.bot.pool.fetch(query)]
         valve_devs.sort()
         embed = discord.Embed(
             color=const.MaterialPalette.blue(),

@@ -1,9 +1,9 @@
 from utils import AluCog, ExtCategory, const
 
 category = ExtCategory(
-    name='Statistics',
+    name="Statistics",
     emote=const.Emote.Jebaited,
-    description='Some statistics that bot gathered/can gather.',
+    description="Some statistics that bot gathered/can gather.",
 )
 
 

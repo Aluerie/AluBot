@@ -30,7 +30,7 @@ __all__ = (
 )
 
 
-def my_bool(argument: str):
+def my_bool(argument: str) -> bool:
     """My own bool converter
 
     Same as discord.py `(..., var: bool)` but with "in/out" -> True/False

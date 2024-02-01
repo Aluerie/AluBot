@@ -8,11 +8,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils.timezones import TimeZone, TimeZoneTransformer
-
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluContext
+    from utils.timezones import TimeZone, TimeZoneTransformer
 
 from ._base import UserSettingsBaseCog
 
@@ -22,13 +21,15 @@ class TimezoneSetting(UserSettingsBaseCog):
         self.bot.initialize_tz_manager()
 
     @commands.hybrid_group()
-    async def timezone(self, ctx: AluContext):
+    async def timezone(self, ctx: AluContext) -> None:
         """Commands related to managing or retrieving timezone info."""
         await ctx.send_help(ctx.command)
 
     @timezone.command(name="set")
     @app_commands.describe(timezone="The timezone to change to.")
-    async def timezone_set(self, ctx: AluContext, *, timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]):
+    async def timezone_set(
+        self, ctx: AluContext, *, timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
+    ) -> None:
         """Sets your timezone.
 
         This is used to convert times to your local timezone when
@@ -41,7 +42,9 @@ class TimezoneSetting(UserSettingsBaseCog):
 
     @timezone.command(name="info")
     @app_commands.describe(timezone="The timezone to get info about.")
-    async def timezone_info(self, ctx: AluContext, *, timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]):
+    async def timezone_info(
+        self, ctx: AluContext, *, timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
+    ) -> None:
         """Retrieves info about a timezone."""
 
         e = discord.Embed(title=timezone.label, colour=discord.Colour.blurple())
@@ -55,12 +58,13 @@ class TimezoneSetting(UserSettingsBaseCog):
 
     @timezone.command(name="get")
     @app_commands.describe(user="The member to get the timezone of. Defaults to yourself.")
-    async def timezone_get(self, ctx: AluContext, *, user: discord.User = commands.Author):
+    async def timezone_get(self, ctx: AluContext, *, user: discord.User = commands.Author) -> None:
         """Shows the timezone of a user."""
         self_query = user.id == ctx.author.id
         tz = await self.bot.tz_manager.get_timezone(user.id)
         if tz is None:
-            return await ctx.send(f"{user} has not set their timezone.")
+            await ctx.send(f"{user} has not set their timezone.")
+            return
 
         time = discord.utils.utcnow().astimezone(zoneinfo.ZoneInfo(tz)).strftime("%Y-%m-%d %I:%M %p")
         if self_query:
@@ -71,12 +75,12 @@ class TimezoneSetting(UserSettingsBaseCog):
             await ctx.send(f"The current time for {user} is {time}.")
 
     @timezone.command(name="clear")
-    async def timezone_clear(self, ctx: AluContext):
+    async def timezone_clear(self, ctx: AluContext) -> None:
         """Clears your timezone."""
         await ctx.pool.execute("UPDATE user_settings SET timezone = NULL WHERE id=$1", ctx.author.id)
         self.bot.tz_manager.get_timezone.invalidate(self, ctx.author.id)
         await ctx.send("Your timezone has been cleared.", ephemeral=True)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(TimezoneSetting(bot))

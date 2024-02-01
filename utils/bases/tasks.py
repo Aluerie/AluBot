@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import datetime
 import logging
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Sequence, TypeVar
+from collections.abc import Callable, Coroutine, Sequence
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import discord
 from discord.ext import tasks
@@ -12,6 +11,8 @@ from discord.utils import MISSING
 from .cog import AluCog
 
 if TYPE_CHECKING:
+    import datetime
+
     from bot import AluBot
 
 log = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ class AluLoop(tasks.Loop[LF]):
         # this will fail outside a cog or a bot class
         # but all my tasks are inside those anyway.
         cog: AluCog = args[0]
-        try:  
+        try:
             # if isinstance(cog, AluCog):
             # not that this code will work for task inside any class that has .bot as its attribute
             # like we use it in cache class
@@ -106,7 +107,7 @@ def aluloop(
     reconnect: bool = True,
     name: str | None = None,
 ) -> Callable[[LF], AluLoop[LF]]:
-    def decorator(func) -> AluLoop:
+    def decorator(func: LF) -> AluLoop[LF]:
         return AluLoop(
             func,
             seconds=seconds,

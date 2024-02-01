@@ -1,7 +1,10 @@
 [tool.black]
+# I use ruff over it
 line-length = 120
+python_version = "py312"
 
 [tool.isort]
+# I use ruff over it
 profile = "black"
 combine_as_imports = true
 combine_star = true
@@ -9,9 +12,54 @@ line_length = 120
 
 [tool.pyright]
 pythonVersion = "3.12"
-typeCheckingMode = "basic"
-exclude = ["**/__pycache__", "build", "dist"]
+typeCheckingMode = "strict"
+exclude = ["**/__pycache__"]
+# https://github.com/microsoft/pyright/blob/main/docs/configuration.md
+deprecateTypingAliases = true
+reportMissingTypeStubs = "none"    # a lot of libs don't have stubs
+reportUnknownMemberType = "none"   # a lot of libs don't declare member types
+reportUnknownVariableType = "none" # consequence of above
+
+[tool.ruff]
+line-length = 120
+# https://docs.astral.sh/ruff/rules/
+select = [
+    "C4",
+    "F",
+    "G",
+    "I",
+    "PTH",
+    "RUF",
+    "SIM",
+    "TCH",
+    "UP",
+    "W",
+    "PERF",
+    "ANN",
+]
+ignore = [
+    "F401",
+    "F402",
+    "F403",
+    "F405",
+    "PERF203",
+    "RUF001",
+    "RUF009",
+    "SIM105",
+    "UP034",
+    "UP038",
+    "ANN101",
+    "ANN102",
+    "ANN401",
+]
+[tool.ruff.isort]
+split-on-trailing-comma = true
+combine-as-imports = true
 
 [project]
 name = "AluBot"
+version = "2024.0.0"
+requires-python = ">=3.12"
 authors = [{ name = "Aluerie" }]
+maintainers = [{ name = "Aluerie" }]
+description = "Personal Discord Bot"

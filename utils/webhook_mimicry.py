@@ -25,7 +25,7 @@ class MimicUserWebhook:
     def __init__(self, *, bot: AluBot, channel: WebhookSourceChannel, thread: discord.Thread | None):
         self.bot: AluBot = bot
         self.channel: WebhookSourceChannel = channel
-        self.thread:discord.Thread | None = thread
+        self.thread: discord.Thread | None = thread
 
     @staticmethod
     def get_channel_thread(

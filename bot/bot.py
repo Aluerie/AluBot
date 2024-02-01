@@ -3,10 +3,11 @@ from __future__ import annotations
 import datetime
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable, Literal, MutableMapping, override
+from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
 from discord.ext import commands
+from discord.utils import MISSING
 
 import config
 from ext import get_extensions
@@ -21,8 +22,11 @@ from .intents_perms import intents, permissions
 from .timer import TimerManager
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, Iterable, MutableMapping, Sequence
+
     from aiohttp import ClientSession
-    from asyncpg import Pool
+    from asyncpg import Pool, Record
+    from discord.abc import Snowflake
 
     from utils import AluCog
 
@@ -33,7 +37,7 @@ log = logging.getLogger(__name__)
 
 
 class AluBotHelper(TimerManager):
-    """Extra class to help with MRO Nerdge"""
+    """Extra class to help with MRO."""
 
     def __init__(self, *, bot: AluBot) -> None:
         super().__init__(bot=bot)
@@ -49,21 +53,25 @@ class AluBot(commands.Bot, AluBotHelper):
         tree: AluAppCommandTree
         #     cogs: Mapping[str, AluCog]
         old_tree_error: Callable[
-            [discord.Interaction[AluBot], discord.app_commands.AppCommandError], Coroutine[Any, Any, None]
+            [discord.Interaction[AluBot], discord.app_commands.AppCommandError],
+            Coroutine[Any, Any, None],
         ]
 
-    def __init__(self, test=False, *, session: ClientSession, pool: Pool, **kwargs: Any):
+    def __init__(self, test: bool = False, *, session: ClientSession, pool: Pool[Record], **kwargs: Any) -> None:
         main_prefix = "~" if test else "$"
         self.main_prefix: Literal["~", "$"] = main_prefix
         self.test: bool = test
         super().__init__(
             command_prefix=self.get_pre,
-            activity=discord.Streaming(name=f"\N{PURPLE HEART} /help /setup", url="https://www.twitch.tv/aluerie"),
+            activity=discord.Streaming(
+                name="\N{PURPLE HEART} /help /setup",
+                url="https://www.twitch.tv/aluerie",
+            ),
             intents=intents,
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=AluAppCommandTree,
         )
-        self.pool: Pool = pool
+        self.pool = pool
         self.session: ClientSession = session
 
         self.exc_manager: ExceptionManager = ExceptionManager(self)
@@ -77,7 +85,7 @@ class AluBot(commands.Bot, AluBotHelper):
         # modules
         self.formats = formats
 
-        self.category_cogs: dict[ExtCategory, list[AluCog | commands.Cog]] = dict()
+        self.category_cogs: dict[ExtCategory, list[AluCog | commands.Cog]] = {}
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
             seconds=datetime.timedelta(days=7).seconds
@@ -107,7 +115,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
         if self.test:
 
-            async def try_auto_sync_with_logging():
+            async def try_auto_sync_with_logging() -> None:
                 try:
                     result = await self.try_hideout_auto_sync()
                 except Exception as err:
@@ -121,7 +129,10 @@ class AluBot(commands.Bot, AluBotHelper):
             if not failed:
                 self.loop.create_task(try_auto_sync_with_logging())
             else:
-                log.info("Autosync: cancelled %s One or more cogs failed to load.", const.Tick.No)
+                log.info(
+                    "Autosync: cancelled %s One or more cogs failed to load.",
+                    const.Tick.No,
+                )
 
     async def try_hideout_auto_sync(self) -> bool:
         """Try auto copy-global+sync for hideout guild."""
@@ -139,7 +150,7 @@ class AluBot(commands.Bot, AluBotHelper):
         guild = discord.Object(id=self.hideout.id)
         self.tree.copy_global_to(guild=guild)
 
-        all_cmds = self.tree._get_all_commands(guild=guild)
+        all_cmds = self.tree.get_commands(guild=guild)
 
         new_payloads = [(guild.id, cmd.to_dict()) for cmd in all_cmds]
 
@@ -152,7 +163,10 @@ class AluBot(commands.Bot, AluBotHelper):
 
         if not_synced:
             await self.pool.execute("DELETE FROM auto_sync WHERE guild_id = $1", guild.id)
-            await self.pool.executemany("INSERT INTO auto_sync (guild_id, payload) VALUES ($1, $2)", new_payloads)
+            await self.pool.executemany(
+                "INSERT INTO auto_sync (guild_id, payload) VALUES ($1, $2)",
+                new_payloads,
+            )
 
             await self.tree.sync(guild=guild)
             return True
@@ -160,14 +174,20 @@ class AluBot(commands.Bot, AluBotHelper):
             return False
 
     def get_pre(self, bot: AluBot, message: discord.Message) -> Iterable[str]:
-        if message.guild is None:
-            prefix = self.main_prefix
-        else:
-            prefix = self.prefixes.get(message.guild.id, self.main_prefix)
+        prefix = self.main_prefix if message.guild is None else self.prefixes.get(message.guild.id, self.main_prefix)
         return commands.when_mentioned_or(prefix, "/")(bot, message)
 
-    async def add_cog(self, cog: AluCog | commands.Cog):
-        await super().add_cog(cog)
+    @override
+    async def add_cog(
+        self,
+        cog: AluCog | commands.Cog,
+        /,
+        *,
+        override: bool = False,
+        guild: Snowflake | None = MISSING,
+        guilds: Sequence[Snowflake] = MISSING,
+    ) -> None:
+        await super().add_cog(cog, override=override, guild=guild, guilds=guilds)
 
         # jishaku does not have a category thus we have this weird typehint
         category = getattr(cog, "category", None)
@@ -176,12 +196,12 @@ class AluBot(commands.Bot, AluBotHelper):
 
         self.category_cogs.setdefault(category, []).append(cog)
 
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         if not hasattr(self, "launch_time"):
-            self.launch_time = datetime.datetime.now(datetime.timezone.utc)
+            self.launch_time = datetime.datetime.now(datetime.UTC)
         # if hasattr(self, "dota"):
         #     await self.dota.wait_until_ready()
-        log.info(f"Logged in as {self.user}")
+        log.info("Logged in as %s", self.user)
 
     @override
     async def start(self) -> None:
@@ -202,10 +222,8 @@ class AluBot(commands.Bot, AluBotHelper):
         await super().start(token, reconnect=True)  # VALVE_SWITCH
 
     @override
-    async def get_context(
-        self, origin: discord.Interaction | discord.Message, /, *, cls=AluContext
-    ) -> AluContext:
-        return await super().get_context(origin, cls=cls)
+    async def get_context(self, origin: discord.Interaction | discord.Message, /, *, cls=AluContext) -> AluContext:
+        return await super().get_context(origin, cls=AluContext)
 
     @property
     def owner(self) -> discord.User:
@@ -266,7 +284,7 @@ class AluBot(commands.Bot, AluBotHelper):
             import orjson
             from pulsefire.clients import CDragonClient, MerakiCDNClient, RiotAPIClient
             from pulsefire.middlewares import http_error_middleware, json_response_middleware, rate_limiter_middleware
-            from pulsefire.ratelimiters import RiotAPIRateLimiter  # cSpell: ignore ratelimiters
+            from pulsefire.ratelimiters import RiotAPIRateLimiter
 
             self.riot = RiotAPIClient(
                 default_headers={"X-Riot-Token": config.RIOT_API_KEY},
@@ -362,7 +380,14 @@ class AluBot(commands.Bot, AluBotHelper):
             await self.twitch.close()
 
         # things to __aexit__()
-        for client in ["riot", "cdragon", "meraki", "opendota", "stratz", "odota_constants"]:
+        for client in [
+            "riot",
+            "cdragon",
+            "meraki",
+            "opendota",
+            "stratz",
+            "odota_constants",
+        ]:
             if hasattr(self, client):
                 await getattr(self, client).__aexit__()
 

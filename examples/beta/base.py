@@ -1,7 +1,8 @@
 """
-The files in this folder are made for easier resetting of git-ignored `extensions/beta.py` file 
+The files in this folder are made for easier resetting of git-ignored `extensions/beta.py` file
 where I do various beta testings in the test version of the bot.
 """
+#  pyright: basic
 from __future__ import annotations
 
 import asyncio
@@ -11,9 +12,11 @@ import logging
 import os
 import random
 import sys
-from typing import TYPE_CHECKING, Annotated, Any, Callable, Coroutine, Literal, Sequence, TypeVar
+from collections.abc import Callable, Coroutine, Sequence
+from typing import TYPE_CHECKING, Annotated, Any, Literal, TypedDict, TypeVar, cast, reveal_type
 
-import discord
+import asyncpg
+import discord  # noqa TCH002
 from discord import app_commands
 from discord.ext import commands, menus
 
@@ -23,8 +26,6 @@ from utils import AluCog, AluContext, ExtCategory, aluloop, checks, const, error
 
 log = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    pass
 
 category = ExtCategory(
     name="Beta Features",
@@ -34,7 +35,7 @@ category = ExtCategory(
 
 
 class BetaCog(AluCog, category=category):
-    async def cog_load(self):
+    async def cog_load(self) -> None:
         self.beta_task.clear_exception_types()
         self.beta_task.start()
 
@@ -44,5 +45,5 @@ class BetaCog(AluCog, category=category):
         return self.hideout.spam
 
     @aluloop()
-    async def beta_task(self):
+    async def beta_task(self) -> None:
         ...

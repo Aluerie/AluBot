@@ -49,7 +49,7 @@ class OpenDotaAutoParser(AluCog):
                 self.bot.dota.emit("autoparse_top_games_response")
 
         query = "SELECT steam_id FROM autoparse"
-        self.steam_ids = [r for r, in await self.bot.pool.fetch(query)]
+        self.steam_ids = [r for (r,) in await self.bot.pool.fetch(query)]
 
         self.autoparse_task.start()
 

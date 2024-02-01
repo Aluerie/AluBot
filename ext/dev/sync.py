@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
@@ -18,11 +19,40 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class UmbraSyncCommandCog(DevBaseCog):
+class SyncAppTreeTools(DevBaseCog):
     """A special one-command cog for famous umbra sync command. A bit modified though.
 
     `?tag usc` which abbreviates to `?tag umbra sync command`.
     """
+
+    async def cog_load(self):
+        if not self.bot.test:
+            self.auto_sync.start()
+
+    async def cog_unload(self):
+        self.auto_sync.cancel()
+
+    @aluloop(count=1)
+    async def auto_sync(self):
+        """Auto syncing bot's application tree task.
+
+        `?tag ass` and all. But I'm stupid and forget to sync the tree manually.
+        Especially when I'm actively developing and really only spend time with testing bot.
+
+        Let's do it once per reboot after 2 hours of wait time. If I ever get rate limited warning:
+        then we will think of better measures.
+        """
+
+        # initial wait
+        await asyncio.sleep(60.0 * 60 * 2)  # 2 hours
+        # global
+        await self.bot.tree.sync()
+        # premium guilds
+        for guild_id in const.PREMIUM_GUILDS:
+            await asyncio.sleep(30.0)
+            await self.bot.tree.sync(guild=discord.Object(id=guild_id))
+
+        log.info("Synced global and premium guild bound commands.")
 
     async def sync_to_guild_list(self, guilds: list[discord.Object]) -> str:
         """Syncs app tree for the guilds."""
@@ -53,7 +83,7 @@ class UmbraSyncCommandCog(DevBaseCog):
         # SYNC METHODS ABOUT CURRENT GUILD
         elif spec and spec != "global":
             if not current_guild:
-                raise errors.BadArgument(f"You used `sync` command with a spec outside of a guild")
+                raise errors.BadArgument("You used `sync` command with a spec outside of a guild")
 
             match spec:
                 case "current" | "~":
@@ -66,7 +96,7 @@ class UmbraSyncCommandCog(DevBaseCog):
                     self.bot.tree.clear_commands(guild=current_guild)
                     desc = "Cleared guild-bound commands from the current guild."
                 case _:
-                    raise errors.BadArgument(f"Unknown specification for `sync` command.")
+                    raise errors.BadArgument("Unknown specification for `sync` command.")
             synced = await self.bot.tree.sync(guild=current_guild)
             desc = desc.format(len(synced))
 
@@ -135,43 +165,12 @@ class UmbraSyncCommandCog(DevBaseCog):
 
 
 class DailyAutoSync(DevBaseCog):
-    """Run syncing app cmd tree once a day per restart.
-
-    `?tag ass` and all. But I'm stupid and forget to sync the tree manually.
-    So let the bot sync on the very first 3am per restart. Not that big of a deal.
-
-    Especially when I'm actively developing and really only spend time with testing bot.
-    """
+    """Run syncing app cmd tree once per bot restart."""
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
-        self.sync_dict: dict[str, None | int] = {
-            "hideout-bound": self.hideout.id,
-            "community-bound": self.community.id,
-            "global": None,
-            "skip": 1,
-        }
-
-    async def cog_load(self):
-        if not self.bot.test:
-            self.one_time_sync.start()
-
-    async def cog_unload(self):
-        self.one_time_sync.cancel()
-
-    @aluloop(count=4, minutes=10)
-    async def one_time_sync(self):
-        if "skip" in self.sync_dict:
-            # skip the very first iteration
-            self.sync_dict.pop("skip")
-            return
-
-        guild_name, guild_id = self.sync_dict.popitem()  # brings last key, value pair in dict
-        guild = discord.Object(id=guild_id) if guild_id else None
-        synced = await self.bot.tree.sync(guild=guild)
-        log.info(f"Synced `{len(synced)}` **{guild_name}** commands.")
 
 
 async def setup(bot):
-    await bot.add_cog(UmbraSyncCommandCog(bot))
+    await bot.add_cog(SyncAppTreeTools(bot))
     await bot.add_cog(DailyAutoSync(bot))

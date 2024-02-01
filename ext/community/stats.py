@@ -23,7 +23,7 @@ class StatsVoiceChannels(CommunityCog):
 
     @aluloop(time=[datetime.time(hour=x) for x in range(0, 24)])  # 24 times a day
     async def my_time(self):
-        symbol = '#' if platform.system() == 'Windows' else '-'
+        symbol = "#" if platform.system() == "Windows" else "-"
         msk_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3)))
         new_name = f'\N{ALARM CLOCK} {msk_now.strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
         await self.bot.community.my_time.edit(name=new_name)
@@ -34,10 +34,10 @@ class StatsVoiceChannels(CommunityCog):
         amount_of_people = (self.bot.community.guild.member_count or 0) - amount_of_bots
 
         # total people
-        await self.bot.community.total_people.edit(name=f'\N{HOUSE WITH GARDEN} People: {amount_of_people}')
+        await self.bot.community.total_people.edit(name=f"\N{HOUSE WITH GARDEN} People: {amount_of_people}")
 
         # total bots
-        await self.bot.community.total_bots.edit(name=f'\N{ROBOT FACE} Bots: {amount_of_bots}')
+        await self.bot.community.total_bots.edit(name=f"\N{ROBOT FACE} Bots: {amount_of_bots}")
 
 
 async def setup(bot):

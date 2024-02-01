@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import discord
 
@@ -19,9 +19,9 @@ class AluView(discord.ui.View):
 
     Parameters
     ----------
-    author_id : Optional[int]
+    author_id : int | None
         _description_
-    timeout : Optional[float], optional
+    timeout : float | None
         _description_, by default 5*60.0
     view_name : str, optional
         _description_, by default "Interactive Element"
@@ -33,12 +33,12 @@ class AluView(discord.ui.View):
     def __init__(
         self,
         *,
-        author_id: Optional[int],
+        author_id: int | None,
         view_name: str = "Interactive Element",
-        timeout: Optional[float] = 5 * 60.0,
+        timeout: float | None = 5 * 60.0,
     ):
         super().__init__(timeout=timeout)
-        self.author_id: Optional[int] = author_id
+        self.author_id: int | None = author_id
 
         # we could try doing __class__.__name__ stuff and add spaces, replace "view" with "interactive element"
         # but it might get tricky since like FPCSetupMiscView exists
@@ -102,6 +102,6 @@ class AluView(discord.ui.View):
 class Url(discord.ui.View):
     """Lazy class to make URL button in one line instead of two."""
 
-    def __init__(self, url: str, label: str = "Open", emoji: Optional[str] = None):
+    def __init__(self, url: str, label: str = "Open", emoji: str | None = None):
         super().__init__()
         self.add_item(discord.ui.Button(label=label, emoji=emoji, url=url))

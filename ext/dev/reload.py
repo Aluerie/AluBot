@@ -27,7 +27,7 @@ class ExtensionConverter(commands.Converter):
     Yes. Lazy."""
 
     # currently does not handle base extensions
-    async def convert(self, _ctx: AluContext, argument: str):
+    async def convert(self, ctx: AluContext, argument: str):
         m = argument.lower()
         return f"ext.{m}"
 
@@ -205,7 +205,7 @@ class ReloadCog(DevBaseCog):
                 else:
                     try:
                         importlib.reload(actual_module)
-                    except Exception as e:
+                    except Exception:
                         statuses.append((False, module))
                     else:
                         statuses.append((True, module))

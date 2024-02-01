@@ -7,8 +7,9 @@ from __future__ import annotations
 import datetime
 import difflib
 import re
+from collections.abc import Sequence
 from enum import IntEnum
-from typing import TYPE_CHECKING, Literal, Sequence
+from typing import TYPE_CHECKING, Literal
 
 from dateutil.relativedelta import relativedelta
 
@@ -17,9 +18,6 @@ from dateutil.relativedelta import relativedelta
 from discord.utils import TimestampStyle, format_dt
 
 from . import const
-
-if TYPE_CHECKING:
-    pass
 
 
 class plural:
@@ -118,12 +116,12 @@ def human_timedelta(
     # licensed MPL v2 from Rapptz/RoboDanny
     # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 
-    now = source.astimezone(datetime.timezone.utc) if source else datetime.datetime.now(datetime.timezone.utc)
+    now = source.astimezone(datetime.UTC) if source else datetime.datetime.now(datetime.UTC)
 
     match dt:
         # todo: i dont like this garbage
         case datetime.datetime():
-            dt = dt.astimezone(datetime.timezone.utc)
+            dt = dt.astimezone(datetime.UTC)
         case datetime.timedelta():
             dt = now - dt
         case int() | float():
@@ -373,10 +371,8 @@ def tick(semi_bool: bool | None) -> str:
             return const.Tick.Yes
         case False:
             return const.Tick.No
-        case None:
-            return const.Tick.Black
         case _:
-            raise TypeError(f"`tick`: Expected True, False, None. Got {semi_bool.__class__.__name__}")
+            return const.Tick.Black
 
 
 def hms_to_seconds(hms_time: str) -> int:
@@ -388,7 +384,7 @@ def hms_to_seconds(hms_time: str) -> int:
 
     def letter_to_seconds(letter: str) -> int:
         """regex_time('h') = 3, regex_time('m') = 51, regex_time('s') = 8 for above example"""
-        pattern = r"\d+(?={})".format(letter)
+        pattern = r"\d+(?={})".format(letter)  # noqa UP032
         units = re.search(pattern, hms_time)
         return int(units.group(0)) if units else 0
 

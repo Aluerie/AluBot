@@ -222,7 +222,7 @@ class AluBot(commands.Bot, AluBotHelper):
         await super().start(token, reconnect=True)  # VALVE_SWITCH
 
     @override
-    async def get_context(self, origin: discord.Interaction | discord.Message, /, *, cls=AluContext) -> AluContext:
+    async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:
         return await super().get_context(origin, cls=AluContext)
 
     @property

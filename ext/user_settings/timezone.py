@@ -8,10 +8,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from utils.timezones import TimeZone, TimeZoneTransformer  # noqa: TCH001
+
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluContext
-    from utils.timezones import TimeZone, TimeZoneTransformer
 
 from ._base import UserSettingsBaseCog
 

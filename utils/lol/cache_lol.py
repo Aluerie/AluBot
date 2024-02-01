@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, TypedDict
+from typing import TYPE_CHECKING, TypedDict, override
 
 from roleidentification import get_roles
 
@@ -8,8 +8,6 @@ from ..cache import KeysCache
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
-
-    from aiohttp import ClientSession
 
     from bot import AluBot
 
@@ -55,6 +53,7 @@ class ChampionKeysCache(KeysCache):
     if TYPE_CHECKING:
         cached_data: ChampionCache
 
+    @override
     async def fill_data(self) -> ChampionCache:
         champion_summary = await self.bot.cdragon.get_lol_v1_champion_summary()
 

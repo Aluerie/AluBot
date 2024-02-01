@@ -6,7 +6,7 @@ import logging
 import random
 import time
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Protocol, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, override
 
 import orjson
 
@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Coroutine, MutableMapping
+    from collections.abc import Callable, Coroutine, Generator, MutableMapping
 
     from bot import AluBot
 
@@ -31,7 +31,7 @@ type CacheDict = dict[Any, Any]
 CachedDataT = TypeVar("CachedDataT", bound=CacheDict)
 
 
-class KeysCache[CachedDataT]:
+class KeysCache:
     """KeysCache
 
     Caches the data from public json-urls
@@ -169,7 +169,7 @@ class CacheProtocol(Protocol[R]):
         ...
 
 
-class ExpiringCache(dict):
+class ExpiringCache(dict[Any, Any]):
     def __init__(self, seconds: float) -> None:
         self.__ttl: float = seconds
         super().__init__()
@@ -181,28 +181,34 @@ class ExpiringCache(dict):
         for k in to_remove:
             del self[k]
 
-    def get(self, key: str, default: Any = None):
+    @override
+    def get(self, key: str, default: Any = None) -> Any:
         v = super().get(key, default)
         if v is default:
             return default
         return v[0]
 
+    @override
     def __contains__(self, key: str) -> bool:
         self.__verify_cache_integrity()
         return super().__contains__(key)
 
-    def __getitem__(self, key: str):
+    @override
+    def __getitem__(self, key: str) -> Any:
         self.__verify_cache_integrity()
         v, _ = super().__getitem__(key)
         return v
 
+    @override
     def __setitem__(self, key: str, value: Any) -> None:
         super().__setitem__(key, (value, time.monotonic()))
 
-    def values(self):
+    @override
+    def values(self) -> Generator[Any, None, None]:
         return (x[0] for x in super().values())
 
-    def items(self):
+    @override
+    def items(self) -> Generator[tuple[Any, Any], None, None]:
         return ((x[0], x[1][0]) for x in super().items())
 
 
@@ -231,7 +237,7 @@ def cache(
         def _make_key(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
             # this is a bit of a cluster fuck
             # we do care what 'self' parameter is when we __repr__ it
-            def _true_repr(o):
+            def _true_repr(o: Any) -> str:
                 if o.__class__.__repr__ is object.__repr__:
                     return f"<{o.__class__.__module__}.{o.__class__.__name__}>"
                 return repr(o)
@@ -253,7 +259,7 @@ def cache(
             return ":".join(key)
 
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any):
+        def wrapper(*args: Any, **kwargs: Any) -> asyncio.Task[Any]:  # is it proper type?
             key = _make_key(args, kwargs)
             try:
                 task = _internal_cache[key]
@@ -272,17 +278,14 @@ def cache(
                 return True
 
         def _invalidate_containing(key: str) -> None:
-            to_remove = []
-            for k in _internal_cache:
-                if key in k:
-                    to_remove.append(k)
+            to_remove = [k for k in _internal_cache if key in k]
             for k in to_remove:
                 try:
                     del _internal_cache[k]
                 except KeyError:
                     continue
 
-        # TODO: investigate those # type: ignore
+        # TODO: investigate those "type: ignore"
         wrapper.cache = _internal_cache  # type: ignore
         wrapper.get_key = lambda *args, **kwargs: _make_key(args, kwargs)  # type: ignore
         wrapper.invalidate = _invalidate  # type: ignore

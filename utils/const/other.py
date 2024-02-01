@@ -98,6 +98,7 @@ class Dota(CONSTANTS):
         9: "#A46900",
     }
 
+    TALENT_TREE_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
     ATTR_BONUS_ICON = "https://static.wikia.nocookie.net/dota2_gamepedia/images/e/e2/Attribute_Bonus_icon.png"
 
     AGHANIMS_SCEPTER_ITEM_ID = 108

@@ -37,19 +37,12 @@ PS for more understanding:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol, Self
+from typing import TYPE_CHECKING, Any, override
 
 import asyncpg
 import orjson
 
 from config import POSTGRES_URL
-
-if TYPE_CHECKING:
-    from types import TracebackType
-
-    from asyncpg import Connection
-
-    xd = asyncpg.Pool
 
 
 class DotRecord(asyncpg.Record):
@@ -63,55 +56,36 @@ class DotRecord(asyncpg.Record):
         return self[name]
 
 
-class PoolAcquireContext(Protocol):
-    async def __aenter__(self) -> Connection[DotRecord]:
-        ...
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        ...
+if TYPE_CHECKING:
+    BasePool = asyncpg.Pool[DotRecord]
+else:
+    BasePool = asyncpg.Pool
 
 
-# For typing purposes, our `bot.pool` will be PoolProtocol
-# that allows us to properly type the return values
-# via narrowing like mentioned in instructions above
-# without hundreds of "type: ignore" notices for each TypedDict.
+class PoolTypedWithAny(BasePool):
+    """Fake Type Class.
 
-# Right now, asyncpg is untyped so this is better than the current status quo
-# If we ever need the regular Pool type we have `bot.database` without any Protocol shenanigans,
-# * to check default type-hinting
-# * to quickly check official docs for Pool methods since (protocol ones are empty and `copy_doc` won't work for vscode)
-# it returns types from `asyncpg-stubs`
+    For typing purposes, our `bot.pool` will be of type `PoolTypedWithAny`
+    that allows us to properly type the return values via narrowing like mentioned in instructions above
+    without hundreds of "type: ignore" notices for each TypedDict.
 
+    I could use Protocol to type it all, but `async-stubs` provide a good job in typing most of the stuff
+    and we also don't lose doc-string this way.
 
-class PoolProtocol(Protocol):
-    def acquire(self, *, timeout: float | None = None) -> PoolAcquireContext:
-        ...
+    * Right now, asyncpg is untyped so this is better than the current status quo
+    * If we ever need the regular Pool type we have `bot.database` without any shenanigans.
+    """
 
-    async def execute(self, query: str, *args: Any, timeout: float | None = None) -> str:
-        ...
+    if TYPE_CHECKING:
+        # all methods below were changed from "asyncpg.Record" to "Any"
 
-    async def executemany(self, query: str, *args: Any, timeout: float | None = None) -> None:
-        ...
+        @override
+        async def fetch(self, query: str, *args: Any, timeout: float | None = None) -> list[Any]:
+            ...
 
-    async def fetch(self, query: str, *args: Any, timeout: float | None = None) -> list[Any]:
-        ...
-
-    async def fetchrow(self, query: str, *args: Any, timeout: float | None = None) -> Any | None:
-        ...
-
-    def release(self, connection: Connection[DotRecord]) -> None:
-        ...
-
-    async def __aenter__(self) -> Self:
-        ...
-
-    async def __aexit__(self, *exc: Any) -> None:  # exc_type, exc_value, exc_tb
-        ...
+        @override
+        async def fetchrow(self, query: str, *args: Any, timeout: float | None = None) -> Any:
+            ...
 
 
 async def create_pool() -> asyncpg.Pool[DotRecord]:

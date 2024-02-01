@@ -96,7 +96,7 @@ class LoLAccount(Account):
 
     @property
     @override
-    def account_string_with_links(self):
+    def account_string_with_links(self) -> str:
         return self.static_account_name_with_links(self.platform.value, self.game_name, self.tag_line)
 
     @override
@@ -128,13 +128,13 @@ class LoLFPCSettings(BaseSettings):
     The bot will send messages in a chosen channel when your fav streamer picks your fav champ.
     """
 
-    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         bot.initialize_cache_league()
         super().__init__(
             bot,
             *args,
             prefix="lol",
-            colour=const.Colour.palevioletred,
+            colour=const.Colour.darkslategray,
             game_display_name="League of Legends",
             game_icon_url=const.Logo.Lol,
             character_singular_word="champion",
@@ -282,7 +282,7 @@ class LoLFPCSettings(BaseSettings):
 
         embed = (
             discord.Embed(
-                colour=const.Colour.palevioletred,
+                colour=const.Colour.darkslategray,
                 title="List of champs missing from Meraki JSON",
                 description=(
                     "\n".join(
@@ -336,7 +336,7 @@ class LoLFPCSettings(BaseSettings):
             new_emote = await guild.create_custom_emoji(name=alias, image=await response.read())
 
         embed = discord.Embed(
-            colour=const.Colour.palevioletred,
+            colour=const.Colour.darkslategray,
             title="New League of Legends 2 Champion emote was created",
             description=f'```py\n{new_emote.name} = "{new_emote}"```',
         ).add_field(

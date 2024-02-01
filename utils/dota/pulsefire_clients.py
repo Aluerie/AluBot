@@ -3,7 +3,7 @@ from __future__ import annotations
 import collections
 import random
 import time
-from typing import TYPE_CHECKING, Never
+from typing import TYPE_CHECKING, Any, override
 
 import orjson
 from pulsefire.clients import BaseClient
@@ -19,6 +19,8 @@ except ImportError:
     import config
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
     from pulsefire.invocation import Invocation
 
     from . import schemas
@@ -29,6 +31,8 @@ __all__ = (
     "ODotaConstantsClient",
 )
 
+type HeaderRateLimitInfo = Mapping[str, Sequence[tuple[int, int]]]
+
 
 class DotaAPIsRateLimiter(BaseRateLimiter):
     """Dota 2 APIs rate limiter.
@@ -36,15 +40,15 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
     This rate limiter can be served stand-alone for centralized rate limiting.
     """
 
-    _index: dict[tuple[str, int, *tuple[str]], tuple[int, int, float, float, float]] = collections.defaultdict(
-        lambda: (0, 0, 0, 0, 0)
-    )
-
     def __init__(self) -> None:
-        self._track_syncs: dict[str, tuple[float, list]] = {}
+        self._track_syncs: dict[str, tuple[float, list[Any]]] = {}
         self.rate_limits_string: str = "Not Set Yet"
         self.rate_limits_ratio: float = 1.0
+        self._index: dict[
+            tuple[str, int, Any, Any, Any], tuple[int, int, float, float, float]
+        ] = collections.defaultdict(lambda: (0, 0, 0, 0, 0))
 
+    @override
     async def acquire(self, invocation: Invocation) -> float:
         wait_for = 0
         pinging_targets = []
@@ -76,6 +80,7 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
 
         return wait_for
 
+    @override
     async def synchronize(self, invocation: Invocation, headers: dict[str, str]) -> None:
         response_time = time.time()
         request_time, pinging_targets = self._track_syncs.pop(invocation.uid, [None, None])
@@ -95,9 +100,9 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
             return
         for scope, idx, *subscopes in pinging_targets:  # type: ignore
             if idx >= len(header_limits[scope]):
-                self._index[(scope, idx, *subscopes)] = (0, 10**10, response_time + 3600, 0, 0)  # type: ignore
+                self._index[(scope, idx, *subscopes)] = (0, 10**10, response_time + 3600, 0, 0)
                 continue
-            self._index[(scope, idx, *subscopes)] = (  # type: ignore
+            self._index[(scope, idx, *subscopes)] = (
                 header_counts[scope][idx][0],
                 header_limits[scope][idx][0],
                 header_limits[scope][idx][1] + response_time,
@@ -105,23 +110,24 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
                 0,
             )
 
-    def analyze_headers(self, headers) -> Never:
+    def analyze_headers(self, headers: dict[str, str]) -> tuple[HeaderRateLimitInfo, HeaderRateLimitInfo]:
         raise NotImplementedError
 
 
 class OpenDotaAPIRateLimiter(DotaAPIsRateLimiter):
-    def analyze_headers(self, headers):
+    @override
+    def analyze_headers(self, headers: dict[str, str]) -> tuple[HeaderRateLimitInfo, HeaderRateLimitInfo]:
         self.rate_limits_string = "\n".join(
             [f"{timeframe}: " f"{headers[f'X-Rate-Limit-Remaining-{timeframe}']}" for timeframe in ("Minute", "Day")]
         )
         self.rate_limits_ratio = int(headers["X-Rate-Limit-Remaining-Day"]) / 2000
 
         header_limits = {
-            "app": [[60, 60], [2000, 60 * 60 * 24]],
+            "app": [(60, 60), (2000, 60 * 60 * 24)],
         }
         header_counts = {
             "app": [
-                [int(headers[f"X-Rate-Limit-Remaining-{name}"]), period]
+                (int(headers[f"X-Rate-Limit-Remaining-{name}"]), period)
                 for name, period in [("Minute", 60), ("Day", 60 * 60 * 24)]
             ]
         }
@@ -154,6 +160,8 @@ class ODotaConstantsClient(BaseClient):
     def __init__(self) -> None:
         self.rate_limiter = OpenDotaAPIRateLimiter()
         super().__init__(
+            # could use `https://api.opendota.com/api/constants` but sometimes they update the repo first
+            # and forget to update the site backend x_x
             base_url="https://raw.githubusercontent.com/odota/dotaconstants/master/build",
             default_params={},
             default_headers={},
@@ -165,11 +173,25 @@ class ODotaConstantsClient(BaseClient):
         )
 
     async def get_heroes(self) -> schemas.ODotaConstantsJson.Heroes:
+        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/heroes.json
         return await self.invoke("GET", "/heroes.json")  # type: ignore
+
+    async def get_ability_ids(self) -> schemas.ODotaConstantsJson.AbilityIDs:
+        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/ability_ids.json
+        return await self.invoke("GET", "/ability_ids.json")  # type: ignore
+
+    async def get_abilities(self) -> schemas.ODotaConstantsJson.Abilities:
+        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/abilities.json
+        return await self.invoke("GET", "/abilities.json")  # type: ignore
+
+    async def get_hero_abilities(self) -> schemas.ODotaConstantsJson.HeroAbilitiesData:
+        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/hero_abilities.json
+        return await self.invoke("GET", "/hero_abilities.json")  # type: ignore
 
 
 class StratzAPIRateLimiter(DotaAPIsRateLimiter):
-    def analyze_headers(self, headers):
+    @override
+    def analyze_headers(self, headers: dict[str, str]) -> tuple[HeaderRateLimitInfo, HeaderRateLimitInfo]:
         self.rate_limits_string = "\n".join(
             [
                 f"{timeframe}: "
@@ -185,8 +207,8 @@ class StratzAPIRateLimiter(DotaAPIsRateLimiter):
             ("Hour", 60 * 60),
             ("Day", 60 * 60 * 24),
         ]
-        header_limits = {"app": [[int(headers[f"X-RateLimit-Limit-{name}"]), period] for name, period in periods]}
-        header_counts = {"app": [[int(headers[f"X-RateLimit-Remaining-{name}"]), period] for name, period in periods]}
+        header_limits = {"app": [(int(headers[f"X-RateLimit-Limit-{name}"]), period) for name, period in periods]}
+        header_counts = {"app": [(int(headers[f"X-RateLimit-Remaining-{name}"]), period) for name, period in periods]}
         return header_limits, header_counts
 
 
@@ -252,7 +274,7 @@ class StratzClient(BaseClient):
 
 if __name__ == "__main__":
     import asyncio
-    import pprint
+    import pprint  # type: ignore
 
     # OPENDOTA
     async def test_opendota_get_match() -> None:

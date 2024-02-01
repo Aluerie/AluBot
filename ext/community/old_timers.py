@@ -148,7 +148,7 @@ class OldTimers(CommunityCog):
 
     @tasks.loop(minutes=109)
     async def daily_important_reminders(self) -> None:
-        await self.timer_work("Daily Important Message", Colour.palevioletred, await get_important_text(self.bot.pool))
+        await self.timer_work("Daily Important Message", Colour.darkslategray, await get_important_text(self.bot.pool))
 
     @tasks.loop(minutes=167)
     async def daily_fact_reminders(self) -> None:

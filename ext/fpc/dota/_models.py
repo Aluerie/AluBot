@@ -109,6 +109,7 @@ class MatchToSend(BaseMatchToSend):
                 "colour": colour,
             }
 
+    @override
     async def notification_image(self, twitch_data: TwitchData, colour: discord.Colour) -> Image.Image:
         log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
@@ -143,7 +144,11 @@ class MatchToSend(BaseMatchToSend):
 
             w2, h2 = self.bot.transposer.get_text_wh(text, font)
             draw.text(
-                xy=(0, 35 + h2 + 10), text=twitch_data["twitch_status"], font=font, align="center", fill=str(colour)
+                xy=(0, height - 100 - 10 - h2),
+                text=twitch_data["twitch_status"],
+                font=font,
+                align="center",
+                fill=str(colour),
             )
             return img
 
@@ -200,6 +205,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
         player = data["data"]["match"]["players"][0]
 
+        self.hero_id: int = player["heroId"]
         self.outcome: str = "Win" if player["isVictory"] else "Loss"
         self.kda: str = f'{player["kills"]}/{player["deaths"]}/{player["assists"]}'
 
@@ -232,6 +238,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
         self.neutral_item_id: int = player["neutral0Id"] or 0
 
+    @override
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
         return f"<{self.__class__.__name__} {pairs}>"
@@ -245,14 +252,17 @@ class StratzMatchToEdit(BaseMatchToEdit):
         neutral_item_url = await self.bot.cache_dota.item.icon_by_id(self.neutral_item_id)
         neutral_item_image = await self.bot.transposer.url_to_image(neutral_item_url)
 
-        ability_icon_urls = [await self.bot.cache_dota.ability.icon_by_id(id) for id in self.ability_upgrades_ids]
+        ability_icon_urls = [
+            await self.bot.cache_dota.hero.ability_icon_by_ability_id(id) for id in self.ability_upgrades_ids
+        ]
         ability_icon_images = [await self.bot.transposer.url_to_image(url) for url in ability_icon_urls]
 
-        talent_names = []
-        for ability_upgrade in self.ability_upgrades_ids:
-            talent_name = await self.bot.cache_dota.ability.talent_by_id(ability_upgrade)
-            if talent_name is not None:
-                talent_names.append(talent_name)
+        hero_talents = await self.bot.cache_dota.hero.talents_by_id(self.hero_id)
+        talent_ids = [talent[0] for talent in hero_talents]
+
+        talents_order = [
+            ability_upgrade for ability_upgrade in self.ability_upgrades_ids if ability_upgrade in talent_ids
+        ]
 
         def build_notification_image() -> Image.Image:
             log.debug("Building edited notification message.")
@@ -289,17 +299,6 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 ability_image = ability_image.resize((ability_h, ability_h))
                 img.paste(ability_image, (count * ability_h, height - information_height - ability_image.height))
 
-            # talents
-            talent_font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 12)
-            for count, talent_text in enumerate(talent_names):
-                talent_text_w, talent_text_h = self.bot.transposer.get_text_wh(talent_text, talent_font)
-                draw.text(
-                    xy=(width - talent_text_w, height - information_height - 30 * 2 - 22 * count),
-                    text=talent_text,
-                    font=talent_font,
-                    align="right",
-                )
-
             # kda text
             font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
 
@@ -320,6 +319,26 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 align="center",
                 fill=colour_dict[self.outcome],
             )
+
+            # talents
+            talent_font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 15)
+
+            for count, (talent_id, talent_display_text) in enumerate(hero_talents):
+                talent_text_w, talent_text_h = self.bot.transposer.get_text_wh(talent_display_text, talent_font)
+                left_border = 0 if count % 2 else width - talent_text_w
+                position = (
+                    left_border,
+                    height - information_height - ability_h - kda_text_h - outcome_text_h - 20 - 26 * (count // 2),
+                )
+                left, top, right, bottom = draw.textbbox(position, talent_display_text, font=talent_font)
+                if talent_id in talents_order[:4]:
+                    fill_colour = "darkorange"
+                elif talent_id in talents_order[4:]:
+                    fill_colour = "gray"
+                else:
+                    fill_colour = "black"
+                draw.rectangle(xy=(left - 6, top - 6, right + 6, bottom + 6), fill=fill_colour)
+                draw.text(xy=position, text=talent_display_text, font=talent_font, align="right")
 
             # img.show()
             return img
@@ -365,6 +384,7 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
     """
     # BETA TESTING USAGE
     # from .fpc.dota._models import beta_test_stratz_edit
+
     # await beta_test_stratz_edit(self)
 
     from ext.fpc.dota._models import StratzMatchToEdit

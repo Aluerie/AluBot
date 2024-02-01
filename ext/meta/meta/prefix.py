@@ -74,7 +74,7 @@ class GuildPrefix:
         return cls(bot, guild, prefix)
 
     def check_prefix(self) -> discord.Embed:
-        e = discord.Embed(colour=Colour.palevioletred)
+        e = discord.Embed(colour=Colour.darkslategray)
         e.description = f"Current prefix: `{self.prefix}`"
         return e
 

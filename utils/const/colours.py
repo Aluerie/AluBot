@@ -25,11 +25,12 @@ class Colour:
     # but I just chose the name that is supported by the said extension in highlight and is close enough in value.
     blueviolet    = 0x9678B6 # dota fpc
 
-    palevioletred = 0xDB7093 # lol fpc
+    darkslategray = 0x2F4F4F  # lol fpc
     maroon        = 0x800000  # errors
 
     slateblue     = 0x6A5ACD
     darkviolet    = 0x9400D3
+    # todo: add all colours from link above
 
     # other known colours
     twitch = 0x9146FF
@@ -69,8 +70,7 @@ material_palette_dict_colours = {
 mp_shades = [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
 
 material_palette = {
-    colour: dict(zip(mp_shades, hex_values))
-    for colour, hex_values in material_palette_dict_colours.items()
+    colour: dict(zip(mp_shades, hex_values)) for colour, hex_values in material_palette_dict_colours.items()
 }
 
 
@@ -195,8 +195,7 @@ material_accent_palette_dict_colours = {
 map_shades = [700, 400, 200, 100]
 
 material_accent_palette = {
-    colour: dict(zip(map_shades, hex_values))
-    for colour, hex_values in material_palette_dict_colours.items()
+    colour: dict(zip(map_shades, hex_values)) for colour, hex_values in material_palette_dict_colours.items()
 }
 
 

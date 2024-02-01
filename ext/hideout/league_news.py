@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, override
 
 import discord
 from bs4 import BeautifulSoup
@@ -12,7 +12,7 @@ from utils import aluloop, const
 from ._base import HideoutCog
 
 if TYPE_CHECKING:
-    from bot import Timer
+    from bot import AluBot, Timer
 
     class LeaguePatchCheckTimerData(TypedDict):
         last_patch_href: str
@@ -25,9 +25,11 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
 
     patch_news_json = "https://www.leagueoflegends.com/page-data/en-us/news/tags/patch-notes/page-data.json"
 
+    @override
     async def cog_load(self) -> None:
         self.initiate_league_patch_check_timer.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.initiate_league_patch_check_timer.cancel()
 
@@ -95,7 +97,7 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
 
         embed = (
             discord.Embed(
-                colour=const.Colour.palevioletred,
+                colour=const.Colour.darkslategray,
                 title=node["title"],
                 url=f"https://www.leagueoflegends.com/en-us{newest_patch_href}",
             )
@@ -105,5 +107,5 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
         await self.bot.hideout.repost.send(embed=embed, files=files)
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(LeagueOfLegendsPatchChecker(bot))

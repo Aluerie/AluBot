@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from discord.abc import Snowflake
 
     from utils import AluCog
-    from utils.database import DotRecord, PoolProtocol
+    from utils.database import DotRecord, PoolTypedWithAny
 
 
 __all__ = ("AluBot",)
@@ -73,7 +73,7 @@ class AluBot(commands.Bot, AluBotHelper):
             tree_cls=AluAppCommandTree,
         )
         self.database = pool
-        self.pool: PoolProtocol = pool  # type: ignore # asyncpg typehinting crutch
+        self.pool: PoolTypedWithAny = pool  # type: ignore # asyncpg typehinting crutch
         self.session: ClientSession = session
 
         self.exc_manager: ExceptionManager = ExceptionManager(self)
@@ -90,6 +90,7 @@ class AluBot(commands.Bot, AluBotHelper):
             seconds=datetime.timedelta(days=7).seconds
         )
 
+    @override
     async def setup_hook(self) -> None:
         self.prefixes = PrefixConfig(self.pool)
         self.bot_app_info = await self.application_info()
@@ -368,6 +369,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
             self.tz_manager = TimezoneManager(self)
 
+    @override
     async def close(self) -> None:
         """Closes the connection to Discord while cleaning up other open sessions and clients."""
         await super().close()

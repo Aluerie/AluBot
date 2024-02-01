@@ -101,7 +101,7 @@ class MatchToSend(BaseMatchToSend):
         def build_notification_image() -> Image.Image:
             width, height = img.size
             information_row = 50
-            rectangle = Image.new("RGB", (width, 100), f"#{const.Colour.palevioletred:0>6x}")
+            rectangle = Image.new("RGB", (width, 100), f"#{const.Colour.darkslategray:0>6x}")
             ImageDraw.Draw(rectangle)
             img.paste(rectangle)
             img.paste(rectangle, (0, height - information_row))
@@ -149,7 +149,7 @@ class MatchToSend(BaseMatchToSend):
         champion_emoji = getattr(const.LoLChampions, await self.bot.cache_lol.champion.alias_by_id(self.champion_id))
         embed = (
             discord.Embed(
-                color=const.Colour.palevioletred,
+                color=const.Colour.darkslategray,
                 title=f"{title} {champion_emoji}",
                 url=streamer.url,
                 description=(
@@ -210,13 +210,14 @@ class MatchToEdit(BaseMatchToEdit):
                         skill_slot = event.get("skillSlot")  # .get only bcs of NotRequired type-hinting
                         if skill_slot:
                             self.skill_build.append(skill_slot)
-
                     # ITEM ORDER
                     case "ITEM_PURCHASED":
                         item_id = event.get("itemId")
                         if item_id and item_id in item_ids:
                             self.sorted_item_ids.append(item_id)
                             item_ids.remove(item_id)
+                    case _:
+                        continue
 
     @override
     async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour) -> Image.Image:
@@ -227,7 +228,7 @@ class MatchToEdit(BaseMatchToEdit):
         trinket_icon_url = await self.bot.cache_lol.item.icon_by_id(self.trinket_item_id)
         trinket_icon_img = await self.bot.transposer.url_to_image(trinket_icon_url)
 
-        def build_notification_image():
+        def build_notification_image() -> Image.Image:
             width, height = img.size
             information_row = 50  # hard coded bcs of knowing code of MatchToSend
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 34)
@@ -311,7 +312,7 @@ if TYPE_CHECKING:
 
 
 async def beta_test_edit_image(self: AluCog) -> None:
-    """Testing function for `edit_image` from LoLFPCMatchToEdit class
+    """Testing function for `edit_image` from League'sMatchToEdit class
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """

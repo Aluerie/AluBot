@@ -6,6 +6,8 @@ Note that it can be outdated, wrong, incomplete.
 
 from typing import Literal, NamedTuple, NotRequired, TypedDict
 
+# ruff: noqa: UP013, UP014
+
 __all__ = (
     "OpenDotaAPI",
     "StratzGraphQL",
@@ -349,3 +351,64 @@ class ODotaConstantsJson:
         },
     )
     Heroes = dict[str, Hero]
+
+    # get_ability_ids
+    AbilityIDs = dict[str, str]
+
+    # get_abilities
+    AbilityAttrib = TypedDict(
+        "AbilityAttrib",
+        {
+            "key": str,
+            "header": str,
+            "value": str,
+            "generated": NotRequired[bool],
+        },
+    )
+    Ability = TypedDict(
+        "Ability",
+        {
+            "dname": str,
+            "behavior": list[str],
+            "dmg_type": str,
+            "bkbpierce": str,
+            "target_team": str,
+            "target_type": list[str],
+            "desc": str,
+            "attrib": list[AbilityAttrib],
+            "lore": str,
+            "mc": list[str],  # mana cost
+            "cd": list[str],  # cooldown
+            "img": str,
+        },
+    )
+    Talent = TypedDict(
+        "Talent",
+        {
+            "dname": str,
+        },
+    )
+    Abilities = dict[str, Ability | Talent]
+    # get_hero_abilities
+    HeroTalent = TypedDict(
+        "HeroTalent",
+        {
+            "name": str,
+            "level": int,
+        },
+    )
+    HeroAbilities = TypedDict(
+        "HeroAbilities",
+        {
+            "abilities": list[str],
+            # note that talents are ordered like this (it's exactly list of length 8):
+            # 8 7
+            # 6 5
+            # 4 3
+            # 2 1
+            # so if it's even - it's left talent, if it's odd - right
+            # level with help with... level :D
+            "talents": list[HeroTalent],
+        },
+    )
+    HeroAbilitiesData = dict[str, HeroAbilities]

@@ -55,7 +55,7 @@ class DotaAccount(Account):
     async def set_game_specific_attrs(self, bot: AluBot, flags: AddDotaPlayerFlags) -> None:
         steam_id_obj = SteamID(flags.steam)
         if steam_id_obj.type != EType.Individual:
-            steam_id_obj = SteamID.from_url(steam_string)  # type: ignore # ValvePython doesn't care about TypeHints
+            steam_id_obj = SteamID.from_url(flags.steam)  # type: ignore # ValvePython doesn't care about TypeHints
         if steam_id_obj is None or (hasattr(steam_id_obj, "type") and steam_id_obj.type != EType.Individual):
             msg = (
                 f"Error checking steam profile for {flags.steam}.\n"
@@ -126,7 +126,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     6. Ready ! More info below
     """
 
-    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         bot.initialize_cache_dota()
         super().__init__(
             bot,

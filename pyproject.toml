@@ -18,24 +18,24 @@ exclude = ["**/__pycache__"]
 
 deprecateTypingAliases = true
 reportMissingTypeStubs = "none"                # a lot of libs don't have stubs
-reportPrivateUsage = "none"                    # it's my choice reeee
-reportImplicitOverride = "warning"
+reportPrivateUsage = "none"                    # it's my choice, reeee
+reportImplicitOverride = "warning"             # I love it
 reportUnnecessaryTypeIgnoreComment = "warning" # why it's "none" by default, even for strict ?!
 
-# Unused stuff - yes, I write a lot of unused stuff **GIGACHAD noises**
+# Unused stuff - yes, I write a lot of unused stuff **GIGACHAD music**
 reportUnusedImport = "warning"
 reportUnusedVariable = "none"
 reportUnusedClass = "none"
 reportUnusedFunction = "none"
 
-# a lot of libs don't **properly** declare types thus:
+# Unknown stuff - a lot of libs don't **properly** declare types
 reportUnknownMemberType = "none"
 reportUnknownVariableType = "none"
 reportUnknownArgumentType = "none"
 
 # there is a lot of **Incompatible** overriding in discord.py Bot development
 # like `convert(ctx: AluContext, argument: str)` in converters.
-# it's easier to none this out than # type: ignore hundreds of times. :x
+# it's easier to none this out than "# type: ignore" hundreds of times x_x
 reportIncompatibleVariableOverride = "none"
 reportIncompatibleMethodOverride = "none"
 

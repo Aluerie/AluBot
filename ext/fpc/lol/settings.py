@@ -11,12 +11,13 @@ from discord.ext import commands
 from utils import checks, const, errors, lol
 
 from .._base import Account, BaseSettings
-from ..database_management import AddLoLPlayerFlags
 from ._models import lol_links
 
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluGuildContext
+
+    from ..database_management import AddLoLPlayerFlags
 
 
 log = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class LoLAccount(Account):
         tag_line: str
 
     @override
-    async def set_game_specific_attrs(self, bot: AluBot, flags: AddLoLPlayerFlags):
+    async def set_game_specific_attrs(self, bot: AluBot, flags: AddLoLPlayerFlags) -> None:
         # RIOT ACCOUNT INFO
         try:
             riot_account = await bot.riot.get_account_v1_by_riot_id(
@@ -54,10 +55,13 @@ class LoLAccount(Account):
                 # so check response time to this request (BUT WHATEVER)
             )
         except aiohttp.ClientResponseError:
-            raise errors.BadArgument(
+            msg = (
                 "Error `get_account_v1_by_riot_id` for "
                 f"`{flags.game_name}#{flags.tag_line}` for `{flags.platform}` platform.\n"
                 "This account probably does not exist."
+            )
+            raise errors.BadArgument(
+                msg
             )
 
         self.puuid = puuid = riot_account["puuid"]
@@ -69,9 +73,12 @@ class LoLAccount(Account):
         try:
             summoner = await bot.riot.get_lol_summoner_v4_by_puuid(puuid=puuid, region=self.platform)
         except aiohttp.ClientResponseError:
-            raise errors.BadArgument(
+            msg = (
                 f"Error `get_lol_summoner_v4_by_puuid` for riot account\n"
                 f"`{flags.game_name}#{flags.tag_line}` in `{flags.platform}` platform, puuid: `{puuid}`"
+            )
+            raise errors.BadArgument(
+                msg
             )
         self.summoner_id = summoner["id"]
 
@@ -85,7 +92,7 @@ class LoLAccount(Account):
 
     @override
     @staticmethod
-    def static_account_name_with_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any):
+    def static_account_name_with_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any) -> str:
         opgg_name = lol.Platform(platform).opgg_name
         links = lol_links(platform, game_name, tag_line)
         return f"`{opgg_name}`: `{game_name} #{tag_line}` {links}"
@@ -124,7 +131,7 @@ class LoLFPCSettings(BaseSettings):
     The bot will send messages in a chosen channel when your fav streamer picks your fav champ.
     """
 
-    def __init__(self, bot: AluBot, *args, **kwargs):
+    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
         bot.initialize_cache_league()
         super().__init__(
             bot,
@@ -144,17 +151,17 @@ class LoLFPCSettings(BaseSettings):
 
     @checks.hybrid.is_premium_guild_manager()
     @commands.hybrid_group(name="lol", aliases=["league"])
-    async def lol_group(self, ctx: AluGuildContext):
+    async def lol_group(self, ctx: AluGuildContext) -> None:
         """League of Legends FPC (Favourite Player+Character) commands."""
         await ctx.send_help()
 
     @lol_group.group(name="request")
-    async def lol_request(self, ctx: AluGuildContext):
+    async def lol_request(self, ctx: AluGuildContext) -> None:
         """League of Legends FPC (Favourite Player+Character) request commands."""
         await ctx.send_help()
 
     @lol_request.command(name="player")
-    async def lol_request_player(self, ctx: AluGuildContext, *, flags: AddLoLPlayerFlags):
+    async def lol_request_player(self, ctx: AluGuildContext, *, flags: AddLoLPlayerFlags) -> None:
         """Request LoL Player to be added into the bot's FPC database
 
         So you and other people can add the player into their favourite later and start \
@@ -163,7 +170,7 @@ class LoLFPCSettings(BaseSettings):
         await self.request_player(ctx, flags)
 
     @lol_group.group(name="setup")
-    async def lol_setup(self, ctx: AluGuildContext):
+    async def lol_setup(self, ctx: AluGuildContext) -> None:
         """League of Legends FPC (Favourite Player+Character) setup commands.
 
         Manage FPC feature settings in your server with those commands.
@@ -171,39 +178,39 @@ class LoLFPCSettings(BaseSettings):
         await ctx.send_help()
 
     @lol_setup.command(name="channel")
-    async def lol_setup_channel(self, ctx: AluGuildContext):
+    async def lol_setup_channel(self, ctx: AluGuildContext) -> None:
         """Setup/manage your LoL FPC Notifications channel."""
         await self.setup_channel(ctx)
 
     @lol_setup.command(name="champions")
-    async def lol_setup_champions(self, ctx: AluGuildContext):
+    async def lol_setup_champions(self, ctx: AluGuildContext) -> None:
         """Setup/manage your LoL FPC favourite champions list."""
         await self.setup_characters(ctx)
 
     @lol_setup.command(name="players")
-    async def lol_setup_players(self, ctx: AluGuildContext):
+    async def lol_setup_players(self, ctx: AluGuildContext) -> None:
         """Setup/manage your LoL FPC favourite players list."""
         await self.setup_players(ctx)
 
     @lol_setup.command(name="miscellaneous", aliases=["misc"])
-    async def lol_setup_misc(self, ctx: AluGuildContext):
+    async def lol_setup_misc(self, ctx: AluGuildContext) -> None:
         """Manage your LoL FPC misc settings."""
         await self.setup_misc(ctx)
 
     @lol_group.command(name="tutorial")
-    async def lol_tutorial(self, ctx: AluGuildContext):
+    async def lol_tutorial(self, ctx: AluGuildContext) -> None:
         """Guide to setup League of Legends FPC Notifications."""
         await self.tutorial(ctx)
 
     @checks.hybrid.is_hideout()
     @commands.hybrid_group(name="lolfpc")  # cspell: ignore lolfpc
-    async def hideout_lol_group(self, ctx: AluGuildContext):
+    async def hideout_lol_group(self, ctx: AluGuildContext) -> None:
         """League of Legends FPC (Favourite Player+Character) Hideout-only commands."""
 
         await ctx.send_help()
 
     @hideout_lol_group.group(name="player")
-    async def hideout_lol_player(self, ctx: AluGuildContext):
+    async def hideout_lol_player(self, ctx: AluGuildContext) -> None:
         """League of Legends FPC (Favourite Player+Character) Hideout-only player-related commands."""
         await ctx.send_help()
 
@@ -215,7 +222,7 @@ class LoLFPCSettings(BaseSettings):
     @hideout_lol_player.command(name="add")
     @app_commands.describe(player_name="Player Name. Autocomplete suggestions exclude your favourite players.")
     @app_commands.autocomplete(player_name=hideout_lol_player_add_autocomplete)
-    async def hideout_lol_player_add(self, ctx: AluGuildContext, player_name: str):
+    async def hideout_lol_player_add(self, ctx: AluGuildContext, player_name: str) -> None:
         """Add a League of Legends player into your favourite FPC players list."""
         await self.hideout_player_add(ctx, player_name)
 
@@ -227,12 +234,12 @@ class LoLFPCSettings(BaseSettings):
     @hideout_lol_player.command(name="remove")
     @app_commands.describe(player_name="Player Name. Autocomplete suggestions include only your favourite players.")
     @app_commands.autocomplete(player_name=hideout_lol_player_remove_autocomplete)
-    async def hideout_lol_player_remove(self, ctx: AluGuildContext, player_name: str):
+    async def hideout_lol_player_remove(self, ctx: AluGuildContext, player_name: str) -> None:
         """Remove a League of Legends player into your favourite FPC players list."""
         await self.hideout_player_remove(ctx, player_name)
 
     @hideout_lol_group.group(name="champion")
-    async def hideout_lol_champion(self, ctx: AluGuildContext):
+    async def hideout_lol_champion(self, ctx: AluGuildContext) -> None:
         """League of Legends FPC (Favourite Player+Character) Hideout-only champion-related commands."""
         await ctx.send_help()
 
@@ -244,7 +251,7 @@ class LoLFPCSettings(BaseSettings):
     @hideout_lol_champion.command(name="add")
     @app_commands.describe(champion_name="Champion Name. Autocomplete suggestions exclude your favourite champs.")
     @app_commands.autocomplete(champion_name=hideout_lol_champion_add_autocomplete)
-    async def hideout_lol_champion_add(self, ctx: AluGuildContext, champion_name: str):
+    async def hideout_lol_champion_add(self, ctx: AluGuildContext, champion_name: str) -> None:
         """Add a League of Legends champion into your favourite FPC champions list."""
         await self.hideout_character_add(ctx, champion_name)
 
@@ -256,24 +263,24 @@ class LoLFPCSettings(BaseSettings):
     @hideout_lol_champion.command(name="remove")
     @app_commands.describe(champion_name="Champion Name. Autocomplete suggestions only include your favourite champs.")
     @app_commands.autocomplete(champion_name=hideout_lol_champion_remove_autocomplete)
-    async def hideout_lol_champion_remove(self, ctx: AluGuildContext, champion_name: str):
+    async def hideout_lol_champion_remove(self, ctx: AluGuildContext, champion_name: str) -> None:
         """Remove a League of Legends champion into your favourite FPC champions list."""
         await self.hideout_character_remove(ctx, champion_name)
 
     @hideout_lol_player.command(name="list")
-    async def hideout_lol_player_list(self, ctx: AluGuildContext):
+    async def hideout_lol_player_list(self, ctx: AluGuildContext) -> None:
         """Show a list of your favourite League of Legends FPC players."""
         await self.hideout_player_list(ctx)
 
     @hideout_lol_champion.command(name="list")
-    async def hideout_lol_champion_list(self, ctx: AluGuildContext):
+    async def hideout_lol_champion_list(self, ctx: AluGuildContext) -> None:
         """Show a list of your favourite League of Legends FPC champions."""
         await self.hideout_character_list(ctx)
 
     # Utilities to debug some rare situations.
 
     @commands.command(hidden=True)
-    async def meraki(self, ctx: AluGuildContext):
+    async def meraki(self, ctx: AluGuildContext) -> None:
         """Show list of champions that are missing from Meraki JSON."""
 
         embed = (
@@ -303,7 +310,7 @@ class LoLFPCSettings(BaseSettings):
 
     @commands.is_owner()
     @commands.command(name="create_champion_emote")
-    async def create_champion_emote(self, ctx: AluGuildContext, champion_name: str):
+    async def create_champion_emote(self, ctx: AluGuildContext, champion_name: str) -> None:
         """Create a new discord emote for a League of Legends champion.
 
         Useful when a new LoL champion gets added to the game, so we can just use this command,
@@ -321,11 +328,13 @@ class LoLFPCSettings(BaseSettings):
         guild_id = const.EmoteGuilds.LOL[3]
         guild = self.bot.get_guild(guild_id)
         if guild is None:
-            raise errors.SomethingWentWrong(f"Guild with id {guild_id} is `None`.")
+            msg = f"Guild with id {guild_id} is `None`."
+            raise errors.SomethingWentWrong(msg)
 
         async with self.bot.session.get(url=icon_url) as response:
             if not response.ok:
-                raise errors.ResponseNotOK("Response for a new emote link wasn't okay")
+                msg = "Response for a new emote link wasn't okay"
+                raise errors.ResponseNotOK(msg)
 
             new_emote = await guild.create_custom_emoji(name=alias, image=await response.read())
 
@@ -340,5 +349,5 @@ class LoLFPCSettings(BaseSettings):
         await ctx.reply(embed=embed)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(LoLFPCSettings(bot))

@@ -100,8 +100,10 @@ class Snowflake:
         except ValueError:
             param = ctx.current_parameter
             if param:
-                raise commands.BadArgument(f"{param.name} argument expected a Discord ID not {argument!r}")
-            raise commands.BadArgument(f"expected a Discord ID not {argument!r}")
+                msg = f"{param.name} argument expected a Discord ID not {argument!r}"
+                raise commands.BadArgument(msg)
+            msg = f"expected a Discord ID not {argument!r}"
+            raise commands.BadArgument(msg)
 
 
 class InvalidColour(AluBotException):
@@ -131,16 +133,22 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
                 return getattr(const.MaterialPalette, colour_name)(shade)
             except AttributeError:
                 methods = [m[0] for m in inspect.getmembers(const.MaterialPalette, predicate=inspect.ismethod)]
-                raise InvalidColour(
+                msg = (
                     f"Provided colour name is incorrect.\n\n"
                     "MaterialUI Google Palette supports the following colour names:"
                     f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
                 )
-            except ValueError:
                 raise InvalidColour(
+                    msg
+                )
+            except ValueError:
+                msg = (
                     "Provided shade value is incorrect.\n\n"
                     "MaterialUI Google Palette supports the following shades values:"
                     f'\n{", ".join(f"`{v}`" for v in const.MaterialPalette.shades)}{error_footer}'
+                )
+                raise InvalidColour(
+                    msg
                 )
 
         # Material Accent Palette
@@ -152,16 +160,22 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
                 return getattr(const.MaterialAccentPalette, colour_name)(shade)
             except AttributeError:
                 methods = [m[0] for m in inspect.getmembers(const.MaterialAccentPalette, predicate=inspect.ismethod)]
-                raise InvalidColour(
+                msg = (
                     f"Provided colour name is incorrect.\n\n"
                     "MaterialAccentUI Google Palette supports the following colour names:"
                     f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
                 )
-            except ValueError:
                 raise InvalidColour(
+                    msg
+                )
+            except ValueError:
+                msg = (
                     "Provided shade value is incorrect.\n\n"
                     "MaterialAccentUI Google Palette supports the following shades values:"
                     f'\n{", ".join(f"`{v}`" for v in const.MaterialAccentPalette.shades)}{error_footer}'
+                )
+                raise InvalidColour(
+                    msg
                 )
 
         # ImageColor
@@ -175,7 +189,8 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
         try:
             return await super().convert(ctx, argument)
         except commands.BadColourArgument:
-            raise InvalidColour(f"Colour `{argument}` is invalid.{error_footer}")
+            msg = f"Colour `{argument}` is invalid.{error_footer}"
+            raise InvalidColour(msg)
 
     # async def transform(self, interaction: discord.Interaction, value: str):
     #     return await self.convert(interaction, value)  # type: ignore
@@ -213,7 +228,8 @@ class MonthNumber(commands.Converter, app_commands.Transformer):
         if len(keys) == 1:
             return self.mapping[keys[0]]
         else:
-            raise commands.BadArgument(f"Couldn't understand month spelling out of {argument!r}")
+            msg = f"Couldn't understand month spelling out of {argument!r}"
+            raise commands.BadArgument(msg)
 
     async def convert(self, _ctx: AluContext, argument: str) -> int:
         return self.worker(argument)
@@ -246,4 +262,5 @@ class DateTimezonePicker(commands.FlagConverter, case_insensitive=True):
                 tzinfo=self.timezone.to_tzinfo(),
             )
         except ValueError:
-            raise commands.BadArgument("Invalid date given, please recheck the date.")
+            msg = "Invalid date given, please recheck the date."
+            raise commands.BadArgument(msg)

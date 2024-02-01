@@ -64,7 +64,7 @@ def try_get_friend_stats(bot, start_at_match_id=0, matches_requested=20):
     global send_matches
     bot.steam_dota_login()
 
-    def ready_function():
+    def ready_function() -> None:
         log.debug("ready_function friend stats")
         bot.dota.request_player_match_history(
             account_id=DOTA_FRIEND_ID,
@@ -72,7 +72,7 @@ def try_get_friend_stats(bot, start_at_match_id=0, matches_requested=20):
             start_at_match_id=start_at_match_id,
         )
 
-    def response(request_id, matches):
+    def response(request_id, matches) -> None:
         global send_matches
         send_matches = matches
         bot.dota.emit("player_match_history_response")
@@ -90,7 +90,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
     You can get various information about Aluerie's Dota 2 progress.
     """
 
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         self.bot: AluBot = bot
 
         self.current_match_data: MatchHistoryData | None = None
@@ -109,7 +109,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
 
     @commands.hybrid_group()
     @checks.hybrid.is_my_guild()
-    async def stalk(self, ctx: AluGuildContext):
+    async def stalk(self, ctx: AluGuildContext) -> None:
         """Group command about stalking Aluerie, for actual commands use it together with subcommands"""
         await ctx.send_help(ctx.command)
 
@@ -166,7 +166,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
     @stalk.command(
         name="dh", description="Aluerie's Dota 2 Match History (shows last 100 matches)", aliases=["dotahistory"]
     )
-    async def dh(self, ctx: AluGuildContext):
+    async def dh(self, ctx: AluGuildContext) -> None:
         """Aluerie's Dota 2 Match History (shows last 100 matches)"""
         await ctx.typing()
 
@@ -254,7 +254,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         await pages.Paginator(pages=pages_list).send(ctx)
 
     @dh.error
-    async def dh_error(self, ctx: AluGuildContext, error):
+    async def dh_error(self, ctx: AluGuildContext, error) -> None:
         if isinstance(error.original, IndexError):
             ctx.is_error_handled = True
             e = discord.Embed(colour=const.Colour.maroon)
@@ -264,7 +264,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
             await ctx.reply(embed=e, ephemeral=True)
 
     @stalk.command(name="match_ids")
-    async def match_ids(self, ctx: AluGuildContext):
+    async def match_ids(self, ctx: AluGuildContext) -> None:
         """Copy-paste'able match ids"""
         await ctx.typing()
         start_at_match_id = 0
@@ -293,11 +293,11 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
             title="Copypastable match ids",
         )
 
-    def request_player_match_history(self, start_at_match_id=0, matches_requested=20):
+    def request_player_match_history(self, start_at_match_id=0, matches_requested=20) -> None:
         log.info("try_get_friend stats dota2info")
         self.bot.login_into_steam_dota()
 
-        def ready_function():
+        def ready_function() -> None:
             log.info("ready_function friend stats")
             self.bot.dota.request_player_match_history(
                 account_id=DOTA_FRIEND_ID,
@@ -305,7 +305,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
                 start_at_match_id=start_at_match_id,
             )
 
-        def response(_, matches):  # "_" is request_id
+        def response(_, matches) -> None:  # "_" is request_id
             self.new_matches_for_history = matches
             self.bot.dota.emit("player_match_history_response")
 
@@ -313,16 +313,16 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         ready_function()
         self.bot.dota.wait_event("player_match_history_response", timeout=20)
 
-    def request_match_details(self, match_id=0, prev_mmr=0):
+    def request_match_details(self, match_id=0, prev_mmr=0) -> None:
         log.info("try_get_friends_stats dota2info")
         self.current_match_data = None
         self.bot.login_into_steam_dota()
 
-        def ready_function():
+        def ready_function() -> None:
             log.info("ready_function friend stats")
             self.bot.dota.request_match_details(match_id=match_id)
 
-        def response(_match_id, _eresult, match):
+        def response(_match_id, _eresult, match) -> None:
             for p in match.players:
                 if p.account_id == DOTA_FRIEND_ID:
                     self.current_match_data = MatchHistoryData(
@@ -342,11 +342,11 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
 
     @commands.hybrid_group()
     @checks.hybrid.is_my_guild()
-    async def ranked(self, ctx: AluGuildContext):
+    async def ranked(self, ctx: AluGuildContext) -> None:
         """Group command"""
         await ctx.send_help(ctx.command)
 
-    async def sync_work(self):
+    async def sync_work(self) -> None:
         self.request_player_match_history()
         last_recorded_match = db.session.query(db.dh).order_by(db.dh.id.desc()).limit(1).first()  # type: ignore
         for m in reversed(self.new_matches_for_history):
@@ -357,7 +357,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
                 continue
 
     @ranked.command()
-    async def sync(self, ctx: AluGuildContext):
+    async def sync(self, ctx: AluGuildContext) -> None:
         """Sync information for Irene's ranked infographics"""
         await ctx.typing()
         await self.sync_work()
@@ -370,7 +370,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
             datetime.time(hour=15, minute=45, tzinfo=datetime.UTC),
         ]
     )
-    async def match_history_refresh(self):
+    async def match_history_refresh(self) -> None:
         """url = "https://www.dota2.com/patches/"
         async with self.bot.ses.get(url) as resp:
             soup = BeautifulSoup(await resp.read(), 'html.parser')
@@ -379,11 +379,11 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         await self.sync_work()
 
     @match_history_refresh.before_loop
-    async def before(self):
+    async def before(self) -> None:
         await self.bot.wait_until_ready()
 
     @ranked.command(aliases=["infographics"])
-    async def info(self, ctx: AluGuildContext):
+    async def info(self, ctx: AluGuildContext) -> None:
         """Infographics about Aluerie ranked adventure"""
         await ctx.typing()
         hero_stats_dict = {}
@@ -402,7 +402,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
 
         sorted_dict = dict(sorted(hero_stats_dict.items(), key=lambda x: sum(x[1].values()), reverse=False))
 
-        def winrate():
+        def winrate() -> str:
             wins = sum(v["wins"] for v in hero_stats_dict.values())
             losses = sum(v["losses"] for v in hero_stats_dict.values())
             winrate = 100 * wins / (wins + losses)
@@ -503,5 +503,5 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         await ctx.reply(file=self.bot.transposer.plot_to_file(fig, filename="mmr.png"))
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(GamerStats(bot))

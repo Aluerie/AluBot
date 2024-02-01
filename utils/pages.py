@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 class IndexModal(discord.ui.Modal, title="Go to page"):
     goto = discord.ui.TextInput(label="Page Number", min_length=1, required=True)
 
-    def __init__(self, paginator: Paginator):
+    def __init__(self, paginator: Paginator) -> None:
         super().__init__()
         self.paginator: Paginator = paginator
 
@@ -38,7 +38,7 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
         self.goto.max_length = len(m)
         self.goto.placeholder = f"Enter a number between 1 and {m}"
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction: discord.Interaction) -> None:
         if self.paginator.is_finished():
             e = discord.Embed(colour=const.Colour.maroon, description="Took too long")
             await interaction.response.send_message(embed=e, ephemeral=True)
@@ -58,7 +58,7 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
 class SearchModal(discord.ui.Modal, title="Search Page by query"):
     search = discord.ui.TextInput(label="Search Query", required=True)
 
-    def __init__(self, paginator):
+    def __init__(self, paginator) -> None:
         super().__init__()
         self.paginator: Paginator = paginator
 
@@ -83,7 +83,7 @@ class SearchModal(discord.ui.Modal, title="Search Page by query"):
 
 
 class Paginator(AluView):
-    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], source: menus.PageSource):
+    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], source: menus.PageSource) -> None:
         super().__init__(
             author_id=ctx_ntr.user.id,
             view_name="Pagination Menu",
@@ -95,7 +95,7 @@ class Paginator(AluView):
         self.clear_items()
         self.fill_items()
 
-    def fill_items(self):
+    def fill_items(self) -> None:
         if self.source.is_paginating():
             for item in [self.home_page, self.previous_page, self.index, self.next_page, self.search]:
                 self.add_item(item)
@@ -187,30 +187,31 @@ class Paginator(AluView):
                 self.message = await interaction.original_response()
             return self.message
         else:
-            raise RuntimeError("Cannot start a paginator without a context or interaction.")
+            msg = "Cannot start a paginator without a context or interaction."
+            raise RuntimeError(msg)
 
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
-    async def home_page(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def home_page(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         """Show the very first page, kinda standard"""
         await self.show_page(interaction, 0)
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.red)
-    async def previous_page(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def previous_page(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         """Go to previous page"""
         await self.show_checked_page(interaction, self.current_page_number - 1)
 
     @discord.ui.button(label="/", style=discord.ButtonStyle.gray)
-    async def index(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def index(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         """Choose page using modal; this button also has label to show current_page/maximum"""
         await interaction.response.send_modal(IndexModal(self))
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.green)
-    async def next_page(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def next_page(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         """Go to next page"""
         await self.show_checked_page(interaction, self.current_page_number + 1)
 
     @discord.ui.button(label="\N{RIGHT-POINTING MAGNIFYING GLASS}", style=discord.ButtonStyle.blurple)
-    async def search(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def search(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         """Fuzzy search in all pages and go the page with most likely similarity"""
         # todo: implement PaginatorSearchModal
         await interaction.response.send_message("sorry, the search feature is disabled for now", ephemeral=True)
@@ -218,7 +219,7 @@ class Paginator(AluView):
     @discord.ui.button(
         label="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}", style=discord.ButtonStyle.blurple
     )
-    async def refresh(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def refresh(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         """Refresh current page.
 
         Useful for dynamic things like SetupView where people can change
@@ -229,7 +230,7 @@ class Paginator(AluView):
 
 
 class EnumeratedPageSource(menus.ListPageSource):
-    def __init__(self, entries, *, per_page: int, no_enumeration: bool = False, description_prefix: str = ""):
+    def __init__(self, entries, *, per_page: int, no_enumeration: bool = False, description_prefix: str = "") -> None:
         super().__init__(entries, per_page=per_page)
         self.description_prefix = description_prefix
         self.no_enumeration = no_enumeration
@@ -265,7 +266,7 @@ class EnumeratedPaginator(Paginator):
         footer_text: str | None = None,
         author_name: str | None = None,
         author_icon: str | None = None,
-    ):
+    ) -> None:
         # todo: if we stumble into a problem where we have description limit
         # then we can rearrange entities with
         # paginator = commands.Paginator(prefix='', suffix='', max_size=Lmt.Embed.description)

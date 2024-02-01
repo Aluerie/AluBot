@@ -108,7 +108,7 @@ class ExceptionManager:
         for i in range(0, len(iterable), max_chars_in_code):
             yield codeblocks.format(iterable[i : i + max_chars_in_code])
 
-    async def send_error(self, traceback: str, packet: ErrorInfoPacket):
+    async def send_error(self, traceback: str, packet: ErrorInfoPacket) -> None:
         """Send an error to the webhook and log it to the console.
         It is not recommended to call this yourself, call `register_error` instead.
 

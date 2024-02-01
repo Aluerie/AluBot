@@ -26,12 +26,12 @@ if TYPE_CHECKING:
 class DevInformation(DevBaseCog):
     @commands.hybrid_group(name="system", hidden=True)
     @checks.app.is_hideout()
-    async def system(self, ctx: AluContext):
+    async def system(self, ctx: AluContext) -> None:
         """Group command for /system subcommands."""
         await ctx.send_help()
 
     @system.command(name="information", aliases=["info"])
-    async def system_information(self, ctx: AluContext):
+    async def system_information(self, ctx: AluContext) -> None:
         """(\N{GREY HEART} Hideout-Only) Get system info about machine hosting the bot."""
 
         # some data doesn't fit nicely with chained embed initialization format
@@ -75,7 +75,7 @@ class DevInformation(DevBaseCog):
         await ctx.reply(embed=embed)
 
     @system.command(name="packages")
-    async def system_packages(self, ctx: AluContext):
+    async def system_packages(self, ctx: AluContext) -> None:
         """(\N{GREY HEART} Hideout-Only) Get info bot's main Python Packages."""
         curious_packages = [
             "discord.py",
@@ -103,12 +103,12 @@ class DevInformation(DevBaseCog):
         await ctx.reply(embed=embed)
 
     @system.command(name="logs")
-    async def system_logs(self, ctx: AluContext):
+    async def system_logs(self, ctx: AluContext) -> None:
         """(\N{GREY HEART} Hideout-Only) Get bot's logs."""
         await ctx.typing()
         logs_file = discord.File(".alubot/alubot.log")
         await ctx.reply(file=logs_file)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(DevInformation(bot))

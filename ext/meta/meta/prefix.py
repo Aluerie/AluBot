@@ -48,11 +48,11 @@ class PrefixSetupView(discord.ui.View):
         self.paginator: SetupPages = paginator
 
     @discord.ui.button(emoji="\N{HEAVY DOLLAR SIGN}", label="Change prefix", style=discord.ButtonStyle.blurple)
-    async def set_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button):
+    async def set_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button) -> None:
         await interaction.response.send_modal(PrefixSetModal(self.cog, self.paginator))
 
     @discord.ui.button(emoji="\N{BANKNOTE WITH DOLLAR SIGN}", label="Reset prefix", style=discord.ButtonStyle.blurple)
-    async def reset_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button):
+    async def reset_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button) -> None:
         assert interaction.guild
         p = GuildPrefix(interaction.client, interaction.guild)
         e = await p.set_prefix()
@@ -61,7 +61,7 @@ class PrefixSetupView(discord.ui.View):
 
 
 class GuildPrefix:
-    def __init__(self, bot: AluBot, guild: discord.Guild, prefix: Optional[str] = None):
+    def __init__(self, bot: AluBot, guild: discord.Guild, prefix: str | None = None) -> None:
         self.bot: AluBot = bot
         self.guild: discord.Guild = guild
         self.prefix: str = prefix if prefix else bot.main_prefix  # reset zone
@@ -87,11 +87,14 @@ class GuildPrefix:
         # Anyway, now let's verify Prefix
         if new_prefix.startswith((f"<@{bot_user_id}>", f"<@!{bot_user_id}>")):
             # Just to remind the user that it is a thing, even tho modal doesn't allow >3 characters;
-            raise commands.BadArgument("That is a reserved prefix already in use.")
+            msg = "That is a reserved prefix already in use."
+            raise commands.BadArgument(msg)
         if len(new_prefix.split()) > 1:
-            raise commands.BadArgument("Space usage is not allowed in `prefix set` command")
+            msg = "Space usage is not allowed in `prefix set` command"
+            raise commands.BadArgument(msg)
         if (le := len(new_prefix)) > 3:
-            raise commands.BadArgument(f"Prefix should consist of 1, 2 or 3 characters. Not {le} !")
+            msg = f"Prefix should consist of 1, 2 or 3 characters. Not {le} !"
+            raise commands.BadArgument(msg)
         return cls(bot, guild, new_prefix)
 
     @classmethod
@@ -115,7 +118,7 @@ class GuildPrefix:
 
 class PrefixSetupCog(AluCog, SetupCog, name="Prefix Setup"):
     @property
-    def setup_emote(self):
+    def setup_emote(self) -> str:
         return "\N{HEAVY DOLLAR SIGN}"
 
     async def setup_info(self):
@@ -135,7 +138,7 @@ class PrefixSetupCog(AluCog, SetupCog, name="Prefix Setup"):
     async def setup_view(self, pages: SetupPages):
         return PrefixSetupView(self, pages)
 
-    async def prefix_prefix_check_replies(self, ctx: AluGuildContext):
+    async def prefix_prefix_check_replies(self, ctx: AluGuildContext) -> None:
         p = await GuildPrefix.from_guild(self.bot, ctx.guild)
         e = p.check_prefix()
         e.set_footer(text=f"To change prefix use `@{self.bot.user.name} prefix set` command")
@@ -143,19 +146,19 @@ class PrefixSetupCog(AluCog, SetupCog, name="Prefix Setup"):
 
     @checks.hybrid.is_manager()
     @commands.group(invoke_without_command=True)
-    async def prefix(self, ctx: AluGuildContext):
+    async def prefix(self, ctx: AluGuildContext) -> None:
         """Group command about prefix for this server."""
         await self.prefix_prefix_check_replies(ctx)
 
     @checks.hybrid.is_manager()
     @prefix.command(name="check")
-    async def prefix_check(self, ctx: AluGuildContext):
+    async def prefix_check(self, ctx: AluGuildContext) -> None:
         """Check prefix for this server."""
         await self.prefix_prefix_check_replies(ctx)
 
     @checks.hybrid.is_manager()
     @prefix.command(name="set")
-    async def prefix_set(self, ctx: AluGuildContext, *, new_prefix: GuildPrefix):
+    async def prefix_set(self, ctx: AluGuildContext, *, new_prefix: GuildPrefix) -> None:
         """Set new prefix for the server.
         If you have troubles to set a new prefix because other bots also answer it then \
         just mention the bot with the command <@713124699663499274>` prefix set`.

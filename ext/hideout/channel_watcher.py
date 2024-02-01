@@ -25,7 +25,7 @@ class ChannelWatcher(HideoutCog):
         role_mention: str = "",
         *args,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(bot, *args, **kwargs)
         self.bot: AluBot = bot
         self.db_column: str = db_column
@@ -45,7 +45,7 @@ class ChannelWatcher(HideoutCog):
         self.sleep_task.cancel()
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: discord.Message) -> None:
         if message.channel.id == self.watch_channel_id:
             if self.sleep_task.is_running():
                 # a bit of shit-code: check if my glorious embed indicates ending
@@ -61,7 +61,7 @@ class ChannelWatcher(HideoutCog):
                 self.sleep_task.start()
 
     @aluloop(count=1)
-    async def sleep_task(self):
+    async def sleep_task(self) -> None:
         await asyncio.sleep(self.sleep_time)  # let's assume the longest possible game+q time is ~50 mins
         channel: discord.TextChannel = self.bot.get_channel(self.ping_channel_id)  # type: ignore
         e = discord.Embed(colour=const.Colour.maroon, title=self.__cog_name__)
@@ -73,7 +73,7 @@ class ChannelWatcher(HideoutCog):
 
 
 class EventPassWatcher(ChannelWatcher):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(
             bot,
             db_column="event_pass_is_live",
@@ -88,7 +88,7 @@ DROPS_CHANNEL = 1074010096566284288
 
 
 class DropsWatcher(ChannelWatcher):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(
             bot,
             db_column="drops_watch_live",
@@ -98,6 +98,6 @@ class DropsWatcher(ChannelWatcher):
         )
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(EventPassWatcher(bot))
     # await bot.add_cog(DropsWatcher(bot))

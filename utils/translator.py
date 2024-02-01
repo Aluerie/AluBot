@@ -98,7 +98,8 @@ async def translate(
         src = data.get("src", "Unknown")
         sentences: list[TranslatedSentence] = data.get("sentences", [])
         if len(sentences) == 0:
-            raise RuntimeError("Google translate returned no information")
+            msg = "Google translate returned no information"
+            raise RuntimeError(msg)
 
         return TranslateResult(
             original="".join(sentence.get("orig", "") for sentence in sentences),

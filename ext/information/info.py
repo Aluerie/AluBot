@@ -29,7 +29,7 @@ warnings.filterwarnings(
 class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
     """Commands to get some useful info"""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.ctx_menu_avatar = app_commands.ContextMenu(
             name="View User Avatar",
@@ -43,14 +43,14 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         c = self.ctx_menu_avatar
         self.bot.tree.remove_command(c.name, type=c.type)
 
-    async def view_user_avatar(self, interaction: discord.Interaction, user: discord.User):
+    async def view_user_avatar(self, interaction: discord.Interaction, user: discord.User) -> None:
         embed = discord.Embed(color=user.colour, title=f"Avatar for {user.display_name}").set_image(
             url=user.display_avatar.url
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
         pdates = search_dates(message.content)
@@ -69,13 +69,13 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
                 await message.channel.send(embed=e)
 
     @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member):
+    async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
         if before.guild.id != const.Guild.community:
             return
         added_role = list(set(after.roles) - set(before.roles))
         removed_role = list(set(before.roles) - set(after.roles))
 
-        async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id):
+        async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id) -> None:
             if (added_role and added_role[0] == role) or (removed_role and removed_role[0] == role):
                 msg = channel.get_partial_message(msg_id)
                 e = discord.Embed(title=f"List of {role.name}", colour=const.Colour.blueviolet)
@@ -86,7 +86,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         await give_text_list(self.community.nsfw_bots_role, self.community.nsfw_bot_spam, 959982171492323388)
 
     @commands.hybrid_command(name="gmt", aliases=["utc"], description="Show GMT(UTC) time")
-    async def gmt(self, ctx: AluContext):
+    async def gmt(self, ctx: AluContext) -> None:
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
@@ -97,7 +97,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
 
     @commands.hybrid_command(name="role")
     @app_commands.describe(role="Choose role to get info about")
-    async def role_info(self, ctx: AluContext, *, role: discord.Role):
+    async def role_info(self, ctx: AluContext, *, role: discord.Role) -> None:
         """View info about selected role."""
         e = discord.Embed(title="Role information", colour=role.colour)
         msg = f"Role {role.mention}\n"
@@ -112,7 +112,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         usage="<formatted_colour_string>",
     )
     @app_commands.describe(colour="Colour in any of supported formats")
-    async def colour(self, ctx, *, colour: Annotated[discord.Colour, converters.AluColourConverter]):
+    async def colour(self, ctx, *, colour: Annotated[discord.Colour, converters.AluColourConverter]) -> None:
         """Get info about colour in specified <formatted_colour_string>
 
         The bot supports the following string formats:
@@ -143,7 +143,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
 
     @colour.autocomplete("colour")
     async def autocomplete(self, _: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
-        colours = ["prpl", "rgb(", "hsl(", "hsv(", "mp(", "map("] + list(ImageColor.colormap.keys())
+        colours = ["prpl", "rgb(", "hsl(", "hsv(", "mp(", "map(", *list(ImageColor.colormap.keys())]
         return [
             app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
         ][:25]
@@ -162,7 +162,7 @@ class StatsCommands(InfoCog, name="Stats", emote=const.Emote.Smartge):
         ctx: AluContext,
         channel_or_and_member: commands.Greedy[discord.Member | discord.TextChannel],
         limit: commands.Range[int, 2000],
-    ):
+    ) -> None:
         """Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
 
         I do not scrap any chat histories into my own database.

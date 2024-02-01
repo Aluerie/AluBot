@@ -66,7 +66,7 @@ def inner_trim(s: str, *, _regex=re.compile(r"\s+")) -> str:
 
 class FreeDictionaryDefinition(NamedTuple):
     definition: str
-    example: Optional[str]
+    example: str | None
     children: list[FreeDictionaryDefinition]
 
     @classmethod
@@ -84,7 +84,7 @@ class FreeDictionaryDefinition(NamedTuple):
         definition += html_to_markdown(node, include_spans=False)
         definition = inner_trim(definition)
 
-        example: Optional[str] = None
+        example: str | None = None
         example_nodes = node.xpath("./span[@class='illustration']")
         if example_nodes:
             example = example_nodes[0].text_content()
@@ -143,8 +143,8 @@ class FreeDictionaryPhrasalVerb(NamedTuple):
 class FreeDictionaryWord:
     raw_word: str
     word: str
-    pronunciation_url: Optional[str]
-    pronunciation: Optional[str]
+    pronunciation_url: str | None
+    pronunciation: str | None
     meanings: list[FreeDictionaryMeaning]
     phrasal_verbs: list[FreeDictionaryPhrasalVerb]
 
@@ -175,7 +175,7 @@ class FreeDictionaryWord:
             self.pronunciation_url = f"https://img.tfd.com/{data_src}/{mp3}.mp3"
 
     def get_meanings(self, node) -> None:
-        conjugations: Optional[str] = None
+        conjugations: str | None = None
 
         data_src = node.attrib.get("data-src")
 
@@ -205,10 +205,7 @@ class FreeDictionaryWord:
 
             pos = html_to_markdown(div)
             if conjugations is not None:
-                if conjugations.startswith(","):
-                    pos = f"{pos}{conjugations}"
-                else:
-                    pos = f"{pos} {conjugations}"
+                pos = f"{pos}{conjugations}" if conjugations.startswith(",") else f"{pos} {conjugations}"
 
             meaning = FreeDictionaryMeaning(definitions, pos)
             self.meanings.append(meaning)
@@ -242,7 +239,7 @@ class FreeDictionaryWord:
         }
 
 
-async def parse_free_dictionary_for_word(session: ClientSession, *, word: str) -> Optional[FreeDictionaryWord]:
+async def parse_free_dictionary_for_word(session: ClientSession, *, word: str) -> FreeDictionaryWord | None:
     url = yarl.URL("https://www.thefreedictionary.com") / word
 
     headers = {
@@ -282,7 +279,7 @@ async def parse_free_dictionary_for_word(session: ClientSession, *, word: str) -
             return None
 
         node = section[0]
-        h2: Optional[Any] = node.find("h2")
+        h2: Any | None = node.find("h2")
         if h2 is None:
             log.info("Could not find word element")
             return None
@@ -324,7 +321,7 @@ async def free_dictionary_autocomplete_query(session: ClientSession, *, query: s
 class FreeDictionaryWordMeaningPageSource(menus.ListPageSource):
     entries: list[FreeDictionaryMeaning]
 
-    def __init__(self, word: FreeDictionaryWord):
+    def __init__(self, word: FreeDictionaryWord) -> None:
         super().__init__(entries=word.meanings, per_page=1)
         self.word: FreeDictionaryWord = word
 
@@ -335,10 +332,7 @@ class FreeDictionaryWordMeaningPageSource(menus.ListPageSource):
             if maximum >= 2
             else self.word.raw_word
         )
-        if self.word.pronunciation:
-            title = f"{self.word.word} {self.word.pronunciation}"
-        else:
-            title = self.word.word
+        title = f"{self.word.word} {self.word.pronunciation}" if self.word.pronunciation else self.word.word
 
         embed = discord.Embed(title=title, colour=DICTIONARY_EMBED_COLOUR)
         embed.set_author(name=heading)

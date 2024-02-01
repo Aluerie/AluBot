@@ -28,7 +28,7 @@ class MatchHistoryData:
         match_outcome: int,
         player_slot: int,
         pool: Pool,
-    ):
+    ) -> None:
         self.id = match_id
         self.hero_id = hero_id
         self.start_time = start_time
@@ -58,7 +58,7 @@ class MatchHistoryData:
 
         self.winloss = winloss()
 
-    async def add_to_database(self):
+    async def add_to_database(self) -> None:
         if self.winloss != -1:  # NotScored
             last_recorded_match = db.session.query(db.dh).order_by(db.dh.id.desc()).limit(1).first()  # type: ignore
 

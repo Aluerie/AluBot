@@ -67,9 +67,9 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
     await self.exc_manager.register_error(exception, embed, where=str(event))
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     commands.Bot.on_error = on_error  # type: ignore # self is discord.Client while we want it AluBot.
 
 
-async def teardown(bot: AluBot):
+async def teardown(bot: AluBot) -> None:
     commands.Bot.on_error = old_on_error

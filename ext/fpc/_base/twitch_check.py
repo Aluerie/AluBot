@@ -20,7 +20,7 @@ __all__ = ("TwitchAccountCheckBase",)
 
 
 class TwitchAccountCheckBase(FPCCog):
-    def __init__(self, bot: AluBot, table_name: str, day: int, *args, **kwargs):
+    def __init__(self, bot: AluBot, table_name: str, day: int, *args, **kwargs) -> None:
         super().__init__(bot, *args, **kwargs)
         self.table_name: str = table_name
         self.day: int = day
@@ -28,7 +28,7 @@ class TwitchAccountCheckBase(FPCCog):
         self.check_acc_renames.start()
 
     @aluloop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.UTC))
-    async def check_acc_renames(self):
+    async def check_acc_renames(self) -> None:
         if datetime.datetime.now(datetime.UTC).day != self.day:
             return
 

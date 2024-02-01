@@ -46,7 +46,7 @@ class MatchToSend(BaseMatchToSend):
         game: RiotAPISchema.LolSpectatorV4Game,
         participant: RiotAPISchema.LolSpectatorV4GameParticipant,
         player_account_row: LivePlayerAccountRow,
-    ):
+    ) -> None:
         super().__init__(bot)
 
         self.match_id: int = game["gameId"]
@@ -165,7 +165,7 @@ class MatchToSend(BaseMatchToSend):
         return embed, image_file
 
     @override
-    async def insert_into_game_messages(self, message_id: int, channel_id: int):
+    async def insert_into_game_messages(self, message_id: int, channel_id: int) -> None:
         query = """
             INSERT INTO lol_messages
             (message_id, channel_id, match_id, platform, champion_id)
@@ -184,7 +184,7 @@ class MatchToEdit(BaseMatchToEdit):
         *,
         participant: RiotAPISchema.LolMatchV5MatchInfoParticipant,
         timeline: RiotAPISchema.LolMatchV5MatchTimeline,
-    ):
+    ) -> None:
         super().__init__(bot)
 
         self.summoner_id: str = participant["summonerId"]
@@ -310,7 +310,7 @@ if TYPE_CHECKING:
     from utils import AluCog
 
 
-async def beta_test_edit_image(self: AluCog):
+async def beta_test_edit_image(self: AluCog) -> None:
     """Testing function for `edit_image` from LoLFPCMatchToEdit class
 
     Import this into `beta_task` for easy testing of how new elements alignment.

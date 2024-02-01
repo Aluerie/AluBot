@@ -46,7 +46,7 @@ class EmoteSpam(CommunityCog):
         else:
             return True
 
-    async def delete_the_message(self, message: discord.Message):
+    async def delete_the_message(self, message: discord.Message) -> None:
         try:
             await message.delete()
         except discord.NotFound:
@@ -61,7 +61,7 @@ class EmoteSpam(CommunityCog):
             e.set_thumbnail(url=s[0].url)
         await self.bot.community.bot_spam.send(answer_text, embed=e)
 
-    async def emote_spam_work(self, message: discord.Message):
+    async def emote_spam_work(self, message: discord.Message) -> None:
         is_allowed = await self.is_message_allowed(message, nqn_check=1)
         if is_allowed:
             await asyncio.sleep(10)
@@ -71,11 +71,11 @@ class EmoteSpam(CommunityCog):
             await self.delete_the_message(message)
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: discord.Message) -> None:
         await self.emote_spam_work(message)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, _before: discord.Message, after: discord.Message):
+    async def on_message_edit(self, _before: discord.Message, after: discord.Message) -> None:
         await self.emote_spam_work(after)
 
     @cache.cache(maxsize=60 * 24, strategy=cache.Strategy.lru)
@@ -98,13 +98,13 @@ class EmoteSpam(CommunityCog):
                 return random_emote
 
     @tasks.loop(minutes=63)
-    async def emote_spam(self):
+    async def emote_spam(self) -> None:
         if random.randint(1, 100 + 1) < 2:
             emote = await self.get_random_emote()
             await self.bot.community.emote_spam.send(f"{emote!s} {emote!s} {emote!s}")
 
     @commands.hybrid_command()
-    async def do_emote_spam(self, ctx: AluContext):
+    async def do_emote_spam(self, ctx: AluContext) -> None:
         """Send 3x random emote into emote spam channel"""
 
         emote = await self.get_random_emote()
@@ -115,7 +115,7 @@ class EmoteSpam(CommunityCog):
         await ctx.reply(embed=e, ephemeral=True, delete_after=10)
 
     @tasks.loop(count=1)
-    async def offline_criminal_check(self):
+    async def offline_criminal_check(self) -> None:
         channel = self.bot.community.emote_spam
         async for message in channel.history(limit=2000):
             if message.author.id == self.bot.user.id:
@@ -126,7 +126,7 @@ class EmoteSpam(CommunityCog):
 
     @emote_spam.before_loop
     @offline_criminal_check.before_loop
-    async def emote_spam_before(self):
+    async def emote_spam_before(self) -> None:
         await self.bot.wait_until_ready()
 
 
@@ -169,20 +169,20 @@ class ComfySpam(CommunityCog):
                 return 0
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: discord.Message) -> None:
         await self.comfy_chat_control(message)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, _before: discord.Message, after: discord.Message):
+    async def on_message_edit(self, _before: discord.Message, after: discord.Message) -> None:
         await self.comfy_chat_control(after)
 
     @tasks.loop(minutes=62)
-    async def comfy_spam(self):
+    async def comfy_spam(self) -> None:
         if random.randint(1, 100 + 1) < 2:
             await self.community.comfy_spam.send("{0} {0} {0}".format(const.Emote.peepoComfy))
 
     @tasks.loop(count=1)
-    async def offline_criminal_check(self):
+    async def offline_criminal_check(self) -> None:
         async for message in self.community.comfy_spam.history(limit=2000):
             if message.author.id == self.bot.user.id:
                 return
@@ -192,10 +192,10 @@ class ComfySpam(CommunityCog):
 
     @comfy_spam.before_loop
     @offline_criminal_check.before_loop
-    async def comfy_spam_before(self):
+    async def comfy_spam_before(self) -> None:
         await self.bot.wait_until_ready()
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(EmoteSpam(bot))
     await bot.add_cog(ComfySpam(bot))

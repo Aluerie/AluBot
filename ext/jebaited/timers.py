@@ -19,18 +19,18 @@ class Timers(JebaitedCog):
         pass
 
     @commands.hybrid_group()
-    async def timer(self, ctx: AluContext):
+    async def timer(self, ctx: AluContext) -> None:
         """new timer"""
         await ctx.send_help(ctx.command)
 
     @timer.command()
-    async def create(self, ctx: AluContext, category: str, frequency: str, probability: float):
+    async def create(self, ctx: AluContext, category: str, frequency: str, probability: float) -> None:
         pass
 
     @commands.Cog.listener()  # Yep, that's the best name I came up with.
-    async def on_timer_timer_complete(self):
+    async def on_timer_timer_complete(self) -> None:
         pass
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Timers(bot))

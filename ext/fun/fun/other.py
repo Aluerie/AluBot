@@ -26,10 +26,10 @@ class Other(FunCog):
         return await ctx.reply(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
 
     @commands.Cog.listener("on_message")
-    async def reply_non_command_mentions(self, message: discord.Message):
+    async def reply_non_command_mentions(self, message: discord.Message) -> None:
         """for now there is only blush and question marks"""
         if message.guild and message.guild.me in message.mentions:
-            if any([item in message.content.lower() for item in ["😊", "blush"]]):
+            if any(item in message.content.lower() for item in ["😊", "blush"]):
                 await message.channel.send(f"{message.author.mention} {const.Emote.peepoBlushDank}")
             else:
                 ctx = await self.bot.get_context(message)
@@ -41,7 +41,7 @@ class Other(FunCog):
                             await message.add_reaction(r)
 
     @commands.hybrid_command()
-    async def apuband(self, ctx: AluContext):
+    async def apuband(self, ctx: AluContext) -> None:
         """Send apuband emote combo."""
         guild = self.community.guild
         emote_names = ["peepo1Maracas", "peepo2Drums", "peepo3Piano", "peepo4Guitar", "peepo5Singer", "peepo6Sax"]
@@ -59,7 +59,7 @@ class Other(FunCog):
 
     @commands.hybrid_command()
     @app_commands.describe(max_roll_number="Max limit to roll")
-    async def roll(self, ctx: AluContext, max_roll_number: app_commands.Range[int, 1]):
+    async def roll(self, ctx: AluContext, max_roll_number: app_commands.Range[int, 1]) -> None:
         """Roll an integer from 1 to `max_roll_number`."""
         await ctx.reply(content=str(random.randint(1, max_roll_number + 1)))
 
@@ -69,10 +69,10 @@ class Other(FunCog):
     async def echo(
         self,
         ctx: AluGuildContext,
-        channel: Optional[discord.TextChannel] = None,
+        channel: discord.TextChannel | None = None,
         *,
         text: str = "Allo",
-    ):
+    ) -> None:
         """Send `text` to `#channel` from bot's name.
 
         For text command you can also reply to a message without specifying text for bot to copy it.
@@ -121,7 +121,7 @@ class Other(FunCog):
         match_repl = lambda c: (style.get(c.group(0)) or style.get(c.group(0).lower()) or c)
         return re.sub(pattern, match_repl, text)  # type: ignore # i dont understand regex types x_x
 
-    async def send_fancy_text(self, ctx: AluContext, answer: str):
+    async def send_fancy_text(self, ctx: AluContext, answer: str) -> None:
         if ctx.guild:
             # TODO: I'm not sure what to do when permissions won't go our way
             mimic = webhook_mimicry.MimicUserWebhook.from_context(ctx)
@@ -137,7 +137,7 @@ class Other(FunCog):
 
     @commands.hybrid_command()
     @app_commands.describe(text="Text to convert into emotes.")
-    async def emotify(self, ctx: AluContext, *, text: str):
+    async def emotify(self, ctx: AluContext, *, text: str) -> None:
         """Makes your text consist only of emotes."""
 
         style = (
@@ -158,7 +158,7 @@ class Other(FunCog):
 
     @commands.hybrid_command()
     @app_commands.describe(text="Text to convert into fancy text")
-    async def fancify(self, ctx: AluContext, *, text: str):  # cSpell:disable #fmt:off # black meeses it up x_x
+    async def fancify(self, ctx: AluContext, *, text: str) -> None:  # cSpell:disable #fmt:off # black meeses it up x_x
         """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼."""
         # cSpell:enable #fmt:on
 

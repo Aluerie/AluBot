@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, Any, Literal, Optional
 
 import discord
@@ -10,30 +9,32 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils import checks, const
-from utils.converters import Snowflake
 from utils.formats import plural
 
 from ._base import ModerationCog
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from utils import AluContext, AluGuildContext
+    from utils.converters import Snowflake
 
 
 class PurgeFlags(commands.FlagConverter):
-    user: Optional[discord.User] = commands.flag(description="Remove messages from this user", default=None)
-    contains: Optional[str] = commands.flag(
+    user: discord.User | None = commands.flag(description="Remove messages from this user", default=None)
+    contains: str | None = commands.flag(
         description="Remove messages that contains this string (case sensitive)", default=None
     )
-    prefix: Optional[str] = commands.flag(
+    prefix: str | None = commands.flag(
         description="Remove messages that start with this string (case sensitive)", default=None
     )
-    suffix: Optional[str] = commands.flag(
+    suffix: str | None = commands.flag(
         description="Remove messages that end with this string (case sensitive)", default=None
     )
-    after: Annotated[Optional[int], Snowflake] = commands.flag(
+    after: Annotated[int | None, Snowflake] = commands.flag(
         description="Search for messages that come after this message ID", default=None
     )
-    before: Annotated[Optional[int], Snowflake] = commands.flag(
+    before: Annotated[int | None, Snowflake] = commands.flag(
         description="Search for messages that come before this message ID", default=None
     )
     bot: bool = commands.flag(description="Remove messages from bots (not webhooks!)", default=False)
@@ -55,7 +56,7 @@ class ModerationTools(ModerationCog):
     @commands.bot_has_permissions(manage_messages=True)
     @app_commands.describe(search="How many messages to search for")
     async def purge(
-        self, ctx: AluGuildContext, search: Optional[commands.Range[int, 1, 2000]] = None, *, flags: PurgeFlags
+        self, ctx: AluGuildContext, search: commands.Range[int, 1, 2000] | None = None, *, flags: PurgeFlags
     ):
         """Removes messages that meet a criteria.
 
@@ -133,9 +134,8 @@ class ModerationTools(ModerationCog):
             r = op(p(m) for p in predicates)
             return r
 
-        if flags.after:
-            if search is None:
-                search = 2000
+        if flags.after and search is None:
+            search = 2000
 
         if search is None:
             search = 100
@@ -183,7 +183,7 @@ class ModerationTools(ModerationCog):
     @commands.hybrid_command()
     @commands.guild_only()
     @checks.hybrid.is_mod()
-    async def spam_chat(self, ctx: AluContext):
+    async def spam_chat(self, ctx: AluContext) -> None:
         """Let the bot to spam the chat in case you want
         to move some bad messages out of sight,
         but not clear/delete them, like some annoying/flashing images
@@ -193,5 +193,5 @@ class ModerationTools(ModerationCog):
         await ctx.reply(content=content)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(ModerationTools(bot))

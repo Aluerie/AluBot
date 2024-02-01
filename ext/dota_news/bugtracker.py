@@ -134,7 +134,7 @@ class Action:
         actor: SimpleUser,
         issue_number: int,
         **kwargs,
-    ):
+    ) -> None:
         self.event_type: EventBase | CommentBase = enum_type
         self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.UTC)
         self.actor: SimpleUser = actor
@@ -156,10 +156,10 @@ class Event(Action):
 class Comment(Action):
     """Github Issue Timeline's Comment"""
 
-    def __init__(self, *, comment_body: str, comment_url: Optional[str] = None, **kwargs):
+    def __init__(self, *, comment_body: str, comment_url: str | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
         self.comment_body: str = comment_body
-        self.comment_url: Optional[str] = comment_url
+        self.comment_url: str | None = comment_url
 
     @property
     def markdown_body(self) -> str:
@@ -184,13 +184,13 @@ class TimeLine:
         ids of github actors who created those events/comments.
     """
 
-    def __init__(self, issue: Issue):
+    def __init__(self, issue: Issue) -> None:
         self.issue: Issue = issue
 
         self.actions: list[Action] = []
         self.actor_ids: set[int] = set()
 
-    def add_action(self, action: Action):
+    def add_action(self, action: Action) -> None:
         """Add action to the Timeline."""
         self.actions.append(action)
         self.actor_ids.add(action.actor.id)
@@ -210,7 +210,7 @@ class TimeLine:
         return [e for e in self.actions if isinstance(e, Comment)]
 
     @property
-    def last_comment_url(self) -> Optional[str]:
+    def last_comment_url(self) -> str | None:
         """Get url for the last comment."""
         sorted_comments = sorted(self.comments, key=lambda x: x.created_at, reverse=False)
         try:
@@ -231,7 +231,8 @@ class TimeLine:
 
             lead_action = event or comment
             if lead_action is None:
-                raise RuntimeError("Somehow lead_event is None")
+                msg = "Somehow lead_event is None"
+                raise RuntimeError(msg)
 
             embed.colour = lead_action.event_type.colour
             url = comment.comment_url if comment else None
@@ -313,12 +314,12 @@ class BugTracker(AluCog):
 
     @commands.is_owner()
     @commands.group(name="bugtracker", aliases=["valve"], hidden=True)
-    async def bugtracker(self, ctx: AluContext):
+    async def bugtracker(self, ctx: AluContext) -> None:
         """Commands to retrieve or manually control the list of known Valve developers' github accounts."""
         await ctx.send_help(ctx.command)
 
     @bugtracker.command(name="add")
-    async def bugtracker_add(self, ctx: AluContext, *, login: str):
+    async def bugtracker_add(self, ctx: AluContext, *, login: str) -> None:
         """Manually add a user login to the list of known Valve developers."""
         logins = [b for x in login.split(",") if (b := x.lstrip().rstrip())]
         query = """
@@ -356,7 +357,7 @@ class BugTracker(AluCog):
         await ctx.reply(embeds=embeds)
 
     @bugtracker.command(name="remove")
-    async def bugtracker_remove(self, ctx: AluContext, login: str):
+    async def bugtracker_remove(self, ctx: AluContext, login: str) -> None:
         """Manually remove a user login from the list of known Valve developers."""
         query = "DELETE FROM valve_devs WHERE login=$1"
         await self.bot.pool.execute(query, login)
@@ -368,7 +369,7 @@ class BugTracker(AluCog):
         await ctx.reply(embed=embed)
 
     @bugtracker.command(name="list", aliases=["devs"])
-    async def bugtracker_list(self, ctx: AluContext):
+    async def bugtracker_list(self, ctx: AluContext) -> None:
         """Show the list of known Valve developers."""
         query = "SELECT login FROM valve_devs"
         valve_devs: list[str] = [i for (i,) in await self.bot.pool.fetch(query)]
@@ -381,7 +382,7 @@ class BugTracker(AluCog):
         await ctx.reply(embed=embed)
 
     @aluloop(minutes=3)
-    async def bugtracker_news_worker(self):
+    async def bugtracker_news_worker(self) -> None:
         """The task to
         * track GitHub events/comments in the Dota 2 Bug Tracker Repository
         * analyze them and build Timelines
@@ -397,7 +398,7 @@ class BugTracker(AluCog):
         # if self.bot.test:  # FORCE TESTING
         #     dt = now - datetime.timedelta(hours=2)
 
-        issue_dict: dict[int, TimeLine] = dict()
+        issue_dict: dict[int, TimeLine] = {}
 
         # Closed / Self-assigned / Reopened Events
         for page_number in itertools.count(start=1, step=1):
@@ -543,5 +544,5 @@ class BugTracker(AluCog):
         ).parsed_data
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(BugTracker(bot))

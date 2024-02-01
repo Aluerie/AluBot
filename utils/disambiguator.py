@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 import discord
 
-from . import AluView, const
+from . import AluContext, AluView, const
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from bot import AluBot
 
-    from . import AluContext
 
 
 __all__ = ("Disambiguator",)
@@ -21,7 +21,7 @@ class ConfirmationView(AluView):
         super().__init__(author_id=author_id, view_name="Confirmation Prompt", timeout=timeout)
         self.value: bool | None = None
 
-    async def button_callback(self, interaction: discord.Interaction, yes_no: bool):
+    async def button_callback(self, interaction: discord.Interaction, yes_no: bool) -> None:
         self.value = yes_no
         await interaction.response.defer()
         for item in self.children:
@@ -30,18 +30,18 @@ class ConfirmationView(AluView):
         self.stop()
 
     @discord.ui.button(emoji=const.Tick.Yes, label="Confirm", style=discord.ButtonStyle.green)
-    async def confirm(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def confirm(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         await self.button_callback(interaction, True)
 
     @discord.ui.button(emoji=const.Tick.No, label="Cancel", style=discord.ButtonStyle.red)
-    async def cancel(self, interaction: discord.Interaction, _: discord.ui.Button):
+    async def cancel(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         await self.button_callback(interaction, False)
 
 
 class DisambiguatorView[T](AluView):
     selected: T
 
-    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any]):
+    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any]) -> None:
         super().__init__(author_id=ctx_ntr.user.id, view_name="Select Menu")
         self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
         self.data: list[T] = data
@@ -60,7 +60,7 @@ class DisambiguatorView[T](AluView):
         self.select = select
         self.add_item(select)
 
-    async def on_select_submit(self, interaction: discord.Interaction):
+    async def on_select_submit(self, interaction: discord.Interaction) -> None:
         index = int(self.select.values[0])
         self.selected = self.data[index]
         await interaction.response.defer()
@@ -96,7 +96,8 @@ class Disambiguator:
             else:
                 return await ctx_ntr.followup.send(embed=embed, view=view, ephemeral=ephemeral, wait=True)
         else:
-            raise TypeError(f"Expected Interaction or Context, got {ctx_ntr.__class__.__name__}")
+            msg = f"Expected Interaction or Context, got {ctx_ntr.__class__.__name__}"
+            raise TypeError(msg)
 
     async def confirm(
         self,
@@ -179,11 +180,13 @@ class Disambiguator:
         amount_of_matches = len(matches)
 
         if amount_of_matches == 0:
-            raise ValueError("No results found.")
+            msg = "No results found."
+            raise ValueError(msg)
         elif amount_of_matches == 1:
             return matches[0]
         elif amount_of_matches > 25:
-            raise ValueError("Too many results... sorry.")
+            msg = "Too many results... sorry."
+            raise ValueError(msg)
 
         view = DisambiguatorView(ctx_ntr, matches, entry)
         embed = discord.Embed(colour=discord.Colour.dark_gray())

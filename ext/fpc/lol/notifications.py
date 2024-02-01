@@ -37,7 +37,7 @@ log.setLevel(logging.INFO)
 
 
 class LoLNotifications(BaseNotifications):
-    def __init__(self, bot: AluBot, *args, **kwargs):
+    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
         super().__init__(bot, prefix="lol", *args, **kwargs)
         self.live_match_ids: list[int] = []
 
@@ -51,7 +51,7 @@ class LoLNotifications(BaseNotifications):
         self.notification_worker.stop()  # .cancel()
         return await super().cog_unload()
 
-    async def send_notifications(self):
+    async def send_notifications(self) -> None:
         self.live_match_ids = []
 
         query = "SELECT DISTINCT character_id FROM lol_favourite_characters"
@@ -124,12 +124,9 @@ class LoLNotifications(BaseNotifications):
                         AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3)
                         AND s.enabled = TRUE;
                 """
-                channel_spoil_tuples: list[tuple[int, bool]] = [
-                    (channel_id, spoil)
-                    for channel_id, spoil in await self.bot.pool.fetch(
+                channel_spoil_tuples: list[tuple[int, bool]] = list(await self.bot.pool.fetch(
                         query, participant["championId"], player_account_row["player_id"], game["gameId"]
-                    )
-                ]
+                    ))
                 if channel_spoil_tuples:
                     log.debug(
                         "Notif %s - %s",
@@ -140,7 +137,7 @@ class LoLNotifications(BaseNotifications):
                     await self.send_match(match_to_send, channel_spoil_tuples)
 
     @aluloop(seconds=59)
-    async def notification_worker(self):
+    async def notification_worker(self) -> None:
         log.debug("--- LoL FPC Notifications Task is starting now ---")
         await self.send_notifications()
         await self.edit_notifications()
@@ -148,7 +145,7 @@ class LoLNotifications(BaseNotifications):
 
     # POST MATCH EDITS
 
-    async def edit_notifications(self):
+    async def edit_notifications(self) -> None:
         query = """
             SELECT match_id, champion_id, platform, ARRAY_AGG ((channel_id, message_id)) channel_message_tuples
             FROM lol_messages
@@ -180,5 +177,5 @@ class LoLNotifications(BaseNotifications):
             await self.bot.pool.fetch(query, match_row["match_id"])
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(LoLNotifications(bot))

@@ -91,7 +91,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
     reputation and many other things (currency, custom profile) to come
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.view_user_rank = app_commands.ContextMenu(
@@ -111,7 +111,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
     async def context_menu_view_user_rank_callback(
         self, interaction: discord.Interaction[AluBot], member: discord.Member
-    ):
+    ) -> None:
         await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
 
     async def rank_work(
@@ -122,12 +122,14 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         """Get file that is image for rank/levels information for desired member"""
         member = member or getattr(ctx, "author") or getattr(ctx, "user")
         if member.bot:
-            raise errors.ErroneousUsage("Sorry! our system does not count experience for bots.")
+            msg = "Sorry! our system does not count experience for bots."
+            raise errors.ErroneousUsage(msg)
 
         query = "SELECT inlvl, exp, rep FROM users WHERE id=$1"
         row = await ctx.client.pool.fetchrow(query, member.id)
         if not row.inlvl:
-            raise errors.ErroneousUsage("You decided to opt out of the exp system before")
+            msg = "You decided to opt out of the exp system before"
+            raise errors.ErroneousUsage(msg)
         lvl = get_level(row.exp)
         next_lvl_exp, prev_lvl_exp = get_exp_for_next_level(lvl), get_exp_for_next_level(lvl - 1)
 
@@ -140,14 +142,14 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
     @commands.hybrid_command(name="rank")
     @checks.hybrid.is_community()
-    async def rank(self, ctx: AluGuildContext, member: discord.Member):
+    async def rank(self, ctx: AluGuildContext, member: discord.Member) -> None:
         """View member's rank and level in this server."""
         await ctx.reply(file=await self.rank_work(ctx, member), ephemeral=True)
 
     @commands.hybrid_command(name="leaderboard", aliases=["l"])
     @checks.hybrid.is_community()
     @app_commands.describe(sort_by="Choose how to sort leaderboard")
-    async def leaderboard(self, ctx, sort_by: Literal["exp", "rep"] = "exp"):
+    async def leaderboard(self, ctx, sort_by: Literal["exp", "rep"] = "exp") -> None:
         """View experience leaderboard for this server"""
         guild = self.community.guild
 
@@ -184,7 +186,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         await pgs.start()
 
     @commands.Cog.listener(name="on_message")
-    async def experience_counting(self, message: discord.Message):
+    async def experience_counting(self, message: discord.Message) -> None:
         if message.author.bot:
             return
 
@@ -213,7 +215,8 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                 level_up_role = discord.utils.get(message.guild.roles, name=f"Level #{level}")
                 previous_level_role = discord.utils.get(message.guild.roles, name=f"Level #{level - 1}")
                 if not level_up_role or not previous_level_role:
-                    raise ValueError("Roles were not found in the community guild")
+                    msg = "Roles were not found in the community guild"
+                    raise ValueError(msg)
                 e = discord.Embed(colour=const.Colour.blueviolet)
                 e.description = "{0} just advanced to {1} ! " "{2} {2} {2}".format(
                     message.author.mention, level_up_role.mention, const.Emote.PepoG
@@ -228,7 +231,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
     @commands.cooldown(1, 60 * 60, commands.BucketType.user)
     @checks.hybrid.is_community()
     @app_commands.describe(member="Member to give rep to")
-    async def rep(self, ctx, member: discord.Member):
+    async def rep(self, ctx, member: discord.Member) -> None:
         """Give +1 to `@member`'s reputation ;"""
         if member == ctx.author or member.bot:
             await ctx.reply(content="You can't give reputation to yourself or bots")
@@ -239,7 +242,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             await ctx.reply(content=answer_text)
 
     @commands.Cog.listener(name="on_message")
-    async def reputation_counting(self, message: discord.Message):
+    async def reputation_counting(self, message: discord.Message) -> None:
         if message.author.bot:
             return
 
@@ -254,7 +257,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                         await self.bot.pool.execute(query, member.id)
 
     @aluloop(time=datetime.time(hour=13, minute=13, tzinfo=datetime.UTC))
-    async def remove_inactive(self):
+    async def remove_inactive(self) -> None:
         query = "SELECT id, lastseen, name FROM users"
         rows = await self.bot.pool.fetch(query)
 
@@ -269,5 +272,5 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                 await self.community.logs.send(embed=e)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(ExperienceSystem(bot))

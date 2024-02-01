@@ -3,7 +3,7 @@ from __future__ import annotations
 import collections
 import random
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Never
 
 import orjson
 from pulsefire.clients import BaseClient
@@ -105,7 +105,7 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
                 0,
             )
 
-    def analyze_headers(self, headers):
+    def analyze_headers(self, headers) -> Never:
         raise NotImplementedError
 
 
@@ -246,7 +246,7 @@ class StratzClient(BaseClient):
             }
         }
         """
-        json = {"query": query, "variables": {"match_id": match_id, "friend_id": friend_id}}
+        json = {"query": query, "variables": {"match_id": match_id, "friend_id": friend_id}}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
 
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     import pprint
 
     # OPENDOTA
-    async def test_opendota_get_match():
+    async def test_opendota_get_match() -> None:
         async with OpenDotaClient() as opendota_client:
             match = await opendota_client.get_match(match_id=7543594334)
             # player = match["players"][5]
@@ -267,13 +267,13 @@ if __name__ == "__main__":
             # pprint.pprint(match)
         print(opendota_client.rate_limiter.rate_limits_string)
 
-    async def test_opendota_request_parse():
+    async def test_opendota_request_parse() -> None:
         async with OpenDotaClient() as opendota_client:
-            job = await opendota_client.request_parse(match_id=7543594334)
+            await opendota_client.request_parse(match_id=7543594334)
             # pprint.pprint(job)
 
     # STRATZ
-    async def test_stratz_get_match():
+    async def test_stratz_get_match() -> None:
         async with StratzClient() as stratz_client:
             match_id = 7549006442
             friend_id = 159020918

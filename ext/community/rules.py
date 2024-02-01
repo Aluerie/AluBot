@@ -21,12 +21,12 @@ class CommunityRules(CommunityCog, name="Rules", emote=const.Emote.PepoRules):
 
     @commands.has_role(const.Role.discord_mods)
     @commands.hybrid_group(hidden=True)
-    async def modrule(self, ctx: AluContext):
+    async def modrule(self, ctx: AluContext) -> None:
         """Commands about editing community rules."""
         await ctx.send_help(ctx.command)
 
     @modrule.command()
-    async def add(self, ctx: AluContext, *, content: str):
+    async def add(self, ctx: AluContext, *, content: str) -> None:
         """Add new real rule to the server."""
         query = "INSERT INTO real_rules (content) VALUES ($1)"
         await self.bot.pool.execute(query, content)
@@ -38,7 +38,7 @@ class CommunityRules(CommunityCog, name="Rules", emote=const.Emote.PepoRules):
         await ctx.reply(embed=e)
 
     @modrule.command()
-    async def remove(self, ctx: AluContext, number: int):
+    async def remove(self, ctx: AluContext, number: int) -> None:
         """Remove rule from the server real rules."""
         query = "SELECT (id, content) FROM real_rules LIMIT $1 OFFSET $1"
         rule_id, content = await self.bot.pool.fetch(query, number)
@@ -137,5 +137,5 @@ class CommunityRules(CommunityCog, name="Rules", emote=const.Emote.PepoRules):
     #     await self.remove_work(ctx, num, db.rr, 1)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(CommunityRules(bot))

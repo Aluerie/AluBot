@@ -1,28 +1,29 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal, NamedTuple, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands, menus, tasks
 
-from utils import AluContext
 from utils.const import Colour, Emote
 from utils.formats import human_timedelta
 from utils.pages import Paginator
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from bot import AluBot
+    from utils import AluContext
 
 
 class HelpFormatData(NamedTuple):
     cog: commands.Cog | Literal["front_page", "back_page"]
-    cmds: Optional[Sequence[commands.Command]]
+    cmds: Sequence[commands.Command] | None
 
 
 class HelpPageSource(menus.ListPageSource):
-    def __init__(self, data: list[HelpFormatData], help_cmd: MyHelpCommand):
+    def __init__(self, data: list[HelpFormatData], help_cmd: MyHelpCommand) -> None:
         super().__init__(entries=data, per_page=1)
         self.help_cmd: MyHelpCommand = help_cmd
         self.data: list[HelpFormatData] = data
@@ -63,7 +64,7 @@ class HelpPageSource(menus.ListPageSource):
 
 
 class HelpSelect(discord.ui.Select):
-    def __init__(self, paginator: HelpPages):
+    def __init__(self, paginator: HelpPages) -> None:
         super().__init__(placeholder="Choose help category")
         self.paginator: HelpPages = paginator
         self.__fill_options()
@@ -97,14 +98,14 @@ class HelpSelect(discord.ui.Select):
             value=str(max_len - 1),
         )
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction: discord.Interaction) -> None:
         await self.paginator.show_page(interaction, int(self.values[0]))
 
 
 class HelpPages(Paginator):
     source: HelpPageSource
 
-    def __init__(self, ctx: AluContext, source: HelpPageSource):
+    def __init__(self, ctx: AluContext, source: HelpPageSource) -> None:
         super().__init__(ctx, source)
         self.add_item(HelpSelect(self))
 
@@ -112,7 +113,7 @@ class HelpPages(Paginator):
 class MyHelpCommand(commands.HelpCommand):
     context: AluContext
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             verify_checks=True,
             command_attrs={
@@ -137,8 +138,8 @@ class MyHelpCommand(commands.HelpCommand):
             answer.append(self.get_command_signature(c))
         return answer
 
-    def get_command_signature(self, c: commands.Command):
-        def signature():
+    def get_command_signature(self, c: commands.Command) -> str:
+        def signature() -> str:
             sign = f" `{c.signature}`" if c.signature else ""
             name = c.name if not getattr(c, "root_parent") else c.root_parent.name  # type:ignore
             app_command = self.context.bot.tree.get_app_command(name)
@@ -154,14 +155,14 @@ class MyHelpCommand(commands.HelpCommand):
                 return " | aliases: " + "; ".join([f"`{ali}`" for ali in c.aliases])
             return ""
 
-        def cd():
+        def cd() -> str:
             if c.cooldown is not None:
                 return f" | cd: {c.cooldown.rate} per {human_timedelta(c.cooldown.per, mode='strip', suffix=False)}"
             return ""
 
-        def check():
+        def check() -> str:
             if c.checks:
-                res = set(getattr(i, "__doc__") or "mods only" for i in c.checks)
+                res = {getattr(i, "__doc__") or "mods only" for i in c.checks}
                 res = [f"*{i}*" for i in res]
                 return f"**!** {', '.join(res)}\n"
             return ""
@@ -171,7 +172,7 @@ class MyHelpCommand(commands.HelpCommand):
 
         return f"\N{BLACK CIRCLE} {signature()}{aliases()}{cd()}\n{check()}{help_str()}"
 
-    async def send_bot_help(self, mapping):
+    async def send_bot_help(self, mapping) -> None:
         await self.context.typing()
         sorted_list_of_keys = sorted(mapping, key=lambda x: getattr(x, "qualified_name", "No Category"))
         sorted_mapping = {k: mapping[k] for k in sorted_list_of_keys}
@@ -188,7 +189,7 @@ class MyHelpCommand(commands.HelpCommand):
         # pages.add_item(HelpSelect())
         await pages.start()
 
-    async def send_cog_help(self, cog):
+    async def send_cog_help(self, cog) -> None:
         filtered = await self.filter_commands(cog.get_commands(), sort=True)
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
 
@@ -201,19 +202,19 @@ class MyHelpCommand(commands.HelpCommand):
         e.set_thumbnail(url=self.context.bot.user.display_avatar.url)
         await self.context.reply(embed=e)
 
-    async def send_group_help(self, group):
+    async def send_group_help(self, group) -> None:
         filtered = await self.filter_commands(group.commands, sort=True)
         command_signatures = [chr(10).join(await self.get_the_answer(c)) for c in filtered]
         e = discord.Embed(color=Colour.blueviolet, title=group.name, description=f"{chr(10).join(command_signatures)}")
         await self.context.reply(embed=e)
 
-    async def send_command_help(self, command):
+    async def send_command_help(self, command) -> None:
         e = discord.Embed(
             title=command.qualified_name, color=Colour.blueviolet, description=self.get_command_signature(command)
         )
         await self.context.reply(embed=e)
 
-    async def send_error_message(self, error):
+    async def send_error_message(self, error) -> None:
         e = discord.Embed(title="Help Command Error", description=error, color=Colour.maroon)
         e.set_footer(
             text=(

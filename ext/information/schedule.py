@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-from collections.abc import MutableMapping
 from enum import Enum
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -15,6 +14,8 @@ from utils import cache, const, formats, pages
 from ._base import InfoCog
 
 if TYPE_CHECKING:
+    from collections.abc import MutableMapping
+
     from bot import AluBot
     from utils import AluContext
 
@@ -171,13 +172,13 @@ class ScheduleModeEnum(Enum):
 
 
 class ScheduleSelect(discord.ui.Select):
-    def __init__(self, author: discord.User | discord.Member, soup: BeautifulSoup, query: str | None = None):
+    def __init__(self, author: discord.User | discord.Member, soup: BeautifulSoup, query: str | None = None) -> None:
         super().__init__(options=SELECT_OPTIONS, placeholder="\N{SPIRAL CALENDAR PAD} Select schedule category")
         self.query: str | None = query
         self.soup: BeautifulSoup = soup
         self.author: discord.User | discord.Member = author
 
-    async def callback(self, interaction: discord.Interaction[AluBot]):
+    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
         sch_enum = ScheduleModeEnum(value=int(self.values[0]))
         p = SchedulePages(interaction, self.soup, sch_enum, self.query)
         await p.start(edit_response=True)
@@ -199,7 +200,7 @@ class SchedulePageSource(menus.ListPageSource):
         soup: BeautifulSoup,
         schedule_enum: ScheduleModeEnum,
         query: str | None = None,
-    ):
+    ) -> None:
         initial_data = scrape_schedule_data(soup, schedule_enum, query)
         initial_data.sort(key=lambda x: (x.league, x.dt))
         super().__init__(entries=initial_data, per_page=20)
@@ -266,7 +267,7 @@ class SchedulePages(pages.Paginator):
         soup: BeautifulSoup,
         schedule_enum: ScheduleModeEnum,
         query: str | None = None,
-    ):
+    ) -> None:
         source = SchedulePageSource(ctx.user, soup, schedule_enum, query)
         super().__init__(ctx, source)
         self.add_item(ScheduleSelect(ctx.user, soup, query))
@@ -294,7 +295,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
     @commands.hybrid_command(aliases=["sch"])
     @app_commands.rename(schedule_mode="filter")
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in SELECT_OPTIONS])
-    async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: str | None = None):
+    async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: str | None = None) -> None:
         """Dota 2 Pro Matches Schedule
 
         Parameters
@@ -311,7 +312,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
         await p.start()
 
     @commands.hybrid_command()
-    async def fixtures(self, ctx: AluContext):
+    async def fixtures(self, ctx: AluContext) -> None:
         """Get football fixtures"""
         url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
         async with self.bot.session.get(url) as r:
@@ -350,5 +351,5 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                 await ctx.reply(embed=e, ephemeral=True)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Schedule(bot))

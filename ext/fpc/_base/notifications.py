@@ -106,9 +106,11 @@ class BaseNotifications(FPCCog):
                 embed_image_url = embed.image.url
                 colour = embed.colour
                 if not embed_image_url:
-                    raise errors.SomethingWentWrong("embed.image.url is None in FPC Notifications")
+                    msg = "embed.image.url is None in FPC Notifications"
+                    raise errors.SomethingWentWrong(msg)
                 if not colour:
-                    raise errors.SomethingWentWrong("`embed.colour` is None in FPC Notifications")
+                    msg = "`embed.colour` is None in FPC Notifications"
+                    raise errors.SomethingWentWrong(msg)
 
                 old_filename = embed_image_url.split("/")[-1].split(".png")[0]  # regex-less solution, lol
 

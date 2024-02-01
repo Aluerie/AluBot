@@ -27,7 +27,7 @@ class LoggingHandler(logging.Handler):
     * `log.debug` do not so use primarily them for debug logs
     """
 
-    def __init__(self, cog: LoggerViaWebhook):
+    def __init__(self, cog: LoggerViaWebhook) -> None:
         self.cog: LoggerViaWebhook = cog
         super().__init__(logging.INFO)
 
@@ -55,7 +55,7 @@ class LoggerViaWebhook(DevBaseCog):
         "ext.fpc.lol.notifications": const.Logo.Lol,
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._logging_queue = asyncio.Queue()
 
@@ -93,18 +93,18 @@ class LoggerViaWebhook(DevBaseCog):
         await self.logger_webhook.send(msg, username=username, avatar_url=avatar_url)
 
     @tasks.loop(seconds=0.0)
-    async def logging_worker(self):
+    async def logging_worker(self) -> None:
         record = await self._logging_queue.get()
         await self.send_log_record(record)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     cog = LoggerViaWebhook(bot)
     await bot.add_cog(cog)
     bot.logging_handler = handler = LoggingHandler(cog)
     logging.getLogger().addHandler(handler)
 
 
-async def teardown(bot: AluBot):
+async def teardown(bot: AluBot) -> None:
     logging.getLogger().removeHandler(bot.logging_handler)
     del bot.logging_handler

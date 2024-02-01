@@ -32,7 +32,7 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
         self.initiate_league_patch_check_timer.cancel()
 
     @aluloop(count=1)
-    async def initiate_league_patch_check_timer(self):
+    async def initiate_league_patch_check_timer(self) -> None:
         # we have to do this quirk bcs if we put this into cog load
         # it will not have TimerManager initiated yet.
         query = "SELECT id FROM timers WHERE event = $1"
@@ -53,7 +53,7 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
         )
 
     @commands.Cog.listener("on_league_patch_check_timer_complete")
-    async def league_patch_checker(self, timer: Timer[LeaguePatchCheckTimerData]):
+    async def league_patch_checker(self, timer: Timer[LeaguePatchCheckTimerData]) -> None:
         last_patch_href = timer.data["last_patch_href"]
 
         async with self.bot.session.get(self.patch_news_json) as r_news:
@@ -105,5 +105,5 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
         await self.bot.hideout.repost.send(embed=embed, files=files)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(LeagueOfLegendsPatchChecker(bot))

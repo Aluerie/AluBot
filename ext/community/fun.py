@@ -14,7 +14,7 @@ from ._base import CommunityCog
 
 class CommunityFun(CommunityCog):
     @staticmethod
-    def community_check(msg: discord.Message):
+    def community_check(msg: discord.Message) -> bool:
         if (
             msg.guild
             and msg.guild.id == const.Guild.community
@@ -25,14 +25,11 @@ class CommunityFun(CommunityCog):
             return False
 
     @staticmethod
-    def channel_check(msg: discord.Message, channel_id: int):
-        if msg.channel.id == channel_id and msg.author.id not in const.MY_BOTS:
-            return True
-        else:
-            return False
+    def channel_check(msg: discord.Message, channel_id: int) -> bool:
+        return bool(msg.channel.id == channel_id and msg.author.id not in const.MY_BOTS)
 
     @commands.Cog.listener("on_message")
-    async def bots_in_lobby(self, message: discord.Message):
+    async def bots_in_lobby(self, message: discord.Message) -> None:
         if not self.channel_check(message, const.Channel.general):
             return
 
@@ -47,7 +44,7 @@ class CommunityFun(CommunityCog):
         )
 
     @commands.Cog.listener("on_message")
-    async def weebs_out(self, message: discord.Message):
+    async def weebs_out(self, message: discord.Message) -> None:
         if not self.channel_check(message, const.Channel.weebs):
             return
 
@@ -59,7 +56,7 @@ class CommunityFun(CommunityCog):
             )
 
     @commands.Cog.listener("on_message")
-    async def ree_the_oof(self, message: discord.Message):
+    async def ree_the_oof(self, message: discord.Message) -> None:
         if not self.community_check(message):
             return
 
@@ -71,7 +68,7 @@ class CommunityFun(CommunityCog):
                     await message.delete()
 
     @commands.Cog.listener("on_message")
-    async def random_comfy_react(self, message: discord.Message):
+    async def random_comfy_react(self, message: discord.Message) -> None:
         if not self.community_check(message):
             return
 
@@ -83,7 +80,7 @@ class CommunityFun(CommunityCog):
                 return
 
     @commands.Cog.listener("on_message")
-    async def your_life(self, message: discord.Message):
+    async def your_life(self, message: discord.Message) -> None:
         if not self.community_check(message):
             return
 
@@ -97,5 +94,5 @@ class CommunityFun(CommunityCog):
                 return
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(CommunityFun(bot))

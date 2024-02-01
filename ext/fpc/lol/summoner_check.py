@@ -29,7 +29,7 @@ class LoLSummonerNameCheck(FPCCog):
         return await super().cog_load()
 
     @aluloop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.UTC))
-    async def check_summoner_renames(self):
+    async def check_summoner_renames(self) -> None:
         if datetime.datetime.now(datetime.UTC).day != 17:
             return
 

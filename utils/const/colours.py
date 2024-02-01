@@ -69,7 +69,7 @@ material_palette_dict_colours = {
 mp_shades = [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
 
 material_palette = {
-    colour: {shade: hex_value for shade, hex_value in zip(mp_shades, hex_values)}
+    colour: dict(zip(mp_shades, hex_values))
     for colour, hex_values in material_palette_dict_colours.items()
 }
 
@@ -195,7 +195,7 @@ material_accent_palette_dict_colours = {
 map_shades = [700, 400, 200, 100]
 
 material_accent_palette = {
-    colour: {shade: hex_value for shade, hex_value in zip(map_shades, hex_values)}
+    colour: dict(zip(map_shades, hex_values))
     for colour, hex_values in material_palette_dict_colours.items()
 }
 

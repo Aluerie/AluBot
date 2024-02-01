@@ -53,5 +53,5 @@ class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
                 await thread.send(embed=e)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Suggestions(bot))

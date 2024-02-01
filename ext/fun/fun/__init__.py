@@ -16,5 +16,5 @@ class Fun(RockPaperScissorsCommand, Other):
         return discord.PartialEmoji.from_str(Emote.FeelsDankMan)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(Fun(bot))

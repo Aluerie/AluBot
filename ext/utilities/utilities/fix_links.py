@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)  # .DEBUG)
 
 
-def fix_link_worker(text_to_fix: str, omit_rest: bool = False) -> Optional[str]:
+def fix_link_worker(text_to_fix: str, omit_rest: bool = False) -> str | None:
     """Fix embeds for twitter/instagram/more to come with better embeds."""
 
     def url_regex(x: str) -> str:
@@ -49,7 +49,7 @@ def fix_link_worker(text_to_fix: str, omit_rest: bool = False) -> Optional[str]:
 
 
 class LinkUtilities(AluCog):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.fix_link_ctx_menu = app_commands.ContextMenu(
             name="Fix Twitter/Insta link", callback=self.fix_link_ctx_menu_callback
@@ -64,16 +64,17 @@ class LinkUtilities(AluCog):
     def cog_fix_link_worker(self, text_to_fix: str) -> str:
         res = fix_link_worker(text_to_fix, omit_rest=True)
         if res is None:
-            raise commands.BadArgument('This message does not have any twitter/instagram links to "fix".')
+            msg = 'This message does not have any twitter/instagram links to "fix".'
+            raise commands.BadArgument(msg)
         return res
 
-    async def fix_link_ctx_menu_callback(self, interaction: discord.Interaction, message: discord.Message):
+    async def fix_link_ctx_menu_callback(self, interaction: discord.Interaction, message: discord.Message) -> None:
         content = self.cog_fix_link_worker(message.content)
         await interaction.response.send_message(content)
 
     @commands.hybrid_command()
     @app_commands.describe(link='Enter Twitter/Instagram link to "fix"')
-    async def fix_links(self, ctx: AluContext, *, link: str):
+    async def fix_links(self, ctx: AluContext, *, link: str) -> None:
         """Fix twitter/instagram links with better embeds."""
         content = self.cog_fix_link_worker(link)
         await ctx.reply(content)

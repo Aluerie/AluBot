@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 import logging
 import textwrap
 from typing import TYPE_CHECKING, Annotated, Any, TypedDict
@@ -14,6 +13,8 @@ from utils import AluContext, const, formats, pages, times
 from ._base import RemindersCog
 
 if TYPE_CHECKING:
+    import datetime
+
     from bot import AluBot, Timer
 
     class RemindTimerData(TypedDict):
@@ -132,7 +133,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         ctx: AluContext,
         *,
         when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="...")],
-    ):
+    ) -> None:
         """Main group of remind command. Just a way to make an alias for 'remind me' with a space."""
         await self.remind_helper(ctx, dt=when.dt, text=when.arg)
 
@@ -143,7 +144,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         interaction: discord.Interaction[AluBot],
         when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
         text: str = "...",
-    ):
+    ) -> None:
         """Sets a reminder to remind you of something at a specific time"""
         ctx = await AluContext.from_interaction(interaction)
         await self.remind_helper(ctx, dt=when, text=text)
@@ -156,7 +157,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         when_and_what: Annotated[
             times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="...")
         ],
-    ):
+    ) -> None:
         """Reminds you of something after a certain amount of time. \
         The input can be any direct date (i.e. DD/MM/YYYY) or a human \
         readable offset. Examples:
@@ -169,7 +170,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         await self.remind_helper(ctx, dt=when_and_what.dt, text=when_and_what.arg)
 
     @remind.command(name="list", ignore_extra=False)
-    async def remind_list(self, ctx: AluContext):
+    async def remind_list(self, ctx: AluContext) -> None:
         """Shows a list of your current reminders"""
         query = """
             SELECT id, expires, extra #>> '{args,2}'
@@ -293,7 +294,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         await ctx.reply(embed=response_embed)
 
     @commands.Cog.listener()
-    async def on_reminder_timer_complete(self, timer: Timer[RemindTimerData]):
+    async def on_reminder_timer_complete(self, timer: Timer[RemindTimerData]) -> None:
         log.debug('Timer Event "on_reminder_timer_complete" starts now')
 
         author_id = timer.data["author_id"]
@@ -324,5 +325,5 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
                 view.message = msg
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Reminder(bot))

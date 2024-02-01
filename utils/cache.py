@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 R = TypeVar("R")
 
-CacheDict: TypeAlias = dict[Any, Any]
+type CacheDict = dict[Any, Any]
 CachedDataT = TypeVar("CachedDataT", bound=CacheDict)
 
 
@@ -89,7 +89,8 @@ class KeysCache[CachedDataT]:
         status = response.status
         response_text = await response.text()
         log.debug("Key Cache response error: %s %s", status, response_text)
-        raise errors.ResponseNotOK(f"Key Cache response error: {status} {response_text}")
+        msg = f"Key Cache response error: {status} {response_text}"
+        raise errors.ResponseNotOK(msg)
 
     async def fill_data(self) -> CacheDict:
         """Fill self.cached_data with the data from various json data
@@ -100,7 +101,7 @@ class KeysCache[CachedDataT]:
         ...
 
     @aluloop()
-    async def update_data(self):
+    async def update_data(self) -> None:
         """The task responsible for keeping the data up-to-date."""
 
         # log.debug("Trying to update Cache %s.", self.__class__.__name__)
@@ -169,11 +170,11 @@ class CacheProtocol(Protocol[R]):
 
 
 class ExpiringCache(dict):
-    def __init__(self, seconds: float):
+    def __init__(self, seconds: float) -> None:
         self.__ttl: float = seconds
         super().__init__()
 
-    def __verify_cache_integrity(self):
+    def __verify_cache_integrity(self) -> None:
         # Have to do this in two steps...
         current_time = time.monotonic()
         to_remove = [k for (k, (v, t)) in super().items() if current_time > (t + self.__ttl)]
@@ -186,7 +187,7 @@ class ExpiringCache(dict):
             return default
         return v[0]
 
-    def __contains__(self, key: str):
+    def __contains__(self, key: str) -> bool:
         self.__verify_cache_integrity()
         return super().__contains__(key)
 
@@ -195,14 +196,14 @@ class ExpiringCache(dict):
         v, _ = super().__getitem__(key)
         return v
 
-    def __setitem__(self, key: str, value: Any):
+    def __setitem__(self, key: str, value: Any) -> None:
         super().__setitem__(key, (value, time.monotonic()))
 
     def values(self):
-        return map(lambda x: x[0], super().values())
+        return (x[0] for x in super().values())
 
     def items(self):
-        return map(lambda x: (x[0], x[1][0]), super().items())
+        return ((x[0], x[1][0]) for x in super().items())
 
 
 class Strategy(enum.Enum):
@@ -272,7 +273,7 @@ def cache(
 
         def _invalidate_containing(key: str) -> None:
             to_remove = []
-            for k in _internal_cache.keys():
+            for k in _internal_cache:
                 if key in k:
                     to_remove.append(k)
             for k in to_remove:

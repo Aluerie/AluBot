@@ -17,19 +17,21 @@ if TYPE_CHECKING:
 class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
     """Commands to moderate servers with"""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def warn_check(self, member: discord.Member):
+    def warn_check(self, member: discord.Member) -> None:
         if member.id == self.bot.owner_id:
-            raise errors.ErroneousUsage(f"You can't do that to Aluerie {const.Emote.bubuGun}")
+            msg = f"You can't do that to Aluerie {const.Emote.bubuGun}"
+            raise errors.ErroneousUsage(msg)
         if member.bot:
-            raise errors.ErroneousUsage("Don't bully bots, please")
+            msg = "Don't bully bots, please"
+            raise errors.ErroneousUsage(msg)
 
     @commands.has_role(const.Role.discord_mods)
     @checks.prefix.is_community()
     @commands.command()
-    async def warn(self, ctx: AluGuildContext, member: discord.Member, *, reason: str = "No reason"):
+    async def warn(self, ctx: AluGuildContext, member: discord.Member, *, reason: str = "No reason") -> None:
         """Give member a warning."""
         self.warn_check(member)
 
@@ -70,7 +72,8 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
                 e.add_field(name="Error Message", value=f"```py\n{exc.text}\n```")
                 return await ctx.reply(embed=e)
         else:
-            raise errors.BadArgument("Discord does not allow muting people for more than 28 days.")
+            msg = "Discord does not allow muting people for more than 28 days."
+            raise errors.BadArgument(msg)
 
         e = discord.Embed(title="Manual mute by a mod", colour=const.MaterialPalette.red(shade=600), description=reason)
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
@@ -107,7 +110,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         # apparently discord limitation -> it does not ever happen
 
     @commands.Cog.listener("on_guild_channel_create")
-    async def give_aluerie_all_perms(self, channel: discord.abc.GuildChannel):
+    async def give_aluerie_all_perms(self, channel: discord.abc.GuildChannel) -> None:
         if channel.guild.id != self.community.id:
             return
 
@@ -118,5 +121,5 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         await channel.set_permissions(sister_of_the_veil, overwrite=all_perms, reason=reason)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(ModerationCog(bot))

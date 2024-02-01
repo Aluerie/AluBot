@@ -18,14 +18,14 @@ if TYPE_CHECKING:
 class AluHelpCog(MetaCog):
     """Help command."""
 
-    def __init__(self, bot: AluBot, *args, **kwargs):
+    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
         super().__init__(bot, *args, **kwargs)
         if bot.help_command:
             bot.help_command.cog = self
 
     @app_commands.command(name="help")
     @app_commands.describe(query="Command/Section/Category name to get help about.")
-    async def slash_help(self, interaction: discord.Interaction[AluBot], *, query: str | None):
+    async def slash_help(self, interaction: discord.Interaction[AluBot], *, query: str | None) -> None:
         """Show help menu for the bot."""
         ctx = await AluContext.from_interaction(interaction)
         if query:
@@ -39,12 +39,12 @@ class AluHelpCog(MetaCog):
 
     @commands.is_owner()
     @commands.command(hidden=True)
-    async def devhelp(self, ctx: AluContext, *, query: str | None):
+    async def devhelp(self, ctx: AluContext, *, query: str | None) -> None:
         """Show dev help menu for the bot."""
         my_help = AluHelp(show_hidden=True)
         my_help.context = ctx
         await my_help.command_callback(ctx, command=query)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(AluHelpCog(bot))

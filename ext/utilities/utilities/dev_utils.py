@@ -11,7 +11,7 @@ from utils import AluCog, AluContext, const
 
 class DevUtilities(AluCog):
     @commands.hybrid_command(aliases=["char"])
-    async def charinfo(self, ctx: AluContext, *, characters: str):
+    async def charinfo(self, ctx: AluContext, *, characters: str) -> None:
         """Shows information about character(-s).
 
         Only up to a 10 characters at a time though.

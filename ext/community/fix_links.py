@@ -13,7 +13,7 @@ from ._base import CommunityCog
 
 
 class FixLinksCommunity(CommunityCog):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.delete_mimic_ctx_menu = app_commands.ContextMenu(
             name="Delete Mimic message",
@@ -29,7 +29,7 @@ class FixLinksCommunity(CommunityCog):
 
     async def delete_mimic_ctx_menu_callback(
         self, interaction: discord.Interaction[commands.Bot], message: discord.Message
-    ):
+    ) -> None:
         # todo: why it's there, wrong cog
         if self.bot.mimic_message_user_mapping.get(message.id) == interaction.user.id:
             # ^ userid_ttl[0] represents both
@@ -40,17 +40,19 @@ class FixLinksCommunity(CommunityCog):
             await interaction.response.send_message(embed=e, ephemeral=True)
             return
         elif not message.webhook_id:
-            raise errors.UserError("This message was not mimicked by my MimicUser functionality.")
+            msg = "This message was not mimicked by my MimicUser functionality."
+            raise errors.UserError(msg)
         else:
-            raise errors.SomethingWentWrong(
+            msg = (
                 "Either this message\n"
                 "* was not mimicked by me\n"
                 "* expired from cache (7 days)\n"
                 "* or cache was reset (because of reboot). \nSorry. You have to ask moderators to delete it."
             )
+            raise errors.SomethingWentWrong(msg)
 
     @commands.Cog.listener("on_message")
-    async def fix_links(self, message: discord.Message):
+    async def fix_links(self, message: discord.Message) -> None:
         if not message.guild:
             return
         elif message.guild.id not in const.MY_GUILDS:
@@ -68,5 +70,5 @@ class FixLinksCommunity(CommunityCog):
         await links.extra_send_fxtwitter_links(msg)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(FixLinksCommunity(bot))

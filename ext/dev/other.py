@@ -12,7 +12,7 @@ from ._base import DevBaseCog
 
 
 class AdminTools(DevBaseCog):
-    async def send_guild_embed(self, guild: discord.Guild, join: bool):
+    async def send_guild_embed(self, guild: discord.Guild, join: bool) -> None:
         if join:
             word, colour = "joined", const.MaterialPalette.green(shade=500)
         else:
@@ -38,24 +38,24 @@ class AdminTools(DevBaseCog):
         await self.bot.hideout.global_logs.send(embed=e)
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild: discord.Guild):
+    async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.send_guild_embed(guild, join=True)
         query = "INSERT INTO guilds (id, name) VALUES ($1, $2)"
         await self.bot.pool.execute(query, guild.id, guild.name)
 
     @commands.Cog.listener()
-    async def on_guild_remove(self, guild: discord.Guild):
+    async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.send_guild_embed(guild, join=False)
         query = "DELETE FROM guilds WHERE id=$1"
         await self.bot.pool.execute(query, guild.id)
 
     @commands.group(name="guild", hidden=True)
-    async def guild_group(self, ctx: AluContext):
+    async def guild_group(self, ctx: AluContext) -> None:
         """Developer commands to control the guilds bot is in."""
         await ctx.send_help(ctx.command)
 
     @guild_group.command(hidden=True)
-    async def leave(self, ctx: AluContext, guild: discord.Guild):
+    async def leave(self, ctx: AluContext, guild: discord.Guild) -> None:
         """'Make bot leave guild with named guild_id;"""
         if guild is not None:
             await guild.leave()
@@ -63,10 +63,11 @@ class AdminTools(DevBaseCog):
             e.description = f"Just left guild {guild.name} with id `{guild.id}`\n"
             await ctx.reply(embed=e)
         else:
-            raise commands.BadArgument(f"The bot is not in the guild with id `{guild}`")
+            msg = f"The bot is not in the guild with id `{guild}`"
+            raise commands.BadArgument(msg)
 
     @guild_group.command(hidden=True)
-    async def list(self, ctx: AluContext):
+    async def list(self, ctx: AluContext) -> None:
         """Show list of guilds the bot is in."""
         e = discord.Embed(colour=const.Colour.blueviolet)
         e.description = (
@@ -76,7 +77,7 @@ class AdminTools(DevBaseCog):
         await ctx.reply(embed=e)
 
     @guild_group.command(hidden=True)
-    async def api(self, ctx: AluContext):
+    async def api(self, ctx: AluContext) -> None:
         """Lazy way to update GitHub ReadMe badges until I figure out more continuous one"""
         json_dict = {
             "servers": len(self.bot.guilds),
@@ -95,5 +96,5 @@ class AdminTools(DevBaseCog):
     #     await ctx.reply('Done')
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(AdminTools(bot))

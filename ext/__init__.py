@@ -48,7 +48,7 @@ try:
     USE_ALL_EXTENSIONS = _test.USE_ALL_EXTENSIONS
 except ModuleNotFoundError:
     _test = None
-    TEST_EXTENSIONS = tuple()
+    TEST_EXTENSIONS = ()
     USE_ALL_EXTENSIONS = True
 
 # EXTENSIONS

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-import discord
-from discord import app_commands
 from discord.ext import commands
 
 from utils import checks, errors, lol
@@ -11,6 +9,9 @@ from utils import checks, errors, lol
 from ._base import FPCCog
 
 if TYPE_CHECKING:
+    import discord
+    from discord import app_commands
+
     from bot import AluBot
     from utils import AluGuildContext
 
@@ -40,8 +41,8 @@ class AddDotaPlayerFlags(commands.FlagConverter):
 
 
 class RemoveDotaPlayerFlags(commands.FlagConverter):
-    name: Optional[str] = commands.flag(description=NAME_FLAG_DESC, default=None)
-    steam: Optional[str] = commands.flag(description=STEAM_FLAG_DESC, default=None)
+    name: str | None = commands.flag(description=NAME_FLAG_DESC, default=None)
+    steam: str | None = commands.flag(description=STEAM_FLAG_DESC, default=None)
 
 
 class AddLoLPlayerFlags(commands.FlagConverter):
@@ -52,7 +53,7 @@ class AddLoLPlayerFlags(commands.FlagConverter):
 
 
 class RemoveLoLPlayerFlags(commands.FlagConverter):
-    name: Optional[str] = commands.flag(description=NAME_FLAG_DESC, default=None)
+    name: str | None = commands.flag(description=NAME_FLAG_DESC, default=None)
 
 
 class FPCDatabaseManagement(FPCCog):
@@ -63,19 +64,20 @@ class FPCDatabaseManagement(FPCCog):
 
     def get_fpc_settings_cog(self, cog_name: str) -> FPCCog:
         """Get FPC Settings Cog"""
-        fpc_settings_cog: Optional[FPCCog] = self.bot.get_cog(cog_name)  # type:ignore
+        fpc_settings_cog: FPCCog | None = self.bot.get_cog(cog_name)  # type:ignore
         if fpc_settings_cog is None:
-            raise errors.ErroneousUsage(f"Cog `{cog_name}` is not loaded.")
+            msg = f"Cog `{cog_name}` is not loaded."
+            raise errors.ErroneousUsage(msg)
         return fpc_settings_cog
 
     @checks.hybrid.is_hideout()
     @commands.hybrid_group()
-    async def database(self, ctx: AluGuildContext):
+    async def database(self, ctx: AluGuildContext) -> None:
         """Group command about managing players/accounts bot's FPC database."""
         await ctx.send_help()
 
     @database.group(name="dota")
-    async def database_dota(self, ctx: AluGuildContext):
+    async def database_dota(self, ctx: AluGuildContext) -> None:
         """Group command about managing Dota 2 players/accounts in the bot's FPC database."""
         await ctx.send_help()
 
@@ -85,12 +87,12 @@ class FPCDatabaseManagement(FPCCog):
         return self.get_fpc_settings_cog("Dota 2 FPC")  # type: ignore
 
     @database_dota.command(name="add")
-    async def database_dota_add(self, ctx: AluGuildContext, *, flags: AddDotaPlayerFlags):
+    async def database_dota_add(self, ctx: AluGuildContext, *, flags: AddDotaPlayerFlags) -> None:
         """Add Dota 2 player to the FPC database."""
         await self.dota_fpc_settings_cog.database_add(ctx, flags)
 
     @database_dota.command(name="remove")
-    async def database_dota_remove(self, ctx: AluGuildContext, player_name: str):
+    async def database_dota_remove(self, ctx: AluGuildContext, player_name: str) -> None:
         """Remove Dota 2 account/player from the database."""
         await self.dota_fpc_settings_cog.database_remove(ctx, player_name)
 
@@ -101,7 +103,7 @@ class FPCDatabaseManagement(FPCCog):
         return await self.dota_fpc_settings_cog.database_remove_autocomplete(interaction, current)
 
     @database.group(name="lol")
-    async def database_lol(self, ctx: AluGuildContext):
+    async def database_lol(self, ctx: AluGuildContext) -> None:
         """Group command about managing LoL 2 players/accounts in the bot's FPC database."""
         await ctx.send_help()
 
@@ -111,12 +113,12 @@ class FPCDatabaseManagement(FPCCog):
         return self.get_fpc_settings_cog("League of Legends FPC")  # type: ignore
 
     @database_lol.command(name="add")
-    async def database_lol_add(self, ctx: AluGuildContext, *, flags: AddLoLPlayerFlags):
+    async def database_lol_add(self, ctx: AluGuildContext, *, flags: AddLoLPlayerFlags) -> None:
         """Add LoL player to the FPC database."""
         await self.lol_fpc_settings_cog.database_add(ctx, flags)
 
     @database_lol.command(name="remove")
-    async def database_lol_remove(self, ctx: AluGuildContext, player_name: str):
+    async def database_lol_remove(self, ctx: AluGuildContext, player_name: str) -> None:
         """Remove LoL account/player from the FPC database."""
         await self.lol_fpc_settings_cog.database_remove(ctx, player_name)
 
@@ -127,5 +129,5 @@ class FPCDatabaseManagement(FPCCog):
         return await self.lol_fpc_settings_cog.database_remove_autocomplete(interaction, current)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(FPCDatabaseManagement(bot))

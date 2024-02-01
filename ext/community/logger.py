@@ -69,7 +69,7 @@ class MemberLogging(CommunityCog):
         return e
 
     @commands.Cog.listener("on_user_update")
-    async def logger_on_user_update(self, before: discord.User, after: discord.User):
+    async def logger_on_user_update(self, before: discord.User, after: discord.User) -> None:
         # if self.community.guild.id not in before.mutual_guilds:
         #     return
         member = self.community.guild.get_member(after.id)
@@ -136,7 +136,7 @@ class MemberLogging(CommunityCog):
     ###           NICKNAME CHANGES             ###
     ##############################################
 
-    async def update_database_and_announce(self, member_after: discord.Member, nickname_before: str | None):
+    async def update_database_and_announce(self, member_after: discord.Member, nickname_before: str | None) -> None:
         query = "UPDATE users SET name=$1 WHERE id=$2"
         await self.bot.pool.execute(query, member_after.display_name, member_after.id)
 
@@ -147,14 +147,14 @@ class MemberLogging(CommunityCog):
         await self.rolling_stones_role_check(member_after)
 
     @commands.Cog.listener("on_member_update")
-    async def logger_member_nickname_update(self, before: discord.Member, after: discord.Member):
+    async def logger_member_nickname_update(self, before: discord.Member, after: discord.Member) -> None:
         if before.bot:
             return
 
         if before.nick != after.nick:
             await self.update_database_and_announce(member_after=after, nickname_before=before.nick)
 
-    async def rolling_stones_role_check(self, after: discord.Member):
+    async def rolling_stones_role_check(self, after: discord.Member) -> None:
         """
         Parameters
         ----------
@@ -174,8 +174,8 @@ class MemberLogging(CommunityCog):
             await after.remove_roles(rolling_stones_role)
 
     @aluloop(hours=6)
-    async def nicknames_database_check(self):
-        async def update_heartbeat(dt: datetime.datetime):
+    async def nicknames_database_check(self) -> None:
+        async def update_heartbeat(dt: datetime.datetime) -> None:
             query = "UPDATE botvars SET community_nickname_heartbeat=$1 WHERE id=$2"
             await self.bot.pool.execute(query, dt, True)
 
@@ -211,7 +211,7 @@ class MemberLogging(CommunityCog):
 
 class MessageLogging(CommunityCog):
     @commands.Cog.listener()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
         if after.guild is None or after.guild.id != const.Guild.community:
             return
         if before.author.bot:
@@ -254,7 +254,7 @@ class CommandLogging(CommunityCog):
     included_guilds = [const.Guild.community]
 
     @commands.Cog.listener()
-    async def on_command(self, ctx: commands.Context):
+    async def on_command(self, ctx: commands.Context) -> None:
         assert ctx.command
 
         if not ctx.guild or ctx.guild.id not in self.included_guilds or ctx.author.id in self.ignored_users:
@@ -295,7 +295,7 @@ class VoiceChatMembersLogging(CommunityCog):
         member: discord.Member,
         before: discord.VoiceState,
         after: discord.VoiceState,
-    ):
+    ) -> None:
         if member.guild.id != self.community.id:
             return
 
@@ -324,7 +324,7 @@ class VoiceChatMembersLogging(CommunityCog):
                 return
 
     @aluloop(count=1)
-    async def check_voice_members(self):
+    async def check_voice_members(self) -> None:
         voice_role = self.community.voice_role
 
         # check if voice role has members who left the voice chat
@@ -338,6 +338,6 @@ class VoiceChatMembersLogging(CommunityCog):
                 await member.add_roles(voice_role)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     for c in (MemberLogging, MessageLogging, CommandLogging, VoiceChatMembersLogging):
         await bot.add_cog(c(bot))

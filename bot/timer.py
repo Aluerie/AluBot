@@ -432,6 +432,6 @@ class TimerManager:
         rows = await self.bot.pool.fetch("SELECT * FROM timers")
         return [Timer(record=row) for row in rows]
 
-    def rerun_the_task(self):
+    def rerun_the_task(self) -> None:
         self._task.cancel()
         self._task = self.bot.loop.create_task(self.bot.dispatch_timers())

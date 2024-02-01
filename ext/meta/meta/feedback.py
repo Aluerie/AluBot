@@ -54,7 +54,7 @@ class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
 
 class FeedbackCog(MetaCog):
     @property
-    def feedback_channel(self) -> Optional[discord.TextChannel]:
+    def feedback_channel(self) -> discord.TextChannel | None:
         # maybe add different channel
         return self.bot.hideout.global_logs
 
@@ -101,8 +101,8 @@ class FeedbackCog(MetaCog):
 
     @staticmethod
     def get_successfully_submitted_embed(
-        summary: Optional[str] = None,
-        details: Optional[str] = None,
+        summary: str | None = None,
+        details: str | None = None,
     ) -> discord.Embed:
         e = discord.Embed(colour=const.Colour.blueviolet, title=summary, description=details)
         e.set_author(name="Successfully submitted feedback")
@@ -110,7 +110,7 @@ class FeedbackCog(MetaCog):
 
     @commands.command(name="feedback")
     @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
-    async def prefix_feedback(self, ctx: AluContext, *, details: str):
+    async def prefix_feedback(self, ctx: AluContext, *, details: str) -> None:
         """Give feedback about the bot directly to the bot developer.
 
         This is a quick way to request features or bug fixes. \
@@ -132,13 +132,13 @@ class FeedbackCog(MetaCog):
         await ctx.author.send(embed=e3)
 
     @app_commands.command(name="feedback")
-    async def slash_feedback(self, interaction: discord.Interaction):
+    async def slash_feedback(self, interaction: discord.Interaction) -> None:
         """Give feedback about the bot directly to the bot developer."""
         await interaction.response.send_modal(FeedbackModal(self))
 
     @commands.is_owner()
     @commands.command(aliases=["pm"], hidden=True)
-    async def dm(self, ctx: AluContext, user: discord.User, *, content: str):
+    async def dm(self, ctx: AluContext, user: discord.User, *, content: str) -> None:
         """Write direct message to {user}.
 
         Meant to be used by the bots developers to contact feedback submitters.
@@ -161,5 +161,5 @@ class FeedbackCog(MetaCog):
         await ctx.send(embed=e2)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(FeedbackCog(bot))

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class ButtonOnCooldown(commands.CommandError):
-    def __init__(self, retry_after: float):
+    def __init__(self, retry_after: float) -> None:
         self.retry_after: float = retry_after
 
 
@@ -38,7 +38,7 @@ class ConfModal(discord.ui.Modal):
         max_length=4000,
     )
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction: discord.Interaction) -> None:
         embed = discord.Embed(title=self.title, colour=Colour.blueviolet, description=self.conf.value)
         if self.title == "Non-anonymous confession":
             embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
@@ -56,7 +56,7 @@ class ConfModal(discord.ui.Modal):
 
 
 class ConfView(discord.ui.View):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(timeout=None)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -66,7 +66,7 @@ class ConfView(discord.ui.View):
             raise ButtonOnCooldown(retry_after)
         return True
 
-    async def on_error(self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item):
+    async def on_error(self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item) -> None:
         if isinstance(error, ButtonOnCooldown):
             e = discord.Embed(colour=Colour.maroon).set_author(name=error.__class__.__name__)
             e.description = (
@@ -83,7 +83,7 @@ class ConfView(discord.ui.View):
         style=discord.ButtonStyle.primary,
         emoji=Emote.bubuChrist,
     )
-    async def button0_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def button0_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(ConfModal(title=button.label))
 
     @discord.ui.button(
@@ -92,13 +92,13 @@ class ConfView(discord.ui.View):
         style=discord.ButtonStyle.primary,
         emoji=Emote.PepoBeliever,
     )
-    async def button1_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def button1_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(ConfModal(title=button.label))
 
 
 class Confession(CommunityCog):
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         self.bot.add_view(ConfView())  # Registers a View for persistent listening
 
         # very silly testing way
@@ -106,5 +106,5 @@ class Confession(CommunityCog):
         # await self.bot.get_channel(Channel.spam_me).send(view=ConfView())
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Confession(bot))

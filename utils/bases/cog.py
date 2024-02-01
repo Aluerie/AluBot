@@ -43,7 +43,8 @@ class AluCog(commands.Cog):
         elif parent_category is None:
             cls.category = category or EXT_CATEGORY_NONE
         else:
-            raise TypeError("`parent_category` is not of ExtCategory class when subclassing AluCog.")
+            msg = "`parent_category` is not of ExtCategory class when subclassing AluCog."
+            raise TypeError(msg)
         return super().__init_subclass__(**kwargs)
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:

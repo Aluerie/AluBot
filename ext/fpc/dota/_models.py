@@ -280,7 +280,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                     item_timing_w, item_timing_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
                     draw.text((left, height - item_timing_h), item_timing, font=font_item_timing, align="left")
 
-            resized_neutral_item_image = i = neutral_item_image.resize((69, information_height))
+            i = neutral_item_image.resize((69, information_height))
             img.paste(im=i, box=(width - i.width, height - i.height))
 
             # abilities

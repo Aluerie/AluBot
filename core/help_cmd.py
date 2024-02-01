@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Literal
 
 import discord
@@ -10,6 +9,8 @@ from discord.ext import commands, menus
 from utils import AluCog, AluContext, ExtCategory, aluloop, const, pages
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
     from bot import AluBot
 
 
@@ -24,7 +25,7 @@ class CogPage:
         section_total_pages: int = 1,
         category_page_number: int = 0,
         category_total_pages: int = 1,
-    ):
+    ) -> None:
         self.section: Literal["_front_page"] | AluCog | commands.Cog = section
         self.category: ExtCategory = category
         self.page_commands: Sequence[commands.Command] = page_commands
@@ -36,7 +37,7 @@ class CogPage:
 
 
 class HelpPageSource(menus.ListPageSource):
-    def __init__(self, data: dict[ExtCategory, list[CogPage]]):
+    def __init__(self, data: dict[ExtCategory, list[CogPage]]) -> None:
         entries = list(itertools.chain.from_iterable(data.values()))
         super().__init__(entries=entries, per_page=1)
 
@@ -93,7 +94,7 @@ class HelpPageSource(menus.ListPageSource):
 
 
 class HelpSelect(discord.ui.Select):
-    def __init__(self, paginator: HelpPages):
+    def __init__(self, paginator: HelpPages) -> None:
         super().__init__(placeholder="\N{UNICORN FACE} Choose help category")
         self.paginator: HelpPages = paginator
 
@@ -116,7 +117,7 @@ class HelpSelect(discord.ui.Select):
                 value=str(start - 1),  # we added 1 in total=1
             )
 
-    async def callback(self, interaction: discord.Interaction[AluBot]):
+    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
         page_to_open = int(self.values[0])
         await self.paginator.show_page(interaction, page_to_open)
 
@@ -129,19 +130,19 @@ class HelpPages(pages.Paginator):
         ctx: AluContext | discord.Interaction[AluBot],
         help_cmd: AluHelp,
         help_data: dict[ExtCategory, list[CogPage]],
-    ):
+    ) -> None:
         self.help_cmd: AluHelp = help_cmd
         self.help_data: dict[ExtCategory, list[CogPage]] = help_data
         super().__init__(ctx, HelpPageSource(help_data))
 
-    def fill_items(self):
+    def fill_items(self) -> None:
         if self.source.is_paginating():  # Copied a bit from super().fill_items
             for item in [self.legend_page, self.previous_page, self.index, self.next_page, self.search]:
                 self.add_item(item)
             self.add_item(HelpSelect(self))
 
     @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
-    async def legend_page(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button):
+    async def legend_page(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button) -> None:
         """Show legend page."""
         e = discord.Embed(
             title="Legend used in the Help menu.",
@@ -216,7 +217,7 @@ class AluHelp(commands.HelpCommand):
         return answer
 
     def get_command_signature(self, command: commands.Command) -> str:
-        def signature():
+        def signature() -> str:
             app_command = self.context.bot.tree.get_app_command(command.qualified_name)
             if app_command:
                 cmd_mention = app_command.mention
@@ -237,9 +238,9 @@ class AluHelp(commands.HelpCommand):
         #         return f' | cd: {command.cooldown.rate} per {human_timedelta(command.cooldown.per, strip=True, suffix=False)}'
         #     return ''
 
-        def check():
+        def check() -> str:
             if command.checks:
-                res = set(getattr(i, "__doc__") or "mods only" for i in command.checks)
+                res = {getattr(i, "__doc__") or "mods only" for i in command.checks}
                 res = [f"*{i}*" for i in res]
                 return f"**!** {', '.join(res)}\n"
             return ""
@@ -269,7 +270,7 @@ class AluHelp(commands.HelpCommand):
         mapping: dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]],
         *,
         requested_cog: AluCog | commands.Cog | None = None,
-    ):
+    ) -> None:
         await self.context.typing()
 
         help_data: dict[ExtCategory, list[CogPage]] = {}
@@ -320,10 +321,10 @@ class AluHelp(commands.HelpCommand):
     async def send_bot_help(
         self,
         mapping: dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]],
-    ):
+    ) -> None:
         await self.send_help_menu(mapping)
 
-    async def send_cog_help(self, cog: AluCog | commands.Cog):
+    async def send_cog_help(self, cog: AluCog | commands.Cog) -> None:
         mapping = self.get_bot_mapping()
         await self.send_help_menu(mapping, requested_cog=cog)
 
@@ -340,7 +341,7 @@ class AluHelp(commands.HelpCommand):
 class BaseHelpCog(AluCog):
     """Base cog for help command"""
 
-    def __init__(self, bot: AluBot, *args, **kwargs):
+    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
         super().__init__(bot, *args, **kwargs)
         bot.help_command = AluHelp()
         bot.help_command.cog = self
@@ -356,7 +357,7 @@ class BaseHelpCog(AluCog):
         self.bot.help_command = self._original_help_command
 
     @aluloop(count=1)
-    async def load_help_info(self):
+    async def load_help_info(self) -> None:
         # auto-syncing is bad, but is auto-fetching commands bad to fill the cache?
         # If I ever get rate-limited here then we will think :thinking:
         await self.bot.tree.fetch_commands()
@@ -371,5 +372,5 @@ class BaseHelpCog(AluCog):
             await self.community.bot_spam.send(embed=embed)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(BaseHelpCog(bot))

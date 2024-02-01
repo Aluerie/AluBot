@@ -14,7 +14,6 @@ Glossary:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeVar
 
@@ -23,6 +22,8 @@ from discord import app_commands
 from discord.ext import commands
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
     from .. import AluContext
 
 __all__ = (
@@ -36,7 +37,7 @@ TT = TypeVar("TT", bound="type[Any]")
 
 
 class classproperty(Generic[TT, T_co]):
-    def __init__(self, func: Callable[[TT], T_co]):
+    def __init__(self, func: Callable[[TT], T_co]) -> None:
         self.__func__ = func
 
     def __get__(self, instance: Any, type: TT) -> T_co:

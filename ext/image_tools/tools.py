@@ -24,7 +24,7 @@ class ToolsCog(ImageToolsCog, name="Tools", emote=const.Emote.DankFix):
 
     @commands.hybrid_command()
     @app_commands.describe(url="Url of image to convert")
-    async def convert(self, ctx: AluContext, *, url: str):
+    async def convert(self, ctx: AluContext, *, url: str) -> None:
         """Convert image from webp to png format"""
         img = await self.bot.transposer.url_to_image(url)
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags
@@ -34,5 +34,5 @@ class ToolsCog(ImageToolsCog, name="Tools", emote=const.Emote.DankFix):
         await ctx.reply(embed=e, file=file)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(ToolsCog(bot))

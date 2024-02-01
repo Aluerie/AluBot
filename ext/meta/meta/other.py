@@ -58,7 +58,7 @@ async def count_others(
     return line_count
 
 
-def format_commit(commit: pygit2.Commit):
+def format_commit(commit: pygit2.Commit) -> str:
     short, _, _ = commit.message.partition("\n")
     short = short[0:40] + "..." if len(short) > 40 else short
     short_sha2 = commit.hex[0:6]
@@ -83,11 +83,11 @@ class PingTuple(NamedTuple):
 
 class OtherCog(AluCog):
     @commands.command()
-    async def hello(self, ctx: AluContext):
+    async def hello(self, ctx: AluContext) -> None:
         await ctx.reply(f"Hello {const.Emote.bubuAYAYA}")
 
     @commands.hybrid_command(aliases=["join"])
-    async def invite(self, ctx: AluContext):
+    async def invite(self, ctx: AluContext) -> None:
         """Show the invite link, so you can add me to your server.
         You can also press "Add to Server" button in my profile.
         """
@@ -95,7 +95,7 @@ class OtherCog(AluCog):
         await ctx.reply(view=Url(self.bot.invite_link, emoji="\N{SWAN}", label="Invite Link"))
 
     @commands.hybrid_command(help="Checks the bot's ping to Discord")
-    async def ping(self, ctx: AluContext):
+    async def ping(self, ctx: AluContext) -> None:
         pings: list[PingTuple] = []
 
         typing_start = time.monotonic()
@@ -129,7 +129,7 @@ class OtherCog(AluCog):
         await message.edit(embed=e)
 
     @commands.hybrid_command(help="Show info about the bot", aliases=["botinfo", "bi"])
-    async def about(self, ctx: AluContext):
+    async def about(self, ctx: AluContext) -> None:
         """Information about the bot itself."""
         await ctx.defer()
         information = self.bot.bot_app_info
@@ -178,7 +178,7 @@ class OtherCog(AluCog):
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
-    async def source(self, ctx: AluContext, *, command: Optional[str] = None):
+    async def source(self, ctx: AluContext, *, command: str | None = None):
         """Links to the bots code, or a specific command's"""
         source_url = ctx.bot.repo_url
         branch = "master"
@@ -210,7 +210,8 @@ class OtherCog(AluCog):
         else:
             obj = self.bot.get_command(command.replace(".", " "))
             if obj is None:
-                raise commands.BadArgument("Couldn't find source for the command")
+                msg = "Couldn't find source for the command"
+                raise commands.BadArgument(msg)
 
             # since we found the command we're looking for, presumably anyway, let's
             # try to access the code itself
@@ -222,7 +223,8 @@ class OtherCog(AluCog):
         if not module.startswith("discord"):
             # not a built-in command
             if filename is None:
-                raise commands.BadArgument("Couldn't find source for the command")
+                msg = "Couldn't find source for the command"
+                raise commands.BadArgument(msg)
             location = os.path.relpath(filename).replace("\\", "/")
         else:
             location = module.replace(".", "/") + ".py"

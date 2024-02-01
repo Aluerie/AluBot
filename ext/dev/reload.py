@@ -7,7 +7,6 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Annotated
 
 import discord
@@ -18,6 +17,9 @@ from utils import AluContext, const, formats
 
 from ._base import DevBaseCog
 
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
 
 class ExtensionConverter(commands.Converter):
     """Just so I don't type `$reload extensions.fpc.dota` but `$reload fpc.dota`
@@ -25,16 +27,16 @@ class ExtensionConverter(commands.Converter):
     Yes. Lazy."""
 
     # currently does not handle base extensions
-    async def convert(self, ctx: AluContext, argument: str):
+    async def convert(self, ctx: AluContext, argument: str) -> str:
         m = argument.lower()
         return f"ext.{m}"
 
 
 class ReloadCog(DevBaseCog):
     @commands.command(name="extensions", hidden=True)
-    async def extensions(self, ctx: AluContext):
+    async def extensions(self, ctx: AluContext) -> None:
         """Shows available extensions to load/reload/unload."""
-        extensions = [f"\N{BLACK CIRCLE} {ext}" for ext in self.bot.extensions.keys()]
+        extensions = [f"\N{BLACK CIRCLE} {ext}" for ext in self.bot.extensions]
         e = discord.Embed(title="Loaded Extensions", description="\n".join(extensions), colour=const.Colour.blueviolet)
         await ctx.reply(embed=e)
 
@@ -46,7 +48,7 @@ class ReloadCog(DevBaseCog):
         extension: str,
         *,
         job_func: Callable[[str], Awaitable[None]],
-    ):
+    ) -> None:
         """Load/Unload/Reload a single extension."""
         try:
             await job_func(extension)
@@ -59,12 +61,12 @@ class ReloadCog(DevBaseCog):
         await ctx.tick_reaction(tick)
 
     @commands.command(name="load", hidden=True)
-    async def load(self, ctx: AluContext, extension: Annotated[str, ExtensionConverter]):
+    async def load(self, ctx: AluContext, extension: Annotated[str, ExtensionConverter]) -> None:
         """Loads a module."""
         await self.load_unload_reload_job(ctx, extension, job_func=self.bot.load_extension)
 
     @commands.command(name="unload", hidden=True)
-    async def unload(self, ctx: AluContext, extension: Annotated[str, ExtensionConverter]):
+    async def unload(self, ctx: AluContext, extension: Annotated[str, ExtensionConverter]) -> None:
         """Unloads a module."""
         await self.load_unload_reload_job(ctx, extension, job_func=self.bot.unload_extension)
 
@@ -75,20 +77,20 @@ class ReloadCog(DevBaseCog):
             await self.bot.load_extension(extension)
 
     @commands.group(name="reload", hidden=True, invoke_without_command=True)
-    async def reload(self, ctx: AluContext, extension: Annotated[str, ExtensionConverter]):
+    async def reload(self, ctx: AluContext, extension: Annotated[str, ExtensionConverter]) -> None:
         """Reloads a module."""
         await self.load_unload_reload_job(ctx, extension, job_func=self.reload_or_load_extension)
 
     # RELOAD ALL
 
-    async def reload_all_worker(self, ctx: AluContext):
+    async def reload_all_worker(self, ctx: AluContext) -> None:
         extensions_to_reload = get_extensions(ctx.bot.test, reload=True)
         extensions_to_unload = [e for e in self.bot.extensions if e not in extensions_to_reload]
 
         statuses: list[tuple[bool, str, str]] = []
         errors: list[tuple[str, str]] = []
 
-        async def do_the_job(ext: str, emote: str, method: Callable[[str], Awaitable[None]]):
+        async def do_the_job(ext: str, emote: str, method: Callable[[str], Awaitable[None]]) -> None:
             try:
                 await method(ext)
                 statuses.append((True, emote, ext))
@@ -128,12 +130,12 @@ class ReloadCog(DevBaseCog):
                     await ctx.send(formats.tick(True))
 
     @reload.command(name="all", hidden=True)
-    async def reload_all(self, ctx: AluContext):
+    async def reload_all(self, ctx: AluContext) -> None:
         """Reloads all modules"""
         await self.reload_all_worker(ctx)
 
     @commands.command(name="t", hidden=True)
-    async def reload_all_shortcut(self, ctx: AluContext):
+    async def reload_all_shortcut(self, ctx: AluContext) -> None:
         """Extreme one-letter shortcut to `reload all` due to a high usage rate."""
         await self.reload_all_worker(ctx)
 
@@ -218,15 +220,15 @@ class ReloadCog(DevBaseCog):
         await ctx.send("\n".join(f"{formats.tick(status)}: `{module}`" for status, module in statuses))
 
     @reload.command(name="pull", hidden=True)
-    async def reload_pull(self, ctx: AluContext):
+    async def reload_pull(self, ctx: AluContext) -> None:
         """Reloads all modules, while pulling from git."""
         await self.reload_pull_worker(ctx)
 
     @commands.command(name="p", hidden=True)
-    async def reload_pull_shortcut(self, ctx: AluContext):
+    async def reload_pull_shortcut(self, ctx: AluContext) -> None:
         """Extreme one-letter shortcut to `reload pull`."""
         await self.reload_pull_worker(ctx)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(ReloadCog(bot))

@@ -7,7 +7,6 @@ from __future__ import annotations
 import datetime
 import difflib
 import re
-from collections.abc import Sequence
 from enum import IntEnum
 from typing import TYPE_CHECKING, Literal
 
@@ -18,6 +17,9 @@ from dateutil.relativedelta import relativedelta
 from discord.utils import TimestampStyle, format_dt
 
 from . import const
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class plural:
@@ -34,7 +36,7 @@ class plural:
     # licensed MPL v2 from Rapptz/RoboDanny
     # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
 
-    def __init__(self, value: int):
+    def __init__(self, value: int) -> None:
         self.value: int = value
 
     def __format__(self, format_spec: str) -> str:
@@ -127,8 +129,9 @@ def human_timedelta(
         case int() | float():
             dt = now - datetime.timedelta(seconds=dt)
         case _:
+            msg = "Parameter `dt` must be either of types: `datetime.datetime`, `datetime.timedelta`, `int` or `float`"
             raise TypeError(
-                "Parameter `dt` must be either of types: `datetime.datetime`, `datetime.timedelta`, `int` or `float`"
+                msg
             )
 
     now = now.replace(microsecond=0)
@@ -236,10 +239,7 @@ def ordinal(n: int | str) -> str:
     # print([ordinal(n) for n in range(1,32)])
     # ```
     n = int(n)
-    if 11 <= (n % 100) <= 13:
-        suffix = "th"
-    else:
-        suffix = ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
+    suffix = "th" if 11 <= n % 100 <= 13 else ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
     return str(n) + suffix
 
 
@@ -281,7 +281,7 @@ def inline_word_by_word_diff(a, b):  # a = old_string, b = new_string #
     return " ".join(process_tag(*t) for t in matcher.get_opcodes())
 
 
-def block_function(string, blocked_words, whitelist_words):
+def block_function(string, blocked_words, whitelist_words) -> int:
     for blocked_word in blocked_words:
         if blocked_word.lower() in string.lower():
             for whitelist_word in whitelist_words:

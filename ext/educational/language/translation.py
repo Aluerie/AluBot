@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class TranslateCog(EducationalCog):
-    def __init__(self, bot: AluBot, *args, **kwargs):
+    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
         super().__init__(bot, *args, **kwargs)
         self.translate_context_menu = app_commands.ContextMenu(
             name="Translate to English",
@@ -39,17 +39,18 @@ class TranslateCog(EducationalCog):
         e.set_footer(text=f"Detected language: {result.source_lang}")
         return e
 
-    async def translate_context_menu_callback(self, interaction: discord.Interaction, message: discord.Message):
+    async def translate_context_menu_callback(self, interaction: discord.Interaction, message: discord.Message) -> None:
         if len(text := message.content) == 0:
+            msg = "Sorry, but it seems, that this message doesn't have any text content to translate."
             raise errors.BadArgument(
-                "Sorry, but it seems, that this message doesn't have any text content to translate."
+                msg
             )
         e = await self.translate_embed(text)
         await interaction.response.send_message(embed=e, ephemeral=True)
 
     @commands.hybrid_command()
     @app_commands.describe(text="Enter text to translate")
-    async def translate(self, ctx: AluContext, text: str):
+    async def translate(self, ctx: AluContext, text: str) -> None:
         """Google Translate to English, auto-detects source language"""
         e = await self.translate_embed(text)
         await ctx.reply(embed=e)

@@ -47,12 +47,11 @@ class SteamDB(AluCog):
     # and my attempts were always 1-2 minutes later than steamdb
     # So until I find a better way or just ask them.
     @commands.Cog.listener("on_message")
-    async def filter_steamdb_messages(self, message: discord.Message):
-        if message.channel.id == const.Channel.dota_info:
-            if "https://steamcommunity.com" in message.content:
-                msg = await self.news_webhook.send(content=message.content, wait=True)
-                await msg.publish()
+    async def filter_steamdb_messages(self, message: discord.Message) -> None:
+        if message.channel.id == const.Channel.dota_info and "https://steamcommunity.com" in message.content:
+            msg = await self.news_webhook.send(content=message.content, wait=True)
+            await msg.publish()
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(SteamDB(bot))

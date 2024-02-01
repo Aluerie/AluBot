@@ -99,8 +99,9 @@ class Account(abc.ABC):
         if self.is_twitch_streamer:
             twitch_user = next(iter(await bot.twitch.fetch_users(names=[self.player_name])), None)
             if not twitch_user:
+                msg = f"Error checking twitch user `{self.player_name}`.\n User either does not exist or is banned."
                 raise errors.BadArgument(
-                    f"Error checking twitch user `{self.player_name}`.\n User either does not exist or is banned."
+                    msg
                 )
             display_name, twitch_id, profile_image = twitch_user.display_name, twitch_user.id, twitch_user.profile_image
         else:
@@ -126,7 +127,7 @@ class Account(abc.ABC):
         return self
 
     @staticmethod
-    def static_player_embed_name(display_name: str, is_twitch_streamer: bool):
+    def static_player_embed_name(display_name: str, is_twitch_streamer: bool) -> str:
         if is_twitch_streamer:
             return f"\N{BLACK CIRCLE} [{display_name}](https://www.twitch.tv/{display_name})"
         else:
@@ -238,10 +239,13 @@ class BaseSettings(FPCCog):
         """
         display_name: str | None = await self.bot.pool.fetchval(query, account_id)
         if display_name:
-            raise errors.BadArgument(
+            msg = (
                 "This account is already in the database.\n"
                 f"It is marked as {display_name}'s account.\n\n"
                 f"You might have wanted to use `/{self.prefix} setup players` and chose this player from here."
+            )
+            raise errors.BadArgument(
+                msg
             )
 
     async def request_player(self, ctx: AluGuildContext, flags: commands.FlagConverter) -> None:
@@ -394,13 +398,16 @@ class BaseSettings(FPCCog):
         query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
         channel_id: int | None = await ctx.pool.fetchval(query, ctx.guild.id)
         if not channel_id:
-            raise errors.ErroneousUsage(
+            msg = (
                 "I'm sorry! You cannot use this command without setting up "
                 f"{self.game_display_name} FPC (Favourite Player+Character) channel first. "
                 f"Please, use `/{self.prefix} setup channel` to assign it."
             )
+            raise errors.ErroneousUsage(
+                msg
+            )
 
-    async def setup_misc(self, ctx: AluGuildContext):
+    async def setup_misc(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game} setup miscellaneous` command.
 
         This gives
@@ -479,7 +486,7 @@ class BaseSettings(FPCCog):
         character_alias = await self.character_alias_by_id(character_id)
         return getattr(self.emote_cls, character_alias)
 
-    async def setup_characters(self, ctx: AluGuildContext):
+    async def setup_characters(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game} setup {characters}` command.
 
         This gives
@@ -492,9 +499,7 @@ class BaseSettings(FPCCog):
         name_by_id_cache = await self.character_name_by_id_cache()
         name_by_id_cache.pop(0, None)  # 0 id is special
 
-        character_tuples: list[tuple[int, str]] = [
-            (character_id, character_name) for character_id, character_name in name_by_id_cache.items()
-        ]
+        character_tuples: list[tuple[int, str]] = list(name_by_id_cache.items())
         character_tuples.sort(key=lambda x: x[1])
 
         paginator = views.FPCSetupCharactersPaginator(ctx, character_tuples, self)
@@ -502,7 +507,7 @@ class BaseSettings(FPCCog):
         # paginator.message is already assigned
         self.setup_messages_cache[message.id] = paginator
 
-    async def setup_players(self, ctx: AluGuildContext):
+    async def setup_players(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game} setup players` command.
 
         This gives
@@ -538,7 +543,7 @@ class BaseSettings(FPCCog):
         get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]],
         column: str,
         object_word: str,
-    ):
+    ) -> None:
         """Worker function for commands /{game}-fpc {character}/player add
 
         Parameters
@@ -563,8 +568,9 @@ class BaseSettings(FPCCog):
         try:
             await ctx.pool.execute(query, ctx.guild.id, object_id)
         except asyncpg.UniqueViolationError:
+            msg = f"{object_word.capitalize()} {object_display_name} was already in your favourite list."
             raise errors.BadArgument(
-                f"{object_word.capitalize()} {object_display_name} was already in your favourite list."
+                msg
             )
 
         embed = discord.Embed(colour=self.colour).add_field(
@@ -611,27 +617,30 @@ class BaseSettings(FPCCog):
             )
             await ctx.reply(embed=embed)
         elif result == "DELETE 0":
+            msg = f"{object_word.capitalize()} {object_display_name} is already not in your favourite list."
             raise errors.BadArgument(
-                f"{object_word.capitalize()} {object_display_name} is already not in your favourite list."
+                msg
             )
         else:
-            raise errors.BadArgument("Unknown error.")
+            msg = "Unknown error."
+            raise errors.BadArgument(msg)
 
     async def get_player_tuple(self, player_name: str) -> tuple[int, str]:
         """Get player_id, display_name by their name from FPC database."""
         query = f"SELECT player_id, display_name FROM {self.prefix}_players WHERE lower(display_name)=$1"
         player_row: SetupPlayerQueryRow | None = await self.bot.pool.fetchrow(query, player_name.lower())
         if player_row is None:
+            msg = f"There is no player named {player_name} in the database. Please, double check everything."
             raise errors.BadArgument(
-                f"There is no player named {player_name} in the database. Please, double check everything."
+                msg
             )
         return player_row["player_id"], player_row["display_name"]
 
-    async def hideout_player_add(self, ctx: AluGuildContext, player_name: str):
+    async def hideout_player_add(self, ctx: AluGuildContext, player_name: str) -> None:
         """Base function for `/{game}-fpc player add` Hideout-only command."""
         await self.hideout_add_worker(ctx, player_name, self.get_player_tuple, "player", "player")
 
-    async def hideout_player_remove(self, ctx: AluGuildContext, player_name: str):
+    async def hideout_player_remove(self, ctx: AluGuildContext, player_name: str) -> None:
         """Base function for `/{game}-fpc player remove` Hideout-only command."""
         await self.hideout_remove_worker(ctx, player_name, self.get_player_tuple, "player", "player")
 
@@ -639,20 +648,23 @@ class BaseSettings(FPCCog):
         try:
             character_id = await self.character_id_by_name(character_name)
         except KeyError:
-            raise errors.BadArgument(
+            msg = (
                 f"{self.character_singular_word.capitalize()} {character_name} does not exist. "
                 "Please, double check everything."
+            )
+            raise errors.BadArgument(
+                msg
             )
         character_display_name = await self.character_name_by_id(character_id)
         return character_id, character_display_name
 
-    async def hideout_character_add(self, ctx: AluGuildContext, character_name: str):
+    async def hideout_character_add(self, ctx: AluGuildContext, character_name: str) -> None:
         """Base function for `/{game}-fpc {character} add` Hideout-only command."""
         await self.hideout_add_worker(
             ctx, character_name, self.get_character_tuple, "character", self.character_singular_word
         )
 
-    async def hideout_character_remove(self, ctx: AluGuildContext, character_name: str):
+    async def hideout_character_remove(self, ctx: AluGuildContext, character_name: str) -> None:
         """Base function for `/{game}-fpc {character} remove` Hideout-only command."""
         await self.hideout_remove_worker(
             ctx, character_name, self.get_character_tuple, "character", self.character_singular_word
@@ -675,7 +687,7 @@ class BaseSettings(FPCCog):
             description=favourite_player_names,
         ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
 
-    async def hideout_player_list(self, ctx: AluGuildContext):
+    async def hideout_player_list(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game}-fpc player list` Hideout-only command."""
         await ctx.typing()
         embed = await self.get_player_list_embed(ctx.guild.id)
@@ -695,7 +707,7 @@ class BaseSettings(FPCCog):
             description=favourite_character_names,
         )
 
-    async def hideout_character_list(self, ctx: AluGuildContext):
+    async def hideout_character_list(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game}-fpc {character} list` Hideout-only command."""
 
         await ctx.typing()
@@ -739,7 +751,7 @@ class BaseSettings(FPCCog):
 
         if mode_add_remove:
             # add
-            choice_ids = [id for id in name_by_id_cache.keys() if id not in favourite_character_ids]
+            choice_ids = [id for id in name_by_id_cache if id not in favourite_character_ids]
         else:
             # remove
             choice_ids = favourite_character_ids
@@ -764,7 +776,7 @@ class BaseSettings(FPCCog):
             for (name,) in await interaction.client.pool.fetch(query, current)
         ]
 
-    async def tutorial(self, ctx: AluGuildContext):
+    async def tutorial(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game} tutorial` command."""
         await ctx.typing()
 
@@ -831,6 +843,7 @@ class BaseSettings(FPCCog):
                     name=f"{const.DIGITS[count]}. Use {app_command.mention}", value=field_value, inline=False
                 )
             else:
-                raise RuntimeError("Somehow FPC related command is None.")
+                msg = "Somehow FPC related command is None."
+                raise RuntimeError(msg)
 
         await ctx.reply(embed=embed, file=file)

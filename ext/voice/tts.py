@@ -41,13 +41,13 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
     Make the bot talk in voice chat.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.connections: dict[int, discord.VoiceClient] = {}  # guild.id to Voice we are connected to
 
     @app_commands.guild_only()
     @commands.hybrid_group(name="text-to-speech", aliases=["tts", "voice"])
-    async def tts_group(self, ctx: AluGuildContext):
+    async def tts_group(self, ctx: AluGuildContext) -> None:
         """Text-To-Speech commands."""
         await ctx.send_help(ctx.command)
 
@@ -57,10 +57,11 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         lang: LanguageData,
         *,
         text: str = "Allo",
-    ):
+    ) -> None:
         voice_state = ctx.author.voice
         if not voice_state:
-            raise errors.ErroneousUsage("You aren't in a voice channel!")
+            msg = "You aren't in a voice channel!"
+            raise errors.ErroneousUsage(msg)
 
         voice_client = ctx.guild.voice_client
         if voice_client is not None:
@@ -69,7 +70,8 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
             await voice_client.move_to(voice_state.channel)
         else:
             if not voice_state.channel:
-                raise errors.ErroneousUsage("You aren't connected to a voice channel!")
+                msg = "You aren't connected to a voice channel!"
+                raise errors.ErroneousUsage(msg)
             vc = await voice_state.channel.connect()  # Connect to the voice channel the author is in.
             self.connections.update({ctx.guild.id: vc})  # Updating the cache with the guild and channel.
 
@@ -82,7 +84,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
 
     @tts_group.command()
     @app_commands.describe(text="Enter text to speak", language="Choose language/accent")
-    async def speak(self, ctx: AluGuildContext, language: LanguageCollection.Literal = "fr", *, text: str = "Allo"):
+    async def speak(self, ctx: AluGuildContext, language: LanguageCollection.Literal = "fr", *, text: str = "Allo") -> None:
         """Make Text-To-Speech request into voice-chat."""
         lang: LanguageData = getattr(LanguageCollection, language)
         await self.speak_worker(ctx, lang, text=text)
@@ -92,12 +94,13 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         await ctx.reply(embed=e)
 
     @tts_group.command()
-    async def stop(self, ctx: AluGuildContext):
+    async def stop(self, ctx: AluGuildContext) -> None:
         """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests."""
         try:
             vc = self.connections[ctx.guild.id]
         except KeyError:
-            raise errors.ErroneousUsage("I'm not in voice channel")
+            msg = "I'm not in voice channel"
+            raise errors.ErroneousUsage(msg)
 
         if vc.is_playing():
             vc.stop()
@@ -108,12 +111,13 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
             await ctx.reply(embed=e, ephemeral=True)
 
     @tts_group.command()
-    async def leave(self, ctx: AluGuildContext):
+    async def leave(self, ctx: AluGuildContext) -> None:
         """Make bot leave voice channel."""
         try:
             vc = self.connections[ctx.guild.id]
         except KeyError:
-            raise errors.ErroneousUsage("I'm not in a voice channel.")
+            msg = "I'm not in a voice channel."
+            raise errors.ErroneousUsage(msg)
 
         await vc.disconnect()
         e = discord.Embed(description=f"I left {vc.channel.mention}", colour=ctx.user.colour)
@@ -121,7 +125,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
 
     @app_commands.guild_only()
     @commands.hybrid_command(name="bonjour")
-    async def bonjour(self, ctx: AluGuildContext):
+    async def bonjour(self, ctx: AluGuildContext) -> None:
         """`Bonjour !` into both text/voice chats."""
         try:
             await self.speak_worker(ctx, LanguageCollection.fr, text="Bonjour !")
@@ -135,12 +139,12 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         member: discord.Member,
         before: discord.VoiceState,
         _after: discord.VoiceState,
-    ):
+    ) -> None:
         if before.channel is not None and len([m for m in before.channel.members if not m.bot]) == 0:
             vc = self.connections.get(member.guild.id, None)
             if vc is not None:
                 await vc.disconnect()
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(TextToSpeech(bot))

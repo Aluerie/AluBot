@@ -67,7 +67,7 @@ class TwitchCog(CommunityCog):
         await self.hideout.spam.send(embed=e)
 
     @commands.Cog.listener()
-    async def on_presence_update(self, before: discord.Member, after: discord.Member):
+    async def on_presence_update(self, before: discord.Member, after: discord.Member) -> None:
         if before.bot or before.activities == after.activities or before.id == self.bot.owner_id:
             return
 
@@ -91,5 +91,5 @@ class TwitchCog(CommunityCog):
             return
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(TwitchCog(bot))

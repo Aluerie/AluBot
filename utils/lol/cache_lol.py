@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import MutableMapping
 from typing import TYPE_CHECKING, Optional, TypedDict
 
 from roleidentification import get_roles
@@ -8,6 +7,8 @@ from roleidentification import get_roles
 from ..cache import KeysCache
 
 if TYPE_CHECKING:
+    from collections.abc import MutableMapping
+
     from aiohttp import ClientSession
 
     from bot import AluBot
@@ -30,7 +31,7 @@ __all__ = ("CacheLoL",)
 
 
 class CacheLoL:
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         self.champion = ChampionKeysCache(bot)
         self.rune = RuneKeysCache(bot)
         self.item = ItemKeysCache(bot)
@@ -138,7 +139,7 @@ class SummonerSpellKeysCache(KeysCache):
 
 
 class RolesCache(KeysCache):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot=bot)
         self.meraki_patch: str = "Unknown"
 
@@ -170,7 +171,7 @@ class RolesCache(KeysCache):
         data = await self.get_better_champion_roles(data)
         return data
 
-    async def get_missing_from_meraki_champion_ids(self, data_meraki: Optional[dict] = None) -> set[int]:
+    async def get_missing_from_meraki_champion_ids(self, data_meraki: dict | None = None) -> set[int]:
         data_meraki = data_meraki or await self.get_cached_data()
         name_by_id = await self.bot.cache_lol.champion.get_cache("name_by_id")
         return set(name_by_id.keys()) - set(data_meraki.keys())

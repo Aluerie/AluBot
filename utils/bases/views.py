@@ -36,7 +36,7 @@ class AluView(discord.ui.View):
         author_id: int | None,
         view_name: str = "Interactive Element",
         timeout: float | None = 5 * 60.0,
-    ):
+    ) -> None:
         super().__init__(timeout=timeout)
         self.author_id: int | None = author_id
 
@@ -74,7 +74,7 @@ class AluView(discord.ui.View):
                 item.disabled = True  # type: ignore
             await self.message.edit(view=self)
 
-    async def on_error(self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[Any]):
+    async def on_error(self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[Any]) -> None:
         """My own Error Handler for Views"""
 
         if isinstance(error, errors.AluBotException):
@@ -102,6 +102,6 @@ class AluView(discord.ui.View):
 class Url(discord.ui.View):
     """Lazy class to make URL button in one line instead of two."""
 
-    def __init__(self, url: str, label: str = "Open", emoji: str | None = None):
+    def __init__(self, url: str, label: str = "Open", emoji: str | None = None) -> None:
         super().__init__()
         self.add_item(discord.ui.Button(label=label, emoji=emoji, url=url))

@@ -10,9 +10,7 @@ from . import errors
 if TYPE_CHECKING:
     from . import AluBot, AluContext
 
-    WebhookSourceChannel: TypeAlias = (
-        discord.ForumChannel | discord.VoiceChannel | discord.TextChannel | discord.StageChannel
-    )
+    type WebhookSourceChannel = discord.ForumChannel | discord.VoiceChannel | discord.TextChannel | discord.StageChannel
 
 
 class MimicUserWebhook:
@@ -22,7 +20,7 @@ class MimicUserWebhook:
     for example, fix twitter/instagram links for them.
     """
 
-    def __init__(self, *, bot: AluBot, channel: WebhookSourceChannel, thread: discord.Thread | None):
+    def __init__(self, *, bot: AluBot, channel: WebhookSourceChannel, thread: discord.Thread | None) -> None:
         self.bot: AluBot = bot
         self.channel: WebhookSourceChannel = channel
         self.thread: discord.Thread | None = thread
@@ -36,15 +34,18 @@ class MimicUserWebhook:
             case discord.Thread():
                 parent_channel = res_channel.parent
                 if parent_channel is None:
-                    raise TypeError("Somehow we are in a thread with no parent channel.")
+                    msg = "Somehow we are in a thread with no parent channel."
+                    raise TypeError(msg)
                 return parent_channel, res_channel
             case discord.DMChannel() | discord.GroupChannel():
-                raise TypeError("Such functionality is not available in DMs")
+                msg = "Such functionality is not available in DMs"
+                raise TypeError(msg)
             case discord.PartialMessageable():
                 # typechecker moments
                 # This type is returned in library in a very few places (only at `Client.get_partial_messageable()`?!)
                 # thus it's unlikely we get into this case
-                raise TypeError("Unknown error due to not enough data about the channel (PartialMessageable).")
+                msg = "Unknown error due to not enough data about the channel (PartialMessageable)."
+                raise TypeError(msg)
             case _:
                 return res_channel, None
 
@@ -87,9 +88,12 @@ class MimicUserWebhook:
         except discord.Forbidden:
             raise commands.BotMissingPermissions(["manage_webhooks"])
         except discord.HTTPException:
-            raise errors.SomethingWentWrong(
+            msg = (
                 "An error occurred while creating the webhook for this channel. "
                 "Note you can only have 15 webhooks per channel."
+            )
+            raise errors.SomethingWentWrong(
+                msg
             )
 
     async def send_user_message(
@@ -101,10 +105,7 @@ class MimicUserWebhook:
         embed: discord.Embed = discord.utils.MISSING,
     ):
         wh = await self.get_or_create()
-        if message:
-            files = [await a.to_file() for a in message.attachments]
-        else:
-            files = discord.utils.MISSING
+        files = [await a.to_file() for a in message.attachments] if message else discord.utils.MISSING
 
         msg = await wh.send(
             content=content,

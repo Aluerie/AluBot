@@ -135,17 +135,14 @@ class DotaFPCNotifications(BaseNotifications):
                             AND s.enabled = TRUE;
                     """
 
-                    channel_spoil_tuples: list[tuple[int, bool]] = [
-                        (channel_id, spoil)
-                        for channel_id, spoil in await self.bot.pool.fetch(
+                    channel_spoil_tuples: list[tuple[int, bool]] = list(await self.bot.pool.fetch(
                             query,
                             hero_id,
                             user["player_id"],
                             match.id,
                             account_id,
                             twitch_live_only,
-                        )
-                    ]
+                        ))
 
                     if channel_spoil_tuples:
                         hero_name = await self.bot.cache_dota.hero.name_by_id(hero_id)
@@ -168,7 +165,7 @@ class DotaFPCNotifications(BaseNotifications):
                         send_log.debug("Sending took %.5f secs", time.perf_counter() - start_time)
 
     @aluloop(seconds=59)
-    async def notification_sender(self):
+    async def notification_sender(self) -> None:
         send_log.debug("--- Task to send Dota2 FPC Notifications is starting now ---")
 
         # REQUESTING
@@ -204,7 +201,7 @@ class DotaFPCNotifications(BaseNotifications):
         send_log.debug("--- Task is finished ---")
 
     @aluloop(minutes=5)
-    async def notification_editor(self):
+    async def notification_editor(self) -> None:
         """Task responsible for editing Dota FPC Messages with PostMatch Result data
 
         The data is featured from Opendota/Stratz.
@@ -273,12 +270,12 @@ class DotaFPCNotifications(BaseNotifications):
         )
 
     @commands.command(hidden=True)
-    async def ratelimits(self, ctx: AluContext):
+    async def ratelimits(self, ctx: AluContext) -> None:
         """Send OpenDota/Stratz rate limit numbers"""
         await ctx.reply(embed=self.get_ratelimit_embed())
 
     @aluloop(time=datetime.time(hour=23, minute=55, tzinfo=datetime.UTC))
-    async def daily_ratelimit_report(self):
+    async def daily_ratelimit_report(self) -> None:
         """Send information about Stratz daily limit to spam logs.
 
         Stratz has daily ratelimit of 10000 requests and it's kinda scary one, if parsing requests fail a lot.
@@ -292,5 +289,5 @@ class DotaFPCNotifications(BaseNotifications):
         await self.hideout.logger.send(content=content, embed=self.get_ratelimit_embed())
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(DotaFPCNotifications(bot))

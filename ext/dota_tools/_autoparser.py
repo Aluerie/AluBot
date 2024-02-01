@@ -23,13 +23,13 @@ class OpenDotaAutoParser(AluCog):
     Yes, a bit dirty and dishonourable since they provide it as a paid feature while I hack it in.
     """
 
-    def __init__(self, bot: AluBot, *args, **kwargs):
+    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
         super().__init__(bot, *args, **kwargs)
         self.active_matches: list[int] = []
         self.lobby_ids: set[int] = set()
 
         self.matches_to_parse: list[int] = []
-        self.opendota_req_cache: dict[int, OpendotaRequestMatch] = dict()
+        self.opendota_req_cache: dict[int, OpendotaRequestMatch] = {}
 
         self.steam_ids: list[int]
 
@@ -37,7 +37,7 @@ class OpenDotaAutoParser(AluCog):
         await self.bot.initialize_dota()
 
         @self.bot.dota.on("top_source_tv_games")  # type: ignore
-        def autoparse_response(result):
+        def autoparse_response(result) -> None:
             if result.specific_games:
                 # remember the quirk that
                 # result.specific_games = my friends games
@@ -56,7 +56,7 @@ class OpenDotaAutoParser(AluCog):
     async def cog_unload(self) -> None:
         self.autoparse_task.cancel()
 
-    async def get_active_matches(self):
+    async def get_active_matches(self) -> None:
         self.lobby_ids = set()
 
         proto_msg = MsgProto(emsg.EMsg.ClientRichPresenceRequest)
@@ -82,7 +82,7 @@ class OpenDotaAutoParser(AluCog):
             self.matches_to_parse = self.active_matches
 
     @aluloop(seconds=59)
-    async def autoparse_task(self):
+    async def autoparse_task(self) -> None:
         await self.get_active_matches()
         for match_id in self.matches_to_parse:
             if match_id not in self.opendota_req_cache:
@@ -97,5 +97,5 @@ class OpenDotaAutoParser(AluCog):
                 self.active_matches.remove(match_id)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(OpenDotaAutoParser(bot))

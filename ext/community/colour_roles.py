@@ -68,7 +68,7 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
 
 
 class ColourRolesView(discord.ui.View):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(timeout=None)
         # Adds the dropdown to our view object.
         self.add_item(ColourRolesDropdown())
@@ -76,15 +76,15 @@ class ColourRolesView(discord.ui.View):
 
 class ColourRoles(CommunityCog):
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self) -> None:
         self.bot.add_view(ColourRolesView())
 
     @commands.is_owner()
     @commands.command(hidden=True)
-    async def new_role_selection(self, ctx: AluGuildContext):
+    async def new_role_selection(self, ctx: AluGuildContext) -> None:
         await ctx.send(view=ColourRolesView())
         # await self.bot.community.role_selection.send(embed=e, view=ColourRolesView())
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(ColourRoles(bot))

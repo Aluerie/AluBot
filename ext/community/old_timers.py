@@ -130,7 +130,7 @@ class OldTimers(CommunityCog):
         self.daily_gif_reminders.cancel()
         self.daily_rule_reminders.cancel()
 
-    async def check_amount_messages(self, msg_amount=10):
+    async def check_amount_messages(self, msg_amount=10) -> bool:
         async for msg in self.community.general.history(limit=msg_amount):
             if msg.author == self.bot.user:
                 return True
@@ -143,23 +143,23 @@ class OldTimers(CommunityCog):
         return await self.community.general.send(embed=e)
 
     @tasks.loop(minutes=107)
-    async def daily_reminders(self):
+    async def daily_reminders(self) -> None:
         await self.timer_work("Daily Message", Colour.blueviolet, await get_a_text(self.bot.pool))
 
     @tasks.loop(minutes=109)
-    async def daily_important_reminders(self):
+    async def daily_important_reminders(self) -> None:
         await self.timer_work("Daily Important Message", Colour.palevioletred, await get_important_text(self.bot.pool))
 
     @tasks.loop(minutes=167)
-    async def daily_fact_reminders(self):
+    async def daily_fact_reminders(self) -> None:
         await self.timer_work("Daily Fact Message", Colour.slateblue, await get_fact_text(self.bot.pool))
 
     @tasks.loop(minutes=156)
-    async def daily_rule_reminders(self):
+    async def daily_rule_reminders(self) -> None:
         await self.timer_work("Daily Rule Message", 0x66FFBF, await get_rule_text(self.bot.pool))
 
     @tasks.loop(minutes=107)
-    async def daily_gif_reminders(self):
+    async def daily_gif_reminders(self) -> None:
         if random.randint(0, 100) > 2 or await self.check_amount_messages():
             return
         await self.community.general.send(await get_gif_text(self.bot.pool))
@@ -169,9 +169,9 @@ class OldTimers(CommunityCog):
     @daily_fact_reminders.before_loop
     @daily_rule_reminders.before_loop
     @daily_gif_reminders.before_loop
-    async def old_timers_before(self):
+    async def old_timers_before(self) -> None:
         await self.bot.wait_until_ready()
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(OldTimers(bot))

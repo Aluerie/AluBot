@@ -82,7 +82,7 @@ async def welcome_message(
 
 class Welcome(CommunityCog):
     @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
+    async def on_member_join(self, member: discord.Member) -> None:
         guild = self.bot.community.guild
         if member.guild != guild:
             return
@@ -112,7 +112,7 @@ class Welcome(CommunityCog):
         await self.bot.community.welcome.send(content=content_text, embed=embed, file=image_file)
 
     @commands.Cog.listener()
-    async def on_member_remove(self, member: discord.Member):
+    async def on_member_remove(self, member: discord.Member) -> None:
         if member.guild.id != const.Guild.community:
             return
         e = discord.Embed(description="{0} {0} {0}".format(const.Emote.SmogeInTheRain), colour=0x000000)
@@ -122,7 +122,7 @@ class Welcome(CommunityCog):
         await msg.add_reaction(const.Emote.SmogeInTheRain)
 
     @commands.Cog.listener()
-    async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
+    async def on_member_ban(self, guild: discord.Guild, member: discord.Member) -> None:
         if guild.id != const.Guild.community:
             return
         e = discord.Embed(description=f"{const.Emote.peepoPolice} {const.Emote.peepoPolice} {const.Emote.peepoPolice}", color=0x800000)
@@ -132,7 +132,7 @@ class Welcome(CommunityCog):
         await msg.add_reaction(const.Emote.peepoPolice)
 
     @commands.Cog.listener()
-    async def on_member_unban(self, guild: discord.Guild, member: discord.Member):
+    async def on_member_unban(self, guild: discord.Guild, member: discord.Member) -> None:
         if guild.id != const.Guild.community:
             return
         e = discord.Embed(description="{0} {0} {0}".format(const.Emote.PogChampPepe), color=0x00FF7F)
@@ -144,12 +144,12 @@ class Welcome(CommunityCog):
 
     @commands.is_owner()
     @commands.command(hidden=True)
-    async def welcome_preview(self, ctx: AluContext, member: Optional[discord.Member]):
+    async def welcome_preview(self, ctx: AluContext, member: discord.Member | None) -> None:
         """Get a rendered welcome message for a `{@user}`."""
         person = member or ctx.author
         content_text, embed, image_file = await welcome_message(self.bot, person)
         await ctx.reply(content=content_text, embed=embed, file=image_file)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Welcome(bot))

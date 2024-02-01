@@ -23,5 +23,5 @@ class DotaFPC(
         return await super().cog_load()
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(DotaFPC(bot))

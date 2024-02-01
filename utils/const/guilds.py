@@ -196,7 +196,8 @@ class SavedGuild:
     def guild(self) -> discord.Guild:
         guild = self.bot.get_guild(self.id)
         if guild is None:
-            raise RuntimeError(f"{self} not in cache.")
+            msg = f"{self} not in cache."
+            raise RuntimeError(msg)
         return guild
 
     def get_channel(self, channel_id: int, channel_type: type[T]) -> T:
@@ -205,25 +206,29 @@ class SavedGuild:
             if isinstance(channel, channel_type):
                 return channel
             else:
-                raise TypeError(f"Channel id={channel_id} was type: {type(channel)} expected: {channel_type}")
+                msg = f"Channel id={channel_id} was type: {type(channel)} expected: {channel_type}"
+                raise TypeError(msg)
 
             # the other way for this is
             #   >>> # this line omitted from runtime when python is run with - O
             #   >>> assert isinstance(channel, typ)
             #   >>> return channel
         else:
-            raise RuntimeError(f"Channel id={channel_id} from {self} not in cache")
+            msg = f"Channel id={channel_id} from {self} not in cache"
+            raise RuntimeError(msg)
 
     def get_role(self, role_id: int) -> discord.Role:
         role = self.guild.get_role(role_id)
         if role is None:
-            raise RuntimeError(f"Role id={role_id} from {self} not in cache")
+            msg = f"Role id={role_id} from {self} not in cache"
+            raise RuntimeError(msg)
         return role
 
     def get_member(self, user_id: int) -> discord.Member:
         member = self.guild.get_member(user_id)
         if member is None:
-            raise RuntimeError(f"Member id={user_id} from {self} not in cache")
+            msg = f"Member id={user_id} from {self} not in cache"
+            raise RuntimeError(msg)
         return member
 
     @property

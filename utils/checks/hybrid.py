@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING, TypeVar
 
 from discord import app_commands
@@ -9,6 +8,8 @@ from discord.ext import commands
 from .. import const
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .. import AluContext
 
 T = TypeVar("T")

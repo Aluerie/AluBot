@@ -25,8 +25,8 @@ class StartView(discord.ui.View):
     def __init__(
         self,
         *,
-        message: Optional[discord.Message] = None,
-    ):
+        message: discord.Message | None = None,
+    ) -> None:
         super().__init__()
 
         self.starting_embed = discord.Embed(title="Embed Maker", colour=const.Colour.blueviolet)
@@ -34,22 +34,22 @@ class StartView(discord.ui.View):
         self.message = message
 
     @discord.ui.button(label="Author", emoji="\N{LOWER LEFT FOUNTAIN PEN}", style=discord.ButtonStyle.blurple)
-    async def author_button(self, interaction: discord.Interaction, _button: discord.ui.Button):
+    async def author_button(self, interaction: discord.Interaction, _button: discord.ui.Button) -> None:
         await interaction.response.send_message("hello")
 
 
 class EmbedMaker(JebaitedCog, name="Embed Maker", emote=const.Emote.DankZzz):
     @commands.hybrid_group(name="embed")
-    async def embed_(self, ctx: AluContext):
+    async def embed_(self, ctx: AluContext) -> None:
         """Command about Embed Builder."""
         await ctx.send_help(ctx.command)
 
     @embed_.command()
-    async def make(self, ctx: AluContext):
+    async def make(self, ctx: AluContext) -> None:
         """Embed Maker command. Opens a menu for making/editing/importing embed messages."""
         view = StartView()
         view.message = await ctx.reply(embeds=view.embeds, view=view)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(EmbedMaker(bot))

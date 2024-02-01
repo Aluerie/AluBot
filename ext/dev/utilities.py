@@ -16,17 +16,18 @@ if TYPE_CHECKING:
 class DeveloperUtilities(DevBaseCog):
     @commands.guild_only()
     @commands.command()
-    async def yoink(self, ctx: AluGuildContext, emote: discord.PartialEmoji | str):
+    async def yoink(self, ctx: AluGuildContext, emote: discord.PartialEmoji | str) -> None:
         """Yoink emote from current server to one of my emote servers for the bot.
 
         This is used to reduce annoyance of opening another account, copying files and copying id.
         """
 
-        async def add_new_emote_to_emote_guilds(emote_to_yoink: discord.PartialEmoji | discord.Emoji):
+        async def add_new_emote_to_emote_guilds(emote_to_yoink: discord.PartialEmoji | discord.Emoji) -> None:
             for guild_id in const.EmoteGuilds.EMOTE:
                 guild = self.bot.get_guild(guild_id)
                 if guild is None:
-                    raise errors.SomethingWentWrong("One of `EMOTE_GUILDS` is None")
+                    msg = "One of `EMOTE_GUILDS` is None"
+                    raise errors.SomethingWentWrong(msg)
                 try:
                     new_emote = await guild.create_custom_emoji(
                         name=emote_to_yoink.name,
@@ -40,7 +41,8 @@ class DeveloperUtilities(DevBaseCog):
                     e.set_thumbnail(url=new_emote.url)
                     await ctx.reply(answer, embed=e)
                     return
-            raise errors.SomethingWentWrong("We failed to add the emote to any of `EMOTE_GUILDS`")
+            msg = "We failed to add the emote to any of `EMOTE_GUILDS`"
+            raise errors.SomethingWentWrong(msg)
 
         if isinstance(emote, discord.PartialEmoji):
             await add_new_emote_to_emote_guilds(emote)
@@ -56,5 +58,5 @@ class DeveloperUtilities(DevBaseCog):
                     await add_new_emote_to_emote_guilds(emo)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(DeveloperUtilities(bot))

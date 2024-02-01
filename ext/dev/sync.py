@@ -25,15 +25,15 @@ class SyncAppTreeTools(DevBaseCog):
     `?tag usc` which abbreviates to `?tag umbra sync command`.
     """
 
-    async def cog_load(self):
+    async def cog_load(self) -> None:
         if not self.bot.test:
             self.auto_sync.start()
 
-    async def cog_unload(self):
+    async def cog_unload(self) -> None:
         self.auto_sync.cancel()
 
     @aluloop(count=1)
-    async def auto_sync(self):
+    async def auto_sync(self) -> None:
         """Auto syncing bot's application tree task.
 
         `?tag ass` and all. But I'm stupid and forget to sync the tree manually.
@@ -68,7 +68,7 @@ class SyncAppTreeTools(DevBaseCog):
         return f"Synced {len(cmds)} guild-bound commands to `{successful_guild_syncs}/{len(guilds)}` guilds."
 
     async def sync_command_worker(
-        self, spec: Optional[str], current_guild: Optional[discord.Guild], guilds: list[discord.Object]
+        self, spec: str | None, current_guild: discord.Guild | None, guilds: list[discord.Object]
     ) -> discord.Embed:
         # SYNC LIST OF GUILDS
         if spec == "premium":
@@ -83,7 +83,8 @@ class SyncAppTreeTools(DevBaseCog):
         # SYNC METHODS ABOUT CURRENT GUILD
         elif spec and spec != "global":
             if not current_guild:
-                raise errors.BadArgument("You used `sync` command with a spec outside of a guild")
+                msg = "You used `sync` command with a spec outside of a guild"
+                raise errors.BadArgument(msg)
 
             match spec:
                 case "current" | "~":
@@ -96,7 +97,8 @@ class SyncAppTreeTools(DevBaseCog):
                     self.bot.tree.clear_commands(guild=current_guild)
                     desc = "Cleared guild-bound commands from the current guild."
                 case _:
-                    raise errors.BadArgument("Unknown specification for `sync` command.")
+                    msg = "Unknown specification for `sync` command."
+                    raise errors.BadArgument(msg)
             synced = await self.bot.tree.sync(guild=current_guild)
             desc = desc.format(len(synced))
 
@@ -147,7 +149,7 @@ class SyncAppTreeTools(DevBaseCog):
         self,
         ctx: AluContext,
         guilds: commands.Greedy[discord.Object],
-        spec: Optional[Literal["global", "~", "current", "*", "copy", "^", "clear", "premium", "my"]] = None,
+        spec: Literal["global", "~", "current", "*", "copy", "^", "clear", "premium", "my"] | None = None,
     ) -> None:
         """Sync bot's app tree.
 
@@ -171,6 +173,6 @@ class DailyAutoSync(DevBaseCog):
         super().__init__(bot, *args, **kwargs)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(SyncAppTreeTools(bot))
     await bot.add_cog(DailyAutoSync(bot))

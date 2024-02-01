@@ -33,7 +33,7 @@ class EDOTAGCMsg(IntEnum):
 
 
 class Dota2Client(Dota2Client_):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(SteamClient())
         self.check_list: set[int] = set()
         self.matches: list[GameCoordinatorAPI.CSourceTVGameSmall] = []
@@ -42,7 +42,7 @@ class Dota2Client(Dota2Client_):
         self._bot: AluBot = bot
         self.deaths: int = 0
 
-    async def login(self):
+    async def login(self) -> None:
         log.debug(f"dota2info: client.connected {self.steam.connected}")
         if self._bot.test:
             username, password = (config.TEST_STEAM_USERNAME, config.TEST_STEAM_PASSWORD)
@@ -81,7 +81,7 @@ class Dota2Client(Dota2Client_):
             self.deaths = 0
             return [LiveMatch(match) for match in self.matches]
 
-    def _handle_top_source_tv(self, message: GameCoordinatorAPI.GCToClientFindTopSourceTVGamesResponse):
+    def _handle_top_source_tv(self, message: GameCoordinatorAPI.GCToClientFindTopSourceTVGamesResponse) -> None:
         for match in message.game_list:
             self.matches.append(match)
 

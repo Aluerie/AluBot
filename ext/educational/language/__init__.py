@@ -14,5 +14,5 @@ class Languages(
     """Languages"""
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(Languages(bot))

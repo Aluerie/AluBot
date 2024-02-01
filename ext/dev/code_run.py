@@ -63,8 +63,9 @@ class CodeRun(DevBaseCog):
                             key = f"{item}_{idx}"
                             env[key] = obj
                 if not found_type:
+                    msg = f"We could not assign `mention_{idx}` to {obj} from Greedy mentions. " "Check eval cmd code."
                     raise commands.BadArgument(  # should not in theory happen but let's watch out
-                        f"We could not assign `mention_{idx}` to {obj} from Greedy mentions. " "Check eval cmd code."
+                        msg
                     )
 
         return env
@@ -122,5 +123,5 @@ class CodeRun(DevBaseCog):
                 await ctx.send(f"```py\n{value}{ret}\n```")
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(CodeRun(bot))

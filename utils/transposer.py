@@ -86,8 +86,9 @@ class TransposeClient:
             if response.ok:
                 return Image.open(BytesIO(await response.read()))
             else:
+                msg = f"`transposer.url_to_image`: Status {response.status} - Could not download file from {url}"
                 raise errors.ResponseNotOK(
-                    f"`transposer.url_to_image`: Status {response.status} - Could not download file from {url}"
+                    msg
                 )
 
     async def url_to_file(self, url: str, filename: str = "fromAluBot.png") -> discord.File:
@@ -96,6 +97,7 @@ class TransposeClient:
             if response.ok:
                 return discord.File(BytesIO(await response.read()), filename)
             else:
+                msg = f"`transposer.url_to_file`: Status {response.status} - Could not download file from {url}"
                 raise errors.ResponseNotOK(
-                    f"`transposer.url_to_file`: Status {response.status} - Could not download file from {url}"
+                    msg
                 )

@@ -40,7 +40,7 @@ def get_links_from_str(string):
     return re.findall(Regex.URL, str(string))
 
 
-async def extra_send_fxtwitter_links(message: discord.Message) -> Optional[discord.Message]:
+async def extra_send_fxtwitter_links(message: discord.Message) -> discord.Message | None:
     """Unfortunately `certified discord tm moment` where
     it does not allow links to be clickable in website embeds
     thus we have to extract them ourselves.

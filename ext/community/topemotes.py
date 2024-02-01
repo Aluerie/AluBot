@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from utils import AluContext
 
 
-def filter_emotes_condition(emote, mode):
+def filter_emotes_condition(emote, mode) -> int:
     if mode == 1:
         return 1
     elif mode == 2 and emote.animated:
@@ -35,15 +35,12 @@ def filter_emotes_condition(emote, mode):
 async def get_sorted_emote_dict(mode, pool: Pool):
     emote_dict = {}
 
-    def filter_mode(mod, animated):
+    def filter_mode(mod, animated) -> bool:
         if mod == 1:
             return True
         elif mod == 2 and animated:
             return True
-        elif mod == 3 and not animated:
-            return True
-        else:
-            return False
+        return bool(mod == 3 and not animated)
 
     query = "SELECT * FROM emotes"
     rows = await pool.fetch(query)
@@ -51,10 +48,10 @@ async def get_sorted_emote_dict(mode, pool: Pool):
         if filter_mode(mode, row.animated):
             emote_dict[row.name] = sum(row.month_array)
 
-    return {k: v for k, v in sorted(emote_dict.items(), key=lambda item: item[1], reverse=True)}
+    return dict(sorted(emote_dict.items(), key=lambda item: item[1], reverse=True))
 
 
-async def topemotes_job(ctx: AluContext, mode):
+async def topemotes_job(ctx: AluContext, mode) -> None:
     sorted_emote_dict = await get_sorted_emote_dict(mode, pool=ctx.pool)
     new_array = []
     split_size = 20
@@ -96,13 +93,13 @@ class EmoteAnalysis(CommunityCog, name="Emote stats"):
         self.daily_emote_shift.cancel()
 
     @commands.Cog.listener()
-    async def on_message(self, msg: discord.Message):
+    async def on_message(self, msg: discord.Message) -> None:
         # if self.bot.test_flag:
         #    return
 
         if not msg.author.bot or msg.webhook_id:
             custom_emojis_ids = re.findall(const.Regex.EMOTE_STATS_IDS, msg.content)  # they are in str tho
-            custom_emojis_ids = set(list(map(int, custom_emojis_ids)))
+            custom_emojis_ids = set(map(int, custom_emojis_ids))
 
             for emote_id in custom_emojis_ids:
                 query = "UPDATE emotes SET month_array[30]=month_array[30]+1 WHERE id=$1;"
@@ -110,7 +107,7 @@ class EmoteAnalysis(CommunityCog, name="Emote stats"):
 
     @commands.hybrid_command(name="topemotes", description="Show emotes usage stats")
     @app_commands.describe(keyword="Possible keywords: `all`, `ani`, `nonani`")
-    async def topemotes(self, ctx, keyword: Literal["all", "ani", "nonani"] = "all"):
+    async def topemotes(self, ctx, keyword: Literal["all", "ani", "nonani"] = "all") -> None:
         """Show emotes usage stats for `keyword` group ;\
         Possible keywords: `all`, `ani` for animated emotes, `nonani` for static emotes ;"""
         match keyword:
@@ -122,7 +119,7 @@ class EmoteAnalysis(CommunityCog, name="Emote stats"):
                 await topemotes_job(ctx, 3)
 
     @tasks.loop(time=datetime.time(hour=16, minute=43, tzinfo=datetime.UTC))
-    async def daily_emote_shift(self):
+    async def daily_emote_shift(self) -> None:
         query = "SELECT id, month_array FROM emotes"
         rows = await self.bot.pool.fetch(query)
         for row in rows:
@@ -130,9 +127,9 @@ class EmoteAnalysis(CommunityCog, name="Emote stats"):
             await self.bot.pool.execute(query, row.month_array[1:] + [0], row.id)
 
     @daily_emote_shift.before_loop
-    async def before(self):
+    async def before(self) -> None:
         await self.bot.wait_until_ready()
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(EmoteAnalysis(bot))

@@ -26,11 +26,11 @@ __all__ = ("Dota2Client",)
 
 
 class Dota2Client(Client):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(state=PersonaState.Invisible)
         self._bot: AluBot = bot
 
-    async def login(self):
+    async def login(self) -> None:
         if self._bot.test:
             username, password = (config.TEST_STEAM_USERNAME, config.TEST_STEAM_PASSWORD)
         else:
@@ -44,7 +44,7 @@ class Dota2Client(Client):
             embed = discord.Embed(colour=discord.Colour.blue(), description="Dota2Client: `on_ready`.")
             await self._bot.hideout.spam.send(embed=embed)
 
-    async def on_error(self, event: str, error: Exception, *args: object, **kwargs: object):
+    async def on_error(self, event: str, error: Exception, *args: object, **kwargs: object) -> None:
         embed = discord.Embed(
             colour=discord.Colour.dark_red(),
             title=f"Error in steam.py's {self.__class__.__name__}",

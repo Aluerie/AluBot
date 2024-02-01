@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 async def on_app_command_error(
     interaction: discord.Interaction[AluBot], error: app_commands.AppCommandError | Exception
-):
+) -> None:
     """Handler called when an error is raised while invoking an app command."""
 
     # Hmm, idk I still want commands to go through this handler if any error occurs
@@ -88,10 +88,10 @@ async def on_app_command_error(
         await interaction.followup.send(embed=e, ephemeral=True)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     bot.old_tree_error = bot.tree.on_error
     bot.tree.on_error = on_app_command_error
 
 
-async def teardown(bot: AluBot):
+async def teardown(bot: AluBot) -> None:
     bot.tree.on_error = bot.old_tree_error

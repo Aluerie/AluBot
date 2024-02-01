@@ -10,14 +10,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot.timer import Timer
 from utils import checks, const, converters, formats, pages
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from bot import AluBot
-    from bot.timer import TimerRecord
+    from bot.timer import Timer, TimerRecord
     from utils import AluGuildContext
 
 
@@ -130,7 +129,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         description="Set your birthday",
         usage="day: <day> month: <month as word> year: [year] timezone: [timezone]",
     )
-    async def birthday_set(self, ctx: AluGuildContext, *, birthday: converters.DateTimezonePicker):
+    async def birthday_set(self, ctx: AluGuildContext, *, birthday: converters.DateTimezonePicker) -> None:
         """Set your birthday."""
 
         dt = birthday.verify_date()
@@ -183,7 +182,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
         # clear the previous birthday data before adding a new one
         await self.remove_birthday_helper(ctx.author.id)
-        timer: Timer[BirthdayTimerData] = await self.bot.create_timer(
+        await self.bot.create_timer(
             event="birthday",
             expires_at=expires_at,
             timezone=birthday.timezone.key,
@@ -324,7 +323,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         )
 
     @commands.Cog.listener("on_remove_birthday_role_timer_complete")
-    async def birthday_cleanup(self, timer: Timer[BirthdayTimerData]):
+    async def birthday_cleanup(self, timer: Timer[BirthdayTimerData]) -> None:
         user_id = timer.data["user_id"]
         birthday_role = self.community.birthday_role
         guild = self.community.guild
@@ -334,7 +333,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             await member.remove_roles(birthday_role)
 
     @birthday.command(name="list", hidden=True)
-    async def birthday_list(self, ctx: AluGuildContext):
+    async def birthday_list(self, ctx: AluGuildContext) -> None:
         """Show list of birthdays in this server"""
         guild = self.community.guild
 
@@ -363,5 +362,5 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         await pgs.start()
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Birthday(bot))

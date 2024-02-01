@@ -17,5 +17,5 @@ class Meta(AluHelpCog, SetupCommandCog, OtherCog, FeedbackCog, PrefixSetupCog):
         return discord.PartialEmoji.from_str(Emote.FeelsDankManLostHisHat)
 
 
-async def setup(bot):
+async def setup(bot) -> None:
     await bot.add_cog(Meta(bot))

@@ -27,7 +27,7 @@ class Config(Generic[_T]):
         pool: Pool | None = None,
         *,
         encoder: type[json.JSONEncoder] | None = None,
-    ):
+    ) -> None:
         self.filename = f".alubot/{filename}"
         self.pool = pool
         self.encoder = encoder
@@ -50,10 +50,10 @@ class Config(Generic[_T]):
         except JSONDecodeError:
             return False
 
-    async def load_from_database(self):
+    async def load_from_database(self) -> None:
         ...
 
-    def _dump(self):
+    def _dump(self) -> None:
         temp = f"{self.filename}-{uuid.uuid4()}.tmp"
         with open(temp, "w", encoding="utf-8") as tmp:
             json.dump(self._json.copy(), tmp, ensure_ascii=True, cls=self.encoder, separators=(",", ":"))
@@ -68,7 +68,7 @@ class Config(Generic[_T]):
         """Retrieves a config entry"""
         return self._json.get(str(key), default)
 
-    async def put_into_database(self, key: Any, value: _T | Any):
+    async def put_into_database(self, key: Any, value: _T | Any) -> None:
         ...
 
     async def put(self, key: Any, value: _T | Any) -> None:
@@ -77,7 +77,7 @@ class Config(Generic[_T]):
         await self.put_into_database(key, value)
         await self.save()
 
-    async def remove_from_database(self, key: Any):
+    async def remove_from_database(self, key: Any) -> None:
         ...
 
     async def remove(self, key: Any) -> None:
@@ -105,18 +105,18 @@ class PrefixConfig(Config):
     if TYPE_CHECKING:
         pool: Pool
 
-    def __init__(self, pool: Pool):
+    def __init__(self, pool: Pool) -> None:
         super().__init__(filename="prefixes.json", pool=pool)
 
-    async def load_from_database(self):
+    async def load_from_database(self) -> None:
         query = "SELECT id, prefix FROM guilds"
         rows = await self.pool.fetch(query) or []
         self._json = {r.id: r.prefix for r in rows if r.prefix is not None}
 
-    async def put_into_database(self, guild_id: int, new_prefix: str):
+    async def put_into_database(self, guild_id: int, new_prefix: str) -> None:
         query = "UPDATE guilds SET prefix=$1 WHERE id=$2"
         await self.pool.execute(query, new_prefix, guild_id)
 
-    async def remove_from_database(self, guild_id: int):
+    async def remove_from_database(self, guild_id: int) -> None:
         query = "UPDATE guilds SET prefix=NULL WHERE id=$1"
         await self.pool.execute(query, guild_id)

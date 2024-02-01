@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Optional
 
 import discord
@@ -11,6 +10,8 @@ from utils import const
 from ._base import ConfigGuildCog
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from bot import AluBot
     from utils import AluGuildContext
 
@@ -24,7 +25,7 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
     @commands.command()
     @commands.has_permissions(manage_emojis=True)
     @commands.bot_has_permissions(view_audit_log=True)
-    async def turn_emote_logs(self, ctx: AluGuildContext, channel: Optional[discord.TextChannel] = None):
+    async def turn_emote_logs(self, ctx: AluGuildContext, channel: discord.TextChannel | None = None) -> None:
         """Turn emote logs on in this channel for this guild"""
         ch = channel or ctx.channel
 
@@ -43,7 +44,7 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
         guild: discord.Guild,
         before: Sequence[discord.Emoji],
         after: Sequence[discord.Emoji],
-    ):
+    ) -> None:
         query = "SELECT emote_logs_id FROM guilds WHERE id=$1"
         val = await self.bot.pool.fetchval(query, guild.id)
         ch = self.bot.get_channel(val)
@@ -53,7 +54,7 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
         diff_after = [x for x in after if x not in before]
         diff_before = [x for x in before if x not in after]
 
-        async def set_author(emotion, embedx: discord.Embed, act: discord.AuditLogAction):
+        async def set_author(emotion, embedx: discord.Embed, act: discord.AuditLogAction) -> None:
             if emotion.managed:
                 embedx.set_author(name="Tw.tv Sub integration", icon_url=const.Logo.Twitch)
                 return
@@ -104,5 +105,5 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
                 await ch.send(embed=e)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Prefix(bot))

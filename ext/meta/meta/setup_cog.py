@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple, Never
 
 import discord
 from discord.ext import commands, menus
@@ -15,7 +15,7 @@ class SetupFormatData(NamedTuple):
 
 
 class SetupSelect(discord.ui.Select):
-    def __init__(self, paginator: SetupPages):
+    def __init__(self, paginator: SetupPages) -> None:
         super().__init__(placeholder="Choose setup category")
         self.paginator: SetupPages = paginator
         self.__fill_options()
@@ -40,12 +40,12 @@ class SetupSelect(discord.ui.Select):
             self.add_option(label=cog_name, description=cog_desc, emoji=cog_emote, value=str(counter + 1))
             counter += 1
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction: discord.Interaction) -> None:
         await self.paginator.show_page(interaction, int(self.values[0]))
 
 
 class SetupPageSource(menus.ListPageSource):
-    def __init__(self, data: list[SetupFormatData]):
+    def __init__(self, data: list[SetupFormatData]) -> None:
         super().__init__(entries=data, per_page=1)
         self.data: list[SetupFormatData] = data
 
@@ -85,7 +85,7 @@ class SetupPageSource(menus.ListPageSource):
 class SetupPages(Paginator):
     source: SetupPageSource
 
-    def __init__(self, ctx: AluGuildContext, source: SetupPageSource):
+    def __init__(self, ctx: AluGuildContext, source: SetupPageSource) -> None:
         super().__init__(ctx, source)
         self.show_text_cmds = True
         self.add_item(SetupSelect(self))
@@ -93,13 +93,13 @@ class SetupPages(Paginator):
     def update_more_labels(self, page_number: int) -> None:
         self.text_cmds.label = "\N{NOTEBOOK}" if self.show_text_cmds else "\N{OPEN BOOK}"
 
-    def fill_items(self):
+    def fill_items(self) -> None:
         if self.source.is_paginating():
             for item in [self.refresh, self.previous_page, self.index, self.next_page, self.text_cmds]:
                 self.add_item(item)
 
     @discord.ui.button(label="\N{NOTEBOOK}", style=discord.ButtonStyle.blurple)
-    async def text_cmds(self, interaction: discord.Interaction, _btn: discord.ui.Button):
+    async def text_cmds(self, interaction: discord.Interaction, _btn: discord.ui.Button) -> None:
         """Toggle showing text commands embed in the setup paginator"""
         self.show_text_cmds = not self.show_text_cmds
         await self.show_page(interaction, self.current_page_number)
@@ -107,7 +107,7 @@ class SetupPages(Paginator):
 
 class SetupCog:
     @property
-    def setup_emote(self):
+    def setup_emote(self) -> Never:
         raise NotImplementedError
 
     async def setup_info(self) -> discord.Embed:
@@ -122,9 +122,9 @@ class SetupCog:
 
 class SetupCommandCog(AluCog):
     @commands.hybrid_command()
-    async def setup(self, ctx: AluGuildContext):
+    async def setup(self, ctx: AluGuildContext) -> None:
         setup_data: list[SetupFormatData] = [SetupFormatData(cog="front_page")]
-        for cog_name, cog in self.bot.cogs.items():
+        for cog in self.bot.cogs.values():
             if getattr(cog, "setup_info", None):
                 setup_data.append(SetupFormatData(cog=cog))
 

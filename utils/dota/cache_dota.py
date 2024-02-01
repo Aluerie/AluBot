@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import MutableMapping
 from typing import TYPE_CHECKING, TypedDict
 
 from .. import const
 from ..cache import KeysCache
 
 if TYPE_CHECKING:
+    from collections.abc import MutableMapping
+
     from bot import AluBot
 
     class HeroKeysData(TypedDict):
@@ -44,7 +45,7 @@ class HeroKeysCache(KeysCache):
             "img_by_id": {0: const.Dota.HERO_DISCONNECT},
             "icon_by_id": {0: const.Dota.HERO_DISCONNECT},
         }
-        for _, hero in hero_dict.items():
+        for hero in hero_dict.values():
             data["id_by_npcname"][hero["name"]] = hero["id"]
             data["npcname_by_id"][hero["id"]] = hero["name"]
             data["id_by_name"][hero["localized_name"].lower()] = hero["id"]

@@ -1,4 +1,5 @@
 from enum import StrEnum
+
 from ._meta import CONSTANTS
 
 

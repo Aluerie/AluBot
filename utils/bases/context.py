@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, Any, overload, override
 
 import discord
 from discord.ext import commands
@@ -13,11 +13,10 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from aiohttp import ClientSession
-    from asyncpg import Pool
 
     from bot import AluBot
 
-    from ..database import DotRecord
+    from ..database import PoolProtocol
 
 
 __all__ = (
@@ -34,9 +33,10 @@ class AluContext(commands.Context["AluBot"]):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.pool: Pool[DotRecord] = self.bot.pool
+        self.pool: PoolProtocol = self.bot.pool
         self.is_error_handled: bool = False
 
+    @override
     def __repr__(self) -> str:
         return f"<AluContext cmd={self.command} ntr={formats.tick(bool(self.interaction))} author={self.author}>"
 
@@ -62,7 +62,7 @@ class AluContext(commands.Context["AluBot"]):
     def session(self) -> ClientSession:
         return self.bot.session
 
-    async def tick_reaction(self, semi_bool: bool | None):
+    async def tick_reaction(self, semi_bool: bool | None) -> None:
         with contextlib.suppress(discord.HTTPException):
             await self.message.add_reaction(formats.tick(semi_bool))
 
@@ -171,6 +171,7 @@ class AluContext(commands.Context["AluBot"]):
         ...
 
     # Literal copy of .reply from the library but with `.to_reference(fail_if_not_exists=False)`
+    @override
     @discord.utils.copy_doc(commands.Context.reply)
     async def reply(self, content: str | None = None, **kwargs: Any):
         if self.interaction is None:

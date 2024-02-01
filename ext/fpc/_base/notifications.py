@@ -52,11 +52,11 @@ class BaseNotifications(FPCCog):
         live_player_ids = [
             twitch_id_to_player_id[stream.user.id]
             for stream in await self.bot.twitch.fetch_streams(user_ids=list(twitch_id_to_player_id.keys()))
-            if stream.game_id == twitch_category_id
+            if stream.game_id == twitch_category_id  # type: ignore # stream.game_id is actually str, not int.
         ]
         return live_player_ids
 
-    async def send_match(self, match: BaseMatchToSend, channel_spoil_tuples: list[tuple[int, bool]]):
+    async def send_match(self, match: BaseMatchToSend, channel_spoil_tuples: list[tuple[int, bool]]) -> None:
         embed, image_file = await match.embed_and_file()
 
         for channel_id, spoil in channel_spoil_tuples:
@@ -78,7 +78,7 @@ class BaseNotifications(FPCCog):
                     self.message_cache[message.id] = message
                     await match.insert_into_game_messages(message.id, channel.id)
 
-    async def edit_match(self, match: BaseMatchToEdit, channel_message_tuples: list[tuple[int, int]]):
+    async def edit_match(self, match: BaseMatchToEdit, channel_message_tuples: list[tuple[int, int]]) -> None:
         new_image_file: discord.File | None = None
 
         for channel_id, message_id in channel_message_tuples:

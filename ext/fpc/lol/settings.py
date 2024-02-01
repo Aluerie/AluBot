@@ -293,7 +293,7 @@ class LoLFPCSettings(BaseSettings):
             .add_field(
                 name="Links",
                 value=(
-                    f"• [GitHub](https://github.com/meraki-analytics/role-identification)\n"
+                    "• [GitHub](https://github.com/meraki-analytics/role-identification)\n"
                     "• [Json](https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)"
                 ),
             )

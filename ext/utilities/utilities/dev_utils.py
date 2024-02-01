@@ -8,9 +8,6 @@ from discord.ext import commands
 
 from utils import AluCog, AluContext, const
 
-if TYPE_CHECKING:
-    pass
-
 
 class DevUtilities(AluCog):
     @commands.hybrid_command(aliases=["char"])

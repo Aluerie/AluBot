@@ -100,7 +100,7 @@ class RPSView(discord.ui.View):
                 return f"{c1.emote_name} {c1.value.word} {c2.emote_name}", f"{self.player1.mention} wins", self.player1
 
         winning_strings = winning_choice(c1, c2)
-        ggwp = "\n\n**Good Game, Well Played {0} {0} {0}**".format(const.Emote.DankL)
+        ggwp = f"\n\n**Good Game, Well Played {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}**"
         return f"{choices_string}\n{winning_strings[0]}{ggwp}\n{winning_strings[1]}", winning_strings[2]
 
     async def rps_button_callback(self, interaction: discord.Interaction, choice: RPSChoice):

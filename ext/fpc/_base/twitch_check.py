@@ -27,9 +27,9 @@ class TwitchAccountCheckBase(FPCCog):
         # self.__cog_name__ = f'TwitchAccCheckCog for {table_name}'
         self.check_acc_renames.start()
 
-    @aluloop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.timezone.utc))
+    @aluloop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.UTC))
     async def check_acc_renames(self):
-        if datetime.datetime.now(datetime.timezone.utc).day != self.day:
+        if datetime.datetime.now(datetime.UTC).day != self.day:
             return
 
         query = f"SELECT player_id, twitch_id, display_name FROM {self.table_name} WHERE twitch_id IS NOT NULL"

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import zoneinfo
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, override
 
 import discord
 from discord import app_commands
@@ -59,11 +59,11 @@ class TimeZone(NamedTuple):
         except ValueError:
             raise commands.BadArgument(
                 f"Could not find timezone for input:```\n{argument!r}```\n"
-                "I insist that you should be using user-friendly suggestions from autocomplete for `timezone` argument in "
-                "`/timezone set`, `/birthday set`, etc. slash commands to ease your choice. "
-                "You can also use IANA aliases for timezones which you can find here: "
-                "[TimeZonePicker](https://kevinnovak.github.io/Time-Zone-Picker/) or "
-                "[WikiPage](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)'s `TZ identifier` column"
+                + "I insist that you should be using user-friendly suggestions from autocomplete for "
+                + "`timezone` argument in `/timezone set`, `/birthday set`, etc. slash commands to ease your choice. "
+                + "You can also use IANA aliases for timezones which you can find here: "
+                + "[TimeZonePicker](https://kevinnovak.github.io/Time-Zone-Picker/) or "
+                + "[WikiPage](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)'s `TZ identifier` column"
             )
 
     def to_choice(self) -> app_commands.Choice[str]:
@@ -79,10 +79,12 @@ class TimeZoneTransformer(app_commands.Transformer):
     and in hybrid if we need autocomplete to work
     """
 
+    @override
     async def transform(self, interaction: discord.Interaction[AluBot], value: str) -> TimeZone:
         ctx = await AluContext.from_interaction(interaction)
         return await TimeZone.convert(ctx, value)
 
+    @override
     async def autocomplete(self, interaction: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice[str]]:
         tz_manager = interaction.client.tz_manager
 
@@ -268,7 +270,7 @@ class TimezoneManager:
             return "+00:00"
 
     @cache.cache()
-    async def get_timezone(self, user_id: int, /) -> Optional[str]:
+    async def get_timezone(self, user_id: int, /) -> str | None:
         query = "SELECT timezone from user_settings WHERE id = $1;"
         record = await self.bot.pool.fetchrow(query, user_id)
         return record["timezone"] if record else None
@@ -276,10 +278,10 @@ class TimezoneManager:
     async def get_tzinfo(self, user_id: int, /) -> datetime.tzinfo:
         tz = await self.get_timezone(user_id)
         if tz is None:
-            return datetime.timezone.utc
-        return zoneinfo.ZoneInfo(tz) or datetime.timezone.utc
+            return datetime.UTC
+        return zoneinfo.ZoneInfo(tz) or datetime.UTC
 
-    async def set_timezone(self, user_id: int, timezone: TimeZone):
+    async def set_timezone(self, user_id: int, timezone: TimeZone) -> None:
         query = """
             INSERT INTO user_settings (id, timezone)
             VALUES ($1, $2)

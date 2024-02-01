@@ -119,9 +119,9 @@ class LoLNotifications(BaseNotifications):
                     FROM lol_favourite_characters c
                     JOIN lol_favourite_players p on c.guild_id = p.guild_id
                     JOIN lol_settings s on s.guild_id = c.guild_id
-                    WHERE character_id=$1 
+                    WHERE character_id=$1
                         AND player_id=$2
-                        AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3)  
+                        AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3)
                         AND s.enabled = TRUE;
                 """
                 channel_spoil_tuples: list[tuple[int, bool]] = [
@@ -141,10 +141,10 @@ class LoLNotifications(BaseNotifications):
 
     @aluloop(seconds=59)
     async def notification_worker(self):
-        log.debug(f"--- LoL FPC Notifications Task is starting now ---")
+        log.debug("--- LoL FPC Notifications Task is starting now ---")
         await self.send_notifications()
         await self.edit_notifications()
-        log.debug(f"--- LoL FPC Notifications Task is finished ---")
+        log.debug("--- LoL FPC Notifications Task is finished ---")
 
     # POST MATCH EDITS
 

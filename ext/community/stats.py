@@ -8,9 +8,6 @@ from utils import AluCog, aluloop
 
 from ._base import CommunityCog
 
-if TYPE_CHECKING:
-    pass
-
 
 class StatsVoiceChannels(CommunityCog):
     async def cog_load(self) -> None:

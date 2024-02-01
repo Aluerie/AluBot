@@ -16,9 +16,6 @@ from discord.ext import commands
 
 from utils import AluCog, AluContext, Url, const
 
-if TYPE_CHECKING:
-    pass
-
 
 async def count_lines(
     path: str,
@@ -177,7 +174,7 @@ class OtherCog(AluCog):
             ),
         )
         e.add_field(name="Last reboot", value=discord.utils.format_dt(self.bot.launch_time, style="R"))
-        e.set_footer(text=f"Made with Love... and discord.py \N{SPARKLING HEART}", icon_url=const.Logo.Python)
+        e.set_footer(text="Made with Love... and discord.py \N{SPARKLING HEART}", icon_url=const.Logo.Python)
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
@@ -235,5 +232,5 @@ class OtherCog(AluCog):
         final_url = f"{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}"
         embed.set_footer(text=f"Found source code here:\n{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
 
-        view = Url(final_url, label=f'Source code for command "{str(obj)}"', emoji=const.EmoteLogo.GitHub)
+        view = Url(final_url, label=f'Source code for command "{obj!s}"', emoji=const.EmoteLogo.GitHub)
         await ctx.reply(embed=embed, view=view)

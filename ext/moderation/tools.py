@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from typing import TYPE_CHECKING, Annotated, Any, Callable, Literal, Optional
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Annotated, Any, Literal, Optional
 
 import discord
 from discord import app_commands
@@ -159,7 +160,7 @@ class ModerationTools(ModerationCog):
 
         try:
             deleted = await ctx.channel.purge(limit=search, before=before, after=after, check=predicate)
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await ctx.send("I do not have permissions to delete messages.")
         except discord.HTTPException as e:
             return await ctx.send(f"Error: {e} (try a smaller search?)")

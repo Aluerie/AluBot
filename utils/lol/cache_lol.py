@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, MutableMapping, Optional, TypedDict
+from collections.abc import MutableMapping
+from typing import TYPE_CHECKING, Optional, TypedDict
 
 from roleidentification import get_roles
 

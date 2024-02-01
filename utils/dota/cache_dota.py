@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, MutableMapping, TypedDict
+from collections.abc import MutableMapping
+from typing import TYPE_CHECKING, TypedDict
 
 from .. import const
 from ..cache import KeysCache

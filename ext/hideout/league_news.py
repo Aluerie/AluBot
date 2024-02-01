@@ -44,7 +44,7 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
         # the timer does not exist so we create it (again)
         # probably cog wasn't loaded when event fired
         # which is actually not addressed in the TimerManager logic...
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.UTC)
         data: LeaguePatchCheckTimerData = {"last_patch_href": "none"}
         await self.bot.create_timer(
             event="league_patch_check",

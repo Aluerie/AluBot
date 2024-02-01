@@ -56,7 +56,7 @@ class Codeblock:
             - if it is not codeblock
     """
 
-    def __init__(self, code: str, language: str = ""):
+    def __init__(self, code: str, language: str = "") -> None:
         self.code: str = code
         self.language: str = language
 
@@ -167,7 +167,7 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
         # ImageColor
         try:
             # https://pillow.readthedocs.io/en/stable/reference/ImageColor.html
-            rgb: Tuple[int, int, int] = ImageColor.getcolor(argument, "RGB")  # type:ignore
+            rgb: tuple[int, int, int] = ImageColor.getcolor(argument, "RGB")  # type:ignore
             return discord.Colour.from_rgb(*rgb)
         except ValueError:
             pass
@@ -222,10 +222,7 @@ class MonthNumber(commands.Converter, app_commands.Transformer):
         return self.worker(value)
 
     async def autocomplete(self, _interaction: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice]:
-        if not arg:
-            month_names = self.mapping.keys()
-        else:
-            month_names = fuzzy.finder(arg, self.mapping.keys())
+        month_names = self.mapping.keys() if not arg else fuzzy.finder(arg, self.mapping.keys())
         return [app_commands.Choice(name=name, value=name) for name in month_names]
 
 

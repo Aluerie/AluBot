@@ -157,8 +157,8 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         cnt = offset
 
         query = f"""
-            SELECT id, exp, rep 
-            FROM users 
+            SELECT id, exp, rep
+            FROM users
             WHERE inlvl=TRUE
             ORDER BY {sort_by} DESC;
         """
@@ -194,8 +194,8 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         query = """
             WITH u AS (
                 SELECT lastseen FROM users WHERE id=$1
-            )           
-            UPDATE users 
+            )
+            UPDATE users
             SET msg_count=msg_count+1, lastseen=(now() at time zone 'utc')
             WHERE id=$1
             RETURNING (SELECT lastseen from u)
@@ -253,7 +253,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                         query = "UPDATE users SET rep=rep+1 WHERE id=$1"
                         await self.bot.pool.execute(query, member.id)
 
-    @aluloop(time=datetime.time(hour=13, minute=13, tzinfo=datetime.timezone.utc))
+    @aluloop(time=datetime.time(hour=13, minute=13, tzinfo=datetime.UTC))
     async def remove_inactive(self):
         query = "SELECT id, lastseen, name FROM users"
         rows = await self.bot.pool.fetch(query)

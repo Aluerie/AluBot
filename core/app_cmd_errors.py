@@ -54,8 +54,8 @@ async def on_app_command_error(
     elif isinstance(error, app_commands.CommandSignatureMismatch):
         # TODO: WARN DEVS, make title too
         desc = (
-            f"**\N{WARNING SIGN} This command's signature is out of date!**\n"
-            f"I've warned the developers about this and it will be fixed as soon as possible."
+            "**\N{WARNING SIGN} This command's signature is out of date!**\n"
+            "I've warned the developers about this and it will be fixed as soon as possible."
         )
     elif isinstance(error, app_commands.CommandNotFound):
         desc = (  # TODO: WARN DEVS, make title too

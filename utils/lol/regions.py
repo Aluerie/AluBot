@@ -1,21 +1,22 @@
 """
 Glossary:
-* platform 
+* platform
     RiotGames routing platform names with numbers like `NA1`.
-* continent 
+* continent
     RiotGames routing continent names like `AMERICAS`.
-* region 
+* region
     Garbage term, because Riot API uses it as both platform and region.
     So in pulsefire riot api client calls we use both continent and platform for `region=` keyword argument.
-* server 
-    Normal human-readable server abbreviations like 'NA'. 
+* server
+    Normal human-readable server abbreviations like 'NA'.
     Name does not exist in riot api calls and only used for display purposes.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Callable, Generic, Literal, Mapping, Self, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeVar
 
 import discord
 from discord import app_commands
@@ -61,7 +62,7 @@ class Platform(StrEnum):
     Philippines         = "PH2"
     Russia              = "RU"
     Singapore           = "SG2"
-    Thailand            = "TH2" 
+    Thailand            = "TH2"
     Turkey              = "TR1"
     Taiwan              = "TW2"
     Vietnam             = "VN2"
@@ -84,7 +85,7 @@ class Platform(StrEnum):
             cls.Singapore          : "SG - Singapore, Malaysia, & Indonesia",
             cls.Thailand           : "TH - Thailand",
             cls.Turkey             : "TR - Turkey",
-            cls.Taiwan             : "TW - Taiwan, Hong Kong, and Macao", 
+            cls.Taiwan             : "TW - Taiwan, Hong Kong, and Macao",
             cls.Vietnam            : "VN - Vietnam",
         }
 
@@ -116,7 +117,7 @@ class Platform(StrEnum):
     @property
     def continent(self):
         return self.CONTINENTS[self]
-    
+
     @classproperty
     def OPGG_NAMES(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore
         return {

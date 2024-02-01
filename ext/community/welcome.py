@@ -91,8 +91,8 @@ class Welcome(CommunityCog):
             await member.add_roles(self.bot.community.bots_role)
         else:
             query = """
-                INSERT INTO users (id, name) 
-                VALUES ($1, $2) 
+                INSERT INTO users (id, name)
+                VALUES ($1, $2)
                 ON CONFLICT DO NOTHING
                 RETURNING True;
             """
@@ -125,7 +125,7 @@ class Welcome(CommunityCog):
     async def on_member_ban(self, guild: discord.Guild, member: discord.Member):
         if guild.id != const.Guild.community:
             return
-        e = discord.Embed(description="{0} {0} {0}".format(const.Emote.peepoPolice), color=0x800000)
+        e = discord.Embed(description=f"{const.Emote.peepoPolice} {const.Emote.peepoPolice} {const.Emote.peepoPolice}", color=0x800000)
         e.set_author(name=f"{member.display_name} was just banned from the server", icon_url=member.display_avatar.url)
         e.set_footer(text=f"With love, {guild.me.display_name}")
         msg = await self.bot.community.welcome.send(embed=e)

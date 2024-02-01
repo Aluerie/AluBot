@@ -7,7 +7,8 @@ import os
 import re
 import subprocess
 import sys
-from typing import TYPE_CHECKING, Annotated, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING, Annotated
 
 import discord
 from discord.ext import commands
@@ -16,9 +17,6 @@ from ext import get_extensions
 from utils import AluContext, const, formats
 
 from ._base import DevBaseCog
-
-if TYPE_CHECKING:
-    pass
 
 
 class ExtensionConverter(commands.Converter):

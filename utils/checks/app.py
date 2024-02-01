@@ -6,9 +6,6 @@ from discord import app_commands
 
 from .. import const
 
-if TYPE_CHECKING:
-    pass
-
 
 def is_my_guild():
     return app_commands.guilds(*const.MY_GUILDS)

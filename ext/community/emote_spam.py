@@ -101,7 +101,7 @@ class EmoteSpam(CommunityCog):
     async def emote_spam(self):
         if random.randint(1, 100 + 1) < 2:
             emote = await self.get_random_emote()
-            await self.bot.community.emote_spam.send("{0} {0} {0}".format(str(emote)))
+            await self.bot.community.emote_spam.send(f"{emote!s} {emote!s} {emote!s}")
 
     @commands.hybrid_command()
     async def do_emote_spam(self, ctx: AluContext):
@@ -109,7 +109,7 @@ class EmoteSpam(CommunityCog):
 
         emote = await self.get_random_emote()
         channel = self.community.emote_spam
-        content = "{0} {0} {0}".format(str(emote))
+        content = f"{emote!s} {emote!s} {emote!s}"
         await channel.send(content)
         e = discord.Embed(colour=const.Colour.blueviolet, description=f"I sent {content} into {channel.mention}")
         await ctx.reply(embed=e, ephemeral=True, delete_after=10)

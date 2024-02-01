@@ -1,7 +1,7 @@
 """
 Slightly overcooked typing for OpenDota pulsefire-like client REST requests.
 
-Note that it can be outdated, wrong, incomplete. 
+Note that it can be outdated, wrong, incomplete.
 """
 
 from typing import Literal, NamedTuple, NotRequired, TypedDict

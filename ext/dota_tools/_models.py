@@ -51,9 +51,9 @@ class MatchHistoryData:
                 return None
             elif match_outcome in (2, 3):  # 2 is Radiant, 3 is Dire
                 if player_slot < 128:  # Am I Radiant? player slots are 0 1 2 3 4 vs 128 129 130 131 132
-                    return 2 == match_outcome
+                    return match_outcome == 2
                 else:
-                    return 3 == match_outcome
+                    return match_outcome == 3
             return None
 
         self.winloss = winloss()
@@ -68,7 +68,7 @@ class MatchHistoryData:
             mmr = new_mmr(last_recorded_match.mmr)
 
             query = """
-                INSERT INTO dotahistory 
+                INSERT INTO dotahistory
                 (hero_id, winloss, mmr, role, dtime)
                 VALUES ($1, $2, $3, $4, $5)
             """

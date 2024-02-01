@@ -11,9 +11,6 @@ from utils import const, errors, links, webhook_mimicry
 
 from ._base import CommunityCog
 
-if TYPE_CHECKING:
-    pass
-
 
 class FixLinksCommunity(CommunityCog):
     def __init__(self, *args, **kwargs):

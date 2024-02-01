@@ -47,13 +47,13 @@ class ShortTime:
         if match is None or not match.group(0):
             match = self.discord_fmt.fullmatch(argument)
             if match is not None:
-                self.dt = datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.timezone.utc)
+                self.dt = datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.UTC)
                 return
             else:
                 raise commands.BadArgument("invalid time provided")
 
         data = {k: int(v) for k, v in match.groupdict(default=0).items()}
-        now = now or datetime.datetime.now(datetime.timezone.utc)
+        now = now or datetime.datetime.now(datetime.UTC)
         self.dt = now + relativedelta(**data)  # type: ignore #todo: investigate
 
     @classmethod
@@ -69,9 +69,9 @@ class HumanTime:
     calendar = pdt.Calendar(version=pdt.VERSION_CONTEXT_STYLE, constants=constants)
 
     def __init__(self, argument: str, *, now: datetime.datetime | None = None):
-        now = now or datetime.datetime.now(datetime.timezone.utc)
+        now = now or datetime.datetime.now(datetime.UTC)
         dt, status = self.calendar.parseDT(argument, sourceTime=now)
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
+        dt = dt.replace(tzinfo=datetime.UTC)
         if not status.hasDateOrTime:  # type: ignore # TODO: fix
             raise commands.BadArgument('invalid time provided, try e.g. "tomorrow" or "3 days"')
 
@@ -91,7 +91,7 @@ class Time(HumanTime):
     def __init__(self, argument: str, *, now: datetime.datetime | None = None):
         try:
             o = ShortTime(argument, now=now)
-        except Exception as e:
+        except Exception:
             super().__init__(argument)
         else:
             self.dt = o.dt
@@ -120,7 +120,7 @@ class TimeTransformer(app_commands.Transformer):
 
         now = interaction.created_at  # .astimezone(tzinfo)
         if not now.tzinfo:
-            now = now.replace(tzinfo=datetime.timezone.utc)
+            now = now.replace(tzinfo=datetime.UTC)
 
         try:
             short = ShortTime(value, now=now)
@@ -203,7 +203,7 @@ class UserFriendlyTime(commands.Converter):
             match = ShortTime.discord_fmt.match(argument)
             if match is not None:
                 result = FriendlyTimeResult(
-                    datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.timezone.utc).astimezone(tzinfo)
+                    datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.UTC).astimezone(tzinfo)
                 )
                 remaining = argument[match.end() :].strip()
                 await result.ensure_constraints(ctx, self, now, remaining)

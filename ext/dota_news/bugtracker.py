@@ -136,7 +136,7 @@ class Action:
         **kwargs,
     ):
         self.event_type: EventBase | CommentBase = enum_type
-        self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.timezone.utc)
+        self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.UTC)
         self.actor: SimpleUser = actor
         self.issue_number: int = issue_number
 
@@ -392,7 +392,7 @@ class BugTracker(AluCog):
 
         query = "SELECT git_checked_dt FROM botinfo WHERE id=$1"
         dt: datetime.datetime = await self.bot.pool.fetchval(query, const.Guild.community)
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.UTC)
 
         # if self.bot.test:  # FORCE TESTING
         #     dt = now - datetime.timedelta(hours=2)
@@ -414,7 +414,7 @@ class BugTracker(AluCog):
                     # check if this is a valid issue event
                     continue
 
-                event_created_at = event.created_at.replace(tzinfo=datetime.timezone.utc)
+                event_created_at = event.created_at.replace(tzinfo=datetime.UTC)
                 log.debug(
                     "Found event: %s %s %s %s ", event.event, event.issue.number, event.actor.login, event_created_at
                 )
@@ -464,7 +464,7 @@ class BugTracker(AluCog):
             state="open",
             since=dt,
         ):
-            if not dt < issue.created_at.replace(tzinfo=datetime.timezone.utc) < now:
+            if not dt < issue.created_at.replace(tzinfo=datetime.UTC) < now:
                 continue
 
             if issue.user and issue.user.login in self.valve_devs:

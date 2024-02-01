@@ -4,9 +4,6 @@ from typing import TYPE_CHECKING, Literal
 
 import discord
 
-if TYPE_CHECKING:
-    pass
-
 __all__ = (
     "Colour",
     "MaterialPalette",
@@ -27,10 +24,10 @@ class Colour:
     # https://en.wikipedia.org/wiki/Lavender_(color)#Lavender_purple_(purple_mountain_majesty)
     # but I just chose the name that is supported by the said extension in highlight and is close enough in value.
     blueviolet    = 0x9678B6 # dota fpc
-    
+
     palevioletred = 0xDB7093 # lol fpc
     maroon        = 0x800000  # errors
-    
+
     slateblue     = 0x6A5ACD
     darkviolet    = 0x9400D3
 
@@ -44,7 +41,7 @@ class Colour:
 
 # fmt: off
 material_palette_dict_colours = {
-    # shade value |   900   |   800   |   700   |   600   |   500   |   400   |   300   |   200   |   100   |    50    |     
+    # shade value |   900   |   800   |   700   |   600   |   500   |   400   |   300   |   200   |   100   |    50    |
     'red':         [0xB71C1C, 0xC62828, 0xD32F2F, 0xE53935, 0xF44336, 0xEF5350, 0xE57373, 0xEF9A9A, 0xFFCDD2, 0xFFEBEE],
     'pink':        [0x880E4F, 0xAD1457, 0xC2185B, 0xD81B60, 0xE91E63, 0xEC407A, 0xF06292, 0xF48FB1, 0xF8BBD0, 0xFCE4EC],
     'purple':      [0x4A148C, 0x6A1B9A, 0x7B1FA2, 0x8E24AA, 0x9C27B0, 0xAB47BC, 0xBA68C8, 0xCE93D8, 0xE1BEE7, 0xF3E5F5],

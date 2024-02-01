@@ -1,14 +1,14 @@
 """
-This cog is just rude reposting from steamdb resources. 
+This cog is just rude reposting from steamdb resources.
 
 Unfortunately, I'm clueless about how to get the info from steam itself
-And following announcement channels in steamdb discord is not a solution 
+And following announcement channels in steamdb discord is not a solution
 because I only need ~1/10 of messages they post in here.
 
 If this ever becomes a problem or my bot becomes big t
 hen I will have to rewrite this cog.
 
-But for now I just repost messages I'm interested it to only my channel. 
+But for now I just repost messages I'm interested it to only my channel.
 """
 
 from __future__ import annotations

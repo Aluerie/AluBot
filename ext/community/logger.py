@@ -185,7 +185,7 @@ class MemberLogging(CommunityCog):
 
             query = "SELECT community_nickname_heartbeat FROM botvars WHERE id=$1"
             heartbeat_dt: datetime.datetime = await self.bot.pool.fetchval(query, True)
-            heartbeat_dt.replace(tzinfo=datetime.timezone.utc)
+            heartbeat_dt.replace(tzinfo=datetime.UTC)
 
             # get missed time.
             now = discord.utils.utcnow()

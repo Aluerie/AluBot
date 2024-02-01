@@ -79,7 +79,7 @@ class MatchToSend(BaseMatchToSend):
             return 0
 
         timestamp_seconds = round(self.start_time / 1000)  # the `self.start_time` is given in milliseconds
-        return int(datetime.datetime.now(datetime.timezone.utc).timestamp() - timestamp_seconds)
+        return int(datetime.datetime.now(datetime.UTC).timestamp() - timestamp_seconds)
 
     @override
     async def notification_image(
@@ -168,7 +168,7 @@ class MatchToSend(BaseMatchToSend):
     async def insert_into_game_messages(self, message_id: int, channel_id: int):
         query = """
             INSERT INTO lol_messages
-            (message_id, channel_id, match_id, platform, champion_id) 
+            (message_id, channel_id, match_id, platform, champion_id)
             VALUES ($1, $2, $3, $4, $5)
         """
         await self.bot.pool.execute(query, message_id, channel_id, self.match_id, self.platform, self.champion_id)
@@ -200,7 +200,7 @@ class MatchToEdit(BaseMatchToEdit):
 
         for frame in reversed(timeline["info"]["frames"]):
             for event in frame["events"]:
-                if not event.get("participantId") == participant["participantId"]:
+                if event.get("participantId") != participant["participantId"]:
                     # not our player
                     continue
 

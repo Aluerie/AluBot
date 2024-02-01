@@ -121,7 +121,7 @@ class EmoteAnalysis(CommunityCog, name="Emote stats"):
             case "nonani" | "static" | "nonanimated":
                 await topemotes_job(ctx, 3)
 
-    @tasks.loop(time=datetime.time(hour=16, minute=43, tzinfo=datetime.timezone.utc))
+    @tasks.loop(time=datetime.time(hour=16, minute=43, tzinfo=datetime.UTC))
     async def daily_emote_shift(self):
         query = "SELECT id, month_array FROM emotes"
         rows = await self.bot.pool.fetch(query)

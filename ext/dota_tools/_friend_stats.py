@@ -129,7 +129,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         res = try_get_friend_stats(ctx.bot, start_at_match_id=0)
 
         def get_morning_time():
-            now = datetime.datetime.now(datetime.timezone.utc)
+            now = datetime.datetime.now(datetime.UTC)
             morning = now.replace(hour=3, minute=45, second=0)
             if now < morning:
                 morning -= datetime.timedelta(days=1)
@@ -366,8 +366,8 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
 
     @tasks.loop(
         time=[
-            datetime.time(hour=3, minute=45, tzinfo=datetime.timezone.utc),
-            datetime.time(hour=15, minute=45, tzinfo=datetime.timezone.utc),
+            datetime.time(hour=3, minute=45, tzinfo=datetime.UTC),
+            datetime.time(hour=15, minute=45, tzinfo=datetime.UTC),
         ]
     )
     async def match_history_refresh(self):
@@ -442,9 +442,9 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         ax = await heroes_played_bar(self.bot, ax, sorted_dict)
 
         query = """
-            SELECT mmr 
+            SELECT mmr
             FROM dotahistory
-            ORDER BY id DESC 
+            ORDER BY id DESC
             LIMIT 1;
         """
         final_mmr = await self.bot.pool.fetchval(query)
@@ -473,7 +473,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         last_match = await self.bot.pool.fetchrow(query)
 
         axRain = fig.add_subplot(gs[1, 8:10], ylim=(-30, 30))
-        axRain.set_title(f"Last Match", x=0.5, y=0.6)
+        axRain.set_title("Last Match", x=0.5, y=0.6)
         axRain.annotate(
             "Win" if last_match["winloss"] else "Loss",
             (0.5, 0.5),

@@ -8,19 +8,19 @@ ext/
     ext_category_folder/
         # utility folders and files:
         _some_ext_utils_folder/
-        _some_ext_utils_file.py 
+        _some_ext_utils_file.py
         # ^ those must start with "_" in order not to be confused with one of below:
         # actual extension folder and files:
         package_folder_ext/
             **package structure like ext**
         one_file_ext.py
-    
+
     __init__.py  # this file
     beta.py  # special beta test ext file.
 
-This particular file aims to collect those files into Tuple of extensions so end result of 
+This particular file aims to collect those files into Tuple of extensions so end result of
 `get_extensions(test)` should be something like
->>> get_extensions(False) 
+>>> get_extensions(False)
 >>> (
 >>>    'jishaku',
 >>>    'ext.fpc.dota',
@@ -59,7 +59,7 @@ IGNORED_EXTENSIONS = "beta"  # these are ignored in main bot.
 MY_PACKAGES = tuple(module.name for module in iter_modules(path=__path__))  # , prefix=f'{__package__}.'
 
 
-def get_extensions(test: bool, reload: bool = False) -> Tuple[str, ...]:
+def get_extensions(test: bool, reload: bool = False) -> tuple[str, ...]:
     """Get tuple of extensions for bot to load.
 
     Note that this function is a bit more robust than needed according to description above.

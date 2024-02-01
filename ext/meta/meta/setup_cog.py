@@ -9,9 +9,6 @@ from utils import AluCog, AluGuildContext
 from utils.const import Colour
 from utils.pages import Paginator
 
-if TYPE_CHECKING:
-    pass
-
 
 class SetupFormatData(NamedTuple):
     cog: commands.Cog | Literal["front_page", "back_page"]

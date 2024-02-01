@@ -93,7 +93,7 @@ class Dota2Client(Dota2Client_):
 class LiveMatch:
     def __init__(self, proto: GameCoordinatorAPI.CSourceTVGameSmall) -> None:
         self.id = proto.match_id
-        self.start_time = datetime.datetime.fromtimestamp(proto.activate_time, datetime.timezone.utc)
+        self.start_time = datetime.datetime.fromtimestamp(proto.activate_time, datetime.UTC)
         self.server_steam_id = proto.server_steam_id
 
         sorted_players = sorted(proto.players, key=attrgetter("team", "team_slot"))

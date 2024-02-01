@@ -42,7 +42,7 @@ class Config(Generic[_T]):
 
     def load_from_file(self) -> bool:
         try:
-            with open(self.filename, "r", encoding="utf-8") as f:
+            with open(self.filename, encoding="utf-8") as f:
                 self._json = json.load(f)
                 return True
         except FileNotFoundError:

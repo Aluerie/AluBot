@@ -11,9 +11,6 @@ from utils import const
 
 from ._base import CommunityCog
 
-if TYPE_CHECKING:
-    pass
-
 
 class CommunityFun(CommunityCog):
     @staticmethod
@@ -46,7 +43,7 @@ class CommunityFun(CommunityCog):
         else:
             return
         await message.channel.send(
-            "{0} in {1} ! {2} {2} {2}".format(text, const.Channel.general.mention, const.Emote.Ree)
+            f"{text} in {const.Channel.general.mention} ! {const.Emote.Ree} {const.Emote.Ree} {const.Emote.Ree}"
         )
 
     @commands.Cog.listener("on_message")

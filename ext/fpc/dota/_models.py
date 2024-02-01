@@ -5,12 +5,12 @@ import datetime
 import logging
 import math
 import re
-from typing import TYPE_CHECKING, Literal, Optional, TypedDict, override
+from typing import TYPE_CHECKING, Literal, TypedDict, override
 
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
-from utils import const, dota, errors, formats
+from utils import const, formats
 
 from .._base import BaseMatchToEdit, BaseMatchToSend
 
@@ -49,9 +49,9 @@ class MatchToSend(BaseMatchToSend):
         hero_id: int,
         hero_ids: list[int],
         server_steam_id: int,
-        twitch_id: Optional[int] = None,
+        twitch_id: int | None = None,
         hero_name: str,
-    ):
+    ) -> None:
         super().__init__(bot)
         self.match_id: int = match_id
         self.friend_id: int = friend_id
@@ -60,7 +60,7 @@ class MatchToSend(BaseMatchToSend):
         self.hero_id: int = hero_id
         self.hero_ids: list[int] = hero_ids
         self.server_steam_id: int = server_steam_id
-        self.twitch_id: Optional[int] = twitch_id
+        self.twitch_id: int | None = twitch_id
         self.hero_name: str = hero_name
 
     @property
@@ -73,7 +73,7 @@ class MatchToSend(BaseMatchToSend):
 
     @property
     def long_ago(self) -> int:
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.UTC)
         return (now - self.start_time).seconds
 
     async def get_twitch_data(self) -> TwitchData:
@@ -178,9 +178,9 @@ class MatchToSend(BaseMatchToSend):
         return embed, image_file
 
     @override
-    async def insert_into_game_messages(self, message_id: int, channel_id: int):
+    async def insert_into_game_messages(self, message_id: int, channel_id: int) -> None:
         query = """
-            INSERT INTO dota_messages (message_id, channel_id, match_id, friend_id, hero_id) 
+            INSERT INTO dota_messages (message_id, channel_id, match_id, friend_id, hero_id)
             VALUES ($1, $2, $3, $4, $5)
         """
         await self.bot.pool.execute(query, message_id, channel_id, self.match_id, self.friend_id, self.hero_id)
@@ -195,7 +195,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
         self,
         bot: AluBot,
         data: schemas.StratzGraphQL.GetFPCMatchToEdit.ResponseDict,
-    ):
+    ) -> None:
         super().__init__(bot)
 
         player = data["data"]["match"]["players"][0]
@@ -358,7 +358,7 @@ if TYPE_CHECKING:
     from utils import AluCog
 
 
-async def beta_test_stratz_edit(self: AluCog):
+async def beta_test_stratz_edit(self: AluCog) -> None:
     """Testing function for `edit_notification_image` from LoL's MatchToEdit class
 
     Import this into `beta_task` for easy testing of how new elements alignment.
@@ -379,5 +379,4 @@ async def beta_test_stratz_edit(self: AluCog):
     match_to_edit = StratzMatchToEdit(self.bot, data)
 
     new_image = await match_to_edit.edit_notification_image(const.Picture.Placeholder640X360, discord.Colour.purple())
-    # new_image.show()
-    return new_image
+    new_image.show()

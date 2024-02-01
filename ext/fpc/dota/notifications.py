@@ -4,7 +4,7 @@ import asyncio
 import datetime
 import logging
 import time
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 import aiohttp
 import discord
@@ -49,7 +49,7 @@ edit_log.setLevel(logging.DEBUG)
 
 
 class DotaFPCNotifications(BaseNotifications):
-    def __init__(self, bot: AluBot, *args, **kwargs):
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, prefix="dota", *args, **kwargs)
         # Send Matches related attrs
         self.death_counter: int = 0
@@ -58,6 +58,7 @@ class DotaFPCNotifications(BaseNotifications):
         # Edit Matches related attrs
         self.retry_mapping: dict[tuple[int, int], int] = {}
 
+    @override
     async def cog_load(self) -> None:
         # maybe asyncpg.PostgresConnectionError too
         # self.task_to_send_dota_fpc_messages.add_exception_type(asyncpg.InternalServerError)
@@ -70,6 +71,7 @@ class DotaFPCNotifications(BaseNotifications):
         self.daily_ratelimit_report.start()
         return await super().cog_load()
 
+    @override
     async def cog_unload(self) -> None:
         self.notification_sender.cancel()
         self.notification_editor.cancel()
@@ -80,7 +82,7 @@ class DotaFPCNotifications(BaseNotifications):
         query = "SELECT friend_id FROM dota_accounts WHERE player_id=ANY($1)"
         return [f for (f,) in await self.bot.pool.fetch(query, player_ids)]
 
-    async def analyze_top_source_response(self, live_matches: list[LiveMatch]):
+    async def analyze_top_source_response(self, live_matches: list[LiveMatch]) -> None:
         query = "SELECT DISTINCT character_id FROM dota_favourite_characters"
         favourite_hero_ids: list[int] = [r for (r,) in await self.bot.pool.fetch(query)]
 
@@ -111,22 +113,22 @@ class DotaFPCNotifications(BaseNotifications):
                     account_id = player.id
                     hero_id = player.hero.id
 
-                    query = """--sql
-                        SELECT player_id, display_name, twitch_id 
-                        FROM dota_players 
+                    query = """
+                        SELECT player_id, display_name, twitch_id
+                        FROM dota_players
                         WHERE player_id=(SELECT player_id FROM dota_accounts WHERE friend_id = $1);
                     """
                     user: AnalyzeTopSourceResponsePlayerQueryRow = await self.bot.pool.fetchrow(query, account_id)
-                    query = """--sql
+                    query = """
                         SELECT s.channel_id, s.spoil
                         FROM dota_favourite_characters c
                         JOIN dota_favourite_players p on c.guild_id = p.guild_id
                         JOIN dota_settings s on s.guild_id = c.guild_id
-                        WHERE character_id = $1 
+                        WHERE character_id = $1
                             AND p.player_id = $2
                             AND NOT s.channel_id = ANY(
-                                SELECT channel_id 
-                                FROM dota_messages 
+                                SELECT channel_id
+                                FROM dota_messages
                                 WHERE match_id = $3 AND friend_id = $4
                             )
                             AND s.twitch_live_only = $5
@@ -167,7 +169,7 @@ class DotaFPCNotifications(BaseNotifications):
 
     @aluloop(seconds=59)
     async def notification_sender(self):
-        send_log.debug(f"--- Task to send Dota2 FPC Notifications is starting now ---")
+        send_log.debug("--- Task to send Dota2 FPC Notifications is starting now ---")
 
         # REQUESTING
         start_time = time.perf_counter()
@@ -199,7 +201,7 @@ class DotaFPCNotifications(BaseNotifications):
         else:
             self.top_live_matches = live_matches
 
-        send_log.debug(f"--- Task is finished ---")
+        send_log.debug("--- Task is finished ---")
 
     @aluloop(minutes=5)
     async def notification_editor(self):
@@ -275,7 +277,7 @@ class DotaFPCNotifications(BaseNotifications):
         """Send OpenDota/Stratz rate limit numbers"""
         await ctx.reply(embed=self.get_ratelimit_embed())
 
-    @aluloop(time=datetime.time(hour=23, minute=55, tzinfo=datetime.timezone.utc))
+    @aluloop(time=datetime.time(hour=23, minute=55, tzinfo=datetime.UTC))
     async def daily_ratelimit_report(self):
         """Send information about Stratz daily limit to spam logs.
 

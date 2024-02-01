@@ -11,8 +11,7 @@ import logging
 import os
 import traceback
 from contextlib import AbstractAsyncContextManager
-from types import TracebackType
-from typing import TYPE_CHECKING, Generator, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import discord
 
@@ -20,6 +19,9 @@ import config
 from utils import AluContext, const, errors
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+    from types import TracebackType
+
     from .bot import AluBot
 
 
@@ -207,7 +209,7 @@ class ExceptionManager:
                 for name, value in interaction.namespace.__dict__.items():
                     args_str.append(f"[{name}]: {value!r}")
                 else:
-                    args_str.append(f"No arguments")
+                    args_str.append("No arguments")
                 args_str.append("```")
                 embed.add_field(name="Command Args", value="\n".join(args_str), inline=False)
             else:
@@ -300,7 +302,7 @@ class ExceptionManager:
                 log.debug("Waiting %s seconds to send the error.", total_seconds)
                 await asyncio.sleep(total_seconds)
 
-            self._most_recent = datetime.datetime.now(datetime.timezone.utc)
+            self._most_recent = datetime.datetime.now(datetime.UTC)
             return await self.send_error(traceback_string, packet)
 
 
@@ -333,7 +335,7 @@ class HandleHTTPException(AbstractAsyncContextManager):
 
     __slots__ = ("destination", "title")
 
-    def __init__(self, destination: discord.abc.Messageable, *, title: str | None = None):
+    def __init__(self, destination: discord.abc.Messageable, *, title: str | None = None) -> None:
         self.destination = destination
         self.title = title
 

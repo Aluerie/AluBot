@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, NamedTuple, Optional, Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Literal, NamedTuple, Optional
 
 import discord
 from discord import app_commands

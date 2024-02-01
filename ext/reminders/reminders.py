@@ -274,7 +274,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
 
         query = """
             DELETE FROM timers
-            WHERE event = 'reminder' 
+            WHERE event = 'reminder'
             AND data #>> '{author_id}' = $1;
         """
         await ctx.pool.execute(query, author_id)

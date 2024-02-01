@@ -1,17 +1,10 @@
 from __future__ import annotations
 
 import abc
-import logging
-import re
-from typing import TYPE_CHECKING, Any, Optional, Self, TypedDict
-
-import discord
-
-from utils import errors
-
-from . import FPCCog
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import discord
     from PIL import Image
 
     from bot import AluBot
@@ -57,7 +50,7 @@ class BaseMatchToSend(abc.ABC):
 
 
 class BaseMatchToEdit(abc.ABC):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         self.bot: AluBot = bot
 
     @abc.abstractmethod

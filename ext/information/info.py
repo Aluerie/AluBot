@@ -91,7 +91,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
         e = discord.Embed(colour=const.Colour.blueviolet, title="GMT(Greenwich Mean Time)")
-        e.set_footer(text=f"GMT is the same as UTC (Universal Time Coordinated)")
+        e.set_footer(text="GMT is the same as UTC (Universal Time Coordinated)")
         e.add_field(name="Time:", value=now_time).add_field(name="Date:", value=now_date)
         await ctx.reply(embed=e)
 

@@ -10,9 +10,6 @@ from utils import AluContext, const
 
 from ._base import DevBaseCog
 
-if TYPE_CHECKING:
-    pass
-
 
 class AdminTools(DevBaseCog):
     async def send_guild_embed(self, guild: discord.Guild, join: bool):
@@ -26,7 +23,7 @@ class AdminTools(DevBaseCog):
         e.add_field(name="Shard ID", value=guild.shard_id or "N/A")
 
         if guild.owner:
-            e.set_author(name=f"The bot {word} {str(guild.owner)}'s guild", icon_url=guild.owner.display_avatar.url)
+            e.set_author(name=f"The bot {word} {guild.owner!s}'s guild", icon_url=guild.owner.display_avatar.url)
             e.add_field(name="Owner ID", value=f"`{guild.owner.id}`")
 
         if guild.icon:

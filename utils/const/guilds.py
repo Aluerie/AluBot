@@ -151,7 +151,7 @@ CATEGORY_ROLES = [
     727492782196916275,  # plebs
 ]
 
-IGNORED_FOR_LOGS = [Role.voice, Role.live_stream] + CATEGORY_ROLES
+IGNORED_FOR_LOGS = [Role.voice, Role.live_stream, *CATEGORY_ROLES]
 
 
 class User(UserEnum):
@@ -185,7 +185,7 @@ class SavedGuild:
         Snowflake ID for the guild itself.
     """
 
-    def __init__(self, bot: AluBot, guild_id: int):
+    def __init__(self, bot: AluBot, guild_id: int) -> None:
         self.bot: AluBot = bot
         self.id: int = guild_id
 
@@ -232,7 +232,7 @@ class SavedGuild:
 
 
 class CommunityGuild(SavedGuild):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot, Guild.community)
 
     # channels #########################################################################################################
@@ -347,7 +347,7 @@ class CommunityGuild(SavedGuild):
 
 
 class HideoutGuild(SavedGuild):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot, Guild.hideout)
 
     # channels

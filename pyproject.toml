@@ -1,7 +1,7 @@
 [tool.black]
 # I use ruff over it
 line-length = 120
-python_version = "py312"
+target-version = ["py312"]
 
 [tool.isort]
 # I use ruff over it
@@ -12,13 +12,11 @@ line_length = 120
 
 [tool.pyright]
 pythonVersion = "3.12"
-typeCheckingMode = "strict"
+typeCheckingMode = "strict"  # let's enable the default max setting and go down from here.
 exclude = ["**/__pycache__"]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
-deprecateTypingAliases = true
-reportMissingTypeStubs = "none"    # a lot of libs don't have stubs
-reportUnknownMemberType = "none"   # a lot of libs don't declare member types
-reportUnknownVariableType = "none" # consequence of above
+
+
 
 [tool.ruff]
 line-length = 120
@@ -36,6 +34,11 @@ select = [
     "W",
     "PERF",
     "ANN",
+    # my experimental additions 
+    "N",
+    "EM",
+    "ICN",
+    "DTZ"
 ]
 ignore = [
     "F401",

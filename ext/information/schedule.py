@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import datetime
+from collections.abc import MutableMapping
 from enum import Enum
-from typing import TYPE_CHECKING, Any, MutableMapping, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import discord
 from bs4 import BeautifulSoup
@@ -62,7 +63,7 @@ def scrape_schedule_data(
 
     matches: list[Match] = []
 
-    dt_now = datetime.datetime.now(datetime.timezone.utc)
+    dt_now = datetime.datetime.now(datetime.UTC)
     divs = soup.findAll("div", {"data-toggle-area-content": schedule_mode.data_toggle_area_content})
     match_rows = divs[-1].findAll("tbody")
 
@@ -70,7 +71,7 @@ def scrape_schedule_data(
         timer = match_row.find(class_="timer-object")
         timestamp = timer.get("data-timestamp")
         # timestamp is given in local machine time
-        dt = datetime.datetime.fromtimestamp(int(timestamp)).astimezone(datetime.timezone.utc)
+        dt = datetime.datetime.fromtimestamp(int(timestamp)).astimezone(datetime.UTC)
         twitch_url = f"https://liquipedia.net/dota2/Special:Stream/twitch/{timer.get('data-stream-twitch')}"
         return dt, twitch_url
 
@@ -217,7 +218,7 @@ class SchedulePageSource(menus.ListPageSource):
             .set_footer(text=self.schedule_enum.label_name, icon_url=const.Logo.Dota)
         )
 
-        dt_now = datetime.datetime.now(datetime.timezone.utc)
+        dt_now = datetime.datetime.now(datetime.UTC)
 
         # find the longest team versus string like "Secret - PSG.LGD"
 
@@ -334,7 +335,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                             "datetime"
                         ]
                         dt = datetime.datetime.strptime(match_time, "%Y-%m-%dT%H:%M:%SZ").replace(
-                            tzinfo=datetime.timezone.utc
+                            tzinfo=datetime.UTC
                         )
                         teams = f"{team1} - {team2}".ljust(40, " ")
                         match_strings.append(f"`{teams}` {formats.format_dt_tdR(dt)}")

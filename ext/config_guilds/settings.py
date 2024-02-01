@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Optional
 
 import discord
 from discord.ext import commands
@@ -82,7 +83,7 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
                 await set_author(emote, e, discord.AuditLogAction.emoji_create)
                 await ch.send(embed=e)
                 if not emote.managed:
-                    msg = await ch.send("{0} {0} {0}".format(str(emote)))
+                    msg = await ch.send(f"{emote!s} {emote!s} {emote!s}")
                     await msg.add_reaction(str(emote))
                 if guild.id == const.Guild.community:
                     query = "INSERT INTO emotes (id, name, animated) VALUES ($1, $2, $3)"

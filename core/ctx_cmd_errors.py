@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, errors
+from utils import const, errors, formats
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -20,7 +20,7 @@ def unexpected_error_embed() -> discord.Embed:
             description=(
                 "I've notified my developer about the error and sent all the details. "
                 "Hopefully, we'll get it fixed soon.\n"
-                "Sorry for the inconvenience! {0} {0} {0}".format(const.Emote.DankL)
+                f"Sorry for the inconvenience! {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}"
             ),
         )
         .set_thumbnail(url=const.Picture.DankFix)
@@ -55,14 +55,14 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
     elif isinstance(error, commands.CommandNotFound):
         if ctx.prefix in ["/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "]:
             return
-        if ctx.prefix == "~":
-            if ctx.message.content[1].isdigit():  # "$200 for this?" 2 is [1]
-                # prefix commands should not start with digits
-                return
+        if ctx.prefix == "$" and ctx.message.content[1].isdigit():
+            # "$200 for this?" 2 is `ctx.message.content[1]`
+            # prefix commands should not start with digits
+            return
         # TODO: make a fuzzy search in here to recommend the command that user wants
         desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
     elif isinstance(error, commands.CommandOnCooldown):
-        desc = f"Please retry in `{ctx.bot.formats.human_timedelta(error.retry_after, mode='brief')}`"
+        desc = f"Please retry in `{formats.human_timedelta(error.retry_after, mode='brief')}`"
     elif isinstance(error, commands.NotOwner):
         desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
     elif isinstance(error, commands.MissingRole):
@@ -99,7 +99,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
     await ctx.reply(embed=response_to_user_embed, ephemeral=True)
 
 
-async def setup(bot: AluBot):
+async def setup(bot: AluBot) -> None:
     bot.add_listener(on_command_error)
 
 

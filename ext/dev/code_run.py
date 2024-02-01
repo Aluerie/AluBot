@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class CodeRun(DevBaseCog):
-    def __init__(self, bot: AluBot):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot)
         self._last_result: Any = None
         self.sessions: set[int] = set()
@@ -97,7 +97,7 @@ class CodeRun(DevBaseCog):
 
         try:
             exec(to_compile, env)
-        except Exception as error:
+        except Exception:
             await ctx.tick_reaction(False)
             return await ctx.send(f"```py\n{traceback.format_exc()}```")
 
@@ -106,7 +106,7 @@ class CodeRun(DevBaseCog):
         try:
             with redirect_stdout(stdout):
                 ret = await func()
-        except Exception as error:
+        except Exception:
             value = stdout.getvalue()
             await ctx.tick_reaction(False)
             await ctx.send(f"```py\n{value}{traceback.format_exc()}\n```")

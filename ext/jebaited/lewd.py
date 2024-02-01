@@ -22,7 +22,7 @@ class LewdCog(JebaitedCog, name="Lewd", emote=const.Emote.peepoStepOnMePls):
     @commands.hybrid_command()
     async def lewd(self, ctx: AluContext):
         """[NSFW] Get a random horny picture."""
-        await ctx.reply("Coming soon {0} {0} {0}".format(const.Emote.Jebaited))
+        await ctx.reply(f"Coming soon {const.Emote.Jebaited} {const.Emote.Jebaited} {const.Emote.Jebaited}")
 
 
 async def setup(bot: AluBot):

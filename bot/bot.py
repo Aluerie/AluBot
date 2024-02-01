@@ -11,7 +11,7 @@ from discord.utils import MISSING
 
 import config
 from ext import get_extensions
-from utils import EXT_CATEGORY_NONE, AluContext, ExtCategory, cache, const, formats
+from utils import EXT_CATEGORY_NONE, AluContext, ExtCategory, cache, const
 from utils.disambiguator import Disambiguator
 from utils.jsonconfig import PrefixConfig
 from utils.transposer import TransposeClient
@@ -25,10 +25,11 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Iterable, MutableMapping, Sequence
 
     from aiohttp import ClientSession
-    from asyncpg import Pool, Record
+    from asyncpg import Pool
     from discord.abc import Snowflake
 
     from utils import AluCog
+    from utils.database import DotRecord, PoolProtocol
 
 
 __all__ = ("AluBot",)
@@ -57,7 +58,7 @@ class AluBot(commands.Bot, AluBotHelper):
             Coroutine[Any, Any, None],
         ]
 
-    def __init__(self, test: bool = False, *, session: ClientSession, pool: Pool[Record], **kwargs: Any) -> None:
+    def __init__(self, test: bool = False, *, session: ClientSession, pool: Pool[DotRecord], **kwargs: Any) -> None:
         main_prefix = "~" if test else "$"
         self.main_prefix: Literal["~", "$"] = main_prefix
         self.test: bool = test
@@ -65,13 +66,14 @@ class AluBot(commands.Bot, AluBotHelper):
             command_prefix=self.get_pre,
             activity=discord.Streaming(
                 name="\N{PURPLE HEART} /help /setup",
-                url="https://www.twitch.tv/aluerie",
+                url="https://www.twitch.tv/irene_adler__",
             ),
             intents=intents,
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=AluAppCommandTree,
         )
-        self.pool = pool
+        self.database = pool
+        self.pool: PoolProtocol = pool  # type: ignore # asyncpg typehinting crutch
         self.session: ClientSession = session
 
         self.exc_manager: ExceptionManager = ExceptionManager(self)
@@ -81,9 +83,6 @@ class AluBot(commands.Bot, AluBotHelper):
         self.repo_url = "https://github.com/Aluerie/AluBot"
         self.developer = "Aluerie"  # it's my GitHub account name
         self.server_url = "https://discord.gg/K8FuDeP"
-
-        # modules
-        self.formats = formats
 
         self.category_cogs: dict[ExtCategory, list[AluCog | commands.Cog]] = {}
 

@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import discord
-from discord import app_commands
 from discord.ext import commands
 
-from utils import checks, const
+from utils import const
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
+    from bot import AluBot
     from utils import AluContext
 
 
@@ -137,5 +137,5 @@ class CommunityRules(CommunityCog, name="Rules", emote=const.Emote.PepoRules):
     #     await self.remove_work(ctx, num, db.rr, 1)
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(CommunityRules(bot))

@@ -1,22 +1,21 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import discord
-from discord.ext import tasks
 
+from utils import aluloop
 from utils.const import DIGITS, Channel, Colour, Emote, Guild, Role, User
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from asyncpg import Pool
-
     from bot import AluBot
+    from utils.database import PoolTypedWithAny
 
 
-async def get_the_thing(txt_list, name, pool: Pool):
+async def get_the_thing(txt_list: list[str], name: str, pool: PoolTypedWithAny) -> str:
     query = f"UPDATE botinfo SET {name} = {name} + 1 WHERE id=$1 RETURNING {name}"
     val = await pool.fetchval(query, Guild.community)
     return txt_list[val % len(txt_list)]
@@ -41,7 +40,7 @@ daily_reminders_txt = [
 ]
 
 
-async def get_a_text(pool: Pool):
+async def get_a_text(pool: PoolTypedWithAny) -> str:
     return await get_the_thing(daily_reminders_txt, "curr_timer", pool)
 
 
@@ -65,12 +64,12 @@ daily_reminders_txt = [
 ]
 
 
-async def get_important_text(pool: Pool):
+async def get_important_text(pool: PoolTypedWithAny) -> str:
     return await get_the_thing(daily_reminders_txt, "curr_important_timer", pool)
 
 
-async def get_fact_text(pool: Pool):
-    async def get_msg_count(pool: Pool):
+async def get_fact_text(pool: PoolTypedWithAny) -> str:
+    async def get_msg_count(pool: PoolTypedWithAny) -> int:
         query = "SELECT SUM(msg_count) FROM users"
         val = await pool.fetchval(query)
         return val
@@ -87,14 +86,14 @@ async def get_fact_text(pool: Pool):
     return await get_the_thing(daily_reminders_txt, "curr_fact_timer", pool)
 
 
-async def get_gif_text(pool: Pool):
+async def get_gif_text(pool: PoolTypedWithAny) -> str:
     daily_reminders_txt = [
         "https://media.discordapp.net/attachments/702561315478044807/950421428732325958/peepoSitSlide.gif"
     ]
     return await get_the_thing(daily_reminders_txt, "curr_gif_timer", pool)
 
 
-async def get_rule_text(pool: Pool):
+async def get_rule_text(pool: PoolTypedWithAny) -> str:
     daily_reminders_txt = [
         "Hey chat, follow étiqueté.",
         f"Hey chat, remember the rule\n{DIGITS[1]} Respect everybody in the server. Be polite.",
@@ -116,6 +115,7 @@ async def get_rule_text(pool: Pool):
 
 
 class OldTimers(CommunityCog):
+    @override
     async def cog_load(self) -> None:
         self.daily_reminders.start()
         self.daily_important_reminders.start()
@@ -123,6 +123,7 @@ class OldTimers(CommunityCog):
         self.daily_gif_reminders.start()
         self.daily_rule_reminders.start()
 
+    @override
     def cog_unload(self) -> None:
         self.daily_reminders.cancel()
         self.daily_important_reminders.cancel()
@@ -130,47 +131,42 @@ class OldTimers(CommunityCog):
         self.daily_gif_reminders.cancel()
         self.daily_rule_reminders.cancel()
 
-    async def check_amount_messages(self, msg_amount=10) -> bool:
+    async def check_amount_messages(self, msg_amount: int = 10) -> bool:
         async for msg in self.community.general.history(limit=msg_amount):
             if msg.author == self.bot.user:
                 return True
         return False
 
-    async def timer_work(self, title, Colour, description, rlimit=2, msg_num=10):
-        if random.randint(0, 100) > rlimit or await self.check_amount_messages(msg_amount=msg_num):
+    async def timer_work(
+        self, title: str, colour: int, description: str, chance_limit: int = 2, msg_num: int = 10
+    ) -> None:
+        if random.randint(0, 100) > chance_limit or await self.check_amount_messages(msg_amount=msg_num):
             return
-        e = discord.Embed(title=title, color=Colour, description=description)
-        return await self.community.general.send(embed=e)
+        e = discord.Embed(title=title, color=colour, description=description)
+        await self.community.general.send(embed=e)
+        return
 
-    @tasks.loop(minutes=107)
+    @aluloop(minutes=107)
     async def daily_reminders(self) -> None:
         await self.timer_work("Daily Message", Colour.blueviolet, await get_a_text(self.bot.pool))
 
-    @tasks.loop(minutes=109)
+    @aluloop(minutes=109)
     async def daily_important_reminders(self) -> None:
         await self.timer_work("Daily Important Message", Colour.darkslategray, await get_important_text(self.bot.pool))
 
-    @tasks.loop(minutes=167)
+    @aluloop(minutes=167)
     async def daily_fact_reminders(self) -> None:
         await self.timer_work("Daily Fact Message", Colour.slateblue, await get_fact_text(self.bot.pool))
 
-    @tasks.loop(minutes=156)
+    @aluloop(minutes=156)
     async def daily_rule_reminders(self) -> None:
         await self.timer_work("Daily Rule Message", 0x66FFBF, await get_rule_text(self.bot.pool))
 
-    @tasks.loop(minutes=107)
+    @aluloop(minutes=107)
     async def daily_gif_reminders(self) -> None:
         if random.randint(0, 100) > 2 or await self.check_amount_messages():
             return
         await self.community.general.send(await get_gif_text(self.bot.pool))
-
-    @daily_reminders.before_loop
-    @daily_important_reminders.before_loop
-    @daily_fact_reminders.before_loop
-    @daily_rule_reminders.before_loop
-    @daily_gif_reminders.before_loop
-    async def old_timers_before(self) -> None:
-        await self.bot.wait_until_ready()
 
 
 async def setup(bot: AluBot) -> None:

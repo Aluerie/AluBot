@@ -285,7 +285,7 @@ def block_function(string: str, blocked_words: list[str], whitelist_words: list[
     return False  # allow
 
 
-def indent(symbol: str, counter: int, offset: int, split_size: int) -> str:
+def indent(symbol: str | int, counter: int, offset: int, split_size: int) -> str:
     return str(symbol).ljust(len(str(((counter - offset) // split_size + 1) * split_size)), " ")
 
 

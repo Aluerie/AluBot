@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, override
 
 import aiohttp
 
@@ -24,6 +24,7 @@ log.setLevel(logging.INFO)
 
 
 class SummonerNameCheck(FPCCog):
+    @override
     async def cog_load(self) -> None:
         self.check_summoner_renames.start()
         return await super().cog_load()

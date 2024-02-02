@@ -166,18 +166,18 @@ class FriendlyTimeResult:
                 raise commands.BadArgument(msg)
             remaining = uft.default
 
-        if uft.converter is not None:
+        if uft.converter:
             self.arg = await uft.converter.convert(ctx, remaining)
         else:
             self.arg = remaining
 
 
-class UserFriendlyTime(commands.Converter):
+class UserFriendlyTime(commands.Converter[FriendlyTimeResult]):
     """That way quotes aren't absolutely necessary."""
 
     def __init__(
         self,
-        converter: type[commands.Converter] | commands.Converter | None = None,
+        converter: type[commands.Converter[str]] | commands.Converter[str] | None = None,
         *,
         default: Any = None,
     ) -> None:
@@ -188,7 +188,7 @@ class UserFriendlyTime(commands.Converter):
             msg = "commands.Converter subclass necessary."
             raise TypeError(msg)
 
-        self.converter: commands.Converter = converter  # type: ignore  # It doesn't understand this narrowing
+        self.converter: commands.Converter[str] | None = converter
         self.default: Any = default
 
     @override
@@ -223,7 +223,7 @@ class UserFriendlyTime(commands.Converter):
         if argument.endswith("from now"):
             argument = argument[:-8].strip()
 
-        if argument[0:2] == "me":
+        if argument[0:2] == "me":  # noqa: SIM102
             # starts with "me to", "me in", or "me at "
             if argument[0:6] in ("me to ", "me in ", "me at "):
                 argument = argument[6:]

@@ -30,7 +30,7 @@ log.setLevel(logging.INFO)
 class SnoozeModal(discord.ui.Modal, title="Snooze"):
     duration = discord.ui.TextInput(label="Duration", placeholder="10 minutes", default="10 minutes", min_length=2)
 
-    def __init__(self, parent: ReminderView, timer: Timer) -> None:
+    def __init__(self, parent: ReminderView, timer: Timer[RemindTimerData]) -> None:
         super().__init__()
         self.parent: ReminderView = parent
         self.timer: Timer[RemindTimerData] = timer
@@ -63,9 +63,9 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
 
 
 class SnoozeButton(discord.ui.Button["ReminderView"]):
-    def __init__(self, cog: Reminder, timer: Timer) -> None:
+    def __init__(self, cog: Reminder, timer: Timer[RemindTimerData]) -> None:
         super().__init__(label="Snooze", style=discord.ButtonStyle.blurple)
-        self.timer: Timer = timer
+        self.timer: Timer[RemindTimerData] = timer
         self.cog: Reminder = cog
 
     @override
@@ -77,7 +77,7 @@ class SnoozeButton(discord.ui.Button["ReminderView"]):
 class ReminderView(discord.ui.View):
     message: discord.Message
 
-    def __init__(self, *, url: str, timer: Timer, cog: Reminder, author_id: int) -> None:
+    def __init__(self, *, url: str, timer: Timer[RemindTimerData], cog: Reminder, author_id: int) -> None:
         super().__init__(timeout=300)
         self.author_id: int = author_id
         self.snooze = SnoozeButton(cog, timer)
@@ -91,6 +91,7 @@ class ReminderView(discord.ui.View):
             return False
         return True
 
+    @override
     async def on_timeout(self) -> None:
         self.snooze.disabled = True
         await self.message.edit(view=self)
@@ -222,7 +223,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     #     return [app_commands.Choice(name=m, value=n) for n, m in choice_list if current.lower() in m.lower()]
 
     @remind.command(name="delete", aliases=["remove", "cancel"], ignore_extra=True)
-    # @app_commands.autocomplete(id=remind_delete_id_autocomplete)  # type: ignore
+    # @app_commands.autocomplete(id=remind_delete_id_autocomplete)  # type: ignored
     # @app_commands.describe(id='either input a number of reminder id or choose it from suggestion^')
     async def remind_delete(self, ctx: AluContext, *, id: int) -> None:
         """Deletes a reminder by its ID.
@@ -241,7 +242,8 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         if status == "DELETE 0":
             e = discord.Embed(description="Could not delete any reminders with that ID.", colour=const.Colour.maroon)
             e.set_author(name="IDError")
-            return await ctx.reply(embed=e)
+            await ctx.reply(embed=e)
+            return
 
         # if the current timer is being deleted
         if self.bot._current_timer and self.bot._current_timer.id == id:
@@ -268,7 +270,8 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
                 colour=ctx.author.colour,
                 description="You do not have any reminders to delete.",
             )
-            return await ctx.reply(embed=no_reminders_embed)
+            await ctx.reply(embed=no_reminders_embed)
+            return
 
         confirm_embed = discord.Embed(
             colour=ctx.author.colour,

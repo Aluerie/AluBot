@@ -2,18 +2,23 @@ from __future__ import annotations
 
 import datetime
 import platform
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from utils import AluCog, aluloop
+from utils import aluloop
 
 from ._base import CommunityCog
 
+if TYPE_CHECKING:
+    from bot import AluBot
+
 
 class StatsVoiceChannels(CommunityCog):
+    @override
     async def cog_load(self) -> None:
         self.my_time.start()
         self.refresh_member_stats.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.my_time.stop()
         self.refresh_member_stats.stop()
@@ -37,5 +42,5 @@ class StatsVoiceChannels(CommunityCog):
         await self.bot.community.total_bots.edit(name=f"\N{ROBOT FACE} Bots: {amount_of_bots}")
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(StatsVoiceChannels(bot))

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
@@ -50,18 +50,21 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
         ch = self.bot.get_channel(val)
         if ch is None:
             return
+        assert isinstance(ch, discord.TextChannel)
 
         diff_after = [x for x in after if x not in before]
         diff_before = [x for x in before if x not in after]
 
-        async def set_author(emotion, embedx: discord.Embed, act: discord.AuditLogAction) -> None:
+        async def set_author(emotion: discord.Emoji, embed: discord.Embed, act: discord.AuditLogAction) -> None:
             if emotion.managed:
-                embedx.set_author(name="Tw.tv Sub integration", icon_url=const.Logo.Twitch)
+                embed.set_author(name="Tw.tv Sub integration", icon_url=const.Logo.Twitch)
                 return
             else:
                 async for entry in guild.audit_logs(action=act):
+                    assert isinstance(entry.target, discord.Emoji)
+                    assert isinstance(entry.user, discord.Member)
                     if entry.target.id == emotion.id:
-                        embedx.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
+                        embed.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
                         return
 
         # Remove emote ###########################################################################

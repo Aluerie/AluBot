@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord.ext import commands
@@ -23,8 +23,8 @@ class ChannelWatcher(HideoutCog):
         watch_channel_id: int,
         ping_channel_id: int,
         role_mention: str = "",
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         super().__init__(bot, *args, **kwargs)
         self.bot: AluBot = bot
@@ -35,12 +35,14 @@ class ChannelWatcher(HideoutCog):
         self.role_mention: str = role_mention
         self.watch_bool: bool = True
 
+    @override
     async def cog_load(self) -> None:
         query = f"SELECT {self.db_column} FROM botinfo WHERE id=$1"
         self.watch_bool = p = await self.bot.pool.fetchval(query, const.Guild.community)
         if p:
             self.sleep_task.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.sleep_task.cancel()
 

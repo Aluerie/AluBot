@@ -13,11 +13,7 @@ from discord.ext import commands
 from utils import aluloop, const
 
 from .._base import BaseNotifications
-from ._models import (
-    MatchToSend,
-    NotCountedMatchToEdit,
-    StratzMatchToEdit,
-)
+from ._models import MatchToSend, NotCountedMatchToEdit, StratzMatchToEdit
 
 if TYPE_CHECKING:
     # from steam.ext.dota2 import LiveMatch # VALVE_SWITCH
@@ -209,6 +205,7 @@ class DotaFPCNotifications(BaseNotifications):
         The data is featured from Opendota/Stratz.
         """
         if not self.top_live_matches:
+            # remember that bcs of this the very first edit actually happens 10 minutes after the reboot.
             return
 
         edit_log.debug("*** Starting Task to Edit Dota FPC Messages ***")

@@ -57,28 +57,21 @@ class DotRecord(asyncpg.Record):
 
 
 if TYPE_CHECKING:
-    # type-checker fail with "Expected type arguments for generic class" otherwise
-    BasePool = asyncpg.Pool[DotRecord]
-else:
-    # run-time fails with Pool not subscriptable class otherwise, maybe I'm just stupid.
-    BasePool = asyncpg.Pool
 
+    class PoolTypedWithAny(asyncpg.Pool[DotRecord]):
+        """Fake Type Class.
 
-class PoolTypedWithAny(BasePool):
-    """Fake Type Class.
+        For typing purposes, our `bot.pool` will be of type `PoolTypedWithAny`
+        that allows us to properly type the return values via narrowing like mentioned in instructions above
+        without hundreds of "type: ignore" notices for each TypedDict.
 
-    For typing purposes, our `bot.pool` will be of type `PoolTypedWithAny`
-    that allows us to properly type the return values via narrowing like mentioned in instructions above
-    without hundreds of "type: ignore" notices for each TypedDict.
+        I could use Protocol to type it all, but `async-stubs` provide a good job in typing most of the stuff
+        and we also don't lose doc-string this way.
 
-    I could use Protocol to type it all, but `async-stubs` provide a good job in typing most of the stuff
-    and we also don't lose doc-string this way.
+        * Right now, asyncpg is untyped so this is better than the current status quo
+        * If we ever need the regular Pool type we have `bot.database` without any shenanigans.
+        """
 
-    * Right now, asyncpg is untyped so this is better than the current status quo
-    * If we ever need the regular Pool type we have `bot.database` without any shenanigans.
-    """
-
-    if TYPE_CHECKING:
         # all methods below were changed from "asyncpg.Record" to "Any"
 
         @override

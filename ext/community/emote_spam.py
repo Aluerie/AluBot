@@ -4,7 +4,7 @@ import asyncio
 import itertools
 import random
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, override
 
 import discord
 import emoji
@@ -20,10 +20,12 @@ if TYPE_CHECKING:
 
 
 class EmoteSpam(CommunityCog):
+    @override
     async def cog_load(self) -> None:
         self.emote_spam.start()
         self.offline_criminal_check.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.emote_spam.cancel()
         self.offline_criminal_check.cancel()
@@ -75,7 +77,7 @@ class EmoteSpam(CommunityCog):
         await self.emote_spam_work(message)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, _before: discord.Message, after: discord.Message) -> None:
+    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
         await self.emote_spam_work(after)
 
     @cache.cache(maxsize=60 * 24, strategy=cache.Strategy.lru)
@@ -131,26 +133,29 @@ class EmoteSpam(CommunityCog):
 
 
 class ComfySpam(CommunityCog):
+    @override
     async def cog_load(self) -> None:
         self.comfy_spam.start()
         self.offline_criminal_check.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.comfy_spam.cancel()
         self.offline_criminal_check.cancel()
 
-    comfy_emotes = [
+    comfy_emotes = (
         "<:peepoComfy:726438781208756288>",
         "<:_:726438781208756288>",
         "<:pepoblanket:595156413974577162>",
         "<:_:595156413974577162>",
-    ]
+    )
 
-    async def comfy_chat_control(self, message: discord.Message):
+    async def comfy_chat_control(self, message: discord.Message) -> Literal[0, 1] | None:
         if message.channel.id == const.Channel.comfy_spam:
             channel: discord.TextChannel = message.channel  # type: ignore
             if len(message.embeds):
-                return await message.delete()
+                await message.delete()
+                return
             text = str(message.content)
             text = re.sub(const.Regex.WHITESPACE, "", text)
             for item in self.comfy_emotes:
@@ -173,7 +178,7 @@ class ComfySpam(CommunityCog):
         await self.comfy_chat_control(message)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, _before: discord.Message, after: discord.Message) -> None:
+    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
         await self.comfy_chat_control(after)
 
     @tasks.loop(minutes=62)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord.ext import commands
@@ -13,12 +13,15 @@ from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from bot import AluBot
+    from utils import AluContext
 
 
 class MemberLogging(CommunityCog):
+    @override
     async def cog_load(self) -> None:
         self.nicknames_database_check.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.nicknames_database_check.cancel()
 
@@ -116,7 +119,7 @@ class MemberLogging(CommunityCog):
         await self.community.bot_spam.send(embeds=embeds)
 
     @commands.Cog.listener("on_member_update")
-    async def logger_member_roles_update(self, before: discord.Member, after: discord.Member):
+    async def logger_member_roles_update(self, before: discord.Member, after: discord.Member) -> None:
         if before.guild.id != const.Guild.community:
             return
 
@@ -124,13 +127,15 @@ class MemberLogging(CommunityCog):
         if added_role and added_role[0].id not in const.IGNORED_FOR_LOGS:
             e = discord.Embed(description=f"**Role added:** {added_role[0].mention}", colour=0x00FF7F)
             e.set_author(name=f"{after.display_name}'s roles changed", icon_url=after.display_avatar.url)
-            return await self.bot.community.logs.send(embed=e)
+            await self.bot.community.logs.send(embed=e)
+            return
 
         removed_role = list(set(before.roles) - set(after.roles))
         if removed_role and removed_role[0].id not in const.IGNORED_FOR_LOGS:
             e = discord.Embed(description=f"**Role removed:** {removed_role[0].mention}", colour=0x006400)
             e.set_author(name=f"{after.display_name}'s roles changed", icon_url=after.display_avatar.url)
-            return await self.bot.community.logs.send(embed=e)
+            await self.bot.community.logs.send(embed=e)
+            return
 
     ##############################################
     ###           NICKNAME CHANGES             ###
@@ -233,7 +238,7 @@ class MessageLogging(CommunityCog):
         await self.community.logs.send(embed=e)
 
     @commands.Cog.listener()
-    async def on_message_delete(self, message: discord.Message):
+    async def on_message_delete(self, message: discord.Message) -> None:
         if message.author.bot or (message.guild and message.guild.id != const.Guild.community):
             return
         if re.search(const.Regex.BUG_CHECK, message.content):  # bug_check
@@ -246,15 +251,15 @@ class MessageLogging(CommunityCog):
         msg = f"{message.author.display_name}'s del in #{channel}"
         e.set_author(name=msg, icon_url=message.author.display_avatar.url)
         files = [await item.to_file() for item in message.attachments]
-        return await self.bot.community.logs.send(embed=e, files=files)
+        await self.bot.community.logs.send(embed=e, files=files)
 
 
 class CommandLogging(CommunityCog):
-    ignored_users = [const.User.aluerie]
-    included_guilds = [const.Guild.community]
+    ignored_users = (const.User.aluerie,)
+    included_guilds = (const.Guild.community,)
 
     @commands.Cog.listener()
-    async def on_command(self, ctx: commands.Context) -> None:
+    async def on_command(self, ctx: AluContext) -> None:
         assert ctx.command
 
         if not ctx.guild or ctx.guild.id not in self.included_guilds or ctx.author.id in self.ignored_users:
@@ -283,9 +288,11 @@ class CommandLogging(CommunityCog):
 
 
 class VoiceChatMembersLogging(CommunityCog):
+    @override
     async def cog_load(self) -> None:
         self.check_voice_members.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.check_voice_members.cancel()
 
@@ -300,28 +307,31 @@ class VoiceChatMembersLogging(CommunityCog):
             return
 
         voice_role = self.bot.community.voice_role
-        if before.channel is None and after.channel is not None:  # joined the voice channel
+        if before.channel is None and after.channel is not None:
+            # joined the voice channel
             await member.add_roles(voice_role)
-            e = discord.Embed(color=0x00FF7F)
-            msg = f"{member.display_name} entered {after.channel.name}."
-            e.set_author(name=msg, icon_url=member.display_avatar.url)
+            e = discord.Embed(color=0x00FF7F).set_author(
+                name=f"{member.display_name} entered {after.channel.name}.", icon_url=member.display_avatar.url
+            )
             await after.channel.send(embed=e)
             return
-        if before.channel is not None and after.channel is None:  # quit the voice channel
+        if before.channel is not None and after.channel is None:
+            # quit the voice channel
             await member.remove_roles(voice_role)
-            e = discord.Embed(color=0x800000)
-            msg = f"{member.display_name} left {before.channel.name}."
-            e.set_author(name=msg, icon_url=member.display_avatar.url)
+            e = discord.Embed(color=0x800000).set_author(
+                name=f"{member.display_name} left {before.channel.name}.", icon_url=member.display_avatar.url
+            )
             await before.channel.send(embed=e)
             return
-        if before.channel is not None and after.channel is not None:  # changed voice channels
-            if before.channel.id != after.channel.id:
-                e = discord.Embed(color=0x6495ED)
-                msg = f"{member.display_name} went from {before.channel.name} to {after.channel.name}."
-                e.set_author(name=msg, icon_url=member.display_avatar.url)
-                await before.channel.send(embed=e)
-                await after.channel.send(embed=e)
-                return
+        if before.channel is not None and after.channel is not None and before.channel.id != after.channel.id:
+            # changed voice channels
+            e = discord.Embed(color=0x6495ED).set_author(
+                name=f"{member.display_name} went from {before.channel.name} to {after.channel.name}.",
+                icon_url=member.display_avatar.url,
+            )
+            await before.channel.send(embed=e)
+            await after.channel.send(embed=e)
+            return
 
     @aluloop(count=1)
     async def check_voice_members(self) -> None:

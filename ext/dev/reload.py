@@ -3,11 +3,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import importlib
-import os
 import re
 import subprocess
 import sys
-from typing import TYPE_CHECKING, Annotated
+from pathlib import Path
+from typing import TYPE_CHECKING, Annotated, override
 
 import discord
 from discord.ext import commands
@@ -20,13 +20,16 @@ from ._base import DevBaseCog
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
+    from bot import AluBot
 
-class ExtensionConverter(commands.Converter):
+
+class ExtensionConverter(commands.Converter[str]):
     """Just so I don't type `$reload extensions.fpc.dota` but `$reload fpc.dota`
 
     Yes. Lazy."""
 
     # currently does not handle base extensions
+    @override
     async def convert(self, ctx: AluContext, argument: str) -> str:
         m = argument.lower()
         return f"ext.{m}"
@@ -161,7 +164,9 @@ class ReloadCog(DevBaseCog):
         # I'm afraid I need to fetch list of extensions.
         extensions = get_extensions(ctx.bot.test, reload=True)
         for file in files:
-            root, ext = os.path.splitext(file)
+            path = Path(file)
+            root = str(path.parent / path.stem)
+            ext = path.suffix
             if ext != ".py":
                 continue
 
@@ -174,7 +179,7 @@ class ReloadCog(DevBaseCog):
         ret.sort(reverse=True)
         return ret
 
-    async def reload_pull_worker(self, ctx: AluContext):
+    async def reload_pull_worker(self, ctx: AluContext) -> None:
         async with ctx.typing():
             stdout, _stderr = await self.run_process("git pull")
 
@@ -183,7 +188,8 @@ class ReloadCog(DevBaseCog):
         # along with the text "Already up to date" are in stdout
 
         if stdout.startswith("Already up to date."):
-            return await ctx.reply(stdout)
+            await ctx.reply(stdout)
+            return
 
         modules = self.find_modules_from_git(ctx, stdout)
 
@@ -230,5 +236,5 @@ class ReloadCog(DevBaseCog):
         await self.reload_pull_worker(ctx)
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(ReloadCog(bot))

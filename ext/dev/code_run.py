@@ -30,7 +30,7 @@ class CodeRun(DevBaseCog):
         mentions: commands.Greedy[discord.Member | discord.User | discord.abc.GuildChannel | discord.Role],
     ) -> dict[str, Any]:
         """Returns the dict to be used in eval/REPL."""
-        env = {
+        env: dict[str, Any] = {
             "author": ctx.author,
             "bot": self.bot,
             "channel": ctx.channel,
@@ -77,7 +77,7 @@ class CodeRun(DevBaseCog):
         mentions: commands.Greedy[discord.Member | discord.User | discord.abc.GuildChannel | discord.Role],
         *,
         codeblock: Codeblock | None = None,
-    ):
+    ) -> None:
         """Direct evaluation of Python code.
         It just puts your codeblock into `async def func():`, so
         remember to end the code with `return result` if you want only `result`
@@ -100,7 +100,8 @@ class CodeRun(DevBaseCog):
             exec(to_compile, env)
         except Exception:
             await ctx.tick_reaction(False)
-            return await ctx.send(f"```py\n{traceback.format_exc()}```")
+            await ctx.send(f"```py\n{traceback.format_exc()}```")
+            return
 
         func = env["func"]  # <class 'function'>
 

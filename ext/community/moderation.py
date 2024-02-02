@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 import discord
 from discord.ext import commands
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
     """Commands to moderate servers with"""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
     def warn_check(self, member: discord.Member) -> None:
@@ -55,7 +55,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         until_when_and_reason: Annotated[
             times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="...")
         ],
-    ):
+    ) -> None:
         """Give member a mute."""
         self.warn_check(member)
 
@@ -65,12 +65,18 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             try:
                 await member.edit(timed_out_until=dt, reason=reason)
             except discord.HTTPException as exc:
-                e = discord.Embed(colour=const.Colour.maroon, title="Oups... Error during muting.")
-                e.set_author(name=str(member), icon_url=member.display_avatar.url)
-                e.set_footer(text=f"Member ID: {member.id}")
-                e.description = "If you think it's wrong then contact Aluerie."
-                e.add_field(name="Error Message", value=f"```py\n{exc.text}\n```")
-                return await ctx.reply(embed=e)
+                e = (
+                    discord.Embed(
+                        colour=const.Colour.maroon,
+                        title="Oups... Error during muting.",
+                        description="If you think it's wrong then contact Aluerie.",
+                    )
+                    .set_author(name=str(member), icon_url=member.display_avatar.url)
+                    .add_field(name="Error Message", value=f"```py\n{exc.text}\n```")
+                    .set_footer(text=f"Member ID: {member.id}")
+                )
+                await ctx.reply(embed=e)
+                return
         else:
             msg = "Discord does not allow muting people for more than 28 days."
             raise errors.BadArgument(msg)
@@ -86,7 +92,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         await self.community.logs.send(embed=e)
 
     @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member):
+    async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
         if after.guild.id != const.Guild.community:
             return
 
@@ -103,7 +109,8 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
 
             author_text = f"{after.display_name} is muted by {mute_actor_str} until"
             e.set_author(name=author_text, icon_url=after.display_avatar.url)
-            return await self.community.logs.send(embed=e)
+            await self.community.logs.send(embed=e)
+            return
 
         # elif before.is_timed_out() is True and after.is_timed_out() is False:  # member is unmuted
         #     return

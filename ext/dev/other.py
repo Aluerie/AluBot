@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
@@ -9,6 +9,9 @@ from discord.ext import commands
 from utils import AluContext, const
 
 from ._base import DevBaseCog
+
+if TYPE_CHECKING:
+    from bot import AluBot
 
 
 class AdminTools(DevBaseCog):
@@ -57,7 +60,7 @@ class AdminTools(DevBaseCog):
     @guild_group.command(hidden=True)
     async def leave(self, ctx: AluContext, guild: discord.Guild) -> None:
         """'Make bot leave guild with named guild_id;"""
-        if guild is not None:
+        if guild:
             await guild.leave()
             e = discord.Embed(colour=const.Colour.blueviolet)
             e.description = f"Just left guild {guild.name} with id `{guild.id}`\n"
@@ -96,5 +99,5 @@ class AdminTools(DevBaseCog):
     #     await ctx.reply('Done')
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(AdminTools(bot))

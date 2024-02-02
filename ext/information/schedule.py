@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, override
 
 import discord
 from bs4 import BeautifulSoup
@@ -27,6 +27,7 @@ class Match(NamedTuple):
     twitch_url: str
     dt: datetime.datetime
 
+    @override
     def __repr__(self) -> str:
         return f"<{self.league}, {self.teams}>"
 
@@ -68,7 +69,7 @@ def scrape_schedule_data(
     divs = soup.findAll("div", {"data-toggle-area-content": schedule_mode.data_toggle_area_content})
     match_rows = divs[-1].findAll("tbody")
 
-    def get_dt_and_twitch_url(match_row) -> tuple[datetime.datetime, str]:
+    def get_dt_and_twitch_url(match_row: Any) -> tuple[datetime.datetime, str]:
         timer = match_row.find(class_="timer-object")
         timestamp = timer.get("data-timestamp")
         # timestamp is given in local machine time
@@ -147,6 +148,7 @@ class ScheduleModeEnum(Enum):
     full_schedule = 3
     completed = 4
 
+    @override
     def __str__(self) -> str:
         return str(self.value)
 
@@ -171,28 +173,6 @@ class ScheduleModeEnum(Enum):
         return lookup[self.value]
 
 
-class ScheduleSelect(discord.ui.Select):
-    def __init__(self, author: discord.User | discord.Member, soup: BeautifulSoup, query: str | None = None) -> None:
-        super().__init__(options=SELECT_OPTIONS, placeholder="\N{SPIRAL CALENDAR PAD} Select schedule category")
-        self.query: str | None = query
-        self.soup: BeautifulSoup = soup
-        self.author: discord.User | discord.Member = author
-
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
-        sch_enum = ScheduleModeEnum(value=int(self.values[0]))
-        p = SchedulePages(interaction, self.soup, sch_enum, self.query)
-        await p.start(edit_response=True)
-
-    async def interaction_check(self, interaction: discord.Interaction[AluBot]) -> bool:
-        if interaction.user and interaction.user.id == self.author.id:
-            return True
-        else:
-            schedule_enum = ScheduleModeEnum(value=int(self.values[0]))
-            p = SchedulePages(interaction, self.soup, schedule_enum, self.query)
-            await p.start(ephemeral=True)
-            return False
-
-
 class SchedulePageSource(menus.ListPageSource):
     def __init__(
         self,
@@ -208,7 +188,8 @@ class SchedulePageSource(menus.ListPageSource):
         self.author: discord.User | discord.Member = author
         self.query: str | None = query
 
-    async def format_page(self, menu: SchedulePages, matches: list[Match]):
+    @override
+    async def format_page(self, menu: SchedulePages, matches: list[Match]) -> discord.Embed:
         embed = (
             discord.Embed(
                 colour=0x042B4C,
@@ -273,6 +254,30 @@ class SchedulePages(pages.Paginator):
         self.add_item(ScheduleSelect(ctx.user, soup, query))
 
 
+class ScheduleSelect(discord.ui.Select[SchedulePages]):
+    def __init__(self, author: discord.User | discord.Member, soup: BeautifulSoup, query: str | None = None) -> None:
+        super().__init__(options=SELECT_OPTIONS, placeholder="\N{SPIRAL CALENDAR PAD} Select schedule category")
+        self.query: str | None = query
+        self.soup: BeautifulSoup = soup
+        self.author: discord.User | discord.Member = author
+
+    @override
+    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+        sch_enum = ScheduleModeEnum(value=int(self.values[0]))
+        p = SchedulePages(interaction, self.soup, sch_enum, self.query)
+        await p.start(edit_response=True)
+
+    @override
+    async def interaction_check(self, interaction: discord.Interaction[AluBot]) -> bool:
+        if interaction.user and interaction.user.id == self.author.id:
+            return True
+        else:
+            schedule_enum = ScheduleModeEnum(value=int(self.values[0]))
+            p = SchedulePages(interaction, self.soup, schedule_enum, self.query)
+            await p.start(ephemeral=True)
+            return False
+
+
 class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
     """Check Pro Matches schedule.
 
@@ -335,9 +340,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                         match_time = match.find("span", attrs={"class": "simple-match-card__pre-match"}).find("time")[
                             "datetime"
                         ]
-                        dt = datetime.datetime.strptime(match_time, "%Y-%m-%dT%H:%M:%SZ").replace(
-                            tzinfo=datetime.UTC
-                        )
+                        dt = datetime.datetime.strptime(match_time, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.UTC)
                         teams = f"{team1} - {team2}".ljust(40, " ")
                         match_strings.append(f"`{teams}` {formats.format_dt_tdR(dt)}")
 

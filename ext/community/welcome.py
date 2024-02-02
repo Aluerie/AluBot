@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from utils import AluContext
 
 
-async def welcome_image(bot: AluBot, member: discord.User | discord.Member):
+async def welcome_image(bot: AluBot, member: discord.User | discord.Member) -> Image.Image:
     image = Image.open("./assets/images/profile/welcome.png", mode="r")
     avatar = await bot.transposer.url_to_image(member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))

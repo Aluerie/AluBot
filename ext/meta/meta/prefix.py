@@ -1,7 +1,7 @@
 # todo: move this file somewhere else - some guild setup material, maybe just one general cog for setup command
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Self
+from typing import TYPE_CHECKING, Self, override
 
 import discord
 from discord.ext import commands
@@ -26,6 +26,7 @@ class PrefixSetModal(discord.ui.Modal, title="New prefix setup"):
         self.cog: PrefixSetupCog = cog
         self.paginator: SetupPages = paginator
 
+    @override
     async def on_error(self, interaction: discord.Interaction, error: Exception, /) -> None:
         e = discord.Embed(colour=Colour.maroon)
         if isinstance(error, commands.BadArgument):
@@ -34,7 +35,9 @@ class PrefixSetModal(discord.ui.Modal, title="New prefix setup"):
             e.description = "Unknown error, sorry"
         await interaction.response.send_message(embed=e, ephemeral=True)
 
+    @override
     async def on_submit(self, interaction: discord.Interaction[AluBot]) -> None:
+        assert interaction.guild
         p: GuildPrefix = await GuildPrefix.construct(interaction.client, interaction.guild, str(self.prefix.value))
         e = await p.set_prefix()
         await interaction.response.send_message(embed=e, ephemeral=True)
@@ -48,11 +51,11 @@ class PrefixSetupView(discord.ui.View):
         self.paginator: SetupPages = paginator
 
     @discord.ui.button(emoji="\N{HEAVY DOLLAR SIGN}", label="Change prefix", style=discord.ButtonStyle.blurple)
-    async def set_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button) -> None:
+    async def set_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button[Self]) -> None:
         await interaction.response.send_modal(PrefixSetModal(self.cog, self.paginator))
 
     @discord.ui.button(emoji="\N{BANKNOTE WITH DOLLAR SIGN}", label="Reset prefix", style=discord.ButtonStyle.blurple)
-    async def reset_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button) -> None:
+    async def reset_prefix(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button[Self]) -> None:
         assert interaction.guild
         p = GuildPrefix(interaction.client, interaction.guild)
         e = await p.set_prefix()
@@ -118,10 +121,12 @@ class GuildPrefix:
 
 class PrefixSetupCog(AluCog, SetupCog, name="Prefix Setup"):
     @property
+    @override
     def setup_emote(self) -> str:
         return "\N{HEAVY DOLLAR SIGN}"
 
-    async def setup_info(self):
+    @override
+    async def setup_info(self) -> discord.Embed:
         e = discord.Embed(colour=Colour.blueviolet)
         e.title = "Server Prefix Setup"
         e.description = (
@@ -131,11 +136,13 @@ class PrefixSetupCog(AluCog, SetupCog, name="Prefix Setup"):
         )
         return e
 
-    async def setup_state(self, ctx: AluGuildContext):
+    @override
+    async def setup_state(self, ctx: AluGuildContext) -> discord.Embed:
         p = await GuildPrefix.from_guild(self.bot, ctx.guild)
         return p.check_prefix()
 
-    async def setup_view(self, pages: SetupPages):
+    @override
+    async def setup_view(self, pages: SetupPages) -> PrefixSetupView:
         return PrefixSetupView(self, pages)
 
     async def prefix_prefix_check_replies(self, ctx: AluGuildContext) -> None:

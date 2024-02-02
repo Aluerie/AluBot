@@ -14,12 +14,15 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 
+type AluCommand = commands.Command[AluCog, Any, Any]
+type AluGroupCommand = commands.Group[AluCog, Any, Any]
+
 class CogPage:
     def __init__(
         self,
         section: Literal["_front_page"] | AluCog | commands.Cog,  # dirty way to handle front page
         category: ExtCategory,
-        page_commands: Sequence[commands.Command],
+        page_commands: Sequence[AluCommand],
         section_total_commands: int = 0,
         section_page_number: int = 0,
         section_total_pages: int = 1,
@@ -28,7 +31,7 @@ class CogPage:
     ) -> None:
         self.section: Literal["_front_page"] | AluCog | commands.Cog = section
         self.category: ExtCategory = category
-        self.page_commands: Sequence[commands.Command] = page_commands
+        self.page_commands: Sequence[AluCommand] = page_commands
         self.section_total_commands: int = section_total_commands
         self.section_page_number: int = section_page_number
         self.section_total_pages: int = section_total_pages
@@ -107,6 +110,7 @@ class HelpPages(pages.Paginator):
         self.help_data: dict[ExtCategory, list[CogPage]] = help_data
         super().__init__(ctx, HelpPageSource(help_data))
 
+    @override
     def fill_items(self) -> None:
         if self.source.is_paginating():  # Copied a bit from super().fill_items
             for item in [self.legend_page, self.previous_page, self.index, self.next_page, self.search]:
@@ -200,8 +204,8 @@ class AluHelp(commands.HelpCommand):
         )
 
     async def unpack_commands(
-        self, command: commands.Command, answer: list[commands.Command] | None = None, deep: int = 0
-    ) -> list[commands.Command]:
+        self, command: AluCommand, answer: list[AluCommand] | None = None, deep: int = 0
+    ) -> list[AluCommand]:
         """If a command is a group then unpack those until their very-last children.
 
         examples:
@@ -218,7 +222,8 @@ class AluHelp(commands.HelpCommand):
             answer.append(command)
         return answer
 
-    def get_command_signature(self, command: commands.Command) -> str:
+    @override
+    def get_command_signature(self, command: AluCommand) -> str:
         def signature() -> str:
             app_command = self.context.bot.tree.get_app_command(command.qualified_name)
             if app_command:
@@ -230,7 +235,7 @@ class AluHelp(commands.HelpCommand):
             sign = f" `{command.signature}`" if command.signature else ""
             return f"{cmd_mention}{sign}"
 
-        def aliases():
+        def aliases() -> str:
             if len(command.aliases):
                 return " | aliases: " + "; ".join([f"`{ali}`" for ali in command.aliases])
             return ""
@@ -249,7 +254,7 @@ class AluHelp(commands.HelpCommand):
 
         return f"\N{BLACK CIRCLE} {signature()}{aliases()}\n{check()}"
 
-    def get_command_short_help(self, command: commands.Command) -> str:
+    def get_command_short_help(self, command: AluCommand) -> str:
         # help string
         help_str = command.help or "No documentation"
         split = help_str.split("\n", 1)
@@ -257,8 +262,9 @@ class AluHelp(commands.HelpCommand):
         help_str = split[0] + extra_info
         return help_str
 
-    def get_bot_mapping(self) -> dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]]:
-        """Retrieves the bot mapping passed to :meth:`send_bot_help`."""
+    @override
+    def get_bot_mapping(self) -> dict[ExtCategory, dict[AluCog, list[AluCommand]]]:
+        """Retrieves the bot mapping passed to `send_bot_help`."""
 
         # TODO: include solo slash commands and Context Menu commands.
         categories = self.context.bot.category_cogs
@@ -269,9 +275,9 @@ class AluHelp(commands.HelpCommand):
 
     async def send_help_menu(
         self,
-        mapping: dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]],
+        mapping: dict[ExtCategory, dict[AluCog, list[AluCommand]]],
         *,
-        requested_cog: AluCog | commands.Cog | None = None,
+        requested_cog: AluCog | None = None,
     ) -> None:
         await self.context.typing()
 
@@ -323,21 +329,21 @@ class AluHelp(commands.HelpCommand):
     @override
     async def send_bot_help(
         self,
-        mapping: dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]],
+        mapping: dict[ExtCategory, dict[AluCog, list[AluCommand]]],
     ) -> None:
         await self.send_help_menu(mapping)
 
     @override
-    async def send_cog_help(self, cog: AluCog | commands.Cog) -> None:
+    async def send_cog_help(self, cog: AluCog) -> None:
         mapping = self.get_bot_mapping()
         await self.send_help_menu(mapping, requested_cog=cog)
 
     @override
-    async def send_command_help(self, command: commands.Command) -> None:
+    async def send_command_help(self, command: AluCommand) -> None:
         return await super().send_command_help(command)
 
     @override
-    async def send_group_help(self, group: commands.Group) -> None:
+    async def send_group_help(self, group: AluGroupCommand) -> None:
         return await super().send_group_help(group)
 
     @override

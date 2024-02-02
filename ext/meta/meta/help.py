@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import discord
 from discord import app_commands
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class AluHelpCog(MetaCog):
     """Help command."""
 
-    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         if bot.help_command:
             bot.help_command.cog = self

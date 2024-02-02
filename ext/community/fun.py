@@ -11,18 +11,18 @@ from utils import const
 
 from ._base import CommunityCog
 
+if TYPE_CHECKING:
+    from bot import AluBot
+
 
 class CommunityFun(CommunityCog):
     @staticmethod
     def community_check(msg: discord.Message) -> bool:
-        if (
-            msg.guild
+        return (
+            bool(msg.guild)
             and msg.guild.id == const.Guild.community
             and not (msg.author.id in const.MY_BOTS or msg.webhook_id)  # webhook so we ignore dota-news or nqn bot
-        ):
-            return True
-        else:
-            return False
+        )
 
     @staticmethod
     def channel_check(msg: discord.Message, channel_id: int) -> bool:
@@ -94,5 +94,5 @@ class CommunityFun(CommunityCog):
                 return
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(CommunityFun(bot))

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, NamedTuple
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple
 
 import discord
 from discord import app_commands
@@ -41,7 +41,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
     Make the bot talk in voice chat.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.connections: dict[int, discord.VoiceClient] = {}  # guild.id to Voice we are connected to
 
@@ -84,7 +84,9 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
 
     @tts_group.command()
     @app_commands.describe(text="Enter text to speak", language="Choose language/accent")
-    async def speak(self, ctx: AluGuildContext, language: LanguageCollection.Literal = "fr", *, text: str = "Allo") -> None:
+    async def speak(
+        self, ctx: AluGuildContext, language: LanguageCollection.Literal = "fr", *, text: str = "Allo"
+    ) -> None:
         """Make Text-To-Speech request into voice-chat."""
         lang: LanguageData = getattr(LanguageCollection, language)
         await self.speak_worker(ctx, lang, text=text)

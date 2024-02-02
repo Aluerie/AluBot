@@ -22,7 +22,7 @@ reportPrivateUsage = "none"        # it's my choice, reeee
 reportImplicitOverride = "warning" # I love it
 
 # Unnecessary
-reportUnnecessaryIsInstance = "none"           # I like raising the error if type is not it
+reportUnnecessaryIsInstance = "none"           # I like "else" raising the error if type is somehow not it
 reportUnnecessaryTypeIgnoreComment = "warning" # why it's "none" by default, even for strict ?!
 
 # Unused stuff - yes, I write a lot of unused stuff **GIGACHAD music**

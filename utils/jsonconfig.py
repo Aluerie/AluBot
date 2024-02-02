@@ -10,10 +10,10 @@ import json
 import os
 import uuid
 from json import JSONDecodeError
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
 if TYPE_CHECKING:
-    from asyncpg import Pool
+    from .database import PoolTypedWithAny
 
 _T = TypeVar("_T")
 
@@ -24,7 +24,7 @@ class Config(Generic[_T]):
     def __init__(
         self,
         filename: str,
-        pool: Pool | None = None,
+        pool: PoolTypedWithAny | None = None,
         *,
         encoder: type[json.JSONEncoder] | None = None,
     ) -> None:
@@ -42,7 +42,7 @@ class Config(Generic[_T]):
 
     def load_from_file(self) -> bool:
         try:
-            with open(self.filename, encoding="utf-8") as f:
+            with open(self.filename, encoding="utf-8") as f:  # noqa: PTH123
                 self._json = json.load(f)
                 return True
         except FileNotFoundError:
@@ -55,16 +55,16 @@ class Config(Generic[_T]):
 
     def _dump(self) -> None:
         temp = f"{self.filename}-{uuid.uuid4()}.tmp"
-        with open(temp, "w", encoding="utf-8") as tmp:
+        with open(temp, "w", encoding="utf-8") as tmp:  # noqa: PTH123
             json.dump(self._json.copy(), tmp, ensure_ascii=True, cls=self.encoder, separators=(",", ":"))
         # atomically move the file
-        os.replace(temp, self.filename)
+        os.replace(temp, self.filename)  # noqa: PTH105
 
     async def save(self) -> None:
         async with self.lock:
             await self.loop.run_in_executor(None, self._dump)
 
-    def get(self, key: Any, default: Any = None):
+    def get(self, key: Any, default: Any = None) -> Any:
         """Retrieves a config entry"""
         return self._json.get(str(key), default)
 
@@ -99,24 +99,27 @@ class Config(Generic[_T]):
         return self._json
 
 
-class PrefixConfig(Config):
+class PrefixConfig(Config[Any]):
     """Prefix Config"""
 
     if TYPE_CHECKING:
-        pool: Pool
+        pool: PoolTypedWithAny
 
-    def __init__(self, pool: Pool) -> None:
+    def __init__(self, pool: PoolTypedWithAny) -> None:
         super().__init__(filename="prefixes.json", pool=pool)
 
+    @override
     async def load_from_database(self) -> None:
         query = "SELECT id, prefix FROM guilds"
         rows = await self.pool.fetch(query) or []
         self._json = {r.id: r.prefix for r in rows if r.prefix is not None}
 
+    @override
     async def put_into_database(self, guild_id: int, new_prefix: str) -> None:
         query = "UPDATE guilds SET prefix=$1 WHERE id=$2"
         await self.pool.execute(query, new_prefix, guild_id)
 
+    @override
     async def remove_from_database(self, guild_id: int) -> None:
         query = "UPDATE guilds SET prefix=NULL WHERE id=$1"
         await self.pool.execute(query, guild_id)

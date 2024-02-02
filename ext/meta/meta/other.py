@@ -6,7 +6,7 @@ import itertools
 import os
 import re
 import time
-from typing import TYPE_CHECKING, NamedTuple, Optional
+from typing import TYPE_CHECKING, NamedTuple
 
 import aiofiles
 import discord
@@ -14,14 +14,17 @@ import psutil
 import pygit2
 from discord.ext import commands
 
-from utils import AluCog, AluContext, Url, const
+from utils import AluCog, Url, const
+
+if TYPE_CHECKING:
+    from utils import AluContext
 
 
 async def count_lines(
     path: str,
     filetype: str = ".py",
     skip_venv: bool = True,
-):
+) -> int:
     lines = 0
     for i in os.scandir(path):
         if i.is_file():
@@ -39,7 +42,7 @@ async def count_others(
     filetype: str = ".py",
     file_contains: str = "def",
     skip_venv: bool = True,
-):
+) -> int:
     line_count = 0
     for i in os.scandir(path):
         if i.is_file():
@@ -69,7 +72,7 @@ def format_commit(commit: pygit2.Commit) -> str:
     return f"[`{short_sha2}`](https://github.com/Aluerie/AluBot/commit/{commit.hex}) {short} ({offset})"
 
 
-def get_latest_commits(limit: int = 5):
+def get_latest_commits(limit: int = 5) -> str:
     repo = pygit2.Repository("./.git")
     commits = list(itertools.islice(repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL), limit))
     return "\n".join(format_commit(c) for c in commits)
@@ -178,7 +181,7 @@ class OtherCog(AluCog):
         await ctx.reply(embed=e)
 
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
-    async def source(self, ctx: AluContext, *, command: str | None = None):
+    async def source(self, ctx: AluContext, *, command: str | None = None) -> None:
         """Links to the bots code, or a specific command's"""
         source_url = ctx.bot.repo_url
         branch = "master"
@@ -200,7 +203,8 @@ class OtherCog(AluCog):
 
         if command is None:
             view = Url(source_url, label="GitHub Repo", emoji=const.EmoteLogo.GitHub)
-            return await ctx.reply(embed=embed, view=view)
+            await ctx.reply(embed=embed, view=view)
+            return
 
         if command == "help":
             src = type(self.bot.help_command)
@@ -219,7 +223,7 @@ class OtherCog(AluCog):
             module = obj.callback.__module__
             filename = src.co_filename
 
-        lines, firstlineno = inspect.getsourcelines(src)
+        lines, first_line_no = inspect.getsourcelines(src)
         if not module.startswith("discord"):
             # not a built-in command
             if filename is None:
@@ -231,8 +235,8 @@ class OtherCog(AluCog):
             source_url = "https://github.com/Rapptz/discord.py"
             branch = "master"
 
-        final_url = f"{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}"
-        embed.set_footer(text=f"Found source code here:\n{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
+        final_url = f"{source_url}/blob/{branch}/{location}#L{first_line_no}-L{first_line_no + len(lines) - 1}"
+        embed.set_footer(text=f"Found source code here:\n{location}#L{first_line_no}-L{first_line_no + len(lines) - 1}")
 
         view = Url(final_url, label=f'Source code for command "{obj!s}"', emoji=const.EmoteLogo.GitHub)
         await ctx.reply(embed=embed, view=view)

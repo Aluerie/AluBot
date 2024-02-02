@@ -24,8 +24,8 @@ from .timer import TimerManager
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Iterable, MutableMapping, Sequence
 
+    import asyncpg
     from aiohttp import ClientSession
-    from asyncpg import Pool
     from discord.abc import Snowflake
 
     from utils import AluCog
@@ -58,7 +58,9 @@ class AluBot(commands.Bot, AluBotHelper):
             Coroutine[Any, Any, None],
         ]
 
-    def __init__(self, test: bool = False, *, session: ClientSession, pool: Pool[DotRecord], **kwargs: Any) -> None:
+    def __init__(
+        self, test: bool = False, *, session: ClientSession, pool: asyncpg.Pool[DotRecord], **kwargs: Any
+    ) -> None:
         main_prefix = "~" if test else "$"
         self.main_prefix: Literal["~", "$"] = main_prefix
         self.test: bool = test
@@ -72,19 +74,19 @@ class AluBot(commands.Bot, AluBotHelper):
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=AluAppCommandTree,
         )
-        self.database = pool
-        self.pool: PoolTypedWithAny = pool  # type: ignore # asyncpg typehinting crutch
+        self.database: asyncpg.Pool[DotRecord] = pool
+        self.pool: PoolTypedWithAny = pool  # type: ignore # asyncpg typehinting crutch, read `utils.database` for more
         self.session: ClientSession = session
 
         self.exc_manager: ExceptionManager = ExceptionManager(self)
         self.transposer: TransposeClient = TransposeClient(session=session)
         self.disambiguator: Disambiguator = Disambiguator()
 
-        self.repo_url = "https://github.com/Aluerie/AluBot"
-        self.developer = "Aluerie"  # it's my GitHub account name
-        self.server_url = "https://discord.gg/K8FuDeP"
+        self.repo_url: str = "https://github.com/Aluerie/AluBot"
+        self.developer: str = "Aluerie"  # it's my GitHub account name
+        self.server_url: str = "https://discord.gg/K8FuDeP"
 
-        self.category_cogs: dict[ExtCategory, list[AluCog | commands.Cog]] = {}
+        self.category_cogs: dict[ExtCategory, list[AluCog]] = {}
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
             seconds=datetime.timedelta(days=7).seconds
@@ -180,7 +182,7 @@ class AluBot(commands.Bot, AluBotHelper):
     @override
     async def add_cog(
         self,
-        cog: AluCog | commands.Cog,
+        cog: AluCog,
         /,
         *,
         override: bool = False,
@@ -201,7 +203,7 @@ class AluBot(commands.Bot, AluBotHelper):
             self.launch_time = datetime.datetime.now(datetime.UTC)
         # if hasattr(self, "dota"):
         #     await self.dota.wait_until_ready()
-        log.info("Logged in as %s", self.user)
+        log.info("Logged in as `%s`", self.user)
 
     @override
     async def start(self) -> None:

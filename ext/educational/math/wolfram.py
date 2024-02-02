@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from urllib import parse as urlparse
 
 from discord import app_commands
@@ -23,7 +23,7 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
     [wolframalpha.com](https://www.wolframalpha.com/)
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         base = "https://api.wolframalpha.com/v1"
         self.simple_url = f"{base}/simple?appid={WOLFRAM_TOKEN}&background=black&foreground=white&layout=labelbar&i="

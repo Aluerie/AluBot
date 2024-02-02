@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, override
 
 import discord
 from discord import app_commands
@@ -15,16 +15,15 @@ from utils.pages import EnumeratedPaginator
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from asyncpg import Pool
-
     from bot import AluBot
     from utils import AluContext
+    from utils.database import PoolTypedWithAny
 
 
-def filter_emotes_condition(emote, mode) -> int:
-    if mode == 1:
+def filter_emotes_condition(emote: discord.PartialEmoji, mode: int) -> int:
+    if mode == 1:  # noqa: SIM114
         return 1
-    elif mode == 2 and emote.animated:
+    elif mode == 2 and emote.animated:  # noqa: SIM114
         return 1
     elif mode == 3 and not emote.animated:
         return 1
@@ -32,11 +31,11 @@ def filter_emotes_condition(emote, mode) -> int:
         return 0
 
 
-async def get_sorted_emote_dict(mode, pool: Pool):
+async def get_sorted_emote_dict(mode: int, pool: PoolTypedWithAny) -> dict[str, int]:
     emote_dict = {}
 
-    def filter_mode(mod, animated) -> bool:
-        if mod == 1:
+    def filter_mode(mod: int, animated: bool) -> bool:
+        if mod == 1:  # noqa: SIM114
             return True
         elif mod == 2 and animated:
             return True
@@ -51,7 +50,7 @@ async def get_sorted_emote_dict(mode, pool: Pool):
     return dict(sorted(emote_dict.items(), key=lambda item: item[1], reverse=True))
 
 
-async def topemotes_job(ctx: AluContext, mode) -> None:
+async def topemotes_job(ctx: AluContext, mode: int) -> None:
     sorted_emote_dict = await get_sorted_emote_dict(mode, pool=ctx.pool)
     new_array = []
     split_size = 20
@@ -86,9 +85,11 @@ class EmoteAnalysis(CommunityCog, name="Emote stats"):
     def help_emote(self) -> discord.PartialEmoji:
         return discord.PartialEmoji.from_str(const.Emote.peepoComfy)
 
+    @override
     def cog_load(self) -> None:
         self.daily_emote_shift.start()
 
+    @override
     def cog_unload(self) -> None:
         self.daily_emote_shift.cancel()
 
@@ -107,15 +108,15 @@ class EmoteAnalysis(CommunityCog, name="Emote stats"):
 
     @commands.hybrid_command(name="topemotes", description="Show emotes usage stats")
     @app_commands.describe(keyword="Possible keywords: `all`, `ani`, `nonani`")
-    async def topemotes(self, ctx, keyword: Literal["all", "ani", "nonani"] = "all") -> None:
+    async def topemotes(self, ctx: AluContext, keyword: Literal["all", "ani", "nonani"] = "all") -> None:
         """Show emotes usage stats for `keyword` group ;\
         Possible keywords: `all`, `ani` for animated emotes, `nonani` for static emotes ;"""
         match keyword:
             case "all":
                 await topemotes_job(ctx, 1)
-            case "ani" | "animated":
+            case "ani" | "animated":  # type: ignore
                 await topemotes_job(ctx, 2)
-            case "nonani" | "static" | "nonanimated":
+            case "nonani" | "static" | "nonanimated":  # type: ignore
                 await topemotes_job(ctx, 3)
 
     @tasks.loop(time=datetime.time(hour=16, minute=43, tzinfo=datetime.UTC))

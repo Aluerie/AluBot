@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord import app_commands
@@ -11,18 +11,23 @@ from utils import const, errors, links, webhook_mimicry
 
 from ._base import CommunityCog
 
+if TYPE_CHECKING:
+    from bot import AluBot
+
 
 class FixLinksCommunity(CommunityCog):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.delete_mimic_ctx_menu = app_commands.ContextMenu(
             name="Delete Mimic message",
             callback=self.delete_mimic_ctx_menu_callback,
         )
 
+    @override
     async def cog_load(self) -> None:
         self.bot.tree.add_command(self.delete_mimic_ctx_menu)
 
+    @override
     async def cog_unload(self) -> None:
         c = self.delete_mimic_ctx_menu
         self.bot.tree.remove_command(c.name, type=c.type)
@@ -53,9 +58,7 @@ class FixLinksCommunity(CommunityCog):
 
     @commands.Cog.listener("on_message")
     async def fix_links(self, message: discord.Message) -> None:
-        if not message.guild:
-            return
-        elif message.guild.id not in const.MY_GUILDS:
+        if not message.guild or message.guild.id not in const.MY_GUILDS:
             return
         if message.author.bot:
             return
@@ -70,5 +73,5 @@ class FixLinksCommunity(CommunityCog):
         await links.extra_send_fxtwitter_links(msg)
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(FixLinksCommunity(bot))

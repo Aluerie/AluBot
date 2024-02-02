@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord import app_commands
@@ -49,15 +49,17 @@ def fix_link_worker(text_to_fix: str, omit_rest: bool = False) -> str | None:
 
 
 class LinkUtilities(AluCog):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.fix_link_ctx_menu = app_commands.ContextMenu(
             name="Fix Twitter/Insta link", callback=self.fix_link_ctx_menu_callback
         )
 
+    @override
     async def cog_load(self) -> None:
         self.bot.tree.add_command(self.fix_link_ctx_menu)
 
+    @override
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.fix_link_ctx_menu.name, type=self.fix_link_ctx_menu.type)
 

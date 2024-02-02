@@ -4,7 +4,7 @@ import asyncio
 import datetime
 import logging
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, TypeVar, override
 
 import asyncpg
 import discord
@@ -91,6 +91,7 @@ class Timer(Generic[TimerDataT]):
         self.timezone: str = record["timezone"]
         self.data: TimerDataT = record["data"]
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Timer):
             return False
@@ -106,9 +107,11 @@ class Timer(Generic[TimerDataT]):
                 and self.created_at == other.created_at
             )
 
+    @override
     def __hash__(self) -> int:
         return hash(self.id)
 
+    @override
     def __repr__(self) -> str:
         return f"<Timer id={self.id} event={self.event} expires_at={self.expires_at} created_at={self.created_at}>"
 
@@ -135,7 +138,7 @@ class Timer(Generic[TimerDataT]):
         return cls(record=pseudo_record)
 
     @property
-    def format_dt_R(self) -> str:
+    def format_dt_R(self) -> str:  # noqa: N802
         return discord.utils.format_dt(self.created_at.replace(tzinfo=datetime.UTC), style="R")
 
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal, Self, override
 
 import discord
 from discord.ext import commands, menus
@@ -41,7 +41,8 @@ class HelpPageSource(menus.ListPageSource):
         entries = list(itertools.chain.from_iterable(data.values()))
         super().__init__(entries=entries, per_page=1)
 
-    async def format_page(self, menu: HelpPages, page: CogPage):
+    @override
+    async def format_page(self, menu: HelpPages, page: CogPage) -> discord.Embed:
         e = discord.Embed(colour=const.Colour.blueviolet)
 
         if page.section == "_front_page":
@@ -93,35 +94,6 @@ class HelpPageSource(menus.ListPageSource):
         return e
 
 
-class HelpSelect(discord.ui.Select):
-    def __init__(self, paginator: HelpPages) -> None:
-        super().__init__(placeholder="\N{UNICORN FACE} Choose help category")
-        self.paginator: HelpPages = paginator
-
-        self.__fill_options()
-
-    def __fill_options(self) -> None:
-        pages_per_category: Mapping[ExtCategory, tuple[int, int]] = {}
-        total = 1
-        for category, cog_pages in self.paginator.help_data.items():
-            starting = total
-            total += len(cog_pages)
-            pages_per_category[category] = starting, total - 1
-
-        for category, (start, end) in pages_per_category.items():
-            pages_string = f"(page {start})" if start == end else f"(pages {start}-{end})"
-            self.add_option(
-                label=f"{category.name} {pages_string}",
-                emoji=category.emote,
-                description=category.description,
-                value=str(start - 1),  # we added 1 in total=1
-            )
-
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
-        page_to_open = int(self.values[0])
-        await self.paginator.show_page(interaction, page_to_open)
-
-
 class HelpPages(pages.Paginator):
     source: HelpPageSource
 
@@ -142,7 +114,7 @@ class HelpPages(pages.Paginator):
             self.add_item(HelpSelect(self))
 
     @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
-    async def legend_page(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button) -> None:
+    async def legend_page(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button[Self]) -> None:
         """Show legend page."""
         e = discord.Embed(
             title="Legend used in the Help menu.",
@@ -180,6 +152,36 @@ class HelpPages(pages.Paginator):
     # async def find_command_or_section_page(self, interaction: discord.Interaction, _button: discord.ui.Button):
     #     """Show modal which leads to basically invoking /help <command>/<section>"""
     #     await self.show_page(ntr, 0)
+
+
+class HelpSelect(discord.ui.Select[HelpPages]):
+    def __init__(self, paginator: HelpPages) -> None:
+        super().__init__(placeholder="\N{UNICORN FACE} Choose help category")
+        self.paginator: HelpPages = paginator
+
+        self.__fill_options()
+
+    def __fill_options(self) -> None:
+        pages_per_category: Mapping[ExtCategory, tuple[int, int]] = {}
+        total = 1
+        for category, cog_pages in self.paginator.help_data.items():
+            starting = total
+            total += len(cog_pages)
+            pages_per_category[category] = starting, total - 1
+
+        for category, (start, end) in pages_per_category.items():
+            pages_string = f"(page {start})" if start == end else f"(pages {start}-{end})"
+            self.add_option(
+                label=f"{category.name} {pages_string}",
+                emoji=category.emote,
+                description=category.description,
+                value=str(start - 1),  # we added 1 in total=1
+            )
+
+    @override
+    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+        page_to_open = int(self.values[0])
+        await self.paginator.show_page(interaction, page_to_open)
 
 
 class AluHelp(commands.HelpCommand):
@@ -318,30 +320,35 @@ class AluHelp(commands.HelpCommand):
         pages = HelpPages(self.context, self, help_data)
         await pages.start(page_number=starting_page)
 
+    @override
     async def send_bot_help(
         self,
         mapping: dict[ExtCategory, dict[AluCog | commands.Cog, list[commands.Command]]],
     ) -> None:
         await self.send_help_menu(mapping)
 
+    @override
     async def send_cog_help(self, cog: AluCog | commands.Cog) -> None:
         mapping = self.get_bot_mapping()
         await self.send_help_menu(mapping, requested_cog=cog)
 
-    async def send_command_help(self, command: commands.Command):
+    @override
+    async def send_command_help(self, command: commands.Command) -> None:
         return await super().send_command_help(command)
 
-    async def send_group_help(self, group: commands.Group):
+    @override
+    async def send_group_help(self, group: commands.Group) -> None:
         return await super().send_group_help(group)
 
-    async def send_error_message(self, error: str):
+    @override
+    async def send_error_message(self, error: str) -> None:
         return await super().send_error_message(error)
 
 
 class BaseHelpCog(AluCog):
     """Base cog for help command"""
 
-    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         bot.help_command = AluHelp()
         bot.help_command.cog = self
@@ -349,9 +356,11 @@ class BaseHelpCog(AluCog):
 
         self._original_help_command: commands.HelpCommand | None = bot.help_command
 
+    @override
     async def cog_load(self) -> None:
         self.load_help_info.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.load_help_info.cancel()
         self.bot.help_command = self._original_help_command

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from utils import AluGuildContext
 
     from .dota import DotaFPC
-    from .lol import LoLFPC
+    from .lol import LolFPC
 
 # common flag descriptions
 NAME_FLAG_DESC = "Player name. if it's a twitch streamer then it should match their twitch handle."
@@ -108,7 +108,7 @@ class FPCDatabaseManagement(FPCCog):
         await ctx.send_help()
 
     @property
-    def lol_fpc_settings_cog(self) -> LoLFPC:
+    def lol_fpc_settings_cog(self) -> LolFPC:
         """Get LoL FPC Settings Cog"""
         return self.get_fpc_settings_cog("League of Legends FPC")  # type: ignore
 

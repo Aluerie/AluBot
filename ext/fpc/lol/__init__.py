@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 
-class LoLFPC(
+class LolFPC(
     Notifications,
     Settings,
     SummonerNameCheck,
@@ -33,4 +33,4 @@ class LoLFPC(
 
 
 async def setup(bot: AluBot) -> None:
-    await bot.add_cog(LoLFPC(bot))
+    await bot.add_cog(LolFPC(bot))

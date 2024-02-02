@@ -242,7 +242,7 @@ class DotaFPCNotifications(BaseNotifications):
                 self.retry_mapping[tuple_uuid] += 1
                 continue
 
-            if stratz_data["data"]["match"] is None:
+            if not stratz_data["data"]["match"]:  # it gonna be None
                 # if somebody abandons in draft but we managed to send the game out
                 # then parser will fail and declare None
                 edit_log.info("Stratz: match %s did not count. Deleting the match.", match_id)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 import discord
 
@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from bot import AluBot
-
 
 
 __all__ = ("Disambiguator",)
@@ -30,18 +29,20 @@ class ConfirmationView(AluView):
         self.stop()
 
     @discord.ui.button(emoji=const.Tick.Yes, label="Confirm", style=discord.ButtonStyle.green)
-    async def confirm(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+    async def confirm(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
         await self.button_callback(interaction, True)
 
     @discord.ui.button(emoji=const.Tick.No, label="Cancel", style=discord.ButtonStyle.red)
-    async def cancel(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+    async def cancel(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
         await self.button_callback(interaction, False)
 
 
 class DisambiguatorView[T](AluView):
     selected: T
 
-    def __init__(self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any]) -> None:
+    def __init__(
+        self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any]
+    ) -> None:
         super().__init__(author_id=ctx_ntr.user.id, view_name="Select Menu")
         self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
         self.data: list[T] = data
@@ -88,16 +89,15 @@ class Disambiguator:
         ephemeral: bool = True,
     ) -> discord.Message | discord.InteractionMessage:
         if isinstance(ctx_ntr, AluContext):
+            # Context
             return await ctx_ntr.reply(embed=embed, view=view, ephemeral=ephemeral)
-        elif isinstance(ctx_ntr, discord.Interaction):
+        else:
+            # Interaction
             if not ctx_ntr.response.is_done():
                 await ctx_ntr.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
                 return await ctx_ntr.original_response()
             else:
                 return await ctx_ntr.followup.send(embed=embed, view=view, ephemeral=ephemeral, wait=True)
-        else:
-            msg = f"Expected Interaction or Context, got {ctx_ntr.__class__.__name__}"
-            raise TypeError(msg)
 
     async def confirm(
         self,

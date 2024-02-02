@@ -37,7 +37,6 @@ from __future__ import annotations
 import importlib
 import os
 from pkgutil import iter_modules
-from typing import Tuple
 
 from core import CORE_EXTENSIONS
 
@@ -48,8 +47,8 @@ try:
     USE_ALL_EXTENSIONS = _test.USE_ALL_EXTENSIONS
 except ModuleNotFoundError:
     _test = None
-    TEST_EXTENSIONS = ()
-    USE_ALL_EXTENSIONS = True
+    TEST_EXTENSIONS = ()  # type: ignore
+    USE_ALL_EXTENSIONS = True  # type: ignore
 
 # EXTENSIONS
 
@@ -92,7 +91,7 @@ def get_extensions(test: bool, reload: bool = False) -> tuple[str, ...]:
         if not use_all_extensions:
             return CORE_EXTENSIONS + tuple(f"ext.{x}" for x in test_extensions)
 
-    # production giga-gathering option.
+    # production gathering option.
     all_folders = [f.name for f in os.scandir("ext") if f.is_dir() if not f.name.startswith("_")]
 
     ext_category_folders = [x for x in all_folders if x not in MY_PACKAGES]

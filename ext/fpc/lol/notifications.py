@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 import aiohttp
 import asyncpg
-import discord
 
 from utils import aluloop, const, lol
 
@@ -36,17 +35,19 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class LoLNotifications(BaseNotifications):
-    def __init__(self, bot: AluBot, *args, **kwargs) -> None:
+class Notifications(BaseNotifications):
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, prefix="lol", *args, **kwargs)
         self.live_match_ids: list[int] = []
 
+    @override
     async def cog_load(self) -> None:
         self.notification_worker.add_exception_type(asyncpg.InternalServerError)
         self.notification_worker.clear_exception_types()
         self.notification_worker.start()
         return await super().cog_load()
 
+    @override
     async def cog_unload(self) -> None:
         self.notification_worker.stop()  # .cancel()
         return await super().cog_unload()
@@ -124,9 +125,11 @@ class LoLNotifications(BaseNotifications):
                         AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3)
                         AND s.enabled = TRUE;
                 """
-                channel_spoil_tuples: list[tuple[int, bool]] = list(await self.bot.pool.fetch(
+                channel_spoil_tuples: list[tuple[int, bool]] = list(
+                    await self.bot.pool.fetch(
                         query, participant["championId"], player_account_row["player_id"], game["gameId"]
-                    ))
+                    )
+                )
                 if channel_spoil_tuples:
                     log.debug(
                         "Notif %s - %s",
@@ -178,4 +181,4 @@ class LoLNotifications(BaseNotifications):
 
 
 async def setup(bot: AluBot) -> None:
-    await bot.add_cog(LoLNotifications(bot))
+    await bot.add_cog(Notifications(bot))

@@ -7,7 +7,7 @@ import re
 import textwrap
 from enum import Enum
 from operator import attrgetter
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord.ext import commands
@@ -133,7 +133,7 @@ class Action:
         created_at: datetime.datetime,
         actor: SimpleUser,
         issue_number: int,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         self.event_type: EventBase | CommentBase = enum_type
         self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.UTC)
@@ -156,7 +156,7 @@ class Event(Action):
 class Comment(Action):
     """Github Issue Timeline's Comment"""
 
-    def __init__(self, *, comment_body: str, comment_url: str | None = None, **kwargs) -> None:
+    def __init__(self, *, comment_body: str, comment_url: str | None = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.comment_body: str = comment_body
         self.comment_url: str | None = comment_url
@@ -290,6 +290,7 @@ class BugTracker(AluCog):
         The main task of the cog that tracks, analyzes GitHub events and sends news messages.
     """
 
+    @override
     async def cog_load(self) -> None:
         self.bot.initialize_github()
         self.valve_devs: list[str] = await self.get_valve_devs()
@@ -297,6 +298,7 @@ class BugTracker(AluCog):
         self.bugtracker_news_worker.add_exception_type(RequestError, RequestFailed)
         self.bugtracker_news_worker.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.bugtracker_news_worker.stop()  # .cancel()
 
@@ -533,7 +535,7 @@ class BugTracker(AluCog):
         await self.bot.pool.execute(query, now, const.Guild.community)
         log.debug("^^^ BugTracker task is finished ^^^")
 
-    async def get_issue(self, issue_number: int):
+    async def get_issue(self, issue_number: int) -> Issue:
         """Shortcut to get a Dota 2 Bug Tracker issue by its number."""
         return (
             await self.bot.github.rest.issues.async_get(

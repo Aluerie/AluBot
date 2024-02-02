@@ -1,5 +1,5 @@
 """
-## Orignal source:
+## Original source:
 * RoboDanny's cogs.utils.buttons (license MPL v2 from Rapptz/RoboDanny)
     https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/buttons.py
 
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Any, NamedTuple, Optional, Self
+from typing import TYPE_CHECKING, Any, NamedTuple, Self, override
 
 import discord
 import yarl
@@ -42,7 +42,7 @@ def html_to_markdown(node: Any, *, include_spans: bool = False) -> str:
     for child in node:
         if child.tag == "i":
             text.append(f"{italics_marker}{child.text.strip()}{italics_marker}")
-            italics_marker = "_" if italics_marker == "*" else "*"
+            italics_marker = "_" if italics_marker == "*" else "*"  # type: ignore # xd
         elif child.tag == "b":
             if text and text[-1].endswith("*"):
                 text.append("\u200b")
@@ -60,7 +60,7 @@ def html_to_markdown(node: Any, *, include_spans: bool = False) -> str:
     return "".join(text).strip()
 
 
-def inner_trim(s: str, *, _regex=re.compile(r"\s+")) -> str:
+def inner_trim(s: str, *, _regex: re.Pattern[str] = re.compile(r"\s+")) -> str:
     return _regex.sub(" ", s.strip())
 
 
@@ -156,7 +156,7 @@ class FreeDictionaryWord:
         self.get_pronunciation(node)
         self.get_meanings(node)
 
-    def get_pronunciation(self, node) -> None:
+    def get_pronunciation(self, node: Any) -> None:
         self.pronunciation_url = None
         self.pronunciation = None
         snd = node.xpath("span[@class='snd' and @data-snd]")
@@ -174,7 +174,7 @@ class FreeDictionaryWord:
             mp3 = snd.attrib.get("data-snd")
             self.pronunciation_url = f"https://img.tfd.com/{data_src}/{mp3}.mp3"
 
-    def get_meanings(self, node) -> None:
+    def get_meanings(self, node: Any) -> None:
         conjugations: str | None = None
 
         data_src = node.attrib.get("data-src")
@@ -325,6 +325,7 @@ class FreeDictionaryWordMeaningPageSource(menus.ListPageSource):
         super().__init__(entries=word.meanings, per_page=1)
         self.word: FreeDictionaryWord = word
 
+    @override
     async def format_page(self, menu: pages.Paginator, entry: FreeDictionaryMeaning) -> discord.Embed:
         maximum = self.get_max_pages()
         heading = (
@@ -343,21 +344,24 @@ class FreeDictionaryWordMeaningPageSource(menus.ListPageSource):
 class DictionaryCog(EducationalCog):
     @commands.hybrid_command(name="define")
     @app_commands.describe(word="The word to look up")
-    async def _define(self, ctx: AluContext, *, word: str):
+    async def _define(self, ctx: AluContext, *, word: str) -> None:
         """Looks up an English word in the dictionary."""
 
         result = await parse_free_dictionary_for_word(ctx.session, word=word)
         if result is None:
-            return await ctx.send("Could not find that word.", ephemeral=True)
+            await ctx.send("Could not find that word.", ephemeral=True)
+            return
 
         # Check if it's a phrasal verb somehow
         phrase = discord.utils.find(lambda v: v.word.lower() == word.lower(), result.phrasal_verbs)
         if phrase is not None:
             embed = phrase.to_embed()
-            return await ctx.send(embed=embed)
+            await ctx.send(embed=embed)
+            return
 
         if not result.meanings:
-            return await ctx.send("Could not find any definitions for that word.", ephemeral=True)
+            await ctx.send("Could not find any definitions for that word.", ephemeral=True)
+            return
 
         # Paginate over the various meanings of the word
         p = pages.Paginator(ctx, FreeDictionaryWordMeaningPageSource(result))

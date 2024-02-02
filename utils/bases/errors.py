@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import logging
 
-import discord
+# ruff: noqa: N818
 
 log = logging.getLogger(__name__)
 
 __all__: tuple[str, ...] = (
-    "AluBotException",
+    "AluBotError",
     "BadArgument",
     "SomethingWentWrong",
     "UserError",
@@ -19,13 +19,13 @@ __all__: tuple[str, ...] = (
 
 # this should inherit at least Exception so `except Exception as e` in discord.py don't fail
 # maybe we will consider inheriting discord.DiscordException
-class AluBotException(Exception):  # discord.DiscordException):
+class AluBotError(Exception):  # discord.DiscordException):
     """The base exception for AluBot. All other exceptions should inherit from this."""
 
     __slots__: tuple[str, ...] = ()
 
 
-class BadArgument(AluBotException):
+class BadArgument(AluBotError):
     """My own BadArgument exception.
     Analogy to commands.BadArgument but raised by my own conversions and conditions
     """
@@ -33,19 +33,19 @@ class BadArgument(AluBotException):
     __slots__: tuple[str, ...] = ()
 
 
-class SomethingWentWrong(AluBotException):
+class SomethingWentWrong(AluBotError):
     """When something goes wrong and I want to notify the user about it."""
 
     __slots__: tuple[str, ...] = ()
 
 
-class UserError(AluBotException):
+class UserError(AluBotError):
     """user made a mistake and I want to notify them about it."""
 
     __slots__: tuple[str, ...] = ()
 
 
-class ErroneousUsage(AluBotException):
+class ErroneousUsage(AluBotError):
     """This exception does not mean an error happened. But rather some bad command usage.
 
     Example, somebody uses `/text-to-speech stop` while the bot is not even in a voice chat.
@@ -57,13 +57,13 @@ class ErroneousUsage(AluBotException):
     __slots__: tuple[str, ...] = ()
 
 
-class SilentError(AluBotException):
+class SilentError(AluBotError):
     """Error that will be specifically ignored by command handlers."""
 
     __slots__: tuple[str, ...] = ()
 
 
-class ResponseNotOK(AluBotException):
+class ResponseNotOK(AluBotError):
     """Raised we aiohttp session response is not OK
 
     Sometimes we just specifically need to raise an error in those cases

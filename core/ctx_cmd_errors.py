@@ -44,7 +44,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
         # raised by myself but it's not an error per se, thus i dont give error type to the user.
         error_type = None
         desc = f"{error}"
-    elif isinstance(error, errors.AluBotException):
+    elif isinstance(error, errors.AluBotError):
         # These errors are generally raised in code by myself or by my code with an explanation text as `error`
         # AluBotException subclassed exceptions are all mine.
         desc = f"{error}"

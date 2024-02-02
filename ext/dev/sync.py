@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
 from discord import app_commands
@@ -15,6 +15,7 @@ from ._base import DevBaseCog
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluContext
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
@@ -25,10 +26,12 @@ class SyncAppTreeTools(DevBaseCog):
     `?tag usc` which abbreviates to `?tag umbra sync command`.
     """
 
+    @override
     async def cog_load(self) -> None:
         if not self.bot.test:
             self.auto_sync.start()
 
+    @override
     async def cog_unload(self) -> None:
         self.auto_sync.cancel()
 
@@ -124,7 +127,7 @@ class SyncAppTreeTools(DevBaseCog):
             app_commands.Choice(name="Specific Guilds", value="guilds"),
         ]
     )
-    async def slash_sync(self, interaction: discord.Interaction[AluBot], method: str):
+    async def slash_sync(self, interaction: discord.Interaction[AluBot], method: str) -> None:
         """(\N{GREY HEART} Hideout-Only) Sync bot's app tree.
 
         Parameters
@@ -173,6 +176,6 @@ class DailyAutoSync(DevBaseCog):
         super().__init__(bot, *args, **kwargs)
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(SyncAppTreeTools(bot))
     await bot.add_cog(DailyAutoSync(bot))

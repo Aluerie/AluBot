@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime  # noqa: TCH003
 import logging
 import textwrap
-from typing import TYPE_CHECKING, Annotated, Any, TypedDict
+from typing import TYPE_CHECKING, Annotated, Any, TypedDict, override
 
 import discord
 from discord import app_commands
@@ -35,6 +35,7 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         self.parent: ReminderView = parent
         self.timer: Timer[RemindTimerData] = timer
 
+    @override
     async def on_submit(self, interaction: discord.Interaction[AluBot]) -> None:
         try:
             when = times.FutureTime(str(self.duration)).dt
@@ -67,6 +68,7 @@ class SnoozeButton(discord.ui.Button["ReminderView"]):
         self.timer: Timer = timer
         self.cog: Reminder = cog
 
+    @override
     async def callback(self, interaction: discord.Interaction) -> Any:
         assert self.view is not None
         await interaction.response.send_modal(SnoozeModal(self.view, self.timer))
@@ -82,6 +84,7 @@ class ReminderView(discord.ui.View):
         self.add_item(discord.ui.Button(url=url, label="Go to original message"))
         self.add_item(self.snooze)
 
+    @override
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.author_id:
             await interaction.response.send_message("This snooze button is not for you, sorry!", ephemeral=True)
@@ -96,13 +99,15 @@ class ReminderView(discord.ui.View):
 class Reminder(RemindersCog, emote=const.Emote.DankG):
     """Remind yourself of something at sometime"""
 
+    @override
     async def cog_load(self) -> None:
         self.bot.initialize_tz_manager()
 
-    async def remind_helper(self, ctx: AluContext, *, dt: datetime.datetime, text: str):
+    async def remind_helper(self, ctx: AluContext, *, dt: datetime.datetime, text: str) -> None:
         """Remind helper so we don't duplicate"""
         if len(text) >= 1500:
-            return await ctx.send("Reminder must be fewer than 1500 characters.")
+            await ctx.send("Reminder must be fewer than 1500 characters.")
+            return
 
         zone = await self.bot.tz_manager.get_timezone(ctx.author.id)
         data: RemindTimerData = {
@@ -219,7 +224,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     @remind.command(name="delete", aliases=["remove", "cancel"], ignore_extra=True)
     # @app_commands.autocomplete(id=remind_delete_id_autocomplete)  # type: ignore
     # @app_commands.describe(id='either input a number of reminder id or choose it from suggestion^')
-    async def remind_delete(self, ctx: AluContext, *, id: int):
+    async def remind_delete(self, ctx: AluContext, *, id: int) -> None:
         """Deletes a reminder by its ID.
 
         To get a reminder ID, use the reminder list command or autocomplete for slash command.
@@ -247,7 +252,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         await ctx.reply(embed=e)
 
     @remind.command(name="clear", ignore_extra=False)
-    async def reminder_clear(self, ctx: AluContext):
+    async def reminder_clear(self, ctx: AluContext) -> None:
         """Clears all reminders you have set."""
 
         # For UX purposes this has to be two queries.

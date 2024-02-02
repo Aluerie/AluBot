@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
 from discord import app_commands
@@ -30,7 +30,16 @@ exp_lvl_table = [
 # fmt: on
 
 
-async def rank_image(bot: AluBot, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, place_str, member):
+async def rank_image(
+    bot: AluBot,
+    lvl: int,
+    exp: int,
+    rep: int,
+    next_lvl_exp: int,
+    prev_lvl_exp: int,
+    place_str: str,
+    member: discord.Member,
+) -> Image.Image:
     image = Image.open("./assets/images/profile/welcome.png", mode="r")
     avatar = await bot.transposer.url_to_image(member.display_avatar.url)
     avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
@@ -72,7 +81,7 @@ async def rank_image(bot: AluBot, lvl, exp, rep, next_lvl_exp, prev_lvl_exp, pla
     return image
 
 
-def get_level(exp):
+def get_level(exp: int) -> int:
     level = 0
     for item in exp_lvl_table:
         if item <= exp:
@@ -80,7 +89,7 @@ def get_level(exp):
     return level
 
 
-def get_exp_for_next_level(lvl):
+def get_exp_for_next_level(lvl: int) -> int:
     return exp_lvl_table[lvl]
 
 
@@ -91,7 +100,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
     reputation and many other things (currency, custom profile) to come
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.view_user_rank = app_commands.ContextMenu(
@@ -100,10 +109,12 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             guild_ids=[const.Guild.community],
         )
 
+    @override
     async def cog_load(self) -> None:
         self.remove_inactive.start()
         self.bot.tree.add_command(self.view_user_rank)
 
+    @override
     async def cog_unload(self) -> None:
         self.remove_inactive.cancel()
         c = self.view_user_rank
@@ -118,7 +129,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         self,
         ctx: AluGuildContext | discord.Interaction[AluBot],
         member: discord.Member,
-    ):
+    ) -> discord.File:
         """Get file that is image for rank/levels information for desired member"""
         member = member or getattr(ctx, "author") or getattr(ctx, "user")
         if member.bot:
@@ -149,7 +160,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
     @commands.hybrid_command(name="leaderboard", aliases=["l"])
     @checks.hybrid.is_community()
     @app_commands.describe(sort_by="Choose how to sort leaderboard")
-    async def leaderboard(self, ctx, sort_by: Literal["exp", "rep"] = "exp") -> None:
+    async def leaderboard(self, ctx: AluGuildContext, sort_by: Literal["exp", "rep"] = "exp") -> None:
         """View experience leaderboard for this server"""
         guild = self.community.guild
 
@@ -165,7 +176,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             ORDER BY {sort_by} DESC;
         """
         rows = await self.bot.pool.fetch(query)
-        for row in rows:  # type: ignore
+        for row in rows:
             if (member := guild.get_member(row.id)) is None:
                 continue
             new_array.append(
@@ -225,16 +236,16 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                 await author.remove_roles(previous_level_role)
                 await author.add_roles(level_up_role)
 
-    thanks_words = ["thanks", "ty", "thank"]
+    thanks_words = ("thanks", "ty", "thank")
 
     @commands.hybrid_command(name="rep", description="Give +1 to @member reputation")
     @commands.cooldown(1, 60 * 60, commands.BucketType.user)
     @checks.hybrid.is_community()
     @app_commands.describe(member="Member to give rep to")
-    async def rep(self, ctx, member: discord.Member) -> None:
+    async def rep(self, ctx: AluGuildContext, member: discord.Member) -> None:
         """Give +1 to `@member`'s reputation ;"""
         if member == ctx.author or member.bot:
-            await ctx.reply(content="You can't give reputation to yourself or bots")
+            await ctx.reply(content="You can't give reputation to yourself or bots.")
         else:
             query = "UPDATE users SET rep=rep+1 WHERE id=$1 RETURNING rep"
             rep = await self.bot.pool.fetchval(query, member.id)

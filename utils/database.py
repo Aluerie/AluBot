@@ -57,8 +57,10 @@ class DotRecord(asyncpg.Record):
 
 
 if TYPE_CHECKING:
+    # type-checker fail with "Expected type arguments for generic class" otherwise
     BasePool = asyncpg.Pool[DotRecord]
 else:
+    # run-time fails with Pool not subscriptable class otherwise, maybe I'm just stupid.
     BasePool = asyncpg.Pool
 
 

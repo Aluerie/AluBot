@@ -8,10 +8,10 @@ import asyncio
 import datetime
 import inspect
 import logging
-import os
 import traceback
 from contextlib import AbstractAsyncContextManager
-from typing import TYPE_CHECKING, NamedTuple
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, NamedTuple, Self, override
 
 import discord
 
@@ -259,7 +259,7 @@ class ExceptionManager:
         *,
         where: str,
         extra: str | None = None,
-    ):
+    ) -> None:
         """Register, analyse error and put it into queue to send to developers
 
         Parameters
@@ -289,7 +289,7 @@ class ExceptionManager:
 
         # apparently there is https://github.com/vi3k6i5/flashtext for "the fastest replacement"
         # not sure if I want to add extra dependance
-        traceback_string = "".join(traceback.format_exception(error)).replace(os.getcwd(), "AluBot")
+        traceback_string = "".join(traceback.format_exception(error)).replace(str(Path.cwd()), "AluBot")
         # .replace("``": "`\u200b`")
 
         packet = await self.get_info_packet(source=source, where=where, extra=extra)
@@ -306,7 +306,7 @@ class ExceptionManager:
             return await self.send_error(traceback_string, packet)
 
 
-class HandleHTTPException(AbstractAsyncContextManager):
+class HandleHTTPException(AbstractAsyncContextManager[Any]):
     """Context manger to handle HTTP Exceptions.
 
     This is useful for handling errors that are not critical, but
@@ -339,9 +339,11 @@ class HandleHTTPException(AbstractAsyncContextManager):
         self.destination = destination
         self.title = title
 
-    async def __aenter__(self):
+    @override
+    async def __aenter__(self) -> Self:
         return self
 
+    @override
     async def __aexit__(
         self,
         exc_type: type[BaseException] | None = None,

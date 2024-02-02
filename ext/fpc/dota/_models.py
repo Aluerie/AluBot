@@ -130,7 +130,7 @@ class MatchToSend(BaseMatchToSend):
                 hero_image = ImageOps.expand(
                     hero_image,
                     border=(0, 3, 0, 0),
-                    fill=const.Dota.PLAYER_COLOUR_MAP.get(count, "#FF0000"),
+                    fill=const.Dota.PLAYER_COLOUR_MAP[count],
                 )
                 extra_space = 0 if count < 5 else 20
                 img.paste(hero_image, (count * 62 + extra_space, 0))
@@ -143,7 +143,7 @@ class MatchToSend(BaseMatchToSend):
             draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
             # twitch status
-            w3, h3= self.bot.transposer.get_text_wh(text, font)
+            w3, h3= self.bot.transposer.get_text_wh(twitch_data["twitch_status"], font)
             draw.text(
                 xy=(width - w3, height - 100 - 10 - h3),
                 text=twitch_data["twitch_status"],
@@ -361,7 +361,7 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
             width, height = img.size
 
             draw = ImageDraw.Draw(img)
-            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 43)
+            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 45)
             text = "Not Counted"
             text_w, text_h = self.bot.transposer.get_text_wh(text, font)
             draw.text(

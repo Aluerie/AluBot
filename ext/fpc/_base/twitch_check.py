@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from utils import aluloop
 
@@ -20,7 +20,7 @@ __all__ = ("TwitchAccountCheckBase",)
 
 
 class TwitchAccountCheckBase(FPCCog):
-    def __init__(self, bot: AluBot, table_name: str, day: int, *args, **kwargs) -> None:
+    def __init__(self, bot: AluBot, table_name: str, day: int, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         self.table_name: str = table_name
         self.day: int = day

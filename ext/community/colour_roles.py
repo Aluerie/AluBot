@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord.ext import commands
@@ -14,7 +14,14 @@ if TYPE_CHECKING:
     from utils import AluGuildContext
 
 
-class ColourRolesDropdown(discord.ui.RoleSelect):
+class ColourRolesView(discord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+        # Adds the dropdown to our view object.
+        self.add_item(ColourRolesDropdown())
+
+
+class ColourRolesDropdown(discord.ui.RoleSelect[ColourRolesView]):
     def __init__(self) -> None:
         super().__init__(
             custom_id="colour_roles_dropdown",
@@ -23,7 +30,8 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
             max_values=1,
         )
 
-    async def callback(self, interaction: discord.Interaction[AluBot]):
+    @override
+    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
         if not len(self.values):
             e = discord.Embed()
             e.description = f"You've selected zero roles and thus I did nothing {const.Emote.peepoComfy}"
@@ -64,14 +72,8 @@ class ColourRolesDropdown(discord.ui.RoleSelect):
                     e.description = f"Added {role.mention} colour role!"
                     await interaction.response.send_message(embed=e, ephemeral=True)
             else:
-                return interaction.response.send_message("Something went wrong...", ephemeral=True)
-
-
-class ColourRolesView(discord.ui.View):
-    def __init__(self) -> None:
-        super().__init__(timeout=None)
-        # Adds the dropdown to our view object.
-        self.add_item(ColourRolesDropdown())
+                await interaction.response.send_message("Something went wrong...", ephemeral=True)
+                return
 
 
 class ColourRoles(CommunityCog):

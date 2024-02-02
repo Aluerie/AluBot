@@ -5,9 +5,12 @@ import platform
 from contextlib import contextmanager
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ClassVar, override
 
 import discord
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 __all__ = ("setup_logging",)
 
@@ -23,7 +26,7 @@ ASCII_STARTING_UP_ART = r"""
 
 
 @contextmanager
-def setup_logging(test: bool):
+def setup_logging(test: bool) -> Generator[Any, Any, Any]:
     log = logging.getLogger()
     log.setLevel(logging.INFO)
 
@@ -69,15 +72,15 @@ class MyColourFormatter(logging.Formatter):
     # 100-107 are the same as the bright ones but for the background.
     # 1 means bold, 2 means dim, 0 means reset, and 4 means underline.
 
-    LEVEL_COLOURS = [
+    LEVEL_COLOURS = (
         (logging.DEBUG, "\x1b[40;1m"),
         (logging.INFO, "\x1b[34;1m"),
         (logging.WARNING, "\x1b[33;1m"),
         (logging.ERROR, "\x1b[31m"),
         (logging.CRITICAL, "\x1b[41m"),
-    ]
+    )
 
-    FORMATS = {
+    FORMATS: ClassVar[dict[int, logging.Formatter]] = {
         level: logging.Formatter(
             f"\x1b[37;1m%(asctime)s\x1b[0m | {colour}%(levelname)-7s\x1b[0m | "
             f"\x1b[35m%(name)-30s\x1b[0m | %(lineno)-4d | %(funcName)-30s | %(message)s",
@@ -86,7 +89,8 @@ class MyColourFormatter(logging.Formatter):
         for level, colour in LEVEL_COLOURS
     }
 
-    def format(self, record):
+    @override
+    def format(self, record: logging.LogRecord) -> str:
         formatter = self.FORMATS.get(record.levelno)
         if formatter is None:
             formatter = self.FORMATS[logging.DEBUG]
@@ -103,7 +107,7 @@ class MyColourFormatter(logging.Formatter):
         return output
 
 
-def get_log_fmt(handler: logging.Handler):
+def get_log_fmt(handler: logging.Handler) -> logging.Formatter:
     if (
         isinstance(handler, logging.StreamHandler)
         and discord.utils.stream_supports_colour(handler.stream)

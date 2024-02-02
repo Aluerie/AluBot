@@ -27,15 +27,15 @@ def hybrid_has_permissions(**perms: bool) -> Callable[[T], T]:
     return decorator
 
 
-def is_manager():
+def is_manager() -> Callable[[T], T]:
     return hybrid_has_permissions(manage_guild=True)
 
 
-def is_mod():
+def is_mod() -> Callable[[T], T]:
     return hybrid_has_permissions(ban_members=True, manage_messages=True)
 
 
-def is_admin():
+def is_admin() -> Callable[[T], T]:
     return hybrid_has_permissions(administrator=True)
 
 
@@ -45,7 +45,7 @@ def is_admin():
 def is_in_guilds(
     *guild_ids: int,
     error_text: str = "Sorry! This command is not usable outside of specific servers.",
-):
+) -> Callable[[T], T]:
     def predicate(ctx: AluContext) -> bool:
         if ctx.guild and ctx.guild.id in guild_ids:
             return True
@@ -60,19 +60,19 @@ def is_in_guilds(
     return decorator
 
 
-def is_my_guild():
+def is_my_guild() -> Callable[[T], T]:
     return is_in_guilds(*const.MY_GUILDS)
 
 
-def is_community():
+def is_community() -> Callable[[T], T]:
     return is_in_guilds(const.Guild.community)
 
 
-def is_hideout():
+def is_hideout() -> Callable[[T], T]:
     return is_in_guilds(const.Guild.hideout)
 
 
-def is_premium_guild():
+def is_premium_guild() -> Callable[[T], T]:
     # async def predicate(ctx: AluContext) -> bool:
     #     """only premium servers"""
     #     if not ctx.guild:
@@ -101,7 +101,7 @@ def is_premium_guild():
     return is_in_guilds(*const.PREMIUM_GUILDS)
 
 
-def is_premium_guild_manager():
+def is_premium_guild_manager() -> Callable[[T], T]:
     def decorator(func: T) -> T:
         is_premium_guild()(func)
         commands.has_permissions(manage_guild=True)(func)

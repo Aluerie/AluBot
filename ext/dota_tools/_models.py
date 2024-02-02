@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import matplotlib.colors as mcolors
 import numpy as np
@@ -43,7 +43,7 @@ class MatchHistoryData:
         self.role = role_dict[lane_selection_flags]
         self.pool = pool
 
-        def winloss():
+        def winloss() -> bool | None | Literal[-1]:
             # https://github.com/ValvePython/dota2/blob/3ca4c43331d8bb946145ffbf92130f52e8eb024a/protobufs/dota_shared_enums.proto#L360
             if match_outcome > 60:
                 return -1

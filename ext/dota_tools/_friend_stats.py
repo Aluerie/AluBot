@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 
 from config import DOTA_FRIEND_ID
-from ext.fpc_notifications.dota._models import Match
+from ext.fpc.dota._models import MatchToSend
 from utils import checks, const
 from utils.dota import hero
 from utils.formats import indent
@@ -59,7 +59,7 @@ def get_match_type_name(lobby_type, game_mode):
         return f"{lobby_type_dict.get(lobby_type)}-{game_mode_dict.get(game_mode)}"
 
 
-def try_get_friend_stats(bot, start_at_match_id=0, matches_requested=20):
+def try_get_friend_stats(bot: AluBot, start_at_match_id: int = 0, matches_requested: int = 20):
     log.debug("try_get_friend_stats dota2info")
     global send_matches
     bot.steam_dota_login()
@@ -412,8 +412,8 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
         fig = plt.figure(figsize=(10, 12), dpi=300, constrained_layout=True)
         gs = fig.add_gridspec(nrows=7, ncols=10)
 
-        axText = fig.add_subplot(gs[0, :])
-        axText.annotate(
+        ax_text = fig.add_subplot(gs[0, :])
+        ax_text.annotate(
             "Aluerie's ranked grind",
             (0.5, 0.5),
             xycoords="axes fraction",
@@ -422,9 +422,9 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
             fontsize=23,
             fontweight="black",
         )
-        axText.get_xaxis().set_visible(False)
-        axText.get_yaxis().set_visible(False)
-        axText = fancy_ax(axText)
+        ax_text.get_xaxis().set_visible(False)
+        ax_text.get_yaxis().set_visible(False)
+        ax_text = fancy_ax(ax_text)
 
         ax = fig.add_subplot(gs[2:5, 0:10])
         gradient_fill(
@@ -460,21 +460,21 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
 
         for i, (k, v) in enumerate(data_info.items(), start=0):
             left, right = i * 2, i * 2 + 2
-            axRain = fig.add_subplot(gs[1, left:right], ylim=(-30, 30))
-            axRain.set_title(f"{k}", x=0.5, y=0.6)
-            axRain.annotate(
+            ax_rain = fig.add_subplot(gs[1, left:right], ylim=(-30, 30))
+            ax_rain.set_title(f"{k}", x=0.5, y=0.6)
+            ax_rain.annotate(
                 f"{v}", (0.5, 0.4), xycoords="axes fraction", va="center", ha="center", fontsize=20, fontweight="black"
             )
-            axRain.get_xaxis().set_visible(False)
-            axRain.get_yaxis().set_visible(False)
-            axRain = fancy_ax(axRain)
+            ax_rain.get_xaxis().set_visible(False)
+            ax_rain.get_yaxis().set_visible(False)
+            ax_rain = fancy_ax(ax_rain)
 
         query = "SELECT * FROM dotahistory ORDER BY id DESC LIMIT 1"
         last_match = await self.bot.pool.fetchrow(query)
 
-        axRain = fig.add_subplot(gs[1, 8:10], ylim=(-30, 30))
-        axRain.set_title("Last Match", x=0.5, y=0.6)
-        axRain.annotate(
+        ax_rain = fig.add_subplot(gs[1, 8:10], ylim=(-30, 30))
+        ax_rain.set_title("Last Match", x=0.5, y=0.6)
+        ax_rain.annotate(
             "Win" if last_match["winloss"] else "Loss",
             (0.5, 0.5),
             xycoords="axes fraction",
@@ -483,7 +483,7 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
             fontsize=20,
             fontweight="black",
         )
-        axRain.annotate(
+        ax_rain.annotate(
             last_match["dtime"].strftime("%m/%d, %H:%M"),
             (0.5, 0.2),
             xycoords="axes fraction",
@@ -491,13 +491,13 @@ class GamerStats(commands.Cog, name="Stalk Aluerie's Gamer Stats"):
             ha="center",
             fontsize=12,
         )
-        axRain = fancy_ax(axRain)
+        ax_rain = fancy_ax(ax_rain)
         hero_icon = await self.bot.transposer.url_to_image(await hero.img_by_id(last_match["hero_id"]))
         hero_icon.putalpha(200)
 
-        axRain.imshow(hero_icon, extent=[-30, 30, -20, 20], aspect="auto")
-        axRain.get_xaxis().set_visible(False)
-        axRain.get_yaxis().set_visible(False)
+        ax_rain.imshow(hero_icon, extent=(-30, 30, -20, 20), aspect="auto")
+        ax_rain.get_xaxis().set_visible(False)
+        ax_rain.get_yaxis().set_visible(False)
         fig.patch.set_linewidth(4)
         fig.patch.set_edgecolor(str(const.Colour.blueviolet))
         await ctx.reply(file=self.bot.transposer.plot_to_file(fig, filename="mmr.png"))

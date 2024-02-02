@@ -412,3 +412,34 @@ class ODotaConstantsJson:
         },
     )
     HeroAbilitiesData = dict[str, HeroAbilities]
+
+    # get items
+    ItemAttrib = TypedDict(
+        "ItemAttrib",
+        {
+            "key": str,
+            "header": str,
+            "value": str,
+            "generated": NotRequired[bool],
+        },
+    )
+    Item = TypedDict(
+        "Item",
+        {
+            "hint": list[str],
+            "id": int,
+            "img": str,
+            "dname": str,
+            "qual": str,
+            "cost": int,
+            "notes": str,
+            "attrib": list[ItemAttrib],
+            "mc": Literal[False] | int,
+            "cd": float,
+            "lore": str,
+            "components": list[str],
+            "created": bool,
+            "charges": bool,
+        },
+    )
+    Items = dict[str, Item]

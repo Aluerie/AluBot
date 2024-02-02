@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, override
 
 import discord
 
@@ -14,6 +14,7 @@ T = TypeVar("T")
 
 
 class SnowflakeEnum(IntEnum):
+    @override
     def __str__(self) -> str:
         return self.mention
 
@@ -24,18 +25,21 @@ class SnowflakeEnum(IntEnum):
 
 class ChannelEnum(SnowflakeEnum):
     @property
+    @override
     def mention(self) -> str:
         return f"<#{self.value}>"
 
 
 class RoleEnum(SnowflakeEnum):
     @property
+    @override
     def mention(self) -> str:
         return f"<@&{self.value}>"
 
 
 class UserEnum(SnowflakeEnum):
     @property
+    @override
     def mention(self) -> str:
         return f"<@{self.value}>"
 
@@ -58,10 +62,10 @@ PREMIUM_GUILDS = [Guild.community, Guild.hideout, Guild.stone]
 
 
 class EmoteGuilds(CONSTANTS):
-    DOTA = [1123282491294359563, 1123897964700643399, 1123898231198339083, 1123898374387662909]
-    LOL = [1123898479308185691, 1123898578843205692, 1123899243304861718, 1123899449857548408]
-    EMOTE = [1123901376435589173, 1123901447277379644, 1123901514289774632, 1123901546409762896]
-    BRAND = [1125050799572131982, 1125050890777268355]
+    DOTA = (1123282491294359563, 1123897964700643399, 1123898231198339083, 1123898374387662909)
+    LOL = (1123898479308185691, 1123898578843205692, 1123899243304861718, 1123899449857548408)
+    EMOTE = (1123901376435589173, 1123901447277379644, 1123901514289774632, 1123901546409762896)
+    BRAND = (1125050799572131982, 1125050890777268355)
 
 
 class Channel(ChannelEnum):
@@ -189,6 +193,7 @@ class SavedGuild:
         self.bot: AluBot = bot
         self.id: int = guild_id
 
+    @override
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id}>"
 

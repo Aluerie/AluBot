@@ -74,10 +74,12 @@ class AluView(discord.ui.View):
                 item.disabled = True  # type: ignore
             await self.message.edit(view=self)
 
-    async def on_error(self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[Any]) -> None:
+    async def on_error(
+        self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[Any]
+    ) -> None:
         """My own Error Handler for Views"""
 
-        if isinstance(error, errors.AluBotException):
+        if isinstance(error, errors.AluBotError):
             desc = str(error)
 
         else:

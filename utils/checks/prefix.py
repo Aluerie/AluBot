@@ -7,7 +7,9 @@ from discord.ext import commands
 from .. import const
 
 if TYPE_CHECKING:
-    from .. import AluGuildContext
+    from collections.abc import Callable
+
+    from .. import AluContext
 
 T = TypeVar("T")
 
@@ -15,8 +17,8 @@ T = TypeVar("T")
 def is_in_guilds(
     *guild_ids: int,
     explanation: str = "Sorry! This command is not usable outside of specific servers",
-):
-    def predicate(ctx: AluGuildContext) -> bool:
+) -> Callable[[T], T]:
+    def predicate(ctx: AluContext) -> bool:
         guild = ctx.guild
         if guild is not None and guild.id in guild_ids:
             return True
@@ -30,11 +32,11 @@ def is_in_guilds(
     return decorator
 
 
-def is_my_guild():
+def is_my_guild() -> Callable[[T], T]:
     return is_in_guilds(*const.MY_GUILDS)
 
 
-def is_community():
+def is_community() -> Callable[[T], T]:
     return is_in_guilds(
         const.Guild.community,
         explanation="Sorry! This command is not usable outside of Aluerie's Community Server.",

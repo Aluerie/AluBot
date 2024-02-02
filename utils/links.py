@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
+import aiohttp
 import discord
-from aiohttp.client_exceptions import ClientConnectorError
 
 from .const import Regex
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from discord import Embed
 
 
-async def replace_tco_links(session, embed: Embed) -> Embed:
+async def replace_tco_links(session: aiohttp.ClientSession, embed: Embed) -> Embed:
     text = embed.description
     if text:
         url_array = re.findall(Regex.URL, str(text))
@@ -22,7 +22,7 @@ async def replace_tco_links(session, embed: Embed) -> Embed:
                 async with session.get(url) as resp:
                     link_for_embed = f"[Redirect link]({resp.url})"
                     text = text.replace(url, link_for_embed)
-        except ClientConnectorError:
+        except aiohttp.ClientConnectorError:
             pass
         embed.description = text
     return embed
@@ -34,7 +34,7 @@ def move_link_to_title(embed: Embed) -> Embed:
     return embed
 
 
-def get_links_from_str(string):
+def get_links_from_str(string: str) -> list[str]:
     # url_array = re.findall(REGEX_URL_LINK, str(string))
     # return [item for item in url_array if 'twitter' in item]
     return re.findall(Regex.URL, str(string))

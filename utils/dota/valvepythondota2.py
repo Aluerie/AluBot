@@ -43,7 +43,7 @@ class Dota2Client(Dota2Client_):
         self.deaths: int = 0
 
     async def login(self) -> None:
-        log.debug(f"dota2info: client.connected {self.steam.connected}")
+        log.debug("dota2info: client.connected %s", self.steam.connected)
         if self._bot.test:
             username, password = (config.TEST_STEAM_USERNAME, config.TEST_STEAM_PASSWORD)
         else:
@@ -100,7 +100,7 @@ class LiveMatch:
         self.players = [LiveMatchPlayer(id=p.account_id, hero=Hero(id=p.hero_id)) for p in sorted_players]
 
     @property
-    def heroes(self):
+    def heroes(self) -> list[Hero]:
         return [p.hero for p in self.players]
 
 

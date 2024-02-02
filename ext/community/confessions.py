@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Self, override
 
 import discord
 from discord.ext import commands
@@ -19,7 +19,7 @@ class ButtonOnCooldown(commands.CommandError):
         self.retry_after: float = retry_after
 
 
-def key(interaction: discord.Interaction):
+def key(interaction: discord.Interaction) -> discord.User | discord.Member:
     return interaction.user
 
 
@@ -28,7 +28,7 @@ cd = commands.CooldownMapping.from_cooldown(1.0, 30.0 * 60, key)
 
 
 class ConfModal(discord.ui.Modal):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
     conf = discord.ui.TextInput(
@@ -38,6 +38,7 @@ class ConfModal(discord.ui.Modal):
         max_length=4000,
     )
 
+    @override
     async def on_submit(self, interaction: discord.Interaction) -> None:
         embed = discord.Embed(title=self.title, colour=Colour.blueviolet, description=self.conf.value)
         if self.title == "Non-anonymous confession":
@@ -59,6 +60,7 @@ class ConfView(discord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None)
 
+    @override
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         # retry_after = self.cd.update_rate_limit(ntr) # returns retry_after which is nice
         bucket = cd.get_bucket(interaction)
@@ -66,7 +68,10 @@ class ConfView(discord.ui.View):
             raise ButtonOnCooldown(retry_after)
         return True
 
-    async def on_error(self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item) -> None:
+    @override
+    async def on_error(
+        self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[Self]
+    ) -> None:
         if isinstance(error, ButtonOnCooldown):
             e = discord.Embed(colour=Colour.maroon).set_author(name=error.__class__.__name__)
             e.description = (
@@ -83,7 +88,7 @@ class ConfView(discord.ui.View):
         style=discord.ButtonStyle.primary,
         emoji=Emote.bubuChrist,
     )
-    async def button0_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+    async def button0_callback(self, interaction: discord.Interaction, button: discord.ui.Button[Self]) -> None:
         await interaction.response.send_modal(ConfModal(title=button.label))
 
     @discord.ui.button(
@@ -92,7 +97,7 @@ class ConfView(discord.ui.View):
         style=discord.ButtonStyle.primary,
         emoji=Emote.PepoBeliever,
     )
-    async def button1_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+    async def button1_callback(self, interaction: discord.Interaction, button: discord.ui.Button[Self]) -> None:
         await interaction.response.send_modal(ConfModal(title=button.label))
 
 

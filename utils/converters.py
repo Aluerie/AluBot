@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import inspect
 import re
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Self, override
 
 import discord
 from discord import app_commands
@@ -13,10 +13,12 @@ from PIL import ImageColor
 from utils import fuzzy
 
 from . import const
-from .bases import AluBotException
+from .bases import AluBotError
 from .timezones import TimeZone, TransformTimeZone
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from bot import AluBot
 
     from .bases import AluContext
@@ -106,7 +108,7 @@ class Snowflake:
             raise commands.BadArgument(msg)
 
 
-class InvalidColour(AluBotException):
+class InvalidColour(AluBotError):  # noqa: N818
     """Exception for custom cases of AluColourConverter."""
 
     __slots__: tuple[str, ...] = ()
@@ -115,6 +117,7 @@ class InvalidColour(AluBotException):
 class AluColourConverter(commands.ColourConverter):  # , app_commands.Transformer):
     """Some super overloaded colour converted made for /colour command."""
 
+    @override
     async def convert(self, ctx: AluContext, argument: str) -> discord.Colour:
         # TODO: we will rename command: for below, probably so be careful.
         error_footer = f'\n\nTo see supported colour formats by the bot - use "{const.Slash.help}` command: colour`"'
@@ -138,18 +141,14 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
                     "MaterialUI Google Palette supports the following colour names:"
                     f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
                 )
-                raise InvalidColour(
-                    msg
-                )
+                raise InvalidColour(msg)
             except ValueError:
                 msg = (
                     "Provided shade value is incorrect.\n\n"
                     "MaterialUI Google Palette supports the following shades values:"
                     f'\n{", ".join(f"`{v}`" for v in const.MaterialPalette.shades)}{error_footer}'
                 )
-                raise InvalidColour(
-                    msg
-                )
+                raise InvalidColour(msg)
 
         # Material Accent Palette
         m = re.match(r"map\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", argument)
@@ -165,18 +164,14 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
                     "MaterialAccentUI Google Palette supports the following colour names:"
                     f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
                 )
-                raise InvalidColour(
-                    msg
-                )
+                raise InvalidColour(msg)
             except ValueError:
                 msg = (
                     "Provided shade value is incorrect.\n\n"
                     "MaterialAccentUI Google Palette supports the following shades values:"
                     f'\n{", ".join(f"`{v}`" for v in const.MaterialAccentPalette.shades)}{error_footer}'
                 )
-                raise InvalidColour(
-                    msg
-                )
+                raise InvalidColour(msg)
 
         # ImageColor
         try:
@@ -193,7 +188,7 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
             raise InvalidColour(msg)
 
     # async def transform(self, interaction: discord.Interaction, value: str):
-    #     return await self.convert(interaction, value)  # type: ignore
+    #     return await self.convert(interaction, value)  # type: ignored
     # # todo: do it properly (idk how but for now should be fine since super().convert does not use ctx)
 
     # async def autocomplete(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
@@ -203,8 +198,8 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
     #     ][:25]
 
 
-class MonthNumber(commands.Converter, app_commands.Transformer):
-    mapping: dict[str, int] = {
+class MonthNumber(commands.Converter[int], app_commands.Transformer):
+    mapping: Mapping[str, int] = {
         "January": 1,
         "February": 2,
         "March": 3,
@@ -231,13 +226,16 @@ class MonthNumber(commands.Converter, app_commands.Transformer):
             msg = f"Couldn't understand month spelling out of {argument!r}"
             raise commands.BadArgument(msg)
 
-    async def convert(self, _ctx: AluContext, argument: str) -> int:
+    @override
+    async def convert(self, ctx: AluContext, argument: str) -> int:
         return self.worker(argument)
 
-    async def transform(self, _interaction: discord.Interaction, value: str) -> int:
+    @override
+    async def transform(self, interaction: discord.Interaction, value: str) -> int:
         return self.worker(value)
 
-    async def autocomplete(self, _interaction: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice]:
+    @override
+    async def autocomplete(self, interaction: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice[str]]:
         month_names = self.mapping.keys() if not arg else fuzzy.finder(arg, self.mapping.keys())
         return [app_commands.Choice(name=name, value=name) for name in month_names]
 

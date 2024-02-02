@@ -56,9 +56,10 @@ class Dota2Client(Client):
         # kwargs
         args_str = ["```py"]
         for value in args:
-            args_str.append(f"{value!r}")
+            args_str.append(f"{value!r}")  # noqa: PERF401
         else:
             args_str.append("No args")
+        args_str.append("```")
         embed.add_field(name="Args", value="\n".join(args_str), inline=False)
 
         # kwargs
@@ -67,6 +68,7 @@ class Dota2Client(Client):
             kwargs_str.append(f"[{name}]: {value!r}")
         else:
             kwargs_str.append("No kwargs")
+        args_str.append("```")
         embed.add_field(name="Kwargs", value="\n".join(kwargs_str), inline=False)
 
         await self._bot.exc_manager.register_error(error, source=embed, where="Dota2Client")

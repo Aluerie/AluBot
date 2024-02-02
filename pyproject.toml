@@ -17,9 +17,12 @@ exclude = ["**/__pycache__"]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
 
 deprecateTypingAliases = true
-reportMissingTypeStubs = "none"                # a lot of libs don't have stubs
-reportPrivateUsage = "none"                    # it's my choice, reeee
-reportImplicitOverride = "warning"             # I love it
+reportMissingTypeStubs = "none"    # a lot of libs don't have stubs
+reportPrivateUsage = "none"        # it's my choice, reeee
+reportImplicitOverride = "warning" # I love it
+
+# Unnecessary
+reportUnnecessaryIsInstance = "none"           # I like raising the error if type is not it
 reportUnnecessaryTypeIgnoreComment = "warning" # why it's "none" by default, even for strict ?!
 
 # Unused stuff - yes, I write a lot of unused stuff **GIGACHAD music**

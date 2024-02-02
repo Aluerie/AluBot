@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, override
 
 import discord
 import parsedatetime as pdt
@@ -18,7 +18,7 @@ from dateutil.relativedelta import relativedelta
 from discord import app_commands
 from discord.ext import commands
 
-from .bases import AluBotException
+from .bases import AluBotError
 
 if TYPE_CHECKING:
     from .bases import AluContext
@@ -109,11 +109,12 @@ class FutureTime(Time):
             raise commands.BadArgument(msg)
 
 
-class BadTimeTransform(app_commands.AppCommandError, AluBotException):
+class BadTimeTransform(app_commands.AppCommandError, AluBotError):  # noqa: N818
     pass
 
 
 class TimeTransformer(app_commands.Transformer):
+    @override
     async def transform(self, interaction: discord.Interaction, value: str) -> datetime.datetime:
         # fix timezone thing
         # tzinfo = datetime.timezone.utc
@@ -148,6 +149,7 @@ class FriendlyTimeResult:
         self.dt = dt
         self.arg = ""
 
+    @override
     def __repr__(self) -> str:
         return f"<FriendlyTimeResult dt={self.dt} arg={self.arg}>"
 
@@ -189,6 +191,7 @@ class UserFriendlyTime(commands.Converter):
         self.converter: commands.Converter = converter  # type: ignore  # It doesn't understand this narrowing
         self.default: Any = default
 
+    @override
     async def convert(self, ctx: AluContext, argument: str) -> FriendlyTimeResult:
         calendar = HumanTime.calendar
         regex = ShortTime.compiled
@@ -250,9 +253,7 @@ class UserFriendlyTime(commands.Converter):
                 "must be either at the end or beginning of your input, "
                 "or I just flat out did not understand what you meant. Sorry."
             )
-            raise commands.BadArgument(
-                msg
-            )
+            raise commands.BadArgument(msg)
 
         if not status.hasTime:
             # replace it with the current time

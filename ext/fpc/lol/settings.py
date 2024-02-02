@@ -120,7 +120,7 @@ class LoLAccount(Account):
         }
 
 
-class LoLFPCSettings(BaseSettings):
+class Settings(BaseSettings):
     """Commands to set up fav champ + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \
@@ -347,4 +347,4 @@ class LoLFPCSettings(BaseSettings):
 
 
 async def setup(bot: AluBot) -> None:
-    await bot.add_cog(LoLFPCSettings(bot))
+    await bot.add_cog(Settings(bot))

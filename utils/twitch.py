@@ -106,6 +106,7 @@ class Streamer:
             else:
                 self.preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{user.name}-640x360.jpg"
 
+    @override
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.display_name} id={self.id} title={self.title}>"
 

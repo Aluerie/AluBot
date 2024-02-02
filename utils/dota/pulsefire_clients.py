@@ -188,6 +188,10 @@ class ODotaConstantsClient(BaseClient):
         # https://raw.githubusercontent.com/odota/dotaconstants/master/build/hero_abilities.json
         return await self.invoke("GET", "/hero_abilities.json")  # type: ignore
 
+    async def get_items(self) -> schemas.ODotaConstantsJson.Items:
+        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/items.json
+        return await self.invoke("GET", "/items.json")  # type: ignore
+
 
 class StratzAPIRateLimiter(DotaAPIsRateLimiter):
     @override

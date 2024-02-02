@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import colorsys
 import warnings
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any, override
 
 import discord
 from dateparser.search import search_dates
@@ -29,16 +29,18 @@ warnings.filterwarnings(
 class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
     """Commands to get some useful info"""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.ctx_menu_avatar = app_commands.ContextMenu(
             name="View User Avatar",
             callback=self.view_user_avatar,
         )
 
+    @override
     async def cog_load(self) -> None:
         self.bot.tree.add_command(self.ctx_menu_avatar)
 
+    @override
     async def cog_unload(self) -> None:
         c = self.ctx_menu_avatar
         self.bot.tree.remove_command(c.name, type=c.type)
@@ -53,17 +55,17 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
-        pdates = search_dates(message.content)
-        if pdates is None:
+        parsed_dates = search_dates(message.content)
+        if not parsed_dates:
             return
-        for pdate in pdates:
-            dt = pdate[1]
+        for date in parsed_dates:
+            dt = date[1]
             if dt.tzinfo is not None:
                 e = discord.Embed(colour=const.Colour.blueviolet)
                 utc_offset = o.seconds if (o := dt.utcoffset()) else 0
                 dst = d.seconds if (d := dt.dst()) else 0
                 e.description = (
-                    f'"{pdate[0]}" in your timezone:\n {formats.format_dt_tdR(dt)}\n'
+                    f'"{date[0]}" in your timezone:\n {formats.format_dt_tdR(dt)}\n'
                     f"{dt.tzname()} is GMT {utc_offset / 3600:+.1f}, dst: { dst / 3600:+.1f}"
                 )
                 await message.channel.send(embed=e)
@@ -75,7 +77,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         added_role = list(set(after.roles) - set(before.roles))
         removed_role = list(set(before.roles) - set(after.roles))
 
-        async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id) -> None:
+        async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id: int) -> None:
             if (added_role and added_role[0] == role) or (removed_role and removed_role[0] == role):
                 msg = channel.get_partial_message(msg_id)
                 e = discord.Embed(title=f"List of {role.name}", colour=const.Colour.blueviolet)
@@ -112,7 +114,9 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         usage="<formatted_colour_string>",
     )
     @app_commands.describe(colour="Colour in any of supported formats")
-    async def colour(self, ctx, *, colour: Annotated[discord.Colour, converters.AluColourConverter]) -> None:
+    async def colour(
+        self, ctx: AluContext, *, colour: Annotated[discord.Colour, converters.AluColourConverter]
+    ) -> None:
         """Get info about colour in specified <formatted_colour_string>
 
         The bot supports the following string formats:
@@ -130,7 +134,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         rgb = colour.to_rgb()
 
         img = Image.new("RGB", (300, 300), rgb)
-        file = ctx.bot.imgtools.img_to_file(img, filename="colour.png")
+        file = ctx.bot.transposer.image_to_file(img, filename="colour.png")
         e = discord.Embed(color=discord.Colour.from_rgb(*rgb), title="Colour info")
         e.description = (
             "Hex triplet: `#{:02x}{:02x}{:02x}`\n".format(*rgb)

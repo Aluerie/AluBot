@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from utils.const import Emote
 
 from .._base import EducationalCog
 from .dictionary import DictionaryCog
 from .translation import TranslateCog
+
+if TYPE_CHECKING:
+    from bot import AluBot
 
 
 class Languages(
@@ -14,5 +21,5 @@ class Languages(
     """Languages"""
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(Languages(bot))

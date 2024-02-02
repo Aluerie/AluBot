@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, override
+
 from utils import const
 
 from .notifications import DotaFPCNotifications
 from .settings import DotaFPCSettings
 from .twitch_check import DotaTwitchAccountCheck
+
+if TYPE_CHECKING:
+    from bot import AluBot
 
 
 class DotaFPC(
@@ -16,6 +23,7 @@ class DotaFPC(
     Dota 2 - __F__avourite __P__layer+__C__haracter combo notifications.
     """
 
+    @override
     async def cog_load(self) -> None:
         await self.bot.initialize_dota_pulsefire_clients()
         await self.bot.initialize_dota()
@@ -23,5 +31,5 @@ class DotaFPC(
         return await super().cog_load()
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(DotaFPC(bot))

@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import random
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
@@ -14,16 +14,18 @@ from utils import checks, const, webhook_mimicry
 from .._base import FunCog
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from utils import AluContext, AluGuildContext
 
 
 class Other(FunCog):
     @commands.hybrid_command()
-    async def coinflip(self, ctx: AluContext):
+    async def coinflip(self, ctx: AluContext) -> None:
         """Flip a coin: Heads or Tails?"""
 
         word = "Heads" if random.randint(0, 1) == 0 else "Tails"
-        return await ctx.reply(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
+        await ctx.reply(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
 
     @commands.Cog.listener("on_message")
     async def reply_non_command_mentions(self, message: discord.Message) -> None:
@@ -105,7 +107,7 @@ class Other(FunCog):
             pass
 
     @staticmethod
-    def fancify_text(text: str, *, style: dict[str, str]):
+    def fancify_text(text: str, *, style: dict[str, str]) -> str:
         patterns = [
             const.Regex.USER_MENTION,
             const.Regex.ROLE_MENTION,
@@ -118,7 +120,10 @@ class Other(FunCog):
 
         style = style | {k: k for k in mentions_or_emotes}
         pattern = "|".join(re.escape(k) for k in style)
-        match_repl = lambda c: (style.get(c.group(0)) or style.get(c.group(0).lower()) or c)
+
+        match_repl: Callable[[re.Match[str]], str | re.Match[str]] = lambda c: (
+            style.get(c.group(0)) or style.get(c.group(0).lower()) or c
+        )
         return re.sub(pattern, match_repl, text)  # type: ignore # i dont understand regex types x_x
 
     async def send_fancy_text(self, ctx: AluContext, answer: str) -> None:
@@ -159,10 +164,10 @@ class Other(FunCog):
     @commands.hybrid_command()
     @app_commands.describe(text="Text to convert into fancy text")
     async def fancify(self, ctx: AluContext, *, text: str) -> None:  # cSpell:disable #fmt:off # black meeses it up x_x
-        """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼."""
+        """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼."""  # noqa: RUF002
         # cSpell:enable #fmt:on
 
-        style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy 𝓐-𝓩
+        style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy font
             chr(0x00000061 + x): chr(0x0001D4EA + x)
             for x in range(26)  # a-z into fancy a-z (Black messes it up)
         }

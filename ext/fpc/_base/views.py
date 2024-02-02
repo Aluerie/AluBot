@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Self, TypedDict, override
 
 import discord
 from discord.ext import menus
@@ -33,6 +33,7 @@ class FPCView(AluView):
         )
         self.cog: BaseSettings = cog
 
+    @override
     async def on_timeout(self) -> None:
         await super().on_timeout()
         self.cog.setup_messages_cache.pop(self.message.id, None)
@@ -52,7 +53,9 @@ class SetupChannel(FPCView):
         placeholder="\N{BIRD} Select a new FPC notifications Channel",
         row=0,
     )
-    async def set_channel(self, interaction: discord.Interaction[AluBot], select: discord.ui.ChannelSelect):
+    async def set_channel(
+        self, interaction: discord.Interaction[AluBot], select: discord.ui.ChannelSelect[Self]
+    ) -> None:
         chosen_channel = select.values[0]  # doesn't have all data thus we need to resolve
         channel = chosen_channel.resolve() or await chosen_channel.fetch()
 
@@ -62,18 +65,14 @@ class SetupChannel(FPCView):
                 f"You can't select a channel of this type for {self.cog.game_display_name} FPC channel."
                 "Please, select normal text channel."
             )
-            raise errors.ErroneousUsage(
-                msg
-            )
+            raise errors.ErroneousUsage(msg)
 
         if not channel.permissions_for(channel.guild.me).send_messages:
             msg = (
                 "I do not have permission to `send_messages` in that channel. "
                 "Please, select a channel where I can do that so I'm able to send notifications in future."
             )
-            raise errors.ErroneousUsage(
-                msg
-            )
+            raise errors.ErroneousUsage(msg)
 
         query = f"""
             INSERT INTO {self.cog.prefix}_settings (guild_id, guild_name, channel_id)
@@ -87,7 +86,7 @@ class SetupChannel(FPCView):
             colour=self.cog.colour,
             description=f"From now on I will send {self.cog.game_display_name} FPC Notifications to {channel.mention}.",
         )
-        return await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
 
 class SetupMisc(FPCView):
@@ -126,15 +125,17 @@ class SetupMisc(FPCView):
         await interaction.response.edit_message(embed=self.embed)
 
     @discord.ui.button(emoji="\N{BLACK SQUARE FOR STOP}", label='Toggle "Receive Notifications Setting"', row=0)
-    async def toggle_enable(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button) -> None:
+    async def toggle_enable(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button[Self]) -> None:
         await self.toggle_worker(interaction, "enabled", 0)
 
     @discord.ui.button(emoji="\N{MICROSCOPE}", label='Toggle "Show Post-Match Results Setting"', row=1)
-    async def toggle_spoil(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button) -> None:
+    async def toggle_spoil(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button[Self]) -> None:
         await self.toggle_worker(interaction, "spoil", 1)
 
     @discord.ui.button(emoji="\N{CLAPPER BOARD}", label='Toggle "Only Twitch Live Players Setting"', row=2)
-    async def toggle_twitch_live_only(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button) -> None:
+    async def toggle_twitch_live_only(
+        self, interaction: discord.Interaction[AluBot], _: discord.ui.Button[Self]
+    ) -> None:
         await self.toggle_worker(interaction, "twitch_live_only", 2)
 
     @discord.ui.button(
@@ -143,7 +144,7 @@ class SetupMisc(FPCView):
         emoji="\N{WASTEBASKET}",
         row=3,
     )
-    async def delete_data(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button) -> None:
+    async def delete_data(self, interaction: discord.Interaction[AluBot], _: discord.ui.Button[Self]) -> None:
         # Confirmation
         confirm_embed = (
             discord.Embed(
@@ -165,7 +166,7 @@ class SetupMisc(FPCView):
             )
         )
 
-        if not interaction.client.disambiguator.confirm(interaction, confirm_embed):
+        if not await interaction.client.disambiguator.confirm(interaction, confirm_embed):
             return
 
         # Disable all the active setup views so the user can't mess up the database
@@ -189,115 +190,17 @@ class SetupMisc(FPCView):
         await interaction.followup.send(embed=response_embed)
 
 
-class AddRemoveButton(discord.ui.Button):
-    """Green/Black Buttons to Remove from/Add to favourite list
-    for `/{game} setup players/{characters}` command's view.
-    """
-
-    def __init__(
-        self,
-        label: str,
-        is_favourite: bool,
-        object_id: int,
-        menu: FPCSetupPlayersCharactersPaginator,
-        emoji: str | None = None,
-    ) -> None:
-        super().__init__(
-            emoji=emoji,
-            style=discord.ButtonStyle.green if is_favourite else discord.ButtonStyle.gray,
-            label=label,
-        )
-        self.is_favourite: bool = is_favourite
-        self.object_id: int = object_id
-        self.menu: FPCSetupPlayersCharactersPaginator = menu
-
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
-        assert interaction.guild
-
-        if self.is_favourite:
-            # delete from the favourites list
-            query = f"DELETE FROM {self.menu.table_name} WHERE guild_id=$1 AND {self.menu.id_column_name}=$2"
-        else:
-            # add to the favourites list
-            query = f"""
-                INSERT INTO {self.menu.table_name}
-                (guild_id, {self.menu.id_column_name})
-                VALUES ($1, $2)
-                ON CONFLICT DO NOTHING
-            """
-        await interaction.client.pool.execute(query, interaction.guild.id, self.object_id)
-
-        # Edit the message with buttons
-        self.is_favourite = not self.is_favourite
-        self.style = discord.ButtonStyle.green if self.is_favourite else discord.ButtonStyle.gray
-        await interaction.response.edit_message(view=self.menu)
-
-
-class AccountListButton(discord.ui.Button):
-    """5th Button to Show account list for `/{game} setup players` command's view."""
-
-    def __init__(self, entries: list[tuple[int, str]], menu: FPCSetupPlayersCharactersPaginator) -> None:
-        super().__init__(
-            style=discord.ButtonStyle.blurple,
-            label="\N{PENCIL}",
-        )
-        self.entries: list[tuple[int, str]] = entries
-        self.menu: FPCSetupPlayersCharactersPaginator = menu
-        self.field_name: str = "\N{PENCIL} List of accounts of players shown on the page"
-        self.field_value: str = "Show list of accounts with links to their profiles and extra information."
-
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
-        assert interaction.guild
-
-        columns = "display_name, twitch_id, " + ", ".join(self.menu.cog.account_table_columns)
-
-        query = f"""
-            SELECT {columns}
-            FROM {self.menu.cog.prefix}_players p
-            JOIN {self.menu.cog.prefix}_accounts a
-            ON p.player_id = a.player_id
-            ORDER BY display_name
-        """
-        rows: list[AccountListButtonQueryRow] = await interaction.client.pool.fetch(query) or []
-
-        player_dict: dict[str, AccountListButtonPlayerSortDict] = {}
-        for row in rows:
-            if row["display_name"] not in player_dict:
-                player_dict[row["display_name"]] = {
-                    "name": self.menu.cog.account_cls.static_player_embed_name(
-                        row["display_name"], bool(row["twitch_id"])
-                    ),
-                    "accounts": [],
-                }
-
-            account_kwargs = {column: row[column] for column in self.menu.cog.account_table_columns}
-            player_dict[row["display_name"]]["accounts"].append(
-                self.menu.cog.account_cls.static_account_name_with_links(**account_kwargs)
-            )
-
-        embed = discord.Embed(
-            colour=self.menu.cog.colour,
-            title="List of accounts for players shown above.",
-            description="\n".join(
-                f"{player['name']}\n{chr(10).join(player['accounts'])}" for player in player_dict.values()
-            ),
-        ).set_footer(
-            text=f"to request a new account/player to be added - use `/{self.menu.cog.prefix} request player` command",
-            icon_url=self.menu.cog.game_icon_url,
-        )
-
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-
-
 class FPCSetupPlayersCharactersPageSource(menus.ListPageSource):
     """Page source for both commands `/{game} setup players/champions`."""
 
     def __init__(self, data: list[tuple[int, str]]) -> None:
         super().__init__(entries=data, per_page=20)
 
-    async def format_page(self, menu: FPCSetupPlayersCharactersPaginator, entries: list[tuple[int, str]]):
-        """
-        Create a page for `/{game} setup {characters/players}` command.
+    @override
+    async def format_page(
+        self, menu: FPCSetupPlayersCharactersPaginator, entries: list[tuple[int, str]]
+    ) -> discord.Embed:
+        """Create a page for `/{game} setup {characters/players}` command.
 
         This gives
          * Embed with explanation text
@@ -411,16 +314,17 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
 
         self.table_name: str = f"{cog.prefix}_favourite_{table_object_name}s "
         self.id_column_name: str = f"{table_object_name}_id"
-        self.special_button_cls: Optional[type[AccountListButton]] = special_button_cls
+        self.special_button_cls: type[AccountListButton] | None = special_button_cls
         self.get_emoji_name: Callable[[int], Awaitable[str]] | None = get_emoji_name
 
+    @override
     async def on_timeout(self) -> None:
         await super().on_timeout()
         self.cog.setup_messages_cache.pop(self.message.id, None)
         return
 
     @discord.ui.button(label="\N{PAGE WITH CURL}", style=discord.ButtonStyle.blurple)
-    async def object_list(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+    async def object_list(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
         """Show favourite object list."""
         assert interaction.guild
         embed = await self.get_object_list_embed(interaction.guild.id)
@@ -482,69 +386,109 @@ class FPCSetupCharactersPaginator(FPCSetupPlayersCharactersPaginator):
         )
 
 
-### DATABASE REMOVE VIEWS
-
-
-class RemoveAllAccountsButton(discord.ui.Button):
-    """Button to remove all specific player's accounts in  `/database {game} remove` command's view."""
-
-    def __init__(self, cog: BaseSettings, player_id: int, player_name: str) -> None:
-        super().__init__(
-            style=discord.ButtonStyle.red,
-            label=f"Remove all {player_name}'s accounts.",
-            emoji="\N{POUTING FACE}",
-        )
-        self.cog: BaseSettings = cog
-        self.player_id: int = player_id
-        self.player_name: str = player_name
-
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
-        query = f"DELETE FROM {self.cog.prefix}_players WHERE player_id=$1"
-        result: str = await interaction.client.pool.execute(query, self.player_id)
-
-        if result != "DELETE 1":
-            msg = "Error deleting this player from the database."
-            raise errors.BadArgument(msg)
-
-        embed = discord.Embed(colour=self.cog.colour).add_field(
-            name="Succesfully removed a player from the database",
-            value=self.player_name,
-        )
-        await interaction.response.send_message(embed=embed)
-
-
-class RemoveAccountButton(discord.ui.Button):
-    """Button to remove a specific player's account in  `/database {game} remove` command's view."""
+class AddRemoveButton(discord.ui.Button[FPCSetupPlayersCharactersPaginator]):
+    """Green/Black Buttons to Remove from/Add to favourite list
+    for `/{game} setup players/{characters}` command's view.
+    """
 
     def __init__(
         self,
-        emoji: str,
-        cog: BaseSettings,
-        account_id: AccountIDType,
-        account_name: str,
-        account_id_column: str,
+        label: str,
+        is_favourite: bool,
+        object_id: int,
+        menu: FPCSetupPlayersCharactersPaginator,
+        emoji: str | None = None,
     ) -> None:
         super().__init__(
-            style=discord.ButtonStyle.blurple,
-            label=account_name,
             emoji=emoji,
+            style=discord.ButtonStyle.green if is_favourite else discord.ButtonStyle.gray,
+            label=label,
         )
-        self.cog: BaseSettings = cog
-        self.account_id: AccountIDType = account_id
-        self.account_id_column: str = account_id_column
+        self.is_favourite: bool = is_favourite
+        self.object_id: int = object_id
+        self.menu: FPCSetupPlayersCharactersPaginator = menu
 
+    @override
     async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
-        query = f"DELETE FROM {self.cog.prefix}_accounts WHERE {self.account_id_column} = $1"
-        result: str = await interaction.client.pool.execute(query, self.account_id)
-        if result != "DELETE 1":
-            msg = "Error deleting this account from the database."
-            raise errors.BadArgument(msg)
+        assert interaction.guild
 
-        embed = discord.Embed(colour=self.cog.colour).add_field(
-            name="Succesfully removed an account from the database",
-            value=self.label,
+        if self.is_favourite:
+            # delete from the favourites list
+            query = f"DELETE FROM {self.menu.table_name} WHERE guild_id=$1 AND {self.menu.id_column_name}=$2"
+        else:
+            # add to the favourites list
+            query = f"""
+                INSERT INTO {self.menu.table_name}
+                (guild_id, {self.menu.id_column_name})
+                VALUES ($1, $2)
+                ON CONFLICT DO NOTHING
+            """
+        await interaction.client.pool.execute(query, interaction.guild.id, self.object_id)
+
+        # Edit the message with buttons
+        self.is_favourite = not self.is_favourite
+        self.style = discord.ButtonStyle.green if self.is_favourite else discord.ButtonStyle.gray
+        await interaction.response.edit_message(view=self.menu)
+
+
+class AccountListButton(discord.ui.Button[FPCSetupPlayersPaginator]):
+    """5th Button to Show account list for `/{game} setup players` command's view."""
+
+    def __init__(self, entries: list[tuple[int, str]], menu: FPCSetupPlayersCharactersPaginator) -> None:
+        super().__init__(
+            style=discord.ButtonStyle.blurple,
+            label="\N{PENCIL}",
         )
-        await interaction.response.send_message(embed=embed)
+        self.entries: list[tuple[int, str]] = entries
+        self.menu: FPCSetupPlayersCharactersPaginator = menu
+        self.field_name: str = "\N{PENCIL} List of accounts of players shown on the page"
+        self.field_value: str = "Show list of accounts with links to their profiles and extra information."
+
+    @override
+    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+        assert interaction.guild
+
+        columns = "display_name, twitch_id, " + ", ".join(self.menu.cog.account_table_columns)
+
+        query = f"""
+            SELECT {columns}
+            FROM {self.menu.cog.prefix}_players p
+            JOIN {self.menu.cog.prefix}_accounts a
+            ON p.player_id = a.player_id
+            ORDER BY display_name
+        """
+        rows: list[AccountListButtonQueryRow] = await interaction.client.pool.fetch(query) or []
+
+        player_dict: dict[str, AccountListButtonPlayerSortDict] = {}
+        for row in rows:
+            if row["display_name"] not in player_dict:
+                player_dict[row["display_name"]] = {
+                    "name": self.menu.cog.account_cls.static_player_embed_name(
+                        row["display_name"], bool(row["twitch_id"])
+                    ),
+                    "accounts": [],
+                }
+
+            account_kwargs = {column: row[column] for column in self.menu.cog.account_table_columns}
+            player_dict[row["display_name"]]["accounts"].append(
+                self.menu.cog.account_cls.static_account_name_with_links(**account_kwargs)
+            )
+
+        embed = discord.Embed(
+            colour=self.menu.cog.colour,
+            title="List of accounts for players shown above.",
+            description="\n".join(
+                f"{player['name']}\n{chr(10).join(player['accounts'])}" for player in player_dict.values()
+            ),
+        ).set_footer(
+            text=f"to request a new account/player to be added - use `/{self.menu.cog.prefix} request player` command",
+            icon_url=self.menu.cog.game_icon_url,
+        )
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+### DATABASE REMOVE VIEWS
 
 
 class DatabaseRemoveView(AluView):
@@ -576,3 +520,67 @@ class DatabaseRemoveView(AluView):
             self.add_item(
                 RemoveAccountButton(const.DIGITS[percent_counter], cog, account_id, account_name, account_id_column)
             )
+
+
+class RemoveAllAccountsButton(discord.ui.Button[DatabaseRemoveView]):
+    """Button to remove all specific player's accounts in  `/database {game} remove` command's view."""
+
+    def __init__(self, cog: BaseSettings, player_id: int, player_name: str) -> None:
+        super().__init__(
+            style=discord.ButtonStyle.red,
+            label=f"Remove all {player_name}'s accounts.",
+            emoji="\N{POUTING FACE}",
+        )
+        self.cog: BaseSettings = cog
+        self.player_id: int = player_id
+        self.player_name: str = player_name
+
+    @override
+    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+        query = f"DELETE FROM {self.cog.prefix}_players WHERE player_id=$1"
+        result: str = await interaction.client.pool.execute(query, self.player_id)
+
+        if result != "DELETE 1":
+            msg = "Error deleting this player from the database."
+            raise errors.BadArgument(msg)
+
+        embed = discord.Embed(colour=self.cog.colour).add_field(
+            name="Succesfully removed a player from the database",
+            value=self.player_name,
+        )
+        await interaction.response.send_message(embed=embed)
+
+
+class RemoveAccountButton(discord.ui.Button[DatabaseRemoveView]):
+    """Button to remove a specific player's account in  `/database {game} remove` command's view."""
+
+    def __init__(
+        self,
+        emoji: str,
+        cog: BaseSettings,
+        account_id: AccountIDType,
+        account_name: str,
+        account_id_column: str,
+    ) -> None:
+        super().__init__(
+            style=discord.ButtonStyle.blurple,
+            label=account_name,
+            emoji=emoji,
+        )
+        self.cog: BaseSettings = cog
+        self.account_id: AccountIDType = account_id
+        self.account_id_column: str = account_id_column
+
+    @override
+    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+        query = f"DELETE FROM {self.cog.prefix}_accounts WHERE {self.account_id_column} = $1"
+        result: str = await interaction.client.pool.execute(query, self.account_id)
+        if result != "DELETE 1":
+            msg = "Error deleting this account from the database."
+            raise errors.BadArgument(msg)
+
+        embed = discord.Embed(colour=self.cog.colour).add_field(
+            name="Successfully removed an account from the database",
+            value=self.label,
+        )
+        await interaction.response.send_message(embed=embed)

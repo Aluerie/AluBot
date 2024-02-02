@@ -15,7 +15,7 @@ Glossary:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeVar, override
 
 import discord
 from discord import app_commands
@@ -36,7 +36,7 @@ T_co = TypeVar("T_co", covariant=True)
 TT = TypeVar("TT", bound="type[Any]")
 
 
-class classproperty(Generic[TT, T_co]):
+class classproperty(Generic[TT, T_co]):  # noqa: N801
     def __init__(self, func: Callable[[TT], T_co]) -> None:
         self.__func__ = func
 
@@ -70,7 +70,7 @@ class Platform(StrEnum):
     # PublicBetaEnvironment = "PBE" # no, we will not support it.
 
     @classproperty
-    def DISPLAY_NAMES(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore
+    def DISPLAY_NAMES(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore  # noqa: N805, N802
         return {
             cls.Brazil             : "BR - Brazil",
             cls.EuropeNordicAndEast: "EUNE - Europe Nordic & East",
@@ -95,7 +95,7 @@ class Platform(StrEnum):
         return self.DISPLAY_NAMES[self]
 
     @classproperty
-    def CONTINENTS(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore
+    def CONTINENTS(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore  # noqa: N802, N805
         return {
             cls.Brazil             : "AMERICAS",
             cls.EuropeNordicAndEast: "EUROPE",
@@ -116,11 +116,11 @@ class Platform(StrEnum):
         }
 
     @property
-    def continent(self):
+    def continent(self) -> str:
         return self.CONTINENTS[self]
 
     @classproperty
-    def OPGG_NAMES(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore
+    def OPGG_NAMES(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore  # noqa: N805, N802
         return {
             cls.Brazil             : "BR",
             cls.EuropeNordicAndEast: "EUNE",
@@ -141,14 +141,14 @@ class Platform(StrEnum):
         }
 
     @property
-    def opgg_name(self):
+    def opgg_name(self) -> str:
         return self.OPGG_NAMES[self]
 
 
 # fmt: on
 
 
-class PlatformConverter(commands.Converter, app_commands.Transformer):
+class PlatformConverter(commands.Converter[Platform], app_commands.Transformer):
     """PlatformConverter for both prefix and slash commands.
 
     for prefix commands - it accepts OPGG_NAMES - meaning values such as NA, euw, las, oce, etc.
@@ -157,7 +157,8 @@ class PlatformConverter(commands.Converter, app_commands.Transformer):
     Both in the end return Platform type.
     """
 
-    async def convert(self, _ctx: AluContext, argument: str) -> Platform:
+    @override
+    async def convert(self, ctx: AluContext, argument: str) -> Platform:
         for platform, opgg_name in Platform.OPGG_NAMES.items():
             if argument.upper() == opgg_name:
                 return platform
@@ -167,11 +168,13 @@ class PlatformConverter(commands.Converter, app_commands.Transformer):
                 + f"The list of League of Legends servers is {[v.upper() for v in Platform.OPGG_NAMES.values()]}"
             )
 
+    @override
     async def transform(self, interaction: discord.Interaction[discord.Client], value: str) -> Platform:
         # since we have choices hard-coded it will be of Platform type-string
         # PS. app_commands.Transformer won't run without subclassed `transform`
         return Platform(value)
 
     @property
-    def choices(self):
+    @override
+    def choices(self) -> list[app_commands.Choice[Platform]]:
         return [app_commands.Choice(name=name, value=key) for key, name in Platform.DISPLAY_NAMES.items()][:25]

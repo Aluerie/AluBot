@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class LoLSummonerNameCheck(FPCCog):
+class SummonerNameCheck(FPCCog):
     async def cog_load(self) -> None:
         self.check_summoner_renames.start()
         return await super().cog_load()

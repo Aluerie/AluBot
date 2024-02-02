@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING, Self
 
 import discord
 from discord.ext import commands
@@ -50,12 +50,12 @@ class MimicUserWebhook:
                 return res_channel, None
 
     @classmethod
-    def from_context(cls, ctx: AluContext):
+    def from_context(cls, ctx: AluContext) -> Self:
         channel, thread = cls.get_channel_thread(ctx.channel)
         return cls(bot=ctx.bot, channel=channel, thread=thread)
 
     @classmethod
-    def from_message(cls, bot: AluBot, message: discord.Message):
+    def from_message(cls, bot: AluBot, message: discord.Message) ->  Self:
         channel, thread = cls.get_channel_thread(message.channel)
         return cls(bot=bot, channel=channel, thread=thread)
 
@@ -92,9 +92,7 @@ class MimicUserWebhook:
                 "An error occurred while creating the webhook for this channel. "
                 "Note you can only have 15 webhooks per channel."
             )
-            raise errors.SomethingWentWrong(
-                msg
-            )
+            raise errors.SomethingWentWrong(msg)
 
     async def send_user_message(
         self,
@@ -103,7 +101,7 @@ class MimicUserWebhook:
         message: discord.Message | None = None,
         content: str = "",
         embed: discord.Embed = discord.utils.MISSING,
-    ):
+    ) -> discord.WebhookMessage:
         wh = await self.get_or_create()
         files = [await a.to_file() for a in message.attachments] if message else discord.utils.MISSING
 

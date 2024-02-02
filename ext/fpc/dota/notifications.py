@@ -135,14 +135,16 @@ class DotaFPCNotifications(BaseNotifications):
                             AND s.enabled = TRUE;
                     """
 
-                    channel_spoil_tuples: list[tuple[int, bool]] = list(await self.bot.pool.fetch(
+                    channel_spoil_tuples: list[tuple[int, bool]] = list(
+                        await self.bot.pool.fetch(
                             query,
                             hero_id,
                             user["player_id"],
                             match.id,
                             account_id,
                             twitch_live_only,
-                        ))
+                        )
+                    )
 
                     if channel_spoil_tuples:
                         hero_name = await self.bot.cache_dota.hero.name_by_id(hero_id)
@@ -289,5 +291,5 @@ class DotaFPCNotifications(BaseNotifications):
         await self.hideout.logger.send(content=content, embed=self.get_ratelimit_embed())
 
 
-async def setup(bot) -> None:
+async def setup(bot: AluBot) -> None:
     await bot.add_cog(DotaFPCNotifications(bot))

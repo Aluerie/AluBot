@@ -2,6 +2,9 @@ from enum import StrEnum
 
 from ._meta import CONSTANTS
 
+# emote names should match discord ones and etc thus:
+# ruff: noqa: N815
+
 
 class Emote(StrEnum):
     """Emote strings.

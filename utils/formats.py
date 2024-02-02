@@ -8,7 +8,7 @@ import datetime
 import difflib
 import re
 from enum import IntEnum
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, override
 
 from dateutil.relativedelta import relativedelta
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
-class plural:
+class plural:  # noqa: N801
     """
     Helper class to format tricky plural nouns
 
@@ -39,6 +39,7 @@ class plural:
     def __init__(self, value: int) -> None:
         self.value: int = value
 
+    @override
     def __format__(self, format_spec: str) -> str:
         v = self.value
         singular, separator, plural = format_spec.partition("|")
@@ -128,11 +129,6 @@ def human_timedelta(
             dt = now - dt
         case int() | float():
             dt = now - datetime.timedelta(seconds=dt)
-        case _:
-            msg = "Parameter `dt` must be either of types: `datetime.datetime`, `datetime.timedelta`, `int` or `float`"
-            raise TypeError(
-                msg
-            )
 
     now = now.replace(microsecond=0)
     dt = dt.replace(microsecond=0)
@@ -197,7 +193,7 @@ def human_timedelta(
             return sep.join(output) + output_suffix
 
 
-def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle):
+def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> str:
     """
     Copy from d.py docs for *letters argument
     +-------------+----------------------------+-----------------+
@@ -220,7 +216,7 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle):
     return " ".join([format_dt(dt, letter) for letter in style_letters])
 
 
-def format_dt_tdR(dt: datetime.datetime) -> str:
+def format_dt_tdR(dt: datetime.datetime) -> str:  # noqa: N802 # tdR is discord format choices.
     """My favourite discord timestamp combination.
 
     Shortcut to combine t, d, R styles together.
@@ -243,10 +239,10 @@ def ordinal(n: int | str) -> str:
     return str(n) + suffix
 
 
-def inline_diff(a, b):  # a = old_string, b = new_string
+def inline_diff(a: str, b: str) -> str:  # a = old_string, b = new_string
     matcher = difflib.SequenceMatcher(None, a, b)
 
-    def process_tag(tag, i1, i2, j1, j2):
+    def process_tag(tag: str, i1: int, i2: int, j1: int, j2: int) -> str:
         if tag == "replace":
             return "~~" + matcher.a[i1:i2] + " ~~ __" + matcher.b[j1:j2] + "__"  # type: ignore
         if tag == "delete":
@@ -261,11 +257,11 @@ def inline_diff(a, b):  # a = old_string, b = new_string
 
 
 # https://stackoverflow.com/questions/39001097/match-changes-by-words-not-by-characters
-def inline_word_by_word_diff(a, b):  # a = old_string, b = new_string #
-    a, b = a.split(), b.split()
+def inline_word_by_word_diff(before: str, after: str) -> str:  # a = old_string, b = new_string #
+    a, b = before.split(), after.split()
     matcher = difflib.SequenceMatcher(None, a, b)
 
-    def process_tag(tag, i1, i2, j1, j2):
+    def process_tag(tag: str, i1: int, i2: int, j1: int, j2: int) -> str:
         a_str, b_str = " ".join(matcher.a[i1:i2]), " ".join(matcher.b[j1:j2])  # type: ignore
         match tag:
             case "replace":
@@ -276,22 +272,20 @@ def inline_word_by_word_diff(a, b):  # a = old_string, b = new_string #
                 return a_str
             case "insert":
                 return f"__{b_str}__"
-        assert False, "Unknown tag %r" % tag
+            case _:
+                assert False, "Unknown tag %r" % tag
 
     return " ".join(process_tag(*t) for t in matcher.get_opcodes())
 
 
-def block_function(string, blocked_words, whitelist_words) -> int:
+def block_function(string: str, blocked_words: list[str], whitelist_words: list[str]) -> bool:
     for blocked_word in blocked_words:
         if blocked_word.lower() in string.lower():
-            for whitelist_word in whitelist_words:
-                if whitelist_word.lower() in string.lower():
-                    return 0  # allow
-            return 1  # block
-    return 0  # allow
+            return all(whitelist_word.lower() not in string.lower() for whitelist_word in whitelist_words)  # block
+    return False  # allow
 
 
-def indent(symbol, counter, offset, split_size):
+def indent(symbol: str, counter: int, offset: int, split_size: int) -> str:
     return str(symbol).ljust(len(str(((counter - offset) // split_size + 1) * split_size)), " ")
 
 

@@ -85,18 +85,18 @@ class Dota(CONSTANTS):
     HERO_DISCONNECT = f"{GITHUB_BOT_IMAGES}/hosted/DotaDisconnect.png"
     EMPTY_ITEM_TILE = f"{GITHUB_BOT_IMAGES}/hosted/Black_tile.png"
 
-    PLAYER_COLOUR_MAP = {
-        0: "#3375FF",
-        1: "#66FFBF",
-        2: "#BF00BF",
-        3: "#F3F00B",
-        4: "#FF6B00",
-        5: "#FE86C2",
-        6: "#A1B447",
-        7: "#65D9F7",
-        8: "#008321",
-        9: "#A46900",
-    }
+    PLAYER_COLOUR_MAP = (
+        "#3375FF",
+        "#66FFBF",
+        "#BF00BF",
+        "#F3F00B",
+        "#FF6B00",
+        "#FE86C2",
+        "#A1B447",
+        "#65D9F7",
+        "#008321",
+        "#A46900",
+    )
 
     TALENT_TREE_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
     ATTR_BONUS_ICON = "https://static.wikia.nocookie.net/dota2_gamepedia/images/e/e2/Attribute_Bonus_icon.png"

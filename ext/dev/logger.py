@@ -4,7 +4,7 @@ import asyncio
 import datetime
 import logging
 import textwrap
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord.ext import tasks
@@ -15,6 +15,8 @@ from utils import const, formats
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from bot import AluBot
 
 log = logging.getLogger(__name__)
@@ -31,16 +33,18 @@ class LoggingHandler(logging.Handler):
         self.cog: LoggerViaWebhook = cog
         super().__init__(logging.INFO)
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
         return True  # record.name in ('discord.gateway')
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         self.cog.add_record(record)
 
 
 class LoggerViaWebhook(DevBaseCog):
     # TODO: ADD MORE STUFF
-    AVATAR_MAPPING = {
+    AVATAR_MAPPING: Mapping[str, str] = {
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
         "bot.bot": "https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png",
@@ -55,13 +59,15 @@ class LoggerViaWebhook(DevBaseCog):
         "ext.fpc.lol.notifications": const.Logo.Lol,
     }
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._logging_queue = asyncio.Queue()
 
+    @override
     async def cog_load(self) -> None:
         self.logging_worker.start()
 
+    @override
     def cog_unload(self) -> None:
         self.logging_worker.cancel()
 
@@ -89,7 +95,7 @@ class LoggerViaWebhook(DevBaseCog):
         # Discord doesn't allow Webhooks names to contain "discord";
         # so if the record.name comes from discord.py library - it gonna block it
         # thus we replace letters: "c" is cyrillic, "o" is greek.
-        username = record.name.replace("discord", "disсοrd")  # cSpell: ignore disсοrd
+        username = record.name.replace("discord", "disсοrd")  # cSpell: ignore disсοrd  # noqa: RUF003
         await self.logger_webhook.send(msg, username=username, avatar_url=avatar_url)
 
     @tasks.loop(seconds=0.0)

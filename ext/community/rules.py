@@ -15,8 +15,7 @@ if TYPE_CHECKING:
 
 
 class CommunityRules(CommunityCog, name="Rules", emote=const.Emote.PepoRules):
-    """The Community Server has some strict rules.
-    """
+    """The Community Server has some strict rules."""
 
     @commands.has_role(const.Role.discord_mods)
     @commands.hybrid_group(hidden=True)

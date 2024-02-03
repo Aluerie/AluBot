@@ -193,8 +193,7 @@ class MatchToSend(BaseMatchToSend):
 
 
 class StratzMatchToEdit(BaseMatchToEdit):
-    """Class
-    """
+    """Class."""
 
     def __init__(
         self,
@@ -347,8 +346,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
 
 class NotCountedMatchToEdit(BaseMatchToEdit):
-    """Class
-    """
+    """Class."""
 
     @override
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
@@ -377,7 +375,7 @@ if TYPE_CHECKING:
 
 
 async def beta_test_stratz_edit(self: AluCog) -> None:
-    """Testing function for `edit_notification_image` from LoL's MatchToEdit class
+    """Testing function for `edit_notification_image` from LoL's MatchToEdit class.
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class TimeZone(NamedTuple):
-    """Timezone Named-Tuple
+    """Timezone Named-Tuple.
 
     !!! Note that we STILL need to use
     >>> timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
@@ -103,7 +103,7 @@ class CLDRDataEntry(NamedTuple):
 
 
 class TimezoneManager:
-    """Timezone Manager Client
+    """Timezone Manager Client.
 
     Due to client-like need to fill the cache of timezones, I decided to move the
     whole thing into separate entity that will be in bot attribute and available
@@ -126,7 +126,7 @@ class TimezoneManager:
         self.bot.loop.create_task(self.parse_bcp47_timezones())
 
     async def parse_bcp47_timezones(self) -> None:
-        """Get user-friendly timezone data from CLDR (the Unicode Common Locale Data Repository)
+        """Get user-friendly timezone data from CLDR (the Unicode Common Locale Data Repository).
 
         Apparently official python documentation recommend doing this in this caution note
         https://docs.python.org/3/library/zoneinfo.html#zoneinfo.ZoneInfo.key
@@ -252,7 +252,7 @@ class TimezoneManager:
 
     @staticmethod
     def get_utc_offset_string(iana_alias: str, now_utc: datetime.datetime) -> str:
-        """Get UTC offset string like +03:00
+        """Get UTC offset string like +03:00.
 
         Yes, please pass now_utc = datetime.datetime.now(datetime.timezone.utc) here
         I don't want to create it each function run.

@@ -80,7 +80,7 @@ class CodeRun(DevBaseCog):
     ) -> None:
         """Direct evaluation of Python code.
         It just puts your codeblock into `async def func():`, so
-        remember to end the code with `return result` if you want only `result`
+        remember to end the code with `return result` if you want only `result`.
         """
         if codeblock is None:
             # codeblock is optional, just bcs I want Greedy to be optional with None and preserve the order.

@@ -57,13 +57,13 @@ class RemoveLoLPlayerFlags(commands.FlagConverter):
 
 
 class FPCDatabaseManagement(FPCCog):
-    """FPC Database Management
+    """FPC Database Management.
 
     Commands for bot owner(-s) to add/remove player accounts from the FPC database.
     """
 
     def get_fpc_settings_cog(self, cog_name: str) -> FPCCog:
-        """Get FPC Settings Cog"""
+        """Get FPC Settings Cog."""
         fpc_settings_cog: FPCCog | None = self.bot.get_cog(cog_name)  # type:ignore
         if fpc_settings_cog is None:
             msg = f"Cog `{cog_name}` is not loaded."
@@ -83,7 +83,7 @@ class FPCDatabaseManagement(FPCCog):
 
     @property
     def dota_fpc_settings_cog(self) -> DotaFPC:
-        """Get Dota 2 FPC Settings Cog"""
+        """Get Dota 2 FPC Settings Cog."""
         return self.get_fpc_settings_cog("Dota 2 FPC")  # type: ignore
 
     @database_dota.command(name="add")
@@ -109,7 +109,7 @@ class FPCDatabaseManagement(FPCCog):
 
     @property
     def lol_fpc_settings_cog(self) -> LolFPC:
-        """Get LoL FPC Settings Cog"""
+        """Get LoL FPC Settings Cog."""
         return self.get_fpc_settings_cog("League of Legends FPC")  # type: ignore
 
     @database_lol.command(name="add")

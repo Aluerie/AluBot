@@ -18,7 +18,7 @@ _T = TypeVar("_T")
 
 
 class Config(Generic[_T]):
-    """The 'Database' objects based on `.json` files :D"""
+    """The 'Database' objects based on `.json` files :D."""
 
     def __init__(
         self,
@@ -64,14 +64,14 @@ class Config(Generic[_T]):
             await self.loop.run_in_executor(None, self._dump)
 
     def get(self, key: Any, default: Any = None) -> Any:
-        """Retrieves a config entry"""
+        """Retrieves a config entry."""
         return self._json.get(str(key), default)
 
     async def put_into_database(self, key: Any, value: _T | Any) -> None:
         ...
 
     async def put(self, key: Any, value: _T | Any) -> None:
-        """Edits a config entry"""
+        """Edits a config entry."""
         self._json[str(key)] = value
         await self.put_into_database(key, value)
         await self.save()
@@ -99,7 +99,7 @@ class Config(Generic[_T]):
 
 
 class PrefixConfig(Config[Any]):
-    """Prefix Config"""
+    """Prefix Config."""
 
     if TYPE_CHECKING:
         pool: PoolTypedWithAny

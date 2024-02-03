@@ -215,7 +215,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
     @birthday.command(aliases=["del", "delete"])
     async def remove(self, ctx: AluGuildContext) -> None:
-        """Remove your birthday data and stop getting congratulations"""
+        """Remove your birthday data and stop getting congratulations."""
         status = await self.remove_birthday_helper(ctx.author.id)
         if status == "DELETE 0":
             embed = discord.Embed(
@@ -234,7 +234,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     @birthday.command(usage="[member=you]")
     @app_commands.describe(member="Member of the server or you if not specified")
     async def check(self, ctx: AluGuildContext, member: discord.Member = commands.Author) -> None:
-        """Check your or somebody's birthday in database"""
+        """Check your or somebody's birthday in database."""
         query = """
             SELECT * FROM timers
             WHERE event = 'birthday'
@@ -332,7 +332,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
     @birthday.command(name="list", hidden=True)
     async def birthday_list(self, ctx: AluGuildContext) -> None:
-        """Show list of birthdays in this server"""
+        """Show list of birthdays in this server."""
         guild = self.community.guild
 
         query = """

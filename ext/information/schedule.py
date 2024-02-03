@@ -154,7 +154,7 @@ class ScheduleModeEnum(Enum):
 
     @property
     def data_toggle_area_content(self) -> str:
-        """Variable that is passed to "data-toggle-area-content" div in soup parser"""
+        """Variable that is passed to "data-toggle-area-content" div in soup parser."""
         lookup = {
             ScheduleModeEnum.next_game_day_featured: "2",
             ScheduleModeEnum.featured: "2",
@@ -301,7 +301,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
     @app_commands.rename(schedule_mode="filter")
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in SELECT_OPTIONS])
     async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: str | None = None) -> None:
-        """Dota 2 Pro Matches Schedule
+        """Dota 2 Pro Matches Schedule.
 
         Parameters
         ----------
@@ -319,7 +319,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
 
     @commands.hybrid_command()
     async def fixtures(self, ctx: AluContext) -> None:
-        """Get football fixtures"""
+        """Get football fixtures."""
         url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
         async with self.bot.session.get(url) as r:
             soup = BeautifulSoup(await r.read(), "html.parser")

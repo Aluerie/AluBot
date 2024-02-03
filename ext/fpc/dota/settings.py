@@ -157,7 +157,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
     @dota_request.command(name="player")
     async def dota_request_player(self, ctx: AluGuildContext, *, flags: AddDotaPlayerFlags) -> None:
-        """Request Dota 2 Player to be added into the bot's FPC database
+        """Request Dota 2 Player to be added into the bot's FPC database.
 
         So you and other people can add the player into their favourite later and start \
         receiving FPC Notifications.

@@ -1,5 +1,5 @@
 """This code is licensed MPL v2 from Rapptz/RoboDanny
-https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
+https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py.
 
 Most of the code below is a shameless copypaste from @Rapptz's RoboDanny utils
 but IDK it's just so good and smart. I really learn a lot from reading @Danny's code.

@@ -126,7 +126,7 @@ class Timer(Generic[TimerDataT]):
         timezone: str,
         data: TimerDataT,
     ) -> Self:
-        """Initiate the timer without the database before deciding to put it in"""
+        """Initiate the timer without the database before deciding to put it in."""
         pseudo_record: PseudoTimerRecord[TimerDataT] = {
             "id": None,
             "event": event,

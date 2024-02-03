@@ -33,7 +33,7 @@ __all__ = (
 
 
 def my_bool(argument: str) -> bool:
-    """My own bool converter
+    """My own bool converter.
 
     Same as discord.py `(..., var: bool)` but with "in/out" -> True/False
     Example: $levels opt in/out - to opt in or out of levels system.
@@ -48,7 +48,7 @@ def my_bool(argument: str) -> bool:
 
 
 class Codeblock:
-    """Parsed codeblock from discord message if there is such markdown
+    """Parsed codeblock from discord message if there is such markdown.
 
     Attributes
     ----------

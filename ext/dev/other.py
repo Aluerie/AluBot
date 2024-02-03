@@ -81,7 +81,7 @@ class AdminTools(DevBaseCog):
 
     @guild_group.command(hidden=True)
     async def api(self, ctx: AluContext) -> None:
-        """Lazy way to update GitHub ReadMe badges until I figure out more continuous one"""
+        """Lazy way to update GitHub ReadMe badges until I figure out more continuous one."""
         json_dict = {
             "servers": len(self.bot.guilds),
             "users": len(self.bot.users),  # [x for x in self.bot.users if not x.bot]

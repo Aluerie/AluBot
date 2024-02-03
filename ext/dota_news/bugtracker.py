@@ -33,7 +33,7 @@ GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
 
 
 class ActionBase:
-    """_summary_
+    """_summary_.
 
     Attributes
     ----------
@@ -67,7 +67,7 @@ class ActionBase:
 
 
 class EventBase(ActionBase):
-    """Base class for github issue event
+    """Base class for github issue event.
 
     In a context of this file git issue "event" means stuff that doesn't have to have text with it, i.e.
     closed, assigned, reopened.
@@ -77,7 +77,7 @@ class EventBase(ActionBase):
 
 
 class CommentBase(ActionBase):
-    """Base class for github issue comment
+    """Base class for github issue comment.
 
     In a context of this file git issue "comment" means stuff that has to have text with it, i.e.
     commented, opened.
@@ -149,14 +149,14 @@ class Action:
 
 
 class Event(Action):
-    """Github Issue Timeline's Event"""
+    """Github Issue Timeline's Event."""
 
     # this needs to be separate classes bcs `isinstance` check
     pass
 
 
 class Comment(Action):
-    """Github Issue Timeline's Comment"""
+    """Github Issue Timeline's Comment."""
 
     def __init__(self, *, comment_body: str, comment_url: str | None = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -272,7 +272,7 @@ class TimeLine:
 
 
 class BugTracker(AluCog):
-    """BugTracker News
+    """BugTracker News.
 
     Track Valve developers activity in the Dota2-Gameplay repository
     and send a notification to #bugtracker-news in my discord server.

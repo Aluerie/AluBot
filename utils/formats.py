@@ -1,5 +1,4 @@
-"""Helping functions to create better/easier or just human-friendly formatting for various things.
-"""
+"""Helping functions to create better/easier or just human-friendly formatting for various things."""
 
 from __future__ import annotations
 
@@ -22,7 +21,7 @@ if TYPE_CHECKING:
 
 
 class plural:  # noqa: N801
-    """Helper class to format tricky plural nouns
+    """Helper class to format tricky plural nouns.
 
     Examples: ::
 
@@ -206,7 +205,7 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> s
     | F           | Tuesday, 17 May 2016 22:57 | Long Date Time  |
     +-------------+----------------------------+-----------------+
     | R           | 5 years ago                | Relative Time   |
-    +-------------+----------------------------+-----------------+
+    +-------------+----------------------------+-----------------+.
     """
     return " ".join([format_dt(dt, letter) for letter in style_letters])
 
@@ -223,7 +222,7 @@ def format_dt_tdR(dt: datetime.datetime) -> str:  # noqa: N802 # tdR is discord 
 
 
 def ordinal(n: int | str) -> str:
-    """Convert an integer into its ordinal representation, i.e. 0->'0th', '3'->'3rd'"""
+    """Convert an integer into its ordinal representation, i.e. 0->'0th', '3'->'3rd'."""
     # Remember that there is always funny lambda possibility
     # ```py
     # ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])
@@ -294,7 +293,7 @@ def indent(symbol: str | int, counter: int, offset: int, split_size: int) -> str
 
 
 class AnsiFG(IntEnum):
-    """Ansi foreground colours"""
+    """Ansi foreground colours."""
 
     gray = 30
     red = 31
@@ -307,7 +306,7 @@ class AnsiFG(IntEnum):
 
 
 class AnsiBG(IntEnum):
-    """Ansi background colours"""
+    """Ansi background colours."""
 
     firefly_dark_blue = 40
     orange = 41
@@ -320,7 +319,7 @@ class AnsiBG(IntEnum):
 
 
 class AnsiFMT(IntEnum):
-    """Ansi text formats"""
+    """Ansi text formats."""
 
     normal = 0
     bold = 1
@@ -335,7 +334,7 @@ def ansi(
     bold: bool = False,
     underline: bool = False,
 ) -> str:
-    """Something ansi function"""
+    """Something ansi function."""
     # TODO: make better docs
     # todo: what s the point of ansi function if mobile does not support it
     # todo: check ansi gist for more
@@ -365,14 +364,14 @@ def tick(semi_bool: bool | None) -> str:
 
 
 def hms_to_seconds(hms_time: str) -> int:
-    """Convert time in hms format like "03h51m08s" to seconds
+    """Convert time in hms format like "03h51m08s" to seconds.
 
     Example, `twitchio.Video.duration` have this in a such format so I need to convert it to seconds.
     like this: "03h51m08s" -> 3 * 3600 + 51 * 60 + 8 = 13868
     """
 
     def letter_to_seconds(letter: str) -> int:
-        """regex_time('h') = 3, regex_time('m') = 51, regex_time('s') = 8 for above example"""
+        """regex_time('h') = 3, regex_time('m') = 51, regex_time('s') = 8 for above example."""
         pattern = r"\d+(?={})".format(letter)  # noqa UP032
         units = re.search(pattern, hms_time)
         return int(units.group(0)) if units else 0
@@ -382,7 +381,7 @@ def hms_to_seconds(hms_time: str) -> int:
 
 
 def divmod_timedelta(total_seconds: int | float) -> str:
-    """Easier human timedelta than `formats.human_timedelta`
+    """Easier human timedelta than `formats.human_timedelta`.
 
     But because of this, for accuracy sake, this only supports days, hours, minutes, seconds.
     """

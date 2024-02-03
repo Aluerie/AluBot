@@ -40,7 +40,7 @@ class BetaCog(AluCog, category=category):
 
     @property
     def spam(self) -> discord.TextChannel:
-        """Even lazier shortcut"""
+        """Even lazier shortcut."""
         return self.hideout.spam
 
     @aluloop()

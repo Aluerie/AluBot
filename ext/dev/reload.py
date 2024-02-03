@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 class ExtensionConverter(commands.Converter[str]):
-    """Just so I don't type `$reload extensions.fpc.dota` but `$reload fpc.dota`
+    """Just so I don't type `$reload extensions.fpc.dota` but `$reload fpc.dota`.
 
     Yes. Lazy.
     """
@@ -135,7 +135,7 @@ class ReloadCog(DevBaseCog):
 
     @reload.command(name="all", hidden=True)
     async def reload_all(self, ctx: AluContext) -> None:
-        """Reloads all modules"""
+        """Reloads all modules."""
         await self.reload_all_worker(ctx)
 
     @commands.command(name="t", hidden=True)

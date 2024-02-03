@@ -52,6 +52,6 @@ class TranslateCog(EducationalCog):
     @commands.hybrid_command()
     @app_commands.describe(text="Enter text to translate")
     async def translate(self, ctx: AluContext, text: str) -> None:
-        """Google Translate to English, auto-detects source language"""
+        """Google Translate to English, auto-detects source language."""
         e = await self.translate_embed(text)
         await ctx.reply(embed=e)

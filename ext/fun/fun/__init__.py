@@ -14,8 +14,7 @@ if TYPE_CHECKING:
 
 
 class Fun(RockPaperScissorsCommand, Other):
-    """Commands to have fun with
-    """
+    """Commands to have fun with."""
 
     @property
     def help_emote(self) -> discord.PartialEmoji:

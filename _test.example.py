@@ -1,4 +1,4 @@
-"""List of extensions to test
+"""List of extensions to test.
 
 * Rename this file to `_test.py`.
 * List extensions to test under `TEST_EXTENSIONS` tuple

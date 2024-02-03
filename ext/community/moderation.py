@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
-    """Commands to moderate servers with"""
+    """Commands to moderate servers with."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

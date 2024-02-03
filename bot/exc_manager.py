@@ -1,5 +1,4 @@
-"""ex_manager.py - yes, it is for managing my exes.
-"""
+"""ex_manager.py - yes, it is for managing my exes."""
 
 from __future__ import annotations
 
@@ -46,7 +45,7 @@ class ErrorInfoPacket(NamedTuple):
 
 
 class ExceptionManager:
-    """Exception Manager that
+    """Exception Manager that.
 
     * should be used to send all unhandled errors to developers via webhooks.
     * controls rate-limit of the said webhook
@@ -138,7 +137,7 @@ class ExceptionManager:
         where: str,
         extra: str | None,
     ) -> ErrorInfoPacket:
-        """Get info packet"""
+        """Get info packet."""
         if isinstance(source, str):
             dt = discord.utils.utcnow()
             embed = discord.Embed(colour=0xDA9F93, description=source, timestamp=dt).set_footer(text=where)
@@ -259,7 +258,7 @@ class ExceptionManager:
         where: str,
         extra: str | None = None,
     ) -> None:
-        """Register, analyse error and put it into queue to send to developers
+        """Register, analyse error and put it into queue to send to developers.
 
         Parameters
         ----------

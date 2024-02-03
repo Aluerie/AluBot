@@ -137,7 +137,7 @@ class RPSView(discord.ui.View):
 class RockPaperScissorsCommand(FunCog):
     @commands.hybrid_command(name="rock-paper-scissors", aliases=["rps", "rock_paper_scissors"])
     async def rps(self, ctx: AluGuildContext, user: discord.Member | discord.User) -> None:
-        """Rock Paper Scissors game with @member"""
+        """Rock Paper Scissors game with @member."""
         if user == ctx.author:
             msg = "You cannot challenge yourself in a Rock Paper Scissors game"
             raise commands.BadArgument(msg)

@@ -18,7 +18,7 @@ class Languages(
     EducationalCog,
     emote=Emote.bedNerdge,
 ):
-    """Languages"""
+    """Languages."""
 
 
 async def setup(bot: AluBot) -> None:

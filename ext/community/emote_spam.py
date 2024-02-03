@@ -106,7 +106,7 @@ class EmoteSpam(CommunityCog):
 
     @commands.hybrid_command()
     async def do_emote_spam(self, ctx: AluContext) -> None:
-        """Send 3x random emote into emote spam channel"""
+        """Send 3x random emote into emote spam channel."""
         emote = await self.get_random_emote()
         channel = self.community.emote_spam
         content = f"{emote!s} {emote!s} {emote!s}"

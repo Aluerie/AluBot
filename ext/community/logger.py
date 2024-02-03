@@ -44,7 +44,7 @@ class MemberLogging(CommunityCog):
         before_field: str | None,
         after_field: str | None,
     ) -> discord.Embed:
-        """Gives Before/After embed to send later for logger purposes
+        """Gives Before/After embed to send later for logger purposes.
 
         Parameters
         ----------

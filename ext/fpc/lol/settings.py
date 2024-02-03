@@ -159,7 +159,7 @@ class Settings(BaseSettings):
 
     @lol_request.command(name="player")
     async def lol_request_player(self, ctx: AluGuildContext, *, flags: AddLoLPlayerFlags) -> None:
-        """Request LoL Player to be added into the bot's FPC database
+        """Request LoL Player to be added into the bot's FPC database.
 
         So you and other people can add the player into their favourite later and start \
         receiving FPC Notifications.

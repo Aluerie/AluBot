@@ -27,7 +27,7 @@ warnings.filterwarnings(
 
 
 class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
-    """Commands to get some useful info"""
+    """Commands to get some useful info."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -117,7 +117,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
     async def colour(
         self, ctx: AluContext, *, colour: Annotated[discord.Colour, converters.AluColourConverter]
     ) -> None:
-        """Get info about colour in specified <formatted_colour_string>
+        r"""Get info about colour in specified <formatted_colour_string>.
 
         The bot supports the following string formats:
 
@@ -153,7 +153,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
 
 
 class StatsCommands(InfoCog, name="Stats", emote=const.Emote.Smartge):
-    """Some stats/infographics/diagrams/info
+    """Some stats/infographics/diagrams/info.
 
     More to come.
     """

@@ -76,7 +76,7 @@ async def topemotes_job(ctx: AluContext, mode: int) -> None:
 
 
 class EmoteAnalysis(CommunityCog, name="Emote stats"):
-    """See stats on emote usage in Aluerie's server
+    """See stats on emote usage in Aluerie's server.
 
     The bot keeps data for one month.
     """

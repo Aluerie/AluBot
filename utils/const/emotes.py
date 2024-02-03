@@ -81,7 +81,7 @@ class Emote(StrEnum):
 
 
 class Tick(StrEnum):
-    """Tick StrEnum, used to match True/False with yes/no emotes"""
+    """Tick StrEnum, used to match True/False with yes/no emotes."""
 
     Yes = "\N{WHITE HEAVY CHECK MARK}"
     No = "\N{CROSS MARK}"

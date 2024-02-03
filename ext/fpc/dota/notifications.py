@@ -200,7 +200,7 @@ class DotaFPCNotifications(BaseNotifications):
 
     @aluloop(minutes=5)
     async def notification_editor(self) -> None:
-        """Task responsible for editing Dota FPC Messages with PostMatch Result data
+        """Task responsible for editing Dota FPC Messages with PostMatch Result data.
 
         The data is featured from Opendota/Stratz.
         """
@@ -270,7 +270,7 @@ class DotaFPCNotifications(BaseNotifications):
 
     @commands.command(hidden=True)
     async def ratelimits(self, ctx: AluContext) -> None:
-        """Send OpenDota/Stratz rate limit numbers"""
+        """Send OpenDota/Stratz rate limit numbers."""
         await ctx.reply(embed=self.get_ratelimit_embed())
 
     @aluloop(time=datetime.time(hour=23, minute=55, tzinfo=datetime.UTC))

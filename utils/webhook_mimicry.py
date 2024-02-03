@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class MimicUserWebhook:
     """This class aims to manage webhooks that are supposed
-    to mimic user message for various NQN inspired features
+    to mimic user message for various NQN inspired features.
 
     for example, fix twitter/instagram links for them.
     """

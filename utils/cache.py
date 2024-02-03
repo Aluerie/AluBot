@@ -32,7 +32,7 @@ CachedDataT = TypeVar("CachedDataT", bound=CacheDict)
 
 
 class KeysCache:
-    """KeysCache
+    """KeysCache.
 
     Caches the data from public json-urls
     for a certain amount of time just so we have somewhat up-to-date data
@@ -58,7 +58,7 @@ class KeysCache:
     """
 
     def __init__(self, bot: AluBot) -> None:
-        """__init__
+        """__init__.
 
         Parameters
         ----------
@@ -78,7 +78,7 @@ class KeysCache:
         self.update_data.start()
 
     async def get_response_json(self, url: str) -> Any:
-        """Get response.json() from url with data"""
+        """Get response.json() from url with data."""
         async with self.bot.session.get(url=url) as response:
             if response.ok:
                 # https://stackoverflow.com/a/48842348/19217368
@@ -94,7 +94,7 @@ class KeysCache:
         raise errors.ResponseNotOK(msg)
 
     async def fill_data(self) -> CacheDict:
-        """Fill self.cached_data with the data from various json data
+        """Fill self.cached_data with the data from various json data.
 
         This function is supposed to be implemented by subclasses.
         We get the data and sort it out into a convenient dictionary to cache.
@@ -113,7 +113,7 @@ class KeysCache:
     # methods to actually get the data from cache
 
     async def get_cached_data(self) -> CacheDict:
-        """Get the whole cached data"""
+        """Get the whole cached data."""
         if self.cached_data:
             return self.cached_data
         else:

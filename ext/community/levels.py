@@ -94,9 +94,9 @@ def get_exp_for_next_level(lvl: int) -> int:
 
 
 class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA):
-    """Commands about member profiles
+    """Commands about member profiles.
 
-    There is a profile system in Irene\'s server: levelling experience,
+    There is a profile system in Irene's server: levelling experience,
     reputation and many other things (currency, custom profile) to come
     """
 
@@ -130,7 +130,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         ctx: AluGuildContext | discord.Interaction[AluBot],
         member: discord.Member,
     ) -> discord.File:
-        """Get file that is image for rank/levels information for desired member"""
+        """Get file that is image for rank/levels information for desired member."""
         member = member or getattr(ctx, "author") or getattr(ctx, "user")
         if member.bot:
             msg = "Sorry! our system does not count experience for bots."
@@ -161,7 +161,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
     @checks.hybrid.is_community()
     @app_commands.describe(sort_by="Choose how to sort leaderboard")
     async def leaderboard(self, ctx: AluGuildContext, sort_by: Literal["exp", "rep"] = "exp") -> None:
-        """View experience leaderboard for this server"""
+        """View experience leaderboard for this server."""
         guild = self.community.guild
 
         new_array = []

@@ -25,7 +25,7 @@ LF = TypeVar("LF", bound=_func)
 
 class AluLoop(tasks.Loop[LF]):
     """Subclass for discord.ext.tasks.Loop
-    for extra standard needed functionality
+    for extra standard needed functionality.
     """
 
     def __init__(
@@ -61,7 +61,7 @@ class AluLoop(tasks.Loop[LF]):
 
     async def _error(self, *args: Any) -> None:
         """Same _error as in parent class but
-        added sending webhook notifications to my spam
+        added sending webhook notifications to my spam.
         """
         exception: Exception = args[-1]
         # log.error('Unhandled exception in internal background task %r.', self.coro.__name__, exc_info=exception)

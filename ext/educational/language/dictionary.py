@@ -1,6 +1,6 @@
 """## Original source:
 * RoboDanny's cogs.utils.buttons (license MPL v2 from Rapptz/RoboDanny)
-    https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/buttons.py
+    https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/buttons.py.
 
 # todo: rework this according to my needs :x
 """

@@ -71,7 +71,7 @@ class MatchToSend(BaseMatchToSend):
 
     @property
     def long_ago(self) -> int:
-        """Gives how many seconds passed from start time till Now"""
+        """Gives how many seconds passed from start time till Now."""
         if self.start_time == 0:
             # start_time is filled later in Riot Web API (after loading screen)
             # thus sometimes it gonna be just plain zero when we find the match during the loading screen
@@ -312,7 +312,7 @@ if TYPE_CHECKING:
 
 
 async def beta_test_edit_image(self: AluCog) -> None:
-    """Testing function for `edit_image` from League'sMatchToEdit class
+    """Testing function for `edit_image` from League'sMatchToEdit class.
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """

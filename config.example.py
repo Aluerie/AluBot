@@ -1,4 +1,4 @@
-"""Config variables file
+"""Config variables file.
 
 * Rename this file from `config.example.py` to `config.py`
 * Fill out the variables below.

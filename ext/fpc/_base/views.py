@@ -280,7 +280,7 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
         special_button_cls: type[AccountListButton] | None = None,
         get_emoji_name: Callable[[int], Awaitable[str]] | None = None,
     ) -> None:
-        """__init__
+        """__init__.
 
         Parameters
         ----------

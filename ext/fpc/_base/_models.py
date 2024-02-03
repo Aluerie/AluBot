@@ -38,11 +38,11 @@ class BaseMatchToSend(abc.ABC):
 
     @abc.abstractmethod
     async def insert_into_game_messages(self, message_id: int, channel_id: int) -> None:
-        """Insert the match to messages table so we can edit it later"""
+        """Insert the match to messages table so we can edit it later."""
 
     @abc.abstractmethod
     async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
-        """Get embed and file"""
+        """Get embed and file."""
         # image = await self.notification_image()
 
         # title = f"{self.player_name} - {self.character_name}"

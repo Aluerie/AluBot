@@ -1,4 +1,4 @@
-"""Helpers
+"""Helpers.
 
 Some utilities that I could not categorize anywhere really.
 """
@@ -24,7 +24,7 @@ log.setLevel(logging.DEBUG)
 
 class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they aren't used as actual classes per PEP-8.
     """A helper tool to quickly measure performance time
-    of the codeblock we contexting in
+    of the codeblock we contexting in.
 
     Use it like this:
     ```py

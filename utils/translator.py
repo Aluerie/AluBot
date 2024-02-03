@@ -70,7 +70,7 @@ class TranslateResult(NamedTuple):
 async def translate(
     text: str, *, source_lang: str = "auto", target_lang: str = "en", session: ClientSession
 ) -> TranslateResult:
-    """Google Translate"""
+    """Google Translate."""
     query = {
         "dj": "1",
         "dt": ["sp", "t", "ld", "bd"],

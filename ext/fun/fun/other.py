@@ -22,13 +22,13 @@ if TYPE_CHECKING:
 class Other(FunCog):
     @commands.hybrid_command()
     async def coinflip(self, ctx: AluContext) -> None:
-        """Flip a coin: Heads or Tails?"""
+        """Flip a coin: Heads or Tails?."""
         word = "Heads" if random.randint(0, 1) == 0 else "Tails"
         await ctx.reply(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
 
     @commands.Cog.listener("on_message")
     async def reply_non_command_mentions(self, message: discord.Message) -> None:
-        """For now there is only blush and question marks"""
+        """For now there is only blush and question marks."""
         if message.guild and message.guild.me in message.mentions:
             if any(item in message.content.lower() for item in ["😊", "blush"]):
                 await message.channel.send(f"{message.author.mention} {const.Emote.peepoBlushDank}")

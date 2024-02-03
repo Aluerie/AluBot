@@ -181,7 +181,7 @@ class OtherCog(AluCog):
 
     @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
     async def source(self, ctx: AluContext, *, command: str | None = None) -> None:
-        """Links to the bots code, or a specific command's"""
+        """Links to the bots code, or a specific command's."""
         source_url = ctx.bot.repo_url
         branch = "master"
 

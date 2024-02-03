@@ -72,7 +72,7 @@ class DisambiguatorView[T](AluView):
 
 
 class Disambiguator:
-    """Class having utilities to disambiguate user's input. Like
+    """Class having utilities to disambiguate user's input. Like.
 
     * confirmation prompt
         Just a simple Confirm/Cancel question.
@@ -163,7 +163,7 @@ class Disambiguator:
         *,
         ephemeral: bool = False,
     ) -> T:
-        """_summary_
+        """_summary_.
 
         Returns
         -------

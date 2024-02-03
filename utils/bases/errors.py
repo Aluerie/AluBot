@@ -27,7 +27,7 @@ class AluBotError(Exception):  # discord.DiscordException):
 
 class BadArgument(AluBotError):
     """My own BadArgument exception.
-    Analogy to commands.BadArgument but raised by my own conversions and conditions
+    Analogy to commands.BadArgument but raised by my own conversions and conditions.
     """
 
     __slots__: tuple[str, ...] = ()
@@ -65,7 +65,7 @@ class SilentError(AluBotError):
 
 
 class ResponseNotOK(AluBotError):
-    """Raised we aiohttp session response is not OK
+    """Raised we aiohttp session response is not OK.
 
     Sometimes we just specifically need to raise an error in those cases
     when response from `self.bot.session.get(url)` is not OK.

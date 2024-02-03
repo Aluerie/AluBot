@@ -41,7 +41,7 @@ BASE_URL = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/
 
 
 def cdragon_asset_url(path: str) -> str:
-    """Return the CDragon url for the given game asset path"""
+    """Return the CDragon url for the given game asset path."""
     path = path.lower()
     splitted = path.split("/lol-game-data/assets/")
     if len(splitted) == 2:
@@ -76,19 +76,19 @@ class ChampionKeysCache(KeysCache):
     # icon_url: https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/145.png
 
     async def id_by_name(self, champion_name: str) -> int:
-        """Get champion id by name"""
+        """Get champion id by name."""
         return await self.get_value("id_by_name", champion_name.lower())
 
     async def name_by_id(self, champion_id: int) -> str:
-        """Get champion name by id"""
+        """Get champion name by id."""
         return await self.get_value("name_by_id", champion_id)
 
     async def alias_by_id(self, champion_id: int) -> str:
-        """Get champion alias by id"""
+        """Get champion alias by id."""
         return await self.get_value("alias_by_id", champion_id)
 
     async def icon_by_id(self, champion_id: int) -> str:
-        """Get champion icon url by id"""
+        """Get champion icon url by id."""
         return await self.get_value("icon_by_id", champion_id)
 
 
@@ -103,7 +103,7 @@ class ItemKeysCache(KeysCache):
         return data
 
     async def icon_by_id(self, item_id: int) -> str:
-        """Get item icon url by id"""
+        """Get item icon url by id."""
         return await self.get_value("icon_by_id", item_id)
 
 
@@ -118,7 +118,7 @@ class RuneKeysCache(KeysCache):
         return data
 
     async def icon_by_id(self, rune_id: int) -> str:
-        """Get rune icon url by id"""
+        """Get rune icon url by id."""
         return await self.get_value("icon_by_id", rune_id)
 
 
@@ -133,7 +133,7 @@ class SummonerSpellKeysCache(KeysCache):
         return data
 
     async def icon_by_id(self, summoner_spell_id: int) -> str:
-        """Get summoner spell icon url by id"""
+        """Get summoner spell icon url by id."""
         return await self.get_value("icon_by_id", summoner_spell_id)
 
 
@@ -143,7 +143,7 @@ class RolesCache(KeysCache):
         self.meraki_patch: str = "Unknown"
 
     async def fill_data(self) -> dict:
-        """My own analogy to `from roleidentification import pull_data`
+        """My own analogy to `from roleidentification import pull_data`.
 
         Meraki's `pull_data` is using `import requests`
         which is blocking, so I have to copypaste it
@@ -197,7 +197,7 @@ class RolesCache(KeysCache):
         }
 
     async def get_better_champion_roles(self, champion_roles: dict[int, RoleDict]) -> dict[int, RoleDict]:
-        """Improvement to meraki's `get_roles()`
+        """Improvement to meraki's `get_roles()`.
 
         Unfortunately, Meraki run out of money to support their Json
         Thus sometimes it is behind a few patches and

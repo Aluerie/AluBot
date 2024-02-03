@@ -18,7 +18,7 @@ __all__ = (
 
 
 class AluCog(commands.Cog):
-    """Base cog class for all AluBot cogs
+    """Base cog class for all AluBot cogs.
 
     Attributes
     ----------

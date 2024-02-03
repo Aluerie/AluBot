@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emote.PepoBeliever):
-    """Change bot\'s config for the server
+    r"""Change bot\'s config for the server.
 
     More to come.
     """
@@ -26,7 +26,7 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
     @commands.has_permissions(manage_emojis=True)
     @commands.bot_has_permissions(view_audit_log=True)
     async def turn_emote_logs(self, ctx: AluGuildContext, channel: discord.TextChannel | None = None) -> None:
-        """Turn emote logs on in this channel for this guild"""
+        """Turn emote logs on in this channel for this guild."""
         ch = channel or ctx.channel
 
         query = "UPDATE guilds SET emote_logs_id=$1 WHERE id=$2"

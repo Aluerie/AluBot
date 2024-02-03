@@ -16,7 +16,7 @@ class Mathematics(
     EducationalCog,
     emote=Emote.bedNerdge,
 ):
-    """Mathematics"""
+    """Mathematics."""
 
 
 async def setup(bot: AluBot) -> None:

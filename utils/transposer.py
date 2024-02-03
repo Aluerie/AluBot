@@ -19,7 +19,7 @@ log.setLevel(logging.INFO)
 
 
 class TransposeClient:
-    """Transpose object of X class to an object of Y class
+    """Transpose object of X class to an object of Y class.
 
     The class primarily used to convert things into discord.File or PIL.Image.Image.
     These functions are used so often that I decided to make an extra class.
@@ -34,7 +34,7 @@ class TransposeClient:
 
     @staticmethod
     def get_text_wh(text: str, font: ImageFont.FreeTypeFont) -> tuple[int, int]:
-        """Get text wh-dimensions for selected font
+        """Get text wh-dimensions for selected font.
 
         Returns
         -------
@@ -54,14 +54,14 @@ class TransposeClient:
 
     @staticmethod
     def str_to_file(string: str, filename: str = "file.txt") -> discord.File:
-        """Convert string to discord.File"""
+        """Convert string to discord.File."""
         fp = BytesIO(StringIO(string).read().encode("utf8"))
         fp.seek(0)
         return discord.File(fp, filename=filename)
 
     @staticmethod
     def plot_to_file(figure: Figure, filename: str = "plt.png") -> discord.File:
-        """Convert matplotlib.figure.Figure to discord.File"""
+        """Convert matplotlib.figure.Figure to discord.File."""
         image_binary = BytesIO()
         figure.savefig(image_binary)
         image_binary.seek(0)
@@ -69,7 +69,7 @@ class TransposeClient:
 
     @staticmethod
     def image_to_file(image: Image.Image, filename: str = "fromAluBot.png", extension: str = "PNG") -> discord.File:
-        """Convert PIL.Image.Image to discord.File"""
+        """Convert PIL.Image.Image to discord.File."""
         image_binary = BytesIO()
         image.save(image_binary, extension)
         image_binary.seek(0)
@@ -77,11 +77,11 @@ class TransposeClient:
 
     @staticmethod
     async def attachment_to_image(attachment: discord.Attachment) -> Image.Image:
-        """Convert discord.Attachment to Image.Image"""
+        """Convert discord.Attachment to Image.Image."""
         return Image.open(BytesIO(await attachment.read()))
 
     async def url_to_image(self, url: str) -> Image.Image:
-        """Convert URL to PIL.Image.Image"""
+        """Convert URL to PIL.Image.Image."""
         log.debug(url)
         async with self.session.get(url) as response:
             if response.ok:
@@ -93,7 +93,7 @@ class TransposeClient:
                 )
 
     async def url_to_file(self, url: str, filename: str = "fromAluBot.png") -> discord.File:
-        """Convert URL to discord.File"""
+        """Convert URL to discord.File."""
         async with self.session.get(url) as response:
             if response.ok:
                 return discord.File(BytesIO(await response.read()), filename)

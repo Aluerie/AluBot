@@ -354,7 +354,7 @@ class AluHelp(commands.HelpCommand):
 
 
 class BaseHelpCog(AluCog):
-    """Base cog for help command"""
+    """Base cog for help command."""
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)

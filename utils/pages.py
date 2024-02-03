@@ -1,4 +1,4 @@
-"""Pagination menus View classes
+"""Pagination menus View classes.
 
 Sources I used to create this file:
 
@@ -125,7 +125,7 @@ class Paginator(AluView):
                 await interaction.response.edit_message(**kwargs, view=self)
 
     async def show_checked_page(self, interaction: discord.Interaction, page_number: int) -> None:
-        """Just so next/prev don't IndexError me and loop correctly"""
+        """Just so next/prev don't IndexError me and loop correctly."""
         max_pages = self.source.get_max_pages()
         try:
             if max_pages is None:
@@ -192,27 +192,27 @@ class Paginator(AluView):
 
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
     async def home_page(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
-        """Show the very first page, kinda standard"""
+        """Show the very first page, kinda standard."""
         await self.show_page(interaction, 0)
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.red)
     async def previous_page(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
-        """Go to previous page"""
+        """Go to previous page."""
         await self.show_checked_page(interaction, self.current_page_number - 1)
 
     @discord.ui.button(label="/", style=discord.ButtonStyle.gray)
     async def index(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
-        """Choose page using modal; this button also has label to show current_page/maximum"""
+        """Choose page using modal; this button also has label to show current_page/maximum."""
         await interaction.response.send_modal(IndexModal(self))
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.green)
     async def next_page(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
-        """Go to next page"""
+        """Go to next page."""
         await self.show_checked_page(interaction, self.current_page_number + 1)
 
     @discord.ui.button(label="\N{RIGHT-POINTING MAGNIFYING GLASS}", style=discord.ButtonStyle.blurple)
     async def search(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
-        """Fuzzy search in all pages and go the page with most likely similarity"""
+        """Fuzzy search in all pages and go the page with most likely similarity."""
         # todo: implement PaginatorSearchModal
         await interaction.response.send_message("sorry, the search feature is disabled for now", ephemeral=True)
 

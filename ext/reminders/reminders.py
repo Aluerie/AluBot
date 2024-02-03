@@ -98,14 +98,14 @@ class ReminderView(discord.ui.View):
 
 
 class Reminder(RemindersCog, emote=const.Emote.DankG):
-    """Remind yourself of something at sometime"""
+    """Remind yourself of something at sometime."""
 
     @override
     async def cog_load(self) -> None:
         self.bot.initialize_tz_manager()
 
     async def remind_helper(self, ctx: AluContext, *, dt: datetime.datetime, text: str) -> None:
-        """Remind helper so we don't duplicate"""
+        """Remind helper so we don't duplicate."""
         if len(text) >= 1500:
             await ctx.send("Reminder must be fewer than 1500 characters.")
             return
@@ -150,7 +150,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
         text: str = "...",
     ) -> None:
-        """Sets a reminder to remind you of something at a specific time"""
+        """Sets a reminder to remind you of something at a specific time."""
         ctx = await AluContext.from_interaction(interaction)
         await self.remind_helper(ctx, dt=when, text=text)
 
@@ -176,7 +176,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
 
     @remind.command(name="list", ignore_extra=False)
     async def remind_list(self, ctx: AluContext) -> None:
-        """Shows a list of your current reminders"""
+        """Shows a list of your current reminders."""
         query = """
             SELECT id, expires, extra #>> '{args,2}'
             FROM timers

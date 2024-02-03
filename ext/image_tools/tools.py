@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class ToolsCog(ImageToolsCog, name="Tools", emote=const.Emote.DankFix):
-    """Some useful stuff
+    """Some useful stuff.
 
     Maybe one day it's going to be helpful for somebody.
     """
@@ -25,7 +25,7 @@ class ToolsCog(ImageToolsCog, name="Tools", emote=const.Emote.DankFix):
     @commands.hybrid_command()
     @app_commands.describe(url="Url of image to convert")
     async def convert(self, ctx: AluContext, *, url: str) -> None:
-        """Convert image from webp to png format"""
+        """Convert image from webp to png format."""
         img = await self.bot.transposer.url_to_image(url)
         maxsize = (112, 112)  # TODO: remake this function to have all possible fun flags
         img.thumbnail(maxsize, Image.ANTIALIAS)

@@ -13,7 +13,7 @@ __all__ = (
 
 # fmt: off
 class Colour:
-    """My chosen colours"""
+    """My chosen colours."""
 
     # names are lower-case because "Color Highlight" VSCode extension doesn't highlight words in any other case
     # blueviolet - BlueViolet - blue_violet - blueViolet - BLUEVIOLET - BLUE_VIOLET ;
@@ -75,7 +75,7 @@ material_palette = {
 
 
 class MaterialPalette:
-    """Material Design Color Palette
+    """Material Design Color Palette.
 
     https://m2.material.io/design/color/the-color-system.html#tools-for-picking-colors
     """
@@ -200,7 +200,7 @@ material_accent_palette = {
 
 
 class MaterialAccentPalette:
-    """Material Design Color Palette with Accent Designs
+    """Material Design Color Palette with Accent Designs.
 
     https://m2.material.io/design/color/the-color-system.html#tools-for-picking-colors
     """

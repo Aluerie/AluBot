@@ -130,11 +130,11 @@ class HeroKeysCache(KeysCache):
         return await self.get_value("ability_icon_by_ability_id", ability_id)
 
     async def icon_by_id(self, ability_id: int) -> str:
-        """Get ability icon url by id"""
+        """Get ability icon url by id."""
         return await self.get_value("icon_by_id", ability_id)
 
     async def talents_by_id(self, hero_id: int) -> list[tuple[int, str]]:
-        """Get ability name by its id
+        """Get ability name by its id.
 
         Currently only return data on talents and None for everything else,
         bcs we do not need anything else for now

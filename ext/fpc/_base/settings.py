@@ -66,19 +66,19 @@ class Account(abc.ABC):
     @property
     @abc.abstractmethod
     def hint_database_add_command_args(self) -> str:
-        """Formatted args for `/database {game} add` command for easy copy&paste"""
+        """Formatted args for `/database {game} add` command for easy copy&paste."""
 
     @staticmethod
     @abc.abstractmethod
     def static_account_name_with_links(**kwargs: Any) -> str:
         """Static method for `account_string_with_links` so we can get it
-        when we don't need to initiate a full account
+        when we don't need to initiate a full account.
         """
 
     @property
     @abc.abstractmethod
     def account_string_with_links(self) -> str:
-        """Account string with links"""
+        """Account string with links."""
 
     # todo: i dont like it, why there is two things of those
     # todo: maybe we need to do like Player Account and then PlayerAccount class?
@@ -86,13 +86,13 @@ class Account(abc.ABC):
     @abc.abstractmethod
     def static_account_string(**kwargs: Any) -> str:
         """Static method for `account_string` so we can get it
-        when we don't need to initiate a full account
+        when we don't need to initiate a full account.
         """
 
     @property
     @abc.abstractmethod
     def account_string(self) -> str:
-        """Account string"""
+        """Account string."""
 
     async def set_base_attrs(self, bot: AluBot) -> None:
         if self.is_twitch_streamer:
@@ -249,7 +249,7 @@ class BaseSettings(FPCCog):
             )
 
     async def request_player(self, ctx: AluGuildContext, flags: commands.FlagConverter) -> None:
-        """Base function for `/{game} request player` command
+        """Base function for `/{game} request player` command.
 
         This allows people to request player accounts to be added into the bot's FPC database.
         """
@@ -291,7 +291,7 @@ class BaseSettings(FPCCog):
         await self.hideout.global_logs.send(embed=logs_embed)
 
     async def database_add(self, ctx: AluGuildContext, flags: commands.FlagConverter) -> None:
-        """Base function for `/database {game} add` command
+        """Base function for `/database {game} add` command.
 
         This allows bot owner to add player accounts into the bot's FPC database.
         """
@@ -328,7 +328,7 @@ class BaseSettings(FPCCog):
         await self.hideout.global_logs.send(embed=logs_embed)
 
     async def database_remove(self, ctx: AluGuildContext, player_name: str) -> None:
-        """Base function for `/database {game} remove` command
+        """Base function for `/database {game} remove` command.
 
         This allows bot owner to remove player accounts from the bot's FPC database.
         """
@@ -537,7 +537,7 @@ class BaseSettings(FPCCog):
         column: str,
         object_word: str,
     ) -> None:
-        """Worker function for commands /{game}-fpc {character}/player add
+        """Worker function for commands /{game}-fpc {character}/player add.
 
         Parameters
         ----------
@@ -580,7 +580,7 @@ class BaseSettings(FPCCog):
         column: str,
         object_word: str,
     ) -> None:
-        """Worker function for commands /{game}-fpc {character}/player remove
+        """Worker function for commands /{game}-fpc {character}/player remove.
 
         Parameters
         ----------

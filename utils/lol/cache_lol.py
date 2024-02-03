@@ -151,7 +151,6 @@ class RolesCache(KeysCache):
         We can always check if they changed it at
         https://github.com/meraki-analytics/role-identification
         """
-
         champion_roles = await self.bot.meraki.get_lol_champion_rates()
         self.meraki_patch = champion_roles["patch"]
 

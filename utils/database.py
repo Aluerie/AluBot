@@ -53,6 +53,7 @@ class DotRecord(asyncpg.Record):
     """
 
     def __getattr__(self, name: str) -> Any:
+        """Dot-notation, i.e. get Record attribute with `row.name`."""
         return self[name]
 
 

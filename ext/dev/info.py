@@ -33,7 +33,6 @@ class DevInformation(DevBaseCog):
     @system.command(name="information", aliases=["info"])
     async def system_information(self, ctx: AluContext) -> None:
         """(\N{GREY HEART} Hideout-Only) Get system info about machine hosting the bot."""
-
         # some data doesn't fit nicely with chained embed initialization format
         cpu_freq = f"| {psutil.cpu_freq().current / 1000:.1f}GHz\n" if psutil.cpu_count() else ""
 

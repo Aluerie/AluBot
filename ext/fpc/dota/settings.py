@@ -279,7 +279,6 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
         Useful when a new Dota 2 hero gets added to the game, so we can just use this command,
         copy-paste the answer to `utils.const` and be happy.
         """
-
         await ctx.typing()
 
         hero_id = await self.bot.cache_dota.hero.id_by_name(hero_name)

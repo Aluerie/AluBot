@@ -45,7 +45,6 @@ class SyncAppTreeTools(DevBaseCog):
         Let's do it once per reboot after 2 hours of wait time. If I ever get rate limited warning:
         then we will think of better measures.
         """
-
         # initial wait
         await asyncio.sleep(60.0 * 60 * 2)  # 2 hours
         # global
@@ -136,6 +135,7 @@ class SyncAppTreeTools(DevBaseCog):
             Method to sync bot's commands with.
         guild_id : Optional[int]
             If you want to sync a specific guild then provide its ID.
+
         """
         if method == "guilds":
             # it's not worth to mirror commands.Greedy argument into a slash command

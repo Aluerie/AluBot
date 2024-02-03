@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 type AluCommand = commands.Command[AluCog, Any, Any]
 type AluGroupCommand = commands.Group[AluCog, Any, Any]
 
+
 class CogPage:
     def __init__(
         self,
@@ -144,7 +145,7 @@ class HelpPages(pages.Paginator):
             ("[argument...]", "This means you can have multiple arguments.\n"),
             (
                 "Note",
-                "Now that you know the basics, it should be noted that...\n" "__**You do not type in the brackets!**__",
+                "Now that you know the basics, it should be noted that...\n__**You do not type in the brackets!**__",
             ),
         )
         for name, value in fields:
@@ -208,10 +209,12 @@ class AluHelp(commands.HelpCommand):
     ) -> list[AluCommand]:
         """If a command is a group then unpack those until their very-last children.
 
-        examples:
+        Examples
+        --------
         /help -> [/help]
         /tag (create delete owner etc) -> [/tag create, /tag delete, /tag delete, /tag etc]
         same for 3depth children.
+
         """
         if answer is None:
             answer = []  # so the array only exists inside the command.
@@ -265,7 +268,6 @@ class AluHelp(commands.HelpCommand):
     @override
     def get_bot_mapping(self) -> dict[ExtCategory, dict[AluCog, list[AluCommand]]]:
         """Retrieves the bot mapping passed to `send_bot_help`."""
-
         # TODO: include solo slash commands and Context Menu commands.
         categories = self.context.bot.category_cogs
 

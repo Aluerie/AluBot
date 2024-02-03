@@ -40,7 +40,6 @@ async def start_the_bot(test: bool) -> None:
 @click.option("--test", "-t", is_flag=True)
 def main(click_ctx: click.Context, test: bool) -> None:
     """Launches the bot."""
-
     if click_ctx.invoked_subcommand is None:
         with setup_logging(test):
             asyncio.run(start_the_bot(test))

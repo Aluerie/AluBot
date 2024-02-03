@@ -26,7 +26,8 @@ if TYPE_CHECKING:
 class ExtensionConverter(commands.Converter[str]):
     """Just so I don't type `$reload extensions.fpc.dota` but `$reload fpc.dota`
 
-    Yes. Lazy."""
+    Yes. Lazy.
+    """
 
     # currently does not handle base extensions
     @override

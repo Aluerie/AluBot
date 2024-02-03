@@ -132,8 +132,8 @@ class Disambiguator:
             ``True`` if explicit confirm,
             ``False`` if explicit deny,
             ``None`` if deny due to timeout
-        """
 
+        """
         author_id = author_id or ctx_ntr.user.id
         view = ConfirmationView(author_id=author_id, timeout=timeout)
         view.message = await self.send_message(ctx_ntr, embed, view, ephemeral=ephemeral)
@@ -176,6 +176,7 @@ class Disambiguator:
             _description_
         ValueError
             _description_
+
         """
         amount_of_matches = len(matches)
 

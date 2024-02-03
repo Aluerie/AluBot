@@ -76,6 +76,7 @@ class Streamer:
         Stream's title. "Offline" if stream is offline.
     preview_url: str
         Thumbnail for the stream preview. Tries to use offline image if stream is offline.
+
     """
 
     if TYPE_CHECKING:

@@ -1,5 +1,4 @@
-"""
-Glossary:
+"""Glossary:
 * platform
     RiotGames routing platform names with numbers like `NA1`.
 * continent

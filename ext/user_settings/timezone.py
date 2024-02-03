@@ -47,7 +47,6 @@ class TimezoneSetting(UserSettingsBaseCog):
         self, ctx: AluContext, *, timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
     ) -> None:
         """Retrieves info about a timezone."""
-
         e = discord.Embed(title=timezone.label, colour=discord.Colour.blurple())
         now_utc = discord.utils.utcnow()
         dt = now_utc.astimezone(tz=zoneinfo.ZoneInfo(key=timezone.key))

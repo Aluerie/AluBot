@@ -94,7 +94,6 @@ class OtherCog(AluCog):
         """Show the invite link, so you can add me to your server.
         You can also press "Add to Server" button in my profile.
         """
-
         await ctx.reply(view=Url(self.bot.invite_link, emoji="\N{SWAN}", label="Invite Link"))
 
     @commands.hybrid_command(help="Checks the bot's ping to Discord")

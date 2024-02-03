@@ -1,5 +1,4 @@
-"""
-Inspired by RoboDanny's `config.py`. So all credit to Danny.
+"""Inspired by RoboDanny's `config.py`. So all credit to Danny.
 Very educational though.
 """
 

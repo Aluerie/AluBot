@@ -24,6 +24,7 @@ class AluCog(commands.Cog):
     ----------
     bot: AluBot
         The bot instance.
+
     """
 
     if TYPE_CHECKING:

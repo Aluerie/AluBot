@@ -130,7 +130,6 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         \N{BULLET} Extra: MateriaAccentUI Google Palette: `map(colour_name, shade)`
         \N{BULLET} Last but not least: `prpl` for favourite Aluerie\'s colour
         """
-
         rgb = colour.to_rgb()
 
         img = Image.new("RGB", (300, 300), rgb)

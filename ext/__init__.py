@@ -1,5 +1,4 @@
-"""
-`Ext` Folder contains all extensions for the AluBot.
+"""`Ext` Folder contains all extensions for the AluBot.
 
 * This folder has rather a short name just for shorter folder names in `logging`.
 * The structure of folders/extensions in this project as follows:
@@ -74,12 +73,13 @@ def get_extensions(test: bool, reload: bool = False) -> tuple[str, ...]:
     reload : bool = False
         If `_test` module with TEST_EXTENSIONS should be reloaded.
         Used to force reload in manual text commands like `$reload all`.
+
     Returns
     -------
     Tuple[str, ...]
         tuple of extensions for bot to load
-    """
 
+    """
     # get only extensions for testing
     if test and _test:
         if reload:

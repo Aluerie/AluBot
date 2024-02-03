@@ -21,8 +21,7 @@ class LolFPC(
     emote=const.Emote.PogChampPepe,
     name="League of Legends FPC",  # careful with this name since it's used in `database_management.py`
 ):
-    """
-    LoL - __F__avourite __P__layer+__C__haracter combo notifications.
+    """LoL - __F__avourite __P__layer+__C__haracter combo notifications.
     """
 
     @override

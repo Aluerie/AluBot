@@ -37,9 +37,10 @@ class TransposeClient:
         """Get text wh-dimensions for selected font
 
         Returns
-        ---
+        -------
         Tuple[int, int]
             (width, height) - width and height of the text written in specified font
+
         """
         # https://stackoverflow.com/a/46220683/9263761
         # https://levelup.gitconnected.com/how-to-properly-calculate-text-size-in-pil-images-17a2cc6f51fd

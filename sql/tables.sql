@@ -43,14 +43,6 @@ CREATE TABLE IF NOT EXISTS botinfo (
     drop_watch_live BOOLEAN DEFAULT (FALSE)
 );
 
-CREATE TABLE IF NOT EXISTS guilds (
-    id BIGINT PRIMARY KEY,
-    name TEXT,
-    prefix TEXT,
-    emote_logs_id BIGINT,
-    birthday_channel BIGINT,
-    birthday_role BIGINT
-);
 
 CREATE TABLE IF NOT EXISTS afknotes (
     id INTEGER PRIMARY KEY,

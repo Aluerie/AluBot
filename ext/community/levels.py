@@ -229,7 +229,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                     msg = "Roles were not found in the community guild"
                     raise ValueError(msg)
                 e = discord.Embed(colour=const.Colour.blueviolet)
-                e.description = "{0} just advanced to {1} ! " "{2} {2} {2}".format(
+                e.description = "{0} just advanced to {1} ! {2} {2} {2}".format(
                     message.author.mention, level_up_role.mention, const.Emote.PepoG
                 )
                 await message.channel.send(embed=e)

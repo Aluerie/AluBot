@@ -46,6 +46,7 @@ class ActionBase:
     emote : str
         Emote to use in a special type of embed where there is many different events per one issue.
         Emote differentiates "actions" from each other.
+
     """
 
     def __init__(self, name: str, *, colour: int, word: str, emote: str) -> None:
@@ -124,6 +125,7 @@ class Action:
         Github issue whom created the event/comment.
     issue_number : int
         GitHub issue number.
+
     """
 
     def __init__(
@@ -182,6 +184,7 @@ class TimeLine:
         List of those events/comments to sort later.
     actor_ids : set[int]
         ids of github actors who created those events/comments.
+
     """
 
     def __init__(self, issue: Issue) -> None:
@@ -288,6 +291,7 @@ class BugTracker(AluCog):
         The list of known Valve developers who ever interacted with the Bug Tracker.
     bugtracker_news_worker : utils.bases.tasks.Loop
         The main task of the cog that tracks, analyzes GitHub events and sends news messages.
+
     """
 
     @override
@@ -390,7 +394,6 @@ class BugTracker(AluCog):
         * analyze them and build Timelines
         * send messages to news channel if Valve developers activity was spotted.
         """
-
         log.debug("^^^ BugTracker task started ^^^")
 
         query = "SELECT git_checked_dt FROM botinfo WHERE id=$1"

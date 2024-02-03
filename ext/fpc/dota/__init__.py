@@ -19,8 +19,7 @@ class DotaFPC(
     emote=const.Emote.DankLove,
     name="Dota 2 FPC",  # careful with this name since it's used in `database_management.py`
 ):
-    """
-    Dota 2 - __F__avourite __P__layer+__C__haracter combo notifications.
+    """Dota 2 - __F__avourite __P__layer+__C__haracter combo notifications.
     """
 
     @override

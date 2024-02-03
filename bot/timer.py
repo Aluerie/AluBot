@@ -79,6 +79,7 @@ class Timer(Generic[TimerDataT]):
         A list of arguments to pass to the :meth:`TimerManager.create_timer` method.
     kwargs: dict[str, Any]
         A dictionary of keyword arguments to pass to the :meth:`TimerManager.create_timer` method.
+
     """
 
     __slots__ = ("id", "event", "expires_at", "created_at", "timezone", "data")
@@ -126,7 +127,6 @@ class Timer(Generic[TimerDataT]):
         data: TimerDataT,
     ) -> Self:
         """Initiate the timer without the database before deciding to put it in"""
-
         pseudo_record: PseudoTimerRecord[TimerDataT] = {
             "id": None,
             "event": event,
@@ -149,6 +149,7 @@ class TimerManager:
     ----------
     bot : AluBot
         The bot instance.
+
     """
 
     __slots__: tuple[str, ...] = ("name", "bot", "_have_data", "_current_timer", "_task")
@@ -202,6 +203,7 @@ class TimerManager:
         -------
         Timer[TimerMapping]
             The timer that is expired and should be dispatched.
+
         """
         timer = await self.get_active_timer(days=days)
 
@@ -222,6 +224,7 @@ class TimerManager:
         ----------
         timer : Timer
             The timer to dispatch.
+
         """
         log.debug("Calling and Dispatching the timer %s with event %s", timer.id, timer.event)
 
@@ -247,6 +250,7 @@ class TimerManager:
         -------
         Timer | None
             The timer that is expired and should be dispatched.
+
         """
         query = """
             SELECT * FROM timers
@@ -275,7 +279,7 @@ class TimerManager:
         Used to create a timer and put it into a database, or just dispatch it if it's a short timer.
 
         Parameters
-        -----------
+        ----------
         when : datetime.datetime
             When the timer should fire.
         event : str
@@ -296,8 +300,9 @@ class TimerManager:
         Arguments and keyword arguments must be JSON serializable.
 
         Returns
-        --------
+        -------
         Timer
+
         """
         log.debug("Creating %s timer for %s", event, expires_at)
 
@@ -359,8 +364,8 @@ class TimerManager:
         -------
         Timer | None
             The timer that was fetched.
-        """
 
+        """
         query = "SELECT * FROM timers WHERE id = $1"
         record: TimerRecord[TimerMapping] | None = await self.bot.pool.fetchrow(query, id)
         return Timer(record=record) if record else None
@@ -372,8 +377,8 @@ class TimerManager:
         ----------
         id: int
             The ID of the timer to delete.
-        """
 
+        """
         query = "DELETE * FROM timers WHERE id = $1"
         await self.bot.pool.execute(query, id)
 
@@ -383,18 +388,18 @@ class TimerManager:
         Note you cannot find a database by its expiry or creation time.
 
         Parameters
-        -----------
+        ----------
         event : str
             The name of the event to search for.
         **kwargs
             Keyword arguments to search for in the database.
 
         Returns
-        --------
+        -------
         Timer | None
             The timer if found, otherwise None.
-        """
 
+        """
         filtered_clause = [f"data #>> ARRAY['{key}'] = ${i}" for (i, key) in enumerate(kwargs.keys(), start=2)]
         query = f"SELECT * FROM timers WHERE event = $1 AND {' AND '.join(filtered_clause)} LIMIT 1"
         record: TimerRecord | None = await self.bot.pool.fetchrow(query, event, *kwargs.values())
@@ -406,13 +411,13 @@ class TimerManager:
         Note you cannot find a database by its expiry or creation time.
 
         Parameters
-        -----------
+        ----------
         event: str
             The name of the event to search for.
         **kwargs
             Keyword arguments to search for in the database.
-        """
 
+        """
         filtered_clause = [f"data #>> ARRAY['{key}'] = ${i}" for (i, key) in enumerate(kwargs.keys(), start=2)]
         query = f"DELETE FROM timers WHERE event = $1 AND {' AND '.join(filtered_clause)} RETURNING id"
         record: Any = await self.bot.pool.fetchrow(query, event, *kwargs.values())
@@ -430,8 +435,8 @@ class TimerManager:
         -------
         list
             A list of `Timer` objects.
-        """
 
+        """
         rows = await self.bot.pool.fetch("SELECT * FROM timers")
         return [Timer(record=row) for row in rows]
 

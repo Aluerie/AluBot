@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, errors, formats
-
-from .ctx_cmd_errors import unexpected_error_embed
+from utils import const, errors, formats, helpers
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -19,7 +16,6 @@ async def on_app_command_error(
     interaction: discord.Interaction[AluBot], error: app_commands.AppCommandError | Exception
 ) -> None:
     """Handler called when an error is raised while invoking an app command."""
-
     # Hmm, idk I still want commands to go through this handler if any error occurs
     # not sure how to achieve analogical to "ctx.is_error_handled" behaviour
     # if command is not None:
@@ -76,16 +72,11 @@ async def on_app_command_error(
                 await interaction.response.send_message(":x", ephemeral=True)
             return
 
-    if unexpected_error:
-        e = unexpected_error_embed()
-    else:
-        e = discord.Embed(colour=const.Colour.maroon)
-        e.set_author(name=error_type)
-        e.description = desc
+    response_to_user_embed = helpers.error_handler_response_to_user_embed(unexpected_error, desc, error_type)
     if not interaction.response.is_done():
-        await interaction.response.send_message(embed=e, ephemeral=True)
+        await interaction.response.send_message(embed=response_to_user_embed, ephemeral=True)
     else:
-        await interaction.followup.send(embed=e, ephemeral=True)
+        await interaction.followup.send(embed=response_to_user_embed, ephemeral=True)
 
 
 async def setup(bot: AluBot) -> None:

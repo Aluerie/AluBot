@@ -203,7 +203,6 @@ class Settings(BaseSettings):
     @commands.hybrid_group(name="lolfpc")  # cspell: ignore lolfpc
     async def hideout_lol_group(self, ctx: AluGuildContext) -> None:
         """League of Legends FPC (Favourite Player+Character) Hideout-only commands."""
-
         await ctx.send_help()
 
     @hideout_lol_group.group(name="player")
@@ -279,7 +278,6 @@ class Settings(BaseSettings):
     @commands.command(hidden=True)
     async def meraki(self, ctx: AluGuildContext) -> None:
         """Show list of champions that are missing from Meraki JSON."""
-
         embed = (
             discord.Embed(
                 colour=const.Colour.darkslategray,
@@ -313,7 +311,6 @@ class Settings(BaseSettings):
         Useful when a new LoL champion gets added to the game, so we can just use this command,
         copy-paste the answer to `utils.const` and be happy.
         """
-
         await ctx.typing()
         cache_lol = self.bot.cache_lol.champion
 

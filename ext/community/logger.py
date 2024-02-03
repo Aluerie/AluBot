@@ -44,8 +44,7 @@ class MemberLogging(CommunityCog):
         before_field: str | None,
         after_field: str | None,
     ) -> discord.Embed:
-        """
-        Gives Before/After embed to send later for logger purposes
+        """Gives Before/After embed to send later for logger purposes
 
         Parameters
         ----------
@@ -59,8 +58,9 @@ class MemberLogging(CommunityCog):
             Value of the said attribute before the triggered event
 
         Returns
-        ----------
+        -------
         Embed to send for logger purposes
+
         """
         e = self.base_embed(member)
         e.description = (
@@ -160,11 +160,11 @@ class MemberLogging(CommunityCog):
             await self.update_database_and_announce(member_after=after, nickname_before=before.nick)
 
     async def rolling_stones_role_check(self, after: discord.Member) -> None:
-        """
-        Parameters
+        """Parameters
         ----------
         after : discord.Member
             member whose nickname gonna be checked for rolling stones eligibility
+
         """
         rolling_stones_role = self.community.rolling_stone_role
         if not after.nick:

@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     from bot import AluBot
     from utils import CONSTANTS, AluView
     from utils.cache import KeysCache
-    from utils.database import DotRecord
 
     # currently
     # * `steam_id` are `int`
@@ -150,7 +149,7 @@ class BaseSettings(FPCCog):
     here is the base class containing base methods.
 
     Attributes
-    -----------
+    ----------
     prefix: str
         Code-name for the game, i.e. `lol`, `dota`.
         Important notes.
@@ -180,6 +179,7 @@ class BaseSettings(FPCCog):
         Function that gets character id by its name, i.e. 'Anti-Mage' -> 1.
     get_character_name_by_id_cache: Callable[[], Awaitable[dict[int, str]]]
         Lambda function that gets "name_by_id" sub-dict from the game related cache.
+
     """
 
     def __init__(
@@ -194,7 +194,7 @@ class BaseSettings(FPCCog):
         character_plural_word: str,
         account_cls: type[Account],
         account_typed_dict_cls: type,
-        character_cache: KeysCache[Any],
+        character_cache: KeysCache,
         emote_cls: type[CONSTANTS],
         **kwargs: Any,
     ) -> None:
@@ -253,7 +253,6 @@ class BaseSettings(FPCCog):
 
         This allows people to request player accounts to be added into the bot's FPC database.
         """
-
         await ctx.typing()
         account = await self.account_cls.create(self.bot, flags)
         await self.check_if_account_already_in_database(account_id=getattr(account, self.account_id_column))
@@ -296,7 +295,6 @@ class BaseSettings(FPCCog):
 
         This allows bot owner to add player accounts into the bot's FPC database.
         """
-
         await ctx.typing()
         account = await self.account_cls.create(self.bot, flags)
         await self.check_if_account_already_in_database(account_id=getattr(account, self.account_id_column))
@@ -334,7 +332,6 @@ class BaseSettings(FPCCog):
 
         This allows bot owner to remove player accounts from the bot's FPC database.
         """
-
         await ctx.typing()
 
         player_id, display_name = await self.get_player_tuple(player_name)
@@ -359,7 +356,6 @@ class BaseSettings(FPCCog):
         * Embed with current state of channel setup
         * View to select a new channel for FPC notifications
         """
-
         await ctx.typing()
         # Get channel
         query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
@@ -394,7 +390,6 @@ class BaseSettings(FPCCog):
         It's somewhat needed because without it functions like `setup_characters`, `setup_players`
         will fail with ForeignKeyViolationError since there is nothing in `{self.prefix}_settings` table.
         """
-
         query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
         channel_id: int | None = await ctx.pool.fetchval(query, ctx.guild.id)
         if not channel_id:
@@ -492,7 +487,6 @@ class BaseSettings(FPCCog):
         This gives
         * View of buttons to add/remove characters to/from person favourite characters
         """
-
         await ctx.typing()
         await self.is_fpc_channel_set(ctx)
 
@@ -513,7 +507,6 @@ class BaseSettings(FPCCog):
         This gives
         * View of buttons to add/remove players to/from person favourite players
         """
-
         await ctx.typing()
         await self.is_fpc_channel_set(ctx)
 
@@ -559,8 +552,8 @@ class BaseSettings(FPCCog):
             so it's "dota_favourite_characters" table with a column "character_id".
         object_word : str
             gathering word like "hero", "champion", "player"
-        """
 
+        """
         await ctx.typing()
         object_id, object_display_name = await get_object_tuple(name)
 
@@ -602,8 +595,8 @@ class BaseSettings(FPCCog):
             so it's "dota_favourite_characters" table with a column "character_id".
         object_word : str
             gathering word like "hero", "champion", "player"
-        """
 
+        """
         await ctx.typing()
         object_id, object_display_name = await get_object_tuple(name)
 
@@ -709,7 +702,6 @@ class BaseSettings(FPCCog):
 
     async def hideout_character_list(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game}-fpc {character} list` Hideout-only command."""
-
         await ctx.typing()
         embed = await self.get_character_list_embed(ctx.guild.id)
         await ctx.reply(embed=embed)
@@ -718,7 +710,6 @@ class BaseSettings(FPCCog):
         self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for player_name in `/{game}-fpc player add/remove`."""
-
         assert interaction.guild
 
         query = f"""
@@ -739,7 +730,6 @@ class BaseSettings(FPCCog):
         self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for character_name in `/{game}-fpc {character} add/remove`."""
-
         query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
 
         favourite_character_ids: list[int] = [
@@ -764,7 +754,6 @@ class BaseSettings(FPCCog):
         self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for player_name in `/database {game} remove`."""
-
         query = f"""
             SELECT display_name
             FROM {self.prefix}_players

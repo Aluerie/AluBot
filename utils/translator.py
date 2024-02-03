@@ -1,5 +1,4 @@
-"""
-For some reason, any google-search "Python Google Translate" ends in some misery.
+"""For some reason, any google-search "Python Google Translate" ends in some misery.
 Ready-to-go libs are either blocking, abandoned, have unsolved bugs or just bad code
 while I just need a simple function.
 The best lib-solution in here is `async-google-trans-new` which still loses the race

@@ -1,5 +1,4 @@
-"""
-This code is licensed MPL v2 from Rapptz/RoboDanny
+"""This code is licensed MPL v2 from Rapptz/RoboDanny
 https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 
 Most of the code below is a shameless copypaste from @Rapptz's RoboDanny utils
@@ -255,13 +254,19 @@ class UserFriendlyTime(commands.Converter[FriendlyTimeResult]):
             )
             raise commands.BadArgument(msg)
 
+        dt = dt.replace(tzinfo=tzinfo)
         if not status.hasTime:
             # replace it with the current time
             dt = dt.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
 
+        if status.hasTime and not status.hasDate and dt < now:
+            # if it's in the past, and it has a time but no date,
+            # assume it's for the next occurrence of that time
+            dt = dt + datetime.timedelta(days=1)
+
         # if midnight is provided, just default to next day
         if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
-            dt = dt.replace(day=now.day + 1)
+            dt = dt + datetime.timedelta(days=1)
 
         result = FriendlyTimeResult(dt.replace(tzinfo=tzinfo))
         remaining = ""

@@ -61,8 +61,8 @@ def scrape_schedule_data(
     -------
     list[Match]
         data about Dota 2 matches in a structured dictionary.
-    """
 
+    """
     matches: list[Match] = []
 
     dt_now = datetime.datetime.now(datetime.UTC)
@@ -154,7 +154,7 @@ class ScheduleModeEnum(Enum):
 
     @property
     def data_toggle_area_content(self) -> str:
-        """variable that is passed to "data-toggle-area-content" div in soup parser"""
+        """Variable that is passed to "data-toggle-area-content" div in soup parser"""
         lookup = {
             ScheduleModeEnum.next_game_day_featured: "2",
             ScheduleModeEnum.featured: "2",
@@ -309,6 +309,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
             What matches to show
         query : str | None
             Search filter, i.e. "EG", "ESL" (or any other team/tournament names)
+
         """
         await ctx.typing()
         soup = await self.get_soup("dota2")

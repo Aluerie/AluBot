@@ -20,6 +20,7 @@ class DevUtilities(AluCog):
         ----------
         characters : str
             Input up to 10 characters to get format info about.
+
         """
 
         def to_string(c: str) -> tuple[str, str]:

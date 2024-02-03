@@ -193,8 +193,7 @@ class MatchToSend(BaseMatchToSend):
 
 
 class StratzMatchToEdit(BaseMatchToEdit):
-    """
-    Class
+    """Class
     """
 
     def __init__(
@@ -348,8 +347,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
 
 class NotCountedMatchToEdit(BaseMatchToEdit):
-    """
-    Class
+    """Class
     """
 
     @override

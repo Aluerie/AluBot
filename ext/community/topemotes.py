@@ -110,7 +110,8 @@ class EmoteAnalysis(CommunityCog, name="Emote stats"):
     @app_commands.describe(keyword="Possible keywords: `all`, `ani`, `nonani`")
     async def topemotes(self, ctx: AluContext, keyword: Literal["all", "ani", "nonani"] = "all") -> None:
         """Show emotes usage stats for `keyword` group ;\
-        Possible keywords: `all`, `ani` for animated emotes, `nonani` for static emotes ;"""
+        Possible keywords: `all`, `ani` for animated emotes, `nonani` for static emotes ;
+        """
         match keyword:
             case "all":
                 await topemotes_job(ctx, 1)

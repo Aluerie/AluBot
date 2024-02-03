@@ -52,7 +52,8 @@ class ErroneousUsage(AluBotError):
     Well - it's not a real exception, but rather a bad usage, which is given in the command itself.
     The reason it's exception in the first place so error handler handles it properly as in embed/ephemeral/etc.
 
-    We don't set_author in error_handler for this one."""
+    We don't set_author in error_handler for this one.
+    """
 
     __slots__: tuple[str, ...] = ()
 
@@ -68,6 +69,7 @@ class ResponseNotOK(AluBotError):
 
     Sometimes we just specifically need to raise an error in those cases
     when response from `self.bot.session.get(url)` is not OK.
-    I.e. Cache Updates."""
+    I.e. Cache Updates.
+    """
 
     __slots__: tuple[str, ...] = ()

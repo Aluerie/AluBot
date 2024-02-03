@@ -117,7 +117,6 @@ class FeedbackCog(MetaCog):
         The bot will DM you about the status of your request if possible/needed.
         You can also open issues/PR on [GitHub](https://github.com/Aluerie/AluBot).
         """
-
         channel = self.feedback_channel
         if channel is None:
             await ctx.reply("Sorry, something went wrong \N{THINKING FACE}", ephemeral=True)
@@ -143,7 +142,6 @@ class FeedbackCog(MetaCog):
 
         Meant to be used by the bots developers to contact feedback submitters.
         """
-
         # dm the user
         e = discord.Embed(colour=const.Colour.blueviolet, title="Message from a developer")
         e.set_author(name=str(ctx.author), icon_url=ctx.author.display_avatar.url)

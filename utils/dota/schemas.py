@@ -1,5 +1,4 @@
-"""
-Slightly overcooked typing for OpenDota pulsefire-like client REST requests.
+"""Slightly overcooked typing for OpenDota pulsefire-like client REST requests.
 
 Note that it can be outdated, wrong, incomplete.
 """

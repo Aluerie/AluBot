@@ -19,8 +19,7 @@ class Utilities(
     name="Utilities",
     emote=Emote.FeelsDankManLostHisHat,
 ):
-    """
-    Utilities
+    """Utilities
     """
 
 

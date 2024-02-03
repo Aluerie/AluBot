@@ -88,7 +88,6 @@ class ModerationTools(ModerationCog):
         When the command is done doing its work, you will get a message
         detailing which users got removed and how many messages got removed.
         """
-
         predicates: list[Callable[[discord.Message], Any]] = []
         if flags.bot:
             if flags.webhooks:

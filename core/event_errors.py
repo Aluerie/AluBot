@@ -26,8 +26,8 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
         The positional arguments for the event that raised the exception.
     kwargs: Any
         The keyword arguments for the event that raised the exception.
-    """
 
+    """
     # Exception Traceback
     (_exception_type, exception, _traceback) = sys.exc_info()
     if exception is None:

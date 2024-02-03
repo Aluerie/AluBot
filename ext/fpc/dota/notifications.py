@@ -280,7 +280,6 @@ class DotaFPCNotifications(BaseNotifications):
         Stratz has daily ratelimit of 10000 requests and it's kinda scary one, if parsing requests fail a lot.
         This is why we also send @mention if ratelimit is critically low.
         """
-
         content = ""
         if self.bot.stratz.rate_limiter.rate_limits_ratio < 0.1:
             content = f"<@{self.bot.owner_id}>"

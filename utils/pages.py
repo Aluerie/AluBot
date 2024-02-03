@@ -1,5 +1,4 @@
-"""
-Pagination menus View classes
+"""Pagination menus View classes
 
 Sources I used to create this file:
 

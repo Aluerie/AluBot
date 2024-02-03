@@ -87,7 +87,6 @@ class EmoteSpam(CommunityCog):
 
     async def get_random_emote(self) -> discord.Emoji:
         """Get a random discord emote from one of discord servers the bot is in."""
-
         # Note: hmm, maybe we need to do some privacy check?
         # what if server owner doesn't want me to use their emotes.
 
@@ -108,7 +107,6 @@ class EmoteSpam(CommunityCog):
     @commands.hybrid_command()
     async def do_emote_spam(self, ctx: AluContext) -> None:
         """Send 3x random emote into emote spam channel"""
-
         emote = await self.get_random_emote()
         channel = self.community.emote_spam
         content = f"{emote!s} {emote!s} {emote!s}"

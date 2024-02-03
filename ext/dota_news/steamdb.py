@@ -1,5 +1,4 @@
-"""
-This cog is just rude reposting from steamdb resources.
+"""This cog is just rude reposting from steamdb resources.
 
 Unfortunately, I'm clueless about how to get the info from steam itself
 And following announcement channels in steamdb discord is not a solution

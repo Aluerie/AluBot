@@ -24,8 +24,7 @@ LF = TypeVar("LF", bound=_func)
 
 
 class AluLoop(tasks.Loop[LF]):
-    """
-    Subclass for discord.ext.tasks.Loop
+    """Subclass for discord.ext.tasks.Loop
     for extra standard needed functionality
     """
 
@@ -44,8 +43,7 @@ class AluLoop(tasks.Loop[LF]):
         self._before_loop = self._base_before_loop
 
     async def _base_before_loop(self, *args: Any) -> None:
-        """
-        I want to give a standard coro to `_before_loop`.
+        """I want to give a standard coro to `_before_loop`.
 
         Otherwise every task has same
         >>> @my_task.before_loop
@@ -55,7 +53,6 @@ class AluLoop(tasks.Loop[LF]):
 
         fragment of code.
         """
-
         # this will fail outside a cog
         # but all my tasks are inside cogs anyway.
         cog = args[0]
@@ -63,8 +60,7 @@ class AluLoop(tasks.Loop[LF]):
             await cog.bot.wait_until_ready()
 
     async def _error(self, *args: Any) -> None:
-        """
-        Same _error as in parent class but
+        """Same _error as in parent class but
         added sending webhook notifications to my spam
         """
         exception: Exception = args[-1]

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
     from bot import AluBot
 
-    from ..database import PoolProtocol
+    from ..database import PoolTypedWithAny
 
 
 __all__ = (
@@ -33,7 +33,7 @@ class AluContext(commands.Context["AluBot"]):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.pool: PoolProtocol = self.bot.pool
+        self.pool: PoolTypedWithAny = self.bot.pool
         self.is_error_handled: bool = False
 
     @override
@@ -66,9 +66,15 @@ class AluContext(commands.Context["AluBot"]):
         with contextlib.suppress(discord.HTTPException):
             await self.message.add_reaction(formats.tick(semi_bool))
 
+    # the next two functions mean the following in a context of discord chat:
+    #       replying to Bob: wow
+    # Alice: hey
+    # redirect reference means we are getting "replying to Bob".
+    # replied message means we are getting the message object for "wow" Bob's message.
+
     @discord.utils.cached_property
     def replied_reference(self) -> discord.MessageReference | None:
-        """Used to redirect reference to `ctx.message`'s reference."""
+        """Get redirect reference to `ctx.message`'s reference."""
         ref = self.message.reference
         if ref and isinstance(ref.resolved, discord.Message):
             return ref.resolved.to_reference(fail_if_not_exists=False)  # maybe don't make it default
@@ -76,7 +82,7 @@ class AluContext(commands.Context["AluBot"]):
 
     @discord.utils.cached_property
     def replied_message(self) -> discord.Message | None:
-        """Used to get message from provided reference in `ctx.message`"""
+        """Get message from provided reference in `ctx.message`."""
         ref = self.message.reference
         if ref and isinstance(ref.resolved, discord.Message):
             return ref.resolved
@@ -181,6 +187,8 @@ class AluContext(commands.Context["AluBot"]):
 
 
 class AluGuildContext(AluContext):
+    """AluContext but in guilds meaning some attributes can be type-narrowed."""
+
     if TYPE_CHECKING:
         author: discord.Member
         guild: discord.Guild

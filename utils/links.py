@@ -45,7 +45,6 @@ async def extra_send_fxtwitter_links(message: discord.Message) -> discord.Messag
     it does not allow links to be clickable in website embeds
     thus we have to extract them ourselves.
     """
-
     # wait till website meta embed actually renders
     await asyncio.sleep(2.7)
 

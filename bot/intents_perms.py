@@ -1,5 +1,4 @@
-"""
-Since I have a weird set of functions that greatly differs for Public/Community/Hideout usage
+"""Since I have a weird set of functions that greatly differs for Public/Community/Hideout usage
 and thus they also differ in intents/permissions they require.
 
 Let's weight those intents/permissions to give ourselves a reasoning why this or that should be `True`.
@@ -15,8 +14,8 @@ But this is a bit overcooking on formatting and organizing part.
 from discord import Intents, Permissions
 
 __all__ = (
-    "intents",
-    "permissions",
+    "INTENTS",
+    "PERMISSIONS",
 )
 
 
@@ -46,7 +45,7 @@ i.dm_messages = True
 # | Message content               |                           | Message content                                     |<|
 i.message_content = True
 # +-------------------------------+---------------------------+---------------------------+---------------------------+
-intents = i
+INTENTS = i
 
 
 p = Permissions()  # Idk why but I want to weight all these permissions carefully so
@@ -96,4 +95,4 @@ p.connect = True
 # | Speak                         | TextToSpeech commands                                                   | <- | <- |
 p.speak = True
 # +-------------------------------+---------------------------+---------------------------+---------------------------+
-permissions = p
+PERMISSIONS = p

@@ -58,11 +58,13 @@ select = [
     "W",
     "PERF",
     "ANN",
-    # my experimental additions 
+    # my experimental additions
     "N",
     "EM",
     "ICN",
     "DTZ",
+    "ISC",
+    "D"
 ]
 ignore = [
     "F401",

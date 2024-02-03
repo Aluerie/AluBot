@@ -211,8 +211,8 @@ class FPCSetupPlayersCharactersPageSource(menus.ListPageSource):
         entries:
             List of (id, name) tuples,
             for example: [(1, "Anti-Mage"), (2, "Axe"), ...] or [(1, "gosu"), (2, "Quantum"), ...].
-        """
 
+        """
         # unfortunately we have to fetch favourites each format page
         # in case they are bad acting with using both slash commands
         # or several menus
@@ -301,8 +301,8 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
         special_button_cls : Optional[type[AccountListButton]], optional
             button to replace the 5th button in pagination menu.
             i.e. we want account list for /setup players command.
-        """
 
+        """
         super().__init__(
             ctx,
             source=FPCSetupPlayersCharactersPageSource(object_id_name_tuples),

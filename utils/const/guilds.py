@@ -182,11 +182,12 @@ class SavedGuild:
     * HideoutGuild
 
     Attributes
-    ------------
+    ----------
     bot : AluBot
         The bot instance to initiate all snowflakes into discord Objects
     id : int
         Snowflake ID for the guild itself.
+
     """
 
     def __init__(self, bot: AluBot, guild_id: int) -> None:

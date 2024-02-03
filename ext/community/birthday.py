@@ -131,7 +131,6 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     )
     async def birthday_set(self, ctx: AluGuildContext, *, birthday: converters.DateTimezonePicker) -> None:
         """Set your birthday."""
-
         dt = birthday.verify_date()
 
         confirm_embed = (
@@ -236,7 +235,6 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     @app_commands.describe(member="Member of the server or you if not specified")
     async def check(self, ctx: AluGuildContext, member: discord.Member = commands.Author) -> None:
         """Check your or somebody's birthday in database"""
-
         query = """
             SELECT * FROM timers
             WHERE event = 'birthday'

@@ -1,5 +1,4 @@
-"""
-## Original source:
+"""## Original source:
 * RoboDanny's cogs.utils.buttons (license MPL v2 from Rapptz/RoboDanny)
     https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/buttons.py
 
@@ -346,7 +345,6 @@ class DictionaryCog(EducationalCog):
     @app_commands.describe(word="The word to look up")
     async def _define(self, ctx: AluContext, *, word: str) -> None:
         """Looks up an English word in the dictionary."""
-
         result = await parse_free_dictionary_for_word(ctx.session, word=word)
         if result is None:
             await ctx.send("Could not find that word.", ephemeral=True)

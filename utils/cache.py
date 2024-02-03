@@ -64,6 +64,7 @@ class KeysCache:
         ----------
         bot : AluBot
             We need it just so @aluloop task can find exc_manager in case of exceptions.
+
         """
         self.bot: AluBot = bot
 
@@ -103,7 +104,6 @@ class KeysCache:
     @aluloop()
     async def update_data(self) -> None:
         """The task responsible for keeping the data up-to-date."""
-
         # log.debug("Trying to update Cache %s.", self.__class__.__name__)
         async with self.lock:
             start_time = time.perf_counter()
@@ -136,7 +136,6 @@ class KeysCache:
 
         For example, when we try to find Dota talent name, we query ability ids into it that aren't talents.
         """
-
         data = await self.get_cached_data()
         return data[cache].get(key)
 

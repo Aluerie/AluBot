@@ -118,7 +118,7 @@ class OpenDotaAPIRateLimiter(DotaAPIsRateLimiter):
     @override
     def analyze_headers(self, headers: dict[str, str]) -> tuple[HeaderRateLimitInfo, HeaderRateLimitInfo]:
         self.rate_limits_string = "\n".join(
-            [f"{timeframe}: " f"{headers[f'X-Rate-Limit-Remaining-{timeframe}']}" for timeframe in ("Minute", "Day")]
+            [f"{timeframe}: {headers[f'X-Rate-Limit-Remaining-{timeframe}']}" for timeframe in ("Minute", "Day")]
         )
         self.rate_limits_ratio = int(headers["X-Rate-Limit-Remaining-Day"]) / 2000
 

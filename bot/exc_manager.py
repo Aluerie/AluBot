@@ -1,5 +1,4 @@
-"""
-ex_manager.py - yes, it is for managing my exes.
+"""ex_manager.py - yes, it is for managing my exes.
 """
 
 from __future__ import annotations
@@ -29,8 +28,7 @@ log = logging.getLogger("exc_manager")
 
 
 class ErrorInfoPacket(NamedTuple):
-    """
-    Parameters
+    """Parameters
     ----------
     embed: discord.Embed
         embed to send in error notification to the devs
@@ -39,6 +37,7 @@ class ErrorInfoPacket(NamedTuple):
     mention: bool
         whether mention the devs.
         Useful if I'm sitting in debug-spam channel so I don't get unnecessary pings.
+
     """
 
     embed: discord.Embed
@@ -64,6 +63,7 @@ class ExceptionManager:
         A mapping of tracebacks to their error information.
     error_webhook : discord.Webhook
         The error webhook used to send errors.
+
     """
 
     # Inspired by:
@@ -118,8 +118,8 @@ class ExceptionManager:
             The traceback of the error.
         packet: ErrorInfoPacket
             The additional information about the error.
-        """
 
+        """
         code_chunks = list(self._yield_code_chunks(traceback))
 
         # hmm, this is honestly a bit too many sends for 5 seconds of rate limit :thinking:
@@ -139,7 +139,6 @@ class ExceptionManager:
         extra: str | None,
     ) -> ErrorInfoPacket:
         """Get info packet"""
-
         if isinstance(source, str):
             dt = discord.utils.utcnow()
             embed = discord.Embed(colour=0xDA9F93, description=source, timestamp=dt).set_footer(text=where)
@@ -263,7 +262,7 @@ class ExceptionManager:
         """Register, analyse error and put it into queue to send to developers
 
         Parameters
-        -----------
+        ----------
         error: Exception
             Exception that the developers of AluBot are going to be notified about
         source: discord.Interaction[AluBot] | AluContext | discord.Embed | str | None,
@@ -284,6 +283,7 @@ class ExceptionManager:
 
             The example of this is error handler in views, where I pass information on view/item objects
             as an extra_data string. This info gets added into extra field in embed.
+
         """
         log.error("%s: %s.", error.__class__.__name__, where, exc_info=error)
 
@@ -331,6 +331,7 @@ class HandleHTTPException(AbstractAsyncContextManager[Any]):
     SilentCommandError
         Error raised if an HTTPException is encountered. This
         error is specifically ignored by the command error handler.
+
     """
 
     __slots__ = ("destination", "title")

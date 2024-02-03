@@ -256,7 +256,6 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     @remind.command(name="clear", ignore_extra=False)
     async def reminder_clear(self, ctx: AluContext) -> None:
         """Clears all reminders you have set."""
-
         # For UX purposes this has to be two queries.
         query = """
             SELECT COUNT(*) FROM timers

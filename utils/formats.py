@@ -1,5 +1,4 @@
-"""
-Helping functions to create better/easier or just human-friendly formatting for various things.
+"""Helping functions to create better/easier or just human-friendly formatting for various things.
 """
 
 from __future__ import annotations
@@ -23,8 +22,7 @@ if TYPE_CHECKING:
 
 
 class plural:  # noqa: N801
-    """
-    Helper class to format tricky plural nouns
+    """Helper class to format tricky plural nouns
 
     Examples: ::
 
@@ -50,15 +48,13 @@ class plural:  # noqa: N801
 
 
 def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
-    """
-    Join sequence of string in human-like format.
+    """Join sequence of string in human-like format.
 
     Example Usage: ::
 
         >>> human_join(['Conan Doyle', 'Nabokov', 'Fitzgerald'], final='and')
         >>> 'Conan Doyle, Nabokov and Fitzgerald'
     """
-
     # licensed MPL v2 from Rapptz/RoboDanny
     # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
 
@@ -83,8 +79,7 @@ def human_timedelta(
     mode: Literal["full", "brief", "strip"] = "full",
     suffix: bool = True,
 ) -> str:
-    """
-    Human timedelta between `dt` and `source` `datetime.datetime`'s.
+    """Human timedelta between `dt` and `source` `datetime.datetime`'s.
 
     Example Usage: ::
 
@@ -114,8 +109,8 @@ def human_timedelta(
     -------
     str
         Human readable string describing difference between `dt` and `source`
-    """
 
+    """
     # licensed MPL v2 from Rapptz/RoboDanny
     # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 
@@ -194,8 +189,7 @@ def human_timedelta(
 
 
 def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> str:
-    """
-    Copy from d.py docs for *letters argument
+    """Copy from d.py docs for *letters argument
     +-------------+----------------------------+-----------------+
     |    Style    |       Example Output       |   Description   |
     +=============+============================+=================+
@@ -212,7 +206,8 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> s
     | F           | Tuesday, 17 May 2016 22:57 | Long Date Time  |
     +-------------+----------------------------+-----------------+
     | R           | 5 years ago                | Relative Time   |
-    +-------------+----------------------------+-----------------+"""
+    +-------------+----------------------------+-----------------+
+    """
     return " ".join([format_dt(dt, letter) for letter in style_letters])
 
 
@@ -391,10 +386,18 @@ def divmod_timedelta(total_seconds: int | float) -> str:
 
     But because of this, for accuracy sake, this only supports days, hours, minutes, seconds.
     """
-
     minutes, seconds = divmod(total_seconds, 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
 
     timeunit_dict = {"d": days, "h": hours, "m": minutes, "s": seconds}
     return "".join(f"{letter}{number}" for letter, number in timeunit_dict.items() if number)
+
+
+def convert_pascal_case_to_spaces(text: str) -> str:
+    """Convert PascalCase string to space-separated one
+    i.e. convert "CommandNotFound" to "Command Not Found".
+    """
+    # https://stackoverflow.com/a/9283563/19217368
+    label = re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", text)
+    return label

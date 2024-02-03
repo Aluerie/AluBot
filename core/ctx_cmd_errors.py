@@ -6,26 +6,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, errors, formats
+from utils import const, errors, formats, helpers
 
 if TYPE_CHECKING:
     from bot import AluBot
     from utils import AluContext
-
-
-def unexpected_error_embed() -> discord.Embed:
-    return (
-        discord.Embed(
-            colour=const.Colour.maroon,
-            description=(
-                "I've notified my developer about the error and sent all the details. "
-                "Hopefully, we'll get it fixed soon.\n"
-                f"Sorry for the inconvenience! {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}"
-            ),
-        )
-        .set_thumbnail(url=const.Picture.DankFix)
-        .set_author(name="Oups... Unexpected error!")
-    )
 
 
 async def on_command_error(ctx: AluContext, error: commands.CommandError | Exception) -> None:
@@ -90,12 +75,7 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
             #     await ctx.reply(":(", ephemeral=True)
             return
 
-    if unexpected_error:
-        response_to_user_embed = unexpected_error_embed()
-    else:
-        response_to_user_embed = discord.Embed(colour=const.Colour.maroon, description=desc)
-        if error_type:
-            response_to_user_embed.set_author(name=error_type)
+    response_to_user_embed = helpers.error_handler_response_to_user_embed(unexpected_error, desc, error_type)
     await ctx.reply(embed=response_to_user_embed, ephemeral=True)
 
 

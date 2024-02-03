@@ -49,13 +49,15 @@ def my_bool(argument: str) -> bool:
 
 class Codeblock:
     """Parsed codeblock from discord message if there is such markdown
+
     Attributes
-    ---------
+    ----------
     language: Optional[str]
         empty '' string if
             - language was not given in ``` codeblock
             - if it is singular ` codeblock
             - if it is not codeblock
+
     """
 
     def __init__(self, code: str, language: str = "") -> None:

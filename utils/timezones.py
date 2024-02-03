@@ -30,6 +30,7 @@ class TimeZone(NamedTuple):
     key: str
         IANA alias string that will be used in zoneinfo.ZoneInfo(key=key) like 'Europe/Berlin'
         or you can just use timezone.to_tz()
+
     """
 
     label: str
@@ -256,7 +257,6 @@ class TimezoneManager:
         Yes, please pass now_utc = datetime.datetime.now(datetime.timezone.utc) here
         I don't want to create it each function run.
         """
-
         # why do I need to have/construct a datetime object to get UTC offset, sadge
         # this data is not affected by DST, isn't it ?
         now_tz = now_utc.astimezone(tz=zoneinfo.ZoneInfo(key=iana_alias))

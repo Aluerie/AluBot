@@ -80,9 +80,11 @@ class Other(FunCog):
 
         Parameters
         ----------
-        channel: Optional[discord.TextChannel]
+        ctx :
+            Context
+        channel :
             Channel to send to
-        text:
+        text :
             Enter text to speak
 
         """
@@ -147,7 +149,7 @@ class Other(FunCog):
             {
                 "!": "\N{WHITE EXCLAMATION MARK ORNAMENT}",
                 "?": "\N{WHITE QUESTION MARK ORNAMENT}",
-            }  # ?! into emotes
+            }  # Turn ?! into emotes
             | {str(i): n for i, n in enumerate(const.DIGITS)}  # digits into emotes :zero:, :one:, :two:, ...
             | {
                 chr(0x00000041 + x): f"{chr(0x0001F1E6 + x)} " for x in range(26)

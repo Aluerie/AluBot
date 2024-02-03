@@ -64,7 +64,7 @@ select = [
     "ICN",
     "DTZ",
     "ISC",
-    "D"
+    # "D", # for doc-string madness
 ]
 ignore = [
     "F401",
@@ -80,10 +80,13 @@ ignore = [
     "ANN101",
     "ANN102",
     "ANN401",
+    "D401",    # the imperative doc-string rule is kinda bullshit.
+    "D100",    # docstring in a public module
 ]
 [tool.ruff.isort]
 split-on-trailing-comma = true
 combine-as-imports = true
+
 
 [project]
 name = "AluBot"

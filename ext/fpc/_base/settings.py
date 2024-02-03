@@ -71,9 +71,7 @@ class Account(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def static_account_name_with_links(**kwargs: Any) -> str:
-        """Static method for `account_string_with_links` so we can get it
-        when we don't need to initiate a full account.
-        """
+        """Static method for `account_string_with_links` for when we don't need to initiate a full account."""
 
     @property
     @abc.abstractmethod
@@ -85,9 +83,7 @@ class Account(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def static_account_string(**kwargs: Any) -> str:
-        """Static method for `account_string` so we can get it
-        when we don't need to initiate a full account.
-        """
+        """Static method for `account_string` for when we don't need to initiate a full account."""
 
     @property
     @abc.abstractmethod
@@ -99,9 +95,7 @@ class Account(abc.ABC):
             twitch_user = next(iter(await bot.twitch.fetch_users(names=[self.player_name])), None)
             if not twitch_user:
                 msg = f"Error checking twitch user `{self.player_name}`.\n User either does not exist or is banned."
-                raise errors.BadArgument(
-                    msg
-                )
+                raise errors.BadArgument(msg)
             display_name, twitch_id, profile_image = twitch_user.display_name, twitch_user.id, twitch_user.profile_image
         else:
             display_name, twitch_id, profile_image = self.player_name, None, discord.utils.MISSING
@@ -138,9 +132,9 @@ class Account(abc.ABC):
 
 
 class BaseSettings(FPCCog):
-    """Base class for cogs representing FPC (Favourite Player+Character) feature
-    for different games:
+    """Base class for cogs representing FPC (Favourite Player+Character) feature.
 
+    The following games are currently supported:
     * Dota 2
     * League of Legends
     * and probably more to come.
@@ -244,9 +238,7 @@ class BaseSettings(FPCCog):
                 f"It is marked as {display_name}'s account.\n\n"
                 f"You might have wanted to use `/{self.prefix} setup players` and chose this player from here."
             )
-            raise errors.BadArgument(
-                msg
-            )
+            raise errors.BadArgument(msg)
 
     async def request_player(self, ctx: AluGuildContext, flags: commands.FlagConverter) -> None:
         """Base function for `/{game} request player` command.
@@ -398,9 +390,7 @@ class BaseSettings(FPCCog):
                 f"{self.game_display_name} FPC (Favourite Player+Character) channel first. "
                 f"Please, use `/{self.prefix} setup channel` to assign it."
             )
-            raise errors.ErroneousUsage(
-                msg
-            )
+            raise errors.ErroneousUsage(msg)
 
     async def setup_misc(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game} setup miscellaneous` command.
@@ -562,9 +552,7 @@ class BaseSettings(FPCCog):
             await ctx.pool.execute(query, ctx.guild.id, object_id)
         except asyncpg.UniqueViolationError:
             msg = f"{object_word.capitalize()} {object_display_name} was already in your favourite list."
-            raise errors.BadArgument(
-                msg
-            )
+            raise errors.BadArgument(msg)
 
         embed = discord.Embed(colour=self.colour).add_field(
             name=f"Succesfully added a {object_word} to your favourites.",
@@ -611,9 +599,7 @@ class BaseSettings(FPCCog):
             await ctx.reply(embed=embed)
         elif result == "DELETE 0":
             msg = f"{object_word.capitalize()} {object_display_name} is already not in your favourite list."
-            raise errors.BadArgument(
-                msg
-            )
+            raise errors.BadArgument(msg)
         else:
             msg = "Unknown error."
             raise errors.BadArgument(msg)
@@ -624,9 +610,7 @@ class BaseSettings(FPCCog):
         player_row: SetupPlayerQueryRow | None = await self.bot.pool.fetchrow(query, player_name.lower())
         if player_row is None:
             msg = f"There is no player named {player_name} in the database. Please, double check everything."
-            raise errors.BadArgument(
-                msg
-            )
+            raise errors.BadArgument(msg)
         return player_row["player_id"], player_row["display_name"]
 
     async def hideout_player_add(self, ctx: AluGuildContext, player_name: str) -> None:
@@ -645,9 +629,7 @@ class BaseSettings(FPCCog):
                 f"{self.character_singular_word.capitalize()} {character_name} does not exist. "
                 "Please, double check everything."
             )
-            raise errors.BadArgument(
-                msg
-            )
+            raise errors.BadArgument(msg)
         character_display_name = await self.character_name_by_id(character_id)
         return character_id, character_display_name
 

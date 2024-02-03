@@ -85,6 +85,8 @@ if TYPE_CHECKING:
 
 
 async def create_pool() -> asyncpg.Pool[DotRecord]:
+    """Create a database connection pool."""
+
     def _encode_jsonb(value: Any) -> str:
         return orjson.dumps(value).decode("utf-8")
 

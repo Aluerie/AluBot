@@ -33,7 +33,7 @@ async def on_views_modals_error(
     """Handler called when an error is raised within an AluView or AluModal objects.
 
     Basically, error handler for views and modals.
-    """  # noqa: D401
+    """
     error_type: str | None = error.__class__.__name__
     desc: str = "No description"
     unexpected_error: bool = False

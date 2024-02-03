@@ -387,8 +387,9 @@ class FPCSetupCharactersPaginator(FPCSetupPlayersCharactersPaginator):
 
 
 class AddRemoveButton(discord.ui.Button[FPCSetupPlayersCharactersPaginator]):
-    """Green/Black Buttons to Remove from/Add to favourite list
-    for `/{game} setup players/{characters}` command's view.
+    """Green/Black Buttons to Remove from/Add to favourite list.
+
+    Used for `/{game} setup players/{characters}` command's view.
     """
 
     def __init__(

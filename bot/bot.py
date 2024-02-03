@@ -65,6 +65,20 @@ class AluBot(commands.Bot, AluBotHelper):
     def __init__(
         self, test: bool = False, *, session: ClientSession, pool: asyncpg.Pool[DotRecord], **kwargs: Any
     ) -> None:
+        """Initialize the AluBot.
+
+        Parameters
+        ----------
+        session : ClientSession
+            aiohttp.ClientSession to use within the bot.
+        pool : asyncpg.Pool[DotRecord]
+            A connection pool to the database.
+        test : bool, optional
+            whether the bot is a testing version (YenBot) or main production bot (AluBot), by default False
+        kwargs : Any
+            kwargs for the purpose of MRO and what not.
+
+        """
         self.test: bool = test
         self.main_prefix: Literal["~", "$"] = "~" if test else "$"
 

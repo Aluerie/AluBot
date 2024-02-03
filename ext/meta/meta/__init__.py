@@ -9,14 +9,12 @@ from utils.const import Emote
 from .feedback import FeedbackCog
 from .help import AluHelpCog
 from .other import OtherCog
-from .prefix import PrefixSetupCog
-from .setup_cog import SetupCommandCog
 
 if TYPE_CHECKING:
     from bot import AluBot
 
 
-class Meta(AluHelpCog, SetupCommandCog, OtherCog, FeedbackCog, PrefixSetupCog):
+class Meta(AluHelpCog, OtherCog, FeedbackCog):
     """Commands-utilities related to Discord or the Bot itself."""
 
     @property

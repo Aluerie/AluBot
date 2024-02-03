@@ -46,7 +46,7 @@ class UserError(AluBotError):
 
 
 class ErroneousUsage(AluBotError):
-    """This exception does not mean an error happened. But rather some bad command usage.
+    """The exception does not mean an error happened. But rather some bad command usage.
 
     Example, somebody uses `/text-to-speech stop` while the bot is not even in a voice chat.
     Well - it's not a real exception, but rather a bad usage, which is given in the command itself.

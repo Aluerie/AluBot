@@ -82,7 +82,7 @@ class LoLAccount(Account):
     def hint_database_add_command_args(self) -> str:
         return (
             f"name: {self.player_display_name} game_name: {self.game_name} "
-            + f"tag_line: {self.tag_line} server: {self.platform.display_name}"
+            f"tag_line: {self.tag_line} server: {self.platform.display_name}"
         )
 
     @override

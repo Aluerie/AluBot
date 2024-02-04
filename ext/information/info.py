@@ -152,7 +152,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         ][:25]
 
 
-class StatsCommands(InfoCog, name="Stats", emote=const.Emote.Smartge):
+class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
     """Some stats/infographics/diagrams/info.
 
     More to come.

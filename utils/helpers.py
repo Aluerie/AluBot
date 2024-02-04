@@ -11,7 +11,8 @@ from typing import TYPE_CHECKING, Self
 
 import discord
 
-from . import const, errors, formats
+from . import const, formats
+from .bases import errors
 
 if TYPE_CHECKING:
     from types import TracebackType

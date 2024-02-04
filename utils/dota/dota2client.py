@@ -45,30 +45,32 @@ class Dota2Client(Client):
             await self._bot.hideout.spam.send(embed=embed)
 
     async def on_error(self, event: str, error: Exception, *args: object, **kwargs: object) -> None:
-        embed = discord.Embed(
-            colour=discord.Colour.dark_red(),
-            title=f"Error in steam.py's {self.__class__.__name__}",
-        ).set_author(
-            name=f"Event: {event}",
-            icon_url=const.Logo.Dota,
+        embed = (
+            discord.Embed(
+                colour=discord.Colour.dark_red(),
+                title=f"Error in steam.py's {self.__class__.__name__}",
+            )
+            .set_author(
+                name=f"Event: {event}",
+                icon_url=const.Logo.Dota,
+            )
+            .add_field(
+                name="Args",
+                value=(
+                    "```py\n" + "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) + "```"
+                    if args
+                    else "No Args"
+                ),
+                inline=False,
+            )
+            .add_field(
+                name="Kwargs",
+                value=(
+                    "```py\n" + "\n".join(f"[{name}]: {value!r}" for name, value in kwargs.items()) + "```"
+                    if kwargs
+                    else "No Kwargs"
+                ),
+                inline=False,
+            )
         )
-
-        # kwargs
-        args_str = ["```py"]
-        for value in args:
-            args_str.append(f"{value!r}")  # noqa: PERF401
-        else:
-            args_str.append("No args")
-        args_str.append("```")
-        embed.add_field(name="Args", value="\n".join(args_str), inline=False)
-
-        # kwargs
-        kwargs_str = ["```py"]
-        for name, value in kwargs.items():
-            kwargs_str.append(f"[{name}]: {value!r}")
-        else:
-            kwargs_str.append("No kwargs")
-        args_str.append("```")
-        embed.add_field(name="Kwargs", value="\n".join(kwargs_str), inline=False)
-
-        await self._bot.exc_manager.register_error(error, source=embed, where="Dota2Client")
+        await self._bot.exc_manager.register_error(error, embed)

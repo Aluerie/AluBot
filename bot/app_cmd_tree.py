@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord import app_commands
@@ -12,14 +12,11 @@ if TYPE_CHECKING:
 
     from .bot import AluBot
 
-    AppCommandStore = dict[str, app_commands.AppCommand]  # name: AppCommand
+    AppCommandStore = dict[str, app_commands.AppCommand]  # {name: app_command}
 
 
 class AluAppCommandTree(app_commands.CommandTree):
-    if TYPE_CHECKING:
-        on_error: Callable[[discord.Interaction[AluBot], app_commands.AppCommandError], Coroutine[Any, Any, None]]
-
-    """Custom Command tree class to set up slash cmds mentions
+    """Custom Command tree class to set up slash cmds mentions.
 
     The class makes the tree store app_commands.AppCommand
     to access later for mentioning or anything
@@ -27,6 +24,9 @@ class AluAppCommandTree(app_commands.CommandTree):
 
     # Credits to @Soheab and their `?tag slashid` in dpy server.
     # https://gist.github.com/Soheab/fed903c25b1aae1f11a8ca8c33243131#file-bot_subclass
+
+    if TYPE_CHECKING:
+        on_error: Callable[[discord.Interaction[AluBot], app_commands.AppCommandError], Coroutine[Any, Any, None]]
 
     def __init__(self, client: AluBot) -> None:
         super().__init__(client=client)
@@ -107,11 +107,13 @@ class AluAppCommandTree(app_commands.CommandTree):
         else:
             self._global_app_commands = self._unpack_app_commands(commands)
 
+    @override
     async def fetch_command(self, command_id: int, /, *, guild: Snowflake | None = None) -> app_commands.AppCommand:
         res = await super().fetch_command(command_id, guild=guild)
         await self._update_cache([res], guild=guild)
         return res
 
+    @override
     async def fetch_commands(self, *, guild: Snowflake | None = None) -> list[app_commands.AppCommand]:
         res = await super().fetch_commands(guild=guild)
         await self._update_cache(res, guild=guild)
@@ -123,6 +125,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         else:
             self._global_app_commands = {}
 
+    @override
     def clear_commands(
         self,
         *,
@@ -134,6 +137,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         if clear_app_commands_cache:
             self.clear_app_commands_cache(guild=guild)
 
+    @override
     async def sync(self, *, guild: Snowflake | None = None) -> list[app_commands.AppCommand]:
         res = await super().sync(guild=guild)
         await self._update_cache(res, guild=guild)

@@ -8,6 +8,7 @@ from enum import IntEnum
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
+import discord
 from dota2.client import Dota2Client as Dota2Client_
 from steam.client import SteamClient
 
@@ -56,7 +57,11 @@ class Dota2Client(Dota2Client_):
                 self.launch()
         except Exception as exc:
             log.error("Logging in Steam failed")
-            await self._bot.exc_manager.register_error(exc, source="Steam login", where="Steam login")
+            embed = discord.Embed(
+                colour=0x233423,
+                title="Steam login",
+            ).set_footer(text="Dota2Client.login")
+            await self._bot.exc_manager.register_error(exc, embed)
 
     async def top_live_matches(self) -> list[LiveMatch]:
         log.debug("Steam is connected: %s", self.steam.connected)

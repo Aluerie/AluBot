@@ -187,7 +187,13 @@ class TimerManager:
             self._task.cancel()
             self._task = self.bot.loop.create_task(self.dispatch_timers())
         except Exception as exc:
-            await self.bot.exc_manager.register_error(exc, source="TimerManager", where="dispatch_timers")
+            embed = discord.Embed(
+                colour=0xFF8243,
+                title="Error in dispatching the timer",
+            ).set_footer(
+                text="TimerManager.dispatch_timers",
+            )
+            await self.bot.exc_manager.register_error(exc, embed)
 
     async def wait_for_active_timers(self, *, days: int = 7) -> Timer[TimerMapping]:
         """Wait for a timer that has expired.

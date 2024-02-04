@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import textwrap
 from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, errors, formats, helpers
+from utils import errors, formats, helpers
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -18,20 +19,19 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
     if ctx.is_error_handled is True:
         return
 
-    error_type = error.__class__.__name__
+    # error handler working variables
     desc = "No description"
-    unexpected_error = False
+    is_unexpected = False
+    mention = True
+
+    # error handler itself.
 
     if isinstance(error, (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError)):
         # we aren't interested in the chain traceback.
         return await on_command_error(ctx, error.original)
-    elif isinstance(error, errors.ErroneousUsage):
-        # raised by myself but it's not an error per se, thus i dont give error type to the user.
-        error_type = None
-        desc = f"{error}"
     elif isinstance(error, errors.AluBotError):
         # These errors are generally raised in code by myself or by my code with an explanation text as `error`
-        # AluBotException subclassed exceptions are all mine.
+        # AluBotError subclassed exceptions are all mine.
         desc = f"{error}"
     elif isinstance(error, commands.BadArgument):
         desc = f"{error}"
@@ -60,27 +60,57 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
     #     return
     else:
         # error is unhandled/unclear and thus developers need to be notified about it.
-        unexpected_error = True
+        is_unexpected = True
 
-        where = f"on_command_error {ctx.clean_prefix}{ctx.command.qualified_name}" if ctx.command else "non-cmd ctx"
-        await ctx.bot.exc_manager.register_error(error, ctx, where=where)
+        cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
+        metadata_embed = (
+            discord.Embed(
+                colour=0x890620,
+                title=f"Error with `{ctx.clean_prefix}{ctx.command}`",
+                url=ctx.message.jump_url,
+                description=textwrap.shorten(ctx.message.content, width=1024),
+                # timestamp=ctx.message.created_at,
+            )
+            .set_author(
+                name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else "DM Channel"})",
+                icon_url=ctx.author.display_avatar,
+            )
+            .add_field(
+                name="Command Args",
+                value=(
+                    "```py\n" + "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items()) + "```"
+                    if ctx.kwargs
+                    else "```py\nNo arguments```"
+                ),
+                inline=False,
+            )
+            .add_field(
+                name="Snowflake Ids",
+                value=(
+                    "```py\n"
+                    f"author  = {ctx.author.id}\n"
+                    f"channel = {ctx.channel.id}\n"
+                    f"guild   = {ctx.guild.id if ctx.guild else "DM Channel"}```"
+                ),
+            )
+            .set_footer(
+                text=f"on_command_error: {cmd_name}",
+                icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
+            )
+        )
+        mention = bool(ctx.channel.id != ctx.bot.hideout.spam_channel_id)
+        await ctx.bot.exc_manager.register_error(error, metadata_embed, mention=mention)
 
-        if ctx.channel.id == ctx.bot.hideout.spam_channel_id:
-            # means I'm developing and thus I don't need details embed
-            embed = discord.Embed(colour=const.Colour.maroon).set_author(name=error.__class__.__name__)
-            await ctx.reply(embed=embed, ephemeral=True)
-            # # well, then I do not need "desc" embed as well
-            # if ctx.interaction and not ctx.interaction.response.is_done():
-            #     # they error out unanswered anyway if not "is_done":/
-            #     await ctx.reply(":(", ephemeral=True)
-            return
-
-    response_to_user_embed = helpers.error_handler_response_to_user_embed(unexpected_error, desc, error_type)
-    await ctx.reply(embed=response_to_user_embed, ephemeral=True)
+    response_embed = helpers.error_handler_response_embed(error, is_unexpected, desc, mention)
+    await ctx.reply(embed=response_embed, ephemeral=True)
 
 
 async def setup(bot: AluBot) -> None:
     bot.add_listener(on_command_error)
+
+
+async def teardown(bot: AluBot) -> None:
+    bot.remove_listener(on_command_error)
 
 
 """

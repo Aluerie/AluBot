@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Self
 
 import discord
 
-from . import const, formats
+from . import const, errors, formats
 
 if TYPE_CHECKING:
     from types import TracebackType
@@ -51,33 +51,32 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
         log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
 
 
-def unexpected_error_embed() -> discord.Embed:
-    """Unexpected error embed.
+def error_handler_response_embed(error: Exception, is_unexpected: bool, desc: str, mention: bool) -> discord.Embed:
+    """A boilerplate responses for all cases that happen in error handlers.
 
-    This embed is used in error handlers and in base classes such as `on_error` on Views.
+    This function uses all "error handler variables" to provide the response.
     """
-    return (
-        discord.Embed(
-            colour=const.Colour.maroon,
-            description=(
-                "I've notified my developer about the error and sent all the details. "
-                "Hopefully, we'll get it fixed soon.\n"
-                f"Sorry for the inconvenience! {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}"
-            ),
+    if not mention:
+        # means I'm developing and sitting right in the channel
+        return discord.Embed(colour=const.Colour.maroon).set_author(name=error.__class__.__name__)
+    elif is_unexpected:
+        # means error is unexpected so let's return our ready to go answer
+        return (
+            discord.Embed(
+                colour=const.Colour.maroon,
+                description=(
+                    "Sorry! Something went wrong! But I've notified my developer about the error and "
+                    "sent all required details. Hopefully, we'll get it fixed soon.\n"
+                    f"Sorry for the inconvenience! {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}"
+                ),
+            )
+            .set_thumbnail(url=const.Picture.DankFix)
+            .set_author(name="Oups... Unexpected error!")
+            .set_footer(text="PS. No private data was recorded.")
         )
-        .set_thumbnail(url=const.Picture.DankFix)
-        .set_author(name="Oups... Unexpected error!")
-    )
-
-def error_handler_response_to_user_embed(
-        unexpected_error: bool,
-        desc: str,
-        error_type: str | None
-) -> discord.Embed:
-    if unexpected_error:
-        return unexpected_error_embed()
     else:
-        embed = discord.Embed(colour=const.Colour.maroon, description = desc)
-        if error_type:
-            embed.set_author(name=formats.convert_pascal_case_to_spaces(error_type))
+        # error was expected and has expected `desc` answer template
+        embed = discord.Embed(colour=const.Colour.maroon, description=desc)
+        if not isinstance(error, errors.ErroneousUsage):
+            embed.set_author(name=formats.convert_pascal_case_to_spaces(error.__class__.__name__))
         return embed

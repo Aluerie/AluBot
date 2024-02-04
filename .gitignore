@@ -1,18 +1,19 @@
-.vscode/settings.json
+# the bot temporary folder for garbage
+.alubot/
 
+# pycharm
 .idea/
 
+# python
 __pycache__/
+venv/
 
 # ipython notebooks
 .ipynb_checkpoints
 *.ipynb
 
-venv/
-
+# windows
 *.ini
-
-.alubot/
 
 # beta test
 /ext/beta.py
@@ -20,3 +21,4 @@ _test.py
 
 # config secrets
 /config.py
+.vscode/settings.json

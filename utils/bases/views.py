@@ -34,28 +34,51 @@ async def on_views_modals_error(
 
     Basically, error handler for views and modals.
     """
-    error_type: str | None = error.__class__.__name__
-    desc: str = "No description"
-    unexpected_error: bool = False
 
-    if isinstance(error, errors.ErroneousUsage):
-        error_type = None
-        desc = f"{error}"
+    # error handler variables
+    desc: str = "No description"
+    is_unexpected: bool = False
+    mention = True
+
     if isinstance(error, errors.AluBotError):
         desc = str(error)
     else:
         # error is unexpected
-        unexpected_error = True
+        is_unexpected = True
 
-        extra = f"```py\n[view]: {view}"
-        if item:
-            extra += f"\n[item]: {item}"
-        extra += "\n```"
-        await interaction.client.exc_manager.register_error(
-            error, interaction, where=f"{view.__class__.__name__} error", extra=extra
+        metadata_embed = (
+            discord.Embed(colour=0x2A0553, title="Error in View")
+            .add_field(
+                name="View Objects",
+                value=(f"```py\n[view]: {view}" + (f"\n[item]: {item}" if item else "") + "```"),
+            )
+            .add_field(
+                name="Snowflake Ids",
+                value=(
+                    "```py\n"
+                    f"author  = {interaction.user.id}\n"
+                    f"channel = {interaction.channel_id}\n"
+                    f"guild   = {interaction.guild_id}```"
+                ),
+                inline=False,
+            )
+            .set_author(
+                name=(
+                    f"@{interaction.user} in #{interaction.channel} "
+                    f"({interaction.guild.name if interaction.guild else "DM Channel"})"
+                ),
+                icon_url=interaction.user.display_avatar,
+            )
+            .set_footer(
+                text=f"on_views_modals_error: {view.__class__.__name__}",
+                icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
+            )
         )
 
-    response_to_user_embed = helpers.error_handler_response_to_user_embed(unexpected_error, desc, error_type)
+        mention = interaction.channel_id != interaction.client.hideout.spam_channel_id
+        await interaction.client.exc_manager.register_error(error, metadata_embed, mention=mention)
+
+    response_to_user_embed = helpers.error_handler_response_embed(error, is_unexpected, desc, mention)
 
     if interaction.response.is_done():
         await interaction.followup.send(embed=response_to_user_embed, ephemeral=True)

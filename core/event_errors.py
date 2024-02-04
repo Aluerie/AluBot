@@ -47,24 +47,24 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
     ):
         return
 
-    # Event Arguments
-    args_str = ["```py"]
-    for index, arg in enumerate(args):
-        args_str.append(f"[{index}]: {arg!r}")
-    args_str.append("```")
-
-    # Embed
     embed = (
         discord.Embed(
             colour=0xA32952,
             title=f"`{event}`",
         )
         .set_author(name="Event Error")
-        .add_field(name="Args", value="\n".join(args_str), inline=False)
-        .set_footer(text="on_error (event error)")
+        .add_field(
+            name="Args",
+            value=(
+                "```py\n" + "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) + "```"
+                if args
+                else "No Args"
+            ),
+            inline=False,
+        )
+        .set_footer(text=f"AluBot.on_error: {event}")
     )
-
-    await self.exc_manager.register_error(exception, embed, where=str(event))
+    await self.exc_manager.register_error(exception, embed)
 
 
 async def setup(bot: AluBot) -> None:

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Self, override
 import discord
 from discord.ext import commands
 
+from utils import AluModal, AluView
 from utils.const import Colour, Emote
 from utils.formats import human_timedelta
 
@@ -27,7 +28,7 @@ def key(interaction: discord.Interaction) -> discord.User | discord.Member:
 cd = commands.CooldownMapping.from_cooldown(1.0, 30.0 * 60, key)
 
 
-class ConfModal(discord.ui.Modal):
+class ConfModal(AluModal):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
@@ -56,9 +57,9 @@ class ConfModal(discord.ui.Modal):
         cd.update_rate_limit(interaction)
 
 
-class ConfView(discord.ui.View):
+class ConfView(AluView):
     def __init__(self) -> None:
-        super().__init__(timeout=None)
+        super().__init__(author_id=None, timeout=None)
 
     @override
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -73,14 +74,15 @@ class ConfView(discord.ui.View):
         self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[Self]
     ) -> None:
         if isinstance(error, ButtonOnCooldown):
-            e = discord.Embed(colour=Colour.maroon).set_author(name=error.__class__.__name__)
-            e.description = (
-                "Sorry, you are on cooldown \n" f"Time left `{human_timedelta(error.retry_after, mode='brief')}`"
-            )
+            e = discord.Embed(
+                colour=Colour.maroon,
+                description=(
+                    f"Sorry, you are on cooldown \nTime left `{human_timedelta(error.retry_after, mode='brief')}`"
+                ),
+            ).set_author(name=error.__class__.__name__)
             await interaction.response.send_message(embed=e, ephemeral=True)
         else:
-            # await super().on_error(ntr, error, item) # original on_error
-            await interaction.client.exc_manager.register_error(error, "Confessions", where="Confessions")
+            await super().on_error(interaction, error, item)
 
     @discord.ui.button(
         label="Anonymous confession",

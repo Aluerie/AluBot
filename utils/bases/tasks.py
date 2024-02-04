@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Coroutine, Sequence
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, override
 
 import discord
 from discord.ext import tasks
@@ -59,6 +59,7 @@ class AluLoop(tasks.Loop[LF]):
         if isinstance(cog, AluCog):
             await cog.bot.wait_until_ready()
 
+    @override
     async def _error(self, *args: Any) -> None:
         """Same _error as in parent class but
         added sending webhook notifications to my spam.
@@ -69,7 +70,7 @@ class AluLoop(tasks.Loop[LF]):
         embed = (
             discord.Embed(title=self.coro.__name__, colour=0xEF7A85)
             .set_author(name=f"{self.coro.__module__}: {self.coro.__qualname__}")
-            .set_footer(text="Error in aluloop task")
+            .set_footer(text=f"aluloop: {self.coro.__name__}")
         )
 
         # this will fail outside a cog or a bot class
@@ -79,12 +80,12 @@ class AluLoop(tasks.Loop[LF]):
             # if isinstance(cog, AluCog):
             # not that this code will work for task inside any class that has .bot as its attribute
             # like we use it in cache class
-            await cog.bot.exc_manager.register_error(exception, embed, where=f"aluloop {self.coro.__name__}")
+            await cog.bot.exc_manager.register_error(exception, embed)
         except AttributeError:
             bot: AluBot = args[0]
             # if isinstance(cog, AluBot):
             # this will work for tasks inside the bot class
-            await bot.exc_manager.register_error(exception, embed, where=f"aluloop {self.coro.__name__}")
+            await bot.exc_manager.register_error(exception, embed)
         # otherwise we can't reach bot.exc_manager
         # so maybe add some other webhook?
 

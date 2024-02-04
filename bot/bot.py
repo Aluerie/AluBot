@@ -122,14 +122,17 @@ class AluBot(commands.Bot, AluBotHelper):
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
         os.environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
 
-        failed = False
+        failed_to_load_all_exts = False
         for ext in get_extensions(self.test):
             try:
                 await self.load_extension(ext)
             except Exception as error:
-                failed = True
-                msg = f"Failed to load extension `{ext}`."
-                await self.exc_manager.register_error(error, msg, where=msg)
+                failed_to_load_all_exts = True
+                embed = discord.Embed(
+                    colour=0xDA9F93,
+                    description=f"Failed to load extension {ext}.",
+                ).set_footer(text=f"setup_hook: loading extension {ext}")
+                await self.exc_manager.register_error(error, embed)
 
         await self.populate_database_cache()
         await self.create_database_listeners()
@@ -152,7 +155,7 @@ class AluBot(commands.Bot, AluBotHelper):
                     else:
                         log.info("Autosync: not needed %s.", const.Tick.Black)
 
-            if not failed:
+            if not failed_to_load_all_exts:
                 self.loop.create_task(try_auto_sync_with_logging())
             else:
                 log.info(

@@ -25,16 +25,14 @@ async def on_app_command_error(
     if isinstance(error, app_commands.CommandInvokeError):
         error = error.original
 
-    error_type: str | None = error.__class__.__name__
+    # error handler working variables
     desc: str = "No description"
     unexpected_error: bool = False
+    mention: bool = True
+
+    # error handler itself.
 
     if isinstance(error, commands.BadArgument):  # TODO: remove all those `commands.BadArgument`
-        desc = f"{error}"
-
-    elif isinstance(error, errors.ErroneousUsage):
-        # raised by myself but it's not an error per se, thus i dont give error type to the user.
-        error_type = None
         desc = f"{error}"
     elif isinstance(error, errors.AluBotError):
         # These errors are generally raised in code by myself or by my code with an explanation text as `error`
@@ -61,22 +59,54 @@ async def on_app_command_error(
         )
     else:
         unexpected_error = True
-        where = f"/{interaction.command.qualified_name}" if interaction.command else "?-cmd ntr"
-        await interaction.client.exc_manager.register_error(error, interaction, where=f"on_app_command_error {where}")
 
+        cmd_name = f"/{interaction.command.qualified_name}" if interaction.command else "non-cmd interaction"
+        metadata_embed = (
+            discord.Embed(
+                colour=0x2C0703,
+                title=f"Error in `{cmd_name}`",
+                # timestamp = interaction.created_at
+            )
+            .add_field(
+                name="Command Arguments",
+                value=(
+                    "```py\n"
+                    + "\n".join(f"[{name}]: {value!r}" for name, value in interaction.namespace.__dict__.items())
+                    + "```"
+                    if interaction.namespace.__dict__
+                    else "```py\nNo arguments```"
+                ),
+            )
+            .add_field(
+                name="Snowflake Ids",
+                value=(
+                    "```py\n"
+                    f"author  = {interaction.user.id}\n"
+                    f"channel = {interaction.channel_id}\n"
+                    f"guild   = {interaction.guild_id}```"
+                ),
+                inline=False,
+            )
+            .set_author(
+                name=(
+                    f"@{interaction.user} in #{interaction.channel} "
+                    f"({interaction.guild.name if interaction.guild else "DM Channel"})"
+                ),
+                icon_url=interaction.user.display_avatar,
+            )
+            .set_footer(
+                text=f"on_app_command_error: {cmd_name}",
+                icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
+            )
+        )
         mention = interaction.channel_id != interaction.client.hideout.spam_channel_id
-        if not mention:
-            # well, then I do not need "desc" embed as well
-            if not interaction.response.is_done():
-                # they error out unanswered anyway if not "is_done":/
-                await interaction.response.send_message(":x", ephemeral=True)
-            return
+        await interaction.client.exc_manager.register_error(error, metadata_embed, mention=mention)
 
-    response_to_user_embed = helpers.error_handler_response_to_user_embed(unexpected_error, desc, error_type)
+    response_embed = helpers.error_handler_response_embed(error, unexpected_error, desc, mention)
     if not interaction.response.is_done():
-        await interaction.response.send_message(embed=response_to_user_embed, ephemeral=True)
+        await interaction.response.send_message(embed=response_embed, ephemeral=True)
     else:
-        await interaction.followup.send(embed=response_to_user_embed, ephemeral=True)
+        await interaction.followup.send(embed=response_embed, ephemeral=True)
 
 
 async def setup(bot: AluBot) -> None:

@@ -39,10 +39,12 @@ class TwitchClient(twitchio.Client):
 
     @override
     async def event_error(self, error: Exception, data: str | None = None) -> None:
-        embed = discord.Embed(colour=const.Colour.twitch, title="Twitch Client Error")
-        if data:
-            embed.description = data[2048:]
-        await self._bot.exc_manager.register_error(error, source=embed, where="Twitch Client")
+        embed = discord.Embed(
+            colour=const.Colour.twitch,
+            title="Twitch Client Error",
+            description=data[2048:] if data else "",
+        ).set_footer(text="TwitchClient.event_error")
+        await self._bot.exc_manager.register_error(error, embed)
 
     # UTILITIES
 

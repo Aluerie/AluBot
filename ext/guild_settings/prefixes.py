@@ -102,7 +102,7 @@ class PrefixSettings(GuildSettingsCog):
                 colour=const.Colour.blueviolet,
                 title="Server Prefix Setup",
                 description=(
-                    'You can change server prefixes with button "Change prefixes" below.\n\n'
+                    'You can change server prefixes with the button "Change prefixes" below.\n\n'
                     f"The bot also always answers on @-mentions, i.e. {self.bot.user.mention}` help`."
                 ),
             )

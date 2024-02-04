@@ -58,8 +58,11 @@ class ReloadCog(DevBaseCog):
             await job_func(extension)
             tick = True
         except Exception as exc:
-            txt = f"Job `{job_func.__name__}` for extension `{extension}` failed."
-            await self.bot.exc_manager.register_error(exc, txt, where=txt)
+            embed = discord.Embed(
+                colour=0x663322,
+                description=f"Job `{job_func.__name__}` for extension `{extension}` failed.",
+            ).set_footer(text=f"load_unload_reload_job: {extension}")
+            await self.bot.exc_manager.register_error(exc, embed)
             tick = False
 
         await ctx.tick_reaction(tick)
@@ -101,8 +104,11 @@ class ReloadCog(DevBaseCog):
             except* commands.ExtensionError as eg:
                 statuses.append((False, emote, ext))
                 for exc in eg.exceptions:
-                    txt = f"Job `{method.__name__}` for extension `{ext}` failed."
-                    await self.bot.exc_manager.register_error(exc, txt, where=txt)
+                    embed = discord.Embed(
+                        colour=0x663322,
+                        description=f"Job `{method.__name__}` for extension `{ext}` failed.",
+                    ).set_footer(text=f"reload_all_worker.do_the_job: {ext}")
+                    await self.bot.exc_manager.register_error(exc, embed)
                     # name, value
                     errors.append((f"{formats.tick(False)} `{exc.__class__.__name__}`", f"{exc}"))
 

@@ -50,6 +50,8 @@ class AdminTools(DevBaseCog):
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.send_guild_embed(guild, join=False)
         query = "DELETE FROM guilds WHERE id=$1"
+        # todo: dont delete this ?
+        # we also need something to catch up on bot restarts in case we joined something while we were offline.
         await self.bot.pool.execute(query, guild.id)
 
     @commands.group(name="guild", hidden=True)

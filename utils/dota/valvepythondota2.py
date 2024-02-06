@@ -73,7 +73,7 @@ class Dota2Client(Dota2Client_):
             await asyncio.sleep(3.3)
 
         self.check_list = {i * 10 for i in range(0, 10)}
-        self.matches = []
+        self.matches.clear()
         self.send(EDOTAGCMsg.EMsgClientToGCFindTopSourceTVGames, {"start_game": 90})
         # can it fix the blocking problem ?
         # https://github.com/gfmio/asyncio-gevent?tab=readme-ov-file#converting-greenlets-to-asyncio-futures

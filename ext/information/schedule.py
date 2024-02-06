@@ -77,23 +77,16 @@ def scrape_schedule_data(
         twitch_url = f"https://liquipedia.net/dota2/Special:Stream/twitch/{timer.get('data-stream-twitch')}"
         return dt, twitch_url
 
-    game_day_is_in = 100  # just super high value so unbound warning doesn't proc
-    if schedule_mode.only_next_game_day:
-        # take advantage that matches are already sorted by time in match_rows
-        the_first_match = match_rows[0]
-        dt, _ = get_dt_and_twitch_url(the_first_match)
-        game_day_is_in = (dt - dt_now).days
-
     for match_row in match_rows:
         dt, twitch_url = get_dt_and_twitch_url(match_row)
 
-        if schedule_mode.only_next_game_day and (dt - dt_now).days > game_day_is_in:
-            # we do not want this and next matches, since it's too far in future
+        if schedule_mode.only_next_game_day and (dt - dt_now).days > 0:
+            # we do not want this and next matches, since it's too far in future (we only want next 24 hours.)
             break
 
         team1 = match_row.select_one(".team-left").text.strip().replace("`", ".")
         team2 = match_row.select_one(".team-right").text.strip().replace("`", ".")
-
+        # print(dt, (dt - dt_now).days, team1, team2)
         league = match_row.find(class_="league-icon-small-image").find("a")
         league_title = league.get("title")
         league_url = league.get("href")

@@ -57,9 +57,9 @@ def setup_logging(test: bool) -> Generator[Any, Any, Any]:
     finally:
         # __exit__
         handlers = log.handlers[:]
-        for hdlr in handlers:
-            hdlr.close()
-            log.removeHandler(hdlr)
+        for h in handlers:
+            h.close()
+            log.removeHandler(h)
 
 
 class MyColourFormatter(logging.Formatter):

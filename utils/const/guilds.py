@@ -8,7 +8,9 @@ import discord
 from ._meta import CONSTANTS
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    # idk why but vscode always suggests `utils.const.AluBot` instead of `bot.AluBot` for autocomplete.
+    # so let's do this weird renaming.
+    from bot import AluBot as _AluBot
 
 T = TypeVar("T")
 
@@ -190,8 +192,8 @@ class SavedGuild:
 
     """
 
-    def __init__(self, bot: AluBot, guild_id: int) -> None:
-        self.bot: AluBot = bot
+    def __init__(self, bot: _AluBot, guild_id: int) -> None:
+        self.bot: _AluBot = bot
         self.id: int = guild_id
 
     @override
@@ -243,7 +245,7 @@ class SavedGuild:
 
 
 class CommunityGuild(SavedGuild):
-    def __init__(self, bot: AluBot) -> None:
+    def __init__(self, bot: _AluBot) -> None:
         super().__init__(bot, Guild.community)
 
     # channels #########################################################################################################
@@ -358,7 +360,7 @@ class CommunityGuild(SavedGuild):
 
 
 class HideoutGuild(SavedGuild):
-    def __init__(self, bot: AluBot) -> None:
+    def __init__(self, bot: _AluBot) -> None:
         super().__init__(bot, Guild.hideout)
 
     # channels

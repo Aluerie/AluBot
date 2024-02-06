@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import os
 import platform
 import socket
 import sys
@@ -107,6 +109,74 @@ class DevInformation(DevBaseCog):
         await ctx.typing()
         logs_file = discord.File(".alubot/alubot.log")
         await ctx.reply(file=logs_file)
+
+    @system.command(name="health")
+    async def system_health(self, ctx: AluContext) -> None:
+        """(\N{GREY HEART} Hideout-Only) Get bot's health status."""
+        await ctx.typing()
+
+        # todo: customize this to my liking.
+
+        # This uses a lot of private methods because there is no
+        # clean way of doing this otherwise.
+
+        HEALTHY = discord.Colour(value=0x43B581)  # noqa: N806
+        UNHEALTHY = discord.Colour(value=0xF04947)  # noqa: N806
+        WARNING = discord.Colour(value=0xF09E47)  # noqa: N806
+        total_warnings = 0
+
+        embed = discord.Embed(title="Bot Health Report", colour=HEALTHY)
+
+        # Check the connection pool health.
+        pool = self.bot.pool
+        total_waiting = len(pool._queue._getters)
+        current_generation = pool._generation
+
+        description = [
+            f"Total `Pool.acquire` Waiters: {total_waiting}",
+            f"Current Pool Generation: {current_generation}",
+            f"Connections In Use: {len(pool._holders) - pool._queue.qsize()}",
+        ]
+
+        questionable_connections = 0
+        connection_value = []
+        for index, holder in enumerate(pool._holders, start=1):
+            generation = holder._generation
+            in_use = holder._in_use is not None
+            is_closed = holder._con is None or holder._con.is_closed()
+            display = f"gen={holder._generation} in_use={in_use} closed={is_closed}"
+            questionable_connections += any((in_use, generation != current_generation))
+            connection_value.append(f"<Holder i={index} {display}>")
+
+        joined_value = "\n".join(connection_value)
+        embed.add_field(name="Connections", value=f"```py\n{joined_value}\n```", inline=False)
+
+        all_tasks = asyncio.all_tasks(loop=self.bot.loop)
+        event_tasks = [t for t in all_tasks if "Client._run_event" in repr(t) and not t.done()]
+
+        cogs_directory = os.path.dirname(__file__)
+        tasks_directory = os.path.join("discord", "ext", "tasks", "__init__.py")
+        inner_tasks = [t for t in all_tasks if cogs_directory in repr(t) or tasks_directory in repr(t)]
+
+        bad_inner_tasks = ", ".join(hex(id(t)) for t in inner_tasks if t.done() and t._exception is not None)
+        total_warnings += bool(bad_inner_tasks)
+        embed.add_field(name="Inner Tasks", value=f'Total: {len(inner_tasks)}\nFailed: {bad_inner_tasks or "None"}')
+        embed.add_field(name="Events Waiting", value=f"Total: {len(event_tasks)}", inline=False)
+
+        process = psutil.Process()
+        memory_usage = process.memory_full_info().uss / 1024**2
+        cpu_usage = process.cpu_percent() / psutil.cpu_count()
+        embed.add_field(name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU", inline=False)
+
+        global_rate_limit = not self.bot.http._global_over.is_set()
+        description.append(f"Global Rate Limit: {global_rate_limit}")
+
+        if global_rate_limit or total_warnings >= 9:
+            embed.colour = UNHEALTHY
+
+        embed.set_footer(text=f"{total_warnings} warning(s)")
+        embed.description = "\n".join(description)
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: AluBot) -> None:

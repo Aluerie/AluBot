@@ -79,3 +79,28 @@ CREATE TRIGGER update_prefixes_cache_trigger
     ON guilds 
     FOR EACH ROW 
         EXECUTE PROCEDURE update_prefixes_cache();
+
+CREATE TABLE IF NOT EXISTS emote_stats_total (
+    id BIGSERIAL PRIMARY KEY,
+    emote_id BIGINT, 
+    guild_id BIGINT,
+    total INTEGER DEFAULT (0)
+);
+
+CREATE INDEX IF NOT EXISTS emote_stats_total_guild_id_idx ON emote_stats_total (guild_id);
+CREATE INDEX IF NOT EXISTS emote_stats_total_emote_id_idx ON emote_stats_total (emote_id);
+CREATE UNIQUE INDEX IF NOT EXISTS emote_stats_total_uniq_idx ON emote_stats_total (guild_id, emote_id);
+
+
+CREATE TABLE IF NOT EXISTS emote_stats_last_year (
+    id BIGSERIAL PRIMARY KEY,
+    emote_id BIGINT,
+    guild_id BIGINT,
+    author_id BIGINT,
+    used TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS emote_stats_last_year_emote_id_idx ON emote_stats_last_year (emote_id);
+CREATE INDEX IF NOT EXISTS emote_stats_last_year_guild_id_idx ON emote_stats_last_year (guild_id);
+CREATE INDEX IF NOT EXISTS emote_stats_last_year_author_id_idx ON emote_stats_last_year (author_id);
+CREATE INDEX IF NOT EXISTS emote_stats_last_year_used_idx ON emote_stats_last_year (used);

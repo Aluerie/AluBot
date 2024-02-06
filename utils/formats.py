@@ -6,7 +6,7 @@ import datetime
 import difflib
 import re
 from enum import IntEnum
-from typing import TYPE_CHECKING, Literal, override
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from dateutil.relativedelta import relativedelta
 
@@ -17,7 +17,7 @@ from discord.utils import TimestampStyle, format_dt
 from . import const
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
 
 class plural:  # noqa: N801
@@ -283,6 +283,10 @@ def indent(symbol: str | int, counter: int, offset: int, split_size: int) -> str
     return str(symbol).ljust(len(str(((counter - offset) // split_size + 1) * split_size)), " ")
 
 
+def new_indent(symbol: str | int, counter: int, split_size: int) -> str:
+    return str(symbol).ljust(len(str(counter + split_size)), " ")
+
+
 #######################################################################
 # ANSI ################################################################
 #######################################################################
@@ -400,3 +404,102 @@ def convert_pascal_case_to_spaces(text: str) -> str:
     # https://stackoverflow.com/a/9283563/19217368
     label = re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", text)
     return label
+
+
+LiteralAligns = Literal["^", "<", ">"]
+
+
+class TabularData:
+    def __init__(self, *, outer: str, inner: str, separators: bool) -> None:
+        self.outer: str = outer
+        self.inner: str = inner
+        self.separators: bool = separators
+
+        self._widths: list[int] = []
+        self._columns: list[str] = []
+        self._aligns: list[LiteralAligns] = []
+        self._rows: list[list[str]] = []
+
+    def set_columns(self, columns: list[str], *, aligns: list[LiteralAligns] = []) -> None:
+        if aligns and len(aligns) != len(columns):
+            msg = "columns and formats parameters should be the same length lists."
+            raise ValueError(msg)
+
+        self._columns = columns
+        self._aligns = aligns or ["^"] * len(columns)  # fancy default
+        self._widths = [len(c) + 2 * len(self.outer) for c in columns]
+
+    def add_row(self, row: Iterable[Any]) -> None:
+        rows = [str(r) for r in row]
+        self._rows.append(rows)
+        for index, element in enumerate(rows):
+            width = len(element) + 2 * len(self.outer)
+            if width > self._widths[index]:
+                self._widths[index] = width
+
+    def add_rows(self, rows: Iterable[Iterable[Any]]) -> None:
+        for row in rows:
+            self.add_row(row)
+
+    def render(self) -> str:
+        """Renders a table.
+
+        Example:
+
+        +-------+-----+
+        | Name  | Age |
+        +-------+-----+
+        | Alice | 24  |
+        |  Bob  | 19  |
+        +-------+-----+
+        """
+
+        def align_properly(e: str, i: int) -> str:
+            match self._aligns[i]:
+                case "^":
+                    return f"{e:^{self._widths[i]}}"
+                case ">":
+                    return f"{(e + ' ' * bool(self.outer)):>{self._widths[i]}}"
+                case "<":
+                    return f"{(' ' * bool(self.outer) + e):<{self._widths[i]}}"
+
+        def get_entry(d: list[str]) -> str:
+            elem = f"{self.inner}".join(align_properly(e, i) for i, e in enumerate(d))
+            return f"{self.outer}{elem}{self.outer}"
+
+        to_draw = []
+
+        if self.separators:
+            sep = "+".join("-" * w for w in self._widths)
+            sep = f"+{sep}+"
+
+            # separator
+            # column_names
+            # separator
+            to_draw = [sep, get_entry(self._columns), sep]
+            # data
+            to_draw.extend([get_entry(row) for row in self._rows])
+            # last separator
+            to_draw.append(sep)
+        else:
+            to_draw = [get_entry(self._columns)]
+            to_draw.extend([get_entry(row) for row in self._rows])
+
+        return "\n".join(to_draw)
+
+
+class RstTable(TabularData):
+    def __init__(self) -> None:
+        super().__init__(outer="|", inner="|", separators=True)
+
+
+class NoBorderTable(TabularData):
+    def __init__(self) -> None:
+        super().__init__(outer="", inner=" ", separators=False)
+
+
+if __name__ == "__main__":
+    table = NoBorderTable()
+    table.set_columns(["Name", "AgeAgeAgeAgeAge ", "JobTitle"], aligns=["<", ">", "^"])
+    table.add_rows([["Alice", 29, "xd"], ["Bob", 23, "artist"]])
+    print(table.render())

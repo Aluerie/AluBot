@@ -130,8 +130,8 @@ class AluBot(commands.Bot, AluBotHelper):
                 failed_to_load_all_exts = True
                 embed = discord.Embed(
                     colour=0xDA9F93,
-                    description=f"Failed to load extension {ext}.",
-                ).set_footer(text=f"setup_hook: loading extension {ext}")
+                    description=f"Failed to load extension `{ext}`.",
+                ).set_footer(text=f"setup_hook: loading extension \"{ext}\"")
                 await self.exc_manager.register_error(error, embed)
 
         await self.populate_database_cache()

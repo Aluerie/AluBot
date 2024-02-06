@@ -1,23 +1,24 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord.ext import commands
 
 import config
-from utils import const, twitch
+from utils import const
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    import twitchio
+
     from twitchio.ext import eventsub
 
     from bot import AluBot
 
 
 class TwitchCog(CommunityCog):
+    @override
     async def cog_load(self) -> None:
         await self.bot.initialize_twitch()
 
@@ -35,9 +36,9 @@ class TwitchCog(CommunityCog):
 
         content = (
             f"{self.community.stream_lover_role.mention} and chat, "
-            + f"our Highness **@{streamer.display_name}** just went live !"
+            f"our Highness **@{streamer.display_name}** just went live !"
         )
-        file = await self.bot.transposer.url_to_file(streamer.preview_url, filename="twtvpreview.png")
+        file = await self.bot.transposer.url_to_file(streamer.preview_url, filename="twitch_preview.png")
         embed = (
             discord.Embed(
                 colour=0x9146FF,
@@ -63,7 +64,7 @@ class TwitchCog(CommunityCog):
     @commands.Cog.listener("on_twitchio_channel_points_redeem")
     async def twitch_tv_redeem_notifications(self, event: eventsub.CustomRewardRedemptionAddUpdateData) -> None:
         e = discord.Embed(colour=0x9146FF)
-        e.description = f"{event.user.name} redeemed {event.reward.title} for {event.reward.cost} channel points"
+        e.description = f"`{event.user.name}` redeemed `{event.reward.title}` for {event.reward.cost} channel points"
         await self.hideout.spam.send(embed=e)
 
     @commands.Cog.listener()

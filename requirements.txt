@@ -10,6 +10,7 @@ git+https://github.com/Gorialis/jishaku.git
 twitchio[speed] @ git+https://github.com/TwitchIO/TwitchIO.git@fix/eventsub-reconnect
 
 # Dota 2 (steamio)
+# my own branch with dota2 extension
 # steamio @ git+https://github.com/Aluerie/steam.py@introduce-ext.dota2
 
 # Dota 2 (ValvePython)
@@ -55,7 +56,7 @@ uvloop==0.19.0; platform_system == 'Linux'  # ignore on non-Linux - because not 
 aiofiles==23.2.1
 pillow==10.2.0
 emoji==2.10.1
-numpy==1.26.3
+numpy==1.26.4
 urllib3==2.2.0
 wordcloud==1.9.3
 matplotlib==3.8.2

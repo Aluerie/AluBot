@@ -26,15 +26,23 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
 
     # error handler itself.
 
+    # CHAINED ERRORS
     if isinstance(error, (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError)):
         # we aren't interested in the chain traceback.
         return await on_command_error(ctx, error.original)
+
+    # MY OWN ERRORS
     elif isinstance(error, errors.AluBotError):
         # These errors are generally raised in code by myself or by my code with an explanation text as `error`
         # AluBotError subclassed exceptions are all mine.
         desc = f"{error}"
+
+    # BAD ARGUMENT SUBCLASSED ERRORS
+    elif isinstance(error, commands.EmojiNotFound):
+        desc = f"Sorry! `{error.argument}` is not a custom emote."
     elif isinstance(error, commands.BadArgument):
         desc = f"{error}"
+
     elif isinstance(error, commands.MissingRequiredArgument):
         desc = f"Please, provide this argument:\n`{error.param.name}`"
     elif isinstance(error, commands.CommandNotFound):
@@ -167,8 +175,6 @@ case commands.RoleNotFound():
     desc = f'Bad argument: {error.argument}'
 case commands.BadInviteArgument():
     desc = f'Bad argument'
-case commands.EmojiNotFound():
-    desc = f'Bad argument: {error.argument}'
 case commands.PartialEmojiConversionFailure():
     desc = f'Bad argument: {error.argument}'
 case commands.BadBoolArgument():

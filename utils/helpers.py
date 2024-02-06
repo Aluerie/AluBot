@@ -66,7 +66,7 @@ def error_handler_response_embed(error: Exception, is_unexpected: bool, desc: st
             discord.Embed(
                 colour=const.Colour.maroon,
                 description=(
-                    "Sorry! Something went wrong! But I've notified my developer about the error "
+                    "Sorry! Something went wrong! I've notified my developer about the error "
                     "with all the details. Hopefully, we'll get it fixed soon.\n"
                     f"Sorry for the inconvenience! {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}"
                 ),

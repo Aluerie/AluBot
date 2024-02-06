@@ -442,26 +442,16 @@ class TabularData:
             self.add_row(row)
 
     def render(self) -> str:
-        """Renders a table.
-
-        Example:
-
-        +-------+-----+
-        | Name  | Age |
-        +-------+-----+
-        | Alice | 24  |
-        |  Bob  | 19  |
-        +-------+-----+
-        """
+        """Renders a table."""
+        # todo: maybe make render abstract method and impl it in subclasses instead
+        # so we don't have this gibberish unclear code with a lot of " if conditions"
+        # then remove + 2 * len(self.outer) in self._widths above
+        # maybe move set_columns as __init__
+        # and add logic where columns is allowed to be empty so like NoBorderTable can be without column names
 
         def align_properly(e: str, i: int) -> str:
-            match self._aligns[i]:
-                case "^":
-                    return f"{e:^{self._widths[i]}}"
-                case ">":
-                    return f"{(e + ' ' * bool(self.outer)):>{self._widths[i]}}"
-                case "<":
-                    return f"{(' ' * bool(self.outer) + e):<{self._widths[i]}}"
+            align_lookup = {"^": e, ">": e + " " * bool(self.outer), "<": " " * bool(self.outer) + e}
+            return f"{align_lookup[self._aligns[i]]:{self._aligns[i]}{self._widths[i]}}"
 
         def get_entry(d: list[str]) -> str:
             elem = f"{self.inner}".join(align_properly(e, i) for i, e in enumerate(d))
@@ -473,13 +463,8 @@ class TabularData:
             sep = "+".join("-" * w for w in self._widths)
             sep = f"+{sep}+"
 
-            # separator
-            # column_names
-            # separator
             to_draw = [sep, get_entry(self._columns), sep]
-            # data
             to_draw.extend([get_entry(row) for row in self._rows])
-            # last separator
             to_draw.append(sep)
         else:
             to_draw = [get_entry(self._columns)]
@@ -489,11 +474,29 @@ class TabularData:
 
 
 class RstTable(TabularData):
+    """_summary_
+
+    +-------+-----+
+    | Name  | Age |
+    +-------+-----+
+    | Alice | 24  |
+    |  Bob  | 19  |
+    +-------+-----+
+    """
+
     def __init__(self) -> None:
         super().__init__(outer="|", inner="|", separators=True)
 
 
 class NoBorderTable(TabularData):
+    """_summary_
+
+
+    Name  Age
+    Alice  24
+    Bob    19
+    """
+
     def __init__(self) -> None:
         super().__init__(outer="", inner=" ", separators=False)
 

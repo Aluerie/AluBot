@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())  # type: ignore
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 async def start_the_bot(test: bool) -> None:

@@ -5,10 +5,11 @@ import datetime
 import itertools
 import re
 from collections import Counter, defaultdict
-from typing import TYPE_CHECKING, TypedDict, override
+from typing import TYPE_CHECKING, Literal, TypedDict, override
 
 import asyncpg
 import discord
+from discord import app_commands
 from discord.ext import commands, menus
 
 from bot import AluBot
@@ -17,6 +18,8 @@ from utils import aluloop, checks, const, errors, formats, pages
 from ._base import StatsCog
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from bot import AluBot
     from utils import AluGuildContext
 
@@ -153,23 +156,63 @@ class EmoteStats(StatsCog):
         await ctx.send_help()
 
     @emotestats.command(name="server")
-    async def emotestats_server(self, ctx: AluGuildContext) -> None:
+    @app_commands.choices(
+        emote_type=[
+            app_commands.Choice(name="All emotes", value="all"),
+            app_commands.Choice(name="Only non-animated emotes", value="static"),
+            app_commands.Choice(name="Only animated emotes", value="animated"),
+        ],
+        timeframe=[
+            app_commands.Choice(name="All time total stats", value="total"),
+            app_commands.Choice(name="Only last year emote usage stats", value="year"),
+            app_commands.Choice(name="Only last month emote usage stats", value="month"),
+        ],
+    )
+    async def emotestats_server(
+        self,
+        ctx: AluGuildContext,
+        emote_type: Literal["all", "static", "animated"],
+        timeframe: Literal["total", "year", "month"],
+    ) -> None:
         """Show statistic about emote usage in this server."""
-        emote_ids = [e.id for e in ctx.guild.emojis if not e.managed]
+        if emote_type == "all":
+            condition = lambda _: True
+        elif emote_type == "static":
+            condition: Callable[[discord.Emoji], bool] = lambda e: not e.animated
+        elif emote_type == "animated":
+            condition: Callable[[discord.Emoji], bool] = lambda e: e.animated
+
+        emote_ids = [e.id for e in ctx.guild.emojis if not e.managed and condition(e)]
 
         if not emote_ids:
             msg = "This server does not have any custom emotes."
             raise errors.SomethingWentWrong(msg)
 
-        # total
+        # now we need to fill `rows` variable with list[tuple[int, int]] of list[(emote_id, usage_count)] format
+        if timeframe == "total":
+            query = """
+                    SELECT emote_id, total
+                    FROM emote_stats_total
+                    WHERE guild_id = $1 AND emote_id = ANY($2::bigint[])
+                    ORDER BY total DESC
+                """
+            rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, ctx.guild.id, emote_ids))
+        else:
+            now = datetime.datetime.now(datetime.UTC)
+            if timeframe == "month":
+                track_point = now - datetime.timedelta(days=30)
+                clause = f"AND used > '{track_point.isoformat()}'::date"
+            elif timeframe == "year":
+                clause = ""
 
-        query = """
-                SELECT emote_id, total
-                FROM emote_stats_total
-                WHERE guild_id = $1 AND emote_id = ANY($2::bigint[])
-                ORDER BY total DESC
+            query = f"""
+                SELECT emote_id, COUNT(*) as "total"
+                FROM emote_stats_last_year
+                WHERE guild_id = $1 AND emote_id = ANY($2::bigint[]) {clause}
+                GROUP BY emote_id
+                ORDER BY total DESC;
             """
-        rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, ctx.guild.id, emote_ids))
+            rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, ctx.guild.id, emote_ids))
 
         rows.extend([(emote_id, 0) for emote_id in emote_ids if emote_id not in [row[0] for row in rows]])
 
@@ -235,10 +278,7 @@ class EmoteStats(StatsCog):
     def usage_per_day(dt: datetime.datetime, usages: int) -> float:
         base = EMOTE_STATS_TRACKING_START if dt < EMOTE_STATS_TRACKING_START else dt
         days = (datetime.datetime.now(datetime.UTC) - base).total_seconds() / 86400  # 86400 seconds in a day
-        if int(days) == 0:
-            return usages
-        else:
-            return usages / days
+        return usages / (int(days) or 1)  # or 1 takes care of days = 1 DivisionError
 
 
 async def setup(bot: AluBot) -> None:

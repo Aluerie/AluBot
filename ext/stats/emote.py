@@ -227,7 +227,7 @@ class EmoteStats(StatsCog):
             colon_name = emote.name
 
         per_day = self.usage_per_day(emote.created_at, count)
-        percent = count / total
+        percent = count / (total or 1)
 
         return full_name, f"`:{colon_name}:", str(count), f"{percent:.1%}", f"{per_day:.1f}`"
 

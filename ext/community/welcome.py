@@ -177,8 +177,9 @@ class Welcome(CommunityCog):
         if before.guild.id != const.Guild.community:
             return
 
+        roles_to_insert = [role.id for role in after.roles if role.id not in const.CATEGORY_ROLES]
         query = "UPDATE community_members SET roles = $1::bigint[] WHERE id = $2"
-        await self.bot.pool.execute(query, [role.id for role in after.roles], after.id)
+        await self.bot.pool.execute(query, roles_to_insert, after.id)
 
 
 async def setup(bot: AluBot) -> None:

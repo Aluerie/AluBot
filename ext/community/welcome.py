@@ -169,12 +169,16 @@ class Welcome(CommunityCog):
         await ctx.reply(**send_kwargs)
 
     @commands.Cog.listener("on_member_update")
-    async def update_member_autoroles(self, member: discord.Member) -> None:
+    async def update_member_autoroles(self, before: discord.Member, after: discord.Member) -> None:
         """Update Member AutoRoles.
 
         We need to keep roles column in community_members table updated
         """
-        return
+        if before.guild.id != const.Guild.community:
+            return
+
+        query = "UPDATE community_members SET roles = $1::bigint[] WHERE id = $2"
+        await self.bot.pool.execute(query, [role.id for role in after.roles], after.id)
 
 
 async def setup(bot: AluBot) -> None:

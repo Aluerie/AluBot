@@ -71,7 +71,7 @@ class HeroKeysCache(KeysCache):
             # TALENTS
             for talent in hero_ability["talents"]:
                 talent_name = talent["name"]
-                ability_id = reverse_ability_ids.get(talent_name, None)
+                ability_id = reverse_ability_ids.get(talent_name)
                 if ability_id is None:
                     continue
                 data["ability_icon_by_ability_id"][ability_id] = const.Dota.TALENT_TREE_ICON

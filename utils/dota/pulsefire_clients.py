@@ -29,6 +29,7 @@ __all__ = (
     "OpenDotaClient",
     "StratzClient",
     "ODotaConstantsClient",
+    "SteamWebAPIClient",
 )
 
 type HeaderRateLimitInfo = Mapping[str, Sequence[tuple[int, int]]]
@@ -193,6 +194,24 @@ class ODotaConstantsClient(BaseClient):
         return await self.invoke("GET", "/items.json")  # type: ignore
 
 
+class SteamWebAPIClient(BaseClient):
+    def __init__(self) -> None:
+        super().__init__(
+            base_url="https://api.steampowered.com/",
+            default_params={},
+            default_headers={},
+            default_queries={"key": config.STEAM_WEB_API_KEY},
+            middlewares=[
+                json_response_middleware(orjson.loads),
+                http_error_middleware(),
+            ],
+        )
+
+    async def get_match_details(self, match_id: int) -> schemas.SteamWebAPI.MatchDetails:
+        queries = {"match_id": match_id}  # noqa F481
+        return await self.invoke("GET", "/IDOTA2Match_570/GetMatchDetails/v1/")  # type: ignore
+
+
 class StratzAPIRateLimiter(DotaAPIsRateLimiter):
     @override
     def analyze_headers(self, headers: dict[str, str]) -> tuple[HeaderRateLimitInfo, HeaderRateLimitInfo]:
@@ -308,4 +327,10 @@ if __name__ == "__main__":
 
         print(stratz_client.rate_limiter.rate_limits_string)
 
-    asyncio.run(test_opendota_get_match())
+    # STEAM WEB API
+    async def test_steam_web_api_client() -> None:
+        async with SteamWebAPIClient() as steam_web_api:
+            match = await steam_web_api.get_match_details(7566292740)
+            print(match)
+
+    asyncio.run(test_steam_web_api_client())

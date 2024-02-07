@@ -170,7 +170,7 @@ class DotaFPCNotifications(BaseNotifications):
         start_time = time.perf_counter()
         try:
             live_matches = await self.bot.dota.top_live_matches()
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError:  # noqa: UP041
             self.death_counter += 1
             await self.hideout.spam.send(f"Game Coordinator is dying: count `{self.death_counter}`")
             send_log.warning(f"Game Coordinator is dying: count `{self.death_counter}`")
@@ -223,10 +223,12 @@ class DotaFPCNotifications(BaseNotifications):
         for match_row in match_rows:
             tuple_uuid = match_id, friend_id = match_row["match_id"], match_row["friend_id"]
             if tuple_uuid not in self.retry_mapping:
-                self.retry_mapping[tuple_uuid] = 1
+                self.retry_mapping[tuple_uuid] = 0
                 # Stratz 99% will not have data in the first 5 minutes so it's just a wasted call
-                # Thus lets skip the very first loop #0 (by assigning #1 to loop counter)
+                # Thus lets skip the very first loop #0
                 continue
+            else:
+                self.retry_mapping[tuple_uuid] += 1
 
             edit_log.debug("Editing match = %s retry %s", tuple_uuid, self.retry_mapping[tuple_uuid])
 
@@ -236,17 +238,25 @@ class DotaFPCNotifications(BaseNotifications):
                 edit_log.warning(
                     "Stratz API Resp for match `%s` friend `%s`: Not OK, status `%s`", match_id, friend_id, exc.status
                 )
-                self.retry_mapping[tuple_uuid] += 1
                 continue
 
-            if not stratz_data["data"]["match"]:  # it gonna be None
-                # if somebody abandons in draft but we managed to send the game out
-                # then parser will fail and declare None
-                edit_log.info("Stratz: match %s did not count. Deleting the match.", match_id)
-                match_to_edit = NotCountedMatchToEdit(self.bot)
+            if not stratz_data["data"]["match"]:
+                # This is None when conditions under "*" happen
+                # which we have to separate
+                match_details = await self.bot.steam_web_api.get_match_details(match_id)
+                if match_details['result']['duration'] < 600:  # 10 minutes
+                    # * Game did not count
+                    # * Game was less than 10 minutes
+                    edit_log.info("SteamWebAPI: match `%s` did not count. Deleting the match.", match_id)
+                    match_to_edit = NotCountedMatchToEdit(self.bot)
+                else:
+                    # * Game is still live
+                    # * Steam Web API / Dota 2 Game Coordinator is dying
+                    edit_log.warning("SteamWebAPI: match `%s` is not ready (still live or GC dying).", match_id)
+                    continue
+
             elif not stratz_data["data"]["match"]["statsDateTime"]:
-                edit_log.warning("Parsing for match %s friend %s was not finished.", match_id, friend_id)
-                self.retry_mapping[tuple_uuid] += 1
+                edit_log.warning("Parsing for match `%s` friend `%s` was not finished.", match_id, friend_id)
                 continue
             else:
                 match_to_edit = StratzMatchToEdit(self.bot, stratz_data)

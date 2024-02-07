@@ -209,7 +209,7 @@ class SavedGuild:
         return guild
 
     def get_channel(self, channel_id: int, channel_type: type[T]) -> T:
-        channel = self.bot.get_channel(channel_id)
+        channel = self.guild.get_channel(channel_id)
         if channel:
             if isinstance(channel, channel_type):
                 return channel

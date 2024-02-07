@@ -131,7 +131,7 @@ class AluBot(commands.Bot, AluBotHelper):
                 embed = discord.Embed(
                     colour=0xDA9F93,
                     description=f"Failed to load extension `{ext}`.",
-                ).set_footer(text=f"setup_hook: loading extension \"{ext}\"")
+                ).set_footer(text=f'setup_hook: loading extension "{ext}"')
                 await self.exc_manager.register_error(error, embed)
 
         await self.populate_database_cache()
@@ -320,7 +320,7 @@ class AluBot(commands.Bot, AluBotHelper):
         * Stratz API pulsefire client
         """
         if not hasattr(self, "opendota"):
-            from utils.dota import ODotaConstantsClient, OpenDotaClient, StratzClient
+            from utils.dota import ODotaConstantsClient, OpenDotaClient, SteamWebAPIClient, StratzClient
 
             self.opendota = OpenDotaClient()
             await self.opendota.__aenter__()
@@ -330,6 +330,9 @@ class AluBot(commands.Bot, AluBotHelper):
 
             self.odota_constants = ODotaConstantsClient()
             await self.odota_constants.__aenter__()
+
+            self.steam_web_api = SteamWebAPIClient()
+            await self.steam_web_api.__aenter__()
 
     def initialize_cache_dota(self) -> None:
         """Initialize Dota 2 constants cache.
@@ -455,6 +458,7 @@ class AluBot(commands.Bot, AluBotHelper):
             "opendota",
             "stratz",
             "odota_constants",
+            "steam_web_api",
         ]:
             if hasattr(self, client):
                 await getattr(self, client).__aexit__()

@@ -11,6 +11,8 @@ __all__ = (
     "OpenDotaAPI",
     "StratzGraphQL",
     "GameCoordinatorAPI",
+    "ODotaConstantsJson",
+    "SteamWebAPI",
 )
 
 
@@ -442,3 +444,99 @@ class ODotaConstantsJson:
         },
     )
     Items = dict[str, Item]
+
+
+class SteamWebAPI:
+    MatchDetailsAbilityUpgrades = TypedDict(
+        "MatchDetailsAbilityUpgrades",
+        {
+            "ability": int,
+            "time": int,
+            "level": int,
+        },
+    )
+    MatchDetailsPlayer = TypedDict(
+        "MatchDetailsPlayer",
+        {
+            "account_id": int,
+            "player_slot": int,  # 0-9
+            "team_number": int,  # 0-1
+            "team_slot": int,  # 0-4
+            "hero_id": int,
+            "item_0": int,
+            "item_1": int,
+            "item_2": int,
+            "item_3": int,
+            "item_4": int,
+            "item_5": int,
+            "backpack_0": int,
+            "backpack_1": int,
+            "backpack_2": int,
+            "item_neutral": int,
+            "kills": int,
+            "deaths": int,
+            "assists": int,
+            "leaver_status": int,  # 0-1
+            "last_hits": int,
+            "denies": int,
+            "gold_per_min": int,
+            "xp_per_min": int,
+            "level": int,
+            "net_worth": int,
+            "aghanims_scepter": int,
+            "aghanims_shard": int,
+            "moonshard": int,
+            "hero_damage": int,
+            "tower_damage": int,
+            "hero_healing": int,
+            "gold": int,
+            "gold_spent": int,
+            "scaled_hero_damage": int,
+            "scaled_tower_damage": int,
+            "scaled_hero_healing": int,
+            "ability_upgrades": list[MatchDetailsAbilityUpgrades],
+        },
+    )
+
+    MatchDetailsPickBan = TypedDict(
+        "MatchDetailsPickBan",
+        {
+            "is_pick": bool,
+            "hero_id": int,
+            "team": int,
+            "order": int,
+        },
+    )
+    MatchDetailsResult = TypedDict(
+        "MatchDetailsResult",
+        {
+            "players": list[MatchDetailsPlayer],
+            "duration": int,
+            "pre_game_duration": int,
+            "start_time": int,
+            "match_id": int,
+            "match_seq_num": int,
+            "tower_status_radiant": int,
+            "tower_status_dire": int,
+            "barracks_status_radiant": int,
+            "barracks_status_dire": int,
+            "cluster": int,
+            "first_blood_time": int,
+            "lobby_type": int,
+            "human_players": int,
+            "leagueid": int,
+            "game_mode": int,
+            "flags": int,
+            "engine": int,
+            "radiant_score": int,
+            "dire_score": int,
+            "picks_bans": list[MatchDetailsPickBan],
+        },
+    )
+
+    MatchDetails = TypedDict(
+        "MatchDetails",
+        {
+            "result": MatchDetailsResult,
+        },
+    )

@@ -20,6 +20,10 @@ if TYPE_CHECKING:
         embed: discord.Embed
         file: discord.File
 
+    class WelcomeMemberRow(TypedDict):
+        roles: list[int]
+        name: str
+
 
 class Welcome(CommunityCog):
     async def welcome_image(self, member: discord.User | discord.Member) -> Image.Image:
@@ -88,8 +92,12 @@ class Welcome(CommunityCog):
         )
         return {"content": content_text, "embed": embed, "file": self.bot.transposer.image_to_file(image)}
 
-    @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member) -> None:
+    @commands.Cog.listener("on_member_join")
+    async def welcome_new_member(self, member: discord.Member) -> None:
+        """Welcome new member
+
+        This listener also gives back to old returning members their roles and old nickname if any.
+        """
         if member.guild != const.Guild.community:
             return
 
@@ -107,16 +115,20 @@ class Welcome(CommunityCog):
             query = """
                 INSERT INTO community_members (id, name)
                 VALUES ($1, $2)
-                ON CONFLICT (id) DO NOTHING
-                RETURNING roles;
+                ON CONFLICT (id) DO UPDATE
+                    SET last_seen = (now() at time zone 'utc')
+                RETURNING roles, name;
             """
-            autorole_ids: list[int] | None = await self.bot.pool.fetchval(query, member.id, member.name)
-            back = bool(autorole_ids)
+            new_row: WelcomeMemberRow = await self.bot.pool.fetchval(query, member.id, member.name)
+            back = bool(new_row["roles"])
 
-            if autorole_ids:
+            if back:
                 # returning person
-                autorole_roles = (role for role_id in autorole_ids if (role := member.guild.get_role(role_id)))
+                # autorole give back roles
+                autorole_roles = (role for role_id in new_row["roles"] if (role := member.guild.get_role(role_id)))
                 await member.add_roles(*autorole_roles)
+                # give back their nickname
+                await member.edit(nick=new_row["name"])
             else:
                 # new person
                 if role := member.guild.get_role(const.Role.level_zero):

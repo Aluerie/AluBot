@@ -142,7 +142,7 @@ class MemberLogging(CommunityCog):
     ##############################################
 
     async def update_database_and_announce(self, member_after: discord.Member, nickname_before: str | None) -> None:
-        query = "UPDATE users SET name=$1 WHERE id=$2"
+        query = "UPDATE community_members SET name=$1 WHERE id=$2"
         await self.bot.pool.execute(query, member_after.display_name, member_after.id)
 
         e = self.before_after_embed(member_after, "server nickname", nickname_before, member_after.nick)
@@ -181,14 +181,14 @@ class MemberLogging(CommunityCog):
     @aluloop(hours=6)
     async def nicknames_database_check(self) -> None:
         async def update_heartbeat(dt: datetime.datetime) -> None:
-            query = "UPDATE botvars SET community_nickname_heartbeat=$1 WHERE id=$2"
+            query = "UPDATE bot_vars SET community_nickname_heartbeat=$1 WHERE id=$2"
             await self.bot.pool.execute(query, dt, True)
 
         if self.nicknames_database_check.current_loop == 0:
             # we need to check for nickname changes
             guild = self.bot.community.guild
 
-            query = "SELECT community_nickname_heartbeat FROM botvars WHERE id=$1"
+            query = "SELECT community_nickname_heartbeat FROM bot_vars WHERE id=$1"
             heartbeat_dt: datetime.datetime = await self.bot.pool.fetchval(query, True)
             heartbeat_dt.replace(tzinfo=datetime.UTC)
 
@@ -203,7 +203,7 @@ class MemberLogging(CommunityCog):
             suspect_targets = list(dict.fromkeys(suspect_targets))  # remove duplicates
 
             for target in suspect_targets:
-                query = "SELECT name FROM users WHERE id=$1"
+                query = "SELECT name FROM community_members WHERE id=$1"
                 database_display_name = await self.bot.pool.fetchval(query, target.id)
 
                 if database_display_name != target.display_name:

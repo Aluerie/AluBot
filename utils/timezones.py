@@ -58,14 +58,15 @@ class TimeZone(NamedTuple):
         try:
             return await ctx.bot.disambiguator.disambiguate(ctx, timezones, lambda t: t.label, ephemeral=True)
         except ValueError:
-            raise commands.BadArgument(
+            msg = (
                 f"Could not find timezone for input:```\n{argument!r}```\n"
-                + "I insist that you should be using user-friendly suggestions from autocomplete for "
-                + "`timezone` argument in `/timezone set`, `/birthday set`, etc. slash commands to ease your choice. "
-                + "You can also use IANA aliases for timezones which you can find here: "
-                + "[TimeZonePicker](https://kevinnovak.github.io/Time-Zone-Picker/) or "
-                + "[WikiPage](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)'s `TZ identifier` column"
+                "I insist that you should be using user-friendly suggestions from autocomplete for "
+                "`timezone` argument in `/timezone set`, `/birthday set`, etc. slash commands to ease your choice. "
+                "You can also use IANA aliases for timezones which you can find here: "
+                "[TimeZonePicker](https://kevinnovak.github.io/Time-Zone-Picker/) or "
+                "[WikiPage](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)'s `TZ identifier` column"
             )
+            raise commands.BadArgument(msg)
 
     def to_choice(self) -> app_commands.Choice[str]:
         return app_commands.Choice(name=self.label, value=self.key)

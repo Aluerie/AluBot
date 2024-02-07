@@ -5,15 +5,13 @@ CREATE TABLE auto_sync (
     payload JSONB
 );
 
-CREATE TABLE IF NOT EXISTS botvars (
+CREATE TABLE IF NOT EXISTS bot_vars (
     id BOOLEAN NOT NULL PRIMARY KEY DEFAULT TRUE,
     community_nickname_heartbeat TIMESTAMPTZ DEFAULT (NOW() at time zone 'utc'),
     lol_patch TEXT,
     
-    -- only row with id=TRUE is allowed
-    -- so use it like this 
-    -- query = "SELECT var FROM botvars WHERE id=$1"
-    -- await self.bot.pool.fetchval(query, True)
+    -- only row with id=TRUE is allowed so you can use this table like this 
+    -- var: int = await self.bot.pool.fetchval("SELECT var FROM bot_vars")
     CONSTRAINT only_one_row CHECK (id)
 );
 

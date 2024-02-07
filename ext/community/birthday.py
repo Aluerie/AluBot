@@ -3,8 +3,7 @@ from __future__ import annotations
 import datetime
 import random
 import zoneinfo
-from re import I
-from typing import TYPE_CHECKING, Optional, TypedDict
+from typing import TYPE_CHECKING, TypedDict, override
 
 import discord
 from discord import app_commands
@@ -109,6 +108,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     congratulate you.
     """
 
+    @override
     async def cog_load(self) -> None:
         self.bot.initialize_tz_manager()
 
@@ -180,7 +180,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             expires_at = dt.replace(year=end_of_today.year + 1)
 
         # clear the previous birthday data before adding a new one
-        await self.remove_birthday_helper(ctx.author.id)
+        await self.remove_birthday_worker(ctx.author.id)
         await self.bot.create_timer(
             event="birthday",
             expires_at=expires_at,
@@ -197,7 +197,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         )
         await ctx.reply(embed=embed)
 
-    async def remove_birthday_helper(self, user_id: int) -> None:
+    async def remove_birthday_worker(self, user_id: int) -> str:
         query = """
             DELETE FROM timers
             WHERE event = 'birthday'
@@ -216,7 +216,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     @birthday.command(aliases=["del", "delete"])
     async def remove(self, ctx: AluGuildContext) -> None:
         """Remove your birthday data and stop getting congratulations."""
-        status = await self.remove_birthday_helper(ctx.author.id)
+        status = await self.remove_birthday_worker(ctx.author.id)
         if status == "DELETE 0":
             embed = discord.Embed(
                 colour=const.Colour.maroon,
@@ -263,7 +263,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             # user is not in the guild anymore
             # so let's check if the user data is deleted from the database
             query = """--sql
-                SELECT * FROM users WHERE id = $1;
+                SELECT * FROM community_members WHERE id = $1;
             """
             user_row = await self.bot.pool.fetchrow(query, user_id)
             if user_row:

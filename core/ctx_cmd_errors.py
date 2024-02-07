@@ -37,7 +37,14 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
         # AluBotError subclassed exceptions are all mine.
         desc = f"{error}"
 
-    # BAD ARGUMENT SUBCLASSED ERRORS
+    # UserInputError SUBCLASSED ERRORS
+    elif isinstance(error, commands.BadLiteralArgument):
+        desc = (
+            f"Sorry! Incorrect argument value: {error.argument!r}. \n"
+            f"Only these options are valid for a parameter `{error.param.displayed_name or error.param.name}`:\n"
+            f"{formats.human_join([repr(l) for l in error.literals])}."
+        )
+        print(error.errors)
     elif isinstance(error, commands.EmojiNotFound):
         desc = f"Sorry! `{error.argument}` is not a custom emote."
     elif isinstance(error, commands.BadArgument):
@@ -179,10 +186,6 @@ case commands.PartialEmojiConversionFailure():
     desc = f'Bad argument: {error.argument}'
 case commands.BadBoolArgument():
     desc = f'Bad argument: {error.argument}'
-case commands.BadLiteralArgument():
-    desc = (
-        f'Only these choices are valid for parameter `{error.param.name}`:\n `{", ".join(error.literals)}`'
-    )
 case commands.MissingPermissions():
     desc = f'Missing permissions: {", ".join(error.missing_permissions)}'
 case commands.BotMissingPermissions():

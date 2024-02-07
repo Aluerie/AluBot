@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import zoneinfo
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord import app_commands
@@ -18,6 +18,7 @@ from ._base import UserSettingsBaseCog
 
 
 class TimezoneSetting(UserSettingsBaseCog):
+    @override
     async def cog_load(self) -> None:
         self.bot.initialize_tz_manager()
 

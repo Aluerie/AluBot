@@ -13,21 +13,21 @@ Disclaimer: maybe some of these are bad. I'm learning.
 1. Recipe for converting column to tz aware
 
     ```sql
-    ALTER TABLE botinfo ALTER COLUMN git_checked_dt
+    ALTER TABLE bot_info ALTER COLUMN git_checked_dt
     TYPE TIMESTAMPTZ USING git_checked_dt AT TIME ZONE 'UTC';
     ```
 
 2. Recipe to set default
 
     ```sql
-    ALTER TABLE users ALTER COLUMN created_at
+    ALTER TABLE community_members ALTER COLUMN created_at
     SET DEFAULT (now() at time zone 'utc');
     ```
 
 3. Recipe to INSERT and return True/None if it was success
 
     ```sql
-    INSERT INTO users (id, name)
+    INSERT INTO community_members (id, name)
     VALUES ($1, $2)
     ON CONFLICT DO NOTHING
     RETURNING True;

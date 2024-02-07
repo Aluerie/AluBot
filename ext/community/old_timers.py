@@ -70,7 +70,7 @@ async def get_important_text(pool: PoolTypedWithAny) -> str:
 
 async def get_fact_text(pool: PoolTypedWithAny) -> str:
     async def get_msg_count(pool: PoolTypedWithAny) -> int:
-        query = "SELECT SUM(msg_count) FROM users"
+        query = "SELECT SUM(msg_count) FROM community_members"
         val = await pool.fetchval(query)
         return val
 

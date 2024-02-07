@@ -111,12 +111,12 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
     @override
     async def cog_load(self) -> None:
-        self.remove_inactive.start()
+        self.remove_long_ago_gone_members.start()
         self.bot.tree.add_command(self.view_user_rank)
 
     @override
     async def cog_unload(self) -> None:
-        self.remove_inactive.cancel()
+        self.remove_long_ago_gone_members.cancel()
         c = self.view_user_rank
         self.bot.tree.remove_command(c.name, type=c.type)
 
@@ -136,15 +136,15 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             msg = "Sorry! our system does not count experience for bots."
             raise errors.ErroneousUsage(msg)
 
-        query = "SELECT inlvl, exp, rep FROM users WHERE id=$1"
+        query = "SELECT in_lvl, exp, rep FROM community_members WHERE id=$1"
         row = await ctx.client.pool.fetchrow(query, member.id)
-        if not row.inlvl:
+        if not row.in_lvl:
             msg = "You decided to opt out of the exp system before"
             raise errors.ErroneousUsage(msg)
         lvl = get_level(row.exp)
         next_lvl_exp, prev_lvl_exp = get_exp_for_next_level(lvl), get_exp_for_next_level(lvl - 1)
 
-        query = "SELECT count(*) FROM users WHERE exp > $1"
+        query = "SELECT COUNT(*) FROM community_members WHERE exp > $1"
         place = 1 + await ctx.client.pool.fetchval(query, row.exp)
         image = await rank_image(
             ctx.client, lvl, row.exp, row.rep, next_lvl_exp, prev_lvl_exp, formats.ordinal(place), member
@@ -171,8 +171,8 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
         query = f"""
             SELECT id, exp, rep
-            FROM users
-            WHERE inlvl=TRUE
+            FROM community_members
+            WHERE in_lvl=TRUE
             ORDER BY {sort_by} DESC;
         """
         rows = await self.bot.pool.fetch(query)
@@ -205,20 +205,18 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             return
 
         query = """
-            WITH u AS (
-                SELECT lastseen FROM users WHERE id=$1
-            )
-            UPDATE users
-            SET msg_count=msg_count+1, lastseen=(now() at time zone 'utc')
-            WHERE id=$1
-            RETURNING (SELECT lastseen from u)
+            WITH m AS (SELECT last_seen FROM community_members WHERE id=$1)
+            UPDATE community_members
+            SET msg_count = msg_count+1, last_seen = (now() at time zone 'utc')
+            WHERE id = $1
+            RETURNING (SELECT last_seen from m)
         """
-        lastseen = await self.bot.pool.fetchval(query, message.author.id)
+        last_seen: datetime.datetime = await self.bot.pool.fetchval(query, message.author.id)
 
         author: discord.Member = message.author  # type: ignore
-        dt_now = discord.utils.utcnow()
-        if dt_now - lastseen > datetime.timedelta(seconds=LAST_SEEN_TIMEOUT):
-            query = "UPDATE users SET exp=exp+1 WHERE id=$1 RETURNING exp"
+        now = datetime.datetime.now(datetime.UTC)
+        if now - last_seen > datetime.timedelta(seconds=LAST_SEEN_TIMEOUT):
+            query = "UPDATE community_members SET exp = exp+1 WHERE id = $1 RETURNING exp"
             exp = await self.bot.pool.fetchval(query, message.author.id)
             level = get_level(exp)
 
@@ -238,18 +236,18 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
     thanks_words = ("thanks", "ty", "thank")
 
-    @commands.hybrid_command(name="rep", description="Give +1 to @member reputation")
+    @commands.hybrid_command(name="rep", aliases=["reputation"], description="Give +1 to @member reputation")
     @commands.cooldown(1, 60 * 60, commands.BucketType.user)
     @checks.hybrid.is_community()
     @app_commands.describe(member="Member to give rep to")
-    async def rep(self, ctx: AluGuildContext, member: discord.Member) -> None:
+    async def reputation(self, ctx: AluGuildContext, member: discord.Member) -> None:
         """Give +1 to `@member`'s reputation ;"""
         if member == ctx.author or member.bot:
             await ctx.reply(content="You can't give reputation to yourself or bots.")
         else:
-            query = "UPDATE users SET rep=rep+1 WHERE id=$1 RETURNING rep"
-            rep = await self.bot.pool.fetchval(query, member.id)
-            answer_text = f"Added +1 reputation to **{member.display_name}**: now {rep} reputation"
+            query = "UPDATE community_members SET rep=rep+1 WHERE id=$1 RETURNING rep"
+            reputation: int = await self.bot.pool.fetchval(query, member.id)
+            answer_text = f"Added +1 reputation to **{member.display_name}**: now {reputation} reputation"
             await ctx.reply(content=answer_text)
 
     @commands.Cog.listener(name="on_message")
@@ -264,19 +262,30 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             if item in message.content.lower():
                 for member in message.mentions:
                     if member != message.author:
-                        query = "UPDATE users SET rep=rep+1 WHERE id=$1"
+                        query = "UPDATE community_members SET rep=rep+1 WHERE id=$1"
                         await self.bot.pool.execute(query, member.id)
 
     @aluloop(time=datetime.time(hour=13, minute=13, tzinfo=datetime.UTC))
-    async def remove_inactive(self) -> None:
-        query = "SELECT id, lastseen, name FROM users"
+    async def remove_long_ago_gone_members(self) -> None:
+        """Remove long ago gone members.
+
+        Just a small clean up task so we don't keep members who left long ago in the database.
+        365 days is probably enough to warrant that they no longer come back.
+        `community_members` table holds stuff like auto_roles, experience, msg_count.
+        """
+
+        if datetime.datetime.now(datetime.UTC).weekday() != 3:
+            # let's do this task on Thursdays only, why not xd.
+            return
+
+        query = "SELECT id, last_seen, name FROM community_members"
         rows = await self.bot.pool.fetch(query)
 
         for row in rows:
             guild = self.community.guild
             person = guild.get_member(row.id)
-            if person is None and discord.utils.utcnow() - row.lastseen > datetime.timedelta(days=100):
-                query = "DELETE FROM users WHERE id=$1"
+            if person is None and discord.utils.utcnow() - row.last_seen > datetime.timedelta(days=365):
+                query = "DELETE FROM community_members WHERE id=$1"
                 await self.bot.pool.execute(query, row.id)
                 e = discord.Embed(description=f"id = {row.id}", colour=0xE6D690)
                 e.set_author(name=f"{row.name} was removed from the database")

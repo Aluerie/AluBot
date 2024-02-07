@@ -81,7 +81,7 @@ class Dota2Client(Dota2Client_):
         if self.check_list:
             self.deaths += 1
             # we didn't cross out all checking `start_game`-s
-            raise asyncio.TimeoutError
+            raise TimeoutError
         else:
             self.deaths = 0
             return [LiveMatch(match) for match in self.matches]

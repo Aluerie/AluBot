@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import datetime
 import logging
 import time
@@ -170,7 +169,7 @@ class DotaFPCNotifications(BaseNotifications):
         start_time = time.perf_counter()
         try:
             live_matches = await self.bot.dota.top_live_matches()
-        except asyncio.TimeoutError:  # noqa: UP041
+        except TimeoutError:
             self.death_counter += 1
             await self.hideout.spam.send(f"Game Coordinator is dying: count `{self.death_counter}`")
             send_log.warning(f"Game Coordinator is dying: count `{self.death_counter}`")
@@ -193,6 +192,7 @@ class DotaFPCNotifications(BaseNotifications):
             # Thus we consider this result corrupted since it can ruin editing logic.
             # We still forgive 90 though, should be fine.
             send_log.warn("GC only fetched %s matches", len(live_matches))
+            # thus do not update `self.top_live_matches`
         else:
             self.top_live_matches = live_matches
 

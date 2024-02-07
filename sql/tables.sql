@@ -1,32 +1,5 @@
 -- Initial SQL tables
 
-CREATE TABLE IF NOT EXISTS tags (
-    id SERIAL PRIMARY KEY,
-    name TEXT,
-    owner_id BIGINT,
-    content TEXT,
-    uses INTEGER DEFAULT (0),
-    created_at TIMESTAMP DEFAULT (now() at time zone 'utc')
-);
-
-CREATE TABLE IF NOT EXISTS users (
-    id BIGINT PRIMARY KEY,
-    name TEXT,
-    lastseen TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
-    exp INTEGER DEFAULT (0),
-    cur INTEGER DEFAULT (0),
-    rep INTEGER DEFAULT (0),
-    msg_count BIGINT DEFAULT (0),
-    can_make_tags BOOLEAN DEFAULT TRUE,
-    inlvl BOOLEAN DEFAULT TRUE
-);
-
-CREATE TABLE IF NOT EXISTS emotes (
-    id BIGINT PRIMARY KEY,
-    name TEXT,
-    animated BOOLEAN,
-    month_array INTEGER ARRAY[30] DEFAULT '{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}'
-);
 
 CREATE TABLE IF NOT EXISTS botinfo (
     id BIGINT PRIMARY KEY,

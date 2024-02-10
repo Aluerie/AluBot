@@ -72,7 +72,7 @@ All info in `/help` command of the bot. The following list is far from being com
 - [X] maintains Game News  announcement channels
     - `#🐈bugtracker_news` tracks when Valve developers interact with the [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay).
     - `#🍋dota2_news with` Official [Dota 2](https://www.dota2.com/home) news
-- [X] Fix bad links in discord chat with Mimic™️ (just a feature name) technology. Currently fixes:
+- [X] AutoFix bad links in discord chat with Mimic™️ (just a feature name) technology. Currently fixes:
     - Twitter links with the help of [fxtwitter.com](https://github.com/FixTweet/FixTweet)
     - Instagram with [ddinstagram.com](https://ddinstagram.com/)
 - [X] In total over 100 useful/fun commands.

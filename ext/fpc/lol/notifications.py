@@ -71,7 +71,7 @@ class Notifications(BaseNotifications):
         player_account_rows: list[LivePlayerAccountRow] = await self.bot.pool.fetch(query, live_twitch_ids)
 
         # todo: bring pulsefire TaskGroup here
-        # I'm not sure how to combine `player_account_rows`` with results from Semaphore though.
+        # I'm not sure how to combine `player_account_rows` with results from Semaphore though.
         # https://pulsefire.iann838.com/usage/advanced/concurrent-requests/
         for player_account_row in player_account_rows:
             try:

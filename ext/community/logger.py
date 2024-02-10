@@ -241,7 +241,8 @@ class MessageLogging(CommunityCog):
     async def on_message_delete(self, message: discord.Message) -> None:
         if message.author.bot or (message.guild and message.guild.id != const.Guild.community):
             return
-        if re.search(const.Regex.BUG_CHECK, message.content):  # bug_check
+        if re.search(const.Regex.IS_DELETED_BY_NQN, message.content):  # bug_check
+            # todo: this leads to any messages with emotes being ignored.
             return
         if message.content.startswith("$"):
             return

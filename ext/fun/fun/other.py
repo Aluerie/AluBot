@@ -89,7 +89,7 @@ class Other(FunCog):
 
         """
         # Note, that if you want bot to send a fancy message with embeds then there is `/embed make` command.
-        # TODO: when embed maker is ready add this^ into the command docstring
+
         ch = channel or ctx.channel
         if ch.id in [const.Channel.emote_spam, const.Channel.comfy_spam]:
             msg = f"Sorry, channel {ch.mention} is special emote-only channel. I won' speak there."

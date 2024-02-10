@@ -28,7 +28,7 @@ class Regex(CONSTANTS):
     EMOTE_OLD = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"  # emotes
     NQN = r":(?P<name>[a-zA-Z0-9_]{2,32}):"  # standard emotes
     # emoji = get_emoji_regexp() # use from emoji import get_emoji_regexp for this
-    BUG_CHECK = r":.*:"
+    IS_DELETED_BY_NQN = r":.*:"
     EMOTE_STATS = r"<a?:[a-zA-Z0-9_]{2,32}:[0-9]{18,22}>"
     EMOTE_STATS_IDS = r"<a?:[a-zA-Z0-9_]{2,32}:([0-9]{18,22})>"
     INVIS = "[^!-~]+"  # IDK might be huge question mark

@@ -45,7 +45,7 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
         before: Sequence[discord.Emoji],
         after: Sequence[discord.Emoji],
     ) -> None:
-        query = "SELECT emote_logs_id FROM guilds WHERE id=$1"
+        query = "SELECT emote_logs_id FROM guilds WHERE guild_id=$1"
         val = await self.bot.pool.fetchval(query, guild.id)
         ch = self.bot.get_channel(val)
         if ch is None:

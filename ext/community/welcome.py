@@ -112,13 +112,15 @@ class Welcome(CommunityCog):
             await member.add_roles(*category_roles)
 
             # 2. if it's returning person - give them their old roles, else give level 0 role
+            # note: roles are kept updated by listener in this cog
+            # note: nickname (name) is updated by a listener in community logger cog
             query = """
                 INSERT INTO community_members (id, name)
                 VALUES ($1, $2)
                 ON CONFLICT (id) DO UPDATE
                     SET last_seen = (now() at time zone 'utc')
                 RETURNING roles, name;
-            """
+            """  # ^^^ https://stackoverflow.com/a/37543015/19217368
             new_row: WelcomeMemberRow = await self.bot.pool.fetchval(query, member.id, member.name)
             back = bool(new_row["roles"])
 

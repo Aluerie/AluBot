@@ -63,7 +63,7 @@ class CodeRun(DevBaseCog):
                             key = f"{item}_{idx}"
                             env[key] = obj
                 if not found_type:
-                    msg = f"We could not assign `mention_{idx}` to {obj} from Greedy mentions. " "Check eval cmd code."
+                    msg = f"We could not assign `mention_{idx}` to {obj} from Greedy mentions. Check eval cmd code."
                     raise commands.BadArgument(  # should not in theory happen but let's watch out
                         msg
                     )

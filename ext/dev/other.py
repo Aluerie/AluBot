@@ -43,13 +43,13 @@ class AdminTools(DevBaseCog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.send_guild_embed(guild, join=True)
-        query = "INSERT INTO guilds (id, name) VALUES ($1, $2)"
+        query = "INSERT INTO guilds (guild_id, name) VALUES ($1, $2)"
         await self.bot.pool.execute(query, guild.id, guild.name)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.send_guild_embed(guild, join=False)
-        query = "DELETE FROM guilds WHERE id=$1"
+        query = "DELETE FROM guilds WHERE guild_id=$1"
         # todo: dont delete this ?
         # we also need something to catch up on bot restarts in case we joined something while we were offline.
         await self.bot.pool.execute(query, guild.id)

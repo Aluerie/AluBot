@@ -30,6 +30,8 @@ async def on_app_command_error(
     unexpected_error: bool = False
     mention: bool = True
 
+    warn_developers_desc: str = ""
+
     # error handler itself.
 
     if isinstance(error, commands.BadArgument):  # TODO: remove all those `commands.BadArgument`
@@ -46,16 +48,27 @@ async def on_app_command_error(
     #     logging.debug(f'Ignoring silent command error raised in application command {cmd}', exc_info=False)
     #     return
     elif isinstance(error, app_commands.CommandSignatureMismatch):
-        # TODO: WARN DEVS, make title too
         desc = (
-            "**\N{WARNING SIGN} This command's signature is out of date!**\n"
+            "\N{WARNING SIGN} This command's signature is out of date!\n"
             "I've warned the developers about this and it will be fixed as soon as possible."
         )
+        warn_developers_desc = (
+            f"The signature for command {error.command!r} is different from the one provided by Discord. "
+            "This can happen because either your code is out of date or you have not synced the "
+            "commands with Discord, causing the mismatch in data. It is recommended to sync the "
+            "command tree (globally and guild-bound) to fix this issue."
+        )
+
     elif isinstance(error, app_commands.CommandNotFound):
-        desc = (  # TODO: WARN DEVS, make title too
-            # TODO: maybe link our server there or create a new server for the bot support?
-            "**Sorry, but somehow this slash command does not exist anymore.**\n"
-            f"If you think this command should exist, please ask about it using {const.Slash.feedback} command."
+        desc = (
+            "Sorry! \N{WARNING SIGN} Somehow this slash command does not exist anymore.\n"
+            "I've warned the developers about this. "
+            "Soon the command will either be brought back or deleted from the command list."
+        )
+        warn_developers_desc = (
+            f"Application command {error.name!r} was not found! "
+            "Please, resync your app tree (globally and guild-bound). Or check your code."
+            f"Command details: \nparents: {error.parents!r}\ntype: {error.type!r}"
         )
     else:
         unexpected_error = True
@@ -101,6 +114,13 @@ async def on_app_command_error(
         )
         mention = interaction.channel_id != interaction.client.hideout.spam_channel_id
         await interaction.client.exc_manager.register_error(error, metadata_embed, mention=mention)
+
+    if warn_developers_desc:
+        warn_developers_embed = discord.Embed(
+            colour=const.Colour.maroon,
+            description=warn_developers_desc,
+        ).set_author(name=error.__class__.__name__)
+        await interaction.client.hideout.spam.send(const.Role.error_ping.mention, embed=warn_developers_embed)
 
     response_embed = helpers.error_handler_response_embed(error, unexpected_error, desc, mention)
     if not interaction.response.is_done():

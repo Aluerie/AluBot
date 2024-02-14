@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import random
 from enum import Enum
-from typing import TYPE_CHECKING, NamedTuple, Optional
+from typing import TYPE_CHECKING, NamedTuple, Self, override
 
 import discord
 from discord.ext import commands
 
-from utils import const
+from utils import AluView, const
 
 from .._base import FunCog
 
@@ -31,7 +31,7 @@ class RPSChoice(Enum):
         return f"{self.value.emote} {self.name}"
 
 
-class RPSView(discord.ui.View):
+class RPSView(AluView):
     def __init__(
         self,
         *,
@@ -39,7 +39,7 @@ class RPSView(discord.ui.View):
         player2: discord.User | discord.Member,
         message: discord.Message = None,  # type: ignore # secured to be discord.Message
     ) -> None:
-        super().__init__()
+        super().__init__(author_id=None)
         self.player1: discord.User | discord.Member = player1
         self.player2: discord.User | discord.Member = player2
         self.message: discord.Message = message
@@ -48,6 +48,7 @@ class RPSView(discord.ui.View):
 
         self.choices: dict[discord.User | discord.Member, RPSChoice] = {}
 
+    @override
     async def on_timeout(self) -> None:
         e = self.message.embeds[0]
         e.add_field(name="Timeout", value="Sorry, it is been too long, game is over in Draw due to timeout.")
@@ -58,7 +59,7 @@ class RPSView(discord.ui.View):
         await self.edit_embed_player_choice(self.player2)
 
     @staticmethod
-    def choice_name(button: discord.ui.Button) -> str:
+    def choice_name(button: discord.ui.Button[RPSView]) -> str:
         return f"{button.emoji} {button.label}"
 
     async def edit_embed_player_choice(self, player: discord.User | discord.Member) -> None:
@@ -71,25 +72,31 @@ class RPSView(discord.ui.View):
         )
         await self.message.edit(embed=e)
 
+    @override
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user and interaction.user in self.players:
-            if interaction.user.id in self.choices:
-                e = discord.Embed(colour=const.Colour.maroon)
-                e.description = f"You've already chosen **{self.choices[interaction.user.id]}**"
-                await interaction.response.send_message(embed=e, ephemeral=True)
+            if interaction.user in self.choices:
+                embed = discord.Embed(
+                    colour=const.Colour.maroon,
+                    description=f"You've already chosen **{self.choices[interaction.user]}**",
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
                 return False
             else:
                 return True
         else:
-            e = discord.Embed(colour=const.Colour.maroon, description="Sorry! This game dialog is not for you.")
-            await interaction.response.send_message(embed=e, ephemeral=True)
+            embed = discord.Embed(
+                colour=const.Colour.maroon,
+                description="Sorry! This game dialog is not for you.",
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return False
 
     def result_str(self) -> tuple[str, discord.User | discord.Member | None]:
         choices_string = "\n".join([f"{n.mention}: {c.emote_name}" for n, c in self.choices.items()])
 
-        c1 = self.choices[self.player1]
-        c2 = self.choices[self.player2]
+        c1 = self.choices[self.player1] # choice 1
+        c2 = self.choices[self.player2] # choice 2
 
         def winning_choice(c1: RPSChoice, c2: RPSChoice) -> tuple[str, str, discord.User | discord.Member | None]:
             if (c1.value.number + 1) % 3 == c2.value.number:  # Player2 won bcs their move is +1 bigger than ~player1
@@ -106,8 +113,8 @@ class RPSView(discord.ui.View):
     async def rps_button_callback(self, interaction: discord.Interaction, choice: RPSChoice) -> None:
         self.choices[interaction.user] = choice
 
-        e = discord.Embed(colour=const.Colour.blueviolet, description=f"You've chosen **{choice.emote_name}**")
-        await interaction.response.send_message(embed=e, ephemeral=True)
+        embed = discord.Embed(colour=const.Colour.blueviolet, description=f"You've chosen **{choice.emote_name}**")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
         await self.edit_embed_player_choice(interaction.user)
 
         if len(self.choices) == 2:
@@ -120,17 +127,17 @@ class RPSView(discord.ui.View):
             self.stop()
 
     @discord.ui.button(label=RPSChoice.Rock.name, emoji=RPSChoice.Rock.value.emote, style=discord.ButtonStyle.red)
-    async def rock_button(self, interaction: discord.Interaction, _button: discord.ui.Button) -> None:
+    async def rock_button(self, interaction: discord.Interaction, _button: discord.ui.Button[Self]) -> None:
         await self.rps_button_callback(interaction, RPSChoice.Rock)
 
     @discord.ui.button(label=RPSChoice.Paper.name, emoji=RPSChoice.Paper.value.emote, style=discord.ButtonStyle.green)
-    async def paper_button(self, interaction: discord.Interaction, _button: discord.ui.Button) -> None:
+    async def paper_button(self, interaction: discord.Interaction, _button: discord.ui.Button[Self]) -> None:
         await self.rps_button_callback(interaction, RPSChoice.Paper)
 
     @discord.ui.button(
         label=RPSChoice.Scissors.name, emoji=RPSChoice.Scissors.value.emote, style=discord.ButtonStyle.blurple
     )
-    async def scissors_button(self, interaction: discord.Interaction, _button: discord.ui.Button) -> None:
+    async def scissors_button(self, interaction: discord.Interaction, _button: discord.ui.Button[Self]) -> None:
         await self.rps_button_callback(interaction, RPSChoice.Scissors)
 
 

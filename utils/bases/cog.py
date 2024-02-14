@@ -8,7 +8,7 @@ from discord.ext import commands
 if TYPE_CHECKING:
     from bot import AluBot
 
-    from . import const
+    from .. import const
 
 __all__ = (
     "AluCog",

@@ -130,7 +130,7 @@ class OtherCog(AluCog):
         e = discord.Embed(colour=discord.Colour.dark_embed(), description=answer)
         await message.edit(embed=e)
 
-    @commands.hybrid_command(help="Show info about the bot", aliases=["botinfo", "bi"])
+    @commands.hybrid_command(help="Show info about the bot")
     async def about(self, ctx: AluContext) -> None:
         """Information about the bot itself."""
         await ctx.defer()

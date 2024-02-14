@@ -95,7 +95,8 @@ class EmoteStats(StatsCog):
             # maybe expand in future if needed? `guild_id` column is already implemented.
             return
 
-        if message.author.bot:
+        if message.author.bot and not message.webhook_id:
+            # exclude messages from bots but include webhooks so stuff like NQN can work with stats.
             return
 
         matches = EMOJI_REGEX.findall(message.content)
@@ -121,6 +122,7 @@ class EmoteStats(StatsCog):
                     for x in matches
                 ]
             )
+            print(self._batch_last_year, self._batch_total)
 
     @aluloop(seconds=60.0)
     async def bulk_insert(self) -> None:
@@ -190,9 +192,9 @@ class EmoteStats(StatsCog):
             app_commands.Choice(name="Only animated emotes", value="animated"),
         ],
         timeframe=[
-            app_commands.Choice(name="All time total stats", value="all-time"),
-            app_commands.Choice(name="Only last year emote usage stats", value="year"),
-            app_commands.Choice(name="Only last month emote usage stats", value="month"),
+            app_commands.Choice(name="All time", value="all-time"),
+            app_commands.Choice(name="Only last year", value="year"),
+            app_commands.Choice(name="Only last month", value="month"),
         ],
     )
     async def emotestats_server(
@@ -208,7 +210,7 @@ class EmoteStats(StatsCog):
         ctx : AluGuildContext
             Context
         emote_type : Literal["both", "static", "animated"]
-            Type of the emote to include in stats.
+            Emote type to include in stats.
         timeframe : Literal["all-time", "year", "month"]
             Time period to filter results with.
         """

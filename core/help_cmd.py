@@ -125,8 +125,7 @@ class HelpPages(pages.Paginator):
             title="Legend used in the Help menu.",
             description=(
                 "If you have troubles figuring out how to use some of text commands "
-                "then you should try using slash commands"
-                " because everything there has a small explanation text. "
+                "then you should try using slash commands because everything there has a small explanation text. "
                 "Nevertheless, this help menu also shows signatures for text, a.k.a. prefix commands."
                 "Reading those is pretty simple."
             ),

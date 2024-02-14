@@ -26,95 +26,96 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
 
     # error handler itself.
 
-    # CHAINED ERRORS
-    if isinstance(error, (commands.HybridCommandError, commands.CommandInvokeError, app_commands.CommandInvokeError)):
-        # we aren't interested in the chain traceback.
-        return await on_command_error(ctx, error.original)
+    match error:
+        # CHAINED ERRORS
+        case commands.HybridCommandError() | commands.CommandInvokeError() | app_commands.CommandInvokeError():
+            # we aren't interested in the chain traceback.
+            return await on_command_error(ctx, error.original)
 
-    # MY OWN ERRORS
-    elif isinstance(error, errors.AluBotError):
-        # These errors are generally raised in code by myself or by my code with an explanation text as `error`
-        # AluBotError subclassed exceptions are all mine.
-        desc = f"{error}"
+        # MY OWN ERRORS
+        case errors.AluBotError():
+            # These errors are generally raised in code by myself or by my code with an explanation text as `error`
+            # AluBotError subclassed exceptions are all mine.
+            desc = f"{error}"
 
-    # UserInputError SUBCLASSED ERRORS
-    elif isinstance(error, commands.BadLiteralArgument):
-        desc = (
-            f"Sorry! Incorrect argument value: {error.argument!r}. \n"
-            f"Only these options are valid for a parameter `{error.param.displayed_name or error.param.name}`:\n"
-            f"{formats.human_join([repr(l) for l in error.literals])}."
-        )
-        print(error.errors)
-    elif isinstance(error, commands.EmojiNotFound):
-        desc = f"Sorry! `{error.argument}` is not a custom emote."
-    elif isinstance(error, commands.BadArgument):
-        desc = f"{error}"
+        # UserInputError SUBCLASSED ERRORS
+        case commands.BadLiteralArgument():
+            desc = (
+                f"Sorry! Incorrect argument value: {error.argument!r}. \n"
+                f"Only these options are valid for a parameter `{error.param.displayed_name or error.param.name}`:\n"
+                f"{formats.human_join([repr(l) for l in error.literals])}."
+            )
 
-    elif isinstance(error, commands.MissingRequiredArgument):
-        desc = f"Please, provide this argument:\n`{error.param.name}`"
-    elif isinstance(error, commands.CommandNotFound):
-        if ctx.prefix in ["/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "]:
-            return
-        if ctx.prefix == "$" and ctx.message.content[1].isdigit():
-            # "$200 for this?" 2 is `ctx.message.content[1]`
-            # prefix commands should not start with digits
-            return
-        # TODO: make a fuzzy search in here to recommend the command that user wants
-        desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
-    elif isinstance(error, commands.CommandOnCooldown):
-        desc = f"Please retry in `{formats.human_timedelta(error.retry_after, mode='brief')}`"
-    elif isinstance(error, commands.NotOwner):
-        desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
-    elif isinstance(error, commands.MissingRole):
-        desc = f"Sorry, only {error.missing_role} are able to use this command."
-    elif isinstance(error, commands.CheckFailure):
-        desc = f"{error}"
+        case commands.EmojiNotFound():
+            desc = f"Sorry! `{error.argument}` is not a custom emote."
+        case commands.BadArgument():
+            desc = f"{error}"
 
-    # elif isinstance(error, errors.SilentError):
-    #     # this will fail the interaction hmm
-    #     return
-    else:
-        # error is unhandled/unclear and thus developers need to be notified about it.
-        is_unexpected = True
+        case commands.MissingRequiredArgument():
+            desc = f"Please, provide this argument:\n`{error.param.name}`"
+        case commands.CommandNotFound():
+            if ctx.prefix in ["/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "]:
+                return
+            if ctx.prefix == "$" and ctx.message.content[1].isdigit():
+                # "$200 for this?" 2 is `ctx.message.content[1]`
+                # prefix commands should not start with digits
+                return
+            # TODO: make a fuzzy search in here to recommend the command that user wants
+            desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
+        case commands.CommandOnCooldown():
+            desc = f"Please retry in `{formats.human_timedelta(error.retry_after, mode='brief')}`"
+        case commands.NotOwner():
+            desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
+        case commands.MissingRole():
+            desc = f"Sorry, only {error.missing_role} are able to use this command."
+        case commands.CheckFailure():
+            desc = f"{error}"
 
-        cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
-        metadata_embed = (
-            discord.Embed(
-                colour=0x890620,
-                title=f"Error with `{ctx.clean_prefix}{ctx.command}`",
-                url=ctx.message.jump_url,
-                description=textwrap.shorten(ctx.message.content, width=1024),
-                # timestamp=ctx.message.created_at,
+        # elif isinstance(error, errors.SilentError):
+        #     # this will fail the interaction hmm
+        #     return
+        case _:
+            # error is unhandled/unclear and thus developers need to be notified about it.
+            is_unexpected = True
+
+            cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
+            metadata_embed = (
+                discord.Embed(
+                    colour=0x890620,
+                    title=f"Error with `{ctx.clean_prefix}{ctx.command}`",
+                    url=ctx.message.jump_url,
+                    description=textwrap.shorten(ctx.message.content, width=1024),
+                    # timestamp=ctx.message.created_at,
+                )
+                .set_author(
+                    name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else "DM Channel"})",
+                    icon_url=ctx.author.display_avatar,
+                )
+                .add_field(
+                    name="Command Args",
+                    value=(
+                        "```py\n" + "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items()) + "```"
+                        if ctx.kwargs
+                        else "```py\nNo arguments```"
+                    ),
+                    inline=False,
+                )
+                .add_field(
+                    name="Snowflake Ids",
+                    value=(
+                        "```py\n"
+                        f"author  = {ctx.author.id}\n"
+                        f"channel = {ctx.channel.id}\n"
+                        f"guild   = {ctx.guild.id if ctx.guild else "DM Channel"}```"
+                    ),
+                )
+                .set_footer(
+                    text=f"on_command_error: {cmd_name}",
+                    icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
+                )
             )
-            .set_author(
-                name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else "DM Channel"})",
-                icon_url=ctx.author.display_avatar,
-            )
-            .add_field(
-                name="Command Args",
-                value=(
-                    "```py\n" + "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items()) + "```"
-                    if ctx.kwargs
-                    else "```py\nNo arguments```"
-                ),
-                inline=False,
-            )
-            .add_field(
-                name="Snowflake Ids",
-                value=(
-                    "```py\n"
-                    f"author  = {ctx.author.id}\n"
-                    f"channel = {ctx.channel.id}\n"
-                    f"guild   = {ctx.guild.id if ctx.guild else "DM Channel"}```"
-                ),
-            )
-            .set_footer(
-                text=f"on_command_error: {cmd_name}",
-                icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
-            )
-        )
-        mention = bool(ctx.channel.id != ctx.bot.hideout.spam_channel_id)
-        await ctx.bot.exc_manager.register_error(error, metadata_embed, mention=mention)
+            mention = bool(ctx.channel.id != ctx.bot.hideout.spam_channel_id)
+            await ctx.bot.exc_manager.register_error(error, metadata_embed, mention=mention)
 
     response_embed = helpers.error_handler_response_embed(error, is_unexpected, desc, mention)
     await ctx.reply(embed=response_embed, ephemeral=True)

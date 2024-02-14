@@ -243,8 +243,13 @@ class DotaFPCNotifications(BaseNotifications):
             if not stratz_data["data"]["match"]:
                 # This is None when conditions under "*" happen
                 # which we have to separate
-                match_details = await self.bot.steam_web_api.get_match_details(match_id)
-                if match_details['result']['duration'] < 600:  # 10 minutes
+                try:
+                    match_details = await self.bot.steam_web_api.get_match_details(match_id)
+                except KeyError:
+                    edit_log.warning("SteamWebAPI: KeyError - match `%s` is not ready (still live?).", match_id)
+                    continue
+
+                if match_details["result"]["duration"] < 600:  # 10 minutes
                     # * Game did not count
                     # * Game was less than 10 minutes
                     edit_log.info("SteamWebAPI: match `%s` did not count. Deleting the match.", match_id)

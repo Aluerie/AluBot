@@ -122,7 +122,6 @@ class EmoteStats(StatsCog):
                     for x in matches
                 ]
             )
-            print(self._batch_last_year, self._batch_total)
 
     @aluloop(seconds=60.0)
     async def bulk_insert(self) -> None:

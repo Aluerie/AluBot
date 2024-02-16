@@ -64,7 +64,7 @@ class Dota2Client(Dota2Client_):
             await self._bot.exc_manager.register_error(exc, embed)
 
     async def top_live_matches(self) -> list[LiveMatch]:
-        log.debug("Steam is connected: %s", self.steam.connected)
+        # log.debug("Steam is connected: %s", self.steam.connected)
         if not self.steam.connected:
             await self._bot.hideout.spam.send("Dota2Client: Steam is not connected.")
             log.warning("Dota2Client: Steam is not connected.")

@@ -98,7 +98,7 @@ class Welcome(CommunityCog):
 
         This listener also gives back to old returning members their roles and old nickname if any.
         """
-        if member.guild != const.Guild.community:
+        if member.guild.id != const.Guild.community:
             return
 
         back = False

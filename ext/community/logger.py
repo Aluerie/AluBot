@@ -94,7 +94,7 @@ class MemberLogging(CommunityCog):
             embeds.append(e)
         elif before.avatar != after.avatar:
             # TODO: maybe invite logic for default avatar as in removed/set from zero
-            # like duckbot, even tho it's already clear enough
+            # like duck bot, even tho it's already clear enough
             e = self.before_after_embed(member, "avatar", "Thumbnail to the right", "Image below")
             e.set_thumbnail(url=before.display_avatar.url)
             e.set_image(url=after.display_avatar.url)
@@ -105,7 +105,7 @@ class MemberLogging(CommunityCog):
             changes = [
                 attr
                 for attr in before.__dir__()
-                if not attr.startswith("_") and getattr(before, attr) != getattr(after, attr)
+                if not attr.startswith("_") and getattr(before, attr, None) != getattr(after, attr, None)
             ]
             extra_e = self.base_embed(member)
             for attr in changes:

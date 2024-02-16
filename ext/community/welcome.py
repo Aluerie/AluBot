@@ -121,10 +121,10 @@ class Welcome(CommunityCog):
                     SET last_seen = (now() at time zone 'utc')
                 RETURNING roles, name;
             """  # ^^^ https://stackoverflow.com/a/37543015/19217368
-            new_row: WelcomeMemberRow = await self.bot.pool.fetchval(query, member.id, member.name)
-            back = bool(new_row["roles"])
+            # None if new person, record-dict otherwise
+            new_row: WelcomeMemberRow | None = await self.bot.pool.fetchval(query, member.id, member.name)
 
-            if back:
+            if bool(new_row):
                 # returning person
                 # autorole give back roles
                 autorole_roles = (role for role_id in new_row["roles"] if (role := member.guild.get_role(role_id)))

@@ -40,7 +40,7 @@ send_log = logging.getLogger("send_dota_fpc")
 send_log.setLevel(logging.INFO)
 
 edit_log = logging.getLogger("edit_dota_fpc")
-edit_log.setLevel(logging.DEBUG)
+edit_log.setLevel(logging.INFO)
 
 
 class DotaFPCNotifications(BaseNotifications):
@@ -289,17 +289,14 @@ class DotaFPCNotifications(BaseNotifications):
         """Send OpenDota/Stratz rate limit numbers."""
         await ctx.reply(embed=self.get_ratelimit_embed())
 
-    @aluloop(time=datetime.time(hour=23, minute=55, tzinfo=datetime.UTC))
+    @aluloop(time=datetime.time(hour=22, minute=55, tzinfo=datetime.UTC))
     async def daily_ratelimit_report(self) -> None:
         """Send information about Stratz daily limit to spam logs.
 
         Stratz has daily ratelimit of 10000 requests and it's kinda scary one, if parsing requests fail a lot.
         This is why we also send @mention if ratelimit is critically low.
         """
-        content = ""
-        if self.bot.stratz.rate_limiter.rate_limits_ratio < 0.1:
-            content = f"<@{self.bot.owner_id}>"
-
+        content = f"<@{self.bot.owner_id}>" if self.bot.stratz.rate_limiter.rate_limits_ratio < 0.1 else ""
         await self.hideout.logger.send(content=content, embed=self.get_ratelimit_embed())
 
 

@@ -43,7 +43,7 @@ class TwitchClient(twitchio.Client):
             colour=const.Colour.twitch,
             title="Twitch Client Error",
             description=data[2048:] if data else "",
-        ).set_footer(text="TwitchClient.event_error")
+        ).set_footer(text="TwitchClient.event_error", icon_url=const.Logo.Twitch)
         await self._bot.exc_manager.register_error(error, embed)
 
     # UTILITIES
@@ -53,9 +53,12 @@ class TwitchClient(twitchio.Client):
         stream = next(iter(await self.fetch_streams(user_ids=[twitch_id])), None)  # None if offline
         return Streamer(self, user, stream)
 
+    # todo: we probably want `fetch_streamers` method so we dont waste api calls, but fml - we fetch just one streamer
+    # in our models
+
 
 class Streamer:
-    """My own helping class that unites `twitchio.User` and `twitch.Stream together`
+    """My own helping class that unites `twitchio.User` and `twitch.Stream` together.
     Do not confuse "streamer" with "user" or "stream" terms. It's meant to be a concatenation.
 
     The problem is neither classes have full information.
@@ -99,14 +102,17 @@ class Streamer:
             self.live = True
             self.game = stream.game_name
             self.title = stream.title
+            # todo: make a comment with thumbnail
             self.preview_url = stream.thumbnail_url.replace("{width}", "640").replace("{height}", "360")
         else:
             self.live = False
             self.game = "Offline"
             self.title = "Offline"
             if offline_image := user.offline_image:
+                # todo: make a comment with an example
                 self.preview_url = f'{"-".join(offline_image.split("-")[:-1])}-640x360.{offline_image.split(".")[-1]}'
             else:
+                # example: https://static-cdn.jtvnw.net/previews-ttv/live_user_gorgc-640x360.jpg
                 self.preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{user.name}-640x360.jpg"
 
     @override

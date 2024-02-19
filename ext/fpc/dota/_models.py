@@ -33,8 +33,8 @@ class TwitchData(TypedDict):
     colour: discord.Colour
 
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+send_log = logging.getLogger("send_dota_fpc")
+edit_log = logging.getLogger("edit_dota_fpc")
 
 
 class MatchToSend(BaseMatchToSend):
@@ -77,7 +77,7 @@ class MatchToSend(BaseMatchToSend):
         return (now - self.start_time).seconds
 
     async def get_twitch_data(self) -> TwitchData:
-        log.debug("`get_twitch_data` is starting")
+        send_log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
             return {
                 "preview_url": const.Picture.Placeholder640X360,
@@ -111,14 +111,14 @@ class MatchToSend(BaseMatchToSend):
 
     @override
     async def notification_image(self, twitch_data: TwitchData, colour: discord.Colour) -> Image.Image:
-        log.debug("`get_notification_image` is starting")
+        send_log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         img = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
         hero_image_urls = [await self.bot.cache_dota.hero.img_by_id(id) for id in self.hero_ids]
         hero_images = [await self.bot.transposer.url_to_image(url) for url in hero_image_urls]
 
         def build_notification_image() -> Image.Image:
-            log.debug("`build_notification_image` is starting")
+            send_log.debug("`build_notification_image` is starting")
             width, height = img.size
             rectangle = Image.new("RGB", (width, 70), str(colour))
             ImageDraw.Draw(rectangle)
@@ -143,7 +143,7 @@ class MatchToSend(BaseMatchToSend):
             draw.text(((width - w2) / 2, 35), text, font=font, align="center")
 
             # twitch status
-            w3, h3= self.bot.transposer.get_text_wh(twitch_data["twitch_status"], font)
+            w3, h3 = self.bot.transposer.get_text_wh(twitch_data["twitch_status"], font)
             draw.text(
                 xy=(width - w3, height - 100 - 10 - h3),
                 text=twitch_data["twitch_status"],
@@ -157,7 +157,7 @@ class MatchToSend(BaseMatchToSend):
 
     @override
     async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
-        log.debug("Creating embed + file for Notification match")
+        send_log.debug("Creating embed + file for Notification match")
 
         twitch_data = await self.get_twitch_data()
 
@@ -264,7 +264,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
         ]
 
         def build_notification_image() -> Image.Image:
-            log.debug("Building edited notification message.")
+            edit_log.debug("Building edited notification message.")
             width, height = img.size
 
             information_height = 50
@@ -279,7 +279,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 left = count * item_image.width
                 img.paste(item_image, (left, height - item_image.height))
 
-            # items and aghanim shard/blessing
+            # items and aghanims shard/blessing
             font_item_timing = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
 
             for count, (item_id, item_timing) in enumerate(self.sorted_item_purchases):
@@ -353,7 +353,7 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
         img = await self.bot.transposer.url_to_image(embed_image_url)
 
         def build_notification_image() -> Image.Image:
-            log.debug("Building edited notification message.")
+            edit_log.debug("Building edited notification message.")
             width, height = img.size
 
             draw = ImageDraw.Draw(img)
@@ -373,16 +373,16 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
 if TYPE_CHECKING:
     from utils import AluCog
 
+    # BETA TESTING USAGE
+    # from .fpc.dota._models import beta_test_stratz_edit
+    # await beta_test_stratz_edit(self)
+
 
 async def beta_test_stratz_edit(self: AluCog) -> None:
     """Testing function for `edit_notification_image` from LoL's MatchToEdit class.
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """
-    # BETA TESTING USAGE
-    # from .fpc.dota._models import beta_test_stratz_edit
-
-    # await beta_test_stratz_edit(self)
 
     from ext.fpc.dota._models import StratzMatchToEdit
 

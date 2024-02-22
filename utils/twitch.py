@@ -104,6 +104,7 @@ class Streamer:
             self.title = stream.title
             # todo: make a comment with thumbnail
             self.preview_url = stream.thumbnail_url.replace("{width}", "640").replace("{height}", "360")
+            log.warning("if stream %s", self.preview_url)
         else:
             self.live = False
             self.game = "Offline"
@@ -111,6 +112,7 @@ class Streamer:
             if offline_image := user.offline_image:
                 # todo: make a comment with an example
                 self.preview_url = f'{"-".join(offline_image.split("-")[:-1])}-640x360.{offline_image.split(".")[-1]}'
+                log.warning("else %s", self.preview_url)
             else:
                 # example: https://static-cdn.jtvnw.net/previews-ttv/live_user_gorgc-640x360.jpg
                 self.preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{user.name}-640x360.jpg"

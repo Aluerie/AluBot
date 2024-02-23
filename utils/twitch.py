@@ -102,18 +102,18 @@ class Streamer:
             self.live = True
             self.game = stream.game_name
             self.title = stream.title
-            # todo: make a comment with thumbnail
+            # example: https://static-cdn.jtvnw.net/previews-ttv/live_user_iannihilate-640x360.jpg
             self.preview_url = stream.thumbnail_url.replace("{width}", "640").replace("{height}", "360")
-            log.warning("if stream %s", self.preview_url)
         else:
             self.live = False
             self.game = "Offline"
             self.title = "Offline"
             if offline_image := user.offline_image:
-                # todo: make a comment with an example
+                # example for quinn:
+                # https://static-cdn.jtvnw.net/jtv_user_pictures/fdc9e3a8-b005-4719-9ca2-1a2e0e77ff5b-channel_offline_image-640x360.png
                 self.preview_url = f'{"-".join(offline_image.split("-")[:-1])}-640x360.{offline_image.split(".")[-1]}'
-                log.warning("else %s", self.preview_url)
             else:
+                # same as "if stream" but manually constructed, usually gives gray camera placeholder
                 # example: https://static-cdn.jtvnw.net/previews-ttv/live_user_gorgc-640x360.jpg
                 self.preview_url = f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{user.name}-640x360.jpg"
 

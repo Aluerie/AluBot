@@ -35,6 +35,12 @@ class LoggingHandler(logging.Handler):
 
     @override
     def filter(self, record: logging.LogRecord) -> bool:
+        """Filter out some somewhat pointless messages so we don't spam the channel as much."""
+
+        if "Clock drift detected for task" in record.message:
+            # idk, it's kinda pointless since I won't do anything about it.
+            return False
+
         return True  # record.name in ('discord.gateway')
 
     @override

@@ -85,7 +85,7 @@ class LoggerViaWebhook(AluCog):
 
     @override
     def cog_unload(self) -> None:
-        self.logging_worker.cancel()
+        self.logging_worker.stop()
 
     @discord.utils.cached_property
     def logger_webhook(self) -> discord.Webhook:
@@ -142,5 +142,7 @@ async def setup(bot: AluBot) -> None:
 async def teardown(bot: AluBot) -> None:
     if bot.test:
         return
+
+    log.warning("Tearing down logger via webhook.")
     logging.getLogger().removeHandler(bot.logging_handler)
     del bot.logging_handler

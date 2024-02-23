@@ -10,9 +10,7 @@ import discord
 from discord.ext import tasks
 
 from config import SPAM_LOGS_WEBHOOK
-from utils import const, formats
-
-from ._base import DevBaseCog
+from utils import AluCog, const, formats
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -26,7 +24,7 @@ class LoggingHandler(logging.Handler):
     """Extra logging handler to output info/warning/errors to a discord webhook.
 
     * Just remember that `log.info` and above calls go spammed in a discord webhook so plan them accordingly.
-    * `log.debug` do not so use primarily them for debug logs
+    * `log.debug` is not so use primarily them for debug logs (they only get saved in .log file)
     """
 
     def __init__(self, cog: LoggerViaWebhook) -> None:
@@ -37,7 +35,11 @@ class LoggingHandler(logging.Handler):
     def filter(self, record: logging.LogRecord) -> bool:
         """Filter out some somewhat pointless messages so we don't spam the channel as much."""
 
-        if "Clock drift detected for task" in record.message:
+        if (
+            "Clock drift detected for task" in record.message
+            or "Shard ID None has successfully RESUMED" in record.message
+            or " Shard ID None has connected to Gateway" in record.message
+        ):
             # idk, it's kinda pointless since I won't do anything about it.
             return False
 
@@ -48,7 +50,14 @@ class LoggingHandler(logging.Handler):
         self.cog.add_record(record)
 
 
-class LoggerViaWebhook(DevBaseCog):
+class LoggerViaWebhook(AluCog):
+    """Logger Via Webhook - providing handler to send logs in a discord channel
+
+    This is basically an extra logging handler that uses discord webhook to print the messages.
+    Kinda pointless, but at the same time, very handy to have an easy to check, easy to view channel with messages
+    which is being spammed with errors if something is catastrophically wrong that it doesn't go to error handlers.
+    """
+
     # TODO: ADD MORE STUFF
     AVATAR_MAPPING: Mapping[str, str] = {
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
@@ -61,6 +70,7 @@ class LoggerViaWebhook(DevBaseCog):
         "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
         "exc_manager": "https://em-content.zobj.net/source/microsoft/378/sos-button_1f198.png",
         "twitchio.ext.eventsub.ws": const.Logo.Twitch,
+        "twitchio.websocket": const.Logo.Twitch,
         # "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
         "ext.fpc.lol.notifications": const.Logo.Lol,
     }
@@ -111,6 +121,18 @@ class LoggerViaWebhook(DevBaseCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Setup
+
+    Reason this is in core extensions because some `cog_load` have pretty important log messages
+    that we want to log into the webhook. So we want to load this as early as possible.
+
+    If we ever need even earlier load then we will have to
+    manually order extensions in __init__ or at least bump this one
+    """
+    if bot.test:
+        # no need since I'm directly watching.
+        return
+
     cog = LoggerViaWebhook(bot)
     await bot.add_cog(cog)
     bot.logging_handler = handler = LoggingHandler(cog)
@@ -118,5 +140,7 @@ async def setup(bot: AluBot) -> None:
 
 
 async def teardown(bot: AluBot) -> None:
+    if bot.test:
+        return
     logging.getLogger().removeHandler(bot.logging_handler)
     del bot.logging_handler

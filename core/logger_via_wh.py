@@ -35,12 +35,12 @@ class LoggingHandler(logging.Handler):
     def filter(self, record: logging.LogRecord) -> bool:
         """Filter out some somewhat pointless messages so we don't spam the channel as much."""
 
-        if (
-            "Clock drift detected for task" in record.message
-            or "Shard ID None has successfully RESUMED" in record.message
-            or " Shard ID None has connected to Gateway" in record.message
-        ):
-            # idk, it's kinda pointless since I won't do anything about it.
+        messages_to_ignore = (
+            "Clock drift detected for task",  # idk, I won't do anything about any of those messages.
+            "Shard ID None has successfully RESUMED",
+            "Shard ID None has connected to Gateway",
+        )
+        if any(msg in record.message for msg in messages_to_ignore):
             return False
 
         return True  # record.name in ('discord.gateway')
@@ -62,7 +62,7 @@ class LoggerViaWebhook(AluCog):
     AVATAR_MAPPING: Mapping[str, str] = {
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
-        "bot.bot": "https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png",
+        "bot.bot": "https://static.vecteezy.com/system/resources/previews/018/930/718/original/discord-logo-discord-icon-transparent-free-png.png",
         "send_dota_fpc": "https://i.imgur.com/67ipDvY.png",
         "edit_dota_fpc": "https://i.imgur.com/nkcvMa2.png",
         "ext.dev.sync": "https://em-content.zobj.net/source/microsoft/378/counterclockwise-arrows-button_1f504.png",

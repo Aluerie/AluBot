@@ -37,7 +37,7 @@ lxml
 
 # DateParsing
 parsedatetime==2.6
-python-dateutil==2.8.2
+python-dateutil==2.9.0
 dateparser==1.2.0
 
 # Jupyter Notebooks (I like to mess with those on home PC)

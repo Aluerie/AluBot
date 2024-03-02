@@ -250,7 +250,7 @@ class DotaFPCNotifications(BaseNotifications):
                     edit_log.warning("SteamWebAPI: KeyError - match `%s` is not ready (still live?).", match_id)
                     edit_log.warning("%s", match_details)
                     continue
-                if duration < 600:  # 10 minutes
+                if duration < 900:  # 15 minutes (stratz excluded some 11 minutes games too)
                     # * Game did not count
                     # * Game was less than 10 minutes
                     edit_log.info("SteamWebAPI: match `%s` did not count. Deleting the match.", match_id)

@@ -17,7 +17,7 @@ category = ExtCategory(
 
 
 class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=category):
-    """My subclass to main frontend class for JIshaku.
+    """My subclass to main frontend class for Jishaku.
 
     This implements all Features and is the main entry point for Jishaku.
     """

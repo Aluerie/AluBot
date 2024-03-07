@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import logging
 from enum import Enum
 from typing import TYPE_CHECKING, Any, NamedTuple, override
 
@@ -18,6 +19,9 @@ if TYPE_CHECKING:
 
     from bot import AluBot
     from utils import AluContext
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 class Match(NamedTuple):
@@ -283,11 +287,13 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
 
     async def get_soup(self, key: str) -> BeautifulSoup:
         if soup := self.soup_cache.get(key):
+            log.debug("soup %s was present in cache, %s %s", key, soup, type(soup))
             return soup
         else:
             async with self.bot.session.get(MATCHES_URL) as r:
                 soup = BeautifulSoup(await r.read(), "html.parser")
                 self.soup_cache[key] = soup
+                log.debug("refreshed soup %s via request %s %s", key, soup, type(soup))
                 return soup
 
     @commands.hybrid_command(aliases=["sch"])

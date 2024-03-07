@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class LoLAccountDict(TypedDict):

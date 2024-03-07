@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from .schemas import GameCoordinatorAPI
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 __all__ = (
     "Dota2Client",

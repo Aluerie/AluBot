@@ -29,7 +29,7 @@ __all__ = (
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 def lol_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str) -> str:

@@ -18,7 +18,7 @@ from . import aluloop
 from .bases import errors
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Generator, MutableMapping
@@ -181,13 +181,6 @@ class ExpiringCache(dict[Any, Any]):
             del self[k]
 
     @override
-    def get(self, key: str, default: Any = None) -> Any:
-        v = super().get(key, default)
-        if v is default:
-            return default
-        return v[0]
-
-    @override
     def __contains__(self, key: str) -> bool:
         self.__verify_cache_integrity()
         return super().__contains__(key)
@@ -203,12 +196,21 @@ class ExpiringCache(dict[Any, Any]):
         super().__setitem__(key, (value, time.monotonic()))
 
     @override
+    def get(self, key: str, default: Any = None) -> Any:
+        v = super().get(key, default)
+        if v is default:
+            return default
+        return v[0]
+
+    @override
     def values(self) -> Generator[Any, None, None]:
         return (x[0] for x in super().values())
+        # map(lambda x: x[0], super().values())
+        # https://docs.astral.sh/ruff/rules/unnecessary-map/
 
     @override
     def items(self) -> Generator[tuple[Any, Any], None, None]:
-        return ((x[0], x[1][0]) for x in super().items())
+        return ((x[0], x[1][0]) for x in super().items())  # map(lambda x: (x[0], x[1][0]), super().items())
 
 
 class Strategy(enum.Enum):

@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 __all__ = ("BaseNotifications",)
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class BaseNotifications(FPCCog):

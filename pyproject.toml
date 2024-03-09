@@ -84,6 +84,11 @@ ignore = [
     "D100",    # docstring in a public module
     "UP032",   # I use it for triple emotes stuff, please ruff, stfu
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"ext/beta.py" = ["ANN201"]
+
+
 [tool.ruff.isort]
 split-on-trailing-comma = true
 combine-as-imports = true

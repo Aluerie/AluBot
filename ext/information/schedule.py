@@ -283,17 +283,15 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
-        self.soup_cache: MutableMapping[str, BeautifulSoup] = cache.ExpiringCache(seconds=1800.0)
+        self.soup_cache: MutableMapping[str, BeautifulSoup] = cache.ExpiringCache(seconds=1800.0)  # 30 minutes
 
     async def get_soup(self, key: str) -> BeautifulSoup:
         if soup := self.soup_cache.get(key):
-            log.debug("soup %s was present in cache, %s %s", key, soup, type(soup))
             return soup
         else:
             async with self.bot.session.get(MATCHES_URL) as r:
                 soup = BeautifulSoup(await r.read(), "html.parser")
                 self.soup_cache[key] = soup
-                log.debug("refreshed soup %s via request %s %s", key, soup, type(soup))
                 return soup
 
     @commands.hybrid_command(aliases=["sch"])

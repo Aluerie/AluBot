@@ -176,7 +176,7 @@ class ExpiringCache(dict[Any, Any]):
     def __verify_cache_integrity(self) -> None:
         # Have to do this in two steps...
         current_time = time.monotonic()
-        to_remove = [k for (k, (v, t)) in super().items() if current_time > (t + self.__ttl)]
+        to_remove = [k for (k, (_, t)) in super().items() if current_time > (t + self.__ttl)]
         for k in to_remove:
             del self[k]
 
@@ -197,19 +197,24 @@ class ExpiringCache(dict[Any, Any]):
 
     @override
     def get(self, key: str, default: Any = None) -> Any:
+        self.__verify_cache_integrity()
         v = super().get(key, default)
-        if v is default:
-            return default
-        return v[0]
+        return default if v is default else v[0]
 
     @override
     def values(self) -> Generator[Any, None, None]:
-        return (x[0] for x in super().values())
-        # map(lambda x: x[0], super().values())
+        return (x[0] for x in super().values())  # map(lambda x: x[0], super().values())
         # https://docs.astral.sh/ruff/rules/unnecessary-map/
 
     @override
     def items(self) -> Generator[tuple[Any, Any], None, None]:
+        """Generator `for key, value in items()` iterator.
+
+        Note that this function should be used like this:
+        >>> for (key, value) in self.items():
+        Whereas the `super().items()` function should be used when we need ttl:
+        >>> for (key, (value, ttl)) in super().items():
+        """
         return ((x[0], x[1][0]) for x in super().items())  # map(lambda x: (x[0], x[1][0]), super().items())
 
 

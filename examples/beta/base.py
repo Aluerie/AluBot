@@ -12,7 +12,7 @@ import os
 import random
 import sys
 from collections.abc import Callable, Coroutine, Sequence
-from typing import TYPE_CHECKING, Annotated, Any, Literal, TypedDict, TypeVar, cast, reveal_type
+from typing import TYPE_CHECKING, Annotated, Any, Literal, TypedDict, TypeVar, cast, override, reveal_type
 
 import asyncpg
 import discord  # noqa TCH002
@@ -21,7 +21,7 @@ from discord.ext import commands, menus
 
 import config
 from bot import AluBot
-from utils import AluCog, AluContext, ExtCategory, aluloop, checks, const, errors, timezones
+from utils import AluCog, AluContext, ExtCategory, aluloop, cache, checks, const, errors, timezones
 
 log = logging.getLogger(__name__)
 

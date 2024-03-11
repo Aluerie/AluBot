@@ -38,8 +38,6 @@ class TwitchCog(CommunityCog):
             f"**`@{streamer.display_name}`** just went live !"
         )
         # this url is a bit different from our `streamer.preview_url`
-        preview_url = "http://https/static-cdn.jtvnw.net/previews-ttv/live_user_irene_adler__-1280x720.jpg?format=webp&width=720&height=405"
-        file = await self.bot.transposer.url_to_file(preview_url, filename="twitch_preview.png")
         embed = (
             discord.Embed(
                 colour=0x9146FF,
@@ -52,15 +50,14 @@ class TwitchCog(CommunityCog):
                 icon_url=streamer.avatar_url,
                 url=streamer.url,
             )
-            .set_image(url=f"attachment://{file.filename}")
+            .set_image(url="http://https/static-cdn.jtvnw.net/previews-ttv/live_user_irene_adler__-1280x720.jpg?format=webp&width=720&height=405")
         )
-
         if game_art_url := await streamer.game_art_url():
             embed.set_thumbnail(url=game_art_url)
         else:
             embed.set_thumbnail(url=streamer.avatar_url)
 
-        await self.community.stream_notifs.send(content=content, embed=embed, file=file)
+        await self.community.stream_notifs.send(content=content, embed=embed)
 
     @commands.Cog.listener("on_twitchio_channel_points_redeem")
     async def twitch_tv_redeem_notifications(self, event: eventsub.CustomRewardRedemptionAddUpdateData) -> None:

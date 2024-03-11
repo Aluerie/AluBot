@@ -11,7 +11,6 @@ from utils import const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-
     from twitchio.ext import eventsub
 
     from bot import AluBot
@@ -36,15 +35,17 @@ class TwitchCog(CommunityCog):
 
         content = (
             f"{self.community.stream_lover_role.mention} and chat, "
-            f"our Highness **@{streamer.display_name}** just went live !"
+            f"**`@{streamer.display_name}`** just went live !"
         )
-        file = await self.bot.transposer.url_to_file(streamer.preview_url, filename="twitch_preview.png")
+        # this url is a bit different from our `streamer.preview_url`
+        preview_url = "http://https/static-cdn.jtvnw.net/previews-ttv/live_user_irene_adler__-1280x720.jpg?format=webp&width=720&height=405"
+        file = await self.bot.transposer.url_to_file(preview_url, filename="twitch_preview.png")
         embed = (
             discord.Embed(
                 colour=0x9146FF,
                 title=f"{streamer.title}",
                 url=streamer.url,
-                description=(f"Playing {streamer.game}\n/[Watch Stream]({streamer.url}){await streamer.vod_link()}"),
+                description=(f"Playing {streamer.game}\n/[Stream]({streamer.url}){await streamer.vod_link()}"),
             )
             .set_author(
                 name=f"{streamer.display_name} just went live on Twitch!",
@@ -63,8 +64,10 @@ class TwitchCog(CommunityCog):
 
     @commands.Cog.listener("on_twitchio_channel_points_redeem")
     async def twitch_tv_redeem_notifications(self, event: eventsub.CustomRewardRedemptionAddUpdateData) -> None:
-        e = discord.Embed(colour=0x9146FF)
-        e.description = f"`{event.user.name}` redeemed `{event.reward.title}` for {event.reward.cost} channel points"
+        e = discord.Embed(
+            colour=0x9146FF,
+            description=f"`{event.user.name}` redeemed `{event.reward.title}` for {event.reward.cost} channel points",
+        )
         await self.hideout.spam.send(embed=e)
 
     @commands.Cog.listener()

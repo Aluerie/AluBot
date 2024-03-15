@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 import twitchio
@@ -28,12 +28,18 @@ class TwitchClient(twitchio.Client):
     # EVENT SUB
 
     async def event_eventsub_notification(self, event: eventsub.NotificationEvent) -> None:
-        if isinstance(event.data, eventsub.StreamOnlineData):
-            self._bot.dispatch("twitchio_stream_start", event.data)
+        match_lookup: dict[Any, str] = {
+            eventsub.StreamOnlineData: "stream_start",
+            eventsub.StreamOfflineData: "stream_end",
+            eventsub.CustomRewardRedemptionAddUpdateData: "channel_points_redeem",  # mostly for testing
+        }
+        try:
+            event_name = match_lookup[type(event.data)]
+        except KeyError:
+            # well, we don't handle said events
+            return
 
-        # testing with channel points
-        elif isinstance(event.data, eventsub.CustomRewardRedemptionAddUpdateData):
-            self._bot.dispatch("twitchio_channel_points_redeem", event.data)
+        self._bot.dispatch(f"twitchio_{event_name}", event.data)
 
     # OVERRIDE
 

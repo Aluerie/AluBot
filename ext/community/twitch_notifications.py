@@ -11,7 +11,6 @@ from utils import const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-
     from twitchio.ext import eventsub
 
     from bot import AluBot
@@ -27,6 +26,8 @@ class TwitchCog(CommunityCog):
         # since we are subbing to event of myself only then my own access token is fine
         broadcaster, token = const.Twitch.MY_USER_ID, config.TWITCH_ACCESS_TOKEN
         await self.bot.twitch.eventsub.subscribe_channel_stream_start(broadcaster, token)
+        self.message_cache: dict[int, discord.Message] = {}
+        await self.bot.twitch.eventsub.subscribe_channel_stream_end(broadcaster, token)
         # testing with channel points since it's easy yo do :D
         await self.bot.twitch.eventsub.subscribe_channel_points_redeemed(broadcaster, token)
 
@@ -34,11 +35,7 @@ class TwitchCog(CommunityCog):
     async def twitch_tv_live_notifications(self, event: eventsub.StreamOnlineData) -> None:
         streamer = await self.bot.twitch.fetch_streamer(event.broadcaster.id)
 
-        content = (
-            f"{self.community.stream_lover_role.mention} and chat, "
-            f"our Highness **@{streamer.display_name}** just went live !"
-        )
-        file = await self.bot.transposer.url_to_file(streamer.preview_url, filename="twitch_preview.png")
+        content = f"{self.community.stream_lover_role.mention} and chat, **`@{streamer.display_name}`** just went live!"
         embed = (
             discord.Embed(
                 colour=0x9146FF,
@@ -51,7 +48,12 @@ class TwitchCog(CommunityCog):
                 icon_url=streamer.avatar_url,
                 url=streamer.url,
             )
-            .set_image(url=f"attachment://{file.filename}")
+            .set_image(
+                url=(
+                    f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{streamer.display_name}-1280x720.jpg"
+                    "?format=webp&width=720&height=405"
+                )
+            )
         )
 
         if game_art_url := await streamer.game_art_url():
@@ -59,13 +61,28 @@ class TwitchCog(CommunityCog):
         else:
             embed.set_thumbnail(url=streamer.avatar_url)
 
-        await self.community.stream_notifs.send(content=content, embed=embed, file=file)
+        message = await self.community.stream_notifs.send(content=content, embed=embed)
+        self.message_cache[event.broadcaster.id] = message
+
+    @commands.Cog.listener("on_twitchio_stream_end")
+    async def twitch_tv_offline_edit_notification(self, event: eventsub.StreamOfflineData) -> None:
+        try:
+            message = self.message_cache[event.broadcaster.id]
+        except KeyError:
+            return
+        embed = message.embeds[0]
+        embed.set_image(
+            url="https://static-cdn.jtvnw.net/jtv_user_pictures/ed948895-c574-4325-9c0c-d7639a45df64-channel_offline_image-1920x1080.png"
+        )
+        await message.edit(embed=embed)
 
     @commands.Cog.listener("on_twitchio_channel_points_redeem")
     async def twitch_tv_redeem_notifications(self, event: eventsub.CustomRewardRedemptionAddUpdateData) -> None:
-        e = discord.Embed(colour=0x9146FF)
-        e.description = f"`{event.user.name}` redeemed `{event.reward.title}` for {event.reward.cost} channel points"
-        await self.hideout.spam.send(embed=e)
+        embed = discord.Embed(
+            colour=0x9146FF,
+            description=f"`{event.user.name}` redeemed `{event.reward.title}` for {event.reward.cost} channel points",
+        )
+        await self.hideout.spam.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member) -> None:

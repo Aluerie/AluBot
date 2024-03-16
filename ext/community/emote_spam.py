@@ -83,7 +83,11 @@ class EmoteSpam(CommunityCog):
     @cache.cache(maxsize=60 * 24, strategy=cache.Strategy.lru)
     async def get_all_emotes(self) -> list[discord.Emoji]:
         """Get all emotes available to the bot."""
-        return list(itertools.chain.from_iterable(guild.emojis for guild in self.bot.guilds))
+
+        # let's exclude special emote servers for the bot.
+        ignored_guilds = const.EmoteGuilds.DOTA + const.EmoteGuilds.LOL + const.EmoteGuilds.BRAND
+        guild_list = [guild for guild in self.bot.guilds if guild.id not in ignored_guilds]
+        return list(itertools.chain.from_iterable(guild.emojis for guild in guild_list))
 
     async def get_random_emote(self) -> discord.Emoji:
         """Get a random discord emote from one of discord servers the bot is in."""

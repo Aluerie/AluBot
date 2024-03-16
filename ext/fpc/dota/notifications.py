@@ -267,7 +267,7 @@ class DotaFPCNotifications(BaseNotifications):
                 )
                 if self.retry_mapping[tuple_uuid] > 8:
                     # okay, let's give up on Stratz.
-                    edit_log.info("Giving up on editing the match [`%s`](https://stratz.com/matches/%s).", match_id)
+                    edit_log.info("Giving up on editing match [`%s`](https://stratz.com/matches/%s).", match_id)
                     await self.delete_match_from_editing_queue(match_id, friend_id)
                     # TODO: maybe edit the match with opendota instead? to have at least some data
                 continue
@@ -277,7 +277,6 @@ class DotaFPCNotifications(BaseNotifications):
             # now we know how exactly to edit the match with a specific `match_to_edit`
             await self.edit_match(match_to_edit, match_row["channel_message_tuples"])
             edit_log.info("Edited message after `%s` retries.", self.retry_mapping[tuple_uuid])
-
             await self.delete_match_from_editing_queue(match_id, friend_id)
         edit_log.debug("*** Finished Task to Edit Dota FPC Messages ***")
 

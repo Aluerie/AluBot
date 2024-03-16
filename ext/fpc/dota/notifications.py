@@ -230,7 +230,8 @@ class DotaFPCNotifications(BaseNotifications):
             else:
                 self.retry_mapping[tuple_uuid] += 1
 
-            edit_log.debug("Editing match = %s retry %s", tuple_uuid, self.retry_mapping[tuple_uuid])
+            retry = self.retry_mapping[tuple_uuid]  # just a short name
+            edit_log.debug("Editing match %s, friend %s retry %s", match_id, friend_id, retry)
 
             try:
                 stratz_data = await self.bot.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
@@ -262,12 +263,16 @@ class DotaFPCNotifications(BaseNotifications):
                     continue
 
             elif not stratz_data["data"]["match"]["statsDateTime"]:
-                edit_log.warning(
-                    "Parsing match [`%s`](https://stratz.com/matches/%s) was not finished.", match_id, friend_id
+                msg = "Parsing match [`{0}`](<https://stratz.com/matches/{0}>) was not finished. Retry {1}".format(
+                    match_id,
+                    retry,
                 )
-                if self.retry_mapping[tuple_uuid] > 8:
-                    # okay, let's give up on Stratz.
-                    edit_log.info("Giving up on editing match [`%s`](https://stratz.com/matches/%s).", match_id)
+                edit_log.warning(msg)
+
+                if retry > 12:
+                    # okay, let's give up on Stratz, it's been an hour or so.
+                    msg = "Giving up on editing match [`{0}`](<https://stratz.com/matches/{0}>).".format(match_id)
+                    edit_log.info(msg)
                     await self.delete_match_from_editing_queue(match_id, friend_id)
                     # TODO: maybe edit the match with opendota instead? to have at least some data
                 continue
@@ -276,7 +281,7 @@ class DotaFPCNotifications(BaseNotifications):
 
             # now we know how exactly to edit the match with a specific `match_to_edit`
             await self.edit_match(match_to_edit, match_row["channel_message_tuples"])
-            edit_log.info("Edited message after `%s` retries.", self.retry_mapping[tuple_uuid])
+            edit_log.info("Edited message after `%s` retries.", retry)
             await self.delete_match_from_editing_queue(match_id, friend_id)
         edit_log.debug("*** Finished Task to Edit Dota FPC Messages ***")
 

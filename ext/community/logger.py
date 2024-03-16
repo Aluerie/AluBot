@@ -107,13 +107,13 @@ class MemberLogging(CommunityCog):
                 for attr in before.__dir__()
                 if not attr.startswith("_") and getattr(before, attr, None) != getattr(after, attr, None)
             ]
-            extra_e = self.base_embed(member)
+            extra_embed = self.base_embed(member)
             for attr in changes:
                 # TODO: this will fail if 25+ fields
-                value = f"**Before**: {getattr(before, attr)}\n**After**: {getattr(after, attr)}"
-                extra_e.add_field(name=f"`{attr}`", value=value)
-            extra_e.set_footer(text=f"{before.id}")
-            await self.hideout.spam.send(embed=extra_e)
+                value = f"**Before**: {getattr(before, attr, None)}\n**After**: {getattr(after, attr, None)}"
+                extra_embed.add_field(name=f"`{attr}`", value=value)
+            extra_embed.set_footer(text=f"{before.id}")
+            await self.hideout.spam.send(embed=extra_embed)
 
         # TODO: it will fail if there is more than 10 things
         await self.community.bot_spam.send(embeds=embeds)

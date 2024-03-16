@@ -35,7 +35,7 @@ Initial idea was to send me notifications when my favourite  Dota 2/ League of L
 However, the whole process grew into making *the ultimate multipurpose bot*
 with pretty much everything I ever needed ! Check List of features after the pic.
 
-![AluBot preview](./assets/images/readme/dota-lol_notifs.png)
+![AluBot preview](./assets/readme/dota-lol_notifs.png)
 
 ## 🏓Table of Contents
 
@@ -130,7 +130,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     <tr>
         <td>
             <a href="https://discord.com/">
-                <img valign="bottom" src="./assets/images/readme/discord.png" alt="Discord" width="40" />
+                <img valign="bottom" src="./assets/readme/discord.png" alt="Discord" width="40" />
             </a>
         </td>
         <td>
@@ -138,7 +138,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         </td>
         <td>
             <a href="https://github.com/Rapptz/discord.py">
-                <img valign="bottom" src="./assets/images/readme/DiscordPy.png" alt="Discord.py" width="40" />
+                <img valign="bottom" src="./assets/readme/DiscordPy.png" alt="Discord.py" width="40" />
             </a>
         </td>
         <td>
@@ -148,13 +148,13 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     <tr>
         <td>
             <a href="https://www.dota2.com/">
-                <img valign="bottom" src="./assets/images/readme/dota_logo_psd.png" alt="Dota 2" width="40" />
+                <img valign="bottom" src="./assets/readme/dota_logo_psd.png" alt="Dota 2" width="40" />
             </a>
         </td>
         <td>Dota 2 Game Coordinator  API</td>
         <td>
             <a href="https://github.com/Gobot1234/steam.py">
-                <img valign="bottom" src="./assets/images/readme/steamio.png" alt="Dota 2" width="40" />
+                <img valign="bottom" src="./assets/readme/steamio.png" alt="Dota 2" width="40" />
             </a>
         </td>
         <td><a href="https://steam-py.github.io/docs/latest/">steam.py</a></td>
@@ -162,13 +162,13 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     <tr>
         <td>
             <a href="https://stratz.com/">
-                <img valign="bottom" src="./assets/images/readme/Stratz.png" alt="Stratz" width="40" />
+                <img valign="bottom" src="./assets/readme/Stratz.png" alt="Stratz" width="40" />
             </a>
         </td>
         <td><a href="https://api.stratz.com/graphiql/">Stratz GraphQL API</a></td>
         <td>
             <a href="https://github.com/iann838/pulsefire">
-                <img valign="bottom" src="./assets/images/readme/pulsefire.png" alt="Pulsefire" width="40" />
+                <img valign="bottom" src="./assets/readme/pulsefire.png" alt="Pulsefire" width="40" />
             </a>
         </td>
         <td>pulsefire-like client (see below)</a></td>
@@ -176,13 +176,13 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     <tr>
         <td>
             <a href="https://opendota.com/">
-                <img valign="bottom" src="./assets/images/readme/Opendota.png" alt="OpenDota" width="40" />
+                <img valign="bottom" src="./assets/readme/Opendota.png" alt="OpenDota" width="40" />
             </a>
         </td>
         <td><a href="https://docs.opendota.com/">OpenDota API</a></td>
         <td>
             <a href="https://github.com/iann838/pulsefire">
-                <img valign="bottom" src="./assets/images/readme/pulsefire.png" alt="Pulsefire" width="40" />
+                <img valign="bottom" src="./assets/readme/pulsefire.png" alt="Pulsefire" width="40" />
             </a>
         </td>
         <td>pulsefire-like client (see below)</a></td>
@@ -190,13 +190,13 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     <tr>
         <td>
             <a href="https://developer.riotgames.com/">
-                <img valign="bottom" src="./assets/images/readme/riot-logo.png" alt="Riot Games" width="40" />
+                <img valign="bottom" src="./assets/readme/riot-logo.png" alt="Riot Games" width="40" />
             </a>
         </td>
         <td><a href="https://developer.riotgames.com/apis">Riot Games API</a></td>
         <td>
             <a href="https://github.com/iann838/pulsefire">
-                <img valign="bottom" src="./assets/images/readme/pulsefire.png" alt="Pulsefire" width="40" />
+                <img valign="bottom" src="./assets/readme/pulsefire.png" alt="Pulsefire" width="40" />
             </a>
         </td>
         <td><a href="https://pulsefire.iann838.com/">pulsefire</a></td>
@@ -204,7 +204,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     <tr>
         <td>
             <a href="https://twitch.tv/">
-                <img valign="bottom" src="./assets/images/readme/twitch.png" alt="Twitch" width="40" />
+                <img valign="bottom" src="./assets/readme/twitch.png" alt="Twitch" width="40" />
             </a>
         </td>
         <td>
@@ -212,7 +212,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         </td>
         <td>
             <a href="https://github.com/PythonistaGuild/TwitchIO">
-                <img valign="bottom" src="./assets/images/readme/twitchio.png" alt="Twitchio" width="40" />
+                <img valign="bottom" src="./assets/readme/twitchio.png" alt="Twitchio" width="40" />
             </a>
         </td>
         <td>
@@ -222,7 +222,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         <tr>
         <td>
             <a href="https://twitch.tv/">
-                <img valign="bottom" src="./assets/images/readme/github-mark-white.png" alt="Github" width="40" />
+                <img valign="bottom" src="./assets/readme/github-mark-white.png" alt="Github" width="40" />
             </a>
         </td>
         <td>
@@ -230,7 +230,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         </td>
         <td>
             <a href="https://github.com/yanyongyu/githubkit">
-                <img valign="bottom" src="./assets/images/readme/githubkit.png" alt="Twitch" width="40" />
+                <img valign="bottom" src="./assets/readme/githubkit.png" alt="Twitch" width="40" />
             </a>
         </td>
         <td>
@@ -241,7 +241,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         <tr>
         <td>
             <a href="https://steamcommunity.com/">
-                <img valign="bottom" src="./assets/images/readme/steam.png" alt="Github" width="40" />
+                <img valign="bottom" src="./assets/readme/steam.png" alt="Github" width="40" />
             </a>
         </td>
         <td>
@@ -249,7 +249,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         </td>
         <td>
             <a href="https://github.com/iann838/pulsefire">
-                <img valign="bottom" src="./assets/images/readme/pulsefire.png" alt="Pulsefire" width="40" />
+                <img valign="bottom" src="./assets/readme/pulsefire.png" alt="Pulsefire" width="40" />
             </a>
         </td>
         <td>
@@ -260,7 +260,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         <tr>
         <td>
             <a href="https://www.wolframalpha.com/">
-                <img valign="bottom" src="./assets/images/readme/wolfram.png" alt="WolframAlpha" width="40" />
+                <img valign="bottom" src="./assets/readme/wolfram.png" alt="WolframAlpha" width="40" />
             </a>
         </td>
         <td>

@@ -7,7 +7,7 @@ git+https://github.com/Rapptz/discord-ext-menus
 git+https://github.com/Gorialis/jishaku.git
 
 # Twitch
-twitchio[speed] @ git+https://github.com/TwitchIO/TwitchIO.git@fix/eventsub-reconnect
+twitchio[speed] @ git+https://github.com/Aluerie/TwitchIO.git # my own fork with handled bad frame None case
 
 # Dota 2 (steamio)
 # my own branch with dota2 extension

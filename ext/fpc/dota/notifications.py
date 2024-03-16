@@ -241,7 +241,7 @@ class DotaFPCNotifications(BaseNotifications):
                 continue
 
             if not stratz_data["data"]["match"]:
-                # This is None when conditions under "*" happen
+                # This is None when conditions under "*" below happen
                 # which we have to separate
                 match_details = await self.bot.steam_web_api.get_match_details(match_id)
                 try:
@@ -262,18 +262,32 @@ class DotaFPCNotifications(BaseNotifications):
                     continue
 
             elif not stratz_data["data"]["match"]["statsDateTime"]:
-                edit_log.warning("Parsing for match `%s` friend `%s` was not finished.", match_id, friend_id)
+                edit_log.warning(
+                    "Parsing match [`%s`](https://stratz.com/matches/%s) was not finished.", match_id, friend_id
+                )
+                if self.retry_mapping[tuple_uuid] > 8:
+                    # okay, let's give up on Stratz.
+                    edit_log.info("Giving up on editing the match [`%s`](https://stratz.com/matches/%s).", match_id)
+                    await self.delete_match_from_editing_queue(match_id, friend_id)
+                    # TODO: maybe edit the match with opendota instead? to have at least some data
                 continue
             else:
                 match_to_edit = StratzMatchToEdit(self.bot, stratz_data)
 
+            # now we know how exactly to edit the match with a specific `match_to_edit`
             await self.edit_match(match_to_edit, match_row["channel_message_tuples"])
-
-            query = "DELETE FROM dota_messages WHERE match_id=$1 AND friend_id=$2"
-            await self.bot.pool.execute(query, match_id, friend_id)
             edit_log.info("Edited message after `%s` retries.", self.retry_mapping[tuple_uuid])
-            self.retry_mapping.pop(tuple_uuid, None)
+
+            await self.delete_match_from_editing_queue(match_id, friend_id)
         edit_log.debug("*** Finished Task to Edit Dota FPC Messages ***")
+
+    async def delete_match_from_editing_queue(self, match_id: int, friend_id: int) -> None:
+        """Delete the match to edit from database and retry_mapping.
+
+        Meaning the editing is either finished or given up on."""
+        query = "DELETE FROM dota_messages WHERE match_id=$1 AND friend_id=$2"
+        await self.bot.pool.execute(query, match_id, friend_id)
+        self.retry_mapping.pop((match_id, friend_id), None)
 
     # STRATZ RATE LIMITS
 

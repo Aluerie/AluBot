@@ -81,8 +81,9 @@ class Welcome(CommunityCog):
                 f"{const.DIGITS[1]} Read the rules and useful info in {const.Channel.rules} {const.Emote.PepoG}\n"
                 f"{const.DIGITS[2]} Choose some fancy roles in {const.Channel.role_selection} {const.Emote.peepoNiceDay}\n"
                 f"{const.DIGITS[3]} Go to {const.Channel.general} or any other channel and chat with us {const.Emote.peepoComfy}\n"
-                f"{const.DIGITS[4]} Use `/help` in {const.Channel.bot_spam} to see insane Aluerie's coding skills {const.Emote.PogChampPepe}\n"
-                f"{const.DIGITS[5]} Have fun ! (but follow the rules {const.Emote.bubuGun} {const.Emote.bubuGun} {const.Emote.bubuGun} )"
+                f"{const.DIGITS[4]} Check out <id:customize>, <id:guide>, <id:browse> {const.Emote.DankApprove}\n"
+                f"{const.DIGITS[5]} Use `/help` in {const.Channel.bot_spam} to see insane Aluerie's coding skills {const.Emote.PogChampPepe}\n"
+                f"{const.DIGITS[6]} Have fun ! (but follow the rules {const.Emote.bubuGun} {const.Emote.bubuGun} {const.Emote.bubuGun} )"
             )
         else:
             description = f"Chat, it's a new bot in our server. Use it wisely {const.Emote.peepoComfy}"

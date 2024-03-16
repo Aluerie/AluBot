@@ -221,6 +221,8 @@ class DotaFPCNotifications(BaseNotifications):
         )
 
         for match_row in match_rows:
+            # note to the following line: we could make retry database column instead of
+            # having local self.retry_mapping but idk.
             tuple_uuid = match_id, friend_id = match_row["match_id"], match_row["friend_id"]
             if tuple_uuid not in self.retry_mapping:
                 self.retry_mapping[tuple_uuid] = 0

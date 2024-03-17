@@ -19,9 +19,10 @@ jobs:
         USERNAME: ${{ secrets.USERNAME }}
         PORT: ${{ secrets.PORT }}
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        # if you have troubles with requirement not reinstalling from new github links then add --force-reinstall
         script: |
           cd ./AluBot
           git pull
           source venv/bin/activate
-          python3.12 -m pip install -U -r ./requirements.txt
+          python3.12 -m pip install -U -r ./requirements.txt --force-reinstall
           sudo systemctl restart alubot.service

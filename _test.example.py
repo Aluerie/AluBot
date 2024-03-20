@@ -15,8 +15,6 @@ TEST_EXTENSIONS = (
     # "dota_news.bugtracker",
     #####################################
     # 'meta.meta.help',
-    # 'jebaited.lewd',
-    # 'jebaited.embedmaker',
     # 'community.fix_links',
     # 'info.schedule',
     "community.twitch_notifications",

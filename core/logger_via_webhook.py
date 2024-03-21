@@ -62,9 +62,9 @@ class LoggerViaWebhook(AluCog):
     AVATAR_MAPPING: Mapping[str, str] = {
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
-        "bot.bot": "https://static.vecteezy.com/system/resources/previews/018/930/718/original/discord-logo-discord-icon-transparent-free-png.png",
-        "send_dota_fpc": "https://i.imgur.com/67ipDvY.png",
-        "edit_dota_fpc": "https://i.imgur.com/nkcvMa2.png",
+        "bot.bot": "https://i.imgur.com/6XZ8Roa.png",  # lady Noir
+        "send_dota_fpc": "https://i.imgur.com/67ipDvY.png",  # dota 2
+        "edit_dota_fpc": "https://i.imgur.com/nkcvMa2.png",  # dota 2
         "ext.dev.sync": "https://em-content.zobj.net/source/microsoft/378/counterclockwise-arrows-button_1f504.png",
         "utils.dota.valvepythondota2": "https://i.imgur.com/D96bMgG.png",
         "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
@@ -73,6 +73,7 @@ class LoggerViaWebhook(AluCog):
         "twitchio.websocket": const.Logo.Twitch,
         # "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
         "ext.fpc.lol.notifications": const.Logo.Lol,
+        "githubkit": "https://seeklogo.com/images/G/github-colored-logo-FDDF6EB1F0-seeklogo.com.png",
     }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

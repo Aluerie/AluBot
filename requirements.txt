@@ -7,7 +7,7 @@ git+https://github.com/Rapptz/discord-ext-menus
 git+https://github.com/Gorialis/jishaku.git
 
 # Twitch
-twitchio[speed] @ git+https://github.com/PythonistaGuild/TwitchIO.git@maintain/2.x
+twitchio[speed] @ git+https://github.com/PythonistaGuild/TwitchIO.git  #@maintain/2.x  # test other branch 
 
 # Dota 2 (steamio)
 # my own branch with dota2 extension

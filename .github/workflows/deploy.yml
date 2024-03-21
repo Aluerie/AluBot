@@ -19,7 +19,7 @@ jobs:
         USERNAME: ${{ secrets.USERNAME }}
         PORT: ${{ secrets.PORT }}
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        # if you have troubles with requirement not reinstalling from new github links then add --force-reinstall
+        # --force-reinstall = paste it if you need to reinstall packages from some other same-version git-branch
         script: |
           cd ./AluBot
           git pull

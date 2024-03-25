@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class TwitchClient(twitchio.Client):
+class AluTwitchClient(twitchio.Client):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(token=config.TWITCH_ACCESS_TOKEN)
 
@@ -96,8 +96,8 @@ class Streamer:
         title: str
         preview_url: str
 
-    def __init__(self, _twitch: TwitchClient, user: twitchio.User, stream: twitchio.Stream | None) -> None:
-        self._twitch: TwitchClient = _twitch
+    def __init__(self, _twitch: AluTwitchClient, user: twitchio.User, stream: twitchio.Stream | None) -> None:
+        self._twitch: AluTwitchClient = _twitch
 
         self.id: int = user.id
         self.display_name: str = user.display_name
@@ -144,7 +144,4 @@ class Streamer:
             game = next(iter(await self._twitch.fetch_games(names=[self.game])), None)
             if game:
                 return game.art_url(285, 380)
-            else:
-                return None
-        else:
-            return None
+        return None

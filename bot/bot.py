@@ -427,9 +427,9 @@ class AluBot(commands.Bot, AluBotHelper):
     async def initialize_twitch(self) -> None:
         """Initialize subclassed twitchio's Twitch Client."""
         if not hasattr(self, "twitch"):
-            from utils.twitch import TwitchClient
+            from utils.twitch import AluTwitchClient
 
-            self.twitch = TwitchClient(self)
+            self.twitch = AluTwitchClient(self)
             await self.twitch.connect()
 
     def initialize_tz_manager(self) -> None:

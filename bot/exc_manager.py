@@ -117,10 +117,8 @@ class ExceptionManager:
         traceback_string = "".join(traceback.format_exception(error)).replace(str(Path.cwd()), "AluBot")
         # .replace("``": "`\u200b`")
 
-        dt = datetime.datetime.now(datetime.UTC)
-
         async with self._lock:
-            if self._most_recent and (delta := dt - self._most_recent) < self.cooldown:
+            if self._most_recent and (delta := datetime.datetime.now(datetime.UTC) - self._most_recent) < self.cooldown:
                 # We have to wait
                 total_seconds = delta.total_seconds()
                 log.debug("Waiting %s seconds to send the error.", total_seconds)

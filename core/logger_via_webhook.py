@@ -23,8 +23,14 @@ log = logging.getLogger(__name__)
 class LoggingHandler(logging.Handler):
     """Extra logging handler to output info/warning/errors to a discord webhook.
 
+    Extremely handy tool to see all the error/warning/info logs.
+
     * Just remember that `log.info` and above calls go spammed in a discord webhook so plan them accordingly.
-    * `log.debug` is not so use primarily them for debug logs (they only get saved in .log file)
+        because we do not want to get rate-limited.
+    * For this^ reason `log.debug` is not getting logged.
+        However, you can access `alubot.log` via `/system logs` command or just by connecting to VPS.
+    * the webhook is being spammed with errors if something is catastrophically wrong
+        even if that it doesn't go to error handlers (for some reason).
     """
 
     def __init__(self, cog: LoggerViaWebhook) -> None:
@@ -53,9 +59,7 @@ class LoggingHandler(logging.Handler):
 class LoggerViaWebhook(AluCog):
     """Logger Via Webhook - providing handler to send logs in a discord channel
 
-    This is basically an extra logging handler that uses discord webhook to print the messages.
-    Kinda pointless, but at the same time, very handy to have an easy to check, easy to view channel with messages
-    which is being spammed with errors if something is catastrophically wrong that it doesn't go to error handlers.
+    This cog maintains a discord webhook that sends logging messages.
     """
 
     # TODO: ADD MORE STUFF
@@ -79,6 +83,11 @@ class LoggerViaWebhook(AluCog):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._logging_queue = asyncio.Queue()
+
+        # cooldown attrs
+        self._lock: asyncio.Lock = asyncio.Lock()
+        self.cooldown: datetime.timedelta = datetime.timedelta(seconds=5)
+        self._most_recent: datetime.datetime | None = None
 
     @override
     async def cog_load(self) -> None:
@@ -118,7 +127,16 @@ class LoggerViaWebhook(AluCog):
     @tasks.loop(seconds=0.0)
     async def logging_worker(self) -> None:
         record = await self._logging_queue.get()
-        await self.send_log_record(record)
+
+        async with self._lock:
+            if self._most_recent and (delta := datetime.datetime.now(datetime.UTC) - self._most_recent) < self.cooldown:
+                # We have to wait
+                total_seconds = delta.total_seconds()
+                log.debug("Waiting %s seconds to send the error.", total_seconds)
+                await asyncio.sleep(total_seconds)
+
+            self._most_recent = datetime.datetime.now(datetime.UTC)
+            await self.send_log_record(record)
 
 
 async def setup(bot: AluBot) -> None:

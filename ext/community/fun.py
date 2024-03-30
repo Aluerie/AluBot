@@ -48,7 +48,7 @@ class CommunityFun(CommunityCog):
         if not self.channel_check(message, const.Channel.weebs):
             return
 
-        if random.randint(1, 100 + 1) < 7:
+        if random.randint(1, 456 + 1) < 6:
             await message.channel.send(
                 "{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}".format(
                     const.Emote.WeebsOutOut, const.Emote.WeebsOut, const.Emote.peepoWeebSmash, const.Emote.peepoRiot

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import inspect
 import re
 from typing import TYPE_CHECKING, Any, override
 
@@ -105,7 +106,10 @@ class MemberLogging(CommunityCog):
             changes = [
                 attr
                 for attr in before.__dir__()
-                if not attr.startswith("_") and getattr(before, attr, None) != getattr(after, attr, None)
+                if attr not in ("system",)
+                and not attr.startswith("_")
+                and not inspect.ismethod(getattr(before, attr, None))
+                and getattr(before, attr, None) != getattr(after, attr, None)
             ]
             extra_embed = self.base_embed(member)
             for attr in changes:
@@ -115,8 +119,9 @@ class MemberLogging(CommunityCog):
             extra_embed.set_footer(text=f"{before.id}")
             await self.hideout.spam.send(embed=extra_embed)
 
-        # TODO: it will fail if there is more than 10 things
-        await self.community.bot_spam.send(embeds=embeds)
+        if embeds:
+            # TODO: it will fail if there is more than 10 things
+            await self.community.bot_spam.send(embeds=embeds)
 
     @commands.Cog.listener("on_member_update")
     async def logger_member_roles_update(self, before: discord.Member, after: discord.Member) -> None:

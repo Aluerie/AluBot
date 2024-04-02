@@ -106,18 +106,24 @@ class MemberLogging(CommunityCog):
             changes = [
                 attr
                 for attr in before.__dir__()
-                if attr not in ("system",)
+                if attr
+                not in (
+                    "system",  # sometimes it's missing resulting in "None != False"
+                    "avatar_decoration",  # not interested
+                    "avatar_decoration_sku_id",  # not interested
+                )
                 and not attr.startswith("_")
                 and not inspect.ismethod(getattr(before, attr, None))
                 and getattr(before, attr, None) != getattr(after, attr, None)
             ]
-            extra_embed = self.base_embed(member)
-            for attr in changes:
-                # TODO: this will fail if 25+ fields
-                value = f"**Before**: {getattr(before, attr, None)}\n**After**: {getattr(after, attr, None)}"
-                extra_embed.add_field(name=f"`{attr}`", value=value)
-            extra_embed.set_footer(text=f"{before.id}")
-            await self.hideout.spam.send(embed=extra_embed)
+            if changes:
+                extra_embed = self.base_embed(member)
+                for attr in changes:
+                    # TODO: this will fail if 25+ fields
+                    value = f"**Before**: {getattr(before, attr, None)}\n**After**: {getattr(after, attr, None)}"
+                    extra_embed.add_field(name=f"`{attr}`", value=value)
+                extra_embed.set_footer(text=f"{before.id}")
+                await self.hideout.spam.send(embed=extra_embed)
 
         if embeds:
             # TODO: it will fail if there is more than 10 things

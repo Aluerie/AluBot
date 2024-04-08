@@ -122,7 +122,7 @@ class DevInformation(DevBaseCog):
 
         HEALTHY = discord.Colour(value=0x43B581)  # noqa: N806
         UNHEALTHY = discord.Colour(value=0xF04947)  # noqa: N806
-        WARNING = discord.Colour(value=0xF09E47)  # noqa: N806
+        discord.Colour(value=0xF09E47)
         total_warnings = 0
 
         embed = discord.Embed(title="Bot Health Report", colour=HEALTHY)

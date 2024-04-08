@@ -376,7 +376,7 @@ def hms_to_seconds(hms_time: str) -> int:
 
     def letter_to_seconds(letter: str) -> int:
         """regex_time('h') = 3, regex_time('m') = 51, regex_time('s') = 8 for above example."""
-        pattern = r"\d+(?={})".format(letter)  # noqa UP032
+        pattern = r"\d+(?={})".format(letter)  # UP032
         units = re.search(pattern, hms_time)
         return int(units.group(0)) if units else 0
 

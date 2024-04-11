@@ -43,8 +43,8 @@ class MatchToSend(BaseMatchToSend):
     def __init__(
         self,
         bot: AluBot,
-        game: RiotAPISchema.LolSpectatorV4Game,
-        participant: RiotAPISchema.LolSpectatorV4GameParticipant,
+        game: RiotAPISchema.LolSpectatorV5Game,
+        participant: RiotAPISchema.LolSpectatorV5GameParticipant,
         player_account_row: LivePlayerAccountRow,
     ) -> None:
         super().__init__(bot)
@@ -56,7 +56,7 @@ class MatchToSend(BaseMatchToSend):
         self.tag_line: str = player_account_row["tag_line"]
         self.twitch_id: int = player_account_row["twitch_id"]
 
-        self.start_time: int = game["gameStartTime"]
+        self.start_time: int = game.get("gameStartTime", 0)
         self.all_champion_ids: list[int] = [p["championId"] for p in game["participants"]]
 
         self.champion_id: int = participant["championId"]

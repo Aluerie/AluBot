@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from bot import AluBot
 
     class LivePlayerAccountRow(TypedDict):
-        summoner_id: str
+        puuid: str
         player_id: int
         game_name: str
         tag_line: str
@@ -63,7 +63,7 @@ class Notifications(BaseNotifications):
         live_twitch_ids = await self.get_twitch_live_player_ids(const.Twitch.LOL_GAME_CATEGORY_ID, favourite_player_ids)
 
         query = """
-            SELECT a.summoner_id, a.player_id, game_name, tag_line, platform, display_name, twitch_id, last_edited
+            SELECT a.puuid, a.player_id, game_name, tag_line, platform, display_name, twitch_id, last_edited
             FROM lol_accounts a
             JOIN lol_players p ON a.player_id = p.player_id
             WHERE p.player_id=ANY($1)
@@ -75,8 +75,8 @@ class Notifications(BaseNotifications):
         # https://pulsefire.iann838.com/usage/advanced/concurrent-requests/
         for player_account_row in player_account_rows:
             try:
-                game = await self.bot.riot.get_lol_spectator_v4_active_game_by_summoner(
-                    summoner_id=player_account_row["summoner_id"],
+                game = await self.bot.riot.get_lol_spectator_v5_active_game_by_summoner(
+                    puuid=player_account_row["puuid"],
                     region=player_account_row["platform"],
                 )
             except aiohttp.ClientResponseError as exc:
@@ -106,9 +106,7 @@ class Notifications(BaseNotifications):
 
             self.live_match_ids.append(game["gameId"])
 
-            participant = next(
-                (p for p in game["participants"] if p["summonerId"] == player_account_row["summoner_id"]), None
-            )
+            participant = next((p for p in game["participants"] if p["puuid"] == player_account_row["puuid"]), None)
 
             if (
                 participant

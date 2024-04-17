@@ -123,7 +123,7 @@ class MemberLogging(CommunityCog):
                     value = f"**Before**: {getattr(before, attr, None)}\n**After**: {getattr(after, attr, None)}"
                     extra_embed.add_field(name=f"`{attr}`", value=value)
                 extra_embed.set_footer(text=f"{before.id}")
-                await self.hideout.spam.send(embed=extra_embed)
+                await self.bot.spam.send(embed=extra_embed)
 
         if embeds:
             # TODO: it will fail if there is more than 10 things

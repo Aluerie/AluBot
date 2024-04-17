@@ -1,60 +1,85 @@
-"""Config variables file.
-
-* Rename this file from `config.example.py` to `config.py`
-* Fill out the variables below.
 """
+CONFIG VARIABLES
+
+* If there are differences in variable value for Home PC and VPS
+then it will be covered by `if platform.system() == "Linux": condition
+where Linux is my VPS;
+* It's probably not extremely awful practice rather than always be checking for `if bot.test` in the code.
+"""
+import platform
 
 # /* cSpell:disable */
 
-# DISCORD (AluBot)
-MAIN_TOKEN = ""  # your bot's token
+############################################
+#               1. DISCORD                 #
+############################################
 
-# DISCORD (YenBot)
-TEST_TOKEN = ""
+if platform.system() == "Linux":
+    # AluBot - my main bot
+    __discord_bot_token = "abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz"
+else:
+    # YenBot - testing bot
+    __discord_bot_token = "xyz"
 
-# STEAM (MAIN BOT ACCOUNT)
-# I have not yet implemented getting SteamGuard codes with super-secret thing
-# So both main and test accounts should be without 2FA from SteamGuard (no email, no mobile codes).
-# well, any empty new account with 0$ wallet works.
-# For Game coordinator features add it to friends from your actual gaming steam account
-STEAM_MAIN_LGN = ""
-STEAM_MAIN_PSW = ""
+DISCORD_BOT_TOKEN = __discord_bot_token
 
-# STEAM (TEST BOT'S ACCOUNT)
-STEAM_TEST_LGN = ""
-STEAM_TEST_PSW = ""
+############################################
+#              2. DATABASE                 #
+############################################
 
-# STEAM API KEY
+if platform.system() == "Linux":
+    # VPS Machine
+    __postgres_url = "postgresql://user:password@host:port/database"
+else:
+    # Home Computer
+    __postgres_url = "postgresql://user:password@host:port/database"
+
+POSTGRES_URL = __postgres_url
+
+############################################
+#               3. STEAM                   #
+############################################
+
+STEAM_USERNAME = ""
+STEAM_PASSWORD = ""
+
+# Steam WEB API Key
 STEAM_WEB_API_KEY = ""
+# Dota 2 my own Friend ID
+DOTA_FRIEND_ID = 123
 
-# DOTA 2
-DOTA_FRIEND_ID = 123_456_789
+############################################
+#               4. TWITCH                  #
+############################################
 
-# GIT PERSONAL TOKEN
-GIT_PERSONAL_TOKEN = ""
+TWITCH_ACCESS_TOKEN = ""
+TWITCH_REFRESH_TOKEN = ""
+TWITCH_CLIENT_ID = ""
 
-# RIOT
-RIOT_API_KEY = ""
+############################################
+#         5. WEBHOOK URL CATALOG           #
+############################################
 
-# TWITCH # https://twitchtokengenerator.com/ for TOKEN
-TWITCH_TOKEN = ""
+# Error Handler - send tracebacks and error pings into a proper channel;
+ERROR_HANDLER_WEBHOOK = "https://discord.com/api/webhooks/1234567/ABCDEFG"
+# Spam Messages - just miscallenous messages, can be anything;
+SPAM_WEBHOOK = "https://discord.com/api/webhooks/1234567/ABCDEFG"
+# Logger - send `log.info`, `log.warning`, `log.error` into #🐬logger;
+LOGGER_WEBHOOK = "https://discord.com/api/webhooks/1234567/ABCDEFG"
+# Dota 2 News Webhook - send Dota 2 news to #🍋dota2_news (or to #🍷test_spam when testing)
+DOTA_NEWS_WEBHOOK = "https://discord.com/api/webhooks/1234567/ABCDEFG"
 
-# POSTGRES DATABASE
-POSTGRES_URL = "postgresql://user:password@host:port/database"
+############################################
+#             6. OTHER SERVICES            #
+############################################
 
-# WOLFRAM # 2000 requests /month
-WOLFRAM_TOKEN = ""
-
-# ERROR HANDLER WEBHOOK URL
-ERROR_HANDLER_WEBHOOK_URL = "https://discord.com/api/webhooks/something"
-
-# TEST BOT'S ERROR HANDLER WEBHOOK URL
-TEST_ERROR_HANDLER_WEBHOOK_URL = "https://discord.com/api/webhooks/something"
-
-# BOT CONSOLE LOGGER SPAM WEEBHOOK URL
-SPAM_LOGS_WEBHOOK_URL = "https://discord.com/api/webhooks/something"
-
-# STRATZ
+# Stratz
 STRATZ_BEARER_TOKEN = ""
+# Wolfram # 2000 /month
+WOLFRAM_TOKEN = ""
+# Git Personal Token
+GIT_PERSONAL_TOKEN = ""
+# Riot API Key
+RIOT_API_KEY = ""
 
 # /* cSpell:enable */

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext import tasks
 
-from config import SPAM_LOGS_WEBHOOK
+from config import LOGGER_WEBHOOK
 from utils import AluCog, const, formats
 
 if TYPE_CHECKING:
@@ -99,7 +99,7 @@ class LoggerViaWebhook(AluCog):
 
     @discord.utils.cached_property
     def logger_webhook(self) -> discord.Webhook:
-        return discord.Webhook.from_url(url=SPAM_LOGS_WEBHOOK, session=self.bot.session)
+        return discord.Webhook.from_url(url=LOGGER_WEBHOOK, session=self.bot.session)
 
     def add_record(self, record: logging.LogRecord) -> None:
         self._logging_queue.put_nowait(record)

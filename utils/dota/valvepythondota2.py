@@ -45,15 +45,10 @@ class Dota2Client(Dota2Client_):
 
     async def login(self) -> None:
         log.debug("dota2info: client.connected %s", self.steam.connected)
-        if self._bot.test:
-            username, password = (config.TEST_STEAM_USERNAME, config.TEST_STEAM_PASSWORD)
-        else:
-            username, password = (config.STEAM_USERNAME, config.STEAM_PASSWORD)
-
         try:
-            if self.steam.login(username=username, password=password):
+            if self.steam.login(username=config.STEAM_USERNAME, password=config.STEAM_PASSWORD):
                 self.steam.change_status(persona_state=7)
-                log.info("Logged in Steam as `%s`", username)
+                log.info("Logged in Steam as `%s`", config.STEAM_USERNAME)
                 self.launch()
         except Exception as exc:
             log.error("Logging in Steam failed")
@@ -66,7 +61,7 @@ class Dota2Client(Dota2Client_):
     async def top_live_matches(self) -> list[LiveMatch]:
         # log.debug("Steam is connected: %s", self.steam.connected)
         if not self.steam.connected:
-            await self._bot.hideout.spam.send("Dota2Client: Steam is not connected.")
+            await self._bot.spam.send("Dota2Client: Steam is not connected.")
             log.warning("Dota2Client: Steam is not connected.")
             await asyncio.sleep(3.3)
             await self.login()

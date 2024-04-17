@@ -31,12 +31,8 @@ class Dota2Client(Client):
         self._bot: AluBot = bot
 
     async def login(self) -> None:
-        if self._bot.test:
-            username, password = (config.TEST_STEAM_USERNAME, config.TEST_STEAM_PASSWORD)
-        else:
-            username, password = (config.STEAM_USERNAME, config.STEAM_PASSWORD)
-        await super().login(username, password)
-        log.info("We successfully logged invis mode into Steam: %s", username)
+        await super().login(config.STEAM_USERNAME, config.STEAM_PASSWORD)
+        log.info("We successfully logged invis mode into Steam: %s", config.STEAM_USERNAME)
 
     async def on_ready(self) -> None:
         if not self._bot.test:

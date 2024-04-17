@@ -12,12 +12,12 @@ But for now I just repost messages I'm interested it to only my channel.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord.ext import commands
 
-from config import DOTA_NEWS_WEBHOOK, TEST_SPAM_PINK_WEBHOOK
+from config import DOTA_NEWS_WEBHOOK
 from utils import AluCog, const
 
 if TYPE_CHECKING:
@@ -25,6 +25,8 @@ if TYPE_CHECKING:
 
 
 class SteamDB(AluCog):
+
+    @override
     def cog_load(self) -> None:
         self.bot.initialize_github()
 
@@ -35,7 +37,7 @@ class SteamDB(AluCog):
     @discord.utils.cached_property
     def news_webhook(self) -> discord.Webhook:
         return discord.Webhook.from_url(
-            url=TEST_SPAM_PINK_WEBHOOK if self.bot.test else DOTA_NEWS_WEBHOOK,
+            url=DOTA_NEWS_WEBHOOK,
             client=self.bot,
             session=self.bot.session,
             bot_token=self.bot.http.token,

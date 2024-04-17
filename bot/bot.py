@@ -273,8 +273,6 @@ class AluBot(commands.Bot, AluBotHelper):
 
     @override
     async def start(self) -> None:
-        token = config.TEST_TOKEN if self.test else config.MAIN_TOKEN
-
         # erm, bcs of my horrendous .test logic we need to do it in a weird way
         # todo: is there anything better ? :D
 
@@ -287,7 +285,7 @@ class AluBot(commands.Bot, AluBotHelper):
         #         self.dota.login(),
         #     )
         # else:
-        await super().start(token, reconnect=True)  # VALVE_SWITCH
+        await super().start(config.DISCORD_BOT_TOKEN, reconnect=True)  # VALVE_SWITCH
 
     @override
     async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:
@@ -480,4 +478,13 @@ class AluBot(commands.Bot, AluBotHelper):
             self.user.id,
             permissions=PERMISSIONS,
             scopes=("bot", "applications.commands"),
+        )
+
+    @discord.utils.cached_property
+    def spam(self) -> discord.Webhook:
+        return discord.Webhook.from_url(
+            url=config.SPAM_WEBHOOK,
+            session=self.session,
+            client=self,
+            bot_token=self.http.token,
         )

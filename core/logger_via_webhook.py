@@ -67,8 +67,8 @@ class LoggerViaWebhook(AluCog):
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
         "bot.bot": "https://i.imgur.com/6XZ8Roa.png",  # lady Noir
-        "send_dota_fpc": "https://i.imgur.com/67ipDvY.png",  # dota 2
-        "edit_dota_fpc": "https://i.imgur.com/nkcvMa2.png",  # dota 2
+        "send_dota_fpc": "https://i.imgur.com/6x1J57F.png",  # dota 2 FPC logs
+        "edit_dota_fpc": "https://i.imgur.com/8nj04Ol.png",  # dota 2 FPC logs
         "ext.dev.sync": "https://em-content.zobj.net/source/microsoft/378/counterclockwise-arrows-button_1f504.png",
         "utils.dota.valvepythondota2": "https://i.imgur.com/D96bMgG.png",
         "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",

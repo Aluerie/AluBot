@@ -52,7 +52,7 @@ class BaseNotifications(FPCCog):
         live_player_ids = [
             twitch_id_to_player_id[stream.user.id]
             for stream in await self.bot.twitch.fetch_streams(user_ids=list(twitch_id_to_player_id.keys()))
-            if stream.game_id == twitch_category_id  # type: ignore # stream.game_id is actually str, not int.
+            if stream.game_id == twitch_category_id
         ]
         return live_player_ids
 

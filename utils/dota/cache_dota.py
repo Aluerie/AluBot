@@ -86,9 +86,11 @@ class HeroKeysCache(KeysCache):
             data["icon_by_id"][hero["id"]] = f"https://cdn.cloudflare.steamstatic.com{hero['icon']}"
 
             data["talents_by_id"][hero["id"]] = [
-                (talent_id_by_name[talent["name"]], abilities[talent["name"]]["dname"])
+                # Unknown Talent :( because new patches sometimes introduce terms that opendota fails to figure out
+                (talent_id_by_name[talent["name"]], abilities[talent["name"]].get("dname", "Unknown Talent :("))
                 for talent in hero_abilities[hero["name"]]["talents"]
             ]
+
         return data
 
     # Example of hero values to be transposed into each other

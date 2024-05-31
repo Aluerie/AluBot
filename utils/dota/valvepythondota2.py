@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from enum import IntEnum
 from operator import attrgetter
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import discord
 from dota2.client import Dota2Client as Dota2Client_
@@ -42,6 +42,9 @@ class Dota2Client(Dota2Client_):
 
         self._bot: AluBot = bot
         self.deaths: int = 0
+
+        # TEST PRINT
+        # self.test_print: bool = False
 
     async def login(self) -> None:
         log.debug("dota2info: client.connected %s", self.steam.connected)
@@ -85,6 +88,11 @@ class Dota2Client(Dota2Client_):
         for match in message.game_list:
             self.matches.append(match)
 
+            # TEST PRINT
+            # if not self.test_print:
+            #     print(match)
+            #     self.test_print = True
+
         self.check_list.discard(message.start_game)
         if not self.check_list:
             self.emit("live_matches_ready")
@@ -102,6 +110,12 @@ class LiveMatch:
     @property
     def heroes(self) -> list[Hero]:
         return [p.hero for p in self.players]
+
+    # todo: make repr so print(match) can work
+
+    # @override
+    # def __repr__(self) -> str:
+    #     return f"<Dota2FPC LiveMatch (my own) id={self.id} players={}"
 
 
 @dataclass

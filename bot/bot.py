@@ -180,7 +180,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
         all_cmds = self.tree.get_commands(guild=guild)
 
-        new_payloads = [(guild.id, cmd.to_dict()) for cmd in all_cmds]
+        new_payloads = [(guild.id, cmd.to_dict(self.tree)) for cmd in all_cmds]
 
         query = "SELECT payload FROM auto_sync WHERE guild_id = $1"
         db_payloads = [r["payload"] for r in await self.pool.fetch(query, guild.id)]

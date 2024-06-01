@@ -220,6 +220,7 @@ class StratzGraphQL:
             {
                 "isVictory": bool,
                 "heroId": int,
+                "variant": int,
                 "kills": int,
                 "deaths": int,
                 "assists": int,
@@ -398,6 +399,15 @@ class ODotaConstantsJson:
             "level": int,
         },
     )
+    HeroFacet = TypedDict(
+        "HeroFacet",
+        {
+            "name": str,
+            "icon": str,
+            "color": str,
+            "gradientId": str,  # why it's string "3" :c
+        },
+    )
     HeroAbilities = TypedDict(
         "HeroAbilities",
         {
@@ -410,6 +420,7 @@ class ODotaConstantsJson:
             # so if it's even - it's left talent, if it's odd - right
             # level with help with... level :D
             "talents": list[HeroTalent],
+            "facets": list[HeroFacet],
         },
     )
     HeroAbilitiesData = dict[str, HeroAbilities]

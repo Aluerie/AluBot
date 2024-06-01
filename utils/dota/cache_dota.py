@@ -10,6 +10,12 @@ if TYPE_CHECKING:
 
     from bot import AluBot
 
+    class HeroFacet(TypedDict):
+        display_name: str
+        icon: str
+        colour: str
+        gradient_id: int
+
     class HeroKeysData(TypedDict):
         id_by_npcname: MutableMapping[str, int]
         npcname_by_id: MutableMapping[int, str]
@@ -19,6 +25,7 @@ if TYPE_CHECKING:
         icon_by_id: MutableMapping[int, str]
         ability_icon_by_ability_id: MutableMapping[int, str]
         talents_by_id: MutableMapping[int, list[tuple[int, str]]]
+        facets_by_id: MutableMapping[int, list[HeroFacet]]
 
     class AbilityKeysData(TypedDict):
         icon_by_id: MutableMapping[int, str]
@@ -34,6 +41,8 @@ class CacheDota:
 
 
 class HeroKeysCache(KeysCache):
+    CDN = "https://cdn.cloudflare.steamstatic.com"
+
     if TYPE_CHECKING:
         cached_data: HeroKeysData
 
@@ -46,6 +55,7 @@ class HeroKeysCache(KeysCache):
         abilities = await self.bot.odota_constants.get_abilities()
         hero_abilities = await self.bot.odota_constants.get_hero_abilities()
 
+        # by_id or by_name means by hero_name/hero_id, might write full thing if it's too unclear.
         data: HeroKeysData = {
             "id_by_npcname": {"": 0},
             "npcname_by_id": {0: ""},
@@ -55,9 +65,11 @@ class HeroKeysCache(KeysCache):
             "icon_by_id": {0: const.Dota.HERO_DISCONNECT},
             "ability_icon_by_ability_id": {0: const.Dota.HERO_DISCONNECT, 730: const.Dota.ATTR_BONUS_ICON},
             "talents_by_id": {},
+            "facets_by_id": {},
         }
 
         talent_id_by_name: dict[str, int] = {}
+        facets_id_by_name: dict[str, int] = {}
 
         for hero_ability in hero_abilities.values():
             # ABILITIES
@@ -66,7 +78,7 @@ class HeroKeysCache(KeysCache):
 
                 img_url = abilities[ability_name].get("img", None)
                 if img_url:
-                    data["ability_icon_by_ability_id"][ability_id] = f"https://cdn.cloudflare.steamstatic.com{img_url}"
+                    data["ability_icon_by_ability_id"][ability_id] = f"{self.CDN}{img_url}"
 
             # TALENTS
             for talent in hero_ability["talents"]:
@@ -77,18 +89,39 @@ class HeroKeysCache(KeysCache):
                 data["ability_icon_by_ability_id"][ability_id] = const.Dota.TALENT_TREE_ICON
                 talent_id_by_name[talent_name] = ability_id
 
+            # FACETS
+
+            for facet in hero_ability["facets"]:
+                facet_name = facet["name"]
+                ability_id = reverse_ability_ids.get(facet_name)
+                if ability_id is None:
+                    continue
+                facets_id_by_name[facet_name] = ability_id
+
         for hero in hero_data.values():
             data["id_by_npcname"][hero["name"]] = hero["id"]
             data["npcname_by_id"][hero["id"]] = hero["name"]
             data["id_by_name"][hero["localized_name"].lower()] = hero["id"]
             data["name_by_id"][hero["id"]] = hero["localized_name"]
-            data["img_by_id"][hero["id"]] = f"https://cdn.cloudflare.steamstatic.com{hero['img']}"
-            data["icon_by_id"][hero["id"]] = f"https://cdn.cloudflare.steamstatic.com{hero['icon']}"
+            data["img_by_id"][hero["id"]] = f"{self.CDN}{hero['img']}"
+            data["icon_by_id"][hero["id"]] = f"{self.CDN}{hero['icon']}"
 
             data["talents_by_id"][hero["id"]] = [
                 # Unknown Talent :( because new patches sometimes introduce terms that opendota fails to figure out
-                (talent_id_by_name[talent["name"]], abilities[talent["name"]].get("dname", "Unknown Talent :("))
+                (talent_id_by_name[talent["name"]], abilities[talent["name"]].get("dname", "Unknown Talent Name"))
                 for talent in hero_abilities[hero["name"]]["talents"]
+            ]
+
+            data["facets_by_id"][hero["id"]] = [  # type: ignore # it doesn't trust me that the following is list[HeroFacet]
+                {
+                    "display_name": abilities.get(facet["name"], {"dname": "Unknown Facet Name"}).get(
+                        "dname", "Unknown Facet Name :c"
+                    ),  # Erm ?
+                    "icon": f"{self.CDN}/apps/dota2/images/dota_react/icons/facets/{facet['icon']}.png",
+                    "colour": facet["color"],
+                    "gradient_id": facet["gradientId"],
+                }
+                for facet in hero_abilities[hero["name"]]["facets"]
             ]
 
         return data
@@ -143,6 +176,10 @@ class HeroKeysCache(KeysCache):
         """
         return await self.get_value("talents_by_id", hero_id)
 
+    async def facets_by_id(self, hero_id: int) -> list[HeroFacet]:
+        """Get list of hero facets."""
+        return await self.get_value("facets_by_id", hero_id)
+
 
 class ItemKeysCache(KeysCache):
     # ITEMS_URL = "https://api.opendota.com/api/constants/items"
@@ -155,7 +192,7 @@ class ItemKeysCache(KeysCache):
             "icon_by_id": {0: const.Dota.EMPTY_ITEM_TILE},
             "id_by_key": {},
             "name_by_id": {0: "Empty Slot"},
-            "id_by_name": {}
+            "id_by_name": {},
         }
         for key, item in item_dict.items():
             data["icon_by_id"][item["id"]] = f"https://cdn.cloudflare.steamstatic.com{item['img']}"

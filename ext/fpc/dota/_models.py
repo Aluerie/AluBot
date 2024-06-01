@@ -237,6 +237,8 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
         self.neutral_item_id: int = player["neutral0Id"] or 0
 
+        self.facet: int = player["variant"]
+
     @override
     def __repr__(self) -> str:
         pairs = " ".join([f"{k}={v!r}" for k, v in self.__dict__.items()])
@@ -262,6 +264,9 @@ class StratzMatchToEdit(BaseMatchToEdit):
         talents_order = [
             ability_upgrade for ability_upgrade in self.ability_upgrades_ids if ability_upgrade in talent_ids
         ]
+
+        facet = (await self.bot.cache_dota.hero.facets_by_id(self.hero_id))[self.facet - 1]  # they start from 1
+        facet_image = await self.bot.transposer.url_to_image(facet["icon"])
 
         def build_notification_image() -> Image.Image:
             edit_log.debug("Building edited notification message.")
@@ -339,6 +344,39 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 draw.rectangle(xy=(left - 6, top - 6, right + 6, bottom + 6), fill=fill_colour)
                 draw.text(xy=position, text=talent_display_text, font=talent_font, align="right")
 
+            # facet
+
+            font_facet = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 22)
+            facet_icon_h = 45
+            facet_text_w, facet_text_h = self.bot.transposer.get_text_wh(facet["display_name"], font_facet)
+            draw.rectangle(
+                xy=(
+                    width - facet_text_w - facet_icon_h,
+                    height - information_height - ability_h - facet_icon_h,
+                    width,
+                    height - information_height - ability_h,
+                ),
+                fill=facet["colour"],
+            )
+            draw.text(
+                (
+                    width - facet_text_w,
+                    height - information_height - ability_h - facet_icon_h / 2 - facet_text_h/2,
+                ),
+                facet["display_name"],
+                font=font_facet,
+                align="right",
+            )
+            resized_facet_image = facet_image.resize((facet_icon_h, facet_icon_h))
+            img.paste(
+                resized_facet_image,
+                (
+                    width - facet_text_w - facet_icon_h,
+                    height - information_height - ability_h - facet_icon_h,
+                ),
+                mask=resized_facet_image,
+            )
+
             # img.show()
             return img
 
@@ -389,8 +427,8 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
     await self.bot.initialize_dota_pulsefire_clients()
     self.bot.initialize_cache_dota()
 
-    match_id = 7549006442
-    friend_id = 159020918
+    match_id = 7769171805
+    friend_id = 321580662
     data = await self.bot.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
 
     match_to_edit = StratzMatchToEdit(self.bot, data)

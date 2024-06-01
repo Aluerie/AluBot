@@ -263,6 +263,7 @@ class StratzClient(BaseClient):
                 players(steamAccountId: $friend_id) {
                     isVictory
                     heroId
+                    variant
                     kills
                     deaths
                     assists

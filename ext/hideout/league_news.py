@@ -24,6 +24,10 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
     # but really there is only two json links to get info from.
 
     patch_news_json = "https://www.leagueoflegends.com/page-data/en-us/news/tags/patch-notes/page-data.json"
+    # Botty is using different link though:
+    # it's trying to pull from
+    # https://www.leagueoflegends.com/page-data/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/page-data.json
+    # i.e. https://www.leagueoflegends.com/page-data/en-us/news/game-updates/patch-14-11-notes/page-data.json
 
     @override
     async def cog_load(self) -> None:
@@ -108,4 +112,5 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
 
 
 async def setup(bot: AluBot) -> None:
-    await bot.add_cog(LeagueOfLegendsPatchChecker(bot))
+    pass  # fok league patches
+    # await bot.add_cog(LeagueOfLegendsPatchChecker(bot))

@@ -233,6 +233,12 @@ class DotaFPCNotifications(BaseNotifications):
 
             retry = self.retry_mapping[tuple_uuid]  # just a short name
             edit_log.debug("Editing match %s, friend %s retry %s", match_id, friend_id, retry)
+            if retry > 13:
+                # okay, let's give up on editing, it's been an hour or so.
+                msg = "Giving up on editing match [`{0}`](<https://stratz.com/matches/{0}>).".format(match_id)
+                edit_log.info(msg)
+                await self.delete_match_from_editing_queue(match_id, friend_id)
+                # TODO: maybe edit the match with opendota instead? to have at least some data
 
             try:
                 stratz_data = await self.bot.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
@@ -245,13 +251,21 @@ class DotaFPCNotifications(BaseNotifications):
             if not stratz_data["data"]["match"]:
                 # This is None when conditions under "*" below happen
                 # which we have to separate
-                match_details = await self.bot.steam_web_api.get_match_details(match_id)
+                try:
+                    match_details = await self.bot.steam_web_api.get_match_details(match_id)
+                except aiohttp.ClientResponseError as exc:
+                    edit_log.warn("SteamWebAPI: it's down? status `%s`", exc.status)  # exc_info = true
+                    # we can't confirm if any of "*" conditions are true
+                    # so we will have to rely on other elif/else in future loops
+                    continue
+
                 try:
                     duration = match_details["result"]["duration"]
                 except KeyError:
                     edit_log.warning("SteamWebAPI: KeyError - match `%s` is not ready (still live?).", match_id)
                     edit_log.warning("%s", match_details)
                     continue
+
                 if duration < 900:  # 15 minutes (stratz excluded some 11 minutes games too)
                     # * Game did not count
                     # * Game was less than 10 minutes
@@ -270,12 +284,6 @@ class DotaFPCNotifications(BaseNotifications):
                 )
                 edit_log.warning(msg)
 
-                if retry > 12:
-                    # okay, let's give up on Stratz, it's been an hour or so.
-                    msg = "Giving up on editing match [`{0}`](<https://stratz.com/matches/{0}>).".format(match_id)
-                    edit_log.info(msg)
-                    await self.delete_match_from_editing_queue(match_id, friend_id)
-                    # TODO: maybe edit the match with opendota instead? to have at least some data
                 continue
             else:
                 match_to_edit = StratzMatchToEdit(self.bot, stratz_data)

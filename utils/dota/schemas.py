@@ -405,7 +405,9 @@ class ODotaConstantsJson:
             "name": str,
             "icon": str,
             "color": str,
-            "gradientId": str,  # why it's string "3" :c
+            "title": str,
+            "gradient_id": int,
+            "description": str,
         },
     )
     HeroAbilities = TypedDict(

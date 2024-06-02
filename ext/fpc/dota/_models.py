@@ -348,7 +348,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
             font_facet = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 22)
             facet_icon_h = 45
-            facet_text_w, facet_text_h = self.bot.transposer.get_text_wh(facet["display_name"], font_facet)
+            facet_text_w, facet_text_h = self.bot.transposer.get_text_wh(facet["title"], font_facet)
             draw.rectangle(
                 xy=(
                     width - facet_text_w - facet_icon_h,
@@ -363,7 +363,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                     width - facet_text_w,
                     height - information_height - ability_h - facet_icon_h / 2 - facet_text_h/2,
                 ),
-                facet["display_name"],
+                facet["title"],
                 font=font_facet,
                 align="right",
             )

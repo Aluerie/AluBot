@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from bot import AluBot
 
     class HeroFacet(TypedDict):
-        display_name: str
+        title: str
         icon: str
         colour: str
         gradient_id: int
@@ -112,14 +112,12 @@ class HeroKeysCache(KeysCache):
                 for talent in hero_abilities[hero["name"]]["talents"]
             ]
 
-            data["facets_by_id"][hero["id"]] = [  # type: ignore # it doesn't trust me that the following is list[HeroFacet]
+            data["facets_by_id"][hero["id"]] = [
                 {
-                    "display_name": abilities.get(facet["name"], {"dname": "Unknown Facet Name"}).get(
-                        "dname", "Unknown Facet Name :c"
-                    ),  # Erm ?
+                    "title": facet["title"],
                     "icon": f"{self.CDN}/apps/dota2/images/dota_react/icons/facets/{facet['icon']}.png",
                     "colour": facet["color"],
-                    "gradient_id": facet["gradientId"],
+                    "gradient_id": facet["gradient_id"],
                 }
                 for facet in hero_abilities[hero["name"]]["facets"]
             ]

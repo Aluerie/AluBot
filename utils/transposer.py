@@ -33,12 +33,12 @@ class TransposeClient:
         self.session: ClientSession = session
 
     @staticmethod
-    def get_text_wh(text: str, font: ImageFont.FreeTypeFont) -> tuple[int, int]:
+    def get_text_wh(text: str, font: ImageFont.FreeTypeFont) -> tuple[float, float]:
         """Get text wh-dimensions for selected font.
 
         Returns
         -------
-        Tuple[int, int]
+        Tuple[float, float]
             (width, height) - width and height of the text written in specified font
 
         """

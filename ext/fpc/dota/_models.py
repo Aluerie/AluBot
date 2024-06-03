@@ -246,7 +246,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
     @override
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
-        img = await self.bot.transposer.url_to_image(embed_image_url)
+        canvas = await self.bot.transposer.url_to_image(embed_image_url)
         item_icon_urls = [await self.bot.cache_dota.item.icon_by_id(id) for id, _ in self.sorted_item_purchases]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
 
@@ -270,115 +270,138 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
         def build_notification_image() -> Image.Image:
             edit_log.debug("Building edited notification message.")
-            width, height = img.size
+            canvas_w, canvas_h = canvas.size
+            draw = ImageDraw.Draw(canvas)
 
-            information_height = 50
-            rectangle = Image.new("RGB", (width, information_height), str(colour))
-            ImageDraw.Draw(rectangle)
-            img.paste(rectangle, (0, height - information_height))
-            draw = ImageDraw.Draw(img)
+            def draw_items_row() -> float:
+                """Draw items on a single row.
 
-            for count, item_image in enumerate(item_icon_images):
-                # item image
-                item_image = item_image.resize((69, information_height))  # 69/50 - to match 88/64 which is natural size
-                left = count * item_image.width
-                img.paste(item_image, (left, height - item_image.height))
+                Returns height of the row to align other elements in the canvas."""
 
-            # items and aghanims shard/blessing
-            font_item_timing = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)
+                h = 50  # the height for items row, meaning items themselves are of this height.
+                item_w = 69  # then item_w, item_h is (69, 50) which matches 88/64 in proportion (original size).
+                font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)  # font for item timings
 
-            for count, (item_id, item_timing) in enumerate(self.sorted_item_purchases):
-                if item_timing:
-                    # item timing
-                    left = count * 69
-                    item_timing_w, item_timing_h = self.bot.transposer.get_text_wh(item_timing, font_item_timing)
-                    draw.text((left, height - item_timing_h), item_timing, font=font_item_timing, align="left")
+                # rectangle for the row
+                rectangle = Image.new("RGB", (canvas_w, h), str(colour))
+                ImageDraw.Draw(rectangle)
+                canvas.paste(rectangle, (0, canvas_h - h))
 
-            i = neutral_item_image.resize((69, information_height))
-            img.paste(im=i, box=(width - i.width, height - i.height))
+                # item images
+                for count, img in enumerate(item_icon_images):
+                    canvas.paste(img.resize((item_w, h)), (count * item_w, canvas_h - h))
 
-            # abilities
-            ability_h = 37
-            for count, ability_image in enumerate(ability_icon_images):
-                ability_image = ability_image.resize((ability_h, ability_h))
-                img.paste(ability_image, (count * ability_h, height - information_height - ability_image.height))
+                # item timings
+                for count, (item_id, item_timing) in enumerate(self.sorted_item_purchases):
+                    if item_timing:
+                        text_w, text_h = self.bot.transposer.get_text_wh(item_timing, font)
+                        draw.text((count * item_w, canvas_h - text_h), item_timing, font=font, align="left")
 
-            # kda text
-            font_kda = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
+                canvas.paste(im=neutral_item_image.resize((item_w, h)), box=(canvas_w - item_w, canvas_h - h))
+                return h
 
-            kda_text_w, kda_text_h = self.bot.transposer.get_text_wh(self.kda, font_kda)
-            draw.text((0, height - kda_text_h - information_height - ability_h), self.kda, font=font_kda, align="right")
+            items_h = draw_items_row()
 
-            # outcome text
-            outcome_text_w, outcome_text_h = self.bot.transposer.get_text_wh(self.outcome, font_kda)
-            colour_dict = {
-                "Win": str(const.MaterialPalette.green(shade=800)),
-                "Loss": str(const.MaterialPalette.red(shade=900)),
-                "Not Scored": (255, 255, 255),
-            }
-            draw.text(
-                xy=(0, height - kda_text_h - outcome_text_h - information_height - ability_h),
-                text=self.outcome,
-                font=font_kda,
-                align="center",
-                fill=colour_dict[self.outcome],
-            )
+            def draw_abilities_row() -> float:
+                """Draw row representing the order of abilities in skill order of the player."""
+                h = 37
 
-            # talents
-            talent_font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 15)
+                for count, img in enumerate(ability_icon_images):
+                    canvas.paste(img.resize((h, h)), (count * h, canvas_h - items_h - h))
+                return h
 
-            for count, (talent_id, talent_display_text) in enumerate(hero_talents):
-                talent_text_w, talent_text_h = self.bot.transposer.get_text_wh(talent_display_text, talent_font)
-                left_border = 0 if count % 2 else width - talent_text_w
-                position = (
-                    left_border,
-                    height - information_height - ability_h - kda_text_h - outcome_text_h - 20 - 26 * (count // 2),
+            abilities_h = draw_abilities_row()
+
+            def draw_kda() -> float:
+                """Draw kda.
+
+                Returns height of the segment.
+                """
+                font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
+                w, h = self.bot.transposer.get_text_wh(self.kda, font)
+                draw.text((0, canvas_h - items_h - abilities_h - h), self.kda, font=font)
+                return h
+
+            kda_h = draw_kda()
+
+            def draw_outcome() -> float:
+                """Draw outcome of the game (Win or Loss).
+
+                Returns height of the segment.
+                """
+
+                font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
+                w, h = self.bot.transposer.get_text_wh(self.outcome, font)
+                colour_map = {
+                    "Win": str(const.MaterialPalette.green(shade=800)),
+                    "Loss": str(const.MaterialPalette.red(shade=900)),
+                    "Not Scored": (255, 255, 255),
+                }
+                draw.text(
+                    xy=(0, canvas_h - items_h - abilities_h - kda_h - h),
+                    text=self.outcome,
+                    font=font,
+                    fill=colour_map[self.outcome],
                 )
-                left, top, right, bottom = draw.textbbox(position, talent_display_text, font=talent_font)
-                if talent_id in talents_order[:4]:
-                    fill_colour = "darkorange"
-                elif talent_id in talents_order[4:]:
-                    fill_colour = "gray"
-                else:
-                    fill_colour = "black"
-                draw.rectangle(xy=(left - 6, top - 6, right + 6, bottom + 6), fill=fill_colour)
-                draw.text(xy=position, text=talent_display_text, font=talent_font, align="right")
+                return h
 
-            # facet
+            outcome_h = draw_outcome()
 
-            font_facet = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 22)
-            facet_icon_h = 45
-            facet_text_w, facet_text_h = self.bot.transposer.get_text_wh(facet["title"], font_facet)
-            draw.rectangle(
-                xy=(
-                    width - facet_text_w - facet_icon_h,
-                    height - information_height - ability_h - facet_icon_h,
-                    width,
-                    height - information_height - ability_h,
-                ),
-                fill=facet["colour"],
-            )
-            draw.text(
-                (
-                    width - facet_text_w,
-                    height - information_height - ability_h - facet_icon_h / 2 - facet_text_h/2,
-                ),
-                facet["title"],
-                font=font_facet,
-                align="right",
-            )
-            resized_facet_image = facet_image.resize((facet_icon_h, facet_icon_h))
-            img.paste(
-                resized_facet_image,
-                (
-                    width - facet_text_w - facet_icon_h,
-                    height - information_height - ability_h - facet_icon_h,
-                ),
-                mask=resized_facet_image,
-            )
+            def draw_talent_tree_choices() -> None:
+                """Draw talent tree choices.
+
+                Mirrors hero's talent tree. Chosen talents are marked with orange colour (otherwise black).
+                Draws mono-colour rectangles on the left/right side of the image.
+                """
+                font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 15)
+                p = 6
+
+                for count, (talent_id, talent_display_text) in enumerate(hero_talents):
+                    text_w, text_h = self.bot.transposer.get_text_wh(talent_display_text, font)
+
+                    x = 0 if count % 2 else canvas_w - text_w
+                    position = (x, canvas_h - items_h - abilities_h - kda_h - outcome_h - 20 - 26 * (count // 2))
+                    x, y, u, v = draw.textbbox(position, talent_display_text, font=font)
+
+                    if talent_id in talents_order[:4]:
+                        fill_colour = "darkorange"
+                    elif talent_id in talents_order[4:]:
+                        fill_colour = "gray"
+                    else:
+                        fill_colour = "black"
+
+                    draw.rectangle(xy=(x - p, y - p, u + p, v + p), fill=fill_colour)
+                    draw.text(xy=position, text=talent_display_text, font=font, align="right")
+
+            draw_talent_tree_choices()
+
+            def draw_facet() -> None:
+                """Draw facet icon+rectangle. Just a mono-colour rectangle with icon and title text."""
+
+                icon_h = 40
+                icon_p = 1
+                text_p = 8  # currently just left, right
+                font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 22)
+
+                # text + rectangle
+                text_w, text_h = self.bot.transposer.get_text_wh(facet["title"], font)
+                x, y, u, v = (
+                    canvas_w - text_w - icon_h - 2 * text_p,
+                    canvas_h - items_h - abilities_h - icon_h,
+                    canvas_w,
+                    canvas_h - items_h - abilities_h,
+                )
+                draw.rectangle(xy=(x, y, u, v), fill=facet["colour"])
+                draw.text((x + icon_h + text_p, v - (icon_h + text_h) / 2), facet["title"], font=font)
+
+                # icon
+                resized_facet_image = facet_image.resize((icon_h - icon_p, icon_h - icon_p))
+                canvas.paste(resized_facet_image, (x + icon_p, y + icon_p), mask=resized_facet_image)
+
+            draw_facet()
 
             # img.show()
-            return img
+            return canvas
 
         return await asyncio.to_thread(build_notification_image)
 

@@ -38,3 +38,23 @@ Just some glossary so that I try to keep consistent terminology across the proje
 * **hideout**
 
     My personal one-man discord server. I do most of the testing here. Also some features of the bot are specifically designed for it.
+
+## Chosen PIL notations
+
+We might go back to full words in pillow but specifically in pillow it feels right to use short notations with index-like underline notations, i.e. "facet_h" where h represents "height".
+
+* **x, y, u, v**
+
+    Notation for the `(top_left_x, top_left_y, bottom_right_x, bottom_right_y)` tuple. Simple 4 letters is just nicer to look at. I.e. `picture_u` means coordinate for its `bottom_right_x`
+
+* **h, w**
+
+    Notation for height, width, i.e. `picture_w` means picture width.
+
+* **p**
+
+    Padding, i.e. `picture_p` means padding of the picture.
+
+* **canvas**
+
+    Similarly to IRL canvas - it's just a drawing board for us (the artist :o). We draw on this canvas.

@@ -113,45 +113,54 @@ class MatchToSend(BaseMatchToSend):
     async def notification_image(self, twitch_data: TwitchData, colour: discord.Colour) -> Image.Image:
         send_log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
-        img = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
+        canvas = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
         hero_image_urls = [await self.bot.cache_dota.hero.img_by_id(id) for id in self.hero_ids]
         hero_images = [await self.bot.transposer.url_to_image(url) for url in hero_image_urls]
 
         def build_notification_image() -> Image.Image:
+            """Image Builder."""
             send_log.debug("`build_notification_image` is starting")
-            width, height = img.size
-            rectangle = Image.new("RGB", (width, 70), str(colour))
-            ImageDraw.Draw(rectangle)
-            img.paste(rectangle)
 
-            # hero top-bar images
-            for count, hero_image in enumerate(hero_images):
-                hero_image = hero_image.resize((62, 35))
-                hero_image = ImageOps.expand(
-                    hero_image,
-                    border=(0, 3, 0, 0),
-                    fill=const.Dota.PLAYER_COLOUR_MAP[count],
-                )
-                extra_space = 0 if count < 5 else 20
-                img.paste(hero_image, (count * 62 + extra_space, 0))
+            canvas_w, canvas_h = canvas.size
+            draw = ImageDraw.Draw(canvas)
 
-            # middle text "Player - Hero"
-            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
-            draw = ImageDraw.Draw(img)
-            text = f"{twitch_data['display_name']} - {self.hero_name}"
-            w2, h2 = self.bot.transposer.get_text_wh(text, font)
-            draw.text(((width - w2) / 2, 35), text, font=font, align="center")
+            topbar_h = 70
 
-            # twitch status
-            w3, h3 = self.bot.transposer.get_text_wh(twitch_data["twitch_status"], font)
-            draw.text(
-                xy=(width - w3, height - 100 - 10 - h3),
-                text=twitch_data["twitch_status"],
-                font=font,
-                align="center",
-                fill=str(colour),
-            )
-            return img
+            def draw_picked_heroes() -> None:
+                """Draw picked heroes in the match"""
+                rectangle = Image.new("RGB", (canvas_w, topbar_h), str(colour))
+                ImageDraw.Draw(rectangle)
+                canvas.paste(rectangle)
+
+                hero_w, hero_h = (62, 35)
+                for count, img in enumerate(hero_images):
+                    img = img.resize((hero_w, hero_h))
+                    img = ImageOps.expand(img, border=(0, 3, 0, 0), fill=const.Dota.PLAYER_COLOUR_MAP[count])
+                    extra_space = 0 if count < 5 else 20  # math 640 - 62 * 10 = 20 where 640 is initial resolution.
+                    canvas.paste(img, (count * hero_w + extra_space, 0))
+
+            draw_picked_heroes()
+
+            def draw_player_hero_text() -> None:
+                """Draw "Player - Hero" text in the middle."""
+                font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
+
+                text = f"{twitch_data['display_name']} - {self.hero_name}"
+                w, h = self.bot.transposer.get_text_wh(text, font)
+                draw.text(((canvas_w - w) / 2, 35), text, font=font, align="center")
+
+            draw_player_hero_text()
+
+            def draw_twitch_status() -> None:
+                """Draw twitch status"""
+                font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 13)
+                text = twitch_data["twitch_status"]
+                w, h = self.bot.transposer.get_text_wh(text, font)
+                draw.text(xy=(canvas_w - w, topbar_h + 1 + h), text=text, font=font, fill=str(colour))
+
+            draw_twitch_status()
+
+            return canvas
 
         return await asyncio.to_thread(build_notification_image)
 

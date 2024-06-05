@@ -51,6 +51,20 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
         # PT for Performance Time, maybe there are better ideas for abbreviations.
         log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
 
+    # same as ^^^
+    def __aenter__(self) -> Self:
+        self.start = perf_counter()
+        return self
+
+    def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_traceback: TracebackType | None,
+    ) -> None:
+        # PT for Performance Time, maybe there are better ideas for abbreviations.
+        log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
+
 
 def error_handler_response_embed(error: Exception, is_unexpected: bool, desc: str, mention: bool) -> discord.Embed:
     """A boilerplate responses for all cases that happen in error handlers.

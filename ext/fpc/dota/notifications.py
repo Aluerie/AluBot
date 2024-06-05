@@ -10,6 +10,7 @@ import discord
 from discord.ext import commands
 
 from utils import aluloop, const
+from utils.helpers import measure_time
 
 from .._base import BaseNotifications
 from ._models import MatchToSend, NotCountedMatchToEdit, StratzMatchToEdit
@@ -47,7 +48,7 @@ class DotaFPCNotifications(BaseNotifications):
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, prefix="dota", *args, **kwargs)
         # Send Matches related attrs
-        self.death_counter: int = 0
+        self.game_coordinator_death_counter: int = 0
         self.top_live_matches: list[LiveMatch] = []
 
         # Edit Matches related attrs
@@ -170,12 +171,12 @@ class DotaFPCNotifications(BaseNotifications):
         try:
             live_matches = await self.bot.dota.top_live_matches()
         except TimeoutError:
-            self.death_counter += 1
-            send_log.warning(f"GC is dying: count `{self.death_counter}`")
+            self.game_coordinator_death_counter += 1
+            send_log.warning(f"GC is dying: count `{self.game_coordinator_death_counter}`")
             # nothing to "mark_matches_to_edit" so let's return
             return
         else:
-            self.death_counter = 0
+            self.game_coordinator_death_counter = 0
 
         top_source_end_time = time.perf_counter() - start_time
         send_log.debug("Requesting took %.5f secs with %s results", top_source_end_time, len(live_matches))
@@ -297,7 +298,8 @@ class DotaFPCNotifications(BaseNotifications):
     async def delete_match_from_editing_queue(self, match_id: int, friend_id: int) -> None:
         """Delete the match to edit from database and retry_mapping.
 
-        Meaning the editing is either finished or given up on."""
+        Meaning the editing is either finished or given up on.
+        """
         query = "DELETE FROM dota_messages WHERE match_id=$1 AND friend_id=$2"
         await self.bot.pool.execute(query, match_id, friend_id)
         self.retry_mapping.pop((match_id, friend_id), None)

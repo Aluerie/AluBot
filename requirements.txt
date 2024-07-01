@@ -54,7 +54,7 @@ uvloop==0.19.0; platform_system == 'Linux'  # ignore on non-Linux - because not 
 
 # Uncategorised (or Other)
 aiofiles==24.1.0
-pillow==10.3.0
+pillow==10.4.0
 emoji==2.12.1
 numpy==2.0.0
 urllib3==2.2.2

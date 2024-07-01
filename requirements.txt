@@ -20,12 +20,12 @@ dota2 @ git+https://github.com/Aluerie/dota2.git  # my own fork with updated pro
 vdf~=3.4
 
 # League of Legends
-pulsefire~=2.0.9
+pulsefire~=2.0.12
 git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
 githubkit
-pygit2==1.14.1
+pygit2==1.15.0
 
 # TTS
 gtts~=2.5.1
@@ -53,14 +53,14 @@ orjson
 uvloop==0.19.0; platform_system == 'Linux'  # ignore on non-Linux - because not available
 
 # Uncategorised (or Other)
-aiofiles==23.2.1
+aiofiles==24.1.0
 pillow==10.3.0
-emoji==2.11.0
-numpy==1.26.4
-urllib3==2.2.1
+emoji==2.12.1
+numpy==2.0.0
+urllib3==2.2.2
 wordcloud==1.9.3
-matplotlib==3.8.4
+matplotlib==3.9.0
 unidiff==0.7.5
-psutil==5.9.8
+psutil==6.0.0
 click==8.1.7
 lru_dict==1.3.0

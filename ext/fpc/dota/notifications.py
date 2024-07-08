@@ -182,9 +182,8 @@ class DotaFPCNotifications(BaseNotifications):
         send_log.debug("Requesting took %.5f secs with %s results", top_source_end_time, len(live_matches))
 
         # ANALYZING
-        start_time = time.perf_counter()
-        await self.analyze_top_source_response(live_matches)
-        send_log.debug("Analyzing took %.5f secs", time.perf_counter() - start_time)
+        async with measure_time("Analyzing Top Source Response", logger=send_log):
+            await self.analyze_top_source_response(live_matches)
 
         # another mini-death condition
         if len(live_matches) < 90:  # 100

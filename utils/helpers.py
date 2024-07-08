@@ -31,12 +31,16 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
     ```py
     with measure_time("My long operation"):
         time.sleep(5)
+
+    async with measure_time("My long async operation"):
+        await asyncio.sleep(5)
     ```
     It will output the perf_counter with `log.debug`.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, *, logger: logging.Logger = log) -> None:
         self.name = name
+        self.log = logger
 
     def __enter__(self) -> Self:
         self.start = perf_counter()
@@ -49,21 +53,21 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
         exc_traceback: TracebackType | None,
     ) -> None:
         # PT for Performance Time, maybe there are better ideas for abbreviations.
-        log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
+        self.log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
 
     # same as ^^^
-    def __aenter__(self) -> Self:
+    async def __aenter__(self) -> Self:
         self.start = perf_counter()
         return self
 
-    def __aexit__(
+    async def __aexit__(
         self,
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         exc_traceback: TracebackType | None,
     ) -> None:
         # PT for Performance Time, maybe there are better ideas for abbreviations.
-        log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
+        self.log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
 
 
 def error_handler_response_embed(error: Exception, is_unexpected: bool, desc: str, mention: bool) -> discord.Embed:

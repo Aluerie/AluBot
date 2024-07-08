@@ -8,7 +8,9 @@ from discord.ext import commands
 from . import errors
 
 if TYPE_CHECKING:
-    from . import AluBot, AluContext
+    from bot import AluBot
+
+    from . import AluContext
 
     type WebhookSourceChannel = discord.ForumChannel | discord.VoiceChannel | discord.TextChannel | discord.StageChannel
 
@@ -55,7 +57,7 @@ class MimicUserWebhook:
         return cls(bot=ctx.bot, channel=channel, thread=thread)
 
     @classmethod
-    def from_message(cls, bot: AluBot, message: discord.Message) ->  Self:
+    def from_message(cls, bot: AluBot, message: discord.Message) -> Self:
         channel, thread = cls.get_channel_thread(message.channel)
         return cls(bot=bot, channel=channel, thread=thread)
 

@@ -25,10 +25,10 @@ git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
 githubkit
-pygit2==1.15.0
+pygit2==1.15.1
 
 # TTS
-gtts~=2.5.1
+gtts~=2.5.2
 ffmpeg
 
 # WebScrape
@@ -56,10 +56,10 @@ uvloop==0.19.0; platform_system == 'Linux'  # ignore on non-Linux - because not 
 aiofiles==24.1.0
 pillow==10.4.0
 emoji==2.12.1
-numpy==2.0.0
+numpy==2.0.1
 urllib3==2.2.2
 wordcloud==1.9.3
-matplotlib==3.9.0
+matplotlib==3.9.1
 unidiff==0.7.5
 psutil==6.0.0
 click==8.1.7

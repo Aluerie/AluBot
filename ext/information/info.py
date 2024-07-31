@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import colorsys
 import warnings
-from typing import TYPE_CHECKING, Annotated, Any, override
+from typing import TYPE_CHECKING, Annotated
 
 import discord
 from dateparser.search import search_dates
@@ -28,28 +28,6 @@ warnings.filterwarnings(
 
 class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
     """Commands to get some useful info."""
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self.ctx_menu_avatar = app_commands.ContextMenu(
-            name="View User Avatar",
-            callback=self.view_user_avatar,
-        )
-
-    @override
-    async def cog_load(self) -> None:
-        self.bot.tree.add_command(self.ctx_menu_avatar)
-
-    @override
-    async def cog_unload(self) -> None:
-        c = self.ctx_menu_avatar
-        self.bot.tree.remove_command(c.name, type=c.type)
-
-    async def view_user_avatar(self, interaction: discord.Interaction, user: discord.User) -> None:
-        embed = discord.Embed(color=user.colour, title=f"Avatar for {user.display_name}").set_image(
-            url=user.display_avatar.url
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:

@@ -76,12 +76,12 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
 
         # banner and accent_colour info is only available via Client.fetch_user().
         # https://discordpy.readthedocs.io/en/latest/api.html?highlight=user#discord.User.banner
-        user = await self.bot.fetch_user(user.id)
+        fetched_user = await self.bot.fetch_user(user.id)
 
-        if banner := user.banner:
+        if banner := fetched_user.banner:
             embed = discord.Embed(colour=user.colour, title=f"Banner for {user.display_name}").set_image(url=banner.url)
             await ctx.reply(embed=embed)
-        elif accent_colour := user.accent_colour:
+        elif accent_colour := fetched_user.accent_colour:
             img = Image.new("RGB", (300, 300), accent_colour.to_rgb())
             file = ctx.bot.transposer.image_to_file(img, filename="colour.png")
             embed = discord.Embed(colour=user.colour, title=f"Banner for {user.display_name}").set_image(

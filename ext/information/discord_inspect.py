@@ -74,6 +74,10 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
     async def profile_banner(self, ctx: AluContext, *, user: discord.User) -> None:
         """View @user's banner picture."""
 
+        # banner and accent_colour info is only available via Client.fetch_user().
+        # https://discordpy.readthedocs.io/en/latest/api.html?highlight=user#discord.User.banner
+        user = await self.bot.fetch_user(user.id)
+
         if banner := user.banner:
             embed = discord.Embed(colour=user.colour, title=f"Banner for {user.display_name}").set_image(url=banner.url)
             await ctx.reply(embed=embed)
@@ -88,7 +92,7 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
             embed = discord.Embed(
                 colour=user.colour,
                 title=f"Banner for {user.display_name}",
-                description="The user did not set banner nor profile accent colour.",
+                description="The user did not set banner nor explicitly set their profile accent colour.",
             )
             await ctx.reply(embed=embed)
 

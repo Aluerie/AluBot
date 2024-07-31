@@ -71,15 +71,15 @@ class HeroKeysCache(KeysCache):
         talent_id_by_name: dict[str, int] = {}
         facets_id_by_name: dict[str, int] = {}
 
-        for hero_ability in hero_abilities.values():
-            # ABILITIES
-            for ability_name in hero_ability["abilities"]:
-                ability_id = reverse_ability_ids[ability_name]
-
-                img_url = abilities[ability_name].get("img", None)
+        # ABILITIES
+        for ability_id, ability_name in ability_ids.items():
+            try_ability = abilities.get(ability_name, None)
+            if try_ability:
+                img_url = try_ability.get("img", None)
                 if img_url:
-                    data["ability_icon_by_ability_id"][ability_id] = f"{self.CDN}{img_url}"
+                    data["ability_icon_by_ability_id"][int(ability_id)] = f"{self.CDN}{img_url}"
 
+        for hero_ability in hero_abilities.values():
             # TALENTS
             for talent in hero_ability["talents"]:
                 talent_name = talent["name"]
@@ -90,7 +90,6 @@ class HeroKeysCache(KeysCache):
                 talent_id_by_name[talent_name] = ability_id
 
             # FACETS
-
             for facet in hero_ability["facets"]:
                 facet_name = facet["name"]
                 ability_id = reverse_ability_ids.get(facet_name)
@@ -122,6 +121,7 @@ class HeroKeysCache(KeysCache):
                 for facet in hero_abilities[hero["name"]]["facets"]
             ]
 
+        print('hi')
         return data
 
     # Example of hero values to be transposed into each other

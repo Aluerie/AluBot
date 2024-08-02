@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 __all__ = ("setup_logging",)
 
+# generated at https://patorjk.com/software/taag/ using "Standard" font
 ASCII_STARTING_UP_ART = r"""
      _    _       ____        _     ____  _             _   _
     / \  | |_   _| __ )  ___ | |_  / ___|| |_ __ _ _ __| |_(_)_ __   __ _

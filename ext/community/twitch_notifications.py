@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import datetime
 from typing import TYPE_CHECKING, override
 
 import discord
 from discord.ext import commands
 
 import config
-from utils import const
+from utils import const, formats
 
 from ._base import CommunityCog
 
@@ -34,6 +35,20 @@ class TwitchCog(CommunityCog):
     @commands.Cog.listener("on_twitchio_stream_start")
     async def twitch_tv_live_notifications(self, event: eventsub.StreamOnlineData) -> None:
         streamer = await self.bot.twitch.fetch_streamer(event.broadcaster.id)
+
+        ### brute force check if internet died
+
+        video = next(iter(await self.bot.twitch.fetch_videos(user_id=streamer.id, period="day")), None)
+        if video:
+            duration = formats.hms_to_seconds(video.duration)
+            estimated_video_end = video.created_at + datetime.timedelta(seconds=duration)
+
+            now = datetime.datetime.now(datetime.UTC)
+            if (now - estimated_video_end).seconds < 3600:
+                # my internet probably crashed or twitch died, or I manually restarted the stream.
+                return
+
+        ### send notification
 
         content = f"{self.community.stream_lover_role.mention} and chat, **`@{streamer.display_name}`** just went live!"
         embed = (

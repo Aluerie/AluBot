@@ -340,8 +340,10 @@ class BugTracker(AluCog):
             # looks like executemany wont work bcs it executes strings letter by letter!
             val = await self.bot.pool.fetchval(query, l)
             if val:
+                # query above returned True
                 success_logins.append(l)
             else:
+                # query above returned None
                 error_logins.append(l)
 
         def embed_answer(logins: list[str], color: discord.Color, description: str) -> discord.Embed:

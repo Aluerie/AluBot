@@ -108,6 +108,7 @@ class ExceptionManager:
             Important!!! Embed's footer text will be duplicated to `log.error` so choose the wording carefully.
         mention : bool
             Whether to mention Irene when releasing the error to the webhook
+
         """
         log.error("%s: `%s`.", error.__class__.__name__, embed.footer.text, exc_info=error)
 
@@ -127,7 +128,8 @@ class ExceptionManager:
             await self.send_error(traceback_string, embed, mention)
 
     async def send_error(self, traceback: str, embed: discord.Embed, mention: bool) -> None:
-        """Send an error to the webhook.
+        """Send an error to the error webhook.
+
         It is not recommended to call this yourself, call `register_error` instead.
 
         Parameters
@@ -138,6 +140,7 @@ class ExceptionManager:
             The additional information about the error. This comes from registering the error.
         mention : bool
             Whether to send said embed and ping Irene at all.
+
         """
         code_chunks = list(self._yield_code_chunks(traceback))
 

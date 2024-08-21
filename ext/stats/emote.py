@@ -293,7 +293,7 @@ class EmoteStats(StatsCog):
             ctx,
             EmoteStatsPageSource(
                 tables,
-                f"During the timeframe: total {all_emotes_total} emotes were used: {all_emotes_per_day} per day",
+                f"During the timeframe: total {all_emotes_total} emotes were used: {all_emotes_per_day:.0f} per day",
                 f"Emote Type: {emote_type}, Timeframe: {'last' if timeframe != 'all-time' else ''} {timeframe}",
                 ctx.guild.icon,
             ),

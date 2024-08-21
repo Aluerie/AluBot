@@ -482,6 +482,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
     @discord.utils.cached_property
     def spam(self) -> discord.Webhook:
+        """A shortcut to spam webhook."""
         return discord.Webhook.from_url(
             url=config.SPAM_WEBHOOK,
             session=self.session,

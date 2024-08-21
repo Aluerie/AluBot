@@ -254,7 +254,16 @@ def inline_diff(a: str, b: str) -> str:  # a = old_string, b = new_string
 
 
 # https://stackoverflow.com/questions/39001097/match-changes-by-words-not-by-characters
-def inline_word_by_word_diff(before: str, after: str) -> str:  # a = old_string, b = new_string #
+def inline_word_by_word_diff(before: str, after: str) -> str:
+    """Return Inline word by word difference between two strings.
+
+    This assumes some discord markdown, i.e.
+    * cross out words that got deleted
+    * italics for words that are new
+    * combine both of above for replacements^
+
+    """
+    # a = old_string, b = new_string #
     a, b = before.split(), after.split()
     matcher = difflib.SequenceMatcher(None, a, b)
 
@@ -413,6 +422,8 @@ LiteralAligns = Literal["^", "<", ">"]
 
 
 class TabularData:
+    """A helper class to simplify making a table-like text inside discord codeblocks."""
+
     def __init__(self, *, outer: str, inner: str, separators: bool) -> None:
         self.outer: str = outer
         self.inner: str = inner

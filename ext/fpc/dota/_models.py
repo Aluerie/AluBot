@@ -276,7 +276,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
             ability_upgrade for ability_upgrade in self.ability_upgrades_ids if ability_upgrade in talent_ids
         ]
 
-        facet = (await self.bot.cache_dota.hero.facets_by_id(self.hero_id))[self.facet - 1]  # they start from 1
+        facet = await self.bot.cache_dota.hero.facets_by_id(self.hero_id, self.facet)
         facet_image = await self.bot.transposer.url_to_image(facet["icon"])
 
         def build_notification_image() -> Image.Image:

@@ -188,7 +188,10 @@ def human_timedelta(
 
 
 def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> str:
-    """Copy from d.py docs for *letters argument
+    """Format `datetime.datetime` to discord friendly timestamp.
+
+    The Styles Example table:
+    (it's copied from discord.py docs - click on TimestampStyle for the original).
     +-------------+----------------------------+-----------------+
     |    Style    |       Example Output       |   Description   |
     +=============+============================+=================+
@@ -490,7 +493,6 @@ class RstTable(TabularData):
 
 class NoBorderTable(TabularData):
     """_summary_
-
 
     Name  Age
     Alice  24

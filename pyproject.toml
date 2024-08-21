@@ -64,7 +64,7 @@ lint.select = [
     "ICN",
     "DTZ",
     "ISC",
-    "D", # for doc-string madness
+    "D",   # for doc-string madness
 ]
 lint.ignore = [
     "F401",
@@ -82,6 +82,7 @@ lint.ignore = [
     "ANN401",
     "D401",    # the imperative doc-string rule is kinda bullshit.
     "D100",    # docstring in a public module
+    "D417",    # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
     "UP032",   # I use it for triple emotes stuff, please ruff, stfu
 ]
 

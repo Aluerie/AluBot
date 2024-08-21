@@ -127,14 +127,12 @@ class SyncAppTreeTools(DevBaseCog):
         ]
     )
     async def slash_sync(self, interaction: discord.Interaction[AluBot], method: str) -> None:
-        """(\N{GREY HEART} Hideout-Only) Sync bot's app tree.
+        """\N{GREY HEART} Hideout-Only | Sync bot's app tree.
 
         Parameters
         ----------
-        method : app_commands.Choice[str]
+        method :
             Method to sync bot's commands with.
-        guild_id : Optional[int]
-            If you want to sync a specific guild then provide its ID.
 
         """
         if method == "guilds":

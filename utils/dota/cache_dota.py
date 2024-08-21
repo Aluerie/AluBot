@@ -121,7 +121,7 @@ class HeroKeysCache(KeysCache):
                 for facet in hero_abilities[hero["name"]]["facets"]
             ]
 
-        print('hi')
+        print("hi")
         return data
 
     # Example of hero values to be transposed into each other
@@ -174,9 +174,19 @@ class HeroKeysCache(KeysCache):
         """
         return await self.get_value("talents_by_id", hero_id)
 
-    async def facets_by_id(self, hero_id: int) -> list[HeroFacet]:
-        """Get list of hero facets."""
-        return await self.get_value("facets_by_id", hero_id)
+    async def facets_by_id(self, hero_id: int, facet_number: int) -> HeroFacet:
+        """Get hero facet by hero_id and ordinal number."""
+        facet_list: list[HeroFacet] = await self.get_value("facets_by_id", hero_id)
+        try:
+            return facet_list[facet_number - 1]  # Stratz start facet numbering from 1
+        except IndexError:
+            # this means opendota has something borked so let's return some template Unknown for now
+            return {
+                "title": "Unknown Facet",
+                "colour": "gray",
+                "gradient_id": 1,
+                "icon": "cooldown",
+            }
 
 
 class ItemKeysCache(KeysCache):

@@ -27,7 +27,7 @@ class LoggingHandler(logging.Handler):
 
     * Just remember that `log.info` and above calls go spammed in a discord webhook so plan them accordingly.
         because we do not want to get rate-limited.
-    * For this^ reason `log.debug` is not getting logged.
+    * For this^ reason `log.debug` is usually not getting logged.
         However, you can access `alubot.log` via `/system logs` command or just by connecting to VPS.
     * the webhook is being spammed with errors if something is catastrophically wrong
         even if that it doesn't go to error handlers (for some reason).
@@ -35,16 +35,16 @@ class LoggingHandler(logging.Handler):
 
     def __init__(self, cog: LoggerViaWebhook) -> None:
         self.cog: LoggerViaWebhook = cog
-        super().__init__(logging.INFO)
+        super().__init__(logging.DEBUG)
 
     @override
     def filter(self, record: logging.LogRecord) -> bool:
         """Filter out some somewhat pointless messages so we don't spam the channel as much."""
-
         messages_to_ignore = (
             "Clock drift detected for task",  # idk, I won't do anything about any of those messages.
             "Shard ID None has successfully RESUMED",
             "Shard ID None has connected to Gateway",
+            # "Webhook ID 1116501979133399113 is rate limited.",
         )
         if any(msg in record.message for msg in messages_to_ignore):
             return False
@@ -57,9 +57,10 @@ class LoggingHandler(logging.Handler):
 
 
 class LoggerViaWebhook(AluCog):
-    """Logger Via Webhook - providing handler to send logs in a discord channel
+    """Cog providing a handler to send logs in a #logger discord channel.
 
-    This cog maintains a discord webhook that sends logging messages.
+    Essentially mirrors logs from logging library to discord via a webhook messages.
+    This cog does some fine-tuning so everything looks pretty and also fits ratelimits.
     """
 
     # TODO: ADD MORE STUFF

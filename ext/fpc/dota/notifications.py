@@ -90,10 +90,17 @@ class DotaFPCNotifications(BaseNotifications):
         return await super().cog_unload()
 
     async def convert_player_id_to_friend_id(self, player_ids: list[int]) -> list[int]:
+        """Get friend_id by player_id (a serial key in my own database)."""
         query = "SELECT friend_id FROM dota_accounts WHERE player_id=ANY($1)"
         return [f for (f,) in await self.bot.pool.fetch(query, player_ids)]
 
     async def analyze_top_source_response(self, live_matches: list[LiveMatch]) -> None:
+        """Analyze FindTopSourceTVGames response from Dota 2 Coordinator and select matches to send notifications for.
+
+        This function looks for favourite player + favourite hero combos per subscribed person
+        in matches provided by FindTopSourceTVGames response.
+        Also sends the message via MatchToSend class model.
+        """
         query = "SELECT DISTINCT character_id FROM dota_favourite_characters"
         favourite_hero_ids: list[int] = [r for (r,) in await self.bot.pool.fetch(query)]
 
@@ -179,6 +186,7 @@ class DotaFPCNotifications(BaseNotifications):
 
     @aluloop(seconds=59)
     async def notification_sender(self) -> None:
+        """Task responsible for sending Dota 2 FPC notifications."""
         send_log.debug("--- Task to send Dota2 FPC Notifications is starting now ---")
 
         # REQUESTING
@@ -254,9 +262,9 @@ class DotaFPCNotifications(BaseNotifications):
             # discord-markdown friendly strings for my #logger channel.
             # put it into the beginning of every consequent edit_log.info / edit_log.debug call
             log_str = (
-                f"`r={self.retry_mapping[tuple_uuid]}`, "
-                f"match [`{match_id}`](<https://stratz.com/matches/{match_id}>) "
-                f"([`{match_row['player_name']}`](<https://stratz.com/players/{friend_id}>))"
+                f"`r={self.retry_mapping[tuple_uuid]}` "
+                f"[`{match_id}`](<https://stratz.com/matches/{match_id}>) "
+                f"[`{match_row['player_name']}`](<https://stratz.com/players/{friend_id}>)"
             )
 
             edit_log.debug("%s Start editing attempt.", log_str)

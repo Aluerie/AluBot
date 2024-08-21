@@ -114,11 +114,15 @@ class TwitchCog(CommunityCog):
 
     @commands.Cog.listener("on_twitchio_channel_points_redeem")
     async def twitch_tv_redeem_notifications(self, event: eventsub.CustomRewardRedemptionAddUpdateData) -> None:
+        """Send a notification for channel points redeems at @Irene_Adler__ into my person #logger channel.
+
+        This is used for testing twitchio eventsub.
+        """
         embed = discord.Embed(
             colour=0x9146FF,
             description=f"`{event.user.name}` redeemed `{event.reward.title}` for {event.reward.cost} channel points",
         )
-        await self.hideout.spam.send(embed=embed)
+        await self.hideout.logger.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member) -> None:

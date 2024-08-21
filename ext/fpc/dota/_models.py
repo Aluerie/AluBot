@@ -65,7 +65,7 @@ class MatchToSend(BaseMatchToSend):
 
     @property
     def links(self) -> str:
-        """Links to stats sites in markdown format."""
+        """Markdown links to stats sites."""
         dotabuff = f"https://www.dotabuff.com/matches/{self.match_id}"
         opendota = f"https://www.opendota.com/matches/{self.match_id}"
         stratz = f"https://www.stratz.com/matches/{self.match_id}"
@@ -152,7 +152,7 @@ class MatchToSend(BaseMatchToSend):
             draw_player_hero_text()
 
             def draw_twitch_status() -> None:
-                """Draw twitch status"""
+                """Write twitch status, like Live / Offline / NoTwitch."""
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 13)
                 text = twitch_data["twitch_status"]
                 w, h = self.bot.transposer.get_text_wh(text, font)

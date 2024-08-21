@@ -1,9 +1,12 @@
-"""
-CONFIG VARIABLES
+"""CONFIGURATION VARIABLES.
 
-* If there are differences in variable value for Home PC and VPS
-then it will be covered by `if platform.system() == "Linux": condition
-where Linux is my VPS;
+I just use plain `config.py` file to store the secrets/tokens/passwords/etc for the bot.
+Rename this file to `config.py` instead of `config.example.py` and fill the variables with your own secrets.
+
+Notes.
+* I use different bot accounts and some different secrets for production and testing versions of the bot.
+    This is why there are some differences in variable values for Home PC (Windows) and VPS (Linux)
+    which are covered by `if platform.system() == "Linux": condition.
 * It's probably not extremely awful practice rather than always be checking for `if bot.test` in the code.
 """
 import platform

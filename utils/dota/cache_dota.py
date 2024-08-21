@@ -121,7 +121,6 @@ class HeroKeysCache(KeysCache):
                 for facet in hero_abilities[hero["name"]]["facets"]
             ]
 
-        print("hi")
         return data
 
     # Example of hero values to be transposed into each other
@@ -185,7 +184,7 @@ class HeroKeysCache(KeysCache):
                 "title": "Unknown Facet",
                 "colour": "gray",
                 "gradient_id": 1,
-                "icon": "cooldown",
+                "icon": f"{self.CDN}/apps/dota2/images/dota_react/icons/facets/cooldown.png",
             }
 
 

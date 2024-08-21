@@ -255,10 +255,7 @@ class FPCSetupPlayersCharactersPageSource(menus.ListPageSource):
         for entry in entries:
             id, name = entry
             is_favourite = id in favourite_ids
-            if menu.get_emoji_name:
-                emoji = await menu.get_emoji_name(id)
-            else:
-                emoji = None
+            emoji = menu.cog.emote_dict[id]
             menu.add_item(AddRemoveButton(name, is_favourite, id, menu, emoji=emoji))
 
         return embed
@@ -278,7 +275,6 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
         get_object_list_embed: Callable[[int], Awaitable[discord.Embed]],
         *,
         special_button_cls: type[AccountListButton] | None = None,
-        get_emoji_name: Callable[[int], Awaitable[str]] | None = None,
     ) -> None:
         """__init__.
 
@@ -315,7 +311,6 @@ class FPCSetupPlayersCharactersPaginator(pages.Paginator):
         self.table_name: str = f"{cog.prefix}_favourite_{table_object_name}s "
         self.id_column_name: str = f"{table_object_name}_id"
         self.special_button_cls: type[AccountListButton] | None = special_button_cls
-        self.get_emoji_name: Callable[[int], Awaitable[str]] | None = get_emoji_name
 
     @override
     async def on_timeout(self) -> None:
@@ -382,7 +377,6 @@ class FPCSetupCharactersPaginator(FPCSetupPlayersCharactersPaginator):
             cog.character_plural_word,
             cog,
             cog.get_character_list_embed,
-            get_emoji_name=cog.get_character_emoji,
         )
 
 

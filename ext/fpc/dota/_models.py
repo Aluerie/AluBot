@@ -174,7 +174,7 @@ class MatchToSend(BaseMatchToSend):
         title = f"{twitch_data['display_name']} - {self.hero_name}"
         filename = twitch_data["twitch_status"] + "-" + re.sub(r"[_' ]", "", title) + ".png"
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
-        hero_emoji = getattr(const.DotaHeroes, await self.bot.cache_dota.hero.alias_by_id(self.hero_id))
+        hero_emoji = const.DOTA_HERO_EMOTES[self.hero_id]
         embed = (
             discord.Embed(
                 colour=twitch_data["colour"],

@@ -40,12 +40,12 @@ with pretty much everything I ever needed ! Check List of features after the pic
 ## 🏓Table of Contents
 
 - [AluBot 💜](#alubot-)
-    - [🏓Table of Contents](#table-of-contents)
-    - [🏠 Wiki](#-wiki)
-    - [📖 Features](#-features)
-    - [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
-    - [🤗 Thanks](#-thanks)
-    - [🚀 Powered by](#-powered-by)
+  - [🏓Table of Contents](#table-of-contents)
+  - [🏠 Wiki](#-wiki)
+  - [📖 Features](#-features)
+  - [🤝 Reporting Bugs, Making Suggestions and Contributing](#-reporting-bugs-making-suggestions-and-contributing)
+  - [🤗 Thanks](#-thanks)
+  - [🚀 Powered by](#-powered-by)
 
 ## 🏠 [Wiki](<https://github.com/Aluerie/AluBot/wiki>)
 
@@ -67,14 +67,14 @@ All info in `/help` command of the bot. The following list is far from being com
     (thus FPC abbreviation). Also edits messages to include post-game stats.
 
     The following games are currently supported:
-    - Dota 2
-    - League Of Legends
+  - Dota 2
+  - League Of Legends
 - [X] maintains Game News  announcement channels
-    - `#🐈bugtracker_news` tracks when Valve developers interact with the [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay).
-    - `#🍋dota2_news with` Official [Dota 2](https://www.dota2.com/home) news
+  - `#🐈bugtracker_news` tracks when Valve developers interact with the [Dota 2 Bugtracker](https://github.com/ValveSoftware/Dota2-Gameplay).
+  - `#🍋dota2_news` with Official [Dota 2](https://www.dota2.com/home) news
 - [X] AutoFix bad links in discord chat with Mimic™️ (just a feature name) technology. Currently fixes:
-    - Twitter links with the help of [fxtwitter.com](https://github.com/FixTweet/FixTweet)
-    - Instagram with [ddinstagram.com](https://ddinstagram.com/)
+  - Twitter links with the help of [fxtwitter.com](https://github.com/FixTweet/FixTweet)
+  - Instagram with [ddinstagram.com](https://ddinstagram.com/)
 - [X] In total over 100 useful/fun commands.
 - [X] And so much more (and even more to come).
   
@@ -106,11 +106,11 @@ All info in `/help` command of the bot. The following list is far from being com
 
 - There are [Contributing guidelines](/.github/CONTRIBUTING.md)
 - TL;DR^: Feel free to
-    - open a GitHub Issue/PR
-    - use `/feedback` bot command
-    - write [@aluerie](https://discordapp.com/users/312204139751014400) on discord
-    - look [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
-    - join our [discord server](https://discord.gg/K8FuDeP) (it's just a server of mine though, not some "official alubot support")
+  - open a GitHub Issue/PR
+  - use `/feedback` bot command
+  - write [@aluerie](https://discordapp.com/users/312204139751014400) on discord
+  - look [Project](https://github.com/users/Aluerie/projects/8/views/1) for ideas to contribute.
+  - join our [discord server](https://discord.gg/K8FuDeP) (it's just a server of mine though, not some "official alubot support")
 
 ## 🤗 Thanks
 

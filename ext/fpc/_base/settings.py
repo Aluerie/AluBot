@@ -189,7 +189,7 @@ class BaseSettings(FPCCog):
         account_cls: type[Account],
         account_typed_dict_cls: type,
         character_cache: KeysCache,
-        emote_cls: type[CONSTANTS],
+        emote_dict: dict[int, str],
         **kwargs: Any,
     ) -> None:
         super().__init__(bot, *args, **kwargs)
@@ -214,7 +214,7 @@ class BaseSettings(FPCCog):
         self.character_name_by_id_cache: Callable[[], Awaitable[dict[int, str]]] = lambda: character_cache.get_cache(
             "name_by_id"
         )
-        self.emote_cls = emote_cls
+        self.emote_dict: dict[int, str] = emote_dict
 
         # setup messages cache
         self.setup_messages_cache: dict[int, AluView] = {}
@@ -467,10 +467,6 @@ class BaseSettings(FPCCog):
     # async def get_character_name_by_id_cache(self) -> dict[int, str]:
     #     raise NotImplementedError
 
-    async def get_character_emoji(self, character_id: int) -> str:
-        character_alias = await self.character_alias_by_id(character_id)
-        return getattr(self.emote_cls, character_alias)
-
     async def setup_characters(self, ctx: AluGuildContext) -> None:
         """Base function for `/{game} setup {characters}` command.
 
@@ -555,7 +551,7 @@ class BaseSettings(FPCCog):
             raise errors.BadArgument(msg)
 
         embed = discord.Embed(colour=self.colour).add_field(
-            name=f"Succesfully added a {object_word} to your favourites.",
+            name=f"Successfully added a {object_word} to your favourites.",
             value=object_display_name,
         )
         await ctx.reply(embed=embed)
@@ -593,7 +589,7 @@ class BaseSettings(FPCCog):
         if result == "DELETE 1":
             embed = discord.Embed(
                 colour=self.colour,
-                title=f"Succesfully removed a {object_word} from your favourites.",
+                title=f"Successfully removed a {object_word} from your favourites.",
                 description=object_display_name,
             )
             await ctx.reply(embed=embed)

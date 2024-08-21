@@ -72,7 +72,7 @@ class ChampionKeysCache(KeysCache):
     # example of champion values
     # id: 145
     # name: "Kai'Sa" (lower_name in cache "id_by_name": "kai'sa")
-    # key: "Kaisa"  # also key eats spaces like "MissFortune"
+    # alias: "Kaisa"  # eats spaces like "MissFortune"
     # icon_url: https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/145.png
 
     async def id_by_name(self, champion_name: str) -> int:

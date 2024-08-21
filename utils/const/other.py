@@ -68,6 +68,7 @@ class Twitch(CONSTANTS):
     MY_USER_ID = 180499648
     LOL_GAME_CATEGORY_ID = "21779"
     DOTA_GAME_CATEGORY_ID = "29595"
+    MY_OFFLINE_SCREEN = "https://static-cdn.jtvnw.net/jtv_user_pictures/ed948895-c574-4325-9c0c-d7639a45df64-channel_offline_image-1920x1080.png"
 
 
 class League(CONSTANTS):

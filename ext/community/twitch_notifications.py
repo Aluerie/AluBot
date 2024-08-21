@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 from typing import TYPE_CHECKING, override
 
@@ -7,7 +8,8 @@ import discord
 from discord.ext import commands
 
 import config
-from utils import const, formats
+from bot import AluBot
+from utils import aluloop, const, formats
 
 from ._base import CommunityCog
 
@@ -18,6 +20,13 @@ if TYPE_CHECKING:
 
 
 class TwitchCog(CommunityCog):
+    """Cog responsible for Twitch Related functions for my discord community.
+
+    Such as
+    * Notifications for my own stream start/editing when it ends;
+    * giving @LiveStreamer role to folks in the server who are currently streaming on twitch.tv
+    """
+
     @override
     async def cog_load(self) -> None:
         await self.bot.initialize_twitch()
@@ -27,23 +36,29 @@ class TwitchCog(CommunityCog):
         # since we are subbing to event of myself only then my own access token is fine
         broadcaster, token = const.Twitch.MY_USER_ID, config.TWITCH_ACCESS_TOKEN
         await self.bot.twitch.eventsub.subscribe_channel_stream_start(broadcaster, token)
-        self.message_cache: dict[int, discord.Message] = {}
+        self.last_notification_message: discord.Message | None = None
         await self.bot.twitch.eventsub.subscribe_channel_stream_end(broadcaster, token)
         # testing with channel points since it's easy yo do :D
         await self.bot.twitch.eventsub.subscribe_channel_points_redeemed(broadcaster, token)
 
     @commands.Cog.listener("on_twitchio_stream_start")
     async def twitch_tv_live_notifications(self, event: eventsub.StreamOnlineData) -> None:
+        """Notifications for when my stream goes live.
+
+        * Notification message has a sneak-peak image in embed that always shows the live-stream
+            whenever the user enters #stream-notifications channel.
+        * Also double-checks that stream is truly new, i.e. to avoid duplicate notifications in case my stream crashed.
+        """
         streamer = await self.bot.twitch.fetch_streamer(event.broadcaster.id)
 
-        ### brute force check if internet died
+        ### brute force check if stream died
         # the assumption here is that I won't take a break shorter than 1 hour between streams
 
         vods = await self.bot.twitch.fetch_videos(user_id=streamer.id, period="day")
         try:
             # this should always exist
             current_vod = vods[0]
-            current_vod_link = f"/[VOD](f{current_vod.url})"
+            current_vod_link = f"/[VOD]({current_vod.url})"
         except ValueError:
             current_vod = None
             current_vod_link = ""
@@ -98,18 +113,22 @@ class TwitchCog(CommunityCog):
             embed.set_thumbnail(url=streamer.avatar_url)
 
         message = await self.community.stream_notifs.send(content=content, embed=embed)
-        self.message_cache[event.broadcaster.id] = message
+        self.last_notification_message = message
 
     @commands.Cog.listener("on_twitchio_stream_end")
-    async def twitch_tv_offline_edit_notification(self, event: eventsub.StreamOfflineData) -> None:
-        try:
-            message = self.message_cache[event.broadcaster.id]
-        except KeyError:
+    async def twitch_tv_offline_edit_notification(self, _: eventsub.StreamOfflineData) -> None:
+        """Starts the task to edit the notification message."""
+        self.edit_offline_screen.start()
+
+    @aluloop(count=1)
+    async def edit_offline_screen(self) -> None:
+        """Task to edit the notification image to my offline screen when it's confirmed that stream truly ended."""
+        await asyncio.sleep(60 * 60)
+        message = self.last_notification_message
+        if message is None:
             return
         embed = message.embeds[0]
-        embed.set_image(
-            url="https://static-cdn.jtvnw.net/jtv_user_pictures/ed948895-c574-4325-9c0c-d7639a45df64-channel_offline_image-1920x1080.png"
-        )
+        embed.set_image(url=const.Twitch.MY_OFFLINE_SCREEN)
         await message.edit(embed=embed)
 
     @commands.Cog.listener("on_twitchio_channel_points_redeem")
@@ -124,8 +143,9 @@ class TwitchCog(CommunityCog):
         )
         await self.hideout.logger.send(embed=embed)
 
-    @commands.Cog.listener()
-    async def on_presence_update(self, before: discord.Member, after: discord.Member) -> None:
+    @commands.Cog.listener(name="on_presence_update")
+    async def live_streamer_role(self, before: discord.Member, after: discord.Member) -> None:
+        """Grant people who are streaming on twitch role @LiveStreamer."""
         if before.bot or before.activities == after.activities or before.id == self.bot.owner_id:
             return
 
@@ -150,4 +170,5 @@ class TwitchCog(CommunityCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(TwitchCog(bot))

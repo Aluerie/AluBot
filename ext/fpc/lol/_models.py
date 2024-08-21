@@ -146,7 +146,7 @@ class MatchToSend(BaseMatchToSend):
         title = f"{streamer.display_name} - {champion_name}"
         filename = re.sub(r"[_' ]", "", title) + ".png"
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
-        champion_emoji = getattr(const.LoLChampions, await self.bot.cache_lol.champion.alias_by_id(self.champion_id))
+        champion_emoji = const.LOL_CHAMPION_EMOTES[self.champion_id]
         embed = (
             discord.Embed(
                 color=const.Colour.darkslategray,

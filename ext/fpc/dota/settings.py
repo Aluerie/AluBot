@@ -140,7 +140,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
             account_cls=DotaAccount,
             account_typed_dict_cls=DotaAccountDict,
             character_cache=bot.cache_dota.hero,
-            emote_cls=const.DotaHeroes,
+            emote_dict=const.DOTA_HERO_EMOTES,
             **kwargs,
         )
 

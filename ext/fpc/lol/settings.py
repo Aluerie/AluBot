@@ -142,7 +142,7 @@ class Settings(BaseSettings):
             account_cls=LoLAccount,
             account_typed_dict_cls=LoLAccountDict,
             character_cache=bot.cache_lol.champion,
-            emote_cls=const.LoLChampions,
+            emote_dict=const.LOL_CHAMPION_EMOTES,
             **kwargs,
         )
 
@@ -344,4 +344,5 @@ class Settings(BaseSettings):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Settings(bot))

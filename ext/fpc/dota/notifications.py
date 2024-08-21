@@ -264,7 +264,8 @@ class DotaFPCNotifications(BaseNotifications):
             log_str = (
                 f"`r={self.retry_mapping[tuple_uuid]}` "
                 f"[`{match_id}`](<https://stratz.com/matches/{match_id}>) "
-                f"[`{match_row['player_name']}`](<https://stratz.com/players/{friend_id}>)"
+                f"[`{match_row['player_name']}`](<https://stratz.com/players/{friend_id}>) "
+                f"{const.DOTA_HERO_EMOTES[match_row['hero_id']]}"
             )
 
             edit_log.debug("%s Start editing attempt.", log_str)

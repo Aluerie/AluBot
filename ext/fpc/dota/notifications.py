@@ -30,6 +30,7 @@ if TYPE_CHECKING:
         friend_id: int
         hero_id: int
         channel_message_tuples: list[tuple[int, int]]
+        player_name: str
 
     class AnalyzeTopSourceResponsePlayerQueryRow(TypedDict):
         player_id: int
@@ -41,11 +42,25 @@ send_log = logging.getLogger("send_dota_fpc")
 send_log.setLevel(logging.INFO)
 
 edit_log = logging.getLogger("edit_dota_fpc")
-edit_log.setLevel(logging.INFO)
+edit_log.setLevel(logging.DEBUG)
 
 
 class DotaFPCNotifications(BaseNotifications):
+    """Cog responsible for sending and editing Dota 2 FPC notifications."""
+
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+        """_summary_.
+
+        Parameters
+        ----------
+        bot : AluBot
+            _description_
+        args : Any
+            _description_
+        kwargs: Any
+            _description_
+
+        """
         super().__init__(bot, prefix="dota", *args, **kwargs)
         # Send Matches related attrs
         self.game_coordinator_death_counter: int = 0
@@ -210,10 +225,15 @@ class DotaFPCNotifications(BaseNotifications):
         edit_log.debug("*** Starting Task to Edit Dota FPC Messages ***")
 
         query = """
-            SELECT match_id, friend_id, hero_id, ARRAY_AGG ((channel_id, message_id)) channel_message_tuples
+            SELECT
+                match_id,
+                friend_id,
+                hero_id,
+                player_name,
+                ARRAY_AGG ((channel_id, message_id)) channel_message_tuples
             FROM dota_messages
             WHERE NOT match_id=ANY($1)
-            GROUP BY match_id, friend_id, hero_id
+            GROUP BY match_id, friend_id, hero_id, player_name
         """
         match_rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(
             query, [match.id for match in self.top_live_matches]
@@ -231,21 +251,24 @@ class DotaFPCNotifications(BaseNotifications):
             else:
                 self.retry_mapping[tuple_uuid] += 1
 
-            retry = self.retry_mapping[tuple_uuid]  # just a short name
-            edit_log.debug("Editing match %s, friend %s retry %s", match_id, friend_id, retry)
-            if retry > 13:
-                # okay, let's give up on editing, it's been an hour or so.
-                msg = "Giving up on editing match [`{0}`](<https://stratz.com/matches/{0}>).".format(match_id)
-                edit_log.info(msg)
+            # discord-markdown friendly strings for my #logger channel.
+            # put it into the beginning of every consequent edit_log.info / edit_log.debug call
+            log_str = (
+                f"`r={self.retry_mapping[tuple_uuid]}`, "
+                f"match [`{match_id}`](<https://stratz.com/matches/{match_id}>) "
+                f"([`{match_row['player_name']}`](<https://stratz.com/players/{friend_id}>))"
+            )
+
+            edit_log.debug("%s Start editing attempt.", log_str)
+            if self.retry_mapping[tuple_uuid] > 13:
+                edit_log.info("%s It's been too long - giving up on editing.", log_str)
                 await self.delete_match_from_editing_queue(match_id, friend_id)
                 # TODO: maybe edit the match with opendota instead? to have at least some data
 
             try:
                 stratz_data = await self.bot.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
             except aiohttp.ClientResponseError as exc:
-                edit_log.warning(
-                    "Stratz API Resp for match `%s` friend `%s`: Not OK, status `%s`", match_id, friend_id, exc.status
-                )
+                edit_log.warning("%s Stratz API Resp: Not OK, Status `%s`", log_str, exc.status)
                 continue
 
             if not stratz_data["data"]["match"]:
@@ -262,35 +285,30 @@ class DotaFPCNotifications(BaseNotifications):
                 try:
                     duration = match_details["result"]["duration"]
                 except KeyError:
-                    edit_log.warning("SteamWebAPI: KeyError - match `%s` is not ready (still live?).", match_id)
+                    edit_log.warning("%s SteamWebAPI: KeyError - match is not ready (still live?).", log_str)
                     edit_log.warning("%s", match_details)
                     continue
 
                 if duration < 900:  # 15 minutes (stratz excluded some 11 minutes games too)
                     # * Game did not count
                     # * Game was less than 10 minutes
-                    edit_log.info("SteamWebAPI: match `%s` did not count. Deleting the match.", match_id)
+                    edit_log.info("%s SteamWebAPI: match did not count. Deleting the match.", log_str)
                     match_to_edit = NotCountedMatchToEdit(self.bot)
                 else:
                     # * Game is still live
                     # * Steam Web API / Dota 2 Game Coordinator is dying
-                    edit_log.warning("SteamWebAPI: match `%s` is not ready (still live or GC dying).", match_id)
+                    edit_log.warning("%s SteamWebAPI: match is not ready (still live or GC dying).", log_str)
                     continue
 
             elif not stratz_data["data"]["match"]["statsDateTime"]:
-                msg = "Parsing match [`{0}`](<https://stratz.com/matches/{0}>) was not finished. Retry {1}".format(
-                    match_id,
-                    retry,
-                )
-                edit_log.warning(msg)
-
+                edit_log.warning("%s Parsing was not finished.", log_str)
                 continue
             else:
                 match_to_edit = StratzMatchToEdit(self.bot, stratz_data)
 
             # now we know how exactly to edit the match with a specific `match_to_edit`
             await self.edit_match(match_to_edit, match_row["channel_message_tuples"])
-            edit_log.info("Edited message after `%s` retries.", retry)
+            edit_log.info("%s Edited message successfully.", log_str)
             await self.delete_match_from_editing_queue(match_id, friend_id)
         edit_log.debug("*** Finished Task to Edit Dota FPC Messages ***")
 
@@ -306,6 +324,7 @@ class DotaFPCNotifications(BaseNotifications):
     # STRATZ RATE LIMITS
 
     def get_ratelimit_embed(self) -> discord.Embed:
+        """Get Stratz RateLimits embed to send to my logger channel (on daily basis)."""
         return discord.Embed(
             colour=discord.Colour.blue(),
             title="Stratz RateLimits",
@@ -314,14 +333,14 @@ class DotaFPCNotifications(BaseNotifications):
 
     @commands.command(hidden=True)
     async def ratelimits(self, ctx: AluContext) -> None:
-        """Send OpenDota/Stratz rate limit numbers."""
+        """Get OpenDota/Stratz rate limit numbers."""
         await ctx.reply(embed=self.get_ratelimit_embed())
 
     @aluloop(time=datetime.time(hour=22, minute=55, tzinfo=datetime.UTC))
     async def daily_ratelimit_report(self) -> None:
         """Send information about Stratz daily limit to spam logs.
 
-        Stratz has daily ratelimit of 10000 requests and it's kinda scary one, if parsing requests fail a lot.
+        Stratz has daily ratelimit of 10000 requests and it might be a scary one, if parsing requests fail a lot.
         This is why we also send @mention if ratelimit is critically low.
         """
         content = f"<@{self.bot.owner_id}>" if self.bot.stratz.rate_limiter.rate_limits_ratio < 0.1 else ""
@@ -329,4 +348,5 @@ class DotaFPCNotifications(BaseNotifications):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(DotaFPCNotifications(bot))

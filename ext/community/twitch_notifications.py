@@ -37,15 +37,36 @@ class TwitchCog(CommunityCog):
         streamer = await self.bot.twitch.fetch_streamer(event.broadcaster.id)
 
         ### brute force check if internet died
+        # the assumption here is that I won't take a break shorter than 1 hour between streams
 
-        video = next(iter(await self.bot.twitch.fetch_videos(user_id=streamer.id, period="day")), None)
-        if video:
-            duration = formats.hms_to_seconds(video.duration)
-            estimated_video_end = video.created_at + datetime.timedelta(seconds=duration)
+        vods = await self.bot.twitch.fetch_videos(user_id=streamer.id, period="day")
+        try:
+            # this should always exist
+            current_vod = vods[0]
+            current_vod_link = f"/[VOD](f{current_vod.url})"
+        except ValueError:
+            current_vod = None
+            current_vod_link = ""
 
-            now = datetime.datetime.now(datetime.UTC)
-            if (now - estimated_video_end).seconds < 3600:
-                # my internet probably crashed or twitch died, or I manually restarted the stream.
+        # to verify if the stream is truly new and avoid send duplicate notifications
+        # we need to recognize the following cases:
+        # * I restart the stream like a clown
+        # * Internet goes down
+        # * Twitch betrays me with a lag
+        # * Some other F
+        # we need to compare the current vod with the latest vod, because when I go offline Twitch stops the vod.
+
+        try:
+            previous_vod = vods[1]
+        except ValueError:
+            previous_vod = None
+
+        if previous_vod is not None and current_vod is not None:
+            previous_vod_duration = formats.hms_to_seconds(previous_vod.duration)
+            estimated_prev_vod_end = previous_vod.created_at + datetime.timedelta(seconds=previous_vod_duration)
+
+            if (current_vod.created_at - estimated_prev_vod_end).seconds < 3600:
+                # we assume one of "* things" from above happened
                 return
 
         ### send notification
@@ -56,7 +77,7 @@ class TwitchCog(CommunityCog):
                 colour=0x9146FF,
                 title=f"{streamer.title}",
                 url=streamer.url,
-                description=(f"Playing {streamer.game}\n/[Watch Stream]({streamer.url}){await streamer.vod_link()}"),
+                description=(f"Playing {streamer.game}\n/[Watch Stream]({streamer.url}){current_vod_link}"),
             )
             .set_author(
                 name=f"{streamer.display_name} just went live on Twitch!",

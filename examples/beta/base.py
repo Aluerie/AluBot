@@ -2,6 +2,7 @@
 where I do various beta testings in the test version of the bot.
 """
 #  pyright: basic
+
 from __future__ import annotations
 
 import asyncio

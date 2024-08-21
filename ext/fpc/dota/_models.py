@@ -127,7 +127,7 @@ class MatchToSend(BaseMatchToSend):
             topbar_h = 70
 
             def draw_picked_heroes() -> None:
-                """Draw picked heroes in the match"""
+                """Draw picked heroes in the match."""
                 rectangle = Image.new("RGB", (canvas_w, topbar_h), str(colour))
                 ImageDraw.Draw(rectangle)
                 canvas.paste(rectangle)
@@ -195,10 +195,12 @@ class MatchToSend(BaseMatchToSend):
     @override
     async def insert_into_game_messages(self, message_id: int, channel_id: int) -> None:
         query = """
-            INSERT INTO dota_messages (message_id, channel_id, match_id, friend_id, hero_id)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO dota_messages (message_id, channel_id, match_id, friend_id, hero_id, player_name)
+            VALUES ($1, $2, $3, $4, $5, $6)
         """
-        await self.bot.pool.execute(query, message_id, channel_id, self.match_id, self.friend_id, self.hero_id)
+        await self.bot.pool.execute(
+            query, message_id, channel_id, self.match_id, self.friend_id, self.hero_id, self.player_name
+        )
 
 
 class StratzMatchToEdit(BaseMatchToEdit):
@@ -285,8 +287,8 @@ class StratzMatchToEdit(BaseMatchToEdit):
             def draw_items_row() -> float:
                 """Draw items on a single row.
 
-                Returns height of the row to align other elements in the canvas."""
-
+                Returns height of the row to align other elements in the canvas.
+                """
                 h = 50  # the height for items row, meaning items themselves are of this height.
                 item_w = 69  # then item_w, item_h is (69, 50) which matches 88/64 in proportion (original size).
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)  # font for item timings
@@ -338,7 +340,6 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
                 Returns height of the segment.
                 """
-
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
                 w, h = self.bot.transposer.get_text_wh(self.outcome, font)
                 colour_map = {
@@ -386,7 +387,6 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
             def draw_facet() -> None:
                 """Draw facet icon+rectangle. Just a mono-colour rectangle with icon and title text."""
-
                 icon_h = 40
                 icon_p = 1
                 text_p = 8  # currently just left, right
@@ -453,7 +453,6 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """
-
     from ext.fpc.dota._models import StratzMatchToEdit
 
     await self.bot.initialize_dota_pulsefire_clients()

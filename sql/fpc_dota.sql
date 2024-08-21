@@ -53,5 +53,6 @@ CREATE TABLE IF NOT EXISTS dota_messages (
     channel_id BIGINT NOT NULL,
     match_id BIGINT NOT NULL,
     friend_id INTEGER NOT NULL,
-    hero_id: INT NOT NULL
+    hero_id: INT NOT NULL,
+    player_name: TEXT --currently only used for logs so we don't double JOIN
 );

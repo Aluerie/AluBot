@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 
 
 class SteamDB(AluCog):
-
     @override
     def cog_load(self) -> None:
         self.bot.initialize_github()
@@ -36,12 +35,7 @@ class SteamDB(AluCog):
 
     @discord.utils.cached_property
     def news_webhook(self) -> discord.Webhook:
-        return discord.Webhook.from_url(
-            url=DOTA_NEWS_WEBHOOK,
-            client=self.bot,
-            session=self.bot.session,
-            bot_token=self.bot.http.token,
-        )
+        return self.bot.webhook_from_url(DOTA_NEWS_WEBHOOK)
 
     # this is a bit shady since I just blatantly copy their messages
     # but Idk, I tried fetching Dota 2 news via different kinds of RSS

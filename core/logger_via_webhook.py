@@ -100,7 +100,8 @@ class LoggerViaWebhook(AluCog):
 
     @discord.utils.cached_property
     def logger_webhook(self) -> discord.Webhook:
-        return discord.Webhook.from_url(url=LOGGER_WEBHOOK, session=self.bot.session)
+        """A webhook in hideout's #logger channel."""
+        return self.bot.webhook_from_url(LOGGER_WEBHOOK)
 
     def add_record(self, record: logging.LogRecord) -> None:
         self._logging_queue.put_nowait(record)

@@ -480,12 +480,16 @@ class AluBot(commands.Bot, AluBotHelper):
             scopes=("bot", "applications.commands"),
         )
 
-    @discord.utils.cached_property
-    def spam(self) -> discord.Webhook:
-        """A shortcut to spam webhook."""
+    def webhook_from_url(self, url: str) -> discord.Webhook:
+        """A shortcut function with filled in discord.Webhook.from_url args."""
         return discord.Webhook.from_url(
-            url=config.SPAM_WEBHOOK,
+            url=url,
             session=self.session,
             client=self,
             bot_token=self.http.token,
         )
+
+    @discord.utils.cached_property
+    def spam(self) -> discord.Webhook:
+        """A shortcut to spam webhook."""
+        return self.webhook_from_url(config.SPAM_WEBHOOK)

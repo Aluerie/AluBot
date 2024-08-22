@@ -49,6 +49,7 @@ class TwitchCog(CommunityCog):
             whenever the user enters #stream-notifications channel.
         * Also double-checks that stream is truly new, i.e. to avoid duplicate notifications in case my stream crashed.
         """
+        self.edit_offline_screen.cancel()
         streamer = await self.bot.twitch.fetch_streamer(event.broadcaster.id)
 
         ### brute force check if stream died

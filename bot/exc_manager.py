@@ -71,12 +71,7 @@ class ExceptionManager:
         self._lock: asyncio.Lock = asyncio.Lock()
         self._most_recent: datetime.datetime | None = None
 
-        self.error_webhook: discord.Webhook = discord.Webhook.from_url(
-            url=config.ERROR_HANDLER_WEBHOOK,
-            session=bot.session,
-            client=bot,
-            bot_token=bot.http.token,
-        )
+        self.error_webhook: discord.Webhook = bot.webhook_from_url(config.ERROR_HANDLER_WEBHOOK)
 
     def _yield_code_chunks(self, iterable: str, *, chunks_size: int = 2000) -> Generator[str, None, None]:
         codeblocks: str = "```py\n{}```"

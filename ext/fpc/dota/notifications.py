@@ -286,7 +286,7 @@ class DotaFPCNotifications(BaseNotifications):
                 try:
                     match_details = await self.bot.steam_web_api.get_match_details(match_id)
                 except aiohttp.ClientResponseError as exc:
-                    edit_log.warn("SteamWebAPI: it's down? status `%s`", exc.status)  # exc_info = true
+                    edit_log.warning("SteamWebAPI: it's down? status `%s`", exc.status)  # exc_info = true
                     # we can't confirm if any of "*" conditions are true
                     # so we will have to rely on other elif/else in future loops
                     continue

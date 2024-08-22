@@ -35,7 +35,7 @@ class LoggingHandler(logging.Handler):
 
     def __init__(self, cog: LoggerViaWebhook) -> None:
         self.cog: LoggerViaWebhook = cog
-        super().__init__(logging.DEBUG)
+        super().__init__(logging.INFO)
 
     @override
     def filter(self, record: logging.LogRecord) -> bool:

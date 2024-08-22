@@ -1,5 +1,4 @@
-"""
-The features in this file are about getting a basic information from directly discord that
+"""The features in this file are about getting a basic information from directly discord that
 there is seemingly no easy way of getting in the app's UI itself (but would be nice).
 
 For example, a command `/profile picture` will get an avatar picture for a mentioned @member.
@@ -73,7 +72,6 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
     @app_commands.describe(user="User to view banner of;")
     async def profile_banner(self, ctx: AluContext, *, user: discord.User) -> None:
         """View @user's banner picture."""
-
         # banner and accent_colour info is only available via Client.fetch_user().
         # https://discordpy.readthedocs.io/en/latest/api.html?highlight=user#discord.User.banner
         fetched_user = await self.bot.fetch_user(user.id)

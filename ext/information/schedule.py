@@ -296,6 +296,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
 
     @commands.hybrid_command(aliases=["sch"])
     @app_commands.allowed_installs(guilds=True, users=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.rename(schedule_mode="filter")
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in SELECT_OPTIONS])
     async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: str | None = None) -> None:

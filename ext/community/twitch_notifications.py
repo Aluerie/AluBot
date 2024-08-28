@@ -9,7 +9,7 @@ from discord.ext import commands
 
 import config
 from bot import AluBot
-from utils import aluloop, const, formats
+from utils import aluloop, const
 
 from ._base import CommunityCog
 
@@ -49,41 +49,19 @@ class TwitchCog(CommunityCog):
             whenever the user enters #stream-notifications channel.
         * Also double-checks that stream is truly new, i.e. to avoid duplicate notifications in case my stream crashed.
         """
-        self.edit_offline_screen.cancel()
         streamer = await self.bot.twitch.fetch_streamer(event.broadcaster.id)
 
-        ### brute force check if stream died
-        # the assumption here is that I won't take a break shorter than 1 hour between streams
+        # brute force check if stream died
+        # due to Internet, lag, twitch being twitch or something else
+        query = "SELECT twitch_last_offline FROM bot_vars"
+        stream_last_offline: datetime.datetime = await self.bot.pool.fetchval(query)
+        if (datetime.datetime.now(datetime.UTC) - stream_last_offline).seconds < 900:
+            # the assumption here is that I won't take a break shorter than 15 minutes between streams
+            self.edit_offline_screen.cancel()
+            return
 
-        vods = await self.bot.twitch.fetch_videos(user_id=streamer.id, period="day")
-        try:
-            # this should always exist
-            current_vod = vods[0]
-            current_vod_link = f"/[VOD]({current_vod.url})"
-        except ValueError:
-            current_vod = None
-            current_vod_link = ""
-
-        # to verify if the stream is truly new and avoid send duplicate notifications
-        # we need to recognize the following cases:
-        # * I restart the stream like a clown
-        # * Internet goes down
-        # * Twitch betrays me with a lag
-        # * Some other F
-        # we need to compare the current vod with the latest vod, because when I go offline Twitch stops the vod.
-
-        try:
-            previous_vod = vods[1]
-        except ValueError:
-            previous_vod = None
-
-        if previous_vod is not None and current_vod is not None:
-            previous_vod_duration = formats.hms_to_seconds(previous_vod.duration)
-            estimated_prev_vod_end = previous_vod.created_at + datetime.timedelta(seconds=previous_vod_duration)
-
-            if (current_vod.created_at - estimated_prev_vod_end).seconds < 3600:
-                # we assume one of "* things" from above happened
-                return
+        current_vod = next(iter(await self.bot.twitch.fetch_videos(user_id=streamer.id, period="day")), None)
+        current_vod_link = f"/[VOD]({current_vod.url})" if current_vod else ""
 
         ### send notification
 
@@ -119,12 +97,13 @@ class TwitchCog(CommunityCog):
     @commands.Cog.listener("on_twitchio_stream_end")
     async def twitch_tv_offline_edit_notification(self, _: eventsub.StreamOfflineData) -> None:
         """Starts the task to edit the notification message."""
+        await self.bot.pool.execute("UPDATE bot_vars SET twitch_last_offline = $1", datetime.datetime.now(datetime.UTC))
         self.edit_offline_screen.start()
 
     @aluloop(count=1)
     async def edit_offline_screen(self) -> None:
         """Task to edit the notification image to my offline screen when it's confirmed that stream truly ended."""
-        await asyncio.sleep(60 * 60)
+        await asyncio.sleep(11 * 60)
         message = self.last_notification_message
         if message is None:
             return

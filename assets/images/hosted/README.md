@@ -10,3 +10,4 @@ Here is the list of links
 * Dota Disconnect - <https://i.imgur.com/9n8oSge.png>
 * Dota Edit FPC for logs - <https://i.imgur.com/8nj04Ol.png>
 * Dota Send FPC for logs - <https://i.imgur.com/6x1J57F.png>
+* Dota Unknown (New) Hero - <https://i.imgur.com/9BQ4VxL.png>

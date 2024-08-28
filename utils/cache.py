@@ -57,6 +57,14 @@ class KeysCache:
     I'm not developing a library here, am I?
     """
 
+    # TODO: refactor this cache thing so it's more clear what is what
+    # i.e. cache = whole class
+    # cached_data -> rename to data
+    # think of a name for data category maybe like mapping name
+    # and think of a name for value keys thing idk
+    if TYPE_CHECKING:
+        cached_data: CacheDict
+
     def __init__(self, bot: AluBot) -> None:
         """__init__.
 
@@ -68,12 +76,10 @@ class KeysCache:
         """
         self.bot: AluBot = bot
 
-        self.cached_data: CacheDict = {}
         self.lock: asyncio.Lock = asyncio.Lock()
 
         self.update_data.add_exception_type(errors.ResponseNotOK)
         # random times just so we don't have a possibility of all cache being updated at the same time
-        # and somehow yoink'ing the whole event loop
         self.update_data.change_interval(hours=24, minutes=random.randint(1, 59))
         self.update_data.start()
 
@@ -114,9 +120,9 @@ class KeysCache:
 
     async def get_cached_data(self) -> CacheDict:
         """Get the whole cached data."""
-        if self.cached_data:
+        try:
             return self.cached_data
-        else:
+        except AttributeError:
             await self.update_data()
             return self.cached_data
 

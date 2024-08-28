@@ -163,7 +163,11 @@ class HeroKeysCache(KeysCache):
 
     async def icon_by_id(self, ability_id: int) -> str:
         """Get ability icon url by id."""
-        return await self.get_value("icon_by_id", ability_id)
+        icon_url: str | None = await self.get_value_or_none("icon_by_id", ability_id)
+        if icon_url is None:
+            return "https://i.imgur.com/9BQ4VxL.png"  # icon for unknown (new?) hero
+        else:
+            return icon_url
 
     async def talents_by_id(self, hero_id: int) -> list[tuple[int, str]]:
         """Get ability name by its id.

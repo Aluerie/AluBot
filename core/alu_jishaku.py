@@ -16,7 +16,7 @@ category = ExtCategory(
 )
 
 
-class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=category):
+class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=category): # type: ignore
     """My subclass to main frontend class for Jishaku.
 
     This implements all Features and is the main entry point for Jishaku.
@@ -26,4 +26,5 @@ class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=catego
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     return await bot.add_cog(AluJishaku(bot=bot))

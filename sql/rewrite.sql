@@ -5,13 +5,20 @@ CREATE TABLE auto_sync (
     payload JSONB
 );
 
+
+-- Special Bot Variables.
+-- which values are properly kept/tracked between bot restarts.
+-- * these variables don't really fit any other database;
+-- * they aren't connected with each other, it's just some random global variables in a sense.
 CREATE TABLE IF NOT EXISTS bot_vars (
     id BOOLEAN NOT NULL PRIMARY KEY DEFAULT TRUE,
     community_nickname_heartbeat TIMESTAMPTZ DEFAULT (NOW() at time zone 'utc'),
     lol_patch TEXT,
+    twitch_last_offline TIMESTAMP, -- used to track if my stream crashed
     
-    -- only row with id=TRUE is allowed so you can use this table like this 
+    -- only row with id=TRUE is allowed so you can use this table like this without WHERE clause
     -- var: int = await self.bot.pool.fetchval("SELECT var FROM bot_vars")
+    -- await self.bot.pool.execute("UPDATE bot_vars SET twitch_last_offline = $1", now)
     CONSTRAINT only_one_row CHECK (id)
 );
 

@@ -130,7 +130,7 @@ class KeysCache:
         """Get value by the `key` from the sub-cache named `cache` in the `self.cached_data`."""
         try:
             return self.cached_data[cache][key]
-        except KeyError:
+        except (KeyError, AttributeError):
             # let's try to update the cache in case it's a KeyError due to
             # * new patch or something
             # * the data is not initialized then we will get stuck in self.lock waiting for the data.
@@ -149,7 +149,7 @@ class KeysCache:
         """Get the whole sub-cache dict."""
         try:
             return self.cached_data[cache]
-        except KeyError:
+        except (KeyError, AttributeError):
             await self.update_data()
             return self.cached_data[cache]
 

@@ -16,7 +16,7 @@ from .._base import FunCog
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from utils import AluContext, AluGuildContext
+    from bot import AluContext, AluGuildContext
 
 
 class Other(FunCog):

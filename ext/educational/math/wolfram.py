@@ -12,8 +12,7 @@ from utils import const, errors
 from .._base import EducationalCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 
 class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
@@ -78,4 +77,5 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(WolframAlphaCog(bot))

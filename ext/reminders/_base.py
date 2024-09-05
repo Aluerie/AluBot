@@ -1,8 +1,9 @@
-from utils import AluCog, ExtCategory, const
+from bot import AluCog, ExtCategory
+from utils.const import Emote
 
 category = ExtCategory(
     name="Reminders",
-    emote=const.Emote.DankHatTooBig,
+    emote=Emote.DankHatTooBig,
     description="Reminders",
 )
 

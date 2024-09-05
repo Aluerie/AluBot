@@ -10,18 +10,14 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import ImageColor
 
-from utils import fuzzy
-
-from . import const
-from .bases import AluBotError
+from . import const, fuzzy
+from .errors import AluBotError
 from .timezones import TimeZone, TransformTimeZone
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from bot import AluBot
-
-    from .bases import AluContext
+    from bot import AluBot, AluContext
 
 __all__ = (
     "my_bool",

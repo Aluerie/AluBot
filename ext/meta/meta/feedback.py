@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord import app_commands
@@ -9,8 +9,7 @@ from discord.ext import commands
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 from .._base import MetaCog
 
@@ -34,6 +33,7 @@ class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
         super().__init__()
         self.cog: FeedbackCog = cog
 
+    @override
     async def on_submit(self, interaction: discord.Interaction) -> None:
         channel = self.cog.feedback_channel
         if channel is None:
@@ -160,4 +160,5 @@ class FeedbackCog(MetaCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(FeedbackCog(bot))

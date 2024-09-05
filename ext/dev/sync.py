@@ -2,28 +2,35 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Literal, override
+from typing import TYPE_CHECKING, Literal, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import aluloop, checks, const, errors
+from bot import aluloop
+from utils import checks, const, errors
 
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
 class SyncAppTreeTools(DevBaseCog):
-    """A special one-command cog for famous umbra sync command. A bit modified though.
+    """Cog responsible for syncing application commands tree.
 
-    `?tag usc` which abbreviates to `?tag umbra sync command`.
+    Includes both manual ways (commands) and automatic (task, which is not recommended).
+
+    Notes
+    -----
+    * I have another autosync task in the AluBot class.
+        Do not move that task here because I want it to run on every test-bot launch while
+        this cog does not get loaded at all times.
+
     """
 
     @override
@@ -37,7 +44,7 @@ class SyncAppTreeTools(DevBaseCog):
 
     @aluloop(count=1)
     async def auto_sync(self) -> None:
-        """Auto syncing bot's application tree task.
+        """Auto Syncing bot's application tree task.
 
         `?tag ass` and all. But I'm stupid and forget to sync the tree manually.
         Especially when I'm actively developing and really only spend time with testing bot.
@@ -70,8 +77,20 @@ class SyncAppTreeTools(DevBaseCog):
         return f"Synced {len(cmds)} guild-bound commands to `{successful_guild_syncs}/{len(guilds)}` guilds."
 
     async def sync_command_worker(
-        self, spec: str | None, current_guild: discord.Guild | None, guilds: list[discord.Object]
+        self,
+        spec: str | None,
+        current_guild: discord.Guild | None,
+        guilds: list[discord.Object],
     ) -> discord.Embed:
+        """A worker function for both prefix/slash commands to sync application tree.
+
+        Sources
+        -----
+        * This in concept mirrors code of the famous Umbra Sync Command.
+        * https://about.abstractumbra.dev/discord.py/2023/01/29/sync-command-example.html
+        * `?tag usc` in discord.py server which abbreviates to `?tag umbra sync command`.
+
+        """
         # SYNC LIST OF GUILDS
         if spec == "premium":
             guild_list = [discord.Object(id=guild_id) for guild_id in const.PREMIUM_GUILDS]
@@ -131,7 +150,7 @@ class SyncAppTreeTools(DevBaseCog):
 
         Parameters
         ----------
-        method :
+        method
             Method to sync bot's commands with.
 
         """
@@ -167,13 +186,6 @@ class SyncAppTreeTools(DevBaseCog):
         await ctx.reply(embed=embed)
 
 
-class DailyAutoSync(DevBaseCog):
-    """Run syncing app cmd tree once per bot restart."""
-
-    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
-        super().__init__(bot, *args, **kwargs)
-
-
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(SyncAppTreeTools(bot))
-    await bot.add_cog(DailyAutoSync(bot))

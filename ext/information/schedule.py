@@ -17,8 +17,7 @@ from ._base import InfoCog
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
 
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -355,4 +354,5 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Schedule(bot))

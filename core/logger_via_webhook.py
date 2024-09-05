@@ -9,8 +9,9 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext import tasks
 
+from bot import AluCog
 from config import LOGGER_WEBHOOK
-from utils import AluCog, const, formats
+from utils import const, formats
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -21,20 +22,21 @@ log = logging.getLogger(__name__)
 
 
 class LoggingHandler(logging.Handler):
-    """Extra logging handler to output info/warning/errors to a discord webhook.
+    """Extra Logging Handler to output info/warning/errors to a discord webhook.
 
-    Extremely handy tool to see all the error/warning/info logs.
+    Just a comfortable way to see most bot's logs real-time without opening SSH session.
 
-    * Just remember that `log.info` and above calls go spammed in a discord webhook so plan them accordingly.
-        because we do not want to get rate-limited.
-    * For this^ reason `log.debug` is usually not getting logged.
-        However, you can access `alubot.log` via `/system logs` command or just by connecting to VPS.
-    * the webhook is being spammed with errors if something is catastrophically wrong
-        even if that it doesn't go to error handlers (for some reason).
+    Notes
+    -----
+    * We mirror `log.info` and above logging calls to a discord webhook.
+    * `log.debug` aren't mirrored so keep in mind this difference between `debug` and `info`.
+        #TODO This should be mentioned in code style /docs file.
+    * You can still access `alubot.log` via `/system logs` command or just by connecting to VPS.
+
     """
 
-    def __init__(self, cog: LoggerViaWebhook) -> None:
-        self.cog: LoggerViaWebhook = cog
+    def __init__(self, cog: LogsViaWebhook) -> None:
+        self.cog: LogsViaWebhook = cog
         super().__init__(logging.INFO)
 
     @override
@@ -56,11 +58,10 @@ class LoggingHandler(logging.Handler):
         self.cog.add_record(record)
 
 
-class LoggerViaWebhook(AluCog):
-    """Cog providing a handler to send logs in a #logger discord channel.
+class LogsViaWebhook(AluCog):
+    """Mirroring logs to discord webhook messages.
 
-    Essentially mirrors logs from logging library to discord via a webhook messages.
-    This cog does some fine-tuning so everything looks pretty and also fits ratelimits.
+    This cog is responsible for rate-limiting, formatting, fine-tuning and sending the log messages.
     """
 
     # TODO: ADD MORE STUFF
@@ -104,9 +105,11 @@ class LoggerViaWebhook(AluCog):
         return self.bot.webhook_from_url(LOGGER_WEBHOOK)
 
     def add_record(self, record: logging.LogRecord) -> None:
+        """Add a record to a logging queue."""
         self._logging_queue.put_nowait(record)
 
     async def send_log_record(self, record: logging.LogRecord) -> None:
+        """Send Log record to discord webhook."""
         attributes = {
             "INFO": "\N{INFORMATION SOURCE}\ufe0f",
             "WARNING": "\N{WARNING SIGN}\ufe0f",
@@ -128,6 +131,7 @@ class LoggerViaWebhook(AluCog):
 
     @tasks.loop(seconds=0.0)
     async def logging_worker(self) -> None:
+        """Task responsible for mirroring logging messages to a discord webhook."""
         record = await self._logging_queue.get()
 
         async with self._lock:
@@ -142,28 +146,32 @@ class LoggerViaWebhook(AluCog):
 
 
 async def setup(bot: AluBot) -> None:
-    """Setup
+    """Load AluBot extension. Framework of discord.py.
 
-    Reason this is in core extensions because some `cog_load` have pretty important log messages
-    that we want to log into the webhook. So we want to load this as early as possible.
+    The reason why this extension is in the list of core extensions is
+    because some `cog_load` from normal extensions sometimes have pretty important log messages
+    that we want to log into the discord webhook. Thus, we want to load this as early as possible.
 
-    If we ever need even earlier load then we will have to
-    manually order extensions in __init__ or at least bump this one
+    Future
+    ------
+    If we ever need to load this even earlier then we will have to
+    manually order extensions in `core/__init__.py` or at least bump this one
     """
     if bot.test:
         # no need since I'm directly watching.
         return
 
-    cog = LoggerViaWebhook(bot)
+    cog = LogsViaWebhook(bot)
     await bot.add_cog(cog)
-    bot.logging_handler = handler = LoggingHandler(cog)
+    bot.logs_via_webhook_handler = handler = LoggingHandler(cog)
     logging.getLogger().addHandler(handler)
 
 
 async def teardown(bot: AluBot) -> None:
+    """Teardown AluBot extension. Framework of discord.py."""
     if bot.test:
         return
 
     log.warning("Tearing down logger via webhook.")
-    logging.getLogger().removeHandler(bot.logging_handler)
-    del bot.logging_handler
+    logging.getLogger().removeHandler(bot.logs_via_webhook_handler)
+    del bot.logs_via_webhook_handler

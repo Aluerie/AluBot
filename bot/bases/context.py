@@ -14,9 +14,9 @@ if TYPE_CHECKING:
 
     from aiohttp import ClientSession
 
-    from bot import AluBot
+    from utils.database import PoolTypedWithAny
 
-    from ..database import PoolTypedWithAny
+    from .. import AluBot
 
 
 __all__ = (
@@ -46,29 +46,44 @@ class AluContext(commands.Context["AluBot"]):
 
     @property
     def client(self) -> AluBot:
+        """Alias for `ctx.bot` for consistency with `discord.Interaction` (`interaction.client`).
+
+        Example:
+        -------
+        There are some weird cases we need to compare the type of ctx_ntr to both of them, so instead of doing:
+        >>> if isinstance(ctx_ntr, AluContext): #  bot = ctx_ntr.bot
+        >>> if isinstance(ctx_ntr, discord.Interaction): #  bot = ctx_ntr.client
+
+        we will just do `ctx_ntr.client` and typechecker is going to be happy.
+
+        """
         return self.bot
 
     @property
     def user(self) -> discord.User | discord.Member:
+        """Alias for `ctx.author` for consistency with `discord.Interaction` (`interaction.user`)."""
         return self.author
 
     @property
     def created_at(self) -> datetime.datetime:
+        """Alias for `ctx.message.created_at` for consistency with `discord.Interaction` (`interaction.created_at`)."""
         return self.message.created_at
 
     # Continue
 
     @property
     def session(self) -> ClientSession:
+        """Shortcut to `ctx.bot.session`."""
         return self.bot.session
 
     async def tick_reaction(self, semi_bool: bool | None) -> None:
+        """Add tick reaction to `ctx.message`."""
         with contextlib.suppress(discord.HTTPException):
             await self.message.add_reaction(formats.tick(semi_bool))
 
     # the next two functions mean the following in a context of discord chat:
-    #       replying to Bob: wow
-    # Alice: hey
+    # /--> replying to @Bob: wow, 2+2=5
+    # Alice: hey Bob, this is wrong!
     # redirect reference means we are getting "replying to Bob".
     # replied message means we are getting the message object for "wow" Bob's message.
 

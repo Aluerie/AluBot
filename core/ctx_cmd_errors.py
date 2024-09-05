@@ -10,8 +10,7 @@ from discord.ext import commands
 from utils import errors, formats, helpers
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 
 async def on_command_error(ctx: AluContext, error: commands.CommandError | Exception) -> None:
@@ -122,10 +121,12 @@ async def on_command_error(ctx: AluContext, error: commands.CommandError | Excep
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     bot.add_listener(on_command_error)
 
 
 async def teardown(bot: AluBot) -> None:
+    """Unload AluBot extension. Framework of discord.py."""
     bot.remove_listener(on_command_error)
 
 

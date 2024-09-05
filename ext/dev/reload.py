@@ -13,14 +13,14 @@ import discord
 from discord.ext import commands
 
 from ext import get_extensions
-from utils import AluContext, const, formats
+from utils import const, formats
 
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from bot import AluBot
+    from bot import AluBot, AluContext
 
 
 class ExtensionConverter(commands.Converter[str]):
@@ -244,4 +244,5 @@ class ReloadCog(DevBaseCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ReloadCog(bot))

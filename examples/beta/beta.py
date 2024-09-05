@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from examples.beta.base import *
 
-# pyright: basic
+#  ruff: noqa: D101, D102, D103
 
 
 class BetaTest(BetaCog):
@@ -24,4 +24,5 @@ class BetaTest(BetaCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(BetaTest(bot))

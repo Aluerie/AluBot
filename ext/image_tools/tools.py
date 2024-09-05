@@ -12,8 +12,7 @@ from utils import const
 from ._base import ImageToolsCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 
 class ToolsCog(ImageToolsCog, name="Tools", emote=const.Emote.DankFix):
@@ -35,4 +34,5 @@ class ToolsCog(ImageToolsCog, name="Tools", emote=const.Emote.DankFix):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ToolsCog(bot))

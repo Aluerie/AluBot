@@ -54,4 +54,5 @@ class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Suggestions(bot))

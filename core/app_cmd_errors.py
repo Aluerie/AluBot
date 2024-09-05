@@ -130,9 +130,11 @@ async def on_app_command_error(
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     bot.old_tree_error = bot.tree.on_error
     bot.tree.on_error = on_app_command_error
 
 
 async def teardown(bot: AluBot) -> None:
+    """Unload AluBot extension. Framework of discord.py."""
     bot.tree.on_error = bot.old_tree_error

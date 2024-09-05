@@ -8,8 +8,8 @@ import discord
 from discord.ext import commands
 
 import config
-from bot import AluBot
-from utils import aluloop, const
+from bot import AluBot, aluloop
+from utils import const
 
 from ._base import CommunityCog
 
@@ -35,10 +35,10 @@ class TwitchCog(CommunityCog):
         # these are supposed to be broadcaster/user access token for streamers we sub to
         # since we are subbing to event of myself only then my own access token is fine
         broadcaster, token = const.Twitch.MY_USER_ID, config.TWITCH_ACCESS_TOKEN
-        await self.bot.twitch.eventsub.subscribe_channel_stream_start(broadcaster, token)
         self.last_notification_message: discord.Message | None = None
+
+        await self.bot.twitch.eventsub.subscribe_channel_stream_start(broadcaster, token)
         await self.bot.twitch.eventsub.subscribe_channel_stream_end(broadcaster, token)
-        # testing with channel points since it's easy yo do :D
         await self.bot.twitch.eventsub.subscribe_channel_points_redeemed(broadcaster, token)
 
     @commands.Cog.listener("on_twitchio_stream_start")

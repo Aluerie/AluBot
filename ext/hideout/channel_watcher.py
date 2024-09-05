@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext import commands
 
-from utils import aluloop, const
+from bot import aluloop
+from utils import const
 
 from ._base import HideoutCog
 
@@ -101,5 +102,6 @@ class DropsWatcher(ChannelWatcher):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(EventPassWatcher(bot))
     # await bot.add_cog(DropsWatcher(bot))

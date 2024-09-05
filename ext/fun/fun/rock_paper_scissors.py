@@ -7,12 +7,13 @@ from typing import TYPE_CHECKING, NamedTuple, Self, override
 import discord
 from discord.ext import commands
 
-from utils import AluView, const
+from bot import AluView
+from utils import const
 
 from .._base import FunCog
 
 if TYPE_CHECKING:
-    from utils import AluGuildContext
+    from bot import AluGuildContext
 
 
 class RPSElement(NamedTuple):

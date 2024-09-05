@@ -12,8 +12,7 @@ from utils import const, errors
 from ._base import VoiceChatCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
 
 class LanguageData(NamedTuple):
@@ -149,4 +148,5 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(TextToSpeech(bot))

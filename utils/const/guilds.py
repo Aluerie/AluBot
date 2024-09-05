@@ -8,24 +8,35 @@ import discord
 from ._meta import CONSTANTS
 
 if TYPE_CHECKING:
-    # idk why but vscode always suggests `utils.const.AluBot` instead of `bot.AluBot` for autocomplete.
-    # so let's do this weird renaming.
-    from bot import AluBot as _AluBot
+    from bot import AluBot
 
 T = TypeVar("T")
 
 
 class SnowflakeEnum(IntEnum):
+    """Snowflake Enum boilerplate class.
+
+    Enum classes for Discord models should subclass this.
+    These classes provide bare-bone minimum functionality with IDs
+    without utilizing actual models from discord.py
+    """
+
     @override
     def __str__(self) -> str:
         return self.mention
 
     @property
     def mention(self) -> str:
+        """Get Discord mention string.
+
+        Usually allows various interactions within Discord.
+        """
         raise NotImplementedError
 
 
 class ChannelEnum(SnowflakeEnum):
+    """Discord Channel."""
+
     @property
     @override
     def mention(self) -> str:
@@ -33,6 +44,8 @@ class ChannelEnum(SnowflakeEnum):
 
 
 class RoleEnum(SnowflakeEnum):
+    """Discord Role."""
+
     @property
     @override
     def mention(self) -> str:
@@ -40,6 +53,8 @@ class RoleEnum(SnowflakeEnum):
 
 
 class UserEnum(SnowflakeEnum):
+    """Discord User."""
+
     @property
     @override
     def mention(self) -> str:
@@ -47,6 +62,8 @@ class UserEnum(SnowflakeEnum):
 
 
 class Guild:
+    """Discord Guild (or commonly called Servers)."""
+
     community = 702561315478044804
     hideout = 759916212842659850
 
@@ -185,15 +202,15 @@ class SavedGuild:
 
     Attributes
     ----------
-    bot : AluBot
+    bot
         The bot instance to initiate all snowflakes into discord Objects
-    id : int
+    id
         Snowflake ID for the guild itself.
 
     """
 
-    def __init__(self, bot: _AluBot, guild_id: int) -> None:
-        self.bot: _AluBot = bot
+    def __init__(self, bot: AluBot, guild_id: int) -> None:
+        self.bot: AluBot = bot
         self.id: int = guild_id
 
     @override
@@ -202,6 +219,7 @@ class SavedGuild:
 
     @property
     def guild(self) -> discord.Guild:
+        """Get guild object."""
         guild = self.bot.get_guild(self.id)
         if guild is None:
             msg = f"{self} not in cache."
@@ -209,6 +227,7 @@ class SavedGuild:
         return guild
 
     def get_channel(self, channel_id: int, channel_type: type[T]) -> T:
+        """Get channel object by id."""
         channel = self.guild.get_channel(channel_id)
         if channel:
             if isinstance(channel, channel_type):
@@ -226,6 +245,7 @@ class SavedGuild:
             raise RuntimeError(msg)
 
     def get_role(self, role_id: int) -> discord.Role:
+        """Get role object by id."""
         role = self.guild.get_role(role_id)
         if role is None:
             msg = f"Role id={role_id} from {self} not in cache"
@@ -233,6 +253,7 @@ class SavedGuild:
         return role
 
     def get_member(self, user_id: int) -> discord.Member:
+        """Get member object by id."""
         member = self.guild.get_member(user_id)
         if member is None:
             msg = f"Member id={user_id} from {self} not in cache"
@@ -241,32 +262,38 @@ class SavedGuild:
 
     @property
     def aluerie(self) -> discord.Member:
+        """Get member object for @Aluerie."""
         return self.get_member(User.aluerie)
 
 
 class CommunityGuild(SavedGuild):
-    def __init__(self, bot: _AluBot) -> None:
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot, Guild.community)
 
     # channels #########################################################################################################
     @property
     def role_selection(self) -> discord.TextChannel:
+        """Colour and other roles selection channel."""
         return self.get_channel(Channel.role_selection, discord.TextChannel)
 
     @property
     def welcome(self) -> discord.TextChannel:
+        """Channel to welcome community new-comers."""
         return self.get_channel(Channel.welcome, discord.TextChannel)
 
     @property
     def bday_notifs(self) -> discord.TextChannel:
+        """Channel for birthday notifications."""
         return self.get_channel(Channel.bday_notifs, discord.TextChannel)
 
     @property
     def stream_notifs(self) -> discord.TextChannel:
+        """My own stream notifications channel."""
         return self.get_channel(Channel.stream_notifs, discord.TextChannel)
 
     @property
     def general(self) -> discord.TextChannel:
+        """General channel."""
         return self.get_channel(Channel.general, discord.TextChannel)
 
     @property
@@ -291,14 +318,17 @@ class CommunityGuild(SavedGuild):
 
     @property
     def stream_room(self) -> discord.VoiceChannel:
+        """Voice Channel to stream in."""
         return self.get_channel(Channel.stream_room, discord.VoiceChannel)
 
     @property
     def patch_notes(self) -> discord.TextChannel:
+        """Community server news. Called Patch Notes for fun."""
         return self.get_channel(Channel.patch_notes, discord.TextChannel)
 
     @property
     def suggestions(self) -> discord.ForumChannel:
+        """Forum channel where each thread is a server related suggestion."""
         return self.get_channel(Channel.suggestions, discord.ForumChannel)
 
     @property
@@ -311,14 +341,17 @@ class CommunityGuild(SavedGuild):
 
     @property
     def my_time(self) -> discord.VoiceChannel:
+        """Channel which name somewhat reflects my local time."""
         return self.get_channel(Channel.my_time, discord.VoiceChannel)
 
     @property
     def total_people(self) -> discord.VoiceChannel:
+        """Channel which name somewhat reflects amount of people in the server."""
         return self.get_channel(Channel.total_people, discord.VoiceChannel)
 
     @property
     def total_bots(self) -> discord.VoiceChannel:
+        """Channel which name somewhat reflects amount of people in the server."""
         return self.get_channel(Channel.total_bots, discord.VoiceChannel)
 
     # roles ############################################################################################################
@@ -360,7 +393,7 @@ class CommunityGuild(SavedGuild):
 
 
 class HideoutGuild(SavedGuild):
-    def __init__(self, bot: _AluBot) -> None:
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot, Guild.hideout)
 
     # channels
@@ -378,17 +411,21 @@ class HideoutGuild(SavedGuild):
 
     @property
     def logger(self) -> discord.TextChannel:
+        """Channel where AluBot posts its own logs from logging library."""
         return self.get_channel(Channel.logger, discord.TextChannel)
 
     @property
     def repost(self) -> discord.TextChannel:
+        """Channel where all news/announcements/notifications get posted/reposted."""
         return self.get_channel(Channel.repost, discord.TextChannel)
 
     # roles ############################################################################################################
     @property
     def jailed_bots(self) -> discord.Role:
+        """Role for jailed bots."""
         return self.get_role(Role.jailed_bots)
 
     @property
     def error_ping(self) -> discord.Role:
+        """Role to ping developers about bot errors."""
         return self.get_role(Role.error_ping)

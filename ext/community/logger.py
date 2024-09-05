@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext import commands
 
-from utils import aluloop, const, formats
+from bot import aluloop
+from utils import const, formats
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 
 class MemberLogging(CommunityCog):

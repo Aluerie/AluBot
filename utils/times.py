@@ -17,10 +17,10 @@ from dateutil.relativedelta import relativedelta
 from discord import app_commands
 from discord.ext import commands
 
-from .bases import AluBotError
+from .errors import AluBotError
 
 if TYPE_CHECKING:
-    from .bases import AluContext
+    from bot import AluContext
 
 
 class ShortTime:

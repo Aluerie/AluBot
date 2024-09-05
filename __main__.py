@@ -23,12 +23,14 @@ else:
 
 
 async def start_the_bot(test: bool) -> None:
+    """Helper function to start the bot."""
     log = logging.getLogger()
     try:
         pool = await create_pool()
     except Exception:
         click.echo("Could not set up PostgreSQL. Exiting.", file=sys.stderr)
         log.exception("Could not set up PostgreSQL. Exiting.")
+        # todo: maybe webhook notif that it went wrong
         return
 
     async with aiohttp.ClientSession() as session, pool as pool, AluBot(test, session=session, pool=pool) as alubot:
@@ -47,6 +49,7 @@ def main(click_ctx: click.Context, test: bool) -> None:
 
 @main.group(short_help="database stuff", options_metavar="[options]")
 def db() -> None:
+    """Group for cli database related commands."""
     pass
 
 

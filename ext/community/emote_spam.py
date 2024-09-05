@@ -15,8 +15,7 @@ from utils import cache, const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 
 class EmoteSpam(CommunityCog):
@@ -83,7 +82,6 @@ class EmoteSpam(CommunityCog):
     @cache.cache(maxsize=60 * 24, strategy=cache.Strategy.lru)
     async def get_all_emotes(self) -> list[discord.Emoji]:
         """Get all emotes available to the bot."""
-
         # let's exclude special emote servers for the bot.
         ignored_guilds = const.EmoteGuilds.DOTA + const.EmoteGuilds.LOL + const.EmoteGuilds.BRAND
         guild_list = [guild for guild in self.bot.guilds if guild.id not in ignored_guilds]
@@ -204,5 +202,6 @@ class ComfySpam(CommunityCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(EmoteSpam(bot))
     await bot.add_cog(ComfySpam(bot))

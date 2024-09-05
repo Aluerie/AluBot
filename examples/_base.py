@@ -1,4 +1,5 @@
-from utils import AluCog, ExtCategory, const
+from bot import AluCog, ExtCategory
+from utils import const
 
 category = ExtCategory(
     name="Cog",

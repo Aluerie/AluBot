@@ -1,8 +1,9 @@
-from utils import AluCog, ExtCategory, const
+from bot import AluCog, ExtCategory
+from utils.const import Emote
 
 category = ExtCategory(
     name="Moderation",
-    emote=const.Emote.peepoPolice,
+    emote=Emote.peepoPolice,
     description="Moderation tools",
 )
 

@@ -9,41 +9,43 @@ from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, TypeVar, overri
 import asyncpg
 import discord
 
-type TimerMapping = Mapping[str, Any]
-TimerDataT = TypeVar("TimerDataT", bound=TimerMapping)
+from utils.database import DotRecord
 
 if TYPE_CHECKING:
-    from utils.database import DotRecord
-
     from .bot import AluBot
-
-    # currently somewhat pointless since this gives typing for attributes like .id instead of ["id"]
-    class TimerRecord(DotRecord, Generic[TimerDataT]):
-        id: int
-        event: str
-        expires_at: datetime.datetime
-        created_at: datetime.datetime
-        timezone: str
-        data: TimerDataT
-
-    # mirror above for @classmethod .temporary
-    class PseudoTimerRecord(TypedDict, Generic[TimerDataT]):
-        id: None
-        event: str
-        expires_at: datetime.datetime
-        created_at: datetime.datetime
-        timezone: str
-        data: TimerDataT
-
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
-
 
 __all__: tuple[str, ...] = (
     "Timer",
     "TimerManager",
+    "TimerRecord",
 )
+
+type TimerMapping = Mapping[str, Any]
+TimerDataT = TypeVar("TimerDataT", bound=TimerMapping)
+
+
+# currently somewhat pointless since this gives typing for attributes like .id instead of ["id"]
+class TimerRecord(DotRecord, Generic[TimerDataT]):
+    id: int
+    event: str
+    expires_at: datetime.datetime
+    created_at: datetime.datetime
+    timezone: str
+    data: TimerDataT
+
+
+# mirror above for @classmethod .temporary
+class PseudoTimerRecord(TypedDict, Generic[TimerDataT]):
+    id: None
+    event: str
+    expires_at: datetime.datetime
+    created_at: datetime.datetime
+    timezone: str
+    data: TimerDataT
+
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class Timer(Generic[TimerDataT]):

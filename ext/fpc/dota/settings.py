@@ -314,4 +314,5 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(DotaFPCSettings(bot))

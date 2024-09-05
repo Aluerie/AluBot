@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, Literal, Self, override
 import discord
 from discord.ext import commands, menus
 
-from utils import AluCog, AluContext, ExtCategory, aluloop, const, pages
+from bot import AluCog, AluContext, ExtCategory, aluloop
+from utils import const, pages
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -389,4 +390,5 @@ class BaseHelpCog(AluCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(BaseHelpCog(bot))

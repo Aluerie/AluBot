@@ -17,8 +17,9 @@ from typing import TYPE_CHECKING, override
 import discord
 from discord.ext import commands
 
+from bot import AluCog
 from config import DOTA_NEWS_WEBHOOK
-from utils import AluCog, const
+from utils import const
 
 if TYPE_CHECKING:
     from bot import AluBot

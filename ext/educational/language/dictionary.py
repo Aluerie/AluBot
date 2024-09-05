@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from utils import AluContext
+    from bot import AluContext
 
     # from .utils.context import Context, GuildContext
     # from .utils.paginator import RoboPages

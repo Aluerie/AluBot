@@ -15,10 +15,11 @@ import pygit2
 from discord.ext import commands
 from pygit2.enums import SortMode
 
-from utils import AluCog, Url, const
+from bot import AluCog, Url
+from utils import const
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from bot import AluContext
 
 
 async def count_lines(

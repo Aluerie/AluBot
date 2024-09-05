@@ -17,8 +17,7 @@ from ._base import ModerationCog
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot
-    from utils import AluContext, AluGuildContext
+    from bot import AluBot, AluContext, AluGuildContext
 
 
 class PurgeFlags(commands.FlagConverter):
@@ -196,4 +195,5 @@ class ModerationTools(ModerationCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ModerationTools(bot))

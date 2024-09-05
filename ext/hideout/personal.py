@@ -17,9 +17,12 @@ if TYPE_CHECKING:
 class PersonalCommands(HideoutCog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
-        if member.guild == self.bot.hideout.guild:  # and member.bot:
-            # if somebody somehow enters it then also jail them lol
-            await member.add_roles(self.bot.hideout.jailed_bots)
+        if member.guild == self.bot.hideout.guild:
+            if member.bot:
+                # if somebody somehow enters it then also jail them lol
+                await member.add_roles(self.bot.hideout.jailed_bots)
+            else:
+                await member.kick()
 
     @commands.Cog.listener(name="on_message")
     async def personal_git_copy_paste(self, message: discord.Message) -> None:
@@ -41,4 +44,5 @@ class PersonalCommands(HideoutCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(PersonalCommands(bot))

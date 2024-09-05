@@ -11,8 +11,9 @@ from discord.ext import commands
 from discord.utils import MISSING
 
 import config
+from bot import EXT_CATEGORY_NONE, AluContext, ExtCategory
 from ext import get_extensions
-from utils import EXT_CATEGORY_NONE, AluContext, ExtCategory, cache, const
+from utils import cache, const
 from utils.disambiguator import Disambiguator
 from utils.transposer import TransposeClient
 
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
     from aiohttp import ClientSession
     from discord.abc import Snowflake
 
-    from utils import AluCog
+    from bot import AluCog
     from utils.database import DotRecord, PoolTypedWithAny
 
 
@@ -51,7 +52,7 @@ class AluBot(commands.Bot, AluBotHelper):
         user: discord.ClientUser
         #     bot_app_info: discord.AppInfo
         #     launch_time: datetime.datetime
-        logging_handler: Any
+        logs_via_webhook_handler: Any
         #     prefixes: PrefixConfig
         tree: AluAppCommandTree
         #     cogs: Mapping[str, AluCog]
@@ -63,7 +64,12 @@ class AluBot(commands.Bot, AluBotHelper):
         listener_connection: asyncpg.Connection[DotRecord]
 
     def __init__(
-        self, test: bool = False, *, session: ClientSession, pool: asyncpg.Pool[DotRecord], **kwargs: Any
+        self,
+        test: bool = False,
+        *,
+        session: ClientSession,
+        pool: asyncpg.Pool[DotRecord],
+        **kwargs: Any,
     ) -> None:
         """Initialize the AluBot.
 
@@ -212,7 +218,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
         Parameters
         ----------
-        message : discord.Message
+        message
             The message to get the prefix of.
 
         """

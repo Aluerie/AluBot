@@ -6,8 +6,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from bot import AluContext
 from core.help_cmd import AluHelp
-from utils import AluContext
 
 from .._base import MetaCog
 
@@ -47,4 +47,5 @@ class AluHelpCog(MetaCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(AluHelpCog(bot))

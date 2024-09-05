@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from utils import AluContext, const
+from utils import const
 
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluContext
 
 
 class AdminTools(DevBaseCog):
@@ -102,4 +102,5 @@ class AdminTools(DevBaseCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(AdminTools(bot))

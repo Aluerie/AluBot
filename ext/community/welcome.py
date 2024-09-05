@@ -12,8 +12,7 @@ from utils import const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
     class SendWelcomeKwargs(TypedDict):
         content: str
@@ -88,9 +87,7 @@ class Welcome(CommunityCog):
         else:
             description = f"Chat, it's a new bot in our server. Use it wisely {const.Emote.peepoComfy}"
 
-        embed = discord.Embed(color=const.Colour.blueviolet, description=description).set_footer(
-            text=f"With love, {self.bot.community.guild.me.display_name}"
-        )
+        embed = discord.Embed(color=const.Colour.blueviolet, description=description)
         return {"content": content_text, "embed": embed, "file": self.bot.transposer.image_to_file(image)}
 
     @commands.Cog.listener("on_member_join")
@@ -198,4 +195,5 @@ class Welcome(CommunityCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Welcome(bot))

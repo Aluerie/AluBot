@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Self, override
 import discord
 from discord.ext import commands
 
-from utils import AluModal, AluView
+from bot import AluModal, AluView
 from utils.const import Colour, Emote
 from utils.formats import human_timedelta
 
@@ -114,4 +114,5 @@ class Confession(CommunityCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Confession(bot))

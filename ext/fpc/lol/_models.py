@@ -308,7 +308,7 @@ class MatchToEdit(BaseMatchToEdit):
 
 
 if TYPE_CHECKING:
-    from utils import AluCog
+    from bot import AluCog
 
 
 async def beta_test_edit_image(self: AluCog) -> None:

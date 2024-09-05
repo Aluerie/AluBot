@@ -11,8 +11,7 @@ from typing import TYPE_CHECKING, Self
 
 import discord
 
-from . import const, formats
-from .bases import errors
+from . import const, errors, formats
 
 if TYPE_CHECKING:
     from types import TracebackType
@@ -24,10 +23,10 @@ log.setLevel(logging.INFO)
 
 
 class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they aren't used as actual classes per PEP-8.
-    """A helper tool to quickly measure performance time
-    of the codeblock we contexting in.
+    """Measure performance time of a contexted codeblock.
 
-    Use it like this:
+    Example:
+    -------
     ```py
     with measure_time("My long operation"):
         time.sleep(5)
@@ -36,14 +35,15 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
         await asyncio.sleep(5)
     ```
     It will output the perf_counter with `log.debug`.
+
     """
 
     def __init__(self, name: str, *, logger: logging.Logger = log) -> None:
-        self.name = name
-        self.log = logger
+        self.name: str = name
+        self.log: logging.Logger = logger
 
     def __enter__(self) -> Self:
-        self.start = perf_counter()
+        self.start: float = perf_counter()
         return self
 
     def __exit__(

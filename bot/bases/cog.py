@@ -6,9 +6,9 @@ import discord
 from discord.ext import commands
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from utils import const
 
-    from .. import const
+    from .. import AluBot
 
 __all__ = (
     "AluCog",
@@ -39,13 +39,10 @@ class AluCog(commands.Cog):
     ) -> None:
         cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
         parent_category: ExtCategory | None = getattr(cls, "category", None)
-        if isinstance(parent_category, ExtCategory):
-            cls.category = category or parent_category or EXT_CATEGORY_NONE
-        elif parent_category is None:
+        if parent_category is None:
             cls.category = category or EXT_CATEGORY_NONE
         else:
-            msg = "`parent_category` is not of ExtCategory class when subclassing AluCog."
-            raise TypeError(msg)
+            cls.category = category or parent_category or EXT_CATEGORY_NONE
         return super().__init_subclass__(**kwargs)
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
@@ -60,10 +57,12 @@ class AluCog(commands.Cog):
     # shortcuts
     @property
     def community(self) -> const.CommunityGuild:
+        """Shortcut to get Community Guild object."""
         return self.bot.community
 
     @property
     def hideout(self) -> const.HideoutGuild:
+        """Shortcut to get Hideout Guild object."""
         return self.bot.hideout
 
     # @property
@@ -72,6 +71,12 @@ class AluCog(commands.Cog):
 
 
 class ExtCategory(NamedTuple):
+    """Extension Category.
+
+    Used to group extensions and cogs belonging to them into categories
+    mostly for the purpose of help commands.
+    """
+
     name: str
     emote: str
     description: str

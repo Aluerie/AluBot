@@ -10,8 +10,7 @@ from utils import const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 
 class CommunityRules(CommunityCog, name="Rules", emote=const.Emote.PepoRules):
@@ -136,4 +135,5 @@ class CommunityRules(CommunityCog, name="Rules", emote=const.Emote.PepoRules):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(CommunityRules(bot))

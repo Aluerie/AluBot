@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import discord
 from PIL import Image
 
-from .bases import errors
+from . import errors
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession

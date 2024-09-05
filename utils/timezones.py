@@ -9,7 +9,9 @@ from discord import app_commands
 from discord.ext import commands
 from lxml import etree
 
-from . import AluContext, cache, fuzzy
+from bot import AluContext
+
+from . import cache, fuzzy
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -18,10 +20,11 @@ if TYPE_CHECKING:
 class TimeZone(NamedTuple):
     """Timezone Named-Tuple.
 
-    !!! Note that we STILL need to use
-    >>> timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
-    in hybrid commands to make autocomplete work
-    (in app commands to make it work at all)
+    Notes
+    -----
+    * In hybrid commands to make autocomplete work we need to use:
+        >>> timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
+    * In app commands we need to use it^ to make it work at all.
 
     Attributes
     ----------
@@ -37,10 +40,15 @@ class TimeZone(NamedTuple):
     key: str
 
     def to_tzinfo(self) -> zoneinfo.ZoneInfo:
+        """Convert to tzinfo compatible ZoneInfo object.
+
+        These can be put into `tz` argument of datetime library functions.
+        """
         return zoneinfo.ZoneInfo(self.key)
 
     @classmethod
     async def convert(cls, ctx: AluContext, argument: str) -> TimeZone:  # Self won't proc cause of try
+        """Convert."""
         tz_manager = ctx.bot.tz_manager
 
         # Prioritise aliases because they handle short codes slightly better
@@ -69,6 +77,7 @@ class TimeZone(NamedTuple):
             raise commands.BadArgument(msg)
 
     def to_choice(self) -> app_commands.Choice[str]:
+        """To choice."""
         return app_commands.Choice(name=self.label, value=self.key)
 
 

@@ -8,13 +8,13 @@ from discord import app_commands
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from utils import aluloop, checks, const, errors, formats, pages
+from bot import aluloop
+from utils import checks, const, errors, formats, pages
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
 LAST_SEEN_TIMEOUT = 60
 
@@ -187,12 +187,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             cnt += 1
 
         pgs = pages.EnumeratedPaginator(
-            ctx,
-            new_array,
-            per_page=split_size,
-            colour=const.Colour.blueviolet,
-            title="Server Leaderboard",
-            footer_text=f"With love, {guild.me.display_name}",
+            ctx, new_array, per_page=split_size, colour=const.Colour.blueviolet, title="Server Leaderboard"
         )
         await pgs.start()
 
@@ -273,7 +268,6 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         365 days is probably enough to warrant that they no longer come back.
         `community_members` table holds stuff like auto_roles, experience, msg_count.
         """
-
         if datetime.datetime.now(datetime.UTC).weekday() != 3:
             # let's do this task on Thursdays only, why not xd.
             return
@@ -293,4 +287,5 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ExperienceSystem(bot))

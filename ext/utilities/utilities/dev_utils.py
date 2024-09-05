@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import unicodedata
-from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
 
-from utils import AluCog, AluContext, const
+from bot import AluCog, AluContext
+from utils import const
 
 
 class DevUtilities(AluCog):
+    """Utility functions that are mostly usable to developers like me."""
+
     @commands.hybrid_command(aliases=["char"])
     async def charinfo(self, ctx: AluContext, *, characters: str) -> None:
         """Shows information about character(-s).

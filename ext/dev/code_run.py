@@ -14,8 +14,7 @@ from utils.converters import Codeblock
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 
 class CodeRun(DevBaseCog):
@@ -125,4 +124,5 @@ class CodeRun(DevBaseCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(CodeRun(bot))

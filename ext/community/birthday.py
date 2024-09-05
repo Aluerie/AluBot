@@ -14,9 +14,7 @@ from utils import checks, const, converters, formats, pages
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from bot.timer import Timer, TimerRecord
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext, Timer, TimerRecord
 
 
 CONGRATULATION_TEXT_BANK = (
@@ -355,10 +353,11 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             per_page=20,
             title="Birthday List",
             colour=const.Colour.blueviolet,
-            footer_text=f"DD/Month/YYYY format | With love, {guild.me.display_name}",
+            footer_text="DD/Month/YYYY format",
         )
         await pgs.start()
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Birthday(bot))

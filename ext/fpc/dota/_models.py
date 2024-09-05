@@ -284,7 +284,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
             canvas_w, canvas_h = canvas.size
             draw = ImageDraw.Draw(canvas)
 
-            def draw_items_row() -> float:
+            def draw_items_row() -> int:
                 """Draw items on a single row.
 
                 Returns height of the row to align other elements in the canvas.
@@ -441,7 +441,7 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
 
 
 if TYPE_CHECKING:
-    from utils import AluCog
+    from bot import AluCog
 
     # BETA TESTING USAGE
     # from .fpc.dota._models import beta_test_stratz_edit

@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING, Any, Self
 
 import discord
 
-from . import AluContext, AluView, const
+from bot import AluContext, AluView
+from utils import const
 
 if TYPE_CHECKING:
     from collections.abc import Callable

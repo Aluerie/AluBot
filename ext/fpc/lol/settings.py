@@ -15,8 +15,7 @@ from ..database_management import AddLoLPlayerFlags  # noqa: TCH001
 from ._models import lol_links
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
 
 log = logging.getLogger(__name__)

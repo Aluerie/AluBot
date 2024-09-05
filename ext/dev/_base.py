@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from utils import AluCog, ExtCategory, const, override
+from bot import AluCog, ExtCategory
+from utils.const import Emote
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from bot import AluContext
 
 category = ExtCategory(
     name="Developer tools",
-    emote=const.Emote.DankFix,
+    emote=Emote.DankFix,
     description="Tools for developers only",
 )
 

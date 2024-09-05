@@ -12,16 +12,15 @@ import discord
 from discord import app_commands
 from discord.ext import commands, menus
 
-from bot import AluBot
-from utils import aluloop, checks, const, errors, formats, pages
+from bot import AluBot, aluloop
+from utils import checks, const, errors, formats, pages
 
 from ._base import StatsCog
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
     class BatchLastYearEntry(TypedDict):
         emote_id: int
@@ -89,6 +88,7 @@ class EmoteStats(StatsCog):
         ----------
         message : discord.Message
             message to filter emotes from.
+
         """
         if message.guild is None or message.guild.id != const.Guild.community:
             # while we are testing this feature, let's only limit the data to the community server
@@ -212,8 +212,8 @@ class EmoteStats(StatsCog):
             Emote type to include in stats.
         timeframe : Literal["all-time", "year", "month"]
             Time period to filter results with.
-        """
 
+        """
         if emote_type == "both":
             condition = lambda _: True
         elif emote_type == "static":
@@ -350,8 +350,8 @@ class EmoteStats(StatsCog):
             Context
         emote : discord.Emoji
             Emote to get information/stats about.
-        """
 
+        """
         embed = (
             discord.Embed(
                 colour=const.Colour.blueviolet,
@@ -440,4 +440,5 @@ class EmoteStats(StatsCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(EmoteStats(bot))

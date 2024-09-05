@@ -7,7 +7,7 @@ import asyncpg
 import discord
 from discord import app_commands
 
-from utils import AluGuildContext, const, errors, formats, fuzzy
+from utils import const, errors, formats, fuzzy
 
 from . import FPCCog, views
 
@@ -16,8 +16,7 @@ if TYPE_CHECKING:
 
     from discord.ext import commands
 
-    from bot import AluBot
-    from utils import CONSTANTS, AluView
+    from bot import AluBot, AluGuildContext, AluView
     from utils.cache import KeysCache
 
     # currently

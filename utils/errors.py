@@ -1,3 +1,12 @@
+"""CUSTOM ERRORS.
+
+This file is basically a list of custom errors that I raise elsewhere in the code.
+The rule of thumb: If I write my own `raise` then it should raise an error from this list.
+
+The reason these errors are gathered together is so `ctx_cmd_errors.py` and such don't have to
+import half of the bot folders (i.e. translation error would always mean translator-package been imported)
+"""
+
 from __future__ import annotations
 
 import logging
@@ -27,26 +36,30 @@ class AluBotError(Exception):  # discord.DiscordException):
 
 class BadArgument(AluBotError):
     """My own BadArgument exception.
-    Analogy to commands.BadArgument but raised by my own conversions and conditions.
+
+    Analogy to `commands.BadArgument` but raised by my own conversions and conditions.
     """
 
     __slots__: tuple[str, ...] = ()
 
 
 class SomethingWentWrong(AluBotError):
-    """When something goes wrong and I want to notify the user about it."""
+    """When something goes wrong."""
 
     __slots__: tuple[str, ...] = ()
 
 
 class UserError(AluBotError):
-    """user made a mistake and I want to notify them about it."""
+    """User made a mistake."""
 
     __slots__: tuple[str, ...] = ()
 
 
 class ErroneousUsage(AluBotError):
-    """The exception does not mean an error happened. But rather some bad command usage.
+    """Erroneous usage of the bot features.
+
+    This exception does not mean an error in the bot happened. Or that it's a user mistake.
+    But instead, user didn't use the bot features correctly.
 
     Example, somebody uses `/text-to-speech stop` while the bot is not even in a voice chat.
     Well - it's not a real exception, but rather a bad usage, which is given in the command itself.
@@ -65,7 +78,7 @@ class SilentError(AluBotError):
 
 
 class ResponseNotOK(AluBotError):
-    """Raised we aiohttp session response is not OK.
+    """Raised when `aiohttp`'s session response is not OK.
 
     Sometimes we just specifically need to raise an error in those cases
     when response from `self.bot.session.get(url)` is not OK.
@@ -73,3 +86,12 @@ class ResponseNotOK(AluBotError):
     """
 
     __slots__: tuple[str, ...] = ()
+
+
+class TranslateError(AluBotError):
+    """Raised when there is an error in translate functionality."""
+
+    def __init__(self, status_code: int, text: str) -> None:
+        self.status_code: int = status_code
+        self.text: str = text
+        super().__init__(f"Google Translate responded with HTTP Status Code {status_code}")

@@ -1,4 +1,6 @@
-"""Since I have a weird set of functions that greatly differs for Public/Community/Hideout usage
+"""INTENTS AND PERMISSIONS.
+
+Since I have a weird set of functions that greatly differs for Public/Community/Hideout usage
 and thus they also differ in intents/permissions they require.
 
 Let's weight those intents/permissions to give ourselves a reasoning why this or that should be `True`.

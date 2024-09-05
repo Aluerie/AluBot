@@ -1,4 +1,6 @@
-"""The files in this folder are made for easier resetting of git-ignored `extensions/beta.py` file
+"""BASE IMPORT FILE FOR BETA.PY SANDBOX TESTING.
+
+The files in this folder are made for easier resetting of git-ignored `ext/beta.py` file
 where I do various beta testings in the test version of the bot.
 """
 #  pyright: basic
@@ -21,8 +23,8 @@ from discord import app_commands
 from discord.ext import commands, menus
 
 import config
-from bot import AluBot
-from utils import AluCog, AluContext, ExtCategory, aluloop, cache, checks, const, errors, formats, timezones
+from bot import AluBot, AluCog, AluContext, ExtCategory, aluloop
+from utils import cache, checks, const, errors, formats, timezones
 from utils.helpers import measure_time
 
 log = logging.getLogger(__name__)
@@ -36,6 +38,9 @@ category = ExtCategory(
 
 
 class BetaCog(AluCog, category=category):
+    """Base Class for BetaTest cog."""
+
+    @override
     async def cog_load(self) -> None:
         self.beta_task.clear_exception_types()
         self.beta_task.start()
@@ -47,4 +52,5 @@ class BetaCog(AluCog, category=category):
 
     @aluloop()
     async def beta_task(self) -> None:
+        """Task that is supposed to run just once to test stuff out."""
         ...

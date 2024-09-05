@@ -12,8 +12,7 @@ from ._base import ConfigGuildCog
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
 
 class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emote.PepoBeliever):
@@ -34,7 +33,6 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
 
         e = discord.Embed(title="Emote logging is turned on", colour=const.Colour.blueviolet)
         e.description = f"Now I will log emote create/delete/rename actions in {ch.mention}. Go try it!"
-        e.set_footer(text=f"With love, {ctx.guild.me.display_name}")
         e.set_thumbnail(url=ctx.guild.me.display_avatar.url)
         await ctx.reply(embed=e)
 
@@ -109,4 +107,5 @@ class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emo
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Prefix(bot))

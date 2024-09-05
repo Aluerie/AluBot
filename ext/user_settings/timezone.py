@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
 import zoneinfo
 from typing import TYPE_CHECKING, override
 
@@ -11,13 +12,14 @@ from discord.ext import commands
 from utils.timezones import TimeZone, TimeZoneTransformer  # noqa: TCH001
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 from ._base import UserSettingsBaseCog
 
 
 class TimezoneSetting(UserSettingsBaseCog):
+    """Manage your timezone settings."""
+
     @override
     async def cog_load(self) -> None:
         self.bot.initialize_tz_manager()
@@ -48,14 +50,16 @@ class TimezoneSetting(UserSettingsBaseCog):
         self, ctx: AluContext, *, timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
     ) -> None:
         """Retrieves info about a timezone."""
-        e = discord.Embed(title=timezone.label, colour=discord.Colour.blurple())
-        now_utc = discord.utils.utcnow()
-        dt = now_utc.astimezone(tz=zoneinfo.ZoneInfo(key=timezone.key))
-        e.add_field(name="Current Time", value=dt.strftime("%Y-%m-%d %I:%M %p"))
-        e.add_field(name="UTC Offset", value=self.bot.tz_manager.get_utc_offset_string(timezone.key, now_utc))
-        e.add_field(name="IANA Database Alias", value=timezone.key)
+        now = datetime.datetime.now(datetime.UTC)
+        dt = now.astimezone(tz=zoneinfo.ZoneInfo(key=timezone.key))
 
-        await ctx.send(embed=e)
+        embed = (
+            discord.Embed(colour=discord.Colour.blurple(), title=timezone.label)
+            .add_field(name="Current Time", value=dt.strftime("%Y-%m-%d %I:%M %p"))
+            .add_field(name="UTC Offset", value=self.bot.tz_manager.get_utc_offset_string(timezone.key, now))
+            .add_field(name="IANA Database Alias", value=timezone.key)
+        )
+        await ctx.send(embed=embed)
 
     @timezone.command(name="get")
     @app_commands.describe(user="The member to get the timezone of. Defaults to yourself.")
@@ -84,4 +88,5 @@ class TimezoneSetting(UserSettingsBaseCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(TimezoneSetting(bot))

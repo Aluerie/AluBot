@@ -7,7 +7,8 @@ import discord
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
-from utils import aluloop, const
+from bot import aluloop
+from utils import const
 
 from ._base import HideoutCog
 
@@ -112,5 +113,6 @@ class LeagueOfLegendsPatchChecker(HideoutCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     pass  # fok league patches
     # await bot.add_cog(LeagueOfLegendsPatchChecker(bot))

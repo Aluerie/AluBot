@@ -20,6 +20,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
 
+__all__ = ("plural",)
+
+
 class plural:  # noqa: N801
     """Helper class to format tricky plural nouns.
 

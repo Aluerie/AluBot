@@ -14,8 +14,9 @@ import orjson
 # from discord.utils import MISSING
 from lru import LRU
 
-from . import aluloop
-from .bases import errors
+from bot import aluloop
+
+from . import errors
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)

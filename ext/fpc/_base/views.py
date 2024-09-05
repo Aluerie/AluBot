@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING, Self, TypedDict, override
 import discord
 from discord.ext import menus
 
-from utils import AluView, const, errors, formats, pages
+from bot import AluView
+from utils import const, errors, formats, pages
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Mapping
 
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
     from .settings import AccountIDType, BaseSettings
 

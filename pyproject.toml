@@ -82,6 +82,9 @@ lint.ignore = [
     "ANN401",
     "D401",    # the imperative doc-string rule is kinda bullshit.
     "D100",    # docstring in a public module
+    "D104",    # Missing docstring in publick package. Otherwise spams __init__.py and such.
+    "D105",    # Missing docstring in magic method.
+    "D107",    # Missing docstring in `__init__`. 
     "D417",    # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
     "UP032",   # I use it for triple emotes stuff, please ruff, stfu
 ]

@@ -10,8 +10,7 @@ from utils import const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
 
 class ColourRolesView(discord.ui.View):
@@ -89,4 +88,5 @@ class ColourRoles(CommunityCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ColourRoles(bot))

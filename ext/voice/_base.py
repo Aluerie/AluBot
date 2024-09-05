@@ -1,8 +1,9 @@
-from utils import AluCog, ExtCategory, const
+from bot import AluCog, ExtCategory
+from utils.const import Emote
 
 category = ExtCategory(
     name="Voice chat",
-    emote=const.Emote.Ree,
+    emote=Emote.Ree,
     description="Text-To-Speech commands",
 )
 

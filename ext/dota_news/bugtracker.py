@@ -14,13 +14,13 @@ from discord.ext import commands
 from githubkit.exception import RequestError, RequestFailed
 from PIL import Image
 
-from utils import AluCog, aluloop, const
+from bot import AluCog, aluloop
+from utils import const
 
 if TYPE_CHECKING:
     from githubkit.rest import Issue, SimpleUser
 
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -165,6 +165,7 @@ class Comment(Action):
 
     @property
     def markdown_body(self) -> str:
+        """Convert GitHub issue body to Discord markdown-friendly string."""
         url_regex = re.compile(rf"({GITHUB_REPO_URL}/issues/(\d+))")
         body = url_regex.sub(r"[#\2](\1)", self.comment_body)
         body = "\n".join([line for line in body.splitlines() if line])
@@ -391,10 +392,11 @@ class BugTracker(AluCog):
 
     @aluloop(minutes=3)
     async def bugtracker_news_worker(self) -> None:
-        """The task to
-        * track GitHub events/comments in the Dota 2 Bug Tracker Repository
-        * analyze them and build Timelines
-        * send messages to news channel if Valve developers activity was spotted.
+        """Bugtracker News Task.
+
+        * tracks GitHub events/comments in the Dota 2 Bug Tracker Repository
+        * analyzes them and build Timelines
+        * sends messages to news channel if Valve developers activity was spotted.
         """
         log.debug("^^^ BugTracker task started ^^^")
 
@@ -552,4 +554,5 @@ class BugTracker(AluCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(BugTracker(bot))

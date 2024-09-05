@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING, Annotated, Any
 import discord
 from discord.ext import commands
 
-from utils import AluGuildContext, checks, const, errors, times
+from utils import checks, const, errors, times
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluGuildContext
 
 
 class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
@@ -129,4 +129,5 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ModerationCog(bot))

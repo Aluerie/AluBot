@@ -8,10 +8,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluCog
+from bot import AluCog
 
 if TYPE_CHECKING:
-    from utils import AluContext
+    from bot import AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)  # .DEBUG)

@@ -16,8 +16,7 @@ from utils import const, converters, formats
 from ._base import InfoCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
@@ -170,5 +169,6 @@ class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Info(bot))
     await bot.add_cog(StatsCommands(bot))

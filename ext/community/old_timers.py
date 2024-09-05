@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 
 import discord
 
-from utils import aluloop
+from bot import aluloop
 from utils.const import DIGITS, Channel, Colour, Emote, Guild, Role, User
 
 from ._base import CommunityCog
@@ -170,4 +170,5 @@ class OldTimers(CommunityCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(OldTimers(bot))

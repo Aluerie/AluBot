@@ -1,8 +1,9 @@
-from utils import AluCog, ExtCategory, const
+from bot import AluCog, ExtCategory
+from utils.const import Emote
 
 category = ExtCategory(
     name="Hideout",
-    emote=const.Emote.KURU,
+    emote=Emote.KURU,
     description="Hideout trash",
 )
 

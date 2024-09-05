@@ -19,8 +19,9 @@ from typing import TYPE_CHECKING, Any, Self, override
 import discord
 from discord.ext import menus
 
+from bot import AluContext, AluView
+
 from . import const
-from .bases import AluContext, AluView
 
 if TYPE_CHECKING:
     from bot import AluBot

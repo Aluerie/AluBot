@@ -9,7 +9,8 @@ import aiohttp
 import discord
 from discord.ext import commands
 
-from utils import aluloop, const
+from bot import aluloop
+from utils import const
 from utils.helpers import measure_time
 
 from .._base import BaseNotifications
@@ -17,8 +18,7 @@ from ._models import MatchToSend, NotCountedMatchToEdit, StratzMatchToEdit
 
 if TYPE_CHECKING:
     # from steam.ext.dota2 import LiveMatch # VALVE_SWITCH
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
     from utils.dota import LiveMatch
 
     class AnalyzeGetPlayerIDsQueryRow(TypedDict):

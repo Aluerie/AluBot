@@ -4,7 +4,7 @@ import datetime
 import platform
 from typing import TYPE_CHECKING, override
 
-from utils import aluloop
+from bot import aluloop
 
 from ._base import CommunityCog
 
@@ -43,4 +43,5 @@ class StatsVoiceChannels(CommunityCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(StatsVoiceChannels(bot))

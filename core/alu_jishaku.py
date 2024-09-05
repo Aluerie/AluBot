@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING
 
 from jishaku.cog import OPTIONAL_FEATURES, STANDARD_FEATURES
 
-from utils import AluCog, ExtCategory, const
+from bot import AluCog, ExtCategory
+from utils import const
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -16,7 +17,7 @@ category = ExtCategory(
 )
 
 
-class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=category): # type: ignore
+class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=category):  # type: ignore
     """My subclass to main frontend class for Jishaku.
 
     This implements all Features and is the main entry point for Jishaku.

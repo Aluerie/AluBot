@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, TypedDict, override
 
 import aiohttp
 
-from utils import aluloop
+from bot import aluloop
 
 from .._base import FPCCog
 

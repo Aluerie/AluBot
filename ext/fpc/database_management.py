@@ -12,8 +12,7 @@ if TYPE_CHECKING:
     import discord
     from discord import app_commands
 
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
     from .dota import DotaFPC
     from .lol import LolFPC
@@ -130,4 +129,5 @@ class FPCDatabaseManagement(FPCCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(FPCDatabaseManagement(bot))

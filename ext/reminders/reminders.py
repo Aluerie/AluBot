@@ -9,7 +9,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import AluContext, const, formats, pages, times
+from bot import AluContext
+from utils import const, formats, pages, times
 
 from ._base import RemindersCog
 
@@ -332,4 +333,5 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Reminder(bot))

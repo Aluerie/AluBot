@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any
 import discord
 from discord.ext import commands
 
-from utils import AluContext, const
+from bot import AluContext
+from utils import const
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -15,8 +16,7 @@ old_on_error = commands.Bot.on_error
 
 
 async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
-    """Called when an error is raised, and it's not from a command,
-    but most likely from an event listener.
+    """Called when an error is raised in an event listener.
 
     Parameters
     ----------
@@ -67,9 +67,11 @@ async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
     await self.exc_manager.register_error(exception, embed)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(_: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     commands.Bot.on_error = on_error  # type: ignore # self is discord.Client while we want it AluBot.
 
 
-async def teardown(bot: AluBot) -> None:
+async def teardown(_: AluBot) -> None:
+    """Unload AluBot extension. Framework of discord.py."""
     commands.Bot.on_error = old_on_error

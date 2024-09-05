@@ -11,8 +11,7 @@ from typing import TYPE_CHECKING, override
 
 import discord
 
-from .. import const, helpers
-from . import errors
+from utils import const, errors, helpers
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -34,7 +33,6 @@ async def on_views_modals_error(
 
     Basically, error handler for views and modals.
     """
-
     # error handler variables
     desc: str = "No description"
     is_unexpected: bool = False

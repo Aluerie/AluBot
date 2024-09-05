@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, TypedDict, override
 import aiohttp
 import asyncpg
 
-from utils import aluloop, const, lol
+from bot import aluloop
+from utils import const, lol
 
 from .._base import BaseNotifications
 from ._models import MatchToEdit, MatchToSend

@@ -19,8 +19,7 @@ from utils import const
 from ._base import InfoCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluContext
+    from bot import AluBot, AluContext
 
 
 class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.PepoG):
@@ -96,4 +95,5 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(DiscordInspect(bot))

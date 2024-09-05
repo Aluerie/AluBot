@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING, Self, override
 import discord
 from discord.ext import commands
 
-from utils import AluView, checks, const
+from bot import AluView
+from utils import checks, const
 
 from ._base import GuildSettingsCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
 
 class PrefixView(AluView):
@@ -119,4 +119,5 @@ class PrefixSettings(GuildSettingsCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(PrefixSettings(bot))

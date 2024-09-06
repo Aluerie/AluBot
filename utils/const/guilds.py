@@ -62,7 +62,7 @@ class UserEnum(SnowflakeEnum):
 
 
 class Guild:
-    """Discord Guild (or commonly called Servers)."""
+    """Discord known guild ids."""
 
     community = 702561315478044804
     hideout = 759916212842659850
@@ -81,6 +81,8 @@ PREMIUM_GUILDS = [Guild.community, Guild.hideout, Guild.stone]
 
 
 class EmoteGuilds(CONSTANTS):
+    """Discord IDs for Bot Emote Servers."""  # TODO: remove this when we sort out app emojis.
+
     DOTA = (1123282491294359563, 1123897964700643399, 1123898231198339083, 1123898374387662909)
     LOL = (1123898479308185691, 1123898578843205692, 1123899243304861718, 1123899449857548408)
     EMOTE = (1123901376435589173, 1123901447277379644, 1123901514289774632, 1123901546409762896)
@@ -88,6 +90,8 @@ class EmoteGuilds(CONSTANTS):
 
 
 class Channel(ChannelEnum):
+    """Discord IDs for known/special channels."""
+
     rules = 724996010169991198
     role_selection = 1099742867947262093
 
@@ -135,6 +139,8 @@ class Channel(ChannelEnum):
 
 
 class Role(RoleEnum):
+    """Discord IDs for known/special roles."""
+
     # COMMUNITY
     sister_of_the_veil = 821051642443071498
     bots = 724981475099017276
@@ -178,6 +184,8 @@ IGNORED_FOR_LOGS = [Role.voice, Role.live_stream, *CATEGORY_ROLES]
 
 
 class User(UserEnum):
+    """Discord IDs for known/special users/bots."""
+
     aluerie = 312204139751014400
     alubot = 713124699663499274
     yenbot = 1001856865631748159
@@ -191,6 +199,8 @@ MY_BOTS = [User.alubot, User.yenbot]
 
 class SavedGuild:
     """Represents a Discord Saved guild.
+
+    Type-hint friendly way to get my desired channels out of bot cache.
 
     This class is supposed to be subclassed in order
     to mirror structure of known Discord Guild with correct typing, i.e.
@@ -267,6 +277,11 @@ class SavedGuild:
 
 
 class CommunityGuild(SavedGuild):
+    """Community Server.
+
+    Just a small comfy server for my community that somehow find it across the Internet.
+    """
+
     def __init__(self, bot: AluBot) -> None:
         super().__init__(bot, Guild.community)
 
@@ -298,22 +313,27 @@ class CommunityGuild(SavedGuild):
 
     @property
     def comfy_spam(self) -> discord.TextChannel:
+        """Channel for peepoComfy emote spam."""
         return self.get_channel(Channel.comfy_spam, discord.TextChannel)
 
     @property
     def emote_spam(self) -> discord.TextChannel:
+        """Channel for emote spam."""
         return self.get_channel(Channel.emote_spam, discord.TextChannel)
 
     @property
     def logs(self) -> discord.TextChannel:
+        """Private channel to log stuff for moderation purposes."""
         return self.get_channel(Channel.logs, discord.TextChannel)
 
     @property
     def bot_spam(self) -> discord.TextChannel:
+        """Channel for bot spam."""
         return self.get_channel(Channel.bot_spam, discord.TextChannel)
 
     @property
     def nsfw_bot_spam(self) -> discord.TextChannel:
+        """Channel for NSFW bot spam."""
         return self.get_channel(Channel.nsfw_bot_spam, discord.TextChannel)
 
     @property
@@ -333,10 +353,12 @@ class CommunityGuild(SavedGuild):
 
     @property
     def dota_news(self) -> discord.TextChannel:
+        """Channel where dota news/announcements are posted."""
         return self.get_channel(Channel.dota_news, discord.TextChannel)
 
     @property
     def bugtracker_news(self) -> discord.TextChannel:
+        """Channel where my bot tracks Valve activity in the bugtracker."""
         return self.get_channel(Channel.bugtracker_news, discord.TextChannel)
 
     @property
@@ -357,56 +379,73 @@ class CommunityGuild(SavedGuild):
     # roles ############################################################################################################
     @property
     def sister_of_the_veil(self) -> discord.Role:
+        """Role with all permissions in community server."""
         return self.get_role(Role.sister_of_the_veil)
 
     @property
     def voice_role(self) -> discord.Role:
+        """Role given to voice chat users."""
         return self.get_role(Role.voice)
 
     @property
     def bots_role(self) -> discord.Role:
+        """Role for bots."""
         return self.get_role(Role.bots)
 
     @property
     def nsfw_bots_role(self) -> discord.Role:
+        """Role for NSFW bots."""
         return self.get_role(Role.nsfw_bots)
 
     @property
     def live_stream_role(self) -> discord.Role:
+        """Role for twitch.tv live streamers."""
         return self.get_role(Role.live_stream)
 
     @property
     def birthday_role(self) -> discord.Role:
+        """Role to mark people whose birthday is today."""
         return self.get_role(Role.birthday)
 
     @property
     def rolling_stone_role(self) -> discord.Role:
+        """Rolling stones flavour role."""
         return self.get_role(Role.rolling_stone)
 
     @property
     def stream_lover_role(self) -> discord.Role:
+        """Role for ping notifications about my stream."""
         return self.get_role(Role.stream_lover)
 
     @property
     def blacklisted(self) -> discord.Role:
+        """Blacklisted Role."""
         return self.get_role(Role.blacklisted)
 
 
 class HideoutGuild(SavedGuild):
+    """Hideout Server.
+
+    A private server of mine with all the notifications, project management, bot logs, reposts, sandbox, etc.
+    """
+
     def __init__(self, bot: AluBot) -> None:
         super().__init__(bot, Guild.hideout)
 
     # channels
     @property
     def global_logs(self) -> discord.TextChannel:
+        """Channel for AluBot global logs."""
         return self.get_channel(Channel.global_logs, discord.TextChannel)
 
     @property
     def spam_channel_id(self) -> int:
+        """Spam channel ID. Note that test version of the bot has different spam channel compared to main one."""
         return Channel.test_spam if self.bot.test else Channel.look_spam
 
     @property
     def spam(self) -> discord.TextChannel:
+        """Spam channel. Note that test version of the bot has different spam channel compared to main one."""
         return self.get_channel(self.spam_channel_id, discord.TextChannel)
 
     @property

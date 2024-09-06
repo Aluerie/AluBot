@@ -78,6 +78,7 @@ class ColourRolesDropdown(discord.ui.RoleSelect[ColourRolesView]):
 class ColourRoles(CommunityCog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
+        """Register/activate persistent view for Colour Roles dropdown."""
         self.bot.add_view(ColourRolesView())
 
     @commands.is_owner()

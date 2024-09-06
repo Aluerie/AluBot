@@ -16,6 +16,13 @@ if TYPE_CHECKING:
 
 
 class ChannelWatcher(HideoutCog):
+    """A template for a cog with a task of watching the channel.
+
+    This is just a precaution thing. For example, event pass watcher project is supposed to send a message
+    to its own discord channel once/hour. Meaning, if it didn't then something probably broke.
+    In that case AluBot will notify me.
+    """
+
     def __init__(
         self,
         bot: AluBot,
@@ -49,6 +56,10 @@ class ChannelWatcher(HideoutCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
+        """ACtually watch the channel.
+
+        Basically every message starts sleep timer after which we will conclude that something is broken.
+        """
         if message.channel.id == self.watch_channel_id:
             if self.sleep_task.is_running():
                 # a bit of shit-code: check if my glorious embed indicates ending
@@ -65,7 +76,8 @@ class ChannelWatcher(HideoutCog):
 
     @aluloop(count=1)
     async def sleep_task(self) -> None:
-        await asyncio.sleep(self.sleep_time)  # let's assume the longest possible game+q time is ~50 mins
+        """Sleep and if the bot fully slept -> send notification that something got broken."""
+        await asyncio.sleep(self.sleep_time)
         channel: discord.TextChannel = self.bot.get_channel(self.ping_channel_id)  # type: ignore
         e = discord.Embed(colour=const.Colour.maroon, title=self.__cog_name__)
         e.description = "The bot crashed but did not even send the message"
@@ -76,6 +88,8 @@ class ChannelWatcher(HideoutCog):
 
 
 class EventPassWatcher(ChannelWatcher):
+    """Event Pass Progress ChannelWatcher."""
+
     def __init__(self, bot: AluBot) -> None:
         super().__init__(
             bot,
@@ -91,6 +105,8 @@ DROPS_CHANNEL = 1074010096566284288
 
 
 class DropsWatcher(ChannelWatcher):
+    """League Pro Play Drops ChannelWatcher."""
+
     def __init__(self, bot: AluBot) -> None:
         super().__init__(
             bot,
@@ -103,5 +119,6 @@ class DropsWatcher(ChannelWatcher):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(EventPassWatcher(bot))
+    pass  # we don't play league anymore.
+    # await bot.add_cog(EventPassWatcher(bot))
     # await bot.add_cog(DropsWatcher(bot))

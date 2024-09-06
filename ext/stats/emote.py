@@ -206,8 +206,6 @@ class EmoteStats(StatsCog):
 
         Parameters
         ----------
-        ctx : AluGuildContext
-            Context
         emote_type : Literal["both", "static", "animated"]
             Emote type to include in stats.
         timeframe : Literal["all-time", "year", "month"]

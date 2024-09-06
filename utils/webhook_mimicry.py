@@ -8,9 +8,7 @@ from discord.ext import commands
 from . import errors
 
 if TYPE_CHECKING:
-    from bot import AluBot
-
-    from . import AluContext
+    from bot import AluBot, AluContext
 
     type WebhookSourceChannel = discord.ForumChannel | discord.VoiceChannel | discord.TextChannel | discord.StageChannel
 

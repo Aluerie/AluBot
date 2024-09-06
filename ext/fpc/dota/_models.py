@@ -313,7 +313,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
             items_h = draw_items_row()
 
-            def draw_abilities_row() -> float:
+            def draw_abilities_row() -> int:
                 """Draw row representing the order of abilities in skill order of the player."""
                 h = 37
 

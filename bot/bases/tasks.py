@@ -2,18 +2,19 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Coroutine, Sequence
-from typing import TYPE_CHECKING, Any, TypeVar, override
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, override
 
 import discord
 from discord.ext import tasks
 from discord.utils import MISSING
 
-from .cog import AluCog
-
 if TYPE_CHECKING:
     import datetime
 
-    from bot import AluBot
+    from ..bot import AluBot
+
+    class HasBotAttribute(Protocol):
+        bot: AluBot
 
 log = logging.getLogger(__name__)
 
@@ -23,9 +24,19 @@ _func = Callable[..., Coroutine[Any, Any, Any]]
 LF = TypeVar("LF", bound=_func)
 
 
+
 class AluLoop(tasks.Loop[LF]):
-    """Subclass for discord.ext.tasks.Loop
-    for extra standard needed functionality.
+    """My subclass for discord.ext.tasks.Loop.
+
+    Just extra boilerplate functionality.
+
+    Notes
+    -----
+    * This should be used inside a class that having `.bot` attribute for the purpose of error handling/typehinting.
+        such as AluCog, KeysCache, etc, because for convenience my function signatures are
+        `(self, cog: AluCog, *_: Any)` where `AluCog` is a fake type (the only thing that matters is that it has `.bot`)
+    * Thankfully, there is no real need to use tasks outside of cogs.
+
     """
 
     def __init__(
@@ -42,57 +53,31 @@ class AluLoop(tasks.Loop[LF]):
         super().__init__(coro, seconds, hours, minutes, time, count, reconnect, name)
         self._before_loop = self._base_before_loop
 
-    async def _base_before_loop(self, *args: Any) -> None:
-        """I want to give a standard coro to `_before_loop`.
+    async def _base_before_loop(self, cog: HasBotAttribute) -> None:  # *args: Any
+        """A standard coro to `_before_loop`.
 
         Otherwise every task has same
-        >>> @my_task.before_loop
-        >>> @other_task.before_loop
-        >>> async def my_task_before(self):
-        >>>     await self.bot.wait_until_ready()
-
+        ```py
+        @my_task.before_loop
+        @other_task.before_loop
+        async def my_task_before(self):
+            await self.bot.wait_until_ready()
+        ```
         fragment of code.
         """
-        # this will fail outside a cog
-        # but all my tasks are inside cogs anyway.
-        cog = args[0]
-        if isinstance(cog, AluCog):
-            await cog.bot.wait_until_ready()
+        await cog.bot.wait_until_ready()
 
     @override
-    async def _error(self, *args: Any) -> None:
-        """Same _error as in parent class but
-        added sending webhook notifications to my spam.
-        """
-        exception: Exception = args[-1]
-        # log.error('Unhandled exception in internal background task %r.', self.coro.__name__, exc_info=exception)
-
+    async def _error(self, cog: HasBotAttribute, exception: Exception) -> None:
+        """Same `_error` as in parent class but with `exc_manager` integrated."""
         embed = (
             discord.Embed(title=self.coro.__name__, colour=0xEF7A85)
             .set_author(name=f"{self.coro.__module__}: {self.coro.__qualname__}")
             .set_footer(text=f"aluloop: {self.coro.__name__}")
         )
-
-        # this will fail outside a cog or a bot class
-        # but all my tasks are inside those anyway.
-        cog: AluCog = args[0]
-        try:
-            # if isinstance(cog, AluCog):
-            # not that this code will work for task inside any class that has .bot as its attribute
-            # like we use it in cache class
-            await cog.bot.exc_manager.register_error(exception, embed)
-        except AttributeError:
-            bot: AluBot = args[0]
-            # if isinstance(cog, AluBot):
-            # this will work for tasks inside the bot class
-            await bot.exc_manager.register_error(exception, embed)
-        # otherwise we can't reach bot.exc_manager
-        # so maybe add some other webhook?
+        await cog.bot.exc_manager.register_error(exception, embed)
 
 
-# Slight note, if `discord.ext.tasks` gets extra cool features
-# which will be represented in a change of `tasks.loop` decorator/its signature
-# which we do not import/inherit so check out for updates in discord.py
 @discord.utils.copy_doc(tasks.loop)
 def aluloop(
     *,
@@ -104,6 +89,15 @@ def aluloop(
     reconnect: bool = True,
     name: str | None = None,
 ) -> Callable[[LF], AluLoop[LF]]:
+    """Copy-pasted `loop` decorator from `discord.ext.tasks` corresponding to AluLoop class.
+
+    Notes
+    -----
+    * if `discord.ext.tasks` gets extra cool features which will be represented in a change of `tasks.loop`
+        decorator/signature we would need to manually update this function (or maybe even AluLoop class)
+
+    """
+
     def decorator(func: LF) -> AluLoop[LF]:
         return AluLoop(
             func,

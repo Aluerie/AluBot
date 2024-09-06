@@ -136,6 +136,8 @@ class OpenDotaAPIRateLimiter(DotaAPIsRateLimiter):
 
 
 class OpenDotaClient(BaseClient):
+    """Pulsefire client for OpenDota API."""
+
     def __init__(self) -> None:
         self.rate_limiter = OpenDotaAPIRateLimiter()
         super().__init__(
@@ -150,14 +152,22 @@ class OpenDotaClient(BaseClient):
             ],
         )
 
-    async def get_match(self, *, match_id: int) -> schemas.OpenDotaAPI.Match:
+    async def get_match(self, *, match_id: int) -> schemas.OpenDotaAPI.GetMatch.Match:
+        """GET matches/{match_id}."""
         return await self.invoke("GET", f"/matches/{match_id}")  # type: ignore
 
-    async def request_parse(self, *, match_id: int) -> schemas.OpenDotaAPI.ParseJob:
+    async def request_parse(self, *, match_id: int) -> schemas.OpenDotaAPI.PostRequest.ParseJob:
+        """POST /request/{match_id}."""
         return await self.invoke("POST", f"/request/{match_id}")  # type: ignore
 
 
 class ODotaConstantsClient(BaseClient):
+    """Pulsefire client to work with OpenDota constants.
+
+    This client works with odota/dotaconstants repository.
+    https://github.com/odota/dotaconstants
+    """
+
     def __init__(self) -> None:
         self.rate_limiter = OpenDotaAPIRateLimiter()
         super().__init__(
@@ -174,27 +184,44 @@ class ODotaConstantsClient(BaseClient):
         )
 
     async def get_heroes(self) -> schemas.ODotaConstantsJson.Heroes:
-        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/heroes.json
+        """Get `heroes.json` data.
+
+        https://raw.githubusercontent.com/odota/dotaconstants/master/build/heroes.json
+        """
         return await self.invoke("GET", "/heroes.json")  # type: ignore
 
     async def get_ability_ids(self) -> schemas.ODotaConstantsJson.AbilityIDs:
-        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/ability_ids.json
+        """Get `ability_ids.json` data.
+
+        https://raw.githubusercontent.com/odota/dotaconstants/master/build/ability_ids.json
+        """
         return await self.invoke("GET", "/ability_ids.json")  # type: ignore
 
     async def get_abilities(self) -> schemas.ODotaConstantsJson.Abilities:
-        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/abilities.json
+        """Get `abilities.json` data.
+
+        https://raw.githubusercontent.com/odota/dotaconstants/master/build/abilities.json
+        """
         return await self.invoke("GET", "/abilities.json")  # type: ignore
 
     async def get_hero_abilities(self) -> schemas.ODotaConstantsJson.HeroAbilitiesData:
-        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/hero_abilities.json
+        """Get `hero_abilities.json` data.
+
+        https://raw.githubusercontent.com/odota/dotaconstants/master/build/hero_abilities.json.
+        """
         return await self.invoke("GET", "/hero_abilities.json")  # type: ignore
 
     async def get_items(self) -> schemas.ODotaConstantsJson.Items:
-        # https://raw.githubusercontent.com/odota/dotaconstants/master/build/items.json
+        """Get `items.json` data.
+
+        https://raw.githubusercontent.com/odota/dotaconstants/master/build/items.json
+        """
         return await self.invoke("GET", "/items.json")  # type: ignore
 
 
 class SteamWebAPIClient(BaseClient):
+    """Pulsefire client to work with Steam Web API."""
+
     def __init__(self) -> None:
         super().__init__(
             base_url="https://api.steampowered.com/",
@@ -208,6 +235,10 @@ class SteamWebAPIClient(BaseClient):
         )
 
     async def get_match_details(self, match_id: int) -> schemas.SteamWebAPI.MatchDetails:
+        """GET /IDOTA2Match_570/GetMatchDetails/v1/.
+
+        https://steamapi.xpaw.me/#IDOTA2Match_570/GetMatchDetails.
+        """
         queries = {"match_id": match_id}  # noqa F481
         return await self.invoke("GET", "/IDOTA2Match_570/GetMatchDetails/v1/")  # type: ignore
 
@@ -236,6 +267,8 @@ class StratzAPIRateLimiter(DotaAPIsRateLimiter):
 
 
 class StratzClient(BaseClient):
+    """Pulsefire client to boilerplate work with Stratz GraphQL queries."""
+
     def __init__(self) -> None:
         self.rate_limiter = StratzAPIRateLimiter()
         super().__init__(
@@ -256,6 +289,7 @@ class StratzClient(BaseClient):
     async def get_fpc_match_to_edit(
         self, *, match_id: int, friend_id: int
     ) -> schemas.StratzGraphQL.GetFPCMatchToEdit.ResponseDict:
+        """Queries info that I need to know in order to edit Dota 2 FPC notification."""
         query = """
         query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
             match(id: $match_id) {

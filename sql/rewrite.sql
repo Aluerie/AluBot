@@ -13,7 +13,7 @@ CREATE TABLE auto_sync (
 CREATE TABLE IF NOT EXISTS bot_vars (
     id BOOLEAN NOT NULL PRIMARY KEY DEFAULT TRUE,
     community_nickname_heartbeat TIMESTAMPTZ DEFAULT (NOW() at time zone 'utc'),
-    lol_patch TEXT,
+    lol_patch TEXT,  --deprecated
     twitch_last_offline TIMESTAMPTZ DEFAULT (NOW() at time zone 'utc'), -- used to track if my stream crashed
     
     -- only row with id=TRUE is allowed so you can use this table like this without WHERE clause

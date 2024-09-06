@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS botinfo (
     curr_rule_timer INTEGER DEFAULT (0),
     git_checked_dt TIMESTAMPTZ DEFAULT (now() at time zone 'utc'),
     dota_patch TEXT,
-    event_pass_is_live BOOLEAN DEFAULT (FALSE),
-    drop_watch_live BOOLEAN DEFAULT (FALSE)
+    event_pass_is_live BOOLEAN DEFAULT (FALSE),  --deprecated
+    drop_watch_live BOOLEAN DEFAULT (FALSE)  --deprecated
 );
 
 

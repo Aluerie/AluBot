@@ -64,10 +64,11 @@ class AluTwitchClient(twitchio.Client):
 
 
 class Streamer:
-    """My own helping class that unites `twitchio.User` and `twitch.Stream` together.
-    Do not confuse "streamer" with "user" or "stream" terms. It's meant to be a concatenation.
+    """Concatenation between `twitchio.User` and `twitch.Stream`.
 
-    The problem is neither classes have full information.
+    Do not confuse "streamer" with "user" or "stream" terms. This is meant to be a concatenation.
+    There is a weird problem that they both don't aren't enough separately.
+    While we need to fill into the same attributes for both online/offline streamers.
 
     Attributes
     ----------

@@ -87,6 +87,9 @@ lint.ignore = [
     "D107",    # Missing docstring in `__init__`. 
     "D417",    # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
     "UP032",   # I use it for triple emotes stuff, please ruff, stfu
+    # Warning incompatibilities
+    "D203", # one-blank-line-before-class
+    "D213", # multi-line-summary-second-line
 ]
 
 [tool.ruff.lint.per-file-ignores]

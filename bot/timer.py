@@ -145,14 +145,7 @@ class Timer(Generic[TimerDataT]):
 
 
 class TimerManager:
-    """Class to create and manage timers.
-
-    Attributes
-    ----------
-    bot : AluBot
-        The bot instance.
-
-    """
+    """Class to create and manage timers."""
 
     __slots__: tuple[str, ...] = ("name", "bot", "_have_data", "_current_timer", "_task")
 
@@ -170,6 +163,7 @@ class TimerManager:
         Please note if you use this class, you need to cancel the task when you're done with it.
         """
         await self.bot.wait_until_ready()
+
         try:
             while not self.bot.is_closed():
                 # can `asyncio.sleep` only for up to ~48 days reliably,
@@ -192,9 +186,7 @@ class TimerManager:
             embed = discord.Embed(
                 colour=0xFF8243,
                 title="Error in dispatching the timer",
-            ).set_footer(
-                text="TimerManager.dispatch_timers",
-            )
+            ).set_footer(text="TimerManager.dispatch_timers")
             await self.bot.exc_manager.register_error(exc, embed)
 
     async def wait_for_active_timers(self, *, days: int = 7) -> Timer[TimerMapping]:
@@ -356,6 +348,7 @@ class TimerManager:
         return timer
 
     async def short_timer_optimisation(self, seconds: float, timer: Timer[TimerMapping]) -> None:
+        """Optimisation for small timers, skipping the whole insert/delete from the database procedure."""
         await asyncio.sleep(seconds)
         event_name = f"{timer.event}_timer_complete"
         self.bot.dispatch(event_name, timer)

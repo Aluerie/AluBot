@@ -10,14 +10,13 @@ from steam.steamid import EType, SteamID
 
 from utils import checks, const, errors
 
-from .._base import Account, BaseSettings
+from ..base_classes import Account, BaseSettings
 
 # from steam import ID, InvalidID # VALVE_SWITCH
 from ..database_management import AddDotaPlayerFlags  # noqa: TCH001
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils import AluGuildContext
+    from bot import AluBot, AluGuildContext
 
 
 log = logging.getLogger(__name__)

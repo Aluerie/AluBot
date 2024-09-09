@@ -17,22 +17,29 @@ if TYPE_CHECKING:
 
 
 class RPSElement(NamedTuple):
-    number: int
+    """Player Move Attributes."""
+
+    number: int  # used for RPS math
     emote: str
     word: str
 
 
 class RPSChoice(Enum):
+    """Enum to describe all three moves of the game."""
+
     Rock = RPSElement(number=0, emote="\N{ROCK}", word="smashes")
     Paper = RPSElement(number=1, emote="\N{ROLLED-UP NEWSPAPER}", word="covers")
     Scissors = RPSElement(number=2, emote="\N{BLACK SCISSORS}", word="cut")
 
     @property
     def emote_name(self) -> str:
+        """Somewhat display name for the class. I like emote+word formatting a lot."""
         return f"{self.value.emote} {self.name}"
 
 
 class RPSView(AluView):
+    """Rock Paper Scissors View."""
+
     def __init__(
         self,
         *,
@@ -56,14 +63,12 @@ class RPSView(AluView):
         await self.message.edit(embed=e, view=None)
 
     async def bot_choice_edit(self) -> None:
+        """Edit the embed with bot's play move."""
         self.choices[self.player2] = random.choice(list(RPSChoice))
         await self.edit_embed_player_choice(self.player2)
 
-    @staticmethod
-    def choice_name(button: discord.ui.Button[RPSView]) -> str:
-        return f"{button.emoji} {button.label}"
-
     async def edit_embed_player_choice(self, player: discord.User | discord.Member) -> None:
+        """Edit the embed with player choice."""
         e = self.message.embeds[0].copy()
         e.set_field_at(
             2,
@@ -94,10 +99,11 @@ class RPSView(AluView):
             return False
 
     def result_str(self) -> tuple[str, discord.User | discord.Member | None]:
+        """Calculate and announce the result of the game."""
         choices_string = "\n".join([f"{n.mention}: {c.emote_name}" for n, c in self.choices.items()])
 
-        c1 = self.choices[self.player1] # choice 1
-        c2 = self.choices[self.player2] # choice 2
+        c1 = self.choices[self.player1]  # choice 1
+        c2 = self.choices[self.player2]  # choice 2
 
         def winning_choice(c1: RPSChoice, c2: RPSChoice) -> tuple[str, str, discord.User | discord.Member | None]:
             if (c1.value.number + 1) % 3 == c2.value.number:  # Player2 won bcs their move is +1 bigger than ~player1
@@ -112,6 +118,7 @@ class RPSView(AluView):
         return f"{choices_string}\n{winning_strings[0]}{ggwp}\n{winning_strings[1]}", winning_strings[2]
 
     async def rps_button_callback(self, interaction: discord.Interaction, choice: RPSChoice) -> None:
+        """Boiler-plate function for Rock/Scissor/Paper buttons as player move choices."""
         self.choices[interaction.user] = choice
 
         embed = discord.Embed(colour=const.Colour.blueviolet, description=f"You've chosen **{choice.emote_name}**")
@@ -128,21 +135,29 @@ class RPSView(AluView):
             self.stop()
 
     @discord.ui.button(label=RPSChoice.Rock.name, emoji=RPSChoice.Rock.value.emote, style=discord.ButtonStyle.red)
-    async def rock_button(self, interaction: discord.Interaction, _button: discord.ui.Button[Self]) -> None:
+    async def rock_button(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
+        """Button to play rock in a Rock Paper Scissors game."""
         await self.rps_button_callback(interaction, RPSChoice.Rock)
 
     @discord.ui.button(label=RPSChoice.Paper.name, emoji=RPSChoice.Paper.value.emote, style=discord.ButtonStyle.green)
-    async def paper_button(self, interaction: discord.Interaction, _button: discord.ui.Button[Self]) -> None:
+    async def paper_button(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
+        """Button to play paper in a Rock Paper Scissors game."""
         await self.rps_button_callback(interaction, RPSChoice.Paper)
 
     @discord.ui.button(
         label=RPSChoice.Scissors.name, emoji=RPSChoice.Scissors.value.emote, style=discord.ButtonStyle.blurple
     )
-    async def scissors_button(self, interaction: discord.Interaction, _button: discord.ui.Button[Self]) -> None:
+    async def scissors_button(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
+        """Button to play scissors in a Rock Paper SCissors game."""
         await self.rps_button_callback(interaction, RPSChoice.Scissors)
 
 
 class RockPaperScissorsCommand(FunCog):
+    """Just one command cog.
+
+    Rock Paper Scissors mini-game.
+    """
+
     @commands.hybrid_command(name="rock-paper-scissors", aliases=["rps", "rock_paper_scissors"])
     async def rps(self, ctx: AluGuildContext, user: discord.Member | discord.User) -> None:
         """Rock Paper Scissors game with @member."""

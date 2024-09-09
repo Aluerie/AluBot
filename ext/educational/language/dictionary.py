@@ -1,5 +1,8 @@
-"""## Original source:
-* RoboDanny's cogs.utils.buttons (license MPL v2 from Rapptz/RoboDanny)
+"""Dictionary.
+
+Source:
+-------
+* This code is plain shameless copy RoboDanny's `define` command (license MPL v2 from Rapptz/RoboDanny)
     https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/buttons.py.
 
 # todo: rework this according to my needs :x
@@ -41,7 +44,7 @@ def html_to_markdown(node: Any, *, include_spans: bool = False) -> str:
     for child in node:
         if child.tag == "i":
             text.append(f"{italics_marker}{child.text.strip()}{italics_marker}")
-            italics_marker = "_" if italics_marker == "*" else "*"  # type: ignore # xd
+            italics_marker = "_" if italics_marker == "*" else "*"
         elif child.tag == "b":
             if text and text[-1].endswith("*"):
                 text.append("\u200b")
@@ -165,8 +168,7 @@ class FreeDictionaryWord:
         snd = snd[0]
         pron = node.xpath("span[@class='pron']")
         if pron:
-            self.pronunciation = pron[0].text_content() + (pron[0].tail or "")
-            self.pronunciation = self.pronunciation.strip()
+            self.pronunciation = (pron[0].text_content() + (pron[0].tail or "")).strip()
 
         data_src = node.attrib.get("data-src")
         if data_src is not None:

@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw, ImageFont
 from utils import const, lol
 from utils.formats import human_timedelta
 
-from .._base import BaseMatchToEdit, BaseMatchToSend
+from ..base_classes import BaseMatchToEdit, BaseMatchToSend
 
 if TYPE_CHECKING:
     from pulsefire.schemas import RiotAPISchema
@@ -320,7 +320,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
     # from .fpc.lol._models import beta_test_edit_image
     # await beta_test_edit_image(self)
 
-    from ext.fpc.lol._models import MatchToEdit
+    from ext.fpc.lol.models import MatchToEdit
 
     await self.bot.initialize_league_pulsefire_clients()
     self.bot.initialize_cache_league()

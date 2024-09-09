@@ -140,7 +140,7 @@ class TwitchCog(CommunityCog):
             if isinstance(item, discord.Streaming):
                 stream_after = item
 
-        # todo: voice chat role like thing as in check when the bot dies/goes back to live
+        # TODO: voice chat role like thing as in check when the bot dies/goes back to live
         if live_streaming_role not in after.roles and stream_after is not None:  # friend started the stream
             await after.add_roles(live_streaming_role)
         elif live_streaming_role in after.roles and stream_after is None:  # friend ended the stream

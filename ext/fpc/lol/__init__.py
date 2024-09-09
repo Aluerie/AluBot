@@ -7,7 +7,6 @@ from utils import const
 from .notifications import Notifications
 from .settings import Settings
 from .summoner_check import SummonerNameCheck
-from .twitch_check import TwitchAccountCheck
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -17,7 +16,6 @@ class LolFPC(
     Notifications,
     Settings,
     SummonerNameCheck,
-    TwitchAccountCheck,
     emote=const.Emote.PogChampPepe,
     name="League of Legends FPC",  # careful with this name since it's used in `database_management.py`
 ):

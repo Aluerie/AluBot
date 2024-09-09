@@ -17,6 +17,11 @@ if TYPE_CHECKING:
     from bot import AluBot, AluGuildContext, Timer, TimerRecord
 
 
+class BirthdayTimerData(TypedDict):
+    user_id: int
+    year: int
+
+
 CONGRATULATION_TEXT_BANK = (
     "I hope your special day will bring you lots of happiness, love, and fun. You deserve them a lot. Enjoy!",
     "All things are sweet and bright. May you have a lovely birthday Night.",
@@ -80,22 +85,16 @@ GIF_URLS_BANK = (
 )
 
 
-def get_congratulation_text() -> str:
-    return f"{random.choice(CONGRATULATION_TEXT_BANK)} {const.Emote.peepoHappyDank}"
+def birthday_fmt(birthday_date: datetime.datetime) -> str:
+    """Format a date to show in the bot's embeds.
 
+    Example:
+    -------
+    Output: "28/August/2025"
 
-def get_congratulation_gif() -> str:
-    return random.choice(GIF_URLS_BANK)
-
-
-def birthday_string(bdate: datetime.datetime) -> str:
-    fmt = "%d/%B" if bdate.year == 1900 else "%d/%B/%Y"
-    return bdate.strftime(fmt)
-
-
-class BirthdayTimerData(TypedDict):
-    user_id: int
-    year: int
+    """
+    fmt = "%d/%B" if birthday_date.year == 1900 else "%d/%B/%Y"
+    return birthday_date.strftime(fmt)
 
 
 class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
@@ -112,6 +111,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
     @discord.utils.cached_property
     def birthday_channel(self) -> discord.TextChannel:
+        """The channel where birthday notifications are sent."""
         channel = self.community.logs if self.bot.test else self.community.bday_notifs
         return channel
 
@@ -137,7 +137,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 title="Birthday Confirmation",
                 description="Do you confirm that this is the correct date/timezone for your birthday?",
             )
-            .add_field(name="Date", value=birthday_string(dt))
+            .add_field(name="Date", value=birthday_fmt(dt))
             .add_field(name="Timezone", value=birthday.timezone.label)
             .set_footer(
                 text=(
@@ -188,7 +188,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
         embed = (
             discord.Embed(colour=ctx.author.colour, title="Your birthday is successfully set")
-            .add_field(name="Data", value=birthday_string(dt))
+            .add_field(name="Data", value=birthday_fmt(dt))
             .add_field(name="Timezone", value=birthday.timezone.label)
             .add_field(name="Next congratulations incoming", value=formats.format_dt(expires_at, "R"))
             .set_footer(text="Important! By submitting this information you agree it can be shown to anyone.")
@@ -245,12 +245,13 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         if row is None:
             e.description = "It's not set yet."
         else:
-            e.add_field(name="Date", value=birthday_string(row.expires_at.replace(year=row.data["year"])))
+            e.add_field(name="Date", value=birthday_fmt(row.expires_at.replace(year=row.data["year"])))
             e.add_field(name="Timezone", value=row["timezone"])
         await ctx.reply(embed=e)
 
     @commands.Cog.listener("on_birthday_timer_complete")
     async def birthday_congratulations(self, timer: Timer[BirthdayTimerData]) -> None:
+        """Send birthday notifications."""
         user_id = timer.data["user_id"]
         year = timer.data["year"]
 
@@ -290,15 +291,19 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             if year != 1900:
                 content += f"\n{member.display_name} is now {now.year - year} years old !"
 
-            e = discord.Embed(title=f"CONGRATULATIONS !!! {const.Emote.peepoRoseDank * 3}", color=member.color)
-            e.set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
-            e.description = get_congratulation_text()
-            footer_text = f"Their birthday is {birthday_string(now.replace(year=year))}; timezone: {timer.timezone}\n"
-            e.set_footer(text=footer_text)
-            e.set_thumbnail(url=member.display_avatar.url)
-            e.set_image(url=get_congratulation_gif())
+            embed = (
+                discord.Embed(
+                    color=member.color,
+                    title=f"CONGRATULATIONS !!! {const.Emote.peepoRoseDank * 3}",
+                    description=f"{random.choice(CONGRATULATION_TEXT_BANK)} {const.Emote.peepoHappyDank}",
+                )
+                .set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
+                .set_thumbnail(url=member.display_avatar.url)
+                .set_image(url=random.choice(GIF_URLS_BANK))
+                .set_footer(text=f"Their birthday: {birthday_fmt(now.replace(year=year))}. Timezone: {timer.timezone}.")
+            )
 
-            await self.birthday_channel.send(content=content, embed=e)
+            await self.birthday_channel.send(content=content, embed=embed)
 
             # create remove roles timer
             await self.bot.create_timer(
@@ -320,6 +325,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
     @commands.Cog.listener("on_remove_birthday_role_timer_complete")
     async def birthday_cleanup(self, timer: Timer[BirthdayTimerData]) -> None:
+        """Remove @Birthday Role from people when their birthday has passed."""
         user_id = timer.data["user_id"]
         birthday_role = self.community.birthday_role
         guild = self.community.guild
@@ -345,7 +351,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             birthday_person = guild.get_member(row.data["user_id"])
             if birthday_person is not None:
                 date = row.expires_at.astimezone(zoneinfo.ZoneInfo(key=row.timezone)).replace(year=row.data["year"])
-                string_list.append(f"{birthday_string(date)}, {row.timezone} - {birthday_person.mention}")
+                string_list.append(f"{birthday_fmt(date)}, {row.timezone} - {birthday_person.mention}")
 
         pgs = pages.EnumeratedPaginator(
             ctx,

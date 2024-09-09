@@ -13,8 +13,8 @@ from bot import aluloop
 from utils import const
 from utils.helpers import measure_time
 
-from .._base import BaseNotifications
-from ._models import MatchToSend, NotCountedMatchToEdit, StratzMatchToEdit
+from ..base_classes import BaseNotifications
+from .models import MatchToSend, NotCountedMatchToEdit, StratzMatchToEdit
 
 if TYPE_CHECKING:
     # from steam.ext.dota2 import LiveMatch # VALVE_SWITCH
@@ -213,7 +213,7 @@ class DotaFPCNotifications(BaseNotifications):
             # this means it returned 80, 70, ..., or even 0 matches.
             # Thus we consider this result corrupted since it can ruin editing logic.
             # We still forgive 90 though, should be fine.
-            send_log.warn("GC only fetched %s matches", len(live_matches))
+            send_log.warning("GC only fetched %s matches", len(live_matches))
             # thus do not update `self.top_live_matches`
         else:
             self.top_live_matches = live_matches

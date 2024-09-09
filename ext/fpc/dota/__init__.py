@@ -6,7 +6,6 @@ from utils import const
 
 from .notifications import DotaFPCNotifications
 from .settings import DotaFPCSettings
-from .twitch_check import DotaTwitchAccountCheck
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -15,7 +14,6 @@ if TYPE_CHECKING:
 class DotaFPC(
     DotaFPCNotifications,
     DotaFPCSettings,
-    DotaTwitchAccountCheck,
     emote=const.Emote.DankLove,
     name="Dota 2 FPC",  # careful with this name since it's used in `database_management.py`
 ):

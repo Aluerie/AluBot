@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from utils import const, formats
 
-from .._base import BaseMatchToEdit, BaseMatchToSend
+from ..base_classes import BaseMatchToEdit, BaseMatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -453,7 +453,7 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """
-    from ext.fpc.dota._models import StratzMatchToEdit
+    from ext.fpc.dota.models import StratzMatchToEdit
 
     await self.bot.initialize_dota_pulsefire_clients()
     self.bot.initialize_cache_dota()

@@ -1,21 +1,27 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from discord.ext import commands
 
 from utils import checks, errors, lol
 
-from ._base import FPCCog
+from .base_classes import FPCCog
 
 if TYPE_CHECKING:
     import discord
     from discord import app_commands
 
-    from bot import AluBot, AluGuildContext
+    from bot import AluBot, AluGuildContext, Timer
 
     from .dota import DotaFPC
     from .lol import LolFPC
+
+    class CheckAccRenamesQueryRow(TypedDict):
+        player_id: int
+        twitch_id: int
+        display_name: str
+
 
 # common flag descriptions
 NAME_FLAG_DESC = "Player name. if it's a twitch streamer then it should match their twitch handle."
@@ -99,6 +105,10 @@ class FPCDatabaseManagement(FPCCog):
     async def database_dota_remove_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for `/database dota remove` command.
+
+        Includes all pro players in the Dota 2 FPC database.
+        """
         return await self.dota_fpc_settings_cog.database_remove_autocomplete(interaction, current)
 
     @database.group(name="lol")
@@ -125,7 +135,36 @@ class FPCDatabaseManagement(FPCCog):
     async def database_lol_remove_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for `/database lol remove` command.
+
+        Includes all pro-players/streamers in the League FPC database.
+        """
         return await self.lol_fpc_settings_cog.database_remove_autocomplete(interaction, current)
+
+    @commands.Cog.listener("on_fpc_twitch_renames_check_timer_complete")
+    async def check_twitch_accounts_renames(self, timer: Timer) -> None:
+        """Checks if people in FPC database renamed themselves on twitch.tv.
+
+        I think we're using twitch ids everywhere so this timer is more for convenience matter
+        when I'm browsing the database, but still.
+        """
+        for table_name in ("dota_players", "lol_players"):
+            query = f"SELECT player_id, twitch_id, display_name FROM {table_name} WHERE twitch_id IS NOT NULL"
+            rows: list[CheckAccRenamesQueryRow] = await self.bot.pool.fetch(query)
+
+            for row in rows:
+                # todo: wtf fetch only one user ?!
+                user = next(iter(await self.bot.twitch.fetch_users(ids=[row["twitch_id"]])), None)
+
+                if user is None:
+                    continue
+                elif user.display_name != row["display_name"]:
+                    query = f"UPDATE {table_name} SET display_name=$1 WHERE player_id=$3"
+                    await self.bot.pool.execute(query, user.display_name, row["player_id"])
+        # TODO: periodic timer - create a new one
+        # TODO: maybe standardize the process of periodic timers
+        # TODO: remove twitch_check from other folders
+        # TODO: check if it's possible to fire a timer before cogs load in
 
 
 async def setup(bot: AluBot) -> None:

@@ -14,10 +14,14 @@ if TYPE_CHECKING:
 
 
 class MimicUserWebhook:
-    """This class aims to manage webhooks that are supposed
-    to mimic user message for various NQN inspired features.
+    """Management of Mimic Webhooks and features related to them.
 
-    for example, fix twitter/instagram links for them.
+    Mimic Webhook is a discord webhook that aims to mimic user (their profile picture and nickname)
+    and posts messages from their name.
+
+    Examples of usage:
+    * "Replace" users' messages with bad twitter/instagram links with fixed versions;
+    * NQN bot - imitate Nitro emotes;
     """
 
     def __init__(self, *, bot: AluBot, channel: WebhookSourceChannel, thread: discord.Thread | None) -> None:

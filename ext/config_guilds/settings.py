@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class Prefix(ConfigGuildCog, name="Server settings for the bot", emote=const.Emote.PepoBeliever):
-    r"""Change bot\'s config for the server.
+    """Change bot's config for the server.
 
     More to come.
     """

@@ -8,7 +8,7 @@ import aiohttp
 
 from bot import aluloop
 
-from .._base import FPCCog
+from ..base_classes import FPCCog
 
 if TYPE_CHECKING:
 

@@ -20,7 +20,7 @@ class DevUtilities(AluCog):
 
         Parameters
         ----------
-        characters : str
+        characters
             Input up to 10 characters to get format info about.
 
         """

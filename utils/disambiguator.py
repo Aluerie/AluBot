@@ -89,6 +89,7 @@ class Disambiguator:
         view: discord.ui.View = discord.utils.MISSING,
         ephemeral: bool = True,
     ) -> discord.Message | discord.InteractionMessage:
+        """Boiler plate function that replies for both cases of AluContext and discord.Interaction."""
         if isinstance(ctx_ntr, AluContext):
             # Context
             return await ctx_ntr.reply(embed=embed, view=view, ephemeral=ephemeral)

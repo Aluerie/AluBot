@@ -12,7 +12,7 @@ from . import FPCCog
 if TYPE_CHECKING:
     from bot import AluBot
 
-    from ._models import BaseMatchToEdit, BaseMatchToSend
+    from .models import BaseMatchToEdit, BaseMatchToSend
 
     class GetTwitchLivePlayerRow(TypedDict):
         twitch_id: int

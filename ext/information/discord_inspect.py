@@ -1,8 +1,11 @@
-"""The features in this file are about getting a basic information from directly discord that
-there is seemingly no easy way of getting in the app's UI itself (but would be nice).
+"""DISCORD INSPECTIONS.
 
-For example, a command `/profile picture` will get an avatar picture for a mentioned @member.
-This information is public and yet there is no easy way to get it without using tools like discord bots.
+Maybe a bad name, but it is supposed to contain features to get information that can be gotten directly from discord,
+but for some reason it is not easily available in the app UI itself.
+
+Such as view somebody's avatar picture.
+This information is public and yet there is no easy way to get it
+without using tools like discord bots or css inspection.
 """
 
 from __future__ import annotations
@@ -46,13 +49,15 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
         # ctx: AluGuildContext | discord.Interaction[AluBot],
         user: discord.User,
     ) -> discord.Embed:
-        """"""
-        embed = discord.Embed(colour=user.colour, title=f"Avatar for {user.display_name}").set_image(
-            url=user.display_avatar.url
-        )
+        """Embed for view user avatar related commands."""
+        embed = discord.Embed(
+            colour=user.colour,
+            title=f"Avatar for {user.display_name}",
+        ).set_image(url=user.display_avatar.url)
         return embed
 
     async def view_user_avatar(self, interaction: discord.Interaction, user: discord.User) -> None:
+        """Callback for context menu command "View User Avatar"."""
         embed = self.get_avatar_embed_worker(user)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 

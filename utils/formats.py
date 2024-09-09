@@ -413,10 +413,17 @@ def divmod_timedelta(total_seconds: int | float) -> str:
 
 
 def convert_pascal_case_to_spaces(text: str) -> str:
-    """Convert PascalCase string to space-separated one
-    i.e. convert "CommandNotFound" to "Command Not Found".
+    """Separate PascalCase string with spaces.
+
+    Examples
+    --------
+    * "CommandNotFound" -> "Command Not Found".
+
+    Source
+    ------
+    * https://stackoverflow.com/a/9283563/19217368
+
     """
-    # https://stackoverflow.com/a/9283563/19217368
     label = re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", text)
     return label
 
@@ -491,14 +498,19 @@ class TabularData:
 
 
 class RstTable(TabularData):
-    """_summary_
+    """RST Table for Discord Markdown Codeblocks.
 
+    Example:
+    -------
+    ```txt
     +-------+-----+
     | Name  | Age |
     +-------+-----+
     | Alice | 24  |
     |  Bob  | 19  |
     +-------+-----+
+    ```
+
     """
 
     def __init__(self) -> None:
@@ -506,11 +518,16 @@ class RstTable(TabularData):
 
 
 class NoBorderTable(TabularData):
-    """_summary_
+    """No line-border Table for Discord Markdown Codeblocks.
 
+    Example:
+    -------
+    ```txt
     Name  Age
     Alice  24
     Bob    19
+    ```
+
     """
 
     def __init__(self) -> None:

@@ -1,27 +1,32 @@
 from __future__ import annotations
 
+import datetime
 import random
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, TypedDict, override
 
 import discord
+from discord.ext import commands
 
 from bot import aluloop
-from utils.const import DIGITS, Channel, Colour, Emote, Guild, Role, User
+from utils.const import DIGITS, Channel, Colour, Emote, Role, User
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
-    from utils.database import PoolTypedWithAny
+    from bot import AluBot, Timer
+
+    class OldTimerTimerData(TypedDict):
+        """Schema."""
+
+        advice: int
+        important: int
+        fact: int
+        gif: int
+        rule: int
+        dynamic: int
 
 
-async def get_the_thing(txt_list: list[str], name: str, pool: PoolTypedWithAny) -> str:
-    query = f"UPDATE botinfo SET {name} = {name} + 1 WHERE id=$1 RETURNING {name}"
-    val = await pool.fetchval(query, Guild.community)
-    return txt_list[val % len(txt_list)]
-
-
-daily_reminders_txt = [
+ADVICE_BANK = [
     f"Hey chat, don't forget to spam some emotes in {Channel.comfy_spam} or {Channel.emote_spam}",
     f"Hey chat, if you see some high/elite MMR streamer pick PA/DW/Muerta - "
     f"don't hesitate to ping {User.aluerie} about it pretty please !",
@@ -39,12 +44,7 @@ daily_reminders_txt = [
     f"{Role.nsfw_bots} in {Channel.nsfw_bot_spam} by respectively checking pins in those channels.",
 ]
 
-
-async def get_a_text(pool: PoolTypedWithAny) -> str:
-    return await get_the_thing(daily_reminders_txt, "curr_timer", pool)
-
-
-daily_reminders_txt = [
+IMPORTANT_BANK = [
     f"Hey chat, check out rules in {Channel.rules}. Follow them or {Emote.bubuGun} {Emote.bubuGun} {Emote.bubuGun}",
     f"Hey chat, remember to grab some roles in {Channel.role_selection} including a custom colour from 140 available !",
     "Hey chat, if you have any suggestions about server/stream/emotes/anything - "
@@ -64,109 +64,134 @@ daily_reminders_txt = [
 ]
 
 
-async def get_important_text(pool: PoolTypedWithAny) -> str:
-    return await get_the_thing(daily_reminders_txt, "curr_important_timer", pool)
+FACT_BANK = [
+    "Hey chat, this server was created on 22/04/2020.",
+    'Hey chat, Aluerie made these "interesting daily fact about this server" messages but has no ideas.',
+    "Hey chat, <@135119357008150529> was the very first person to join this server - holy poggers.",
+]
 
+GIF_BANK = [
+    "https://media.discordapp.net/attachments/702561315478044807/950421428732325958/peepoSitSlide.gif",
+]
 
-async def get_fact_text(pool: PoolTypedWithAny) -> str:
-    async def get_msg_count(pool: PoolTypedWithAny) -> int:
-        query = "SELECT SUM(msg_count) FROM community_members"
-        val = await pool.fetchval(query)
-        return val
-
-    daily_reminders_txt = [
-        "Hey chat, this server was created on 22/04/2020.",
-        'Hey chat, Aluerie made these "interesting daily fact about this server" messages but has no ideas.',
-        f"Hey chat, {await get_msg_count(pool)} messages from people in total were sent in this server "
-        f"(which my bot tracked)",
-        f"Hey chat, <@135119357008150529> was the very first person to join this server - holy poggers "
-        f"{Emote.PogChampPepe}",
-        # idea to put there the most chatting person who has the most exp and stuff
-    ]
-    return await get_the_thing(daily_reminders_txt, "curr_fact_timer", pool)
-
-
-async def get_gif_text(pool: PoolTypedWithAny) -> str:
-    daily_reminders_txt = [
-        "https://media.discordapp.net/attachments/702561315478044807/950421428732325958/peepoSitSlide.gif"
-    ]
-    return await get_the_thing(daily_reminders_txt, "curr_gif_timer", pool)
-
-
-async def get_rule_text(pool: PoolTypedWithAny) -> str:
-    daily_reminders_txt = [
-        "Hey chat, follow étiqueté.",
-        f"Hey chat, remember the rule\n{DIGITS[1]} Respect everybody in the server. Be polite.",
-        f"Hey chat, remember the rule\n{DIGITS[2]} Keep the chat in English if possible so everyone understands.",
-        f"Hey chat, remember the rule\n{DIGITS[3]} No racism, sexism or homophobia.",
-        f"Hey chat, remember the rule\n{DIGITS[4]} No offensive language.",
-        f"Hey chat, remember the rule\n{DIGITS[5]} Spam is OK. That means as long as it doesn't completely clog chat up "
-        "and makes it unreadable then it's fine. And well #xxx_spam channels are created to be spammed.",
-        "Hey chat, follow étiqueté.",
-        f"Hey chat, remember the rule\n{DIGITS[6]} No spoilers of any kind "
-        "(this includes games stories and IRL-things like movies/tournaments/etc). ",
-        f"Hey chat, remember the rule\n{DIGITS[7]} No shady links.",
-        f"Hey chat, remember the rule\n{DIGITS[8]} Be talkative, have fun and enjoy your time! :3",
-        f"Hey chat, remember the rule\n{DIGITS[9]} Nothing that violates Discord [Terms Of Service]"
-        "(https://discord.com/terms) & follow [their guidelines](https://discord.com/guidelines)",
-        "Hey chat, remember the rule\n\N{KEYCAP TEN} Don't encourage others to break these rules.",
-    ]
-    return await get_the_thing(daily_reminders_txt, "curr_timer", pool)
+RULE_BANK = [
+    "Hey chat, follow étiqueté.",
+    f"Hey chat, remember the rule\n{DIGITS[1]} Respect everybody in the server. Be polite.",
+    f"Hey chat, remember the rule\n{DIGITS[2]} Keep the chat in English if possible so everyone understands.",
+    f"Hey chat, remember the rule\n{DIGITS[3]} No racism, sexism or homophobia.",
+    f"Hey chat, remember the rule\n{DIGITS[4]} No offensive language.",
+    f"Hey chat, remember the rule\n{DIGITS[5]} Spam is OK. That means as long as it doesn't completely clog chat up "
+    "and makes it unreadable then it's fine. And well #xxx_spam channels are created to be spammed.",
+    "Hey chat, follow étiqueté.",
+    f"Hey chat, remember the rule\n{DIGITS[6]} No spoilers of any kind "
+    "(this includes games stories and IRL-things like movies/tournaments/etc). ",
+    f"Hey chat, remember the rule\n{DIGITS[7]} No shady links.",
+    f"Hey chat, remember the rule\n{DIGITS[8]} Be talkative, have fun and enjoy your time! :3",
+    f"Hey chat, remember the rule\n{DIGITS[9]} Nothing that violates Discord [Terms Of Service]"
+    "(https://discord.com/terms) & follow [their guidelines](https://discord.com/guidelines)",
+    "Hey chat, remember the rule\n\N{KEYCAP TEN} Don't encourage others to break these rules.",
+]
 
 
 class OldTimers(CommunityCog):
+    """Old Timers."""
+
     @override
     async def cog_load(self) -> None:
-        self.daily_reminders.start()
-        self.daily_important_reminders.start()
-        self.daily_fact_reminders.start()
-        self.daily_gif_reminders.start()
-        self.daily_rule_reminders.start()
+        self.initiate_timer.start()
 
     @override
-    def cog_unload(self) -> None:
-        self.daily_reminders.cancel()
-        self.daily_important_reminders.cancel()
-        self.daily_fact_reminders.cancel()
-        self.daily_gif_reminders.cancel()
-        self.daily_rule_reminders.cancel()
+    async def cog_unload(self) -> None:
+        self.initiate_timer.cancel()
 
-    async def check_amount_messages(self, msg_amount: int = 10) -> bool:
-        async for msg in self.community.general.history(limit=msg_amount):
+    @aluloop(count=1)
+    async def initiate_timer(self) -> None:
+        """Initiate Timer."""
+        # we have to do this quirk bcs if we put this into cog load
+        # it will not have TimerManager initiated yet.
+        query = "SELECT id FROM timers WHERE event = $1"
+        value = await self.bot.pool.fetchval(query, "old_timer")
+        if value:
+            # the timer already exists
+            return
+
+        # the timer does not exist so we create it (again)
+        # probably cog wasn't loaded when event fired
+        # which is actually not addressed in the TimerManager logic...
+        now = datetime.datetime.now(datetime.UTC)
+        data: OldTimerTimerData = {"advice": 0, "important": 0, "dynamic": 0, "fact": 0, "gif": 0, "rule": 0}
+        await self.bot.create_timer(
+            event="old_timer",
+            expires_at=now + datetime.timedelta(hours=20),
+            data=data,
+        )
+
+    async def get_total_messages_number(self) -> str:
+        """Count total amount of messages in the community server (that my bot tracked)."""
+        # TODO: please rework this into a simple +1 thing at bot_vars or something
+        query = "SELECT SUM(msg_count) FROM community_members"
+        val = await self.bot.pool.fetchval(query)
+        desc = f"Hey chat, {val} messages from people in total were sent in this server (which my bot tracked)."
+        return desc
+
+    @commands.Cog.listener("on_old_timer_timer_complete")
+    async def old_timers(self, timer: Timer[OldTimerTimerData]) -> None:
+        """Post various reminders or flavour text in #general periodically."""
+        async for msg in self.community.general.history(limit=10):
             if msg.author == self.bot.user:
-                return True
-        return False
+                await self.bot.create_timer(
+                    event="old_timer",
+                    expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=2),
+                    data=timer.data,
+                )
+                return
 
-    async def timer_work(
-        self, title: str, colour: int, description: str, chance_limit: int = 2, msg_num: int = 10
-    ) -> None:
-        if random.randint(0, 100) > chance_limit or await self.check_amount_messages(msg_amount=msg_num):
-            return
-        e = discord.Embed(title=title, color=colour, description=description)
-        await self.community.general.send(embed=e)
-        return
+        timer_type = random.choices(
+            population=["embed", "gif", "dynamic"],
+            weights=[0.91, 0.08, 0.01],
+            k=1,
+        )[0]
 
-    @aluloop(minutes=107)
-    async def daily_reminders(self) -> None:
-        await self.timer_work("Daily Message", Colour.blueviolet, await get_a_text(self.bot.pool))
+        match timer_type:
+            case "embed":
+                # STATIC EMBED MESSAGE
+                data = random.choice(
+                    [
+                        ("Daily Message", Colour.blueviolet, "advice", ADVICE_BANK),
+                        ("Daily Important Message", Colour.darkslategray, "important", IMPORTANT_BANK),
+                        ("Daily Fact Message", Colour.slateblue, "fact", FACT_BANK),
+                        ("Daily Rule Message", 0x66FFBF, "rule", RULE_BANK),
+                    ]
+                )
 
-    @aluloop(minutes=109)
-    async def daily_important_reminders(self) -> None:
-        await self.timer_work("Daily Important Message", Colour.darkslategray, await get_important_text(self.bot.pool))
+                category = data[2]
+                timer.data[category] = index = timer.data[category] + 1
 
-    @aluloop(minutes=167)
-    async def daily_fact_reminders(self) -> None:
-        await self.timer_work("Daily Fact Message", Colour.slateblue, await get_fact_text(self.bot.pool))
+                embed = discord.Embed(colour=data[1], title=data[0], description=data[3][index % len(data[3])])
+                await self.community.general.send(embed=embed)
 
-    @aluloop(minutes=156)
-    async def daily_rule_reminders(self) -> None:
-        await self.timer_work("Daily Rule Message", 0x66FFBF, await get_rule_text(self.bot.pool))
+            case "gif":
+                category = "gif"
+                timer.data[category] = index = timer.data[category] + 1
+                await self.community.general.send(GIF_BANK[index % len(GIF_BANK)])
+            case "dynamic":
+                coro = random.choice(
+                    [
+                        self.get_total_messages_number,
+                    ]
+                )
+                desc = await coro()
+                embed = discord.Embed(colour=discord.Colour.blue(), title="Dynamic Fact", description=desc)
+                await self.community.general.send(embed=embed)
+            case _:
+                pass
 
-    @aluloop(minutes=107)
-    async def daily_gif_reminders(self) -> None:
-        if random.randint(0, 100) > 2 or await self.check_amount_messages():
-            return
-        await self.community.general.send(await get_gif_text(self.bot.pool))
+        await self.bot.create_timer(
+            event="old_timer",
+            expires_at=datetime.datetime.now(datetime.UTC)
+            + datetime.timedelta(minutes=random.randint(5 * 60 * 24, 15 * 60 * 24)),
+            data=timer.data,
+        )
 
 
 async def setup(bot: AluBot) -> None:

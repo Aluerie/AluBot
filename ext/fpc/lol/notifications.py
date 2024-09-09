@@ -9,8 +9,8 @@ import asyncpg
 from bot import aluloop
 from utils import const, lol
 
-from .._base import BaseNotifications
-from ._models import MatchToEdit, MatchToSend
+from ..base_classes import BaseNotifications
+from .models import MatchToEdit, MatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot

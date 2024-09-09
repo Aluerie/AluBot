@@ -10,9 +10,9 @@ from discord.ext import commands
 
 from utils import checks, const, errors, lol
 
-from .._base import Account, BaseSettings
+from ..base_classes import Account, BaseSettings
 from ..database_management import AddLoLPlayerFlags  # noqa: TCH001
-from ._models import lol_links
+from .models import lol_links
 
 if TYPE_CHECKING:
     from bot import AluBot, AluGuildContext

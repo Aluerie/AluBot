@@ -242,6 +242,14 @@ class SteamWebAPIClient(BaseClient):
         queries = {"match_id": match_id}  # noqa F481
         return await self.invoke("GET", "/IDOTA2Match_570/GetMatchDetails/v1/")  # type: ignore
 
+    async def get_real_time_stats(self, server_steam_id: int) -> schemas.SteamWebAPI.RealtimeStats:
+        """GET /IDOTA2Match_570/GetMatchDetails/v1/.
+
+        https://steamapi.xpaw.me/#IDOTA2MatchStats_570/GetRealtimeStats.
+        """
+        queries = {"server_steam_id": server_steam_id}  # noqa F481
+        return await self.invoke("GET", "/IDOTA2MatchStats_570/GetRealtimeStats/v1/")  # type: ignore
+
 
 class StratzAPIRateLimiter(DotaAPIsRateLimiter):
     @override

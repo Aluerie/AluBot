@@ -7,14 +7,11 @@ from __future__ import annotations
 
 import logging
 from time import perf_counter
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import discord
 
 from . import const, errors, formats
-
-if TYPE_CHECKING:
-    from types import TracebackType
 
 __all__ = ("measure_time",)
 
@@ -38,20 +35,18 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
 
     """
 
+    if TYPE_CHECKING:
+        start: float
+
     def __init__(self, name: str, *, logger: logging.Logger = log) -> None:
         self.name: str = name
         self.log: logging.Logger = logger
 
     def __enter__(self) -> Self:
-        self.start: float = perf_counter()
+        self.start = perf_counter()
         return self
 
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        exc_traceback: TracebackType | None,
-    ) -> None:
+    def __exit__(self, *_: Any) -> None:
         # PT for Performance Time, maybe there are better ideas for abbreviations.
         self.log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
 
@@ -60,12 +55,7 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
         self.start = perf_counter()
         return self
 
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        exc_traceback: TracebackType | None,
-    ) -> None:
+    async def __aexit__(self, *_: Any) -> None:
         # PT for Performance Time, maybe there are better ideas for abbreviations.
         self.log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
 

@@ -471,6 +471,8 @@ class ODotaConstantsJson:
 class SteamWebAPI:
     """Schemas for Steam Web API."""
 
+    # 1. GET MATCH DETAILS
+
     MatchDetailsAbilityUpgrades = TypedDict(
         "MatchDetailsAbilityUpgrades",
         {
@@ -562,5 +564,93 @@ class SteamWebAPI:
         "MatchDetails",
         {
             "result": MatchDetailsResult,
+        },
+    )
+
+    # 2. GET REAL TIME STATS
+
+    RealtimeStatsGraphData = TypedDict(
+        "RealtimeStatsGraphData",
+        {
+            "graph_gold": list[int]
+        }
+    )
+
+    RealtimeStatsBuilding = TypedDict(
+        "RealtimeStatsBuilding",
+        {
+            "team": Literal[2, 3],
+            "heading": float,
+            "type": int,
+            "lane": int,
+            "tier": int,
+            "x": float,
+            "y": float,
+            "destroyed": bool,
+        },
+    )
+
+    RealtimeStatsTeamPlayer = TypedDict(
+        "RealtimeStatsTeamPlayer",
+        {
+            "accountid": int,  # cSpell: ignore accountid
+            "playerid": Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],  # cSpell: ignore playerid
+            "name": str,
+            "team": Literal[2, 3],
+            "heroid": int,  # cSpell: ignore heroid
+            "level": int,
+            "kill_count": int,
+            "death_count": int,
+            "assists_count": int,
+            "denies_count": int,
+            "lh_count": int,
+            "gold": int,
+            "x": float,
+            "y": float,
+            "net_worth": int,
+            "abilities": list[int],
+            "items": list[int],
+            "team_slot": Literal[0, 1, 2, 3, 4],
+        },
+    )
+
+    RealtimeStatsTeam = TypedDict(
+        "RealtimeStatsTeam",
+        {
+            "team_number": Literal[2, 3],
+            "team_id": int,
+            "team_name": str,
+            "team_tag": str,
+            "team_logo": str,  # string-number
+            "score": int,
+            "net_worth": int,
+            "team_logo_url": str,
+            "players": list[RealtimeStatsTeamPlayer],
+        },
+    )
+
+    RealtimeStatsMatch = TypedDict(
+        "RealtimeStatsMatch",
+        {
+            "server_steam_id": str,  # string-number, my favourite
+            "match_id": str,  # string-number
+            "timestamp": int,
+            "game_time": int,
+            "game_mode": int,
+            "league_id": int,
+            "league_node_id": int,
+            "game_state": int,
+            "lobby_type": int,
+            "start_timestamp": int,
+        },
+    )
+
+    RealtimeStats = TypedDict(
+        "RealtimeStats",
+        {
+            "match": RealtimeStatsMatch,
+            "teams": list[RealtimeStatsTeam],
+            "buildings": list[RealtimeStatsBuilding],
+            "graph_data": RealtimeStatsGraphData,
         },
     )

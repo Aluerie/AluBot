@@ -28,7 +28,7 @@ githubkit
 pygit2==1.15.1
 
 # TTS
-gtts~=2.5.2
+gtts~=2.5.3
 ffmpeg
 
 # WebScrape
@@ -46,20 +46,20 @@ ipykernel; platform_system == 'Windows'
 # Bot's Base
 asyncpg==0.29.0
 asyncpg-stubs
-aiohttp==3.9.5
+aiohttp==3.10.8
 
 # Optimisation
 orjson
-uvloop==0.19.0; platform_system == 'Linux'  # ignore on non-Linux - because not available
+uvloop==0.20.0; platform_system == 'Linux'  # ignore on non-Linux - because not available
 
 # Uncategorised (or Other)
 aiofiles==24.1.0
 pillow==10.4.0
-emoji==2.12.1
-numpy==2.0.1
-urllib3==2.2.2
+emoji==2.13.2
+numpy==2.1.1
+urllib3==2.2.3
 wordcloud==1.9.3
-matplotlib==3.9.1
+matplotlib==3.9.2
 unidiff==0.7.5
 psutil==6.0.0
 click==8.1.7

@@ -12,12 +12,13 @@ twitchio[speed] @ git+https://github.com/PythonistaGuild/TwitchIO.git  # @mainta
 # Dota 2 (steamio)
 # my own branch with dota2 extension
 # steamio @ git+https://github.com/Aluerie/steam.py@introduce-ext.dota2
+steamio @ git+https://github.com/Aluerie/steam.py@test_relog_w_dota
 
 # Dota 2 (ValvePython)
-steam~=1.4.4
-protobuf~=3.20.1  # any later version won't work since they are based of protoc4
-dota2 @ git+https://github.com/Aluerie/dota2.git  # my own fork with updated proto
-vdf~=3.4
+# steam~=1.4.4
+# protobuf~=3.20.1  # any later version won't work since they are based of protoc4
+# dota2 @ git+https://github.com/Aluerie/dota2.git  # my own fork with updated proto
+# vdf~=3.4
 
 # League of Legends
 pulsefire~=2.0.12

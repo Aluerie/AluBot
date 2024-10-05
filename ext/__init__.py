@@ -51,7 +51,7 @@ except ModuleNotFoundError:
 
 # EXTENSIONS
 
-IGNORED_EXTENSIONS = "beta"  # these are ignored in main bot.
+IGNORED_EXTENSIONS = ("beta",)  # these are ignored in main bot.
 
 # Packages
 MY_PACKAGES = tuple(module.name for module in iter_modules(path=__path__))  # , prefix=f'{__package__}.'

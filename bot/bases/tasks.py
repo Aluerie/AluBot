@@ -16,13 +16,13 @@ if TYPE_CHECKING:
     class HasBotAttribute(Protocol):
         bot: AluBot
 
+
 log = logging.getLogger(__name__)
 
 __all__ = ("aluloop",)
 
 _func = Callable[..., Coroutine[Any, Any, Any]]
 LF = TypeVar("LF", bound=_func)
-
 
 
 class AluLoop(tasks.Loop[LF]):
@@ -64,6 +64,8 @@ class AluLoop(tasks.Loop[LF]):
             await self.bot.wait_until_ready()
         ```
         fragment of code.
+
+        Can still be overwritten it for custom behavior.
         """
         await cog.bot.wait_until_ready()
 
@@ -111,3 +113,13 @@ def aluloop(
         )
 
     return decorator
+
+
+"""Notes to myself that I'm not sure where to put
+
+* `before_loop/after_loop` only happens before/after the whole "loop" task is done,
+    it doesn't trigger before/after iteration. The name is clear.
+* `cancel` - not graceful. `stop` - graceful. I have no idea how to remember that.
+#TODO: maybe make a method for it? "graceful stop"
+* `after_loop` will be triggered after both `stop`/`cancel`. The way to distinguish is `is_being_cancelled` property.
+"""

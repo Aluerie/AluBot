@@ -30,7 +30,7 @@ ASCII_STARTING_UP_ART = r"""
 def setup_logging(test: bool) -> Generator[Any, Any, Any]:
     """Setup logging."""
     log = logging.getLogger()
-    log.setLevel(logging.INFO)
+    log.setLevel(logging.DEBUG)
 
     try:
         # Stream Handler

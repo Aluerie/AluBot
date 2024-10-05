@@ -400,16 +400,16 @@ class AluBot(commands.Bot, AluBotHelper):
 
             self.cache_lol = CacheLoL(self)
 
-    # async def initialize_dota(self) -> None:
-    #     """Initialize Dota 2 Client
+    async def initialize_dota(self) -> None:
+        """Initialize Dota 2 Client.
 
-    #     * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
-    #     """
-    #     if not hasattr(self, "dota"):
-    #         from utils.dota.dota2client import Dota2Client
+        * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
+        """
+        if not hasattr(self, "dota"):
+            from utils.dota.dota2client import Dota2Client
 
-    #         self.dota = Dota2Client(self)
-    #         await self.dota.login()
+            self.dota = Dota2Client(self)  # VALVE_SWITCH
+            # await self.dota.login()
 
     # async def initialize_dota(self) -> None:
     #     """Initialize Dota 2 Client.

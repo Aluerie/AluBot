@@ -36,6 +36,13 @@ class CacheLoL:
         self.summoner_spell = SummonerSpellKeysCache(bot)
         self.role = RolesCache(bot)
 
+    def close(self) -> None:
+        self.champion.close()
+        self.rune.close()
+        self.item.close()
+        self.summoner_spell.close()
+        self.role.close()
+
 
 BASE_URL = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/"
 

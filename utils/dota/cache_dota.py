@@ -39,6 +39,10 @@ class CacheDota:
         self.hero = HeroKeysCache(bot)
         self.item = ItemKeysCache(bot)
 
+    def close(self):
+        self.hero.close()
+        self.item.close()
+
 
 class HeroKeysCache(KeysCache):
     CDN = "https://cdn.cloudflare.steamstatic.com"

@@ -447,13 +447,13 @@ class AluBot(commands.Bot, AluBotHelper):
     @override
     async def close(self) -> None:
         """Close the connection to Discord while cleaning up other open sessions and clients."""
-        await super().close()
-        # if hasattr(self, "dota"):
-        #     await self.dota.close() # VALVE SWITCH
-        if hasattr(self, "session"):
-            await self.session.close()
         if hasattr(self, "twitch"):
             await self.twitch.close()
+
+        if hasattr(self, "cache_dota"):
+            self.cache_dota.close()
+        if hasattr(self, "cache_lol"):
+            self.cache_lol.close()
 
         # things to __aexit__()
         for client in [
@@ -467,6 +467,13 @@ class AluBot(commands.Bot, AluBotHelper):
         ]:
             if hasattr(self, client):
                 await getattr(self, client).__aexit__()
+        if hasattr(self, "dota"):
+            await self.dota.close()  # VALVE SWITCH
+
+        await super().close()
+        # session needs to be closed the last probably
+        if hasattr(self, "session"):
+            await self.session.close()
 
     @property
     def hideout(self) -> const.HideoutGuild:

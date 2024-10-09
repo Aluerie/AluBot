@@ -55,9 +55,16 @@ DOTA_FRIEND_ID = 123
 #               4. TWITCH                  #
 ############################################
 
-TWITCH_ACCESS_TOKEN = ""
-TWITCH_REFRESH_TOKEN = ""
-TWITCH_CLIENT_ID = ""
+# chat: read
+# chat: edit
+TTG_ACCESS_TOKEN: str = ""
+TTG_REFRESH_TOKEN: str = ""
+TTG_CLIENT_ID: str = ""
+
+# channel:read:redemptions
+TTG_IRENE_ACCESS_TOKEN: str = ""
+TTG_IRENE_REFRESh_TOKEN: str = ""
+TTG_IRENE_CLIENT_ID: str = ""
 
 ############################################
 #         5. WEBHOOK URL CATALOG           #

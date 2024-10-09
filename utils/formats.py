@@ -195,6 +195,7 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> s
 
     The Styles Example table:
     (it's copied from discord.py docs - click on TimestampStyle for the original).
+    ```ps1
     +-------------+----------------------------+-----------------+
     |    Style    |       Example Output       |   Description   |
     +=============+============================+=================+
@@ -212,6 +213,7 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> s
     +-------------+----------------------------+-----------------+
     | R           | 5 years ago                | Relative Time   |
     +-------------+----------------------------+-----------------+.
+    ```
     """
     return " ".join([format_dt(dt, letter) for letter in style_letters])
 

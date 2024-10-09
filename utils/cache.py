@@ -84,6 +84,10 @@ class KeysCache:
         self.update_data.change_interval(hours=24, minutes=random.randint(1, 59))
         self.update_data.start()
 
+    def close(self) -> None:
+        """Closes the keys cache."""
+        self.update_data.cancel()
+
     async def get_response_json(self, url: str) -> Any:
         """Get response.json() from url with data."""
         async with self.bot.session.get(url=url) as response:

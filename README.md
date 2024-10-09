@@ -241,3 +241,5 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         <td>Just aiohttp requests</td>
     </tr>
 </table>
+
+TODO: ^Finish this table

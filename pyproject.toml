@@ -64,7 +64,7 @@ lint.select = [
     "ICN",
     "DTZ",
     "ISC",
-    "D",   # for doc-string madness
+    # "D",   # for doc-string madness
 ]
 lint.ignore = [
     "F401",

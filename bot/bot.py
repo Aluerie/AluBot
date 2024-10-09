@@ -283,16 +283,16 @@ class AluBot(commands.Bot, AluBotHelper):
         # erm, bcs of my horrendous .test logic we need to do it in a weird way
         # todo: is there anything better ? :D
 
-        if not self.test or "ext.fpc.dota" in get_extensions(self.test):
-            from utils.dota.dota2client import Dota2Client
+        # if not self.test or "ext.fpc.dota" in get_extensions(self.test):
+        #     from utils.dota.dota2client import Dota2Client
 
-            self.dota = Dota2Client(self)
-            await asyncio.gather(
-                super().start(config.DISCORD_BOT_TOKEN, reconnect=True),
-                self.dota.login(),
-            )
-        else:
-            await super().start(config.DISCORD_BOT_TOKEN, reconnect=True)  # VALVE_SWITCH
+        #     self.dota = Dota2Client(self)
+        #     await asyncio.gather(
+        #         super().start(config.DISCORD_BOT_TOKEN, reconnect=True),
+        #         self.dota.login(),
+        #     )
+        # else:
+        await super().start(config.DISCORD_BOT_TOKEN, reconnect=True)  # VALVE_SWITCH
 
     @override
     async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:
@@ -400,27 +400,27 @@ class AluBot(commands.Bot, AluBotHelper):
 
             self.cache_lol = CacheLoL(self)
 
-    async def initialize_dota(self) -> None:
-        """Initialize Dota 2 Client.
-
-        * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
-        """
-        if not hasattr(self, "dota"):
-            from utils.dota.dota2client import Dota2Client
-
-            self.dota = Dota2Client(self)  # VALVE_SWITCH
-            # await self.dota.login()
-
     # async def initialize_dota(self) -> None:
     #     """Initialize Dota 2 Client.
 
     #     * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
     #     """
     #     if not hasattr(self, "dota"):
-    #         from utils.dota.valvepythondota2 import Dota2Client
+    #         from utils.dota.dota2client import Dota2Client
 
-    #         self.dota = Dota2Client(self)
-    #         await self.dota.login()
+    #         self.dota = Dota2Client(self)  # VALVE_SWITCH
+    #         # await self.dota.login()
+
+    async def initialize_dota(self) -> None:
+        """Initialize Dota 2 Client.
+
+        * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
+        """
+        if not hasattr(self, "dota"):
+            from utils.dota.valvepythondota2 import Dota2Client
+
+            self.dota = Dota2Client(self)
+            await self.dota.login()
 
     def initialize_github(self) -> None:
         """Initialize GitHub REST API Client."""
@@ -467,8 +467,8 @@ class AluBot(commands.Bot, AluBotHelper):
         ]:
             if hasattr(self, client):
                 await getattr(self, client).__aexit__()
-        if hasattr(self, "dota"):
-            await self.dota.close()  # VALVE SWITCH
+        # if hasattr(self, "dota"):
+        #     await self.dota.close()  # VALVE SWITCH
 
         await super().close()
         # session needs to be closed the last probably

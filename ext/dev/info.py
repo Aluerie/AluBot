@@ -76,8 +76,8 @@ class DevInformation(DevBaseCog):
         curious_packages = [
             "discord.py",
             "twitchio",
-            "steamio",  # VALVE_SWITCH
-            # "dota2",
+            "steam",  # VALVE_SWITCH
+            "dota2",
             "pulsefire",
         ]  # list of packages versions of which I'm interested the most
         pv = sys.version_info  # python version

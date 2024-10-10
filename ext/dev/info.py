@@ -5,7 +5,7 @@ import os
 import platform
 import socket
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import discord
 import pkg_resources
@@ -172,6 +172,19 @@ class DevInformation(DevBaseCog):
         embed.set_footer(text=f"{total_warnings} warning(s)")
         embed.description = "\n".join(description)
         await ctx.send(embed=embed)
+
+    @commands.hybrid_command(name="logs", hidden=True)
+    @checks.app.is_hideout()
+    async def logs(self, ctx: AluContext, project: Literal["AluBot", "Irene_s_Bot", "Gloria"]) -> None:
+        """(\N{GREY HEART} Hideout-Only) Get project's logs."""
+        await ctx.typing()
+        mapping = {
+            "AluBot": ".alubot/alubot.log",
+            "Irene_s_Bot": "../Irene_s_Bot/.temp/irenesbot.log",
+            "Gloria": "../Gloria/.steam.log",
+        }
+        logs_file = discord.File(mapping[project])
+        await ctx.reply(file=logs_file)
 
 
 async def setup(bot: AluBot) -> None:

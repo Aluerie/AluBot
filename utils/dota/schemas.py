@@ -2,6 +2,7 @@
 
 Note that it can be outdated, wrong, incomplete.
 """
+from __future__ import annotations
 
 from typing import Literal, NamedTuple, NotRequired, TypedDict
 
@@ -13,6 +14,10 @@ __all__ = (
     "GameCoordinatorAPI",
     "ODotaConstantsJson",
     "SteamWebAPI",
+    "StratzGetHeroesResponse",
+    "StratzGetAbilitiesResponse",
+    "StratzGetItemsResponse",
+    "StratzGetFacetsResponse",
 )
 
 
@@ -569,12 +574,7 @@ class SteamWebAPI:
 
     # 2. GET REAL TIME STATS
 
-    RealtimeStatsGraphData = TypedDict(
-        "RealtimeStatsGraphData",
-        {
-            "graph_gold": list[int]
-        }
-    )
+    RealtimeStatsGraphData = TypedDict("RealtimeStatsGraphData", {"graph_gold": list[int]})
 
     RealtimeStatsBuilding = TypedDict(
         "RealtimeStatsBuilding",
@@ -654,3 +654,119 @@ class SteamWebAPI:
             "graph_data": RealtimeStatsGraphData,
         },
     )
+
+
+# STRATZ: GET HEROES
+
+
+class StratzGetHeroesResponse(TypedDict):
+    """Constants data for Dota 2 Heroes from Stratz GraphQL API.
+
+    Information.
+    """
+
+    data: StratzHeroData
+
+
+class StratzHeroData(TypedDict):
+    constants: StratzHeroConstants
+
+
+class StratzHeroConstants(TypedDict):
+    heroes: list[StratzHero]
+
+
+class StratzHero(TypedDict):
+    id: int
+    shortName: str
+    displayName: str
+    abilities: list[StratzHeroAbility]
+    talents: list[StratzHeroTalent]
+    facets: list[StratzHeroFacet]
+
+
+class StratzHeroAbility(TypedDict):
+    id: int
+    name: str
+
+
+class StratzHeroTalent(TypedDict):
+    abilityId: int
+
+
+class StratzHeroFacet(TypedDict):
+    facetId: int
+
+
+# STRATZ: GET ABILITIES
+
+
+class StratzGetAbilitiesResponse(TypedDict):
+    data: StratzAbilityData
+
+
+class StratzAbilityData(TypedDict):
+    constants: StratzAbilityConstants
+
+
+class StratzAbilityConstants(TypedDict):
+    abilities: list[StratzAbility]
+
+
+class StratzAbility(TypedDict):
+    id: int
+    name: str
+    language: StratzAbilityLanguage
+    isTalent: bool
+
+
+class StratzAbilityLanguage(TypedDict):
+    displayName: str
+
+
+# STRATZ: GET ITEMS
+
+
+class StratzGetItemsResponse(TypedDict):
+    data: StratzItemData
+
+
+class StratzItemData(TypedDict):
+    constants: StratzItemConstants
+
+
+class StratzItemConstants(TypedDict):
+    items: list[StratzItem]
+
+
+class StratzItem(TypedDict):
+    id: int
+    shortName: str
+
+
+# STRATZ: GET FACETS
+
+
+class StratzGetFacetsResponse(TypedDict):
+    data: StratzFacetData
+
+
+class StratzFacetData(TypedDict):
+    constants: StratzFacetConstants
+
+
+class StratzFacetConstants(TypedDict):
+    facets: list[StratzFacet]
+
+
+class StratzFacet(TypedDict):
+    id: int
+    name: str
+    color: str
+    icon: str
+    language: StratzFacetLanguage
+    gradientId: int
+
+
+class StratzFacetLanguage(TypedDict):
+    displayName: str

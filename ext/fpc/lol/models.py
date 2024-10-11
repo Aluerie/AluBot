@@ -337,6 +337,6 @@ async def beta_test_edit_image(self: AluCog) -> None:
     )
 
     new_image = await post_match_player.edit_notification_image(
-        const.Picture.Placeholder640X360, discord.Colour.purple()
+        const.DotaAsset.Placeholder640X360, discord.Colour.purple()
     )
     new_image.show()

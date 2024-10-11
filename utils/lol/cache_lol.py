@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, TypedDict, override
 
 from roleidentification import get_roles
 
-from ..cache import KeysCache
+from ..cache import NewKeysCache
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
@@ -56,7 +56,7 @@ def cdragon_asset_url(path: str) -> str:
     return BASE_URL + path
 
 
-class ChampionKeysCache(KeysCache):
+class ChampionKeysCache(NewKeysCache):
     if TYPE_CHECKING:
         cached_data: ChampionCache
 
@@ -99,7 +99,7 @@ class ChampionKeysCache(KeysCache):
         return await self.get_value("icon_by_id", champion_id)
 
 
-class ItemKeysCache(KeysCache):
+class ItemKeysCache(NewKeysCache):
     async def fill_data(self) -> dict:
         items = await self.bot.cdragon.get_lol_v1_items()
 
@@ -114,7 +114,7 @@ class ItemKeysCache(KeysCache):
         return await self.get_value("icon_by_id", item_id)
 
 
-class RuneKeysCache(KeysCache):
+class RuneKeysCache(NewKeysCache):
     async def fill_data(self) -> dict:
         perks = await self.bot.cdragon.get_lol_v1_perks()
 
@@ -129,7 +129,7 @@ class RuneKeysCache(KeysCache):
         return await self.get_value("icon_by_id", rune_id)
 
 
-class SummonerSpellKeysCache(KeysCache):
+class SummonerSpellKeysCache(NewKeysCache):
     async def fill_data(self) -> dict:
         summoner_spells = await self.bot.cdragon.get_lol_v1_summoner_spells()
 
@@ -144,7 +144,7 @@ class SummonerSpellKeysCache(KeysCache):
         return await self.get_value("icon_by_id", summoner_spell_id)
 
 
-class RolesCache(KeysCache):
+class RolesCache(NewKeysCache):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(bot=bot)
         self.meraki_patch: str = "Unknown"

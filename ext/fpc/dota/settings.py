@@ -10,7 +10,7 @@ from discord.ext import commands
 # from steam import ID, InvalidID  # VALVE_SWITCH
 from steam.steamid import EType, SteamID
 
-from utils import checks, const, errors
+from utils import checks, const, errors, formats
 
 from ..base_classes import Account, BaseSettings
 from ..database_management import AddDotaPlayerFlags  # noqa: TCH001
@@ -127,7 +127,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     """
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
-        bot.initialize_cache_dota()
+        bot.instantiate_dota()
         super().__init__(
             bot,
             *args,
@@ -139,7 +139,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
             character_plural_word="heroes",
             account_cls=DotaAccount,
             account_typed_dict_cls=DotaAccountDict,
-            character_cache=bot.cache_dota.hero,
+            characters=bot.dota.heroes,
             emote_dict=const.DOTA_HERO_EMOTES,
             **kwargs,
         )
@@ -281,10 +281,8 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
         """
         await ctx.typing()
 
-        hero_id = await self.bot.cache_dota.hero.id_by_name(hero_name)
-
-        heroes_json = await self.bot.odota_constants.get_heroes()
-        hero_data = heroes_json[str(hero_id)]
+        hero_id = await self.bot.dota.heroes.id_by_display_name(hero_name)
+        hero = await self.bot.dota.heroes.by_id(hero_id)
 
         guild_id = const.EmoteGuilds.DOTA[3]
         guild = self.bot.get_guild(guild_id)
@@ -292,13 +290,13 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
             msg = f"Guild with id {guild_id} is `None`."
             raise errors.SomethingWentWrong(msg)
 
-        async with self.bot.session.get(url=hero_data["icon"]) as response:
+        async with self.bot.session.get(url=hero.minimap_icon_url) as response:
             if not response.ok:
                 msg = "Response for a new emote link wasn't okay"
                 raise errors.ResponseNotOK(msg)
 
             new_emote = await guild.create_custom_emoji(
-                name=hero_data["name"][14:],  # cut the "npc_dota_hero_" gibberish
+                name=formats.convert_camel_case_to_PascalCase(hero.short_name),
                 image=await response.read(),
             )
 
@@ -307,7 +305,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
             title="New Dota 2 Hero emote was created",
             description=f'```py\n{new_emote.name} = "{new_emote}"```',
         ).add_field(
-            name=await self.bot.cache_dota.hero.name_by_id(hero_id),
+            name=hero.display_name,
             value=str(new_emote),
         )
         await ctx.reply(embed=embed)

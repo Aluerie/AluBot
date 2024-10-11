@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from discord.ext import commands
 
     from bot import AluBot, AluGuildContext, AluView
-    from utils.cache import KeysCache
+    from utils.cache import CharacterCache
 
     # currently
     # * `steam_id` are `int`
@@ -187,7 +187,7 @@ class BaseSettings(FPCCog):
         character_plural_word: str,
         account_cls: type[Account],
         account_typed_dict_cls: type,
-        character_cache: KeysCache,
+        characters: CharacterCache,
         emote_dict: dict[int, str],
         **kwargs: Any,
     ) -> None:
@@ -207,12 +207,12 @@ class BaseSettings(FPCCog):
         self.account_id_column: str = self.account_table_columns[0]
 
         # cache attrs
-        self.character_name_by_id: Callable[[int], Awaitable[str]] = getattr(character_cache, "name_by_id")
-        self.character_alias_by_id: Callable[[int], Awaitable[str]] = getattr(character_cache, "alias_by_id")
-        self.character_id_by_name: Callable[[str], Awaitable[int]] = getattr(character_cache, "id_by_name")
-        self.character_name_by_id_cache: Callable[[], Awaitable[dict[int, str]]] = lambda: character_cache.get_cache(
-            "name_by_id"
-        )
+        # self.character_name_by_id: Callable[[int], Awaitable[str]] = getattr(character_cache, "name_by_id")
+        # self.character_id_by_name: Callable[[str], Awaitable[int]] = getattr(character_cache, "id_by_name")
+        # self.character_name_by_id_cache: Callable[[], Awaitable[dict[int, str]]] = lambda: character_cache.get_cache(
+        #     "name_by_id"
+        # )
+        self.characters: CharacterCache = characters
         self.emote_dict: dict[int, str] = emote_dict
 
         # setup messages cache
@@ -475,11 +475,8 @@ class BaseSettings(FPCCog):
         await ctx.typing()
         await self.is_fpc_channel_set(ctx)
 
-        name_by_id_cache = await self.character_name_by_id_cache()
-        name_by_id_cache.pop(0, None)  # 0 id is special
-
-        character_tuples: list[tuple[int, str]] = list(name_by_id_cache.items())
-        character_tuples.sort(key=lambda x: x[1])
+        character_tuples: list[tuple[int, str]] = await self.characters.id_display_name_tuples()
+        character_tuples.sort(key=lambda x: x[1])  # alphabetic sort
 
         paginator = views.FPCSetupCharactersPaginator(ctx, character_tuples, self)
         message = await paginator.start()
@@ -610,35 +607,102 @@ class BaseSettings(FPCCog):
 
     async def hideout_player_add(self, ctx: AluGuildContext, player_name: str) -> None:
         """Base function for `/{game}-fpc player add` Hideout-only command."""
-        await self.hideout_add_worker(ctx, player_name, self.get_player_tuple, "player", "player")
+        await ctx.typing()
+        player_id, player_display_name = await self.get_player_tuple(player_name)
+
+        query = f"INSERT INTO {self.prefix}_favourite_players (guild_id, player_id) VALUES ($1, $2)"
+        try:
+            await ctx.pool.execute(query, ctx.guild.id, player_id)
+        except asyncpg.UniqueViolationError:
+            msg = f"Player {player_display_name} was already in your favourite list."
+            raise errors.BadArgument(msg)
+
+        embed = discord.Embed(colour=self.colour).add_field(
+            name="Successfully added a player to your favourites.",
+            value=player_display_name,
+        )
+        await ctx.reply(embed=embed)
 
     async def hideout_player_remove(self, ctx: AluGuildContext, player_name: str) -> None:
         """Base function for `/{game}-fpc player remove` Hideout-only command."""
-        await self.hideout_remove_worker(ctx, player_name, self.get_player_tuple, "player", "player")
+        await ctx.typing()
+        player_id, player_display_name = await self.get_player_tuple(player_name)
+
+        query = f"DELETE FROM {self.prefix}_favourite_players WHERE guild_id=$1 AND player_id=$2"
+        result = await ctx.pool.execute(query, ctx.guild.id, player_id)
+        if result == "DELETE 1":
+            embed = discord.Embed(
+                colour=self.colour,
+                title="Successfully removed the player from your favourites.",
+                description=player_display_name,
+            )
+            await ctx.reply(embed=embed)
+        elif result == "DELETE 0":
+            msg = f"Player {player_display_name} is already not in your favourite list."
+            raise errors.BadArgument(msg)
+        else:
+            msg = "Unknown error."
+            raise errors.BadArgument(msg)
 
     async def get_character_tuple(self, character_name: str) -> tuple[int, str]:
         try:
-            character_id = await self.character_id_by_name(character_name)
+            character_id = await self.characters.id_by_display_name(character_name)
         except KeyError:
             msg = (
                 f"{self.character_singular_word.capitalize()} {character_name} does not exist. "
                 "Please, double check everything."
             )
             raise errors.BadArgument(msg)
-        character_display_name = await self.character_name_by_id(character_id)
+        character_display_name = await self.characters.display_name_by_id(character_id)
         return character_id, character_display_name
 
     async def hideout_character_add(self, ctx: AluGuildContext, character_name: str) -> None:
         """Base function for `/{game}-fpc {character} add` Hideout-only command."""
-        await self.hideout_add_worker(
-            ctx, character_name, self.get_character_tuple, "character", self.character_singular_word
+        await ctx.typing()
+        character_id, character_display_name = await self.get_character_tuple(character_name)
+
+        query = f"INSERT INTO {self.prefix}_favourite_characters (guild_id, character_id) VALUES ($1, $2)"
+        try:
+            await ctx.pool.execute(query, ctx.guild.id, character_id)
+        except asyncpg.UniqueViolationError:
+            msg = (
+                f"{self.character_singular_word.capitalize()} {character_display_name} "
+                "was already in your favourite list."
+            )
+            raise errors.BadArgument(msg)
+
+        embed = discord.Embed(colour=self.colour).add_field(
+            name=f"Successfully added a {self.character_singular_word} to your favourites.",
+            value=character_display_name,
         )
+        await ctx.reply(embed=embed)
 
     async def hideout_character_remove(self, ctx: AluGuildContext, character_name: str) -> None:
         """Base function for `/{game}-fpc {character} remove` Hideout-only command."""
         await self.hideout_remove_worker(
             ctx, character_name, self.get_character_tuple, "character", self.character_singular_word
         )
+        await ctx.typing()
+        character_id, character_display_name = await self.get_character_tuple(character_name)
+
+        query = f"DELETE FROM {self.prefix}_favourite_characters WHERE guild_id=$1 AND character_id=$2"
+        result = await ctx.pool.execute(query, ctx.guild.id, character_id)
+        if result == "DELETE 1":
+            embed = discord.Embed(
+                colour=self.colour,
+                title=f"Successfully removed a {self.character_singular_word} from your favourites.",
+                description=character_display_name,
+            )
+            await ctx.reply(embed=embed)
+        elif result == "DELETE 0":
+            msg = (
+                f"{self.character_singular_word.capitalize()} {character_display_name} "
+                "is already not in your favourite list."
+            )
+            raise errors.BadArgument(msg)
+        else:
+            msg = "Unknown error."
+            raise errors.BadArgument(msg)
 
     async def get_player_list_embed(self, guild_id: int) -> discord.Embed:
         query = f"""
@@ -669,7 +733,7 @@ class BaseSettings(FPCCog):
             character_id for (character_id,) in await self.bot.pool.fetch(query, guild_id)
         ]
         favourite_character_names = (
-            "\n".join([await self.character_name_by_id(i) for i in favourite_character_ids]) or "Empty list"
+            "\n".join([await self.characters.display_name_by_id(i) for i in favourite_character_ids]) or "Empty list"
         )
         return discord.Embed(
             colour=self.colour,
@@ -713,8 +777,7 @@ class BaseSettings(FPCCog):
             character_id for (character_id,) in await interaction.client.pool.fetch(query, interaction.guild_id)
         ]
 
-        name_by_id_cache = await self.character_name_by_id_cache()
-        name_by_id_cache.pop(0, None)  # 0 id is special
+        name_by_id_cache = await self.characters.id_display_name_dict()
 
         if mode_add_remove:
             # add

@@ -87,5 +87,5 @@ def error_handler_response_embed(error: Exception, is_unexpected: bool, desc: st
         # error was expected and has expected `desc` answer template
         embed = discord.Embed(colour=const.Colour.maroon, description=desc)
         if not isinstance(error, errors.ErroneousUsage):
-            embed.set_author(name=formats.convert_pascal_case_to_spaces(error.__class__.__name__))
+            embed.set_author(name=formats.convert_PascalCase_to_spaces(error.__class__.__name__))
         return embed

@@ -166,7 +166,7 @@ class DotaFPCNotifications(BaseNotifications):
                     )
 
                     if channel_spoil_tuples:
-                        hero_name = await self.bot.cache_dota.hero.name_by_id(hero_id)
+                        hero_name = await self.bot.dota.heroes.display_name_by_id(hero_id)
                         send_log.debug("%s - %s", user["display_name"], hero_name)
                         match_to_send = MatchToSend(
                             self.bot,
@@ -276,39 +276,40 @@ class DotaFPCNotifications(BaseNotifications):
                 # TODO: maybe edit the match with opendota instead? to have at least some data
 
             try:
-                stratz_data = await self.bot.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
+                stratz_data = await self.bot.dota.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
             except aiohttp.ClientResponseError as exc:
                 edit_log.warning("%s Stratz API Resp: Not OK, Status `%s`", log_str, exc.status)
                 continue
 
             if not stratz_data["data"]["match"]:
-                # This is None when conditions under "*" below happen
-                # which we have to separate
-                try:
-                    match_details = await self.bot.steam_web_api.get_match_details(match_id)
-                except aiohttp.ClientResponseError as exc:
-                    edit_log.warning("SteamWebAPI: it's down? status `%s`", exc.status)  # exc_info = true
-                    # we can't confirm if any of "*" conditions are true
-                    # so we will have to rely on other elif/else in future loops
-                    continue
+                continue # idk fuck my life, GetMatchDetails does not work.
+                # # This is None when conditions under "*" below happen
+                # # which we have to separate
+                # try:
+                #     match_details = await self.bot.dota.steam_web_api.get_match_details(match_id)
+                # except aiohttp.ClientResponseError as exc:
+                #     edit_log.warning("SteamWebAPI: it's down? status `%s`", exc.status)  # exc_info = true
+                #     # we can't confirm if any of "*" conditions are true
+                #     # so we will have to rely on other elif/else in future loops
+                #     continue
 
-                try:
-                    duration = match_details["result"]["duration"]
-                except KeyError:
-                    edit_log.warning("%s SteamWebAPI: KeyError - match is not ready (still live?).", log_str)
-                    edit_log.warning("%s", match_details)
-                    continue
+                # try:
+                #     duration = match_details["result"]["duration"]
+                # except KeyError:
+                #     edit_log.warning("%s SteamWebAPI: KeyError - match is not ready (still live?).", log_str)
+                #     edit_log.warning("%s", match_details)
+                #     continue
 
-                if duration < 900:  # 15 minutes (stratz excluded some 11 minutes games too)
-                    # * Game did not count
-                    # * Game was less than 10 minutes
-                    edit_log.info("%s SteamWebAPI: match did not count. Deleting the match.", log_str)
-                    match_to_edit = NotCountedMatchToEdit(self.bot)
-                else:
-                    # * Game is still live
-                    # * Steam Web API / Dota 2 Game Coordinator is dying
-                    edit_log.warning("%s SteamWebAPI: match is not ready (still live or GC dying).", log_str)
-                    continue
+                # if duration < 900:  # 15 minutes (stratz excluded some 11 minutes games too)
+                #     # * Game did not count
+                #     # * Game was less than 10 minutes
+                #     edit_log.info("%s SteamWebAPI: match did not count. Deleting the match.", log_str)
+                #     match_to_edit = NotCountedMatchToEdit(self.bot)
+                # else:
+                #     # * Game is still live
+                #     # * Steam Web API / Dota 2 Game Coordinator is dying
+                #     edit_log.warning("%s SteamWebAPI: match is not ready (still live or GC dying).", log_str)
+                #     continue
 
             elif not stratz_data["data"]["match"]["statsDateTime"]:
                 edit_log.warning("%s Parsing was not finished.", log_str)
@@ -338,7 +339,7 @@ class DotaFPCNotifications(BaseNotifications):
         return discord.Embed(
             colour=discord.Colour.blue(),
             title="Stratz RateLimits",
-            description=self.bot.stratz.rate_limiter.rate_limits_string,
+            description=self.bot.dota.stratz.rate_limiter.rate_limits_string,
         )
 
     @commands.command(hidden=True)
@@ -353,7 +354,7 @@ class DotaFPCNotifications(BaseNotifications):
         Stratz has daily ratelimit of 10000 requests and it might be a scary one, if parsing requests fail a lot.
         This is why we also send @mention if ratelimit is critically low.
         """
-        content = f"<@{self.bot.owner_id}>" if self.bot.stratz.rate_limiter.rate_limits_ratio < 0.1 else ""
+        content = f"<@{self.bot.owner_id}>" if self.bot.dota.stratz.rate_limiter.rate_limits_ratio < 0.1 else ""
         await self.hideout.logger.send(content=content, embed=self.get_ratelimit_embed())
 
 

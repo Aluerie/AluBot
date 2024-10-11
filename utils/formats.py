@@ -414,7 +414,7 @@ def divmod_timedelta(total_seconds: int | float) -> str:
     return "".join(f"{letter}{number}" for letter, number in timeunit_dict.items() if number)
 
 
-def convert_pascal_case_to_spaces(text: str) -> str:
+def convert_PascalCase_to_spaces(text: str) -> str:  # noqa: N802 # sorry, I always forget what case is what.
     """Separate PascalCase string with spaces.
 
     Examples
@@ -428,6 +428,21 @@ def convert_pascal_case_to_spaces(text: str) -> str:
     """
     label = re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", text)
     return label
+
+
+def convert_camel_case_to_PascalCase(text: str) -> str:  # noqa: N802 # sorry, I always forget what case is what.
+    """Convert camel_case string into PascalCase.
+
+    Examples
+    --------
+    * "snake_case_name" -> "SnakeCaseName".
+
+    Source
+    ------
+    * https://stackoverflow.com/a/1176023/19217368 (last section of the answer)
+
+    """
+    return "".join(word.title() for word in text.split("_"))
 
 
 LiteralAligns = Literal["^", "<", ">"]

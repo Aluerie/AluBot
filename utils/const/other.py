@@ -2,7 +2,39 @@ from enum import StrEnum
 
 from ._meta import CONSTANTS
 
-GITHUB_BOT_IMAGES = "https://raw.githubusercontent.com/Aluerie/AluBot/main/assets/images"
+__all__ = (
+    "DotaAsset",
+    "LogoAsset",
+    "Slash",
+    "Regex",
+    "Picture",
+    "Limit",
+    "Twitch",
+    "League",
+    "Dota",
+    "Logo",
+)
+
+REPO_CONTENT = "https://raw.githubusercontent.com/Aluerie/AluBot/main/"
+
+
+class ImageAsset(StrEnum):
+    def url(self) -> str:
+        return f"{REPO_CONTENT}{self.value}"
+
+
+class DotaAsset(ImageAsset):
+    AbilityUnknown = "./assets/images/dota/ability_unknown.png"
+    ItemEmpty = "./assets/images/dota/item_empty.png"
+    ItemUnknown = "./assets/images/dota/item_unknown.png"
+    Placeholder640X360 = "./assets/images/dota/Lavender640x360.png"
+
+
+class LogoAsset(ImageAsset):
+    DotaWhite = "./assets/images/logo/dota_white.png"
+    """ ^ image above is made by removing (R) from:
+    https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
+    """
 
 
 class Slash(StrEnum):
@@ -39,14 +71,11 @@ class Picture(StrEnum):
     Heart = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/263/purple-heart_1f49c.png"
     DankFix = "https://i.imgur.com/gzrPVLs.png"
     Frog = "https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png"
-    Placeholder640X360 = f"{GITHUB_BOT_IMAGES}/hosted/Lavender640x360.png"
 
 
 class Logo(StrEnum):
     Python = "https://i.imgur.com/5BFecvA.png"
 
-    # the next image is made by removing (R) from
-    # https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
     Dota = "https://i.imgur.com/F8uMnWr.png"
     Lol = "https://i.imgur.com/1DJa07b.png"
     Twitch = "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
@@ -82,9 +111,6 @@ class Dota(CONSTANTS):
     # which means that we shouldn't host images there ever
     # because they rate-limit my bot
     # otherwise `bot.transposer.url_to_image` will fail
-
-    HERO_DISCONNECT = f"{GITHUB_BOT_IMAGES}/hosted/DotaDisconnect.png"
-    EMPTY_ITEM_TILE = f"{GITHUB_BOT_IMAGES}/hosted/Black_tile.png"
 
     PLAYER_COLOUR_MAP = (
         "#3375FF",

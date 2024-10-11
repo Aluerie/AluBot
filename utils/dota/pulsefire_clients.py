@@ -271,11 +271,16 @@ class StratzAPIRateLimiter(DotaAPIsRateLimiter):
         ]
         header_limits = {"app": [(int(headers[f"X-RateLimit-Limit-{name}"]), period) for name, period in periods]}
         header_counts = {"app": [(int(headers[f"X-RateLimit-Remaining-{name}"]), period) for name, period in periods]}
+        print(header_counts, header_limits)
         return header_limits, header_counts
 
 
 class StratzClient(BaseClient):
-    """Pulsefire client to boilerplate work with Stratz GraphQL queries."""
+    """Pulsefire client to boilerplate work with Stratz GraphQL queries.
+
+    You can play around with queries here: https://api.stratz.com/graphiql/
+    Note "i" means it's a fancy UI version.
+    """
 
     def __init__(self) -> None:
         self.rate_limiter = StratzAPIRateLimiter()
@@ -290,7 +295,7 @@ class StratzClient(BaseClient):
             middlewares=[
                 json_response_middleware(orjson.loads),
                 http_error_middleware(),
-                rate_limiter_middleware(self.rate_limiter),
+                # rate_limiter_middleware(self.rate_limiter),
             ],
         )
 
@@ -299,42 +304,125 @@ class StratzClient(BaseClient):
     ) -> schemas.StratzGraphQL.GetFPCMatchToEdit.ResponseDict:
         """Queries info that I need to know in order to edit Dota 2 FPC notification."""
         query = """
-        query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
-            match(id: $match_id) {
-                statsDateTime
-                players(steamAccountId: $friend_id) {
-                    isVictory
-                    heroId
-                    variant
-                    kills
-                    deaths
-                    assists
-                    item0Id
-                    item1Id
-                    item2Id
-                    item3Id
-                    item4Id
-                    item5Id
-                    neutral0Id
-                    playbackData {
-                        abilityLearnEvents {
-                            abilityId
+            query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
+                match(id: $match_id) {
+                    statsDateTime
+                    players(steamAccountId: $friend_id) {
+                        isVictory
+                        heroId
+                        variant
+                        kills
+                        deaths
+                        assists
+                        item0Id
+                        item1Id
+                        item2Id
+                        item3Id
+                        item4Id
+                        item5Id
+                        neutral0Id
+                        playbackData {
+                            abilityLearnEvents {
+                                abilityId
+                            }
+                            purchaseEvents {
+                                time
+                                itemId
+                            }
                         }
-                        purchaseEvents {
-                            time
-                            itemId
-                        }
-                    }
-                    stats {
-                        matchPlayerBuffEvent {
-                            itemId
+                        stats {
+                            matchPlayerBuffEvent {
+                                itemId
+                            }
                         }
                     }
                 }
             }
-        }
         """
         json = {"query": query, "variables": {"match_id": match_id, "friend_id": friend_id}}  # noqa F481
+        return await self.invoke("POST", "")  # type: ignore
+
+    async def get_heroes(self) -> schemas.StratzGetHeroesResponse:
+        """Queries Dota 2 Hero Constants."""
+        query = """
+            query Heroes {
+                constants {
+                    heroes {
+                        id
+                        shortName
+                        displayName
+                        abilities {
+                            ability {
+                                id
+                                name
+                            }
+                        }
+                        talents {
+                            abilityId
+                        }
+                        facets {
+                            facetId
+                        }
+                    }
+                }
+            }
+        """
+        json = {"query": query}  # noqa F481
+        return await self.invoke("POST", "")  # type: ignore
+
+    async def get_abilities(self) -> schemas.StratzGetAbilitiesResponse:
+        """Queries Dota 2 Hero Ability Constants."""
+        query = """
+            query Abilities {
+                constants {
+                    abilities {
+                        id
+                        name
+                        language {
+                            displayName
+                        }
+                        isTalent
+                    }
+                }
+            }
+        """
+        json = {"query": query}  # noqa F481
+        return await self.invoke("POST", "")  # type: ignore
+
+    async def get_items(self) -> schemas.StratzGetItemsResponse:
+        """Queries Dota 2 Hero Item Constants."""
+        query = """
+            query Items {
+                constants {
+                    items {
+                        id
+                        shortName
+                    }
+                }
+            }
+        """
+        json = {"query": query}  # noqa F481
+        return await self.invoke("POST", "")  # type: ignore
+
+    async def get_facets(self) -> schemas.StratzGetFacetsResponse:
+        """Queries Dota 2 Hero Facet Constants."""
+        query = """
+            query FacetConstants {
+                constants {
+                    facets {
+                        id
+                        name
+                        color
+                        icon
+                        language {
+                            displayName
+                        }
+                        gradientId
+                    }
+                }
+            }
+        """
+        json = {"query": query}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
 

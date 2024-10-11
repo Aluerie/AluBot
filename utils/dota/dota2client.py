@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self, override
 
 import discord
 from steam import PersonaState
@@ -17,6 +17,8 @@ except ImportError:
 
 from utils import const
 
+from . import StratzClient
+
 if TYPE_CHECKING:
     from bot import AluBot
 
@@ -26,20 +28,43 @@ __all__ = ("Dota2Client",)
 
 
 class Dota2Client(Client):
+    """My subclass to steam.py's Dota 2 Client.
+
+    Extends functionality to provide
+    * access to stats/data related API like stratz;
+    * access to modelled constants;
+    * integration with my discord bot such as error notifications;
+    * etc.
+    """
+
     def __init__(self, bot: AluBot) -> None:
         super().__init__(state=PersonaState.Invisible)
-        self._bot: AluBot = bot
+        self.bot: AluBot = bot
 
+    @override
+    async def __aenter__(self) -> Self:
+        self.stratz = StratzClient()
+        await self.stratz.__aenter__()
+        return await super().__aenter__()
+
+    @override
+    async def __aexit__(self) -> None:
+        await self.stratz.__aexit__()
+        await super().__aexit__()
+
+    @override
     async def login(self) -> None:
         await super().login(config.STEAM_USERNAME, config.STEAM_PASSWORD)
-        log.info("We successfully logged invis mode into Steam: %s", config.STEAM_USERNAME)
+        log.info("We invisibly logged into Steam: %s", config.STEAM_USERNAME)
 
+    @override
     async def on_ready(self) -> None:
-        if not self._bot.test:
-            await self._bot.wait_until_ready()
+        if not self.bot.test:
+            await self.bot.wait_until_ready()
             embed = discord.Embed(colour=discord.Colour.blue(), description="Dota2Client: `on_ready`.")
-            await self._bot.hideout.spam.send(embed=embed)
+            await self.bot.hideout.spam.send(embed=embed)
 
+    @override
     async def on_error(self, event: str, error: Exception, *args: object, **kwargs: object) -> None:
         embed = (
             discord.Embed(
@@ -69,4 +94,4 @@ class Dota2Client(Client):
                 inline=False,
             )
         )
-        await self._bot.exc_manager.register_error(error, embed)
+        await self.bot.exc_manager.register_error(error, embed)

@@ -303,7 +303,7 @@ class AluBot(commands.Bot, AluBotHelper):
         """Get bot's owner user."""
         return self.bot_app_info.owner
 
-    # INITIALIZE EXTRA ATTRIBUTES/CLIENTS/FUNCTIONS
+    # instantiate INITIALIZE EXTRA ATTRIBUTES/CLIENTS/FUNCTIONS
 
     # The following functions are `initialize_something`
     # which import some heavy modules and initialize some ~heavy clients under bot namespace
@@ -318,36 +318,36 @@ class AluBot(commands.Bot, AluBotHelper):
     # points to import inside the function: https://stackoverflow.com/a/1188693/19217368
     # and I exactly want these^
 
-    async def initialize_dota_pulsefire_clients(self) -> None:
-        """Initialize Dota 2 pulsefire-like clients.
+    # async def initialize_dota_pulsefire_clients(self) -> None:
+    #     """Initialize Dota 2 pulsefire-like clients.
 
-        * OpenDota API pulsefire client
-        * Stratz API pulsefire client
-        """
-        if not hasattr(self, "opendota"):
-            from utils.dota import ODotaConstantsClient, OpenDotaClient, SteamWebAPIClient, StratzClient
+    #     * OpenDota API pulsefire client
+    #     * Stratz API pulsefire client
+    #     """
+    #     if not hasattr(self, "opendota"):
+    #         from utils.dota import ODotaConstantsClient, OpenDotaClient, SteamWebAPIClient, StratzClient
 
-            self.opendota = OpenDotaClient()
-            await self.opendota.__aenter__()
+    #         self.opendota = OpenDotaClient()
+    #         await self.opendota.__aenter__()
 
-            self.stratz = StratzClient()
-            await self.stratz.__aenter__()
+    #         self.stratz = StratzClient()
+    #         await self.stratz.__aenter__()
 
-            self.odota_constants = ODotaConstantsClient()
-            await self.odota_constants.__aenter__()
+    #         self.odota_constants = ODotaConstantsClient()
+    #         await self.odota_constants.__aenter__()
 
-            self.steam_web_api = SteamWebAPIClient()
-            await self.steam_web_api.__aenter__()
+    #         self.steam_web_api = SteamWebAPIClient()
+    #         await self.steam_web_api.__aenter__()
 
-    def initialize_cache_dota(self) -> None:
-        """Initialize Dota 2 constants cache.
+    # def initialize_cache_dota(self) -> None:
+    #     """Initialize Dota 2 constants cache.
 
-        * OpenDota Dota Constants cache with static data
-        """
-        if not hasattr(self, "cache_dota"):
-            from utils.dota import CacheDota
+    #     * OpenDota Dota Constants cache with static data
+    #     """
+    #     if not hasattr(self, "cache_dota"):
+    #         from utils.dota import CacheDota
 
-            self.cache_dota = CacheDota(self)
+    #         self.cache_dota = CacheDota(self)
 
     async def initialize_league_pulsefire_clients(self) -> None:
         """Initialize League Of Legends pulsefire clients.
@@ -411,16 +411,15 @@ class AluBot(commands.Bot, AluBotHelper):
     #         self.dota = Dota2Client(self)  # VALVE_SWITCH
     #         # await self.dota.login()
 
-    async def initialize_dota(self) -> None:
-        """Initialize Dota 2 Client.
+    def instantiate_dota(self) -> None:
+        """Instantiate Dota 2 Client.
 
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from utils.dota.valvepythondota2 import Dota2Client
+            from utils.dota.valvepythondota2 import DotaClient
 
-            self.dota = Dota2Client(self)
-            await self.dota.login()
+            self.dota = DotaClient(self)
 
     def initialize_github(self) -> None:
         """Initialize GitHub REST API Client."""
@@ -450,8 +449,8 @@ class AluBot(commands.Bot, AluBotHelper):
         if hasattr(self, "twitch"):
             await self.twitch.close()
 
-        if hasattr(self, "cache_dota"):
-            self.cache_dota.close()
+        # if hasattr(self, "cache_dota"):
+        #     self.cache_dota.close()
         if hasattr(self, "cache_lol"):
             self.cache_lol.close()
 

@@ -79,17 +79,24 @@ class TransposeClient:
         """Convert discord.Attachment to Image.Image."""
         return Image.open(BytesIO(await attachment.read()))
 
-    async def url_to_image(self, url: str) -> Image.Image:
+    async def url_to_image(self, url_or_fp: str) -> Image.Image:
         """Convert URL to PIL.Image.Image."""
-        log.debug(url)
-        async with self.session.get(url) as response:
-            if response.ok:
-                return Image.open(BytesIO(await response.read()))
-            else:
-                msg = f"`transposer.url_to_image`: Status {response.status} - Could not download file from {url}"
-                raise errors.ResponseNotOK(
-                    msg
-                )
+        log.debug(url_or_fp)
+        if url_or_fp.startswith(("http://", "https://")):
+            async with self.session.get(url_or_fp) as response:
+                if response.ok:
+                    return Image.open(BytesIO(await response.read()))
+                else:
+                    msg = (
+                        f"`transposer.url_to_image`: Status {response.status} -"
+                        f" Could not download file from {url_or_fp}"
+                    )
+                    raise errors.ResponseNotOK(msg)
+        else:
+            try:
+                return Image.open(fp=url_or_fp)
+            except FileNotFoundError:
+                raise
 
     async def url_to_file(self, url: str, filename: str = "fromAluBot.png") -> discord.File:
         """Convert URL to discord.File."""
@@ -98,6 +105,4 @@ class TransposeClient:
                 return discord.File(BytesIO(await response.read()), filename)
             else:
                 msg = f"`transposer.url_to_file`: Status {response.status} - Could not download file from {url}"
-                raise errors.ResponseNotOK(
-                    msg
-                )
+                raise errors.ResponseNotOK(msg)

@@ -14,6 +14,8 @@ from steam.client import SteamClient
 
 import config
 
+from . import Abilities, Facets, Heroes, Items, StratzClient
+
 if TYPE_CHECKING:
     from bot import AluBot
 
@@ -23,7 +25,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 __all__ = (
-    "Dota2Client",
+    "DotaClient",
     "LiveMatch",
 )
 
@@ -33,18 +35,64 @@ class EDOTAGCMsg(IntEnum):
     EMsgGCToClientFindTopSourceTVGamesResponse = 8010
 
 
-class Dota2Client(Dota2Client_):
+class DotaClient(Dota2Client_):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(SteamClient())
         self.check_list: set[int] = set()
         self.matches: list[GameCoordinatorAPI.CSourceTVGameSmall] = []
         self.on(EDOTAGCMsg.EMsgGCToClientFindTopSourceTVGamesResponse, self._handle_top_source_tv)
 
-        self._bot: AluBot = bot
+        self.bot: AluBot = bot
         self.deaths: int = 0
 
         # TEST PRINT
         # self.test_print: bool = False
+
+        # clients
+        self.stratz = stratz = StratzClient()
+        # caches
+        self.abilities = Abilities(bot, stratz)
+        self.heroes = Heroes(bot, stratz)
+        self.items = Items(bot, stratz)
+        self.facets = Facets(bot, stratz)
+
+        self.started: bool = False
+
+    async def start_helpers(self) -> None:
+        """_summary_
+
+        Usage
+        -----
+        If we only want to test helpers functionality, i.e. Stratz API data, then we can use:
+        ```py
+        self.bot.instantiate_dota()
+        await self.bot.dota.start_helpers()  # only starts helping clients/caches.
+        ```
+        """
+        if not self.started:
+            await self.stratz.__aenter__()
+
+            self.abilities.start()
+            self.heroes.start()
+            self.items.start()
+            self.facets.start()
+
+            self.started = True
+
+    async def start(self) -> None:
+        """_summary_
+
+        Usage
+        -----
+        To start the whole client, including logging into steam/dota use:
+        ```py
+        self.bot.instantiate_dota()
+        await self.bot.dota.start()
+        ```
+        """
+        # VALVE_SWITCH: we need proper close for all of these
+        await self.login()
+        await self.start_helpers()
 
     async def login(self) -> None:
         log.debug("dota2info: client.connected %s", self.steam.connected)
@@ -59,12 +107,12 @@ class Dota2Client(Dota2Client_):
                 colour=0x233423,
                 title="Steam login",
             ).set_footer(text="Dota2Client.login")
-            await self._bot.exc_manager.register_error(exc, embed)
+            await self.bot.exc_manager.register_error(exc, embed)
 
     async def top_live_matches(self) -> list[LiveMatch]:
         # log.debug("Steam is connected: %s", self.steam.connected)
         if not self.steam.connected:
-            await self._bot.spam.send("Dota2Client: Steam is not connected.")
+            await self.bot.spam.send("Dota2Client: Steam is not connected.")
             log.warning("Dota2Client: Steam is not connected.")
             await asyncio.sleep(3.3)
             await self.login()
@@ -111,11 +159,9 @@ class LiveMatch:
     def heroes(self) -> list[Hero]:
         return [p.hero for p in self.players]
 
-    # todo: make repr so print(match) can work
-
-    # @override
-    # def __repr__(self) -> str:
-    #     return f"<Dota2FPC LiveMatch (my own) id={self.id} players={}"
+    @override
+    def __repr__(self) -> str:
+        return f"<LiveMatch id={self.id}"
 
 
 @dataclass

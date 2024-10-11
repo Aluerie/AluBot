@@ -1,14 +1,13 @@
 from __future__ import annotations
 
+import abc
 import asyncio
 import enum
 import logging
 import random
 import time
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, override
-
-import orjson
+from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, override
 
 # from aiohttp import ClientSession
 # from discord.utils import MISSING
@@ -31,55 +30,26 @@ R = TypeVar("R")
 type CacheDict = dict[Any, Any]
 CachedDataT = TypeVar("CachedDataT", bound=CacheDict)
 
+VT = TypeVar("VT")
 
-class KeysCache:
-    """KeysCache.
 
-    Caches the data from public json-urls
-    for a certain amount of time just so we have somewhat up-to-date data
-    and don't spam GET requests too often.
-
-    The cache get updated by the aluloop task in the AluBot class.
-
-    Subclasses must implement
-    ```py
-        async def fill_data(self) -> CacheDict:
-    ```
-    and return Cache dictionary that is going to be put into self.cached_data.
-
-    The structure of `self.cached_data` can be anything but for the purposes of
-    dota_cache, cdragon cache it should be a dict so the key `champion_id` in the following example:
-    >>> champion = 910
-    >>> cdragon.champion.cached_data['name_by_id'][champion_id]
-    >>> "Hwei"
-    can be reached for the purposes of `get_value` function.
-
-    This is kinda implementation on "it just works" basis but oh well,
-    I'm not developing a library here, am I?
-    """
-
-    # TODO: refactor this cache thing so it's more clear what is what
-    # i.e. cache = whole class
-    # cached_data -> rename to data
-    # think of a name for data category maybe like mapping name
-    # and think of a name for value keys thing idk
+class NewKeysCache(Generic[VT]):
     if TYPE_CHECKING:
-        cached_data: CacheDict
+        cached_data: dict[int, VT]
 
     def __init__(self, bot: AluBot) -> None:
-        """__init__.
+        """_summary_
 
         Parameters
         ----------
-        bot : AluBot
-            We need it just so @aluloop task can find exc_manager in case of exceptions.
-
+        bot
+            need it just so @aluloop task can use `exc_manager` to send an error notification.
         """
         self.bot: AluBot = bot
-
         self.lock: asyncio.Lock = asyncio.Lock()
 
-        self.update_data.add_exception_type(errors.ResponseNotOK)
+    def start(self) -> None:
+        # self.update_data.add_exception_type(errors.ResponseNotOK)
         # random times just so we don't have a possibility of all cache being updated at the same time
         self.update_data.change_interval(hours=24, minutes=random.randint(1, 59))
         self.update_data.start()
@@ -88,42 +58,17 @@ class KeysCache:
         """Closes the keys cache."""
         self.update_data.cancel()
 
-    async def get_response_json(self, url: str) -> Any:
-        """Get response.json() from url with data."""
-        async with self.bot.session.get(url=url) as response:
-            if response.ok:
-                # https://stackoverflow.com/a/48842348/19217368
-                # `content = None` disables the check and kinda sets it to `content_type=response.content_type`
-                return await response.json(content_type=None, loads=orjson.loads)
-
-        # response not ok
-        # so we raise an error that is `add_exception_type`'ed so the task can run exp backoff
-        status = response.status
-        response_text = await response.text()
-        log.debug("Key Cache response error: %s %s", status, response_text)
-        msg = f"Key Cache response error: {status} {response_text}"
-        raise errors.ResponseNotOK(msg)
-
-    async def fill_data(self) -> CacheDict:
-        """Fill self.cached_data with the data from various json data.
-
-        This function is supposed to be implemented by subclasses.
-        We get the data and sort it out into a convenient dictionary to cache.
-        """
+    async def fill_data(self) -> dict[int, VT]:
         ...
 
     @aluloop()
     async def update_data(self) -> None:
-        """The task responsible for keeping the data up-to-date."""
-        # log.debug("Trying to update Cache %s.", self.__class__.__name__)
         async with self.lock:
             start_time = time.perf_counter()
             self.cached_data = await self.fill_data()
-            log.debug("Cache %s is updated in %.5f", self.__class__.__name__, time.perf_counter() - start_time)
+            log.info("Cache %s is updated in %.5f", self.__class__.__name__, time.perf_counter() - start_time)
 
-    # methods to actually get the data from cache
-
-    async def get_cached_data(self) -> CacheDict:
+    async def get_cached_data(self) -> dict[int, VT]:
         """Get the whole cached data."""
         try:
             return self.cached_data
@@ -131,32 +76,30 @@ class KeysCache:
             await self.update_data()
             return self.cached_data
 
-    async def get_value(self, cache: str, key: Any) -> Any:
-        """Get value by the `key` from the sub-cache named `cache` in the `self.cached_data`."""
+    async def get_value(self, id: int) -> VT:
         try:
-            return self.cached_data[cache][key]
-        except (KeyError, AttributeError):
-            # let's try to update the cache in case it's a KeyError due to
-            # * new patch or something
-            # * the data is not initialized then we will get stuck in self.lock waiting for the data.
-            await self.update_data()
-            return self.cached_data[cache][key]
-
-    async def get_value_or_none(self, cache: str, key: Any) -> Any:
-        """Same as get but sometimes we don't want to refresh the data on KeyError since we expect to hit it.
-
-        For example, when we try to find Dota talent name, we query ability ids into it that aren't talents.
-        """
-        data = await self.get_cached_data()
-        return data[cache].get(key)
-
-    async def get_cache(self, cache: str) -> dict[Any, Any]:
-        """Get the whole sub-cache dict."""
-        try:
-            return self.cached_data[cache]
+            return self.cached_data[id]
         except (KeyError, AttributeError):
             await self.update_data()
-            return self.cached_data[cache]
+            return self.cached_data[id]
+
+
+class CharacterCache(abc.ABC):
+    @abc.abstractmethod
+    async def id_by_display_name(self, character_name: str) -> int:
+        ...
+
+    @abc.abstractmethod
+    async def display_name_by_id(self, character_id: int) -> str:
+        ...
+
+    @abc.abstractmethod
+    async def id_display_name_tuples(self) -> list[tuple[int, str]]:
+        ...
+
+    @abc.abstractmethod
+    async def id_display_name_dict(self) -> dict[int, str]:
+        ...
 
 
 # Can't use ParamSpec due to https://github.com/python/typing/discussions/946

@@ -248,7 +248,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
         self.neutral_item_id: int = player["neutral0Id"] or 0
 
-        self.facet: int = player["variant"]
+        self.facet: int = player["variant"] - 1  # variant thing seems to start facets count from 1 and not zero.
 
     @override
     def __repr__(self) -> str:

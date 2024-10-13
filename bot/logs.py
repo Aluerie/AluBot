@@ -65,6 +65,12 @@ def setup_logging(test: bool) -> Generator[Any, Any, Any]:
 
 
 class MyColourFormatter(logging.Formatter):
+    """My colour formatter.
+
+    Sources
+    -------
+    * fully copy-pasted from `discord.utils._ColourFormatter` class and changed `FORMATS` ClassVar.
+    """
     # ANSI codes are a bit weird to decipher if you're unfamiliar with them, so here's a refresher
     # It starts off with a format like \x1b[XXXm where XXX is a semicolon separated list of commands
     # The important ones here relate to colour.

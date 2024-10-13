@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypedDict, override
 
 from roleidentification import get_roles
@@ -25,23 +26,12 @@ if TYPE_CHECKING:
         UTILITY: float
 
 
-__all__ = ("CacheLoL",)
-
-
-class CacheLoL:
-    def __init__(self, bot: AluBot) -> None:
-        self.champion = ChampionKeysCache(bot)
-        self.rune = RuneKeysCache(bot)
-        self.item = ItemKeysCache(bot)
-        self.summoner_spell = SummonerSpellKeysCache(bot)
-        self.role = RolesCache(bot)
-
-    def close(self) -> None:
-        self.champion.close()
-        self.rune.close()
-        self.item.close()
-        self.summoner_spell.close()
-        self.role.close()
+__all__ = (
+    "Champions",
+    "ItemIcons",
+    "RuneIcons",
+    "SummonerSpellIcons",
+)
 
 
 BASE_URL = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/"
@@ -56,13 +46,13 @@ def cdragon_asset_url(path: str) -> str:
     return BASE_URL + path
 
 
-class ChampionKeysCache(NewKeysCache):
+class Champions(NewKeysCache):
     if TYPE_CHECKING:
         cached_data: ChampionCache
 
     @override
     async def fill_data(self) -> ChampionCache:
-        champion_summary = await self.bot.cdragon.get_lol_v1_champion_summary()
+        champion_summary = await self.bot.lol.cdragon.get_lol_v1_champion_summary()
 
         data: ChampionCache = {"id_by_name": {}, "name_by_id": {}, "icon_by_id": {}, "alias_by_id": {}}
         for champion in champion_summary:
@@ -99,57 +89,46 @@ class ChampionKeysCache(NewKeysCache):
         return await self.get_value("icon_by_id", champion_id)
 
 
-class ItemKeysCache(NewKeysCache):
-    async def fill_data(self) -> dict:
-        items = await self.bot.cdragon.get_lol_v1_items()
+class ItemIcons(NewKeysCache[str]):
+    @override
+    async def fill_data(self) -> dict[int, str]:
+        items = await self.bot.lol.cdragon.get_lol_v1_items()
+        return {item["id"]: cdragon_asset_url(item["iconPath"]) for item in items}
 
-        data = {"icon_by_id": {}}
-        for item in items:
-            data["icon_by_id"][item["id"]] = cdragon_asset_url(item["iconPath"])
-
-        return data
-
-    async def icon_by_id(self, item_id: int) -> str:
+    async def by_id(self, item_id: int) -> str:
         """Get item icon url by id."""
-        return await self.get_value("icon_by_id", item_id)
+        return await self.get_value(item_id)
 
 
-class RuneKeysCache(NewKeysCache):
-    async def fill_data(self) -> dict:
-        perks = await self.bot.cdragon.get_lol_v1_perks()
+class RuneIcons(NewKeysCache[str]):
+    @override
+    async def fill_data(self) -> dict[int, str]:
+        perks = await self.bot.lol.cdragon.get_lol_v1_perks()
+        return {perk["id"]: cdragon_asset_url(perk["iconPath"]) for perk in perks}
 
-        data = {"icon_by_id": {}}
-        for perk in perks:
-            data["icon_by_id"][perk["id"]] = cdragon_asset_url(perk["iconPath"])
-
-        return data
-
-    async def icon_by_id(self, rune_id: int) -> str:
+    async def by_id(self, rune_id: int) -> str:
         """Get rune icon url by id."""
-        return await self.get_value("icon_by_id", rune_id)
+        return await self.get_value(rune_id)
 
 
-class SummonerSpellKeysCache(NewKeysCache):
-    async def fill_data(self) -> dict:
-        summoner_spells = await self.bot.cdragon.get_lol_v1_summoner_spells()
+class SummonerSpellIcons(NewKeysCache[str]):
+    @override
+    async def fill_data(self) -> dict[int, str]:
+        summoner_spells = await self.bot.lol.cdragon.get_lol_v1_summoner_spells()
+        return {spell["id"]: cdragon_asset_url(spell["iconPath"]) for spell in summoner_spells}
 
-        data = {"icon_by_id": {}}
-        for spell in summoner_spells:
-            data["icon_by_id"][spell["id"]] = cdragon_asset_url(spell["iconPath"])
-
-        return data
-
-    async def icon_by_id(self, summoner_spell_id: int) -> str:
+    async def by_id(self, summoner_spell_id: int) -> str:
         """Get summoner spell icon url by id."""
-        return await self.get_value("icon_by_id", summoner_spell_id)
+        return await self.get_value(summoner_spell_id)
 
 
-class RolesCache(NewKeysCache):
+class RolesCache(NewKeysCache[RoleDict]):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(bot=bot)
         self.meraki_patch: str = "Unknown"
 
-    async def fill_data(self) -> dict:
+    @override
+    async def fill_data(self) -> dict[int, RoleDict]:
         """My own analogy to `from roleidentification import pull_data`.
 
         Meraki's `pull_data` is using `import requests`
@@ -158,7 +137,7 @@ class RolesCache(NewKeysCache):
         We can always check if they changed it at
         https://github.com/meraki-analytics/role-identification
         """
-        champion_roles = await self.bot.meraki.get_lol_champion_rates()
+        champion_roles = await self.bot.lol.meraki.get_lol_champion_rates()
         self.meraki_patch = champion_roles["patch"]
 
         data = {}
@@ -176,9 +155,9 @@ class RolesCache(NewKeysCache):
         data = await self.get_better_champion_roles(data)
         return data
 
-    async def get_missing_from_meraki_champion_ids(self, data_meraki: dict | None = None) -> set[int]:
+    async def get_missing_from_meraki_champion_ids(self, data_meraki: dict[int, RoleDict] | None = None) -> set[int]:
         data_meraki = data_meraki or await self.get_cached_data()
-        name_by_id = await self.bot.cache_lol.champion.get_cache("name_by_id")
+        name_by_id = await self.bot.lol.champion.get_cache("name_by_id")
         return set(name_by_id.keys()) - set(data_meraki.keys())
 
     @staticmethod

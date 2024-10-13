@@ -44,7 +44,7 @@ class LoLAccount(Account):
     async def set_game_specific_attrs(self, bot: AluBot, flags: AddLoLPlayerFlags) -> None:
         # RIOT ACCOUNT INFO
         try:
-            riot_account = await bot.riot.get_account_v1_by_riot_id(
+            riot_account = await bot.lol.get_account_v1_by_riot_id(
                 game_name=flags.game_name,
                 tag_line=flags.tag_line,
                 region=flags.platform.continent,
@@ -67,7 +67,7 @@ class LoLAccount(Account):
 
         # SUMMONER INFO
         try:
-            summoner = await bot.riot.get_lol_summoner_v4_by_puuid(puuid=puuid, region=self.platform)
+            summoner = await bot.lol.get_lol_summoner_v4_by_puuid(puuid=puuid, region=self.platform)
         except aiohttp.ClientResponseError:
             msg = (
                 f"Error `get_lol_summoner_v4_by_puuid` for riot account\n"
@@ -128,7 +128,7 @@ class Settings(BaseSettings):
     """
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
-        bot.initialize_cache_league()
+        bot.instantiate_lol()
         super().__init__(
             bot,
             *args,

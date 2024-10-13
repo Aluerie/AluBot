@@ -72,8 +72,8 @@ class LogsViaWebhook(AluCog):
         "send_dota_fpc": "https://i.imgur.com/6x1J57F.png",  # dota 2 FPC logs
         "edit_dota_fpc": "https://i.imgur.com/8nj04Ol.png",  # dota 2 FPC logs
         "ext.dev.sync": "https://em-content.zobj.net/source/microsoft/378/counterclockwise-arrows-button_1f504.png",
-        "utils.dota.valvepythondota2": "https://i.imgur.com/D96bMgG.png",
-        "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
+        "utils.dota.valvepython": "https://i.imgur.com/D96bMgG.png",
+        "utils.dota.steamio": "https://i.imgur.com/D96bMgG.png",
         "exc_manager": "https://em-content.zobj.net/source/microsoft/378/sos-button_1f198.png",
         "twitchio.ext.eventsub.ws": const.Logo.Twitch,
         "twitchio.websocket": const.Logo.Twitch,

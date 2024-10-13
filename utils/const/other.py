@@ -28,6 +28,7 @@ class DotaAsset(ImageAsset):
     ItemEmpty = "./assets/images/dota/item_empty.png"
     ItemUnknown = "./assets/images/dota/item_unknown.png"
     Placeholder640X360 = "./assets/images/dota/Lavender640x360.png"
+    FacetQuestion = "./assets/images/dota/facet_question.png"
 
 
 class LogoAsset(ImageAsset):

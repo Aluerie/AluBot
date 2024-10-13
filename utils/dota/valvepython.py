@@ -14,12 +14,12 @@ from steam.client import SteamClient
 
 import config
 
-from . import Abilities, Facets, Heroes, Items, StratzClient
+from . import Abilities, Facets, Heroes, Items, ODotaConstantsClient, StratzClient
 
 if TYPE_CHECKING:
     from bot import AluBot
 
-    from .schemas import GameCoordinatorAPI
+    from .schemas_xd import GameCoordinatorAPI
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -49,12 +49,13 @@ class DotaClient(Dota2Client_):
         # self.test_print: bool = False
 
         # clients
-        self.stratz = stratz = StratzClient()
+        self.stratz = StratzClient()
+        self.odota_constants = ODotaConstantsClient()
         # caches
-        self.abilities = Abilities(bot, stratz)
-        self.heroes = Heroes(bot, stratz)
-        self.items = Items(bot, stratz)
-        self.facets = Facets(bot, stratz)
+        self.abilities = Abilities(bot)
+        self.heroes = Heroes(bot)
+        self.items = Items(bot)
+        self.facets = Facets(bot)
 
         self.started: bool = False
 
@@ -70,8 +71,11 @@ class DotaClient(Dota2Client_):
         ```
         """
         if not self.started:
+            # clients
             await self.stratz.__aenter__()
+            await self.odota_constants.__aenter__()
 
+            # caches
             self.abilities.start()
             self.heroes.start()
             self.items.start()
@@ -93,6 +97,17 @@ class DotaClient(Dota2Client_):
         # VALVE_SWITCH: we need proper close for all of these
         await self.login()
         await self.start_helpers()
+
+    async def close(self) -> None:
+        # clients
+        await self.stratz.__aexit__()
+        await self.odota_constants.__aexit__()
+
+        # caches
+        self.abilities.close()
+        self.heroes.close()
+        self.items.close()
+        self.facets.close()
 
     async def login(self) -> None:
         log.debug("dota2info: client.connected %s", self.steam.connected)

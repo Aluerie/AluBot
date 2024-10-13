@@ -15,7 +15,6 @@ import logging
 import os
 import random
 import sys
-from collections.abc import Callable, Coroutine, Sequence
 from typing import TYPE_CHECKING, Annotated, Any, Literal, TypedDict, TypeVar, cast, override, reveal_type
 
 import asyncpg
@@ -27,6 +26,9 @@ import config
 from bot import AluBot, AluCog, AluContext, ExtCategory, aluloop
 from utils import cache, checks, const, errors, formats, timezones
 from utils.helpers import measure_time
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, Sequence
 
 log = logging.getLogger(__name__)
 

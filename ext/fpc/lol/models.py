@@ -322,13 +322,13 @@ async def beta_test_edit_image(self: AluCog) -> None:
 
     from ext.fpc.lol.models import MatchToEdit
 
-    await self.bot.initialize_league_pulsefire_clients()
-    self.bot.initialize_cache_league()
+    self.bot.instantiate_lol()
+    await self.bot.lol.start()
 
     match_id = "NA1_4899995798"
     continent = "AMERICAS"
-    match = await self.bot.riot.get_lol_match_v5_match(id=match_id, region=continent)
-    timeline = await self.bot.riot.get_lol_match_v5_match_timeline(id=match_id, region=continent)
+    match = await self.bot.lol.get_lol_match_v5_match(id=match_id, region=continent)
+    timeline = await self.bot.lol.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
     post_match_player = MatchToEdit(
         self.bot,

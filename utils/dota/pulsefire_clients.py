@@ -23,7 +23,8 @@ if TYPE_CHECKING:
 
     from pulsefire.invocation import Invocation
 
-    from . import schemas
+    from . import schemas_xd
+    from .schemas import odota_constants, stratz
 
 __all__ = (
     "OpenDotaClient",
@@ -152,11 +153,11 @@ class OpenDotaClient(BaseClient):
             ],
         )
 
-    async def get_match(self, *, match_id: int) -> schemas.OpenDotaAPI.GetMatch.Match:
+    async def get_match(self, *, match_id: int) -> schemas_xd.OpenDotaAPI.GetMatch.Match:
         """GET matches/{match_id}."""
         return await self.invoke("GET", f"/matches/{match_id}")  # type: ignore
 
-    async def request_parse(self, *, match_id: int) -> schemas.OpenDotaAPI.PostRequest.ParseJob:
+    async def request_parse(self, *, match_id: int) -> schemas_xd.OpenDotaAPI.PostRequest.ParseJob:
         """POST /request/{match_id}."""
         return await self.invoke("POST", f"/request/{match_id}")  # type: ignore
 
@@ -169,7 +170,6 @@ class ODotaConstantsClient(BaseClient):
     """
 
     def __init__(self) -> None:
-        self.rate_limiter = OpenDotaAPIRateLimiter()
         super().__init__(
             # could use `https://api.opendota.com/api/constants` but sometimes they update the repo first
             # and forget to update the site backend x_x
@@ -183,35 +183,35 @@ class ODotaConstantsClient(BaseClient):
             ],
         )
 
-    async def get_heroes(self) -> schemas.ODotaConstantsJson.Heroes:
+    async def get_heroes(self) -> odota_constants.GetHeroesResponse:
         """Get `heroes.json` data.
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/heroes.json
         """
         return await self.invoke("GET", "/heroes.json")  # type: ignore
 
-    async def get_ability_ids(self) -> schemas.ODotaConstantsJson.AbilityIDs:
+    async def get_ability_ids(self) -> odota_constants.GetAbilityIDsResponse:
         """Get `ability_ids.json` data.
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/ability_ids.json
         """
         return await self.invoke("GET", "/ability_ids.json")  # type: ignore
 
-    async def get_abilities(self) -> schemas.ODotaConstantsJson.Abilities:
+    async def get_abilities(self) -> odota_constants.GetAbilitiesResponse:
         """Get `abilities.json` data.
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/abilities.json
         """
         return await self.invoke("GET", "/abilities.json")  # type: ignore
 
-    async def get_hero_abilities(self) -> schemas.ODotaConstantsJson.HeroAbilitiesData:
+    async def get_hero_abilities(self) -> odota_constants.GetHeroAbilitiesResponse:
         """Get `hero_abilities.json` data.
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/hero_abilities.json.
         """
         return await self.invoke("GET", "/hero_abilities.json")  # type: ignore
 
-    async def get_items(self) -> schemas.ODotaConstantsJson.Items:
+    async def get_items(self) -> odota_constants.GetItemsResponse:
         """Get `items.json` data.
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/items.json
@@ -234,7 +234,7 @@ class SteamWebAPIClient(BaseClient):
             ],
         )
 
-    async def get_match_details(self, match_id: int) -> schemas.SteamWebAPI.MatchDetails:
+    async def get_match_details(self, match_id: int) -> schemas_xd.SteamWebAPI.MatchDetails:
         """GET /IDOTA2Match_570/GetMatchDetails/v1/.
 
         https://steamapi.xpaw.me/#IDOTA2Match_570/GetMatchDetails.
@@ -242,7 +242,7 @@ class SteamWebAPIClient(BaseClient):
         queries = {"match_id": match_id}  # noqa F481
         return await self.invoke("GET", "/IDOTA2Match_570/GetMatchDetails/v1/")  # type: ignore
 
-    async def get_real_time_stats(self, server_steam_id: int) -> schemas.SteamWebAPI.RealtimeStats:
+    async def get_real_time_stats(self, server_steam_id: int) -> schemas_xd.SteamWebAPI.RealtimeStats:
         """GET /IDOTA2Match_570/GetMatchDetails/v1/.
 
         https://steamapi.xpaw.me/#IDOTA2MatchStats_570/GetRealtimeStats.
@@ -301,7 +301,7 @@ class StratzClient(BaseClient):
 
     async def get_fpc_match_to_edit(
         self, *, match_id: int, friend_id: int
-    ) -> schemas.StratzGraphQL.GetFPCMatchToEdit.ResponseDict:
+    ) -> schemas_xd.StratzGraphQL.GetFPCMatchToEdit.ResponseDict:
         """Queries info that I need to know in order to edit Dota 2 FPC notification."""
         query = """
             query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
@@ -342,7 +342,7 @@ class StratzClient(BaseClient):
         json = {"query": query, "variables": {"match_id": match_id, "friend_id": friend_id}}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
-    async def get_heroes(self) -> schemas.StratzGetHeroesResponse:
+    async def get_heroes(self) -> stratz.GetHeroesResponse:
         """Queries Dota 2 Hero Constants."""
         query = """
             query Heroes {
@@ -370,7 +370,7 @@ class StratzClient(BaseClient):
         json = {"query": query}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
-    async def get_abilities(self) -> schemas.StratzGetAbilitiesResponse:
+    async def get_abilities(self) -> stratz.GetAbilitiesResponse:
         """Queries Dota 2 Hero Ability Constants."""
         query = """
             query Abilities {
@@ -389,7 +389,7 @@ class StratzClient(BaseClient):
         json = {"query": query}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
-    async def get_items(self) -> schemas.StratzGetItemsResponse:
+    async def get_items(self) -> stratz.GetItemsResponse:
         """Queries Dota 2 Hero Item Constants."""
         query = """
             query Items {
@@ -404,7 +404,7 @@ class StratzClient(BaseClient):
         json = {"query": query}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
-    async def get_facets(self) -> schemas.StratzGetFacetsResponse:
+    async def get_facets(self) -> stratz.GetFacetsResponse:
         """Queries Dota 2 Hero Facet Constants."""
         query = """
             query FacetConstants {

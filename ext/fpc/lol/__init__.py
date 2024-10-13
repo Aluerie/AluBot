@@ -23,7 +23,8 @@ class LolFPC(
 
     @override
     async def cog_load(self) -> None:
-        await self.bot.initialize_league_pulsefire_clients()
+        self.bot.instantiate_lol()
+        await self.bot.lol.start()
         await self.bot.initialize_twitch()
         return await super().cog_load()
 

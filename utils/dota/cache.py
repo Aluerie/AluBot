@@ -10,8 +10,6 @@ from . import constants
 if TYPE_CHECKING:
     from bot import AluBot
 
-    from .pulsefire_clients import StratzClient
-
 
 __all__ = (
     "Abilities",
@@ -62,15 +60,14 @@ class Hero:
 
 
 class Heroes(NewKeysCache[Hero], CharacterCache):
-    def __init__(self, bot: AluBot, stratz: StratzClient) -> None:
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot)
-        self.stratz: StratzClient = stratz
 
     @override
     async def fill_data(self) -> dict[int, Hero]:
-        heroes = await self.stratz.get_heroes()
+        heroes = await self.bot.dota.stratz.get_heroes()
 
-        return {
+        data = {
             hero["id"]: Hero(
                 hero["id"],
                 hero["shortName"],
@@ -80,6 +77,8 @@ class Heroes(NewKeysCache[Hero], CharacterCache):
             )
             for hero in heroes["data"]["constants"]["heroes"]
         }
+        self.lookup_by_name: dict[str, Hero] = {hero.display_name: hero for hero in data.values()}
+        return data
 
     async def by_id(self, hero_id: int) -> Hero:
         try:
@@ -110,11 +109,12 @@ class Heroes(NewKeysCache[Hero], CharacterCache):
 
     @override
     async def id_by_display_name(self, hero_display_name: str) -> int:
-        data = await self.get_cached_data()
         try:
-            hero = next(iter(hero for hero in data.values() if hero.display_name == hero_display_name))
-        except Exception:
-            raise  # TODO: ???
+            hero = self.lookup_by_name[hero_display_name]
+        except (KeyError, AttributeError):
+            await self.update_data()
+            possible_hero = self.lookup_by_name.get(hero_display_name)
+            return possible_hero.id if possible_hero else -1
         else:
             return hero.id
 
@@ -145,13 +145,12 @@ class Ability:
 
 
 class Abilities(NewKeysCache[Ability]):
-    def __init__(self, bot: AluBot, stratz: StratzClient) -> None:
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot)
-        self.stratz: StratzClient = stratz
 
     @override
     async def fill_data(self) -> dict[int, Ability]:
-        abilities = await self.stratz.get_abilities()
+        abilities = await self.bot.dota.stratz.get_abilities()
         return {
             ability["id"]: Ability(
                 ability["id"],
@@ -182,32 +181,31 @@ class Abilities(NewKeysCache[Ability]):
 @dataclass
 class Item:
     id: int
-    name: str
+    short_name: str
 
     @property
     def icon_url(self) -> str:
-        if self.name.startswith("recipe_"):
+        if self.short_name.startswith("recipe_"):
             # all recipes fall back to a common recipe icon
             return f"{CDN_REACT}/items/recipe.png"
         else:
-            return f"{CDN_REACT}/items/{self.name}.png"
+            return f"{CDN_REACT}/items/{self.short_name}.png"
 
 
 @dataclass
 class PseudoItem:
     id: int
-    name: str
+    short_name: str
     icon_url: str
 
 
 class Items(NewKeysCache[Item | PseudoItem]):
-    def __init__(self, bot: AluBot, stratz: StratzClient) -> None:
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot)
-        self.stratz: StratzClient = stratz
 
     @override
     async def fill_data(self) -> dict[int, Item | PseudoItem]:
-        items = await self.stratz.get_items()
+        items = await self.bot.dota.stratz.get_items()
         return {
             0: PseudoItem(
                 0,
@@ -227,7 +225,7 @@ class Items(NewKeysCache[Item | PseudoItem]):
 
         Examples
         -------
-        1076 -> "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/specialists_array.png"
+        1076 -> "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/items/specialists_array.png"
         """
         try:
             item = await self.get_value(item_id)
@@ -246,31 +244,62 @@ class Facet:
 
     @property
     def icon_url(self) -> str:
+        """_summary_
+
+        Examples
+        -------
+        "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/icons/facets/mana.png"
+        """
         return f"{CDN_REACT}/icons/facets/{self.icon}.png"
 
 
-class Facets(NewKeysCache[Facet]):
-    def __init__(self, bot: AluBot, stratz: StratzClient) -> None:
+@dataclass
+class PseudoFacet:
+    id: int
+    display_name: str
+    icon: str
+    colour: str
+    icon_url: str
+
+
+class Facets(NewKeysCache[Facet | PseudoFacet]):
+    def __init__(self, bot: AluBot) -> None:
         super().__init__(bot)
-        self.stratz: StratzClient = stratz
 
     @override
-    async def fill_data(self) -> dict[int, Facet]:
-        facets = await self.stratz.get_facets()
+    async def fill_data(self) -> dict[int, Facet | PseudoFacet]:
+        facets = await self.bot.dota.stratz.get_facets()
+
+        # as of 12/October/2024 Stratz doesn't have full data on Facets (a lot of nulls)
+        # so for now we fill the missing data with opendota
+        hero_abilities = await self.bot.dota.odota_constants.get_hero_abilities()
+        short_name_display_name_lookup: dict[str, str] = {
+            facet["name"]: facet["title"] for hero in hero_abilities.values() for facet in hero["facets"]
+        }
+
         return {
             facet["id"]: Facet(
                 facet["id"],
-                facet["language"]["displayName"],
+                facet["language"]["displayName"]
+                or short_name_display_name_lookup.get(facet["name"])
+                or "Unknown Facet",
                 facet["icon"],
                 constants.FACET_COLOURS[f'{facet["color"]}{facet['gradientId']}'],
             )
             for facet in facets["data"]["constants"]["facets"]
         }
 
-    async def by_id(self, facet_id: int) -> Facet:
+    async def by_id(self, facet_id: int) -> Facet | PseudoFacet:
         try:
             facet = await self.get_value(facet_id)
         except KeyError:
-            raise  # TODO???
+            unknown_facet = PseudoFacet(
+                id=-1,
+                display_name="Unknown",
+                icon="question",
+                colour="#675CAE",
+                icon_url=const.DotaAsset.FacetQuestion,
+            )
+            return unknown_facet
         else:
             return facet

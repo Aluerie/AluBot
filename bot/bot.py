@@ -349,56 +349,41 @@ class AluBot(commands.Bot, AluBotHelper):
 
     #         self.cache_dota = CacheDota(self)
 
-    async def initialize_league_pulsefire_clients(self) -> None:
-        """Initialize League Of Legends pulsefire clients.
+    # async def initialize_league_pulsefire_clients(self) -> None:
+    #     """Initialize League Of Legends pulsefire clients.
 
-        * Riot API Pulsefire client
-        * CDragon Pulsefire client
-        * Meraki Pulsefire client
-        """
-        if not hasattr(self, "riot"):
-            import orjson
-            from pulsefire.clients import CDragonClient, MerakiCDNClient, RiotAPIClient
-            from pulsefire.middlewares import http_error_middleware, json_response_middleware, rate_limiter_middleware
-            from pulsefire.ratelimiters import RiotAPIRateLimiter
+    #     * Riot API Pulsefire client
+    #     * CDragon Pulsefire client
+    #     * Meraki Pulsefire client
+    #     """
+    #     if not hasattr(self, "riot"):
+    #         import orjson
+    #         from pulsefire.clients import CDragonClient, MerakiCDNClient, RiotAPIClient
+    #         from pulsefire.middlewares import http_error_middleware, json_response_middleware, rate_limiter_middleware
+    #         from pulsefire.ratelimiters import RiotAPIRateLimiter
 
-            self.riot = RiotAPIClient(
-                default_headers={"X-Riot-Token": config.RIOT_API_KEY},
-                middlewares=[
-                    json_response_middleware(orjson.loads),
-                    http_error_middleware(),
-                    rate_limiter_middleware(RiotAPIRateLimiter()),
-                ],
-            )
-            await self.riot.__aenter__()
+    #         self.riot = RiotAPIClient(
+    #             default_headers={"X-Riot-Token": config.RIOT_API_KEY},
+    #             middlewares=[
+    #                 json_response_middleware(orjson.loads),
+    #                 http_error_middleware(),
+    #                 rate_limiter_middleware(RiotAPIRateLimiter()),
+    #             ],
+    #         )
+    #         await self.riot.__aenter__()
 
-            self.cdragon = CDragonClient(
-                default_params={"patch": "latest", "locale": "default"},
-                middlewares=[
-                    json_response_middleware(orjson.loads),
-                    http_error_middleware(),
-                ],
-            )
-            await self.cdragon.__aenter__()
+    #         self.cdragon =
+    #         await self.cdragon.__aenter__()
 
-            self.meraki = MerakiCDNClient(
-                middlewares=[
-                    json_response_middleware(orjson.loads),
-                    http_error_middleware(),
-                ],
-            )
-            await self.meraki.__aenter__()
+    #         self.meraki
+    #         await self.meraki.__aenter__()
 
-    def initialize_cache_league(self) -> None:
-        """Initialize League of Legends caches.
+    def instantiate_lol(self) -> None:
+        """Instantiate League of Legends Client."""
+        if not hasattr(self, "lol"):
+            from utils.lol.lol_client import LeagueClient
 
-        * CDragon Cache with static game data
-        * MerakiAnalysis Cache with roles identification data
-        """
-        if not hasattr(self, "cache_lol"):
-            from utils.lol import CacheLoL
-
-            self.cache_lol = CacheLoL(self)
+            self.lol = LeagueClient(self)
 
     # async def initialize_dota(self) -> None:
     #     """Initialize Dota 2 Client.
@@ -417,7 +402,7 @@ class AluBot(commands.Bot, AluBotHelper):
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from utils.dota.valvepythondota2 import DotaClient
+            from utils.dota.valvepython import DotaClient
 
             self.dota = DotaClient(self)
 

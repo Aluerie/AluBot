@@ -90,12 +90,12 @@ class MatchToSend(BaseMatchToSend):
     ) -> Image.Image:
         # prepare stuff for the following PIL procedures
         img = await self.bot.transposer.url_to_image(stream_preview_url)
-        sorted_champion_ids = await self.bot.cache_lol.role.sort_champions_by_roles(self.all_champion_ids)
+        sorted_champion_ids = await self.bot.lol.role.sort_champions_by_roles(self.all_champion_ids)
         champion_icon_urls = [await self.bot.cache_lol.champion.icon_by_id(id) for id in sorted_champion_ids]
         champion_icon_images = [await self.bot.transposer.url_to_image(url) for url in champion_icon_urls]
-        rune_icon_urls = [await self.bot.cache_lol.rune.icon_by_id(id) for id in self.rune_ids]
+        rune_icon_urls = [await self.bot.lol.rune_icons.by_id(id) for id in self.rune_ids]
         rune_icon_images = [await self.bot.transposer.url_to_image(url) for url in rune_icon_urls]
-        summoner_icon_urls = [await self.bot.cache_lol.summoner_spell.icon_by_id(id) for id in self.summoner_spell_ids]
+        summoner_icon_urls = [await self.bot.lol.summoner_spell_icons.by_id(id) for id in self.summoner_spell_ids]
         summoner_icon_images = [await self.bot.transposer.url_to_image(url) for url in summoner_icon_urls]
 
         def build_notification_image() -> Image.Image:

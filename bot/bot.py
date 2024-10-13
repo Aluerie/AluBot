@@ -339,45 +339,6 @@ class AluBot(commands.Bot, AluBotHelper):
     #         self.steam_web_api = SteamWebAPIClient()
     #         await self.steam_web_api.__aenter__()
 
-    # def initialize_cache_dota(self) -> None:
-    #     """Initialize Dota 2 constants cache.
-
-    #     * OpenDota Dota Constants cache with static data
-    #     """
-    #     if not hasattr(self, "cache_dota"):
-    #         from utils.dota import CacheDota
-
-    #         self.cache_dota = CacheDota(self)
-
-    # async def initialize_league_pulsefire_clients(self) -> None:
-    #     """Initialize League Of Legends pulsefire clients.
-
-    #     * Riot API Pulsefire client
-    #     * CDragon Pulsefire client
-    #     * Meraki Pulsefire client
-    #     """
-    #     if not hasattr(self, "riot"):
-    #         import orjson
-    #         from pulsefire.clients import CDragonClient, MerakiCDNClient, RiotAPIClient
-    #         from pulsefire.middlewares import http_error_middleware, json_response_middleware, rate_limiter_middleware
-    #         from pulsefire.ratelimiters import RiotAPIRateLimiter
-
-    #         self.riot = RiotAPIClient(
-    #             default_headers={"X-Riot-Token": config.RIOT_API_KEY},
-    #             middlewares=[
-    #                 json_response_middleware(orjson.loads),
-    #                 http_error_middleware(),
-    #                 rate_limiter_middleware(RiotAPIRateLimiter()),
-    #             ],
-    #         )
-    #         await self.riot.__aenter__()
-
-    #         self.cdragon =
-    #         await self.cdragon.__aenter__()
-
-    #         self.meraki
-    #         await self.meraki.__aenter__()
-
     def instantiate_lol(self) -> None:
         """Instantiate League of Legends Client."""
         if not hasattr(self, "lol"):
@@ -433,26 +394,10 @@ class AluBot(commands.Bot, AluBotHelper):
         """Close the connection to Discord while cleaning up other open sessions and clients."""
         if hasattr(self, "twitch"):
             await self.twitch.close()
-
-        # if hasattr(self, "cache_dota"):
-        #     self.cache_dota.close()
-        if hasattr(self, "cache_lol"):
-            self.cache_lol.close()
-
-        # things to __aexit__()
-        for client in [
-            "riot",
-            "cdragon",
-            "meraki",
-            "opendota",
-            "stratz",
-            "odota_constants",
-            "steam_web_api",
-        ]:
-            if hasattr(self, client):
-                await getattr(self, client).__aexit__()
-        # if hasattr(self, "dota"):
-        #     await self.dota.close()  # VALVE SWITCH
+        if hasattr(self, "dota"):
+            await self.dota.close()
+        if hasattr(self, "lol"):
+            await self.dota.close()
 
         await super().close()
         # session needs to be closed the last probably

@@ -1,2 +1,2 @@
-from .cache_lol import *
+from .cache import *
 from .regions import *

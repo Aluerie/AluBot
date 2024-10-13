@@ -18,13 +18,6 @@ if TYPE_CHECKING:
         icon_by_id: MutableMapping[int, str]
         alias_by_id: MutableMapping[int, str]
 
-    class RoleDict(TypedDict):
-        TOP: float
-        JUNGLE: float
-        MIDDLE: float
-        BOTTOM: float
-        UTILITY: float
-
 
 __all__ = (
     "Champions",
@@ -120,6 +113,14 @@ class SummonerSpellIcons(NewKeysCache[str]):
     async def by_id(self, summoner_spell_id: int) -> str:
         """Get summoner spell icon url by id."""
         return await self.get_value(summoner_spell_id)
+
+
+class RoleDict(TypedDict):
+    TOP: float
+    JUNGLE: float
+    MIDDLE: float
+    BOTTOM: float
+    UTILITY: float
 
 
 class RolesCache(NewKeysCache[RoleDict]):

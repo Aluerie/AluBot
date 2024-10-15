@@ -16,7 +16,7 @@ from . import const, errors, formats
 __all__ = ("measure_time",)
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 
 class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they aren't used as actual classes per PEP-8.
@@ -52,7 +52,7 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
 
     def measure_time(self) -> None:
         # PT for Performance Time, maybe there are better ideas for abbreviations.
-        self.log.info("%s PT: %.3f secs", self.name, perf_counter() - self.start)
+        self.log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
 
     def __exit__(self, *_: Any) -> None:
         self.measure_time()

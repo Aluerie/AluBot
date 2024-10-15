@@ -159,11 +159,17 @@ class Abilities(GameDataStorage[Ability]):
     @override
     async def fill_data(self) -> dict[int, Ability]:
         abilities = await self.bot.dota.stratz.get_abilities()
+
+        # as of 12/October/2024 Stratz doesn't have full data on some Talent names (a lot of nulls)
+        # so for now we fill the missing data with opendota
+        odota_abilities = await self.bot.dota.odota_constants.get_abilities()
+
         return {
             ability["id"]: Ability(
                 ability["id"],
                 ability["name"],
-                ability["language"]["displayName"],
+                ability["language"]["displayName"]
+                or (oa["dname"] or "unknown" if (oa := odota_abilities.get(ability["name"])) else "Unknown"),
                 ability["isTalent"],
             )
             for ability in abilities["data"]["constants"]["abilities"]

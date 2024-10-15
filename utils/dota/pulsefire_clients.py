@@ -271,7 +271,6 @@ class StratzAPIRateLimiter(DotaAPIsRateLimiter):
         ]
         header_limits = {"app": [(int(headers[f"X-RateLimit-Limit-{name}"]), period) for name, period in periods]}
         header_counts = {"app": [(int(headers[f"X-RateLimit-Remaining-{name}"]), period) for name, period in periods]}
-        print(header_counts, header_limits)
         return header_limits, header_counts
 
 
@@ -439,7 +438,7 @@ if __name__ == "__main__":
                 match.pop(item, None)  # type: ignore
             # pprint.pprint(match.keys())
             # pprint.pprint(match)
-        print(opendota_client.rate_limiter.rate_limits_string)
+        print(opendota_client.rate_limiter.rate_limits_string) # noqa: T201
 
     async def test_opendota_request_parse() -> None:
         async with OpenDotaClient() as opendota_client:
@@ -452,14 +451,14 @@ if __name__ == "__main__":
             match_id = 7549006442
             friend_id = 159020918
             match = await stratz_client.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
-            print(match["data"]["match"]["players"][0]["item3Id"])
+            print(match["data"]["match"]["players"][0]["item3Id"])  # noqa: T201
 
-        print(stratz_client.rate_limiter.rate_limits_string)
+        print(stratz_client.rate_limiter.rate_limits_string)  # noqa: T201
 
     # STEAM WEB API
     async def test_steam_web_api_client() -> None:
         async with SteamWebAPIClient() as steam_web_api:
             match = await steam_web_api.get_match_details(7566292740)
-            print(match)
+            print(match)  # noqa: T201
 
     asyncio.run(test_steam_web_api_client())

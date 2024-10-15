@@ -9,17 +9,9 @@ from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataSto
 from . import constants
 
 if TYPE_CHECKING:
-    from collections.abc import MutableMapping
-
     import discord
 
     from bot import AluBot
-
-    class ChampionCache(TypedDict):
-        id_by_name: MutableMapping[str, int]
-        name_by_id: MutableMapping[int, str]
-        icon_by_id: MutableMapping[int, str]
-        alias_by_id: MutableMapping[int, str]
 
 
 __all__ = (
@@ -65,9 +57,6 @@ class PseudoChampion(Character):
 
 
 class Champions(CharacterStorage[Champion]):
-    if TYPE_CHECKING:
-        cached_data: ChampionCache
-
     @override
     async def fill_data(self) -> dict[int, Champion]:
         """_summary_

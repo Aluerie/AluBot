@@ -287,6 +287,7 @@ class StratzClient(BaseClient):
             base_url="https://api.stratz.com/graphql",
             default_params={},
             default_headers={
+                "User-Agent": "STRATZ_API",
                 "Authorization": f"Bearer {config.STRATZ_BEARER_TOKEN}",
                 "Content-Type": "application/json",
             },
@@ -438,7 +439,7 @@ if __name__ == "__main__":
                 match.pop(item, None)  # type: ignore
             # pprint.pprint(match.keys())
             # pprint.pprint(match)
-        print(opendota_client.rate_limiter.rate_limits_string) # noqa: T201
+        print(opendota_client.rate_limiter.rate_limits_string)  # noqa: T201
 
     async def test_opendota_request_parse() -> None:
         async with OpenDotaClient() as opendota_client:

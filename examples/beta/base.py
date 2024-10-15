@@ -25,7 +25,7 @@ from discord.ext import commands, menus
 
 import config
 from bot import AluBot, AluCog, AluContext, ExtCategory, aluloop
-from utils import cache, checks, const, errors, formats, timezones
+from utils import cache, checks, const, errors, formats, fuzzy, timezones
 from utils.helpers import measure_time
 
 if TYPE_CHECKING:

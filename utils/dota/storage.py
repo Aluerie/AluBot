@@ -39,11 +39,25 @@ class Hero(Character):
     the prefix "npc_dota_hero_" is removed in `short_name`.
     """
     talent_ids: list[int]
+    """Ability IDs for hero talents.
+
+    I think the list is ordered same as odota constants:
+    7 6
+    5 4
+    3 2
+    1 0
+    # so if it's even - it's a right talent, if it's odd - left
+    """
     facet_ids: list[int]
+    """Facet IDs for the hero.
+
+    Facet ID is a completely separate identifier from ability ID.
+    This value is also different from "facet slot id" which is simply 0 1 2... index
+    """
 
     @property
     def topbar_icon_url(self) -> str:
-        """_summary_
+        """Hero icon for the in-game topbar with all heroes and score.
 
         Examples
         -------
@@ -53,7 +67,7 @@ class Hero(Character):
 
     @property
     def minimap_icon_url(self) -> str:
-        """_summary_
+        """Hero icon for the minimap. Somewhat represents small pixel art for the hero.
 
         Examples
         -------
@@ -93,6 +107,8 @@ class Heroes(CharacterStorage[Hero]):  # CharacterCache
 
     @override
     async def by_id(self, hero_id: int) -> Hero | PseudoHero:
+        """Get Hero object by its ID."""
+
         # special cases
         if hero_id == 0:
             return PseudoHero(
@@ -119,6 +135,7 @@ class Heroes(CharacterStorage[Hero]):  # CharacterCache
 
     @override
     async def all(self) -> list[Hero]:
+        """Get list of all Dota 2 heroes"""
         data = await self.get_cached_data()
         return list(data.values())
 
@@ -145,6 +162,10 @@ class Ability:
     def icon_url(self) -> str:
         return constants.TALENT_TREE_ICON if self.is_talent else f"{CDN_REACT}/abilities/{self.name}.png"
 
+    @override
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} {self.display_name}>"
+
 
 @dataclass
 class PseudoAbility:
@@ -153,6 +174,10 @@ class PseudoAbility:
     display_name: str
     is_talent: bool | None
     icon_url: str
+
+    @override
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} {self.display_name}>"
 
 
 class Abilities(GameDataStorage[Ability]):
@@ -176,6 +201,7 @@ class Abilities(GameDataStorage[Ability]):
         }
 
     async def by_id(self, ability_id: int) -> Ability | PseudoAbility:
+        """Get Ability by its ID."""
         try:
             ability = await self.get_value(ability_id)
         except KeyError:
@@ -212,7 +238,7 @@ class Item:
 
     @override
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.short_name}>"
+        return f"<{self.__class__.__name__} id={self.id} {self.short_name}>"
 
 
 @dataclass
@@ -220,6 +246,10 @@ class PseudoItem:
     id: int
     short_name: str
     icon_url: str
+
+    @override
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} {self.short_name}>"
 
 
 class Items(GameDataStorage[Item]):
@@ -235,6 +265,8 @@ class Items(GameDataStorage[Item]):
         }
 
     async def by_id(self, item_id: int) -> Item | PseudoItem:
+        """Get Item by its ID."""
+
         # special case
         if item_id == 0:
             return PseudoItem(
@@ -273,6 +305,10 @@ class Facet:
         """
         return f"{CDN_REACT}/icons/facets/{self.icon}.png"
 
+    @override
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} {self.display_name}>"
+
 
 @dataclass
 class PseudoFacet:
@@ -281,6 +317,10 @@ class PseudoFacet:
     icon: str
     colour: str
     icon_url: str
+
+    @override
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} {self.display_name}>"
 
 
 class Facets(GameDataStorage[Facet]):
@@ -308,6 +348,7 @@ class Facets(GameDataStorage[Facet]):
         }
 
     async def by_id(self, facet_id: int) -> Facet | PseudoFacet:
+        """Get Facet by its ID."""
         try:
             facet = await self.get_value(facet_id)
         except KeyError:

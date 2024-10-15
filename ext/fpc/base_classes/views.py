@@ -191,140 +191,6 @@ class SetupMisc(FPCView):
         await interaction.followup.send(embed=response_embed)
 
 
-# class SetupPlayersCharactersPageSource(menus.ListPageSource):
-#     """Page source for both commands `/{game} setup players/champions`."""
-
-#     def __init__(self, data: list[tuple[int, str]]) -> None:
-#         super().__init__(entries=data, per_page=20)
-
-#     @override
-#     async def format_page(self, menu: SetupPlayersCharactersPaginator, entries: list[tuple[int, str]]) -> discord.Embed:
-#         """Create a page for `/{game} setup {characters/players}` command.
-
-#         This gives
-#          * Embed with explanation text
-#          * Buttons to add/remove characters to/from favourite list.
-
-#         Parameters
-#         ----------
-#         entries:
-#             List of (id, name) tuples,
-#             for example: [(1, "Anti-Mage"), (2, "Axe"), ...] or [(1, "gosu"), (2, "Quantum"), ...].
-
-#         """
-#         # unfortunately we have to fetch favourites each format page
-#         # in case they are bad acting with using both slash commands
-#         # or several menus
-#         query = f"SELECT {menu.id_column_name} FROM {menu.table_name} WHERE guild_id=$1"
-#         assert menu.ctx_ntr.guild
-#         favourite_ids: list[int] = [r for (r,) in await menu.ctx_ntr.client.pool.fetch(query, menu.ctx_ntr.guild.id)]
-
-#         menu.clear_items()
-
-#         embed = (
-#             discord.Embed(
-#                 colour=menu.cog.colour,
-#                 title=f"Your favourite {menu.cog.game_display_name} {menu.plural} list interactive setup",
-#                 description=f"Pagination menu below represents all {menu.plural} from {menu.cog.game_display_name}.",
-#             )
-#             .add_field(
-#                 name="\N{LARGE GREEN SQUARE}/\N{BLACK LARGE SQUARE} Buttons",
-#                 value=(
-#                     f"Press those buttons to mark/demark a a {menu.singular} as your favourite.\n"
-#                     "Button's colour shows if it's currently chosen as your favourite. "
-#                     "(\N{LARGE GREEN SQUARE} - yes, \N{BLACK LARGE SQUARE} - no)\n"
-#                 ),
-#                 inline=False,
-#             )
-#             .add_field(
-#                 name=f"{menu.object_list.label} Your favourite {menu.plural} list Button",
-#                 value=f"Show your favourite {menu.plural} list.",
-#                 inline=False,
-#             )
-#         )
-
-#         if menu.special_button_cls is None:
-#             special_item = menu.search
-#         else:
-#             special_item = menu.special_button_cls(entries, menu)
-#             embed.add_field(name=special_item.field_name, value=special_item.field_value)
-#         for item in [menu.object_list, menu.previous_page, menu.index, menu.next_page, special_item]:
-#             menu.add_item(item)
-
-#         for entry in entries:
-#             id, name = entry
-#             is_favourite = id in favourite_ids
-#             emoji = menu.cog.emote_dict[id]
-#             menu.add_item(AddRemoveButton(name, is_favourite, id, menu, emoji=emoji))
-
-#         return embed
-
-
-# class SetupPlayersCharactersPaginator(pages.Paginator):
-#     """A Parent Paginator class for both commands `/{game} setup players/champions`."""
-
-#     def __init__(
-#         self,
-#         interaction: discord.Interaction[AluBot],
-#         object_id_name_tuples: list[tuple[int, str]],
-#         table_object_name: str,
-#         singular: str,
-#         plural: str,
-#         cog: BaseSettings,
-#         get_object_list_embed: Callable[[int], Awaitable[discord.Embed]],
-#         *,
-#         special_button_cls: type[AccountListButton] | None = None,
-#     ) -> None:
-#         """__init__.
-
-#         Parameters
-#         ----------
-#         ctx : AluGuildContext
-#             Context
-#         object_id_name_tuples : list[tuple[int, str]]
-#             list of tuples to pass to source. Something like list of (hero_id, hero_name) tuples.
-#         table_object_name : str
-#             object's name in our SQL tables, i.e. "player", "character".
-#         singular : str
-#             object's display name in singular form, i.e. "player", "hero", "champion"
-#         plural : str
-#             object's display name in plural form, i.e. "players", "heroes", "champions"
-#         cog : FPCSettingsBase
-#             the cog
-#         get_object_list_embed : Callable[[int], Awaitable[discord.Embed]]
-#             this has to go separately because the cog has all the functions.
-#         special_button_cls : Optional[type[AccountListButton]], optional
-#             button to replace the 5th button in pagination menu.
-#             i.e. we want account list for /setup players command.
-
-#         """
-#         super().__init__(
-#             interaction,
-#             source=SetupPlayersCharactersPageSource(object_id_name_tuples),
-#         )
-#         self.cog: BaseSettings = cog
-#         self.singular: str = singular
-#         self.plural: str = plural
-#         self.get_object_list_embed: Callable[[int], Awaitable[discord.Embed]] = get_object_list_embed
-
-#         self.table_name: str = f"{cog.prefix}_favourite_{table_object_name}s "
-#         self.id_column_name: str = f"{table_object_name}_id"
-#         self.special_button_cls: type[AccountListButton] | None = special_button_cls
-
-#     @override
-#     async def on_timeout(self) -> None:
-#         await super().on_timeout()
-#         self.cog.setup_messages_cache.pop(self.message.id, None)
-#         return
-
-#     @discord.ui.button(label="\N{PAGE WITH CURL}", style=discord.ButtonStyle.blurple)
-#     async def object_list(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
-#         """Show favourite object list."""
-#         assert interaction.guild
-#         embed = await self.get_object_list_embed(interaction.guild.id)
-#         await interaction.response.send_message(embed=embed, ephemeral=True)
-
-
 class PlayersPageSource(menus.ListPageSource):
     """Page source for both commands `/{game} setup players`."""
 
@@ -415,16 +281,7 @@ class SetupPlayersPaginator(pages.Paginator):
         player_tuples: list[tuple[int, str]],
         cog: BaseSettings,
     ) -> None:
-        super().__init__(
-            interaction,
-            source=PlayersPageSource(player_tuples),
-            # player_tuples,
-            # "player",
-            # "player",
-            # "players",
-            # cog,
-            # special_button_cls=AccountListButton,
-        )
+        super().__init__(interaction, source=PlayersPageSource(player_tuples))
         self.cog: BaseSettings = cog
 
     @override
@@ -698,7 +555,7 @@ class RemoveAllAccountsButton(discord.ui.Button[DatabaseRemoveView]):
             raise errors.BadArgument(msg)
 
         embed = discord.Embed(colour=self.cog.colour).add_field(
-            name="Succesfully removed a player from the database",
+            name="Successfully removed a player from the database",
             value=self.player_name,
         )
         await interaction.response.send_message(embed=embed)

@@ -35,12 +35,15 @@ VT = TypeVar("VT")
 class Character:
     id: int
     display_name: str
-    """A display name for the character, i.e. `"Dark Willow"`"""
+    """A display name for the character, i.e. `"Dark Willow"`.
+
+    This will include all the spaces, unusual symbols and everything.
+    """
     emote: str
 
     @override
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.display_name} id={self.id}>"
+        return f"<{self.__class__.__name__} id={self.id} {self.display_name}>"
 
 
 CharacterT = TypeVar("CharacterT", bound=Character)
@@ -80,11 +83,21 @@ class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT
 
 
 class GameDataStorage(Generic[VT]):
+    """Game Data Storage.
+
+    Used for fetching and storing data from public API and JSONs.
+    The concept is the data gets updated/refreshed once a day.
+
+    if KeyError arises - there is an attempt to refresh the data, otherwise it's assumed that the data is fine enough
+    (yes, it can backfire with an update where, for example, some item icon changes,
+    but we still update storage once per day, so whatever).
+    """
+
     if TYPE_CHECKING:
         cached_data: dict[int, VT]
 
     def __init__(self, bot: AluBot) -> None:
-        """_summary_
+        """__init__.
 
         Parameters
         ----------
@@ -95,20 +108,28 @@ class GameDataStorage(Generic[VT]):
         self.lock: asyncio.Lock = asyncio.Lock()
 
     def start(self) -> None:
+        """Start the storage tasks."""
         # self.update_data.add_exception_type(errors.ResponseNotOK)
         # random times just so we don't have a possibility of all cache being updated at the same time
         self.update_data.change_interval(hours=24, minutes=random.randint(1, 59))
         self.update_data.start()
 
     def close(self) -> None:
-        """Closes the keys cache."""
+        """Cancel the storage tasks."""
         self.update_data.cancel()
 
     async def fill_data(self) -> dict[int, VT]:
+        """Fill self.cached_data with the data from various json data.
+
+        This function is supposed to be implemented by subclasses.
+        We get the data and sort it out into a convenient dictionary to cache.
+        """
         ...
 
     @aluloop()
     async def update_data(self) -> None:
+        """The task responsible for keeping the data up-to-date."""
+        log.debug("Updating Cache %s.", self.__class__.__name__)
         async with self.lock:
             start_time = time.perf_counter()
             self.cached_data = await self.fill_data()
@@ -123,9 +144,13 @@ class GameDataStorage(Generic[VT]):
             return self.cached_data
 
     async def get_value(self, id: int) -> VT:
+        """Get value by the `key` from `self.cached_data`."""
         try:
             return self.cached_data[id]
         except (KeyError, AttributeError):
+            # let's try to update the cache in case it's a KeyError due to
+            # * new patch or something
+            # * the data is not initialized then we will get stuck in self.lock waiting for the data.
             await self.update_data()
             return self.cached_data[id]
 

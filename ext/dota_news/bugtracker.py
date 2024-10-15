@@ -390,7 +390,7 @@ class BugTracker(AluCog):
         )
         await ctx.reply(embed=embed)
 
-    @aluloop(minutes=3)
+    @aluloop(minutes=10)
     async def bugtracker_news_worker(self) -> None:
         """Bugtracker News Task.
 

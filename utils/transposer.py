@@ -116,6 +116,7 @@ class TransposeClient:
                 raise errors.ResponseNotOK(msg)
 
     async def url_to_bytes(self, url: str) -> bytes:
+        """Convert URL to bytes."""
         async with self.session.get(url) as response:
             if response.ok:
                 return await response.read()

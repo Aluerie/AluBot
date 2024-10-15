@@ -100,6 +100,15 @@ type GetHeroAbilitiesResponse = dict[str, HeroAbilities]
 class HeroAbilities(TypedDict):
     abilities: list[str]
     talents: list[HeroTalent]
+    """Hero Talents
+
+    Note that talents are ordered like this (it's exactly list of length 8):
+    # 7 6
+    # 5 4
+    # 3 2
+    # 1 0
+    # so if it's even - it's a right talent, if it's odd - left
+    """
     facets: list[HeroFacet]
 
 

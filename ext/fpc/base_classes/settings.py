@@ -266,7 +266,7 @@ class BaseSettings(FPCCog):
             colour=self.colour,
             title="Successfully made a request to add the account into the database",
         ).add_field(name=account.player_embed_name, value=account.account_string_with_links)
-        await interaction.response.send_message(embed=response_embed)
+        await interaction.followup.send(embed=response_embed)
 
         logs_embed = confirm_embed.copy()
         logs_embed.title = ""
@@ -308,7 +308,7 @@ class BaseSettings(FPCCog):
             .set_author(name=self.game_display_name, icon_url=self.game_icon_url)
             .set_thumbnail(url=account.profile_image)
         )
-        await interaction.response.send_message(embed=response_embed)
+        await interaction.followup.send(embed=response_embed)
 
         logs_embed = response_embed.copy()
         logs_embed.set_author(name=interaction.user, icon_url=interaction.user.display_avatar.url)
@@ -332,7 +332,7 @@ class BaseSettings(FPCCog):
         view = views.DatabaseRemoveView(
             interaction.user.id, self, player_id, display_name, account_ids_names, self.account_id_column
         )
-        await interaction.response.send_message(view=view)
+        await interaction.followup.send(view=view)
 
     # fpc settings related functions ###################################################################################
 
@@ -367,8 +367,7 @@ class BaseSettings(FPCCog):
             description=desc,
         ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
         view = views.SetupChannel(self, author_id=interaction.user.id)
-        await interaction.response.send_message(embed=embed, view=view)
-        message = await interaction.original_response()
+        message = await interaction.followup.send(embed=embed, view=view, wait=True)
         view.message = message
         self.setup_messages_cache[message.id] = view
 
@@ -456,8 +455,7 @@ class BaseSettings(FPCCog):
             .set_footer(text="Buttons below correspond embed fields above. Read them!")
         )
         view = views.SetupMisc(self, embed, author_id=interaction.user.id)
-        await interaction.response.send_message(embed=embed, view=view)
-        message = await interaction.original_response()
+        message = await interaction.followup.send(embed=embed, view=view, wait=True)
         view.message = message
         self.setup_messages_cache[message.id] = view
 
@@ -621,7 +619,7 @@ class BaseSettings(FPCCog):
             name="Successfully added a player to your favourites.",
             value=player_display_name,
         )
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
 
     async def hideout_player_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
         """Base function for `/{game}-fpc player remove` Hideout-only command."""
@@ -636,7 +634,7 @@ class BaseSettings(FPCCog):
                 title="Successfully removed the player from your favourites.",
                 description=player_display_name,
             )
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
         elif result == "DELETE 0":
             msg = f"Player {player_display_name} is already not in your favourite list."
             raise errors.BadArgument(msg)
@@ -674,7 +672,7 @@ class BaseSettings(FPCCog):
             name=f"Successfully added a {self.character_singular} to your favourites.",
             value=character.display_name,
         )
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
 
     async def hideout_character_remove(self, interaction: discord.Interaction[AluBot], character: Character) -> None:
         """Base function for `/{game}-fpc {character} remove` Hideout-only command."""
@@ -688,7 +686,7 @@ class BaseSettings(FPCCog):
                 title=f"Successfully removed a {self.character_singular} from your favourites.",
                 description=character.display_name,
             )
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
         elif result == "DELETE 0":
             msg = (
                 f"{self.character_singular.capitalize()} {character.display_name} "
@@ -721,7 +719,7 @@ class BaseSettings(FPCCog):
         await interaction.response.defer()
         assert interaction.guild
         embed = await self.get_player_list_embed(interaction.guild.id)
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
 
     async def get_character_list_embed(self, guild_id: int) -> discord.Embed:
         query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
@@ -742,7 +740,7 @@ class BaseSettings(FPCCog):
         await interaction.response.defer()
         assert interaction.guild
         embed = await self.get_character_list_embed(interaction.guild.id)
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
 
     async def hideout_player_add_remove_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
@@ -874,4 +872,4 @@ class BaseSettings(FPCCog):
                 msg = "Somehow FPC related command is None."
                 raise RuntimeError(msg)
 
-        await interaction.response.send_message(embed=embed, file=file)
+        await interaction.followup.send(embed=embed, file=file)

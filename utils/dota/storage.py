@@ -169,7 +169,7 @@ class Abilities(GameDataStorage[Ability]):
                 ability["id"],
                 ability["name"],
                 ability["language"]["displayName"]
-                or (oa["dname"] or "unknown" if (oa := odota_abilities.get(ability["name"])) else "Unknown"),
+                or (oa.get("dname") or "unknown" if (oa := odota_abilities.get(ability["name"])) else "Unknown"),
                 ability["isTalent"],
             )
             for ability in abilities["data"]["constants"]["abilities"]

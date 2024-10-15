@@ -26,11 +26,13 @@ class FPCDevTools(FPCCog):
     hideout_devfpc_dota = app_commands.Group(
         name="dota",
         description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
+        parent=hideout_devfpc,
     )
 
     hideout_devfpc_lol = app_commands.Group(
         name="lol",
         description="League of Legends FPC (Favourite Player+Character) Hideout-only commands.",
+        parent=hideout_devfpc,
     )
 
     async def create_emote_helper(

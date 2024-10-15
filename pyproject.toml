@@ -65,6 +65,7 @@ lint.select = [
     "DTZ",
     "ISC",
     # "D",   # for doc-string madness
+    "T20",   # print/pprint statements
 ]
 lint.ignore = [
     "F401",
@@ -94,6 +95,7 @@ lint.ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "ext/beta.py" = ["ANN201"]
+"*.ipynb" = ["T20", "F404"]
 
 
 [tool.ruff.lint.isort]

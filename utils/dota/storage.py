@@ -1,20 +1,26 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, override
 
-from .. import const
-from ..cache import CharacterCache, NewKeysCache
+from bot import AluBot
+
+from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 from . import constants
 
 if TYPE_CHECKING:
+    import discord
+
     from bot import AluBot
 
 
 __all__ = (
     "Abilities",
     "Facets",
+    "Hero",
+    "PseudoHero",
     "Heroes",
+    "HeroTransformer",
     "Items",
 )
 
@@ -23,9 +29,8 @@ __all__ = (
 CDN_REACT = "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/"
 
 
-@dataclass
-class Hero:
-    id: int
+@dataclass(repr=False)
+class Hero(Character):
     short_name: str
     """A short name for the hero, i.e. `"dark_willow"`.
 
@@ -33,10 +38,8 @@ class Hero:
     Probably, the difference compared to stratz's "name" field is that
     the prefix "npc_dota_hero_" is removed in `short_name`.
     """
-    display_name: str
-    """A display name for the hero, i.e. `"Dark Willow"`"""
-    talents: list[int]
-    facets: list[int]
+    talent_ids: list[int]
+    facet_ids: list[int]
 
     @property
     def topbar_icon_url(self) -> str:
@@ -59,72 +62,71 @@ class Hero:
         return f"{CDN_REACT}/heroes/icons/{self.short_name}.png"
 
 
-class Heroes(NewKeysCache[Hero], CharacterCache):
-    def __init__(self, bot: AluBot) -> None:
-        super().__init__(bot)
+@dataclass(repr=False)
+class PseudoHero(Character):
+    short_name: str
 
+    topbar_icon_url: str
+    minimap_icon_url: str | None = None
+
+    talent_ids: list[int] = field(default_factory=list)
+    facet_ids: list[int] = field(default_factory=list)
+
+
+class Heroes(CharacterStorage[Hero]):  # CharacterCache
     @override
     async def fill_data(self) -> dict[int, Hero]:
         heroes = await self.bot.dota.stratz.get_heroes()
 
-        data = {
+        return {
             hero["id"]: Hero(
-                hero["id"],
-                hero["shortName"],
-                hero["displayName"],
-                [talent["abilityId"] for talent in hero["talents"]],
-                [facet["facetId"] for facet in hero["facets"]],
+                id=hero["id"],
+                short_name=hero["shortName"],
+                display_name=hero["displayName"],
+                talent_ids=[talent["abilityId"] for talent in hero["talents"]],
+                facet_ids=[facet["facetId"] for facet in hero["facets"]],
+                # if I don't provide a ready-to-go emote -> assume the hero is new and thus give it a template emote
+                emote=constants.HERO_EMOTES.get(hero["id"]) or constants.NEW_HERO_EMOTE,
             )
             for hero in heroes["data"]["constants"]["heroes"]
         }
-        self.lookup_by_name: dict[str, Hero] = {hero.display_name: hero for hero in data.values()}
-        return data
 
-    async def by_id(self, hero_id: int) -> Hero:
+    @override
+    async def by_id(self, hero_id: int) -> Hero | PseudoHero:
+        # special cases
+        if hero_id == 0:
+            return PseudoHero(
+                id=0,
+                short_name="disconnected_or_unpicked",
+                display_name="Disconnected/Unpicked",
+                topbar_icon_url=constants.DotaAsset.HeroTopbarDisconnectedUnpicked,
+                emote="\N{BLACK QUESTION MARK ORNAMENT}",
+            )
+
         try:
             hero = await self.get_value(hero_id)
         except KeyError:
-            raise  # TODO: ???
+            unknown_hero = PseudoHero(
+                id=hero_id,
+                short_name="unknown_hero",
+                display_name="Unknown",
+                topbar_icon_url=constants.DotaAsset.HeroTopbarUnknown,
+                emote=constants.NEW_HERO_EMOTE,
+            )
+            return unknown_hero
         else:
             return hero
 
     @override
-    async def id_display_name_tuples(self) -> list[tuple[int, str]]:
+    async def all(self) -> list[Hero]:
         data = await self.get_cached_data()
-        return [(hero_id, hero.display_name) for hero_id, hero in data.items()]
+        return list(data.values())
 
+
+class HeroTransformer(CharacterTransformer[Hero]):
     @override
-    async def id_display_name_dict(self) -> dict[int, str]:
-        data = await self.get_cached_data()
-        return {hero_id: hero.display_name for hero_id, hero in data.items()}
-
-    @override
-    async def display_name_by_id(self, hero_id: int) -> str:
-        try:
-            hero = await self.get_value(hero_id)
-        except KeyError:
-            raise  # TODO: ???
-        else:
-            return hero.display_name
-
-    @override
-    async def id_by_display_name(self, hero_display_name: str) -> int:
-        try:
-            hero = self.lookup_by_name[hero_display_name]
-        except (KeyError, AttributeError):
-            await self.update_data()
-            possible_hero = self.lookup_by_name.get(hero_display_name)
-            return possible_hero.id if possible_hero else -1
-        else:
-            return hero.id
-
-    async def topbar_icon_by_id(self, hero_id: int) -> str:
-        try:
-            hero = await self.get_value(hero_id)
-        except KeyError:
-            raise  # TODO: ???
-        else:
-            return hero.topbar_icon_url
+    def get_character_storage(self, interaction: discord.Interaction[AluBot]) -> Heroes:
+        return interaction.client.dota.heroes
 
 
 @dataclass
@@ -144,10 +146,16 @@ class Ability:
         return constants.TALENT_TREE_ICON if self.is_talent else f"{CDN_REACT}/abilities/{self.name}.png"
 
 
-class Abilities(NewKeysCache[Ability]):
-    def __init__(self, bot: AluBot) -> None:
-        super().__init__(bot)
+@dataclass
+class PseudoAbility:
+    id: int
+    name: str
+    display_name: str
+    is_talent: bool | None
+    icon_url: str
 
+
+class Abilities(GameDataStorage[Ability]):
     @override
     async def fill_data(self) -> dict[int, Ability]:
         abilities = await self.bot.dota.stratz.get_abilities()
@@ -161,21 +169,20 @@ class Abilities(NewKeysCache[Ability]):
             for ability in abilities["data"]["constants"]["abilities"]
         }
 
-    async def icon_by_id(self, ability_id: int) -> str:
+    async def by_id(self, ability_id: int) -> Ability | PseudoAbility:
         try:
             ability = await self.get_value(ability_id)
         except KeyError:
-            return const.DotaAsset.AbilityUnknown
+            unknown_ability = PseudoAbility(
+                id=ability_id,
+                name="unknown_ability",
+                display_name="Unknown",
+                is_talent=None,
+                icon_url=constants.DotaAsset.AbilityUnknown,
+            )
+            return unknown_ability
         else:
-            return ability.icon_url
-
-    async def display_name_by_id(self, ability_id: int) -> str:
-        try:
-            ability = await self.get_value(ability_id)
-        except KeyError:
-            return "Unknown Talent"
-        else:
-            return ability.display_name
+            return ability
 
 
 @dataclass
@@ -185,11 +192,21 @@ class Item:
 
     @property
     def icon_url(self) -> str:
+        """Get item's `icon_url` id by its `item_id`.
+
+        Examples
+        -------
+        <Item id=1076> -> "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/items/specialists_array.png"
+        """
         if self.short_name.startswith("recipe_"):
             # all recipes fall back to a common recipe icon
             return f"{CDN_REACT}/items/recipe.png"
         else:
             return f"{CDN_REACT}/items/{self.short_name}.png"
+
+    @override
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {self.short_name}>"
 
 
 @dataclass
@@ -199,20 +216,11 @@ class PseudoItem:
     icon_url: str
 
 
-class Items(NewKeysCache[Item | PseudoItem]):
-    def __init__(self, bot: AluBot) -> None:
-        super().__init__(bot)
-
+class Items(GameDataStorage[Item]):
     @override
-    async def fill_data(self) -> dict[int, Item | PseudoItem]:
+    async def fill_data(self) -> dict[int, Item]:
         items = await self.bot.dota.stratz.get_items()
         return {
-            0: PseudoItem(
-                0,
-                "Empty Slot",
-                const.DotaAsset.ItemEmpty,
-            )
-        } | {
             item["id"]: Item(
                 item["id"],
                 item["shortName"],
@@ -220,19 +228,26 @@ class Items(NewKeysCache[Item | PseudoItem]):
             for item in items["data"]["constants"]["items"]
         }
 
-    async def icon_by_id(self, item_id: int) -> str:
-        """Get item's `icon_url` id by its `item_id`.
+    async def by_id(self, item_id: int) -> Item | PseudoItem:
+        # special case
+        if item_id == 0:
+            return PseudoItem(
+                0,
+                "Empty Slot",
+                constants.DotaAsset.ItemEmpty,
+            )
 
-        Examples
-        -------
-        1076 -> "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/items/specialists_array.png"
-        """
         try:
             item = await self.get_value(item_id)
         except KeyError:
-            return const.DotaAsset.ItemUnknown
+            unknown_item = PseudoItem(
+                id=item_id,
+                short_name="unknown_item",
+                icon_url=constants.DotaAsset.ItemUnknown,
+            )
+            return unknown_item
         else:
-            return item.icon_url
+            return item
 
 
 @dataclass
@@ -262,12 +277,9 @@ class PseudoFacet:
     icon_url: str
 
 
-class Facets(NewKeysCache[Facet | PseudoFacet]):
-    def __init__(self, bot: AluBot) -> None:
-        super().__init__(bot)
-
+class Facets(GameDataStorage[Facet]):
     @override
-    async def fill_data(self) -> dict[int, Facet | PseudoFacet]:
+    async def fill_data(self) -> dict[int, Facet]:
         facets = await self.bot.dota.stratz.get_facets()
 
         # as of 12/October/2024 Stratz doesn't have full data on Facets (a lot of nulls)
@@ -294,11 +306,11 @@ class Facets(NewKeysCache[Facet | PseudoFacet]):
             facet = await self.get_value(facet_id)
         except KeyError:
             unknown_facet = PseudoFacet(
-                id=-1,
+                id=facet_id,
                 display_name="Unknown",
                 icon="question",
                 colour="#675CAE",
-                icon_url=const.DotaAsset.FacetQuestion,
+                icon_url=constants.DotaAsset.FacetQuestion,
             )
             return unknown_facet
         else:

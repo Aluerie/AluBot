@@ -1,13 +1,71 @@
+"""Schemas representing data structure for my GraphQL calls with StratzClient."""
 from __future__ import annotations
 
 from typing import TypedDict
 
 __all__ = (
+    "GetFPCMatchesResponse",
     "GetHeroesResponse",
     "GetAbilitiesResponse",
     "GetItemsResponse",
     "GetFacetsResponse",
 )
+
+# STRATZ: GET FPC MATCHES
+
+
+class GetFPCMatchesResponse(TypedDict):
+    data: Data
+
+
+class Data(TypedDict):
+    match: Match
+
+
+class Match(TypedDict):
+    statsDateTime: int
+    players: list[Player]
+
+
+class Player(TypedDict):
+    isVictory: bool
+    heroId: int
+    variant: int
+    kills: int
+    deaths: int
+    assists: int
+    item0Id: int
+    item1Id: int
+    item2Id: int
+    item3Id: int
+    item4Id: int
+    item5Id: int
+    neutral0Id: int
+    playbackData: PlaybackData | None
+    stats: Stats
+
+
+class PlaybackData(TypedDict):
+    abilityLearnEvents: list[AbilityLearnEvent]
+    purchaseEvents: list[PurchaseEvent]
+
+
+class AbilityLearnEvent(TypedDict):
+    abilityId: int
+
+
+class PurchaseEvent(TypedDict):
+    time: int
+    itemId: int
+
+
+class Stats(TypedDict):
+    matchPlayerBuffEvent: list[BuffEvent]
+
+
+class BuffEvent(TypedDict):
+    itemId: int | None
+
 
 # STRATZ: GET HEROES
 

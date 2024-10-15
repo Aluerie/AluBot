@@ -11,12 +11,14 @@ import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from utils import const, formats
+from utils.dota import constants as dota_constants
 
 from ..base_classes import BaseMatchToEdit, BaseMatchToSend
 
 if TYPE_CHECKING:
     from bot import AluBot
-    from utils.dota import schemas
+    from utils.dota import Hero, PseudoHero
+    from utils.dota.schemas import stratz
 
 
 __all__ = ("MatchToSend", "StratzMatchToEdit", "NotCountedMatchToEdit")
@@ -46,22 +48,20 @@ class MatchToSend(BaseMatchToSend):
         friend_id: int,
         start_time: datetime.datetime,
         player_name: str,
-        hero_id: int,
         hero_ids: list[int],
         server_steam_id: int,
+        player_hero: Hero | PseudoHero,
         twitch_id: int | None = None,
-        hero_name: str,
     ) -> None:
         super().__init__(bot)
         self.match_id: int = match_id
         self.friend_id: int = friend_id
         self.start_time: datetime.datetime = start_time
         self.player_name: str = player_name
-        self.hero_id: int = hero_id
+        self.player_hero: Hero | PseudoHero = player_hero
         self.hero_ids: list[int] = hero_ids
         self.server_steam_id: int = server_steam_id
         self.twitch_id: int | None = twitch_id
-        self.hero_name: str = hero_name
 
     @property
     def links(self) -> str:
@@ -80,7 +80,7 @@ class MatchToSend(BaseMatchToSend):
         send_log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
             return {
-                "preview_url": const.DotaAsset.Placeholder640X360,
+                "preview_url": dota_constants.DotaAsset.Placeholder640X360,
                 "display_name": self.player_name,
                 "url": "",
                 "logo_url": const.Logo.Dota,
@@ -114,8 +114,8 @@ class MatchToSend(BaseMatchToSend):
         send_log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         canvas = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
-        hero_image_urls = [await self.bot.dota.heroes.topbar_icon_by_id(id) for id in self.hero_ids]
-        hero_images = [await self.bot.transposer.url_to_image(url) for url in hero_image_urls]
+        heroes = [await self.bot.dota.heroes.by_id(id) for id in self.hero_ids]
+        hero_images = [await self.bot.transposer.url_to_image(hero.topbar_icon_url) for hero in heroes]
 
         def build_notification_image() -> Image.Image:
             """Image Builder."""
@@ -145,7 +145,7 @@ class MatchToSend(BaseMatchToSend):
                 """Draw "Player - Hero" text in the middle."""
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
 
-                text = f"{twitch_data['display_name']} - {self.hero_name}"
+                text = f"{twitch_data['display_name']} - {self.player_hero.display_name}"
                 w, h = self.bot.transposer.get_text_wh(text, font)
                 draw.text(((canvas_w - w) / 2, 35), text, font=font, align="center")
 
@@ -171,14 +171,13 @@ class MatchToSend(BaseMatchToSend):
         twitch_data = await self.get_twitch_data()
 
         notification_image = await self.notification_image(twitch_data, twitch_data["colour"])
-        title = f"{twitch_data['display_name']} - {self.hero_name}"
+        title = f"{twitch_data['display_name']} - {self.player_hero.display_name}"
         filename = twitch_data["twitch_status"] + "-" + re.sub(r"[_' ]", "", title) + ".png"
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
-        hero_emoji = const.DOTA_HERO_EMOTES[self.hero_id]
         embed = (
             discord.Embed(
                 colour=twitch_data["colour"],
-                title=f"{title} {hero_emoji}",
+                title=f"{title} {self.player_hero.emote}",
                 url=twitch_data["url"],
                 description=(
                     f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, mode='strip')}\n"
@@ -186,7 +185,7 @@ class MatchToSend(BaseMatchToSend):
                 ),
             )
             .set_author(name=title, url=twitch_data["url"], icon_url=twitch_data["logo_url"])
-            .set_thumbnail(url=await self.bot.dota.heroes.topbar_icon_by_id(self.hero_id))
+            .set_thumbnail(url=self.player_hero.topbar_icon_url)
             .set_image(url=f"attachment://{image_file.filename}")
             .set_footer(text=f"watch_server {self.server_steam_id}")
         )  # | dota2://matchid={self.match_id}&matchtime={matchtime}") # but it's not really convenient.
@@ -199,29 +198,37 @@ class MatchToSend(BaseMatchToSend):
             VALUES ($1, $2, $3, $4, $5, $6)
         """
         await self.bot.pool.execute(
-            query, message_id, channel_id, self.match_id, self.friend_id, self.hero_id, self.player_name
+            query, message_id, channel_id, self.match_id, self.friend_id, self.player_hero.id, self.player_name
         )
 
 
 class StratzMatchToEdit(BaseMatchToEdit):
     """Class."""
 
+    if TYPE_CHECKING:
+        ability_upgrades_ids: list[int]
+
     def __init__(
         self,
         bot: AluBot,
-        data: schemas.StratzGraphQL.GetFPCMatchToEdit.ResponseDict,
+        data: stratz.GetFPCMatchesResponse,
+        player_hero: Hero | PseudoHero | None = None,
     ) -> None:
         super().__init__(bot)
 
         player = data["data"]["match"]["players"][0]
 
-        self.hero_id: int = player["heroId"]
+        self.hero: Hero | PseudoHero | None = player_hero
+        self.hero_id: int = player['heroId']
         self.outcome: str = "Win" if player["isVictory"] else "Loss"
         self.kda: str = f'{player["kills"]}/{player["deaths"]}/{player["assists"]}'
 
-        self.ability_upgrades_ids: list[int] = [
-            event["abilityId"] for event in player["playbackData"]["abilityLearnEvents"][:18]
-        ]
+        playback = player["playbackData"]
+
+        if playback:
+            self.ability_upgrades_ids = [event["abilityId"] for event in playback["abilityLearnEvents"][:18]]
+        else:
+            self.ability_upgrades_ids = []
 
         item_ids: list[int] = [player[f"item{i}Id"] or 0 for i in range(6)]
 
@@ -235,11 +242,12 @@ class StratzMatchToEdit(BaseMatchToEdit):
                     item_ids.append(item_id)
 
         self.sorted_item_purchases: list[tuple[int, str]] = []
-        for purchase_event in reversed(player["playbackData"]["purchaseEvents"]):
-            item_id = purchase_event["itemId"]
-            if item_id in item_ids:
-                self.sorted_item_purchases.append((item_id, f"{math.ceil(purchase_event['time']/60)}m"))
-                item_ids.remove(item_id)
+        if playback:
+            for purchase_event in reversed(playback["purchaseEvents"]):
+                item_id = purchase_event["itemId"]
+                if item_id in item_ids:
+                    self.sorted_item_purchases.append((item_id, f"{math.ceil(purchase_event['time']/60)}m"))
+                    item_ids.remove(item_id)
 
         self.sorted_item_purchases.reverse()  # reverse back
         # add items for which we couldn't find item timings back
@@ -248,7 +256,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
         self.neutral_item_id: int = player["neutral0Id"] or 0
 
-        self.facet: int = player["variant"] - 1  # variant thing seems to start facets count from 1 and not zero.
+        self.facet_slot: int = player["variant"] - 1  # variant thing seems to start facets count from 1 and not zero.
 
     @override
     def __repr__(self) -> str:
@@ -258,23 +266,22 @@ class StratzMatchToEdit(BaseMatchToEdit):
     @override
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
         canvas = await self.bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await self.bot.dota.items.icon_by_id(id) for id, _ in self.sorted_item_purchases]
-        item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
+        items = [await self.bot.dota.items.by_id(id) for id, _ in self.sorted_item_purchases]
+        item_icon_images = [await self.bot.transposer.url_to_cached_image(item.icon_url) for item in items]
 
-        neutral_item_urls = await self.bot.dota.items.icon_by_id(self.neutral_item_id)
-        neutral_item_image = await self.bot.transposer.url_to_image(neutral_item_urls)
+        neutral_item = await self.bot.dota.items.by_id(self.neutral_item_id)
+        neutral_item_image = await self.bot.transposer.url_to_cached_image(neutral_item.icon_url)
 
-        ability_icon_urls = [await self.bot.dota.abilities.icon_by_id(id) for id in self.ability_upgrades_ids]
-        ability_icon_images = [await self.bot.transposer.url_to_image(url) for url in ability_icon_urls]
+        abilities = [await self.bot.dota.abilities.by_id(id) for id in self.ability_upgrades_ids]
+        ability_icon_images = [await self.bot.transposer.url_to_cached_image(ability.icon_url) for ability in abilities]
 
-        hero = await self.bot.dota.heroes.by_id(self.hero_id)
+        hero = self.hero if self.hero else await self.bot.dota.heroes.by_id(self.hero_id)
+        talents_order = [ability_id for ability_id in self.ability_upgrades_ids if ability_id in hero.talent_ids]
+        talents = {talent_id: await self.bot.dota.abilities.by_id(talent_id) for talent_id in hero.talent_ids}
 
-        talents_order = [ability_id for ability_id in self.ability_upgrades_ids if ability_id in hero.talents]
-        talents = {talent_id: await self.bot.dota.abilities.display_name_by_id(talent_id) for talent_id in hero.talents}
-
-        facet_id = hero.facets[self.facet]
+        facet_id = hero.facet_ids[self.facet_slot]
         facet = await self.bot.dota.facets.by_id(facet_id)
-        facet_image = await self.bot.transposer.url_to_image(facet.icon_url)
+        facet_icon_image = await self.bot.transposer.url_to_cached_image(facet.icon_url)
 
         def build_notification_image() -> Image.Image:
             edit_log.debug("Building edited notification message.")
@@ -363,12 +370,12 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 15)
                 p = 6
 
-                for count, (talent_id, talent_display_text) in enumerate(talents.items()):
-                    text_w, text_h = self.bot.transposer.get_text_wh(talent_display_text, font)
+                for count, (talent_id, talent) in enumerate(talents.items()):
+                    text_w, text_h = self.bot.transposer.get_text_wh(talent.display_name, font)
 
                     x = 0 if count % 2 else canvas_w - text_w
                     position = (x, canvas_h - items_h - abilities_h - kda_h - outcome_h - 20 - 26 * (count // 2))
-                    x, y, u, v = draw.textbbox(position, talent_display_text, font=font)
+                    x, y, u, v = draw.textbbox(position, talent.display_name, font=font)
 
                     if talent_id in talents_order[:4]:
                         fill_colour = "darkorange"
@@ -378,7 +385,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                         fill_colour = "black"
 
                     draw.rectangle(xy=(x - p, y - p, u + p, v + p), fill=fill_colour)
-                    draw.text(xy=position, text=talent_display_text, font=font, align="right")
+                    draw.text(xy=position, text=talent.display_name, font=font, align="right")
 
             draw_talent_tree_choices()
 
@@ -401,7 +408,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 draw.text((x + icon_h + text_p, v - (icon_h + text_h) / 2), facet.display_name, font=font)
 
                 # icon
-                resized_facet_image = facet_image.resize((icon_h - icon_p, icon_h - icon_p))
+                resized_facet_image = facet_icon_image.resize((icon_h - icon_p, icon_h - icon_p))
                 canvas.paste(resized_facet_image, (x + icon_p, y + icon_p), mask=resized_facet_image)
 
             draw_facet()
@@ -459,5 +466,7 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
     friend_id = 321580662
     data = await self.bot.dota.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
     match_to_edit = StratzMatchToEdit(self.bot, data)
-    new_image = await match_to_edit.edit_notification_image(const.DotaAsset.Placeholder640X360, discord.Colour.purple())
+    new_image = await match_to_edit.edit_notification_image(
+        dota_constants.DotaAsset.Placeholder640X360, discord.Colour.purple()
+    )
     new_image.show()

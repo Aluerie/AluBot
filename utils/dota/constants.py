@@ -1,4 +1,28 @@
+from __future__ import annotations
+
+from utils.const import ImageAsset
+
+__all__ = (
+    "TALENT_TREE_ICON",
+    "DotaAsset",
+    "FACET_COLOURS",
+    "NEW_HERO_EMOTE",
+)
+
 TALENT_TREE_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
+
+
+_IMAGE_DIR = "./assets/images/dota/"
+
+
+class DotaAsset(ImageAsset):
+    AbilityUnknown = f"{_IMAGE_DIR}ability_unknown.png"
+    FacetQuestion = f"{_IMAGE_DIR}facet_question.png"
+    HeroTopbarDisconnectedUnpicked = f"{_IMAGE_DIR}hero_disconnected.png"
+    HeroTopbarUnknown = f"{_IMAGE_DIR}hero_unknown.png"
+    ItemEmpty = f"{_IMAGE_DIR}item_empty.png"
+    ItemUnknown = f"{_IMAGE_DIR}item_unknown.png"
+    Placeholder640X360 = f"{_IMAGE_DIR}Lavender640x360.png"
 
 
 FACET_COLOURS = {
@@ -26,4 +50,138 @@ FACET_COLOURS = {
     "Gray1": "#6A6D73",
     "Gray2": "#95A9B1",
     "Gray3": "#ADB6BE",
+}
+
+NEW_HERO_EMOTE = "\N{SQUARED NEW}"
+
+HERO_EMOTES: dict[int, str] = {
+    # mapping dota hero ids to their correlated hero-icon emotes.
+    # TODO: upload all these emotes into the Discord DEV portal new app emotes tab.
+    # TODO: rename all emotes to Pascal Case but with underscores :D
+    1: "<:antimage:1202019770787176529>",
+    2: "<:axe:1202019772997304471>",
+    3: "<:bane:1202019775291592754>",
+    4: "<:bloodseeker:1202019777212858398>",
+    5: "<:crystal_maiden:1202019779745947749>",
+    6: "<:drow_ranger:1202019782556385330>",
+    7: "<:earthshaker:1202019784766529596>",
+    8: "<:juggernaut:1202019787698614403>",
+    9: "<:mirana:1202019790080987166>",
+    10: "<:morphling:1202019792429797459>",
+    11: "<:nevermore:1202019795319672952>",
+    12: "<:phantom_lancer:1202019797764931584>",
+    13: "<:puck:1202019799694315522>",
+    14: "<:pudge:1202019802378674186>",
+    15: "<:razor:1202019804886863872>",
+    16: "<:sand_king:1202019806602076311>",
+    17: "<:storm_spirit:1202019809710047314>",
+    18: "<:sven:1202019812310786130>",
+    19: "<:tiny:1202019815028703254>",
+    20: "<:vengefulspirit:1202019817746616362>",
+    21: "<:windrunner:1202019820510388244>",
+    22: "<:zuus:1202019823018573934>",
+    23: "<:kunkka:1202019825690615819>",
+    25: "<:lina:1202019828496601142>",
+    26: "<:lion:1202019832078274601>",
+    27: "<:shadow_shaman:1202019834465095691>",
+    28: "<:slardar:1202019837316960339>",
+    29: "<:tidehunter:1202019839422496800>",
+    30: "<:witch_doctor:1202019842673086505>",
+    31: "<:lich:1202019845265444917>",
+    32: "<:riki:1202019847672975380>",
+    33: "<:enigma:1202019850034348124>",
+    34: "<:tinker:1202019851779182682>",
+    35: "<:sniper:1202019854266142740>",
+    36: "<:necrolyte:1202019856929525811>",
+    37: "<:warlock:1202019859529998401>",
+    38: "<:beastmaster:1202019862655008819>",
+    39: "<:queenofpain:1202019865146437763>",
+    40: "<:venomancer:1202019867822411856>",
+    41: "<:faceless_void:1202019870347108462>",
+    42: "<:skeleton_king:1202019873119535214>",
+    43: "<:death_prophet:1202019875355103245>",
+    44: "<:phantom_assassin:1202019878052319244>",
+    45: "<:pugna:1202019880648577134>",
+    46: "<:templar_assassin:1202019882590539816>",
+    47: "<:viper:1202019885106860092>",
+    48: "<:luna:1202019886906495006>",
+    # guild 2
+    49: "<:dragon_knight:1202026697818636339>",
+    50: "<:dazzle:1202026700301668352>",
+    51: "<:rattletrap:1202026703204122664>",
+    52: "<:leshrac:1202026706337013851>",
+    53: "<:furion:1202026709134610452>",
+    54: "<:life_stealer:1202026711508860978>",
+    55: "<:dark_seer:1202026713345958019>",
+    56: "<:clinkz:1202026715694768218>",
+    57: "<:omniknight:1202026718211088437>",
+    58: "<:enchantress:1202026720388186204>",
+    59: "<:huskar:1202026723441381476>",
+    60: "<:night_stalker:1202026726075674645>",
+    61: "<:broodmother:1202026728625807361>",
+    62: "<:bounty_hunter:1202026732383907940>",
+    63: "<:weaver:1202026735072460831>",
+    64: "<:jakiro:1202026737572249630>",
+    65: "<:batrider:1202026739275153521>",
+    66: "<:chen:1202026741854642297>",
+    67: "<:spectre:1202026744207376386>",
+    68: "<:ancient_apparition:1202026746791333898>",
+    69: "<:doom_bringer:1202026750511423488>",
+    70: "<:ursa:1202026752776622132>",
+    71: "<:spirit_breaker:1202026755595194398>",
+    72: "<:gyrocopter:1202026758132465744>",
+    73: "<:alchemist:1202026760607109232>",
+    74: "<:invoker:1202026763291730000>",
+    75: "<:silencer:1202026765791547422>",
+    76: "<:obsidian_destroyer:1202026767863533568>",
+    77: "<:lycan:1202026770031706184>",
+    78: "<:brewmaster:1202026772653408297>",
+    79: "<:shadow_demon:1202026775412998214>",
+    80: "<:lone_druid:1202026778282168341>",
+    81: "<:chaos_knight:1202026781033644112>",
+    82: "<:meepo:1202026783650893855>",
+    83: "<:treant:1202026786188443718>",
+    84: "<:ogre_magi:1202026788486909982>",
+    85: "<:undying:1202026790932205672>",
+    # guild 3
+    86: "<:rubick:1202027073464717373>",
+    87: "<:disruptor:1202027076316565575>",
+    88: "<:nyx_assassin:1202027079475150898>",
+    89: "<:naga_siren:1202027082058838117>",
+    90: "<:keeper_of_the_light:1202029134101106718>",
+    91: "<:wisp:1202029137280114760>",
+    92: "<:visage:1202029140811984918>",
+    93: "<:slark:1202029143190155304>",
+    94: "<:medusa:1202029145563861012>",
+    95: "<:troll_warlord:1202029147937833000>",
+    96: "<:centaur:1202029150282719283>",
+    97: "<:magnataur:1202029152694440029>",
+    98: "<:shredder:1202029155366215752>",
+    99: "<:bristleback:1202029157710823464>",
+    100: "<:tusk:1202029160072220692>",
+    101: "<:skywrath_mage:1202029162408464404>",
+    102: "<:abaddon:1202029164312674396>",
+    103: "<:elder_titan:1202029166044917791>",
+    104: "<:legion_commander:1202029169152892928>",
+    105: "<:techies:1202029171480731682>",
+    106: "<:ember_spirit:1202029174156427284>",
+    107: "<:earth_spirit:1202029176711041035>",
+    108: "<:abyssal_underlord:1202029179567358022>",
+    109: "<:terrorblade:1202029182381723740>",
+    110: "<:phoenix:1202029184621219920>",
+    111: "<:oracle:1202029187024556042>",
+    112: "<:winter_wyvern:1202029189595922492>",
+    113: "<:arc_warden:1202029192255119402>",
+    114: "<:monkey_king:1202029194666582087>",
+    119: "<:dark_willow:1202029197061787718>",
+    120: "<:pangolier:1202029199636824125>",
+    121: "<:grimstroke:1202029202031779841>",
+    123: "<:hoodwink:1202029204506693685>",
+    126: "<:void_spirit:1202029206469623841>",
+    128: "<:snapfire:1202029208574890017>",
+    129: "<:mars:1202029210567446558>",
+    135: "<:dawnbreaker:1202029213549592586>",
+    136: "<:marci:1202029215982293003>",
+    137: "<:primal_beast:1202029218167529502>",
+    138: "<:muerta:1202029220616994926>",
 }

@@ -14,7 +14,8 @@ from steam.client import SteamClient
 
 import config
 
-from . import Abilities, Facets, Heroes, Items, ODotaConstantsClient, StratzClient
+from .pulsefire_clients import ODotaConstantsClient, StratzClient
+from .storage import Abilities, Facets, Heroes, Items
 
 if TYPE_CHECKING:
     from bot import AluBot

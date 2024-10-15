@@ -9,7 +9,7 @@ from pulsefire.ratelimiters import RiotAPIRateLimiter
 
 import config
 
-from .cache import ItemIcons, RuneIcons, SummonerSpellIcons
+from .storage import Champions, ItemIcons, RolesIdentifiers, RuneIcons, SummonerSpellIcons
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -39,17 +39,30 @@ class LeagueClient(RiotAPIClient):
                 http_error_middleware(),
             ],
         )
-        self.champions = ""
+        self.champions = Champions(bot)
         self.item_icons = ItemIcons(bot)
         self.rune_icons = RuneIcons(bot)
         self.summoner_spell_icons = SummonerSpellIcons(bot)
+        self.roles = RolesIdentifiers(bot)
 
     async def start(self) -> None:
         await self.__aenter__()
         await self.cdragon.__aenter__()
         await self.meraki.__aenter__()
 
+        self.champions.start()
+        self.item_icons.start()
+        self.rune_icons.start()
+        self.summoner_spell_icons.start()
+        self.roles.start()
+
     async def close(self) -> None:
         await self.__aexit__()
         await self.cdragon.__aexit__()
         await self.meraki.__aexit__()
+
+        self.champions.close()
+        self.item_icons.close()
+        self.rune_icons.close()
+        self.summoner_spell_icons.close()
+        self.roles.close()

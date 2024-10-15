@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import discord
 from PIL import Image
 
-from . import errors
+from . import cache, errors
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -80,7 +80,7 @@ class TransposeClient:
         return Image.open(BytesIO(await attachment.read()))
 
     async def url_to_image(self, url_or_fp: str) -> Image.Image:
-        """Convert URL to PIL.Image.Image."""
+        """Convert URL or File Path to PIL.Image.Image."""
         log.debug(url_or_fp)
         if url_or_fp.startswith(("http://", "https://")):
             async with self.session.get(url_or_fp) as response:
@@ -93,10 +93,18 @@ class TransposeClient:
                     )
                     raise errors.ResponseNotOK(msg)
         else:
+            # assume it is a local file
             try:
                 return Image.open(fp=url_or_fp)
             except FileNotFoundError:
                 raise
+
+    @cache.cache(maxsize=256)  # kinda scary
+    async def url_to_cached_image(self, url_or_fp: str) -> Image.Image:
+        """Get image for image_url and save it to cache.
+
+        Useful because the requests within FPC functionality often request same images over and over."""
+        return await self.url_to_image(url_or_fp)
 
     async def url_to_file(self, url: str, filename: str = "fromAluBot.png") -> discord.File:
         """Convert URL to discord.File."""
@@ -105,4 +113,12 @@ class TransposeClient:
                 return discord.File(BytesIO(await response.read()), filename)
             else:
                 msg = f"`transposer.url_to_file`: Status {response.status} - Could not download file from {url}"
+                raise errors.ResponseNotOK(msg)
+
+    async def url_to_bytes(self, url: str) -> bytes:
+        async with self.session.get(url) as response:
+            if response.ok:
+                return await response.read()
+            else:
+                msg = f"`transposer.url_to_bytes`: Status {response.status} - Could not download file from {url}"
                 raise errors.ResponseNotOK(msg)

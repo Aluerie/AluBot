@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, override
 
 import discord
 from discord import app_commands
@@ -10,17 +10,23 @@ from discord.ext import commands
 # from steam import ID, InvalidID  # VALVE_SWITCH
 from steam.steamid import EType, SteamID
 
-from utils import checks, const, errors, formats
+from utils import const
+from utils.dota import Hero, HeroTransformer  # noqa: TCH001
 
 from ..base_classes import Account, BaseSettings
-from ..database_management import AddDotaPlayerFlags  # noqa: TCH001
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext
+    from bot import AluBot
 
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
+
+
+class DotaPlayerCandidate(NamedTuple):
+    name: str
+    steam: str
+    twitch: bool
 
 
 class DotaAccountDict(TypedDict):
@@ -52,13 +58,13 @@ class DotaAccount(Account):
     #     self.friend_id = steam_id.id  # also known as id32
 
     @override
-    async def set_game_specific_attrs(self, bot: AluBot, flags: AddDotaPlayerFlags) -> None:
-        steam_id_obj = SteamID(flags.steam)
+    async def set_game_specific_attrs(self, _: AluBot, player: DotaPlayerCandidate) -> None:
+        steam_id_obj = SteamID(player.steam)
         if steam_id_obj.type != EType.Individual:
-            steam_id_obj = SteamID.from_url(flags.steam)  # type: ignore # ValvePython doesn't care about TypeHints
+            steam_id_obj = SteamID.from_url(player.steam)  # type: ignore # ValvePython doesn't care about TypeHints
         if steam_id_obj is None or (hasattr(steam_id_obj, "type") and steam_id_obj.type != EType.Individual):
             msg = (
-                f"Error checking steam profile for {flags.steam}.\n"
+                f"Error checking steam profile for {player.steam}.\n"
                 "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
                 "or just give steam profile link to the bot."
             )
@@ -135,180 +141,181 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
             colour=const.Colour.blueviolet,
             game_display_name="Dota 2",
             game_icon_url=const.Logo.Dota,
-            character_singular_word="hero",
-            character_plural_word="heroes",
+            character_singular="hero",
+            character_plural="heroes",
             account_cls=DotaAccount,
             account_typed_dict_cls=DotaAccountDict,
             characters=bot.dota.heroes,
-            emote_dict=const.DOTA_HERO_EMOTES,
             **kwargs,
         )
 
-    @checks.hybrid.is_premium_guild_manager()
-    @commands.hybrid_group(name="dota")
-    async def dota_group(self, ctx: AluGuildContext) -> None:
-        """Dota 2 FPC (Favourite Player+Character) commands."""
-        await ctx.send_help()
+    dota_group = app_commands.Group(
+        name="dota",
+        description="Dota 2 FPC (Favourite Player+Character) commands.",
+        guild_ids=const.PREMIUM_GUILDS,
+        default_permissions=discord.Permissions(manage_guild=True),
+    )
 
-    @dota_group.group(name="request")
-    async def dota_request(self, ctx: AluGuildContext) -> None:
-        """Dota 2 FPC (Favourite Player+Character) request commands."""
-        await ctx.send_help()
+    dota_request = app_commands.Group(
+        name="request",
+        description="Dota 2 FPC (Favourite Player+Character) request commands.",
+        parent=dota_group,
+    )
 
     @dota_request.command(name="player")
-    async def dota_request_player(self, ctx: AluGuildContext, *, flags: AddDotaPlayerFlags) -> None:
+    async def dota_request_player(
+        self, interaction: discord.Interaction[AluBot], name: str, steam: str, twitch: bool
+    ) -> None:
         """Request Dota 2 Player to be added into the bot's FPC database.
 
         So you and other people can add the player into their favourite later and start \
         receiving FPC Notifications.
-        """
-        await self.request_player(ctx, flags)
 
-    @dota_group.group(name="setup")
-    async def dota_setup(self, ctx: AluGuildContext) -> None:
-        """Dota 2 FPC (Favourite Player+Character) setup commands.
-
-        Manage FPC feature settings in your server with those commands.
+        Parameters
+        ----------
+        name:
+            Player name. if it's a twitch streamer then it should match their twitch handle.
+        steam:
+            Steam_id in any of 64/32/3/2 versions, friend_id or just steam profile link.
+        twitch:
+            Is this person a twitch.tv streamer (under same name)?
         """
-        await ctx.send_help()
+        player_tuple = DotaPlayerCandidate(name=name, steam=steam, twitch=twitch)
+        await self.request_player(interaction, player_tuple)
+
+    dota_setup = app_commands.Group(
+        name="setup",
+        description="Manage FPC feature settings in your server with those commands..",
+        parent=dota_group,
+    )
 
     @dota_setup.command(name="channel")
-    async def dota_setup_channel(self, ctx: AluGuildContext) -> None:
+    async def dota_setup_channel(self, interaction: discord.Interaction[AluBot]) -> None:
         """Setup/manage your Dota 2 FPC Notifications channel."""
-        await self.setup_channel(ctx)
+        await self.setup_channel(interaction)
 
     @dota_setup.command(name="heroes")
-    async def dota_setup_heroes(self, ctx: AluGuildContext) -> None:
+    async def dota_setup_heroes(self, interaction: discord.Interaction[AluBot]) -> None:
         """Setup/manage your Dota 2 FPC favourite heroes list."""
-        await self.setup_characters(ctx)
+        await self.setup_characters(interaction)
 
     @dota_setup.command(name="players")
-    async def dota_setup_players(self, ctx: AluGuildContext) -> None:
+    async def dota_setup_players(self, interaction: discord.Interaction[AluBot]) -> None:
         """Setup/manage your Dota 2 FPC favourite players list."""
-        await self.setup_players(ctx)
+        await self.setup_players(interaction)
 
-    @dota_setup.command(name="miscellaneous", aliases=["misc"])
-    async def dota_setup_misc(self, ctx: AluGuildContext) -> None:
+    @dota_setup.command(name="miscellaneous")
+    async def dota_setup_misc(self, interaction: discord.Interaction[AluBot]) -> None:
         """Manage your Dota 2 FPC misc settings."""
-        await self.setup_misc(ctx)
+        await self.setup_misc(interaction)
 
     @dota_group.command(name="tutorial")
-    async def dota_tutorial(self, ctx: AluGuildContext) -> None:
+    async def dota_tutorial(self, interaction: discord.Interaction[AluBot]) -> None:
         """Guide to setup Dota 2 FPC Notifications."""
-        await self.tutorial(ctx)
+        await self.tutorial(interaction)
 
-    @checks.hybrid.is_hideout()
-    @commands.hybrid_group(name="dotafpc")  # cspell: ignore dotafpc
-    async def hideout_dota_group(self, ctx: AluGuildContext) -> None:
-        """Dota 2 FPC (Favourite Player+Character) Hideout-only commands."""
-        await ctx.send_help()
+    # HIDEOUT ONLY COMMANDS (at least, at the moment)
 
-    @hideout_dota_group.group(name="player")
-    async def hideout_dota_player(self, ctx: AluGuildContext) -> None:
-        """Dota 2 FPC (Favourite Player+Character) Hideout-only player-related commands."""
-        await ctx.send_help()
+    hideout_dota_group = app_commands.Group(
+        name="dotafpc",  # cspell: ignore dotafpc
+        description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
+        guild_ids=[const.Guild.hideout],
+    )
 
+    hideout_dota_player = app_commands.Group(
+        name="player",  # cspell: ignore dotafpc
+        description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
+        parent=hideout_dota_group,
+    )
+
+    @hideout_dota_player.command(name="add")
+    async def hideout_dota_player_add(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
+        """Add a Dota 2 player into your favourite FPC players list.
+
+        Parameters
+        ----------
+        player_name
+            Player Name. Autocomplete suggestions exclude your favourite players.
+        """
+        await self.hideout_player_add(interaction, player_name)
+
+    @hideout_dota_player_add.autocomplete("player_name")
     async def hideout_dota_player_add_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
-    @hideout_dota_player.command(name="add")
-    @app_commands.describe(player_name="Player Name. Autocomplete suggestions exclude your favourite players.")
-    @app_commands.autocomplete(player_name=hideout_dota_player_add_autocomplete)
-    async def hideout_dota_player_add(self, ctx: AluGuildContext, player_name: str) -> None:
-        """Add a Dota 2 player into your favourite FPC players list."""
-        await self.hideout_player_add(ctx, player_name)
+    @hideout_dota_player.command(name="remove")
+    @app_commands.describe(player_name="")
+    async def hideout_dota_player_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
+        """Remove a Dota 2 player into your favourite FPC players list.
 
+        Parameters
+        ----------
+        player_name
+            Player Name. Autocomplete suggestions include only your favourite players.
+        """
+        await self.hideout_player_remove(interaction, player_name)
+
+    @hideout_dota_player_remove.autocomplete("player_name")
     async def hideout_dota_player_remove_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
-    @hideout_dota_player.command(name="remove")
-    @app_commands.describe(player_name="Player Name. Autocomplete suggestions include only your favourite players.")
-    @app_commands.autocomplete(player_name=hideout_dota_player_remove_autocomplete)
-    async def hideout_dota_player_remove(self, ctx: AluGuildContext, player_name: str) -> None:
-        """Remove a Dota 2 player into your favourite FPC players list."""
-        await self.hideout_player_remove(ctx, player_name)
-
-    @hideout_dota_group.group(name="hero")
-    async def hideout_dota_hero(self, ctx: AluGuildContext) -> None:
-        """Dota 2 FPC (Favourite Player+Character) Hideout-only hero-related commands."""
-        await ctx.send_help()
-
-    async def hideout_dota_hero_add_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
-    ) -> list[app_commands.Choice[str]]:
-        return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=True)
+    hideout_dota_hero = app_commands.Group(
+        name="hero",  # cspell: ignore dotafpc
+        description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
+        parent=hideout_dota_group,
+    )
 
     @hideout_dota_hero.command(name="add")
-    @app_commands.describe(hero_name="Hero Name. Autocomplete suggestions exclude your favourite champs.")
-    @app_commands.autocomplete(hero_name=hideout_dota_hero_add_autocomplete)
-    async def hideout_dota_hero_add(self, ctx: AluGuildContext, hero_name: str) -> None:
-        """Add a Dota 2 hero into your favourite FPC heroes list."""
-        await self.hideout_character_add(ctx, hero_name)
+    async def hideout_dota_hero_add(
+        self, interaction: discord.Interaction[AluBot], hero: app_commands.Transform[Hero, HeroTransformer]
+    ) -> None:
+        """Add a Dota 2 hero into your favourite FPC heroes list.
 
-    async def hideout_dota_hero_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
-    ) -> list[app_commands.Choice[str]]:
-        return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=False)
+        Parameters
+        ----------
+        hero
+            Hero Name. Autocomplete suggestions exclude your favourite champs.
+        """
+        await self.hideout_character_add(interaction, hero)
+
+    # @hideout_dota_hero_add.autocomplete("hero_name")
+    # async def hideout_dota_hero_add_autocomplete(
+    #     self, interaction: discord.Interaction[AluBot], current: str
+    # ) -> list[app_commands.Choice[str]]:
+    #     return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
     @hideout_dota_hero.command(name="remove")
-    @app_commands.describe(hero_name="Hero Name. Autocomplete suggestions only include your favourite champs.")
-    @app_commands.autocomplete(hero_name=hideout_dota_hero_remove_autocomplete)
-    async def hideout_dota_hero_remove(self, ctx: AluGuildContext, hero_name: str) -> None:
-        """Remove a Dota 2 hero into your favourite FPC heroes list."""
-        await self.hideout_character_remove(ctx, hero_name)
+    async def hideout_dota_hero_remove(
+        self, interaction: discord.Interaction[AluBot], hero: app_commands.Transform[Hero, HeroTransformer]
+    ) -> None:
+        """Remove a Dota 2 hero into your favourite FPC heroes list.
+
+        Parameters
+        ----------
+        hero
+            Hero Name. Autocomplete suggestions only include your favourite champs.
+        """
+        await self.hideout_character_remove(interaction, hero)
+
+    # @hideout_dota_hero_remove.autocomplete("hero_name")
+    # async def hideout_dota_hero_remove_autocomplete(
+    #     self, interaction: discord.Interaction[AluBot], current: str
+    # ) -> list[app_commands.Choice[str]]:
+    #     return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
     @hideout_dota_player.command(name="list")
-    async def hideout_dota_player_list(self, ctx: AluGuildContext) -> None:
+    async def hideout_dota_player_list(self, interaction: discord.Interaction[AluBot]) -> None:
         """Show a list of your favourite Dota 2 FPC players."""
-        await self.hideout_player_list(ctx)
+        await self.hideout_player_list(interaction)
 
     @hideout_dota_hero.command(name="list")
-    async def hideout_dota_hero_list(self, ctx: AluGuildContext) -> None:
+    async def hideout_dota_hero_list(self, interaction: discord.Interaction[AluBot]) -> None:
         """Show a list of your favourite Dota 2 FPC heroes."""
-        await self.hideout_character_list(ctx)
-
-    @commands.is_owner()
-    @commands.command(name="create_hero_emote")
-    async def create_hero_emote(self, ctx: AluGuildContext, hero_name: str) -> None:
-        """Create a new discord emote for a Dota 2 hero.
-
-        Useful when a new Dota 2 hero gets added to the game, so we can just use this command,
-        copy-paste the answer to `utils.const` and be happy.
-        """
-        await ctx.typing()
-
-        hero_id = await self.bot.dota.heroes.id_by_display_name(hero_name)
-        hero = await self.bot.dota.heroes.by_id(hero_id)
-
-        guild_id = const.EmoteGuilds.DOTA[3]
-        guild = self.bot.get_guild(guild_id)
-        if guild is None:
-            msg = f"Guild with id {guild_id} is `None`."
-            raise errors.SomethingWentWrong(msg)
-
-        async with self.bot.session.get(url=hero.minimap_icon_url) as response:
-            if not response.ok:
-                msg = "Response for a new emote link wasn't okay"
-                raise errors.ResponseNotOK(msg)
-
-            new_emote = await guild.create_custom_emoji(
-                name=formats.convert_camel_case_to_PascalCase(hero.short_name),
-                image=await response.read(),
-            )
-
-        embed = discord.Embed(
-            colour=const.Colour.blueviolet,
-            title="New Dota 2 Hero emote was created",
-            description=f'```py\n{new_emote.name} = "{new_emote}"```',
-        ).add_field(
-            name=hero.display_name,
-            value=str(new_emote),
-        )
-        await ctx.reply(embed=embed)
+        await self.hideout_character_list(interaction)
 
 
 async def setup(bot: AluBot) -> None:

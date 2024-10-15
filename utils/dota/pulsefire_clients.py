@@ -299,9 +299,7 @@ class StratzClient(BaseClient):
             ],
         )
 
-    async def get_fpc_match_to_edit(
-        self, *, match_id: int, friend_id: int
-    ) -> schemas_xd.StratzGraphQL.GetFPCMatchToEdit.ResponseDict:
+    async def get_fpc_match_to_edit(self, *, match_id: int, friend_id: int) -> stratz.GetFPCMatchesResponse:
         """Queries info that I need to know in order to edit Dota 2 FPC notification."""
         query = """
             query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {

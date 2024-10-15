@@ -10,7 +10,6 @@ from typing import Literal, NamedTuple, NotRequired, TypedDict
 
 __all__ = (
     "OpenDotaAPI",
-    "StratzGraphQL",
     "GameCoordinatorAPI",
     "SteamWebAPI",
 )
@@ -181,85 +180,6 @@ class OpenDotaAPI:
             "RequestParse",
             {
                 "job": ParseJob,
-            },
-        )
-
-
-class StratzGraphQL:
-    """Schemas representing data structure for my GraphQL calls."""
-
-    class GetFPCMatchToEdit:
-        """Type-hinting for my GetFPCMatchToEdit query."""
-
-        BuffEvent = TypedDict(
-            "BuffEvent",
-            {
-                "itemId": int | None,
-            },
-        )
-        Stats = TypedDict(
-            "Stats",
-            {
-                "matchPlayerBuffEvent": list[BuffEvent],
-            },
-        )
-        PurchaseEvent = TypedDict(
-            "PurchaseEvent",
-            {
-                "time": int,
-                "itemId": int,
-            },
-        )
-        AbilityLearnEvent = TypedDict(
-            "AbilityLearnEvent",
-            {
-                "abilityId": int,
-            },
-        )
-        PlaybackData = TypedDict(
-            "PlaybackData",
-            {
-                "abilityLearnEvents": list[AbilityLearnEvent],
-                "purchaseEvents": list[PurchaseEvent],
-            },
-        )
-        Player = TypedDict(
-            "Player",
-            {
-                "isVictory": bool,
-                "heroId": int,
-                "variant": int,
-                "kills": int,
-                "deaths": int,
-                "assists": int,
-                "item0Id": int,
-                "item1Id": int,
-                "item2Id": int,
-                "item3Id": int,
-                "item4Id": int,
-                "item5Id": int,
-                "neutral0Id": int,
-                "playbackData": PlaybackData,
-                "stats": Stats,
-            },
-        )
-        Match = TypedDict(
-            "Match",
-            {
-                "statsDateTime": int,
-                "players": list[Player],
-            },
-        )
-        Data = TypedDict(
-            "Data",
-            {
-                "match": Match,
-            },
-        )
-        ResponseDict = TypedDict(
-            "ResponseDict",
-            {
-                "data": Data,
             },
         )
 

@@ -4,18 +4,11 @@ import abc
 import asyncio
 import enum
 import logging
-import random
 import time
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, override
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, override
 
-# from aiohttp import ClientSession
-# from discord.utils import MISSING
 from lru import LRU
-
-from bot import aluloop
-
-from . import errors
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -23,83 +16,27 @@ log.setLevel(logging.INFO)
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Generator, MutableMapping
 
-    from bot import AluBot
 
 R = TypeVar("R")
 
-type CacheDict = dict[Any, Any]
-CachedDataT = TypeVar("CachedDataT", bound=CacheDict)
-
-VT = TypeVar("VT")
-
-
-class NewKeysCache(Generic[VT]):
-    if TYPE_CHECKING:
-        cached_data: dict[int, VT]
-
-    def __init__(self, bot: AluBot) -> None:
-        """_summary_
-
-        Parameters
-        ----------
-        bot
-            need it just so @aluloop task can use `exc_manager` to send an error notification.
-        """
-        self.bot: AluBot = bot
-        self.lock: asyncio.Lock = asyncio.Lock()
-
-    def start(self) -> None:
-        # self.update_data.add_exception_type(errors.ResponseNotOK)
-        # random times just so we don't have a possibility of all cache being updated at the same time
-        self.update_data.change_interval(hours=24, minutes=random.randint(1, 59))
-        self.update_data.start()
-
-    def close(self) -> None:
-        """Closes the keys cache."""
-        self.update_data.cancel()
-
-    async def fill_data(self) -> dict[int, VT]:
-        ...
-
-    @aluloop()
-    async def update_data(self) -> None:
-        async with self.lock:
-            start_time = time.perf_counter()
-            self.cached_data = await self.fill_data()
-            log.info("Cache %s is updated in %.5f", self.__class__.__name__, time.perf_counter() - start_time)
-
-    async def get_cached_data(self) -> dict[int, VT]:
-        """Get the whole cached data."""
-        try:
-            return self.cached_data
-        except AttributeError:
-            await self.update_data()
-            return self.cached_data
-
-    async def get_value(self, id: int) -> VT:
-        try:
-            return self.cached_data[id]
-        except (KeyError, AttributeError):
-            await self.update_data()
-            return self.cached_data[id]
-
 
 class CharacterCache(abc.ABC):
-    @abc.abstractmethod
-    async def id_by_display_name(self, character_name: str) -> int:
-        ...
+    ...
+    # @abc.abstractmethod
+    # async def id_by_display_name(self, character_name: str) -> int:
+    #     ...
 
-    @abc.abstractmethod
-    async def display_name_by_id(self, character_id: int) -> str:
-        ...
+    # @abc.abstractmethod
+    # async def display_name_by_id(self, character_id: int) -> str:
+    #     ...
 
-    @abc.abstractmethod
-    async def id_display_name_tuples(self) -> list[tuple[int, str]]:
-        ...
+    # @abc.abstractmethod
+    # async def id_display_name_tuples(self) -> list[tuple[int, str]]:
+    #     ...
 
-    @abc.abstractmethod
-    async def id_display_name_dict(self) -> dict[int, str]:
-        ...
+    # @abc.abstractmethod
+    # async def id_display_name_dict(self) -> dict[int, str]:
+    #     ...
 
 
 # Can't use ParamSpec due to https://github.com/python/typing/discussions/946

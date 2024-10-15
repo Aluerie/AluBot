@@ -7,17 +7,15 @@ import asyncpg
 import discord
 from discord import app_commands
 
-from utils import const, errors, formats, fuzzy
+from utils import const, errors, formats
 
 from . import FPCCog, views
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, Mapping
+    from collections.abc import Mapping
 
-    from discord.ext import commands
-
-    from bot import AluBot, AluGuildContext, AluView
-    from utils.cache import CharacterCache
+    from bot import AluBot, AluView
+    from utils.fpc import Character, CharacterStorage
 
     # currently
     # * `steam_id` are `int`
@@ -55,7 +53,7 @@ class Account(abc.ABC):
         self.is_twitch_streamer: bool = is_twitch_streamer
 
     @abc.abstractmethod
-    async def set_game_specific_attrs(self, bot: AluBot, flags: commands.FlagConverter) -> None:
+    async def set_game_specific_attrs(self, bot: AluBot, player_tuple: tuple[Any, ...]) -> None:
         """Set game specific attributes."""
 
     @abc.abstractmethod
@@ -104,10 +102,10 @@ class Account(abc.ABC):
         self.profile_image = profile_image
 
     @classmethod
-    async def create(cls, bot: AluBot, flags: commands.FlagConverter) -> Self:
-        name: str = getattr(flags, "name")
+    async def create(cls, bot: AluBot, player_tuple: tuple[Any, ...]) -> Self:
+        name: str = getattr(player_tuple, "name")
         try:
-            is_twitch_streamer: bool = getattr(flags, "twitch")
+            is_twitch_streamer: bool = getattr(player_tuple, "twitch")
         except AttributeError:
             # doesn't have .twitch attribute, thus we assume it's a streamer-only
             # since the feature will prioritize twitch-streamers in its development.
@@ -115,7 +113,7 @@ class Account(abc.ABC):
 
         self = cls(name, is_twitch_streamer)
         await self.set_base_attrs(bot)
-        await self.set_game_specific_attrs(bot, flags)
+        await self.set_game_specific_attrs(bot, player_tuple)
         return self
 
     @staticmethod
@@ -183,12 +181,11 @@ class BaseSettings(FPCCog):
         colour: int,
         game_display_name: str,
         game_icon_url: str,
-        character_singular_word: str,
-        character_plural_word: str,
+        character_singular: str,
+        character_plural: str,
         account_cls: type[Account],
         account_typed_dict_cls: type,
-        characters: CharacterCache,
-        emote_dict: dict[int, str],
+        characters: CharacterStorage[Any],  # idk better, why [Character] doesn't work :c
         **kwargs: Any,
     ) -> None:
         super().__init__(bot, *args, **kwargs)
@@ -198,8 +195,8 @@ class BaseSettings(FPCCog):
         self.colour: int = colour
         self.game_display_name: str = game_display_name
         self.game_icon_url: str = game_icon_url
-        self.character_singular_word: str = character_singular_word
-        self.character_plural_word: str = character_plural_word
+        self.character_singular: str = character_singular
+        self.character_plural: str = character_plural
 
         # account attrs
         self.account_cls: type[Account] = account_cls
@@ -212,8 +209,7 @@ class BaseSettings(FPCCog):
         # self.character_name_by_id_cache: Callable[[], Awaitable[dict[int, str]]] = lambda: character_cache.get_cache(
         #     "name_by_id"
         # )
-        self.characters: CharacterCache = characters
-        self.emote_dict: dict[int, str] = emote_dict
+        self.characters: CharacterStorage[Character] = characters
 
         # setup messages cache
         self.setup_messages_cache: dict[int, AluView] = {}
@@ -239,12 +235,12 @@ class BaseSettings(FPCCog):
             )
             raise errors.BadArgument(msg)
 
-    async def request_player(self, ctx: AluGuildContext, flags: commands.FlagConverter) -> None:
+    async def request_player(self, interaction: discord.Interaction[AluBot], flags: tuple[Any, ...]) -> None:
         """Base function for `/{game} request player` command.
 
         This allows people to request player accounts to be added into the bot's FPC database.
         """
-        await ctx.typing()
+        await interaction.response.defer()
         account = await self.account_cls.create(self.bot, flags)
         await self.check_if_account_already_in_database(account_id=getattr(account, self.account_id_column))
 
@@ -263,31 +259,31 @@ class BaseSettings(FPCCog):
             .set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
         )
 
-        if not await self.bot.disambiguator.confirm(ctx, embed=confirm_embed):
+        if not await self.bot.disambiguator.confirm(interaction, embed=confirm_embed):
             return
 
         response_embed = discord.Embed(
             colour=self.colour,
             title="Successfully made a request to add the account into the database",
         ).add_field(name=account.player_embed_name, value=account.account_string_with_links)
-        await ctx.reply(embed=response_embed)
+        await interaction.response.send_message(embed=response_embed)
 
         logs_embed = confirm_embed.copy()
         logs_embed.title = ""
         logs_embed.description = ""
-        logs_embed.set_author(name=ctx.user, icon_url=ctx.user.display_avatar.url)
+        logs_embed.set_author(name=interaction.user, icon_url=interaction.user.display_avatar.url)
         logs_embed.add_field(
             name="Command", value=f"/database {self.prefix} add {account.hint_database_add_command_args}"
         )
         await self.hideout.global_logs.send(embed=logs_embed)
 
-    async def database_add(self, ctx: AluGuildContext, flags: commands.FlagConverter) -> None:
+    async def database_add(self, interaction: discord.Interaction[AluBot], player_tuple: tuple[Any, ...]) -> None:
         """Base function for `/database {game} add` command.
 
         This allows bot owner to add player accounts into the bot's FPC database.
         """
-        await ctx.typing()
-        account = await self.account_cls.create(self.bot, flags)
+        await interaction.response.defer()
+        account = await self.account_cls.create(self.bot, player_tuple)
         await self.check_if_account_already_in_database(account_id=getattr(account, self.account_id_column))
 
         query = f"""
@@ -297,14 +293,14 @@ class BaseSettings(FPCCog):
             ON CONFLICT (display_name) DO NOTHING
             RETURNING player_id
         """
-        player_id: int = await ctx.pool.fetchval(query, account.player_display_name, account.twitch_id)
+        player_id: int = await interaction.client.pool.fetchval(query, account.player_display_name, account.twitch_id)
 
         database_dict = account.to_pseudo_record()
         database_dict["player_id"] = player_id
         dollars = ", ".join(f"${i}" for i in range(1, len(database_dict.keys()) + 1))
         columns = ", ".join(database_dict.keys())
         query = f"INSERT INTO {self.prefix}_accounts ({columns}) VALUES ({dollars})"
-        await ctx.pool.execute(query, *database_dict.values())
+        await interaction.client.pool.execute(query, *database_dict.values())
 
         response_embed = (
             discord.Embed(colour=self.colour, title="Successfully added the account to the database")
@@ -312,18 +308,18 @@ class BaseSettings(FPCCog):
             .set_author(name=self.game_display_name, icon_url=self.game_icon_url)
             .set_thumbnail(url=account.profile_image)
         )
-        await ctx.reply(embed=response_embed)
+        await interaction.response.send_message(embed=response_embed)
 
         logs_embed = response_embed.copy()
-        logs_embed.set_author(name=ctx.user, icon_url=ctx.user.display_avatar.url)
+        logs_embed.set_author(name=interaction.user, icon_url=interaction.user.display_avatar.url)
         await self.hideout.global_logs.send(embed=logs_embed)
 
-    async def database_remove(self, ctx: AluGuildContext, player_name: str) -> None:
+    async def database_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
         """Base function for `/database {game} remove` command.
 
         This allows bot owner to remove player accounts from the bot's FPC database.
         """
-        await ctx.typing()
+        await interaction.response.defer()
 
         player_id, display_name = await self.get_player_tuple(player_name)
 
@@ -334,23 +330,23 @@ class BaseSettings(FPCCog):
         }
 
         view = views.DatabaseRemoveView(
-            ctx.author.id, self, player_id, display_name, account_ids_names, self.account_id_column
+            interaction.user.id, self, player_id, display_name, account_ids_names, self.account_id_column
         )
-        await ctx.reply(view=view)
+        await interaction.response.send_message(view=view)
 
     # fpc settings related functions ###################################################################################
 
-    async def setup_channel(self, ctx: AluGuildContext) -> None:
+    async def setup_channel(self, interaction: discord.Interaction[AluBot]) -> None:
         """Base function for `/{game} setup channel` command.
 
         This gives
         * Embed with current state of channel setup
         * View to select a new channel for FPC notifications
         """
-        await ctx.typing()
+        await interaction.response.defer()
         # Get channel
         query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
-        channel_id: int | None = await self.bot.pool.fetchval(query, ctx.guild.id)
+        channel_id: int | None = await self.bot.pool.fetchval(query, interaction.guild_id)
 
         if channel_id:
             channel = self.bot.get_channel(channel_id) or await self.bot.fetch_channel(channel_id)
@@ -370,19 +366,20 @@ class BaseSettings(FPCCog):
             title="FPC (Favourite Player+Character) Channel Setup",
             description=desc,
         ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
-        view = views.SetupChannel(self, author_id=ctx.author.id)
-        message = await ctx.reply(embed=embed, view=view)
+        view = views.SetupChannel(self, author_id=interaction.user.id)
+        await interaction.response.send_message(embed=embed, view=view)
+        message = await interaction.original_response()
         view.message = message
         self.setup_messages_cache[message.id] = view
 
-    async def is_fpc_channel_set(self, ctx: AluGuildContext) -> None:
+    async def is_fpc_channel_set(self, interaction: discord.Interaction[AluBot]) -> None:
         """Checks if the current guild has fpc channel set.
 
         It's somewhat needed because without it functions like `setup_characters`, `setup_players`
         will fail with ForeignKeyViolationError since there is nothing in `{self.prefix}_settings` table.
         """
         query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
-        channel_id: int | None = await ctx.pool.fetchval(query, ctx.guild.id)
+        channel_id: int | None = await interaction.client.pool.fetchval(query, interaction.guild_id)
         if not channel_id:
             msg = (
                 "I'm sorry! You cannot use this command without setting up "
@@ -391,7 +388,7 @@ class BaseSettings(FPCCog):
             )
             raise errors.ErroneousUsage(msg)
 
-    async def setup_misc(self, ctx: AluGuildContext) -> None:
+    async def setup_misc(self, interaction: discord.Interaction[AluBot]) -> None:
         """Base function for `/{game} setup miscellaneous` command.
 
         This gives
@@ -399,11 +396,11 @@ class BaseSettings(FPCCog):
         * Buttons to toggle state of those settings
         * Button to remove the whole data and stop getting FPC notifications
         """
-        await ctx.typing()
-        await self.is_fpc_channel_set(ctx)
+        await interaction.response.defer()
+        await self.is_fpc_channel_set(interaction)
 
         query = f"SELECT enabled, spoil, twitch_live_only FROM {self.prefix}_settings WHERE guild_id=$1"
-        row: SetupMiscQueryRow = await ctx.pool.fetchrow(query, ctx.guild.id)
+        row: SetupMiscQueryRow = await interaction.client.pool.fetchrow(query, interaction.guild_id)
 
         def state(bool: bool) -> str:
             word = "`on`" if bool else "`off`"
@@ -445,7 +442,7 @@ class BaseSettings(FPCCog):
                 value=(
                     "By default, the bot sends notifications no matter if a person is streaming or not at the moment. "
                     "However, if you only want to catch [twitch.tv](https://www.twitch.tv/) streamers playing your "
-                    f"favourite {self.character_plural_word} live - toggle this setting."
+                    f"favourite {self.character_plural} live - toggle this setting."
                 ),
             )
             .add_field(
@@ -458,47 +455,48 @@ class BaseSettings(FPCCog):
             )
             .set_footer(text="Buttons below correspond embed fields above. Read them!")
         )
-        view = views.SetupMisc(self, embed, author_id=ctx.author.id)
-        message = await ctx.reply(embed=embed, view=view)
+        view = views.SetupMisc(self, embed, author_id=interaction.user.id)
+        await interaction.response.send_message(embed=embed, view=view)
+        message = await interaction.original_response()
         view.message = message
         self.setup_messages_cache[message.id] = view
 
     # async def get_character_name_by_id_cache(self) -> dict[int, str]:
     #     raise NotImplementedError
 
-    async def setup_characters(self, ctx: AluGuildContext) -> None:
+    async def setup_characters(self, interaction: discord.Interaction[AluBot]) -> None:
         """Base function for `/{game} setup {characters}` command.
 
         This gives
         * View of buttons to add/remove characters to/from person favourite characters
         """
-        await ctx.typing()
-        await self.is_fpc_channel_set(ctx)
+        await interaction.response.defer()
+        await self.is_fpc_channel_set(interaction)
 
-        character_tuples: list[tuple[int, str]] = await self.characters.id_display_name_tuples()
-        character_tuples.sort(key=lambda x: x[1])  # alphabetic sort
+        characters: list[Character] = await self.characters.all()
+        characters.sort(key=lambda x: x.display_name)
 
-        paginator = views.FPCSetupCharactersPaginator(ctx, character_tuples, self)
+        paginator = views.SetupCharactersPaginator(interaction, characters, self)
         message = await paginator.start()
         # paginator.message is already assigned
         self.setup_messages_cache[message.id] = paginator
 
-    async def setup_players(self, ctx: AluGuildContext) -> None:
+    async def setup_players(self, interaction: discord.Interaction[AluBot]) -> None:
         """Base function for `/{game} setup players` command.
 
         This gives
         * View of buttons to add/remove players to/from person favourite players
         """
-        await ctx.typing()
-        await self.is_fpc_channel_set(ctx)
+        await interaction.response.defer()
+        await self.is_fpc_channel_set(interaction)
 
         query = f"SELECT player_id, display_name FROM {self.prefix}_players"
-        rows: list[SetupPlayerQueryRow] = await ctx.pool.fetch(query)
+        rows: list[SetupPlayerQueryRow] = await interaction.client.pool.fetch(query)
 
         player_tuples: list[tuple[int, str]] = [(row["player_id"], row["display_name"]) for row in rows]
         player_tuples.sort(key=lambda x: x[1])
 
-        paginator = views.FPCSetupPlayersPaginator(ctx, player_tuples, self)
+        paginator = views.SetupPlayersPaginator(interaction, player_tuples, self)
         message = await paginator.start()
         # paginator.message is already assigned
         self.setup_messages_cache[message.id] = paginator
@@ -511,90 +509,92 @@ class BaseSettings(FPCCog):
     # I'm also just hesitant to completely delete all my previous work so let's at least leave one-name version
     # so we can put it as hybrid command, which is easier to maintain.
 
-    async def hideout_add_worker(
-        self,
-        ctx: AluGuildContext,
-        name: str,
-        get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]],
-        column: str,
-        object_word: str,
-    ) -> None:
-        """Worker function for commands /{game}-fpc {character}/player add.
+    # TODO: YOINK DOCS FROM THERE
 
-        Parameters
-        ----------
-        ctx : AluGuildContext
-            Context
-        name : str
-            `name` from user input
-        get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]]
-            function to get `object_id`, `object_display_name` tuple, where object is character/player
-        column : str
-            Suffix of the table, also column in the database like "character", "player"
-            so it's "dota_favourite_characters" table with a column "character_id".
-        object_word : str
-            gathering word like "hero", "champion", "player"
+    # async def hideout_add_worker(
+    #     self,
+    #     ctx: AluGuildContext,
+    #     name: str,
+    #     get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]],
+    #     column: str,
+    #     object_word: str,
+    # ) -> None:
+    #     """Worker function for commands /{game}-fpc {character}/player add.
 
-        """
-        await ctx.typing()
-        object_id, object_display_name = await get_object_tuple(name)
+    #     Parameters
+    #     ----------
+    #     ctx : AluGuildContext
+    #         Context
+    #     name : str
+    #         `name` from user input
+    #     get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]]
+    #         function to get `object_id`, `object_display_name` tuple, where object is character/player
+    #     column : str
+    #         Suffix of the table, also column in the database like "character", "player"
+    #         so it's "dota_favourite_characters" table with a column "character_id".
+    #     object_word : str
+    #         gathering word like "hero", "champion", "player"
 
-        query = f"INSERT INTO {self.prefix}_favourite_{column}s (guild_id, {column}_id) VALUES ($1, $2)"
-        try:
-            await ctx.pool.execute(query, ctx.guild.id, object_id)
-        except asyncpg.UniqueViolationError:
-            msg = f"{object_word.capitalize()} {object_display_name} was already in your favourite list."
-            raise errors.BadArgument(msg)
+    #     """
+    #     await ctx.typing()
+    #     object_id, object_display_name = await get_object_tuple(name)
 
-        embed = discord.Embed(colour=self.colour).add_field(
-            name=f"Successfully added a {object_word} to your favourites.",
-            value=object_display_name,
-        )
-        await ctx.reply(embed=embed)
+    #     query = f"INSERT INTO {self.prefix}_favourite_{column}s (guild_id, {column}_id) VALUES ($1, $2)"
+    #     try:
+    #         await ctx.pool.execute(query, ctx.guild.id, object_id)
+    #     except asyncpg.UniqueViolationError:
+    #         msg = f"{object_word.capitalize()} {object_display_name} was already in your favourite list."
+    #         raise errors.BadArgument(msg)
 
-    async def hideout_remove_worker(
-        self,
-        ctx: AluGuildContext,
-        name: str,
-        get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]],
-        column: str,
-        object_word: str,
-    ) -> None:
-        """Worker function for commands /{game}-fpc {character}/player remove.
+    #     embed = discord.Embed(colour=self.colour).add_field(
+    #         name=f"Successfully added a {object_word} to your favourites.",
+    #         value=object_display_name,
+    #     )
+    #     await ctx.reply(embed=embed)
 
-        Parameters
-        ----------
-        ctx : AluGuildContext
-            Context
-        name : str
-            `name` from user input
-        get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]]
-            function to get `object_id`, `object_display_name` tuple, where object is character/player
-        column : str
-            Suffix of the table, also column in the database like "character", "player"
-            so it's "dota_favourite_characters" table with a column "character_id".
-        object_word : str
-            gathering word like "hero", "champion", "player"
+    # async def hideout_remove_worker(
+    #     self,
+    #     ctx: AluGuildContext,
+    #     name: str,
+    #     get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]],
+    #     column: str,
+    #     object_word: str,
+    # ) -> None:
+    #     """Worker function for commands /{game}-fpc {character}/player remove.
 
-        """
-        await ctx.typing()
-        object_id, object_display_name = await get_object_tuple(name)
+    #     Parameters
+    #     ----------
+    #     ctx : AluGuildContext
+    #         Context
+    #     name : str
+    #         `name` from user input
+    #     get_object_tuple: Callable[[str], Awaitable[tuple[int, str]]]
+    #         function to get `object_id`, `object_display_name` tuple, where object is character/player
+    #     column : str
+    #         Suffix of the table, also column in the database like "character", "player"
+    #         so it's "dota_favourite_characters" table with a column "character_id".
+    #     object_word : str
+    #         gathering word like "hero", "champion", "player"
 
-        query = f"DELETE FROM {self.prefix}_favourite_{column}s WHERE guild_id=$1 AND {column}_id=$2"
-        result = await ctx.pool.execute(query, ctx.guild.id, object_id)
-        if result == "DELETE 1":
-            embed = discord.Embed(
-                colour=self.colour,
-                title=f"Successfully removed a {object_word} from your favourites.",
-                description=object_display_name,
-            )
-            await ctx.reply(embed=embed)
-        elif result == "DELETE 0":
-            msg = f"{object_word.capitalize()} {object_display_name} is already not in your favourite list."
-            raise errors.BadArgument(msg)
-        else:
-            msg = "Unknown error."
-            raise errors.BadArgument(msg)
+    #     """
+    #     await ctx.typing()
+    #     object_id, object_display_name = await get_object_tuple(name)
+
+    #     query = f"DELETE FROM {self.prefix}_favourite_{column}s WHERE guild_id=$1 AND {column}_id=$2"
+    #     result = await ctx.pool.execute(query, ctx.guild.id, object_id)
+    #     if result == "DELETE 1":
+    #         embed = discord.Embed(
+    #             colour=self.colour,
+    #             title=f"Successfully removed a {object_word} from your favourites.",
+    #             description=object_display_name,
+    #         )
+    #         await ctx.reply(embed=embed)
+    #     elif result == "DELETE 0":
+    #         msg = f"{object_word.capitalize()} {object_display_name} is already not in your favourite list."
+    #         raise errors.BadArgument(msg)
+    #     else:
+    #         msg = "Unknown error."
+    #         raise errors.BadArgument(msg)
 
     async def get_player_tuple(self, player_name: str) -> tuple[int, str]:
         """Get player_id, display_name by their name from FPC database."""
@@ -605,14 +605,14 @@ class BaseSettings(FPCCog):
             raise errors.BadArgument(msg)
         return player_row["player_id"], player_row["display_name"]
 
-    async def hideout_player_add(self, ctx: AluGuildContext, player_name: str) -> None:
+    async def hideout_player_add(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
         """Base function for `/{game}-fpc player add` Hideout-only command."""
-        await ctx.typing()
+        await interaction.response.defer()
         player_id, player_display_name = await self.get_player_tuple(player_name)
 
         query = f"INSERT INTO {self.prefix}_favourite_players (guild_id, player_id) VALUES ($1, $2)"
         try:
-            await ctx.pool.execute(query, ctx.guild.id, player_id)
+            await interaction.client.pool.execute(query, interaction.guild_id, player_id)
         except asyncpg.UniqueViolationError:
             msg = f"Player {player_display_name} was already in your favourite list."
             raise errors.BadArgument(msg)
@@ -621,22 +621,22 @@ class BaseSettings(FPCCog):
             name="Successfully added a player to your favourites.",
             value=player_display_name,
         )
-        await ctx.reply(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
-    async def hideout_player_remove(self, ctx: AluGuildContext, player_name: str) -> None:
+    async def hideout_player_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
         """Base function for `/{game}-fpc player remove` Hideout-only command."""
-        await ctx.typing()
+        await interaction.response.defer()
         player_id, player_display_name = await self.get_player_tuple(player_name)
 
         query = f"DELETE FROM {self.prefix}_favourite_players WHERE guild_id=$1 AND player_id=$2"
-        result = await ctx.pool.execute(query, ctx.guild.id, player_id)
+        result = await interaction.client.pool.execute(query, interaction.guild_id, player_id)
         if result == "DELETE 1":
             embed = discord.Embed(
                 colour=self.colour,
                 title="Successfully removed the player from your favourites.",
                 description=player_display_name,
             )
-            await ctx.reply(embed=embed)
+            await interaction.response.send_message(embed=embed)
         elif result == "DELETE 0":
             msg = f"Player {player_display_name} is already not in your favourite list."
             raise errors.BadArgument(msg)
@@ -644,59 +644,54 @@ class BaseSettings(FPCCog):
             msg = "Unknown error."
             raise errors.BadArgument(msg)
 
-    async def get_character_tuple(self, character_name: str) -> tuple[int, str]:
-        try:
-            character_id = await self.characters.id_by_display_name(character_name)
-        except KeyError:
-            msg = (
-                f"{self.character_singular_word.capitalize()} {character_name} does not exist. "
-                "Please, double check everything."
-            )
-            raise errors.BadArgument(msg)
-        character_display_name = await self.characters.display_name_by_id(character_id)
-        return character_id, character_display_name
+    # async def get_character_tuple(self, character_name: str) -> tuple[int, str]:
+    #     try:
+    #         character_id = await self.characters.id_by_display_name(character_name)
+    #     except KeyError:
+    #         msg = (
+    #             f"{self.character_singular_word.capitalize()} {character_name} does not exist. "
+    #             "Please, double check everything."
+    #         )
+    #         raise errors.BadArgument(msg)
+    #     character_display_name = await self.characters.display_name_by_id(character_id)
+    #     return character_id, character_display_name
 
-    async def hideout_character_add(self, ctx: AluGuildContext, character_name: str) -> None:
+    async def hideout_character_add(self, interaction: discord.Interaction[AluBot], character: Character) -> None:
         """Base function for `/{game}-fpc {character} add` Hideout-only command."""
-        await ctx.typing()
-        character_id, character_display_name = await self.get_character_tuple(character_name)
+        await interaction.response.defer()
 
         query = f"INSERT INTO {self.prefix}_favourite_characters (guild_id, character_id) VALUES ($1, $2)"
         try:
-            await ctx.pool.execute(query, ctx.guild.id, character_id)
+            await interaction.client.pool.execute(query, interaction.guild_id, character.id)
         except asyncpg.UniqueViolationError:
             msg = (
-                f"{self.character_singular_word.capitalize()} {character_display_name} "
+                f"{self.character_singular.capitalize()} {character.display_name} "
                 "was already in your favourite list."
             )
             raise errors.BadArgument(msg)
 
         embed = discord.Embed(colour=self.colour).add_field(
-            name=f"Successfully added a {self.character_singular_word} to your favourites.",
-            value=character_display_name,
+            name=f"Successfully added a {self.character_singular} to your favourites.",
+            value=character.display_name,
         )
-        await ctx.reply(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
-    async def hideout_character_remove(self, ctx: AluGuildContext, character_name: str) -> None:
+    async def hideout_character_remove(self, interaction: discord.Interaction[AluBot], character: Character) -> None:
         """Base function for `/{game}-fpc {character} remove` Hideout-only command."""
-        await self.hideout_remove_worker(
-            ctx, character_name, self.get_character_tuple, "character", self.character_singular_word
-        )
-        await ctx.typing()
-        character_id, character_display_name = await self.get_character_tuple(character_name)
+        await interaction.response.defer()
 
         query = f"DELETE FROM {self.prefix}_favourite_characters WHERE guild_id=$1 AND character_id=$2"
-        result = await ctx.pool.execute(query, ctx.guild.id, character_id)
+        result = await interaction.client.pool.execute(query, interaction.guild_id, character.id)
         if result == "DELETE 1":
             embed = discord.Embed(
                 colour=self.colour,
-                title=f"Successfully removed a {self.character_singular_word} from your favourites.",
-                description=character_display_name,
+                title=f"Successfully removed a {self.character_singular} from your favourites.",
+                description=character.display_name,
             )
-            await ctx.reply(embed=embed)
+            await interaction.response.send_message(embed=embed)
         elif result == "DELETE 0":
             msg = (
-                f"{self.character_singular_word.capitalize()} {character_display_name} "
+                f"{self.character_singular.capitalize()} {character.display_name} "
                 "is already not in your favourite list."
             )
             raise errors.BadArgument(msg)
@@ -721,11 +716,12 @@ class BaseSettings(FPCCog):
             description=favourite_player_names,
         ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
 
-    async def hideout_player_list(self, ctx: AluGuildContext) -> None:
+    async def hideout_player_list(self, interaction: discord.Interaction[AluBot]) -> None:
         """Base function for `/{game}-fpc player list` Hideout-only command."""
-        await ctx.typing()
-        embed = await self.get_player_list_embed(ctx.guild.id)
-        await ctx.reply(embed=embed)
+        await interaction.response.defer()
+        assert interaction.guild
+        embed = await self.get_player_list_embed(interaction.guild.id)
+        await interaction.response.send_message(embed=embed)
 
     async def get_character_list_embed(self, guild_id: int) -> discord.Embed:
         query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
@@ -733,19 +729,20 @@ class BaseSettings(FPCCog):
             character_id for (character_id,) in await self.bot.pool.fetch(query, guild_id)
         ]
         favourite_character_names = (
-            "\n".join([await self.characters.display_name_by_id(i) for i in favourite_character_ids]) or "Empty list"
+            "\n".join([(await self.characters.by_id(i)).display_name for i in favourite_character_ids]) or "Empty list"
         )
         return discord.Embed(
             colour=self.colour,
-            title=f"List of your favourite {self.character_plural_word}",
+            title=f"List of your favourite {self.character_plural}",
             description=favourite_character_names,
         )
 
-    async def hideout_character_list(self, ctx: AluGuildContext) -> None:
+    async def hideout_character_list(self, interaction: discord.Interaction[AluBot]) -> None:
         """Base function for `/{game}-fpc {character} list` Hideout-only command."""
-        await ctx.typing()
-        embed = await self.get_character_list_embed(ctx.guild.id)
-        await ctx.reply(embed=embed)
+        await interaction.response.defer()
+        assert interaction.guild
+        embed = await self.get_character_list_embed(interaction.guild.id)
+        await interaction.response.send_message(embed=embed)
 
     async def hideout_player_add_remove_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
@@ -767,28 +764,28 @@ class BaseSettings(FPCCog):
             for (name,) in await interaction.client.pool.fetch(query, interaction.guild.id, current)
         ]
 
-    async def hideout_character_add_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
-    ) -> list[app_commands.Choice[str]]:
-        """Base function to define autocomplete for character_name in `/{game}-fpc {character} add/remove`."""
-        query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
+    # async def hideout_character_add_remove_autocomplete(
+    #     self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
+    # ) -> list[app_commands.Choice[str]]:
+    #     """Base function to define autocomplete for character_name in `/{game}-fpc {character} add/remove`."""
+    #     query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
 
-        favourite_character_ids: list[int] = [
-            character_id for (character_id,) in await interaction.client.pool.fetch(query, interaction.guild_id)
-        ]
+    #     favourite_character_ids: list[int] = [
+    #         character_id for (character_id,) in await interaction.client.pool.fetch(query, interaction.guild_id)
+    #     ]
 
-        name_by_id_cache = await self.characters.id_display_name_dict()
+    #     name_by_id_cache = await self.characters.id_display_name_dict()
 
-        if mode_add_remove:
-            # add
-            choice_ids = [id for id in name_by_id_cache if id not in favourite_character_ids]
-        else:
-            # remove
-            choice_ids = favourite_character_ids
+    #     if mode_add_remove:
+    #         # add
+    #         choice_ids = [id for id in name_by_id_cache if id not in favourite_character_ids]
+    #     else:
+    #         # remove
+    #         choice_ids = favourite_character_ids
 
-        choice_names = [name_by_id_cache[id] for id in choice_ids]
-        fuzzy_names = fuzzy.finder(current, choice_names)
-        return [app_commands.Choice(name=name, value=name) for name in fuzzy_names[:7]]
+    #     choice_names = [name_by_id_cache[id] for id in choice_ids]
+    #     fuzzy_names = fuzzy.finder(current, choice_names)
+    #     return [app_commands.Choice(name=name, value=name) for name in fuzzy_names[:7]]
 
     async def database_remove_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str
@@ -805,9 +802,9 @@ class BaseSettings(FPCCog):
             for (name,) in await interaction.client.pool.fetch(query, current)
         ]
 
-    async def tutorial(self, ctx: AluGuildContext) -> None:
+    async def tutorial(self, interaction: discord.Interaction[AluBot]) -> None:
         """Base function for `/{game} tutorial` command."""
-        await ctx.typing()
+        await interaction.response.defer()
 
         file = discord.File("assets/images/local/fpc_tutorial.png")
         embed = (
@@ -843,10 +840,10 @@ class BaseSettings(FPCCog):
                 ),
             ),
             (
-                f"setup {self.character_plural_word}",
+                f"setup {self.character_plural}",
                 (
                     "Third, you need to choose your __F__avourite __C__haracters from the list of "
-                    f"{self.game_display_name} {self.character_plural_word}."
+                    f"{self.game_display_name} {self.character_plural}."
                 ),
             ),
             (
@@ -866,7 +863,9 @@ class BaseSettings(FPCCog):
         ]
 
         for count, (almost_qualified_name, field_value) in enumerate(cmd_field_tuples, start=1):
-            app_command = self.bot.tree.get_app_command(f"{self.prefix} {almost_qualified_name}", guild=ctx.guild)
+            app_command = self.bot.tree.get_app_command(
+                f"{self.prefix} {almost_qualified_name}", guild=interaction.guild_id
+            )
             if app_command:
                 embed.add_field(
                     name=f"{const.DIGITS[count]}. Use {app_command.mention}", value=field_value, inline=False
@@ -875,4 +874,4 @@ class BaseSettings(FPCCog):
                 msg = "Somehow FPC related command is None."
                 raise RuntimeError(msg)
 
-        await ctx.reply(embed=embed, file=file)
+        await interaction.response.send_message(embed=embed, file=file)

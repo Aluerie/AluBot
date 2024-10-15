@@ -3,7 +3,7 @@ from enum import StrEnum
 from ._meta import CONSTANTS
 
 __all__ = (
-    "DotaAsset",
+    "ImageAsset",
     "LogoAsset",
     "Slash",
     "Regex",
@@ -15,20 +15,11 @@ __all__ = (
     "Logo",
 )
 
-REPO_CONTENT = "https://raw.githubusercontent.com/Aluerie/AluBot/main/"
-
 
 class ImageAsset(StrEnum):
     def url(self) -> str:
-        return f"{REPO_CONTENT}{self.value}"
-
-
-class DotaAsset(ImageAsset):
-    AbilityUnknown = "./assets/images/dota/ability_unknown.png"
-    ItemEmpty = "./assets/images/dota/item_empty.png"
-    ItemUnknown = "./assets/images/dota/item_unknown.png"
-    Placeholder640X360 = "./assets/images/dota/Lavender640x360.png"
-    FacetQuestion = "./assets/images/dota/facet_question.png"
+        relative_location = self.value.removeprefix("./")
+        return f"https://raw.githubusercontent.com/Aluerie/AluBot/main/{relative_location}"
 
 
 class LogoAsset(ImageAsset):

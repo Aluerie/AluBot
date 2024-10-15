@@ -5,10 +5,13 @@ from typing import TYPE_CHECKING, TypedDict, override
 
 from roleidentification import get_roles
 
-from ..cache import NewKeysCache
+from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
+from . import constants
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
+
+    import discord
 
     from bot import AluBot
 
@@ -20,10 +23,13 @@ if TYPE_CHECKING:
 
 
 __all__ = (
+    "Champion",
     "Champions",
+    "ChampionTransformer",
     "ItemIcons",
     "RuneIcons",
     "SummonerSpellIcons",
+    "RolesIdentifiers",
 )
 
 
@@ -39,50 +45,83 @@ def cdragon_asset_url(path: str) -> str:
     return BASE_URL + path
 
 
-class Champions(NewKeysCache):
+@dataclass(repr=False)
+class Champion(Character):
+    alias: str
+    """No spaces, no extra symbols, PascalCase-like name for the champion,
+    i.e. Kaisa (not Kai'Sa), MissFortune (not Miss Fortune)
+    """
+    icon_url: str
+    """_summary_
+
+    https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/145.png
+    """
+
+
+@dataclass(repr=False)
+class PseudoChampion(Character):
+    alias: str
+    icon_url: str
+
+
+class Champions(CharacterStorage[Champion]):
     if TYPE_CHECKING:
         cached_data: ChampionCache
 
     @override
-    async def fill_data(self) -> ChampionCache:
+    async def fill_data(self) -> dict[int, Champion]:
+        """_summary_
+
+        Sources
+        -------
+        * https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json
+        """
         champion_summary = await self.bot.lol.cdragon.get_lol_v1_champion_summary()
-
-        data: ChampionCache = {"id_by_name": {}, "name_by_id": {}, "icon_by_id": {}, "alias_by_id": {}}
-        for champion in champion_summary:
-            if champion["id"] == -1:
-                continue
-
-            data["id_by_name"][champion["name"].lower()] = champion["id"]
-            data["name_by_id"][champion["id"]] = champion["name"]
-            data["alias_by_id"][champion["id"]] = champion["alias"]
-            data["icon_by_id"][champion["id"]] = cdragon_asset_url(champion["squarePortraitPath"])
-
+        data = {
+            champion["id"]: Champion(
+                id=champion["id"],
+                display_name=champion["name"],
+                alias=champion["alias"],
+                icon_url=cdragon_asset_url(champion["squarePortraitPath"]),
+                emote=constants.CHAMPION_EMOTES.get(champion["id"]) or constants.NEW_CHAMPION_EMOTE,
+            )
+            for champion in champion_summary
+        }
+        # they provide champion value for None, but I've never seen their API to give me "-1" yet.
+        # maybe will regret it
+        data.pop(-1, None)
         return data
 
-    # example of champion values
-    # id: 145
-    # name: "Kai'Sa" (lower_name in cache "id_by_name": "kai'sa")
-    # alias: "Kaisa"  # eats spaces like "MissFortune"
-    # icon_url: https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/145.png
+    @override
+    async def by_id(self, champion_id: int) -> Champion | PseudoChampion:
+        try:
+            champion = await self.get_value(champion_id)
+        except KeyError:
+            unknown_champion = PseudoChampion(
+                id=champion_id,
+                display_name="Unknown",
+                alias="Unknown",
+                icon_url=cdragon_asset_url("/lol-game-data/assets/v1/champion-icons/-1.png"),
+                # taken from `get_lol_v1_champion_summary` response ^ for champion with id=-1
+                emote=constants.NEW_CHAMPION_EMOTE,
+            )
+            return unknown_champion
+        else:
+            return champion
 
-    async def id_by_name(self, champion_name: str) -> int:
-        """Get champion id by name."""
-        return await self.get_value("id_by_name", champion_name.lower())
-
-    async def name_by_id(self, champion_id: int) -> str:
-        """Get champion name by id."""
-        return await self.get_value("name_by_id", champion_id)
-
-    async def alias_by_id(self, champion_id: int) -> str:
-        """Get champion alias by id."""
-        return await self.get_value("alias_by_id", champion_id)
-
-    async def icon_by_id(self, champion_id: int) -> str:
-        """Get champion icon url by id."""
-        return await self.get_value("icon_by_id", champion_id)
+    @override
+    async def all(self) -> list[Champion]:
+        data = await self.get_cached_data()
+        return list(data.values())
 
 
-class ItemIcons(NewKeysCache[str]):
+class ChampionTransformer(CharacterTransformer[Champion]):
+    @override
+    def get_character_storage(self, interaction: discord.Interaction[AluBot]) -> Champions:
+        return interaction.client.lol.champions
+
+
+class ItemIcons(GameDataStorage[str]):
     @override
     async def fill_data(self) -> dict[int, str]:
         items = await self.bot.lol.cdragon.get_lol_v1_items()
@@ -93,7 +132,7 @@ class ItemIcons(NewKeysCache[str]):
         return await self.get_value(item_id)
 
 
-class RuneIcons(NewKeysCache[str]):
+class RuneIcons(GameDataStorage[str]):
     @override
     async def fill_data(self) -> dict[int, str]:
         perks = await self.bot.lol.cdragon.get_lol_v1_perks()
@@ -104,7 +143,7 @@ class RuneIcons(NewKeysCache[str]):
         return await self.get_value(rune_id)
 
 
-class SummonerSpellIcons(NewKeysCache[str]):
+class SummonerSpellIcons(GameDataStorage[str]):
     @override
     async def fill_data(self) -> dict[int, str]:
         summoner_spells = await self.bot.lol.cdragon.get_lol_v1_summoner_spells()
@@ -123,7 +162,7 @@ class RoleDict(TypedDict):
     UTILITY: float
 
 
-class RolesCache(NewKeysCache[RoleDict]):
+class RolesIdentifiers(GameDataStorage[RoleDict]):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(bot=bot)
         self.meraki_patch: str = "Unknown"
@@ -158,8 +197,8 @@ class RolesCache(NewKeysCache[RoleDict]):
 
     async def get_missing_from_meraki_champion_ids(self, data_meraki: dict[int, RoleDict] | None = None) -> set[int]:
         data_meraki = data_meraki or await self.get_cached_data()
-        name_by_id = await self.bot.lol.champion.get_cache("name_by_id")
-        return set(name_by_id.keys()) - set(data_meraki.keys())
+        champion_dict = await self.bot.lol.champions.get_cached_data()
+        return set(champion_dict.keys()) - set(data_meraki.keys())
 
     @staticmethod
     def construct_the_dict(

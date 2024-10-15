@@ -1,31 +1,37 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, override
 
 import aiohttp
 import discord
 from discord import app_commands
-from discord.ext import commands
 
-from utils import checks, const, errors, lol
+from utils import const, errors
+from utils.lol import Champion, ChampionTransformer, LiteralPlatform, Platform
 
 from ..base_classes import Account, BaseSettings
-from ..database_management import AddLoLPlayerFlags  # noqa: TCH001
 from .models import lol_links
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext
+    from bot import AluBot
 
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
+class LolPlayerCandidate(NamedTuple):
+    name: str
+    platform: Platform
+    game_name: str
+    tag_line: str
+
+
 class LoLAccountDict(TypedDict):
     summoner_id: str
     puuid: str
-    platform: lol.LiteralPlatform
+    platform: LiteralPlatform
     game_name: str
     tag_line: str
     # player_id: int
@@ -36,18 +42,18 @@ class LoLAccount(Account):
     if TYPE_CHECKING:
         summoner_id: str
         puuid: str
-        platform: lol.Platform
+        platform: Platform
         game_name: str
         tag_line: str
 
     @override
-    async def set_game_specific_attrs(self, bot: AluBot, flags: AddLoLPlayerFlags) -> None:
+    async def set_game_specific_attrs(self, bot: AluBot, player: LolPlayerCandidate) -> None:
         # RIOT ACCOUNT INFO
         try:
             riot_account = await bot.lol.get_account_v1_by_riot_id(
-                game_name=flags.game_name,
-                tag_line=flags.tag_line,
-                region=flags.platform.continent,
+                game_name=player.game_name,
+                tag_line=player.tag_line,
+                region=player.platform.continent,
                 # in theory we can use continent closest to me bcs they all share the same data
                 # for account_v1 endpoint
                 # so check response time to this request (BUT WHATEVER)
@@ -55,13 +61,13 @@ class LoLAccount(Account):
         except aiohttp.ClientResponseError:
             msg = (
                 "Error `get_account_v1_by_riot_id` for "
-                f"`{flags.game_name}#{flags.tag_line}` for `{flags.platform}` platform.\n"
+                f"`{player.game_name}#{player.tag_line}` for `{player.platform}` platform.\n"
                 "This account probably does not exist."
             )
             raise errors.BadArgument(msg)
 
         self.puuid = puuid = riot_account["puuid"]
-        self.platform = flags.platform
+        self.platform = player.platform
         self.game_name = riot_account["gameName"]
         self.tag_line = riot_account["tagLine"]
 
@@ -71,7 +77,7 @@ class LoLAccount(Account):
         except aiohttp.ClientResponseError:
             msg = (
                 f"Error `get_lol_summoner_v4_by_puuid` for riot account\n"
-                f"`{flags.game_name}#{flags.tag_line}` in `{flags.platform}` platform, puuid: `{puuid}`"
+                f"`{player.game_name}#{player.tag_line}` in `{player.platform}` platform, puuid: `{puuid}`"
             )
             raise errors.BadArgument(msg)
         self.summoner_id = summoner["id"]
@@ -86,10 +92,8 @@ class LoLAccount(Account):
 
     @override
     @staticmethod
-    def static_account_name_with_links(
-        platform: lol.LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any
-    ) -> str:
-        opgg_name = lol.Platform(platform).opgg_name
+    def static_account_name_with_links(platform: LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any) -> str:
+        opgg_name = Platform(platform).opgg_name
         links = lol_links(platform, game_name, tag_line)
         return f"`{opgg_name}`: `{game_name} #{tag_line}` {links}"
 
@@ -136,146 +140,193 @@ class Settings(BaseSettings):
             colour=const.Colour.darkslategray,
             game_display_name="League of Legends",
             game_icon_url=const.Logo.Lol,
-            character_singular_word="champion",
-            character_plural_word="champions",
+            character_singular="champion",
+            character_plural="champions",
             account_cls=LoLAccount,
             account_typed_dict_cls=LoLAccountDict,
-            character_cache=bot.cache_lol.champion,
-            emote_dict=const.LOL_CHAMPION_EMOTES,
+            characters=bot.lol.champions,
             **kwargs,
         )
 
-    @checks.hybrid.is_premium_guild_manager()
-    @commands.hybrid_group(name="lol", aliases=["league"])
-    async def lol_group(self, ctx: AluGuildContext) -> None:
-        """League of Legends FPC (Favourite Player+Character) commands."""
-        await ctx.send_help()
+    lol_group = app_commands.Group(
+        name="lol",
+        description="League of Legends FPC (Favourite Player+Character) commands.",
+        guild_ids=[const.Guild.hideout],
+        default_permissions=discord.Permissions(manage_guild=True),
+    )
 
-    @lol_group.group(name="request")
-    async def lol_request(self, ctx: AluGuildContext) -> None:
-        """League of Legends FPC (Favourite Player+Character) request commands."""
-        await ctx.send_help()
+    lol_request = app_commands.Group(
+        name="request",
+        description="League of Legends FPC (Favourite Player+Character) request commands.",
+        parent=lol_group,
+    )
 
     @lol_request.command(name="player")
-    async def lol_request_player(self, ctx: AluGuildContext, *, flags: AddLoLPlayerFlags) -> None:
+    @app_commands.rename(platform="server", game_name="in-game-name")
+    async def lol_request_player(
+        self,
+        interaction: discord.Interaction[AluBot],
+        name: str,
+        platform: Platform,
+        game_name: str,
+        tag_line: str,
+    ) -> None:
         """Request LoL Player to be added into the bot's FPC database.
 
         So you and other people can add the player into their favourite later and start \
         receiving FPC Notifications.
-        """
-        await self.request_player(ctx, flags)
 
-    @lol_group.group(name="setup")
-    async def lol_setup(self, ctx: AluGuildContext) -> None:
-        """League of Legends FPC (Favourite Player+Character) setup commands.
-
-        Manage FPC feature settings in your server with those commands.
+        Parameters
+        ----------
+        name
+            Player name. if it's a twitch streamer then it should match their twitch handle.
+        platform
+            Server where the account is from, i.e. "KR", "NA", "EUW".
+        game_name
+            Riot ID name (without a hashtag or a tag), i.e. "Hide on bush", "Sneaky".
+        tag_line
+            Riot ID tag line (characters after a hashtag), i.e. "KR1", "NA69".
         """
-        await ctx.send_help()
+        player_tuple = LolPlayerCandidate(name=name, platform=platform, game_name=game_name, tag_line=tag_line)
+        await self.request_player(interaction, player_tuple)
+
+    lol_setup = app_commands.Group(
+        name="setup",
+        description="Manage FPC feature settings in your server with those commands..",
+        parent=lol_group,
+    )
 
     @lol_setup.command(name="channel")
-    async def lol_setup_channel(self, ctx: AluGuildContext) -> None:
+    async def lol_setup_channel(self, interaction: discord.Interaction[AluBot]) -> None:
         """Setup/manage your LoL FPC Notifications channel."""
-        await self.setup_channel(ctx)
+        await self.setup_channel(interaction)
 
     @lol_setup.command(name="champions")
-    async def lol_setup_champions(self, ctx: AluGuildContext) -> None:
+    async def lol_setup_champions(self, interaction: discord.Interaction[AluBot]) -> None:
         """Setup/manage your LoL FPC favourite champions list."""
-        await self.setup_characters(ctx)
+        await self.setup_characters(interaction)
 
     @lol_setup.command(name="players")
-    async def lol_setup_players(self, ctx: AluGuildContext) -> None:
+    async def lol_setup_players(self, interaction: discord.Interaction[AluBot]) -> None:
         """Setup/manage your LoL FPC favourite players list."""
-        await self.setup_players(ctx)
+        await self.setup_players(interaction)
 
-    @lol_setup.command(name="miscellaneous", aliases=["misc"])
-    async def lol_setup_misc(self, ctx: AluGuildContext) -> None:
+    @lol_setup.command(name="miscellaneous")
+    async def lol_setup_misc(self, interaction: discord.Interaction[AluBot]) -> None:
         """Manage your LoL FPC misc settings."""
-        await self.setup_misc(ctx)
+        await self.setup_misc(interaction)
 
     @lol_group.command(name="tutorial")
-    async def lol_tutorial(self, ctx: AluGuildContext) -> None:
+    async def lol_tutorial(self, interaction: discord.Interaction[AluBot]) -> None:
         """Guide to setup League of Legends FPC Notifications."""
-        await self.tutorial(ctx)
+        await self.tutorial(interaction)
 
-    @checks.hybrid.is_hideout()
-    @commands.hybrid_group(name="lolfpc")  # cspell: ignore lolfpc
-    async def hideout_lol_group(self, ctx: AluGuildContext) -> None:
-        """League of Legends FPC (Favourite Player+Character) Hideout-only commands."""
-        await ctx.send_help()
+    # HIDEOUT ONLY COMMANDS (at least, at the moment)
+    hideout_lol_group = app_commands.Group(
+        name="lolfpc",  # cspell: ignore lolfpc
+        description="League of Legends FPC (Favourite Player+Character) Hideout-only commands.",
+        guild_ids=[const.Guild.hideout],
+    )
 
-    @hideout_lol_group.group(name="player")
-    async def hideout_lol_player(self, ctx: AluGuildContext) -> None:
-        """League of Legends FPC (Favourite Player+Character) Hideout-only player-related commands."""
-        await ctx.send_help()
+    hideout_lol_player = app_commands.Group(
+        name="player",  # cspell: ignore lolfpc
+        description="League of Legends FPC (Favourite Player+Character) Hideout-only player-related commands.",
+        parent=hideout_lol_group,
+    )
 
+    @hideout_lol_player.command(name="add")
+    async def hideout_lol_player_add(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
+        """Add a League of Legends player into your favourite FPC players list.
+
+        Parameters
+        ----------
+        player_name
+            "Player Name. Autocomplete suggestions exclude your favourite players."
+        """
+        await self.hideout_player_add(interaction, player_name)
+
+    @hideout_lol_player_add.autocomplete("player_name")
     async def hideout_lol_player_add_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
-    @hideout_lol_player.command(name="add")
-    @app_commands.describe(player_name="Player Name. Autocomplete suggestions exclude your favourite players.")
-    @app_commands.autocomplete(player_name=hideout_lol_player_add_autocomplete)
-    async def hideout_lol_player_add(self, ctx: AluGuildContext, player_name: str) -> None:
-        """Add a League of Legends player into your favourite FPC players list."""
-        await self.hideout_player_add(ctx, player_name)
+    @hideout_lol_player.command(name="remove")
+    async def hideout_lol_player_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
+        """Remove a League of Legends player into your favourite FPC players list.
 
+        Parameters
+        ----------
+        player_name
+            Player Name. Autocomplete suggestions include only your favourite players.
+        """
+        await self.hideout_player_remove(interaction, player_name)
+
+    @hideout_lol_player_remove.autocomplete("player_name")
     async def hideout_lol_player_remove_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
-    @hideout_lol_player.command(name="remove")
-    @app_commands.describe(player_name="Player Name. Autocomplete suggestions include only your favourite players.")
-    @app_commands.autocomplete(player_name=hideout_lol_player_remove_autocomplete)
-    async def hideout_lol_player_remove(self, ctx: AluGuildContext, player_name: str) -> None:
-        """Remove a League of Legends player into your favourite FPC players list."""
-        await self.hideout_player_remove(ctx, player_name)
-
-    @hideout_lol_group.group(name="champion")
-    async def hideout_lol_champion(self, ctx: AluGuildContext) -> None:
-        """League of Legends FPC (Favourite Player+Character) Hideout-only champion-related commands."""
-        await ctx.send_help()
-
-    async def hideout_lol_champion_add_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
-    ) -> list[app_commands.Choice[str]]:
-        return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=True)
+    hideout_lol_champion = app_commands.Group(
+        name="champion",  # cspell: ignore lolfpc
+        description="League of Legends FPC (Favourite Player+Character) Hideout-only champion-related commands.",
+        parent=hideout_lol_group,
+    )
 
     @hideout_lol_champion.command(name="add")
-    @app_commands.describe(champion_name="Champion Name. Autocomplete suggestions exclude your favourite champs.")
-    @app_commands.autocomplete(champion_name=hideout_lol_champion_add_autocomplete)
-    async def hideout_lol_champion_add(self, ctx: AluGuildContext, champion_name: str) -> None:
-        """Add a League of Legends champion into your favourite FPC champions list."""
-        await self.hideout_character_add(ctx, champion_name)
+    async def hideout_lol_champion_add(
+        self, interaction: discord.Interaction[AluBot], champion: app_commands.Transform[Champion, ChampionTransformer]
+    ) -> None:
+        """Add a League of Legends champion into your favourite FPC champions list.
 
-    async def hideout_lol_champion_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
-    ) -> list[app_commands.Choice[str]]:
-        return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=False)
+        Parameters
+        ----------
+        champion
+            Champion Name. Autocomplete suggestions exclude your favourite champs.
+        """
+        await self.hideout_character_add(interaction, champion)
+
+    # @hideout_lol_champion_add.autocomplete("champion")
+    # async def hideout_lol_champion_add_autocomplete(
+    #     self, interaction: discord.Interaction[AluBot], current: str
+    # ) -> list[app_commands.Choice[str]]:
+    #     return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
     @hideout_lol_champion.command(name="remove")
-    @app_commands.describe(champion_name="Champion Name. Autocomplete suggestions only include your favourite champs.")
-    @app_commands.autocomplete(champion_name=hideout_lol_champion_remove_autocomplete)
-    async def hideout_lol_champion_remove(self, ctx: AluGuildContext, champion_name: str) -> None:
-        """Remove a League of Legends champion into your favourite FPC champions list."""
-        await self.hideout_character_remove(ctx, champion_name)
+    async def hideout_lol_champion_remove(
+        self, interaction: discord.Interaction[AluBot], champion: app_commands.Transform[Champion, ChampionTransformer]
+    ) -> None:
+        """Remove a League of Legends champion into your favourite FPC champions list.
+
+        Parameters
+        ----------
+        champion
+            Champion Name. Autocomplete suggestions only include your favourite champs.
+        """
+        await self.hideout_character_remove(interaction, champion)
+
+    # @hideout_lol_champion_remove.autocomplete("champion_name")
+    # async def hideout_lol_champion_remove_autocomplete(
+    #     self, interaction: discord.Interaction[AluBot], current: str
+    # ) -> list[app_commands.Choice[str]]:
+    #     return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
     @hideout_lol_player.command(name="list")
-    async def hideout_lol_player_list(self, ctx: AluGuildContext) -> None:
+    async def hideout_lol_player_list(self, interaction: discord.Interaction[AluBot]) -> None:
         """Show a list of your favourite League of Legends FPC players."""
-        await self.hideout_player_list(ctx)
+        await self.hideout_player_list(interaction)
 
     @hideout_lol_champion.command(name="list")
-    async def hideout_lol_champion_list(self, ctx: AluGuildContext) -> None:
+    async def hideout_lol_champion_list(self, interaction: discord.Interaction[AluBot]) -> None:
         """Show a list of your favourite League of Legends FPC champions."""
-        await self.hideout_character_list(ctx)
+        await self.hideout_character_list(interaction)
 
     # Utilities to debug some rare situations.
 
-    @commands.command(hidden=True)
-    async def meraki(self, ctx: AluGuildContext) -> None:
+    @app_commands.guilds(const.Guild.hideout)
+    @app_commands.command()
+    async def meraki(self, interaction: discord.Interaction[AluBot]) -> None:
         """Show list of champions that are missing from Meraki JSON."""
         embed = (
             discord.Embed(
@@ -284,8 +335,8 @@ class Settings(BaseSettings):
                 description=(
                     "\n".join(
                         [
-                            f"\N{BLACK CIRCLE} {await self.bot.cache_lol.champion.name_by_id(i)} - `{i}`"
-                            for i in await self.bot.cache_lol.role.get_missing_from_meraki_champion_ids()
+                            f"\N{BLACK CIRCLE} {(await self.bot.lol.champions.by_id(i)).display_name} - `{i}`"
+                            for i in await self.bot.lol.roles.get_missing_from_meraki_champion_ids()
                         ]
                     )
                     or "None missing"
@@ -298,48 +349,9 @@ class Settings(BaseSettings):
                     "• [Json](https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/championrates.json)"
                 ),
             )
-            .add_field(name="Meraki last updated", value=f"Patch {self.bot.cache_lol.role.meraki_patch}")
+            .add_field(name="Meraki last updated", value=f"Patch {self.bot.lol.roles.meraki_patch}")
         )
-        await ctx.reply(embed=embed)
-
-    @commands.is_owner()
-    @commands.command(name="create_champion_emote")
-    async def create_champion_emote(self, ctx: AluGuildContext, champion_name: str) -> None:
-        """Create a new discord emote for a League of Legends champion.
-
-        Useful when a new LoL champion gets added to the game, so we can just use this command,
-        copy-paste the answer to `utils.const` and be happy.
-        """
-        await ctx.typing()
-        cache_lol = self.bot.cache_lol.champion
-
-        champion_id = await cache_lol.id_by_name(champion_name)
-        # a bit cursed
-        alias = await cache_lol.alias_by_id(champion_id)
-        icon_url = await cache_lol.icon_by_id(champion_id)
-
-        guild_id = const.EmoteGuilds.LOL[3]
-        guild = self.bot.get_guild(guild_id)
-        if guild is None:
-            msg = f"Guild with id {guild_id} is `None`."
-            raise errors.SomethingWentWrong(msg)
-
-        async with self.bot.session.get(url=icon_url) as response:
-            if not response.ok:
-                msg = "Response for a new emote link wasn't okay"
-                raise errors.ResponseNotOK(msg)
-
-            new_emote = await guild.create_custom_emoji(name=alias, image=await response.read())
-
-        embed = discord.Embed(
-            colour=const.Colour.darkslategray,
-            title="New League of Legends 2 Champion emote was created",
-            description=f'```py\n{new_emote.name} = "{new_emote}"```',
-        ).add_field(
-            name=await cache_lol.name_by_id(champion_id),
-            value=str(new_emote),
-        )
-        await ctx.reply(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: AluBot) -> None:

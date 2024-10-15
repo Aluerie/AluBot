@@ -166,19 +166,18 @@ class DotaFPCNotifications(BaseNotifications):
                     )
 
                     if channel_spoil_tuples:
-                        hero_name = await self.bot.dota.heroes.display_name_by_id(hero_id)
-                        send_log.debug("%s - %s", user["display_name"], hero_name)
+                        player_hero = await self.bot.dota.heroes.by_id(hero_id)
+                        send_log.debug("%s - %s", user["display_name"], player_hero.display_name)
                         match_to_send = MatchToSend(
                             self.bot,
                             match_id=match.id,
                             friend_id=account_id,
                             start_time=match.start_time,
                             player_name=user["display_name"],
+                            player_hero=player_hero,
                             twitch_id=user["twitch_id"],
-                            hero_id=hero_id,
                             hero_ids=[hero.id for hero in match.heroes],
                             server_steam_id=match.server_steam_id,
-                            hero_name=hero_name,
                         )
                         # SENDING
                         start_time = time.perf_counter()
@@ -260,13 +259,14 @@ class DotaFPCNotifications(BaseNotifications):
             else:
                 self.retry_mapping[tuple_uuid] += 1
 
+            player_hero = await self.bot.dota.heroes.by_id(match_row['hero_id'])
             # discord-markdown friendly strings for my #logger channel.
             # put it into the beginning of every consequent edit_log.info / edit_log.debug call
             log_str = (
                 f"`r={self.retry_mapping[tuple_uuid]}` "
                 f"[`{match_id}`](<https://stratz.com/matches/{match_id}>) "
                 f"[`{match_row['player_name']}`](<https://stratz.com/players/{friend_id}>) "
-                f"{const.DOTA_HERO_EMOTES[match_row['hero_id']]}"
+                f"{player_hero.emote}"
             )
 
             edit_log.debug("%s Start editing attempt.", log_str)
@@ -315,7 +315,7 @@ class DotaFPCNotifications(BaseNotifications):
                 edit_log.warning("%s Parsing was not finished.", log_str)
                 continue
             else:
-                match_to_edit = StratzMatchToEdit(self.bot, stratz_data)
+                match_to_edit = StratzMatchToEdit(self.bot, stratz_data, player_hero)
 
             # now we know how exactly to edit the match with a specific `match_to_edit`
             await self.edit_match(match_to_edit, match_row["channel_message_tuples"])

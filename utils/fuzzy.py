@@ -1,4 +1,3 @@
-
 """This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,13 +6,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 # help with: http://chairnerd.seatgeek.com/fuzzywuzzy-fuzzy-string-matching-in-python/
 
 # TODO: REPLACE THIS WITH https://github.com/seatgeek/thefuzz
+# or not because it's a bit slower ?!
 
 from __future__ import annotations
 
 import heapq
 import re
 from difflib import SequenceMatcher
-from typing import TYPE_CHECKING, Literal, Optional, TypeVar, overload
+from typing import TYPE_CHECKING, Literal, TypeVar, overload
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterable, Sequence
@@ -148,10 +148,9 @@ def extract(
     limit: int | None = 10,
 ) -> list[tuple[str, int]] | list[tuple[str, int, T]]:
     it = _extraction_generator(query, choices, scorer, score_cutoff)
-    key = lambda t: t[1]
     if limit is not None:
-        return heapq.nlargest(limit, it, key=key)  # type: ignore
-    return sorted(it, key=key, reverse=True)  # type: ignore
+        return heapq.nlargest(limit, it, key=lambda t: t[1])  # type: ignore
+    return sorted(it, key=lambda t: t[1], reverse=True)  # type: ignore
 
 
 @overload
@@ -184,9 +183,8 @@ def extract_one(
     score_cutoff: int = 0,
 ) -> tuple[str, int] | None | tuple[str, int, T] | None:
     it = _extraction_generator(query, choices, scorer, score_cutoff)
-    key = lambda t: t[1]
     try:
-        return max(it, key=key)
+        return max(it, key=lambda t: t[1])
     except:
         # iterator could return nothing
         return None

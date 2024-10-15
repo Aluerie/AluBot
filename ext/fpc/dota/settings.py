@@ -246,7 +246,6 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
     @hideout_dota_player.command(name="remove")
-    @app_commands.describe(player_name="")
     async def hideout_dota_player_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
         """Remove a Dota 2 player into your favourite FPC players list.
 

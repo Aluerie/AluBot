@@ -87,7 +87,7 @@ class PseudoHero(Character):
     facet_ids: list[int] = field(default_factory=list)
 
 
-class Heroes(CharacterStorage[Hero]):  # CharacterCache
+class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
     @override
     async def fill_data(self) -> dict[int, Hero]:
         heroes = await self.bot.dota.stratz.get_heroes()
@@ -122,6 +122,7 @@ class Heroes(CharacterStorage[Hero]):  # CharacterCache
         try:
             hero = await self.get_value(hero_id)
         except KeyError:
+            await self.send_unknown_value_report(hero_id)
             unknown_hero = PseudoHero(
                 id=hero_id,
                 short_name="unknown_hero",
@@ -140,7 +141,7 @@ class Heroes(CharacterStorage[Hero]):  # CharacterCache
         return list(data.values())
 
 
-class HeroTransformer(CharacterTransformer[Hero]):
+class HeroTransformer(CharacterTransformer[Hero, PseudoHero]):
     @override
     def get_character_storage(self, interaction: discord.Interaction[AluBot]) -> Heroes:
         return interaction.client.dota.heroes
@@ -180,7 +181,7 @@ class PseudoAbility:
         return f"<{self.__class__.__name__} id={self.id} {self.display_name}>"
 
 
-class Abilities(GameDataStorage[Ability]):
+class Abilities(GameDataStorage[Ability, PseudoAbility]):
     @override
     async def fill_data(self) -> dict[int, Ability]:
         abilities = await self.bot.dota.stratz.get_abilities()
@@ -200,21 +201,16 @@ class Abilities(GameDataStorage[Ability]):
             for ability in abilities["data"]["constants"]["abilities"]
         }
 
-    async def by_id(self, ability_id: int) -> Ability | PseudoAbility:
-        """Get Ability by its ID."""
-        try:
-            ability = await self.get_value(ability_id)
-        except KeyError:
-            unknown_ability = PseudoAbility(
-                id=ability_id,
-                name="unknown_ability",
-                display_name="Unknown",
-                is_talent=None,
-                icon_url=constants.DotaAsset.AbilityUnknown,
-            )
-            return unknown_ability
-        else:
-            return ability
+    @override
+    @staticmethod
+    def generate_unknown_object(ability_id: int) -> PseudoAbility:
+        return PseudoAbility(
+            id=ability_id,
+            name="unknown_ability",
+            display_name="Unknown",
+            is_talent=None,
+            icon_url=constants.DotaAsset.AbilityUnknown,
+        )
 
 
 @dataclass
@@ -252,7 +248,7 @@ class PseudoItem:
         return f"<{self.__class__.__name__} id={self.id} {self.short_name}>"
 
 
-class Items(GameDataStorage[Item]):
+class Items(GameDataStorage[Item, PseudoItem]):
     @override
     async def fill_data(self) -> dict[int, Item]:
         items = await self.bot.dota.stratz.get_items()
@@ -264,6 +260,16 @@ class Items(GameDataStorage[Item]):
             for item in items["data"]["constants"]["items"]
         }
 
+    @override
+    @staticmethod
+    def generate_unknown_object(item_id: int) -> PseudoItem:
+        return PseudoItem(
+            id=item_id,
+            short_name="unknown_item",
+            icon_url=constants.DotaAsset.ItemUnknown,
+        )
+
+    @override
     async def by_id(self, item_id: int) -> Item | PseudoItem:
         """Get Item by its ID."""
 
@@ -274,18 +280,8 @@ class Items(GameDataStorage[Item]):
                 "Empty Slot",
                 constants.DotaAsset.ItemEmpty,
             )
-
-        try:
-            item = await self.get_value(item_id)
-        except KeyError:
-            unknown_item = PseudoItem(
-                id=item_id,
-                short_name="unknown_item",
-                icon_url=constants.DotaAsset.ItemUnknown,
-            )
-            return unknown_item
         else:
-            return item
+            return await super().by_id(item_id)
 
 
 @dataclass
@@ -323,7 +319,7 @@ class PseudoFacet:
         return f"<{self.__class__.__name__} id={self.id} {self.display_name}>"
 
 
-class Facets(GameDataStorage[Facet]):
+class Facets(GameDataStorage[Facet, PseudoFacet]):
     @override
     async def fill_data(self) -> dict[int, Facet]:
         facets = await self.bot.dota.stratz.get_facets()
@@ -347,18 +343,13 @@ class Facets(GameDataStorage[Facet]):
             for facet in facets["data"]["constants"]["facets"]
         }
 
-    async def by_id(self, facet_id: int) -> Facet | PseudoFacet:
-        """Get Facet by its ID."""
-        try:
-            facet = await self.get_value(facet_id)
-        except KeyError:
-            unknown_facet = PseudoFacet(
-                id=facet_id,
-                display_name="Unknown",
-                icon="question",
-                colour="#675CAE",
-                icon_url=constants.DotaAsset.FacetQuestion,
-            )
-            return unknown_facet
-        else:
-            return facet
+    @override
+    @staticmethod
+    def generate_unknown_object(facet_id: int) -> PseudoFacet:
+        return PseudoFacet(
+            id=facet_id,
+            display_name="Unknown",
+            icon="question",
+            colour="#675CAE",
+            icon_url=constants.DotaAsset.FacetQuestion,
+        )

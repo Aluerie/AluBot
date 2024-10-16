@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     "Champion",
+    "PseudoChampion",
     "Champions",
     "ChampionTransformer",
     "ItemIcons",
@@ -56,7 +57,7 @@ class PseudoChampion(Character):
     icon_url: str
 
 
-class Champions(CharacterStorage[Champion]):
+class Champions(CharacterStorage[Champion, PseudoChampion]):
     @override
     async def fill_data(self) -> dict[int, Champion]:
         """_summary_
@@ -82,65 +83,93 @@ class Champions(CharacterStorage[Champion]):
         return data
 
     @override
-    async def by_id(self, champion_id: int) -> Champion | PseudoChampion:
-        try:
-            champion = await self.get_value(champion_id)
-        except KeyError:
-            unknown_champion = PseudoChampion(
-                id=champion_id,
-                display_name="Unknown",
-                alias="Unknown",
-                icon_url=cdragon_asset_url("/lol-game-data/assets/v1/champion-icons/-1.png"),
-                # taken from `get_lol_v1_champion_summary` response ^ for champion with id=-1
-                emote=constants.NEW_CHAMPION_EMOTE,
-            )
-            return unknown_champion
-        else:
-            return champion
-
-    @override
-    async def all(self) -> list[Champion]:
-        data = await self.get_cached_data()
-        return list(data.values())
+    @staticmethod
+    def generate_unknown_object(champion_id: int) -> PseudoChampion:
+        return PseudoChampion(
+            id=champion_id,
+            display_name="Unknown",
+            alias="Unknown",
+            icon_url=cdragon_asset_url("/lol-game-data/assets/v1/champion-icons/-1.png"),
+            # taken from `get_lol_v1_champion_summary` response ^ for champion with id=-1
+            emote=constants.NEW_CHAMPION_EMOTE,
+        )
 
 
-class ChampionTransformer(CharacterTransformer[Champion]):
+class ChampionTransformer(CharacterTransformer[Champion, PseudoChampion]):
     @override
     def get_character_storage(self, interaction: discord.Interaction[AluBot]) -> Champions:
         return interaction.client.lol.champions
 
 
-class ItemIcons(GameDataStorage[str]):
+class ItemIcons(GameDataStorage[str, str]):
+    """_summary_
+
+    Example
+    ----------
+    https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/items/icons2d/1001_class_t1_bootsofspeed.png
+
+    """
+
     @override
     async def fill_data(self) -> dict[int, str]:
+        """_summary_
+
+        https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/items.json
+        """
         items = await self.bot.lol.cdragon.get_lol_v1_items()
         return {item["id"]: cdragon_asset_url(item["iconPath"]) for item in items}
 
-    async def by_id(self, item_id: int) -> str:
-        """Get item icon url by id."""
-        return await self.get_value(item_id)
+    @override
+    @staticmethod
+    def generate_unknown_object(_: int) -> str:
+        return constants.LoLAsset.ItemUnknown
 
 
-class RuneIcons(GameDataStorage[str]):
+class RuneIcons(GameDataStorage[str, str]):
+    """_summary_
+
+    Examples
+    ----------
+    https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/precision/lethaltempo/lethaltempotemp.png
+    https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/sorcery/unflinching/unflinching.png
+    """
+
     @override
     async def fill_data(self) -> dict[int, str]:
+        """_summary_
+
+        https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json
+        """
         perks = await self.bot.lol.cdragon.get_lol_v1_perks()
         return {perk["id"]: cdragon_asset_url(perk["iconPath"]) for perk in perks}
 
-    async def by_id(self, rune_id: int) -> str:
-        """Get rune icon url by id."""
-        return await self.get_value(rune_id)
+    @override
+    @staticmethod
+    def generate_unknown_object(_: int) -> str:
+        return constants.LoLAsset.RuneUnknown
 
 
-class SummonerSpellIcons(GameDataStorage[str]):
+class SummonerSpellIcons(GameDataStorage[str, str]):
+    """_summary_
+
+    Examples
+    ----------
+    https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/data/spells/icons2d/summoner_boost.png
+    """
+
     @override
     async def fill_data(self) -> dict[int, str]:
+        """_summary_
+
+        https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/summoner-spells.json
+        """
         summoner_spells = await self.bot.lol.cdragon.get_lol_v1_summoner_spells()
         return {spell["id"]: cdragon_asset_url(spell["iconPath"]) for spell in summoner_spells}
 
-    async def by_id(self, summoner_spell_id: int) -> str:
-        """Get summoner spell icon url by id."""
-        return await self.get_value(summoner_spell_id)
+    @override
+    @staticmethod
+    def generate_unknown_object(_: int) -> str:
+        return constants.LoLAsset.SummonerSpellUnknown
 
 
 class RoleDict(TypedDict):
@@ -151,7 +180,7 @@ class RoleDict(TypedDict):
     UTILITY: float
 
 
-class RolesIdentifiers(GameDataStorage[RoleDict]):
+class RolesIdentifiers(GameDataStorage[RoleDict, RoleDict]):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(bot=bot)
         self.meraki_patch: str = "Unknown"

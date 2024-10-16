@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from pulsefire.schemas import RiotAPISchema
 
     from bot import AluBot
+    from utils.lol import Champion, PseudoChampion
 
     from .notifications import LivePlayerAccountRow
 
@@ -46,6 +47,7 @@ class MatchToSend(BaseMatchToSend):
         game: RiotAPISchema.LolSpectatorV5Game,
         participant: RiotAPISchema.LolSpectatorV5GameParticipant,
         player_account_row: LivePlayerAccountRow,
+        champion: Champion | PseudoChampion,
     ) -> None:
         super().__init__(bot)
 
@@ -59,7 +61,7 @@ class MatchToSend(BaseMatchToSend):
         self.start_time: int = game.get("gameStartTime", 0)
         self.all_champion_ids: list[int] = [p["championId"] for p in game["participants"]]
 
-        self.champion_id: int = participant["championId"]
+        self.champion: Champion | PseudoChampion = champion
         self.summoner_spell_ids: tuple[int, int] = (participant["spell1Id"], participant["spell2Id"])
         self.rune_ids: list[int] = participant["perks"]["perkIds"]  # type: ignore
         self.summoner_id: str = participant["summonerId"]
@@ -82,19 +84,17 @@ class MatchToSend(BaseMatchToSend):
         return int(datetime.datetime.now(datetime.UTC).timestamp() - timestamp_seconds)
 
     @override
-    async def notification_image(
-        self,
-        stream_preview_url: str,
-        display_name: str,
-        champion_name: str,
-    ) -> Image.Image:
+    async def notification_image(self, stream_preview_url: str, display_name: str) -> Image.Image:
         # prepare stuff for the following PIL procedures
         img = await self.bot.transposer.url_to_image(stream_preview_url)
-        sorted_champion_ids = await self.bot.lol.role.sort_champions_by_roles(self.all_champion_ids)
-        champion_icon_urls = [await self.bot.cache_lol.champion.icon_by_id(id) for id in sorted_champion_ids]
+
+        sorted_champion_ids = await self.bot.lol.roles.sort_champions_by_roles(self.all_champion_ids)
+        champion_icon_urls = [(await self.bot.lol.champions.by_id(id)).icon_url for id in sorted_champion_ids]
         champion_icon_images = [await self.bot.transposer.url_to_image(url) for url in champion_icon_urls]
+
         rune_icon_urls = [await self.bot.lol.rune_icons.by_id(id) for id in self.rune_ids]
         rune_icon_images = [await self.bot.transposer.url_to_image(url) for url in rune_icon_urls]
+
         summoner_icon_urls = [await self.bot.lol.summoner_spell_icons.by_id(id) for id in self.summoner_spell_ids]
         summoner_icon_images = [await self.bot.transposer.url_to_image(url) for url in summoner_icon_urls]
 
@@ -115,7 +115,7 @@ class MatchToSend(BaseMatchToSend):
             # middle text "Streamer - Champion"
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
             draw = ImageDraw.Draw(img)
-            text = f"{display_name} - {champion_name}"
+            text = f"{display_name} - {self.champion.display_name}"
             w2, h2 = self.bot.transposer.get_text_wh(text, font)
             draw.text(xy=((width - w2) / 2, 65), text=text, font=font, align="center")
 
@@ -140,17 +140,15 @@ class MatchToSend(BaseMatchToSend):
     @override
     async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
         streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
-        champion_name = await self.bot.cache_lol.champion.name_by_id(self.champion_id)
 
-        notification_image = await self.notification_image(streamer.preview_url, streamer.display_name, champion_name)
-        title = f"{streamer.display_name} - {champion_name}"
+        notification_image = await self.notification_image(streamer.preview_url, streamer.display_name)
+        title = f"{streamer.display_name} - {self.champion.display_name}"
         filename = re.sub(r"[_' ]", "", title) + ".png"
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
-        champion_emoji = const.LOL_CHAMPION_EMOTES[self.champion_id]
         embed = (
             discord.Embed(
                 color=const.Colour.darkslategray,
-                title=f"{title} {champion_emoji}",
+                title=f"{title} {self.champion.emote}",
                 url=streamer.url,
                 description=(
                     f"Match `{self.platform.upper()}_{self.match_id}` started {human_timedelta(self.long_ago, mode='strip')}\n"
@@ -158,7 +156,7 @@ class MatchToSend(BaseMatchToSend):
                 ),
             )
             .set_author(name=title, url=streamer.url, icon_url=streamer.avatar_url)
-            .set_thumbnail(url=await self.bot.cache_lol.champion.icon_by_id(self.champion_id))
+            .set_thumbnail(url=self.champion.icon_url)
             .set_image(url=f"attachment://{image_file.filename}")
         )
 
@@ -171,7 +169,7 @@ class MatchToSend(BaseMatchToSend):
             (message_id, channel_id, match_id, platform, champion_id)
             VALUES ($1, $2, $3, $4, $5)
         """
-        await self.bot.pool.execute(query, message_id, channel_id, self.match_id, self.platform, self.champion_id)
+        await self.bot.pool.execute(query, message_id, channel_id, self.match_id, self.platform, self.champion.id)
 
         query = "UPDATE lol_accounts SET last_edited=$1 WHERE summoner_id=$2"
         await self.bot.pool.execute(query, self.match_id, self.summoner_id)
@@ -222,10 +220,10 @@ class MatchToEdit(BaseMatchToEdit):
     @override
     async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await self.bot.cache_lol.item.icon_by_id(id) for id in reversed(self.sorted_item_ids) if id]
+        item_icon_urls = [await self.bot.lol.item_icons.by_id(id) for id in reversed(self.sorted_item_ids) if id]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
 
-        trinket_icon_url = await self.bot.cache_lol.item.icon_by_id(self.trinket_item_id)
+        trinket_icon_url = await self.bot.lol.item_icons.by_id(self.trinket_item_id)
         trinket_icon_img = await self.bot.transposer.url_to_image(trinket_icon_url)
 
         def build_notification_image() -> Image.Image:
@@ -321,6 +319,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
     # await beta_test_edit_image(self)
 
     from ext.fpc.lol.models import MatchToEdit
+    from utils.dota import DotaAsset
 
     self.bot.instantiate_lol()
     await self.bot.lol.start()
@@ -336,7 +335,5 @@ async def beta_test_edit_image(self: AluCog) -> None:
         timeline=timeline,
     )
 
-    new_image = await post_match_player.edit_notification_image(
-        const.DotaAsset.Placeholder640X360, discord.Colour.purple()
-    )
+    new_image = await post_match_player.edit_notification_image(DotaAsset.Placeholder640X360, discord.Colour.purple())
     new_image.show()

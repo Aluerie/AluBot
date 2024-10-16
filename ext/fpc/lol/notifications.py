@@ -76,7 +76,7 @@ class Notifications(BaseNotifications):
         # https://pulsefire.iann838.com/usage/advanced/concurrent-requests/
         for player_account_row in player_account_rows:
             try:
-                game = await self.bot.riot.get_lol_spectator_v5_active_game_by_summoner(
+                game = await self.bot.lol.get_lol_spectator_v5_active_game_by_summoner(
                     puuid=player_account_row["puuid"],
                     region=player_account_row["platform"],
                 )
@@ -130,12 +130,9 @@ class Notifications(BaseNotifications):
                     )
                 )
                 if channel_spoil_tuples:
-                    log.debug(
-                        "Notif %s - %s",
-                        player_account_row["display_name"],
-                        await self.bot.cache_lol.champion.name_by_id(participant["championId"]),
-                    )
-                    match_to_send = MatchToSend(self.bot, game, participant, player_account_row)
+                    champion = await self.bot.lol.champions.by_id(participant["championId"])
+                    log.debug("Notif %s - %s",player_account_row["display_name"],champion.display_name)
+                    match_to_send = MatchToSend(self.bot, game, participant, player_account_row, champion)
                     await self.send_match(match_to_send, channel_spoil_tuples)
 
     @aluloop(seconds=59)
@@ -161,8 +158,8 @@ class Notifications(BaseNotifications):
                 match_id = f"{match_row['platform'].upper()}_{match_row['match_id']}"
                 continent = lol.Platform(match_row["platform"]).continent
 
-                match = await self.bot.riot.get_lol_match_v5_match(id=match_id, region=continent)
-                timeline = await self.bot.riot.get_lol_match_v5_match_timeline(id=match_id, region=continent)
+                match = await self.bot.lol.get_lol_match_v5_match(id=match_id, region=continent)
+                timeline = await self.bot.lol.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
             except aiohttp.ClientResponseError as exc:
                 if exc.status == 404:

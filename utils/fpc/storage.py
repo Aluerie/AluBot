@@ -13,7 +13,7 @@ from discord import app_commands
 
 from bot import aluloop
 
-from .. import fuzzy
+from .. import const, fuzzy
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 VT = TypeVar("VT")
+PseudoVT = TypeVar("PseudoVT")
 
 
 @dataclass
@@ -47,20 +48,23 @@ class Character:
 
 
 CharacterT = TypeVar("CharacterT", bound=Character)
+PseudoCharacterT = TypeVar("PseudoCharacterT", bound=Character)
 
 
-class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT]):
+class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT, PseudoCharacterT]):
     @property
     @override
     def type(self) -> discord.AppCommandOptionType:
         return discord.AppCommandOptionType.number
 
     @abc.abstractmethod
-    def get_character_storage(self, interaction: discord.Interaction[AluBot]) -> CharacterStorage[CharacterT]:
+    def get_character_storage(
+        self, interaction: discord.Interaction[AluBot]
+    ) -> CharacterStorage[CharacterT, PseudoCharacterT]:
         ...
 
     @override
-    async def transform(self, interaction: discord.Interaction[AluBot], hero_id: int) -> CharacterT:
+    async def transform(self, interaction: discord.Interaction[AluBot], hero_id: int) -> CharacterT | PseudoCharacterT:
         storage = self.get_character_storage(interaction)
         character = await storage.by_id(hero_id)
         return character
@@ -82,7 +86,7 @@ class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT
         return [app_commands.Choice(name=character.display_name, value=character.id) for character in options]
 
 
-class GameDataStorage(Generic[VT]):
+class GameDataStorage(Generic[VT, PseudoVT]):
     """Game Data Storage.
 
     Used for fetching and storing data from public API and JSONs.
@@ -154,12 +158,33 @@ class GameDataStorage(Generic[VT]):
             await self.update_data()
             return self.cached_data[id]
 
+    async def send_unknown_value_report(self, id: int) -> None:
+        embed = discord.Embed(
+            color=const.Colour.maroon,
+            title=f"Unknown {self.__class__.__name__} appeared!",
+            description=f"```py\nid={id}\n```",
+        ).set_footer(text=f"Package: {__package__}")
+        await self.bot.spam.send(embed=embed)
 
-class CharacterStorage(abc.ABC, GameDataStorage[CharacterT]):
+    @staticmethod
     @abc.abstractmethod
-    async def by_id(self, character_id: int) -> CharacterT:
+    def generate_unknown_object(id: int) -> PseudoVT:
         ...
 
-    @abc.abstractmethod
-    async def all(self) -> list[CharacterT]:
-        ...
+    async def by_id(self, id: int) -> VT | PseudoVT:
+        """Get storage object by its ID"""
+        try:
+            storage_object = await self.get_value(id)
+        except KeyError:
+            unknown_object = self.generate_unknown_object(id)
+            return unknown_object
+        else:
+            return storage_object
+
+    async def all(self) -> list[VT | PseudoVT]:
+        data = await self.get_cached_data()
+        return list(data.values())
+
+
+class CharacterStorage(abc.ABC, GameDataStorage[CharacterT, PseudoCharacterT]):
+    ...

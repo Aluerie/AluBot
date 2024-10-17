@@ -4,17 +4,17 @@ from __future__ import annotations
 from typing import TypedDict
 
 __all__ = (
-    "GetFPCMatchesResponse",
-    "GetHeroesResponse",
-    "GetAbilitiesResponse",
-    "GetItemsResponse",
-    "GetFacetsResponse",
+    "FPCMatchesResponse",
+    "HeroesResponse",
+    "AbilitiesResponse",
+    "ItemsResponse",
+    "FacetsResponse",
 )
 
 # STRATZ: GET FPC MATCHES
 
 
-class GetFPCMatchesResponse(TypedDict):
+class FPCMatchesResponse(TypedDict):
     data: Data
 
 
@@ -70,7 +70,7 @@ class BuffEvent(TypedDict):
 # STRATZ: GET HEROES
 
 
-class GetHeroesResponse(TypedDict):
+class HeroesResponse(TypedDict):
     """Constants data for Dota 2 Heroes from Stratz GraphQL API.
 
     Information.
@@ -112,7 +112,7 @@ class HeroFacet(TypedDict):
 # STRATZ: GET ABILITIES
 
 
-class GetAbilitiesResponse(TypedDict):
+class AbilitiesResponse(TypedDict):
     data: AbilityData
 
 
@@ -138,7 +138,7 @@ class AbilityLanguage(TypedDict):
 # STRATZ: GET ITEMS
 
 
-class GetItemsResponse(TypedDict):
+class ItemsResponse(TypedDict):
     data: ItemData
 
 
@@ -158,7 +158,7 @@ class Item(TypedDict):
 # STRATZ: GET FACETS
 
 
-class GetFacetsResponse(TypedDict):
+class FacetsResponse(TypedDict):
     data: FacetData
 
 

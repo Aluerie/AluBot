@@ -75,7 +75,7 @@ class AluLoop(tasks.Loop[LF]):
         embed = (
             discord.Embed(title=self.coro.__name__, colour=0xEF7A85)
             .set_author(name=f"{self.coro.__module__}: {self.coro.__qualname__}")
-            .set_footer(text=f"aluloop: {self.coro.__name__}")
+            .set_footer(text=f"{self.__class__.__name__}: {self.coro.__name__}")
         )
         await cog.bot.exc_manager.register_error(exception, embed)
 
@@ -120,6 +120,5 @@ def aluloop(
 * `before_loop/after_loop` only happens before/after the whole "loop" task is done,
     it doesn't trigger before/after iteration. The name is clear.
 * `cancel` - not graceful. `stop` - graceful. I have no idea how to remember that.
-#TODO: maybe make a method for it? "graceful stop"
 * `after_loop` will be triggered after both `stop`/`cancel`. The way to distinguish is `is_being_cancelled` property.
 """

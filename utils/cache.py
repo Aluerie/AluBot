@@ -20,25 +20,6 @@ if TYPE_CHECKING:
 R = TypeVar("R")
 
 
-class CharacterCache(abc.ABC):
-    ...
-    # @abc.abstractmethod
-    # async def id_by_display_name(self, character_name: str) -> int:
-    #     ...
-
-    # @abc.abstractmethod
-    # async def display_name_by_id(self, character_id: int) -> str:
-    #     ...
-
-    # @abc.abstractmethod
-    # async def id_display_name_tuples(self) -> list[tuple[int, str]]:
-    #     ...
-
-    # @abc.abstractmethod
-    # async def id_display_name_dict(self) -> dict[int, str]:
-    #     ...
-
-
 # Can't use ParamSpec due to https://github.com/python/typing/discussions/946
 class CacheProtocol(Protocol[R]):
     cache: MutableMapping[str, asyncio.Task[R]]

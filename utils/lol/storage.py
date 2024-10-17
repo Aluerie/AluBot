@@ -218,8 +218,9 @@ class RolesIdentifiers(GameDataStorage[RoleDict, RoleDict]):
         champion_dict = await self.bot.lol.champions.get_cached_data()
         return set(champion_dict.keys()) - set(data_meraki.keys())
 
+    @override
     @staticmethod
-    def construct_the_dict(
+    def generate_unknown_object(
         playrate: float = 10,  # usually new champions (that are likely to be missing) have rather high playrate
         *,
         top: float = 20,
@@ -257,8 +258,10 @@ class RolesIdentifiers(GameDataStorage[RoleDict, RoleDict]):
 
         # Nilah (data was taken 03/Jan/23) - {id: the_dict}
         # https://www.leagueofgraphs.com/champions/stats/nilah/master
-        manual_data = {895: self.construct_the_dict(playrate=2.8, top=0.4, jungle=0.0, mid=1.7, bot=97.4, support=0.4)}
-        diff_dict = {x: self.construct_the_dict() for x in diff_list if x not in manual_data}
+        manual_data = {
+            895: self.generate_unknown_object(playrate=2.8, top=0.4, jungle=0.0, mid=1.7, bot=97.4, support=0.4)
+        }
+        diff_dict = {x: self.generate_unknown_object() for x in diff_list if x not in manual_data}
         return diff_dict | (manual_data | champion_roles)
 
     async def sort_champions_by_roles(self, all_players_champ_ids: list[int]) -> list[int]:

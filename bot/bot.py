@@ -5,23 +5,24 @@ import contextlib
 import datetime
 import logging
 import os
+import sys
+import textwrap
 from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
+from discord import app_commands
 from discord.ext import commands
 from discord.utils import MISSING
 
 import config
 from bot import EXT_CATEGORY_NONE, AluContext, ExtCategory
 from ext import get_extensions
-from utils import cache, const
-from utils.disambiguator import Disambiguator
-from utils.transposer import TransposeClient
+from utils import cache, const, disambiguator, errors, formats, helpers, transposer
 
-from .app_cmd_tree import AluAppCommandTree
 from .exc_manager import ExceptionManager
 from .intents_perms import INTENTS, PERMISSIONS
 from .timer import TimerManager
+from .tree import AluAppCommandTree
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, MutableMapping, Sequence
@@ -62,14 +63,14 @@ class AluBot(commands.Bot, AluBotHelper):
             Coroutine[Any, Any, None],
         ]
         command_prefix: set[Literal["~", "$"]]  # default is some mix of Iterable[str] and Callable
-        listener_connection: asyncpg.Connection[DotRecord]
+        listener_connection: asyncpg.Connection[asyncpg.Record]
 
     def __init__(
         self,
         test: bool = False,
         *,
         session: ClientSession,
-        pool: asyncpg.Pool[DotRecord],
+        pool: asyncpg.Pool[asyncpg.Record],
         **kwargs: Any,
     ) -> None:
         """Initialize the AluBot.
@@ -101,13 +102,13 @@ class AluBot(commands.Bot, AluBotHelper):
             strip_after_prefix=True,
             case_insensitive=True,
         )
-        self.database: asyncpg.Pool[DotRecord] = pool
+        self.database: asyncpg.Pool[asyncpg.Record] = pool
         self.pool: PoolTypedWithAny = pool  # type: ignore # asyncpg typehinting crutch, read `utils.database` for more
         self.session: ClientSession = session
 
         self.exc_manager: ExceptionManager = ExceptionManager(self)
-        self.transposer: TransposeClient = TransposeClient(session=session)
-        self.disambiguator: Disambiguator = Disambiguator()
+        self.transposer: transposer.TransposeClient = transposer.TransposeClient(session=session)
+        self.disambiguator: disambiguator.Disambiguator = disambiguator.Disambiguator()
 
         self.repo_url: str = "https://github.com/Aluerie/AluBot"
         self.developer: str = "Aluerie"  # it's my GitHub account name
@@ -436,3 +437,165 @@ class AluBot(commands.Bot, AluBotHelper):
     def spam(self) -> discord.Webhook:
         """A shortcut to spam webhook."""
         return self.webhook_from_url(config.SPAM_WEBHOOK)
+
+    @override
+    async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
+        """Called when an error is raised in an event listener.
+
+        Parameters
+        ----------
+        event: str
+            The name of the event that raised the exception.
+        args: Any
+            The positional arguments for the event that raised the exception.
+        kwargs: Any
+            The keyword arguments for the event that raised the exception.
+
+        """
+        # Exception Traceback
+        (_exception_type, exception, _traceback) = sys.exc_info()
+        if exception is None:
+            exception = TypeError("Somehow `on_error` fired with exception being `None`.")
+
+        # Silence command errors that somehow get bubbled up far enough here
+        # if isinstance(exception, commands.CommandInvokeError):
+        #     return
+
+        # ridiculous attempt to eliminate 404 that appear for Hybrid commands for my own usage.
+        # that I can't really remove via on_command_error since they appear before we can do something about it.
+        # maybe we need some rewrite about it tho; like ignore all discord.HTTPException
+        if (
+            isinstance(args[0], AluContext)
+            and args[0].author.id == const.User.aluerie
+            and isinstance(exception, discord.NotFound)
+        ):
+            return
+
+        embed = (
+            discord.Embed(
+                colour=0xA32952,
+                title=f"`{event}`",
+            )
+            .set_author(name="Event Error")
+            .add_field(
+                name="Args",
+                value=(
+                    "```py\n" + "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) + "```"
+                    if args
+                    else "No Args"
+                ),
+                inline=False,
+            )
+            .set_footer(text=f"AluBot.on_error: {event}")
+        )
+        await self.exc_manager.register_error(exception, embed)
+
+    @override
+    async def on_command_error(self, ctx: AluContext, error: commands.CommandError | Exception) -> None:
+        """Handler called when an error is raised while invoking a ctx command.
+
+        In case of peoblems - check out on_command_error in parent BotBase class - it's not simply `pass`
+        """
+        if ctx.is_error_handled is True:
+            return
+
+        # error handler working variables
+        desc = "No description"
+        is_unexpected = False
+        mention = True
+
+        # error handler itself.
+
+        match error:
+            # CHAINED ERRORS
+            case commands.HybridCommandError() | commands.CommandInvokeError() | app_commands.CommandInvokeError():
+                # we aren't interested in the chain traceback.
+                return await self.on_command_error(ctx, error.original)
+
+            # MY OWN ERRORS
+            case errors.AluBotError():
+                # These errors are generally raised in code by myself or by my code with an explanation text as `error`
+                # AluBotError subclassed exceptions are all mine.
+                desc = f"{error}"
+
+            # UserInputError SUBCLASSED ERRORS
+            case commands.BadLiteralArgument():
+                desc = (
+                    f"Sorry! Incorrect argument value: {error.argument!r}. \n"
+                    f"Only these options are valid for a parameter `{error.param.displayed_name or error.param.name}`:\n"
+                    f"{formats.human_join([repr(l) for l in error.literals])}."
+                )
+
+            case commands.EmojiNotFound():
+                desc = f"Sorry! `{error.argument}` is not a custom emote."
+            case commands.BadArgument():
+                desc = f"{error}"
+
+            case commands.MissingRequiredArgument():
+                desc = f"Please, provide this argument:\n`{error.param.name}`"
+            case commands.CommandNotFound():
+                if ctx.prefix in ["/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "]:
+                    return
+                if ctx.prefix == "$" and ctx.message.content[1].isdigit():
+                    # "$200 for this?" 2 is `ctx.message.content[1]`
+                    # prefix commands should not start with digits
+                    return
+                # TODO: make a fuzzy search in here to recommend the command that user wants
+                desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
+            case commands.CommandOnCooldown():
+                desc = f"Please retry in `{formats.human_timedelta(error.retry_after, mode='brief')}`"
+            case commands.NotOwner():
+                desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
+            case commands.MissingRole():
+                desc = f"Sorry, only {error.missing_role} are able to use this command."
+            case commands.CheckFailure():
+                desc = f"{error}"
+
+            # elif isinstance(error, errors.SilentError):
+            #     # this will fail the interaction hmm
+            #     return
+            case _:
+                # error is unhandled/unclear and thus developers need to be notified about it.
+                is_unexpected = True
+
+                cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
+                metadata_embed = (
+                    discord.Embed(
+                        colour=0x890620,
+                        title=f"Error with `{ctx.clean_prefix}{ctx.command}`",
+                        url=ctx.message.jump_url,
+                        description=textwrap.shorten(ctx.message.content, width=1024),
+                        # timestamp=ctx.message.created_at,
+                    )
+                    .set_author(
+                        name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else "DM Channel"})",
+                        icon_url=ctx.author.display_avatar,
+                    )
+                    .add_field(
+                        name="Command Args",
+                        value=(
+                            "```py\n" + "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items()) + "```"
+                            if ctx.kwargs
+                            else "```py\nNo arguments```"
+                        ),
+                        inline=False,
+                    )
+                    .add_field(
+                        name="Snowflake Ids",
+                        value=(
+                            "```py\n"
+                            f"author  = {ctx.author.id}\n"
+                            f"channel = {ctx.channel.id}\n"
+                            f"guild   = {ctx.guild.id if ctx.guild else "DM Channel"}```"
+                        ),
+                    )
+                    .set_footer(
+                        text=f"on_command_error: {cmd_name}",
+                        icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
+                    )
+                )
+                mention = bool(ctx.channel.id != ctx.bot.hideout.spam_channel_id)
+                await ctx.bot.exc_manager.register_error(error, metadata_embed, mention=mention)
+
+        response_embed = helpers.error_handler_response_embed(error, is_unexpected, desc, mention)
+        await ctx.reply(embed=response_embed, ephemeral=True)

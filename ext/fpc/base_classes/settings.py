@@ -185,7 +185,7 @@ class BaseSettings(FPCCog):
         character_plural: str,
         account_cls: type[Account],
         account_typed_dict_cls: type,
-        characters: CharacterStorage[Any],  # idk better, why [Character] doesn't work :c
+        characters: CharacterStorage[Any, Any],  # idk better, why [Character] doesn't work :c
         **kwargs: Any,
     ) -> None:
         super().__init__(bot, *args, **kwargs)
@@ -209,7 +209,7 @@ class BaseSettings(FPCCog):
         # self.character_name_by_id_cache: Callable[[], Awaitable[dict[int, str]]] = lambda: character_cache.get_cache(
         #     "name_by_id"
         # )
-        self.characters: CharacterStorage[Character] = characters
+        self.characters: CharacterStorage[Character, Character] = characters
 
         # setup messages cache
         self.setup_messages_cache: dict[int, AluView] = {}

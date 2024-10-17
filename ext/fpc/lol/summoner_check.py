@@ -19,11 +19,15 @@ if TYPE_CHECKING:
         tag_line: str
 
 
+__all__ = ("SummonerNameCheck",)
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
 class SummonerNameCheck(FPCCog):
+    """Summoner Name Check."""
+
     @override
     async def cog_load(self) -> None:
         self.check_summoner_renames.start()
@@ -31,6 +35,11 @@ class SummonerNameCheck(FPCCog):
 
     @aluloop(time=datetime.time(hour=12, minute=11, tzinfo=datetime.UTC))
     async def check_summoner_renames(self) -> None:
+        """Task that keeps League in-game names in the database somewhat up to date.
+
+        These names are only present for cosmetic purposes.
+        But it's nice to be able to search in sites like opgg with ease.
+        """
         if datetime.datetime.now(datetime.UTC).day != 17:
             return
 
@@ -39,7 +48,7 @@ class SummonerNameCheck(FPCCog):
 
         for row in rows:
             try:
-                account = await self.bot.riot.get_account_v1_by_puuid(region=row["platform"], puuid=row["puuid"])
+                account = await self.bot.lol.get_account_v1_by_puuid(region=row["platform"], puuid=row["puuid"])
             except aiohttp.ClientResponseError as exc:
                 if exc.status == 404:
                     log.info("Failed to get summoner under previous name %s#%s", row["game_name"], row["tag_line"])

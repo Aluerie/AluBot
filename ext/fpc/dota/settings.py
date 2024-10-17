@@ -166,7 +166,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     async def dota_request_player(
         self, interaction: discord.Interaction[AluBot], name: str, steam: str, twitch: bool
     ) -> None:
-        """Request Dota 2 Player to be added into the bot's FPC database.
+        """\N{LEMON} Request Dota 2 Player to be added into the bot's FPC database.
 
         So you and other people can add the player into their favourite later and start \
         receiving FPC Notifications.
@@ -191,27 +191,27 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
     @dota_setup.command(name="channel")
     async def dota_setup_channel(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Setup/manage your Dota 2 FPC Notifications channel."""
+        """\N{LEMON} Setup/manage your Dota 2 FPC Notifications channel."""
         await self.setup_channel(interaction)
 
     @dota_setup.command(name="heroes")
     async def dota_setup_heroes(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Setup/manage your Dota 2 FPC favourite heroes list."""
+        """\N{LEMON} Setup/manage your Dota 2 FPC favourite heroes list."""
         await self.setup_characters(interaction)
 
     @dota_setup.command(name="players")
     async def dota_setup_players(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Setup/manage your Dota 2 FPC favourite players list."""
+        """\N{LEMON} Setup/manage your Dota 2 FPC favourite players list."""
         await self.setup_players(interaction)
 
     @dota_setup.command(name="miscellaneous")
     async def dota_setup_misc(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Manage your Dota 2 FPC misc settings."""
+        """\N{LEMON} Manage your Dota 2 FPC misc settings."""
         await self.setup_misc(interaction)
 
     @dota_group.command(name="tutorial")
     async def dota_tutorial(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Guide to setup Dota 2 FPC Notifications."""
+        """\N{LEMON} Guide to setup Dota 2 FPC Notifications."""
         await self.tutorial(interaction)
 
     # HIDEOUT ONLY COMMANDS (at least, at the moment)
@@ -229,34 +229,34 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     )
 
     @hideout_dota_player.command(name="add")
-    async def hideout_dota_player_add(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
-        """Add a Dota 2 player into your favourite FPC players list.
+    async def hideout_dota_player_add(self, interaction: discord.Interaction[AluBot], player: str) -> None:
+        """\N{RED APPLE} Add a Dota 2 player into your favourite FPC players list.
 
         Parameters
         ----------
-        player_name
+        player
             Player Name. Autocomplete suggestions exclude your favourite players.
         """
-        await self.hideout_player_add(interaction, player_name)
+        await self.hideout_player_add(interaction, player)
 
-    @hideout_dota_player_add.autocomplete("player_name")
+    @hideout_dota_player_add.autocomplete("player")
     async def hideout_dota_player_add_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
     @hideout_dota_player.command(name="remove")
-    async def hideout_dota_player_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
-        """Remove a Dota 2 player into your favourite FPC players list.
+    async def hideout_dota_player_remove(self, interaction: discord.Interaction[AluBot], player: str) -> None:
+        """\N{RED APPLE} Remove a Dota 2 player into your favourite FPC players list.
 
         Parameters
         ----------
-        player_name
+        player
             Player Name. Autocomplete suggestions include only your favourite players.
         """
-        await self.hideout_player_remove(interaction, player_name)
+        await self.hideout_player_remove(interaction, player)
 
-    @hideout_dota_player_remove.autocomplete("player_name")
+    @hideout_dota_player_remove.autocomplete("player")
     async def hideout_dota_player_remove_autocomplete(
         self, interaction: discord.Interaction[AluBot], current: str
     ) -> list[app_commands.Choice[str]]:
@@ -272,7 +272,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     async def hideout_dota_hero_add(
         self, interaction: discord.Interaction[AluBot], hero: app_commands.Transform[Hero, HeroTransformer]
     ) -> None:
-        """Add a Dota 2 hero into your favourite FPC heroes list.
+        """\N{RED APPLE} Add a Dota 2 hero into your favourite FPC heroes list.
 
         Parameters
         ----------
@@ -291,7 +291,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     async def hideout_dota_hero_remove(
         self, interaction: discord.Interaction[AluBot], hero: app_commands.Transform[Hero, HeroTransformer]
     ) -> None:
-        """Remove a Dota 2 hero into your favourite FPC heroes list.
+        """\N{RED APPLE} Remove a Dota 2 hero into your favourite FPC heroes list.
 
         Parameters
         ----------
@@ -308,12 +308,12 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
     @hideout_dota_player.command(name="list")
     async def hideout_dota_player_list(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Show a list of your favourite Dota 2 FPC players."""
+        """\N{RED APPLE} Show a list of your favourite Dota 2 FPC players."""
         await self.hideout_player_list(interaction)
 
     @hideout_dota_hero.command(name="list")
     async def hideout_dota_hero_list(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Show a list of your favourite Dota 2 FPC heroes."""
+        """\N{RED APPLE} Show a list of your favourite Dota 2 FPC heroes."""
         await self.hideout_character_list(interaction)
 
 

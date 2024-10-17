@@ -61,7 +61,7 @@ class Notifications(BaseNotifications):
 
         query = "SELECT DISTINCT player_id FROM lol_favourite_players"
         favourite_player_ids = [r for (r,) in await self.bot.pool.fetch(query)]
-        live_twitch_ids = await self.get_twitch_live_player_ids(const.Twitch.LOL_GAME_CATEGORY_ID, favourite_player_ids)
+        player_streams = await self.get_player_streams(const.Twitch.LOL_GAME_CATEGORY_ID, favourite_player_ids)
 
         query = """
             SELECT a.puuid, a.player_id, game_name, tag_line, platform, display_name, twitch_id, last_edited
@@ -69,7 +69,7 @@ class Notifications(BaseNotifications):
             JOIN lol_players p ON a.player_id = p.player_id
             WHERE p.player_id=ANY($1)
         """
-        player_account_rows: list[LivePlayerAccountRow] = await self.bot.pool.fetch(query, live_twitch_ids)
+        player_account_rows: list[LivePlayerAccountRow] = await self.bot.pool.fetch(query, player_streams.keys())
 
         # todo: bring pulsefire TaskGroup here
         # I'm not sure how to combine `player_account_rows` with results from Semaphore though.

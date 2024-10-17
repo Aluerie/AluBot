@@ -106,6 +106,17 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
         }
 
     @override
+    @staticmethod
+    def generate_unknown_object(hero_id: int) -> PseudoHero:
+        return PseudoHero(
+            id=hero_id,
+            short_name="unknown_hero",
+            display_name="Unknown",
+            topbar_icon_url=constants.DotaAsset.HeroTopbarUnknown,
+            emote=constants.NEW_HERO_EMOTE,
+        )
+
+    @override
     async def by_id(self, hero_id: int) -> Hero | PseudoHero:
         """Get Hero object by its ID."""
 
@@ -118,27 +129,8 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
                 topbar_icon_url=constants.DotaAsset.HeroTopbarDisconnectedUnpicked,
                 emote="\N{BLACK QUESTION MARK ORNAMENT}",
             )
-
-        try:
-            hero = await self.get_value(hero_id)
-        except KeyError:
-            await self.send_unknown_value_report(hero_id)
-            unknown_hero = PseudoHero(
-                id=hero_id,
-                short_name="unknown_hero",
-                display_name="Unknown",
-                topbar_icon_url=constants.DotaAsset.HeroTopbarUnknown,
-                emote=constants.NEW_HERO_EMOTE,
-            )
-            return unknown_hero
         else:
-            return hero
-
-    @override
-    async def all(self) -> list[Hero]:
-        """Get list of all Dota 2 heroes"""
-        data = await self.get_cached_data()
-        return list(data.values())
+            return await super().by_id(hero_id)
 
 
 class HeroTransformer(CharacterTransformer[Hero, PseudoHero]):

@@ -86,7 +86,7 @@ class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT
         return [app_commands.Choice(name=character.display_name, value=character.id) for character in options]
 
 
-class GameDataStorage(Generic[VT, PseudoVT]):
+class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
     """Game Data Storage.
 
     Used for fetching and storing data from public API and JSONs.
@@ -186,5 +186,5 @@ class GameDataStorage(Generic[VT, PseudoVT]):
         return list(data.values())
 
 
-class CharacterStorage(abc.ABC, GameDataStorage[CharacterT, PseudoCharacterT]):
+class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]):
     ...

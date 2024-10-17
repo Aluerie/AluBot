@@ -45,6 +45,7 @@ import orjson
 from config import POSTGRES_URL
 
 
+# @deprecated("Just use dictionary notations.")  # from warnings import deprecated # TODO: 3.13
 class DotRecord(asyncpg.Record):
     """Dot Record.
 
@@ -59,7 +60,7 @@ class DotRecord(asyncpg.Record):
 
 if TYPE_CHECKING:
 
-    class PoolTypedWithAny(asyncpg.Pool[DotRecord]):
+    class PoolTypedWithAny(asyncpg.Pool[asyncpg.Record]):
         """Fake Type Class.
 
         For typing purposes, our `bot.pool` will be "type-ignore"'d-as `PoolTypedWithAny`
@@ -84,7 +85,7 @@ if TYPE_CHECKING:
             ...
 
 
-async def create_pool() -> asyncpg.Pool[DotRecord]:
+async def create_pool() -> asyncpg.Pool[asyncpg.Record]:
     """Create a database connection pool."""
 
     def _encode_jsonb(value: Any) -> str:
@@ -93,7 +94,7 @@ async def create_pool() -> asyncpg.Pool[DotRecord]:
     def _decode_jsonb(value: str) -> Any:
         return orjson.loads(value)
 
-    async def init(con: asyncpg.Connection[DotRecord]) -> None:
+    async def init(con: asyncpg.Connection[asyncpg.Record]) -> None:
         await con.set_type_codec(
             "jsonb",
             schema="pg_catalog",
@@ -108,6 +109,6 @@ async def create_pool() -> asyncpg.Pool[DotRecord]:
         command_timeout=60,
         min_size=20,
         max_size=20,
-        record_class=DotRecord,  # todo: change this to asyncpg.Record once we remove all dotted notations.
+        # record_class=DotRecord,  # deprecated
         statement_cache_size=0,
-    )  # type: ignore # why does it think it can return None?
+    )  # pyright: ignore[reportReturnType]

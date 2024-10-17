@@ -23,8 +23,7 @@ if TYPE_CHECKING:
 
     from pulsefire.invocation import Invocation
 
-    from . import schemas_xd
-    from .schemas import odota_constants, stratz
+    from .schemas import odota_constants, opendota, steam_web_api, stratz
 
 __all__ = (
     "OpenDotaClient",
@@ -153,11 +152,11 @@ class OpenDotaClient(BaseClient):
             ],
         )
 
-    async def get_match(self, *, match_id: int) -> schemas_xd.OpenDotaAPI.GetMatch.Match:
+    async def get_match(self, *, match_id: int) -> opendota.MatchResponse:
         """GET matches/{match_id}."""
         return await self.invoke("GET", f"/matches/{match_id}")  # type: ignore
 
-    async def request_parse(self, *, match_id: int) -> schemas_xd.OpenDotaAPI.PostRequest.ParseJob:
+    async def request_parse(self, *, match_id: int) -> opendota.ParseResponse:
         """POST /request/{match_id}."""
         return await self.invoke("POST", f"/request/{match_id}")  # type: ignore
 
@@ -234,7 +233,7 @@ class SteamWebAPIClient(BaseClient):
             ],
         )
 
-    async def get_match_details(self, match_id: int) -> schemas_xd.SteamWebAPI.MatchDetails:
+    async def get_match_details(self, match_id: int) -> steam_web_api.MatchDetailsResponse:
         """GET /IDOTA2Match_570/GetMatchDetails/v1/.
 
         https://steamapi.xpaw.me/#IDOTA2Match_570/GetMatchDetails.
@@ -242,7 +241,7 @@ class SteamWebAPIClient(BaseClient):
         queries = {"match_id": match_id}  # noqa F481
         return await self.invoke("GET", "/IDOTA2Match_570/GetMatchDetails/v1/")  # type: ignore
 
-    async def get_real_time_stats(self, server_steam_id: int) -> schemas_xd.SteamWebAPI.RealtimeStats:
+    async def get_real_time_stats(self, server_steam_id: int) -> steam_web_api.RealTimeStatsResponse:
         """GET /IDOTA2Match_570/GetMatchDetails/v1/.
 
         https://steamapi.xpaw.me/#IDOTA2MatchStats_570/GetRealtimeStats.
@@ -299,7 +298,7 @@ class StratzClient(BaseClient):
             ],
         )
 
-    async def get_fpc_match_to_edit(self, *, match_id: int, friend_id: int) -> stratz.GetFPCMatchesResponse:
+    async def get_fpc_match_to_edit(self, *, match_id: int, friend_id: int) -> stratz.FPCMatchesResponse:
         """Queries info that I need to know in order to edit Dota 2 FPC notification."""
         query = """
             query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
@@ -340,7 +339,7 @@ class StratzClient(BaseClient):
         json = {"query": query, "variables": {"match_id": match_id, "friend_id": friend_id}}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
-    async def get_heroes(self) -> stratz.GetHeroesResponse:
+    async def get_heroes(self) -> stratz.HeroesResponse:
         """Queries Dota 2 Hero Constants."""
         query = """
             query Heroes {
@@ -368,7 +367,7 @@ class StratzClient(BaseClient):
         json = {"query": query}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
-    async def get_abilities(self) -> stratz.GetAbilitiesResponse:
+    async def get_abilities(self) -> stratz.AbilitiesResponse:
         """Queries Dota 2 Hero Ability Constants."""
         query = """
             query Abilities {
@@ -387,7 +386,7 @@ class StratzClient(BaseClient):
         json = {"query": query}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
-    async def get_items(self) -> stratz.GetItemsResponse:
+    async def get_items(self) -> stratz.ItemsResponse:
         """Queries Dota 2 Hero Item Constants."""
         query = """
             query Items {
@@ -402,7 +401,7 @@ class StratzClient(BaseClient):
         json = {"query": query}  # noqa F481
         return await self.invoke("POST", "")  # type: ignore
 
-    async def get_facets(self) -> stratz.GetFacetsResponse:
+    async def get_facets(self) -> stratz.FacetsResponse:
         """Queries Dota 2 Hero Facet Constants."""
         query = """
             query FacetConstants {

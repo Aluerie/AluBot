@@ -22,6 +22,8 @@ if TYPE_CHECKING:
         channel_id: int
         spoil: bool
 
+    import twitchio
+
 
 __all__ = ("BaseNotifications",)
 
@@ -36,7 +38,9 @@ class BaseNotifications(FPCCog):
 
         self.message_cache: dict[int, discord.Message] = {}
 
-    async def get_twitch_live_player_ids(self, twitch_category_id: str, player_ids: list[int]) -> list[int]:
+    async def get_player_streams(
+        self, twitch_category_id: str, player_ids: list[int]
+    ) -> dict[int, twitchio.Stream]:
         """Get `player_id` for favourite FPC streams that are currently live on Twitch."""
         query = f"""
             SELECT twitch_id, player_id
@@ -47,14 +51,14 @@ class BaseNotifications(FPCCog):
         twitch_id_to_player_id = {row["twitch_id"]: row["player_id"] for row in rows}
         if not twitch_id_to_player_id:
             # otherwise fetch_streams fetches top100 streams and we dont want that.
-            return []
+            return {}
 
-        live_player_ids = [
-            twitch_id_to_player_id[stream.user.id]
+        player_streams = {
+            twitch_id_to_player_id[stream.user.id]: stream
             for stream in await self.bot.twitch.fetch_streams(user_ids=list(twitch_id_to_player_id.keys()))
             if stream.game_id == twitch_category_id
-        ]
-        return live_player_ids
+        }
+        return player_streams
 
     async def send_match(self, match: BaseMatchToSend, channel_spoil_tuples: list[tuple[int, bool]]) -> None:
         embed, image_file = await match.embed_and_file()

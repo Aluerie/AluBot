@@ -84,7 +84,7 @@ class LogsViaWebhook(AluCog):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._logging_queue = asyncio.Queue()
+        self._logging_queue: asyncio.Queue[logging.LogRecord] = asyncio.Queue()
 
         # cooldown attrs
         self._lock: asyncio.Lock = asyncio.Lock()

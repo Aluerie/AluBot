@@ -9,10 +9,11 @@ from pathlib import Path
 import aiohttp
 import asyncpg
 import click
+import discord
 
+import config
 from bot import AluBot, setup_logging
-from config import POSTGRES_URL
-from utils.database import create_pool
+from utils import const, database
 
 try:
     import uvloop  # type: ignore # not available on Windows
@@ -26,14 +27,25 @@ async def start_the_bot(test: bool) -> None:
     """Helper function to start the bot."""
     log = logging.getLogger()
     try:
-        pool = await create_pool()
+        pool = await database.create_pool()
     except Exception:
-        click.echo("Could not set up PostgreSQL. Exiting.", file=sys.stderr)
-        log.exception("Could not set up PostgreSQL. Exiting.")
-        # todo: maybe webhook notif that it went wrong
+        msg = "Could not set up PostgreSQL. Exiting."
+        click.echo(msg, file=sys.stderr)
+        log.exception(msg, stack_info=True)
+
+        webhook = discord.Webhook.from_url(
+            url=config.SPAM_WEBHOOK,
+            session=aiohttp.ClientSession(),
+        )
+        embed = discord.Embed(color=const.Colour.maroon, description=msg)
+        await webhook.send(content=const.Role.error_ping.mention, embed=embed)
         return
 
-    async with aiohttp.ClientSession() as session, pool as pool, AluBot(test, session=session, pool=pool) as alubot:
+    async with (
+        aiohttp.ClientSession() as session,
+        pool as pool,
+        AluBot(test, session=session, pool=pool) as alubot,
+    ):
         await alubot.start()
 
 
@@ -44,7 +56,10 @@ def main(click_ctx: click.Context, test: bool) -> None:
     """Launches the bot."""
     if click_ctx.invoked_subcommand is None:
         with setup_logging(test):
-            asyncio.run(start_the_bot(test))
+            try:
+                asyncio.run(start_the_bot(test))
+            except KeyboardInterrupt:
+                print("Aborted! The bot was interrupted with `KeyboardInterrupt`!")  # noqa: T201
 
 
 @main.group(short_help="database stuff", options_metavar="[options]")
@@ -59,7 +74,7 @@ def create() -> None:
     try:
 
         async def run_create() -> None:
-            connection = await asyncpg.connect(POSTGRES_URL)
+            connection = await asyncpg.connect(config.POSTGRES_URL)
             async with connection.transaction():
                 for f in Path("sql").iterdir():
                     if f.is_file() and f.suffix == ".sql" and not f.name.startswith("_"):

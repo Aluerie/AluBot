@@ -211,7 +211,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
     def __init__(
         self,
         bot: AluBot,
-        data: stratz.GetFPCMatchesResponse,
+        data: stratz.FPCMatchesResponse,
         player_hero: Hero | PseudoHero | None = None,
     ) -> None:
         super().__init__(bot)
@@ -219,7 +219,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
         player = data["data"]["match"]["players"][0]
 
         self.hero: Hero | PseudoHero | None = player_hero
-        self.hero_id: int = player['heroId']
+        self.hero_id: int = player["heroId"]
         self.outcome: str = "Win" if player["isVictory"] else "Loss"
         self.kda: str = f'{player["kills"]}/{player["deaths"]}/{player["assists"]}'
 

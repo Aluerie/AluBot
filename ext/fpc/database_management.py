@@ -109,6 +109,7 @@ class FPCDatabaseManagement(FPCCog):
             Steam_id in any of 64/32/3/2 versions, friend_id or just steam profile link.
         twitch:
             Is this person a twitch.tv streamer (under same name)?
+
         """
         player_tuple = DotaPlayerCandidate(name=name, steam=steam, twitch=twitch)
         await self.dota_fpc_settings_cog.database_add(interaction, player_tuple)
@@ -160,6 +161,7 @@ class FPCDatabaseManagement(FPCCog):
             Riot ID name (without a hashtag or a tag), i.e. "Hide on bush", "Sneaky".
         tag_line
             Riot ID tag line (characters after a hashtag), i.e. "KR1", "NA69".
+
         """
         player_tuple = LolPlayerCandidate(name=name, platform=platform, game_name=game_name, tag_line=tag_line)
         await self.lol_fpc_settings_cog.database_add(interaction, player_tuple)

@@ -20,7 +20,7 @@ from .storage import Abilities, Facets, Heroes, Items
 if TYPE_CHECKING:
     from bot import AluBot
 
-    from .schemas_xd import GameCoordinatorAPI
+    from .schemas import game_coordinator
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -40,7 +40,7 @@ class DotaClient(Dota2Client_):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(SteamClient())
         self.check_list: set[int] = set()
-        self.matches: list[GameCoordinatorAPI.CSourceTVGameSmall] = []
+        self.matches: list[game_coordinator.CSourceTVGameSmall] = []
         self.on(EDOTAGCMsg.EMsgGCToClientFindTopSourceTVGamesResponse, self._handle_top_source_tv)
 
         self.bot: AluBot = bot
@@ -148,7 +148,7 @@ class DotaClient(Dota2Client_):
             self.deaths = 0
             return [LiveMatch(match) for match in self.matches]
 
-    def _handle_top_source_tv(self, message: GameCoordinatorAPI.GCToClientFindTopSourceTVGamesResponse) -> None:
+    def _handle_top_source_tv(self, message: game_coordinator.GCToClientFindTopSourceTVGamesResponse) -> None:
         for match in message.game_list:
             self.matches.append(match)
 
@@ -163,7 +163,7 @@ class DotaClient(Dota2Client_):
 
 
 class LiveMatch:
-    def __init__(self, proto: GameCoordinatorAPI.CSourceTVGameSmall) -> None:
+    def __init__(self, proto: game_coordinator.CSourceTVGameSmall) -> None:
         self.id = proto.match_id
         self.start_time = datetime.datetime.fromtimestamp(proto.activate_time, datetime.UTC)
         self.server_steam_id = proto.server_steam_id

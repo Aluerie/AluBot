@@ -555,4 +555,4 @@ if __name__ == "__main__":
     table = NoBorderTable()
     table.set_columns(["Name", "AgeAgeAgeAgeAge ", "JobTitle"], aligns=["<", ">", "^"])
     table.add_rows([["Alice", 29, "xd"], ["Bob", 23, "artist"]])
-    print(table.render())
+    print(table.render())  # noqa: T201

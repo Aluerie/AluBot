@@ -118,10 +118,10 @@ class DotaFPCNotifications(BaseNotifications):
         for row in player_id_rows:
             if row["twitch_live_only"]:
                 # need to check what streamers are live
-                twitch_live_player_ids = await self.get_twitch_live_player_ids(
+                twitch_live_player_ids = await self.get_player_streams(
                     const.Twitch.DOTA_GAME_CATEGORY_ID, row["player_ids"]
                 )
-                friend_id_cache[True] = await self.convert_player_id_to_friend_id(twitch_live_player_ids)
+                friend_id_cache[True] = await self.convert_player_id_to_friend_id(list(twitch_live_player_ids.keys()))
             else:
                 friend_id_cache[False] = await self.convert_player_id_to_friend_id(row["player_ids"])
 

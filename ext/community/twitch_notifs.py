@@ -210,6 +210,11 @@ class TwitchCog(CommunityCog):
 
             self._most_recent = datetime.datetime.now(datetime.UTC)
             log.debug("Sending twitch.tv received via %s", record.type.name)
+            embed = discord.Embed(
+                color=const.Accent.indigo(700),
+                description=f"Got twitch.tv starting stream notif via `{record.type.name}`",
+            )
+            await self.community.logs.send(embed=embed)
             await self.send_twitch_tv_notification()
 
     @commands.Cog.listener("on_twitchio_stream_end")

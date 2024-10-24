@@ -9,14 +9,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import checks, const, webhook_mimicry
+from utils import const, mimics
 
 from .._base import FunCog
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluContext, AluGuildContext
+    from bot import AluBot, AluContext
 
 
 class Other(FunCog):
@@ -42,70 +42,10 @@ class Other(FunCog):
                             await message.add_reaction(r)
 
     @commands.hybrid_command()
-    async def apuband(self, ctx: AluContext) -> None:
-        """Send apuband emote combo."""
-        guild = self.community.guild
-        emote_names = ["peepo1Maracas", "peepo2Drums", "peepo3Piano", "peepo4Guitar", "peepo5Singer", "peepo6Sax"]
-        content = " ".join([str(discord.utils.get(guild.emojis, name=e)) for e in emote_names])
-        try:
-            if ctx.channel and not isinstance(ctx.channel, (discord.ForumChannel, discord.CategoryChannel)):
-                await ctx.channel.send(content=content)
-                await ctx.reply(content=f"Nice {const.Emote.DankApprove}", ephemeral=True)
-            else:
-                msg = f"We can't send messages in forum channels {const.Emote.FeelsDankManLostHisHat}"
-                await ctx.reply(content=msg, ephemeral=True)
-        except:
-            msg = f"Something went wrong {const.Emote.FeelsDankManLostHisHat} probably permissions"
-            await ctx.reply(content=msg, ephemeral=True)
-
-    @commands.hybrid_command()
     @app_commands.describe(max_roll_number="Max limit to roll")
     async def roll(self, ctx: AluContext, max_roll_number: app_commands.Range[int, 1]) -> None:
         """Roll an integer from 1 to `max_roll_number`."""
         await ctx.reply(content=str(random.randint(1, max_roll_number + 1)))
-
-    @commands.hybrid_command(usage="[channel=curr] [text=Allo]")
-    @commands.check_any(commands.has_permissions(manage_messages=True), commands.check(checks.prefix.is_my_guild()))
-    @commands.bot_has_permissions(send_messages=True, manage_messages=True)
-    async def echo(
-        self,
-        ctx: AluGuildContext,
-        channel: discord.TextChannel | None = None,
-        *,
-        text: str = "Allo",
-    ) -> None:
-        """Send `text` to `#channel` from bot's name.
-
-        For text command you can also reply to a message without specifying text for bot to copy it.
-
-        Parameters
-        ----------
-        ctx :
-            Context
-        channel :
-            Channel to send to
-        text :
-            Enter text to speak
-
-        """
-        # Note, that if you want bot to send a fancy message with embeds then there is `/embed make` command.
-
-        ch = channel or ctx.channel
-        if ch.id in [const.Channel.emote_spam, const.Channel.comfy_spam]:
-            msg = f"Sorry, channel {ch.mention} is special emote-only channel. I won' speak there."
-            raise commands.MissingPermissions([msg])
-        elif not ch.permissions_for(ctx.author).send_messages:
-            raise commands.MissingPermissions([f"Sorry, you don't have permissions to speak in {ch.mention}"])
-        else:
-            if replied_msg := ctx.replied_message:
-                text = replied_msg.content
-            await ch.send(text[0:2000])
-            if ctx.interaction:
-                await ctx.reply(content=f"I did it {const.Emote.DankApprove}", ephemeral=True)
-        try:
-            await ctx.message.delete()
-        except:
-            pass
 
     @staticmethod
     def fancify_text(text: str, *, style: dict[str, str]) -> str:
@@ -127,24 +67,29 @@ class Other(FunCog):
         )
         return re.sub(pattern, match_repl, text)  # type: ignore # i dont understand regex types x_x
 
-    async def send_fancy_text(self, ctx: AluContext, answer: str) -> None:
-        if ctx.guild:
-            # TODO: I'm not sure what to do when permissions won't go our way
-            mimic = webhook_mimicry.MimicUserWebhook.from_context(ctx)
-
-            await mimic.send_user_message(ctx.author, content=answer)
-
-            if ctx.interaction:
-                await ctx.reply(content=f"I did it {const.Emote.DankApprove}", ephemeral=True)
-            else:
-                await ctx.message.delete()
+    async def send_mimic_text(self, interaction: discord.Interaction[AluBot], content: str) -> None:
+        if not interaction.guild:
+            # outside of guilds - probably DM
+            await interaction.response.send_message(content)
         else:
-            await ctx.reply(answer)
+            # in guild - hopefully we can make a webhook
+            mirror = mimics.Mirror.from_interaction(interaction)
+            await mirror.send(member=interaction.user, content=content)
+            await interaction.response.send_message(content=f"We did it {const.Emote.DankApprove}", ephemeral=True)
 
-    @commands.hybrid_command()
-    @app_commands.describe(text="Text to convert into emotes.")
-    async def emotify(self, ctx: AluContext, *, text: str) -> None:
-        """Makes your text consist only of emotes."""
+    text_group = app_commands.Group(
+        name="text",
+        description="Commands to transform text into something nice.",
+    )
+
+    @text_group.command()
+    async def emotify(self, interaction: discord.Interaction[AluBot], text: str) -> None:
+        """Makes your text consist only of emotes.
+
+        Parameters
+        ----------
+            Text to convert into emotes.
+        """
         style = (
             {
                 "!": "\N{WHITE EXCLAMATION MARK ORNAMENT}",
@@ -159,12 +104,18 @@ class Other(FunCog):
             }  # a-z into :regional_identifier_a:-:regional_identifier_z:
         )
         answer = self.fancify_text(text, style=style)
-        await self.send_fancy_text(ctx, answer)
+        await self.send_mimic_text(interaction, answer)
 
-    @commands.hybrid_command()
-    @app_commands.describe(text="Text to convert into fancy text")
-    async def fancify(self, ctx: AluContext, *, text: str) -> None:  # cSpell:disable #fmt:off # black meeses it up x_x
-        """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼."""  # noqa: RUF002
+    @text_group.command()
+    async def fancify(
+        self, interaction: discord.Interaction[AluBot], text: str
+    ) -> None:  # cSpell:disable #fmt:off # black meeses it up x_x
+        """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼.
+
+        Parameters
+        ----------
+            Text to convert into fancy text.
+        """  # noqa: RUF002
         # cSpell:enable #fmt:on
 
         style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy font
@@ -172,4 +123,11 @@ class Other(FunCog):
             for x in range(26)  # a-z into fancy a-z (Black messes it up)
         }
         answer = self.fancify_text(text, style=style)
-        await self.send_fancy_text(ctx, answer)
+        await self.send_mimic_text(interaction, answer)
+
+    @app_commands.command()
+    async def apuband(self, interaction: discord.Interaction[AluBot]) -> None:
+        """Send apuband emote combo."""
+        emote_names = ["peepo1Maracas", "peepo2Drums", "peepo3Piano", "peepo4Guitar", "peepo5Singer", "peepo6Sax"]
+        content = " ".join([str(discord.utils.get(self.community.guild.emojis, name=e)) for e in emote_names])
+        await self.send_mimic_text(interaction, content)

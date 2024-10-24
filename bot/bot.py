@@ -433,6 +433,15 @@ class AluBot(commands.Bot, AluBotHelper):
             bot_token=self.http.token,
         )
 
+    async def webhook_from_database(self, channel_id: int) -> discord.Webhook:
+        query = "SELECT url FROM webhooks WHERE channel_id = $1"
+        webhook_url: str | None = await self.pool.fetchval(query, channel_id)
+        if webhook_url:
+            return self.webhook_from_url(webhook_url)
+        else:
+            msg = f"There is no webhook in the database for channel with id={channel_id}"
+            raise errors.PlaceholderRaiseError(msg)
+
     @discord.utils.cached_property
     def spam(self) -> discord.Webhook:
         """A shortcut to spam webhook."""
@@ -494,7 +503,7 @@ class AluBot(commands.Bot, AluBotHelper):
     async def on_command_error(self, ctx: AluContext, error: commands.CommandError | Exception) -> None:
         """Handler called when an error is raised while invoking a ctx command.
 
-        In case of peoblems - check out on_command_error in parent BotBase class - it's not simply `pass`
+        In case of problems - check out on_command_error in parent BotBase class - it's not simply `pass`
         """
         if ctx.is_error_handled is True:
             return

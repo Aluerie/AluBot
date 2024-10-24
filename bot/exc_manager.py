@@ -107,6 +107,10 @@ class ExceptionManager:
         """
         log.error("%s: `%s`.", error.__class__.__name__, embed.footer.text, exc_info=error)
 
+        # if self.bot.test:
+        #     # i don't need any notifications when I'm testing since I'm right there.
+        #     return
+
         # apparently there is https://github.com/vi3k6i5/flashtext for "the fastest replacement"
         # not sure if I want to add extra dependance
         traceback_string = "".join(traceback.format_exception(error)).replace(str(Path.cwd()), "AluBot")

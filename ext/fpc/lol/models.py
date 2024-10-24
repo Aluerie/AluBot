@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from bot import AluBot
     from utils.lol import Champion, PseudoChampion
 
+    from ..base_classes import RecipientKwargs
     from .notifications import LivePlayerAccountRow
 
 
@@ -138,7 +139,7 @@ class MatchToSend(BaseMatchToSend):
         return await asyncio.to_thread(build_notification_image)
 
     @override
-    async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
+    async def recipient_kwargs(self) -> RecipientKwargs:
         streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
 
         notification_image = await self.notification_image(streamer.preview_url, streamer.display_name)
@@ -160,7 +161,12 @@ class MatchToSend(BaseMatchToSend):
             .set_image(url=f"attachment://{image_file.filename}")
         )
 
-        return embed, image_file
+        return {
+            "embed": embed,
+            "file": image_file,
+            "username": title,
+            "avatar_url": self.champion.icon_url,
+        }
 
     @override
     async def insert_into_game_messages(self, message_id: int, channel_id: int) -> None:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 if TYPE_CHECKING:
     import discord
@@ -13,7 +13,15 @@ if TYPE_CHECKING:
 __all__ = (
     "BaseMatchToSend",
     "BaseMatchToEdit",
+    "RecipientKwargs",
 )
+
+
+class RecipientKwargs(TypedDict):
+    embed: discord.Embed
+    file: discord.File
+    username: NotRequired[str]
+    avatar_url: NotRequired[str]
 
 
 class BaseMatchToSend(abc.ABC):
@@ -41,7 +49,7 @@ class BaseMatchToSend(abc.ABC):
         """Insert the match to messages table so we can edit it later."""
 
     @abc.abstractmethod
-    async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
+    async def recipient_kwargs(self) -> RecipientKwargs:
         """Get embed and file."""
         # image = await self.notification_image()
 

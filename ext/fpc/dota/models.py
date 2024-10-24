@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from utils.dota import Hero, PseudoHero
     from utils.dota.schemas import stratz
 
+    from ..base_classes import RecipientKwargs
+
 
 __all__ = ("MatchToSend", "StratzMatchToEdit", "NotCountedMatchToEdit")
 type LiteralTwitchStatus = Literal["NoTwitch", "Offline", "Live"]
@@ -165,7 +167,7 @@ class MatchToSend(BaseMatchToSend):
         return await asyncio.to_thread(build_notification_image)
 
     @override
-    async def embed_and_file(self) -> tuple[discord.Embed, discord.File]:
+    async def recipient_kwargs(self) -> RecipientKwargs:
         send_log.debug("Creating embed + file for Notification match")
 
         twitch_data = await self.get_twitch_data()
@@ -189,7 +191,12 @@ class MatchToSend(BaseMatchToSend):
             .set_image(url=f"attachment://{image_file.filename}")
             .set_footer(text=f"watch_server {self.server_steam_id}")
         )  # | dota2://matchid={self.match_id}&matchtime={matchtime}") # but it's not really convenient.
-        return embed, image_file
+        return {
+            "embed": embed,
+            "file": image_file,
+            "username": title,
+            "avatar_url": self.player_hero.topbar_icon_url,
+        }
 
     @override
     async def insert_into_game_messages(self, message_id: int, channel_id: int) -> None:

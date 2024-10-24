@@ -13,7 +13,7 @@ from bot import aluloop
 from utils import const
 from utils.helpers import measure_time
 
-from ..base_classes import BaseNotifications
+from ..base_classes import BaseNotifications, EditTuple, RecipientTuple
 from .models import MatchToSend, NotCountedMatchToEdit, StratzMatchToEdit
 
 if TYPE_CHECKING:
@@ -37,6 +37,10 @@ if TYPE_CHECKING:
         player_id: int
         display_name: str
         twitch_id: int
+
+    class GetRecipientsQueryRow(TypedDict):
+        channel_id: int
+        spoil: bool
 
 
 send_log = logging.getLogger("send_dota_fpc")
@@ -153,19 +157,16 @@ class DotaFPCNotifications(BaseNotifications):
                             AND s.twitch_live_only = $5
                             AND s.enabled = TRUE;
                     """
-
-                    channel_spoil_tuples: list[tuple[int, bool]] = list(
-                        await self.bot.pool.fetch(
-                            query,
-                            hero_id,
-                            user["player_id"],
-                            match.id,
-                            account_id,
-                            twitch_live_only,
-                        )
+                    rows: list[GetRecipientsQueryRow] = await self.bot.pool.fetch(
+                        query,
+                        hero_id,
+                        user["player_id"],
+                        match.id,
+                        account_id,
+                        twitch_live_only,
                     )
 
-                    if channel_spoil_tuples:
+                    if rows:
                         player_hero = await self.bot.dota.heroes.by_id(hero_id)
                         send_log.debug("%s - %s", user["display_name"], player_hero.display_name)
                         match_to_send = MatchToSend(
@@ -181,7 +182,10 @@ class DotaFPCNotifications(BaseNotifications):
                         )
                         # SENDING
                         start_time = time.perf_counter()
-                        await self.send_match(match_to_send, channel_spoil_tuples)
+                        await self.send_match(
+                            match_to_send,
+                            [RecipientTuple(channel_id=row["channel_id"], spoil=row["spoil"]) for row in rows],
+                        )
                         send_log.debug("Sending took %.5f secs", time.perf_counter() - start_time)
 
     @aluloop(seconds=59)
@@ -259,7 +263,7 @@ class DotaFPCNotifications(BaseNotifications):
             else:
                 self.retry_mapping[tuple_uuid] += 1
 
-            player_hero = await self.bot.dota.heroes.by_id(match_row['hero_id'])
+            player_hero = await self.bot.dota.heroes.by_id(match_row["hero_id"])
             # discord-markdown friendly strings for my #logger channel.
             # put it into the beginning of every consequent edit_log.info / edit_log.debug call
             log_str = (
@@ -278,11 +282,12 @@ class DotaFPCNotifications(BaseNotifications):
             try:
                 stratz_data = await self.bot.dota.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
             except aiohttp.ClientResponseError as exc:
-                edit_log.warning("%s Stratz API Resp: Not OK, Status `%s`", log_str, exc.status)
+                edit_log.warning("%s Stratz API Resp: Not OK, Status `%s` \N{CROSS MARK}", log_str, exc.status)
                 continue
 
             if not stratz_data["data"]["match"]:
-                continue # idk fuck my life, GetMatchDetails does not work.
+                edit_log.warning("%s GetMatchDetails does not work \N{CROSS MARK}", log_str)
+                continue  # idk fuck my life, GetMatchDetails does not work.
                 # # This is None when conditions under "*" below happen
                 # # which we have to separate
                 # try:
@@ -312,14 +317,20 @@ class DotaFPCNotifications(BaseNotifications):
                 #     continue
 
             elif not stratz_data["data"]["match"]["statsDateTime"]:
-                edit_log.warning("%s Parsing was not finished.", log_str)
+                edit_log.warning("%s Parsing was not finished \N{CROSS MARK}", log_str)
                 continue
             else:
                 match_to_edit = StratzMatchToEdit(self.bot, stratz_data, player_hero)
 
             # now we know how exactly to edit the match with a specific `match_to_edit`
-            await self.edit_match(match_to_edit, match_row["channel_message_tuples"])
-            edit_log.info("%s Edited message successfully.", log_str)
+            await self.edit_match(
+                match_to_edit,
+                [
+                    EditTuple(channel_id=channel_id, message_id=message_id)
+                    for channel_id, message_id in match_row["channel_message_tuples"]
+                ],
+            )
+            edit_log.info("%s Edited message \N{WHITE HEAVY CHECK MARK}", log_str)
             await self.delete_match_from_editing_queue(match_id, friend_id)
         edit_log.debug("*** Finished Task to Edit Dota FPC Messages ***")
 

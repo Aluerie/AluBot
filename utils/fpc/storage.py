@@ -133,11 +133,16 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
     @aluloop()
     async def update_data(self) -> None:
         """The task responsible for keeping the data up-to-date."""
-        log.debug("Updating Cache %s.", self.__class__.__name__)
+        log.debug("Updating Storage %s.", self.__class__.__name__)
         async with self.lock:
             start_time = time.perf_counter()
             self.cached_data = await self.fill_data()
-            log.info("Cache %s is updated in %.3fs", self.__class__.__name__, time.perf_counter() - start_time)
+            log.debug(
+                "Storage %s %s is updated in %.3fs",
+                __package__.split(".")[-1].capitalize() if __package__ else "",
+                self.__class__.__name__,
+                time.perf_counter() - start_time,
+            )
 
     async def get_cached_data(self) -> dict[int, VT]:
         """Get the whole cached data."""

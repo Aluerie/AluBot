@@ -141,7 +141,8 @@ class AluAppCommandTree(app_commands.CommandTree):
         await self._update_cache(res, guild=guild)
         return res
 
-    async def on_app_command_error(
+    @override
+    async def on_error(
         self,
         interaction: discord.Interaction[AluBot],
         error: app_commands.AppCommandError | Exception,

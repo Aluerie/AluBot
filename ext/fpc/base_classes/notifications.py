@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict
 
 import discord
 
-from utils import errors
+from utils import errors, webhooks
 
 from . import FPCCog
 
@@ -24,8 +24,22 @@ if TYPE_CHECKING:
 
     import twitchio
 
+__all__ = (
+    "BaseNotifications",
+    "RecipientTuple",
+    "EditTuple",
+)
 
-__all__ = ("BaseNotifications",)
+
+class RecipientTuple(NamedTuple):
+    channel_id: int
+    spoil: bool
+
+
+class EditTuple(NamedTuple):
+    channel_id: int
+    message_id: int
+
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -36,11 +50,9 @@ class BaseNotifications(FPCCog):
         super().__init__(bot, *args, **kwargs)
         self.prefix: str = prefix
 
-        self.message_cache: dict[int, discord.Message] = {}
+        self.message_cache: dict[int, discord.WebhookMessage] = {}
 
-    async def get_player_streams(
-        self, twitch_category_id: str, player_ids: list[int]
-    ) -> dict[int, twitchio.Stream]:
+    async def get_player_streams(self, twitch_category_id: str, player_ids: list[int]) -> dict[int, twitchio.Stream]:
         """Get `player_id` for favourite FPC streams that are currently live on Twitch."""
         query = f"""
             SELECT twitch_id, player_id
@@ -60,48 +72,40 @@ class BaseNotifications(FPCCog):
         }
         return player_streams
 
-    async def send_match(self, match: BaseMatchToSend, channel_spoil_tuples: list[tuple[int, bool]]) -> None:
-        embed, image_file = await match.embed_and_file()
+    async def send_match(self, match: BaseMatchToSend, recipients: list[RecipientTuple]) -> None:
+        send_kwargs = await match.recipient_kwargs()
 
-        for channel_id, spoil in channel_spoil_tuples:
+        for recipient in recipients:
             try:
-                channel = self.bot.get_channel(channel_id) or await self.bot.fetch_channel(channel_id)
+                channel = self.bot.get_channel(recipient.channel_id) or await self.bot.fetch_channel(
+                    recipient.channel_id
+                )
             except discord.NotFound:
-                # apparently this error sometimes randomly triggers
-                # for even known channels that "should" be in cache
-                # todo: idk how to approach this NotFound problem
                 raise
 
             assert isinstance(channel, discord.TextChannel)
             try:
-                message = await channel.send(embed=embed, file=image_file)
+                mimic = webhooks.Mimic.from_channel(self.bot, channel)
+                message = await mimic.send(wait=True, **send_kwargs)
             except Exception as exc:
                 raise exc
             else:
-                if spoil:
+                if recipient.spoil:
                     self.message_cache[message.id] = message
                     await match.insert_into_game_messages(message.id, channel.id)
 
-    async def edit_match(self, match: BaseMatchToEdit, channel_message_tuples: list[tuple[int, int]]) -> None:
+    async def edit_match(self, match: BaseMatchToEdit, edits: list[EditTuple]) -> None:
         new_image_file: discord.File | None = None
 
-        for channel_id, message_id in channel_message_tuples:
+        for edit in edits:
             try:
                 # try to find in cache
-                message = self.message_cache[message_id]
+                message = self.message_cache[edit.message_id]
             except KeyError:
                 # we have to fetch it
                 try:
-                    channel = self.bot.get_channel(channel_id) or await self.bot.fetch_channel(channel_id)
-                except discord.NotFound:
-                    # apparently this error sometimes randomly triggers
-                    # for even known channels that "should" be in cache
-                    # todo: idk how to approach this NotFound problem
-                    raise
-
-                assert isinstance(channel, discord.TextChannel)
-                try:
-                    message = await channel.fetch_message(message_id)
+                    webhook = await self.bot.webhook_from_database(edit.channel_id)
+                    message = await webhook.fetch_message(edit.message_id)
                 except discord.NotFound:
                     raise
 

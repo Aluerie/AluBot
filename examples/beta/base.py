@@ -16,7 +16,19 @@ import os
 import random
 import sys
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal, TypedDict, TypeVar, cast, override, reveal_type
+from typing import (
+    TYPE_CHECKING,
+    Annotated,
+    Any,
+    ClassVar,
+    Literal,
+    TypedDict,
+    TypeVar,
+    Unpack,
+    cast,
+    override,
+    reveal_type,
+)
 
 import asyncpg
 import discord  # noqa TCH002

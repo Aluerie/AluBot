@@ -23,6 +23,7 @@ __all__: tuple[str, ...] = (
     "ErroneousUsage",
     "SilentError",
     "ResponseNotOK",
+    "PlaceholderRaiseError",
 )
 
 
@@ -95,3 +96,14 @@ class TranslateError(AluBotError):
         self.status_code: int = status_code
         self.text: str = text
         super().__init__(f"Google Translate responded with HTTP Status Code {status_code}")
+
+
+class PlaceholderRaiseError(AluBotError):
+    """Placeholder Error.
+
+    Maybe silly thing, but instead of doing empty `raise` that is not clear later in logs what exactly it is
+    I prefer raising my own placeholder error with a message.
+    This is usually used in a code where I'm unsure what to do and how else to handle the situation.
+    """
+
+    __slots__: tuple[str, ...] = ()

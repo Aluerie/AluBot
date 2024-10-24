@@ -9,7 +9,7 @@ import asyncpg
 from bot import aluloop
 from utils import const, lol
 
-from ..base_classes import BaseNotifications
+from ..base_classes import BaseNotifications, EditTuple, RecipientTuple
 from .models import MatchToEdit, MatchToSend
 
 if TYPE_CHECKING:
@@ -30,6 +30,10 @@ if TYPE_CHECKING:
         champion_id: int
         platform: lol.LiteralPlatform
         channel_message_tuples: list[tuple[int, int]]
+
+    class GetRecipientsQueryRow(TypedDict):
+        channel_id: int
+        spoil: bool
 
 
 log = logging.getLogger(__name__)
@@ -124,16 +128,21 @@ class Notifications(BaseNotifications):
                         AND NOT channel_id=ANY(SELECT channel_id FROM lol_messages WHERE match_id=$3)
                         AND s.enabled = TRUE;
                 """
-                channel_spoil_tuples: list[tuple[int, bool]] = list(
-                    await self.bot.pool.fetch(
-                        query, participant["championId"], player_account_row["player_id"], game["gameId"]
-                    )
+                rows: list[GetRecipientsQueryRow] = await self.bot.pool.fetch(
+                    query,
+                    participant["championId"],
+                    player_account_row["player_id"],
+                    game["gameId"],
                 )
-                if channel_spoil_tuples:
+
+                if rows:
                     champion = await self.bot.lol.champions.by_id(participant["championId"])
-                    log.debug("Notif %s - %s",player_account_row["display_name"],champion.display_name)
+                    log.debug("Notif %s - %s", player_account_row["display_name"], champion.display_name)
                     match_to_send = MatchToSend(self.bot, game, participant, player_account_row, champion)
-                    await self.send_match(match_to_send, channel_spoil_tuples)
+                    await self.send_match(
+                        match_to_send,
+                        [RecipientTuple(channel_id=row["channel_id"], spoil=row["spoil"]) for row in rows],
+                    )
 
     @aluloop(seconds=59)
     async def notification_worker(self) -> None:
@@ -171,7 +180,13 @@ class Notifications(BaseNotifications):
                 if participant["championId"] == match_row["champion_id"]:
                     # found our participant
                     match_to_edit = MatchToEdit(self.bot, participant=participant, timeline=timeline)
-                    await self.edit_match(match_to_edit, match_row["channel_message_tuples"])
+                    await self.edit_match(
+                        match_to_edit,
+                        [
+                            EditTuple(channel_id=channel_id, message_id=message_id)
+                            for channel_id, message_id in match_row["channel_message_tuples"]
+                        ],
+                    )
             query = "DELETE FROM lol_messages WHERE match_id=$1"
             await self.bot.pool.fetch(query, match_row["match_id"])
 

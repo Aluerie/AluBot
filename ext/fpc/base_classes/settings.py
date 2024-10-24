@@ -421,7 +421,7 @@ class BaseSettings(FPCCog):
             .add_field(
                 name=f"\N{BLACK SQUARE FOR STOP} Receive Notifications Setting: {state(row['enabled'])}",
                 value=(
-                    "If you want manually temporarily disable FPC Notifications feature then use this toggle button. "
+                    "If you want to manually temporarily disable FPC Notifications feature then use this toggle button. "
                     "Your data will be intact in case you want to enable receiving notifications again."
                 ),
                 inline=False,

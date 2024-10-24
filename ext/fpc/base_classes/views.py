@@ -120,7 +120,7 @@ class SetupMisc(FPCView):
 
         old_field_name = self.embed.fields[field_index].name
         assert isinstance(old_field_name, str)
-        new_field_name = f'{old_field_name.split(":")[0]} {"`on`" if new_value else "`off`"} {formats.tick(new_value)}'
+        new_field_name = f'{old_field_name.split(":")[0]}: {"`on`" if new_value else "`off`"} {formats.tick(new_value)}'
         old_field_value = self.embed.fields[field_index].value
         self.embed.set_field_at(field_index, name=new_field_name, value=old_field_value, inline=False)
         await interaction.response.edit_message(embed=self.embed)

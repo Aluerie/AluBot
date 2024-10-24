@@ -6,8 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from ext.utilities.utilities.fix_links import fix_link_worker
-from utils import const, errors, links, webhook_mimicry
+from utils import const, errors, links, mimics
 
 from ._base import CommunityCog
 
@@ -19,7 +18,7 @@ class FixLinksCommunity(CommunityCog):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.delete_mimic_ctx_menu = app_commands.ContextMenu(
-            name="Delete Mimic message",
+            name="Delete Mimic Message",
             callback=self.delete_mimic_ctx_menu_callback,
         )
 
@@ -63,14 +62,14 @@ class FixLinksCommunity(CommunityCog):
         if message.author.bot:
             return
 
-        fixed_links = fix_link_worker(message.content)
-        if not fixed_links:
+        fixed_links = links.fix_social_links(message.content)
+        if fixed_links is None:
             return
 
-        mimic = webhook_mimicry.MimicUserWebhook.from_message(bot=self.bot, message=message)
-        msg = await mimic.send_user_message(message.author, message=message, content=fixed_links)
+        mirror = mimics.Mirror.from_message(bot=self.bot, message=message)
+        msg = await mirror.send(message.author, content=fixed_links)
         await message.delete()
-        await links.extra_send_fxtwitter_links(msg)
+        await links.get_metadata_embed_links(msg)
 
 
 async def setup(bot: AluBot) -> None:

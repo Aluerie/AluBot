@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict
 
 import discord
 
-from utils import errors, webhooks
+from utils import errors, mimics
 
 from . import FPCCog
 
@@ -85,7 +85,7 @@ class BaseNotifications(FPCCog):
 
             assert isinstance(channel, discord.TextChannel)
             try:
-                mimic = webhooks.Mimic.from_channel(self.bot, channel)
+                mimic = mimics.Mimic.from_channel(self.bot, channel)
                 message = await mimic.send(wait=True, **send_kwargs)
             except Exception as exc:
                 raise exc

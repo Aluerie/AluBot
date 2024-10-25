@@ -49,18 +49,16 @@ FIX_DICT: dict[str, str] = {
 }
 
 
-def url_sub_regex(x: str) -> str:
-    x = re.escape(x)
-    return rf"""
+COMPILED_REGEX = re.compile(
+    rf"""
         http[s]?
         ://
         (?:www\.)?
-        ({x})                                                                              # group 1 - the actual site
+        ({'|'.join(re.escape(x) for x in FIX_DICT)})                                       # group 1 - the actual site
         (/ (?: [a-zA-Z] | [0-9] | [$-_@.&+] | [!*(),] | (?:% [0-9a-fA-F][0-9a-fA-F]) )+ )  # group 2 - the rest of url
-    """
-
-
-COMPILED_REGEX = re.compile("%s" % "|".join([url_sub_regex(key) for key in FIX_DICT]), re.X)
+    """,
+    flags=re.X | re.I,  # X = VERBOSE, I = IGNORECASE
+)
 
 
 def fix_social_links(text: str, omit_rest: bool = False) -> str | None:
@@ -87,8 +85,12 @@ def fix_social_links(text: str, omit_rest: bool = False) -> str | None:
     Examples
     --------
     ```py
-    fix_social_links("XD https://x.com/IceFrog/status/1718834746300719265 XD https://x.com/IceFrog/status/1718834746300719265 XD")
-    "XD https://fxtwitter.com/IceFrog/status/1718834746300719265 XD https://fxtwitter.com/IceFrog/status/1718834746300719265 XD"
+    text = (
+        "https://www.instagram.com/p/DBg0L6foRNW/ bla bla bla bla bla bla bla"
+        "https://x.com/IceFrog/status/1718834746300719265"
+    )
+    fix_social_links(text)
+    "https://ddinstagram.com/p/DBg0L6foRNW/ bla bla bla bla bla bla bla https://fxtwitter.com/IceFrog/status/1718834746300719265"
     ```
     Sources
     ------
@@ -96,11 +98,8 @@ def fix_social_links(text: str, omit_rest: bool = False) -> str | None:
     """
     if found := COMPILED_REGEX.findall(text):
         if omit_rest:
-            # found is list[tuple[str, ...]], i.e.
-            # [
-            #   ('x.com', '/IceFrog/status/1718834746300719265', '', '', '', '', '', ''),
-            #   ('x.com', '/IceFrog/status/1718834746300719265', '', '', '', '', '', '')
-            # ]
+            # found is list[tuple[str, ...]], where tuple has 2 strings (because we have 2 matching groups in regex)
+            #  i.e. [('instagram.com', '/p/DBg0L6foRNW/'), ('x.com', '/IceFrog/status/1718834746300719265')]
             return "\n".join([f"{FIX_DICT[group[0]]}{group[1]}" for group in found])
         else:
             return COMPILED_REGEX.sub(lambda mo: rf"{FIX_DICT[mo.group(1).lower()]}{mo.group(2)}", text)
@@ -109,6 +108,9 @@ def fix_social_links(text: str, omit_rest: bool = False) -> str | None:
 
 
 if __name__ == "__main__":
-    text = "XD https://x.com/IceFrog/status/1718834746300719265 XD https://x.com/IceFrog/status/1718834746300719265 XD"
-    result = fix_social_links(text, omit_rest=True)
+    text = (
+        "https://www.instagram.com/p/DBg0L6foRNW/ bla bla bla bla bla bla bla "
+        "https://x.com/IceFrog/status/1718834746300719265"
+    )
+    result = fix_social_links(text)
     print(result)  # noqa: T201

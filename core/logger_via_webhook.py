@@ -80,6 +80,7 @@ class LogsViaWebhook(AluCog):
         # "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
         "ext.fpc.lol.notifications": const.Logo.Lol,
         "githubkit": "https://seeklogo.com/images/G/github-colored-logo-FDDF6EB1F0-seeklogo.com.png",
+        # use discord py icon somewhere here
     }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

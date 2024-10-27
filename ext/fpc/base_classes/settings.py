@@ -287,12 +287,17 @@ class BaseSettings(FPCCog):
         await self.check_if_account_already_in_database(account_id=getattr(account, self.account_id_column))
 
         query = f"""
-            INSERT INTO {self.prefix}_players
-            (display_name, twitch_id)
-            VALUES ($1, $2)
-            ON CONFLICT (display_name) DO NOTHING
-            RETURNING player_id
-        """
+            WITH e AS (
+                INSERT INTO {self.prefix}_players
+                (display_name, twitch_id)
+                VALUES ($1, $2)
+                ON CONFLICT (twitch_id) DO NOTHING
+                RETURNING player_id
+            )
+            SELECT * FROM e
+            UNION
+                SELECT player_id FROM {self.prefix}_players WHERE twitch_id=$2;
+        """  # https://stackoverflow.com/a/62205017/19217368
         player_id: int = await interaction.client.pool.fetchval(query, account.player_display_name, account.twitch_id)
 
         database_dict = account.to_pseudo_record()

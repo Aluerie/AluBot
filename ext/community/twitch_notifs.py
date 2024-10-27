@@ -50,7 +50,9 @@ class TwitchCog(CommunityCog):
 
         # cooldown attrs
         self._lock: asyncio.Lock = asyncio.Lock()
-        self.cooldown: datetime.timedelta = datetime.timedelta(seconds=600)
+        # TODO: This is a crutch, if we make it `seconds=600`, then it will give it out fake notifications for when
+        # I close discord during the stream but then reopen it (since presence gonna proc without anything holding it back)
+        self.cooldown: datetime.timedelta = datetime.timedelta(hours=13)
         self._most_recent: datetime.datetime | None = None
 
         self.notifications_worker.start()

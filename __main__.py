@@ -31,23 +31,29 @@ async def start_the_bot(test: bool) -> None:
     except Exception:
         msg = "Could not set up PostgreSQL. Exiting."
         click.echo(msg, file=sys.stderr)
-        log.exception(msg, stack_info=True)
+        log.exception(msg)
 
+        session = aiohttp.ClientSession()
         webhook = discord.Webhook.from_url(
             url=config.SPAM_WEBHOOK,
-            session=aiohttp.ClientSession(),
+            session=session,
         )
         embed = discord.Embed(color=const.Colour.maroon, description=msg)
         await webhook.send(content=const.Role.error_ping.mention, embed=embed)
+        await session.close()
         return
 
+    # try:
     async with (
         aiohttp.ClientSession() as session,
         pool as pool,
         AluBot(test, session=session, pool=pool) as alubot,
     ):
         await alubot.start()
-
+    # except:
+    #     await session.close()
+    #     await pool.close()
+    #     await alubot.close()
 
 @click.group(invoke_without_command=True, options_metavar="[options]")
 @click.pass_context

@@ -47,14 +47,14 @@ FIX_DICT: dict[str, str] = {
     "reddit.com": "https://rxddit.com",
     "instagram.com": "https://ddinstagram.com",
     "tiktok.com": "https://tnktok.com",
-    "twitch.com": "https://fxtwitch.seria.moe",
+    "twitch.tv": "https://fxtwitch.seria.moe",
     "deviantart.com": "https://fixdeviantart.com",
     "tumblr.com": "https://tpmblr.com",
 }
 # PS. in November 2024 I finally found out that some other people made the same bot/feature for Discord:
 # * https://betterdiscord.app/plugin/SocialMediaLinkConverter
 # * https://github.com/seriaati/embed-fixer
-# So, they might find something better.
+# So, check it out, they might find something better.
 
 COMPILED_REGEX = re.compile(
     rf"""

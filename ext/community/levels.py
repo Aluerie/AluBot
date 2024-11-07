@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, Literal, override
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 import discord
 from discord import app_commands
@@ -15,6 +15,12 @@ from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from bot import AluBot, AluGuildContext
+
+    class RemoveLongGoneRow(TypedDict):
+        id: int
+        name: str
+        last_seen: datetime.datetime
+
 
 LAST_SEEN_TIMEOUT = 60
 
@@ -273,17 +279,19 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             return
 
         query = "SELECT id, last_seen, name FROM community_members"
-        rows = await self.bot.pool.fetch(query)
+        rows: list[RemoveLongGoneRow] = await self.bot.pool.fetch(query)
 
         for row in rows:
             guild = self.community.guild
-            person = guild.get_member(row.id)
-            if person is None and discord.utils.utcnow() - row.last_seen > datetime.timedelta(days=365):
+            person = guild.get_member(row["id"])
+            if person is None and discord.utils.utcnow() - row["last_seen"] > datetime.timedelta(days=365):
                 query = "DELETE FROM community_members WHERE id=$1"
-                await self.bot.pool.execute(query, row.id)
-                e = discord.Embed(description=f"id = {row.id}", colour=0xE6D690)
-                e.set_author(name=f"{row.name} was removed from the database")
-                await self.community.logs.send(embed=e)
+                await self.bot.pool.execute(query, row["id"])
+                embed = discord.Embed(
+                    colour=0xE6D690,
+                    description=f"id = {row['id']}",
+                ).set_author(name=f"{row['name']} was removed from the database")
+                await self.community.logs.send(embed=embed)
 
 
 async def setup(bot: AluBot) -> None:

@@ -86,7 +86,7 @@ class BaseNotifications(FPCCog):
             assert isinstance(channel, discord.TextChannel)
             try:
                 mimic = mimics.Mimic.from_channel(self.bot, channel)
-                message = await mimic.send(wait=True, **send_kwargs)
+                message = await mimic.send(wait=True, report=True, **send_kwargs)
             except Exception as exc:
                 raise exc
             else:

@@ -118,7 +118,16 @@ class Mimic:
 
     async def search_owned(self) -> discord.Webhook | None:
         log.debug("Step 2. Searching for owned webhook in the channel %r", self.channel)
-        owned_webhooks = [wh for wh in await self.channel.webhooks() if wh.user == self.bot.user]
+        try:
+            channel_webhooks = await self.channel.webhooks()
+        except discord.Forbidden:
+            msg = (
+                'I do not have permission to "Manage Webhooks" in this server. '
+                "Please, grant me that permission so I can send cool messages using them."
+            )
+            raise errors.SomethingWentWrong(msg)
+
+        owned_webhooks = [wh for wh in channel_webhooks if wh.user == self.bot.user]
         if owned_webhooks:
             for wh in owned_webhooks[1:]:
                 log.debug("Deleting unnecessary webhook %r", wh)
@@ -146,38 +155,34 @@ class Mimic:
     async def create_webhook(self) -> discord.Webhook:
         channel = self.channel
         log.debug("Step 3. Creating a new webhook for channel %r", channel)
-        if channel.permissions_for(channel.guild.me).manage_webhooks:
-            try:
-                webhook = await channel.create_webhook(
-                    name=self.bot.user.name,  # f"{self.bot.user.name}'s Webhook",
-                    avatar=await self.bot.user.display_avatar.read(),
-                    reason=f"To enable extra functionality for {self.bot.user.display_name}",
-                )
-            except discord.HTTPException:
-                description = (
-                    "Hey, I'm sorry for writing like this but I need to create a webhook for this channel "
-                    "for my functionality, but some error occurred... "
-                    "Do you have 15 webhooks in here? Can you clear it up (15 is max value) :c"
-                )
-                await self.report(description)
-                raise
-
-            await self.insert_into_database(
-                id=webhook.id,
-                channel_id=self.channel.id,
-                guild_id=self.channel.guild.id,
-                url=webhook.url,
-            )
-            return webhook
-        else:
-            description = (
+        if not channel.permissions_for(channel.guild.me).manage_webhooks:
+            msg = (
                 "I dont have permission `manage_webhooks`. "
                 "Please, ask moderators to grant me it so I can send messages via webhooks."
             )
-            await self.report(description)
-
-            msg = f"No `manage_webhooks` permission for {self.channel!r}"
             raise errors.SomethingWentWrong(msg)
+
+        try:
+            webhook = await channel.create_webhook(
+                name=self.bot.user.name,  # f"{self.bot.user.name}'s Webhook",
+                avatar=await self.bot.user.display_avatar.read(),
+                reason=f"To enable extra functionality for {self.bot.user.display_name}",
+            )
+        except discord.HTTPException:
+            msg = (
+                "Hey, I'm sorry for writing like this but I need to create a webhook for this channel "
+                "for my functionality, but some error occurred... "
+                "Do you have 15 webhooks in here? Can you clear it up (15 is max value) :c"
+            )
+            raise errors.SomethingWentWrong(msg)
+
+        await self.insert_into_database(
+            id=webhook.id,
+            channel_id=self.channel.id,
+            guild_id=self.channel.guild.id,
+            url=webhook.url,
+        )
+        return webhook
 
     async def insert_into_database(self, *, id: int, channel_id: int, guild_id: int, url: str) -> None:
         query = """
@@ -199,6 +204,7 @@ class Mimic:
         embed: discord.Embed = MISSING,
         embeds: Sequence[discord.Embed] = MISSING,
         wait: Literal[False] = ...,
+        report: bool= ...,
     ) -> None:
         ...
 
@@ -214,6 +220,7 @@ class Mimic:
         embed: discord.Embed = MISSING,
         embeds: Sequence[discord.Embed] = MISSING,
         wait: Literal[True],
+        report: bool= ...,
     ) -> discord.WebhookMessage:
         ...
 
@@ -228,14 +235,57 @@ class Mimic:
         embed: discord.Embed = MISSING,
         embeds: Sequence[discord.Embed] = MISSING,
         wait: bool = False,
+        report: bool = False,
     ) -> discord.WebhookMessage | None:
+        """_summary_
+
+        Parameters
+        ----------
+        content
+            _description_, by default MISSING
+        username
+            _description_, by default MISSING
+        avatar_url
+            _description_, by default MISSING
+        file
+            _description_, by default MISSING
+        files
+            _description_, by default MISSING
+        embed
+            _description_, by default MISSING
+        embeds
+            _description_, by default MISSING
+        wait
+            _description_, by default False
+        report
+            Whether to report Exceptions occurred inside this function or simply raise the error.
+            Useful to set to True in `@aluloop` tasks so it sends a warning to the user.
+            Unnecessary otherwise because error handlers will correctly send it to the command user.
+
+        Returns
+        -------
+        discord.WebhookMessage | None
+            _description_
+
+        Raises
+        ------
+        errors.SomethingWentWrong
+            _description_
+        """
         coros = [
             self.search_database,  # Step 1. Trying to find a webhook in the database
             self.search_owned,  # Step 2. Trying to find an owned webhook in the channel
             self.create_webhook,  # Step 3. Creating a webhook ourselves
         ]
         for coro in coros:
-            webhook = await coro()
+            try:
+                webhook = await coro()
+            except Exception as exc:
+                if report:
+                    self.report(str(exc))
+                else:
+                    raise
+
             if webhook:
                 # the following "if wait" is a monstrous type-checker moment
                 # if you see this a few months later - check if
@@ -287,6 +337,18 @@ class Mimic:
 
         msg = "All 3 steps for webhook send stages failed."
         raise errors.SomethingWentWrong(msg)
+
+    async def get_or_create_webhook(self) -> discord.Webhook:
+        """Get or create webhook in the channel."""
+        coros = [
+            self.search_database,  # Step 1. Trying to find a webhook in the database
+            self.search_owned,  # Step 2. Trying to find an owned webhook in the channel
+            self.create_webhook,  # Step 3. Creating a webhook ourselves
+        ]
+        for coro in coros:
+            webhook = await coro()
+            if webhook:
+                return webhook
 
 
 class Mirror(Mimic):

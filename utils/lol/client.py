@@ -9,7 +9,7 @@ from pulsefire.ratelimiters import RiotAPIRateLimiter
 
 import config
 
-from .cache import ItemIcons, RuneIcons, SummonerSpellIcons
+from .storage import ItemIcons, RuneIcons, SummonerSpellIcons
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -45,6 +45,7 @@ class LeagueClient(RiotAPIClient):
         self.summoner_spell_icons = SummonerSpellIcons(bot)
 
     async def start(self) -> None:
+        """Start all sub-clients and sub-storages needed for my League Client."""
         # clients
         await self.__aenter__()
         await self.cdragon.__aenter__()

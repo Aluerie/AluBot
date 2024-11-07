@@ -7,7 +7,7 @@ import asyncpg
 import discord
 from discord import app_commands
 
-from utils import const, errors, formats
+from utils import const, errors, formats, mimics
 
 from . import FPCCog, views
 
@@ -355,23 +355,29 @@ class BaseSettings(FPCCog):
 
         if channel_id:
             channel = self.bot.get_channel(channel_id) or await self.bot.fetch_channel(channel_id)
-            if not isinstance(channel, discord.TextChannel):
-                # todo: erm not sure about this
-                channel = None
+            assert isinstance(channel, discord.TextChannel)  # view select prevents channel from being any other type
+            mimic = mimics.Mimic.from_channel(self.bot, channel)
+            webhook = await mimic.get_or_create_webhook()
         else:
             channel = None
+            webhook = None
 
-        if channel:
-            desc = f"{self.game_display_name} FPC Notifications Channel is currently to {channel.mention}."
-        else:
-            desc = f"{self.game_display_name} FPC Notifications Channel is currently not set."
-
-        embed = discord.Embed(
-            colour=self.colour,
-            title="FPC (Favourite Player+Character) Channel Setup",
-            description=desc,
-        ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
-        view = views.SetupChannel(self, author_id=interaction.user.id)
+        embed = (
+            discord.Embed(
+                colour=self.colour,
+                title="FPC (Favourite Player+Character) Channel Setup",
+                description=(
+                    "This embed shows the channel where the bot will send FPC notifications. "
+                    "You can choose a new channel, "
+                    "the bot will also create a webhook in that channel to send messages with.\n\n"
+                    "After choosing the channel, the bot will edit this message to showcase newly selected channel."
+                ),
+            )
+            .add_field(name=f"Channel {formats.tick(bool(channel))}", value=channel.mention if channel else "Not set")
+            .add_field(name=f"Webhook {formats.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set")
+            .set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
+        )
+        view = views.SetupChannel(self, author_id=interaction.user.id, embed=embed)
         message = await interaction.followup.send(embed=embed, view=view, wait=True)
         view.message = message
         self.setup_messages_cache[message.id] = view
@@ -389,7 +395,7 @@ class BaseSettings(FPCCog):
                 "I'm sorry! You cannot use this command without setting up "
                 f"{self.game_display_name} FPC (Favourite Player+Character) channel first. "
                 f"Please, use `/{self.prefix} setup channel` to assign it."
-            )
+            )  # TODO: command mention here
             raise errors.ErroneousUsage(msg)
 
     async def setup_misc(self, interaction: discord.Interaction[AluBot]) -> None:
@@ -647,18 +653,6 @@ class BaseSettings(FPCCog):
             msg = "Unknown error."
             raise errors.BadArgument(msg)
 
-    # async def get_character_tuple(self, character_name: str) -> tuple[int, str]:
-    #     try:
-    #         character_id = await self.characters.id_by_display_name(character_name)
-    #     except KeyError:
-    #         msg = (
-    #             f"{self.character_singular_word.capitalize()} {character_name} does not exist. "
-    #             "Please, double check everything."
-    #         )
-    #         raise errors.BadArgument(msg)
-    #     character_display_name = await self.characters.display_name_by_id(character_id)
-    #     return character_id, character_display_name
-
     async def hideout_character_add(self, interaction: discord.Interaction[AluBot], character: Character) -> None:
         """Base function for `/{game}-fpc {character} add` Hideout-only command."""
         await interaction.response.defer()
@@ -731,8 +725,9 @@ class BaseSettings(FPCCog):
         favourite_character_ids: list[int] = [
             character_id for (character_id,) in await self.bot.pool.fetch(query, guild_id)
         ]
+        favourite_characters = [await self.characters.by_id(i) for i in favourite_character_ids]
         favourite_character_names = (
-            "\n".join([(await self.characters.by_id(i)).display_name for i in favourite_character_ids]) or "Empty list"
+            "\n".join([f"{c.emote} {c.display_name}" for c in favourite_characters]) or "Empty list"
         )
         return discord.Embed(
             colour=self.colour,

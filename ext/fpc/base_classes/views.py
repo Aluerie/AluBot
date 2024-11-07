@@ -6,7 +6,7 @@ import discord
 from discord.ext import menus
 
 from bot import AluView
-from utils import const, errors, formats, pages
+from utils import const, errors, formats, mimics, pages
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -48,6 +48,10 @@ class SetupChannel(FPCView):
     * Dropdown menu to select a new channel for notifications.
     """
 
+    def __init__(self, cog: BaseSettings, *, author_id: int | None, embed: discord.Embed) -> None:
+        super().__init__(cog, author_id=author_id)
+        self.embed: discord.Embed = embed
+
     @discord.ui.select(
         cls=discord.ui.ChannelSelect,
         channel_types=[discord.ChannelType.text, discord.ChannelType.news],
@@ -60,7 +64,6 @@ class SetupChannel(FPCView):
         chosen_channel = select.values[0]  # doesn't have all data thus we need to resolve
         channel = chosen_channel.resolve() or await chosen_channel.fetch()
 
-        # probably not needed but who knows what type of channels Discord will make one day
         if not isinstance(channel, discord.TextChannel):
             msg = (
                 f"You can't select a channel of this type for {self.cog.game_display_name} FPC channel."
@@ -71,9 +74,19 @@ class SetupChannel(FPCView):
         if not channel.permissions_for(channel.guild.me).send_messages:
             msg = (
                 "I do not have permission to `send_messages` in that channel. "
-                "Please, select a channel where I can do that so I'm able to send notifications in future."
+                "Please, select a channel where I can do that so I'm able to send notifications."
             )
             raise errors.ErroneousUsage(msg)
+
+        if not channel.permissions_for(channel.guild.me).manage_webhooks:
+            msg = (
+                "I do not have permission to `manage_webhooks` in that channel. "
+                "Please, grant me that permission so I can send cool messages using them."
+            )
+            raise errors.ErroneousUsage(msg)
+
+        mimic = mimics.Mimic.from_channel(self.cog.bot, channel)
+        webhook = await mimic.get_or_create_webhook()
 
         query = f"""
             INSERT INTO {self.cog.prefix}_settings (guild_id, guild_name, channel_id)
@@ -83,11 +96,13 @@ class SetupChannel(FPCView):
         """
         await interaction.client.pool.execute(query, channel.guild.id, channel.guild.name, channel.id)
 
-        embed = discord.Embed(
-            colour=self.cog.colour,
-            description=f"From now on I will send {self.cog.game_display_name} FPC Notifications to {channel.mention}.",
+        self.embed.set_field_at(
+            0, name=f"Channel {formats.tick(bool(channel))}", value=channel.mention if channel else "Not set"
         )
-        await interaction.response.send_message(embed=embed)
+        self.embed.set_field_at(
+            1, name=f"Webhook {formats.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set"
+        )
+        await interaction.response.edit_message(embed=self.embed)
 
 
 class SetupMisc(FPCView):

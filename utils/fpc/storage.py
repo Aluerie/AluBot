@@ -206,6 +206,12 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
             msg = f"Guild id={guild_id} is `None`."
             raise errors.SomethingWentWrong(msg)
 
+        existing_emote = discord.utils.find(lambda e: e.name == emote_name, guild.emojis)
+        if existing_emote:
+            query = f"INSERT INTO {table} (id, emote) VALUES ($1, $2)"
+            await self.bot.pool.execute(query, character_id, str(existing_emote))
+            return str(existing_emote)
+
         new_emote = await guild.create_custom_emoji(
             name=emote_name,
             image=await self.bot.transposer.url_to_bytes(emote_source_url),

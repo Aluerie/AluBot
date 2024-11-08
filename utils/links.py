@@ -50,6 +50,7 @@ FIX_DICT: dict[str, str] = {
     "twitch.tv": "https://fxtwitch.seria.moe",
     "deviantart.com": "https://fixdeviantart.com",
     "tumblr.com": "https://tpmblr.com",
+    "pixiv.net": "https://phixiv.net",
 }
 # PS. in November 2024 I finally found out that some other people made the same bot/feature for Discord:
 # * https://betterdiscord.app/plugin/SocialMediaLinkConverter

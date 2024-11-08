@@ -56,3 +56,9 @@ CREATE TABLE IF NOT EXISTS dota_messages (
     hero_id: INT NOT NULL,
     player_name: TEXT --currently only used for logs so we don't double JOIN
 );
+
+
+CREATE TABLE IF NOT EXISTS dota_heroes_info (
+    id INT PRIMARY KEY,
+    emote TEXT
+);

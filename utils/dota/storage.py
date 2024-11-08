@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, TypedDict, override
+
+import discord
 
 from bot import AluBot
 
+from .. import const, formats
 from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 from . import constants
 
 if TYPE_CHECKING:
-    import discord
-
     from bot import AluBot
+
+    class GetHeroEmoteRow(TypedDict):
+        id: int
+        emote: str
 
 
 __all__ = (
@@ -92,6 +97,10 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
     async def fill_data(self) -> dict[int, Hero]:
         heroes = await self.bot.dota.stratz.get_heroes()
 
+        query = "SELECT id, emote FROM dota_heroes_info"
+        rows: list[GetHeroEmoteRow] = await self.bot.pool.fetch(query)
+        hero_emotes = {row["id"]: row["emote"] for row in rows}
+
         return {
             hero["id"]: Hero(
                 id=hero["id"],
@@ -100,7 +109,7 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
                 talent_ids=[talent["abilityId"] for talent in hero["talents"]],
                 facet_ids=[facet["facetId"] for facet in hero["facets"]],
                 # if I don't provide a ready-to-go emote -> assume the hero is new and thus give it a template emote
-                emote=constants.HERO_EMOTES.get(hero["id"]) or constants.NEW_HERO_EMOTE,
+                emote=hero_emotes.get(hero["id"]) or await self.create_hero_emote(hero["id"], hero["shortName"]),
             )
             for hero in heroes["data"]["constants"]["heroes"]
         }
@@ -131,6 +140,27 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
             )
         else:
             return await super().by_id(hero_id)
+
+    async def create_hero_emote(
+        self,
+        hero_id: int,
+        hero_short_name: str,
+    ) -> str:
+        """Create a new discord emote for a Dota 2 hero."""
+        try:
+            return await self.create_character_emote_helper(
+                character_id=hero_id,
+                table="dota_heroes_info",
+                emote_name=formats.convert_camel_case_to_PascalCase(hero_short_name),
+                emote_source_url=f"{CDN_REACT}/heroes/icons/{hero_short_name}.png",  # copy of `minimap_icon_url` property
+                guild_id=const.EmoteGuilds.DOTA[3],
+            )
+        except Exception as exc:
+            embed = discord.Embed(
+                description=f"Something went wrong when creating hero emote for `id={hero_id}, name={hero_short_name}`."
+            )
+            await self.bot.exc_manager.register_error(exc, embed=embed)
+            return constants.NEW_HERO_EMOTE
 
 
 class HeroTransformer(CharacterTransformer[Hero, PseudoHero]):

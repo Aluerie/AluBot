@@ -3,15 +3,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypedDict, override
 
+import discord
 from roleidentification import get_roles
 
+from .. import const
 from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 from . import constants
 
 if TYPE_CHECKING:
-    import discord
-
     from bot import AluBot
+
+    class GetChampionEmoteRow(TypedDict):
+        id: int
+        emote: str
 
 
 __all__ = (
@@ -67,13 +71,21 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
         * https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json
         """
         champion_summary = await self.bot.lol.cdragon.get_lol_v1_champion_summary()
+
+        query = "SELECT id, emote FROM dota_heroes_info"
+        rows: list[GetChampionEmoteRow] = await self.bot.pool.fetch(query)
+        champion_emotes = {row["id"]: row["emote"] for row in rows}
+
         data = {
             champion["id"]: Champion(
                 id=champion["id"],
                 display_name=champion["name"],
                 alias=champion["alias"],
                 icon_url=cdragon_asset_url(champion["squarePortraitPath"]),
-                emote=constants.CHAMPION_EMOTES.get(champion["id"]) or constants.NEW_CHAMPION_EMOTE,
+                emote=champion_emotes.get(champion["id"])
+                or await self.create_champion_emote(
+                    champion["id"], champion["alias"], cdragon_asset_url(champion["squarePortraitPath"])
+                ),
             )
             for champion in champion_summary
         }
@@ -93,6 +105,26 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
             # taken from `get_lol_v1_champion_summary` response ^ for champion with id=-1
             emote=constants.NEW_CHAMPION_EMOTE,
         )
+
+    async def create_champion_emote(self, id: int, champion_alias: str, champion_icon_url: str) -> str:
+        """Create a new discord emote for a League of Legends champion."""
+        try:
+            return await self.create_character_emote_helper(
+                character_id=id,
+                table="dota_heroes_info",
+                emote_name=champion_alias,
+                emote_source_url=champion_icon_url,  # copy of `minimap_icon_url` property
+                guild_id=const.EmoteGuilds.LOL[3],
+            )
+        except Exception as exc:
+            embed = discord.Embed(
+                description=(
+                    "Something went wrong when creating champion emote "
+                    f"for `id={id}, alias={champion_alias}`."
+                )
+            )
+            await self.bot.exc_manager.register_error(exc, embed=embed)
+            return constants.NEW_CHAMPION_EMOTE
 
 
 class ChampionTransformer(CharacterTransformer[Champion, PseudoChampion]):

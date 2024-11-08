@@ -79,11 +79,7 @@ class FPCDevTools(FPCCog):
     async def hideout_devfpc_dota_emote(
         self, interaction: discord.Interaction[AluBot], hero: app_commands.Transform[Hero, HeroTransformer]
     ) -> None:
-        """Create a new discord emote for a Dota 2 hero.
 
-        Useful when a new Dota 2 hero gets added to the game, so we can just use this command,
-        copy-paste the answer to `utils.const` and be happy.
-        """
         await self.create_emote_helper(
             interaction,
             hero,
@@ -97,11 +93,7 @@ class FPCDevTools(FPCCog):
     async def hideout_devfpc_lol_emote(
         self, interaction: discord.Interaction[AluBot], champion: app_commands.Transform[Champion, ChampionTransformer]
     ) -> None:
-        """Create a new discord emote for a League of Legends champion.
 
-        Useful when a new LoL champion gets added to the game, so we can just use this command,
-        copy-paste the answer to `utils.const` and be happy.
-        """
         await self.create_emote_helper(
             interaction,
             champion,

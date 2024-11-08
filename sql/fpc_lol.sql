@@ -59,3 +59,8 @@ CREATE TABLE IF NOT EXISTS lol_messages (
     platform TEXT NOT NULL,
     champion_id INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS lol_champions_info (
+    id INT PRIMARY KEY,
+    emote TEXT
+);

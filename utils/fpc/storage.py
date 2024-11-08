@@ -13,7 +13,7 @@ from discord import app_commands
 
 from bot import aluloop
 
-from .. import const, fuzzy
+from .. import const, errors, fuzzy
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -189,6 +189,46 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
     async def all(self) -> list[VT | PseudoVT]:
         data = await self.get_cached_data()
         return list(data.values())
+
+    async def create_character_emote_helper(
+        self,
+        *,
+        character_id: int,
+        table: str,
+        emote_name: str,
+        emote_source_url: str,
+        guild_id: int,
+    ) -> str:
+        """Helper function to create a new discord emote for a game character and remember it in the database."""
+
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
+            msg = f"Guild id={guild_id} is `None`."
+            raise errors.SomethingWentWrong(msg)
+
+        new_emote = await guild.create_custom_emoji(
+            name=emote_name,
+            image=await self.bot.transposer.url_to_bytes(emote_source_url),
+        )
+
+        # str(emote) is full emote representation, i.e. "<:AntiMage:1202019770787176529>"
+        query = f"INSERT INTO {table} (id, emote) VALUES ($1, $2)"
+        await self.bot.pool.execute(query, character_id, str(new_emote))
+
+        embed = (
+            discord.Embed(
+                colour=const.Colour.blueviolet,
+                title=f"New emote was added to `{table}` table.",
+                description=f'```py\n{new_emote.name} = "{new_emote}"```',
+            )
+            .add_field(
+                name=emote_name,
+                value=str(new_emote),
+            )
+            .set_footer(text=f"{character_id=}")
+        )
+        await self.bot.hideout.global_logs.send(embed=embed)
+        return str(new_emote)
 
 
 class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]):

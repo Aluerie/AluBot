@@ -72,7 +72,7 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
         """
         champion_summary = await self.bot.lol.cdragon.get_lol_v1_champion_summary()
 
-        query = "SELECT id, emote FROM dota_heroes_info"
+        query = "SELECT id, emote FROM lol_champions_info"
         rows: list[GetChampionEmoteRow] = await self.bot.pool.fetch(query)
         champion_emotes = {row["id"]: row["emote"] for row in rows}
 

@@ -227,6 +227,7 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
                 title=f"New emote was added to `{table}` table.",
                 description=f'```py\n{new_emote.name} = "{new_emote}"```',
             )
+            .set_thumbnail(url=emote_source_url)
             .add_field(
                 name=emote_name,
                 value=str(new_emote),

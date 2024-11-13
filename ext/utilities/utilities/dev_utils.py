@@ -25,21 +25,14 @@ class DevUtilities(AluCog):
 
         """
 
-        def to_string(c: str) -> tuple[str, str]:
+        def to_string(c: str) -> str:
             digit = f"{ord(c):x}"
             name = unicodedata.name(c, None)
-            name = f"\\N{{{name}}}" if name else "Name not found."
-            field_value = f"[`\\U{digit:>08}`](https://www.fileformat.info/info/unicode/char/{digit}) `{c}` {c}"
-            return name, field_value
+            python_name = f"\\N{{{name}}}" if name else "Name not found."
+            u_name = f"[`\\U{digit:>08}`](https://www.fileformat.info/info/unicode/char/{digit})"
+            return f"{u_name}: `{python_name}` \N{EM DASH} `{c}` {c}"
 
-        names: list[str] = []
-        embed = discord.Embed(colour=discord.Colour.blurple())
-        for c in characters[:10]:
-            name, field_value = to_string(c)
-            embed.add_field(name=f"\N{BLACK CIRCLE} `{name}`", value=field_value, inline=False)
-            names.append(name)
+        names: list[str] = [to_string(c) for c in characters[:10]]
         if len(characters) > 10:
-            embed.colour = const.Colour.maroon
-            embed.set_footer(text="Output was too long. Displaying only first 10 chars.")
-        content = "```js\n" + "".join(names) + "```"  # js codeblock highlights {TEXT HERE} in teal :D
-        await ctx.send(content=content, embed=embed)
+            names.append("Output was too long. Displaying only first 10 chars.")
+        await ctx.send(content="\n".join(names))

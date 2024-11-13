@@ -9,7 +9,7 @@ from .. import const
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from .. import AluContext
+    from bot import AluContext
 
 T = TypeVar("T")
 

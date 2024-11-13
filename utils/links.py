@@ -51,6 +51,7 @@ FIX_DICT: dict[str, str] = {
     "deviantart.com": "https://fixdeviantart.com",
     "tumblr.com": "https://tpmblr.com",
     "pixiv.net": "https://phixiv.net",
+    "bsky.app": "https://bskyx.app",
 }
 # PS. in November 2024 I finally found out that some other people made the same bot/feature for Discord:
 # * https://betterdiscord.app/plugin/SocialMediaLinkConverter
@@ -71,11 +72,6 @@ COMPILED_REGEX = re.compile(
 
 def fix_social_links(text: str, omit_rest: bool = False) -> str | None:
     """Fix metadata embeds for social links with better embeds.
-
-    Currently supported:
-    * Twitter       - https://fxtwitter.com/
-    * Instagram     - https://ddinstagram.com
-    * Tiktok        - https://tnktok.com
 
     Parameters
     ----------

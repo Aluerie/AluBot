@@ -228,11 +228,8 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
                 description=f'```py\n{new_emote.name} = "{new_emote}"```',
             )
             .set_thumbnail(url=emote_source_url)
-            .add_field(
-                name=emote_name,
-                value=str(new_emote),
-            )
-            .set_footer(text=f"{character_id=}")
+            .add_field(name="Emote", value=str(new_emote))
+            .add_field(name="ID", value=str(character_id))
         )
         await self.bot.hideout.global_logs.send(embed=embed)
         return str(new_emote)

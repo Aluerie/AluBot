@@ -38,7 +38,6 @@ reportUnknownArgumentType = "none"
 
 # there is a lot of **Incompatible** overriding in discord.py Bot development
 # like `convert(ctx: AluContext, argument: str)` in converters.
-# it's easier to none this out than "# type: ignore" hundreds of times x_x
 reportIncompatibleVariableOverride = "none"
 reportIncompatibleMethodOverride = "none"
 

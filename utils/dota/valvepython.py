@@ -128,7 +128,7 @@ class DotaClient(Dota2Client_):
     async def top_live_matches(self) -> list[LiveMatch]:
         # log.debug("Steam is connected: %s", self.steam.connected)
         if not self.steam.connected:
-            await self.bot.spam.send("Dota2Client: Steam is not connected.")
+            await self.bot.spam_webhook.send("Dota2Client: Steam is not connected.")
             log.warning("Dota2Client: Steam is not connected.")
             await asyncio.sleep(3.3)
             await self.login()

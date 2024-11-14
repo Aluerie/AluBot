@@ -443,9 +443,19 @@ class AluBot(commands.Bot, AluBotHelper):
             raise errors.PlaceholderRaiseError(msg)
 
     @discord.utils.cached_property
-    def spam(self) -> discord.Webhook:
+    def spam_webhook(self) -> discord.Webhook:
         """A shortcut to spam webhook."""
         return self.webhook_from_url(config.SPAM_WEBHOOK)
+
+    @discord.utils.cached_property
+    def error_webhook(self) -> discord.Webhook:
+        """A shortcut to error webhook."""
+        return self.webhook_from_url(config.ERROR_WEBHOOK)
+
+    @property
+    def error_ping(self) -> str:
+        """Error Role ping used to notify Irene about some errors."""
+        return config.ERROR_PING
 
     @override
     async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:

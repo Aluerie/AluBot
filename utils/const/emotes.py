@@ -5,15 +5,13 @@ These emotes are hosted in my emote servers (why not on discord dev portal - exp
 
 Notes
 -----
-* Emotes for game characters are put into their respective folders:
-    1. Dota 2 heroes                    - utils.dota.constants
-    2. League of Legends champions      - utils.lol.constants
 * Unfortunately, as of today (13/October/2024) uploading emotes to the bot page on discord developer portal
     has some severe disadvantages compared to having many emote servers:
     1. Webhooks cannot utilize them (even with @everybody having "Use external emojis" permission) - just sends :emote:
     2. Then we have to upload same emote twice - once to AluBot page, once to YenBot page
     3. And we have to list the emotes twice and have some kind of global namespace variable for it - kinda bad.
         (as in emotes = YENBOT_EMOTES if TEST_BOT_TOKEN else ALUBOT_EMOTES) where TEST_BOT_TOKEN is a global var.
+    # TODO: after 13/October/2025 - check if now it's possible to use bot emotes from dev portal in webhooks.
 """
 
 from enum import StrEnum

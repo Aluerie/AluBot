@@ -5,9 +5,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # help with: http://chairnerd.seatgeek.com/fuzzywuzzy-fuzzy-string-matching-in-python/
 
-# TODO: REPLACE THIS WITH https://github.com/seatgeek/thefuzz
-# or not because it's a bit slower ?!
-
 from __future__ import annotations
 
 import heapq
@@ -149,8 +146,8 @@ def extract(
 ) -> list[tuple[str, int]] | list[tuple[str, int, T]]:
     it = _extraction_generator(query, choices, scorer, score_cutoff)
     if limit is not None:
-        return heapq.nlargest(limit, it, key=lambda t: t[1])  # type: ignore
-    return sorted(it, key=lambda t: t[1], reverse=True)  # type: ignore
+        return heapq.nlargest(limit, it, key=lambda t: t[1])  # pyright: ignore[reportReturnType]
+    return sorted(it, key=lambda t: t[1], reverse=True)  # pyright: ignore[reportReturnType]
 
 
 @overload
@@ -234,7 +231,7 @@ def extract_or_exact(
 
     # check if the top one is exact or more than 30% more correct than the top
     if top == 100 or top > (second + 30):
-        return [matches[0]]  # type: ignore
+        return [matches[0]]  # pyright: ignore[reportReturnType]
 
     return matches
 

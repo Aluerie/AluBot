@@ -169,7 +169,7 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
             title=f"Unknown {self.__class__.__name__} appeared!",
             description=f"```py\nid={id}\n```",
         ).set_footer(text=f"Package: {__package__}")
-        await self.bot.spam.send(embed=embed)
+        await self.bot.spam_webhook.send(embed=embed)
 
     @staticmethod
     @abc.abstractmethod

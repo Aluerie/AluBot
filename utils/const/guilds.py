@@ -168,6 +168,7 @@ class Role(RoleEnum):
     event = 1090274008680902667
     jailed_bots = 1090428532162822234
     error_ping = 1116171071528374394
+    test_error_ping = 1306631362870120600
 
 
 CATEGORY_ROLES = [
@@ -467,4 +468,9 @@ class HideoutGuild(SavedGuild):
     @property
     def error_ping(self) -> discord.Role:
         """Role to ping developers about bot errors."""
+        return self.get_role(Role.error_ping)
+
+    @property
+    def test_error_ping(self) -> discord.Role:
+        """Role to ping developers about test bot errors."""
         return self.get_role(Role.error_ping)

@@ -252,7 +252,7 @@ class AluAppCommandTree(app_commands.CommandTree):
                 colour=const.Colour.maroon,
                 description=warn_developers_desc,
             ).set_author(name=error.__class__.__name__)
-            await interaction.client.hideout.spam.send(const.Role.error_ping.mention, embed=warn_developers_embed)
+            await interaction.client.hideout.spam.send(interaction.client.error_ping, embed=warn_developers_embed)
 
         response_embed = helpers.error_handler_response_embed(error, unexpected_error, desc, mention)
         if not interaction.response.is_done():

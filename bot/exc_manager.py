@@ -12,8 +12,7 @@ from typing import TYPE_CHECKING, Any, Self, override
 
 import discord
 
-import config
-from utils import const, errors
+from utils import errors
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -56,7 +55,6 @@ class ExceptionManager:
         "errors_cache",
         "_lock",
         "_most_recent",
-        "error_webhook",
     )
 
     def __init__(
@@ -70,8 +68,6 @@ class ExceptionManager:
 
         self._lock: asyncio.Lock = asyncio.Lock()
         self._most_recent: datetime.datetime | None = None
-
-        self.error_webhook: discord.Webhook = bot.webhook_from_url(config.ERROR_HANDLER_WEBHOOK)
 
     def _yield_code_chunks(self, iterable: str, *, chunks_size: int = 2000) -> Generator[str, None, None]:
         codeblocks: str = "```py\n{}```"
@@ -145,13 +141,13 @@ class ExceptionManager:
 
         # hmm, this is honestly a bit too many sends for 5 seconds of rate limit :thinking:
         if mention:
-            await self.error_webhook.send(const.Role.error_ping.mention)
+            await self.bot.error_webhook.send(self.bot.error_ping)
 
         for chunk in code_chunks:
-            await self.error_webhook.send(chunk)
+            await self.bot.error_webhook.send(chunk)
 
         if mention:
-            await self.error_webhook.send(embed=embed)
+            await self.bot.error_webhook.send(embed=embed)
 
 
 class HandleHTTPException(AbstractAsyncContextManager[Any]):

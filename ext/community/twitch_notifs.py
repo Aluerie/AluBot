@@ -9,21 +9,20 @@ from typing import TYPE_CHECKING, NamedTuple, override
 import discord
 from discord.ext import commands
 
-import config
 from bot import aluloop
-from utils import const, helpers
+from utils import const
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from twitchio.ext import eventsub
+    import twitchio
 
     from bot import AluBot
 
 __all__ = ("TwitchCog",)
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class NotificationType(IntEnum):
@@ -62,18 +61,8 @@ class TwitchCog(CommunityCog):
     async def cog_load(self) -> None:
         await self.bot.initialize_twitch()
 
-        # Twitch EventSub
-        # these are supposed to be broadcaster/user access token for streamers we sub to
-        # since we are subbing to event of myself only then my own access token is fine
-        broadcaster, token = const.Twitch.MY_USER_ID, config.TTG_IRENE_ACCESS_TOKEN
-        self.last_notification_message: discord.Message | None = None
-
-        await self.bot.twitch.eventsub.subscribe_channel_stream_start(broadcaster, token)
-        await self.bot.twitch.eventsub.subscribe_channel_stream_end(broadcaster, token)
-        await self.bot.twitch.eventsub.subscribe_channel_points_redeemed(broadcaster, token)
-
-    @commands.Cog.listener("on_twitchio_channel_points_redeem")
-    async def twitch_tv_redeem_notifications(self, event: eventsub.CustomRewardRedemptionAddUpdateData) -> None:
+    @commands.Cog.listener("on_twitchio_custom_redemption_add")
+    async def twitch_tv_redeem_notifications(self, event: twitchio.ChannelPointsRedemptionAdd) -> None:
         """Send a notification for channel points redeems at @Irene_Adler__ into my person #logger channel.
 
         This is used for testing twitchio eventsub.
@@ -82,13 +71,14 @@ class TwitchCog(CommunityCog):
             colour=0x9146FF,
             description=f"`{event.user.name}` redeemed `{event.reward.title}` for {event.reward.cost} channel points",
         )
-        await self.hideout.logger.send(embed=embed)
+        await self.hideout.alubot_logs.send(embed=embed)
 
-    @commands.Cog.listener("on_twitchio_stream_start")
-    async def twitch_tv_live_notifications(self, _: eventsub.StreamOnlineData) -> None:
+    @commands.Cog.listener("on_twitchio_stream_online")
+    async def twitch_tv_live_notifications(self, _: twitchio.StreamOnline) -> None:
         """Receive notifications for my stream via eventsub."""
         record = NotificationRecord(created_at=datetime.datetime.now(datetime.UTC), type=NotificationType.eventsub)
         self._logging_queue.put_nowait(record)
+        await self.hideout.spam.send("TEST TEST TEST IT'S WORKING DELETE THIS AFTER WE CONFIRM")
 
     @commands.Cog.listener(name="on_presence_update")
     async def community_twitch_tv_management(self, before: discord.Member, after: discord.Member) -> None:
@@ -98,52 +88,51 @@ class TwitchCog(CommunityCog):
         * Grant people who are streaming on twitch.tv role @LiveStreamer.
         * Gives backup for Aluerie's stream notifications (in case eventsub dies because I'm bad)
         """
-        async with helpers.measure_time("Presence"):
-            if after.guild.id != const.Guild.community:
-                # not community
-                return
+        if after.guild.id != const.Guild.community:
+            # not community
+            return
 
-            if before.bot or before.activities == after.activities:
-                return
+        if before.bot or before.activities == after.activities:
+            return
 
-            before_set = {activity.type for activity in before.activities}
-            after_set = {activity.type for activity in after.activities}
-            if after_set == before_set:
-                # sets are the same, meaning something small changed, i.e. activity property = skip
-                return
+        before_set = {activity.type for activity in before.activities}
+        after_set = {activity.type for activity in after.activities}
+        if after_set == before_set:
+            # sets are the same, meaning something small changed, i.e. activity property = skip
+            return
 
-            log.debug(
-                "%s's presence has been updated from %s to %s",
-                after.display_name,
-                [item.name for item in before_set],
-                [item.name for item in after_set],
-            )
+        log.debug(
+            "%s's presence has been updated from %s to %s",
+            after.display_name,
+            [item.name for item in before_set],
+            [item.name for item in after_set],
+        )
 
-            streaming_type = discord.ActivityType.streaming
+        streaming_type = discord.ActivityType.streaming
 
-            if streaming_type in after_set and streaming_type not in before_set:
-                live_streaming_role = self.community.live_stream_role
-                if live_streaming_role not in after.roles:
-                    # somebody started streaming
-                    log.debug("Adding %s role to %s", live_streaming_role.name, after.display_name)
-                    await after.add_roles(live_streaming_role)
+        if streaming_type in after_set and streaming_type not in before_set:
+            live_streaming_role = self.community.live_stream_role
+            if live_streaming_role not in after.roles:
+                # somebody started streaming
+                log.debug("Adding %s role to %s", live_streaming_role.name, after.display_name)
+                await after.add_roles(live_streaming_role)
 
-                if after.id == const.User.aluerie:
-                    # back up for my own notifications
-                    now = datetime.datetime.now(datetime.UTC)
-                    record = NotificationRecord(created_at=now, type=NotificationType.presence)
-                    self._logging_queue.put_nowait(record)
+            if after.id == const.User.aluerie:
+                # back up for my own notifications
+                now = datetime.datetime.now(datetime.UTC)
+                record = NotificationRecord(created_at=now, type=NotificationType.presence)
+                self._logging_queue.put_nowait(record)
 
-            elif streaming_type in before_set and streaming_type not in after_set:
-                live_streaming_role = self.community.live_stream_role
-                if live_streaming_role in after.roles:
-                    # somebody ended streaming
-                    log.debug("Removing %s role from %s", live_streaming_role.name, after.display_name)
-                    await before.remove_roles(live_streaming_role)
-            else:
-                log.debug("No Changes")
-                # TODO: we need to add the voice chat thing where it checks/sets up things on restart bot
-                # like get all folks with streaming status and clear the role
+        elif streaming_type in before_set and streaming_type not in after_set:
+            live_streaming_role = self.community.live_stream_role
+            if live_streaming_role in after.roles:
+                # somebody ended streaming
+                log.debug("Removing %s role from %s", live_streaming_role.name, after.display_name)
+                await before.remove_roles(live_streaming_role)
+        else:
+            log.debug("No Changes")
+            # TODO: we need to add the voice chat thing where it checks/sets up things on restart bot
+            # like get all folks with streaming status and clear the role
 
     async def send_twitch_tv_notification(self) -> None:
         """Finally, send the notification.
@@ -161,19 +150,17 @@ class TwitchCog(CommunityCog):
             self.edit_offline_screen.cancel()
             return
 
-        twitch_id = const.Twitch.MY_USER_ID
-        user = next(iter(await self.bot.twitch.fetch_users(ids=[twitch_id])))
-        # I call "fetch_channel" over "fetch_stream" because sometimes it gives Offline (no streams) even with eventsub
-        channel_info = await self.bot.twitch.fetch_channel(const.Twitch.MY_USERNAME)
-        game = next(iter(await self.bot.twitch.fetch_games(names=[channel_info.game_name])), None)
+        irene = await self.bot.twitch.irene.user()
+        channel_info = await irene.fetch_channel_info()
+        game = await channel_info.fetch_game()
 
-        stream_url = f"https://www.twitch.tv/{user.name}"
-        current_vod = next(iter(await self.bot.twitch.fetch_videos(user_id=user.id, period="day")), None)
+        stream_url = f"https://twitch.tv/{irene.name}"
+        current_vod = next(iter(await self.bot.twitch.fetch_videos(user_id=irene.id, period="day")), None)
         current_vod_link = f"/[VOD]({current_vod.url})" if current_vod else ""
 
         ### send notification
 
-        content = f"{self.community.stream_lover_role.mention} and chat, **`@{user.display_name}`** just went live!"
+        content = f"{self.community.stream_lover_role.mention} and chat, **`@{irene.display_name}`** just went live!"
         embed = (
             discord.Embed(
                 colour=0x9146FF,
@@ -182,14 +169,14 @@ class TwitchCog(CommunityCog):
                 description=(f"Playing {channel_info.game_name}\n/[Watch Stream]({stream_url}){current_vod_link}"),
             )
             .set_author(
-                name=f"{user.display_name} just went live on Twitch!",
-                icon_url=user.profile_image,
+                name=f"{irene.display_name} just went live on Twitch!",
+                icon_url=irene.profile_image,
                 url=stream_url,
             )
-            .set_thumbnail(url=game.art_url(285, 380) if game else user.profile_image)
+            .set_thumbnail(url=game.box_art if game else irene.profile_image)
             .set_image(
                 url=(
-                    f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{user.display_name}-1280x720.jpg"
+                    f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{irene.display_name}-1280x720.jpg"
                     "?format=webp&width=720&height=405"
                 )
             )
@@ -219,8 +206,8 @@ class TwitchCog(CommunityCog):
             await self.community.logs.send(embed=embed)
             await self.send_twitch_tv_notification()
 
-    @commands.Cog.listener("on_twitchio_stream_end")
-    async def twitch_tv_offline_edit_notification(self, _: eventsub.StreamOfflineData) -> None:
+    @commands.Cog.listener("on_twitchio_stream_offline")
+    async def twitch_tv_offline_edit_notification(self, _: twitchio.StreamOffline) -> None:
         """Starts the task to edit the notification message."""
         await self.bot.pool.execute("UPDATE bot_vars SET twitch_last_offline = $1", datetime.datetime.now(datetime.UTC))
         self.edit_offline_screen.start()

@@ -49,7 +49,7 @@ class BaseMatchToSend(abc.ABC):
         """Insert the match to messages table so we can edit it later."""
 
     @abc.abstractmethod
-    async def recipient_kwargs(self) -> RecipientKwargs:
+    async def webhook_send_kwargs(self) -> RecipientKwargs:
         """Get embed and file."""
         # image = await self.notification_image()
 

@@ -139,7 +139,7 @@ class MatchToSend(BaseMatchToSend):
         return await asyncio.to_thread(build_notification_image)
 
     @override
-    async def recipient_kwargs(self) -> RecipientKwargs:
+    async def webhook_send_kwargs(self) -> RecipientKwargs:
         streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
 
         notification_image = await self.notification_image(streamer.preview_url, streamer.display_name)

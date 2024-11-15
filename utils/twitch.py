@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, TypedDict, override
 
 import discord
 import twitchio
-from twitchio.ext import eventsub
+from twitchio import eventsub
 
 import config
 
@@ -14,53 +14,154 @@ from . import const, formats
 if TYPE_CHECKING:
     from bot import AluBot
 
+    class LoadTokensQueryRow(TypedDict):
+        user_id: str
+        token: str
+        refresh: str
+
+
+__all__ = ("AluTwitchClient",)
 
 log = logging.getLogger(__name__)
 
 
 class AluTwitchClient(twitchio.Client):
     def __init__(self, bot: AluBot) -> None:
-        super().__init__(token=config.TTG_ACCESS_TOKEN)
-
+        super().__init__(
+            client_id=config.TTV_DEV_CLIENT_ID,
+            client_secret=config.TTV_DEV_CLIENT_SECRET,
+            bot_id=const.TwitchID.Bot,
+        )
         self._bot: AluBot = bot
-        self.eventsub: eventsub.EventSubWSClient = eventsub.EventSubWSClient(self)
+
+    def print_bot_oauth(self) -> None:
+        scopes = "%20".join(
+            [
+                "user:read:chat",
+                "user:write:chat",
+                "user:bot",
+            ]
+        )
+        link = f"http://localhost:4343/oauth?scopes={scopes}&force_verify=true"
+        print(f"🤖🤖🤖 BOT OATH LINK: 🤖🤖🤖\n{link}")  # noqa: T201
+
+    def print_broadcaster_oauth(self) -> None:
+        scopes = "%20".join(
+            [
+                "channel:bot",
+                "channel:read:redemptions",
+            ]
+        )
+        link = f"http://localhost:4343/oauth?scopes={scopes}&force_verify=true"
+        print(f"🎬🎬🎬 BROADCASTER OATH LINK: 🎬🎬🎬\n{link}")  # noqa: T201
+
+    @override
+    async def setup_hook(self) -> None:
+        # Twitchio tokens magic
+        # Uncomment the following three lines and run the bot when creating tokens (otherwise they should be commented)
+        # This will make the bot update the database with new tokens.
+        # self.print_bot_oauth()
+        # self.print_broadcaster_oauth()
+        # return
+        # await self.add_component(AluComponent(self))
+
+        broadcaster = const.TwitchID.Me
+        # ✅ Channel Points Redeem                 channel:read:redemptions or channel:manage:redemptions
+        sub = eventsub.ChannelPointsRedeemAddSubscription(broadcaster_user_id=broadcaster)
+        await self.subscribe_websocket(payload=sub, token_for=broadcaster, as_bot=False)
+        # Stream went offline                   No authorization required
+        sub = eventsub.StreamOfflineSubscription(broadcaster_user_id=broadcaster)
+        await self.subscribe_websocket(payload=sub, token_for=broadcaster, as_bot=False)
+        # Stream went live                      No authorization required
+        sub = eventsub.StreamOnlineSubscription(broadcaster_user_id=broadcaster)
+        await self.subscribe_websocket(payload=sub, token_for=broadcaster, as_bot=False)
+
+    @override
+    async def add_token(self, token: str, refresh: str) -> twitchio.authentication.ValidateTokenPayload:
+        # Make sure to call super() as it will add the tokens internally and return us some data...
+        resp: twitchio.authentication.ValidateTokenPayload = await super().add_token(token, refresh)
+
+        # Store our tokens in a simple SQLite Database when they are authorized...
+        query = """
+            INSERT INTO alubot_ttv_tokens (user_id, token, refresh)
+            VALUES ($1, $2, $3)
+            ON CONFLICT(user_id)
+            DO UPDATE SET
+                token = excluded.token,
+                refresh = excluded.refresh;
+        """
+        await self._bot.pool.execute(query, resp.user_id, token, refresh)
+        log.info("Added token to the database for user: %s", resp.user_id)
+        return resp
+
+    @override
+    async def load_tokens(self, path: str | None = None) -> None:
+        # We don't need to call this manually, it is called in .login() from .start() internally...
+
+        rows: list[LoadTokensQueryRow] = await self._bot.pool.fetch("""SELECT * from alubot_ttv_tokens""")
+        for row in rows:
+            await self.add_token(row["token"], row["refresh"])
+
+    # @override
+    async def event_ready(self) -> None:
+        log.info("%s is ready as bot_id = %s", self.__class__.__name__, self.bot_id)
 
     # EVENT SUB
 
-    async def event_eventsub_notification(self, event: eventsub.NotificationEvent) -> None:
-        match_lookup: dict[Any, str] = {
-            eventsub.StreamOnlineData: "stream_start",
-            eventsub.StreamOfflineData: "stream_end",
-            eventsub.CustomRewardRedemptionAddUpdateData: "channel_points_redeem",  # mostly for testing
-        }
-        try:
-            event_name = match_lookup[type(event.data)]
-        except KeyError:
-            # well, we don't handle said events
-            return
+    async def event_custom_redemption_add(self, event: twitchio.ChannelPointsRedemptionAdd) -> None:
+        self._bot.dispatch("twitchio_custom_redemption_add", event)
 
-        self._bot.dispatch(f"twitchio_{event_name}", event.data)
+        if event.user.id == const.TwitchID.Me and event.reward.cost < 4:
+            # < 4 is a weird way to exclude my "Text-To-Speech" redemption.
+            # channel = self.get_channel(payload.broadcaster)
+            await event.broadcaster.send_message(
+                sender=const.TwitchID.Bot,
+                message="Thanks, I think bot is working PepoG",
+            )
+
+    async def event_stream_offline(self, offline: twitchio.StreamOffline) -> None:
+        self._bot.dispatch("twitchio_stream_offline", offline)
+
+    async def event_stream_online(self, online: twitchio.StreamOnline) -> None:
+        self._bot.dispatch("twitchio_stream_online", online)
 
     # OVERRIDE
 
     @override
-    async def event_error(self, error: Exception, data: str | None = None) -> None:
-        embed = discord.Embed(
-            colour=const.Colour.twitch,
-            title="Twitch Client Error",
-            description=data[2048:] if data else "",
-        ).set_footer(text="TwitchClient.event_error", icon_url=const.Logo.Twitch)
-        await self._bot.exc_manager.register_error(error, embed)
+    async def event_error(self, payload: twitchio.EventErrorPayload) -> None:
+        embed = (
+            discord.Embed(
+                colour=const.Colour.twitch,
+                title=f"{self.__class__.__name__} Error",
+            )
+            .add_field(name="Exception", value=f"`{payload.error.__class__.__name__}`")
+            .set_footer(
+                text=f"{self.__class__.__name__}.event_error: `{payload.listener.__qualname__}`",
+                icon_url=const.Logo.Twitch,
+            )
+        )
+        await self._bot.exc_manager.register_error(payload.error, embed=embed)
 
-    # UTILITIES
+    @property
+    def irene(self) -> twitchio.PartialUser:
+        """Get Irene's channel from the cache."""
+        return self.create_partialuser(const.TwitchID.Me)
 
     async def fetch_streamer(self, twitch_id: int) -> Streamer:
-        user = next(iter(await self.fetch_users(ids=[twitch_id])))
+        user = await self.create_partialuser(twitch_id).user()
         stream = next(iter(await self.fetch_streams(user_ids=[twitch_id])), None)  # None if offline
         return Streamer(self, user, stream)
 
-    # todo: we probably want `fetch_streamers` method so we dont waste api calls, but fml - we fetch just one streamer
-    # in our models
+
+# class AluComponent(commands.Component):
+#     # need eventsub.ChatMessageSubscription
+#     # @twitchio_commands.command()
+#     # async def hi(self, ctx: twitchio_commands.Context) -> None:
+#     #     """Simple command that says hello!"""
+#     #     await ctx.reply("hello")
+
+#     def __init__(self, bot: Bot) -> None:
+#         self.bot = bot
 
 
 class Streamer:
@@ -100,9 +201,9 @@ class Streamer:
     def __init__(self, _twitch: AluTwitchClient, user: twitchio.User, stream: twitchio.Stream | None) -> None:
         self._twitch: AluTwitchClient = _twitch
 
-        self.id: int = user.id
+        self.id: str = user.id
         self.display_name: str = user.display_name
-        self.avatar_url: str = user.profile_image
+        self.avatar_url: str = user.profile_image.url
         self.url: str = f"https://www.twitch.tv/{user.name}"
 
         if stream:
@@ -110,15 +211,19 @@ class Streamer:
             self.game = stream.game_name
             self.title = stream.title
             # example: https://static-cdn.jtvnw.net/previews-ttv/live_user_iannihilate-640x360.jpg
-            self.preview_url = stream.thumbnail_url.replace("{width}", "640").replace("{height}", "360")
+            thumbnail = stream.thumbnail
+            thumbnail.set_dimensions(640, 360)
+            self.preview_url = thumbnail.url
         else:
             self.live = False
             self.game = "Offline"
             self.title = "Offline"
-            if offline_image := user.offline_image:
+            offline_image = user.offline_image
+            offline_image.set_dimensions(640, 360)
+            if offline_image:
                 # example for quinn:
                 # https://static-cdn.jtvnw.net/jtv_user_pictures/fdc9e3a8-b005-4719-9ca2-1a2e0e77ff5b-channel_offline_image-640x360.png
-                self.preview_url = f'{"-".join(offline_image.split("-")[:-1])}-640x360.{offline_image.split(".")[-1]}'
+                self.preview_url = offline_image.url
             else:
                 # same as "if stream" but manually constructed, usually gives gray camera placeholder
                 # example: https://static-cdn.jtvnw.net/previews-ttv/live_user_gorgc-640x360.jpg
@@ -144,5 +249,7 @@ class Streamer:
         if self.live:
             game = next(iter(await self._twitch.fetch_games(names=[self.game])), None)
             if game:
-                return game.art_url(285, 380)
+                game_art = game.box_art
+                game_art.set_dimensions(285, 380)
+                return game_art.url
         return None

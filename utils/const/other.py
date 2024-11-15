@@ -10,6 +10,7 @@ __all__ = (
     "Picture",
     "Limit",
     "Twitch",
+    "TwitchID",
     "League",
     "Dota",
     "Logo",
@@ -84,9 +85,13 @@ class Limit:
         field_value = 1024
 
 
+class TwitchID(StrEnum):
+    Me = "180499648"
+    Bot = "1158666176"  # @Aluerie account
+
+
 class Twitch(CONSTANTS):
     MY_USERNAME = "Irene_Adler__"
-    MY_USER_ID = 180499648
     LOL_GAME_CATEGORY_ID = "21779"
     DOTA_GAME_CATEGORY_ID = "29595"
     MY_OFFLINE_SCREEN = "https://static-cdn.jtvnw.net/jtv_user_pictures/ed948895-c574-4325-9c0c-d7639a45df64-channel_offline_image-1920x1080.png"

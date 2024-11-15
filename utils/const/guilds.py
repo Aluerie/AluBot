@@ -126,14 +126,14 @@ class Channel(ChannelEnum):
     # HIDEOUT
     global_logs = 997149550324240465
 
-    look_spam = 970823670702411810
+    look_todo = 970823670702411810
     test_spam = 1066379298363166791
-    logger = 1075497084075130880
+    alubot_logs = 1075497084075130880
 
     repost = 971504469995049041
 
-    dota_info = 873430376033452053
-    github_webhook = 1107050162628595742
+    dota_updates = 873430376033452053
+    alubot_github = 1107050162628595742
 
     event_pass = 966316773869772860
 
@@ -167,8 +167,8 @@ class Role(RoleEnum):
     # HIDEOUT
     event = 1090274008680902667
     jailed_bots = 1090428532162822234
-    error_ping = 1116171071528374394
-    test_error_ping = 1306631362870120600
+    error = 1116171071528374394
+    test_error = 1306631362870120600
 
 
 CATEGORY_ROLES = [
@@ -442,7 +442,7 @@ class HideoutGuild(SavedGuild):
     @property
     def spam_channel_id(self) -> int:
         """Spam channel ID. Note that test version of the bot has different spam channel compared to main one."""
-        return Channel.test_spam if self.bot.test else Channel.look_spam
+        return Channel.test_spam if self.bot.test else Channel.look_todo
 
     @property
     def spam(self) -> discord.TextChannel:
@@ -450,9 +450,9 @@ class HideoutGuild(SavedGuild):
         return self.get_channel(self.spam_channel_id, discord.TextChannel)
 
     @property
-    def logger(self) -> discord.TextChannel:
+    def alubot_logs(self) -> discord.TextChannel:
         """Channel where AluBot posts its own logs from logging library."""
-        return self.get_channel(Channel.logger, discord.TextChannel)
+        return self.get_channel(Channel.alubot_logs, discord.TextChannel)
 
     @property
     def repost(self) -> discord.TextChannel:
@@ -461,16 +461,16 @@ class HideoutGuild(SavedGuild):
 
     # roles ############################################################################################################
     @property
-    def jailed_bots(self) -> discord.Role:
+    def jailed_bots_role(self) -> discord.Role:
         """Role for jailed bots."""
         return self.get_role(Role.jailed_bots)
 
     @property
-    def error_ping(self) -> discord.Role:
+    def error_role(self) -> discord.Role:
         """Role to ping developers about bot errors."""
-        return self.get_role(Role.error_ping)
+        return self.get_role(Role.error)
 
     @property
-    def test_error_ping(self) -> discord.Role:
+    def test_error_role(self) -> discord.Role:
         """Role to ping developers about test bot errors."""
-        return self.get_role(Role.error_ping)
+        return self.get_role(Role.test_error)

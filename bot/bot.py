@@ -122,6 +122,10 @@ class AluBot(commands.Bot, AluBotHelper):
 
         self.prefix_cache: dict[int, set[str]] = {}
 
+        from utils.twitch import AluTwitchClient
+
+        self.twitch = AluTwitchClient(self)
+
     @override
     async def setup_hook(self) -> None:
         self.bot_app_info: discord.AppInfo = await self.application_info()
@@ -150,7 +154,7 @@ class AluBot(commands.Bot, AluBotHelper):
         # needs to be done after cogs are loaded so all cog event listeners are ready
         super(AluBotHelper, self).__init__(bot=self)
 
-        if self.test:
+        if not self.test:
 
             async def try_auto_sync_with_logging() -> None:
                 try:
@@ -293,7 +297,12 @@ class AluBot(commands.Bot, AluBotHelper):
         #         self.dota.login(),
         #     )
         # else:
-        await super().start(config.DISCORD_BOT_TOKEN, reconnect=True)  # VALVE_SWITCH
+
+        # await super().start(config.DISCORD_BOT_TOKEN, reconnect=True)
+        await asyncio.gather(
+            super().start(config.DISCORD_BOT_TOKEN, reconnect=True),  # VALVE_SWITCH
+            self.twitch.start(),
+        )
 
     @override
     async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:
@@ -381,7 +390,7 @@ class AluBot(commands.Bot, AluBotHelper):
             from utils.twitch import AluTwitchClient
 
             self.twitch = AluTwitchClient(self)
-            await self.twitch.connect()
+            await self.twitch.login()
 
     def initialize_tz_manager(self) -> None:
         """Initialize TimeZone Manager."""

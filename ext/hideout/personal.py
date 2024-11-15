@@ -20,13 +20,13 @@ class PersonalCommands(HideoutCog):
         if member.guild == self.bot.hideout.guild:
             if member.bot:
                 # if somebody somehow enters it then also jail them lol
-                await member.add_roles(self.bot.hideout.jailed_bots)
+                await member.add_roles(self.bot.hideout.jailed_bots_role)
             else:
                 await member.kick()
 
     @commands.Cog.listener(name="on_message")
     async def personal_git_copy_paste(self, message: discord.Message) -> None:
-        if message.channel.id == const.Channel.github_webhook:
+        if message.channel.id == const.Channel.alubot_github:
             # Send me discord notifications when somebody except me or dependabot
             # spams my repository with updates
             embeds = [e.copy() for e in message.embeds]

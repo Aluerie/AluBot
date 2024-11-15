@@ -44,7 +44,7 @@ class SteamDB(AluCog):
     # So until I find a better way or just ask them.
     @commands.Cog.listener("on_message")
     async def filter_steamdb_messages(self, message: discord.Message) -> None:
-        if message.channel.id == const.Channel.dota_info and "https://steamcommunity.com" in message.content:
+        if message.channel.id == const.Channel.dota_updates and "https://steamcommunity.com" in message.content:
             msg = await self.news_webhook.send(content=message.content, wait=True)
             await msg.publish()
 

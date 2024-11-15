@@ -167,7 +167,7 @@ class MatchToSend(BaseMatchToSend):
         return await asyncio.to_thread(build_notification_image)
 
     @override
-    async def recipient_kwargs(self) -> RecipientKwargs:
+    async def webhook_send_kwargs(self) -> RecipientKwargs:
         send_log.debug("Creating embed + file for Notification match")
 
         twitch_data = await self.get_twitch_data()

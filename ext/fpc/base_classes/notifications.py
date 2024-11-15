@@ -73,7 +73,7 @@ class BaseNotifications(FPCCog):
         return player_streams
 
     async def send_match(self, match: BaseMatchToSend, recipients: list[RecipientTuple]) -> None:
-        send_kwargs = await match.recipient_kwargs()
+        send_kwargs = await match.webhook_send_kwargs()
 
         for recipient in recipients:
             try:

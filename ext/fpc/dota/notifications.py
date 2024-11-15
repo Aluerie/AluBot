@@ -366,7 +366,7 @@ class DotaFPCNotifications(BaseNotifications):
         This is why we also send @mention if ratelimit is critically low.
         """
         content = f"<@{self.bot.owner_id}>" if self.bot.dota.stratz.rate_limiter.rate_limits_ratio < 0.1 else ""
-        await self.hideout.logger.send(content=content, embed=self.get_ratelimit_embed())
+        await self.hideout.alubot_logs.send(content=content, embed=self.get_ratelimit_embed())
 
 
 async def setup(bot: AluBot) -> None:

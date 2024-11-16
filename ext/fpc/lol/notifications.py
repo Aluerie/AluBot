@@ -22,7 +22,7 @@ if TYPE_CHECKING:
         tag_line: str
         platform: str
         display_name: str
-        twitch_id: int
+        twitch_id: str
         last_edited: int
 
     class FindMatchesToEditQueryRow(TypedDict):

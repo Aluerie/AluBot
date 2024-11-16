@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from .models import BaseMatchToEdit, BaseMatchToSend
 
     class GetTwitchLivePlayerRow(TypedDict):
-        twitch_id: int
+        twitch_id: str
         player_id: int
 
     class ChannelSpoilQueryRow(TypedDict):

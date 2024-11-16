@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     class AnalyzeTopSourceResponsePlayerQueryRow(TypedDict):
         player_id: int
         display_name: str
-        twitch_id: int
+        twitch_id: str
 
     class GetRecipientsQueryRow(TypedDict):
         channel_id: int

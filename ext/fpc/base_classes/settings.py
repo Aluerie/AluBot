@@ -89,7 +89,7 @@ class Account(abc.ABC):
 
     async def set_base_attrs(self, bot: AluBot) -> None:
         if self.is_twitch_streamer:
-            twitch_user = next(iter(await bot.twitch.fetch_users(names=[self.player_name])), None)
+            twitch_user = next(iter(await bot.twitch.fetch_users(logins=[self.player_name])), None)
             if not twitch_user:
                 msg = f"Error checking twitch user `{self.player_name}`.\n User either does not exist or is banned."
                 raise errors.BadArgument(msg)

@@ -147,7 +147,7 @@ class AluTwitchClient(twitchio.Client):
         """Get Irene's channel from the cache."""
         return self.create_partialuser(const.TwitchID.Me)
 
-    async def fetch_streamer(self, twitch_id: int) -> Streamer:
+    async def fetch_streamer(self, twitch_id: str) -> Streamer:
         user = await self.create_partialuser(twitch_id).user()
         stream = next(iter(await self.fetch_streams(user_ids=[twitch_id])), None)  # None if offline
         return Streamer(self, user, stream)

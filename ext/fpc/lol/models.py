@@ -57,7 +57,7 @@ class MatchToSend(BaseMatchToSend):
 
         self.game_name: str = player_account_row["game_name"]
         self.tag_line: str = player_account_row["tag_line"]
-        self.twitch_id: int = player_account_row["twitch_id"]
+        self.twitch_id: str = player_account_row["twitch_id"]
 
         self.start_time: int = game.get("gameStartTime", 0)
         self.all_champion_ids: list[int] = [p["championId"] for p in game["participants"]]

@@ -53,7 +53,7 @@ class MatchToSend(BaseMatchToSend):
         hero_ids: list[int],
         server_steam_id: int,
         player_hero: Hero | PseudoHero,
-        twitch_id: int | None = None,
+        twitch_id: str | None = None,
     ) -> None:
         super().__init__(bot)
         self.match_id: int = match_id
@@ -63,7 +63,7 @@ class MatchToSend(BaseMatchToSend):
         self.player_hero: Hero | PseudoHero = player_hero
         self.hero_ids: list[int] = hero_ids
         self.server_steam_id: int = server_steam_id
-        self.twitch_id: int | None = twitch_id
+        self.twitch_id: str | None = twitch_id
 
     @property
     def links(self) -> str:

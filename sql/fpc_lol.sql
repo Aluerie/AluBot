@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS lol_settings (
 CREATE TABLE IF NOT EXISTS lol_players (
     player_id SERIAL PRIMARY KEY,
     display_name TEXT NOT NULL,
-    twitch_id BIGINT NOT NULL UNIQUE
+    twitch_id TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS lol_favourite_players (

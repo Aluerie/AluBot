@@ -39,7 +39,7 @@ reportUnknownArgumentType = "none"
 # there is a lot of **Incompatible** overriding in discord.py Bot development
 # like `convert(ctx: AluContext, argument: str)` in converters.
 reportIncompatibleVariableOverride = "none"
-reportIncompatibleMethodOverride = "none"
+# reportIncompatibleMethodOverride = "none"
 
 [tool.ruff]
 line-length = 120

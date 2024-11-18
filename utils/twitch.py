@@ -210,16 +210,13 @@ class Streamer:
             self.live = True
             self.game = stream.game_name
             self.title = stream.title
-            # example: https://static-cdn.jtvnw.net/previews-ttv/live_user_iannihilate-640x360.jpg
-            thumbnail = stream.thumbnail
-            thumbnail.set_dimensions(640, 360)
-            self.preview_url = thumbnail.url
+            # example: https://static-cdn.jtvnw.net/previews-ttv/live_user_gosu-{width}x{height}.jpg
+            self.preview_url = stream.thumbnail.url
         else:
             self.live = False
             self.game = "Offline"
             self.title = "Offline"
             offline_image = user.offline_image
-            offline_image.set_dimensions(640, 360)
             if offline_image:
                 # example for quinn:
                 # https://static-cdn.jtvnw.net/jtv_user_pictures/fdc9e3a8-b005-4719-9ca2-1a2e0e77ff5b-channel_offline_image-640x360.png
@@ -249,7 +246,5 @@ class Streamer:
         if self.live:
             game = next(iter(await self._twitch.fetch_games(names=[self.game])), None)
             if game:
-                game_art = game.box_art
-                game_art.set_dimensions(285, 380)
-                return game_art.url
+                return game.box_art.url
         return None

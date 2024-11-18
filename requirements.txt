@@ -25,7 +25,7 @@ vdf~=3.4
 
 
 # League of Legends
-pulsefire~=2.0.20
+pulsefire~=2.0.21
 git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub

@@ -77,32 +77,32 @@ class Dota2Client(Client):
 
             self.started = True
 
-    @override
-    async def __aenter__(self) -> Self:
-        # clients
-        await self.stratz.__aenter__()
-        await self.odota_constants.__aenter__()
+    # @override
+    # async def __aenter__(self) -> Self:
+    #     # clients
+    #     await self.stratz.__aenter__()
+    #     await self.odota_constants.__aenter__()
 
-        # caches
-        self.abilities.start()
-        self.heroes.start()
-        self.items.start()
-        self.facets.start()
+    #     # caches
+    #     self.abilities.start()
+    #     self.heroes.start()
+    #     self.items.start()
+    #     self.facets.start()
 
-        return await super().__aenter__()
+    #     return await super().__aenter__()
 
-    @override
-    async def __aexit__(self) -> None:
-        # clients
-        await self.stratz.__aexit__()
-        await self.odota_constants.__aexit__()
+    # @override
+    # async def __aexit__(self) -> None:
+    #     # clients
+    #     await self.stratz.__aexit__()
+    #     await self.odota_constants.__aexit__()
 
-        # caches
-        self.abilities.close()
-        self.heroes.close()
-        self.items.close()
-        self.facets.close()
-        await super().__aexit__()
+    #     # caches
+    #     self.abilities.close()
+    #     self.heroes.close()
+    #     self.items.close()
+    #     self.facets.close()
+    #     await super().__aexit__()
 
     @override
     async def login(self) -> None:

@@ -44,17 +44,12 @@ async def start_the_bot(test: bool) -> None:
             await session.close()
         return
 
-    # try:
     async with (
         aiohttp.ClientSession() as session,
         pool as pool,
         AluBot(test, session=session, pool=pool) as alubot,
     ):
         await alubot.start()
-    # except:
-    #     await session.close()
-    #     await pool.close()
-    #     await alubot.close()
 
 
 @click.group(invoke_without_command=True, options_metavar="[options]")

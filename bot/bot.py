@@ -403,12 +403,14 @@ class AluBot(commands.Bot, AluBotHelper):
     @override
     async def close(self) -> None:
         """Close the connection to Discord while cleaning up other open sessions and clients."""
+        await self.pool.close()
+
         if hasattr(self, "twitch"):
             await self.twitch.close()
         if hasattr(self, "dota"):
             await self.dota.close()
         if hasattr(self, "lol"):
-            await self.dota.close()
+            await self.lol.close()
 
         await super().close()
         # session needs to be closed the last probably

@@ -290,7 +290,6 @@ class AluBot(commands.Bot, AluBotHelper):
         # todo: is there anything better ? :D
 
         # if not self.test or "ext.fpc.dota" in get_extensions(self.test):
-        #
 
         #
         #     await asyncio.gather(

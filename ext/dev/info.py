@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-import os
+import importlib
+import importlib.metadata
 import platform
 import socket
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import discord
-import pkg_resources
 import psutil
 from discord.ext import commands
 
@@ -91,8 +92,7 @@ class DevInformation(DevBaseCog):
             .add_field(
                 name="List of bot's Main Packages",
                 value="\n".join(
-                    f"\N{BLACK CIRCLE} {package}: {pkg_resources.get_distribution(package).version}"
-                    for package in curious_packages
+                    f"\N{BLACK CIRCLE} {package}: {importlib.metadata.version(package)}" for package in curious_packages
                 ),
             )
         )
@@ -149,9 +149,9 @@ class DevInformation(DevBaseCog):
         all_tasks = asyncio.all_tasks(loop=self.bot.loop)
         event_tasks = [t for t in all_tasks if "Client._run_event" in repr(t) and not t.done()]
 
-        cogs_directory = os.path.dirname(__file__)
-        tasks_directory = os.path.join("discord", "ext", "tasks", "__init__.py")
-        inner_tasks = [t for t in all_tasks if cogs_directory in repr(t) or tasks_directory in repr(t)]
+        cogs_directory = Path(__file__).parent
+        tasks_directory = Path("discord") / "ext" / "tasks" / "__init__.py"
+        inner_tasks = [t for t in all_tasks if str(cogs_directory) in repr(t) or str(tasks_directory) in repr(t)]
 
         bad_inner_tasks = ", ".join(hex(id(t)) for t in inner_tasks if t.done() and t._exception is not None)
         total_warnings += bool(bad_inner_tasks)

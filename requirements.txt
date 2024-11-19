@@ -15,13 +15,13 @@ twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@dev/3.
 # Dota 2 (steamio)
 # my own branch with dota2 extension
 # steamio @ git+https://github.com/Aluerie/steam.py@introduce-ext.dota2
-# steamio @ git+https://github.com/Aluerie/steam.py@test_relog_w_dota
+steamio @ git+https://github.com/Aluerie/steam.py@test_reconnect_issues
 
 # Dota 2 (ValvePython)
-steam~=1.4.4
-protobuf==3.20.1  # any later version won't work since they are based of protoc4
-dota2 @ git+https://github.com/Aluerie/dota2.git  # my own fork with updated proto
-vdf~=3.4
+# steam~=1.4.4
+# protobuf==3.20.1  # any later version won't work since they are based of protoc4
+# dota2 @ git+https://github.com/Aluerie/dota2.git  # my own fork with updated proto
+# vdf~=3.4
 
 
 # League of Legends

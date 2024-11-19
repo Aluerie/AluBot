@@ -77,7 +77,7 @@ class DevInformation(DevBaseCog):
             "discord.py",
             "twitchio",
             "steam",  # VALVE_SWITCH
-            "dota2",
+            # "dota2",
             "pulsefire",
         ]  # list of packages versions of which I'm interested the most
         pv = sys.version_info  # python version

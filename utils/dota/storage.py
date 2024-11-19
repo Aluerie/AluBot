@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING, TypedDict, override
 
 import discord
 
-from bot import AluBot
-
 from .. import const, formats
 from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 from . import constants

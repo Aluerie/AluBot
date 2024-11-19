@@ -6,10 +6,9 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, override
 import discord
 from discord import app_commands
 from discord.ext import commands
+from steam import ID, InvalidID  # VALVE_SWITCH
 
-# from steam import ID, InvalidID  # VALVE_SWITCH
-from steam.steamid import EType, SteamID
-
+# from steam.steamid import EType, SteamID
 from utils import const
 from utils.dota import Hero, HeroTransformer  # noqa: TCH001
 
@@ -39,30 +38,14 @@ class DotaAccount(Account):
         steam_id: int
         friend_id: int
 
-    # @override  # VALVE_SWITCH
-    # async def set_game_specific_attrs(self, bot: AluBot, flags: AddDotaPlayerFlags) -> None:
-    #     try:
-    #         steam_id = ID(flags.steam)
-    #     except InvalidID:
-    #         steam_id = await ID.from_url(flags.steam, session=bot.session)
+    @override  # VALVE_SWITCH
+    async def set_game_specific_attrs(self, bot: AluBot, player: DotaPlayerCandidate) -> None:
+        try:
+            steam_id = ID(player.steam)
+        except InvalidID:
+            steam_id = await ID.from_url(player.steam, session=bot.session)
 
-    #     if steam_id is None:
-    #         msg = (
-    #             f"Error checking steam profile for {flags.steam}.\n"
-    #             "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
-    #             "or just give steam profile link to the bot."
-    #         )
-    #         raise commands.BadArgument(msg)
-
-    #     self.steam_id = steam_id.id64
-    #     self.friend_id = steam_id.id  # also known as id32
-
-    @override
-    async def set_game_specific_attrs(self, _: AluBot, player: DotaPlayerCandidate) -> None:
-        steam_id_obj = SteamID(player.steam)
-        if steam_id_obj.type != EType.Individual:
-            steam_id_obj = SteamID.from_url(player.steam)  # type: ignore # ValvePython doesn't care about TypeHints
-        if steam_id_obj is None or (hasattr(steam_id_obj, "type") and steam_id_obj.type != EType.Individual):
+        if steam_id is None:
             msg = (
                 f"Error checking steam profile for {player.steam}.\n"
                 "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
@@ -70,8 +53,24 @@ class DotaAccount(Account):
             )
             raise commands.BadArgument(msg)
 
-        self.steam_id = steam_id_obj.as_64
-        self.friend_id = steam_id_obj.id
+        self.steam_id = steam_id.id64
+        self.friend_id = steam_id.id  # also known as id32
+
+    # @override
+    # async def set_game_specific_attrs(self, _: AluBot, player: DotaPlayerCandidate) -> None:
+    #     steam_id_obj = SteamID(player.steam)
+    #     if steam_id_obj.type != EType.Individual:
+    #         steam_id_obj = SteamID.from_url(player.steam)  # type: ignore # ValvePython doesn't care about TypeHints
+    #     if steam_id_obj is None or (hasattr(steam_id_obj, "type") and steam_id_obj.type != EType.Individual):
+    #         msg = (
+    #             f"Error checking steam profile for {player.steam}.\n"
+    #             "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
+    #             "or just give steam profile link to the bot."
+    #         )
+    #         raise commands.BadArgument(msg)
+
+    #     self.steam_id = steam_id_obj.as_64
+    #     self.friend_id = steam_id_obj.id
 
     @property
     @override

@@ -18,6 +18,8 @@ import config
 from bot import EXT_CATEGORY_NONE, AluContext, ExtCategory
 from ext import get_extensions
 from utils import cache, const, disambiguator, errors, formats, helpers, transposer
+from utils.dota.steamio import Dota2Client
+from utils.twitch import AluTwitchClient
 
 from .exc_manager import ExceptionManager
 from .intents_perms import INTENTS, PERMISSIONS
@@ -122,9 +124,8 @@ class AluBot(commands.Bot, AluBotHelper):
 
         self.prefix_cache: dict[int, set[str]] = {}
 
-        from utils.twitch import AluTwitchClient
-
         self.twitch = AluTwitchClient(self)
+        self.dota = Dota2Client(self)
 
     @override
     async def setup_hook(self) -> None:
@@ -154,7 +155,7 @@ class AluBot(commands.Bot, AluBotHelper):
         # needs to be done after cogs are loaded so all cog event listeners are ready
         super(AluBotHelper, self).__init__(bot=self)
 
-        if not self.test:
+        if self.test:
 
             async def try_auto_sync_with_logging() -> None:
                 try:
@@ -289,9 +290,9 @@ class AluBot(commands.Bot, AluBotHelper):
         # todo: is there anything better ? :D
 
         # if not self.test or "ext.fpc.dota" in get_extensions(self.test):
-        #     from utils.dota.dota2client import Dota2Client
+        #
 
-        #     self.dota = Dota2Client(self)
+        #
         #     await asyncio.gather(
         #         super().start(config.DISCORD_BOT_TOKEN, reconnect=True),
         #         self.dota.login(),
@@ -302,10 +303,11 @@ class AluBot(commands.Bot, AluBotHelper):
         await asyncio.gather(
             super().start(config.DISCORD_BOT_TOKEN, reconnect=True),  # VALVE_SWITCH
             self.twitch.start(),
+            self.dota.login(),
         )
 
     @override
-    async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:
+    async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:  # pyright: ignore[reportIncompatibleMethodOverride]
         return await super().get_context(origin, cls=AluContext)
 
     @property
@@ -519,7 +521,7 @@ class AluBot(commands.Bot, AluBotHelper):
         await self.exc_manager.register_error(exception, embed)
 
     @override
-    async def on_command_error(self, ctx: AluContext, error: commands.CommandError | Exception) -> None:
+    async def on_command_error(self, ctx: AluContext, error: commands.CommandError | Exception) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
         """Handler called when an error is raised while invoking a ctx command.
 
         In case of problems - check out on_command_error in parent BotBase class - it's not simply `pass`

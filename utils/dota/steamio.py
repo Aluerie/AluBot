@@ -17,7 +17,8 @@ except ImportError:
 
 from utils import const
 
-from . import StratzClient
+from . import ODotaConstantsClient, StratzClient
+from .storage import Abilities, Facets, Heroes, Items
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -41,21 +42,85 @@ class Dota2Client(Client):
         super().__init__(state=PersonaState.Invisible)
         self.bot: AluBot = bot
 
+        # clients
+        self.stratz = StratzClient()
+        self.odota_constants = ODotaConstantsClient()
+        # caches
+        self.abilities = Abilities(bot)
+        self.heroes = Heroes(bot)
+        self.items = Items(bot)
+        self.facets = Facets(bot)
+
+        self.started = False
+
+    async def start_helpers(self) -> None:
+        """_summary_
+
+        Usage
+        -----
+        If we only want to test helpers functionality, i.e. Stratz API data, then we can use:
+        ```py
+        self.bot.instantiate_dota()
+        await self.bot.dota.start_helpers()  # only starts helping clients/caches.
+        ```
+        """
+        if not self.started:
+            # clients
+            await self.stratz.__aenter__()
+            await self.odota_constants.__aenter__()
+
+            # caches
+            self.abilities.start()
+            self.heroes.start()
+            self.items.start()
+            self.facets.start()
+
+            self.started = True
+
     @override
     async def __aenter__(self) -> Self:
-        self.stratz = StratzClient()
+        # clients
         await self.stratz.__aenter__()
+        await self.odota_constants.__aenter__()
+
+        # caches
+        self.abilities.start()
+        self.heroes.start()
+        self.items.start()
+        self.facets.start()
+
         return await super().__aenter__()
 
     @override
     async def __aexit__(self) -> None:
+        # clients
         await self.stratz.__aexit__()
+        await self.odota_constants.__aexit__()
+
+        # caches
+        self.abilities.close()
+        self.heroes.close()
+        self.items.close()
+        self.facets.close()
         await super().__aexit__()
 
     @override
     async def login(self) -> None:
+        await self.start_helpers()
         await super().login(config.STEAM_USERNAME, config.STEAM_PASSWORD)
         log.info("We invisibly logged into Steam: %s", config.STEAM_USERNAME)
+
+    @override
+    async def close(self) -> None:
+        # clients
+        await self.stratz.__aexit__()
+        await self.odota_constants.__aexit__()
+
+        # caches
+        self.abilities.close()
+        self.heroes.close()
+        self.items.close()
+        self.facets.close()
 
     @override
     async def on_ready(self) -> None:

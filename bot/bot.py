@@ -307,7 +307,7 @@ class AluBot(commands.Bot, AluBotHelper):
         )
 
     @override
-    async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:
         return await super().get_context(origin, cls=AluContext)
 
     @property
@@ -521,7 +521,7 @@ class AluBot(commands.Bot, AluBotHelper):
         await self.exc_manager.register_error(exception, embed)
 
     @override
-    async def on_command_error(self, ctx: AluContext, error: commands.CommandError | Exception) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def on_command_error(self, ctx: AluContext, error: commands.CommandError | Exception) -> None:
         """Handler called when an error is raised while invoking a ctx command.
 
         In case of problems - check out on_command_error in parent BotBase class - it's not simply `pass`

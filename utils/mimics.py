@@ -204,9 +204,8 @@ class Mimic:
         embed: discord.Embed = MISSING,
         embeds: Sequence[discord.Embed] = MISSING,
         wait: Literal[False] = ...,
-        report: bool= ...,
-    ) -> None:
-        ...
+        report: bool = ...,
+    ) -> None: ...
 
     @overload
     async def send(
@@ -220,9 +219,8 @@ class Mimic:
         embed: discord.Embed = MISSING,
         embeds: Sequence[discord.Embed] = MISSING,
         wait: Literal[True],
-        report: bool= ...,
-    ) -> discord.WebhookMessage:
-        ...
+        report: bool = ...,
+    ) -> discord.WebhookMessage: ...
 
     async def send(
         self,
@@ -282,7 +280,8 @@ class Mimic:
                 webhook = await coro()
             except Exception as exc:
                 if report:
-                    self.report(str(exc))
+                    await self.report(str(exc))
+                    continue
                 else:
                     raise
 

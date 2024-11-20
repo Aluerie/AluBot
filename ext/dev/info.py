@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import importlib
 import importlib.metadata
+import logging
+import os
 import platform
 import socket
 import sys
@@ -11,6 +13,7 @@ from typing import TYPE_CHECKING, Literal
 
 import discord
 import psutil
+from discord import app_commands
 from discord.ext import commands
 
 from utils import checks, const
@@ -20,17 +23,37 @@ from ._base import DevBaseCog
 if TYPE_CHECKING:
     from bot import AluBot, AluContext
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+
 
 class DevInformation(DevBaseCog):
-    @commands.hybrid_group(name="system", hidden=True)
-    @checks.app.is_hideout()
-    async def system(self, ctx: AluContext) -> None:
-        """Group command for /system subcommands."""
-        await ctx.send_help()
+    system_group = app_commands.Group(
+        name="system",
+        description="(#Hideout) commands for bot's system-wide information or operation commands.",
+        guild_ids=[const.Guild.hideout],
+        default_permissions=discord.Permissions(manage_guild=True),
+    )
 
-    @system.command(name="information", aliases=["info"])
-    async def system_information(self, ctx: AluContext) -> None:
-        """(\N{GREY HEART} Hideout-Only) Get system info about machine hosting the bot."""
+    @system_group.command(name="restart")
+    async def system_restart(self, interaction: discord.Interaction[AluBot]) -> None:
+        """🔬 (#Hideout) Restart the bot process on VPS.
+
+        Usable to restart the bot without logging to VPS machine or committing something.
+        """
+        await interaction.response.send_message("Rebooting in 3 2 1")
+        await asyncio.sleep(3)
+        try:
+            # non systemctl users - sorry
+            os.system("sudo systemctl restart alubot")
+        except Exception as error:
+            log.error(error, stack_info=True)
+            # it might not go off
+            await interaction.followup.send("Something went wrong.")
+
+    @system_group.command(name="information")
+    async def system_information(self, interaction: discord.Interaction[AluBot]) -> None:
+        """🔬 (#Hideout) Get system info about machine hosting the bot."""
         # some data doesn't fit nicely with chained embed initialization format
         cpu_freq = f"| {ghz.current / 1000:.1f}GHz\n" if (ghz := psutil.cpu_freq()) else ""
 
@@ -69,11 +92,11 @@ class DevInformation(DevBaseCog):
                 else:
                     location_string = "Sorry! Couldn't fetch the data"
             embed.add_field(name="Bot's Location judging by IP", value=location_string)
-        await ctx.reply(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
-    @system.command(name="packages")
-    async def system_packages(self, ctx: AluContext) -> None:
-        """(\N{GREY HEART} Hideout-Only) Get info bot's main Python Packages."""
+    @system_group.command(name="packages")
+    async def system_packages(self, interaction: discord.Interaction[AluBot]) -> None:
+        """🔬 (#Hideout) Get info bot's main Python Packages."""
         curious_packages = [
             "discord.py",
             "twitchio",
@@ -96,19 +119,19 @@ class DevInformation(DevBaseCog):
                 ),
             )
         )
-        await ctx.reply(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
-    @system.command(name="logs")
-    async def system_logs(self, ctx: AluContext) -> None:
-        """(\N{GREY HEART} Hideout-Only) Get bot's logs."""
-        await ctx.typing()
+    @system_group.command(name="logs")
+    async def system_logs(self, interaction: discord.Interaction[AluBot]) -> None:
+        """🔬 (#Hideout) Get bot's logs."""
+        await interaction.response.defer()
         logs_file = discord.File(".alubot/alubot.log")
-        await ctx.reply(file=logs_file)
+        await interaction.followup.send(file=logs_file)
 
-    @system.command(name="health")
-    async def system_health(self, ctx: AluContext) -> None:
-        """(\N{GREY HEART} Hideout-Only) Get bot's health status."""
-        await ctx.typing()
+    @system_group.command(name="health")
+    async def system_health(self, interaction: discord.Interaction[AluBot]) -> None:
+        """🔬 (#Hideout) Get bot's health status."""
+        await interaction.response.defer()
 
         # todo: customize this to my liking.
 
@@ -159,9 +182,9 @@ class DevInformation(DevBaseCog):
         embed.add_field(name="Events Waiting", value=f"Total: {len(event_tasks)}", inline=False)
 
         process = psutil.Process()
-        memory_usage = process.memory_full_info().uss / 1024**2
-        cpu_usage = process.cpu_percent() / psutil.cpu_count()
-        embed.add_field(name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU", inline=False)
+        memory_usage = f"{process.memory_full_info().uss / 1024**2:.2f} MiB"
+        cpu_usage = f"{process.cpu_percent() / cpu_count:.2f} % CPU" if (cpu_count := psutil.cpu_count()) else ""
+        embed.add_field(name="Process", value=f"{memory_usage}\n{cpu_usage}", inline=False)
 
         global_rate_limit = not self.bot.http._global_over.is_set()
         description.append(f"Global Rate Limit: {global_rate_limit}")
@@ -171,7 +194,7 @@ class DevInformation(DevBaseCog):
 
         embed.set_footer(text=f"{total_warnings} warning(s)")
         embed.description = "\n".join(description)
-        await ctx.send(embed=embed)
+        await interaction.followup.send(embed=embed)
 
     @commands.hybrid_command(name="logs", hidden=True)
     @checks.app.is_hideout()

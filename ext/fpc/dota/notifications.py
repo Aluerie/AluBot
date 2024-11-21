@@ -274,7 +274,7 @@ class DotaFPCNotifications(BaseNotifications):
             )
 
             edit_log.debug("%s Start editing attempt.", log_str)
-            if self.retry_mapping[tuple_uuid] > 13:
+            if self.retry_mapping[tuple_uuid] > 9:
                 edit_log.info("%s It's been too long - giving up on editing.", log_str)
                 await self.delete_match_from_editing_queue(match_id, friend_id)
                 # TODO: maybe edit the match with opendota instead? to have at least some data

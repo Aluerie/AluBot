@@ -316,7 +316,10 @@ class BaseSettings(FPCCog):
         await interaction.followup.send(embed=response_embed)
 
         logs_embed = response_embed.copy()
-        logs_embed.set_author(name=interaction.user, icon_url=interaction.user.display_avatar.url)
+        logs_embed.set_author(
+            name=interaction.user,
+            icon_url=interaction.user.display_avatar.url,
+        ).set_footer(text="Don't forget to add the player to your favourites!")
         await self.hideout.global_logs.send(embed=logs_embed)
 
     async def database_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:

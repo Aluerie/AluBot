@@ -107,3 +107,7 @@ class PlaceholderRaiseError(AluBotError):
     """
 
     __slots__: tuple[str, ...] = ()
+
+
+class TimeoutError(AluBotError):
+    __slots__: tuple[str, ...] = ()

@@ -357,26 +357,26 @@ class AluBot(commands.Bot, AluBotHelper):
 
             self.lol = LeagueClient(self)
 
-    # async def initialize_dota(self) -> None:
-    #     """Initialize Dota 2 Client.
-
-    #     * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
-    #     """
-    #     if not hasattr(self, "dota"):
-    #         from utils.dota.dota2client import Dota2Client
-
-    #         self.dota = Dota2Client(self)  # VALVE_SWITCH
-    #         # await self.dota.login()
-
-    def instantiate_dota(self) -> None:
-        """Instantiate Dota 2 Client.
+    async def initialize_dota(self) -> None:
+        """Initialize Dota 2 Client.
 
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from utils.dota.valvepython import DotaClient
+            from utils.dota.steamio import Dota2Client
 
-            self.dota = DotaClient(self)
+            self.dota = Dota2Client(self)  # VALVE_SWITCH
+            # await self.dota.login()
+
+    # def instantiate_dota(self) -> None:
+    #     """Instantiate Dota 2 Client.
+
+    #     * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
+    #     """
+    #     if not hasattr(self, "dota"):
+    #         from utils.dota.valvepython import DotaClient
+
+    #         self.dota = DotaClient(self)
 
     def initialize_github(self) -> None:
         """Initialize GitHub REST API Client."""

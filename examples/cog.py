@@ -8,14 +8,13 @@ from discord.ext import commands
 
 from utils import const
 
+from ._base import BaseCog
+
 if TYPE_CHECKING:
     from bot import AluBot, AluContext
 
-from ._base import BaseCog
 
-
-class MyCog(BaseCog):
-    ...
+class MyCog(BaseCog): ...
 
 
 async def setup(bot: AluBot) -> None:

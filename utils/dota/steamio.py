@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Self, override
+from typing import TYPE_CHECKING, override
 
 import discord
 from steam import PersonaState
@@ -21,6 +21,8 @@ from . import ODotaConstantsClient, StratzClient
 from .storage import Abilities, Facets, Heroes, Items
 
 if TYPE_CHECKING:
+    from steam.ext.dota2 import PartialUser
+
     from bot import AluBot
 
 log = logging.getLogger(__name__)
@@ -39,7 +41,7 @@ class Dota2Client(Client):
     """
 
     def __init__(self, bot: AluBot) -> None:
-        super().__init__(state=PersonaState.Invisible)
+        super().__init__()  # state=PersonaState.Invisible
         self.bot: AluBot = bot
 
         # clients
@@ -52,6 +54,9 @@ class Dota2Client(Client):
         self.facets = Facets(bot)
 
         self.started = False
+
+    def aluerie(self) -> PartialUser:
+        return self.instantiate_partial_user(config.DOTA_FRIEND_ID)
 
     async def start_helpers(self) -> None:
         """_summary_

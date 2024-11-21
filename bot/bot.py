@@ -357,7 +357,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
             self.lol = LeagueClient(self)
 
-    async def instantiate_dota(self) -> None:
+    def instantiate_dota(self) -> None:
         """Initialize Dota 2 Client.
 
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam

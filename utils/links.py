@@ -42,16 +42,17 @@ async def get_metadata_embed_links(message: discord.Message) -> discord.Message 
 FIX_DICT: dict[str, str] = {
     # social network: better embed site,
     # note the "slash" in the end and "https://" are important
-    "x.com": "https://fxtwitter.com",
-    "twitter.com": "https://fxtwitter.com",
-    "reddit.com": "https://rxddit.com",
-    "instagram.com": "https://ddinstagram.com",
-    "tiktok.com": "https://tnktok.com",
-    "twitch.tv": "https://fxtwitch.seria.moe",
-    "deviantart.com": "https://fixdeviantart.com",
-    "tumblr.com": "https://tpmblr.com",
-    "pixiv.net": "https://phixiv.net",
-    "bsky.app": "https://bskyx.app",
+    "x": "https://fxtwitter.com",
+    "twitter": "https://fxtwitter.com",
+    "reddit": "https://rxddit.com",
+    "instagram": "https://ddinstagram.com",
+    "tiktok": "https://tnktok.com",
+    "deviantart": "https://fixdeviantart.com",
+    "tumblr": "https://tpmblr.com",
+    "pixiv": "https://phixiv.net",
+    "bsky": "https://bskyx.app",
+    "twitch": "https://fxtwitch.seria.moe/clip",
+    "clips": "https://fxtwitch.seria.moe/clip",
 }
 # PS. in November 2024 I finally found out that some other people made the same bot/feature for Discord:
 # * https://betterdiscord.app/plugin/SocialMediaLinkConverter
@@ -59,11 +60,22 @@ FIX_DICT: dict[str, str] = {
 # So, check it out, they might find something better.
 
 COMPILED_REGEX = re.compile(
-    rf"""
+    r"""
         http[s]?
         ://
         (?:www\.)?
-        ({'|'.join(re.escape(x) for x in FIX_DICT)})                                       # group 1 - the actual site
+        (# group 1 - the actual site
+        x\.com|
+        twitter\.com|
+        reddit\.com|
+        instagram\.com|
+        tiktok\.com|
+        deviantart\.com|
+        tumblr\.com|
+        pixiv\.net|
+        bsky\.app|
+        twitch\.tv/(?:[a-zA-Z]|[0-9]|[_])+/clip | clips\.twitch\.tv
+        )
         (/ (?: [a-zA-Z] | [0-9] | [$-_@.&+] | [!*(),] | (?:% [0-9a-fA-F][0-9a-fA-F]) )+ )  # group 2 - the rest of url
     """,
     flags=re.X | re.I,  # X = VERBOSE, I = IGNORECASE
@@ -106,15 +118,21 @@ def fix_social_links(text: str, omit_rest: bool = False) -> str | None:
             #  i.e. [('instagram.com', '/p/DBg0L6foRNW/'), ('x.com', '/IceFrog/status/1718834746300719265')]
             return "\n".join([f"{FIX_DICT[group[0]]}{group[1]}" for group in found])
         else:
-            return COMPILED_REGEX.sub(lambda mo: rf"{FIX_DICT[mo.group(1).lower()]}{mo.group(2)}", text)
+            return COMPILED_REGEX.sub(lambda mo: rf"{FIX_DICT[mo.group(1).lower().split('.')[0]]}{mo.group(2)}", text)
     else:
         return None
 
 
 if __name__ == "__main__":
-    text = (
+    text1 = (
         "https://www.instagram.com/p/DBg0L6foRNW/ bla bla bla bla bla bla bla "
         "https://x.com/IceFrog/status/1718834746300719265"
     )
-    result = fix_social_links(text)
+
+    text2 = (
+        "* https://clips.twitch.tv/CrispyAwkwardDragonEleGiggle-DUpiKHTVlyX-EgGp\n"
+        "* https://twitch.tv/dinossindgeil/clip/CrispyAwkwardDragonEleGiggle-DUpiKHTVlyX-EgGp"
+    )
+
+    result = fix_social_links(text2)
     print(result)  # noqa: T201

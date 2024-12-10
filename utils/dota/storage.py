@@ -12,6 +12,8 @@ from . import constants
 if TYPE_CHECKING:
     from bot import AluBot
 
+    from .schemas import stratz
+
     class GetHeroEmoteRow(TypedDict):
         id: int
         emote: str
@@ -210,16 +212,23 @@ class Abilities(GameDataStorage[Ability, PseudoAbility]):
         # so for now we fill the missing data with opendota
         odota_abilities = await self.bot.dota.odota_constants.get_abilities()
 
+        def get_display_name(ability: stratz.Ability) -> str:
+            if ability["language"] and (display_name := ability["language"]["displayName"]):
+                # can be `None`, especially for new abilities
+                return display_name
+            else:
+                # else get the information from opendota
+                opendota_ability = odota_abilities.get(ability["name"])
+                if opendota_ability:
+                    return opendota_ability.get("dname", "unknown")
+                else:
+                    return "Unknown"
+
         return {
             ability["id"]: Ability(
                 ability["id"],
                 ability["name"],
-                (
-                    ability["language"]["displayName"]
-                    if ability["language"]  # can be `None`, especially for new abilities
-                    # else get information from opendota;
-                    else (oa.get("dname") or "unknown" if (oa := odota_abilities.get(ability["name"])) else "Unknown")
-                ),
+                get_display_name(ability),
                 ability["isTalent"],
             )
             for ability in abilities["data"]["constants"]["abilities"]

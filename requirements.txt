@@ -29,7 +29,7 @@ pulsefire~=2.0.21
 git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
-githubkit
+githubkit==0.11.14
 pygit2==1.16.0
 
 # TTS

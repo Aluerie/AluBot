@@ -12,7 +12,7 @@ But for now I just repost messages I'm interested it to only my channel.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
@@ -26,10 +26,6 @@ if TYPE_CHECKING:
 
 
 class SteamDB(AluCog):
-    @override
-    def cog_load(self) -> None:
-        self.bot.initialize_github()
-
     @property
     def news_channel(self) -> discord.TextChannel:
         return self.community.dota_news

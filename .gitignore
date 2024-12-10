@@ -1,5 +1,6 @@
 # the bot temporary folder for garbage
 .alubot/
+.temp/
 
 # pycharm (I'm using vscode btw)
 .idea/

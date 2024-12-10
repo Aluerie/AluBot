@@ -91,7 +91,7 @@ class AluTwitchClient(twitchio.Client):
                 refresh = excluded.refresh;
         """
         await self._bot.pool.execute(query, resp.user_id, token, refresh)
-        log.info("Added token to the database for user: %s", resp.user_id)
+        log.debug("Added token to the database for user: %s", resp.user_id)
         return resp
 
     @override

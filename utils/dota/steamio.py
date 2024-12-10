@@ -41,7 +41,7 @@ class Dota2Client(Client):
     """
 
     def __init__(self, bot: AluBot) -> None:
-        super().__init__()  # state=PersonaState.Invisible
+        super().__init__(state=PersonaState.Online)  # .Invisible
         self.bot: AluBot = bot
 
         # clients
@@ -113,7 +113,7 @@ class Dota2Client(Client):
     async def login(self) -> None:
         await self.start_helpers()
         await super().login(config.STEAM_USERNAME, config.STEAM_PASSWORD)
-        log.info("We invisibly logged into Steam: %s", config.STEAM_USERNAME)
+        log.info("We logged into Steam: %s", config.STEAM_USERNAME)
 
     @override
     async def close(self) -> None:

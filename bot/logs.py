@@ -39,13 +39,13 @@ def setup_logging(test: bool) -> Generator[Any, Any, Any]:
         log.addHandler(handler)
 
         # ensure folder for logs, cfg, temp, etc
-        Path(".alubot/").mkdir(parents=True, exist_ok=True)
+        Path(".temp/").mkdir(parents=True, exist_ok=True)
         # File Handler
         file_handler = RotatingFileHandler(
-            filename=f'.alubot/{"alubot" if not test else "yenbot"}.log',
+            filename=f'.temp/{"alubot" if not test else "yenbot"}.log',
             encoding="utf-8",
             mode="w",
-            maxBytes=9 * 1024 * 1024,  # 9 MiB
+            maxBytes=24 * 1024 * 1024,  # MiB
             backupCount=5,  # Rotate through 5 files
         )
         file_handler.setFormatter(get_log_fmt(file_handler))

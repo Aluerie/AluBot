@@ -1,8 +1,7 @@
+#  ruff: noqa: D101, D102, D103, T200, T201, F841
 from __future__ import annotations
 
 from examples.beta.base import *
-
-#  ruff: noqa: D101, D102, D103
 
 
 class BetaTest(BetaCog):

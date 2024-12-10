@@ -78,7 +78,6 @@ class TwitchCog(CommunityCog):
         """Receive notifications for my stream via eventsub."""
         record = NotificationRecord(created_at=datetime.datetime.now(datetime.UTC), type=NotificationType.eventsub)
         self._logging_queue.put_nowait(record)
-        await self.hideout.spam.send("TEST TEST TEST IT'S WORKING DELETE THIS AFTER WE CONFIRM")
 
     @commands.Cog.listener(name="on_presence_update")
     async def community_twitch_tv_management(self, before: discord.Member, after: discord.Member) -> None:

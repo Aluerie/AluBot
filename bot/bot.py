@@ -135,12 +135,12 @@ class AluBot(commands.Bot, AluBotHelper):
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
         os.environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
 
-        failed_to_load_all_exts = False
+        failed_to_load_some_ext = False
         for ext in get_extensions(self.test):
             try:
                 await self.load_extension(ext)
             except Exception as error:
-                failed_to_load_all_exts = True
+                failed_to_load_some_ext = True
                 embed = discord.Embed(
                     colour=0xDA9F93,
                     description=f"Failed to load extension `{ext}`.",
@@ -156,34 +156,32 @@ class AluBot(commands.Bot, AluBotHelper):
         super(AluBotHelper, self).__init__(bot=self)
 
         if self.test:
-
-            async def try_auto_sync_with_logging() -> None:
-                try:
-                    result = await self.try_hideout_auto_sync()
-                except Exception as err:
-                    log.error("Autosync: failed %s.", const.Tick.No, exc_info=err)
-                else:
-                    if result:
-                        log.info("Autosync: success %s.", const.Tick.Yes)
-                    else:
-                        log.info("Autosync: not needed %s.", const.Tick.Black)
-
-            if not failed_to_load_all_exts:
-                self.loop.create_task(try_auto_sync_with_logging())
+            if not failed_to_load_some_ext:
+                self.loop.create_task(self.try_auto_sync_with_logging())
             else:
-                log.info(
-                    "Autosync: cancelled %s One or more cogs failed to load.",
-                    const.Tick.No,
-                )
+                log.info("Autosync: cancelled %s One or more cogs failed to load.", const.Tick.No)
+
+    async def try_auto_sync_with_logging(self) -> None:
+        try:
+            result = await self.try_hideout_auto_sync()
+        except Exception as err:
+            log.error("Autosync: failed %s.", const.Tick.No, exc_info=err)
+        else:
+            phrase = f"success {const.Tick.Yes}" if result else f"not needed {const.Tick.Black}"
+            log.info("Autosync: %s.", phrase)
 
     async def try_hideout_auto_sync(self) -> bool:
-        """Try auto copy-global+sync for hideout guild."""
-        # Inspired by:
-        # licensed MPL v2 from DuckBot-Discord/DuckBot `try_autosync`
-        # https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/bot.py
+        """Try automatic `copy_global_to` + `sync` Hideout Guild for easier testing purposes.
 
-        # tag ass, and all. But strictly for convenient development purposes.
-        # let's try min-maxing auto-sync in my hideout/debug guild in my test bot.
+        ?tag ass (auto-syncing sucks) and all, but common - it's just too convenient
+        and I haven't been rate-limited a single time (yet).
+
+        Sources
+        -------
+        * DuckBot
+            licensed MPL v2 from DuckBot-Discord/DuckBot `try_autosync`
+            https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/bot.py
+        """
 
         # safeguard. Need the app id.
         await self.wait_until_ready()
@@ -204,11 +202,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
         if not_synced:
             await self.pool.execute("DELETE FROM auto_sync WHERE guild_id = $1", guild.id)
-            await self.pool.executemany(
-                "INSERT INTO auto_sync (guild_id, payload) VALUES ($1, $2)",
-                new_payloads,
-            )
-
+            await self.pool.executemany("INSERT INTO auto_sync (guild_id, payload) VALUES ($1, $2)", new_payloads)
             await self.tree.sync(guild=guild)
             return True
         else:
@@ -495,12 +489,12 @@ class AluBot(commands.Bot, AluBotHelper):
         # ridiculous attempt to eliminate 404 that appear for Hybrid commands for my own usage.
         # that I can't really remove via on_command_error since they appear before we can do something about it.
         # maybe we need some rewrite about it tho; like ignore all discord.HTTPException
-        if (
-            isinstance(args[0], AluContext)
-            and args[0].author.id == const.User.aluerie
-            and isinstance(exception, discord.NotFound)
-        ):
-            return
+        # if (
+        #     isinstance(args[0], AluContext)
+        #     and args[0].author.id == const.User.aluerie
+        #     and isinstance(exception, discord.NotFound)
+        # ):
+        #     return
 
         embed = (
             discord.Embed(

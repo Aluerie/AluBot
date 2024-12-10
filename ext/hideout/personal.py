@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class PersonalCommands(HideoutCog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
-        if member.guild == self.bot.hideout.guild:
+        if member.guild.id == self.bot.hideout.guild.id:
             if member.bot:
                 # if somebody somehow enters it then also jail them lol
                 await member.add_roles(self.bot.hideout.jailed_bots_role)

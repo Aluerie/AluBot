@@ -340,7 +340,7 @@ class EmoteStats(StatsCog):
             await self.bot.pool.execute(query, clean_up_dt)
 
     @emotestats_group.command(name="specific")
-    async def emotestats_specific(self, interaction: discord.Interaction[AluBot], emote: discord.Emoji) -> None:
+    async def emotestats_specific(self, interaction: discord.Interaction[AluBot], emote: str) -> None:
         """\N{ROLLING ON THE FLOOR LAUGHING} Show information and stats about specific emote.
 
         Parameters
@@ -349,23 +349,33 @@ class EmoteStats(StatsCog):
             Emote to get information/stats about.
 
         """
+        assert interaction.guild
+
+        emoji = discord.utils.find(lambda e: str(e) == emote, interaction.guild.emojis)
+        if not emoji:
+            # TODO: raise my own error actually;
+            embed = discord.Embed(
+                color=const.Colour.maroon,
+                description=f"Didn't find any emotes matching the name `{emote}`",
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
         embed = (
             discord.Embed(
                 colour=const.Colour.blueviolet,
-                title=f"`:{emote.name}:`",
+                title=f"`:{emoji.name}:`",
             )
             .set_author(name="Emote Stats")
-            .set_thumbnail(url=emote.url)
+            .set_thumbnail(url=emoji.url)
             .add_field(
                 name="Emote Information",
-                value=f"ID: `{emote.id}`\nCreated: {formats.format_dt_tdR(emote.created_at)}",
+                value=f"ID: `{emoji.id}`\nCreated: {formats.format_dt_tdR(emoji.created_at)}",
                 inline=False,
             )
         )
 
-        assert interaction.guild
-
-        if emote.guild_id == const.Guild.community:
+        if emoji.guild_id == const.Guild.community:
             table = formats.NoBorderTable()
             table.set_columns(["`Time Period", "Usages", "Percent", "Per Day`"], aligns=["<", ">", ">", ">"])
 
@@ -385,14 +395,14 @@ class EmoteStats(StatsCog):
                     WHERE emote_id=$1 AND guild_id = $2
                     GROUP BY emote_id;
                 """
-            emote_usage_total: int = await self.bot.pool.fetchval(query, emote.id, interaction.guild.id)
+            emote_usage_total: int = await self.bot.pool.fetchval(query, emoji.id, interaction.guild.id)
 
             table.add_row(
                 [
                     "`All-time",
                     emote_usage_total,
                     f"{emote_usage_total/all_emotes_total:.1%}",
-                    f"{self.usage_per_day(emote.created_at, emote_usage_total)}`",
+                    f"{self.usage_per_day(emoji.created_at, emote_usage_total)}`",
                 ]
             )
 
@@ -408,7 +418,7 @@ class EmoteStats(StatsCog):
                     FROM emote_stats_last_year
                     WHERE emote_id = $1 AND guild_id = $2;
                 """
-            emote_usage_last_year: int = await self.bot.pool.fetchval(query, emote.id, interaction.guild.id)
+            emote_usage_last_year: int = await self.bot.pool.fetchval(query, emoji.id, interaction.guild.id)
 
             table.add_row(
                 [
@@ -416,7 +426,7 @@ class EmoteStats(StatsCog):
                     emote_usage_last_year,
                     f"{emote_usage_last_year/all_emotes_last_year:.1%}",
                     f"{self.usage_per_day(
-                        max(emote.created_at, datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=365)),
+                        max(emoji.created_at, datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=365)),
                         emote_usage_last_year,
                     )}`",
                 ]

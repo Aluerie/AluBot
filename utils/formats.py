@@ -253,7 +253,7 @@ def inline_diff(a: str, b: str) -> str:  # a = old_string, b = new_string
             return matcher.a[i1:i2]  # type: ignore
         if tag == "insert":
             return "__" + matcher.b[j1:j2] + "__"  # type: ignore
-        assert False, "Unknown tag %r" % tag
+        assert False, "Unknown tag {!r}".format(tag)
 
     return "".join(process_tag(*t) for t in matcher.get_opcodes())
 
@@ -284,7 +284,7 @@ def inline_word_by_word_diff(before: str, after: str) -> str:
             case "insert":
                 return f"__{b_str}__"
             case _:
-                assert False, "Unknown tag %r" % tag
+                assert False, "Unknown tag {!r}".format(tag)
 
     return " ".join(process_tag(*t) for t in matcher.get_opcodes())
 

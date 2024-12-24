@@ -13,14 +13,14 @@ from discord import app_commands
 from discord.ext import commands, menus
 
 from bot import AluBot, aluloop
-from utils import checks, const, errors, formats, pages
+from utils import const, errors, formats, pages
 
 from ._base import StatsCog
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot, AluGuildContext
+    from bot import AluBot
 
     class BatchLastYearEntry(TypedDict):
         emote_id: int
@@ -177,13 +177,13 @@ class EmoteStats(StatsCog):
             self._batch_total.clear()
             self._batch_last_year.clear()
 
-    @commands.hybrid_group(name="emotestats")
-    @checks.hybrid.is_community()
-    async def emotestats(self, ctx: AluGuildContext) -> None:
-        """Emote Stats Commands."""
-        await ctx.send_help()
+    emotestats_group = app_commands.Group(
+        name="emote",
+        description="\N{ROLLING ON THE FLOOR LAUGHING} Dota 2 FPC (Favourite Player+Character) commands.",
+        guild_ids=const.MY_GUILDS,
+    )
 
-    @emotestats.command(name="server")
+    @emotestats_group.command(name="server")
     @app_commands.choices(
         emote_type=[
             app_commands.Choice(name="All emotes", value="both"),
@@ -198,20 +198,20 @@ class EmoteStats(StatsCog):
     )
     async def emotestats_server(
         self,
-        ctx: AluGuildContext,
+        interaction: discord.Interaction[AluBot],
         emote_type: Literal["both", "static", "animated"],
         timeframe: Literal["all-time", "year", "month"],
     ) -> None:
-        """Show statistic about emote usage in this server.
+        """\N{ROLLING ON THE FLOOR LAUGHING} Show statistic about emote usage in this server.
 
         Parameters
         ----------
-        emote_type : Literal["both", "static", "animated"]
+        emote_type
             Emote type to include in stats.
-        timeframe : Literal["all-time", "year", "month"]
+        timeframe
             Time period to filter results with.
-
         """
+
         if emote_type == "both":
             condition = lambda _: True
         elif emote_type == "static":
@@ -219,7 +219,8 @@ class EmoteStats(StatsCog):
         elif emote_type == "animated":
             condition: Callable[[discord.Emoji], bool] = lambda e: e.animated
 
-        emote_ids = [e.id for e in ctx.guild.emojis if e.is_usable() and condition(e)]
+        assert interaction.guild  # guild only command
+        emote_ids = [e.id for e in interaction.guild.emojis if e.is_usable() and condition(e)]
 
         if not emote_ids:
             msg = "This server does not have any custom emotes."
@@ -233,7 +234,7 @@ class EmoteStats(StatsCog):
                     WHERE guild_id = $1 AND emote_id = ANY($2::bigint[])
                     ORDER BY total DESC
                 """
-            rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, ctx.guild.id, emote_ids))
+            rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, interaction.guild.id, emote_ids))
         else:
             now = datetime.datetime.now(datetime.UTC)
             if timeframe == "month":
@@ -249,14 +250,14 @@ class EmoteStats(StatsCog):
                 GROUP BY emote_id
                 ORDER BY total DESC;
             """
-            rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, ctx.guild.id, emote_ids))
+            rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, interaction.guild.id, emote_ids))
 
         rows.extend([(emote_id, 0) for emote_id in emote_ids if emote_id not in [row[0] for row in rows]])
 
         # all emotes total
         all_emotes_total = sum(t for _, t in rows)
-        assert ctx.me.joined_at is not None
-        all_emotes_per_day = self.usage_per_day(ctx.me.joined_at, all_emotes_total)
+        assert interaction.guild.me.joined_at is not None
+        all_emotes_per_day = self.usage_per_day(interaction.guild.me.joined_at, all_emotes_total)
 
         offset = 0
         split_size = 20
@@ -288,12 +289,12 @@ class EmoteStats(StatsCog):
             offset += split_size
 
         paginator = pages.Paginator(
-            ctx,
+            interaction,
             EmoteStatsPageSource(
                 tables,
                 f"During the timeframe: total {all_emotes_total} emotes were used: {all_emotes_per_day:.0f} per day",
                 f"Emote Type: {emote_type}, Timeframe: {'last' if timeframe != 'all-time' else ''} {timeframe}",
-                ctx.guild.icon,
+                interaction.guild.icon,
             ),
         )
         await paginator.start()
@@ -338,15 +339,13 @@ class EmoteStats(StatsCog):
                 """
             await self.bot.pool.execute(query, clean_up_dt)
 
-    @emotestats.command(name="emote")
-    async def emotestats_emote(self, ctx: AluGuildContext, emote: discord.Emoji) -> None:
-        """Show information and stats about specific emote.
+    @emotestats_group.command(name="specific")
+    async def emotestats_specific(self, interaction: discord.Interaction[AluBot], emote: discord.Emoji) -> None:
+        """\N{ROLLING ON THE FLOOR LAUGHING} Show information and stats about specific emote.
 
         Parameters
         ----------
-        ctx : AluGuildContext
-            Context
-        emote : discord.Emoji
+        emote
             Emote to get information/stats about.
 
         """
@@ -364,6 +363,8 @@ class EmoteStats(StatsCog):
             )
         )
 
+        assert interaction.guild
+
         if emote.guild_id == const.Guild.community:
             table = formats.NoBorderTable()
             table.set_columns(["`Time Period", "Usages", "Percent", "Per Day`"], aligns=["<", ">", ">", ">"])
@@ -375,7 +376,7 @@ class EmoteStats(StatsCog):
                     WHERE guild_id = $1
                     GROUP BY guild_id;
                 """
-            all_emotes_total: int = await self.bot.pool.fetchval(query, ctx.guild.id)
+            all_emotes_total: int = await self.bot.pool.fetchval(query, interaction.guild.id)
 
             # all time this emote
             query = """
@@ -384,7 +385,7 @@ class EmoteStats(StatsCog):
                     WHERE emote_id=$1 AND guild_id = $2
                     GROUP BY emote_id;
                 """
-            emote_usage_total: int = await self.bot.pool.fetchval(query, emote.id, ctx.guild.id)
+            emote_usage_total: int = await self.bot.pool.fetchval(query, emote.id, interaction.guild.id)
 
             table.add_row(
                 [
@@ -400,14 +401,14 @@ class EmoteStats(StatsCog):
                     FROM emote_stats_last_year
                     WHERE guild_id = $1;
                 """
-            all_emotes_last_year: int = await self.bot.pool.fetchval(query, ctx.guild.id)
+            all_emotes_last_year: int = await self.bot.pool.fetchval(query, interaction.guild.id)
 
             query = """
                     SELECT COUNT(*) as "total"
                     FROM emote_stats_last_year
                     WHERE emote_id = $1 AND guild_id = $2;
                 """
-            emote_usage_last_year: int = await self.bot.pool.fetchval(query, emote.id, ctx.guild.id)
+            emote_usage_last_year: int = await self.bot.pool.fetchval(query, emote.id, interaction.guild.id)
 
             table.add_row(
                 [
@@ -434,7 +435,7 @@ class EmoteStats(StatsCog):
             inline=False,
         )
 
-        await ctx.reply(embed=embed)
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: AluBot) -> None:

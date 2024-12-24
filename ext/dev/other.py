@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING
 
 import discord
@@ -21,38 +20,38 @@ class AdminTools(DevBaseCog):
         else:
             word, colour = "left", const.MaterialPalette.red(shade=500)
 
-        e = discord.Embed(title=word, description=guild.description, colour=colour)
-        e.add_field(name="Guild ID", value=f"`{guild.id}`")
-        e.add_field(name="Shard ID", value=guild.shard_id or "N/A")
+        embed = (
+            discord.Embed(
+                colour=colour,
+                title=word,
+                description=guild.description,
+            )
+            .add_field(name="Guild ID", value=f"`{guild.id}`")
+            .add_field(name="Shard ID", value=guild.shard_id or "N/A")
+        )
 
         if guild.owner:
-            e.set_author(name=f"The bot {word} {guild.owner!s}'s guild", icon_url=guild.owner.display_avatar.url)
-            e.add_field(name="Owner ID", value=f"`{guild.owner.id}`")
+            embed.set_author(name=f"The bot {word} {guild.owner!s}'s guild", icon_url=guild.owner.display_avatar.url)
+            embed.add_field(name="Owner ID", value=f"`{guild.owner.id}`")
 
         if guild.icon:
-            e.set_thumbnail(url=guild.icon.url)
+            embed.set_thumbnail(url=guild.icon.url)
 
         bots = sum(m.bot for m in guild.members)
         total = guild.member_count or 1
-        e.add_field(name="Members", value=total)
-        e.add_field(name="Bots", value=f"{bots} ({bots / total:.2%})")
+        embed.add_field(name="Members", value=total)
+        embed.add_field(name="Bots", value=f"{bots} ({bots / total:.2%})")
         if guild.me:
-            e.timestamp = guild.me.joined_at
-        await self.bot.hideout.global_logs.send(embed=e)
+            embed.timestamp = guild.me.joined_at
+        await self.bot.hideout.global_logs.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.send_guild_embed(guild, join=True)
-        query = "INSERT INTO guilds (guild_id, name) VALUES ($1, $2)"
-        await self.bot.pool.execute(query, guild.id, guild.name)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.send_guild_embed(guild, join=False)
-        query = "DELETE FROM guilds WHERE guild_id=$1"
-        # todo: dont delete this ?
-        # we also need something to catch up on bot restarts in case we joined something while we were offline.
-        await self.bot.pool.execute(query, guild.id)
 
     @commands.group(name="guild", hidden=True)
     async def guild_group(self, ctx: AluContext) -> None:
@@ -80,17 +79,6 @@ class AdminTools(DevBaseCog):
             f"{chr(10).join([f'• {item.name} `{item.id}`' for item in self.bot.guilds])}"
         )
         await ctx.reply(embed=e)
-
-    @guild_group.command(hidden=True)
-    async def api(self, ctx: AluContext) -> None:
-        """Lazy way to update GitHub ReadMe badges until I figure out more continuous one."""
-        json_dict = {
-            "servers": len(self.bot.guilds),
-            "users": len(self.bot.users),  # [x for x in self.bot.users if not x.bot]
-            "updated": discord.utils.utcnow().strftime("%d/%b/%y"),
-        }
-        json_object = json.dumps(json_dict, indent=4)
-        await ctx.reply(content=f"```json\n{json_object}```")
 
     # @commands.is_owner()
     # @commands.command(hidden=True)

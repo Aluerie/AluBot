@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord import app_commands
-from discord.ext import commands
 from PIL import Image
 
 from utils import const
@@ -22,7 +21,7 @@ from utils import const
 from ._base import InfoCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluContext
+    from bot import AluBot
 
 
 class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.PepoG):
@@ -61,42 +60,60 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
         embed = self.get_avatar_embed_worker(user)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @commands.hybrid_group(name="profile")
-    async def profile_group(self, ctx: AluContext) -> None:
-        """Profile Commands."""
-        await ctx.send_help(ctx.command)
+    profile_group = app_commands.Group(
+        name="profile",
+        description="\N{IDENTIFICATION CARD} View discord user profile related data.",
+    )
 
     @profile_group.command(name="avatar")
-    @app_commands.describe(user="User to view avatar of;")
-    async def profile_avatar(self, ctx: AluContext, *, user: discord.User) -> None:
-        """View @user's avatar picture."""
-        await ctx.reply(embed=self.get_avatar_embed_worker(user))
+    async def profile_avatar(self, interaction: discord.Interaction[AluBot], user: discord.User) -> None:
+        """\N{IDENTIFICATION CARD} View @user's avatar picture.
+
+        Parameters
+        ----------
+        user:
+            User to view avatar of.
+        """
+        await interaction.response.send_message(embed=self.get_avatar_embed_worker(user))
 
     @profile_group.command(name="banner")
-    @app_commands.describe(user="User to view banner of;")
-    async def profile_banner(self, ctx: AluContext, *, user: discord.User) -> None:
-        """View @user's banner picture."""
+    async def profile_banner(self, interaction: discord.Interaction[AluBot], user: discord.User) -> None:
+        """\N{IDENTIFICATION CARD} View @user's banner picture.
+
+        Parameters
+        ----------
+        user:
+            User to view banner of.
+        """
+
         # banner and accent_colour info is only available via Client.fetch_user().
         # https://discordpy.readthedocs.io/en/latest/api.html?highlight=user#discord.User.banner
         fetched_user = await self.bot.fetch_user(user.id)
 
         if banner := fetched_user.banner:
-            embed = discord.Embed(colour=user.colour, title=f"Banner for {user.display_name}").set_image(url=banner.url)
-            await ctx.reply(embed=embed)
-        elif accent_colour := fetched_user.accent_colour:
-            img = Image.new("RGB", (300, 300), accent_colour.to_rgb())
-            file = ctx.bot.transposer.image_to_file(img, filename="colour.png")
-            embed = discord.Embed(colour=user.colour, title=f"Banner for {user.display_name}").set_image(
-                url=f"attachment://{file.filename}"
-            )
-            await ctx.reply(embed=embed)
-        else:
+            # user set an image as a banner
             embed = discord.Embed(
                 colour=user.colour,
                 title=f"Banner for {user.display_name}",
-                description="The user did not set banner nor explicitly set their profile accent colour.",
+            ).set_image(url=banner.url)
+            await interaction.response.send_message(embed=embed)
+        elif accent_colour := fetched_user.accent_colour:
+            # user set some colour as a banner
+            img = Image.new("RGB", (300, 300), accent_colour.to_rgb())
+            file = interaction.client.transposer.image_to_file(img, filename="colour.png")
+            embed = discord.Embed(
+                colour=user.colour,
+                title=f"Banner for {user.display_name}",
+            ).set_image(url=f"attachment://{file.filename}")
+            await interaction.response.send_message(embed=embed)
+        else:
+            # user does not have a banner set
+            embed = discord.Embed(
+                colour=user.colour,
+                title=f"Banner for {user.display_name}",
+                description="The user did not set a profile banner nor explicitly set their profile accent colour.",
             )
-            await ctx.reply(embed=embed)
+            await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: AluBot) -> None:

@@ -21,6 +21,11 @@ if TYPE_CHECKING:
         name: str
         last_seen: datetime.datetime
 
+    class LeaderboardQueryRow(TypedDict):
+        id: int
+        exp: int
+        rep: int
+
 
 LAST_SEEN_TIMEOUT = 60
 
@@ -181,14 +186,14 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             WHERE in_lvl=TRUE
             ORDER BY {sort_by} DESC;
         """
-        rows = await self.bot.pool.fetch(query)
+        rows: list[LeaderboardQueryRow] = await self.bot.pool.fetch(query)
         for row in rows:
-            if (member := guild.get_member(row.id)) is None:
+            if (member := guild.get_member(row["id"])) is None:
                 continue
             new_array.append(
                 f"{member.mention}\n`"
                 f"{formats.indent(' ', cnt, offset, split_size)} "
-                f"level {get_level(row.exp)}, {row.exp} exp| {row.rep} rep`"
+                f"level {get_level(row["exp"])}, {row["exp"]} exp| {row["rep"]} rep`"
             )
             cnt += 1
 
@@ -227,11 +232,11 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                 if not level_up_role or not previous_level_role:
                     msg = "Roles were not found in the community guild"
                     raise ValueError(msg)
-                e = discord.Embed(colour=const.Colour.blueviolet)
-                e.description = "{0} just advanced to {1} ! {2} {2} {2}".format(
-                    message.author.mention, level_up_role.mention, const.Emote.PepoG
+                embed = discord.Embed(
+                    colour=const.Colour.blueviolet,
+                    description=f"{message.author.mention} just advanced to {level_up_role.mention} ! {const.Emote.PepoG}",
                 )
-                await message.channel.send(embed=e)
+                await message.channel.send(embed=embed)
                 await author.remove_roles(previous_level_role)
                 await author.add_roles(level_up_role)
 

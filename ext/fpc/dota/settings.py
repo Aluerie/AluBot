@@ -60,7 +60,7 @@ class DotaAccount(Account):
     # async def set_game_specific_attrs(self, _: AluBot, player: DotaPlayerCandidate) -> None:
     #     steam_id_obj = SteamID(player.steam)
     #     if steam_id_obj.type != EType.Individual:
-    #         steam_id_obj = SteamID.from_url(player.steam)  # type: ignore # ValvePython doesn't care about TypeHints
+    #         steam_id_obj = SteamID.from_url(player.steam)  # type-ignore # ValvePython doesn't care about TypeHints
     #     if steam_id_obj is None or (hasattr(steam_id_obj, "type") and steam_id_obj.type != EType.Individual):
     #         msg = (
     #             f"Error checking steam profile for {player.steam}.\n"

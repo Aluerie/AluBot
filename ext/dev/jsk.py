@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import os
+from typing import TYPE_CHECKING, override
 
 from jishaku.cog import OPTIONAL_FEATURES, STANDARD_FEATURES
 
@@ -24,6 +25,16 @@ class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=catego
     """
 
     __is_jishaku__: bool = True
+
+    @override
+    def cog_load(self) -> None:
+        os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
+        os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
+        os.environ["JISHAKU_HIDE"] = "True"
+
+    @override
+    def cog_unload(self) -> None:
+        pass
 
 
 async def setup(bot: AluBot) -> None:

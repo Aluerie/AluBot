@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import datetime
 import logging
-import os
 import sys
 import textwrap
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -34,7 +32,7 @@ if TYPE_CHECKING:
     from discord.abc import Snowflake
 
     from bot import AluCog
-    from utils.database import DotRecord, PoolTypedWithAny
+    from utils.database import PoolTypedWithAny
 
 
 __all__ = ("AluBot",)
@@ -50,14 +48,18 @@ class AluBotHelper(TimerManager):
 
 
 class AluBot(commands.Bot, AluBotHelper):
-    """AluBot."""
+    """Main class for AluBot.
+
+    Essentially extended subclass over discord.py's `commands.Bot`
+    Used to interact with the Discord WebSocket, API and more.
+    Includes discord.py's `ext.commands` extension to organize cogs/commands framework.
+    """
 
     if TYPE_CHECKING:
         user: discord.ClientUser
         #     bot_app_info: discord.AppInfo
         #     launch_time: datetime.datetime
         logs_via_webhook_handler: Any
-        #     prefixes: PrefixConfig
         tree: AluAppCommandTree
         #     cogs: Mapping[str, AluCog]
         old_tree_error: Callable[
@@ -96,7 +98,7 @@ class AluBot(commands.Bot, AluBotHelper):
             command_prefix={self.main_prefix},
             activity=discord.Streaming(
                 name="\N{PURPLE HEART} /help /setup",
-                url="https://www.twitch.tv/irene_adler__",
+                url="https://twitch.tv/irene_adler__",
             ),
             intents=INTENTS,
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
@@ -122,18 +124,12 @@ class AluBot(commands.Bot, AluBotHelper):
             seconds=datetime.timedelta(days=7).seconds
         )
 
-        self.prefix_cache: dict[int, set[str]] = {}
-
         self.twitch = AluTwitchClient(self)
         self.dota = Dota2Client(self)
 
     @override
     async def setup_hook(self) -> None:
         self.bot_app_info: discord.AppInfo = await self.application_info()
-
-        os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
-        os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
-        os.environ["JISHAKU_HIDE"] = "True"  # need to be before loading jsk
 
         failed_to_load_some_ext = False
         for ext in get_extensions(self.test):
@@ -147,19 +143,16 @@ class AluBot(commands.Bot, AluBotHelper):
                 ).set_footer(text=f'setup_hook: loading extension "{ext}"')
                 await self.exc_manager.register_error(error, embed)
 
-        await self.populate_database_cache()
-        await self.create_database_listeners()
-
         # we could go with attribute option like exceptions manager
         # but let's keep its methods nearby in AluBot namespace
         # needs to be done after cogs are loaded so all cog event listeners are ready
         super(AluBotHelper, self).__init__(bot=self)
 
         if self.test:
-            if not failed_to_load_some_ext:
-                self.loop.create_task(self.try_auto_sync_with_logging())
-            else:
+            if failed_to_load_some_ext:
                 log.info("Autosync: cancelled %s One or more cogs failed to load.", const.Tick.No)
+            else:
+                self.loop.create_task(self.try_auto_sync_with_logging())
 
     async def try_auto_sync_with_logging(self) -> None:
         try:
@@ -207,49 +200,6 @@ class AluBot(commands.Bot, AluBotHelper):
             return True
         else:
             return False
-
-    async def populate_database_cache(self) -> None:
-        """Populate cache coming from the database."""
-        prefix_data: list[tuple[int, set[str]]] = await self.pool.fetch("SELECT guild_id, prefixes FROM guilds")
-        self.prefix_cache = {guild_id: prefixes for guild_id, prefixes in prefix_data if prefixes}
-
-    @override
-    async def get_prefix(self, message: discord.Message) -> list[str]:
-        """Return the prefixes for the given message.
-
-        Parameters
-        ----------
-        message
-            The message to get the prefix of.
-
-        """
-        cached_prefixes = self.prefix_cache.get((message.guild and message.guild.id or 0), None)
-        base_prefixes = set(cached_prefixes) if cached_prefixes else self.command_prefix
-        return commands.when_mentioned_or(*base_prefixes)(self, message)
-
-    async def create_database_listeners(self) -> None:
-        """Register listeners for database events."""
-        self.listener_connection = await self.pool.acquire()  # type: ignore
-
-        async def _delete_prefixes_event(
-            conn: asyncpg.Connection[DotRecord], pid: int, channel: str, payload: str
-        ) -> None:
-            from_json = discord.utils._from_json(payload)
-            with contextlib.suppress(Exception):
-                del self.prefix_cache[from_json["guild_id"]]
-
-        async def _create_or_update_event(
-            conn: asyncpg.Connection[DotRecord], pid: int, channel: str, payload: str
-        ) -> None:
-            from_json = discord.utils._from_json(payload)
-            self.prefix_cache[from_json["guild_id"]] = set(from_json["prefixes"])
-
-        # they want `conn` in functions above to be type-hinted as
-        # `asyncpg.Connection[Any] | asyncpg.pool.PoolConnectionProxy[Any]`
-        # and payload as `object`
-        # while we define those params very clearly in .sql and here.
-        await self.listener_connection.add_listener("delete_prefixes", _delete_prefixes_event)  # type: ignore
-        await self.listener_connection.add_listener("update_prefixes", _create_or_update_event)  # type: ignore
 
     @override
     async def add_cog(

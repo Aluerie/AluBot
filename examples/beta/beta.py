@@ -13,10 +13,6 @@ class BetaTest(BetaCog):
     async def prefix(self, ctx: AluContext) -> None:
         await ctx.send("prefix")
 
-    @commands.hybrid_command()
-    async def hybrid(self, ctx: AluContext) -> None:
-        await ctx.send("hybrid")
-
     @app_commands.command()
     async def slash(self, interaction: discord.Interaction[AluBot]) -> None:
         await interaction.response.send_message("slash")

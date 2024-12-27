@@ -5,6 +5,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, NamedTuple, Self, override
 
 import discord
+from discord import app_commands
 from discord.ext import commands
 
 from bot import AluView
@@ -13,7 +14,7 @@ from utils import const
 from .._base import FunCog
 
 if TYPE_CHECKING:
-    from bot import AluGuildContext
+    from bot import AluBot
 
 
 class RPSElement(NamedTuple):
@@ -158,26 +159,32 @@ class RockPaperScissorsCommand(FunCog):
     Rock Paper Scissors mini-game.
     """
 
-    @commands.hybrid_command(name="rock-paper-scissors", aliases=["rps", "rock_paper_scissors"])
-    async def rps(self, ctx: AluGuildContext, user: discord.Member | discord.User) -> None:
+    @app_commands.command(name="rock-paper-scissors")
+    async def rps(self, interaction: discord.Interaction[AluBot], user: discord.Member | discord.User) -> None:
         """Rock Paper Scissors game with @member."""
-        if user == ctx.author:
+        if user == interaction.user:
             msg = "You cannot challenge yourself in a Rock Paper Scissors game"
             raise commands.BadArgument(msg)
-        if user.bot and ctx.guild and user != ctx.guild.me:
+        if user.bot and interaction.guild and user != interaction.guild.me:
             msg = "I'm afraid other bots do not know how to play this game"
             raise commands.BadArgument(msg)
 
-        player1, player2 = (ctx.author, user)
-        e = discord.Embed(title="Rock Paper Scissors Game", colour=const.Colour.blueviolet)
-        e.add_field(name="Player 1", value=f"{player1.mention}")
-        e.add_field(name="Player 2", value=f"{player2.mention}")
-        e.add_field(
-            name="Game State Log",
-            value="\N{BLACK CIRCLE} Both players need to choose their item",
-            inline=False,
+        player1, player2 = (interaction.user, user)
+        embed = (
+            discord.Embed(
+                colour=const.Colour.blueviolet,
+                title="Rock Paper Scissors Game",
+            )
+            .add_field(name="Player 1", value=f"{player1.mention}")
+            .add_field(name="Player 2", value=f"{player2.mention}")
+            .add_field(
+                name="Game State Log",
+                value="\N{BLACK CIRCLE} Both players need to choose their item",
+                inline=False,
+            )
         )
         view = RPSView(player1=player1, player2=player2)
-        view.message = await ctx.reply(embed=e, view=view)
+        await interaction.response.send_message(embed=embed, view=view)
+        view.message = await interaction.original_response()
         if user.bot:
             await view.bot_choice_edit()

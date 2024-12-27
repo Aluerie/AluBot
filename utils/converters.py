@@ -196,7 +196,7 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
     #     ][:25]
 
 
-class MonthNumber(commands.Converter[int], app_commands.Transformer):
+class MonthPicker(commands.Converter[int], app_commands.Transformer):
     mapping: Mapping[str, int] = {
         "January": 1,
         "February": 2,
@@ -240,7 +240,7 @@ class MonthNumber(commands.Converter[int], app_commands.Transformer):
 
 class DateTimezonePicker(commands.FlagConverter, case_insensitive=True):
     day: commands.Range[int, 1, 31] = commands.flag(description="Day, number from 1 till 31.")
-    month: app_commands.Transform[int, MonthNumber] = commands.flag(description="Month, type name like 'September'.")
+    month: app_commands.Transform[int, MonthPicker] = commands.flag(description="Month, type name like 'September'.")
 
     # year is default 1900 because datetime.strptime puts 1900 as default when no year is given
     year: commands.Range[int, 1970] = commands.flag(default=1900, description="Year, number YYYY format.")

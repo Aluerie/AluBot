@@ -20,12 +20,6 @@ if TYPE_CHECKING:
 class TimeZone(NamedTuple):
     """Timezone Named-Tuple.
 
-    Notes
-    -----
-    * In hybrid commands to make autocomplete work we need to use:
-        >>> timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
-    * In app commands we need to use it^ to make it work at all.
-
     Attributes
     ----------
     label: str
@@ -82,13 +76,7 @@ class TimeZone(NamedTuple):
 
 
 class TimeZoneTransformer(app_commands.Transformer):
-    """Transformer to use in app_commands.
-
-    Note that we need to use
-    >>> timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
-    in app commands for them to work
-    and in hybrid if we need autocomplete to work
-    """
+    """Transformer to use in app_commands."""
 
     @override
     async def transform(self, interaction: discord.Interaction[AluBot], value: str) -> TimeZone:

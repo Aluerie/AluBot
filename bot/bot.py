@@ -25,7 +25,7 @@ from .timer import TimerManager
 from .tree import AluAppCommandTree
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Coroutine, MutableMapping, Sequence
+    from collections.abc import MutableMapping, Sequence
 
     import asyncpg
     from aiohttp import ClientSession
@@ -62,10 +62,6 @@ class AluBot(commands.Bot, AluBotHelper):
         logs_via_webhook_handler: Any
         tree: AluAppCommandTree
         #     cogs: Mapping[str, AluCog]
-        old_tree_error: Callable[
-            [discord.Interaction[AluBot], discord.app_commands.AppCommandError],
-            Coroutine[Any, Any, None],
-        ]
         command_prefix: set[Literal["~", "$"]]  # default is some mix of Iterable[str] and Callable
         listener_connection: asyncpg.Connection[asyncpg.Record]
 
@@ -114,9 +110,9 @@ class AluBot(commands.Bot, AluBotHelper):
         self.transposer: transposer.TransposeClient = transposer.TransposeClient(session=session)
         self.disambiguator: disambiguator.Disambiguator = disambiguator.Disambiguator()
 
-        self.repo_url: str = "https://github.com/Aluerie/AluBot"
+        self.repository_url: str = "https://github.com/Aluerie/AluBot"
         self.developer: str = "Aluerie"  # it's my GitHub account name
-        self.server_url: str = "https://discord.gg/K8FuDeP"
+        self.community_invite_url: str = "https://discord.gg/K8FuDeP"
 
         self.category_cogs: dict[ExtCategory, list[AluCog]] = {}
 
@@ -414,6 +410,13 @@ class AluBot(commands.Bot, AluBotHelper):
         return config.ERROR_PING
 
     @override
+    async def on_message(self, message: discord.Message) -> None:
+        if message.guild and message.guild.id == const.Guild.hideout and not message.author.bot:
+            # only process commands in my own private server and only from me (the only non-bot account in there);
+            # everybody else everywhere else should use slash commands.
+            await self.process_commands(message)
+
+    @override
     async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
         """Called when an error is raised in an event listener.
 
@@ -427,24 +430,9 @@ class AluBot(commands.Bot, AluBotHelper):
             The keyword arguments for the event that raised the exception.
 
         """
-        # Exception Traceback
         (_exception_type, exception, _traceback) = sys.exc_info()
         if exception is None:
             exception = TypeError("Somehow `on_error` fired with exception being `None`.")
-
-        # Silence command errors that somehow get bubbled up far enough here
-        # if isinstance(exception, commands.CommandInvokeError):
-        #     return
-
-        # ridiculous attempt to eliminate 404 that appear for Hybrid commands for my own usage.
-        # that I can't really remove via on_command_error since they appear before we can do something about it.
-        # maybe we need some rewrite about it tho; like ignore all discord.HTTPException
-        # if (
-        #     isinstance(args[0], AluContext)
-        #     and args[0].author.id == const.User.aluerie
-        #     and isinstance(exception, discord.NotFound)
-        # ):
-        #     return
 
         embed = (
             discord.Embed(

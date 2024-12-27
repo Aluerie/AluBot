@@ -12,14 +12,16 @@ import aiofiles
 import discord
 import psutil
 import pygit2
+from discord import app_commands
 from discord.ext import commands
 from pygit2.enums import SortMode
+from tabulate import tabulate
 
 from bot import AluCog, Url
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluContext
+    from bot import AluBot
 
 
 async def count_lines(
@@ -87,65 +89,61 @@ class PingTuple(NamedTuple):
 
 
 class OtherCog(AluCog):
-    @commands.command()
-    async def hello(self, ctx: AluContext) -> None:
-        await ctx.reply(f"Hello {const.Emote.bubuAYAYA}")
-
-    @commands.hybrid_command(aliases=["join"])
-    async def invite(self, ctx: AluContext) -> None:
-        """Show the invite link, so you can add me to your server.
-        You can also press "Add to Server" button in my profile.
-        """
-        await ctx.reply(view=Url(self.bot.invite_link, emoji="\N{SWAN}", label="Invite Link"))
-
-    @commands.hybrid_command(help="Checks the bot's ping to Discord")
-    async def ping(self, ctx: AluContext) -> None:
-        pings: list[PingTuple] = []
+    @app_commands.command()
+    async def ping(self, interaction: discord.Interaction[AluBot]) -> None:
+        """Checks the bot's ping to Discord and some other services."""
 
         typing_start = time.monotonic()
-        await ctx.typing()
+        await interaction.response.defer()
+
         typing_ms = (time.monotonic() - typing_start) * 1000
-        pings.append(PingTuple("\N{KEYBOARD}", "Typing", typing_ms))
 
         start = time.perf_counter()
-        message = await ctx.reply("\N{TABLE TENNIS PADDLE AND BALL} Pong!")
+        message = await interaction.followup.send("\N{TABLE TENNIS PADDLE AND BALL} Pong!", wait=True)
         message_ms = (time.perf_counter() - start) * 1000
-        pings.append(PingTuple("\N{LOVE LETTER}", "Message", message_ms))
 
         latency_ms = self.bot.latency * 1000
-        pings.append(PingTuple("\N{SPIDER WEB}", "Websocket", latency_ms))
 
         postgres_start = time.perf_counter()
         await self.bot.pool.fetch("SELECT 1")
         postgres_ms = (time.perf_counter() - postgres_start) * 1000
-        pings.append(PingTuple("\N{ELEPHANT}", "Database", postgres_ms))
 
-        average = sum([k.value for k in pings]) / len(pings)
-        pings.append(PingTuple("\N{PERMANENT PAPER SIGN}\N{VARIATION SELECTOR-16}", "Average", average))
+        pings = [
+            ("\N{LOWER LEFT BALLPOINT PEN}\N{VARIATION SELECTOR-16}", "Typing", typing_ms),
+            ("\N{LOVE LETTER}", "Message", message_ms),
+            ("\N{EARTH GLOBE EUROPE-AFRICA}", "Websocket", latency_ms),
+            ("\N{ELEPHANT}", "Database", postgres_ms),
+        ]
+        average = sum([p[2] for p in pings]) / len(pings)
+        pings.append(("\N{PERMANENT PAPER SIGN}\N{VARIATION SELECTOR-16}", "Average", average))
 
-        longest_word_length = max([len(p.name) for p in pings])
+        embed = discord.Embed(
+            colour=discord.Colour.dark_embed(),
+            description=f'```py\n{tabulate(pings, ("", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f"))}\n```',
+        )
+        await message.edit(embed=embed)
 
-        strings = [f"{p.emoji} `{p.name.ljust(longest_word_length, ' ')} | {round(p.value, 3):07.3f}ms`" for p in pings]
-        answer = "\n".join(strings)
-
-        # await asyncio.sleep(0.7)
-        e = discord.Embed(colour=discord.Colour.dark_embed(), description=answer)
-        await message.edit(embed=e)
-
-    @commands.hybrid_command(help="Show info about the bot")
-    async def about(self, ctx: AluContext) -> None:
-        """Information about the bot itself."""
-        await ctx.defer()
+    @app_commands.command()
+    async def about(self, interaction: discord.Interaction[AluBot]) -> None:
+        """Show information about the bot."""
+        await interaction.response.defer()
         information = self.bot.bot_app_info
 
-        e = discord.Embed(
-            colour=const.Colour.darkviolet,
-            description=information.description,
-        ).set_author(
-            name=f"Made by @{information.owner}",
-            icon_url=information.owner.display_avatar.url,
+        embed = (
+            discord.Embed(
+                colour=const.Colour.darkviolet,
+                description=information.description,
+            )
+            .set_author(
+                name=f"Made by @{information.owner}",
+                icon_url=information.owner.display_avatar.url,
+            )
+            .add_field(
+                name="Latest updates:",
+                value=get_latest_commits(limit=3),
+                inline=False,
+            )
         )
-        e.add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
 
         # statistics
         total_members = 0
@@ -159,17 +157,17 @@ class OtherCog(AluCog):
 
         # avg = [(len([m for m in g.members if not m.bot]) / (g.member_count or 1)) * 100 for g in self.bot.guilds]
         # avg_slash_bot = f"{round(sum(avg) / len(avg), 1)}% avg bot/human"
-        e.add_field(name="Servers", value=f"{guilds} total")  # \n{avg_slash_bot}"
-        e.add_field(name="Members", value=f"{total_members:,} total\n{total_unique:,} unique")
+        embed.add_field(name="Servers", value=f"{guilds} total")  # \n{avg_slash_bot}"
+        embed.add_field(name="Members", value=f"{total_members:,} total\n{total_unique:,} unique")
 
         memory_usage = psutil.Process().memory_full_info().uss / 1024**2
         cpu_usage = psutil.cpu_percent()
 
-        e.add_field(name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU")
-        e.add_field(name="Command Stats", value="*stats coming soon*")
+        embed.add_field(name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU")
+        embed.add_field(name="Command Stats", value="*stats coming soon*")
         # todo: implement command run total and total amount of slash/text commands in the bot maybe tasks
 
-        e.add_field(
+        embed.add_field(
             name="Code stats",
             value=(
                 f"Lines: {(await count_lines('./', '.py') + await count_lines('./', '.sql')):,}\n"
@@ -177,17 +175,17 @@ class OtherCog(AluCog):
                 f"Classes: {await count_others('./', '.py', 'class '):,}"
             ),
         )
-        e.add_field(name="Last reboot", value=discord.utils.format_dt(self.bot.launch_time, style="R"))
-        e.set_footer(text="Made with Love... and discord.py \N{SPARKLING HEART}", icon_url=const.Logo.Python)
-        await ctx.reply(embed=e)
+        embed.add_field(name="Last reboot", value=discord.utils.format_dt(self.bot.launch_time, style="R"))
+        embed.set_footer(text="Made with Love... and discord.py \N{SPARKLING HEART}", icon_url=const.Logo.Python)
+        await interaction.followup.send(embed=embed)
 
-    @commands.hybrid_command(aliases=["sourcecode", "code"], usage="[command|command.subcommand]")
-    async def source(self, ctx: AluContext, *, command: str | None = None) -> None:
+    @app_commands.command()
+    async def source(self, interaction: discord.Interaction[AluBot], *, command: str | None = None) -> None:
         """Links to the bots code, or a specific command's."""
-        source_url = ctx.bot.repo_url
-        branch = "master"
+        source_url = interaction.client.repository_url
+        branch = "main"
 
-        license_url = f"{source_url}/blob/master/LICENSE"
+        license_url = f"{source_url}/blob/main/LICENSE"
         embed = (
             discord.Embed(
                 colour=0x612783,
@@ -204,7 +202,7 @@ class OtherCog(AluCog):
 
         if command is None:
             view = Url(source_url, label="GitHub Repo", emoji=const.EmoteLogo.GitHub)
-            await ctx.reply(embed=embed, view=view)
+            await interaction.response.send_message(embed=embed, view=view)
             return
 
         if command == "help":
@@ -240,4 +238,9 @@ class OtherCog(AluCog):
         embed.set_footer(text=f"Found source code here:\n{location}#L{first_line_no}-L{first_line_no + len(lines) - 1}")
 
         view = Url(final_url, label=f'Source code for command "{obj!s}"', emoji=const.EmoteLogo.GitHub)
-        await ctx.reply(embed=embed, view=view)
+        await interaction.response.send_message(embed=embed, view=view)
+
+
+async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
+    await bot.add_cog(OtherCog(bot))

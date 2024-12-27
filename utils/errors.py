@@ -24,6 +24,7 @@ __all__: tuple[str, ...] = (
     "SilentError",
     "ResponseNotOK",
     "PlaceholderRaiseError",
+    "PermissionsError",
 )
 
 
@@ -110,4 +111,8 @@ class PlaceholderRaiseError(AluBotError):
 
 
 class TimeoutError(AluBotError):
+    __slots__: tuple[str, ...] = ()
+
+
+class PermissionsError(AluBotError):
     __slots__: tuple[str, ...] = ()

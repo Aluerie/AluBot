@@ -108,9 +108,9 @@ class ExceptionManager:
         #     return
 
         # apparently there is https://github.com/vi3k6i5/flashtext for "the fastest replacement"
-        # not sure if I want to add extra dependance
+        # not sure if I want to add extra dependency
         traceback_string = "".join(traceback.format_exception(error)).replace(str(Path.cwd()), "AluBot")
-        # .replace("``": "`\u200b`")
+        traceback_string = traceback_string.replace("``", "`\u200b`")
 
         async with self._lock:
             if self._most_recent and (delta := datetime.datetime.now(datetime.UTC) - self._most_recent) < self.cooldown:
@@ -129,11 +129,11 @@ class ExceptionManager:
 
         Parameters
         ----------
-        traceback : str
+        traceback
             The traceback of the error.
-        embed : discord.Embed
+        embed
             The additional information about the error. This comes from registering the error.
-        mention : bool
+        mention
             Whether to send said embed and ping Irene at all.
 
         """

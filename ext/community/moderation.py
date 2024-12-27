@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 import discord
 from discord.ext import commands
 
-from utils import checks, const, errors, times
+from utils import const, errors, times
 
 from ._base import CommunityCog
 
@@ -29,7 +29,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             raise errors.ErroneousUsage(msg)
 
     @commands.has_role(const.Role.discord_mods)
-    @checks.prefix.is_community()
+    # @app_commands.guilds(const.Guild.community)
     @commands.command()
     async def warn(self, ctx: AluGuildContext, member: discord.Member, *, reason: str = "No reason") -> None:
         """Give member a warning."""
@@ -45,7 +45,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         await self.community.logs.send(embed=e)
 
     @commands.has_role(const.Role.discord_mods)
-    @checks.prefix.is_community()
+    # @app_commands.guilds(const.Guild.community)
     @commands.command()
     async def mute(
         self,

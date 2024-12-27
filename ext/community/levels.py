@@ -9,7 +9,7 @@ from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from bot import aluloop
-from utils import checks, const, errors, formats, pages
+from utils import const, errors, formats, pages
 
 from ._base import CommunityCog
 
@@ -162,17 +162,24 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         )
         return ctx.client.transposer.image_to_file(image, filename="rank.png")
 
-    @commands.hybrid_command(name="rank")
-    @checks.hybrid.is_community()
-    async def rank(self, ctx: AluGuildContext, member: discord.Member) -> None:
+    @app_commands.guilds(const.Guild.community)
+    @app_commands.command(name="rank")
+    async def rank(self, interaction: discord.Interaction[AluBot], member: discord.Member) -> None:
         """View member's rank and level in this server."""
-        await ctx.reply(file=await self.rank_work(ctx, member), ephemeral=True)
+        await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
 
-    @commands.hybrid_command(name="leaderboard", aliases=["l"])
-    @checks.hybrid.is_community()
-    @app_commands.describe(sort_by="Choose how to sort leaderboard")
-    async def leaderboard(self, ctx: AluGuildContext, sort_by: Literal["exp", "rep"] = "exp") -> None:
-        """View experience leaderboard for this server."""
+    @app_commands.guilds(const.Guild.community)
+    @app_commands.command(name="leaderboard")
+    async def leaderboard(
+        self, interaction: discord.Interaction[AluBot], sort_by: Literal["exp", "rep"] = "exp"
+    ) -> None:
+        """View experience leaderboard for this server.
+
+        Parameters
+        ----------
+        sort_by
+            Choose how to sort leaderboard
+        """
         guild = self.community.guild
 
         new_array = []
@@ -198,7 +205,11 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             cnt += 1
 
         pgs = pages.EnumeratedPaginator(
-            ctx, new_array, per_page=split_size, colour=const.Colour.blueviolet, title="Server Leaderboard"
+            interaction,
+            new_array,
+            per_page=split_size,
+            colour=const.Colour.blueviolet,
+            title="Server Leaderboard",
         )
         await pgs.start()
 
@@ -242,19 +253,23 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
     thanks_words = ("thanks", "ty", "thank")
 
-    @commands.hybrid_command(name="rep", aliases=["reputation"], description="Give +1 to @member reputation")
-    @commands.cooldown(1, 60 * 60, commands.BucketType.user)
-    @checks.hybrid.is_community()
+    @app_commands.command(name="give-rep")
+    @app_commands.guilds(const.Guild.community)
+    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @app_commands.describe(member="Member to give rep to")
-    async def reputation(self, ctx: AluGuildContext, member: discord.Member) -> None:
+    async def reputation(self, interaction: discord.Interaction[AluBot], member: discord.Member) -> None:
         """Give +1 to `@member`'s reputation ;"""
-        if member == ctx.author or member.bot:
-            await ctx.reply(content="You can't give reputation to yourself or bots.")
+        if member == interaction.user or member.bot:
+            msg = "You can't give reputation to yourself or bots."
+            raise errors.ErroneousUsage(msg)
         else:
             query = "UPDATE community_members SET rep=rep+1 WHERE id=$1 RETURNING rep"
             reputation: int = await self.bot.pool.fetchval(query, member.id)
-            answer_text = f"Added +1 reputation to **{member.display_name}**: now {reputation} reputation"
-            await ctx.reply(content=answer_text)
+            embed = discord.Embed(
+                color=discord.Colour.green(),
+                description=f"Added +1 reputation to **{member.display_name}**: now {reputation} reputation",
+            )
+            await interaction.response.send_message(embed=embed)
 
     @commands.Cog.listener(name="on_message")
     async def reputation_counting(self, message: discord.Message) -> None:

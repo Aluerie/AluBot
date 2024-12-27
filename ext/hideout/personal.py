@@ -15,15 +15,6 @@ if TYPE_CHECKING:
 
 
 class PersonalCommands(HideoutCog):
-    @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member) -> None:
-        if member.guild.id == self.bot.hideout.guild.id:
-            if member.bot:
-                # if somebody somehow enters it then also jail them lol
-                await member.add_roles(self.bot.hideout.jailed_bots_role)
-            else:
-                await member.kick()
-
     @commands.Cog.listener(name="on_message")
     async def personal_git_copy_paste(self, message: discord.Message) -> None:
         if message.channel.id == const.Channel.alubot_github:

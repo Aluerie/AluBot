@@ -14,14 +14,13 @@ from typing import TYPE_CHECKING, Literal
 import discord
 import psutil
 from discord import app_commands
-from discord.ext import commands
 
-from utils import checks, const
+from utils import const
 
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluContext
+    from bot import AluBot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -125,8 +124,7 @@ class DevInformation(DevBaseCog):
     async def system_logs(self, interaction: discord.Interaction[AluBot]) -> None:
         """🔬 (#Hideout) Get bot's logs."""
         await interaction.response.defer()
-        logs_file = discord.File(".alubot/alubot.log")
-        await interaction.followup.send(file=logs_file)
+        await interaction.followup.send(file=discord.File(".temp/alubot.log"))
 
     @system_group.command(name="health")
     async def system_health(self, interaction: discord.Interaction[AluBot]) -> None:
@@ -196,18 +194,27 @@ class DevInformation(DevBaseCog):
         embed.description = "\n".join(description)
         await interaction.followup.send(embed=embed)
 
-    @commands.hybrid_command(name="logs", hidden=True)
-    @checks.app.is_hideout()
-    async def logs(self, ctx: AluContext, project: Literal["AluBot", "Irene_s_Bot", "Gloria"]) -> None:
-        """(\N{GREY HEART} Hideout-Only) Get project's logs."""
-        await ctx.typing()
+    @app_commands.guilds(const.Guild.hideout)
+    @app_commands.command(name="logs")
+    async def logs(
+        self,
+        interaction: discord.Interaction[AluBot],
+        project: Literal["AluBot", "LueBot", "Gloria"],
+    ) -> None:
+        """(\N{GREY HEART} Hideout-Only) Get project's logs.
+
+        Parameters
+        ----------
+        project
+            Project to fetch `.log` file for.
+        """
+        await interaction.response.defer()
         mapping = {
-            "AluBot": ".alubot/alubot.log",
-            "Irene_s_Bot": "../Irene_s_Bot/.temp/irenesbot.log",
+            "AluBot": ".alubot/.temp/alubot.log",
+            "LueBot": "../LueBot/.temp/irenesbot.log",
             "Gloria": "../Gloria/.steam.log",
         }
-        logs_file = discord.File(mapping[project])
-        await ctx.reply(file=logs_file)
+        await interaction.followup.send(file=discord.File(mapping[project]))
 
 
 async def setup(bot: AluBot) -> None:

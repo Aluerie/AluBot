@@ -16,15 +16,15 @@ from .._base import FunCog
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot, AluContext
+    from bot import AluBot
 
 
 class Other(FunCog):
-    @commands.hybrid_command()
-    async def coinflip(self, ctx: AluContext) -> None:
-        """Flip a coin: Heads or Tails?."""
+    @app_commands.command()
+    async def coinflip(self, interaction: discord.Interaction[AluBot]) -> None:
+        """Flip a coin: Heads or Tails?"""
         word = "Heads" if random.randint(0, 1) == 0 else "Tails"
-        await ctx.reply(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
+        await interaction.response.send_message(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
 
     @commands.Cog.listener("on_message")
     async def reply_non_command_mentions(self, message: discord.Message) -> None:
@@ -41,11 +41,17 @@ class Other(FunCog):
                         with contextlib.suppress(discord.HTTPException):
                             await message.add_reaction(r)
 
-    @commands.hybrid_command()
-    @app_commands.describe(max_roll_number="Max limit to roll")
-    async def roll(self, ctx: AluContext, max_roll_number: app_commands.Range[int, 1]) -> None:
-        """Roll an integer from 1 to `max_roll_number`."""
-        await ctx.reply(content=str(random.randint(1, max_roll_number + 1)))
+    @app_commands.command()
+    async def roll(self, interaction: discord.Interaction[AluBot], max_roll_number: app_commands.Range[int, 1]) -> None:
+        """Roll an integer from 1 to `max_roll_number`.
+
+        Parameters
+        ----------
+        max_roll_number
+            Max limit to roll.
+
+        """
+        await interaction.response.send_message(content=str(random.randint(1, max_roll_number + 1)))
 
     @staticmethod
     def fancify_text(text: str, *, style: dict[str, str]) -> str:

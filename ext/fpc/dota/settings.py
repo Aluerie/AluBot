@@ -172,11 +172,11 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
         Parameters
         ----------
-        name:
+        name
             Player name. if it's a twitch streamer then it should match their twitch handle.
-        steam:
+        steam
             Steam_id in any of 64/32/3/2 versions, friend_id or just steam profile link.
-        twitch:
+        twitch
             Is this person a twitch.tv streamer (under same name)?
         """
         player_tuple = DotaPlayerCandidate(name=name, steam=steam, twitch=twitch)

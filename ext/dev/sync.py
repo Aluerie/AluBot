@@ -9,7 +9,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from bot import aluloop
-from utils import checks, const, errors
+from utils import const, errors
 
 from ._base import DevBaseCog
 
@@ -46,11 +46,9 @@ class SyncAppTreeTools(DevBaseCog):
     async def auto_sync(self) -> None:
         """Auto Syncing bot's application tree task.
 
-        `?tag ass` and all. But I'm stupid and forget to sync the tree manually.
-        Especially when I'm actively developing and really only spend time with testing bot.
-
-        Let's do it once per reboot after 2 hours of wait time. If I ever get rate limited warning:
-        then we will think of better measures.
+        `?tag ass` and all. But I forget to sync the tree manually.
+        Hopefully, auto-syncing 2 hours after reboots is good enough.
+        If I ever get rate limited then we will think of better measures.
         """
         # initial wait
         await asyncio.sleep(60.0 * 60 * 2)  # 2 hours
@@ -86,9 +84,9 @@ class SyncAppTreeTools(DevBaseCog):
 
         Sources
         -----
-        * This in concept mirrors code of the famous Umbra Sync Command.
+        This in concept mirrors code of the famous Umbra Sync Command:
         * https://about.abstractumbra.dev/discord.py/2023/01/29/sync-command-example.html
-        * `?tag usc` in discord.py server which abbreviates to `?tag umbra sync command`.
+        * `?tag usc` in discord.py server which abbreviates to "?tag umbra sync command".
 
         """
         # SYNC LIST OF GUILDS
@@ -131,9 +129,9 @@ class SyncAppTreeTools(DevBaseCog):
         # return the embed result
         return discord.Embed(colour=const.Colour.blueviolet, description=desc)
 
-    # Unfortunately, we need to split the commands bcs commands.Greedy can't be transferred to app_commands
+    # Need to split the commands bcs commands.Greedy can't be transferred to app_commands
+    @app_commands.guilds(const.Guild.hideout)
     @app_commands.command(name="sync")
-    @checks.app.is_hideout()
     @app_commands.choices(
         method=[
             app_commands.Choice(name="Global Sync", value="global"),
@@ -158,7 +156,7 @@ class SyncAppTreeTools(DevBaseCog):
             # it's not worth to mirror commands.Greedy argument into a slash command
             # so just redirect yourself to a prefix $sync command.
             return await interaction.response.send_message(
-                f"Use prefix command `{self.bot.main_prefix}`sync guild1_id guild2_id ... ` Dumbass!"
+                f"Use prefix command `{self.bot.main_prefix}`sync guild1_id guild2_id ... ` !"
             )
 
         embed = await self.sync_command_worker(method, interaction.guild, guilds=[])

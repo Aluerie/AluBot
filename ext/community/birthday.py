@@ -9,12 +9,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import checks, const, converters, formats, pages
+from utils import const, converters, errors, formats, pages, timezones
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext, Timer, TimerRecord
+    from bot import AluBot, Timer, TimerRecord
 
 
 class BirthdayTimerData(TypedDict):
@@ -115,21 +115,43 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         channel = self.community.logs if self.bot.test else self.community.bday_notifs
         return channel
 
-    @checks.hybrid.is_community()
-    @commands.hybrid_group()
-    async def birthday(self, ctx: AluGuildContext) -> None:
-        """Commands about managing your birthday data."""
-        await ctx.send_help(ctx.command)
-
-    @birthday.command(
-        name="set",
-        aliases=["edit"],
-        description="Set your birthday",
-        usage="day: <day> month: <month as word> year: [year] timezone: [timezone]",
+    birthday_group = app_commands.Group(
+        name="birthday", description="Birthday related commands.", guild_ids=[const.Guild.community]
     )
-    async def birthday_set(self, ctx: AluGuildContext, *, birthday: converters.DateTimezonePicker) -> None:
-        """Set your birthday."""
-        dt = birthday.verify_date()
+
+    @birthday_group.command(name="set")
+    async def birthday_set(
+        self,
+        interaction: discord.Interaction[AluBot],
+        day: app_commands.Range[int, 1, 31],
+        month: app_commands.Transform[int, converters.MonthPicker],
+        year: app_commands.Range[int, 1970],
+        timezone: timezones.TransformTimeZone,
+    ) -> None:
+        """Set your birthday.
+
+        Parameters
+        ----------
+        day:
+            Day of your birthday, number from 1 till 31.
+        month:
+            Month of your birthday, full month name.
+        year:
+            Year of your birthday, optional.
+        timezone:
+            Timezone, type and pick from the autocomplete or try IANA alias or country/city names, optional.
+        """
+        await interaction.response.defer()
+        try:
+            birthday = datetime.datetime(
+                day=day,
+                month=month,
+                year=year,
+                tzinfo=timezone.to_tzinfo(),
+            )
+        except ValueError:
+            msg = "Invalid date given, please recheck the date."
+            raise errors.BadArgument(msg)
 
         confirm_embed = (
             discord.Embed(
@@ -137,8 +159,8 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 title="Birthday Confirmation",
                 description="Do you confirm that this is the correct date/timezone for your birthday?",
             )
-            .add_field(name="Date", value=birthday_fmt(dt))
-            .add_field(name="Timezone", value=birthday.timezone.label)
+            .add_field(name="Date", value=birthday_fmt(birthday))
+            .add_field(name="Timezone", value=timezone.label)
             .set_footer(
                 text=(
                     "Please, double check the information! This is important because "
@@ -146,15 +168,15 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 )
             )
         )
-        if not await self.bot.disambiguator.confirm(ctx, embed=confirm_embed):
+        if not await self.bot.disambiguator.confirm(interaction, embed=confirm_embed):
             return
 
         # settle down timezone questions
-        zone = await ctx.bot.tz_manager.get_timezone(ctx.author.id)
+        zone = await interaction.client.tz_manager.get_timezone(interaction.user.id)
         if not zone:
             # no database timezone entry thus we set one
-            await self.bot.tz_manager.set_timezone(ctx.author.id, birthday.timezone)
-        elif birthday.timezone.key != zone:
+            await self.bot.tz_manager.set_timezone(interaction.user.id, timezone)
+        elif timezone.key != zone:
             # different tz in input and database - let's warn the person
             # but still use birthday timezone
             text = (
@@ -164,36 +186,36 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 "your timezone for stuff like reminders then use `/timezone set` again.",
             )
             e = discord.Embed(description=text)
-            await ctx.reply(embed=e, ephemeral=True)
+            await interaction.followup.send(embed=e, ephemeral=True)
 
         data: BirthdayTimerData = {
-            "user_id": ctx.author.id,
+            "user_id": interaction.user.id,
             "year": birthday.year,
         }
 
-        end_of_today = datetime.datetime.now(birthday.timezone.to_tzinfo()).replace(hour=0, minute=0, second=0)
-        expires_at = dt.replace(hour=0, minute=0, second=1, year=end_of_today.year)
+        end_of_today = datetime.datetime.now(timezone.to_tzinfo()).replace(hour=0, minute=0, second=0)
+        expires_at = birthday.replace(hour=0, minute=0, second=1, year=end_of_today.year)
         if expires_at < end_of_today:
             # the birthday already happened this year
-            expires_at = dt.replace(year=end_of_today.year + 1)
+            expires_at = birthday.replace(year=end_of_today.year + 1)
 
         # clear the previous birthday data before adding a new one
-        await self.remove_birthday_worker(ctx.author.id)
+        await self.remove_birthday_worker(interaction.user.id)
         await self.bot.create_timer(
             event="birthday",
             expires_at=expires_at,
-            timezone=birthday.timezone.key,
+            timezone=timezone.key,
             data=data,
         )
 
         embed = (
-            discord.Embed(colour=ctx.author.colour, title="Your birthday is successfully set")
-            .add_field(name="Data", value=birthday_fmt(dt))
-            .add_field(name="Timezone", value=birthday.timezone.label)
+            discord.Embed(colour=interaction.user.colour, title="Your birthday is successfully set")
+            .add_field(name="Data", value=birthday_fmt(birthday))
+            .add_field(name="Timezone", value=timezone.label)
             .add_field(name="Next congratulations incoming", value=formats.format_dt(expires_at, "R"))
             .set_footer(text="Important! By submitting this information you agree it can be shown to anyone.")
         )
-        await ctx.reply(embed=embed)
+        await interaction.followup.send(embed=embed)
 
     async def remove_birthday_worker(self, user_id: int) -> str:
         query = """
@@ -211,28 +233,38 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
         return status
 
-    @birthday.command(aliases=["del", "delete"])
-    async def remove(self, ctx: AluGuildContext) -> None:
+    @birthday_group.command()
+    async def remove(self, interaction: discord.Interaction[AluBot]) -> None:
         """Remove your birthday data and stop getting congratulations."""
-        status = await self.remove_birthday_worker(ctx.author.id)
+        # TODO: make confirm message YES NO;
+        status = await self.remove_birthday_worker(interaction.user.id)
         if status == "DELETE 0":
             embed = discord.Embed(
                 colour=const.Colour.maroon,
                 description="Could not delete your birthday with that ID.",
             ).set_author(name="DatabaseError")
-            await ctx.reply(embed=embed)
+            await interaction.response.send_message(embed=embed)
             return
 
         embed = discord.Embed(
-            colour=ctx.author.color,
+            colour=interaction.user.color,
             description="Your birthday is successfully removed from the bot database",
         )
-        await ctx.reply(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @birthday.command(usage="[member=you]")
-    @app_commands.describe(member="Member of the server or you if not specified")
-    async def check(self, ctx: AluGuildContext, member: discord.Member = commands.Author) -> None:
-        """Check your or somebody's birthday in database."""
+    @birthday_group.command()
+    async def check(self, interaction: discord.Interaction[AluBot], member: discord.Member | None) -> None:
+        """Check your or somebody's birthday in database.
+
+        Parameters
+        ----------
+        member
+            Member of the server. If you send empty - it will show your birthday.
+        """
+        if not member:
+            assert isinstance(interaction.user, discord.Member)
+            member = interaction.user
+
         query = """
             SELECT * FROM timers
             WHERE event = 'birthday'
@@ -240,14 +272,14 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         """
         row: TimerRecord[BirthdayTimerData] | None = await self.bot.pool.fetchrow(query, str(member.id))
 
-        e = discord.Embed(colour=member.color)
-        e.set_author(name=f"{member.display_name}'s birthday status", icon_url=member.display_avatar.url)
+        embed = discord.Embed(colour=member.color)
+        embed.set_author(name=f"{member.display_name}'s birthday status", icon_url=member.display_avatar.url)
         if row is None:
-            e.description = "It's not set yet."
+            embed.description = "It's not set yet."
         else:
-            e.add_field(name="Date", value=birthday_fmt(row.expires_at.replace(year=row.data["year"])))
-            e.add_field(name="Timezone", value=row["timezone"])
-        await ctx.reply(embed=e)
+            embed.add_field(name="Date", value=birthday_fmt(row.expires_at.replace(year=row.data["year"])))
+            embed.add_field(name="Timezone", value=row["timezone"])
+        await interaction.response.send_message(embed=embed)
 
     @commands.Cog.listener("on_birthday_timer_complete")
     async def birthday_congratulations(self, timer: Timer[BirthdayTimerData]) -> None:
@@ -334,8 +366,8 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         if member is not None:
             await member.remove_roles(birthday_role)
 
-    @birthday.command(name="list", hidden=True)
-    async def birthday_list(self, ctx: AluGuildContext) -> None:
+    @birthday_group.command(name="list")
+    async def birthday_list(self, interaction: discord.Interaction[AluBot]) -> None:
         """Show list of birthdays in this server."""
         guild = self.community.guild
 
@@ -354,7 +386,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 string_list.append(f"{birthday_fmt(date)}, {row.timezone} - {birthday_person.mention}")
 
         pgs = pages.EnumeratedPaginator(
-            ctx,
+            interaction,
             entries=string_list,
             per_page=20,
             title="Birthday List",

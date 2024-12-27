@@ -11,7 +11,7 @@ Just some things that do not get handled automatically by Black/Ruff.
 
 ## `discord.Embed` order
 
-Mostly same as its own parameters and "visual" order in Discord App from top->down, left->right.
+Mostly same as its own parameters and "visual" order in Discord App from top-left -> bottom-right diagonal.
 
 ```py
 embed = (

@@ -17,10 +17,10 @@ from typing import TYPE_CHECKING, Any, NamedTuple, Self, override
 import discord
 import yarl
 from discord import app_commands
-from discord.ext import commands, menus
+from discord.ext import menus
 from lxml import html
 
-from utils import pages
+from utils import errors, pages
 
 from .._base import EducationalCog
 
@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from bot import AluContext
+    from bot import AluBot
 
     # from .utils.context import Context, GuildContext
     # from .utils.paginator import RoboPages
@@ -40,11 +40,9 @@ DICTIONARY_EMBED_COLOUR = discord.Colour(0x5F9EB3)
 
 def html_to_markdown(node: Any, *, include_spans: bool = False) -> str:
     text = []
-    italics_marker = "_"
     for child in node:
         if child.tag == "i":
-            text.append(f"{italics_marker}{child.text.strip()}{italics_marker}")
-            italics_marker = "_" if italics_marker == "*" else "*"
+            text.append(f"_{child.text.strip()}_")  # `_` is italics marker
         elif child.tag == "b":
             if text and text[-1].endswith("*"):
                 text.append("\u200b")
@@ -343,33 +341,33 @@ class FreeDictionaryWordMeaningPageSource(menus.ListPageSource):
 
 
 class DictionaryCog(EducationalCog):
-    @commands.hybrid_command(name="define")
+    @app_commands.command(name="define")
     @app_commands.describe(word="The word to look up")
-    async def _define(self, ctx: AluContext, *, word: str) -> None:
+    async def _define(self, interaction: discord.Interaction[AluBot], word: str) -> None:
         """Looks up an English word in the dictionary."""
-        result = await parse_free_dictionary_for_word(ctx.session, word=word)
+        result = await parse_free_dictionary_for_word(self.bot.session, word=word)
         if result is None:
-            await ctx.send("Could not find that word.", ephemeral=True)
-            return
+            msg = "Could not find that word."
+            raise errors.SomethingWentWrong(msg)
 
         # Check if it's a phrasal verb somehow
         phrase = discord.utils.find(lambda v: v.word.lower() == word.lower(), result.phrasal_verbs)
         if phrase is not None:
             embed = phrase.to_embed()
-            await ctx.send(embed=embed)
+            await interaction.response.send_message(embed=embed)
             return
 
         if not result.meanings:
-            await ctx.send("Could not find any definitions for that word.", ephemeral=True)
-            return
+            msg = "Could not find any definitions for that word."
+            raise errors.SomethingWentWrong(msg)
 
         # Paginate over the various meanings of the word
-        p = pages.Paginator(ctx, FreeDictionaryWordMeaningPageSource(result))
+        p = pages.Paginator(interaction, FreeDictionaryWordMeaningPageSource(result))
         await p.start()
 
     @_define.autocomplete("word")
     async def _define_word_autocomplete(
-        self, interaction: discord.Interaction, query: str
+        self, interaction: discord.Interaction[AluBot], query: str
     ) -> list[app_commands.Choice[str]]:
         if not query:
             return []

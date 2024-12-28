@@ -519,7 +519,6 @@ class BaseSettings(FPCCog):
     # But I think it might be confusing for end-user if I have several commands to add/remove players/characters.
     # One simple interactive view is enough for them granted they aren't supposed to change their preferences much.
     # I'm also just hesitant to completely delete all my previous work so let's at least leave one-name version
-    # so we can put it as hybrid command, which is easier to maintain.
 
     # TODO: YOINK DOCS FROM THERE
 

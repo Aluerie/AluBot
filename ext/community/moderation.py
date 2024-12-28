@@ -121,11 +121,10 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         if channel.guild.id != self.community.id:
             return
 
-        sister_of_the_veil = self.community.sister_of_the_veil
         allow, deny = discord.Permissions.all(), discord.Permissions.none()
         all_perms = discord.PermissionOverwrite.from_pair(allow=allow, deny=deny)
         reason = "Give all permissions to Aluerie"
-        await channel.set_permissions(sister_of_the_veil, overwrite=all_perms, reason=reason)
+        await channel.set_permissions(self.community.sister_of_the_veil, overwrite=all_perms, reason=reason)
 
 
 async def setup(bot: AluBot) -> None:

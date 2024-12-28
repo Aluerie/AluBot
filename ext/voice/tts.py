@@ -12,7 +12,7 @@ from utils import const, errors
 from ._base import VoiceChatCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext
+    from bot import AluBot
 
 
 class LanguageData(NamedTuple):
@@ -44,27 +44,29 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         super().__init__(*args, **kwargs)
         self.connections: dict[int, discord.VoiceClient] = {}  # guild.id to Voice we are connected to
 
-    @app_commands.guild_only()
-    @commands.hybrid_group(name="text-to-speech", aliases=["tts", "voice"])
-    async def tts_group(self, ctx: AluGuildContext) -> None:
-        """Text-To-Speech commands."""
-        await ctx.send_help(ctx.command)
+    tts_group = app_commands.Group(
+        name="text-to-speech",
+        description="Make the bot join voice channels and do some talking.",
+        guild_only=True,
+    )
 
     async def speak_worker(
         self,
-        ctx: AluGuildContext,
+        interaction: discord.Interaction[AluBot],
         lang: LanguageData,
         *,
         text: str = "Allo",
     ) -> None:
-        voice_state = ctx.author.voice
+        assert isinstance(interaction.user, discord.Member)
+        voice_state = interaction.user.voice
         if not voice_state:
             msg = "You aren't in a voice channel!"
             raise errors.ErroneousUsage(msg)
 
-        voice_client = ctx.guild.voice_client
+        assert interaction.guild
+        voice_client = interaction.guild.voice_client
         if voice_client is not None:
-            vc = self.connections[ctx.guild.id]
+            vc = self.connections[interaction.guild.id]
             assert isinstance(voice_client, discord.VoiceClient)
             await voice_client.move_to(voice_state.channel)
         else:
@@ -72,7 +74,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
                 msg = "You aren't connected to a voice channel!"
                 raise errors.ErroneousUsage(msg)
             vc = await voice_state.channel.connect()  # Connect to the voice channel the author is in.
-            self.connections.update({ctx.guild.id: vc})  # Updating the cache with the guild and channel.
+            self.connections.update({interaction.guild.id: vc})  # Updating the cache with the guild and channel.
 
         assert isinstance(vc, discord.VoiceClient)
 
@@ -81,58 +83,73 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         tts.save(audio_name)
         vc.play(discord.FFmpegPCMAudio(audio_name))
 
-    @tts_group.command()
-    @app_commands.describe(text="Enter text to speak", language="Choose language/accent")
-    async def speak(
-        self, ctx: AluGuildContext, language: LanguageCollection.Literal = "fr", *, text: str = "Allo"
+    @tts_group.command(name="speak")
+    @app_commands.describe()
+    async def tts_speak(
+        self,
+        interaction: discord.Interaction[AluBot],
+        language: LanguageCollection.Literal = "fr",
+        text: str = "Allo",
     ) -> None:
-        """Make Text-To-Speech request into voice-chat."""
+        """Make Text-To-Speech request into voice-chat.
+
+        Parameters
+        -----------
+        text
+            Enter text for the bot to speak.
+        language
+            Choose language/accent.
+        """
         lang: LanguageData = getattr(LanguageCollection, language)
-        await self.speak_worker(ctx, lang, text=text)
-        e = discord.Embed(title="Text-To-Speech request", description=text, colour=ctx.user.colour)
-        e.set_author(name=ctx.user.display_name, icon_url=ctx.user.display_avatar.url)
-        e.set_footer(text=f"{lang.code} Language: {lang.locale}")
-        await ctx.reply(embed=e)
+        await self.speak_worker(interaction, lang, text=text)
+        embed = (
+            discord.Embed(
+                colour=interaction.user.colour,
+                title="Text-To-Speech request",
+                description=text,
+            )
+            .set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+            .set_footer(text=f"{lang.code} Language: {lang.locale}")
+        )
+        await interaction.response.send_message(embed=embed)
 
     @tts_group.command()
-    async def stop(self, ctx: AluGuildContext) -> None:
+    async def stop(self, interaction: discord.Interaction[AluBot]) -> None:
         """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests."""
+        assert interaction.guild
         try:
-            vc = self.connections[ctx.guild.id]
+            vc = self.connections[interaction.guild.id]
         except KeyError:
             msg = "I'm not in voice channel"
             raise errors.ErroneousUsage(msg)
 
         if vc.is_playing():
             vc.stop()
-            e = discord.Embed(description="Stopped", colour=ctx.user.colour)
-            await ctx.reply(embed=e)
+            embed = discord.Embed(description="Stopped", colour=interaction.user.colour)
+            await interaction.response.send_message(embed=embed)
         else:
-            e = discord.Embed(description="I don't think I was talking", colour=const.Colour.maroon)
-            await ctx.reply(embed=e, ephemeral=True)
+            embed = discord.Embed(description="I don't think I was talking", colour=const.Colour.maroon)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @tts_group.command()
-    async def leave(self, ctx: AluGuildContext) -> None:
+    async def leave(self, interaction: discord.Interaction[AluBot]) -> None:
         """Make bot leave voice channel."""
+        assert interaction.guild
         try:
-            vc = self.connections[ctx.guild.id]
+            vc = self.connections[interaction.guild.id]
         except KeyError:
             msg = "I'm not in a voice channel."
             raise errors.ErroneousUsage(msg)
 
         await vc.disconnect()
-        e = discord.Embed(description=f"I left {vc.channel.mention}", colour=ctx.user.colour)
-        await ctx.reply(embed=e)
+        embed = discord.Embed(description=f"I left {vc.channel.mention}", colour=interaction.user.colour)
+        await interaction.response.send_message(embed=embed)
 
-    @app_commands.guild_only()
-    @commands.hybrid_command(name="bonjour")
-    async def bonjour(self, ctx: AluGuildContext) -> None:
+    @tts_group.command(name="bonjour")
+    async def tts_bonjour(self, interaction: discord.Interaction[AluBot]) -> None:
         """`Bonjour !` into both text/voice chats."""
-        try:
-            await self.speak_worker(ctx, LanguageCollection.fr, text="Bonjour !")
-        except errors.ErroneousUsage:
-            pass
-        await ctx.reply(content=f"Bonjour {const.Emote.bubuAYAYA}")
+        await self.speak_worker(interaction, LanguageCollection.fr, text="Bonjour !")
+        await interaction.response.send_message(content=f"Bonjour {const.Emote.bubuAYAYA}")
 
     @commands.Cog.listener(name="on_voice_state_update")
     async def leave_when_everybody_else_disconnects(

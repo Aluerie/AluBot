@@ -20,13 +20,13 @@ Sources
 * RoboDanny's translator.py (license MPL v2 from Rapptz/RoboDanny)
     - https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/translator.py
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, override
 
 import discord
 from discord import app_commands
-from discord.ext import commands
 
 from utils import const, errors
 
@@ -35,7 +35,7 @@ from .._base import EducationalCog
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from bot import AluBot, AluContext
+    from bot import AluBot
 
 
 # fmt: off
@@ -157,12 +157,17 @@ class TranslateCog(EducationalCog):
             msg = "Sorry, but it seems, that this message doesn't have any text content to translate."
             raise errors.BadArgument(msg)
 
-        e = await self.translate_embed(text)
-        await interaction.response.send_message(embed=e, ephemeral=True)
+        embed = await self.translate_embed(text)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @commands.hybrid_command()
-    @app_commands.describe(text="Enter text to translate")
-    async def translate(self, ctx: AluContext, *, text: str) -> None:
-        """Google Translate to English, auto-detects source language."""
-        e = await self.translate_embed(text)
-        await ctx.reply(embed=e)
+    @app_commands.command()
+    async def translate(self, interaction: discord.Interaction[AluBot], text: str) -> None:
+        """Google Translate to English, auto-detects source language.
+
+        Parameters
+        ----------
+        text
+            Enter text to translate
+        """
+        embed = await self.translate_embed(text)
+        await interaction.response.send_message(embed=embed)

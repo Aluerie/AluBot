@@ -471,8 +471,9 @@ class AluBot(commands.Bot, AluBotHelper):
 
         match error:
             # CHAINED ERRORS
-            case commands.HybridCommandError() | commands.CommandInvokeError() | app_commands.CommandInvokeError():
+            case commands.CommandInvokeError() | app_commands.CommandInvokeError():
                 # we aren't interested in the chain traceback.
+                # commands.HybridCommandError() if we ever bring back hybrid commands;
                 return await self.on_command_error(ctx, error.original)
 
             # MY OWN ERRORS

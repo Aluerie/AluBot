@@ -16,7 +16,7 @@ from utils import const, converters, formats
 from ._base import InfoCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluContext
+    from bot import AluBot
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
@@ -64,35 +64,43 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         await give_text_list(self.community.bots_role, self.community.bot_spam, 959982214827892737)
         await give_text_list(self.community.nsfw_bots_role, self.community.nsfw_bot_spam, 959982171492323388)
 
-    @commands.hybrid_command(name="gmt", aliases=["utc"], description="Show GMT(UTC) time")
-    async def gmt(self, ctx: AluContext) -> None:
+    @app_commands.command(name="gmt")
+    async def gmt(self, interaction: discord.Interaction[AluBot]) -> None:
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
-        e = discord.Embed(colour=const.Colour.blueviolet, title="GMT (Greenwich Mean Time)")
-        e.set_footer(text="GMT is the same as UTC (Universal Time Coordinated)")
-        e.add_field(name="Time:", value=now_time).add_field(name="Date:", value=now_date)
-        await ctx.reply(embed=e)
+        embed = (
+            discord.Embed(
+                colour=const.Colour.blueviolet,
+                title="GMT (Greenwich Mean Time)",
+            )
+            .set_footer(text="GMT is the same as UTC (Universal Time Coordinated)")
+            .add_field(name="Time:", value=now_time)
+            .add_field(name="Date:", value=now_date)
+        )
+        await interaction.response.send_message(embed=embed)
 
-    @commands.hybrid_command(name="role")
+    @app_commands.command(name="role")
     @app_commands.describe(role="Choose role to get info about")
-    async def role_info(self, ctx: AluContext, *, role: discord.Role) -> None:
+    async def role_info(self, interaction: discord.Interaction[AluBot], role: discord.Role) -> None:
         """View info about selected role."""
-        e = discord.Embed(title="Role information", colour=role.colour)
-        msg = f"Role {role.mention}\n"
-        msg += "\n".join([f"{counter} {m.mention}" for counter, m in enumerate(role.members, start=1)])
-        e.description = msg
-        await ctx.reply(embed=e)
+        embed = discord.Embed(
+            colour=role.colour,
+            title="Role information",
+            description=f"Role {role.mention}\n"
+            + "\n".join(
+                [f"{counter} {m.mention}" for counter, m in enumerate(role.members, start=1)],
+            ),
+        )
+
+        await interaction.response.send_message(embed=embed)
         # todo: make pagination about it^.
         # Also add stuff like colour code, amount of members and some garbage other bots include
 
-    @commands.hybrid_command(
-        aliases=["color"],
-        usage="<formatted_colour_string>",
-    )
+    @app_commands.command()
     @app_commands.describe(colour="Colour in any of supported formats")
     async def colour(
-        self, ctx: AluContext, *, colour: Annotated[discord.Colour, converters.AluColourConverter]
+        self, interaction: discord.Interaction[AluBot], colour: Annotated[discord.Colour, converters.AluColourConverter]
     ) -> None:
         r"""Get info about colour in specified <formatted_colour_string>.
 
@@ -110,7 +118,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         rgb = colour.to_rgb()
 
         img = Image.new("RGB", (300, 300), rgb)
-        file = ctx.bot.transposer.image_to_file(img, filename="colour.png")
+        file = interaction.client.transposer.image_to_file(img, filename="colour.png")
         e = discord.Embed(color=discord.Colour.from_rgb(*rgb), title="Colour info")
         e.description = (
             "Hex triplet: `#{:02x}{:02x}{:02x}`\n".format(*rgb)
@@ -119,7 +127,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
             + "HLS: `({:.2f}, {}, {:.2f})`\n".format(*colorsys.rgb_to_hls(*rgb))
         )
         e.set_thumbnail(url=f"attachment://{file.filename}")
-        await ctx.reply(embed=e, file=file)
+        await interaction.response.send_message(embed=e, file=file)
 
     @colour.autocomplete("colour")
     async def autocomplete(self, _: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
@@ -135,37 +143,38 @@ class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
     More to come.
     """
 
-    @commands.hybrid_command(name="wordcloud", usage="[channel(s)=curr] [member(s)=you] [limit=2000]")
-    @app_commands.describe(channel_or_and_member="List channel(-s) or/and member(-s)")
+    @app_commands.guild_only()
+    @app_commands.command(name="wordcloud")
+    @app_commands.rename(member_="member", channel_="channel")
     async def wordcloud(
         self,
-        ctx: AluContext,
-        channel_or_and_member: commands.Greedy[discord.Member | discord.TextChannel],
-        limit: commands.Range[int, 2000],
+        interaction: discord.Interaction[AluBot],
+        member_: discord.Member | None = None,
+        channel_: discord.TextChannel | None = None,
+        limit: app_commands.Range[int, 2000] = 1000,
     ) -> None:
         """Get `@member`'s wordcloud over last total `limit` messages in requested `#channel`.
 
         I do not scrap any chat histories into my own database.
         This is why this command is limited and slow because the bot has to look up channel histories in place.
+
+        Parameters
+        ----------
         """
-        await ctx.typing()
-        cm = channel_or_and_member or []  # idk i don't like mutable default argument warning
-        members = [x for x in cm if isinstance(x, discord.Member)] or [ctx.author]
-        channels = [x for x in cm if isinstance(x, discord.TextChannel)] or [ctx.channel]
+        await interaction.response.defer()
 
-        text = ""
-        for ch in channels:
-            text += "".join([f"{msg.content}\n" async for msg in ch.history(limit=limit) if msg.author in members])
+        member = member_ or interaction.user
+        channel = channel_ or interaction.channel
+        assert channel and not isinstance(channel, discord.ForumChannel) and not isinstance(channel, discord.CategoryChannel)
+
+        text = "".join([f"{msg.content}\n" async for msg in channel.history(limit=limit) if msg.author == member])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
-        e = discord.Embed(colour=const.Colour.blueviolet)
-        members = ", ".join([m.mention for m in members])
-        channels = ", ".join(
-            [c.mention if isinstance(c, discord.TextChannel) else c.__class__.__name__ for c in channels]
+        embed = discord.Embed(
+            colour=const.Colour.blueviolet,
+            description = f"Member: {member}\nChannel: {channel}\nLimit: {limit}"
         )
-
-        e.description = f"Members: {members}\nChannels: {channels}\nLimit: {limit}"
         file = self.bot.transposer.image_to_file(wordcloud.to_image(), filename="wordcloud.png")
-        await ctx.reply(embed=e, file=file)
+        await interaction.followup.send(embed=embed, file=file)
 
 
 async def setup(bot: AluBot) -> None:

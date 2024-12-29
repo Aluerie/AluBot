@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple, override
 import discord
 from bs4 import BeautifulSoup
 from discord import app_commands
-from discord.ext import commands, menus
+from discord.ext import menus
 
 from utils import cache, const, formats, pages
 
@@ -293,30 +293,35 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                 self.soup_cache[key] = soup
                 return soup
 
-    @commands.hybrid_command(aliases=["sch"])
+    @app_commands.command()
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.rename(schedule_mode="filter")
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in SELECT_OPTIONS])
-    async def schedule(self, ctx: AluContext, schedule_mode: int = 1, query: str | None = None) -> None:
+    async def schedule(
+        self, interaction: discord.Interaction[AluBot], schedule_mode: int = 1, query: str | None = None
+    ) -> None:
         """Dota 2 Pro Matches Schedule.
 
         Parameters
         ----------
-        schedule_mode : int
+        schedule_mode
             What matches to show
-        query : str | None
+        query
             Search filter, i.e. "EG", "ESL" (or any other team/tournament names)
 
         """
-        await ctx.typing()
+        await interaction.response.defer()
         soup = await self.get_soup("dota2")
         schedule_enum = ScheduleModeEnum(value=schedule_mode)
-        p = SchedulePages(ctx, soup, schedule_enum, query)
+        p = SchedulePages(interaction, soup, schedule_enum, query)
         await p.start()
 
-    @commands.hybrid_command()
-    async def fixtures(self, ctx: AluContext) -> None:
+    @app_commands.command()
+    async def fixtures(
+        self,
+        interaction: discord.Interaction[AluBot],
+    ) -> None:
         """Get football fixtures."""
         url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
         async with self.bot.session.get(url) as r:
@@ -343,14 +348,23 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                         teams = f"{team1} - {team2}".ljust(40, " ")
                         match_strings.append(f"`{teams}` {formats.format_dt_tdR(dt)}")
 
-                e = discord.Embed(colour=0xE0FA51, title="Premier League Fixtures", url=url)
-                e.description = "\n".join(match_strings)
-                e.set_author(name="Info from onefootball.com", url=url, icon_url="https://i.imgur.com/pm2JgEW.jpg")
-                await ctx.reply(embed=e)
+                embed = discord.Embed(
+                    colour=0xE0FA51,
+                    title="Premier League Fixtures",
+                    url=url,
+                    description="\n".join(match_strings),
+                ).set_author(
+                    name="Info from onefootball.com",
+                    url=url,
+                    icon_url="https://i.imgur.com/pm2JgEW.jpg",
+                )
+                await interaction.response.send_message(embed=embed)
             else:
-                e = discord.Embed(colour=const.Colour.maroon)
-                e.description = "No matches found"
-                await ctx.reply(embed=e, ephemeral=True)
+                embed = discord.Embed(
+                    colour=const.Colour.maroon,
+                    description="No matches found",
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 async def setup(bot: AluBot) -> None:

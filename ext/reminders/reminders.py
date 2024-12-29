@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime  # noqa: TCH003
 import logging
 import textwrap
-from typing import TYPE_CHECKING, Annotated, Any, TypedDict, override
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 import discord
 from discord import app_commands
@@ -133,50 +133,52 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             e.set_footer(text=f'\N{ELECTRIC LIGHT BULB} You can set your timezone with "{ctx.prefix}timezone set')
         await ctx.reply(embed=e)
 
-    @commands.hybrid_group(aliases=["reminder", "remindme"], usage="<when>")
-    async def remind(
-        self,
-        ctx: AluContext,
-        *,
-        when: Annotated[times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="...")],
-    ) -> None:
-        """Main group of remind command. Just a way to make an alias for 'remind me' with a space."""
-        await self.remind_helper(ctx, dt=when.dt, text=when.arg)
+    remind_group = app_commands.Group(
+        name="remind",
+        description="Set reminders to ping you when the time comes.",
+    )
 
-    @remind.app_command.command(name="set")
-    @app_commands.describe(when="When to be reminded of something, in GMT", text="What to be reminded of")
+    @remind_group.command(name="set")
     async def reminder_set(
         self,
         interaction: discord.Interaction[AluBot],
         when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
         text: str = "...",
     ) -> None:
-        """Sets a reminder to remind you of something at a specific time."""
+        """Sets a reminder to remind you of something at a specific time.
+
+        Parameters
+        ----------
+        when
+            When to be reminded of something, in GMT.
+        text
+            What to be reminded of.
+        """
         ctx = await AluContext.from_interaction(interaction)
         await self.remind_helper(ctx, dt=when, text=text)
 
-    @remind.command(name="me", with_app_command=False)
-    async def remind_me(
-        self,
-        ctx: AluContext,
-        *,
-        when_and_what: Annotated[
-            times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="...")
-        ],
-    ) -> None:
-        """Reminds you of something after a certain amount of time. \
-        The input can be any direct date (i.e. DD/MM/YYYY) or a human \
-        readable offset. Examples:
-        * "next thursday at 3pm do something funny"
-        * "do the dishes tomorrow"
-        * "in 50 minutes do the thing"
-        * "2d unmute someone"
-        Times are assumed in UTC.
-        """
-        await self.remind_helper(ctx, dt=when_and_what.dt, text=when_and_what.arg)
+    # @remind.command(name="me", with_app_command=False)
+    # async def remind_me(
+    #     self,
+    #     ctx: AluContext,
+    #     *,
+    #     when_and_what: Annotated[
+    #         times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="...")
+    #     ],
+    # ) -> None:
+    #     """Reminds you of something after a certain amount of time. \
+    #     The input can be any direct date (i.e. DD/MM/YYYY) or a human \
+    #     readable offset. Examples:
+    #     * "next thursday at 3pm do something funny"
+    #     * "do the dishes tomorrow"
+    #     * "in 50 minutes do the thing"
+    #     * "2d unmute someone"
+    #     Times are assumed in UTC.
+    #     """
+    #     await self.remind_helper(ctx, dt=when_and_what.dt, text=when_and_what.arg)
 
-    @remind.command(name="list", ignore_extra=False)
-    async def remind_list(self, ctx: AluContext) -> None:
+    @remind_group.command(name="list")
+    async def remind_list(self, interaction: discord.Interaction[AluBot]) -> None:
         """Shows a list of your current reminders."""
         query = """
             SELECT id, expires, extra #>> '{args,2}'
@@ -185,7 +187,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             AND data #>> '{author_id}' = $1
             ORDER BY expires
         """
-        records = await ctx.pool.fetch(query, str(ctx.author.id))
+        records = await self.bot.pool.fetch(query, str(interaction.user.id))
 
         string_list = []
         for _id, expires, message in records:
@@ -193,12 +195,12 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             string_list.append(f"\N{BLACK CIRCLE} {_id}: {formats.format_dt_tdR(expires)}\n{shorten}")
 
         pgs = pages.EnumeratedPaginator(
-            ctx,
+            interaction,
             string_list,
             per_page=10,
-            author_name=f"{ctx.author.display_name}'s Reminders list",
-            author_icon=ctx.author.display_avatar.url,
-            colour=ctx.author.colour,
+            author_name=f"{interaction.user.display_name}'s Reminders list",
+            author_icon=interaction.user.display_avatar.url,
+            colour=interaction.user.colour,
         )
         await pgs.start()
 
@@ -223,10 +225,10 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     #     ]
     #     return [app_commands.Choice(name=m, value=n) for n, m in choice_list if current.lower() in m.lower()]
 
-    @remind.command(name="delete", aliases=["remove", "cancel"], ignore_extra=True)
+    @remind_group.command(name="delete")
     # @app_commands.autocomplete(id=remind_delete_id_autocomplete)  # type: ignored
     # @app_commands.describe(id='either input a number of reminder id or choose it from suggestion^')
-    async def remind_delete(self, ctx: AluContext, *, id: int) -> None:
+    async def remind_delete(self, interaction: discord.Interaction[AluBot], id: int) -> None:
         """Deletes a reminder by its ID.
 
         To get a reminder ID, use the reminder list command or autocomplete for slash command.
@@ -239,11 +241,13 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             AND event = 'reminder'
             AND data #>> '{author_id}' = $2;
         """
-        status = await ctx.pool.execute(query, id, str(ctx.author.id))
+        status = await interaction.client.pool.execute(query, id, str(interaction.user.id))
         if status == "DELETE 0":
-            e = discord.Embed(description="Could not delete any reminders with that ID.", colour=const.Colour.maroon)
-            e.set_author(name="IDError")
-            await ctx.reply(embed=e)
+            embed = discord.Embed(
+                colour=const.Colour.maroon,
+                description="Could not delete any reminders with that ID.",
+            ).set_author(name="IDError")
+            await interaction.response.send_message(embed=embed)
             return
 
         # if the current timer is being deleted
@@ -251,11 +255,11 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             # cancel the task and re-run it
             self.bot.rerun_the_task()
 
-        e = discord.Embed(description="Successfully deleted reminder.", colour=const.Colour.blueviolet)
-        await ctx.reply(embed=e)
+        embed = discord.Embed(description="Successfully deleted reminder.", colour=const.Colour.blueviolet)
+        await interaction.response.send_message(embed=embed)
 
-    @remind.command(name="clear", ignore_extra=False)
-    async def reminder_clear(self, ctx: AluContext) -> None:
+    @remind_group.command(name="clear")
+    async def reminder_clear(self, interaction: discord.Interaction[AluBot]) -> None:
         """Clears all reminders you have set."""
         # For UX purposes this has to be two queries.
         query = """
@@ -263,21 +267,21 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             WHERE event = 'reminder'
             AND data #>> '{author_id}' = $1;
         """
-        author_id = str(ctx.author.id)
-        total: int = await ctx.pool.fetchval(query, author_id)
+        author_id = str(interaction.user.id)
+        total: int = await interaction.client.pool.fetchval(query, author_id)
         if total == 0:
             no_reminders_embed = discord.Embed(
-                colour=ctx.author.colour,
+                colour=interaction.user.colour,
                 description="You do not have any reminders to delete.",
             )
-            await ctx.reply(embed=no_reminders_embed)
+            await interaction.response.send_message(embed=no_reminders_embed)
             return
 
         confirm_embed = discord.Embed(
-            colour=ctx.author.colour,
+            colour=interaction.user.colour,
             description=f"Are you sure you want to delete {formats.plural(total):reminder}?",
         )
-        if not await ctx.bot.disambiguator.confirm(ctx, embed=confirm_embed):
+        if not await interaction.client.disambiguator.confirm(interaction, embed=confirm_embed):
             return
 
         query = """
@@ -285,20 +289,20 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             WHERE event = 'reminder'
             AND data #>> '{author_id}' = $1;
         """
-        await ctx.pool.execute(query, author_id)
+        await interaction.client.pool.execute(query, author_id)
 
         # Check if the current timer is the one being cleared and cancel it if so
         current_timer = self.bot._current_timer
         if current_timer and current_timer.event == "reminder" and current_timer.data:
             author_id = current_timer.data.get("author_id")
-            if author_id == ctx.author.id:
+            if author_id == interaction.user.id:
                 self.bot.rerun_the_task()
 
         response_embed = discord.Embed(
-            colour=ctx.author.colour,
+            colour=interaction.user.colour,
             description=f"Successfully deleted {formats.plural(total):reminder}.",
         )
-        await ctx.reply(embed=response_embed)
+        await interaction.response.send_message(embed=response_embed)
 
     @commands.Cog.listener()
     async def on_reminder_timer_complete(self, timer: Timer[RemindTimerData]) -> None:

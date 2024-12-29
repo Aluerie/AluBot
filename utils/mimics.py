@@ -339,15 +339,17 @@ class Mimic:
 
     async def get_or_create_webhook(self) -> discord.Webhook:
         """Get or create webhook in the channel."""
-        coros = [
-            self.search_database,  # Step 1. Trying to find a webhook in the database
-            self.search_owned,  # Step 2. Trying to find an owned webhook in the channel
-            self.create_webhook,  # Step 3. Creating a webhook ourselves
-        ]
-        for coro in coros:
-            webhook = await coro()
-            if webhook:
-                return webhook
+
+        # Step 1. Trying to find a webhook in the database
+        if webhook := await self.search_database():
+            return webhook
+
+        # Step 2. Trying to find an owned webhook in the channel
+        if webhook := await self.search_owned():
+            return webhook
+
+        # Step 3. Creating a webhook ourselves
+        return await self.create_webhook()
 
 
 class Mirror(Mimic):

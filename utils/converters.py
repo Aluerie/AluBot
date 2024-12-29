@@ -23,7 +23,7 @@ __all__ = (
     "my_bool",
     "Codeblock",
     "Snowflake",
-    "AluColourConverter",
+    "AluColourTransformer",
     "DateTimezonePicker",
 )
 
@@ -112,11 +112,11 @@ class InvalidColour(AluBotError):  # noqa: N818
     __slots__: tuple[str, ...] = ()
 
 
-class AluColourConverter(commands.ColourConverter):  # , app_commands.Transformer):
+class AluColourTransformer(app_commands.Transformer):
     """Some super overloaded colour converted made for /colour command."""
 
     @override
-    async def convert(self, ctx: AluContext, argument: str) -> discord.Colour:
+    async def transform(self, interaction: discord.Interaction[AluBot], argument: str) -> discord.Colour:
         # TODO: we will rename command: for below, probably so be careful.
         error_footer = f'\n\nTo see supported colour formats by the bot - use "{const.Slash.help}` command: colour`"'
 
@@ -180,7 +180,9 @@ class AluColourConverter(commands.ColourConverter):  # , app_commands.Transforme
             pass
 
         try:
-            return await super().convert(ctx, argument)
+            # TODO: erm i tihnk it doesn't exist anymore since we used to subclass commands.ColourConverter;
+            # we need to figure out how to bring that here :D
+            return await super().transform(interaction, argument)
         except commands.BadColourArgument:
             msg = f"Colour `{argument}` is invalid.{error_footer}"
             raise InvalidColour(msg)

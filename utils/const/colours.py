@@ -58,6 +58,8 @@ class MaterialPalette:
     # [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
     # which is converted to real index in material_worker function
 
+    shades = (900, 800, 700, 600, 500, 400, 300, 200, 100, 50)
+
     @staticmethod
     def red(shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = 500) -> discord.Colour:
         """Get shade of red colour from Google Material Design."""
@@ -185,20 +187,6 @@ class MaterialPalette:
         return material_worker(shades, shade)
 
 
-# fmt: off
-material_accent_palette_dict_colours = {
-
-
-}
-# fmt: on
-
-map_shades = [700, 400, 200, 100]
-
-material_accent_palette = {
-    colour: dict(zip(map_shades, hex_values)) for colour, hex_values in material_accent_palette_dict_colours.items()
-}
-
-
 def accent_worker(colour_hexes: list[int], shade: Literal[700, 400, 200, 100]) -> discord.Colour:
     """Boilerplate function to get the colour for Material Accent Palette class."""
     return discord.Colour(colour_hexes[3 - shade // 200])
@@ -215,7 +203,7 @@ class MaterialAccentPalette:
     # [700, 400, 200, 100]
     # which is converted to real index in material_worker function
 
-    shades = map_shades
+    shades = (700, 400, 200, 100)
 
     @staticmethod
     def red(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:

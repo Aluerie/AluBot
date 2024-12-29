@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import colorsys
 import warnings
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
 import discord
 from dateparser.search import search_dates
@@ -100,7 +100,9 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
     @app_commands.command()
     @app_commands.describe(colour="Colour in any of supported formats")
     async def colour(
-        self, interaction: discord.Interaction[AluBot], colour: Annotated[discord.Colour, converters.AluColourConverter]
+        self,
+        interaction: discord.Interaction[AluBot],
+        colour: app_commands.Transform[discord.Colour, converters.AluColourTransformer],
     ) -> None:
         r"""Get info about colour in specified <formatted_colour_string>.
 
@@ -165,13 +167,16 @@ class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
 
         member = member_ or interaction.user
         channel = channel_ or interaction.channel
-        assert channel and not isinstance(channel, discord.ForumChannel) and not isinstance(channel, discord.CategoryChannel)
+        assert (
+            channel
+            and not isinstance(channel, discord.ForumChannel)
+            and not isinstance(channel, discord.CategoryChannel)
+        )
 
         text = "".join([f"{msg.content}\n" async for msg in channel.history(limit=limit) if msg.author == member])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
         embed = discord.Embed(
-            colour=const.Colour.blueviolet,
-            description = f"Member: {member}\nChannel: {channel}\nLimit: {limit}"
+            colour=const.Colour.blueviolet, description=f"Member: {member}\nChannel: {channel}\nLimit: {limit}"
         )
         file = self.bot.transposer.image_to_file(wordcloud.to_image(), filename="wordcloud.png")
         await interaction.followup.send(embed=embed, file=file)

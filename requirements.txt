@@ -14,8 +14,7 @@ twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@dev/3.
 
 # Dota 2 (steamio)
 # my own branch with dota2 extension
-# steamio @ git+https://github.com/Aluerie/steam.py@introduce-ext.dota2
-steamio @ git+https://github.com/Aluerie/steam.py@test_reconnect_with_dota
+steamio @ git+https://github.com/Aluerie/steam.py@introduce-ext.dota2
 
 # Dota 2 (ValvePython)
 # steam~=1.4.4

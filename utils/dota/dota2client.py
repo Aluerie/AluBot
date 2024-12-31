@@ -43,6 +43,7 @@ class Dota2Client(Client):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(state=PersonaState.Online)  # .Invisible
         self.bot: AluBot = bot
+        self.started: bool = False
 
         # clients
         self.stratz = StratzClient()
@@ -52,8 +53,6 @@ class Dota2Client(Client):
         self.heroes = Heroes(bot)
         self.items = Items(bot)
         self.facets = Facets(bot)
-
-        self.started = False
 
     def aluerie(self) -> PartialUser:
         return self.instantiate_partial_user(config.DOTA_FRIEND_ID)

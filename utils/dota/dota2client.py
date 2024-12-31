@@ -17,7 +17,7 @@ except ImportError:
 
 from utils import const
 
-from . import ODotaConstantsClient, StratzClient
+from .pulsefire_clients import ODotaConstantsClient, StratzClient
 from .storage import Abilities, Facets, Heroes, Items
 
 if TYPE_CHECKING:

@@ -16,7 +16,7 @@ import config
 from bot import EXT_CATEGORY_NONE, AluContext, ExtCategory
 from ext import get_extensions
 from utils import cache, const, disambiguator, errors, formats, helpers, transposer
-from utils.dota.steamio import Dota2Client
+from utils.dota.dota2client import Dota2Client
 from utils.twitch import AluTwitchClient
 
 from .exc_manager import ExceptionManager
@@ -303,7 +303,7 @@ class AluBot(commands.Bot, AluBotHelper):
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from utils.dota.steamio import Dota2Client
+            from utils.dota.dota2client import Dota2Client
 
             self.dota = Dota2Client(self)  # VALVE_SWITCH
             # await self.dota.login()

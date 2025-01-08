@@ -48,10 +48,7 @@ class LoggingHandler(logging.Handler):
             "Shard ID None has connected to Gateway",
             # "Webhook ID 1116501979133399113 is rate limited.",
         )
-        if any(msg in record.message for msg in messages_to_ignore):
-            return False
-
-        return True  # record.name in ('discord.gateway')
+        return not any(msg in record.message for msg in messages_to_ignore)
 
     @override
     def emit(self, record: logging.LogRecord) -> None:

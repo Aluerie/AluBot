@@ -6,7 +6,9 @@ Just some glossary so that I try to keep consistent terminology across the proje
 
 * **prefix command / ctx command**
 
-    Text/prefix command. The command that is getting invoked via typing message like `$sync`, those commands are made with `@commands.command` decorators and such. After deprecating all of hybrid commands, within this project "ctx command" became equal to "prefix command".
+    Text/prefix command. The command that is getting invoked via typing message like `$sync`, those commands are made with `@commands.command` decorators and such. After deprecating all of hybrid commands, within this project "ctx command" became equal to a "prefix command".
+
+    Prefix commands are only to be used for administrative purposes, i.e. the mentioned `$sync`
 
 * **app command**
 

@@ -36,7 +36,7 @@ from discord import app_commands
 from discord.ext import commands, menus
 
 import config
-from bot import AluBot, AluCog, AluContext, ExtCategory, aluloop
+from bot import AluBot, AluCog, ExtCategory, aluloop
 from utils import cache, const, errors, formats, fuzzy, timezones
 from utils.helpers import measure_time
 

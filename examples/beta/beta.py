@@ -9,10 +9,6 @@ class BetaTest(BetaCog):
     async def beta_task(self) -> None:
         pass
 
-    @commands.command()
-    async def prefix(self, ctx: AluContext) -> None:
-        await ctx.send("prefix")
-
     @app_commands.command()
     async def slash(self, interaction: discord.Interaction[AluBot]) -> None:
         await interaction.response.send_message("slash")

@@ -64,8 +64,8 @@ class LogsViaWebhook(AluCog):
     # TODO: ADD MORE STUFF
     EXACT_AVATAR_MAPPING: Mapping[str, str] = {
         # custom name loggers
-        "send_dota_fpc": const.DotaAsset.SendFPC,
-        "edit_dota_fpc": const.DotaAsset.EditFPC,
+        "send_dota_fpc": const.DotaAsset.SendFPC.url,
+        "edit_dota_fpc": const.DotaAsset.EditFPC.url,
 
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
@@ -81,8 +81,8 @@ class LogsViaWebhook(AluCog):
     }
 
     INCLUSIVE_AVATAR_MAPPING: Mapping[str, str] = {
-        "twitchio.": const.LogoAsset.TwitchIO,
-        "steam.": const.LogoAsset.SteamPy,
+        "twitchio.": const.LogoAsset.TwitchIO.url,
+        "steam.": const.LogoAsset.SteamPy.url,
     }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

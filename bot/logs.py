@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 import platform
 from contextlib import contextmanager
@@ -8,6 +9,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, override
 
 import discord
+
+from config import LOGGER_WEBHOOK
+from utils import formats
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -54,6 +58,13 @@ def setup_logging(test: bool) -> Generator[Any, Any, Any]:
         if platform.system() == "Linux":
             # so start-ups in logs are way more noticeable
             log.info(ASCII_STARTING_UP_ART)
+            # send webhook message as well
+            webhook = discord.SyncWebhook.from_url(LOGGER_WEBHOOK)
+            embed = discord.Embed(
+                colour=discord.Colour.og_blurple(),
+                description=f"{formats.format_dt(datetime.datetime.now(datetime.UTC), style="T")} The bot is restarting"
+            )
+            webhook.send(embed=embed)
 
         yield
     finally:
@@ -71,6 +82,7 @@ class MyColourFormatter(logging.Formatter):
     -------
     * fully copy-pasted from `discord.utils._ColourFormatter` class and changed `FORMATS` ClassVar.
     """
+
     # ANSI codes are a bit weird to decipher if you're unfamiliar with them, so here's a refresher
     # It starts off with a format like \x1b[XXXm where XXX is a semicolon separated list of commands
     # The important ones here relate to colour.

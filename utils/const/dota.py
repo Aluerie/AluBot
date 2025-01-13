@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .other import ImageAsset
+from ._meta import ImageAsset
 
 __all__ = (
     "TALENT_TREE_ICON",

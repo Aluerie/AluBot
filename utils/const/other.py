@@ -1,10 +1,9 @@
 from enum import StrEnum
 from typing import override
 
-from ._meta import CONSTANTS
+from ._meta import CONSTANTS, ImageAsset
 
 __all__ = (
-    "ImageAsset",
     "LogoAsset",
     "Emoticon",
     "Slash",
@@ -17,17 +16,6 @@ __all__ = (
     "Dota",
     "Logo",
 )
-
-
-class ImageAsset(StrEnum):
-    @override
-    def __str__(self) -> str:
-        """Relative location compared to the workplace directory, i.e. `./assets/images/logo/dota_white.png`"""
-        return f"./assets/images/{self.value}"
-
-    @property
-    def url(self) -> str:
-        return f"https://raw.githubusercontent.com/Aluerie/AluBot/main/assets/images/{self.value}"
 
 
 class LogoAsset(ImageAsset):

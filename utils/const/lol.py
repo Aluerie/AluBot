@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from utils.const import ImageAsset
+from ._meta import ImageAsset
 
 __all__ = (
     "LoLAsset",

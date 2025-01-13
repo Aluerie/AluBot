@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from utils.const import ImageAsset
+from .other import ImageAsset
 
 __all__ = (
     "TALENT_TREE_ICON",
@@ -12,19 +12,18 @@ __all__ = (
 TALENT_TREE_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
 
 
-_IMAGE_DIR = "./assets/images/dota/"
-
-
 class DotaAsset(ImageAsset):
     """Dota 2 images saved as .png file in the repository assets folder."""
 
-    AbilityUnknown = f"{_IMAGE_DIR}ability_unknown.png"
-    FacetQuestion = f"{_IMAGE_DIR}facet_question.png"
-    HeroTopbarDisconnectedUnpicked = f"{_IMAGE_DIR}hero_disconnected.png"
-    HeroTopbarUnknown = f"{_IMAGE_DIR}hero_unknown.png"
-    ItemEmpty = f"{_IMAGE_DIR}item_empty.png"
-    ItemUnknown = f"{_IMAGE_DIR}item_unknown.png"
-    Placeholder640X360 = f"{_IMAGE_DIR}Lavender640x360.png"
+    AbilityUnknown = "dota/ability_unknown.png"
+    FacetQuestion = "dota/facet_question.png"
+    HeroTopbarDisconnectedUnpicked = "dota/hero_disconnected.png"
+    HeroTopbarUnknown = "dota/hero_unknown.png"
+    ItemEmpty = "dota/item_empty.png"
+    ItemUnknown = "dota/item_unknown.png"
+    Placeholder640X360 = "dota/Lavender640x360.png"
+    EditFPC = "dota/edit_fpc.png"
+    SendFPC = "dota/send_fpc.png"
 
 
 FACET_COLOURS = {

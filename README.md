@@ -64,7 +64,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         <td>Dota 2 Game Coordinator  API</td>
         <td>
             <a href="https://github.com/Gobot1234/steam.py">
-                <img valign="bottom" src="./assets/readme/steamio.png" alt="Dota 2" width="40" />
+                <img valign="bottom" src="./assets/images/logo/steampy.png" alt="Dota 2" width="40" />
             </a>
         </td>
         <td><a href="https://steam-py.github.io/docs/latest/">steam.py</a></td>
@@ -122,7 +122,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
         </td>
         <td>
             <a href="https://github.com/PythonistaGuild/TwitchIO">
-                <img valign="bottom" src="./assets/readme/twitchio.png" alt="Twitchio" width="40" />
+                <img valign="bottom" src="./assets/images/logo/twitchio.png" alt="Twitchio" width="40" />
             </a>
         </td>
         <td>

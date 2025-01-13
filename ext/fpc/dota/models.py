@@ -11,7 +11,6 @@ import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from utils import const, formats
-from utils.dota import constants as dota_constants
 
 from ..base_classes import BaseMatchToEdit, BaseMatchToSend
 
@@ -82,7 +81,7 @@ class MatchToSend(BaseMatchToSend):
         send_log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
             return {
-                "preview_url": dota_constants.DotaAsset.Placeholder640X360,
+                "preview_url": const.DotaAsset.Placeholder640X360,
                 "display_name": self.player_name,
                 "url": "",
                 "logo_url": const.Logo.Dota,
@@ -474,6 +473,6 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
     data = await self.bot.dota.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
     match_to_edit = StratzMatchToEdit(self.bot, data)
     new_image = await match_to_edit.edit_notification_image(
-        dota_constants.DotaAsset.Placeholder640X360, discord.Colour.purple()
+        const.DotaAsset.Placeholder640X360, discord.Colour.purple()
     )
     new_image.show()

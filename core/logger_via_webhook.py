@@ -62,22 +62,27 @@ class LogsViaWebhook(AluCog):
     """
 
     # TODO: ADD MORE STUFF
-    AVATAR_MAPPING: Mapping[str, str] = {
+    EXACT_AVATAR_MAPPING: Mapping[str, str] = {
+        # custom name loggers
+        "send_dota_fpc": const.DotaAsset.SendFPC,
+        "edit_dota_fpc": const.DotaAsset.EditFPC,
+
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
         "bot.bot": "https://i.imgur.com/6XZ8Roa.png",  # lady Noir
-        "send_dota_fpc": "https://i.imgur.com/6x1J57F.png",  # dota 2 FPC logs
-        "edit_dota_fpc": "https://i.imgur.com/8nj04Ol.png",  # dota 2 FPC logs
         "ext.dev.sync": "https://em-content.zobj.net/source/microsoft/378/counterclockwise-arrows-button_1f504.png",
         "utils.dota.valvepython": "https://i.imgur.com/D96bMgG.png",
         "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
         "exc_manager": "https://em-content.zobj.net/source/microsoft/378/sos-button_1f198.png",
-        "twitchio.ext.eventsub.ws": const.Logo.Twitch,
-        "twitchio.websocket": const.Logo.Twitch,
         # "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
         "ext.fpc.lol.notifications": const.Logo.Lol,
         "githubkit": "https://seeklogo.com/images/G/github-colored-logo-FDDF6EB1F0-seeklogo.com.png",
         # use discord py icon somewhere here
+    }
+
+    INCLUSIVE_AVATAR_MAPPING: Mapping[str, str] = {
+        "twitchio.": const.LogoAsset.TwitchIO,
+        "steam.": const.LogoAsset.SteamPy,
     }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -106,6 +111,19 @@ class LogsViaWebhook(AluCog):
         """Add a record to a logging queue."""
         self._logging_queue.put_nowait(record)
 
+    def get_avatar(self, username: str) -> str:
+        """Helper function to get an avatar ulr based on a webhook username to send the record with."""
+
+        # exact name
+        if avatar_url := self.EXACT_AVATAR_MAPPING.get(username):
+            return avatar_url
+        # inclusions
+        for search_name, candidate in self.INCLUSIVE_AVATAR_MAPPING.items():
+            if username.startswith(search_name):
+                return candidate
+        # else
+        return discord.utils.MISSING
+
     async def send_log_record(self, record: logging.LogRecord) -> None:
         """Send Log record to discord webhook."""
         attributes = {
@@ -119,7 +137,7 @@ class LogsViaWebhook(AluCog):
         # so if logger sends at 23:01 and 23:02 it will be hard to understand the time difference
         dt = datetime.datetime.fromtimestamp(record.created, datetime.UTC)
         msg = textwrap.shorten(f"{emoji} {formats.format_dt(dt, style="T")} {record.message}", width=1995)
-        avatar_url = self.AVATAR_MAPPING.get(record.name, discord.utils.MISSING)
+        avatar_url = self.get_avatar(record.name)
 
         # Discord doesn't allow Webhooks names to contain "discord";
         # so if the record.name comes from discord.py library - it gonna block it

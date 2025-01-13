@@ -8,7 +8,6 @@ from roleidentification import get_roles
 
 from .. import const
 from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
-from . import constants
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -103,7 +102,7 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
             alias="Unknown",
             icon_url=cdragon_asset_url("/lol-game-data/assets/v1/champion-icons/-1.png"),
             # taken from `get_lol_v1_champion_summary` response ^ for champion with id=-1
-            emote=constants.NEW_CHAMPION_EMOTE,
+            emote=const.NEW_CHAMPION_EMOTE,
         )
 
     async def create_champion_emote(self, id: int, champion_alias: str, champion_icon_url: str) -> str:
@@ -119,12 +118,11 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
         except Exception as exc:
             embed = discord.Embed(
                 description=(
-                    "Something went wrong when creating champion emote "
-                    f"for `id={id}, alias={champion_alias}`."
+                    f"Something went wrong when creating champion emote for `id={id}, alias={champion_alias}`."
                 )
             )
             await self.bot.exc_manager.register_error(exc, embed=embed)
-            return constants.NEW_CHAMPION_EMOTE
+            return const.NEW_CHAMPION_EMOTE
 
 
 class ChampionTransformer(CharacterTransformer[Champion, PseudoChampion]):
@@ -154,7 +152,7 @@ class ItemIcons(GameDataStorage[str, str]):
     @override
     @staticmethod
     def generate_unknown_object(_: int) -> str:
-        return constants.LoLAsset.ItemUnknown
+        return const.LoLAsset.ItemUnknown
 
 
 class RuneIcons(GameDataStorage[str, str]):
@@ -178,7 +176,7 @@ class RuneIcons(GameDataStorage[str, str]):
     @override
     @staticmethod
     def generate_unknown_object(_: int) -> str:
-        return constants.LoLAsset.RuneUnknown
+        return const.LoLAsset.RuneUnknown
 
 
 class SummonerSpellIcons(GameDataStorage[str, str]):
@@ -201,7 +199,7 @@ class SummonerSpellIcons(GameDataStorage[str, str]):
     @override
     @staticmethod
     def generate_unknown_object(_: int) -> str:
-        return constants.LoLAsset.SummonerSpellUnknown
+        return const.LoLAsset.SummonerSpellUnknown
 
 
 class RoleDict(TypedDict):

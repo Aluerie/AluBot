@@ -325,7 +325,6 @@ async def beta_test_edit_image(self: AluCog) -> None:
     # await beta_test_edit_image(self)
 
     from ext.fpc.lol.models import MatchToEdit
-    from utils.dota import DotaAsset
 
     self.bot.instantiate_lol()
     await self.bot.lol.start()
@@ -341,5 +340,5 @@ async def beta_test_edit_image(self: AluCog) -> None:
         timeline=timeline,
     )
 
-    new_image = await post_match_player.edit_notification_image(DotaAsset.Placeholder640X360, discord.Colour.purple())
+    new_image = await post_match_player.edit_notification_image(const.DotaAsset.Placeholder640X360, discord.Colour.purple())
     new_image.show()

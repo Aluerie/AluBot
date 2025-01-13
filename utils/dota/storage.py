@@ -7,7 +7,6 @@ import discord
 
 from .. import const, formats
 from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
-from . import constants
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -121,8 +120,8 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
             id=hero_id,
             short_name="unknown_hero",
             display_name="Unknown",
-            topbar_icon_url=constants.DotaAsset.HeroTopbarUnknown,
-            emote=constants.NEW_HERO_EMOTE,
+            topbar_icon_url=const.DotaAsset.HeroTopbarUnknown,
+            emote=const.NEW_HERO_EMOTE,
         )
 
     @override
@@ -135,7 +134,7 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
                 id=0,
                 short_name="disconnected_or_unpicked",
                 display_name="Disconnected/Unpicked",
-                topbar_icon_url=constants.DotaAsset.HeroTopbarDisconnectedUnpicked,
+                topbar_icon_url=const.DotaAsset.HeroTopbarDisconnectedUnpicked,
                 emote="\N{BLACK QUESTION MARK ORNAMENT}",
             )
         else:
@@ -160,7 +159,7 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
                 description=f"Something went wrong when creating hero emote for `id={hero_id}, name={hero_short_name}`."
             )
             await self.bot.exc_manager.register_error(exc, embed=embed)
-            return constants.NEW_HERO_EMOTE
+            return const.NEW_HERO_EMOTE
 
 
 class HeroTransformer(CharacterTransformer[Hero, PseudoHero]):
@@ -183,7 +182,7 @@ class Ability:
 
     @property
     def icon_url(self) -> str:
-        return constants.TALENT_TREE_ICON if self.is_talent else f"{CDN_REACT}/abilities/{self.name}.png"
+        return const.TALENT_TREE_ICON if self.is_talent else f"{CDN_REACT}/abilities/{self.name}.png"
 
     @override
     def __repr__(self) -> str:
@@ -242,7 +241,7 @@ class Abilities(GameDataStorage[Ability, PseudoAbility]):
             name="unknown_ability",
             display_name="Unknown",
             is_talent=None,
-            icon_url=constants.DotaAsset.AbilityUnknown,
+            icon_url=const.DotaAsset.AbilityUnknown,
         )
 
 
@@ -299,7 +298,7 @@ class Items(GameDataStorage[Item, PseudoItem]):
         return PseudoItem(
             id=item_id,
             short_name="unknown_item",
-            icon_url=constants.DotaAsset.ItemUnknown,
+            icon_url=const.DotaAsset.ItemUnknown,
         )
 
     @override
@@ -311,7 +310,7 @@ class Items(GameDataStorage[Item, PseudoItem]):
             return PseudoItem(
                 0,
                 "Empty Slot",
-                constants.DotaAsset.ItemEmpty,
+                const.DotaAsset.ItemEmpty,
             )
         else:
             return await super().by_id(item_id)
@@ -371,7 +370,7 @@ class Facets(GameDataStorage[Facet, PseudoFacet]):
                 or short_name_display_name_lookup.get(facet["name"])
                 or "Unknown Facet",
                 facet["icon"],
-                constants.FACET_COLOURS[f'{facet["color"]}{facet['gradientId']}'],
+                const.FACET_COLOURS[f'{facet["color"]}{facet['gradientId']}'],
             )
             for facet in facets["data"]["constants"]["facets"]
         }
@@ -384,5 +383,5 @@ class Facets(GameDataStorage[Facet, PseudoFacet]):
             display_name="Unknown",
             icon="question",
             colour="#675CAE",
-            icon_url=constants.DotaAsset.FacetQuestion,
+            icon_url=const.DotaAsset.FacetQuestion,
         )

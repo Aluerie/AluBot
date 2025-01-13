@@ -1,10 +1,12 @@
 from enum import StrEnum
+from typing import override
 
 from ._meta import CONSTANTS
 
 __all__ = (
     "ImageAsset",
     "LogoAsset",
+    "Emoticon",
     "Slash",
     "Regex",
     "Picture",
@@ -18,16 +20,23 @@ __all__ = (
 
 
 class ImageAsset(StrEnum):
+    @override
+    def __str__(self) -> str:
+        """Relative location compared to the workplace directory, i.e. `./assets/images/logo/dota_white.png`"""
+        return f"./assets/images/{self.value}"
+
+    @property
     def url(self) -> str:
-        relative_location = self.value.removeprefix("./")
-        return f"https://raw.githubusercontent.com/Aluerie/AluBot/main/{relative_location}"
+        return f"https://raw.githubusercontent.com/Aluerie/AluBot/main/assets/images/{self.value}"
 
 
 class LogoAsset(ImageAsset):
-    DotaWhite = "./assets/images/logo/dota_white.png"
+    DotaWhite = "logo/dota_white.png"
     """ ^ image above is made by removing (R) from:
     https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
     """
+    TwitchIO = "logo/twitchio.png"
+    SteamPy = "logo/steampy.png"
 
 
 class Slash(StrEnum):
@@ -35,6 +44,21 @@ class Slash(StrEnum):
 
     feedback = "</feedback:1060350834367549541>"
     help = "</help:971447382787108919>"
+
+
+class Emoticon(StrEnum):
+    """
+    Notes
+    -----
+    Maybe a bad name, considering everything is taken from emojipedia,
+    but I didn't want to sound similar to Emote class
+    """
+
+    Swan = "407/swan_1f9a2.png"
+
+    @override
+    def __str__(self) -> str:
+        return f"https://em-content.zobj.net/source/microsoft/{self.value}"
 
 
 class Regex(CONSTANTS):

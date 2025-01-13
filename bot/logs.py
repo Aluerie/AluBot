@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, override
 import discord
 
 from config import LOGGER_WEBHOOK
-from utils import formats
+from utils import const, formats
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -62,9 +62,9 @@ def setup_logging(test: bool) -> Generator[Any, Any, Any]:
             webhook = discord.SyncWebhook.from_url(LOGGER_WEBHOOK)
             embed = discord.Embed(
                 colour=discord.Colour.og_blurple(),
-                description=f"{formats.format_dt(datetime.datetime.now(datetime.UTC), style="T")} The bot is restarting"
+                description=f"{formats.format_dt(datetime.datetime.now(datetime.UTC), style="T")} The bot is restarting",
             )
-            webhook.send(embed=embed)
+            webhook.send(avatar_url=const.Emoticon.Swan, embed=embed)
 
         yield
     finally:

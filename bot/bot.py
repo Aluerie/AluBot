@@ -343,8 +343,9 @@ class AluBot(commands.Bot, AluBotHelper):
     @override
     async def close(self) -> None:
         """Close the connection to Discord while cleaning up other open sessions and clients."""
-        await self.pool.close()
+        log.info("%s is closing.", self.__class__.__name__)
 
+        await self.pool.close()
         if hasattr(self, "twitch"):
             await self.twitch.close()
         if hasattr(self, "dota"):
@@ -359,12 +360,12 @@ class AluBot(commands.Bot, AluBotHelper):
 
     @property
     def hideout(self) -> const.HideoutGuild:
-        """Shortcut to get Hideout guild, its channels and roles."""
+        """Shortcut for Hideout guild, its channels and roles."""
         return const.HideoutGuild(self)
 
     @property
     def community(self) -> const.CommunityGuild:
-        """Shortcut to get Community guild, its channels and roles."""
+        """Shortcut for Community guild, its channels and roles."""
         return const.CommunityGuild(self)
 
     @discord.utils.cached_property
@@ -422,11 +423,11 @@ class AluBot(commands.Bot, AluBotHelper):
 
         Parameters
         ----------
-        event: str
+        event
             The name of the event that raised the exception.
-        args: Any
+        args
             The positional arguments for the event that raised the exception.
-        kwargs: Any
+        kwargs
             The keyword arguments for the event that raised the exception.
 
         """

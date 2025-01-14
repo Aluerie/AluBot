@@ -41,7 +41,8 @@ class Colour:
 
 
 def material_worker(
-    colour_hexes: list[int], shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50]
+    colour_hexes: list[int],
+    shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50],
 ) -> discord.Colour:
     """Boilerplate function to get the colour for Material Palette class."""
     return discord.Colour(colour_hexes[9 - shade // 100])

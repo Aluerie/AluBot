@@ -66,7 +66,6 @@ class LogsViaWebhook(AluCog):
         # custom name loggers
         "send_dota_fpc": const.DotaAsset.SendFPC.url,
         "edit_dota_fpc": const.DotaAsset.EditFPC.url,
-
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
         "bot.bot": "https://i.imgur.com/6XZ8Roa.png",  # lady Noir
@@ -74,7 +73,6 @@ class LogsViaWebhook(AluCog):
         "utils.dota.valvepython": "https://i.imgur.com/D96bMgG.png",
         "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
         "exc_manager": "https://em-content.zobj.net/source/microsoft/378/sos-button_1f198.png",
-        # "https://em-content.zobj.net/source/microsoft/378/swan_1f9a2.png",
         "ext.fpc.lol.notifications": const.Logo.Lol,
         "githubkit": "https://seeklogo.com/images/G/github-colored-logo-FDDF6EB1F0-seeklogo.com.png",
         # use discord py icon somewhere here
@@ -83,6 +81,18 @@ class LogsViaWebhook(AluCog):
     INCLUSIVE_AVATAR_MAPPING: Mapping[str, str] = {
         "twitchio.": const.LogoAsset.TwitchIO.url,
         "steam.": const.LogoAsset.SteamPy.url,
+    }
+
+    emojis: Mapping[str, str] = {
+        "INFO": "\N{INFORMATION SOURCE}\ufe0f",
+        "WARNING": "\N{WARNING SIGN}\ufe0f",
+        "ERROR": "\N{CROSS MARK}",
+    }
+
+    colours: Mapping[str, discord.Colour | int] = {
+        "INFO": const.MaterialPalette.light_blue(),
+        "WARNING": const.MaterialPalette.yellow(shade=700),
+        "ERROR": const.Colour.maroon,
     }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -126,13 +136,9 @@ class LogsViaWebhook(AluCog):
 
     async def send_log_record(self, record: logging.LogRecord) -> None:
         """Send Log record to discord webhook."""
-        attributes = {
-            "INFO": "\N{INFORMATION SOURCE}\ufe0f",
-            "WARNING": "\N{WARNING SIGN}\ufe0f",
-            "ERROR": "\N{CROSS MARK}",
-        }
 
-        emoji = attributes.get(record.levelname, "\N{WHITE QUESTION MARK ORNAMENT}")
+        emoji = self.emojis.get(record.levelname, "\N{WHITE QUESTION MARK ORNAMENT}")
+        colour = self.colours.get(record.levelname)
         # the time is there so the MM:SS is more clear. Discord stacks messages from the same webhook user
         # so if logger sends at 23:01 and 23:02 it will be hard to understand the time difference
         dt = datetime.datetime.fromtimestamp(record.created, datetime.UTC)
@@ -143,7 +149,12 @@ class LogsViaWebhook(AluCog):
         # so if the record.name comes from discord.py library - it gonna block it
         # thus we replace letters: "c" is cyrillic, "o" is greek.
         username = record.name.replace("discord", "disсοrd")  # cSpell: ignore disсοrd  # noqa: RUF003
-        await self.logger_webhook.send(msg, username=username, avatar_url=avatar_url)
+
+        embed = discord.Embed(
+            colour=colour,
+            description=msg,
+        )
+        await self.logger_webhook.send(embed=embed, username=username, avatar_url=avatar_url)
 
     @tasks.loop(seconds=0.0)
     async def logging_worker(self) -> None:

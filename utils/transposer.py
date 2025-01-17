@@ -95,7 +95,7 @@ class TransposeClient:
         else:
             # assume it is a local file
             try:
-                return Image.open(fp=url_or_fp)
+                return Image.open(fp=str(url_or_fp))
             except FileNotFoundError:
                 raise
 

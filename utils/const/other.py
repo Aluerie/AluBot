@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import override
 
-from ._meta import CONSTANTS, ImageAsset
+from ._meta import ASSETS_IMAGES, CONSTANTS, RAW_GITHUB_IMAGES
 
 __all__ = (
     "LogoAsset",
@@ -18,13 +18,22 @@ __all__ = (
 )
 
 
-class LogoAsset(ImageAsset):
-    DotaWhite = "logo/dota_white.png"
+class LogoAsset(StrEnum):
+    DotaWhite = "dota_white.png"
     """ ^ image above is made by removing (R) from:
     https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
     """
-    TwitchIO = "logo/twitchio.png"
-    SteamPy = "logo/steampy.png"
+    TwitchIO = "twitchio.png"
+    SteamPy = "steampy.png"
+
+    @override
+    def __str__(self) -> str:
+        """Relative location compared to the workplace directory, i.e. `./assets/images/logo/dota_white.png`"""
+        return ASSETS_IMAGES + 'logo/' + self.value
+
+    @property
+    def url(self) -> str:
+        return RAW_GITHUB_IMAGES + "logo/" + self.value
 
 
 class Slash(StrEnum):

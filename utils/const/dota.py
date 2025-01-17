@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from ._meta import ImageAsset
+from enum import StrEnum
+from typing import override
+
+from ._meta import ASSETS_IMAGES, RAW_GITHUB_IMAGES
 
 __all__ = (
     "TALENT_TREE_ICON",
@@ -12,7 +15,7 @@ __all__ = (
 TALENT_TREE_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
 
 
-class DotaAsset(ImageAsset):
+class DotaAsset(StrEnum):
     """Dota 2 images saved as .png file in the repository assets folder."""
 
     AbilityUnknown = "dota/ability_unknown.png"
@@ -24,6 +27,15 @@ class DotaAsset(ImageAsset):
     Placeholder640X360 = "dota/Lavender640x360.png"
     EditFPC = "dota/edit_fpc.png"
     SendFPC = "dota/send_fpc.png"
+
+    @override
+    def __str__(self) -> str:
+        """Relative location compared to the workplace directory, i.e. `./assets/images/logo/dota_white.png`"""
+        return ASSETS_IMAGES + 'dota/' + self.value
+
+    @property
+    def url(self) -> str:
+        return RAW_GITHUB_IMAGES + "dota/" + self.value
 
 
 FACET_COLOURS = {

@@ -18,15 +18,15 @@ TALENT_TREE_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
 class DotaAsset(StrEnum):
     """Dota 2 images saved as .png file in the repository assets folder."""
 
-    AbilityUnknown = "dota/ability_unknown.png"
-    FacetQuestion = "dota/facet_question.png"
-    HeroTopbarDisconnectedUnpicked = "dota/hero_disconnected.png"
-    HeroTopbarUnknown = "dota/hero_unknown.png"
-    ItemEmpty = "dota/item_empty.png"
-    ItemUnknown = "dota/item_unknown.png"
-    Placeholder640X360 = "dota/Lavender640x360.png"
-    EditFPC = "dota/edit_fpc.png"
-    SendFPC = "dota/send_fpc.png"
+    AbilityUnknown = "ability_unknown.png"
+    FacetQuestion = "facet_question.png"
+    HeroTopbarDisconnectedUnpicked = "hero_disconnected.png"
+    HeroTopbarUnknown = "hero_unknown.png"
+    ItemEmpty = "item_empty.png"
+    ItemUnknown = "item_unknown.png"
+    Placeholder640X360 = "Lavender640x360.png"
+    EditFPC = "edit_fpc.png"
+    SendFPC = "send_fpc.png"
 
     @override
     def __str__(self) -> str:

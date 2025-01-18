@@ -5,6 +5,7 @@ import random
 import time
 from typing import TYPE_CHECKING, Any, override
 
+import aiohttp
 import orjson
 from pulsefire.clients import BaseClient
 from pulsefire.middlewares import http_error_middleware, json_response_middleware, rate_limiter_middleware
@@ -12,11 +13,14 @@ from pulsefire.ratelimiters import BaseRateLimiter
 
 try:
     import config
+
+    from .. import errors
 except ImportError:
     import sys
 
     sys.path.append("D:/LAPTOP/AluBot")
     import config
+    from utils import errors
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -45,9 +49,9 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
         self._track_syncs: dict[str, tuple[float, list[Any]]] = {}
         self.rate_limits_string: str = "Not Set Yet"
         self.rate_limits_ratio: float = 1.0
-        self._index: dict[
-            tuple[str, int, Any, Any, Any], tuple[int, int, float, float, float]
-        ] = collections.defaultdict(lambda: (0, 0, 0, 0, 0))
+        self._index: dict[tuple[str, int, Any, Any, Any], tuple[int, int, float, float, float]] = (
+            collections.defaultdict(lambda: (0, 0, 0, 0, 0))
+        )
 
     @override
     async def acquire(self, invocation: Invocation) -> float:
@@ -298,129 +302,149 @@ class StratzClient(BaseClient):
             ],
         )
 
+    async def invoke_with_try(self, query: str, json: dict[str, Any]) -> Any:
+        """Error wrapper for `self.invoker`.
+
+        Notes
+        -----
+        * The reason for this function is that sometimes I forget Stratz resets Bearer Tokens every ~365 days
+            or when they suspect something. In these cases, the bot starts erroring out with 403
+            while I start to panic (when I did nothing wrong).
+            Unfortunately, they don't notify people about token resets.
+        """
+
+        try:
+            return await self.invoke("POST", "")
+        except aiohttp.ClientResponseError as exc:
+            if exc.status == 403:
+                msg = (
+                    "403 Forbidden. Please, check if your Bearer Token in config.py matches "
+                    "the one at https://stratz.com/api. "
+                    "PS. This error is manual and not given by Stratz API."
+                )
+                raise errors.ResponseNotOK(msg)
+            else:
+                raise
+
     async def get_fpc_match_to_edit(self, *, match_id: int, friend_id: int) -> stratz.FPCMatchesResponse:
         """Queries info that I need to know in order to edit Dota 2 FPC notification."""
         query = """
-            query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
-                match(id: $match_id) {
-                    statsDateTime
-                    players(steamAccountId: $friend_id) {
-                        isVictory
-                        heroId
-                        variant
-                        kills
-                        deaths
-                        assists
-                        item0Id
-                        item1Id
-                        item2Id
-                        item3Id
-                        item4Id
-                        item5Id
-                        neutral0Id
-                        playbackData {
-                            abilityLearnEvents {
-                                abilityId
-                            }
-                            purchaseEvents {
-                                time
-                                itemId
-                            }
-                        }
-                        stats {
-                            matchPlayerBuffEvent {
-                                itemId
-                            }
-                        }
-                    }
+query GetFPCMatchToEdit ($match_id: Long!, $friend_id: Long!) {
+    match(id: $match_id) {
+        statsDateTime
+        players(steamAccountId: $friend_id) {
+            isVictory
+            heroId
+            variant
+            kills
+            deaths
+            assists
+            item0Id
+            item1Id
+            item2Id
+            item3Id
+            item4Id
+            item5Id
+            neutral0Id
+            playbackData {
+                abilityLearnEvents {
+                    abilityId
+                }
+                purchaseEvents {
+                    time
+                    itemId
                 }
             }
-        """
-        json = {"query": query, "variables": {"match_id": match_id, "friend_id": friend_id}}  # noqa F481
-        return await self.invoke("POST", "")  # type: ignore
+            stats {
+                matchPlayerBuffEvent {
+                    itemId
+                }
+            }
+        }
+    }
+}"""
+        json = {"query": query, "variables": {"match_id": match_id, "friend_id": friend_id}}
+        return await self.invoke_with_try(query, json)
 
     async def get_heroes(self) -> stratz.HeroesResponse:
         """Queries Dota 2 Hero Constants."""
         query = """
-            query Heroes {
-                constants {
-                    heroes {
-                        id
-                        shortName
-                        displayName
-                        abilities {
-                            ability {
-                                id
-                                name
-                            }
-                        }
-                        talents {
-                            abilityId
-                        }
-                        facets {
-                            facetId
-                        }
-                    }
+query Heroes {
+    constants {
+        heroes {
+            id
+            shortName
+            displayName
+            abilities {
+                ability {
+                    id
+                    name
                 }
             }
+            talents {
+                abilityId
+            }
+            facets {
+                facetId
+            }
+        }
+    }
+}
         """
-        json = {"query": query}  # noqa F481
-        return await self.invoke("POST", "")  # type: ignore
+        json = {"query": query}
+        return await self.invoke_with_try(query, json)
 
     async def get_abilities(self) -> stratz.AbilitiesResponse:
         """Queries Dota 2 Hero Ability Constants."""
         query = """
-            query Abilities {
-                constants {
-                    abilities {
-                        id
-                        name
-                        language {
-                            displayName
-                        }
-                        isTalent
-                    }
-                }
+query Abilities {
+    constants {
+        abilities {
+            id
+            name
+            language {
+                displayName
             }
-        """
-        json = {"query": query}  # noqa F481
-        return await self.invoke("POST", "")  # type: ignore
+            isTalent
+        }
+    }
+}"""
+        json = {"query": query}
+        return await self.invoke_with_try(query, json)
 
     async def get_items(self) -> stratz.ItemsResponse:
         """Queries Dota 2 Hero Item Constants."""
         query = """
-            query Items {
-                constants {
-                    items {
-                        id
-                        shortName
-                    }
-                }
-            }
-        """
-        json = {"query": query}  # noqa F481
-        return await self.invoke("POST", "")  # type: ignore
+query Items {
+    constants {
+        items {
+            id
+            shortName
+        }
+    }
+}"""
+        json = {"query": query}
+        return await self.invoke_with_try(query, json)
 
     async def get_facets(self) -> stratz.FacetsResponse:
         """Queries Dota 2 Hero Facet Constants."""
         query = """
-            query FacetConstants {
-                constants {
-                    facets {
-                        id
-                        name
-                        color
-                        icon
-                        language {
-                            displayName
-                        }
-                        gradientId
-                    }
-                }
+query FacetConstants {
+    constants {
+        facets {
+            id
+            name
+            color
+            icon
+            language {
+                displayName
             }
-        """
-        json = {"query": query}  # noqa F481
-        return await self.invoke("POST", "")  # type: ignore
+            gradientId
+        }
+    }
+}"""
+        json = {"query": query}
+        return await self.invoke_with_try(query, json)
 
 
 if __name__ == "__main__":
@@ -455,10 +479,17 @@ if __name__ == "__main__":
 
         print(stratz_client.rate_limiter.rate_limits_string)  # noqa: T201
 
+    async def test_stratz_get_heroes() -> None:
+        async with StratzClient() as stratz_client:
+            heroes = await stratz_client.get_heroes()
+            print(heroes["data"]["constants"]["heroes"][2])  # noqa: T201
+
+        print(stratz_client.rate_limiter.rate_limits_string)  # noqa: T201
+
     # STEAM WEB API
     async def test_steam_web_api_client() -> None:
         async with SteamWebAPIClient() as steam_web_api:
             match = await steam_web_api.get_match_details(7566292740)
             print(match)  # noqa: T201
 
-    asyncio.run(test_steam_web_api_client())
+    asyncio.run(test_stratz_get_heroes())

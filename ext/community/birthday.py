@@ -132,13 +132,13 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
         Parameters
         ----------
-        day:
+        day
             Day of your birthday, number from 1 till 31.
-        month:
+        month
             Month of your birthday, full month name.
-        year:
+        year
             Year of your birthday, optional.
-        timezone:
+        timezone
             Timezone, type and pick from the autocomplete or try IANA alias or country/city names, optional.
         """
         await interaction.response.defer()

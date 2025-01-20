@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import datetime
 import random
-from typing import TYPE_CHECKING, TypedDict, override
+from enum import Enum
+from typing import TYPE_CHECKING, NamedTuple, TypedDict, override
 
 import discord
 from discord.ext import commands
@@ -24,6 +25,13 @@ if TYPE_CHECKING:
         gif: int
         rule: int
         dynamic: int
+
+
+class DailyEmbedMessageTuple(NamedTuple):
+    title: str
+    colour: int
+    category: str
+    message_bank: list[str]
 
 
 ADVICE_BANK = [
@@ -93,6 +101,13 @@ RULE_BANK = [
 ]
 
 
+class DailyEmbedMessageEnum(Enum):
+    Simple = DailyEmbedMessageTuple("Daily Message", Colour.blueviolet, "advice", ADVICE_BANK)
+    Important = DailyEmbedMessageTuple("Daily Important Message", Colour.darkslategray, "important", IMPORTANT_BANK)
+    Fact = DailyEmbedMessageTuple("Daily Fact Message", Colour.slateblue, "fact", FACT_BANK)
+    Rule = DailyEmbedMessageTuple("Daily Rule Message", 0x66FFBF, "rule", RULE_BANK)
+
+
 class OldTimers(CommunityCog):
     """Old Timers."""
 
@@ -155,19 +170,14 @@ class OldTimers(CommunityCog):
         match timer_type:
             case "embed":
                 # STATIC EMBED MESSAGE
-                data = random.choice(
-                    [
-                        ("Daily Message", Colour.blueviolet, "advice", ADVICE_BANK),
-                        ("Daily Important Message", Colour.darkslategray, "important", IMPORTANT_BANK),
-                        ("Daily Fact Message", Colour.slateblue, "fact", FACT_BANK),
-                        ("Daily Rule Message", 0x66FFBF, "rule", RULE_BANK),
-                    ]
+                data = (random.choice(list(DailyEmbedMessageEnum))).value
+                timer.data[data.category] = index = timer.data[data.category] + 1
+
+                embed = discord.Embed(
+                    colour=data.colour,
+                    title=data.title,
+                    description=data.message_bank[index % len(data.message_bank)],
                 )
-
-                category = data[2]
-                timer.data[category] = index = timer.data[category] + 1
-
-                embed = discord.Embed(colour=data[1], title=data[0], description=data[3][index % len(data[3])])
                 await self.community.general.send(embed=embed)
 
             case "gif":

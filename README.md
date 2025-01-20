@@ -131,12 +131,12 @@ Special thanks to the whole `discord.py` community for endless amount of educati
     </tr>
         <tr>
         <td>
-            <a href="https://twitch.tv/">
+            <a href="https://github.com/">
                 <img valign="bottom" src="./assets/readme/github-mark-white.png" alt="Github" width="40" />
             </a>
         </td>
         <td>
-            <a href="https://github.com/">GitHub API</a>
+            <a href="https://docs.github.com/en/rest">GitHub API</a>
         </td>
         <td>
             <a href="https://github.com/yanyongyu/githubkit">
@@ -144,7 +144,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
             </a>
         </td>
         <td>
-            githubkit
+            <a href="https://yanyongyu.github.io/githubkit/">githubkit </a>
         </td>
     </tr>
     </tr>

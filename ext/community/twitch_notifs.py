@@ -246,7 +246,7 @@ class TwitchCog(CommunityCog):
         streaming_people = [
             member
             for member in self.community.guild.members
-            if discord.ActivityType.streaming in {activity.type for activity in member.activities}
+            if discord.ActivityType.streaming in {activity.type for activity in member.activities} and not member.bot
         ]
         for member in streaming_people:
             if live_streamer_role not in member.roles:

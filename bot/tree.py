@@ -68,10 +68,8 @@ class AluAppCommandTree(app_commands.CommandTree):
             guild_commands = self._guild_app_commands.get(guild_id, {})
             if not self.fallback_to_global:
                 return search_dict(guild_commands)
-            else:
-                return search_dict(guild_commands) or search_dict(self._global_app_commands)
-        else:
-            return search_dict(self._global_app_commands)
+            return search_dict(guild_commands) or search_dict(self._global_app_commands)
+        return search_dict(self._global_app_commands)
 
     @staticmethod
     def _unpack_app_commands(commands: list[app_commands.AppCommand]) -> AppCommandStore:
@@ -92,7 +90,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         return ret
 
     async def _update_cache(
-        self, commands: list[app_commands.AppCommand], guild: Snowflake | int | None = None
+        self, commands: list[app_commands.AppCommand], guild: Snowflake | int | None = None,
     ) -> None:
         # because we support both int and Snowflake
         # we need to convert it to a Snowflake like object if it's an int

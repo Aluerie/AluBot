@@ -53,8 +53,7 @@ class SummonerNameCheck(FPCCog):
                 if exc.status == 404:
                     log.info("Failed to get summoner under previous name %s#%s", row["game_name"], row["tag_line"])
                     continue
-                else:
-                    raise
+                raise
 
             if account["gameName"] != row["game_name"] or account["tagLine"] != row["tag_line"]:
                 query = """

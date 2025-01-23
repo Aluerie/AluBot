@@ -4,11 +4,11 @@ from __future__ import annotations
 from typing import TypedDict
 
 __all__ = (
-    "FPCMatchesResponse",
-    "HeroesResponse",
     "AbilitiesResponse",
-    "ItemsResponse",
+    "FPCMatchesResponse",
     "FacetsResponse",
+    "HeroesResponse",
+    "ItemsResponse",
 )
 
 # STRATZ: GET FPC MATCHES

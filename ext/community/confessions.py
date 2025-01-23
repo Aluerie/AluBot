@@ -71,7 +71,7 @@ class ConfView(AluView):
 
     @override
     async def on_error(
-        self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[Self]
+        self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[Self],
     ) -> None:
         if isinstance(error, ButtonOnCooldown):
             e = discord.Embed(

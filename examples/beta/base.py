@@ -8,40 +8,15 @@ where I do various beta testings in the test version of the bot.
 
 from __future__ import annotations
 
-import asyncio
-import datetime
-import enum
 import logging
-import os
-import random
-import sys
-from dataclasses import dataclass
 from typing import (
-    TYPE_CHECKING,
-    Annotated,
-    Any,
-    ClassVar,
-    Literal,
-    TypedDict,
-    TypeVar,
-    Unpack,
-    cast,
     override,
-    reveal_type,
 )
 
-import asyncpg
 import discord  # noqa TCH002
-from discord import app_commands
-from discord.ext import commands, menus
 
-import config
-from bot import AluBot, AluCog, ExtCategory, aluloop
-from utils import cache, const, errors, formats, fuzzy, timezones
-from utils.helpers import measure_time
-
-if TYPE_CHECKING:
-    from collections.abc import Callable, Coroutine, Sequence
+from bot import AluCog, ExtCategory, aluloop
+from utils import const
 
 log = logging.getLogger(__name__)
 
@@ -69,4 +44,3 @@ class BetaCog(AluCog, category=category):
     @aluloop()
     async def beta_task(self) -> None:
         """Task that is supposed to run just once to test stuff out."""
-        ...

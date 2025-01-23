@@ -4,17 +4,17 @@ from typing import override
 from ._meta import ASSETS_IMAGES, CONSTANTS, RAW_GITHUB_IMAGES
 
 __all__ = (
-    "LogoAsset",
+    "Dota",
     "Emoticon",
-    "Slash",
-    "Regex",
-    "Picture",
+    "League",
     "Limit",
+    "Logo",
+    "LogoAsset",
+    "Picture",
+    "Regex",
+    "Slash",
     "Twitch",
     "TwitchID",
-    "League",
-    "Dota",
-    "Logo",
 )
 
 
@@ -29,7 +29,7 @@ class LogoAsset(StrEnum):
     @override
     def __str__(self) -> str:
         """Relative location compared to the workplace directory, i.e. `./assets/images/logo/dota_white.png`"""
-        return ASSETS_IMAGES + 'logo/' + self.value
+        return ASSETS_IMAGES + "logo/" + self.value
 
     @property
     def url(self) -> str:

@@ -6,10 +6,10 @@ from typing import override
 from ._meta import ASSETS_IMAGES, RAW_GITHUB_IMAGES
 
 __all__ = (
-    "TALENT_TREE_ICON",
-    "DotaAsset",
     "FACET_COLOURS",
     "NEW_HERO_EMOTE",
+    "TALENT_TREE_ICON",
+    "DotaAsset",
 )
 
 TALENT_TREE_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
@@ -31,7 +31,7 @@ class DotaAsset(StrEnum):
     @override
     def __str__(self) -> str:
         """Relative location compared to the workplace directory, i.e. `./assets/images/logo/dota_white.png`"""
-        return ASSETS_IMAGES + 'dota/' + self.value
+        return ASSETS_IMAGES + "dota/" + self.value
 
     @property
     def url(self) -> str:

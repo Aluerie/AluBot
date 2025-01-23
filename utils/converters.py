@@ -20,11 +20,11 @@ if TYPE_CHECKING:
     from bot import AluBot, AluContext
 
 __all__ = (
-    "my_bool",
-    "Codeblock",
-    "Snowflake",
     "AluColourTransformer",
+    "Codeblock",
     "DateTimezonePicker",
+    "Snowflake",
+    "my_bool",
 )
 
 
@@ -37,10 +37,9 @@ def my_bool(argument: str) -> bool:
     lowered = argument.lower()
     if lowered in ("in", "yes", "y", "true", "t", "1", "enable", "on"):
         return True
-    elif lowered in ("out", "no", "n", "false", "f", "0", "disable", "off"):
+    if lowered in ("out", "no", "n", "false", "f", "0", "disable", "off"):
         return False
-    else:
-        raise commands.errors.BadBoolArgument(lowered)
+    raise commands.errors.BadBoolArgument(lowered)
 
 
 class Codeblock:
@@ -222,9 +221,8 @@ class MonthPicker(commands.Converter[int], app_commands.Transformer):
         keys = fuzzy.finder(argument, self.mapping.keys())
         if len(keys) == 1:
             return self.mapping[keys[0]]
-        else:
-            msg = f"Couldn't understand month spelling out of {argument!r}"
-            raise commands.BadArgument(msg)
+        msg = f"Couldn't understand month spelling out of {argument!r}"
+        raise commands.BadArgument(msg)
 
     @override
     async def convert(self, ctx: AluContext, argument: str) -> int:

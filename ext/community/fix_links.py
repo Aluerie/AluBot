@@ -32,7 +32,7 @@ class FixLinksCommunity(CommunityCog):
         self.bot.tree.remove_command(c.name, type=c.type)
 
     async def delete_mimic_ctx_menu_callback(
-        self, interaction: discord.Interaction[commands.Bot], message: discord.Message
+        self, interaction: discord.Interaction[commands.Bot], message: discord.Message,
     ) -> None:
         # todo: why it's there, wrong cog
         if self.bot.mimic_message_user_mapping.get(message.id) == interaction.user.id:
@@ -43,17 +43,16 @@ class FixLinksCommunity(CommunityCog):
             e.description = "Successfully deleted your Mimic message."
             await interaction.response.send_message(embed=e, ephemeral=True)
             return
-        elif not message.webhook_id:
+        if not message.webhook_id:
             msg = "This message was not mimicked by my MimicUser functionality."
             raise errors.UserError(msg)
-        else:
-            msg = (
-                "Either this message\n"
-                "* was not mimicked by me\n"
-                "* expired from cache (7 days)\n"
-                "* or cache was reset (because of reboot). \nSorry. You have to ask moderators to delete it."
-            )
-            raise errors.SomethingWentWrong(msg)
+        msg = (
+            "Either this message\n"
+            "* was not mimicked by me\n"
+            "* expired from cache (7 days)\n"
+            "* or cache was reset (because of reboot). \nSorry. You have to ask moderators to delete it."
+        )
+        raise errors.SomethingWentWrong(msg)
 
     @commands.Cog.listener("on_message")
     async def fix_links(self, message: discord.Message) -> None:

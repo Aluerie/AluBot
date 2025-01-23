@@ -69,9 +69,7 @@ class Welcome(CommunityCog):
             wave_emote, the_word = const.Emote.DankLove, "BACK"
         else:
             wave_emote, the_word = const.Emote.DankHey, ""
-        content_text = "**💜 Welcome {2} to Aluerie's server, {0} !** {1} {1} {1}".format(
-            member.mention, wave_emote, the_word
-        )
+        content_text = f"**💜 Welcome {the_word} to Aluerie's server, {member.mention} !** {wave_emote} {wave_emote} {wave_emote}"
 
         if not member.bot:
             description = (
@@ -129,10 +127,9 @@ class Welcome(CommunityCog):
                 await member.add_roles(*autorole_roles)
                 # give back their nickname
                 await member.edit(nick=new_row["name"])
-            else:
-                # new person
-                if role := member.guild.get_role(const.Role.level_zero):
-                    await member.add_roles(role)
+            # new person
+            elif role := member.guild.get_role(const.Role.level_zero):
+                await member.add_roles(role)
 
         send_kwargs = await self.get_send_welcome_kwargs(member, back=back)
         await self.bot.community.welcome.send(**send_kwargs)
@@ -145,7 +142,7 @@ class Welcome(CommunityCog):
             name=f"{member.display_name} just left the server",
             icon_url=member.display_avatar.url,
         )
-        message = await self.bot.community.welcome.send("{0} {0} {0}".format(const.Emote.SmogeInTheRain), embed=embed)
+        message = await self.bot.community.welcome.send(f"{const.Emote.SmogeInTheRain} {const.Emote.SmogeInTheRain} {const.Emote.SmogeInTheRain}", embed=embed)
         await message.add_reaction(const.Emote.SmogeInTheRain)
 
     @commands.Cog.listener()
@@ -156,7 +153,7 @@ class Welcome(CommunityCog):
             name=f"{member.display_name} was just banned from the server",
             icon_url=member.display_avatar.url,
         )
-        message = await self.bot.community.welcome.send("{0} {0} {0}".format(const.Emote.peepoPolice), embed=embed)
+        message = await self.bot.community.welcome.send(f"{const.Emote.peepoPolice} {const.Emote.peepoPolice} {const.Emote.peepoPolice}", embed=embed)
         await message.add_reaction(const.Emote.peepoPolice)
 
     @commands.Cog.listener()
@@ -167,7 +164,7 @@ class Welcome(CommunityCog):
             name=f"{member.display_name} was just unbanned from the server",
             icon_url=member.display_avatar.url,
         )
-        msg = await self.bot.community.welcome.send("{0} {0} {0}".format(const.Emote.PogChampPepe), embed=embed)
+        msg = await self.bot.community.welcome.send(f"{const.Emote.PogChampPepe} {const.Emote.PogChampPepe} {const.Emote.PogChampPepe}", embed=embed)
         await msg.add_reaction(const.Emote.PogChampPepe)
 
     @commands.is_owner()

@@ -68,7 +68,6 @@ def main(click_ctx: click.Context, test: bool) -> None:
 @main.group(short_help="database stuff", options_metavar="[options]")
 def db() -> None:
     """Group for cli database related commands."""
-    pass
 
 
 @db.command()

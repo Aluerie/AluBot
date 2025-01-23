@@ -37,8 +37,8 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "BaseSettings",
     "Account",
+    "BaseSettings",
 )
 
 
@@ -103,9 +103,9 @@ class Account(abc.ABC):
 
     @classmethod
     async def create(cls, bot: AluBot, player_tuple: tuple[Any, ...]) -> Self:
-        name: str = getattr(player_tuple, "name")
+        name: str = player_tuple.name
         try:
-            is_twitch_streamer: bool = getattr(player_tuple, "twitch")
+            is_twitch_streamer: bool = player_tuple.twitch
         except AttributeError:
             # doesn't have .twitch attribute, thus we assume it's a streamer-only
             # since the feature will prioritize twitch-streamers in its development.
@@ -120,8 +120,7 @@ class Account(abc.ABC):
     def static_player_embed_name(display_name: str, is_twitch_streamer: bool) -> str:
         if is_twitch_streamer:
             return f"\N{BLACK CIRCLE} [{display_name}](https://www.twitch.tv/{display_name})"
-        else:
-            return f"\N{BLACK CIRCLE} {display_name}"
+        return f"\N{BLACK CIRCLE} {display_name}"
 
     @property
     def player_embed_name(self) -> str:
@@ -273,7 +272,7 @@ class BaseSettings(FPCCog):
         logs_embed.description = ""
         logs_embed.set_author(name=interaction.user, icon_url=interaction.user.display_avatar.url)
         logs_embed.add_field(
-            name="Command", value=f"/database {self.prefix} add {account.hint_database_add_command_args}"
+            name="Command", value=f"/database {self.prefix} add {account.hint_database_add_command_args}",
         )
         await self.hideout.global_logs.send(embed=logs_embed)
 
@@ -338,7 +337,7 @@ class BaseSettings(FPCCog):
         }
 
         view = views.DatabaseRemoveView(
-            interaction.user.id, self, player_id, display_name, account_ids_names, self.account_id_column
+            interaction.user.id, self, player_id, display_name, account_ids_names, self.account_id_column,
         )
         await interaction.followup.send(view=view)
 
@@ -745,7 +744,7 @@ class BaseSettings(FPCCog):
         await interaction.followup.send(embed=embed)
 
     async def hideout_player_add_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool
+        self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool,
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for player_name in `/{game}-fpc player add/remove`."""
         assert interaction.guild
@@ -788,7 +787,7 @@ class BaseSettings(FPCCog):
     #     return [app_commands.Choice(name=name, value=name) for name in fuzzy_names[:7]]
 
     async def database_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str,
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for player_name in `/database {game} remove`."""
         query = f"""
@@ -864,11 +863,11 @@ class BaseSettings(FPCCog):
 
         for count, (almost_qualified_name, field_value) in enumerate(cmd_field_tuples, start=1):
             app_command = self.bot.tree.get_app_command(
-                f"{self.prefix} {almost_qualified_name}", guild=interaction.guild_id
+                f"{self.prefix} {almost_qualified_name}", guild=interaction.guild_id,
             )
             if app_command:
                 embed.add_field(
-                    name=f"{const.DIGITS[count]}. Use {app_command.mention}", value=field_value, inline=False
+                    name=f"{const.DIGITS[count]}. Use {app_command.mention}", value=field_value, inline=False,
                 )
             else:
                 msg = "Somehow FPC related command is None."

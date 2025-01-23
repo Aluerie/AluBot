@@ -25,8 +25,8 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "MatchToSend",
     "MatchToEdit",
+    "MatchToSend",
 )
 
 
@@ -199,7 +199,7 @@ class MatchToEdit(BaseMatchToEdit):
 
         self.skill_build: list[int] = []  # list of 1, 2, 3, 4 numbers which correspond to Q, W, E, R skill build order
 
-        item_ids: list[int] = [participant[f"item{i}"] for i in range(0, 5 + 1)]
+        item_ids: list[int] = [participant[f"item{i}"] for i in range(5 + 1)]
         self.sorted_item_ids: list[int] = []
 
         for frame in reversed(timeline["info"]["frames"]):

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import unicodedata
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands

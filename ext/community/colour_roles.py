@@ -33,7 +33,7 @@ class ColourRolesDropdown(discord.ui.RoleSelect[ColourRolesView]):
     async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
         if not len(self.values):
             embed = discord.Embed(
-                description=f"You've selected zero roles and thus I did nothing {const.Emote.peepoComfy}"
+                description=f"You've selected zero roles and thus I did nothing {const.Emote.peepoComfy}",
             )
             return await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -73,7 +73,7 @@ class ColourRolesDropdown(discord.ui.RoleSelect[ColourRolesView]):
                     await interaction.response.send_message(embed=e, ephemeral=True)
             else:
                 await interaction.response.send_message("Something went wrong...", ephemeral=True)
-                return
+                return None
 
 
 class ColourRoles(CommunityCog):

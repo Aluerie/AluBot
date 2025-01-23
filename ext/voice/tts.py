@@ -94,7 +94,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         """Make Text-To-Speech request into voice-chat.
 
         Parameters
-        -----------
+        ----------
         text
             Enter text for the bot to speak.
         language

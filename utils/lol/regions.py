@@ -31,7 +31,7 @@ class classproperty(Generic[TT, T_co]):  # noqa: N801
 
 
 LiteralPlatform = Literal[
-    "BR1", "EUN1", "EUW1", "JP1", "KR", "LA1", "LA2", "NA1", "OC1", "PH2", "RU", "SG2", "TH2", "TR1", "TW2", "VN2"
+    "BR1", "EUN1", "EUW1", "JP1", "KR", "LA1", "LA2", "NA1", "OC1", "PH2", "RU", "SG2", "TH2", "TR1", "TW2", "VN2",
 ]
 
 
@@ -48,22 +48,22 @@ class Platform(StrEnum):
 
     """
 
-    Brazil              = "BR1"
+    Brazil = "BR1"
     EuropeNordicAndEast = "EUN1"
-    EuropeWest          = "EUW1"
-    Japan               = "JP1"
-    RepublicOfKorea     = "KR"
-    LatinAmericaNorth   = "LA1"
-    LatinAmericaSouth   = "LA2"
-    NorthAmerica        = "NA1"
-    Oceania             = "OC1"
-    Philippines         = "PH2"
-    Russia              = "RU"
-    Singapore           = "SG2"
-    Thailand            = "TH2"
-    Turkey              = "TR1"
-    Taiwan              = "TW2"
-    Vietnam             = "VN2"
+    EuropeWest = "EUW1"
+    Japan = "JP1"
+    RepublicOfKorea = "KR"
+    LatinAmericaNorth = "LA1"
+    LatinAmericaSouth = "LA2"
+    NorthAmerica = "NA1"
+    Oceania = "OC1"
+    Philippines = "PH2"
+    Russia = "RU"
+    Singapore = "SG2"
+    Thailand = "TH2"
+    Turkey = "TR1"
+    Taiwan = "TW2"
+    Vietnam = "VN2"
     # PublicBetaEnvironment = "PBE" # no, we will not support it.
 
     @classproperty
@@ -73,22 +73,22 @@ class Platform(StrEnum):
         "Display Name" as a concept does not exist in Riot API and only used by me for display purposes.
         """
         return {
-            cls.Brazil             : "BR - Brazil",
+            cls.Brazil: "BR - Brazil",
             cls.EuropeNordicAndEast: "EUNE - Europe Nordic & East",
-            cls.EuropeWest         : "EUW - Europe West",
-            cls.Japan              : "JP - Japan",
-            cls.RepublicOfKorea    : "KR - Republic of Korea",
-            cls.LatinAmericaNorth  : "LAN - Latin America North",
-            cls.LatinAmericaSouth  : "LAS - Latin America South",
-            cls.NorthAmerica       : "NA - North America",
-            cls.Oceania            : "OCE - Oceania",
-            cls.Philippines        : "PH - Philippines",
-            cls.Russia             : "RU - Russia",
-            cls.Singapore          : "SG - Singapore, Malaysia, & Indonesia",
-            cls.Thailand           : "TH - Thailand",
-            cls.Turkey             : "TR - Turkey",
-            cls.Taiwan             : "TW - Taiwan, Hong Kong, and Macao",
-            cls.Vietnam            : "VN - Vietnam",
+            cls.EuropeWest: "EUW - Europe West",
+            cls.Japan: "JP - Japan",
+            cls.RepublicOfKorea: "KR - Republic of Korea",
+            cls.LatinAmericaNorth: "LAN - Latin America North",
+            cls.LatinAmericaSouth: "LAS - Latin America South",
+            cls.NorthAmerica: "NA - North America",
+            cls.Oceania: "OCE - Oceania",
+            cls.Philippines: "PH - Philippines",
+            cls.Russia: "RU - Russia",
+            cls.Singapore: "SG - Singapore, Malaysia, & Indonesia",
+            cls.Thailand: "TH - Thailand",
+            cls.Turkey: "TR - Turkey",
+            cls.Taiwan: "TW - Taiwan, Hong Kong, and Macao",
+            cls.Vietnam: "VN - Vietnam",
         }
 
     @property
@@ -100,22 +100,22 @@ class Platform(StrEnum):
     def CONTINENTS(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore  # noqa: N802, N805
         """RiotGames routing continent names like `AMERICAS`."""
         return {
-            cls.Brazil             : "AMERICAS",
+            cls.Brazil: "AMERICAS",
             cls.EuropeNordicAndEast: "EUROPE",
-            cls.EuropeWest         : "EUROPE",
-            cls.Japan              : "ASIA",
-            cls.RepublicOfKorea    : "ASIA",
-            cls.LatinAmericaNorth  : "AMERICAS",
-            cls.LatinAmericaSouth  : "AMERICAS",
-            cls.NorthAmerica       : "AMERICAS",
-            cls.Oceania            : "ASIA",
-            cls.Philippines        : "ASIA",
-            cls.Russia             : "EUROPE",
-            cls.Singapore          : "ASIA",
-            cls.Thailand           : "ASIA",
-            cls.Turkey             : "EUROPE",
-            cls.Taiwan             : "ASIA",
-            cls.Vietnam            : "ASIA",
+            cls.EuropeWest: "EUROPE",
+            cls.Japan: "ASIA",
+            cls.RepublicOfKorea: "ASIA",
+            cls.LatinAmericaNorth: "AMERICAS",
+            cls.LatinAmericaSouth: "AMERICAS",
+            cls.NorthAmerica: "AMERICAS",
+            cls.Oceania: "ASIA",
+            cls.Philippines: "ASIA",
+            cls.Russia: "EUROPE",
+            cls.Singapore: "ASIA",
+            cls.Thailand: "ASIA",
+            cls.Turkey: "EUROPE",
+            cls.Taiwan: "ASIA",
+            cls.Vietnam: "ASIA",
         }
 
     @property
@@ -130,22 +130,22 @@ class Platform(StrEnum):
         Used in their links as sub-domain.
         """
         return {
-            cls.Brazil             : "BR",
+            cls.Brazil: "BR",
             cls.EuropeNordicAndEast: "EUNE",
-            cls.EuropeWest         : "EUW",
-            cls.Japan              : "JP",
-            cls.RepublicOfKorea    : "KR",
-            cls.LatinAmericaNorth  : "LAN",
-            cls.LatinAmericaSouth  : "LAS",
-            cls.NorthAmerica       : "NA",
-            cls.Oceania            : "OCE",
-            cls.Philippines        : "PH",
-            cls.Russia             : "RU",
-            cls.Singapore          : "SG",
-            cls.Thailand           : "TH",
-            cls.Turkey             : "TR",
-            cls.Taiwan             : "TW",
-            cls.Vietnam            : "VN",
+            cls.EuropeWest: "EUW",
+            cls.Japan: "JP",
+            cls.RepublicOfKorea: "KR",
+            cls.LatinAmericaNorth: "LAN",
+            cls.LatinAmericaSouth: "LAS",
+            cls.NorthAmerica: "NA",
+            cls.Oceania: "OCE",
+            cls.Philippines: "PH",
+            cls.Russia: "RU",
+            cls.Singapore: "SG",
+            cls.Thailand: "TH",
+            cls.Turkey: "TR",
+            cls.Taiwan: "TW",
+            cls.Vietnam: "VN",
         }
 
     @property
@@ -169,12 +169,11 @@ class PlatformConverter(commands.Converter[Platform], app_commands.Transformer):
         for platform, opgg_name in Platform.OPGG_NAMES.items():
             if argument.upper() == opgg_name:
                 return platform
-        else:
-            msg = (
-                f"Couldn't find any servers like that `{argument!r}`\n"
-                f"The list of League of Legends servers is {[v.upper() for v in Platform.OPGG_NAMES.values()]}"
-            )
-            raise commands.BadArgument(msg)
+        msg = (
+            f"Couldn't find any servers like that `{argument!r}`\n"
+            f"The list of League of Legends servers is {[v.upper() for v in Platform.OPGG_NAMES.values()]}"
+        )
+        raise commands.BadArgument(msg)
 
     @override
     async def transform(self, _: discord.Interaction[discord.Client], value: str) -> Platform:

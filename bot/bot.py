@@ -117,7 +117,7 @@ class AluBot(commands.Bot, AluBotHelper):
         self.category_cogs: dict[ExtCategory, list[AluCog]] = {}
 
         self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
-            seconds=datetime.timedelta(days=7).seconds
+            seconds=datetime.timedelta(days=7).seconds,
         )
 
         self.twitch = AluTwitchClient(self)
@@ -171,7 +171,6 @@ class AluBot(commands.Bot, AluBotHelper):
             licensed MPL v2 from DuckBot-Discord/DuckBot `try_autosync`
             https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/bot.py
         """
-
         # safeguard. Need the app id.
         await self.wait_until_ready()
 
@@ -194,8 +193,7 @@ class AluBot(commands.Bot, AluBotHelper):
             await self.pool.executemany("INSERT INTO auto_sync (guild_id, payload) VALUES ($1, $2)", new_payloads)
             await self.tree.sync(guild=guild)
             return True
-        else:
-            return False
+        return False
 
     @override
     async def add_cog(
@@ -391,9 +389,8 @@ class AluBot(commands.Bot, AluBotHelper):
         webhook_url: str | None = await self.pool.fetchval(query, channel_id)
         if webhook_url:
             return self.webhook_from_url(webhook_url)
-        else:
-            msg = f"There is no webhook in the database for channel with id={channel_id}"
-            raise errors.PlaceholderRaiseError(msg)
+        msg = f"There is no webhook in the database for channel with id={channel_id}"
+        raise errors.PlaceholderRaiseError(msg)
 
     @discord.utils.cached_property
     def spam_webhook(self) -> discord.Webhook:
@@ -461,7 +458,7 @@ class AluBot(commands.Bot, AluBotHelper):
         In case of problems - check out on_command_error in parent BotBase class - it's not simply `pass`
         """
         if ctx.is_error_handled is True:
-            return
+            return None
 
         # error handler working variables
         desc = "No description"
@@ -500,11 +497,11 @@ class AluBot(commands.Bot, AluBotHelper):
                 desc = f"Please, provide this argument:\n`{error.param.name}`"
             case commands.CommandNotFound():
                 if ctx.prefix in ["/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "]:
-                    return
+                    return None
                 if ctx.prefix == "$" and ctx.message.content[1].isdigit():
                     # "$200 for this?" 2 is `ctx.message.content[1]`
                     # prefix commands should not start with digits
-                    return
+                    return None
                 # TODO: make a fuzzy search in here to recommend the command that user wants
                 desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.CommandOnCooldown():

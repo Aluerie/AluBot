@@ -116,7 +116,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         return channel
 
     birthday_group = app_commands.Group(
-        name="birthday", description="Birthday related commands.", guild_ids=[const.Guild.community]
+        name="birthday", description="Birthday related commands.", guild_ids=[const.Guild.community],
     )
 
     @birthday_group.command(name="set")
@@ -165,7 +165,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 text=(
                     "Please, double check the information! This is important because "
                     "as spam preventive measure users can only receive one congratulation per year."
-                )
+                ),
             )
         )
         if not await self.bot.disambiguator.confirm(interaction, embed=confirm_embed):

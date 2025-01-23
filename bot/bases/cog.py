@@ -11,9 +11,9 @@ if TYPE_CHECKING:
     from .. import AluBot
 
 __all__ = (
+    "EXT_CATEGORY_NONE",
     "AluCog",
     "ExtCategory",
-    "EXT_CATEGORY_NONE",
 )
 
 

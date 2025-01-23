@@ -50,11 +50,11 @@ class ExceptionManager:
     # https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/utils/errorhandler.py
 
     __slots__: tuple[str, ...] = (
+        "_lock",
+        "_most_recent",
         "bot",
         "cooldown",
         "errors_cache",
-        "_lock",
-        "_most_recent",
     )
 
     def __init__(

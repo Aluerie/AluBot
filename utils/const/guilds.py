@@ -126,16 +126,15 @@ class Channel(ChannelEnum):
     # HIDEOUT
     global_logs = 997149550324240465
 
-    look_todo = 970823670702411810
-    test_spam = 1066379298363166791
-    alubot_logs = 1075497084075130880
+    alu_spam = 970823670702411810
+    yen_spam = 1066379298363166791
+    alu_logs = 1075497084075130880
 
     repost = 971504469995049041
 
+    hideout_logs = 869735263209947228
     dota_updates = 873430376033452053
     alubot_github = 1107050162628595742
-
-    event_pass = 966316773869772860
 
 
 class Role(RoleEnum):
@@ -153,15 +152,15 @@ class Role(RoleEnum):
     colour_category = 851786344354938880
     activity_category = 852199351808032788
 
-    ## activity roles
+    # activity roles
     birthday = 748586533627363469
     voice = 761475276361826315
 
-    ## special roles
+    # special roles
     blacklisted = 1180423070343757855
     rolling_stone = 819096910848851988
 
-    ## notification roles
+    # notification roles
     stream_lover = 760082003495223298
 
     # HIDEOUT
@@ -243,17 +242,15 @@ class SavedGuild:
         if channel:
             if isinstance(channel, channel_type):
                 return channel
-            else:
-                msg = f"Channel id={channel_id} was type: {type(channel)} expected: {channel_type}"
-                raise TypeError(msg)
+            msg = f"Channel id={channel_id} was type: {type(channel)} expected: {channel_type}"
+            raise TypeError(msg)
 
             # the other way for this is
             #   >>> # this line omitted from runtime when python is run with - O
             #   >>> assert isinstance(channel, typ)
             #   >>> return channel
-        else:
-            msg = f"Channel id={channel_id} from {self} not in cache"
-            raise RuntimeError(msg)
+        msg = f"Channel id={channel_id} from {self} not in cache"
+        raise RuntimeError(msg)
 
     def get_role(self, role_id: int) -> discord.Role:
         """Get role object by id."""
@@ -442,7 +439,7 @@ class HideoutGuild(SavedGuild):
     @property
     def spam_channel_id(self) -> int:
         """Spam channel ID. Note that test version of the bot has different spam channel compared to main one."""
-        return Channel.test_spam if self.bot.test else Channel.look_todo
+        return Channel.yen_spam if self.bot.test else Channel.alu_spam
 
     @property
     def spam(self) -> discord.TextChannel:
@@ -452,7 +449,7 @@ class HideoutGuild(SavedGuild):
     @property
     def alubot_logs(self) -> discord.TextChannel:
         """Channel where AluBot posts its own logs from logging library."""
-        return self.get_channel(Channel.alubot_logs, discord.TextChannel)
+        return self.get_channel(Channel.alu_logs, discord.TextChannel)
 
     @property
     def repost(self) -> discord.TextChannel:

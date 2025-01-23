@@ -18,14 +18,14 @@ exclude = ["**/__pycache__"]
 
 deprecateTypingAliases = true
 reportMissingTypeStubs = "none"    # a lot of libs don't have stubs
-reportPrivateUsage = "none"        # it's my choice, reeee
+reportPrivateUsage = "none"        # it's my choice x_x
 reportImplicitOverride = "warning" # I love it
 
 # Unnecessary
 reportUnnecessaryIsInstance = "none"           # I like "else" raising the error if type is somehow not it
 reportUnnecessaryTypeIgnoreComment = "warning" # why it's "none" by default, even for strict ?!
 
-# Unused stuff - yes, I write a lot of unused stuff **GIGACHAD music**
+# Unused stuff - yes, I write a lot of unused stuff
 reportUnusedImport = "warning"
 reportUnusedVariable = "none"
 reportUnusedClass = "none"
@@ -42,73 +42,133 @@ reportIncompatibleVariableOverride = "none"
 reportIncompatibleMethodOverride = "none"
 
 [tool.ruff]
+# https://docs.astral.sh/ruff/rules/
+# Good ruff configurations:
+# * https://github.com/mikeshardmind/async-utils/blob/main/pyproject.toml
+# * https://github.com/AbstractUmbra/Mipha/blob/main/pyproject.toml
+line-length = 120
+target-version = "py312"
 # requires-python = ">= 3.10"
 
-# [tool.ruff.lint]
-line-length = 120
-# https://docs.astral.sh/ruff/rules/
-lint.select = [
-    "C4",
-    "F",
-    "G",
-    "I",
-    "PTH",
-    "RUF",
-    "SIM",
-    "TCH",
-    "UP",
-    "W",
-    "PERF",
-    "ANN",
-    # my experimental additions
-    "N",
-    "EM",
-    "ICN",
-    "DTZ",
-    "ISC",
-    # "D",   # for doc-string madness
-    "T20",   # print/pprint statements
+[tool.ruff.lint]
+preview = true
+select = [
+    "A",        # shadowing
+    "ANN",      # annotations
+    "ASYNC",    # async
+    "B",        # _bug-bear
+    "BLE",      # blind except
+    "C4",       # better list/set/dict comprehensions
+    "COM",      # commas
+    "DTZ",      # datetime timezone
+    "E",        # pycodestyle against PEP-8
+    "EM",       # exception messages
+    "ERA",      # eradicate commented out code
+    "F",        # pyflakes analyze for errors 
+    "FA",       # future annotations
+    "FBT",      # boolean trap
+    "FURB",     # refurbishing and modernizing Python codebases.  # cSpell: ignore FURB
+    "G",        # logging format
+    "I",        # isort
+    "INP",      # ban PEP-420 (implicit-namespace-package)
+    "ICN",      # import conventions
+    "ISC",      # encourage correct string literal concatenation.
+    "NPY",      # NumPy specific rules
+    "PD",       # Pandas specific rules
+    "PERF",     # performance anti-patterns
+    "PGH",      # py grep-hooks
+    "PIE",      # miscellaneous lints
+    "PLC",      # PyLint Conventions
+    "PLE",      # PyLint Errors
+    "PLR",      # PyLint Refactor
+    "PLW",      # PyLint Warnings
+    "PTH",      # Use PathLib
+    "PYI",      # linting for stub files
+    "Q",        # quotes
+    "Q003",     # change outer quotes to avoid escaping inner quotes
+    "RET",      # return
+    "RSE",      # raise statements.
+    "RUF",      # Ruff-specific rules
+    "S",        # security testing 
+    "SIM",      # simplify
+    "SLOT",     # require __slots__ to be defined for subclasses of immutable types
+    "T20",      # print
+    "TC",       # type checking
+    "TID",      # tidy imports
+    "TRY",      # clean try/except
+    "UP",       # upgrade syntax for newer versions of the language.
+    "YTT",      # misuse of sys.version or sys.version_info
+    # EXPERIMENTAL ADDITIONS
+    "W",        # pycodestyle warnings
+    "N",        # pep-8 namings
+    "D",        # Doc-string madness, kinda annoying for a bot, to be honest
+    "DOC"       # Doc strings, kinda annoying for a bot, to be honest
 ]
-lint.ignore = [
-    "F401",
-    "F402",
-    "F403",
-    "F405",
-    "PERF203",
-    "RUF001",
-    "RUF009",
-    "SIM105",
-    "UP034",
-    "UP038",
-    "ANN101",
-    "ANN102",
-    "ANN401",
-    "D401",    # the imperative doc-string rule is kinda bullshit.
-    "D100",    # docstring in a public module
-    "D104",    # Missing docstring in publick package. Otherwise spams __init__.py and such.
-    "D105",    # Missing docstring in magic method.
-    "D107",    # Missing docstring in `__init__`. 
-    "D417",    # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
-    "UP032",   # I use it for triple emotes stuff, please ruff, stfu
-    # Warning incompatibilities
-    "D203", # one-blank-line-before-class
-    "D213", # multi-line-summary-second-line
+ignore = [
+    "ANN401",   # Any is the correct type in some cases
+    "ASYNC116", # Long sleeps are fine
+    "C90",      # mc cabe complexity memes
+    # "F401",
+    # "F402",
+    # "F403",
+    # "F405",
+    # "PERF203",
+    # "RUF001",
+    # "RUF009",
+    # "SIM105",
+    # "UP034",
+    # "UP038",
+
+    # Doc Strings 
+    # "D401",    # the imperative verb.
+    # "D100",    # docstring in a public module
+    # "D104",    # Missing docstring in public package. Otherwise spams __init__.py and such.
+    # "D105",    # Missing docstring in magic method.
+    # "D107",    # Missing docstring in `__init__`. 
+    # "D417",    # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
+    # "D203", # one-blank-line-before-class
+    # "D213", # multi-line-summary-second-line
+]
+unfixable = [
+    "E501", # line length handled in other ways by ruff format
+    "ERA",  # Don't delete commented out code
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "ext/beta.py" = ["ANN201"]
 "*.ipynb" = ["T20", "F404", "ANN204"]
 
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true
 combine-as-imports = true
 
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "double"
 
 [project]
 name = "AluBot"
+description = "Personal Discord Bot"
+readme = "readme.md"
 version = "2024.0.0"
 requires-python = ">=3.12"
 authors = [{ name = "Aluerie" }]
 maintainers = [{ name = "Aluerie" }]
-description = "Personal Discord Bot"
+
+[project.urls]
+Homepage = "https://github.com/Aluerie/AluBot"

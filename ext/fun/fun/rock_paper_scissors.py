@@ -89,15 +89,13 @@ class RPSView(AluView):
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)
                 return False
-            else:
-                return True
-        else:
-            embed = discord.Embed(
-                colour=const.Colour.maroon,
-                description="Sorry! This game dialog is not for you.",
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return False
+            return True
+        embed = discord.Embed(
+            colour=const.Colour.maroon,
+            description="Sorry! This game dialog is not for you.",
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return False
 
     def result_str(self) -> tuple[str, discord.User | discord.Member | None]:
         """Calculate and announce the result of the game."""
@@ -109,10 +107,10 @@ class RPSView(AluView):
         def winning_choice(c1: RPSChoice, c2: RPSChoice) -> tuple[str, str, discord.User | discord.Member | None]:
             if (c1.value.number + 1) % 3 == c2.value.number:  # Player2 won bcs their move is +1 bigger than ~player1
                 return f"{c2.emote_name} {c2.value.word} {c1.emote_name}", f"{self.player2.mention} wins", self.player2
-            elif c1.value.number == c2.value.number:  # It's a draw bcs both players played the same move
+            if c1.value.number == c2.value.number:  # It's a draw bcs both players played the same move
                 return "Both players chose the same.", "Draw", None
-            else:  # Player1 wins bcs we know that it's not a draw and that player2 didn't win
-                return f"{c1.emote_name} {c1.value.word} {c2.emote_name}", f"{self.player1.mention} wins", self.player1
+            # Player1 wins bcs we know that it's not a draw and that player2 didn't win
+            return f"{c1.emote_name} {c1.value.word} {c2.emote_name}", f"{self.player1.mention} wins", self.player1
 
         winning_strings = winning_choice(c1, c2)
         ggwp = f"\n\n**Good Game, Well Played {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}**"
@@ -146,7 +144,7 @@ class RPSView(AluView):
         await self.rps_button_callback(interaction, RPSChoice.Paper)
 
     @discord.ui.button(
-        label=RPSChoice.Scissors.name, emoji=RPSChoice.Scissors.value.emote, style=discord.ButtonStyle.blurple
+        label=RPSChoice.Scissors.name, emoji=RPSChoice.Scissors.value.emote, style=discord.ButtonStyle.blurple,
     )
     async def scissors_button(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
         """Button to play scissors in a Rock Paper SCissors game."""

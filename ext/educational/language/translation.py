@@ -100,7 +100,7 @@ async def translate(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/104.0.0.0 Safari/537.36"
-        )
+        ),
     }
 
     async with session.get("https://clients5.google.com/translate_a/single", params=query, headers=headers) as resp:

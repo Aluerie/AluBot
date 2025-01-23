@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from ..base_classes import RecipientKwargs
 
 
-__all__ = ("MatchToSend", "StratzMatchToEdit", "NotCountedMatchToEdit")
+__all__ = ("MatchToSend", "NotCountedMatchToEdit", "StratzMatchToEdit")
 type LiteralTwitchStatus = Literal["NoTwitch", "Offline", "Live"]
 
 
@@ -89,26 +89,25 @@ class MatchToSend(BaseMatchToSend):
                 "twitch_status": "NoTwitch",
                 "colour": const.MaterialPalette.gray(),
             }
+        streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
+        if streamer.live:
+            twitch_status = "Live"
+            vod_url = await streamer.vod_link(seconds_ago=self.long_ago)
+            colour = discord.Colour(const.Colour.blueviolet)
         else:
-            streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
-            if streamer.live:
-                twitch_status = "Live"
-                vod_url = await streamer.vod_link(seconds_ago=self.long_ago)
-                colour = discord.Colour(const.Colour.blueviolet)
-            else:
-                twitch_status = "Offline"
-                vod_url = ""
-                colour = discord.Colour(const.Colour.twitch)
+            twitch_status = "Offline"
+            vod_url = ""
+            colour = discord.Colour(const.Colour.twitch)
 
-            return {
-                "preview_url": streamer.preview_url,
-                "display_name": streamer.display_name,
-                "url": streamer.url,
-                "logo_url": streamer.avatar_url,
-                "vod_url": vod_url,
-                "twitch_status": twitch_status,
-                "colour": colour,
-            }
+        return {
+            "preview_url": streamer.preview_url,
+            "display_name": streamer.display_name,
+            "url": streamer.url,
+            "logo_url": streamer.avatar_url,
+            "vod_url": vod_url,
+            "twitch_status": twitch_status,
+            "colour": colour,
+        }
 
     @override
     async def notification_image(self, twitch_data: TwitchData, colour: discord.Colour) -> Image.Image:
@@ -204,7 +203,7 @@ class MatchToSend(BaseMatchToSend):
             VALUES ($1, $2, $3, $4, $5, $6)
         """
         await self.bot.pool.execute(
-            query, message_id, channel_id, self.match_id, self.friend_id, self.player_hero.id, self.player_name
+            query, message_id, channel_id, self.match_id, self.friend_id, self.player_hero.id, self.player_name,
         )
 
 
@@ -252,7 +251,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
             for purchase_event in reversed(playback["purchaseEvents"]):
                 item_id = purchase_event["itemId"]
                 if item_id in item_ids:
-                    self.sorted_item_purchases.append((item_id, f"{math.ceil(purchase_event['time']/60)}m"))
+                    self.sorted_item_purchases.append((item_id, f"{math.ceil(purchase_event['time'] / 60)}m"))
                     item_ids.remove(item_id)
 
         self.sorted_item_purchases.reverse()  # reverse back
@@ -281,7 +280,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
         abilities = [await self.bot.dota.abilities.by_id(id) for id in self.ability_upgrades_ids]
         ability_icon_images = [await self.bot.transposer.url_to_cached_image(ability.icon_url) for ability in abilities]
 
-        hero = self.hero if self.hero else await self.bot.dota.heroes.by_id(self.hero_id)
+        hero = self.hero or await self.bot.dota.heroes.by_id(self.hero_id)
         talents_order = [ability_id for ability_id in self.ability_upgrades_ids if ability_id in hero.talent_ids]
         talents = {talent_id: await self.bot.dota.abilities.by_id(talent_id) for talent_id in hero.talent_ids}
 
@@ -441,7 +440,7 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
             text = "Not Counted"
             text_w, text_h = self.bot.transposer.get_text_wh(text, font)
             draw.text(
-                xy=(0, height - text_h), text=text, font=font, align="left", fill=str(discord.Colour.dark_orange())
+                xy=(0, height - text_h), text=text, font=font, align="left", fill=str(discord.Colour.dark_orange()),
             )
 
             # img.show()
@@ -464,7 +463,6 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
 
     Import this into `beta_task` for easy testing of how new elements alignment.
     """
-
     self.bot.instantiate_dota()
     await self.bot.dota.start_helpers()
 
@@ -473,6 +471,6 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
     data = await self.bot.dota.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
     match_to_edit = StratzMatchToEdit(self.bot, data)
     new_image = await match_to_edit.edit_notification_image(
-        const.DotaAsset.Placeholder640X360, discord.Colour.purple()
+        const.DotaAsset.Placeholder640X360, discord.Colour.purple(),
     )
     new_image.show()

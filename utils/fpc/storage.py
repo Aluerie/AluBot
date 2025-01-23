@@ -19,10 +19,10 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 __all__ = (
-    "GameDataStorage",
     "Character",
     "CharacterStorage",
     "CharacterTransformer",
+    "GameDataStorage",
 )
 
 log = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT
 
     @abc.abstractmethod
     def get_character_storage(
-        self, interaction: discord.Interaction[AluBot]
+        self, interaction: discord.Interaction[AluBot],
     ) -> CharacterStorage[CharacterT, PseudoCharacterT]:
         ...
 
@@ -71,7 +71,7 @@ class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT
 
     @override
     async def autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str,
     ) -> list[app_commands.Choice[int]]:
         storage = self.get_character_storage(interaction)
         characters = await storage.all()
@@ -128,7 +128,6 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
         This function is supposed to be implemented by subclasses.
         We get the data and sort it out into a convenient dictionary to cache.
         """
-        ...
 
     @aluloop()
     async def update_data(self) -> None:
@@ -200,7 +199,6 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
         guild_id: int,
     ) -> str:
         """Helper function to create a new discord emote for a game character and remember it in the database."""
-
         guild = self.bot.get_guild(guild_id)
         if guild is None:
             msg = f"Guild id={guild_id} is `None`."

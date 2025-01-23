@@ -139,6 +139,3 @@ class EmoteLogo(StrEnum):
     # Emotes from BXX extra emote servers, names match emote names in those servers (try to keep them PascalCase)
     GitHub = "<:GitHub:1125588758197178439>"
     AluerieServer = "<:AluerieServer:1125600089109442661>"
-
-
-

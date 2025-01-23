@@ -35,7 +35,7 @@ async def count_lines(
             if i.path.endswith(filetype):
                 if skip_venv and re.search(r"(\\|/)?venv(\\|/)", i.path):
                     continue
-                lines += len((await (await aiofiles.open(i.path, "r", encoding="utf8")).read()).split("\n"))
+                lines += len((await (await aiofiles.open(i.path, encoding="utf8")).read()).split("\n"))
         elif i.is_dir():
             lines += await count_lines(i.path, filetype)
     return lines
@@ -56,9 +56,9 @@ async def count_others(
                 line_count += len(
                     [
                         line
-                        for line in (await (await aiofiles.open(i.path, "r", encoding="utf8")).read()).split("\n")
+                        for line in (await (await aiofiles.open(i.path, encoding="utf8")).read()).split("\n")
                         if file_contains in line
-                    ]
+                    ],
                 )
         elif i.is_dir():
             line_count += await count_others(i.path, filetype, file_contains)
@@ -92,7 +92,6 @@ class OtherCog(AluCog):
     @app_commands.command()
     async def ping(self, interaction: discord.Interaction[AluBot]) -> None:
         """Checks the bot's ping to Discord and some other services."""
-
         typing_start = time.monotonic()
         await interaction.response.defer()
 

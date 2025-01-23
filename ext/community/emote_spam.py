@@ -52,8 +52,7 @@ class EmoteSpam(CommunityCog):
                 text = re.sub(item, "", text)
 
             return not bool(text)  # if there is some text left then it's forbidden.
-        else:
-            return True
+        return True
 
     async def delete_the_message(self, message: discord.Message) -> None:
         """Delete improper message and ping the user about their mistake."""
@@ -62,9 +61,7 @@ class EmoteSpam(CommunityCog):
         except discord.NotFound:
             return
         channel: discord.TextChannel = message.channel  # type: ignore # emote_spam channel is secured
-        answer_text = "{0}, you are NOT allowed to use non-emotes in {1}. Emote-only channel ! {2} {2} {2}".format(
-            message.author.mention, channel.mention, const.Emote.Ree
-        )
+        answer_text = f"{message.author.mention}, you are NOT allowed to use non-emotes in {channel.mention}. Emote-only channel ! {const.Emote.Ree} {const.Emote.Ree} {const.Emote.Ree}"
         embed = discord.Embed(
             title="Deleted message",
             description=message.content,
@@ -180,23 +177,22 @@ class ComfySpam(CommunityCog):
             channel: discord.TextChannel = message.channel  # type: ignore
             if len(message.embeds):
                 await message.delete()
-                return
+                return None
             text = str(message.content)
             text = re.sub(const.Regex.WHITESPACE, "", text)
             for item in self.comfy_emotes:
                 text = text.replace(item, "")
             if text:
                 answer_text = (
-                    "{0}, you are NOT allowed to use anything but truly the only one comfy-emote in {1} ! "
-                    "{2} {2} {2}".format(message.author.mention, channel.mention, const.Emote.Ree)
+                    f"{message.author.mention}, you are NOT allowed to use anything but truly the only one comfy-emote in {channel.mention} ! "
+                    f"{const.Emote.Ree} {const.Emote.Ree} {const.Emote.Ree}"
                 )
                 e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.blueviolet)
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 await message.delete()
                 return 1
-            else:
-                return 0
+            return 0
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -212,7 +208,7 @@ class ComfySpam(CommunityCog):
     async def comfy_spam(self) -> None:
         """Periodic task to keep #comfy-spam channel alive."""
         if random.randint(1, 100 + 1) < 2:
-            await self.community.comfy_spam.send("{0} {0} {0}".format(const.Emote.peepoComfy))
+            await self.community.comfy_spam.send(f"{const.Emote.peepoComfy} {const.Emote.peepoComfy} {const.Emote.peepoComfy}")
 
     @aluloop(count=1)
     async def offline_criminal_check(self) -> None:

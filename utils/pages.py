@@ -105,12 +105,11 @@ class Paginator(AluView):
         value = await discord.utils.maybe_coroutine(self.source.format_page, self, page)
         if isinstance(value, dict):
             return value
-        elif isinstance(value, str):
+        if isinstance(value, str):
             return {"content": value, "embed": None}
-        elif isinstance(value, discord.Embed):
+        if isinstance(value, discord.Embed):
             return {"embed": value, "content": None}
-        else:
-            return {}
+        return {}
 
     async def show_page(self, interaction: discord.Interaction, page_number: int) -> None:
         page = await self.source.get_page(page_number)
@@ -176,7 +175,7 @@ class Paginator(AluView):
             else:
                 self.message = await ctx.send(**kwargs, view=self, ephemeral=ephemeral)
             return self.message
-        elif isinstance(self.ctx_ntr, discord.Interaction):
+        if isinstance(self.ctx_ntr, discord.Interaction):
             interaction = self.ctx_ntr
             if interaction.response.is_done():
                 self.message = await interaction.followup.send(**kwargs, view=self, ephemeral=ephemeral, wait=True)
@@ -187,9 +186,8 @@ class Paginator(AluView):
                 await interaction.response.send_message(**kwargs, view=self, ephemeral=ephemeral)
                 self.message = await interaction.original_response()
             return self.message
-        else:
-            msg = "Cannot start a paginator without a context or interaction."
-            raise RuntimeError(msg)
+        msg = "Cannot start a paginator without a context or interaction."
+        raise RuntimeError(msg)
 
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
     async def home_page(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
@@ -218,7 +216,7 @@ class Paginator(AluView):
         await interaction.response.send_message("sorry, the search feature is disabled for now", ephemeral=True)
 
     @discord.ui.button(
-        label="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}", style=discord.ButtonStyle.blurple
+        label="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}", style=discord.ButtonStyle.blurple,
     )
     async def refresh(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
         """Refresh current page.
@@ -232,7 +230,7 @@ class Paginator(AluView):
 
 class EnumeratedPageSource(menus.ListPageSource):
     def __init__(
-        self, entries: list[str], *, per_page: int, no_enumeration: bool = False, description_prefix: str = ""
+        self, entries: list[str], *, per_page: int, no_enumeration: bool = False, description_prefix: str = "",
     ) -> None:
         super().__init__(entries, per_page=per_page)
         self.description_prefix = description_prefix

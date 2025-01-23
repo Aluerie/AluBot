@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, override
 import discord
 from discord import app_commands
 
-from utils.timezones import TimeZone, TimeZoneTransformer  # noqa: TCH001
+from utils.timezones import TimeZone, TimeZoneTransformer  # noqa: TC001
 
 if TYPE_CHECKING:
     from bot import AluBot

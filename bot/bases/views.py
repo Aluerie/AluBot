@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 __all__ = (
-    "AluView",
     "AluModal",
+    "AluView",
     "Url",
 )
 
@@ -125,17 +125,16 @@ class AluView(discord.ui.View):
         if self.author_id is None:
             # we allow this view to be controlled by everybody
             return True
-        elif interaction.user.id == self.author_id:
+        if interaction.user.id == self.author_id:
             # we allow this view to be controlled only by interaction author
             return True
-        else:
-            # we need to deny control to this non-author user
-            embed = discord.Embed(
-                colour=const.Colour.maroon,
-                description=f"Sorry! This {self.view_name} is not meant to be controlled by you.",
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            return False
+        # we need to deny control to this non-author user
+        embed = discord.Embed(
+            colour=const.Colour.maroon,
+            description=f"Sorry! This {self.view_name} is not meant to be controlled by you.",
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return False
 
     @override
     async def on_timeout(self) -> None:
@@ -151,7 +150,7 @@ class AluView(discord.ui.View):
 
     @override
     async def on_error(
-        self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[discord.ui.View]
+        self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[discord.ui.View],
     ) -> None:
         """My own Error Handler for Views."""
         await on_views_modals_error(self, interaction, error, item)

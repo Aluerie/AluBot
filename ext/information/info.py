@@ -176,7 +176,7 @@ class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
         text = "".join([f"{msg.content}\n" async for msg in channel.history(limit=limit) if msg.author == member])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
         embed = discord.Embed(
-            colour=const.Colour.blueviolet, description=f"Member: {member}\nChannel: {channel}\nLimit: {limit}"
+            colour=const.Colour.blueviolet, description=f"Member: {member}\nChannel: {channel}\nLimit: {limit}",
         )
         file = self.bot.transposer.image_to_file(wordcloud.to_image(), filename="wordcloud.png")
         await interaction.followup.send(embed=embed, file=file)

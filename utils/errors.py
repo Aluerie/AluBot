@@ -18,13 +18,13 @@ log = logging.getLogger(__name__)
 __all__: tuple[str, ...] = (
     "AluBotError",
     "BadArgument",
+    "ErroneousUsage",
+    "PermissionsError",
+    "PlaceholderRaiseError",
+    "ResponseNotOK",
+    "SilentError",
     "SomethingWentWrong",
     "UserError",
-    "ErroneousUsage",
-    "SilentError",
-    "ResponseNotOK",
-    "PlaceholderRaiseError",
-    "PermissionsError",
 )
 
 

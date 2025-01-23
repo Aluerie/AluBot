@@ -37,7 +37,7 @@ class StatsVoiceChannels(CommunityCog):
     async def cog_unload(self) -> None:
         self.my_time.stop()
 
-    @aluloop(time=[datetime.time(hour=x) for x in range(0, 24)])  # 24 times a day
+    @aluloop(time=[datetime.time(hour=x) for x in range(24)])  # 24 times a day
     async def my_time(self) -> None:
         """Update channel name to show Irene's Current Time."""
         symbol = "#" if platform.system() == "Windows" else "-"

@@ -247,7 +247,7 @@ class Settings(BaseSettings):
 
     @hideout_lol_player_add.autocomplete("player")
     async def hideout_lol_player_add_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str,
     ) -> list[app_commands.Choice[str]]:
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
@@ -264,7 +264,7 @@ class Settings(BaseSettings):
 
     @hideout_lol_player_remove.autocomplete("player")
     async def hideout_lol_player_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str,
     ) -> list[app_commands.Choice[str]]:
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
@@ -276,7 +276,7 @@ class Settings(BaseSettings):
 
     @hideout_lol_champion.command(name="add")
     async def hideout_lol_champion_add(
-        self, interaction: discord.Interaction[AluBot], champion: app_commands.Transform[Champion, ChampionTransformer]
+        self, interaction: discord.Interaction[AluBot], champion: app_commands.Transform[Champion, ChampionTransformer],
     ) -> None:
         """\N{GREEN APPLE} Add a League of Legends champion into your favourite FPC champions list.
 
@@ -295,7 +295,7 @@ class Settings(BaseSettings):
 
     @hideout_lol_champion.command(name="remove")
     async def hideout_lol_champion_remove(
-        self, interaction: discord.Interaction[AluBot], champion: app_commands.Transform[Champion, ChampionTransformer]
+        self, interaction: discord.Interaction[AluBot], champion: app_commands.Transform[Champion, ChampionTransformer],
     ) -> None:
         """\N{GREEN APPLE} Remove a League of Legends champion into your favourite FPC champions list.
 
@@ -337,7 +337,7 @@ class Settings(BaseSettings):
                         [
                             f"\N{BLACK CIRCLE} {(await self.bot.lol.champions.by_id(i)).display_name} - `{i}`"
                             for i in await self.bot.lol.roles.get_missing_from_meraki_champion_ids()
-                        ]
+                        ],
                     )
                     or "None missing"
                 ),

@@ -6,8 +6,8 @@ from typing import override
 from ._meta import ASSETS_IMAGES, RAW_GITHUB_IMAGES
 
 __all__ = (
-    "LoLAsset",
     "NEW_CHAMPION_EMOTE",
+    "LoLAsset",
 )
 
 

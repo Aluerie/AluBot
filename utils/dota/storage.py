@@ -22,10 +22,10 @@ __all__ = (
     "Abilities",
     "Facets",
     "Hero",
-    "PseudoHero",
-    "Heroes",
     "HeroTransformer",
+    "Heroes",
     "Items",
+    "PseudoHero",
 )
 
 # CDN_REACT = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react"
@@ -64,7 +64,7 @@ class Hero(Character):
         """Hero icon for the in-game topbar with all heroes and score.
 
         Examples
-        -------
+        --------
         "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/heroes/alchemist.png"
         """
         return f"{CDN_REACT}/heroes/{self.short_name}.png"
@@ -74,7 +74,7 @@ class Hero(Character):
         """Hero icon for the minimap. Somewhat represents small pixel art for the hero.
 
         Examples
-        -------
+        --------
         "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/icons/hoodwink.png"
         """
         return f"{CDN_REACT}/heroes/icons/{self.short_name}.png"
@@ -127,7 +127,6 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
     @override
     async def by_id(self, hero_id: int) -> Hero | PseudoHero:
         """Get Hero object by its ID."""
-
         # special cases
         if hero_id == 0:
             return PseudoHero(
@@ -137,8 +136,7 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
                 topbar_icon_url=const.DotaAsset.HeroTopbarDisconnectedUnpicked,
                 emote="\N{BLACK QUESTION MARK ORNAMENT}",
             )
-        else:
-            return await super().by_id(hero_id)
+        return await super().by_id(hero_id)
 
     async def create_hero_emote(
         self,
@@ -156,7 +154,7 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
             )
         except Exception as exc:
             embed = discord.Embed(
-                description=f"Something went wrong when creating hero emote for `id={hero_id}, name={hero_short_name}`."
+                description=f"Something went wrong when creating hero emote for `id={hero_id}, name={hero_short_name}`.",
             )
             await self.bot.exc_manager.register_error(exc, embed=embed)
             return const.NEW_HERO_EMOTE
@@ -215,13 +213,11 @@ class Abilities(GameDataStorage[Ability, PseudoAbility]):
             if ability["language"] and (display_name := ability["language"]["displayName"]):
                 # can be `None`, especially for new abilities
                 return display_name
-            else:
-                # else get the information from opendota
-                opendota_ability = odota_abilities.get(ability["name"])
-                if opendota_ability:
-                    return opendota_ability.get("dname", "unknown")
-                else:
-                    return "Unknown"
+            # else get the information from opendota
+            opendota_ability = odota_abilities.get(ability["name"])
+            if opendota_ability:
+                return opendota_ability.get("dname", "unknown")
+            return "Unknown"
 
         return {
             ability["id"]: Ability(
@@ -255,14 +251,13 @@ class Item:
         """Get item's `icon_url` id by its `item_id`.
 
         Examples
-        -------
+        --------
         <Item id=1076> -> "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/items/specialists_array.png"
         """
         if self.short_name.startswith("recipe_"):
             # all recipes fall back to a common recipe icon
             return f"{CDN_REACT}/items/recipe.png"
-        else:
-            return f"{CDN_REACT}/items/{self.short_name}.png"
+        return f"{CDN_REACT}/items/{self.short_name}.png"
 
     @override
     def __repr__(self) -> str:
@@ -304,7 +299,6 @@ class Items(GameDataStorage[Item, PseudoItem]):
     @override
     async def by_id(self, item_id: int) -> Item | PseudoItem:
         """Get Item by its ID."""
-
         # special case
         if item_id == 0:
             return PseudoItem(
@@ -312,8 +306,7 @@ class Items(GameDataStorage[Item, PseudoItem]):
                 "Empty Slot",
                 const.DotaAsset.ItemEmpty,
             )
-        else:
-            return await super().by_id(item_id)
+        return await super().by_id(item_id)
 
 
 @dataclass
@@ -328,7 +321,7 @@ class Facet:
         """_summary_
 
         Examples
-        -------
+        --------
         "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/icons/facets/mana.png"
         """
         return f"{CDN_REACT}/icons/facets/{self.icon}.png"

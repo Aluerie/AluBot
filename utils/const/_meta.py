@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any, NoReturn, override
 
 __all__ = (
-    "CONSTANTS",
     "ASSETS_IMAGES",
+    "CONSTANTS",
     "RAW_GITHUB_IMAGES",
 )
 

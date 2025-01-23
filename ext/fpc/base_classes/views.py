@@ -38,7 +38,6 @@ class FPCView(AluView):
     async def on_timeout(self) -> None:
         await super().on_timeout()
         self.cog.setup_messages_cache.pop(self.message.id, None)
-        return
 
 
 class SetupChannel(FPCView):
@@ -59,7 +58,7 @@ class SetupChannel(FPCView):
         row=0,
     )
     async def set_channel(
-        self, interaction: discord.Interaction[AluBot], select: discord.ui.ChannelSelect[Self]
+        self, interaction: discord.Interaction[AluBot], select: discord.ui.ChannelSelect[Self],
     ) -> None:
         chosen_channel = select.values[0]  # doesn't have all data thus we need to resolve
         channel = chosen_channel.resolve() or await chosen_channel.fetch()
@@ -97,10 +96,10 @@ class SetupChannel(FPCView):
         await interaction.client.pool.execute(query, channel.guild.id, channel.guild.name, channel.id)
 
         self.embed.set_field_at(
-            0, name=f"Channel {formats.tick(bool(channel))}", value=channel.mention if channel else "Not set"
+            0, name=f"Channel {formats.tick(bool(channel))}", value=channel.mention if channel else "Not set",
         )
         self.embed.set_field_at(
-            1, name=f"Webhook {formats.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set"
+            1, name=f"Webhook {formats.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set",
         )
         await interaction.response.edit_message(embed=self.embed)
 
@@ -150,7 +149,7 @@ class SetupMisc(FPCView):
 
     @discord.ui.button(emoji="\N{CLAPPER BOARD}", label='Toggle "Only Twitch Live Players Setting"', row=2)
     async def toggle_twitch_live_only(
-        self, interaction: discord.Interaction[AluBot], _: discord.ui.Button[Self]
+        self, interaction: discord.Interaction[AluBot], _: discord.ui.Button[Self],
     ) -> None:
         await self.toggle_worker(interaction, "twitch_live_only", 2)
 
@@ -273,8 +272,8 @@ class PlayersPageSource(menus.ListPageSource):
             is_favourite = id in favourite_ids
             menu.add_item(
                 AddRemoveButton(
-                    name, is_favourite, id, table=f"{cog.prefix}_favourite_players", column="player_id", menu=menu
-                )
+                    name, is_favourite, id, table=f"{cog.prefix}_favourite_players", column="player_id", menu=menu,
+                ),
             )
 
         return embed
@@ -303,7 +302,6 @@ class SetupPlayersPaginator(pages.Paginator):
     async def on_timeout(self) -> None:  # TODO: do it properly, via combining FPCView and pages.Paginator as a class.
         await super().on_timeout()
         self.cog.setup_messages_cache.pop(self.message.id, None)
-        return
 
     @discord.ui.button(label="\N{PAGE WITH CURL}", style=discord.ButtonStyle.blurple)
     async def favourite_players(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
@@ -340,7 +338,7 @@ class SetupPlayersPaginator(pages.Paginator):
 
             account_kwargs = {column: row[column] for column in self.cog.account_table_columns}
             player_dict[row["display_name"]]["accounts"].append(
-                self.cog.account_cls.static_account_name_with_links(**account_kwargs)
+                self.cog.account_cls.static_account_name_with_links(**account_kwargs),
             )
 
         embed = discord.Embed(
@@ -424,7 +422,7 @@ class CharactersPageSource(menus.ListPageSource):
                     table=f"{cog.prefix}_favourite_characters",
                     column="character_id",
                     menu=menu,
-                )
+                ),
             )
 
         return embed
@@ -452,7 +450,6 @@ class SetupCharactersPaginator(pages.Paginator):
     async def on_timeout(self) -> None:  # TODO: do it properly, via combining FPCView and pages.Paginator as a class.
         await super().on_timeout()
         self.cog.setup_messages_cache.pop(self.message.id, None)
-        return
 
     @discord.ui.button(label="\N{PAGE WITH CURL}", style=discord.ButtonStyle.blurple)
     async def favourite_characters(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
@@ -513,7 +510,7 @@ class AddRemoveButton(discord.ui.Button[SetupCharactersPaginator | SetupCharacte
         await interaction.response.edit_message(view=self.menu)
 
 
-### DATABASE REMOVE VIEWS
+# DATABASE REMOVE VIEWS
 
 
 class DatabaseRemoveView(AluView):
@@ -543,7 +540,7 @@ class DatabaseRemoveView(AluView):
         for counter, (account_id, account_name) in enumerate(account_ids_names.items()):
             percent_counter = (counter + 1) % 10
             self.add_item(
-                RemoveAccountButton(const.DIGITS[percent_counter], cog, account_id, account_name, account_id_column)
+                RemoveAccountButton(const.DIGITS[percent_counter], cog, account_id, account_name, account_id_column),
             )
 
 

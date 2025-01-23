@@ -141,7 +141,7 @@ class SyncAppTreeTools(DevBaseCog):
             app_commands.Choice(name="Premium Guilds", value="premium"),
             app_commands.Choice(name="My Guilds", value="my"),
             app_commands.Choice(name="Specific Guilds", value="guilds"),
-        ]
+        ],
     )
     async def slash_sync(self, interaction: discord.Interaction[AluBot], method: str) -> None:
         """\N{GREY HEART} Hideout-Only | Sync bot's app tree.
@@ -156,7 +156,7 @@ class SyncAppTreeTools(DevBaseCog):
             # it's not worth to mirror commands.Greedy argument into a slash command
             # so just redirect yourself to a prefix $sync command.
             return await interaction.response.send_message(
-                f"Use prefix command `{self.bot.main_prefix}`sync guild1_id guild2_id ... ` !"
+                f"Use prefix command `{self.bot.main_prefix}`sync guild1_id guild2_id ... ` !",
             )
 
         embed = await self.sync_command_worker(method, interaction.guild, guilds=[])

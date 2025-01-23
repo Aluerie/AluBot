@@ -123,7 +123,6 @@ class LogsViaWebhook(AluCog):
 
     def get_avatar(self, username: str) -> str:
         """Helper function to get an avatar ulr based on a webhook username to send the record with."""
-
         # exact name
         if avatar_url := self.EXACT_AVATAR_MAPPING.get(username):
             return avatar_url
@@ -136,7 +135,6 @@ class LogsViaWebhook(AluCog):
 
     async def send_log_record(self, record: logging.LogRecord) -> None:
         """Send Log record to discord webhook."""
-
         emoji = self.emojis.get(record.levelname, "\N{WHITE QUESTION MARK ORNAMENT}")
         colour = self.colours.get(record.levelname)
         # the time is there so the MM:SS is more clear. Discord stacks messages from the same webhook user

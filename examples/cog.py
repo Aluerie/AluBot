@@ -2,16 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import discord
-from discord import app_commands
-from discord.ext import commands
-
-from utils import const
-
 from ._base import BaseCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluContext
+    from bot import AluBot
 
 
 class MyCog(BaseCog): ...

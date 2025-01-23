@@ -133,7 +133,7 @@ class TimezoneManager:
         user-friendly `display_timezone_name` -> `alias` in IANA format to pass into zoneinfo.ZoneInfo(key=key)
         """
         async with self.bot.session.get(
-            "https://raw.githubusercontent.com/unicode-org/cldr/main/common/bcp47/timezone.xml"
+            "https://raw.githubusercontent.com/unicode-org/cldr/main/common/bcp47/timezone.xml",
         ) as resp:
             if resp.status != 200:
                 return
@@ -264,8 +264,7 @@ class TimezoneManager:
             minutes, _ = divmod(int(offset.total_seconds()), 60)
             hours, minutes = divmod(minutes, 60)
             return f"{hours:+03d}:{minutes:02d}"
-        else:
-            return "+00:00"
+        return "+00:00"
 
     @cache.cache()
     async def get_timezone(self, user_id: int, /) -> str | None:

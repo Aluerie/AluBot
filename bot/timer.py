@@ -84,7 +84,7 @@ class Timer(Generic[TimerDataT]):
 
     """
 
-    __slots__ = ("id", "event", "expires_at", "created_at", "timezone", "data")
+    __slots__ = ("created_at", "data", "event", "expires_at", "id", "timezone")
 
     def __init__(self, *, record: TimerRecord[TimerDataT] | PseudoTimerRecord[TimerDataT]) -> None:
         self.id: int | None = record["id"]
@@ -98,17 +98,16 @@ class Timer(Generic[TimerDataT]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Timer):
             return False
-        elif self.id or other.id:
+        if self.id or other.id:
             return self.id == other.id
-        else:
-            # if both ids are None then it's a a tough question
-            # condition below still doesn't prove it
-            # but we should not need to compare id=None Timers anyway
-            return (
-                self.event == other.event
-                and self.expires_at == other.expires_at
-                and self.created_at == other.created_at
-            )
+        # if both ids are None then it's a a tough question
+        # condition below still doesn't prove it
+        # but we should not need to compare id=None Timers anyway
+        return (
+            self.event == other.event
+            and self.expires_at == other.expires_at
+            and self.created_at == other.created_at
+        )
 
     @override
     def __hash__(self) -> int:
@@ -147,7 +146,7 @@ class Timer(Generic[TimerDataT]):
 class TimerManager:
     """Class to create and manage timers."""
 
-    __slots__: tuple[str, ...] = ("name", "bot", "_have_data", "_current_timer", "_task")
+    __slots__: tuple[str, ...] = ("_current_timer", "_have_data", "_task", "bot", "name")
 
     def __init__(self, *, bot: AluBot) -> None:
         self.bot: AluBot = bot
@@ -262,8 +261,7 @@ class TimerManager:
         if record:
             timer = Timer(record=record)
             return timer
-        else:
-            return None
+        return None
 
     async def create_timer(
         self,

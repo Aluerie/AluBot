@@ -26,8 +26,8 @@ if TYPE_CHECKING:
 
 __all__ = (
     "BaseNotifications",
-    "RecipientTuple",
     "EditTuple",
+    "RecipientTuple",
 )
 
 
@@ -78,7 +78,7 @@ class BaseNotifications(FPCCog):
         for recipient in recipients:
             try:
                 channel = self.bot.get_channel(recipient.channel_id) or await self.bot.fetch_channel(
-                    recipient.channel_id
+                    recipient.channel_id,
                 )
             except discord.NotFound:
                 raise

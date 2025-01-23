@@ -14,7 +14,7 @@ from utils import const
 from utils.helpers import measure_time
 
 from ..base_classes import BaseNotifications, EditTuple, RecipientTuple
-from .models import MatchToSend, NotCountedMatchToEdit, StratzMatchToEdit
+from .models import MatchToSend, StratzMatchToEdit
 
 if TYPE_CHECKING:
     from steam.ext.dota2 import LiveMatch  # VALVE_SWITCH
@@ -123,7 +123,7 @@ class DotaFPCNotifications(BaseNotifications):
             if row["twitch_live_only"]:
                 # need to check what streamers are live
                 twitch_live_player_ids = await self.get_player_streams(
-                    const.Twitch.DOTA_GAME_CATEGORY_ID, row["player_ids"]
+                    const.Twitch.DOTA_GAME_CATEGORY_ID, row["player_ids"],
                 )
                 friend_id_cache[True] = await self.convert_player_id_to_friend_id(list(twitch_live_player_ids.keys()))
             else:
@@ -248,7 +248,7 @@ class DotaFPCNotifications(BaseNotifications):
             GROUP BY match_id, friend_id, hero_id, player_name
         """
         match_rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(
-            query, [match.id for match in self.top_live_matches]
+            query, [match.id for match in self.top_live_matches],
         )
 
         for match_row in match_rows:
@@ -260,8 +260,7 @@ class DotaFPCNotifications(BaseNotifications):
                 # Stratz 99% will not have data in the first 5 minutes so it's just a wasted call
                 # Thus lets skip the very first loop #0
                 continue
-            else:
-                self.retry_mapping[tuple_uuid] += 1
+            self.retry_mapping[tuple_uuid] += 1
 
             player_hero = await self.bot.dota.heroes.by_id(match_row["hero_id"])
             # discord-markdown friendly strings for my #logger channel.
@@ -316,11 +315,10 @@ class DotaFPCNotifications(BaseNotifications):
                 #     edit_log.warning("%s SteamWebAPI: match is not ready (still live or GC dying).", log_str)
                 #     continue
 
-            elif not stratz_data["data"]["match"]["statsDateTime"]:
+            if not stratz_data["data"]["match"]["statsDateTime"]:
                 edit_log.warning("%s Parsing was not finished \N{CROSS MARK}", log_str)
                 continue
-            else:
-                match_to_edit = StratzMatchToEdit(self.bot, stratz_data, player_hero)
+            match_to_edit = StratzMatchToEdit(self.bot, stratz_data, player_hero)
 
             # now we know how exactly to edit the match with a specific `match_to_edit`
             await self.edit_match(

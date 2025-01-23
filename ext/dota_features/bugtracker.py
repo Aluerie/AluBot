@@ -73,8 +73,6 @@ class EventBase(ActionBase):
     closed, assigned, reopened.
     """
 
-    pass
-
 
 class CommentBase(ActionBase):
     """Base class for github issue comment.
@@ -89,8 +87,6 @@ class CommentBase(ActionBase):
         * if there is many more events - we will list them with emotes
         * if there is only one - then easy life.
     """
-
-    pass
 
 
 # I kindly ask you to have same matching names for
@@ -152,7 +148,6 @@ class Event(Action):
     """Github Issue Timeline's Event."""
 
     # this needs to be separate classes bcs `isinstance` check
-    pass
 
 
 class Comment(Action):
@@ -355,13 +350,13 @@ class BugTracker(AluCog):
         if success_logins:
             self.valve_devs.extend(success_logins)
             embeds.append(
-                embed_answer(success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs.")
+                embed_answer(success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs."),
             )
         if error_logins:
             embeds.append(
                 embed_answer(
-                    error_logins, const.MaterialPalette.red(), "User(-s) were already in the list of Valve devs."
-                )
+                    error_logins, const.MaterialPalette.red(), "User(-s) were already in the list of Valve devs.",
+                ),
             )
         await ctx.reply(embeds=embeds)
 
@@ -426,7 +421,7 @@ class BugTracker(AluCog):
 
                 event_created_at = event.created_at.replace(tzinfo=datetime.UTC)
                 log.debug(
-                    "Found event: %s %s %s %s ", event.event, event.issue.number, event.actor.login, event_created_at
+                    "Found event: %s %s %s %s ", event.event, event.issue.number, event.actor.login, event_created_at,
                 )
                 if event_created_at < dt:
                     # we reached events that we are supposedly already checked
@@ -435,7 +430,7 @@ class BugTracker(AluCog):
                     # these events got created after task start and before paginator
                     # therefore we leave them untouched for the next batch
                     continue
-                if not event.event in [x.name for x in list(EventType)]:
+                if event.event not in [x.name for x in list(EventType)]:
                     continue
 
                 if (login := event.actor.login) in self.valve_devs:
@@ -459,7 +454,7 @@ class BugTracker(AluCog):
                         created_at=event.created_at,
                         actor=event.actor,
                         issue_number=event.issue.number,
-                    )
+                    ),
                 )
             else:
                 continue  # only executed if the inner loop did NOT break
@@ -484,8 +479,8 @@ class BugTracker(AluCog):
                         created_at=issue.created_at,
                         actor=issue.user,
                         issue_number=issue.number,
-                        comment_body=issue.body if issue.body else "",
-                    )
+                        comment_body=issue.body or "",
+                    ),
                 )
 
         # Comments left by Valve devs
@@ -496,7 +491,7 @@ class BugTracker(AluCog):
             sort="updated",
             since=dt,
         ):
-            if not comment.user or not comment.user.login in self.valve_devs:
+            if not comment.user or comment.user.login not in self.valve_devs:
                 continue
 
             # comment doesn't have issue object attached directly so we need to manually grab it
@@ -510,9 +505,9 @@ class BugTracker(AluCog):
                     created_at=comment.created_at,
                     actor=comment.user,
                     issue_number=issue_number,
-                    comment_body=comment.body if comment.body else "",
+                    comment_body=comment.body or "",
                     comment_url=comment.html_url,
-                )
+                ),
             )
 
         embed_and_files = [v.embed_and_file(self.bot) for v in issue_dict.values()]

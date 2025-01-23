@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import datetime  # noqa: TCH003
+import datetime  # noqa: TC003
 import logging
 import textwrap
 from typing import TYPE_CHECKING, Any, TypedDict, override

@@ -157,7 +157,7 @@ class TwitchCog(CommunityCog):
         current_vod = next(iter(await self.bot.twitch.fetch_videos(user_id=irene.id, period="day")), None)
         current_vod_link = f"/[VOD]({current_vod.url})" if current_vod else ""
 
-        ### send notification
+        # send notification
 
         content = f"{self.community.stream_lover_role.mention} and chat, **`@{irene.display_name}`** just went live!"
         embed = (
@@ -177,7 +177,7 @@ class TwitchCog(CommunityCog):
                 url=(
                     f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{irene.display_name}-1280x720.jpg"
                     "?format=webp&width=720&height=405"
-                )
+                ),
             )
         )
         message = await self.community.stream_notifs.send(content=content, embed=embed)

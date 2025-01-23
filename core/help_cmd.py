@@ -72,7 +72,7 @@ class HelpPageSource(menus.ListPageSource):
             menu.add_item(discord.ui.Button(emoji=const.EmoteLogo.GitHub, label="GitHub", url=bot.repository_url))
             menu.add_item(discord.ui.Button(emoji=const.Emote.FeelsDankMan, label="Invite me", url=bot.invite_link))
             menu.add_item(
-                discord.ui.Button(emoji=const.EmoteLogo.AluerieServer, label="Community", url=bot.community_invite_url)
+                discord.ui.Button(emoji=const.EmoteLogo.AluerieServer, label="Community", url=bot.community_invite_url),
             )
 
             return e
@@ -207,7 +207,7 @@ class AluHelp(commands.HelpCommand):
         )
 
     async def unpack_commands(
-        self, command: AluCommand, answer: list[AluCommand] | None = None, deep: int = 0
+        self, command: AluCommand, answer: list[AluCommand] | None = None, deep: int = 0,
     ) -> list[AluCommand]:
         """If a command is a group then unpack those until their very-last children.
 
@@ -252,7 +252,7 @@ class AluHelp(commands.HelpCommand):
 
         def check() -> str:
             if command.checks:
-                res = {getattr(i, "__doc__") or "mods only" for i in command.checks}
+                res = {i.__doc__ or "mods only" for i in command.checks}
                 res = [f"*{i}*" for i in res]
                 return f"**!** {', '.join(res)}\n"
             return ""
@@ -296,7 +296,7 @@ class AluHelp(commands.HelpCommand):
                 filtered = await self.filter_commands(cmds)  # , sort=True)
                 if filtered:
                     cmds_unpacked = list(
-                        itertools.chain.from_iterable([await self.unpack_commands(c) for c in filtered])
+                        itertools.chain.from_iterable([await self.unpack_commands(c) for c in filtered]),
                     )
                     amount_of_cmds = len(cmds_unpacked)
                     chunk_size = 7

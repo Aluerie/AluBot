@@ -110,7 +110,7 @@ class HideoutModeration(HideoutCog):
         for chunk in discord.utils.as_chunks(deleted, 100):
             try:
                 await interaction.channel.delete_messages(
-                    chunk, reason=f"Action done by {interaction.user} (ID: {interaction.user.id}): Purge"
+                    chunk, reason=f"Action done by {interaction.user} (ID: {interaction.user.id}): Purge",
                 )
             except discord.Forbidden:
                 msg = "I do not have permissions to delete messages."

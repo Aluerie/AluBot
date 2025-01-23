@@ -197,8 +197,7 @@ class AluContext(commands.Context["AluBot"]):
     async def reply(self, content: str | None = None, **kwargs: Any):
         if self.interaction is None:
             return await super().send(content, reference=self.message.to_reference(fail_if_not_exists=False), **kwargs)
-        else:
-            return await super().send(content, **kwargs)
+        return await super().send(content, **kwargs)
 
 
 class AluGuildContext(AluContext):

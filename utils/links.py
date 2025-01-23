@@ -78,7 +78,7 @@ COMPILED_REGEX = re.compile(
         )
         (/ (?: [a-zA-Z] | [0-9] | [$-_@.&+] | [!*(),] | (?:% [0-9a-fA-F][0-9a-fA-F]) )+ )  # group 2 - the rest of url
     """,
-    flags=re.X | re.I,  # X = VERBOSE, I = IGNORECASE
+    flags=re.VERBOSE | re.IGNORECASE,  # X = VERBOSE, I = IGNORECASE
 )
 
 
@@ -117,10 +117,8 @@ def fix_social_links(text: str, omit_rest: bool = False) -> str | None:
             # found is list[tuple[str, ...]], where tuple has 2 strings (because we have 2 matching groups in regex)
             #  i.e. [('instagram.com', '/p/DBg0L6foRNW/'), ('x.com', '/IceFrog/status/1718834746300719265')]
             return "\n".join([f"{FIX_DICT[group[0]]}{group[1]}" for group in found])
-        else:
-            return COMPILED_REGEX.sub(lambda mo: rf"{FIX_DICT[mo.group(1).lower().split('.')[0]]}{mo.group(2)}", text)
-    else:
-        return None
+        return COMPILED_REGEX.sub(lambda mo: rf"{FIX_DICT[mo.group(1).lower().split('.')[0]]}{mo.group(2)}", text)
+    return None
 
 
 if __name__ == "__main__":

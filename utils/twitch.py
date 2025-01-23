@@ -40,7 +40,7 @@ class AluTwitchClient(twitchio.Client):
                 "user:read:chat",
                 "user:write:chat",
                 "user:bot",
-            ]
+            ],
         )
         link = f"http://localhost:4343/oauth?scopes={scopes}&force_verify=true"
         print(f"🤖🤖🤖 BOT OATH LINK: 🤖🤖🤖\n{link}")  # noqa: T201
@@ -50,7 +50,7 @@ class AluTwitchClient(twitchio.Client):
             [
                 "channel:bot",
                 "channel:read:redemptions",
-            ]
+            ],
         )
         link = f"http://localhost:4343/oauth?scopes={scopes}&force_verify=true"
         print(f"🎬🎬🎬 BROADCASTER OATH LINK: 🎬🎬🎬\n{link}")  # noqa: T201

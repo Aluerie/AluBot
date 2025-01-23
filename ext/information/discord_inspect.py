@@ -85,7 +85,6 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
         user:
             User to view banner of.
         """
-
         # banner and accent_colour info is only available via Client.fetch_user().
         # https://discordpy.readthedocs.io/en/latest/api.html?highlight=user#discord.User.banner
         fetched_user = await self.bot.fetch_user(user.id)

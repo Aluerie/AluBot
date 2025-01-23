@@ -53,7 +53,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         member: discord.Member,
         *,
         until_when_and_reason: Annotated[
-            times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="...")
+            times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="..."),
         ],
     ) -> None:
         """Give member a mute."""

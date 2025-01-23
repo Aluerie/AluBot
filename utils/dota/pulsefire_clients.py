@@ -30,10 +30,10 @@ if TYPE_CHECKING:
     from .schemas import odota_constants, opendota, steam_web_api, stratz
 
 __all__ = (
-    "OpenDotaClient",
-    "StratzClient",
     "ODotaConstantsClient",
+    "OpenDotaClient",
     "SteamWebAPIClient",
+    "StratzClient",
 )
 
 type HeaderRateLimitInfo = Mapping[str, Sequence[tuple[int, int]]]
@@ -105,9 +105,9 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
             return
         for scope, idx, *subscopes in pinging_targets:  # type: ignore
             if idx >= len(header_limits[scope]):
-                self._index[(scope, idx, *subscopes)] = (0, 10**10, response_time + 3600, 0, 0)
+                self._index[scope, idx, *subscopes] = (0, 10**10, response_time + 3600, 0, 0)
                 continue
-            self._index[(scope, idx, *subscopes)] = (
+            self._index[scope, idx, *subscopes] = (
                 header_counts[scope][idx][0],
                 header_limits[scope][idx][0],
                 header_limits[scope][idx][1] + response_time,
@@ -123,7 +123,7 @@ class OpenDotaAPIRateLimiter(DotaAPIsRateLimiter):
     @override
     def analyze_headers(self, headers: dict[str, str]) -> tuple[HeaderRateLimitInfo, HeaderRateLimitInfo]:
         self.rate_limits_string = "\n".join(
-            [f"{timeframe}: {headers[f'X-Rate-Limit-Remaining-{timeframe}']}" for timeframe in ("Minute", "Day")]
+            [f"{timeframe}: {headers[f'X-Rate-Limit-Remaining-{timeframe}']}" for timeframe in ("Minute", "Day")],
         )
         self.rate_limits_ratio = int(headers["X-Rate-Limit-Remaining-Day"]) / 2000
 
@@ -134,7 +134,7 @@ class OpenDotaAPIRateLimiter(DotaAPIsRateLimiter):
             "app": [
                 (int(headers[f"X-Rate-Limit-Remaining-{name}"]), period)
                 for name, period in [("Minute", 60), ("Day", 60 * 60 * 24)]
-            ]
+            ],
         }
         return header_limits, header_counts
 
@@ -262,7 +262,7 @@ class StratzAPIRateLimiter(DotaAPIsRateLimiter):
                 f"{timeframe}: "
                 f"{headers[f'X-RateLimit-Remaining-{timeframe}']}/{headers[f'X-RateLimit-Limit-{timeframe}']}"
                 for timeframe in ("Second", "Minute", "Hour", "Day")
-            ]
+            ],
         )
         self.rate_limits_ratio = int(headers["X-RateLimit-Remaining-Day"]) / int(headers["X-RateLimit-Limit-Day"])
 
@@ -312,7 +312,6 @@ class StratzClient(BaseClient):
             while I start to panic (when I did nothing wrong).
             Unfortunately, they don't notify people about token resets.
         """
-
         try:
             return await self.invoke("POST", "")
         except aiohttp.ClientResponseError as exc:
@@ -323,8 +322,7 @@ class StratzClient(BaseClient):
                     "PS. This error is manual and not given by Stratz API."
                 )
                 raise errors.ResponseNotOK(msg)
-            else:
-                raise
+            raise
 
     async def get_fpc_match_to_edit(self, *, match_id: int, friend_id: int) -> stratz.FPCMatchesResponse:
         """Queries info that I need to know in order to edit Dota 2 FPC notification."""
@@ -449,7 +447,6 @@ query FacetConstants {
 
 if __name__ == "__main__":
     import asyncio
-    import pprint  # type: ignore
 
     # OPENDOTA
     async def test_opendota_get_match() -> None:

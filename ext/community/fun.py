@@ -40,7 +40,7 @@ class CommunityFun(CommunityCog):
         else:
             return
         await message.channel.send(
-            f"{text} in {const.Channel.general.mention} ! {const.Emote.Ree} {const.Emote.Ree} {const.Emote.Ree}"
+            f"{text} in {const.Channel.general.mention} ! {const.Emote.Ree} {const.Emote.Ree} {const.Emote.Ree}",
         )
 
     @commands.Cog.listener("on_message")
@@ -50,9 +50,7 @@ class CommunityFun(CommunityCog):
 
         if random.randint(1, 456 + 1) < 6:
             await message.channel.send(
-                "{0} {0} {0} {1} {1} {1} {2} {2} {2} {3} {3} {3}".format(
-                    const.Emote.WeebsOutOut, const.Emote.WeebsOut, const.Emote.peepoWeebSmash, const.Emote.peepoRiot
-                )
+                f"{const.Emote.WeebsOutOut} {const.Emote.WeebsOutOut} {const.Emote.WeebsOutOut} {const.Emote.WeebsOut} {const.Emote.WeebsOut} {const.Emote.WeebsOut} {const.Emote.peepoWeebSmash} {const.Emote.peepoWeebSmash} {const.Emote.peepoWeebSmash} {const.Emote.peepoRiot} {const.Emote.peepoRiot} {const.Emote.peepoRiot}",
             )
 
     @commands.Cog.listener("on_message")

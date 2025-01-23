@@ -86,12 +86,11 @@ class TransposeClient:
             async with self.session.get(url_or_fp) as response:
                 if response.ok:
                     return Image.open(BytesIO(await response.read()))
-                else:
-                    msg = (
-                        f"`transposer.url_to_image`: Status {response.status} -"
-                        f" Could not download file from {url_or_fp}"
-                    )
-                    raise errors.ResponseNotOK(msg)
+                msg = (
+                    f"`transposer.url_to_image`: Status {response.status} -"
+                    f" Could not download file from {url_or_fp}"
+                )
+                raise errors.ResponseNotOK(msg)
         else:
             # assume it is a local file
             try:
@@ -103,7 +102,8 @@ class TransposeClient:
     async def url_to_cached_image(self, url_or_fp: str) -> Image.Image:
         """Get image for image_url and save it to cache.
 
-        Useful because the requests within FPC functionality often request same images over and over."""
+        Useful because the requests within FPC functionality often request same images over and over.
+        """
         return await self.url_to_image(url_or_fp)
 
     async def url_to_file(self, url: str, filename: str = "fromAluBot.png") -> discord.File:
@@ -111,15 +111,13 @@ class TransposeClient:
         async with self.session.get(url) as response:
             if response.ok:
                 return discord.File(BytesIO(await response.read()), filename)
-            else:
-                msg = f"`transposer.url_to_file`: Status {response.status} - Could not download file from {url}"
-                raise errors.ResponseNotOK(msg)
+            msg = f"`transposer.url_to_file`: Status {response.status} - Could not download file from {url}"
+            raise errors.ResponseNotOK(msg)
 
     async def url_to_bytes(self, url: str) -> bytes:
         """Convert URL to bytes."""
         async with self.session.get(url) as response:
             if response.ok:
                 return await response.read()
-            else:
-                msg = f"`transposer.url_to_bytes`: Status {response.status} - Could not download file from {url}"
-                raise errors.ResponseNotOK(msg)
+            msg = f"`transposer.url_to_bytes`: Status {response.status} - Could not download file from {url}"
+            raise errors.ResponseNotOK(msg)

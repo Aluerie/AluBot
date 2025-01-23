@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Literal, NotRequired, TypedDict
 
 __all__ = (
-    "GetHeroesResponse",
-    "GetAbilityIDsResponse",
     "GetAbilitiesResponse",
+    "GetAbilityIDsResponse",
     "GetHeroAbilitiesResponse",
+    "GetHeroesResponse",
     "GetItemsResponse",
 )
 

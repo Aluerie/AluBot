@@ -120,7 +120,7 @@ class EmoteStats(StatsCog):
                         "used": message.created_at.isoformat(),
                     }
                     for x in matches
-                ]
+                ],
             )
 
     @aluloop(seconds=60.0)
@@ -211,7 +211,6 @@ class EmoteStats(StatsCog):
         timeframe
             Time period to filter results with.
         """
-
         if emote_type == "both":
             condition = lambda _: True
         elif emote_type == "static":
@@ -280,7 +279,7 @@ class EmoteStats(StatsCog):
                     [
                         f"`{formats.new_indent(counter, counter + 1, split_size)}`",
                         *self.emote_fmt(emote_id=row[0], count=row[1], total=all_emotes_total),
-                    ]
+                    ],
                 )
 
             # hijack the table widths since custom emotes rendering messes it up
@@ -316,7 +315,7 @@ class EmoteStats(StatsCog):
 
     @staticmethod
     def usage_per_day(dt: datetime.datetime, usages: int) -> float:
-        base = EMOTE_STATS_TRACKING_START if dt < EMOTE_STATS_TRACKING_START else dt
+        base = max(dt, EMOTE_STATS_TRACKING_START)
         days = (datetime.datetime.now(datetime.UTC) - base).total_seconds() / 86400  # 86400 seconds in a day
         return usages / (int(days) or 1)  # or 1 takes care of days = 1 DivisionError
 
@@ -401,9 +400,9 @@ class EmoteStats(StatsCog):
                 [
                     "`All-time",
                     emote_usage_total,
-                    f"{emote_usage_total/all_emotes_total:.1%}",
+                    f"{emote_usage_total / all_emotes_total:.1%}",
                     f"{self.usage_per_day(emoji.created_at, emote_usage_total)}`",
-                ]
+                ],
             )
 
             query = """
@@ -424,12 +423,12 @@ class EmoteStats(StatsCog):
                 [
                     "`Last Year",
                     emote_usage_last_year,
-                    f"{emote_usage_last_year/all_emotes_last_year:.1%}",
+                    f"{emote_usage_last_year / all_emotes_last_year:.1%}",
                     f"{self.usage_per_day(
                         max(emoji.created_at, datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=365)),
                         emote_usage_last_year,
                     )}`",
-                ]
+                ],
             )
 
             server_stats = table.render()

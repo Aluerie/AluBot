@@ -117,7 +117,7 @@ class FreeDictionaryMeaning:
     part_of_speech: str
     definitions: list[FreeDictionaryDefinition]
 
-    __slots__ = ("part_of_speech", "definitions")
+    __slots__ = ("definitions", "part_of_speech")
 
     def __init__(self, definitions: Any, part_of_speech: str) -> None:
         self.part_of_speech = part_of_speech
@@ -161,7 +161,7 @@ class FreeDictionaryWord:
         self.pronunciation = None
         snd = node.xpath("span[@class='snd' and @data-snd]")
         if not snd:
-            return None
+            return
 
         snd = snd[0]
         pron = node.xpath("span[@class='pron']")
@@ -367,7 +367,7 @@ class DictionaryCog(EducationalCog):
 
     @_define.autocomplete("word")
     async def _define_word_autocomplete(
-        self, interaction: discord.Interaction[AluBot], query: str
+        self, interaction: discord.Interaction[AluBot], query: str,
     ) -> list[app_commands.Choice[str]]:
         if not query:
             return []

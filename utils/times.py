@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 class ShortTime:
     compiled = re.compile(
-        """
+        r"""
             (?:(?P<years>[0-9])(?:years?|y))?                      # e.g. 2y
             (?:(?P<months>[0-9]{1,2})(?:months?|mon?))?            # e.g. 2months
             (?:(?P<weeks>[0-9]{1,4})(?:weeks?|w))?                 # e.g. 10w
@@ -48,9 +48,8 @@ class ShortTime:
             if match is not None:
                 self.dt = datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.UTC)
                 return
-            else:
-                msg = "invalid time provided"
-                raise commands.BadArgument(msg)
+            msg = "invalid time provided"
+            raise commands.BadArgument(msg)
 
         data = {k: int(v) for k, v in match.groupdict(default=0).items()}
         now = now or datetime.datetime.now(datetime.UTC)
@@ -142,7 +141,7 @@ class FriendlyTimeResult:
     dt: datetime.datetime
     arg: str
 
-    __slots__ = ("dt", "arg")
+    __slots__ = ("arg", "dt")
 
     def __init__(self, dt: datetime.datetime) -> None:
         self.dt = dt
@@ -153,7 +152,7 @@ class FriendlyTimeResult:
         return f"<FriendlyTimeResult dt={self.dt} arg={self.arg}>"
 
     async def ensure_constraints(
-        self, ctx: AluContext, uft: UserFriendlyTime, now: datetime.datetime, remaining: str
+        self, ctx: AluContext, uft: UserFriendlyTime, now: datetime.datetime, remaining: str,
     ) -> None:
         if self.dt < now:
             msg = "This time is in the past."
@@ -211,7 +210,7 @@ class UserFriendlyTime(commands.Converter[FriendlyTimeResult]):
             match = ShortTime.discord_fmt.match(argument)
             if match is not None:
                 result = FriendlyTimeResult(
-                    datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.UTC).astimezone(tzinfo)
+                    datetime.datetime.fromtimestamp(int(match.group("ts")), tz=datetime.UTC).astimezone(tzinfo),
                 )
                 remaining = argument[match.end() :].strip()
                 await result.ensure_constraints(ctx, self, now, remaining)

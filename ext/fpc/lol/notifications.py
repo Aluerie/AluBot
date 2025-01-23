@@ -173,8 +173,7 @@ class Notifications(BaseNotifications):
             except aiohttp.ClientResponseError as exc:
                 if exc.status == 404:
                     continue
-                else:
-                    raise
+                raise
 
             for participant in match["info"]["participants"]:
                 if participant["championId"] == match_row["champion_id"]:

@@ -5,11 +5,11 @@ from typing import Literal
 import discord
 
 __all__ = (
+    "Accent",
     "Colour",
-    "MaterialPalette",
     "Material",
     "MaterialAccentPalette",
-    "Accent",
+    "MaterialPalette",
 )
 
 

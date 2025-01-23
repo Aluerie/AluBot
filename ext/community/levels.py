@@ -31,9 +31,9 @@ LAST_SEEN_TIMEOUT = 60
 
 # fmt: off
 exp_lvl_table = [
-        5,   230,   600,  1080,  1660,  # 1-5
-    2_260,  2980,  3730,  4620,  5550,  # 6-10 # "_" so rainbow indent doesn't make erroneous indent colour :D
-    6_520,  7530,  8580,  9805, 11055,  # 11-15
+        5, 230, 600, 1080, 1660,  # 1-5
+    2_260, 2980, 3730, 4620, 5550,  # 6-10 # "_" so rainbow indent doesn't make erroneous indent colour :D
+    6_520, 7530, 8580, 9805, 11055,  # 11-15
     12330, 13630, 14955, 16455, 18045,  # 16-20
     19645, 21495, 23595, 25945, 28545,  # 21-25
     32045, 36545, 42045, 48545, 56045,  # 26-30
@@ -58,7 +58,7 @@ async def rank_image(
     width, height = image.size
     new_width, new_height = avatar.size
 
-    left = int((width - new_width))
+    left = int(width - new_width)
     top = int((height - new_height) / 2)
     # right = int((width + new_width) / 2)
     # bottom = int((height + new_height) / 2)
@@ -132,7 +132,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         self.bot.tree.remove_command(c.name, type=c.type)
 
     async def context_menu_view_user_rank_callback(
-        self, interaction: discord.Interaction[AluBot], member: discord.Member
+        self, interaction: discord.Interaction[AluBot], member: discord.Member,
     ) -> None:
         await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
 
@@ -142,7 +142,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         member: discord.Member,
     ) -> discord.File:
         """Get file that is image for rank/levels information for desired member."""
-        member = member or getattr(ctx, "author") or getattr(ctx, "user")
+        member = member or ctx.author or ctx.user
         if member.bot:
             msg = "Sorry! our system does not count experience for bots."
             raise errors.ErroneousUsage(msg)
@@ -158,7 +158,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         query = "SELECT COUNT(*) FROM community_members WHERE exp > $1"
         place = 1 + await ctx.client.pool.fetchval(query, row.exp)
         image = await rank_image(
-            ctx.client, lvl, row.exp, row.rep, next_lvl_exp, prev_lvl_exp, formats.ordinal(place), member
+            ctx.client, lvl, row.exp, row.rep, next_lvl_exp, prev_lvl_exp, formats.ordinal(place), member,
         )
         return ctx.client.transposer.image_to_file(image, filename="rank.png")
 
@@ -171,7 +171,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
     @app_commands.guilds(const.Guild.community)
     @app_commands.command(name="leaderboard")
     async def leaderboard(
-        self, interaction: discord.Interaction[AluBot], sort_by: Literal["exp", "rep"] = "exp"
+        self, interaction: discord.Interaction[AluBot], sort_by: Literal["exp", "rep"] = "exp",
     ) -> None:
         """View experience leaderboard for this server.
 
@@ -200,7 +200,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             new_array.append(
                 f"{member.mention}\n`"
                 f"{formats.indent(' ', cnt, offset, split_size)} "
-                f"level {get_level(row["exp"])}, {row["exp"]} exp| {row["rep"]} rep`"
+                f"level {get_level(row["exp"])}, {row["exp"]} exp| {row["rep"]} rep`",
             )
             cnt += 1
 
@@ -262,14 +262,13 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         if member == interaction.user or member.bot:
             msg = "You can't give reputation to yourself or bots."
             raise errors.ErroneousUsage(msg)
-        else:
-            query = "UPDATE community_members SET rep=rep+1 WHERE id=$1 RETURNING rep"
-            reputation: int = await self.bot.pool.fetchval(query, member.id)
-            embed = discord.Embed(
-                color=discord.Colour.green(),
-                description=f"Added +1 reputation to **{member.display_name}**: now {reputation} reputation",
-            )
-            await interaction.response.send_message(embed=embed)
+        query = "UPDATE community_members SET rep=rep+1 WHERE id=$1 RETURNING rep"
+        reputation: int = await self.bot.pool.fetchval(query, member.id)
+        embed = discord.Embed(
+            color=discord.Colour.green(),
+            description=f"Added +1 reputation to **{member.display_name}**: now {reputation} reputation",
+        )
+        await interaction.response.send_message(embed=embed)
 
     @commands.Cog.listener(name="on_message")
     async def reputation_counting(self, message: discord.Message) -> None:

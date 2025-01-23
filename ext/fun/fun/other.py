@@ -36,10 +36,9 @@ class Other(FunCog):
                 ctx = await self.bot.get_context(message)
                 if ctx.command:
                     return
-                else:
-                    for r in ["❔", "❕", "🤔"]:
-                        with contextlib.suppress(discord.HTTPException):
-                            await message.add_reaction(r)
+                for r in ["❔", "❕", "🤔"]:
+                    with contextlib.suppress(discord.HTTPException):
+                        await message.add_reaction(r)
 
     @app_commands.command()
     async def roll(self, interaction: discord.Interaction[AluBot], max_roll_number: app_commands.Range[int, 1]) -> None:
@@ -114,7 +113,7 @@ class Other(FunCog):
 
     @text_group.command()
     async def fancify(
-        self, interaction: discord.Interaction[AluBot], text: str
+        self, interaction: discord.Interaction[AluBot], text: str,
     ) -> None:  # cSpell:disable #fmt:off # black meeses it up x_x
         """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼.
 

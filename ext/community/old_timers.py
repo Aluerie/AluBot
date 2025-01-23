@@ -62,7 +62,7 @@ IMPORTANT_BANK = [
     f"Hey chat, {Channel.confessions} exist {Emote.PepoBeliever} {Emote.PepoBeliever} {Emote.PepoBeliever}",
     f"Hey chat, fix your posture {Emote.PepoBeliever}",
     "Hey chat, remember to smile \N{SLIGHTLY SMILING FACE}",
-    "Hey chat, feel free to invite new cool people to this server {0} {0} {0}".format(Emote.peepoComfy),
+    f"Hey chat, feel free to invite new cool people to this server {Emote.peepoComfy} {Emote.peepoComfy} {Emote.peepoComfy}",
     "Hey chat, follow étiquette.",
     f"Hey chat, if you ever see {User.alubot} offline (it should be always at the top of the members list online) - "
     "immediately ping me",
@@ -188,7 +188,7 @@ class OldTimers(CommunityCog):
                 coro = random.choice(
                     [
                         self.get_total_messages_number,
-                    ]
+                    ],
                 )
                 desc = await coro()
                 embed = discord.Embed(colour=discord.Colour.blue(), title="Dynamic Fact", description=desc)

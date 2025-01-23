@@ -34,7 +34,6 @@ class EmergencySendKwargs(TypedDict):
 class Mimic:
     """Webhook Management for AluBot.
 
-
     Centralized WebHook control.
 
     Examples
@@ -96,8 +95,7 @@ class Mimic:
                 if parent_channel is None:
                     msg = f"Somehow we are in a thread {channel!r} with no parent."
                     raise errors.SomethingWentWrong(msg)
-                else:
-                    return parent_channel, channel
+                return parent_channel, channel
             case discord.DMChannel() | discord.GroupChannel():
                 msg = f"Such functionality is not available in DMS {channel!r}"
                 raise errors.ErroneousUsage(msg)
@@ -113,8 +111,7 @@ class Mimic:
         webhook_url: str | None = await self.bot.pool.fetchval(query, self.channel.id)
         if webhook_url:
             return discord.Webhook.from_url(webhook_url, client=self.bot, bot_token=self.bot.http.token)
-        else:
-            return None
+        return None
 
     async def search_owned(self) -> discord.Webhook | None:
         log.debug("Step 2. Searching for owned webhook in the channel %r", self.channel)
@@ -141,8 +138,7 @@ class Mimic:
                 url=webhook.url,
             )
             return webhook
-        else:
-            return None
+        return None
 
     async def report(self, description: str) -> None:
         embed = discord.Embed(colour=const.Colour.maroon, description=description)
@@ -282,8 +278,7 @@ class Mimic:
                 if report:
                     await self.report(str(exc))
                     continue
-                else:
-                    raise
+                raise
 
             if webhook:
                 # the following "if wait" is a monstrous type-checker moment
@@ -339,7 +334,6 @@ class Mimic:
 
     async def get_or_create_webhook(self) -> discord.Webhook:
         """Get or create webhook in the channel."""
-
         # Step 1. Trying to find a webhook in the database
         if webhook := await self.search_database():
             return webhook

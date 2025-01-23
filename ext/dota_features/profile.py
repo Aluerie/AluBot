@@ -37,7 +37,7 @@ class SteamUserTransformer(app_commands.Transformer):
         interaction: discord.Interaction[AluBot],
         arg: str,
     ) -> list[app_commands.Choice[str]]:
-        return [app_commands.Choice(name='Aluerie', value='112636165')]
+        return [app_commands.Choice(name="Aluerie", value="112636165")]
 
 
 class SteamDotaProfiles(AluCog):
@@ -88,8 +88,8 @@ class SteamDotaProfiles(AluCog):
                         f"{(await interaction.client.dota.heroes.by_id(match.hero)).emote} - {match.id}"
                     )
                     for count, match in enumerate(history)
-                ]
-            )
+                ],
+            ),
         )
         await interaction.followup.send(embed=embed)
 

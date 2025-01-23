@@ -178,7 +178,7 @@ def extract_one(
     *,
     scorer: Callable[[str, str], int] = quick_ratio,
     score_cutoff: int = 0,
-) -> tuple[str, int] | None | tuple[str, int, T] | None:
+) -> tuple[str, int] | None | tuple[str, int, T]:
     it = _extraction_generator(query, choices, scorer, score_cutoff)
     try:
         return max(it, key=lambda t: t[1])
@@ -344,8 +344,7 @@ def finder(
 
     if raw:
         return sorted(suggestions, key=sort_key)
-    else:
-        return [z for _, _, z in sorted(suggestions, key=sort_key)]
+    return [z for _, _, z in sorted(suggestions, key=sort_key)]
 
 
 def find(text: str, collection: Iterable[str], *, key: Callable[[str], str] | None = None) -> str | None:

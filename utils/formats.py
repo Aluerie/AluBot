@@ -6,6 +6,7 @@ import datetime
 import difflib
 import re
 from enum import IntEnum
+from itertools import starmap
 from typing import TYPE_CHECKING, Any, Literal, override
 
 from dateutil.relativedelta import relativedelta
@@ -74,7 +75,7 @@ def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
 
 
 def human_timedelta(
-    dt: datetime.datetime | datetime.timedelta | int | float,
+    dt: datetime.datetime | datetime.timedelta | float,
     *,
     source: datetime.datetime | None = None,
     accuracy: int | None = 3,
@@ -182,12 +183,10 @@ def human_timedelta(
 
     if len(output) == 0:
         return "now"
-    else:
-        if mode == "full":
-            return human_join(output, final="and") + output_suffix
-        else:
-            sep = "" if mode == "strip" else " "
-            return sep.join(output) + output_suffix
+    if mode == "full":
+        return human_join(output, final="and") + output_suffix
+    sep = "" if mode == "strip" else " "
+    return sep.join(output) + output_suffix
 
 
 def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> str:
@@ -253,9 +252,9 @@ def inline_diff(a: str, b: str) -> str:  # a = old_string, b = new_string
             return matcher.a[i1:i2]  # type: ignore
         if tag == "insert":
             return "__" + matcher.b[j1:j2] + "__"  # type: ignore
-        assert False, "Unknown tag {!r}".format(tag)
+        assert False, f"Unknown tag {tag!r}"
 
-    return "".join(process_tag(*t) for t in matcher.get_opcodes())
+    return "".join(starmap(process_tag, matcher.get_opcodes()))
 
 
 # https://stackoverflow.com/questions/39001097/match-changes-by-words-not-by-characters
@@ -284,9 +283,9 @@ def inline_word_by_word_diff(before: str, after: str) -> str:
             case "insert":
                 return f"__{b_str}__"
             case _:
-                assert False, "Unknown tag {!r}".format(tag)
+                assert False, f"Unknown tag {tag!r}"
 
-    return " ".join(process_tag(*t) for t in matcher.get_opcodes())
+    return " ".join(starmap(process_tag, matcher.get_opcodes()))
 
 
 def block_function(string: str, blocked_words: list[str], whitelist_words: list[str]) -> bool:
@@ -393,7 +392,7 @@ def hms_to_seconds(hms_time: str) -> int:
 
     def letter_to_seconds(letter: str) -> int:
         """regex_time('h') = 3, regex_time('m') = 51, regex_time('s') = 8 for above example."""
-        pattern = r"\d+(?={})".format(letter)  # UP032
+        pattern = rf"\d+(?={letter})"  # UP032
         units = re.search(pattern, hms_time)
         return int(units.group(0)) if units else 0
 
@@ -401,7 +400,7 @@ def hms_to_seconds(hms_time: str) -> int:
     return sum([v * letter_to_seconds(letter) for letter, v in timeunit_dict.items()])
 
 
-def divmod_timedelta(total_seconds: int | float) -> str:
+def divmod_timedelta(total_seconds: float) -> str:
     """Easier human timedelta than `formats.human_timedelta`.
 
     But because of this, for accuracy sake, this only supports days, hours, minutes, seconds.
@@ -475,8 +474,7 @@ class TabularData:
         self._rows.append(rows)
         for index, element in enumerate(rows):
             width = len(element) + 2 * len(self.outer)
-            if width > self._widths[index]:
-                self._widths[index] = width
+            self._widths[index] = max(width, self._widths[index])
 
     def add_rows(self, rows: Iterable[Iterable[Any]]) -> None:
         for row in rows:

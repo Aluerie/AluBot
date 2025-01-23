@@ -19,13 +19,13 @@ if TYPE_CHECKING:
 
 __all__ = (
     "Champion",
-    "PseudoChampion",
-    "Champions",
     "ChampionTransformer",
+    "Champions",
     "ItemIcons",
+    "PseudoChampion",
+    "RolesIdentifiers",
     "RuneIcons",
     "SummonerSpellIcons",
-    "RolesIdentifiers",
 )
 
 
@@ -83,7 +83,7 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
                 icon_url=cdragon_asset_url(champion["squarePortraitPath"]),
                 emote=champion_emotes.get(champion["id"])
                 or await self.create_champion_emote(
-                    champion["id"], champion["alias"], cdragon_asset_url(champion["squarePortraitPath"])
+                    champion["id"], champion["alias"], cdragon_asset_url(champion["squarePortraitPath"]),
                 ),
             )
             for champion in champion_summary
@@ -119,7 +119,7 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
             embed = discord.Embed(
                 description=(
                     f"Something went wrong when creating champion emote for `id={id}, alias={champion_alias}`."
-                )
+                ),
             )
             await self.bot.exc_manager.register_error(exc, embed=embed)
             return const.NEW_CHAMPION_EMOTE
@@ -159,7 +159,7 @@ class RuneIcons(GameDataStorage[str, str]):
     """_summary_
 
     Examples
-    ----------
+    --------
     https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/precision/lethaltempo/lethaltempotemp.png
     https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/sorcery/unflinching/unflinching.png
     """
@@ -183,7 +183,7 @@ class SummonerSpellIcons(GameDataStorage[str, str]):
     """_summary_
 
     Examples
-    ----------
+    --------
     https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/data/spells/icons2d/summoner_boost.png
     """
 
@@ -289,7 +289,7 @@ class RolesIdentifiers(GameDataStorage[RoleDict, RoleDict]):
         # Nilah (data was taken 03/Jan/23) - {id: the_dict}
         # https://www.leagueofgraphs.com/champions/stats/nilah/master
         manual_data = {
-            895: self.generate_unknown_object(playrate=2.8, top=0.4, jungle=0.0, mid=1.7, bot=97.4, support=0.4)
+            895: self.generate_unknown_object(playrate=2.8, top=0.4, jungle=0.0, mid=1.7, bot=97.4, support=0.4),
         }
         diff_dict = {x: self.generate_unknown_object() for x in diff_list if x not in manual_data}
         return diff_dict | (manual_data | champion_roles)

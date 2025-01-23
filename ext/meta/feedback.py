@@ -84,7 +84,7 @@ class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
             text=(
                 "This copy of your own feedback was sent to you just so "
                 "if the developers answer it (here via the bot) - you can remember your previous message."
-            )
+            ),
         )
         await interaction.user.send(embed=logs_embed)
 
@@ -120,7 +120,7 @@ class FeedbackCog(MetaCog):
                     "This message is sent to you in DMs because you had previously submitted feedback or "
                     "I found a bug in a command you used, I do not monitor this DM.\n"
                     "Use `/feedback` again if you *need* to answer my message."
-                )
+                ),
             )
         )
         await user.send(embed=embed)

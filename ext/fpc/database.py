@@ -6,7 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from utils import const, errors
-from utils.lol import Platform  # noqa: TCH001
+from utils.lol import Platform  # noqa: TC001
 
 from .base_classes import FPCCog
 from .dota.settings import DotaPlayerCandidate
@@ -97,7 +97,7 @@ class FPCDatabaseManagement(FPCCog):
 
     @database_dota.command(name="add")
     async def database_dota_add(
-        self, interaction: discord.Interaction[AluBot], name: str, steam: str, twitch: bool
+        self, interaction: discord.Interaction[AluBot], name: str, steam: str, twitch: bool,
     ) -> None:
         """Add Dota 2 player to the FPC database.
 
@@ -121,7 +121,7 @@ class FPCDatabaseManagement(FPCCog):
 
     @database_dota_remove.autocomplete("player_name")
     async def database_dota_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str,
     ) -> list[app_commands.Choice[str]]:
         """Autocomplete for `/database dota remove` command.
 
@@ -173,7 +173,7 @@ class FPCDatabaseManagement(FPCCog):
 
     @database_lol_remove.autocomplete("player_name")
     async def database_lol_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str
+        self, interaction: discord.Interaction[AluBot], current: str,
     ) -> list[app_commands.Choice[str]]:
         """Autocomplete for `/database lol remove` command.
 
@@ -198,7 +198,7 @@ class FPCDatabaseManagement(FPCCog):
 
                 if user is None:
                     continue
-                elif user.display_name != row["display_name"]:
+                if user.display_name != row["display_name"]:
                     query = f"UPDATE {table_name} SET display_name=$1 WHERE player_id=$3"
                     await self.bot.pool.execute(query, user.display_name, row["player_id"])
         # TODO: periodic timer - create a new one

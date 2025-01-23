@@ -31,7 +31,7 @@ class ExtensionConverter(commands.Converter[str]):
 
     # currently does not handle base extensions
     @override
-    async def convert(self, ctx: AluContext, argument: str) -> str:
+    async def convert(self, _: AluContext, argument: str) -> str:
         m = argument.lower()
         return f"ext.{m}"
 
@@ -40,9 +40,13 @@ class ReloadCog(DevBaseCog):
     @commands.command(name="extensions", hidden=True)
     async def extensions(self, ctx: AluContext) -> None:
         """Shows available extensions to load/reload/unload."""
-        extensions = [f"\N{BLACK CIRCLE} {ext}" for ext in self.bot.extensions]
-        e = discord.Embed(title="Loaded Extensions", description="\n".join(extensions), colour=const.Colour.blueviolet)
-        await ctx.reply(embed=e)
+        extensions = [f"\N{BLACK CIRCLE} {ext}" for ext in sorted(self.bot.extensions, key=str.lower)]
+        embed = discord.Embed(
+            colour=const.Colour.blueviolet,
+            title="Loaded Extensions",
+            description="\n".join(extensions),
+        )
+        await ctx.reply(embed=embed)
 
     # SINGULAR LOAD UNLOAD RELOAD
 

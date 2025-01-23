@@ -14,20 +14,37 @@ from utils import const, formats
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from bot import AluBot, AluContext
 
 
-class MemberLogging(CommunityCog):
+class CommunityLogging(CommunityCog):
+    """Logging actions of community members.
+
+    Notes
+    -----
+    A bit of privacy invasion, but I guess, we as Server owner
+    have an access to this information via Audit Logs anyway.
+    """
+
     @override
     async def cog_load(self) -> None:
         self.nicknames_database_check.start()
+        self.check_voice_members.start()
 
     @override
     async def cog_unload(self) -> None:
         self.nicknames_database_check.cancel()
+        self.check_voice_members.cancel()
 
     def base_embed(self, member: discord.Member) -> discord.Embed:
-        return discord.Embed(colour=member.colour).set_author(name=str(member), icon_url=member.display_avatar.url)
+        return discord.Embed(
+            colour=member.colour,
+        ).set_author(
+            name=str(member),
+            icon_url=member.display_avatar.url,
+        )
 
     def verb_word(self, before: Any, after: Any) -> str:
         # TODO: make global func out of it because we use it in many files it feels like.
@@ -35,8 +52,7 @@ class MemberLogging(CommunityCog):
             return "set"
         if before and after is None:
             return "removed"
-        else:
-            return "changed"
+        return "changed"
 
     def before_after_embed(
         self,
@@ -49,13 +65,13 @@ class MemberLogging(CommunityCog):
 
         Parameters
         ----------
-        member: discord.Member
+        member
             member for whom the embed is triggered for
-        attribute_locale: str
+        attribute_locale
             Name from Discord Settings page for changed @member's object attribute
-        before_field: str | None
+        before_field
             Value of the said attribute before the triggered event
-        after_field: str | None
+        after_field
             Value of the said attribute before the triggered event
 
         Returns
@@ -63,14 +79,16 @@ class MemberLogging(CommunityCog):
         Embed to send for logger purposes
 
         """
-        e = self.base_embed(member)
-        e.description = (
+        embed = self.base_embed(member)
+        embed.description = (
             f"{member.mention}'s {attribute_locale} was {self.verb_word(before_field, after_field)} "
             f"{const.Emote.PepoDetective}\n"
         )
-        e.add_field(name="Before", value=discord.utils.escape_markdown(before_field) if before_field else "`...`")
-        e.add_field(name="After", value=discord.utils.escape_markdown(after_field) if after_field else "`...`")
-        return e
+        embed.add_field(name="Before", value=discord.utils.escape_markdown(before_field) if before_field else "`...`")
+        embed.add_field(name="After", value=discord.utils.escape_markdown(after_field) if after_field else "`...`")
+        return embed
+
+    # MEMBER UPDATES
 
     @commands.Cog.listener("on_user_update")
     async def logger_on_user_update(self, before: discord.User, after: discord.User) -> None:
@@ -148,9 +166,7 @@ class MemberLogging(CommunityCog):
             await self.bot.community.logs.send(embed=e)
             return
 
-    ##############################################
-    ###           NICKNAME CHANGES             ###
-    ##############################################
+    # NICKNAME CHANGES
 
     async def update_database_and_announce(self, member_after: discord.Member, nickname_before: str | None) -> None:
         query = "UPDATE community_members SET name=$1 WHERE id=$2"
@@ -173,7 +189,7 @@ class MemberLogging(CommunityCog):
     async def rolling_stones_role_check(self, after: discord.Member) -> None:
         """Parameters
         ----------
-        after : discord.Member
+        after
             member whose nickname gonna be checked for rolling stones eligibility
 
         """
@@ -224,8 +240,8 @@ class MemberLogging(CommunityCog):
         else:
             await update_heartbeat(discord.utils.utcnow())
 
+    # MESSAGE LOGGING
 
-class MessageLogging(CommunityCog):
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
         if after.guild is None or after.guild.id != const.Guild.community:
@@ -259,14 +275,18 @@ class MessageLogging(CommunityCog):
             return
 
         channel: discord.abc.GuildChannel = message.channel  # type: ignore # it's secured to be .community channel
-        e = discord.Embed(description=message.content, colour=0xB22222)
-        msg = f"{message.author.display_name}'s del in #{channel}"
-        e.set_author(name=msg, icon_url=message.author.display_avatar.url)
+        embed = discord.Embed(
+            colour=0xB22222,
+            description=message.content,
+        ).set_author(
+            name=f"{message.author.display_name}'s del in #{channel}",
+            icon_url=message.author.display_avatar.url,
+        )
         files = [await item.to_file() for item in message.attachments]
-        await self.bot.community.logs.send(embed=e, files=files)
+        await self.bot.community.logs.send(embed=embed, files=files)
 
+    # COMMAND LOGGING
 
-class CommandLogging(CommunityCog):
     ignored_users = (const.User.aluerie,)
     included_guilds = (const.Guild.community,)
 
@@ -298,15 +318,7 @@ class CommandLogging(CommunityCog):
         e.set_author(icon_url=ctx.author.display_avatar.url, name=msg, url=jump_url)
         await self.bot.community.logs.send(embed=e)
 
-
-class VoiceChatMembersLogging(CommunityCog):
-    @override
-    async def cog_load(self) -> None:
-        self.check_voice_members.start()
-
-    @override
-    async def cog_unload(self) -> None:
-        self.check_voice_members.cancel()
+    # VOICE CHAT LOGGING
 
     @commands.Cog.listener("on_voice_state_update")
     async def community_voice_chat_logging(
@@ -323,7 +335,7 @@ class VoiceChatMembersLogging(CommunityCog):
             # joined the voice channel
             await member.add_roles(voice_role)
             e = discord.Embed(color=0x00FF7F).set_author(
-                name=f"{member.display_name} entered {after.channel.name}.", icon_url=member.display_avatar.url
+                name=f"{member.display_name} entered {after.channel.name}.", icon_url=member.display_avatar.url,
             )
             await after.channel.send(embed=e)
             return
@@ -331,7 +343,7 @@ class VoiceChatMembersLogging(CommunityCog):
             # quit the voice channel
             await member.remove_roles(voice_role)
             e = discord.Embed(color=0x800000).set_author(
-                name=f"{member.display_name} left {before.channel.name}.", icon_url=member.display_avatar.url
+                name=f"{member.display_name} left {before.channel.name}.", icon_url=member.display_avatar.url,
             )
             await before.channel.send(embed=e)
             return
@@ -359,7 +371,85 @@ class VoiceChatMembersLogging(CommunityCog):
             for member in voice_channel.members:
                 await member.add_roles(voice_role)
 
+    # EMOTE LOGS
+
+    @commands.Cog.listener()
+    async def on_guild_emojis_update(
+        self,
+        guild: discord.Guild,
+        before: Sequence[discord.Emoji],
+        after: Sequence[discord.Emoji],
+    ) -> None:
+        # very lazy channel mapping
+        channel_mapping = {
+            const.Guild.community: const.Channel.patch_notes,
+            const.Guild.hideout: const.Channel.hideout_logs,
+        }
+        channel = self.bot.get_channel(channel_mapping[guild.id])
+        assert isinstance(channel, discord.TextChannel)
+
+        diff_after = [x for x in after if x not in before]
+        diff_before = [x for x in before if x not in after]
+
+        async def set_author(emotion: discord.Emoji, embed: discord.Embed, action: discord.AuditLogAction) -> None:
+            """Retrieve the emote uploader and set it to the embed.
+
+            Currently, the author of emote uploader is only available via Audit Logs.
+            We don't really need it, but why not.
+            """
+            if emotion.managed:
+                embed.set_author(name="Tw.tv Sub integration", icon_url=const.Logo.Twitch)
+                return
+            async for entry in guild.audit_logs(action=action):
+                assert isinstance(entry.target, discord.Emoji)
+                assert isinstance(entry.user, discord.Member)
+                if entry.target.id == emotion.id:
+                    embed.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
+                    return
+
+        # Remove emote
+        if diff_after == [] and diff_before != []:
+            for emote in diff_before:
+                embed = discord.Embed(
+                    colour=0xB22222,
+                    title=f"`:{emote.name}:` emote removed",
+                    description=f"[Image link]({emote.url})",
+                ).set_thumbnail(url=emote.url)
+                await set_author(emote, embed, discord.AuditLogAction.emoji_delete)
+                await channel.send(embed=embed)
+
+        # Add emote
+        elif diff_after != [] and diff_before == []:
+            for emote in diff_after:
+                embed = discord.Embed(
+                    colour=0x00FF7F,
+                    title=f"`:{emote.name}:` emote created",
+                    description=f"[Image link]({emote.url})",
+                ).set_thumbnail(url=emote.url)
+                await set_author(emote, embed, discord.AuditLogAction.emoji_create)
+                await channel.send(embed=embed)
+                if not emote.managed:
+                    # can't send managed emotes as a bot;
+                    # maybe we can work around it by temporarily uploading a fake copy to a fake guild;
+                    # but it's fine.
+                    msg = await channel.send(f"{emote!s} {emote!s} {emote!s}")
+                    await msg.add_reaction(str(emote))
+
+        # Renamed emote
+        else:
+            diff_after_name = [x for x in after if x.name not in [x.name for x in before]]
+            diff_before_name = [x for x in before if x.name not in [x.name for x in after]]
+            for emote_after, emote_before in zip(diff_after_name, diff_before_name, strict=False):
+                word = "replaced by" if emote_after.managed else "renamed into"
+
+                embed = discord.Embed(
+                    colour=0x1E90FF,
+                    title=f"`:{emote_before.name}:` emote {word} `:{emote_after.name}:`",
+                    description=f"[Image link]({emote_after.url})",
+                ).set_thumbnail(url=emote_after.url)
+                await set_author(emote_after, embed, discord.AuditLogAction.emoji_update)
+                await channel.send(embed=embed)
+
 
 async def setup(bot: AluBot) -> None:
-    for c in (MemberLogging, MessageLogging, CommandLogging, VoiceChatMembersLogging):
-        await bot.add_cog(c(bot))
+    await bot.add_cog(CommunityLogging(bot))

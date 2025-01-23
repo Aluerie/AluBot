@@ -104,7 +104,7 @@ def scrape_schedule_data(
                 teams=f"{team1} - {team2}",
                 twitch_url=twitch_url,
                 dt=dt,
-            )
+            ),
         )
 
     return matches
@@ -267,11 +267,10 @@ class ScheduleSelect(discord.ui.Select[SchedulePages]):
     async def interaction_check(self, interaction: discord.Interaction[AluBot]) -> bool:
         if interaction.user and interaction.user.id == self.author.id:
             return True
-        else:
-            schedule_enum = ScheduleModeEnum(value=int(self.values[0]))
-            p = SchedulePages(interaction, self.soup, schedule_enum, self.query)
-            await p.start(ephemeral=True)
-            return False
+        schedule_enum = ScheduleModeEnum(value=int(self.values[0]))
+        p = SchedulePages(interaction, self.soup, schedule_enum, self.query)
+        await p.start(ephemeral=True)
+        return False
 
 
 class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
@@ -287,11 +286,10 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
     async def get_soup(self, key: str) -> BeautifulSoup:
         if soup := self.soup_cache.get(key):
             return soup
-        else:
-            async with self.bot.session.get(MATCHES_URL) as r:
-                soup = BeautifulSoup(await r.read(), "html.parser")
-                self.soup_cache[key] = soup
-                return soup
+        async with self.bot.session.get(MATCHES_URL) as r:
+            soup = BeautifulSoup(await r.read(), "html.parser")
+            self.soup_cache[key] = soup
+            return soup
 
     @app_commands.command()
     @app_commands.allowed_installs(guilds=True, users=True)
@@ -299,7 +297,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
     @app_commands.rename(schedule_mode="filter")
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in SELECT_OPTIONS])
     async def schedule(
-        self, interaction: discord.Interaction[AluBot], schedule_mode: int = 1, query: str | None = None
+        self, interaction: discord.Interaction[AluBot], schedule_mode: int = 1, query: str | None = None,
     ) -> None:
         """Dota 2 Pro Matches Schedule.
 
@@ -335,7 +333,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                 match_strings = []
                 for match in matches:
                     team_content = match.findAll(
-                        "of-simple-match-card-team", attrs={"class": "simple-match-card__team-content"}
+                        "of-simple-match-card-team", attrs={"class": "simple-match-card__team-content"},
                     )
                     team1 = team_content[0].find("span", attrs={"class": "simple-match-card-team__name"}).text
                     team2 = team_content[1].find("span", attrs={"class": "simple-match-card-team__name"}).text

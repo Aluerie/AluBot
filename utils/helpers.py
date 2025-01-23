@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from time import perf_counter
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Self
 
 import discord
 
@@ -54,10 +54,10 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
         # PT for Performance Time, maybe there are better ideas for abbreviations.
         self.log.debug("%s PT: %.3f secs", self.name, perf_counter() - self.start)
 
-    def __exit__(self, *_: Any) -> None:
+    def __exit__(self, *_: object) -> None:
         self.measure_time()
 
-    async def __aexit__(self, *_: Any) -> None:
+    async def __aexit__(self, *_: object) -> None:
         self.measure_time()
 
 
@@ -69,7 +69,7 @@ def error_handler_response_embed(error: Exception, is_unexpected: bool, desc: st
     if not mention:
         # means I'm developing and sitting right in the channel
         return discord.Embed(colour=const.Colour.maroon).set_author(name=error.__class__.__name__)
-    elif is_unexpected:
+    if is_unexpected:
         # means error is unexpected so let's return our ready to go answer
         return (
             discord.Embed(
@@ -84,9 +84,8 @@ def error_handler_response_embed(error: Exception, is_unexpected: bool, desc: st
             .set_author(name="Oups... Unexpected error!")
             .set_footer(text="PS. No private data was recorded.")
         )
-    else:
-        # error was expected and has expected `desc` answer template
-        embed = discord.Embed(colour=const.Colour.maroon, description=desc)
-        if not isinstance(error, errors.ErroneousUsage):
-            embed.set_author(name=formats.convert_PascalCase_to_spaces(error.__class__.__name__))
-        return embed
+    # error was expected and has expected `desc` answer template
+    embed = discord.Embed(colour=const.Colour.maroon, description=desc)
+    if not isinstance(error, errors.ErroneousUsage):
+        embed.set_author(name=formats.convert_PascalCase_to_spaces(error.__class__.__name__))
+    return embed

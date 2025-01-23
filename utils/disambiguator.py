@@ -42,7 +42,7 @@ class DisambiguatorView[T](AluView):
     selected: T
 
     def __init__(
-        self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any]
+        self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any],
     ) -> None:
         super().__init__(author_id=ctx_ntr.user.id, view_name="Select Menu")
         self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
@@ -93,13 +93,11 @@ class Disambiguator:
         if isinstance(ctx_ntr, AluContext):
             # Context
             return await ctx_ntr.reply(embed=embed, view=view, ephemeral=ephemeral)
-        else:
-            # Interaction
-            if not ctx_ntr.response.is_done():
-                await ctx_ntr.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
-                return await ctx_ntr.original_response()
-            else:
-                return await ctx_ntr.followup.send(embed=embed, view=view, ephemeral=ephemeral, wait=True)
+        # Interaction
+        if not ctx_ntr.response.is_done():
+            await ctx_ntr.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+            return await ctx_ntr.original_response()
+        return await ctx_ntr.followup.send(embed=embed, view=view, ephemeral=ephemeral, wait=True)
 
     async def confirm(
         self,
@@ -185,9 +183,9 @@ class Disambiguator:
         if amount_of_matches == 0:
             msg = "No results found."
             raise ValueError(msg)
-        elif amount_of_matches == 1:
+        if amount_of_matches == 1:
             return matches[0]
-        elif amount_of_matches > 25:
+        if amount_of_matches > 25:
             msg = "Too many results... sorry."
             raise ValueError(msg)
 

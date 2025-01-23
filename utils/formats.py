@@ -43,7 +43,7 @@ class plural:  # noqa: N801
     @override
     def __format__(self, format_spec: str) -> str:
         v = self.value
-        singular, separator, plural = format_spec.partition("|")
+        singular, _, plural = format_spec.partition("|")
         plural = plural or f"{singular}s"
         if abs(v) != 1:
             return f"{v} {plural}"
@@ -53,10 +53,12 @@ class plural:  # noqa: N801
 def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
     """Join sequence of string in human-like format.
 
-    Example Usage: ::
-
-        >>> human_join(['Conan Doyle', 'Nabokov', 'Fitzgerald'], final='and')
-        >>> 'Conan Doyle, Nabokov and Fitzgerald'
+    Example
+    -------
+        ```
+        human_join(['Conan Doyle', 'Nabokov', 'Fitzgerald'], final='and')
+        # 'Conan Doyle, Nabokov and Fitzgerald'
+        ```
     """
     # licensed MPL v2 from Rapptz/RoboDanny
     # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
@@ -397,7 +399,7 @@ def hms_to_seconds(hms_time: str) -> int:
         return int(units.group(0)) if units else 0
 
     timeunit_dict = {"h": 3600, "m": 60, "s": 1}
-    return sum([v * letter_to_seconds(letter) for letter, v in timeunit_dict.items()])
+    return sum(v * letter_to_seconds(letter) for letter, v in timeunit_dict.items())
 
 
 def divmod_timedelta(total_seconds: float) -> str:
@@ -440,6 +442,9 @@ def convert_camel_case_to_PascalCase(text: str) -> str:  # noqa: N802 # sorry, I
     ------
     * https://stackoverflow.com/a/1176023/19217368 (last section of the answer)
 
+    Returns
+    -------
+    A string converted to PascalCase.
     """
     return "".join(word.title() for word in text.split("_"))
 

@@ -1,8 +1,10 @@
-"""This code is licensed MPL v2 from Rapptz/RoboDanny
-https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py.
+"""times.py.
 
-Most of the code below is a shameless copypaste from @Rapptz's RoboDanny utils
-but IDK it's just so good and smart. I really learn a lot from reading @Danny's code.
+Sources
+-------
+* Most of the code below is a shameless copypaste from @Rapptz's RoboDanny utils (it's so good though)
+    licensed MPL v2 from Rapptz/RoboDanny
+    https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
 """
 
 from __future__ import annotations
@@ -152,7 +154,11 @@ class FriendlyTimeResult:
         return f"<FriendlyTimeResult dt={self.dt} arg={self.arg}>"
 
     async def ensure_constraints(
-        self, ctx: AluContext, uft: UserFriendlyTime, now: datetime.datetime, remaining: str,
+        self,
+        ctx: AluContext,
+        uft: UserFriendlyTime,
+        now: datetime.datetime,
+        remaining: str,
     ) -> None:
         if self.dt < now:
             msg = "This time is in the past."
@@ -223,7 +229,7 @@ class UserFriendlyTime(commands.Converter[FriendlyTimeResult]):
 
         if argument[0:2] == "me":  # noqa: SIM102
             # starts with "me to", "me in", or "me at "
-            if argument[0:6] in ("me to ", "me in ", "me at "):
+            if argument[0:6] in {"me to ", "me in ", "me at "}:
                 argument = argument[6:]
 
         # Have to adjust the timezone so pdt knows how to handle things like "tomorrow at 6pm" in an aware way
@@ -239,13 +245,13 @@ class UserFriendlyTime(commands.Converter[FriendlyTimeResult]):
         # foo date time
 
         # first the first two cases:
-        dt, status, begin, end, dt_string = elements[0]
+        dt, status, begin, end, _ = elements[0]  # the _ is "dt_string"
 
         if not status.hasDateOrTime:
             msg = 'Invalid time provided, try e.g. "tomorrow" or "3 days".'
             raise commands.BadArgument(msg)
 
-        if begin not in (0, 1) and end != len(argument):
+        if begin not in {0, 1} and end != len(argument):
             msg = (
                 "Time is either in an inappropriate location, which "
                 "must be either at the end or beginning of your input, "
@@ -261,16 +267,16 @@ class UserFriendlyTime(commands.Converter[FriendlyTimeResult]):
         if status.hasTime and not status.hasDate and dt < now:
             # if it's in the past, and it has a time but no date,
             # assume it's for the next occurrence of that time
-            dt = dt + datetime.timedelta(days=1)
+            dt += datetime.timedelta(days=1)
 
         # if midnight is provided, just default to next day
         if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
-            dt = dt + datetime.timedelta(days=1)
+            dt += datetime.timedelta(days=1)
 
         result = FriendlyTimeResult(dt.replace(tzinfo=tzinfo))
         remaining = ""
 
-        if begin in (0, 1):
+        if begin in {0, 1}:
             if begin == 1:
                 # check if it's quoted:
                 if argument[0] != '"':

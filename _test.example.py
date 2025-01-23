@@ -13,7 +13,6 @@ TEST_EXTENSIONS = (
     # 'community.moderation'
     # 'hideout.scrape',
     # "dota_news.bugtracker",
-    #####################################
     # 'meta.meta.help',
     # 'community.fix_links',
     # 'info.schedule',

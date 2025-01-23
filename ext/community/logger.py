@@ -123,13 +123,13 @@ class CommunityLogging(CommunityCog):
             # let's compare before and after by their attributes
             changes = [
                 attr
-                for attr in before.__dir__()
+                for attr in dir(before)
                 if attr
-                not in (
+                not in {
                     "system",  # sometimes it's missing resulting in "None != False"
                     "avatar_decoration",  # not interested
                     "avatar_decoration_sku_id",  # not interested
-                )
+                }
                 and not attr.startswith("_")
                 and not inspect.ismethod(getattr(before, attr, None))
                 and getattr(before, attr, None) != getattr(after, attr, None)
@@ -187,7 +187,9 @@ class CommunityLogging(CommunityCog):
             await self.update_database_and_announce(member_after=after, nickname_before=before.nick)
 
     async def rolling_stones_role_check(self, after: discord.Member) -> None:
-        """Parameters
+        """Check for @RollingStones role members.
+
+        Parameters
         ----------
         after
             member whose nickname gonna be checked for rolling stones eligibility
@@ -251,7 +253,7 @@ class CommunityLogging(CommunityCog):
         if before.content == after.content:  # most likely some link embed link action
             return
 
-        channel: discord.abc.GuildChannel = after.channel  # type: ignore # it's secured to be .community channel
+        channel: discord.abc.GuildChannel = after.channel  # type: ignore[reportAssignmentType] # it's secured to be .community channel
         e = discord.Embed(colour=0x00BFFF)
         msg = f"{after.author.display_name} edit in #{channel.name}"
         e.set_author(name=msg, icon_url=after.author.display_avatar.url, url=after.jump_url)
@@ -268,13 +270,13 @@ class CommunityLogging(CommunityCog):
     async def on_message_delete(self, message: discord.Message) -> None:
         if message.author.bot or (message.guild and message.guild.id != const.Guild.community):
             return
-        if re.search(const.Regex.IS_DELETED_BY_NQN, message.content):  # bug_check
+        if re.search(const.Regex.IS_DELETED_BY_NQN, message.content):  # -bug_check
             # todo: this leads to any messages with emotes being ignored.
             return
         if message.content.startswith("$"):
             return
 
-        channel: discord.abc.GuildChannel = message.channel  # type: ignore # it's secured to be .community channel
+        channel: discord.abc.GuildChannel = message.channel  # type: ignore[reportAssignmentType] # it's secured to be .community channel
         embed = discord.Embed(
             colour=0xB22222,
             description=message.content,
@@ -335,7 +337,8 @@ class CommunityLogging(CommunityCog):
             # joined the voice channel
             await member.add_roles(voice_role)
             e = discord.Embed(color=0x00FF7F).set_author(
-                name=f"{member.display_name} entered {after.channel.name}.", icon_url=member.display_avatar.url,
+                name=f"{member.display_name} entered {after.channel.name}.",
+                icon_url=member.display_avatar.url,
             )
             await after.channel.send(embed=e)
             return
@@ -343,7 +346,8 @@ class CommunityLogging(CommunityCog):
             # quit the voice channel
             await member.remove_roles(voice_role)
             e = discord.Embed(color=0x800000).set_author(
-                name=f"{member.display_name} left {before.channel.name}.", icon_url=member.display_avatar.url,
+                name=f"{member.display_name} left {before.channel.name}.",
+                icon_url=member.display_avatar.url,
             )
             await before.channel.send(embed=e)
             return
@@ -452,4 +456,5 @@ class CommunityLogging(CommunityCog):
 
 
 async def setup(bot: AluBot) -> None:
+    """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(CommunityLogging(bot))

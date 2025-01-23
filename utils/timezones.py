@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING, NamedTuple, override
 
 import discord
 from discord import app_commands
-from discord.ext import commands
 from lxml import etree
 
 from bot import AluContext
 
-from . import cache, fuzzy
+from . import cache, errors, fuzzy
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -68,7 +67,7 @@ class TimeZone(NamedTuple):
                 "[TimeZonePicker](https://kevinnovak.github.io/Time-Zone-Picker/) or "
                 "[WikiPage](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)'s `TZ identifier` column"
             )
-            raise commands.BadArgument(msg)
+            raise errors.BadArgument(msg) from None
 
     def to_choice(self) -> app_commands.Choice[str]:
         """To choice."""
@@ -135,7 +134,7 @@ class TimezoneManager:
         async with self.bot.session.get(
             "https://raw.githubusercontent.com/unicode-org/cldr/main/common/bcp47/timezone.xml",
         ) as resp:
-            if resp.status != 200:
+            if not resp.ok:
                 return
 
             parser = etree.XMLParser(ns_clean=True, recover=True, encoding="utf-8")
@@ -160,7 +159,8 @@ class TimezoneManager:
             for entry in entries.values():
                 # These use the first entry in the alias list as the "canonical" name to use when mapping the
                 # timezone to the IANA database.
-                # The CLDR database is not particularly correct when it comes to these, but neither is the IANA database.
+                # The CLDR database is not particularly correct when it comes to these,
+                # but neither is the IANA database.
                 # It turns out the notion of a "canonical" name is a bit of a mess. This works fine for users where
                 # this is only used for display purposes, but it's not ideal.
                 if entry.preferred is not None:

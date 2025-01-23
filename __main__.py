@@ -17,7 +17,7 @@ from bot import AluBot, setup_logging
 from utils import const, database
 
 try:
-    import uvloop  # type: ignore # not available on Windows
+    import uvloop  # type: ignore[reportMissingImports] # not available on Windows
 except ImportError:
     pass
 else:

@@ -485,7 +485,7 @@ class AluBot(commands.Bot, AluBotHelper):
                 desc = (
                     f"Sorry! Incorrect argument value: {error.argument!r}. \n"
                     f"Only these options are valid for a parameter `{error.param.displayed_name or error.param.name}`:\n"
-                    f"{formats.human_join([repr(l) for l in error.literals])}."
+                    f"{formats.human_join([repr(literal) for literal in error.literals])}."
                 )
 
             case commands.EmojiNotFound():

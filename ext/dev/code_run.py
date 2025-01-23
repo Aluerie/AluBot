@@ -28,7 +28,7 @@ class CodeRun(DevBaseCog):
         ctx: AluContext,
         mentions: commands.Greedy[discord.Member | discord.User | discord.abc.GuildChannel | discord.Role],
     ) -> dict[str, Any]:
-        """Returns the dict to be used in eval/REPL."""
+        """Return the dict to be used in eval/REPL."""
         env: dict[str, Any] = {
             "author": ctx.author,
             "bot": self.bot,

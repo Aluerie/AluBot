@@ -43,9 +43,9 @@ reportIncompatibleMethodOverride = "none"
 
 [tool.ruff]
 # https://docs.astral.sh/ruff/rules/
-# Good ruff configurations:
-# * https://github.com/mikeshardmind/async-utils/blob/main/pyproject.toml
+# Examples of good ruff configurations:
 # * https://github.com/AbstractUmbra/Mipha/blob/main/pyproject.toml
+# * https://github.com/mikeshardmind/async-utils/blob/main/pyproject.toml
 line-length = 120
 target-version = "py312"
 # requires-python = ">= 3.10"
@@ -105,13 +105,26 @@ select = [
     "DOC"       # Doc strings, kinda annoying for a bot, to be honest
 ]
 ignore = [
-    "ANN401",   # Any is the correct type in some cases
+    "ANN401",   # `Any` is the correct type in some cases
+    "ASYNC109", # dpy commonly uses this parameter
     "ASYNC116", # Long sleeps are fine
     "C90",      # mc cabe complexity memes
+    "F401",     # unused imports
+    "F403",     # wildcard imports: `from math import *` are used in __init__.py a lot
+    "F405",     # wildcard imports
+    "INP001",   # due to how I load modules this results in annoyances
+    "PLC0415",  # ruff gets this wrong, import needs to be not at top of file in some cases
+    "PLR0912",  # too many branches
+    "PLR0913",  # number of function arguments
+    "PLR0914",  # too many variables: come on
+    "PLR0915",  # too many statements: come on, not everything is solvable in <50 lines.
+    "PLR6301",  # discord.py uses `self` even if I don't
+    "S101",     # use of assert here is a known quantity, blame typing memes
+
+    # OLD RULES
     # "F401",
     # "F402",
-    # "F403",
-    # "F405",
+    
     # "PERF203",
     # "RUF001",
     # "RUF009",
@@ -119,12 +132,17 @@ ignore = [
     # "UP034",
     # "UP038",
 
-    # Doc Strings 
-    # "D401",    # the imperative verb.
-    # "D100",    # docstring in a public module
+    # DOC STRINGS
+    # general doc string exceptions
+    "D100",     # Missing docstring in module: no, module level docs aren't always needed
+    "D105",     # Missing docstring in magic method: documenting magic methods is often dumb.
+    "D107",     # Missing docstring in `__init__`: __init__ is the wrong place to doc this.
+    "D401",     # Doc should be starting with an imperative verb: dumb rule tbh.
+    # doc string exceptions 
+    # for this bot because it's a bot and it's pointless to document *everything* in one-man project.
+    "DOC201",   # `return` is not documented in docstring
+
     # "D104",    # Missing docstring in public package. Otherwise spams __init__.py and such.
-    # "D105",    # Missing docstring in magic method.
-    # "D107",    # Missing docstring in `__init__`. 
     # "D417",    # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
     # "D203", # one-blank-line-before-class
     # "D213", # multi-line-summary-second-line

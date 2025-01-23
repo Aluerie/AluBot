@@ -12,6 +12,8 @@ Notes.
     it will show type str instead of Literal["my actual token"]
 """
 
+# ruff: noqa: S105 # This file is included in `.gitignore`
+
 import platform
 
 __all__ = (

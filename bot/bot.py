@@ -87,16 +87,14 @@ class AluBot(commands.Bot, AluBotHelper):
 
         super().__init__(
             command_prefix={self.main_prefix},
-            activity=discord.Streaming(
-                name="\N{PURPLE HEART} /help /setup",
-                url="https://twitch.tv/irene_adler__",
-            ),
+            activity=discord.Streaming(name="\N{PURPLE HEART} /help /setup", url="https://twitch.tv/irene_adler__"),
             intents=INTENTS,
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=AluAppCommandTree,
             strip_after_prefix=True,
             case_insensitive=True,
         )
+        self.extensions_to_load: tuple[str, ...] = get_extensions(self.test)
         self.database: asyncpg.Pool[asyncpg.Record] = pool
         # Below: asyncpg typehinting crutch, read `utils.database` for more
         self.pool: PoolTypedWithAny = pool  # pyright:ignore[reportAttributeAccessIssue]
@@ -121,15 +119,14 @@ class AluBot(commands.Bot, AluBotHelper):
         self.bot_app_info: discord.AppInfo = await self.application_info()
 
         failed_to_load_some_ext = False
-        for ext in get_extensions(self.test):
+        for ext in self.extensions_to_load:
             try:
                 await self.load_extension(ext)
             except commands.ExtensionError as error:
                 failed_to_load_some_ext = True
-                embed = discord.Embed(
-                    colour=0xDA9F93,
-                    description=f"Failed to load extension `{ext}`.",
-                ).set_footer(text=f'setup_hook: loading extension "{ext}"')
+                embed = discord.Embed(colour=0xDA9F93, description=f"Failed to load extension `{ext}`.").set_footer(
+                    text=f'setup_hook: loading extension "{ext}"',
+                )
                 await self.exc_manager.register_error(error, embed)
 
         # we could go with attribute option like exceptions manager
@@ -220,16 +217,17 @@ class AluBot(commands.Bot, AluBotHelper):
         # erm, bcs of my horrendous .test logic we need to do it in a weird way
         # todo: is there anything better ? :D
 
-        if "ext.fpc.dota" in self.extensions:
-            # Steam/Dota client need extra measures.
+        coroutines = [super().start(config.DISCORD_BOT_TOKEN, reconnect=True)]
+
+        dota_extensions = (
+            "ext.fpc.dota",
+            # "ext.beta", # uncomment when we are testing dota-related stuff in `ext.beta`
+        )
+        if any(ext in self.extensions_to_load for ext in dota_extensions):
             self.instantiate_dota()
-            await asyncio.gather(
-                super().start(config.DISCORD_BOT_TOKEN, reconnect=True),
-                self.twitch.start(),
-                self.dota.login(),
-            )
-        else:
-            await super().start(config.DISCORD_BOT_TOKEN, reconnect=True)
+            coroutines.append(self.dota.login())
+
+        await asyncio.gather(*coroutines)
 
     @override
     async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:
@@ -240,20 +238,21 @@ class AluBot(commands.Bot, AluBotHelper):
         """Get bot's owner user."""
         return self.bot_app_info.owner
 
-    # instantiate INITIALIZE EXTRA ATTRIBUTES/CLIENTS/FUNCTIONS
+    """
+    Instantiate Functions
+    ---------------------
+    The following functions are `instantiate_something`
+    which import some heavy modules and instantiate some ~heavy clients under bot's namespace.
+    They should be used in `__init__` or in `cog_load` methods in cog classes that require them,
+    i.e. fpc dota notifications should call `bot.initialize_dota`, `bot.instantiate_twitch`.
+    This is done exclusively so when I run only a few cogs with a test bot -
+    I don't need to load those heavy modules/clients.
 
-    # The following functions are `initialize_something`
-    # which import some heavy modules and initialize some ~heavy clients under bot namespace
-    # they should be used in `__init__` or in `cog_load` methods in cog classes that need to work with them,
-    # i.e. fpc dota notifications should call
-    # `bot.initialize_dota`, `bot.initialize_dota_cache`, `bot.initialize_twitch`, etc.
-    # This is done exclusively so when I run only a few cogs on test bot
-    # I don't need to load those heavy modules/clients.
-    #
-    # note that I import inside the functions which is against pep8 but apparently it is not so bad:
-    # pep8 answer: https://stackoverflow.com/a/1188672/19217368
-    # points to import inside the function: https://stackoverflow.com/a/1188693/19217368
-    # and I exactly want these^
+    Note, that while I import inside the functions which is against PEP-8 - apparently it is not so bad:
+    * pep8 answer: https://stackoverflow.com/a/1188672/19217368
+    * points to import inside the function: https://stackoverflow.com/a/1188693/19217368
+    and I exactly want these^
+    """
 
     def instantiate_lol(self) -> None:
         """Instantiate League of Legends Client."""
@@ -325,20 +324,11 @@ class AluBot(commands.Bot, AluBotHelper):
     @discord.utils.cached_property
     def invite_link(self) -> str:
         """Get invite link for the bot."""
-        return discord.utils.oauth_url(
-            self.user.id,
-            permissions=PERMISSIONS,
-            scopes=("bot", "applications.commands"),
-        )
+        return discord.utils.oauth_url(self.user.id, permissions=PERMISSIONS, scopes=("bot", "applications.commands"))
 
     def webhook_from_url(self, url: str) -> discord.Webhook:
         """A shortcut function with filled in discord.Webhook.from_url args."""
-        return discord.Webhook.from_url(
-            url=url,
-            session=self.session,
-            client=self,
-            bot_token=self.http.token,
-        )
+        return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
 
     async def webhook_from_database(self, channel_id: int) -> discord.Webhook:
         query = "SELECT url FROM webhooks WHERE channel_id = $1"
@@ -389,10 +379,7 @@ class AluBot(commands.Bot, AluBotHelper):
             exception = TypeError("Somehow `on_error` fired with exception being `None`.")
 
         embed = (
-            discord.Embed(
-                colour=0xA32952,
-                title=f"`{event}`",
-            )
+            discord.Embed(colour=0xA32952, title=f"`{event}`")
             .set_author(name="Event Error")
             .add_field(
                 name="Args",

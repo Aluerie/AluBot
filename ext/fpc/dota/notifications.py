@@ -17,10 +17,9 @@ from ..base_classes import BaseNotifications, EditTuple, RecipientTuple
 from .models import MatchToSend, StratzMatchToEdit
 
 if TYPE_CHECKING:
-    from steam.ext.dota2 import LiveMatch  
+    from steam.ext.dota2 import LiveMatch
 
     from bot import AluBot, AluContext
-    
 
     class AnalyzeGetPlayerIDsQueryRow(TypedDict):
         twitch_live_only: bool

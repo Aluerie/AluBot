@@ -99,10 +99,11 @@ select = [
     "YTT",      # misuse of sys.version or sys.version_info
     # EXPERIMENTAL ADDITIONS
     "D",        # Doc-string madness, kinda annoying for a bot, to be honest
-    "DOC",       # Doc strings, kinda annoying for a bot, to be honest
+    "DOC",      # Doc strings, kinda annoying for a bot, to be honest
     "ERA",      # eradicate commented out code
     "N",        # pep-8 namings
     "W",        # pycodestyle warnings
+    
 ]
 ignore = [
     # 1. General "Somewhat Public" disagreement with Ruff
@@ -110,6 +111,8 @@ ignore = [
     "ASYNC109", # dpy and other libraries commonly use this parameter
     "ASYNC116", # Long sleeps are fine
     "C90",      # mc cabe complexity memes
+    "COM812",   # Ruff page recommends using formatter instead
+    "COM819",   # Ruff page recommends using formatter instead
     "F401",     # unused imports
     "F403",     # wildcard imports: `from math import *` are used in __init__.py a lot
     "F405",     # wildcard imports are not that bad

@@ -26,12 +26,27 @@ class classproperty(Generic[TT, T_co]):  # noqa: N801
     def __init__(self, func: Callable[[TT], T_co]) -> None:
         self.__func__ = func
 
-    def __get__(self, instance: Any, type: TT) -> T_co:
+    def __get__(self, _: Any, type: TT) -> T_co:  # noqa: A002 # _ is `instance`
         return self.__func__(type)
 
 
 LiteralPlatform = Literal[
-    "BR1", "EUN1", "EUW1", "JP1", "KR", "LA1", "LA2", "NA1", "OC1", "PH2", "RU", "SG2", "TH2", "TR1", "TW2", "VN2",
+    "BR1",
+    "EUN1",
+    "EUW1",
+    "JP1",
+    "KR",
+    "LA1",
+    "LA2",
+    "NA1",
+    "OC1",
+    "PH2",
+    "RU",
+    "SG2",
+    "TH2",
+    "TR1",
+    "TW2",
+    "VN2",
 ]
 
 
@@ -64,10 +79,10 @@ class Platform(StrEnum):
     Turkey = "TR1"
     Taiwan = "TW2"
     Vietnam = "VN2"
-    # PublicBetaEnvironment = "PBE" # no, we will not support it.
+    # PublicBetaEnvironment = "PBE" # no, we will not support it. # noqa: ERA001
 
     @classproperty
-    def DISPLAY_NAMES(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore  # noqa: N805, N802
+    def DISPLAY_NAMES(cls: type[Self]) -> Mapping[Platform, str]:  # pyright: ignore[reportGeneralTypeIssues]  # noqa: N805, N802
         """Normal human-readable server abbreviations like 'NA' together with its name.
 
         "Display Name" as a concept does not exist in Riot API and only used by me for display purposes.
@@ -97,7 +112,7 @@ class Platform(StrEnum):
         return self.DISPLAY_NAMES[self]
 
     @classproperty
-    def CONTINENTS(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore  # noqa: N802, N805
+    def CONTINENTS(cls: type[Self]) -> Mapping[Platform, str]:  # pyright: ignore[reportGeneralTypeIssues] # noqa: N802, N805
         """RiotGames routing continent names like `AMERICAS`."""
         return {
             cls.Brazil: "AMERICAS",
@@ -124,7 +139,7 @@ class Platform(StrEnum):
         return self.CONTINENTS[self]
 
     @classproperty
-    def OPGG_NAMES(cls: type[Self]) -> Mapping[Platform, str]:  # type: ignore  # noqa: N805, N802
+    def OPGG_NAMES(cls: type[Self]) -> Mapping[Platform, str]:  # pyright: ignore[reportGeneralTypeIssues]  # noqa: N805, N802
         """OP.GG names for platforms.
 
         Used in their links as sub-domain.

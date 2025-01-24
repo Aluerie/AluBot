@@ -44,7 +44,7 @@ class TransposeClient:
         # https://stackoverflow.com/a/46220683/9263761
         # https://levelup.gitconnected.com/how-to-properly-calculate-text-size-in-pil-images-17a2cc6f51fd
 
-        _ascent, descent = font.getmetrics()
+        _, descent = font.getmetrics()  # _ is `ascent`
 
         text_width: int = font.getmask(text).getbbox()[2]
         text_height: int = font.getmask(text).getbbox()[3] + descent
@@ -86,17 +86,11 @@ class TransposeClient:
             async with self.session.get(url_or_fp) as response:
                 if response.ok:
                     return Image.open(BytesIO(await response.read()))
-                msg = (
-                    f"`transposer.url_to_image`: Status {response.status} -"
-                    f" Could not download file from {url_or_fp}"
-                )
+                msg = f"`transposer.url_to_image`: Status {response.status} - Could not download file from {url_or_fp}"
                 raise errors.ResponseNotOK(msg)
         else:
             # assume it is a local file
-            try:
-                return Image.open(fp=str(url_or_fp))
-            except FileNotFoundError:
-                raise
+            return Image.open(fp=str(url_or_fp))
 
     @cache.cache(maxsize=256)  # kinda scary
     async def url_to_cached_image(self, url_or_fp: str) -> Image.Image:

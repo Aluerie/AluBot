@@ -1,13 +1,17 @@
-"""This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/.
-"""
+"""Fuzzy wuzzy string matching utilities.
 
-# help with: http://chairnerd.seatgeek.com/fuzzywuzzy-fuzzy-string-matching-in-python/
+Sources
+-------
+*  `fuzzy.py` file from RoboDanny (license MPL v2 from Rapptz/RoboDanny)
+    https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/fuzzy.py
+* Helpful article:
+    http://chairnerd.seatgeek.com/fuzzywuzzy-fuzzy-string-matching-in-python/
+"""
 
 from __future__ import annotations
 
 import heapq
+import operator
 import re
 from difflib import SequenceMatcher
 from typing import TYPE_CHECKING, Literal, TypeVar, overload
@@ -20,12 +24,12 @@ T = TypeVar("T")
 
 def ratio(a: str, b: str) -> int:
     m = SequenceMatcher(None, a, b)
-    return int(round(100 * m.ratio()))
+    return round(100 * m.ratio())
 
 
 def quick_ratio(a: str, b: str) -> int:
     m = SequenceMatcher(None, a, b)
-    return int(round(100 * m.quick_ratio()))
+    return round(100 * m.quick_ratio())
 
 
 def partial_ratio(a: str, b: str) -> int:
@@ -35,7 +39,7 @@ def partial_ratio(a: str, b: str) -> int:
     blocks = m.get_matching_blocks()
 
     scores: list[float] = []
-    for i, j, n in blocks:
+    for i, j, _ in blocks:
         start = max(j - i, 0)
         end = start + len(short)
         o = SequenceMatcher(None, short, long[start:end])
@@ -45,7 +49,7 @@ def partial_ratio(a: str, b: str) -> int:
             return 100
         scores.append(r)
 
-    return int(round(100 * max(scores)))
+    return round(100 * max(scores))
 
 
 _word_regex = re.compile(r"\W", re.IGNORECASE)
@@ -80,8 +84,7 @@ def _extraction_generator(
     choices: Sequence[str],
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
-) -> Generator[tuple[str, int], None, None]:
-    ...
+) -> Generator[tuple[str, int], None, None]: ...
 
 
 @overload
@@ -90,8 +93,7 @@ def _extraction_generator(
     choices: dict[str, T],
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
-) -> Generator[tuple[str, int, T], None, None]:
-    ...
+) -> Generator[tuple[str, int, T], None, None]: ...
 
 
 def _extraction_generator(
@@ -120,8 +122,7 @@ def extract(
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
     limit: int | None = ...,
-) -> list[tuple[str, int]]:
-    ...
+) -> list[tuple[str, int]]: ...
 
 
 @overload
@@ -132,8 +133,7 @@ def extract(
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
     limit: int | None = ...,
-) -> list[tuple[str, int, T]]:
-    ...
+) -> list[tuple[str, int, T]]: ...
 
 
 def extract(
@@ -146,8 +146,8 @@ def extract(
 ) -> list[tuple[str, int]] | list[tuple[str, int, T]]:
     it = _extraction_generator(query, choices, scorer, score_cutoff)
     if limit is not None:
-        return heapq.nlargest(limit, it, key=lambda t: t[1])  # pyright: ignore[reportReturnType]
-    return sorted(it, key=lambda t: t[1], reverse=True)  # pyright: ignore[reportReturnType]
+        return heapq.nlargest(limit, it, key=operator.itemgetter(1))  # pyright: ignore[reportReturnType]
+    return sorted(it, key=operator.itemgetter(1), reverse=True)  # pyright: ignore[reportReturnType]
 
 
 @overload
@@ -157,8 +157,7 @@ def extract_one(
     *,
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
-) -> tuple[str, int] | None:
-    ...
+) -> tuple[str, int] | None: ...
 
 
 @overload
@@ -168,8 +167,7 @@ def extract_one(
     *,
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
-) -> tuple[str, int, T] | None:
-    ...
+) -> tuple[str, int, T] | None: ...
 
 
 def extract_one(
@@ -178,10 +176,10 @@ def extract_one(
     *,
     scorer: Callable[[str, str], int] = quick_ratio,
     score_cutoff: int = 0,
-) -> tuple[str, int] | None | tuple[str, int, T]:
+) -> tuple[str, int] | tuple[str, int, T] | None:
     it = _extraction_generator(query, choices, scorer, score_cutoff)
     try:
-        return max(it, key=lambda t: t[1])
+        return max(it, key=operator.itemgetter(1))
     except:
         # iterator could return nothing
         return None
@@ -195,8 +193,7 @@ def extract_or_exact(
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
     limit: int | None = ...,
-) -> list[tuple[str, int]]:
-    ...
+) -> list[tuple[str, int]]: ...
 
 
 @overload
@@ -207,8 +204,7 @@ def extract_or_exact(
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
     limit: int | None = ...,
-) -> list[tuple[str, int, T]]:
-    ...
+) -> list[tuple[str, int, T]]: ...
 
 
 def extract_or_exact(
@@ -243,8 +239,7 @@ def extract_matches(
     *,
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
-) -> list[tuple[str, int]]:
-    ...
+) -> list[tuple[str, int]]: ...
 
 
 @overload
@@ -254,8 +249,7 @@ def extract_matches(
     *,
     scorer: Callable[[str, str], int] = ...,
     score_cutoff: int = ...,
-) -> list[tuple[str, int, T]]:
-    ...
+) -> list[tuple[str, int, T]]: ...
 
 
 def extract_matches(
@@ -294,8 +288,7 @@ def finder(
     *,
     key: Callable[[T], str] | None = ...,
     raw: Literal[True],
-) -> list[tuple[int, int, T]]:
-    ...
+) -> list[tuple[int, int, T]]: ...
 
 
 @overload
@@ -305,8 +298,7 @@ def finder(
     *,
     key: Callable[[T], str] | None = ...,
     raw: Literal[False],
-) -> list[T]:
-    ...
+) -> list[T]: ...
 
 
 @overload
@@ -316,8 +308,7 @@ def finder(
     *,
     key: Callable[[T], str] | None = ...,
     raw: bool = ...,
-) -> list[T]:
-    ...
+) -> list[T]: ...
 
 
 def finder(

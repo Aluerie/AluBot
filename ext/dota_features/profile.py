@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class SteamUserTransformer(app_commands.Transformer):
-    """Simple steam user converter"""
+    """Simple steam user converter."""
 
     @override
     async def transform(self, interaction: discord.Interaction[AluBot], argument: str) -> steam.User:
@@ -25,11 +25,11 @@ class SteamUserTransformer(app_commands.Transformer):
             id64 = await steam.utils.id64_from_url(argument)
             if id64 is None:
                 msg = f"Steam User `{argument!r}` not found."
-                raise errors.BadArgument(msg)
+                raise errors.BadArgument(msg) from None
             return await interaction.client.dota.fetch_user(id64)
         except TimeoutError:
             msg = f"Been searching for `{argument!r}` too long - did not found."
-            raise errors.TimeoutError(msg)
+            raise errors.TimeoutError(msg) from None
 
     @override
     async def autocomplete(

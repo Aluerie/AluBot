@@ -105,21 +105,28 @@ select = [
     "DOC"       # Doc strings, kinda annoying for a bot, to be honest
 ]
 ignore = [
+    # General disagreement with Ruff
     "ANN401",   # `Any` is the correct type in some cases
-    "ASYNC109", # dpy commonly uses this parameter
+    "ASYNC109", # dpy and other libraries commonly use this parameter
     "ASYNC116", # Long sleeps are fine
     "C90",      # mc cabe complexity memes
     "F401",     # unused imports
     "F403",     # wildcard imports: `from math import *` are used in __init__.py a lot
-    "F405",     # wildcard imports
-    "INP001",   # due to how I load modules this results in annoyances
+    "F405",     # wildcard imports are not that bad
+    "INP001",   # due to how we load modules this results in annoyances
     "PLC0415",  # ruff gets this wrong, import needs to be not at top of file in some cases
+    "S101",     # use of assert here is a known quantity, blame typing memes
+    "TRY003",   # over-eager rule
+    "TRY301",   # unrealistic rule
+    
+    # Personal problems
+    "PLR0904",  # too many public methods
     "PLR0912",  # too many branches
     "PLR0913",  # number of function arguments
     "PLR0914",  # too many variables: come on
     "PLR0915",  # too many statements: come on, not everything is solvable in <50 lines.
-    "PLR6301",  # discord.py uses `self` even if I don't
-    "S101",     # use of assert here is a known quantity, blame typing memes
+    "PLR6301",  # discord.py uses `self` even if I don't 
+    "S608",     # I use f-strings with SQL and I don't know better;
 
     # OLD RULES
     # "F401",
@@ -141,6 +148,7 @@ ignore = [
     # doc string exceptions 
     # for this bot because it's a bot and it's pointless to document *everything* in one-man project.
     "DOC201",   # `return` is not documented in docstring
+    "DOC501",   # raised exception is missing from docstring
 
     # "D104",    # Missing docstring in public package. Otherwise spams __init__.py and such.
     # "D417",    # Missing argument description. Otherwise, it keeps asking to document interaction/context args.

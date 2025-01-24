@@ -37,13 +37,13 @@ class ActionBase:
 
     Attributes
     ----------
-    name : str
+    name
         Event's name. Matches github terminology from API.
-    colour : int
+    colour
         Colour to assign for embed when sending the bugtracker news message.
-    word : str
+    word
         Verb to put into author string in the said embed.
-    emote : str
+    emote
         Emote to use in a special type of embed where there is many different events per one issue.
         Emote differentiates "actions" from each other.
 
@@ -350,12 +350,16 @@ class BugTracker(AluCog):
         if success_logins:
             self.valve_devs.extend(success_logins)
             embeds.append(
-                embed_answer(success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs."),
+                embed_answer(
+                    success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs.",
+                ),
             )
         if error_logins:
             embeds.append(
                 embed_answer(
-                    error_logins, const.MaterialPalette.red(), "User(-s) were already in the list of Valve devs.",
+                    error_logins,
+                    const.MaterialPalette.red(),
+                    "User(-s) were already in the list of Valve devs.",
                 ),
             )
         await ctx.reply(embeds=embeds)
@@ -421,7 +425,11 @@ class BugTracker(AluCog):
 
                 event_created_at = event.created_at.replace(tzinfo=datetime.UTC)
                 log.debug(
-                    "Found event: %s %s %s %s ", event.event, event.issue.number, event.actor.login, event_created_at,
+                    "Found event: %s %s %s %s ",
+                    event.event,
+                    event.issue.number,
+                    event.actor.login,
+                    event_created_at,
                 )
                 if event_created_at < dt:
                     # we reached events that we are supposedly already checked
@@ -550,4 +558,5 @@ class BugTracker(AluCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(BugTracker(bot))
+    # TODO: BRING IT BACK AFTER GITHUBKIT FIXES IT
+    # await bot.add_cog(BugTracker(bot))

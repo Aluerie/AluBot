@@ -163,7 +163,12 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
     @dota_request.command(name="player")
     async def dota_request_player(
-        self, interaction: discord.Interaction[AluBot], name: str, steam: str, twitch: bool,
+        self,
+        interaction: discord.Interaction[AluBot],
+        name: str,
+        steam: str,
+        *,
+        twitch: bool,
     ) -> None:
         """\N{LEMON} Request Dota 2 Player to be added into the bot's FPC database.
 
@@ -240,7 +245,9 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
     @hideout_dota_player_add.autocomplete("player")
     async def hideout_dota_player_add_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str,
+        self,
+        interaction: discord.Interaction[AluBot],
+        current: str,
     ) -> list[app_commands.Choice[str]]:
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
@@ -257,7 +264,9 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
     @hideout_dota_player_remove.autocomplete("player")
     async def hideout_dota_player_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str,
+        self,
+        interaction: discord.Interaction[AluBot],
+        current: str,
     ) -> list[app_commands.Choice[str]]:
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
@@ -269,7 +278,9 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
     @hideout_dota_hero.command(name="add")
     async def hideout_dota_hero_add(
-        self, interaction: discord.Interaction[AluBot], hero: app_commands.Transform[Hero, HeroTransformer],
+        self,
+        interaction: discord.Interaction[AluBot],
+        hero: app_commands.Transform[Hero, HeroTransformer],
     ) -> None:
         """\N{RED APPLE} Add a Dota 2 hero into your favourite FPC heroes list.
 
@@ -288,7 +299,9 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
     @hideout_dota_hero.command(name="remove")
     async def hideout_dota_hero_remove(
-        self, interaction: discord.Interaction[AluBot], hero: app_commands.Transform[Hero, HeroTransformer],
+        self,
+        interaction: discord.Interaction[AluBot],
+        hero: app_commands.Transform[Hero, HeroTransformer],
     ) -> None:
         """\N{RED APPLE} Remove a Dota 2 hero into your favourite FPC heroes list.
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import operator
 from collections import Counter
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -40,6 +41,7 @@ class HideoutModeration(HideoutCog):
         user: discord.User | None = None,
         after: int | None = None,
         before: int | None = None,
+        *,
         bot: bool = False,
         webhooks: bool = False,
         require: Literal["any", "all"] = "all",
@@ -84,15 +86,14 @@ class HideoutModeration(HideoutCog):
         op = all if require == "all" else any
 
         def predicate(m: discord.Message) -> bool:
-            r = op(p(m) for p in predicates)
-            return r
+            return op(p(m) for p in predicates)
 
         search_before = discord.Object(id=before) if before else None
         search_after = discord.Object(id=after) if after else None
 
         assert interaction.channel and not isinstance(
             interaction.channel,
-            (discord.ForumChannel, discord.CategoryChannel, discord.DMChannel, discord.GroupChannel),
+            discord.ForumChannel | discord.CategoryChannel | discord.DMChannel | discord.GroupChannel,
         )
         try:
             deleted = [
@@ -102,10 +103,10 @@ class HideoutModeration(HideoutCog):
             ]
         except discord.Forbidden:
             msg = "I do not have permissions to search for messages."
-            raise errors.PermissionsError(msg)
+            raise errors.PermissionsError(msg) from None
         except discord.HTTPException as e:
             msg = f"Error: {e} (try a smaller search?)"
-            raise errors.SomethingWentWrong(msg)
+            raise errors.SomethingWentWrong(msg) from None
 
         for chunk in discord.utils.as_chunks(deleted, 100):
             try:
@@ -114,17 +115,17 @@ class HideoutModeration(HideoutCog):
                 )
             except discord.Forbidden:
                 msg = "I do not have permissions to delete messages."
-                raise errors.PermissionsError(msg)
+                raise errors.PermissionsError(msg) from None
             except discord.HTTPException as e:
                 msg = f"Error while deleting: {e}"
-                raise errors.SomethingWentWrong(msg)
+                raise errors.SomethingWentWrong(msg) from None
 
         spammers = Counter(m.author.display_name for m in deleted)
         deleted = len(deleted)
         deleted_messages = [f'{deleted} message{" was" if deleted == 1 else "s were"} removed.']
         if deleted:
             deleted_messages.append("")
-            spammers = sorted(spammers.items(), key=lambda t: t[1], reverse=True)
+            spammers = sorted(spammers.items(), key=operator.itemgetter(1), reverse=True)
             deleted_messages.extend(f"**{name}**: {count}" for name, count in spammers)
 
         to_send = "\n".join(deleted_messages)
@@ -147,7 +148,7 @@ class HideoutModeration(HideoutCog):
         await interaction.response.send_message(const.Emote.DankHatTooBig)
         assert interaction.channel and not isinstance(
             interaction.channel,
-            (discord.ForumChannel, discord.CategoryChannel, discord.DMChannel, discord.GroupChannel),
+            discord.ForumChannel | discord.CategoryChannel | discord.DMChannel | discord.GroupChannel,
         )
         await interaction.channel.send(content)
 

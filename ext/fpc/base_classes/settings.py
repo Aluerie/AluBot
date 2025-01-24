@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import operator
 from typing import TYPE_CHECKING, Any, Self, TypedDict
 
 import asyncpg
@@ -272,7 +273,8 @@ class BaseSettings(FPCCog):
         logs_embed.description = ""
         logs_embed.set_author(name=interaction.user, icon_url=interaction.user.display_avatar.url)
         logs_embed.add_field(
-            name="Command", value=f"/database {self.prefix} add {account.hint_database_add_command_args}",
+            name="Command",
+            value=f"/database {self.prefix} add {account.hint_database_add_command_args}",
         )
         await self.hideout.global_logs.send(embed=logs_embed)
 
@@ -337,7 +339,12 @@ class BaseSettings(FPCCog):
         }
 
         view = views.DatabaseRemoveView(
-            interaction.user.id, self, player_id, display_name, account_ids_names, self.account_id_column,
+            interaction.user.id,
+            self,
+            player_id,
+            display_name,
+            account_ids_names,
+            self.account_id_column,
         )
         await interaction.followup.send(view=view)
 
@@ -414,9 +421,9 @@ class BaseSettings(FPCCog):
         query = f"SELECT enabled, spoil, twitch_live_only FROM {self.prefix}_settings WHERE guild_id=$1"
         row: SetupMiscQueryRow = await interaction.client.pool.fetchrow(query, interaction.guild_id)
 
-        def state(bool: bool) -> str:
-            word = "`on`" if bool else "`off`"
-            return f"{word} {formats.tick(bool)}"
+        def state(on_off: bool) -> str:  # noqa: FBT001
+            word = "`on`" if on_off else "`off`"
+            return f"{word} {formats.tick(on_off)}"
 
         embed = (
             discord.Embed(
@@ -434,8 +441,8 @@ class BaseSettings(FPCCog):
             .add_field(
                 name=f"\N{BLACK SQUARE FOR STOP} Receive Notifications Setting: {state(row['enabled'])}",
                 value=(
-                    "If you want to manually temporarily disable FPC Notifications feature then use this toggle button. "
-                    "Your data will be intact in case you want to enable receiving notifications again."
+                    "If you want to manually temporarily disable FPC Notifications feature then use this toggle "
+                    "button. Your data will be intact in case you want to enable receiving notifications again."
                 ),
                 inline=False,
             )
@@ -505,7 +512,7 @@ class BaseSettings(FPCCog):
         rows: list[SetupPlayerQueryRow] = await interaction.client.pool.fetch(query)
 
         player_tuples: list[tuple[int, str]] = [(row["player_id"], row["display_name"]) for row in rows]
-        player_tuples.sort(key=lambda x: x[1])
+        player_tuples.sort(key=operator.itemgetter(1))
 
         paginator = views.SetupPlayersPaginator(interaction, player_tuples, self)
         message = await paginator.start()
@@ -625,7 +632,7 @@ class BaseSettings(FPCCog):
             await interaction.client.pool.execute(query, interaction.guild_id, player_id)
         except asyncpg.UniqueViolationError:
             msg = f"Player {player_display_name} was already in your favourite list."
-            raise errors.BadArgument(msg)
+            raise errors.BadArgument(msg) from None
 
         embed = discord.Embed(colour=self.colour).add_field(
             name="Successfully added a player to your favourites.",
@@ -662,11 +669,8 @@ class BaseSettings(FPCCog):
         try:
             await interaction.client.pool.execute(query, interaction.guild_id, character.id)
         except asyncpg.UniqueViolationError:
-            msg = (
-                f"{self.character_singular.capitalize()} {character.display_name} "
-                "was already in your favourite list."
-            )
-            raise errors.BadArgument(msg)
+            msg = f"{self.character_singular.capitalize()} {character.display_name} was already in your favourite list."
+            raise errors.BadArgument(msg) from None
 
         embed = discord.Embed(colour=self.colour).add_field(
             name=f"Successfully added a {self.character_singular} to your favourites.",
@@ -744,7 +748,11 @@ class BaseSettings(FPCCog):
         await interaction.followup.send(embed=embed)
 
     async def hideout_player_add_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str, *, mode_add_remove: bool,
+        self,
+        interaction: discord.Interaction[AluBot],
+        current: str,
+        *,
+        mode_add_remove: bool,
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for player_name in `/{game}-fpc player add/remove`."""
         assert interaction.guild
@@ -752,7 +760,7 @@ class BaseSettings(FPCCog):
         query = f"""
             SELECT display_name
             FROM {self.prefix}_players
-            WHERE {'NOT' if mode_add_remove else ''} player_id=ANY(
+            WHERE {"NOT" if mode_add_remove else ""} player_id=ANY(
                 SELECT player_id FROM {self.prefix}_favourite_players WHERE guild_id=$1
             )
             ORDER BY similarity(display_name, $2) DESC
@@ -787,7 +795,9 @@ class BaseSettings(FPCCog):
     #     return [app_commands.Choice(name=name, value=name) for name in fuzzy_names[:7]]
 
     async def database_remove_autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str,
+        self,
+        interaction: discord.Interaction[AluBot],
+        current: str,
     ) -> list[app_commands.Choice[str]]:
         """Base function to define autocomplete for player_name in `/database {game} remove`."""
         query = f"""
@@ -863,11 +873,14 @@ class BaseSettings(FPCCog):
 
         for count, (almost_qualified_name, field_value) in enumerate(cmd_field_tuples, start=1):
             app_command = self.bot.tree.get_app_command(
-                f"{self.prefix} {almost_qualified_name}", guild=interaction.guild_id,
+                f"{self.prefix} {almost_qualified_name}",
+                guild=interaction.guild_id,
             )
             if app_command:
                 embed.add_field(
-                    name=f"{const.DIGITS[count]}. Use {app_command.mention}", value=field_value, inline=False,
+                    name=f"{const.DIGITS[count]}. Use {app_command.mention}",
+                    value=field_value,
+                    inline=False,
                 )
             else:
                 msg = "Somehow FPC related command is None."

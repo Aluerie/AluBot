@@ -46,9 +46,9 @@ class LeagueClient(RiotAPIClient):
         self.roles = RolesIdentifiers(bot)
 
     async def start(self) -> None:
-        await self.__aenter__()
-        await self.cdragon.__aenter__()
-        await self.meraki.__aenter__()
+        await self.__aenter__()  # noqa: PLC2801
+        await self.cdragon.__aenter__()  # noqa: PLC2801
+        await self.meraki.__aenter__()  # noqa: PLC2801
 
         self.champions.start()
         self.item_icons.start()

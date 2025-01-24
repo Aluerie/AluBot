@@ -11,7 +11,7 @@ from . import const, errors
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ..bot import AluBot, AluContext
+    from bot import AluBot, AluContext
 
     type WebhookSourceChannel = discord.ForumChannel | discord.VoiceChannel | discord.TextChannel | discord.StageChannel
 
@@ -122,7 +122,7 @@ class Mimic:
                 'I do not have permission to "Manage Webhooks" in this server. '
                 "Please, grant me that permission so I can send cool messages using them."
             )
-            raise errors.SomethingWentWrong(msg)
+            raise errors.SomethingWentWrong(msg) from None
 
         owned_webhooks = [wh for wh in channel_webhooks if wh.user == self.bot.user]
         if owned_webhooks:
@@ -132,7 +132,7 @@ class Mimic:
 
             webhook = owned_webhooks[0]
             await self.insert_into_database(
-                id=webhook.id,
+                webhook_id=webhook.id,
                 channel_id=self.channel.id,
                 guild_id=self.channel.guild.id,
                 url=webhook.url,
@@ -170,23 +170,23 @@ class Mimic:
                 "for my functionality, but some error occurred... "
                 "Do you have 15 webhooks in here? Can you clear it up (15 is max value) :c"
             )
-            raise errors.SomethingWentWrong(msg)
+            raise errors.SomethingWentWrong(msg) from None
 
         await self.insert_into_database(
-            id=webhook.id,
+            webhook_id=webhook.id,
             channel_id=self.channel.id,
             guild_id=self.channel.guild.id,
             url=webhook.url,
         )
         return webhook
 
-    async def insert_into_database(self, *, id: int, channel_id: int, guild_id: int, url: str) -> None:
+    async def insert_into_database(self, *, webhook_id: int, channel_id: int, guild_id: int, url: str) -> None:
         query = """
             INSERT INTO webhooks
             (id, channel_id, guild_id, url)
             VALUES ($1, $2, $3, $4)
         """
-        await self.bot.pool.execute(query, id, channel_id, guild_id, url)
+        await self.bot.pool.execute(query, webhook_id, channel_id, guild_id, url)
 
     @overload
     async def send(
@@ -231,7 +231,7 @@ class Mimic:
         wait: bool = False,
         report: bool = False,
     ) -> discord.WebhookMessage | None:
-        """_summary_
+        """_summary_.
 
         Parameters
         ----------

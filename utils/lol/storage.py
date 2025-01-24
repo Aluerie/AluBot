@@ -63,7 +63,7 @@ class PseudoChampion(Character):
 class Champions(CharacterStorage[Champion, PseudoChampion]):
     @override
     async def fill_data(self) -> dict[int, Champion]:
-        """_summary_
+        """_summary_.
 
         Sources
         -------
@@ -83,7 +83,9 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
                 icon_url=cdragon_asset_url(champion["squarePortraitPath"]),
                 emote=champion_emotes.get(champion["id"])
                 or await self.create_champion_emote(
-                    champion["id"], champion["alias"], cdragon_asset_url(champion["squarePortraitPath"]),
+                    champion["id"],
+                    champion["alias"],
+                    cdragon_asset_url(champion["squarePortraitPath"]),
                 ),
             )
             for champion in champion_summary
@@ -132,7 +134,7 @@ class ChampionTransformer(CharacterTransformer[Champion, PseudoChampion]):
 
 
 class ItemIcons(GameDataStorage[str, str]):
-    """_summary_
+    """_summary_.
 
     Example
     ----------
@@ -142,7 +144,7 @@ class ItemIcons(GameDataStorage[str, str]):
 
     @override
     async def fill_data(self) -> dict[int, str]:
-        """_summary_
+        """_summary_.
 
         https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/items.json
         """
@@ -156,7 +158,7 @@ class ItemIcons(GameDataStorage[str, str]):
 
 
 class RuneIcons(GameDataStorage[str, str]):
-    """_summary_
+    """_summary_.
 
     Examples
     --------
@@ -166,7 +168,7 @@ class RuneIcons(GameDataStorage[str, str]):
 
     @override
     async def fill_data(self) -> dict[int, str]:
-        """_summary_
+        """_summary_.
 
         https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json
         """
@@ -180,7 +182,7 @@ class RuneIcons(GameDataStorage[str, str]):
 
 
 class SummonerSpellIcons(GameDataStorage[str, str]):
-    """_summary_
+    """_summary_.
 
     Examples
     --------
@@ -189,7 +191,7 @@ class SummonerSpellIcons(GameDataStorage[str, str]):
 
     @override
     async def fill_data(self) -> dict[int, str]:
-        """_summary_
+        """_summary_.
 
         https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/summoner-spells.json
         """
@@ -230,7 +232,6 @@ class RolesIdentifiers(GameDataStorage[RoleDict, RoleDict]):
 
         data = {}
         for champion_id, positions in champion_roles["data"].items():
-            champion_id = int(champion_id)
             play_rates = {}
 
             for position, rates in positions.items():
@@ -238,10 +239,9 @@ class RolesIdentifiers(GameDataStorage[RoleDict, RoleDict]):
             for position in ("TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"):
                 if position not in play_rates:
                     play_rates[position] = 0.0
-            data[champion_id] = play_rates
+            data[int(champion_id)] = play_rates
 
-        data = await self.get_better_champion_roles(data)
-        return data
+        return await self.get_better_champion_roles(data)
 
     async def get_missing_from_meraki_champion_ids(self, data_meraki: dict[int, RoleDict] | None = None) -> set[int]:
         data_meraki = data_meraki or await self.get_cached_data()

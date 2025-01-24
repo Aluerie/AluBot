@@ -90,7 +90,9 @@ class AluAppCommandTree(app_commands.CommandTree):
         return ret
 
     async def _update_cache(
-        self, commands: list[app_commands.AppCommand], guild: Snowflake | int | None = None,
+        self,
+        commands: list[app_commands.AppCommand],
+        guild: Snowflake | int | None = None,
     ) -> None:
         # because we support both int and Snowflake
         # we need to convert it to a Snowflake like object if it's an int
@@ -233,7 +235,7 @@ class AluAppCommandTree(app_commands.CommandTree):
                 .set_author(
                     name=(
                         f"@{interaction.user} in #{interaction.channel} "
-                        f"({interaction.guild.name if interaction.guild else "DM Channel"})"
+                        f"({interaction.guild.name if interaction.guild else 'DM Channel'})"
                     ),
                     icon_url=interaction.user.display_avatar,
                 )
@@ -252,7 +254,7 @@ class AluAppCommandTree(app_commands.CommandTree):
             ).set_author(name=error.__class__.__name__)
             await interaction.client.hideout.spam.send(interaction.client.error_ping, embed=warn_developers_embed)
 
-        response_embed = helpers.error_handler_response_embed(error, unexpected_error, desc, mention)
+        response_embed = helpers.error_handler_response_embed(error, desc, unexpected=unexpected_error, mention=mention)
         if not interaction.response.is_done():
             await interaction.response.send_message(embed=response_embed, ephemeral=True)
         else:

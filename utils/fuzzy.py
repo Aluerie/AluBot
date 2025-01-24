@@ -6,6 +6,12 @@ Sources
     https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/fuzzy.py
 * Helpful article:
     http://chairnerd.seatgeek.com/fuzzywuzzy-fuzzy-string-matching-in-python/
+
+Notes
+-----
+* Unfortunately, Danny didn't make doc-strings for the functions in here so I mostly cross-checked with
+    https://github.com/seatgeek/thefuzz concepts and ideas, which are kinda the same
+    (but in my testing that library is slower than the code here, not sure why).
 """
 
 from __future__ import annotations
@@ -33,6 +39,7 @@ def quick_ratio(a: str, b: str) -> int:
 
 
 def partial_ratio(a: str, b: str) -> int:
+    """Return the ratio of the most similar substring as a number between 0 and 100."""
     short, long = (a, b) if len(a) <= len(b) else (b, a)
     m = SequenceMatcher(None, short, long)
 
@@ -61,6 +68,7 @@ def _sort_tokens(a: str) -> str:
 
 
 def token_sort_ratio(a: str, b: str) -> int:
+    """Return a measure of the sequences' similarity between 0 and 100 but sorting the token before comparing."""
     a = _sort_tokens(a)
     b = _sort_tokens(b)
     return ratio(a, b)
@@ -73,6 +81,10 @@ def quick_token_sort_ratio(a: str, b: str) -> int:
 
 
 def partial_token_sort_ratio(a: str, b: str) -> int:
+    """Return the ratio of the most similar substring as a number between 0 and 100.
+
+    But sorting the token before comparing.
+    """
     a = _sort_tokens(a)
     b = _sort_tokens(b)
     return partial_ratio(a, b)
@@ -144,6 +156,12 @@ def extract(
     score_cutoff: int = 0,
     limit: int | None = 10,
 ) -> list[tuple[str, int]] | list[tuple[str, int, T]]:
+    """Select the best match in a list or dictionary of choices.
+
+    Find best matches in a list or dictionary of choices, return a
+    list of tuples containing the match and its score. If a dictionary
+    is used, also returns the key for each match.
+    """
     it = _extraction_generator(query, choices, scorer, score_cutoff)
     if limit is not None:
         return heapq.nlargest(limit, it, key=operator.itemgetter(1))  # pyright: ignore[reportReturnType]
@@ -177,6 +195,11 @@ def extract_one(
     scorer: Callable[[str, str], int] = quick_ratio,
     score_cutoff: int = 0,
 ) -> tuple[str, int] | tuple[str, int, T] | None:
+    """Find the single best match above a score in a list of choices.
+
+    This is a convenience method which returns the single best choice.
+    See extract() for the full arguments list.
+    """
     it = _extraction_generator(query, choices, scorer, score_cutoff)
     try:
         return max(it, key=operator.itemgetter(1))

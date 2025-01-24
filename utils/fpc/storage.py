@@ -12,8 +12,7 @@ import discord
 from discord import app_commands
 
 from bot import aluloop
-
-from .. import const, errors, fuzzy
+from utils import const, errors, fuzzy
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -59,19 +58,20 @@ class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT
 
     @abc.abstractmethod
     def get_character_storage(
-        self, interaction: discord.Interaction[AluBot],
-    ) -> CharacterStorage[CharacterT, PseudoCharacterT]:
-        ...
+        self,
+        interaction: discord.Interaction[AluBot],
+    ) -> CharacterStorage[CharacterT, PseudoCharacterT]: ...
 
     @override
     async def transform(self, interaction: discord.Interaction[AluBot], hero_id: int) -> CharacterT | PseudoCharacterT:
         storage = self.get_character_storage(interaction)
-        character = await storage.by_id(hero_id)
-        return character
+        return await storage.by_id(hero_id)
 
     @override
     async def autocomplete(
-        self, interaction: discord.Interaction[AluBot], current: str,
+        self,
+        interaction: discord.Interaction[AluBot],
+        current: str,
     ) -> list[app_commands.Choice[int]]:
         storage = self.get_character_storage(interaction)
         characters = await storage.all()
@@ -151,39 +151,35 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
             await self.update_data()
             return self.cached_data
 
-    async def get_value(self, id: int) -> VT:
+    async def get_value(self, object_id: int) -> VT:
         """Get value by the `key` from `self.cached_data`."""
         try:
-            return self.cached_data[id]
+            return self.cached_data[object_id]
         except (KeyError, AttributeError):
             # let's try to update the cache in case it's a KeyError due to
             # * new patch or something
             # * the data is not initialized then we will get stuck in self.lock waiting for the data.
             await self.update_data()
-            return self.cached_data[id]
+            return self.cached_data[object_id]
 
-    async def send_unknown_value_report(self, id: int) -> None:
+    async def send_unknown_value_report(self, object_id: int) -> None:
         embed = discord.Embed(
             color=const.Colour.maroon,
             title=f"Unknown {self.__class__.__name__} appeared!",
-            description=f"```py\nid={id}\n```",
+            description=f"```py\nid={object_id}\n```",
         ).set_footer(text=f"Package: {__package__}")
         await self.bot.spam_webhook.send(embed=embed)
 
     @staticmethod
     @abc.abstractmethod
-    def generate_unknown_object(id: int) -> PseudoVT:
-        ...
+    def generate_unknown_object(object_id: int) -> PseudoVT: ...
 
-    async def by_id(self, id: int) -> VT | PseudoVT:
-        """Get storage object by its ID"""
+    async def by_id(self, object_id: int) -> VT | PseudoVT:
+        """Get storage object by its ID."""
         try:
-            storage_object = await self.get_value(id)
+            return await self.get_value(object_id)
         except KeyError:
-            unknown_object = self.generate_unknown_object(id)
-            return unknown_object
-        else:
-            return storage_object
+            return self.generate_unknown_object(object_id)
 
     async def all(self) -> list[VT | PseudoVT]:
         data = await self.get_cached_data()
@@ -233,5 +229,4 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
         return str(new_emote)
 
 
-class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]):
-    ...
+class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]): ...

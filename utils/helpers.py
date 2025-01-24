@@ -68,7 +68,7 @@ class measure_time:  # noqa: N801 # it's fine to call classes lowercase if they 
         self.measure_time()
 
 
-def error_handler_response_embed(error: Exception, is_unexpected: bool, desc: str, mention: bool) -> discord.Embed:
+def error_handler_response_embed(error: Exception, desc: str, *, unexpected: bool, mention: bool) -> discord.Embed:
     """A boilerplate responses for all cases that happen in error handlers.
 
     This function uses all "error handler variables" to provide the response.
@@ -76,7 +76,7 @@ def error_handler_response_embed(error: Exception, is_unexpected: bool, desc: st
     if not mention:
         # means I'm developing and sitting right in the channel
         return discord.Embed(colour=const.Colour.maroon).set_author(name=error.__class__.__name__)
-    if is_unexpected:
+    if unexpected:
         # means error is unexpected so let's return our ready to go answer
         return (
             discord.Embed(

@@ -537,6 +537,14 @@ class RstTable(TabularData):
         super().__init__(outer="|", inner="|", separators=True)
 
 
+def code(text: str) -> str:
+    """Wrap text into a Python triple "`" discord codeblock.
+
+    It's just annoying to type sometimes.
+    """
+    return f"```py\n{text}\n```"
+
+
 class NoBorderTable(TabularData):
     """No line-border Table for Discord Markdown Codeblocks.
 

@@ -47,9 +47,9 @@ class LeagueClient(RiotAPIClient):
     async def start(self) -> None:
         """Start all sub-clients and sub-storages needed for my League Client."""
         # clients
-        await self.__aenter__()
-        await self.cdragon.__aenter__()
-        await self.meraki.__aenter__()
+        await self.__aenter__()  # noqa: PLC2801
+        await self.cdragon.__aenter__()  # noqa: PLC2801
+        await self.meraki.__aenter__()  # noqa: PLC2801
 
         # caches
         self.item_icons.start()

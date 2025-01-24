@@ -70,8 +70,8 @@ class Dota2Client(Client):
         """
         if not self.started:
             # clients
-            await self.stratz.__aenter__()
-            await self.odota_constants.__aenter__()
+            await self.stratz.__aenter__()  # noqa: PLC2801
+            await self.odota_constants.__aenter__()  # noqa: PLC2801
 
             # caches
             self.abilities.start()

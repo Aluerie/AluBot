@@ -458,7 +458,7 @@ class AluBot(commands.Bot, AluBotHelper):
         In case of problems - check out on_command_error in parent BotBase class - it's not simply `pass`
         """
         if ctx.is_error_handled is True:
-            return None
+            return
 
         # error handler working variables
         desc = "No description"
@@ -467,13 +467,12 @@ class AluBot(commands.Bot, AluBotHelper):
 
         # error handler itself.
 
-        match error:
-            # CHAINED ERRORS
-            case commands.CommandInvokeError() | app_commands.CommandInvokeError():
-                # we aren't interested in the chain traceback.
-                # commands.HybridCommandError() if we ever bring back hybrid commands;
-                return await self.on_command_error(ctx, error.original)
+        if isinstance(error, commands.CommandInvokeError):
+            # we aren't interested in the chain traceback.
+            # commands.HybridCommandError() if we ever bring back hybrid commands;
+            error = error.original
 
+        match error:
             # MY OWN ERRORS
             case errors.AluBotError():
                 # These errors are generally raised in code by myself or by my code with an explanation text as `error`
@@ -483,8 +482,8 @@ class AluBot(commands.Bot, AluBotHelper):
             # UserInputError SUBCLASSED ERRORS
             case commands.BadLiteralArgument():
                 desc = (
-                    f"Sorry! Incorrect argument value: {error.argument!r}. \n"
-                    f"Only these options are valid for a parameter `{error.param.displayed_name or error.param.name}`:\n"
+                    f"Sorry! Incorrect argument value: {error.argument!r}.\n Only these options are valid "
+                    "for a parameter `{error.param.displayed_name or error.param.name}`:\n"
                     f"{formats.human_join([repr(literal) for literal in error.literals])}."
                 )
 
@@ -496,12 +495,12 @@ class AluBot(commands.Bot, AluBotHelper):
             case commands.MissingRequiredArgument():
                 desc = f"Please, provide this argument:\n`{error.param.name}`"
             case commands.CommandNotFound():
-                if ctx.prefix in ["/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "]:
-                    return None
+                if ctx.prefix in {"/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "}:
+                    return
                 if ctx.prefix == "$" and ctx.message.content[1].isdigit():
                     # "$200 for this?" 2 is `ctx.message.content[1]`
                     # prefix commands should not start with digits
-                    return None
+                    return
                 # TODO: make a fuzzy search in here to recommend the command that user wants
                 desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.CommandOnCooldown():
@@ -530,7 +529,7 @@ class AluBot(commands.Bot, AluBotHelper):
                         # timestamp=ctx.message.created_at,
                     )
                     .set_author(
-                        name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else "DM Channel"})",
+                        name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else 'DM Channel'})",
                         icon_url=ctx.author.display_avatar,
                     )
                     .add_field(
@@ -548,7 +547,7 @@ class AluBot(commands.Bot, AluBotHelper):
                             "```py\n"
                             f"author  = {ctx.author.id}\n"
                             f"channel = {ctx.channel.id}\n"
-                            f"guild   = {ctx.guild.id if ctx.guild else "DM Channel"}```"
+                            f"guild   = {ctx.guild.id if ctx.guild else 'DM Channel'}```"
                         ),
                     )
                     .set_footer(
@@ -559,5 +558,5 @@ class AluBot(commands.Bot, AluBotHelper):
                 mention = bool(ctx.channel.id != ctx.bot.hideout.spam_channel_id)
                 await ctx.bot.exc_manager.register_error(error, metadata_embed, mention=mention)
 
-        response_embed = helpers.error_handler_response_embed(error, is_unexpected, desc, mention)
+        response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected, mention=mention)
         await ctx.reply(embed=response_embed, ephemeral=True)

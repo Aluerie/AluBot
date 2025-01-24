@@ -107,11 +107,11 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
             emote=const.NEW_CHAMPION_EMOTE,
         )
 
-    async def create_champion_emote(self, id: int, champion_alias: str, champion_icon_url: str) -> str:
+    async def create_champion_emote(self, champion_id: int, champion_alias: str, champion_icon_url: str) -> str:
         """Create a new discord emote for a League of Legends champion."""
         try:
             return await self.create_character_emote_helper(
-                character_id=id,
+                character_id=champion_id,
                 table="lol_champions_info",
                 emote_name=champion_alias,
                 emote_source_url=champion_icon_url,  # copy of `minimap_icon_url` property
@@ -120,7 +120,7 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
         except Exception as exc:
             embed = discord.Embed(
                 description=(
-                    f"Something went wrong when creating champion emote for `id={id}, alias={champion_alias}`."
+                    f"Something went wrong when creating champion emote for `id={champion_id}, alias={champion_alias}`."
                 ),
             )
             await self.bot.exc_manager.register_error(exc, embed=embed)
@@ -299,8 +299,8 @@ class RolesIdentifiers(GameDataStorage[RoleDict, RoleDict]):
             champion_roles: dict[int, RoleDict] = await self.get_cached_data()
             team1 = list(get_roles(champion_roles, all_players_champ_ids[:5]).values())
             team2 = list(get_roles(champion_roles, all_players_champ_ids[5:]).values())
-            sorted_list = team1 + team2
-            return sorted_list  # type: ignore # meraki typing sucks
         except:
             # there was some problem with probably meraki
             return all_players_champ_ids
+        else:
+            return team1 + team2  # pyright: ignore[reportReturnType] # meraki typing sucks

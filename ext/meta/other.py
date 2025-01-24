@@ -113,13 +113,11 @@ class OtherCog(AluCog):
             ("\N{EARTH GLOBE EUROPE-AFRICA}", "Websocket", latency_ms),
             ("\N{ELEPHANT}", "Database", postgres_ms),
         ]
-        average = sum([p[2] for p in pings]) / len(pings)
+        average = sum(p[2] for p in pings) / len(pings)
         pings.append(("\N{PERMANENT PAPER SIGN}\N{VARIATION SELECTOR-16}", "Average", average))
 
-        embed = discord.Embed(
-            colour=discord.Colour.dark_embed(),
-            description=f'```py\n{tabulate(pings, ("", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f"))}\n```',
-        )
+        table = tabulate(pings, ("", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f"))
+        embed = discord.Embed(colour=discord.Colour.dark_embed(), description=f"```py\n{table}\n```")
         await message.edit(embed=embed)
 
     @app_commands.command()

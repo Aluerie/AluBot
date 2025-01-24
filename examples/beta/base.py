@@ -34,6 +34,7 @@ import asyncpg
 import discord  # noqa: TC002
 from discord import app_commands
 from discord.ext import commands, menus
+from tabulate import tabulate
 
 import config
 from bot import AluBot, AluCog, ExtCategory, aluloop

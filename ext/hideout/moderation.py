@@ -21,8 +21,10 @@ if TYPE_CHECKING:
 class HideoutModeration(HideoutCog):
     @commands.Cog.listener(name="on_member_join")
     async def jail_bots_kick_people_on_join(self, member: discord.Member) -> None:
-        """Kicks non-bot accounts from the server if they somehow managed to enter
-        and gives bot-accounts @Jailed Bots role.
+        """Jail or kick outsiders.
+
+        * Kicks non-bot accounts from the server if they somehow managed to enter
+        * Gives newly entered bot-accounts @Jailed Bots role.
         """
         if member.guild.id == self.bot.hideout.guild.id:
             if member.bot:

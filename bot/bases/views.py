@@ -63,7 +63,7 @@ async def on_views_modals_error(
             .set_author(
                 name=(
                     f"@{interaction.user} in #{interaction.channel} "
-                    f"({interaction.guild.name if interaction.guild else "DM Channel"})"
+                    f"({interaction.guild.name if interaction.guild else 'DM Channel'})"
                 ),
                 icon_url=interaction.user.display_avatar,
             )
@@ -76,7 +76,9 @@ async def on_views_modals_error(
         mention = interaction.channel_id != interaction.client.hideout.spam_channel_id
         await interaction.client.exc_manager.register_error(error, metadata_embed, mention=mention)
 
-    response_to_user_embed = helpers.error_handler_response_embed(error, is_unexpected, desc, mention)
+    response_to_user_embed = helpers.error_handler_response_embed(
+        error, desc, unexpected=is_unexpected, mention=mention
+    )
 
     if interaction.response.is_done():
         await interaction.followup.send(embed=response_to_user_embed, ephemeral=True)
@@ -150,7 +152,10 @@ class AluView(discord.ui.View):
 
     @override
     async def on_error(
-        self, interaction: discord.Interaction[AluBot], error: Exception, item: discord.ui.Item[discord.ui.View],
+        self,
+        interaction: discord.Interaction[AluBot],
+        error: Exception,
+        item: discord.ui.Item[discord.ui.View],
     ) -> None:
         """My own Error Handler for Views."""
         await on_views_modals_error(self, interaction, error, item)

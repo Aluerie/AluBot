@@ -18,7 +18,7 @@ category = ExtCategory(
 )
 
 
-class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=category):  # type: ignore
+class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES, category=category):  # pyright: ignore[reportUntypedBaseClass]
     """My subclass to main frontend class for Jishaku.
 
     This implements all Features and is the main entry point for Jishaku.

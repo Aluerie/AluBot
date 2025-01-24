@@ -37,6 +37,7 @@ async def get_metadata_embed_links(message: discord.Message) -> discord.Message 
             description="\n".join(links),
         ).set_author(name="links in the embed above in clickable format:")
         return await message.channel.send(embed=embed)
+    return None
 
 
 FIX_DICT: dict[str, str] = {

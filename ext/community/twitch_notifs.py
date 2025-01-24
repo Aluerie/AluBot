@@ -59,7 +59,7 @@ class TwitchCog(CommunityCog):
 
     @override
     async def cog_load(self) -> None:
-        await self.bot.initialize_twitch()
+        await self.bot.instantiate_twitch()
 
     @commands.Cog.listener("on_twitchio_custom_redemption_add")
     async def twitch_tv_redeem_notifications(self, event: twitchio.ChannelPointsRedemptionAdd) -> None:

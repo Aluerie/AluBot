@@ -242,19 +242,31 @@ def ordinal(n: int | str) -> str:
     return str(n) + suffix
 
 
-def inline_diff(a: str, b: str) -> str:  # a = old_string, b = new_string
+def inline_diff(a: str, b: str) -> str:
+    """Return inline difference between strings `a` and `b`.
+
+    Where a = old_string, b = new_string.
+    """
     matcher = difflib.SequenceMatcher(None, a, b)
 
-    def process_tag(tag: str, i1: int, i2: int, j1: int, j2: int) -> str:
+    def process_tag(tag: Literal["replace", "delete", "equal", "insert"], i1: int, i2: int, j1: int, j2: int) -> str:
+        """Process Tags coming from matcher.get_opcodes().
+
+        Dev Notes
+        -----
+        * Originally, this function (from wherever I copied it) had `matcher.` before each `a` and `b`.
+        """
         if tag == "replace":
-            return "~~" + matcher.a[i1:i2] + " ~~ __" + matcher.b[j1:j2] + "__"  # type: ignore
+            return "~~" + a[i1:i2] + " ~~ __" + b[j1:j2] + "__"
         if tag == "delete":
-            return "~~" + matcher.a[i1:i2] + "~~"  # type: ignore
+            return "~~" + a[i1:i2] + "~~"
         if tag == "equal":
-            return matcher.a[i1:i2]  # type: ignore
+            return a[i1:i2]
         if tag == "insert":
-            return "__" + matcher.b[j1:j2] + "__"  # type: ignore
-        assert False, f"Unknown tag {tag!r}"
+            return "__" + b[j1:j2] + "__"
+        # Unreachable code
+        msg = f"Unknown tag {tag!r}"
+        raise AssertionError(msg)
 
     return "".join(starmap(process_tag, matcher.get_opcodes()))
 
@@ -269,12 +281,11 @@ def inline_word_by_word_diff(before: str, after: str) -> str:
     * combine both of above for replacements^
 
     """
-    # a = old_string, b = new_string #
-    a, b = before.split(), after.split()
+    a, b = before.split(), after.split()  # a = old_string, b = new_string
     matcher = difflib.SequenceMatcher(None, a, b)
 
-    def process_tag(tag: str, i1: int, i2: int, j1: int, j2: int) -> str:
-        a_str, b_str = " ".join(matcher.a[i1:i2]), " ".join(matcher.b[j1:j2])  # type: ignore
+    def process_tag(tag: Literal["replace", "delete", "equal", "insert"], i1: int, i2: int, j1: int, j2: int) -> str:
+        a_str, b_str = " ".join(a[i1:i2]), " ".join(b[j1:j2])
         match tag:
             case "replace":
                 return f"~~{a_str}~~ __{b_str}__"
@@ -285,7 +296,9 @@ def inline_word_by_word_diff(before: str, after: str) -> str:
             case "insert":
                 return f"__{b_str}__"
             case _:
-                assert False, f"Unknown tag {tag!r}"
+                # Unreachable code
+                msg = f"Unknown tag {tag!r}"
+                raise AssertionError(msg)
 
     return " ".join(starmap(process_tag, matcher.get_opcodes()))
 

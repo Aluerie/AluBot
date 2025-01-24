@@ -8,7 +8,6 @@ import textwrap
 from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
-from discord import app_commands
 from discord.ext import commands
 from discord.utils import MISSING
 
@@ -16,8 +15,6 @@ import config
 from bot import EXT_CATEGORY_NONE, AluContext, ExtCategory
 from ext import get_extensions
 from utils import cache, const, disambiguator, errors, formats, helpers, transposer
-from utils.dota.dota2client import Dota2Client
-from utils.twitch import AluTwitchClient
 
 from .exc_manager import ExceptionManager
 from .intents_perms import INTENTS, PERMISSIONS
@@ -56,19 +53,17 @@ class AluBot(commands.Bot, AluBotHelper):
     """
 
     if TYPE_CHECKING:
-        user: discord.ClientUser
-        #     bot_app_info: discord.AppInfo
-        #     launch_time: datetime.datetime
+        command_prefix: set[Literal["~", "$"]]  # default is some mix of Iterable[str] and Callable
+        launch_time: datetime.datetime
+        listener_connection: asyncpg.Connection[asyncpg.Record]
         logs_via_webhook_handler: Any
         tree: AluAppCommandTree
-        #     cogs: Mapping[str, AluCog]
-        command_prefix: set[Literal["~", "$"]]  # default is some mix of Iterable[str] and Callable
-        listener_connection: asyncpg.Connection[asyncpg.Record]
+        user: discord.ClientUser
 
     def __init__(
         self,
-        test: bool = False,
         *,
+        test: bool = False,
         session: ClientSession,
         pool: asyncpg.Pool[asyncpg.Record],
         **kwargs: Any,
@@ -103,7 +98,8 @@ class AluBot(commands.Bot, AluBotHelper):
             case_insensitive=True,
         )
         self.database: asyncpg.Pool[asyncpg.Record] = pool
-        self.pool: PoolTypedWithAny = pool  # type: ignore # asyncpg typehinting crutch, read `utils.database` for more
+        # Below: asyncpg typehinting crutch, read `utils.database` for more
+        self.pool: PoolTypedWithAny = pool  # pyright:ignore[reportAttributeAccessIssue]
         self.session: ClientSession = session
 
         self.exc_manager: ExceptionManager = ExceptionManager(self)
@@ -120,9 +116,6 @@ class AluBot(commands.Bot, AluBotHelper):
             seconds=datetime.timedelta(days=7).seconds,
         )
 
-        self.twitch = AluTwitchClient(self)
-        self.dota = Dota2Client(self)
-
     @override
     async def setup_hook(self) -> None:
         self.bot_app_info: discord.AppInfo = await self.application_info()
@@ -131,7 +124,7 @@ class AluBot(commands.Bot, AluBotHelper):
         for ext in get_extensions(self.test):
             try:
                 await self.load_extension(ext)
-            except Exception as error:
+            except commands.ExtensionError as error:
                 failed_to_load_some_ext = True
                 embed = discord.Embed(
                     colour=0xDA9F93,
@@ -154,7 +147,7 @@ class AluBot(commands.Bot, AluBotHelper):
         try:
             result = await self.try_hideout_auto_sync()
         except Exception as err:
-            log.error("Autosync: failed %s.", const.Tick.No, exc_info=err)
+            log.exception("Autosync: failed %s.", const.Tick.No, exc_info=err)
         else:
             phrase = f"success {const.Tick.Yes}" if result else f"not needed {const.Tick.Black}"
             log.info("Autosync: %s.", phrase)
@@ -227,21 +220,16 @@ class AluBot(commands.Bot, AluBotHelper):
         # erm, bcs of my horrendous .test logic we need to do it in a weird way
         # todo: is there anything better ? :D
 
-        # if not self.test or "ext.fpc.dota" in get_extensions(self.test):
-
-        #
-        #     await asyncio.gather(
-        #         super().start(config.DISCORD_BOT_TOKEN, reconnect=True),
-        #         self.dota.login(),
-        #     )
-        # else:
-
-        # await super().start(config.DISCORD_BOT_TOKEN, reconnect=True)
-        await asyncio.gather(
-            super().start(config.DISCORD_BOT_TOKEN, reconnect=True),  # VALVE_SWITCH
-            self.twitch.start(),
-            self.dota.login(),
-        )
+        if "ext.fpc.dota" in self.extensions:
+            # Steam/Dota client need extra measures.
+            self.instantiate_dota()
+            await asyncio.gather(
+                super().start(config.DISCORD_BOT_TOKEN, reconnect=True),
+                self.twitch.start(),
+                self.dota.login(),
+            )
+        else:
+            await super().start(config.DISCORD_BOT_TOKEN, reconnect=True)
 
     @override
     async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:
@@ -267,27 +255,6 @@ class AluBot(commands.Bot, AluBotHelper):
     # points to import inside the function: https://stackoverflow.com/a/1188693/19217368
     # and I exactly want these^
 
-    # async def initialize_dota_pulsefire_clients(self) -> None:
-    #     """Initialize Dota 2 pulsefire-like clients.
-
-    #     * OpenDota API pulsefire client
-    #     * Stratz API pulsefire client
-    #     """
-    #     if not hasattr(self, "opendota"):
-    #         from utils.dota import ODotaConstantsClient, OpenDotaClient, SteamWebAPIClient, StratzClient
-
-    #         self.opendota = OpenDotaClient()
-    #         await self.opendota.__aenter__()
-
-    #         self.stratz = StratzClient()
-    #         await self.stratz.__aenter__()
-
-    #         self.odota_constants = ODotaConstantsClient()
-    #         await self.odota_constants.__aenter__()
-
-    #         self.steam_web_api = SteamWebAPIClient()
-    #         await self.steam_web_api.__aenter__()
-
     def instantiate_lol(self) -> None:
         """Instantiate League of Legends Client."""
         if not hasattr(self, "lol"):
@@ -296,25 +263,14 @@ class AluBot(commands.Bot, AluBotHelper):
             self.lol = LeagueClient(self)
 
     def instantiate_dota(self) -> None:
-        """Initialize Dota 2 Client.
+        """Instantiate Dota 2 Client.
 
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
             from utils.dota.dota2client import Dota2Client
 
-            self.dota = Dota2Client(self)  # VALVE_SWITCH
-            # await self.dota.login()
-
-    # def instantiate_dota(self) -> None:
-    #     """Instantiate Dota 2 Client.
-
-    #     * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
-    #     """
-    #     if not hasattr(self, "dota"):
-    #         from utils.dota.valvepython import DotaClient
-
-    #         self.dota = DotaClient(self)
+            self.dota = Dota2Client(self)
 
     def initialize_github(self) -> None:
         """Initialize GitHub REST API Client."""
@@ -323,8 +279,8 @@ class AluBot(commands.Bot, AluBotHelper):
 
             self.github = GitHub(config.GIT_PERSONAL_TOKEN)
 
-    async def initialize_twitch(self) -> None:
-        """Initialize subclassed twitchio's Twitch Client."""
+    async def instantiate_twitch(self) -> None:
+        """Instantiate subclassed twitchio's Twitch Client."""
         if not hasattr(self, "twitch"):
             from utils.twitch import AluTwitchClient
 

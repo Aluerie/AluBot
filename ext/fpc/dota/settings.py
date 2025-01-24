@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, override
 import discord
 from discord import app_commands
 from discord.ext import commands
-from steam import ID, InvalidID  # VALVE_SWITCH
+from steam import ID, InvalidID
 
 # from steam.steamid import EType, SteamID
 from utils import const
@@ -38,7 +38,7 @@ class DotaAccount(Account):
         steam_id: int
         friend_id: int
 
-    @override  # VALVE_SWITCH
+    @override
     async def set_game_specific_attrs(self, bot: AluBot, player: DotaPlayerCandidate) -> None:
         try:
             steam_id = ID(player.steam)

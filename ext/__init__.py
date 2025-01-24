@@ -106,5 +106,4 @@ def get_extensions(test: bool, reload: bool = False) -> tuple[str, ...]:
         if not module.name.rsplit(".", 1)[-1].startswith(("_", "base"))
     )
 
-    extensions = CORE_EXTENSIONS + uncategorised_extensions + categorised_extensions
-    return extensions
+    return CORE_EXTENSIONS + uncategorised_extensions + categorised_extensions

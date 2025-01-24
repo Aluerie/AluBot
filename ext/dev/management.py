@@ -88,7 +88,7 @@ class BotManagement(DevBaseCog):
 
         if len(self.bot.guilds) > AMOUNT_OF_ALLOWED_GUILDS:
             # Safe-guard to keep the bot in less than 70 guilds (I don't want verification troubles).
-
+            await self.guild_notify(guild)
             await guild.leave()
 
     async def guild_notify(self, guild: discord.Guild) -> None:
@@ -124,7 +124,10 @@ class BotManagement(DevBaseCog):
         assert channel and not isinstance(channel, discord.ForumChannel | discord.CategoryChannel)
         embed = discord.Embed(
             title="I'm sorry",
-            description="I have to leave this server because the bot is already in too many servers.",
+            description=(
+                "Even though server moderators just invited me, "
+                "I have to leave this server because the bot is already in too many servers."
+            ),
         ).set_footer(text="Contact @Aluerie if you really want the bot in your server, we will solve it.")
         await channel.send(embed=embed)
 

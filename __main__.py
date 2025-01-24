@@ -24,7 +24,7 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-async def start_the_bot(test: bool) -> None:
+async def start_the_bot(*, test: bool) -> None:
     """Helper function to start the bot."""
     log = logging.getLogger()
     try:
@@ -47,7 +47,7 @@ async def start_the_bot(test: bool) -> None:
     async with (
         aiohttp.ClientSession() as session,
         pool as pool,
-        AluBot(test, session=session, pool=pool) as alubot,
+        AluBot(test=test, session=session, pool=pool) as alubot,
     ):
         await alubot.start()
 
@@ -55,12 +55,12 @@ async def start_the_bot(test: bool) -> None:
 @click.group(invoke_without_command=True, options_metavar="[options]")
 @click.pass_context
 @click.option("--test", "-t", is_flag=True)
-def main(click_ctx: click.Context, test: bool) -> None:
+def main(click_ctx: click.Context, *, test: bool) -> None:
     """Launches the bot."""
     if click_ctx.invoked_subcommand is None:
         with setup_logging(test):
             try:
-                asyncio.run(start_the_bot(test))
+                asyncio.run(start_the_bot(test=test))
             except KeyboardInterrupt:
                 print("Aborted! The bot was interrupted with `KeyboardInterrupt`!")  # noqa: T201
 

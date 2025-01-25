@@ -146,7 +146,7 @@ class MatchToSend(BaseMatchToSend):
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
 
                 text = f"{twitch_data['display_name']} - {self.player_hero.display_name}"
-                w, h = self.bot.transposer.get_text_wh(text, font)
+                w, _h = self.bot.transposer.get_text_wh(text, font)
                 draw.text(((canvas_w - w) / 2, 35), text, font=font, align="center")
 
             draw_player_hero_text()
@@ -271,13 +271,13 @@ class StratzMatchToEdit(BaseMatchToEdit):
     @override
     async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
         canvas = await self.bot.transposer.url_to_image(embed_image_url)
-        items = [await self.bot.dota.items.by_id(id) for id, _ in self.sorted_item_purchases]
+        items = [await self.bot.dota.items.by_id(id_) for id_, _ in self.sorted_item_purchases]
         item_icon_images = [await self.bot.transposer.url_to_cached_image(item.icon_url) for item in items]
 
         neutral_item = await self.bot.dota.items.by_id(self.neutral_item_id)
         neutral_item_image = await self.bot.transposer.url_to_cached_image(neutral_item.icon_url)
 
-        abilities = [await self.bot.dota.abilities.by_id(id) for id in self.ability_upgrades_ids]
+        abilities = [await self.bot.dota.abilities.by_id(id_) for id_ in self.ability_upgrades_ids]
         ability_icon_images = [await self.bot.transposer.url_to_cached_image(ability.icon_url) for ability in abilities]
 
         hero = self.hero or await self.bot.dota.heroes.by_id(self.hero_id)

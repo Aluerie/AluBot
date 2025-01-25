@@ -90,13 +90,13 @@ class MatchToSend(BaseMatchToSend):
         img = await self.bot.transposer.url_to_image(stream_preview_url)
 
         sorted_champion_ids = await self.bot.lol.roles.sort_champions_by_roles(self.all_champion_ids)
-        champion_icon_urls = [(await self.bot.lol.champions.by_id(id)).icon_url for id in sorted_champion_ids]
+        champion_icon_urls = [(await self.bot.lol.champions.by_id(id_)).icon_url for id_ in sorted_champion_ids]
         champion_icon_images = [await self.bot.transposer.url_to_image(url) for url in champion_icon_urls]
 
-        rune_icon_urls = [await self.bot.lol.rune_icons.by_id(id) for id in self.rune_ids]
+        rune_icon_urls = [await self.bot.lol.rune_icons.by_id(id_) for id_ in self.rune_ids]
         rune_icon_images = [await self.bot.transposer.url_to_image(url) for url in rune_icon_urls]
 
-        summoner_icon_urls = [await self.bot.lol.summoner_spell_icons.by_id(id) for id in self.summoner_spell_ids]
+        summoner_icon_urls = [await self.bot.lol.summoner_spell_icons.by_id(id_) for id_ in self.summoner_spell_ids]
         summoner_icon_images = [await self.bot.transposer.url_to_image(url) for url in summoner_icon_urls]
 
         def build_notification_image() -> Image.Image:
@@ -109,7 +109,7 @@ class MatchToSend(BaseMatchToSend):
 
             # champion icons
             for count, champion_image in enumerate(champion_icon_images):
-                champion_image = champion_image.resize((62, 62))
+                champion_image = champion_image.resize((62, 62))  # noqa: PLW2901
                 extra_space = 0 if count < 5 else 20
                 img.paste(champion_image, (count * 62 + extra_space, 0))
 
@@ -117,7 +117,7 @@ class MatchToSend(BaseMatchToSend):
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
             draw = ImageDraw.Draw(img)
             text = f"{display_name} - {self.champion.display_name}"
-            w2, h2 = self.bot.transposer.get_text_wh(text, font)
+            w2, _ = self.bot.transposer.get_text_wh(text, font)  # _ is `h2`
             draw.text(xy=((width - w2) / 2, 65), text=text, font=font, align="center")
 
             # rune icons
@@ -125,14 +125,14 @@ class MatchToSend(BaseMatchToSend):
             for count, rune_image in enumerate(rune_icon_images):
                 if count < 6:
                     # actual runes (as in non-stat modifiers)
-                    rune_image = rune_image.resize((information_row, information_row))
+                    rune_image = rune_image.resize((information_row, information_row))  # noqa: PLW2901
                 img.paste(rune_image, (left, height - rune_image.height), rune_image)
                 left += rune_image.width
 
             # summoner spell icons
             left = width - 2 * information_row
             for count, spell_image in enumerate(summoner_icon_images):
-                spell_image = spell_image.resize((information_row, information_row))
+                spell_image = spell_image.resize((information_row, information_row))  # noqa: PLW2901
                 img.paste(spell_image, (left + count * spell_image.width, height - spell_image.height))
             return img
 
@@ -152,7 +152,8 @@ class MatchToSend(BaseMatchToSend):
                 title=f"{title} {self.champion.emote}",
                 url=streamer.url,
                 description=(
-                    f"Match `{self.platform.upper()}_{self.match_id}` started {human_timedelta(self.long_ago, mode='strip')}\n"
+                    f"Match `{self.platform.upper()}_{self.match_id}` "
+                    f"started {human_timedelta(self.long_ago, mode='strip')}\n"
                     f"{await streamer.vod_link(seconds_ago=self.long_ago)}{self.links}"
                 ),
             )
@@ -226,7 +227,7 @@ class MatchToEdit(BaseMatchToEdit):
     @override
     async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await self.bot.lol.item_icons.by_id(id) for id in reversed(self.sorted_item_ids) if id]
+        item_icon_urls = [await self.bot.lol.item_icons.by_id(id_) for id_ in reversed(self.sorted_item_ids) if id]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
 
         trinket_icon_url = await self.bot.lol.item_icons.by_id(self.trinket_item_id)
@@ -340,5 +341,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
         timeline=timeline,
     )
 
-    new_image = await post_match_player.edit_notification_image(const.DotaAsset.Placeholder640X360, discord.Colour.purple())
+    new_image = await post_match_player.edit_notification_image(
+        const.DotaAsset.Placeholder640X360, discord.Colour.purple()
+    )
     new_image.show()

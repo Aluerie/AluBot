@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeVar, override
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar, override
 
 import discord
 from discord import app_commands
@@ -22,7 +22,7 @@ T_co = TypeVar("T_co", covariant=True)
 TT = TypeVar("TT", bound="type[Any]")
 
 
-class classproperty(Generic[TT, T_co]):  # noqa: N801
+class classproperty[TT: type[Any], T_co]:  # noqa: N801 # Generic[TT, T_co]
     def __init__(self, func: Callable[[TT], T_co]) -> None:
         self.__func__ = func
 

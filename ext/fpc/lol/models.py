@@ -324,12 +324,14 @@ if TYPE_CHECKING:
 async def beta_test_edit_image(self: AluCog) -> None:
     """Testing function for `edit_image` from League'sMatchToEdit class.
 
-    Import this into `beta_task` for easy testing of how new elements alignment.
+    Usage
+    -----
+    Import this into `beta_task` for easy testing of how new elements alignment like this:
+    ```
+    from .fpc.lol._models import beta_test_edit_image
+    await beta_test_edit_image(self)
+    ```
     """
-    # BETA TESTING USAGE
-    # from .fpc.lol._models import beta_test_edit_image
-    # await beta_test_edit_image(self)
-
     from ext.fpc.lol.models import MatchToEdit
 
     self.bot.instantiate_lol()
@@ -355,12 +357,14 @@ async def beta_test_edit_image(self: AluCog) -> None:
 async def beta_test_send_image(self: AluCog) -> None:
     """Testing function for `send_image` from League'sMatchToEdit class.
 
-    Import this into `beta_task` for easy testing of how new elements alignment.
+    Usage
+    -----
+    Import this into `beta_task` for easy testing of how new elements alignment like this:
+    ```
+    from .fpc.lol._models import beta_test_edit_image
+    await beta_test_edit_image(self)
+    ```
     """
-    # BETA TESTING USAGE
-    # from .fpc.lol._models import beta_test_edit_image
-    # await beta_test_edit_image(self)
-
     from ext.fpc.lol.models import MatchToSend
 
     self.bot.instantiate_lol()

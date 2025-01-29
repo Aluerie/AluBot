@@ -42,7 +42,7 @@ log.setLevel(logging.INFO)
 
 class Notifications(BaseNotifications):
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
-        super().__init__(bot, prefix="lol", *args, **kwargs)
+        super().__init__(bot, "lol", *args, **kwargs)
         self.live_match_ids: list[int] = []
 
     @override
@@ -138,9 +138,14 @@ class Notifications(BaseNotifications):
                 if rows:
                     champion = await self.bot.lol.champions.by_id(participant["championId"])
                     log.info(
-                        "Sending %s - %s %s",
+                        "Sending `%s_%s` - [`%s`](%s) %s",
+                        game["platformId"],
                         game["gameId"],
                         player_account_row["display_name"],
+                        (
+                            f"https://op.gg/summoners/{player_account_row['platform']}/"
+                            f"{player_account_row['game_name']}-{player_account_row['tag_line']}"
+                        ),
                         champion.emote,
                     )
                     match_to_send = MatchToSend(self.bot, game, participant, player_account_row, champion)

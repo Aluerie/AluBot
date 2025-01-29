@@ -1,0 +1,8 @@
+{
+    // DO NOT SHARE ANY SENSITIVE INFG (i.e. SQL EXTENSION SETTINGS) IN THIS FILE
+    // IT IS NOT GIT IGNORED
+    "cSpell.words": [
+        "aluloop",
+        "truststore"
+    ]
+}

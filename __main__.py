@@ -1,5 +1,14 @@
 from __future__ import annotations
 
+try:
+    # `?tag truststore` in discord.py server.
+    # Why Windows is so bad with SSL?
+    import truststore
+except ImportError:
+    pass
+else:
+    truststore.inject_into_ssl()
+
 import asyncio
 import logging
 import platform

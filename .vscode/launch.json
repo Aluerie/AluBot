@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "YenBot",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "__main__.py",
             "args": [
@@ -17,7 +17,7 @@
         },
         {
             "name": "AluBot",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "__main__.py",
             "args": [],

@@ -227,7 +227,7 @@ class MatchToEdit(BaseMatchToEdit):
     @override
     async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
-        item_icon_urls = [await self.bot.lol.item_icons.by_id(id_) for id_ in reversed(self.sorted_item_ids) if id]
+        item_icon_urls = [await self.bot.lol.item_icons.by_id(id_) for id_ in reversed(self.sorted_item_ids) if id_]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
 
         trinket_icon_url = await self.bot.lol.item_icons.by_id(self.trinket_item_id)
@@ -243,9 +243,8 @@ class MatchToEdit(BaseMatchToEdit):
             items_row = information_row
             for count, item_image in enumerate(item_icon_images):
                 left = count * items_row
-                item_image = item_image.resize((items_row, items_row))
                 img.paste(
-                    im=item_image,
+                    im=item_image.resize((items_row, items_row)),
                     box=(left, height - information_row - item_image.height),
                 )
 

@@ -137,7 +137,12 @@ class Notifications(BaseNotifications):
 
                 if rows:
                     champion = await self.bot.lol.champions.by_id(participant["championId"])
-                    log.debug("Notif %s - %s", player_account_row["display_name"], champion.display_name)
+                    log.info(
+                        "Sending %s - %s %s",
+                        game["gameId"],
+                        player_account_row["display_name"],
+                        champion.emote,
+                    )
                     match_to_send = MatchToSend(self.bot, game, participant, player_account_row, champion)
                     await self.send_match(
                         match_to_send,

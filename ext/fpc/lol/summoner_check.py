@@ -40,7 +40,7 @@ class SummonerNameCheck(FPCCog):
         These names are only present for cosmetic purposes.
         But it's nice to be able to search in sites like opgg with ease.
         """
-        if datetime.datetime.now(datetime.UTC).day != 17:
+        if datetime.datetime.now(datetime.UTC).day % 3 == 0:
             return
 
         query = "SELECT puuid, platform, game_name, tag_line FROM lol_accounts"

@@ -126,7 +126,13 @@ class MatchToSend(BaseMatchToSend):
                 if count < 6:
                     # actual runes (as in non-stat modifiers)
                     rune_image = rune_image.resize((information_row, information_row))  # noqa: PLW2901
-                img.paste(rune_image, (left, height - rune_image.height), rune_image)
+
+                try:
+                    mask = rune_image.convert("RGBA")
+                    img.paste(rune_image, (left, height - rune_image.height), mask)
+                except ValueError:
+                    # Bad Transparency Mask ? Riot messed up the images ? Or me?
+                    img.paste(rune_image, (left, height - rune_image.height))
                 left += rune_image.width
 
             # summoner spell icons
@@ -329,7 +335,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
     self.bot.instantiate_lol()
     await self.bot.lol.start()
 
-    match_id = "NA1_4899995798"
+    match_id = "NA1_5217990177"
     continent = "AMERICAS"
     match = await self.bot.lol.get_lol_match_v5_match(id=match_id, region=continent)
     timeline = await self.bot.lol.get_lol_match_v5_match_timeline(id=match_id, region=continent)
@@ -343,4 +349,42 @@ async def beta_test_edit_image(self: AluCog) -> None:
     new_image = await post_match_player.edit_notification_image(
         const.DotaAsset.Placeholder640X360, discord.Colour.purple()
     )
+    new_image.show()
+
+
+async def beta_test_send_image(self: AluCog) -> None:
+    """Testing function for `send_image` from League'sMatchToEdit class.
+
+    Import this into `beta_task` for easy testing of how new elements alignment.
+    """
+    # BETA TESTING USAGE
+    # from .fpc.lol._models import beta_test_edit_image
+    # await beta_test_edit_image(self)
+
+    from ext.fpc.lol.models import MatchToSend
+
+    self.bot.instantiate_lol()
+    await self.bot.lol.start()
+
+    game = await self.bot.lol.get_lol_spectator_v5_active_game_by_summoner(
+        puuid="L_h65XdX9XFsGdp0UJjQ_HhUf6tV57U2IsjdKVy1tIF4DDdloYCQJY_EwWnenjC4f4hl3-wcfTIskA",
+        region="na1",
+    )
+    query = """
+        SELECT a.puuid, a.player_id, game_name, tag_line, platform, display_name, twitch_id, last_edited
+        FROM lol_accounts a
+        JOIN lol_players p ON a.player_id = p.player_id
+        LIMIT 1
+    """
+    player_account_row = await self.bot.pool.fetchrow(query)
+
+    post_match_player = MatchToSend(
+        self.bot,
+        game=game,
+        participant=game["participants"][0],
+        player_account_row=player_account_row,
+        champion=await self.bot.lol.champions.by_id(game["participants"][0]["championId"]),
+    )
+
+    new_image = await post_match_player.notification_image(const.DotaAsset.Placeholder640X360, "gosu")
     new_image.show()

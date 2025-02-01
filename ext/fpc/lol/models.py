@@ -33,6 +33,8 @@ __all__ = (
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+CELL_SIZE = 50  # height/width for pretty much everything in league pictures: runes, spells, items, trinkets, skills.
+
 
 def lol_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str) -> str:
     opgg_name = lol.Platform(platform).opgg_name
@@ -101,11 +103,10 @@ class MatchToSend(BaseMatchToSend):
 
         def build_notification_image() -> Image.Image:
             width, height = img.size
-            information_row = 50
             rectangle = Image.new("RGB", (width, 100), f"#{const.Colour.darkslategray:0>6x}")
             ImageDraw.Draw(rectangle)
             img.paste(rectangle)
-            img.paste(rectangle, (0, height - information_row))
+            img.paste(rectangle, (0, height - CELL_SIZE))
 
             # champion icons
             for count, champion_image in enumerate(champion_icon_images):
@@ -125,7 +126,7 @@ class MatchToSend(BaseMatchToSend):
             for count, rune_image in enumerate(rune_icon_images):
                 if count < 6:
                     # actual runes (as in non-stat modifiers)
-                    rune_image = rune_image.resize((information_row, information_row))  # noqa: PLW2901
+                    rune_image = rune_image.resize((CELL_SIZE, CELL_SIZE))  # noqa: PLW2901
 
                 try:
                     mask = rune_image.convert("RGBA")
@@ -136,9 +137,9 @@ class MatchToSend(BaseMatchToSend):
                 left += rune_image.width
 
             # summoner spell icons
-            left = width - 2 * information_row
+            left = width - 2 * CELL_SIZE
             for count, spell_image in enumerate(summoner_icon_images):
-                spell_image = spell_image.resize((information_row, information_row))  # noqa: PLW2901
+                spell_image = spell_image.resize((CELL_SIZE, CELL_SIZE))  # noqa: PLW2901
                 img.paste(spell_image, (left + count * spell_image.width, height - spell_image.height))
             return img
 
@@ -189,6 +190,9 @@ class MatchToSend(BaseMatchToSend):
 
 
 class MatchToEdit(BaseMatchToEdit):
+    """
+    """
+
     def __init__(
         self,
         bot: AluBot,
@@ -241,24 +245,22 @@ class MatchToEdit(BaseMatchToEdit):
 
         def build_notification_image() -> Image.Image:
             width, height = img.size
-            information_row = 50  # hard coded bcs of knowing code of MatchToSend
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 34)
             draw = ImageDraw.Draw(img)
 
             # Item Icons
-            items_row = information_row
             for count, item_image in enumerate(item_icon_images):
-                left = count * items_row
+                left = count * CELL_SIZE
                 img.paste(
-                    im=item_image.resize((items_row, items_row)),
-                    box=(left, height - information_row - item_image.height),
+                    im=item_image.resize((CELL_SIZE, CELL_SIZE)),
+                    box=(left, height - CELL_SIZE - item_image.height),
                 )
 
             # Trinket Icon
-            trinket_image = trinket_icon_img.resize((items_row, items_row))
+            trinket_image = trinket_icon_img.resize((CELL_SIZE, CELL_SIZE))
             img.paste(
                 im=trinket_image,
-                box=(width - trinket_image.width, height - information_row - trinket_image.height),
+                box=(width - trinket_image.width, height - CELL_SIZE - trinket_image.height),
             )
 
             # Skill Build
@@ -272,9 +274,8 @@ class MatchToEdit(BaseMatchToEdit):
                 3: "assets/images/local/E.png",
                 4: "assets/images/local/R.png",
             }
-            skill_order_row = 40
             skill_slot_images = {
-                skill_slot: Image.open(path).resize((skill_order_row, skill_order_row))
+                skill_slot: Image.open(path).resize((CELL_SIZE, CELL_SIZE))
                 for skill_slot, path in skill_slot_mapping.items()
             }
 
@@ -284,14 +285,14 @@ class MatchToEdit(BaseMatchToEdit):
                     im=skill_slot_image,
                     box=(
                         count * skill_slot_image.width,
-                        height - information_row - items_row - skill_slot_image.height,
+                        height - CELL_SIZE * 2 - skill_slot_image.height,
                     ),
                 )
 
             # KDA Text
             _, kda_text_h = self.bot.transposer.get_text_wh(self.kda, font)  # _ is `kda_text_w`
             draw.text(
-                (0, height - information_row - items_row - skill_order_row - kda_text_h),
+                (0, height - CELL_SIZE * 3 - kda_text_h),
                 self.kda,
                 font=font,
                 align="right",
@@ -305,7 +306,7 @@ class MatchToEdit(BaseMatchToEdit):
                 "No Scored": (255, 255, 255),
             }
             draw.text(
-                xy=(0, height - information_row - items_row - skill_order_row - kda_text_h - outcome_text_h - 5),
+                xy=(0, height - CELL_SIZE * 3 - kda_text_h - outcome_text_h - 5),
                 text=self.outcome,
                 font=font,
                 align="center",

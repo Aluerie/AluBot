@@ -558,5 +558,4 @@ class BugTracker(AluCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    # TODO: BRING IT BACK AFTER GITHUBKIT FIXES IT
-    # await bot.add_cog(BugTracker(bot))
+    await bot.add_cog(BugTracker(bot))

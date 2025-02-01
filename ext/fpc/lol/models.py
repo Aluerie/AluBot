@@ -53,7 +53,7 @@ class MatchToSend(BaseMatchToSend):
         super().__init__(bot)
 
         self.match_id: int = game["gameId"]
-        self.platform: lol.LiteralPlatform = game["platformId"]  # type: ignore
+        self.platform: lol.LiteralPlatform = game["platformId"]  # pyright: ignore[reportAttributeAccessIssue]
 
         self.game_name: str = player_account_row["game_name"]
         self.tag_line: str = player_account_row["tag_line"]
@@ -64,7 +64,7 @@ class MatchToSend(BaseMatchToSend):
 
         self.champion: Champion | PseudoChampion = champion
         self.summoner_spell_ids: tuple[int, int] = (participant["spell1Id"], participant["spell2Id"])
-        self.rune_ids: list[int] = participant["perks"]["perkIds"]  # type: ignore
+        self.rune_ids: list[int] = participant["perks"]["perkIds"]  # pyright: ignore[reportTypedDictNotRequiredAccess]
         self.summoner_id: str = participant["summonerId"]
 
     @property
@@ -76,7 +76,7 @@ class MatchToSend(BaseMatchToSend):
     def long_ago(self) -> int:
         """Gives how many seconds passed from start time till Now."""
         if self.start_time == 0:
-            # start_time is filled later in Riot Web API (after loading screen)
+            # start_time is filled later in Riot Web API (Dafter loading screen)
             # thus sometimes it gonna be just plain zero when we find the match during the loading screen
             # so let's just return 0 as in "Now"
             return 0
@@ -289,7 +289,7 @@ class MatchToEdit(BaseMatchToEdit):
                 )
 
             # KDA Text
-            kda_text_w, kda_text_h = self.bot.transposer.get_text_wh(self.kda, font)
+            _, kda_text_h = self.bot.transposer.get_text_wh(self.kda, font)  # _ is `kda_text_w`
             draw.text(
                 (0, height - information_row - items_row - skill_order_row - kda_text_h),
                 self.kda,
@@ -298,7 +298,7 @@ class MatchToEdit(BaseMatchToEdit):
             )
 
             # Outcome Text
-            outcome_text_w, outcome_text_h = self.bot.transposer.get_text_wh(self.outcome, font)
+            _, outcome_text_h = self.bot.transposer.get_text_wh(self.outcome, font)  # _ is `outcome_text_w`
             colour_dict = {
                 "Win": str(const.MaterialPalette.green(shade=800)),
                 "Loss": str(const.MaterialPalette.red(shade=900)),

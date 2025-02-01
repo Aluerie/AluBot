@@ -28,8 +28,8 @@ pulsefire~=2.0.21
 git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
-githubkit==0.12.5
-pygit2==1.16.0
+githubkit==0.12.6
+pygit2==1.17.0
 
 # TTS
 gtts~=2.5.4
@@ -58,9 +58,9 @@ uvloop==0.21.0; platform_system == 'Linux'  # ignore on non-Linux - because not 
 
 # Uncategorised (or Other)
 aiofiles==24.1.0
-pillow==11.0.0
-emoji==2.14.0
-numpy==2.2.1
+pillow==11.1.0
+emoji==2.14.1
+numpy==2.2.2
 urllib3==2.3.0
 wordcloud==1.9.4
 matplotlib==3.10.0

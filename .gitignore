@@ -21,4 +21,4 @@ venv/
 _test.py
 
 # config secrets
-/config.py
+/config.toml

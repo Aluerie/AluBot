@@ -10,7 +10,7 @@ import discord
 from discord.ext import tasks
 
 from bot import AluCog
-from config import LOGGER_WEBHOOK
+from config import config
 from utils import const, formats
 
 if TYPE_CHECKING:
@@ -115,7 +115,8 @@ class LogsViaWebhook(AluCog):
     @discord.utils.cached_property
     def logger_webhook(self) -> discord.Webhook:
         """A webhook in hideout's #logger channel."""
-        return self.bot.webhook_from_url(LOGGER_WEBHOOK)
+        webhook_url = config["WEBHOOKS"]["LOGGER"] if not self.bot.test else config["WEBHOOKS"]["YEN_SPAM"]
+        return self.bot.webhook_from_url(webhook_url)
 
     def add_record(self, record: logging.LogRecord) -> None:
         """Add a record to a logging queue."""

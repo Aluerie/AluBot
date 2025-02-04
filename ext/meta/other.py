@@ -116,7 +116,9 @@ class OtherCog(AluCog):
         average = sum(p[2] for p in pings) / len(pings)
         pings.append(("\N{PERMANENT PAPER SIGN}\N{VARIATION SELECTOR-16}", "Average", average))
 
-        table = tabulate(pings, ("", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f"))
+        table = tabulate(
+            tabular_data=pings, headers=("", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f")
+        )
         embed = discord.Embed(colour=discord.Colour.dark_embed(), description=f"```py\n{table}\n```")
         await message.edit(embed=embed)
 

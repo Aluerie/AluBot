@@ -24,18 +24,20 @@ if TYPE_CHECKING:
 __all__ = ("plural",)
 
 
-class plural:  # noqa: N801
+class plural:  # noqa: N801 # pep8 allows lowercase names for classes that are used as functions
     """Helper class to format tricky plural nouns.
 
-    Examples: ::
+    Examples
+    --------
+    >>> format(plural(1), "child|children")  # "1 child"
+    >>> format(plural(8), "week|weeks")  # "8 weeks"
+    >>> f"{plural(3):reminder}" # "3 reminders"
 
-        >>> format(plural(1), 'child|children')  # '1 child'
-        >>> format(plural(8), 'week|weeks')  # '8 weeks'
-        >>> f'{plural(3):reminder}' # 3 reminders
+    Sources
+    -------
+    * Rapptz/RoboDanny (license MPL v2), `plural` class:
+        https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
     """
-
-    # licensed MPL v2 from Rapptz/RoboDanny
-    # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
 
     def __init__(self, value: int) -> None:
         self.value: int = value
@@ -51,18 +53,18 @@ class plural:  # noqa: N801
 
 
 def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
-    """Join sequence of string in human-like format.
+    """Join sequence of string in human-readable format.
 
-    Example
+    Examples
+    --------
+    >>> human_join(['Conan Doyle', 'Nabokov', 'Fitzgerald'], final='and')
+    'Conan Doyle, Nabokov and Fitzgerald'
+
+    Sources
     -------
-        ```
-        human_join(['Conan Doyle', 'Nabokov', 'Fitzgerald'], final='and')
-        # 'Conan Doyle, Nabokov and Fitzgerald'
-        ```
+    * Rapptz/RoboDanny (license MPL v2)
+        https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
     """
-    # licensed MPL v2 from Rapptz/RoboDanny
-    # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
-
     size = len(seq)
     if size == 0:
         return ""
@@ -86,13 +88,13 @@ def human_timedelta(
 ) -> str:
     """Human timedelta between `dt` and `source` `datetime.datetime`'s.
 
-    Example Usage: ::
-
-        >>> d = datetime.datetime.today().replace(hour=0, minute=0, second=0)
-        >>> human_timedelta(d)  # '14 hours, 25 minutes and 15 seconds ago'
-        >>> human_timedelta(d, brief=True)  # '14h 39m 48s ago'
-        >>> human_timedelta(d, strip=True)  # '14h50m22s ago'
-        >>> human_timedelta(20000.5324234, strip=True, suffix=False)  # 5h33m20s
+    Examples
+    --------
+    >>> d = datetime.datetime.today().replace(hour=0, minute=0, second=0)
+    >>> human_timedelta(d)  # '14 hours, 25 minutes and 15 seconds ago'
+    >>> human_timedelta(d, brief=True)  # '14h 39m 48s ago'
+    >>> human_timedelta(d, strip=True)  # '14h50m22s ago'
+    >>> human_timedelta(20000.5324234, strip=True, suffix=False)  # 5h33m20s
 
     Parameters
     ----------
@@ -192,11 +194,11 @@ def human_timedelta(
 
 
 def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> str:
-    """Format `datetime.datetime` to discord friendly timestamp.
+    """Format `datetime.datetime` to discord's application friendly timestamp.
 
     The Styles Example table:
     (it's copied from discord.py docs - click on TimestampStyle for the original).
-    ```ps1
+
     +-------------+----------------------------+-----------------+
     |    Style    |       Example Output       |   Description   |
     +=============+============================+=================+
@@ -214,17 +216,15 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> s
     +-------------+----------------------------+-----------------+
     | R           | 5 years ago                | Relative Time   |
     +-------------+----------------------------+-----------------+.
-    ```
     """
     return " ".join([format_dt(dt, letter) for letter in style_letters])
 
 
 def format_dt_tdR(dt: datetime.datetime) -> str:  # noqa: N802 # tdR is discord format choices.
-    """My favourite discord timestamp combination.
+    """Shortcut to combine t, d, R styles for the discord timestamp together.
 
-    Shortcut to combine t, d, R styles together.
+    The most used discord timestamp combination in the bot.
     Discord will show something like this:
-
     "22:57 17/05/2015 5 Years Ago"
     """
     return format_dt_custom(dt, "t", "d", "R")
@@ -232,11 +232,6 @@ def format_dt_tdR(dt: datetime.datetime) -> str:  # noqa: N802 # tdR is discord 
 
 def ordinal(n: int | str) -> str:
     """Convert an integer into its ordinal representation, i.e. 0->'0th', '3'->'3rd'."""
-    # Remember that there is always funny lambda possibility
-    # ```py
-    # ordinal = lambda n: "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10::4])
-    # print([ordinal(n) for n in range(1,32)])
-    # ```
     n = int(n)
     suffix = "th" if 11 <= n % 100 <= 13 else ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
     return str(n) + suffix
@@ -310,12 +305,26 @@ def block_function(string: str, blocked_words: list[str], whitelist_words: list[
     return False  # allow
 
 
-def indent(symbol: str | int, counter: int, offset: int, split_size: int) -> str:
-    return str(symbol).ljust(len(str(((counter - offset) // split_size + 1) * split_size)), " ")
+def label_indent(label: str | int, counter: int, split_size: int) -> str:
+    """Label indent to properly adjust spaces in fake'ish discord app table.
 
+    It's better to explain with an example.
+    When showing a message/embed - discord eats all the spaces in the content, making it much harder to align columns
+    in tabulate-like tables without triple backtick ``` codeblocks.
+    But for some things, like tables containing Discord emotes - we cannot use codeblocks.
 
-def new_indent(symbol: str | int, counter: int, split_size: int) -> str:
-    return str(symbol).ljust(len(str(counter + split_size)), " ")
+    Therefore we need some small magic to calculate offset spacing ourselves.
+
+    Examples
+    --------
+    >>> label_indent("81", 81, 20)
+    "81 "
+
+    Note the extra space after 81, this is because that page of the table will also contain a number 100.
+    so this space makes `81 `, `100` (we surround the numbers with backticks in discord markdown tables)
+    to look properly aligned.
+    """
+    return str(label).ljust(len(str(counter + split_size)), " ")
 
 
 #######################################################################
@@ -388,14 +397,13 @@ def ansi(
     return f"\u001b[{final_format}m{text}\u001b[0m"
 
 
-def tick(semi_bool: bool | None) -> str:
-    match semi_bool:
-        case True:
-            return const.Tick.Yes
-        case False:
-            return const.Tick.No
-        case _:
-            return const.Tick.Black
+def tick(opt: bool | None, /) -> str:  # noqa: FBT001 # this function has just one argument;
+    lookup = {
+        True: const.Tick.Yes,
+        False: const.Tick.No,
+        None: const.Tick.Black,
+    }
+    return lookup.get(opt, const.Tick.Question)
 
 
 def hms_to_seconds(hms_time: str) -> int:
@@ -440,8 +448,7 @@ def convert_PascalCase_to_spaces(text: str) -> str:  # noqa: N802 # sorry, I alw
     * https://stackoverflow.com/a/9283563/19217368
 
     """
-    label = re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", text)
-    return label
+    return re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", text)
 
 
 def convert_camel_case_to_PascalCase(text: str) -> str:  # noqa: N802 # sorry, I always forget what case is what.
@@ -553,9 +560,9 @@ class RstTable(TabularData):
 def code(text: str) -> str:
     """Wrap text into a Python triple "`" discord codeblock.
 
-    It's just annoying to type sometimes.
+    It's just annoying to type sometimes. It's also 1 symbol shorter :D
     """
-    return f"```py\n{text}\n```"
+    return f"```py\n{text}```"
 
 
 class NoBorderTable(TabularData):

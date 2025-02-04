@@ -1,16 +1,20 @@
 """INTENTS AND PERMISSIONS.
 
-Since I have a weird set of functions that greatly differs for Public/Community/Hideout usage
-and thus they also differ in intents/permissions they require.
+The bot offers quite a range of different features for Public/Community/Hideout.
+Extra features for the latter require extra intents/permissions.
+Maybe I should create a separate bot for each "category", but at the moment the bot is quite small server-amount wise
+and doesn't grow (it's just a personal for fun project), so hopefully, this lazy approach is fine.
 
-Let's weight those intents/permissions to give ourselves a reasoning why this or that should be `True`.
-Maybe I should create a separate bot for each
+But if we start to get gazillion "Presence" useless events clogging the bot then
+I will look into creating a helping bot for the community to unload some intents.
 
-At the same time it's quite possible I will make features that are currently community-only to be public
-This is why I probably should be greedy with intents/permissions
-After all we are growing into multipurpose bot that can do everything.
+Or maybe, it will be another way around and I will make those community-only features to be fully public!
 
-But this is a bit overcooking on formatting and organizing part.
+Conclusion
+----------
+Either way, this is a bit overcooking on formatting and organizing part, but let's go.
+
+The table, unfortunately, might be outdated.
 """
 
 from discord import Intents, Permissions

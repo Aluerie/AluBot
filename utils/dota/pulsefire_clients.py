@@ -12,14 +12,14 @@ from pulsefire.middlewares import http_error_middleware, json_response_middlewar
 from pulsefire.ratelimiters import BaseRateLimiter
 
 try:
-    import config
+    from config import config
 
     from .. import errors
 except ImportError:
     import sys
 
     sys.path.append("D:/LAPTOP/AluBot")
-    import config
+    from config import config
     from utils import errors
 
 if TYPE_CHECKING:
@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from .schemas import odota_constants, opendota, steam_web_api, stratz
 
 __all__ = (
-    "ODotaConstantsClient",
     "OpenDotaClient",
+    "OpenDotaConstantsClient",
     "SteamWebAPIClient",
     "StratzClient",
 )
@@ -158,14 +158,14 @@ class OpenDotaClient(BaseClient):
 
     async def get_match(self, *, match_id: int) -> opendota.MatchResponse:
         """GET matches/{match_id}."""
-        return await self.invoke("GET", f"/matches/{match_id}")  # type: ignore
+        return await self.invoke("GET", f"/matches/{match_id}")  # type: ignore[reportReturnType]
 
     async def request_parse(self, *, match_id: int) -> opendota.ParseResponse:
         """POST /request/{match_id}."""
-        return await self.invoke("POST", f"/request/{match_id}")  # type: ignore
+        return await self.invoke("POST", f"/request/{match_id}")  # type: ignore[reportReturnType]
 
 
-class ODotaConstantsClient(BaseClient):
+class OpenDotaConstantsClient(BaseClient):
     """Pulsefire client to work with OpenDota constants.
 
     This client works with odota/dotaconstants repository.
@@ -191,35 +191,35 @@ class ODotaConstantsClient(BaseClient):
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/heroes.json
         """
-        return await self.invoke("GET", "/heroes.json")  # type: ignore
+        return await self.invoke("GET", "/heroes.json")  # type: ignore[reportReturnType]
 
     async def get_ability_ids(self) -> odota_constants.GetAbilityIDsResponse:
         """Get `ability_ids.json` data.
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/ability_ids.json
         """
-        return await self.invoke("GET", "/ability_ids.json")  # type: ignore
+        return await self.invoke("GET", "/ability_ids.json")  # type: ignore[reportReturnType]
 
     async def get_abilities(self) -> odota_constants.GetAbilitiesResponse:
         """Get `abilities.json` data.
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/abilities.json
         """
-        return await self.invoke("GET", "/abilities.json")  # type: ignore
+        return await self.invoke("GET", "/abilities.json")  # type: ignore[reportReturnType]
 
     async def get_hero_abilities(self) -> odota_constants.GetHeroAbilitiesResponse:
         """Get `hero_abilities.json` data.
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/hero_abilities.json.
         """
-        return await self.invoke("GET", "/hero_abilities.json")  # type: ignore
+        return await self.invoke("GET", "/hero_abilities.json")  # type: ignore[reportReturnType]
 
     async def get_items(self) -> odota_constants.GetItemsResponse:
         """Get `items.json` data.
 
         https://raw.githubusercontent.com/odota/dotaconstants/master/build/items.json
         """
-        return await self.invoke("GET", "/items.json")  # type: ignore
+        return await self.invoke("GET", "/items.json")  # type: ignore[reportReturnType]
 
 
 class SteamWebAPIClient(BaseClient):
@@ -230,7 +230,7 @@ class SteamWebAPIClient(BaseClient):
             base_url="https://api.steampowered.com/",
             default_params={},
             default_headers={},
-            default_queries={"key": config.STEAM_WEB_API_KEY},
+            default_queries={"key": config["TOKENS"]["STEAM"]},
             middlewares=[
                 json_response_middleware(orjson.loads),
                 http_error_middleware(),
@@ -242,16 +242,16 @@ class SteamWebAPIClient(BaseClient):
 
         https://steamapi.xpaw.me/#IDOTA2Match_570/GetMatchDetails.
         """
-        queries = {"match_id": match_id}  # noqa F481
-        return await self.invoke("GET", "/IDOTA2Match_570/GetMatchDetails/v1/")  # type: ignore
+        queries = {"match_id": match_id}  # noqa: F841
+        return await self.invoke("GET", "/IDOTA2Match_570/GetMatchDetails/v1/")  # type: ignore[reportReturnType]
 
     async def get_real_time_stats(self, server_steam_id: int) -> steam_web_api.RealTimeStatsResponse:
         """GET /IDOTA2Match_570/GetMatchDetails/v1/.
 
         https://steamapi.xpaw.me/#IDOTA2MatchStats_570/GetRealtimeStats.
         """
-        queries = {"server_steam_id": server_steam_id}  # noqa F481
-        return await self.invoke("GET", "/IDOTA2MatchStats_570/GetRealtimeStats/v1/")  # type: ignore
+        queries = {"server_steam_id": server_steam_id}  # noqa: F841
+        return await self.invoke("GET", "/IDOTA2MatchStats_570/GetRealtimeStats/v1/")  # type: ignore[reportReturnType]
 
 
 class StratzAPIRateLimiter(DotaAPIsRateLimiter):
@@ -291,14 +291,14 @@ class StratzClient(BaseClient):
             default_params={},
             default_headers={
                 "User-Agent": "STRATZ_API",
-                "Authorization": f"Bearer {config.STRATZ_BEARER_TOKEN}",
+                "Authorization": f"Bearer {config['TOKENS']['STRATZ_BEARER']}",
                 "Content-Type": "application/json",
             },
             default_queries={},
             middlewares=[
                 json_response_middleware(orjson.loads),
                 http_error_middleware(),
-                # rate_limiter_middleware(self.rate_limiter),
+                rate_limiter_middleware(self.rate_limiter),
             ],
         )
 
@@ -321,7 +321,7 @@ class StratzClient(BaseClient):
                     "the one at https://stratz.com/api. "
                     "PS. This error is manual and not given by Stratz API."
                 )
-                raise errors.ResponseNotOK(msg)
+                raise errors.ResponseNotOK(msg) from None
             raise
 
     async def get_fpc_match_to_edit(self, *, match_id: int, friend_id: int) -> stratz.FPCMatchesResponse:
@@ -452,19 +452,15 @@ if __name__ == "__main__":
     async def test_opendota_get_match() -> None:
         async with OpenDotaClient() as opendota_client:
             match = await opendota_client.get_match(match_id=7543594334)
-            # player = match["players"][5]
-            # pprint.pprint(list(player.keys()))
-            # pprint.pprint(player["account_id"])
+
             for item in ["players", "teamfights", "radiant_xp_adv", "radiant_gold_adv", "picks_bans"]:
-                match.pop(item, None)  # type: ignore
-            # pprint.pprint(match.keys())
-            # pprint.pprint(match)
+                match.pop(item, None)  # type: ignore[reportArgumentType]
+
         print(opendota_client.rate_limiter.rate_limits_string)  # noqa: T201
 
     async def test_opendota_request_parse() -> None:
         async with OpenDotaClient() as opendota_client:
             await opendota_client.request_parse(match_id=7543594334)
-            # pprint.pprint(job)
 
     # STRATZ
     async def test_stratz_get_match() -> None:

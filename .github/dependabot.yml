@@ -9,9 +9,16 @@ updates:
 
     schedule:
       interval: monthly
+
+    commit-message:
+      prefix: "🤖"
     open-pull-requests-limit: 10
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: monthly
     open-pull-requests-limit: 10
+
+    commit-message:
+      prefix: "🤖"

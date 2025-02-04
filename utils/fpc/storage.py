@@ -50,7 +50,7 @@ CharacterT = TypeVar("CharacterT", bound=Character)
 PseudoCharacterT = TypeVar("PseudoCharacterT", bound=Character)
 
 
-class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT, PseudoCharacterT]):
+class CharacterTransformer[CharacterT: Character, PseudoCharacterT: Character](app_commands.Transformer, abc.ABC):
     @property
     @override
     def type(self) -> discord.AppCommandOptionType:
@@ -86,7 +86,7 @@ class CharacterTransformer(app_commands.Transformer, abc.ABC, Generic[CharacterT
         return [app_commands.Choice(name=character.display_name, value=character.id) for character in options]
 
 
-class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
+class GameDataStorage[VT, PseudoVT](abc.ABC):
     """Game Data Storage.
 
     Used for fetching and storing data from public API and JSONs.
@@ -122,6 +122,7 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
         """Cancel the storage tasks."""
         self.update_data.cancel()
 
+    @abc.abstractmethod
     async def fill_data(self) -> dict[int, VT]:
         """Fill self.cached_data with the data from various json data.
 
@@ -185,6 +186,8 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
         data = await self.get_cached_data()
         return list(data.values())
 
+
+class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]):
     async def create_character_emote_helper(
         self,
         *,
@@ -227,6 +230,3 @@ class GameDataStorage(abc.ABC, Generic[VT, PseudoVT]):
         )
         await self.bot.hideout.global_logs.send(embed=embed)
         return str(new_emote)
-
-
-class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]): ...

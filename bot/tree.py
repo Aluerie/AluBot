@@ -206,31 +206,21 @@ class AluAppCommandTree(app_commands.CommandTree):
             unexpected_error = True
 
             cmd_name = f"/{interaction.command.qualified_name}" if interaction.command else "non-cmd interaction"
+
+            args_join = (
+                "\n".join(f"[{name}]: {value!r}" for name, value in interaction.namespace.__dict__.items())
+                if interaction.namespace.__dict__
+                else "No arguments"
+            )
+            snowflake_ids = (
+                f"author  = {interaction.user.id}\nchannel = {interaction.channel_id}\nguild   = {interaction.guild_id}"
+            )
+
             metadata_embed = (
                 discord.Embed(
                     colour=0x2C0703,
                     title=f"Error in `{cmd_name}`",
-                    # timestamp = interaction.created_at
-                )
-                .add_field(
-                    name="Command Arguments",
-                    value=(
-                        "```py\n"
-                        + "\n".join(f"[{name}]: {value!r}" for name, value in interaction.namespace.__dict__.items())
-                        + "```"
-                        if interaction.namespace.__dict__
-                        else "```py\nNo arguments```"
-                    ),
-                )
-                .add_field(
-                    name="Snowflake Ids",
-                    value=(
-                        "```py\n"
-                        f"author  = {interaction.user.id}\n"
-                        f"channel = {interaction.channel_id}\n"
-                        f"guild   = {interaction.guild_id}```"
-                    ),
-                    inline=False,
+                    timestamp=interaction.created_at,
                 )
                 .set_author(
                     name=(
@@ -239,6 +229,8 @@ class AluAppCommandTree(app_commands.CommandTree):
                     ),
                     icon_url=interaction.user.display_avatar,
                 )
+                .add_field(name="Command Arguments", value=formats.code(args_join), inline=False)
+                .add_field(name="Snowflake Ids", value=formats.code(snowflake_ids), inline=False)
                 .set_footer(
                     text=f"on_app_command_error: {cmd_name}",
                     icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
@@ -252,7 +244,7 @@ class AluAppCommandTree(app_commands.CommandTree):
                 colour=const.Colour.maroon,
                 description=warn_developers_desc,
             ).set_author(name=error.__class__.__name__)
-            await interaction.client.hideout.spam.send(interaction.client.error_ping, embed=warn_developers_embed)
+            await interaction.client.hideout.spam.send(const.Role.error.mention, embed=warn_developers_embed)
 
         response_embed = helpers.error_handler_response_embed(error, desc, unexpected=unexpected_error, mention=mention)
         if not interaction.response.is_done():

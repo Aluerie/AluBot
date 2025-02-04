@@ -55,14 +55,17 @@ class SteamDotaProfiles(AluCog):
             .set_thumbnail(url=user.avatar.url)
             .add_field(
                 name="Steam IDs",
-                value=f'```{tabulate(
-                    [
-                        ["ID64", str(user.id64)],
-                        ["ID32", str(user.id)],
-                        ["ID3", str(user.id3)],
-                        ["ID2", str(user.id2)],
-                    ], tablefmt="plain",
-                )}\n```',
+                value=f"```{
+                    tabulate(
+                        tabular_data=[
+                            ['ID64', str(user.id64)],
+                            ['ID32', str(user.id)],
+                            ['ID3', str(user.id3)],
+                            ['ID2', str(user.id2)],
+                        ],
+                        tablefmt='plain',
+                    )
+                }\n```",
                 inline=False,
             )
             .add_field(name="Currently playing:", value=f"{user.app or 'Nothing'}")

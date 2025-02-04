@@ -3,7 +3,10 @@
     // IT IS NOT GIT IGNORED
     "cSpell.words": [
         "aluloop",
+        "dotaconstants",
+        "emotestats",
         "EUNE",
-        "truststore"
+        "truststore",
+        "wolframalpha"
     ]
 }

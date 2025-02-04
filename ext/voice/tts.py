@@ -46,7 +46,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
 
     tts_group = app_commands.Group(
         name="text-to-speech",
-        description="Make the bot join voice channels and do some talking.",
+        description="\N{STUDIO MICROPHONE} Make the bot join voice channels and do some talking.",
         guild_only=True,
     )
 
@@ -91,7 +91,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         language: LanguageCollection.Literal = "fr",
         text: str = "Allo",
     ) -> None:
-        """Make Text-To-Speech request into voice-chat.
+        """\N{STUDIO MICROPHONE} Make Text-To-Speech request for the voice-chat.
 
         Parameters
         ----------
@@ -115,13 +115,13 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
 
     @tts_group.command()
     async def stop(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Stop playing current audio. Useful if somebody is abusing TTS system with annoying requests."""
+        """\N{STUDIO MICROPHONE} Stop playing current audio. Useful if somebody is abusing TTS system."""
         assert interaction.guild
         try:
             vc = self.connections[interaction.guild.id]
         except KeyError:
             msg = "I'm not in voice channel"
-            raise errors.ErroneousUsage(msg)
+            raise errors.ErroneousUsage(msg) from None
 
         if vc.is_playing():
             vc.stop()
@@ -133,13 +133,13 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
 
     @tts_group.command()
     async def leave(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Make bot leave voice channel."""
+        """\N{STUDIO MICROPHONE} Make the bot leave the voice channel."""
         assert interaction.guild
         try:
             vc = self.connections[interaction.guild.id]
         except KeyError:
             msg = "I'm not in a voice channel."
-            raise errors.ErroneousUsage(msg)
+            raise errors.ErroneousUsage(msg) from None
 
         await vc.disconnect()
         embed = discord.Embed(description=f"I left {vc.channel.mention}", colour=interaction.user.colour)
@@ -147,7 +147,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
 
     @tts_group.command(name="bonjour")
     async def tts_bonjour(self, interaction: discord.Interaction[AluBot]) -> None:
-        """`Bonjour !` into both text/voice chats."""
+        """\N{STUDIO MICROPHONE} Make the bot say "Bonjour !" into both text/voice chats (that you're connected to)."""
         await self.speak_worker(interaction, LanguageCollection.fr, text="Bonjour !")
         await interaction.response.send_message(content=f"Bonjour {const.Emote.bubuAYAYA}")
 

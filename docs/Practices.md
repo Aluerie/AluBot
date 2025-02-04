@@ -4,7 +4,6 @@ In this file I will list common code practices (mostly small ones) such as
 
 * naming
 * order
-
 to keep things consistent.
 
 Just some things that do not get handled automatically by Black/Ruff.
@@ -27,3 +26,51 @@ embed = (
     .set_footer(text="Text")
 )
 ```
+
+## Dota 2 namings
+
+<!-- # TODO: maybe change this? just write 2 everywhere -->
+
+* if it's a display name then we write "2", i.e. `"Dota 2"`
+* if it's not then do not write the number, i.e. `self.bot.dota`. Idk, I just don't like how things like `dota2_hero` look like.
+
+## Docs
+
+Everything is covered well in numpy doc-style guide:
+<https://numpydoc.readthedocs.io/en/latest/format.html#examples>.
+
+Except for a few things that I want to consistently document myself:
+
+### Sources
+
+Numpy doesn't have such section in their standard but "borrowing" code around is a very common practice so let's acknowledge the original sources wherever possible, even if it's some small functions.
+
+Template:
+
+```py
+"""
+    Sources
+    -------
+    * Name of the source (license), extra pointers:
+        https://link_to_the_source.com
+
+        Some extra information.
+"""
+```
+
+Example:
+
+```py
+"""
+    Sources
+    -------
+    * Rapptz/RoboDanny (license MPL v2), `plural` class:
+        https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
+
+        This class is nice. #TODO: write a better comment here lol.
+"""
+```
+
+## Random Standards
+
+* Write `# type: ignore[reportReturnType]` and not `# pyright: ignore[reportReturnType]`

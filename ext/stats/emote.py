@@ -11,6 +11,7 @@ import asyncpg
 import discord
 from discord import app_commands
 from discord.ext import commands, menus
+from tabulate import tabulate
 
 from bot import AluBot, aluloop
 from utils import const, errors, formats, pages
@@ -178,7 +179,7 @@ class EmoteStats(StatsCog):
             self._batch_last_year.clear()
 
     emotestats_group = app_commands.Group(
-        name="emote",
+        name="emote-stats",
         description="\N{ROLLING ON THE FLOOR LAUGHING} Dota 2 FPC (Favourite Player+Character) commands.",
         guild_ids=const.MY_GUILDS,
     )
@@ -211,12 +212,12 @@ class EmoteStats(StatsCog):
         timeframe
             Time period to filter results with.
         """
-        if emote_type == "both":
-            condition = lambda _: True
-        elif emote_type == "static":
-            condition: Callable[[discord.Emoji], bool] = lambda e: not e.animated
-        elif emote_type == "animated":
-            condition: Callable[[discord.Emoji], bool] = lambda e: e.animated
+        condition_lookup: dict[Literal["both", "static", "animated"], Callable[[discord.Emoji], bool]] = {
+            "both": lambda _: True,
+            "static": lambda e: not e.animated,
+            "animated": lambda e: e.animated,
+        }
+        condition = condition_lookup[emote_type]
 
         assert interaction.guild  # guild only command
         emote_ids = [e.id for e in interaction.guild.emojis if e.is_usable() and condition(e)]
@@ -228,11 +229,11 @@ class EmoteStats(StatsCog):
         # now we need to fill `rows` variable with list[tuple[int, int]] of list[(emote_id, usage_count)] format
         if timeframe == "all-time":
             query = """
-                    SELECT emote_id, total
-                    FROM emote_stats_total
-                    WHERE guild_id = $1 AND emote_id = ANY($2::bigint[])
-                    ORDER BY total DESC
-                """
+                SELECT emote_id, total
+                FROM emote_stats_total
+                WHERE guild_id = $1 AND emote_id = ANY($2::bigint[])
+                ORDER BY total DESC
+            """
             rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, interaction.guild.id, emote_ids))
         else:
             now = datetime.datetime.now(datetime.UTC)
@@ -261,37 +262,34 @@ class EmoteStats(StatsCog):
         offset = 0
         split_size = 20
         tables = []
+
         for batch in itertools.batched(rows, n=split_size):
-            table = formats.NoBorderTable()
-            table.set_columns(
-                [
-                    f"`{formats.new_indent('N', offset + 1, split_size)}`",
+            table = tabulate(
+                tabular_data=[
+                    [
+                        f"`{formats.label_indent(counter, counter - 1, split_size)}`",
+                        *self.emote_fmt(emote_id=row[0], count=row[1], total=all_emotes_total),
+                    ]
+                    for counter, row in enumerate(batch, start=offset + 1)
+                ],
+                headers=[
+                    f"`{formats.label_indent('N', offset + 1, split_size)}`",
                     "\N{BLACK LARGE SQUARE}",  # "\N{FRAME WITH PICTURE}",
                     "`Name",
                     "Total",
                     "Percent",
                     "PerDay`",
                 ],
-                aligns=[">", "^", "<", ">", ">", ">"],
+                tablefmt="plain",
             )
-            for counter, row in enumerate(batch, start=offset + 1):
-                table.add_row(
-                    [
-                        f"`{formats.new_indent(counter, counter + 1, split_size)}`",
-                        *self.emote_fmt(emote_id=row[0], count=row[1], total=all_emotes_total),
-                    ],
-                )
-
-            # hijack the table widths since custom emotes rendering messes it up
-            table._widths[1] = 3
-            tables.append(table.render())
             offset += split_size
+            tables.append(table)
 
         paginator = pages.Paginator(
             interaction,
             EmoteStatsPageSource(
                 tables,
-                f"During the timeframe: total {all_emotes_total} emotes were used: {all_emotes_per_day:.0f} per day",
+                f"During the timeframe: total {all_emotes_total} emotes were used: {all_emotes_per_day} per day",
                 f"Emote Type: {emote_type}, Timeframe: {'last' if timeframe != 'all-time' else ''} {timeframe}",
                 interaction.guild.icon,
             ),
@@ -311,13 +309,13 @@ class EmoteStats(StatsCog):
         per_day = self.usage_per_day(emote.created_at, count)
         percent = count / (total or 1)
 
-        return full_name, f"`:{colon_name}:", str(count), f"{percent:.1%}", f"{per_day:.1f}`"
+        return full_name, f"`:{colon_name}:", str(count), f"{percent:.1%}", f"{per_day}`"
 
     @staticmethod
-    def usage_per_day(dt: datetime.datetime, usages: int) -> float:
+    def usage_per_day(dt: datetime.datetime, usages: int) -> str:
         base = max(dt, EMOTE_STATS_TRACKING_START)
         days = (datetime.datetime.now(datetime.UTC) - base).total_seconds() / 86400  # 86400 seconds in a day
-        return usages / (int(days) or 1)  # or 1 takes care of days = 1 DivisionError
+        return f"{usages / (int(days) or 1):.1f}"  # or 1 takes care of days = 1 DivisionError
 
     @aluloop(time=datetime.time(hour=12, minute=11, second=45))
     async def clean_up_old_records(self) -> None:
@@ -375,75 +373,71 @@ class EmoteStats(StatsCog):
         )
 
         if emoji.guild_id == const.Guild.community:
-            table = formats.NoBorderTable()
-            table.set_columns(["`Time Period", "Usages", "Percent", "Per Day`"], aligns=["<", ">", ">", ">"])
-
             # all time total
             query = """
-                    SELECT COALESCE(SUM(total), 0) AS "Count"
-                    FROM emote_stats_total
-                    WHERE guild_id = $1
-                    GROUP BY guild_id;
-                """
+                SELECT COALESCE(SUM(total), 0) AS "Count"
+                FROM emote_stats_total
+                WHERE guild_id = $1
+                GROUP BY guild_id;
+            """
             all_emotes_total: int = await self.bot.pool.fetchval(query, interaction.guild.id)
 
             # all time this emote
             query = """
-                    SELECT COALESCE(SUM(total), 0) AS "Count"
-                    FROM emote_stats_total
-                    WHERE emote_id=$1 AND guild_id = $2
-                    GROUP BY emote_id;
-                """
+                SELECT COALESCE(SUM(total), 0) AS "Count"
+                FROM emote_stats_total
+                WHERE emote_id=$1 AND guild_id = $2
+                GROUP BY emote_id;
+            """
             emote_usage_total: int = await self.bot.pool.fetchval(query, emoji.id, interaction.guild.id)
 
-            table.add_row(
-                [
-                    "`All-time",
-                    emote_usage_total,
-                    f"{emote_usage_total / all_emotes_total:.1%}",
-                    f"{self.usage_per_day(emoji.created_at, emote_usage_total)}`",
-                ],
-            )
+            all_time_period = [
+                "All-time",
+                emote_usage_total,
+                f"{emote_usage_total / all_emotes_total:.1%}",
+                self.usage_per_day(emoji.created_at, emote_usage_total),
+            ]
 
+            # last year total
             query = """
-                    SELECT COUNT(*) as "total"
-                    FROM emote_stats_last_year
-                    WHERE guild_id = $1;
-                """
+                SELECT COUNT(*) as "total"
+                FROM emote_stats_last_year
+                WHERE guild_id = $1;
+            """
             all_emotes_last_year: int = await self.bot.pool.fetchval(query, interaction.guild.id)
 
+            # last year this emote
             query = """
-                    SELECT COUNT(*) as "total"
-                    FROM emote_stats_last_year
-                    WHERE emote_id = $1 AND guild_id = $2;
-                """
+                SELECT COUNT(*) as "total"
+                FROM emote_stats_last_year
+                WHERE emote_id = $1 AND guild_id = $2;
+            """
             emote_usage_last_year: int = await self.bot.pool.fetchval(query, emoji.id, interaction.guild.id)
 
-            table.add_row(
-                [
-                    "`Last Year",
+            last_year_period = [
+                "Last Year",
+                emote_usage_last_year,
+                f"{emote_usage_last_year / all_emotes_last_year:.1%}",
+                self.usage_per_day(
+                    max(emoji.created_at, datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=365)),
                     emote_usage_last_year,
-                    f"{emote_usage_last_year / all_emotes_last_year:.1%}",
-                    f"{self.usage_per_day(
-                        max(emoji.created_at, datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=365)),
-                        emote_usage_last_year,
-                    )}`",
-                ],
-            )
+                ),
+            ]
 
-            server_stats = table.render()
+            server_stats = formats.code(
+                tabulate(
+                    headers=["Period", "Usages", "Percent", "Per Day"],
+                    tabular_data=[all_time_period, last_year_period],
+                    tablefmt="plain",
+                )
+            )
 
         else:
             server_stats = (
                 "Sorry! At the moment, we only track server stats for only Aluerie's Community Server emotes."
             )
 
-        embed.add_field(
-            name="Server Usage Stats",
-            value=server_stats,
-            inline=False,
-        )
-
+        embed.add_field(name="Server Usage Stats", value=server_stats, inline=False)
         await interaction.response.send_message(embed=embed)
 
 

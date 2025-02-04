@@ -5,7 +5,7 @@ from urllib import parse as urlparse
 
 from discord import app_commands
 
-from config import WOLFRAM_TOKEN
+from config import config
 from utils import const, errors
 
 from .._base import EducationalCog
@@ -26,8 +26,9 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         base = "https://api.wolframalpha.com/v1"
-        self.simple_url = f"{base}/simple?appid={WOLFRAM_TOKEN}&background=black&foreground=white&layout=labelbar&i="
-        self.short_url = f"{base}/result?appid={WOLFRAM_TOKEN}&i="
+        wolfram_token = config["TOKENS"]["WOLFRAM"]
+        self.simple_url = f"{base}/simple?appid={wolfram_token}&background=black&foreground=white&layout=labelbar&i="
+        self.short_url = f"{base}/result?appid={wolfram_token}&i="
 
     wolfram_group = app_commands.Group(
         name="wolfram",
@@ -41,7 +42,7 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
 
         Parameters
         ----------
-        query
+        query : str
             Query for WolframAlpha.
         """
         await interaction.response.defer()
@@ -56,7 +57,7 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
 
         Parameters
         ----------
-        query
+        query : str
             Query for WolframAlpha.
         """
         await interaction.response.defer()

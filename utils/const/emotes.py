@@ -66,7 +66,6 @@ class Emote(StrEnum):
     bubuGun = "<:bubuGun:1125591628996948048>"
     peepoBlushDank = "<:peepoBlushDank:1125591832240328786>"
     peepoBusiness = "<:peepoBusiness:1125591642729091113>"
-    # peepoComfy = '<:peepoComfy:1125591750665318420>' # we will use the one from community
     peepoHappyDank = "<:peepoHappyDank:1125591819137335304>"
     peepoMovie = "<:peepoMovie:1125591645853859901>"
     peepoNiceDay = "<:peepoNiceDay:1125591903488987236>"
@@ -100,6 +99,7 @@ class Tick(StrEnum):
     Yes = "\N{WHITE HEAVY CHECK MARK}"
     No = "\N{CROSS MARK}"
     Black = "\N{BLACK LARGE SQUARE}"
+    Question = "\N{WHITE QUESTION MARK ORNAMENT}"
 
 
 DIGITS = [

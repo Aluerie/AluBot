@@ -7,7 +7,7 @@ import discord
 import twitchio
 from twitchio import eventsub
 
-import config
+from config import config
 
 from . import const, formats
 
@@ -28,8 +28,8 @@ log = logging.getLogger(__name__)
 class AluTwitchClient(twitchio.Client):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(
-            client_id=config.TTV_DEV_CLIENT_ID,
-            client_secret=config.TTV_DEV_CLIENT_SECRET,
+            client_id=config["TWITCH"]["CLIENT_ID"],
+            client_secret=config["TWITCH"]["CLIENT_SECRET"],
             bot_id=const.TwitchID.Bot,
         )
         self._bot: AluBot = bot
@@ -208,7 +208,7 @@ class Streamer:
 
         if stream:
             self.live = True
-            self.game = stream.game_name
+            self.game = stream.game_name or "No category"
             self.title = stream.title
             # example: https://static-cdn.jtvnw.net/previews-ttv/live_user_gosu-{width}x{height}.jpg
             self.preview_url = stream.thumbnail.url

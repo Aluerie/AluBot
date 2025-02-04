@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, override
 
 import discord
 
-from config import LOGGER_WEBHOOK
+from config import config
 from utils import const, formats
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ ASCII_STARTING_UP_ART = r"""
 
 
 @contextmanager
-def setup_logging(test: bool) -> Generator[Any, Any, Any]:
+def setup_logging(*, test: bool) -> Generator[Any, Any, Any]:
     """Setup logging."""
     log = logging.getLogger()
     log.setLevel(logging.INFO)
@@ -46,7 +46,7 @@ def setup_logging(test: bool) -> Generator[Any, Any, Any]:
         Path(".temp/").mkdir(parents=True, exist_ok=True)
         # File Handler
         file_handler = RotatingFileHandler(
-            filename=f'.temp/{"alubot" if not test else "yenbot"}.log',
+            filename=f".temp/{'alubot' if not test else 'yenbot'}.log",
             encoding="utf-8",
             mode="w",
             maxBytes=24 * 1024 * 1024,  # MiB
@@ -58,11 +58,12 @@ def setup_logging(test: bool) -> Generator[Any, Any, Any]:
         if platform.system() == "Linux":
             # so start-ups in logs are way more noticeable
             log.info(ASCII_STARTING_UP_ART)
-            # send webhook message as well
-            webhook = discord.SyncWebhook.from_url(LOGGER_WEBHOOK)
+            # send a webhook message as well
+            webhook = discord.SyncWebhook.from_url(config["WEBHOOKS"]["LOGGER"])
+            now_str = formats.format_dt(datetime.datetime.now(datetime.UTC), style="T")
             embed = discord.Embed(
                 colour=discord.Colour.og_blurple(),
-                description=f"{formats.format_dt(datetime.datetime.now(datetime.UTC), style="T")} The bot is restarting",
+                description=f"{now_str} The bot is restarting",
             )
             webhook.send(avatar_url=const.Emoticon.Swan, embed=embed)
 

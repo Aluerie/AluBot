@@ -99,7 +99,7 @@ class Mimic:
             case discord.DMChannel() | discord.GroupChannel():
                 msg = f"Such functionality is not available in DMS {channel!r}"
                 raise errors.ErroneousUsage(msg)
-            case discord.PartialMessageable() | discord.abc.CategoryChannel() | None:
+            case discord.PartialMessageable() | discord.CategoryChannel() | None:
                 # typechecker moments
                 # idk how I'm going to get these types in practice
                 msg = f"Got weird type {type(channel)} for {channel!r}."

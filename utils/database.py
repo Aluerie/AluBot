@@ -30,19 +30,20 @@ if we ever actually face any problems with it.
 
 PS for more understanding:
 * asyncpg.Record is a cut-off version of both dict and tuple classes:
-    click "DotRecord(asyncpg.Record)" declaration for its supported methods.
+    click "asyncpg.Record" declaration for its supported methods.
     This is why if Python ever introduces possibility to extend the capability of typed dict
     (e.g. We can bind it to something else's getitem etc) we can't really type-hint Record properly.
 """
 
 from __future__ import annotations
 
+import platform
 from typing import TYPE_CHECKING, Any, override
 
 import asyncpg
 import orjson
 
-from config import POSTGRES_URL
+from config import config
 
 
 # @deprecated("Just use dictionary notations.")  # from warnings import deprecated # TODO: 3.13
@@ -51,6 +52,10 @@ class DotRecord(asyncpg.Record):
 
     Same as `asyncpg.Record`, but allows dot-notations
     such as `record.id` instead of `record['id']`.
+
+    Notes
+    -----
+    in order to bring it back put `record_class=DotRecord` into `asyncpg.create_pool` function below.
     """
 
     def __getattr__(self, name: str) -> Any:
@@ -77,12 +82,10 @@ if TYPE_CHECKING:
         # all methods below were changed from "asyncpg.Record" to "Any"
 
         @override
-        async def fetch(self, query: str, *args: Any, timeout: float | None = None) -> list[Any]:
-            ...
+        async def fetch(self, query: str, *args: Any, timeout: float | None = None) -> list[Any]: ...
 
         @override
-        async def fetchrow(self, query: str, *args: Any, timeout: float | None = None) -> Any:
-            ...
+        async def fetchrow(self, query: str, *args: Any, timeout: float | None = None) -> Any: ...
 
 
 async def create_pool() -> asyncpg.Pool[asyncpg.Record]:
@@ -103,12 +106,12 @@ async def create_pool() -> asyncpg.Pool[asyncpg.Record]:
             format="text",
         )
 
+    postgres_url = config["POSTGRES"]["VPS"] if platform.system() == "Linux" else config["POSTGRES"]["HOME"]
     return await asyncpg.create_pool(
-        POSTGRES_URL,
+        postgres_url,
         init=init,
         command_timeout=60,
         min_size=20,
         max_size=20,
-        # record_class=DotRecord,  # deprecated
         statement_cache_size=0,
     )  # pyright: ignore[reportReturnType]

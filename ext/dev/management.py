@@ -59,7 +59,7 @@ class BotManagement(DevBaseCog):
         """Prepare an embed stats about the guild."""
         embed.description = guild.description
         guild_info = tabulate(
-            [("Name", guild.name), ("ID", guild.id), ("Shard ID", guild.shard_id or "N/A")],
+            tabular_data=[("Name", guild.name), ("ID", guild.id), ("Shard ID", guild.shard_id or "N/A")],
             tablefmt="plain",
         )
         embed.add_field(name="Guild Info", value=formats.code(guild_info))
@@ -73,7 +73,9 @@ class BotManagement(DevBaseCog):
 
         bots = sum(m.bot for m in guild.members)
         total = guild.member_count or 1
-        guild_stats = tabulate([("Members", total), ("Bots", f"{bots} ({bots / total:.2%})")], tablefmt="plain")
+        guild_stats = tabulate(
+            tabular_data=[("Members", total), ("Bots", f"{bots} ({bots / total:.2%})")], tablefmt="plain"
+        )
         embed.add_field(name="Guild Stats", value=formats.code(guild_stats))
         if guild.me:
             embed.timestamp = guild.me.joined_at

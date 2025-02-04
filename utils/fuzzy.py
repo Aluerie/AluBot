@@ -100,7 +100,7 @@ def _extraction_generator(
 
 
 @overload
-def _extraction_generator(
+def _extraction_generator[T](
     query: str,
     choices: dict[str, T],
     scorer: Callable[[str, str], int] = ...,
@@ -108,7 +108,7 @@ def _extraction_generator(
 ) -> Generator[tuple[str, int, T], None, None]: ...
 
 
-def _extraction_generator(
+def _extraction_generator[T](
     query: str,
     choices: Sequence[str] | dict[str, T],
     scorer: Callable[[str, str], int] = quick_ratio,
@@ -138,7 +138,7 @@ def extract(
 
 
 @overload
-def extract(
+def extract[T](
     query: str,
     choices: dict[str, T],
     *,
@@ -148,7 +148,7 @@ def extract(
 ) -> list[tuple[str, int, T]]: ...
 
 
-def extract(
+def extract[T](
     query: str,
     choices: dict[str, T] | Sequence[str],
     *,
@@ -179,7 +179,7 @@ def extract_one(
 
 
 @overload
-def extract_one(
+def extract_one[T](
     query: str,
     choices: dict[str, T],
     *,
@@ -188,7 +188,7 @@ def extract_one(
 ) -> tuple[str, int, T] | None: ...
 
 
-def extract_one(
+def extract_one[T](
     query: str,
     choices: dict[str, T] | Sequence[str],
     *,
@@ -220,7 +220,7 @@ def extract_or_exact(
 
 
 @overload
-def extract_or_exact(
+def extract_or_exact[T](
     query: str,
     choices: dict[str, T],
     *,
@@ -230,7 +230,7 @@ def extract_or_exact(
 ) -> list[tuple[str, int, T]]: ...
 
 
-def extract_or_exact(
+def extract_or_exact[T](
     query: str,
     choices: dict[str, T] | Sequence[str],
     *,
@@ -266,7 +266,7 @@ def extract_matches(
 
 
 @overload
-def extract_matches(
+def extract_matches[T](
     query: str,
     choices: dict[str, T],
     *,
@@ -275,7 +275,7 @@ def extract_matches(
 ) -> list[tuple[str, int, T]]: ...
 
 
-def extract_matches(
+def extract_matches[T](
     query: str,
     choices: dict[str, T] | Sequence[str],
     *,

@@ -11,8 +11,8 @@ import discord
 from discord.ext import commands
 from discord.utils import MISSING
 
-import config
 from bot import EXT_CATEGORY_NONE, AluContext, ExtCategory
+from config import config
 from ext import get_extensions
 from utils import cache, const, disambiguator, errors, formats, helpers, transposer
 
@@ -66,7 +66,6 @@ class AluBot(commands.Bot, AluBotHelper):
         test: bool = False,
         session: ClientSession,
         pool: asyncpg.Pool[asyncpg.Record],
-        **kwargs: Any,
     ) -> None:
         """Initialize the AluBot.
 
@@ -76,8 +75,9 @@ class AluBot(commands.Bot, AluBotHelper):
             aiohttp.ClientSession to use within the bot.
         pool : asyncpg.Pool[DotRecord]
             A connection pool to the database.
-        test : bool, optional
-            whether the bot is a testing version (YenBot) or main production bot (AluBot), by default False
+        test : bool, default=False
+            whether the bot is a testing version (YenBot) or main production bot (AluBot).
+            I just like to use different discord bot token to debug issues, test new code, etc.
         kwargs : Any
             kwargs for the purpose of MRO and what not.
 
@@ -152,13 +152,12 @@ class AluBot(commands.Bot, AluBotHelper):
     async def try_hideout_auto_sync(self) -> bool:
         """Try automatic `copy_global_to` + `sync` Hideout Guild for easier testing purposes.
 
-        ?tag ass (auto-syncing sucks) and all, but common - it's just too convenient
-        and I haven't been rate-limited a single time (yet).
+        ?tag ass (auto-syncing sucks) and all, but come on - it's just too convenient to pass on.
+        I haven't been rate-limited a single time (yet).
 
         Sources
         -------
-        * DuckBot
-            licensed MPL v2 from DuckBot-Discord/DuckBot `try_autosync`
+        * DuckBot-Discord/DuckBot (licensed MPL v2), `try_autosync` function:
             https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/bot.py
         """
         # safeguard. Need the app id.
@@ -208,8 +207,6 @@ class AluBot(commands.Bot, AluBotHelper):
         """Handle `ready` event."""
         if not hasattr(self, "launch_time"):
             self.launch_time = datetime.datetime.now(datetime.UTC)
-        # if hasattr(self, "dota"):
-        #     await self.dota.wait_until_ready()
         log.info("Logged in as `%s`", self.user)
 
     @override
@@ -217,7 +214,8 @@ class AluBot(commands.Bot, AluBotHelper):
         # erm, bcs of my horrendous .test logic we need to do it in a weird way
         # todo: is there anything better ? :D
 
-        coroutines = [super().start(config.DISCORD_BOT_TOKEN, reconnect=True)]
+        discord_token = config["DISCORD"]["ALUBOT"] if not self.test else config["DISCORD"]["YENBOT"]
+        coroutines = [super().start(discord_token, reconnect=True)]
 
         dota_extensions = (
             "ext.fpc.dota",
@@ -267,7 +265,7 @@ class AluBot(commands.Bot, AluBotHelper):
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from utils.dota.dota2client import Dota2Client
+            from utils.dota.dota_client import Dota2Client
 
             self.dota = Dota2Client(self)
 
@@ -276,7 +274,7 @@ class AluBot(commands.Bot, AluBotHelper):
         if not hasattr(self, "github"):
             from githubkit import GitHub
 
-            self.github = GitHub(config.GIT_PERSONAL_TOKEN)
+            self.github = GitHub(config["TOKENS"]["GIT_PERSONAL"])
 
     async def instantiate_twitch(self) -> None:
         """Instantiate subclassed twitchio's Twitch Client."""
@@ -327,10 +325,16 @@ class AluBot(commands.Bot, AluBotHelper):
         return discord.utils.oauth_url(self.user.id, permissions=PERMISSIONS, scopes=("bot", "applications.commands"))
 
     def webhook_from_url(self, url: str) -> discord.Webhook:
-        """A shortcut function with filled in discord.Webhook.from_url args."""
-        return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
+        """A shortcut function with filled in discord.Webhook.from_url arguments."""
+        return discord.Webhook.from_url(
+            url=url,
+            session=self.session,
+            client=self,
+            bot_token=self.http.token,
+        )
 
     async def webhook_from_database(self, channel_id: int) -> discord.Webhook:
+        """Fetch webhook_url from the database by the `channel_id`."""
         query = "SELECT url FROM webhooks WHERE channel_id = $1"
         webhook_url: str | None = await self.pool.fetchval(query, channel_id)
         if webhook_url:
@@ -341,17 +345,14 @@ class AluBot(commands.Bot, AluBotHelper):
     @discord.utils.cached_property
     def spam_webhook(self) -> discord.Webhook:
         """A shortcut to spam webhook."""
-        return self.webhook_from_url(config.SPAM_WEBHOOK)
+        webhook_url = config["WEBHOOKS"]["SPAM"] if not self.test else config["WEBHOOKS"]["YEN_SPAM"]
+        return self.webhook_from_url(webhook_url)
 
     @discord.utils.cached_property
     def error_webhook(self) -> discord.Webhook:
         """A shortcut to error webhook."""
-        return self.webhook_from_url(config.ERROR_WEBHOOK)
-
-    @property
-    def error_ping(self) -> str:
-        """Error Role ping used to notify Irene about some errors."""
-        return config.ERROR_PING
+        webhook_url = config["WEBHOOKS"]["ERROR"] if not self.test else config["WEBHOOKS"]["YEN_ERROR"]
+        return self.webhook_from_url(webhook_url)
 
     @override
     async def on_message(self, message: discord.Message) -> None:
@@ -366,11 +367,11 @@ class AluBot(commands.Bot, AluBotHelper):
 
         Parameters
         ----------
-        event
+        event : str
             The name of the event that raised the exception.
-        args
+        args : Any
             The positional arguments for the event that raised the exception.
-        kwargs
+        kwargs : Any
             The keyword arguments for the event that raised the exception.
 
         """
@@ -378,19 +379,12 @@ class AluBot(commands.Bot, AluBotHelper):
         if exception is None:
             exception = TypeError("Somehow `on_error` fired with exception being `None`.")
 
+        args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
         embed = (
             discord.Embed(colour=0xA32952, title=f"`{event}`")
             .set_author(name="Event Error")
-            .add_field(
-                name="Args",
-                value=(
-                    "```py\n" + "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) + "```"
-                    if args
-                    else "No Args"
-                ),
-                inline=False,
-            )
-            .set_footer(text=f"AluBot.on_error: {event}")
+            .add_field(name="Args", value=formats.code(args_join), inline=False)
+            .set_footer(text=f"{self.__class__.__name__}.on_error: {event}")
         )
         await self.exc_manager.register_error(exception, embed)
 

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Self, override
 
 import discord
 
-from utils import errors
+from utils import const, errors
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -103,9 +103,9 @@ class ExceptionManager:
         """
         log.error("%s: `%s`.", error.__class__.__name__, embed.footer.text, exc_info=error)
 
-        # if self.bot.test:
-        #     # i don't need any notifications when I'm testing since I'm right there.
-        #     return
+        if self.bot.test:
+            # i don't need any extra notifications when I'm testing since I'm right there.
+            return
 
         # apparently there is https://github.com/vi3k6i5/flashtext for "the fastest replacement"
         # not sure if I want to add extra dependency
@@ -120,34 +120,28 @@ class ExceptionManager:
                 await asyncio.sleep(total_seconds)
 
             self._most_recent = datetime.datetime.now(datetime.UTC)
-            await self.send_error(traceback_string, embed, mention)
+            await self.send_error(traceback_string, embed)
 
-    async def send_error(self, traceback: str, embed: discord.Embed, mention: bool) -> None:
+    async def send_error(self, traceback: str, embed: discord.Embed) -> None:
         """Send an error to the error webhook.
 
         It is not recommended to call this yourself, call `register_error` instead.
 
         Parameters
         ----------
-        traceback
+        traceback: str
             The traceback of the error.
-        embed
+        embed: discord.Embed
             The additional information about the error. This comes from registering the error.
-        mention
-            Whether to send said embed and ping Irene at all.
 
         """
         code_chunks = list(self._yield_code_chunks(traceback))
 
         # hmm, this is honestly a bit too many sends for 5 seconds of rate limit :thinking:
-        if mention:
-            await self.bot.error_webhook.send(self.bot.error_ping)
-
+        await self.bot.error_webhook.send(const.Role.error.mention)
         for chunk in code_chunks:
             await self.bot.error_webhook.send(chunk)
-
-        if mention:
-            await self.bot.error_webhook.send(embed=embed)
+        await self.bot.error_webhook.send(embed=embed)
 
 
 class HandleHTTPException(AbstractAsyncContextManager[Any]):

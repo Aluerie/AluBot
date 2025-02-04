@@ -7,7 +7,7 @@ from pulsefire.clients import CDragonClient, MerakiCDNClient, RiotAPIClient
 from pulsefire.middlewares import http_error_middleware, json_response_middleware, rate_limiter_middleware
 from pulsefire.ratelimiters import RiotAPIRateLimiter
 
-import config
+from config import config
 
 from .storage import Champions, ItemIcons, RolesIdentifiers, RuneIcons, SummonerSpellIcons
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class LeagueClient(RiotAPIClient):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(
-            default_headers={"X-Riot-Token": config.RIOT_API_KEY},
+            default_headers={"X-Riot-Token": config["TOKENS"]["RIOT"]},
             default_queries={},
             middlewares=[
                 json_response_middleware(orjson.loads),

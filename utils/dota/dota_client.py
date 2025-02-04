@@ -7,17 +7,10 @@ import discord
 from steam import PersonaState
 from steam.ext.dota2 import Client
 
-try:
-    import config
-except ImportError:
-    import sys
+from config import config
+from utils import const, formats
 
-    sys.path.append("D:/LAPTOP/AluBot")
-    import config
-
-from utils import const
-
-from .pulsefire_clients import ODotaConstantsClient, StratzClient
+from .pulsefire_clients import OpenDotaConstantsClient, StratzClient
 from .storage import Abilities, Facets, Heroes, Items
 
 if TYPE_CHECKING:
@@ -47,18 +40,19 @@ class Dota2Client(Client):
 
         # clients
         self.stratz = StratzClient()
-        self.odota_constants = ODotaConstantsClient()
-        # caches
+        self.opendota_constants = OpenDotaConstantsClient()
+        # storages
         self.abilities = Abilities(bot)
         self.heroes = Heroes(bot)
         self.items = Items(bot)
         self.facets = Facets(bot)
 
     def aluerie(self) -> PartialUser:
-        return self.instantiate_partial_user(config.DOTA_FRIEND_ID)
+        """Shortcut to get partial user object for @Aluerie's steam/dota2 profile."""
+        return self.instantiate_partial_user(config["STEAM"]["ALUERIE_FRIEND_ID"])
 
     async def start_helpers(self) -> None:
-        """_summary_
+        """Starting helping clients, tasks and services.
 
         Usage
         -----
@@ -71,7 +65,7 @@ class Dota2Client(Client):
         if not self.started:
             # clients
             await self.stratz.__aenter__()  # noqa: PLC2801
-            await self.odota_constants.__aenter__()  # noqa: PLC2801
+            await self.opendota_constants.__aenter__()  # noqa: PLC2801
 
             # caches
             self.abilities.start()
@@ -81,44 +75,20 @@ class Dota2Client(Client):
 
             self.started = True
 
-    # @override
-    # async def __aenter__(self) -> Self:
-    #     # clients
-    #     await self.stratz.__aenter__()
-    #     await self.odota_constants.__aenter__()
-
-    #     # caches
-    #     self.abilities.start()
-    #     self.heroes.start()
-    #     self.items.start()
-    #     self.facets.start()
-
-    #     return await super().__aenter__()
-
-    # @override
-    # async def __aexit__(self) -> None:
-    #     # clients
-    #     await self.stratz.__aexit__()
-    #     await self.odota_constants.__aexit__()
-
-    #     # caches
-    #     self.abilities.close()
-    #     self.heroes.close()
-    #     self.items.close()
-    #     self.facets.close()
-    #     await super().__aexit__()
-
     @override
     async def login(self) -> None:
         await self.start_helpers()
-        await super().login(config.STEAM_USERNAME, config.STEAM_PASSWORD)
-        log.info("We logged into Steam: %s", config.STEAM_USERNAME)
+
+        account_credentials = config["STEAM"]["ALUBOT"] if not self.bot.test else config["STEAM"]["YENBOT"]
+        username, password = account_credentials["USERNAME"], account_credentials["PASSWORD"]
+        await super().login(username, password)
+        log.info("We logged into Steam: %s", username)
 
     @override
     async def close(self) -> None:
         # clients
         await self.stratz.__aexit__()
-        await self.odota_constants.__aexit__()
+        await self.opendota_constants.__aexit__()
 
         # caches
         self.abilities.close()
@@ -135,32 +105,15 @@ class Dota2Client(Client):
 
     @override
     async def on_error(self, event: str, error: Exception, *args: object, **kwargs: object) -> None:
+        args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
+        kwargs_join = "\n".join(f"[{name}]: {value!r}" for name, value in kwargs.items()) if kwargs else "No Kwargs"
         embed = (
             discord.Embed(
                 colour=discord.Colour.dark_red(),
                 title=f"Error in steam.py's {self.__class__.__name__}",
             )
-            .set_author(
-                name=f"Event: {event}",
-                icon_url=const.Logo.Dota,
-            )
-            .add_field(
-                name="Args",
-                value=(
-                    "```py\n" + "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) + "```"
-                    if args
-                    else "No Args"
-                ),
-                inline=False,
-            )
-            .add_field(
-                name="Kwargs",
-                value=(
-                    "```py\n" + "\n".join(f"[{name}]: {value!r}" for name, value in kwargs.items()) + "```"
-                    if kwargs
-                    else "No Kwargs"
-                ),
-                inline=False,
-            )
+            .set_author(name=f"Event: {event}", icon_url=const.Logo.Dota)
+            .add_field(name="Args", value=formats.code(args_join), inline=False)
+            .add_field(name="Kwargs", value=formats.code(kwargs_join), inline=False)
         )
         await self.bot.exc_manager.register_error(error, embed)

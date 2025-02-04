@@ -21,8 +21,8 @@ import asyncpg
 import click
 import discord
 
-import config
 from bot import AluBot, setup_logging
+from config import config
 from utils import const, database
 
 try:
@@ -45,20 +45,20 @@ async def start_the_bot(*, test: bool) -> None:
         if platform.system() != "Windows":
             session = aiohttp.ClientSession()
             webhook = discord.Webhook.from_url(
-                url=config.SPAM_WEBHOOK,
+                url=config["WEBHOOKS"]["SPAM"],
                 session=session,
             )
             embed = discord.Embed(color=const.Colour.maroon, description=msg)
-            await webhook.send(content=config.ERROR_PING, embed=embed)
+            await webhook.send(content=const.Role.error.mention, embed=embed)
             await session.close()
         return
-
-    async with (
-        aiohttp.ClientSession() as session,
-        pool as pool,
-        AluBot(test=test, session=session, pool=pool) as alubot,
-    ):
-        await alubot.start()
+    else:
+        async with (
+            aiohttp.ClientSession() as session,
+            pool as pool,
+            AluBot(test=test, session=session, pool=pool) as alubot,
+        ):
+            await alubot.start()
 
 
 @click.group(invoke_without_command=True, options_metavar="[options]")
@@ -67,7 +67,7 @@ async def start_the_bot(*, test: bool) -> None:
 def main(click_ctx: click.Context, *, test: bool) -> None:
     """Launches the bot."""
     if click_ctx.invoked_subcommand is None:
-        with setup_logging(test):
+        with setup_logging(test=test):
             try:
                 asyncio.run(start_the_bot(test=test))
             except KeyboardInterrupt:
@@ -85,7 +85,7 @@ def create() -> None:
     try:
 
         async def run_create() -> None:
-            connection = await asyncpg.connect(config.POSTGRES_URL)
+            connection = await asyncpg.connect(config["POSTGRES"]["HOME"])
             async with connection.transaction():
                 for f in Path("sql").iterdir():
                     if f.is_file() and f.suffix == ".sql" and not f.name.startswith("_"):

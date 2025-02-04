@@ -268,11 +268,11 @@ class PlayersPageSource(menus.ListPageSource):
             menu.add_item(item)
 
         for entry in entries:
-            id, name = entry
-            is_favourite = id in favourite_ids
+            id_, name = entry
+            is_favourite = id_ in favourite_ids
             menu.add_item(
                 AddRemoveButton(
-                    name, is_favourite, id, table=f"{cog.prefix}_favourite_players", column="player_id", menu=menu,
+                    name, is_favourite, id_, table=f"{cog.prefix}_favourite_players", column="player_id", menu=menu,
                 ),
             )
 

@@ -36,8 +36,8 @@ from discord import app_commands
 from discord.ext import commands, menus
 from tabulate import tabulate
 
-import config
 from bot import AluBot, AluCog, ExtCategory, aluloop
+from config import config
 from utils import cache, const, errors, formats, fuzzy, timezones
 from utils.helpers import measure_time
 

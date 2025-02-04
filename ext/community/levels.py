@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import datetime
+import itertools
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, menus
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from tabulate import tabulate
 
 from bot import aluloop
 from utils import const, errors, formats, pages
@@ -104,6 +106,24 @@ def get_exp_for_next_level(lvl: int) -> int:
     return exp_lvl_table[lvl]
 
 
+class LeaderboardPageSource(menus.ListPageSource):
+    def __init__(self, entries: list[str], *, footer_text: str, guild_icon: discord.Asset | None) -> None:
+        super().__init__(entries, per_page=1)
+        self.footer_text: str = footer_text
+        self.guild_icon: discord.Asset | None = guild_icon
+
+    @override
+    async def format_page(self, _menu: pages.Paginator, entry: str) -> discord.Embed:
+        return discord.Embed(
+            colour=const.Colour.blueviolet,
+            title="Server Leaderboard",
+            description=entry,
+        ).set_footer(
+            icon_url=self.guild_icon,
+            text=self.footer_text,
+        )
+
+
 class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA):
     """Commands about member profiles.
 
@@ -132,7 +152,9 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         self.bot.tree.remove_command(c.name, type=c.type)
 
     async def context_menu_view_user_rank_callback(
-        self, interaction: discord.Interaction[AluBot], member: discord.Member,
+        self,
+        interaction: discord.Interaction[AluBot],
+        member: discord.Member,
     ) -> None:
         await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
 
@@ -158,7 +180,14 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         query = "SELECT COUNT(*) FROM community_members WHERE exp > $1"
         place = 1 + await ctx.client.pool.fetchval(query, row.exp)
         image = await rank_image(
-            ctx.client, lvl, row.exp, row.rep, next_lvl_exp, prev_lvl_exp, formats.ordinal(place), member,
+            ctx.client,
+            lvl,
+            row.exp,
+            row.rep,
+            next_lvl_exp,
+            prev_lvl_exp,
+            formats.ordinal(place),
+            member,
         )
         return ctx.client.transposer.image_to_file(image, filename="rank.png")
 
@@ -171,7 +200,9 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
     @app_commands.guilds(const.Guild.community)
     @app_commands.command(name="leaderboard")
     async def leaderboard(
-        self, interaction: discord.Interaction[AluBot], sort_by: Literal["exp", "rep"] = "exp",
+        self,
+        interaction: discord.Interaction[AluBot],
+        sort_by: Literal["exp", "rep"] = "exp",
     ) -> None:
         """View experience leaderboard for this server.
 
@@ -182,11 +213,6 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         """
         guild = self.community.guild
 
-        new_array = []
-        split_size = 10
-        offset = 1
-        cnt = offset
-
         query = f"""
             SELECT id, exp, rep
             FROM community_members
@@ -194,24 +220,54 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             ORDER BY {sort_by} DESC;
         """
         rows: list[LeaderboardQueryRow] = await self.bot.pool.fetch(query)
-        for row in rows:
-            if (member := guild.get_member(row["id"])) is None:
-                continue
-            new_array.append(
-                f"{member.mention}\n`"
-                f"{formats.indent(' ', cnt, offset, split_size)} "
-                f"level {get_level(row["exp"])}, {row["exp"]} exp| {row["rep"]} rep`",
-            )
-            cnt += 1
+        # clean up the rows from inactive members
+        members = [(member, row) for row in rows if (member := guild.get_member(row["id"])) is not None]
 
-        pgs = pages.EnumeratedPaginator(
+        offset = 0
+        split_size = 10
+        tables = []
+
+        for batch in itertools.batched(members, n=split_size):
+            table = tabulate(
+                tabular_data=[
+                    [
+                        # some absolutely insane tier alignment is going on here
+                        # we use multi-lines table approach
+                        # since we can't align mentions in discord properly due to non-monospace font
+                        # we put mentions on one line and the data onto the second line and properly align those;
+                        # we put invisible symbol to trick the tabulate to make two lines for those
+                        (
+                            f"{(label := '`' + formats.label_indent(counter, counter - 1, split_size) + '`')}"
+                            f"\n`{' ' * len(label)}"
+                        ),
+                        f"{member.mention}\n{' ' * len(member.mention)}",
+                        f"‎\n{get_level(row['exp'])}",
+                        f"‎\n{row['exp']}",
+                        f"‎\n{row['rep']}`",
+                    ]
+                    for counter, (member, row) in enumerate(batch, start=offset + 1)
+                ],
+                headers=[
+                    "`" + formats.label_indent("N", offset + 1, split_size),
+                    "Name",
+                    "Level",
+                    "Exp",
+                    "Rep`",
+                ],
+                tablefmt="plain",
+            )
+            offset += split_size
+            tables.append(table)
+
+        paginator = pages.Paginator(
             interaction,
-            new_array,
-            per_page=split_size,
-            colour=const.Colour.blueviolet,
-            title="Server Leaderboard",
+            LeaderboardPageSource(
+                tables,
+                footer_text=f"Sorted by {sort_by}",
+                guild_icon=guild.icon,
+            ),
         )
-        await pgs.start()
+        await paginator.start()
 
     @commands.Cog.listener(name="on_message")
     async def experience_counting(self, message: discord.Message) -> None:

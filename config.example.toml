@@ -1,0 +1,50 @@
+# CONFIGURATION VARIABLES.
+#
+# Rename this file to `config.toml` instead of `config.example.toml` and fill the variables with your own secrets.
+# The information from this file gets converted to a dictionary with `config.py` file.
+#
+# Notes
+# -----
+# * I use different bot accounts and some different secrets for production and testing versions of the bot 
+#   which is covered by namings like ALUBOT/YENBOT or VPS/HOME. Hopefully, it's not much confusion.
+
+# cSpell:disable 
+[DISCORD]
+ALUBOT = "abcdefghijklmnopqrstuvwxyz"
+YENBOT = "zyxwvutsrqponmlkjihgfedcba"
+
+[POSTGRES]
+VPS = "postgresql://user:password@host:port/database"
+HOME = "postgresql://user:password@host:port/database"
+
+[STEAM]
+ALUERIE_FRIEND_ID = 123
+
+[STEAM.ALUBOT]
+USERNAME = "..."
+PASSWORD = "..."
+
+[STEAM.YENBOT]
+USERNAME = "..."
+PASSWORD = "..."
+
+[TWITCH]
+CLIENT_ID = "..."
+CLIENT_SECRET = "..."
+
+[WEBHOOKS]
+ERROR = "https://discord.com/api/webhooks/1234567/ABCDEFG"
+SPAM = "https://discord.com/api/webhooks/1234567/ABCDEFG"
+LOGGER = "https://discord.com/api/webhooks/1234567/ABCDEFG"
+DOTA_NEWS = "https://discord.com/api/webhooks/1234567/ABCDEFG"
+YEN_ERROR = "https://discord.com/api/webhooks/1234567/ABCDEFG"
+YEN_SPAM = "https://discord.com/api/webhooks/1234567/ABCDEFG"
+
+[TOKENS]
+STRATZ_BEARER = "SUPER_LONG_ALMOST_300_SYMBOLS_TOKEN"
+WOLFRAM = "..."
+RIOT = "RGAPI-..."
+GIT_PERSONAL = "ghp_..."
+STEAM = ""
+
+# /* cSpell:enable */

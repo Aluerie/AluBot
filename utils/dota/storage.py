@@ -207,7 +207,7 @@ class Abilities(GameDataStorage[Ability, PseudoAbility]):
 
         # as of 12/October/2024 Stratz doesn't have full data on some Talent names (a lot of nulls)
         # so for now we fill the missing data with opendota
-        odota_abilities = await self.bot.dota.odota_constants.get_abilities()
+        odota_abilities = await self.bot.dota.opendota_constants.get_abilities()
 
         def get_display_name(ability: stratz.Ability) -> str:
             if ability["language"] and (display_name := ability["language"]["displayName"]):
@@ -351,7 +351,7 @@ class Facets(GameDataStorage[Facet, PseudoFacet]):
 
         # as of 12/October/2024 Stratz doesn't have full data on Facets (a lot of nulls)
         # so for now we fill the missing data with opendota
-        hero_abilities = await self.bot.dota.odota_constants.get_hero_abilities()
+        hero_abilities = await self.bot.dota.opendota_constants.get_hero_abilities()
         short_name_display_name_lookup: dict[str, str] = {
             facet["name"]: facet["title"] for hero in hero_abilities.values() for facet in hero["facets"]
         }
@@ -363,7 +363,7 @@ class Facets(GameDataStorage[Facet, PseudoFacet]):
                 or short_name_display_name_lookup.get(facet["name"])
                 or "Unknown Facet",
                 facet["icon"],
-                const.FACET_COLOURS[f'{facet["color"]}{facet['gradientId']}'],
+                const.FACET_COLOURS[f"{facet['color']}{facet['gradientId']}"],
             )
             for facet in facets["data"]["constants"]["facets"]
         }

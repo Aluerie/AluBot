@@ -47,8 +47,9 @@ class AluLoop(tasks.Loop[LF]):
         minutes: float,
         time: datetime.time | Sequence[datetime.time],
         count: int | None,
-        reconnect: bool,
         name: str | None,
+        *,
+        reconnect: bool,
     ) -> None:
         super().__init__(coro, seconds, hours, minutes, time, count, reconnect, name)
         self._before_loop = self._base_before_loop

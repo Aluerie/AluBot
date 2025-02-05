@@ -6,17 +6,15 @@ import asyncio
 import datetime
 import logging
 import traceback
-from contextlib import AbstractAsyncContextManager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Self, override
+from typing import TYPE_CHECKING
 
-import discord
-
-from utils import const, errors
+from utils import const
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-    from types import TracebackType
+
+    import discord
 
     from .bot import AluBot
 
@@ -76,13 +74,7 @@ class ExceptionManager:
         for i in range(0, len(iterable), max_chars_in_code):
             yield codeblocks.format(iterable[i : i + max_chars_in_code])
 
-    async def register_error(
-        self,
-        error: BaseException,
-        embed: discord.Embed,
-        *,
-        mention: bool = True,
-    ) -> None:
+    async def register_error(self, error: BaseException, embed: discord.Embed) -> None:
         """Register, analyse error and put it into queue to send to developers.
 
         Parameters
@@ -97,18 +89,11 @@ class ExceptionManager:
             Look the template of the formatting for this in something like `ctx_cmd_errors.py`.
 
             Important!!! Embed's footer text will be duplicated to `log.error` so choose the wording carefully.
-        mention : bool
-            Whether to mention Irene when releasing the error to the webhook
-
         """
         log.error("%s: `%s`.", error.__class__.__name__, embed.footer.text, exc_info=error)
 
-        if self.bot.test:
-            # i don't need any extra notifications when I'm testing since I'm right there.
-            return
-
         # apparently there is https://github.com/vi3k6i5/flashtext for "the fastest replacement"
-        # not sure if I want to add extra dependency
+        # not sure if I want to add an extra dependency
         traceback_string = "".join(traceback.format_exception(error)).replace(str(Path.cwd()), "AluBot")
         traceback_string = traceback_string.replace("``", "`\u200b`")
 
@@ -129,74 +114,19 @@ class ExceptionManager:
 
         Parameters
         ----------
-        traceback: str
+        traceback : str
             The traceback of the error.
-        embed: discord.Embed
+        embed : discord.Embed
             The additional information about the error. This comes from registering the error.
 
         """
         code_chunks = list(self._yield_code_chunks(traceback))
 
         # hmm, this is honestly a bit too many sends for 5 seconds of rate limit :thinking:
-        await self.bot.error_webhook.send(const.Role.error.mention)
+        if not self.bot.test:
+            # i don't need any extra pings when I'm testing since I'm right there.
+            await self.bot.error_webhook.send(const.Role.error.mention)
+
         for chunk in code_chunks:
             await self.bot.error_webhook.send(chunk)
         await self.bot.error_webhook.send(embed=embed)
-
-
-class HandleHTTPException(AbstractAsyncContextManager[Any]):
-    """Context manger to handle HTTP Exceptions.
-
-    This is useful for handling errors that are not critical, but
-    still need to be reported to the user.
-
-    Parameters
-    ----------
-    destination: discord.abc.Messageable
-        The destination channel to send the error to.
-    title: str | None
-        The title of the embed. Defaults to ``'An unexpected error occurred!'``.
-
-    Attributes
-    ----------
-    destination: discord.abc.Messageable
-        The destination channel to send the error to.
-    message: str | None
-        The string to put the embed title in.
-
-    Raises
-    ------
-    SilentCommandError
-        Error raised if an HTTPException is encountered. This
-        error is specifically ignored by the command error handler.
-
-    """
-
-    __slots__ = ("destination", "title")
-
-    def __init__(self, destination: discord.abc.Messageable, *, title: str | None = None) -> None:
-        self.destination = destination
-        self.title = title
-
-    @override
-    async def __aenter__(self) -> Self:
-        return self
-
-    @override
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None = None,
-        exc_val: BaseException | None = None,
-        exc_tb: TracebackType | None = None,
-    ) -> bool:
-        if exc_val is not None and isinstance(exc_val, discord.HTTPException) and exc_type:
-            embed = discord.Embed(
-                title=self.title or "An unexpected error occurred!",
-                description=f"{exc_type.__name__}: {exc_val.text}",
-                colour=discord.Colour.red(),
-            )
-
-            await self.destination.send(embed=embed)
-            raise errors.SilentError
-
-        return False

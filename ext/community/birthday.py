@@ -14,7 +14,7 @@ from utils import const, converters, errors, formats, pages, timezones
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, Timer, TimerRecord
+    from bot import AluBot, Timer, TimerRow
 
 
 class BirthdayTimerData(TypedDict):
@@ -112,11 +112,12 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     @discord.utils.cached_property
     def birthday_channel(self) -> discord.TextChannel:
         """The channel where birthday notifications are sent."""
-        channel = self.community.logs if self.bot.test else self.community.bday_notifs
-        return channel
+        return self.community.logs if self.bot.test else self.community.bday_notifs
 
     birthday_group = app_commands.Group(
-        name="birthday", description="Birthday related commands.", guild_ids=[const.Guild.community],
+        name="birthday",
+        description="Birthday related commands.",
+        guild_ids=[const.Guild.community],
     )
 
     @birthday_group.command(name="set")
@@ -222,14 +223,14 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             DELETE FROM timers
             WHERE event = 'birthday'
             AND data #>> '{user_id}' = $1;
-        """
+        """  # noqa: RUF027
         status = await self.bot.pool.execute(query, str(user_id))
 
         current_timer = self.bot._current_timer
         if current_timer and current_timer.event == "timer" and current_timer.data:
             author_id = current_timer.data.get("user_id")
             if author_id == user_id:
-                self.bot.rerun_the_task()
+                self.bot.reschedule_timers()
 
         return status
 
@@ -270,14 +271,14 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             WHERE event = 'birthday'
             AND data #>> '{user_id}' = $1;
         """
-        row: TimerRecord[BirthdayTimerData] | None = await self.bot.pool.fetchrow(query, str(member.id))
+        row: TimerRow[BirthdayTimerData] | None = await self.bot.pool.fetchrow(query, str(member.id))
 
         embed = discord.Embed(colour=member.color)
         embed.set_author(name=f"{member.display_name}'s birthday status", icon_url=member.display_avatar.url)
         if row is None:
             embed.description = "It's not set yet."
         else:
-            embed.add_field(name="Date", value=birthday_fmt(row.expires_at.replace(year=row.data["year"])))
+            embed.add_field(name="Date", value=birthday_fmt(row["expires_at"].replace(year=row["data"]["year"])))
             embed.add_field(name="Timezone", value=row["timezone"])
         await interaction.response.send_message(embed=embed)
 
@@ -376,14 +377,18 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             WHERE event = 'birthday'
             ORDER BY extract(MONTH FROM expires_at), extract(DAY FROM expires_at);
         """
-        rows: list[TimerRecord[BirthdayTimerData]] = await self.bot.pool.fetch(query)
+        rows: list[TimerRow[BirthdayTimerData]] = await self.bot.pool.fetch(query)
 
         string_list = []
         for row in rows:
-            birthday_person = guild.get_member(row.data["user_id"])
+            birthday_person = guild.get_member(row["data"]["user_id"])
             if birthday_person is not None:
-                date = row.expires_at.astimezone(zoneinfo.ZoneInfo(key=row.timezone)).replace(year=row.data["year"])
-                string_list.append(f"{birthday_fmt(date)}, {row.timezone} - {birthday_person.mention}")
+                date = (
+                    row["expires_at"]
+                    .astimezone(zoneinfo.ZoneInfo(key=row["timezone"]))
+                    .replace(year=row["data"]["year"])
+                )
+                string_list.append(f"{birthday_fmt(date)}, {row['timezone']} - {birthday_person.mention}")
 
         pgs = pages.EnumeratedPaginator(
             interaction,

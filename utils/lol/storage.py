@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypedDict, override
+from typing import TYPE_CHECKING, Literal, TypedDict, override
 
 import discord
 from roleidentification import get_roles
@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     class GetChampionEmoteRow(TypedDict):
         id: int
         emote: str
+
+    from pulsefire.schemas import MerakiCDNSchema
 
 
 __all__ = (
@@ -232,10 +234,14 @@ class RolesIdentifiers(GameDataStorage[RoleDict, RoleDict]):
 
         data = {}
         for champion_id, positions in champion_roles["data"].items():
-            play_rates = {}
+            play_rates: dict[Literal["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"], float] = {}
 
             for position, rates in positions.items():
-                play_rates[position.upper()] = rates["playRate"]  # type: ignore # wtf ?!
+                # for some reason, `.items` gives dict_items[str, object] typing for TypedDicts while in this case:
+                # `position` is secured to be `Literal["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"]`
+                # `rates` is secured to be `LolPlayRate` which is `TypedDict("LolPlayRate", {"playRate": float})`
+                # hence the following line is correct type-wise;
+                play_rates[position.upper()] = rates["playRate"]  # type:ignore[reportArgumentType, reportIndexIssue]
             for position in ("TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"):
                 if position not in play_rates:
                     play_rates[position] = 0.0
@@ -299,7 +305,7 @@ class RolesIdentifiers(GameDataStorage[RoleDict, RoleDict]):
             champion_roles: dict[int, RoleDict] = await self.get_cached_data()
             team1 = list(get_roles(champion_roles, all_players_champ_ids[:5]).values())
             team2 = list(get_roles(champion_roles, all_players_champ_ids[5:]).values())
-        except:
+        except Exception:  # noqa: BLE001
             # there was some problem with probably meraki
             return all_players_champ_ids
         else:

@@ -253,7 +253,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         # if the current timer is being deleted
         if self.bot._current_timer and self.bot._current_timer.id == id:
             # cancel the task and re-run it
-            self.bot.rerun_the_task()
+            self.bot.reschedule_timers()
 
         embed = discord.Embed(description="Successfully deleted reminder.", colour=const.Colour.blueviolet)
         await interaction.response.send_message(embed=embed)
@@ -296,7 +296,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         if current_timer and current_timer.event == "reminder" and current_timer.data:
             author_id = current_timer.data.get("author_id")
             if author_id == interaction.user.id:
-                self.bot.rerun_the_task()
+                self.bot.reschedule_timers()
 
         response_embed = discord.Embed(
             colour=interaction.user.colour,
@@ -319,8 +319,8 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             log.warning("Discarding channel %s as it's not found.", channel_id)
             return
 
-        guild_id = channel.guild.id if isinstance(channel, (discord.TextChannel, discord.Thread)) else "@me"
-        content = f"<@{author_id}>, {timer.format_dt_R}\n{text}"
+        guild_id = channel.guild.id if isinstance(channel, discord.TextChannel | discord.Thread) else "@me"
+        content = f"<@{author_id}>, {discord.utils.format_dt(timer.created_at, style='R')}\n{text}"
         view = discord.utils.MISSING
 
         if message_id:

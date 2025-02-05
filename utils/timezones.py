@@ -138,7 +138,7 @@ class TimezoneManager:
                 return
 
             parser = etree.XMLParser(ns_clean=True, recover=True, encoding="utf-8")
-            tree = etree.fromstring(await resp.read(), parser=parser)
+            tree = etree.fromstring(await resp.read(), parser=parser)  # noqa: S320
 
             # Build a temporary dictionary to resolve "preferred" mappings
             entries: dict[str, CLDRDataEntry] = {

@@ -28,13 +28,15 @@ __all__ = (
     "PseudoHero",
 )
 
-# CDN_REACT = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react"
+# old CDN was "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react"
 # idk, dota2.com uses the following cdn for hero icons:
 CDN_REACT = "https://cdn.akamai.steamstatic.com/apps/dota2/images/dota_react/"
 
 
 @dataclass(repr=False)
 class Hero(Character):
+    """Dota 2 Hero."""
+
     short_name: str
     """A short name for the hero, i.e. `"dark_willow"`.
 
@@ -82,6 +84,8 @@ class Hero(Character):
 
 @dataclass(repr=False)
 class PseudoHero(Character):
+    """Dota 2 Pseudo Hero."""
+
     short_name: str
 
     topbar_icon_url: str
@@ -92,6 +96,8 @@ class PseudoHero(Character):
 
 
 class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
+    """Dota 2 Heroes."""
+
     @override
     async def fill_data(self) -> dict[int, Hero]:
         heroes = await self.bot.dota.stratz.get_heroes()
@@ -149,13 +155,12 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
                 character_id=hero_id,
                 table="dota_heroes_info",
                 emote_name=formats.convert_camel_case_to_PascalCase(hero_short_name),
-                emote_source_url=f"{CDN_REACT}/heroes/icons/{hero_short_name}.png",  # copy of `minimap_icon_url` property
+                emote_source_url=f"{CDN_REACT}/heroes/icons/{hero_short_name}.png",  # copy of `minimap_icon_url`
                 guild_id=const.EmoteGuilds.DOTA[3],
             )
-        except Exception as exc:
-            embed = discord.Embed(
-                description=f"Something went wrong when creating hero emote for `id={hero_id}, name={hero_short_name}`.",
-            )
+        except Exception as exc:  # noqa: BLE001
+            desc = f"Something went wrong when creating hero emote for `id={hero_id}, name={hero_short_name}`."
+            embed = discord.Embed(description=desc)
             await self.bot.exc_manager.register_error(exc, embed=embed)
             return const.NEW_HERO_EMOTE
 
@@ -318,7 +323,9 @@ class Facet:
 
     @property
     def icon_url(self) -> str:
-        """_summary_
+        """The icon url to the facet's image.
+
+        Usually just some small logo-symbol.
 
         Examples
         --------

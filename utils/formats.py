@@ -9,6 +9,7 @@ from enum import IntEnum
 from itertools import starmap
 from typing import TYPE_CHECKING, Any, Literal, override
 
+import tabulate
 from dateutil.relativedelta import relativedelta
 
 # remember that we can now use `from utils import formats` into `formats.format_dt` with this:
@@ -21,7 +22,31 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
 
-__all__ = ("plural",)
+__all__ = (
+    "no_pad_fmt",
+    "plural",
+)
+
+# the absolute minimum padding edition of "plain" tablefmt from tabulate package.
+# Note, that the following line also nullifies padding in other table formats from the package.
+# we choose 1 because otherwise the column headers can blend into one another as space i.e.:
+# Example with `tabulate.MIN_PADDING = 0`
+# Period   Usages Percent Per Day
+# All-time   7232 12.0%      19.9
+# Here, "Percent Per Day" blends one into another.
+tabulate.MIN_PADDING = 1
+# cSpell: disable
+no_pad_fmt = tabulate.TableFormat(
+    lineabove=None,
+    linebelowheader=None,
+    linebetweenrows=None,
+    linebelow=None,
+    headerrow=tabulate.DataRow("", " ", ""),
+    datarow=tabulate.DataRow("", " ", ""),
+    padding=0,
+    with_header_hide=None,
+)
+# cSpell: enable
 
 
 class plural:  # noqa: N801 # pep8 allows lowercase names for classes that are used as functions
@@ -327,15 +352,6 @@ def label_indent(label: str | int, counter: int, split_size: int) -> str:
     return str(label).ljust(len(str(counter + split_size)), " ")
 
 
-#######################################################################
-# ANSI ################################################################
-#######################################################################
-# It is not used anywhere in the bot
-# because mobile does not support coloured codeblocks/ansi tech
-# but well, let's keep it
-# https://gist.github.com/kkrypt0nn/a02506f3712ff2d1c8ca7c9e0aed7c06
-
-
 class AnsiFG(IntEnum):
     """Ansi foreground colours."""
 
@@ -378,12 +394,27 @@ def ansi(
     bold: bool = False,
     underline: bool = False,
 ) -> str:
-    """Something ansi function."""
-    # TODO: make better docs
-    # todo: what s the point of ansi function if mobile does not support it
-    # todo: check ansi gist for more
-    # todo: check if stuff from docs in MyColourFormatting in bot.py works.
-    # i think discord ansi is a bit halved
+    """Format text in ANSI colours for discord.
+
+    Discord doesn't support bright colours in ANSI formats (90-97 and 100-107) or dim text highlight.
+
+    Warning
+    -------
+    Currently, it's not used anywhere in the bot because the colouring doesn't work on mobile.
+    But I've figured out that late so let's keep the code.
+
+    Sources
+    -------
+    * Gist by kkrypt0nn  # cSpell:words kkrypt
+        https://gist.github.com/kkrypt0nn/a02506f3712ff2d1c8ca7c9e0aed7c06
+
+    Examples
+    --------
+    >>> res = formats.ansi("wow", foreground=formats.AnsiFG.blue, background=formats.AnsiBG.gray, bold=True)
+    >>> await self.spam.send(f"```ansi\n{res}```")
+
+    Note, that we need to embed the string(-s) within "```ansi" codeblock.
+    """
     array_join = [AnsiFMT.normal.value]
     if bold:
         array_join.append(AnsiFMT.bold.value)
@@ -392,7 +423,7 @@ def ansi(
     if background:
         array_join.append(background.value)
     if foreground:
-        array_join.append(foreground.value)
+        array_join.append(94)
     final_format = ";".join(list(map(str, array_join)))
     return f"\u001b[{final_format}m{text}\u001b[0m"
 
@@ -583,7 +614,17 @@ class NoBorderTable(TabularData):
 
 
 if __name__ == "__main__":
+    import tabulate
+
     table = NoBorderTable()
-    table.set_columns(["Name", "AgeAgeAgeAgeAge ", "JobTitle"], aligns=["<", ">", "^"])
+    table.set_columns(["Name", "AgeAgeAgeAgeAge", "JobTitle"], aligns=["<", ">", "^"])
     table.add_rows([["Alice", 29, "xd"], ["Bob", 23, "artist"]])
     print(table.render())  # noqa: T201
+    print(" ")
+    print(
+        tabulate.tabulate(
+            headers=["Name", "XXX", "JobTitle"],
+            tabular_data=[["Alice", "hh", "xd"], ["Bob", "ko", "artist"]],
+            tablefmt=no_pad_fmt,
+        )
+    )

@@ -89,7 +89,7 @@ async def rank_image(
     d.text((width / 4, height * 4 / 6), f"{rep} REP", fill=(255, 255, 255), font=font)
 
     msg = f"{exp}/{next_lvl_exp} EXP"
-    w4, h4 = bot.transposer.get_text_wh(msg, font)
+    w4, _h4 = bot.transposer.get_text_wh(msg, font)
     d.text((width - w4, height * 5 / 6), msg, fill=(255, 255, 255), font=font)
     return image
 
@@ -254,7 +254,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                     "Exp",
                     "Rep`",
                 ],
-                tablefmt="plain",
+                tablefmt=formats.no_pad_fmt,
             )
             offset += split_size
             tables.append(table)
@@ -286,7 +286,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         """
         last_seen: datetime.datetime = await self.bot.pool.fetchval(query, message.author.id)
 
-        author: discord.Member = message.author  # type: ignore
+        author: discord.Member = message.author  # type: ignore[reportAssignmentType]
         now = datetime.datetime.now(datetime.UTC)
         if now - last_seen > datetime.timedelta(seconds=LAST_SEEN_TIMEOUT):
             query = "UPDATE community_members SET exp = exp+1 WHERE id = $1 RETURNING exp"
@@ -299,10 +299,9 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                 if not level_up_role or not previous_level_role:
                     msg = "Roles were not found in the community guild"
                     raise ValueError(msg)
-                embed = discord.Embed(
-                    colour=const.Colour.blueviolet,
-                    description=f"{message.author.mention} just advanced to {level_up_role.mention} ! {const.Emote.PepoG}",
-                )
+
+                text = f"{message.author.mention} just advanced to {level_up_role.mention} ! {const.Emote.PepoG}"
+                embed = discord.Embed(colour=const.Colour.blueviolet, description=text)
                 await message.channel.send(embed=embed)
                 await author.remove_roles(previous_level_role)
                 await author.add_roles(level_up_role)

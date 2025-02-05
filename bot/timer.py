@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import itertools
 import logging
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, TypeVar, override
+from typing import TYPE_CHECKING, Any, Self, TypedDict, TypeVar, override
 
 import asyncpg
 import discord
-
-from utils.database import DotRecord
 
 if TYPE_CHECKING:
     from .bot import AluBot
@@ -17,26 +16,23 @@ if TYPE_CHECKING:
 __all__: tuple[str, ...] = (
     "Timer",
     "TimerManager",
-    "TimerRecord",
+    "TimerRow",
 )
 
-type TimerMapping = Mapping[str, Any]
-TimerDataT = TypeVar("TimerDataT", bound=TimerMapping)
+# small issue with TypedDict's is why we need to use Mapping here over dict[str, Any]
+# https://github.com/python/mypy/issues/4976#issuecomment-384719025
+type TimerData = Mapping[str, Any]
+TimerDataT = TypeVar("TimerDataT", bound=TimerData)
 
 
-# currently somewhat pointless since this gives typing for attributes like .id instead of ["id"]
-class TimerRecord(DotRecord, Generic[TimerDataT]):
+class TimerRow[TimerDataT](TypedDict):
+    """Database Row for Timers.
+
+    Contains basic data about the timers required for its completion and
+    custom generic data to be used by the listener dispatching the timer.
+    """
+
     id: int
-    event: str
-    expires_at: datetime.datetime
-    created_at: datetime.datetime
-    timezone: str
-    data: TimerDataT
-
-
-# mirror above for @classmethod .temporary
-class PseudoTimerRecord(TypedDict, Generic[TimerDataT]):
-    id: None
     event: str
     expires_at: datetime.datetime
     created_at: datetime.datetime
@@ -48,22 +44,24 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class Timer(Generic[TimerDataT]):
-    """Represents a Timer from the Database.
+class Timer[TimerDataT]:
+    """Timer represent delayed tasks.
 
-    Timers represent delayed tasks like basic use-case of `ext.tasks` provide but
-    with better functionality about custom event times or args/kwargs.
+    Practically, serves same purpose as `ext.tasks`, but allows to dynamically manage timer-tasks on the fly
+    via the database such as reminders, birthdays, etc.
 
-    This also makes it possible for dynamically created routines such as `/remind me` to exist.
-    Also due to database structure there is less pain about restarting the bot+tasks logic for dynamic period timers.
+    Also due to database usage there is less pain about restarting the bot in the timers
+    Tt's useful for such tasks as patch notes checkers as
+    they don't need to do an extra fetch from the database on each bot's restart.
+    Also such timers can be consistently periodic through bot's restarts.
 
     Attributes
     ----------
-    id: Optional[int]
-        If present, then it represents unique ID of the timer.
+    id: int
+        Represents unique ID of the timer. If negative, then the timer is temporary and short-lived.
     event: str
         The event name to trigger when the timer expires.
-        This also affects dispatched event name to be f""on_{timer.event}_timer_complete"".
+        This also defines event's name for the timer to be dispatched to (self.event_name).
         The listener can be formatted as follows (with example `.event` being named "reminder"):
         ```py
         @commands.Cog.listener()  # or .listener("on_reminder_timer_complete")
@@ -77,37 +75,32 @@ class Timer(Generic[TimerDataT]):
         The timezone string for the `expires_at` attribute.
         PostgreSQL/AsyncPG structure essentially require us to have extra timezone string
         when working with aware `datetime.datetime` objects.
-    args: list[Any]
-        A list of arguments to pass to the :meth:`TimerManager.create_timer` method.
-    kwargs: dict[str, Any]
-        A dictionary of keyword arguments to pass to the :meth:`TimerManager.create_timer` method.
+    data: TimerDataT
+        A dictionary of keyword arguments to pass to the `create_timer` method.
 
     """
 
-    __slots__ = ("created_at", "data", "event", "expires_at", "id", "timezone")
+    __slots__ = (
+        "_cs_event_name",
+        "created_at",
+        "data",
+        "event",
+        "expires_at",
+        "id",
+        "timezone",
+    )
 
-    def __init__(self, *, record: TimerRecord[TimerDataT] | PseudoTimerRecord[TimerDataT]) -> None:
-        self.id: int | None = record["id"]
-        self.event: str = record["event"]
-        self.expires_at: datetime.datetime = record["expires_at"]
-        self.created_at: datetime.datetime = record["created_at"]
-        self.timezone: str = record["timezone"]
-        self.data: TimerDataT = record["data"]
+    def __init__(self, *, row: TimerRow[TimerDataT]) -> None:
+        self.id: int | None = row["id"]
+        self.event: str = row["event"]
+        self.expires_at: datetime.datetime = row["expires_at"].replace(tzinfo=datetime.UTC)
+        self.created_at: datetime.datetime = row["created_at"].replace(tzinfo=datetime.UTC)
+        self.timezone: str = row["timezone"]
+        self.data: TimerDataT = row["data"]
 
     @override
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Timer):
-            return False
-        if self.id or other.id:
-            return self.id == other.id
-        # if both ids are None then it's a a tough question
-        # condition below still doesn't prove it
-        # but we should not need to compare id=None Timers anyway
-        return (
-            self.event == other.event
-            and self.expires_at == other.expires_at
-            and self.created_at == other.created_at
-        )
+        return isinstance(other, Timer) and self.id == other.id
 
     @override
     def __hash__(self) -> int:
@@ -121,6 +114,7 @@ class Timer(Generic[TimerDataT]):
     def temporary(
         cls,
         *,
+        id: int,  # noqa: A002
         event: str,
         expires_at: datetime.datetime,
         created_at: datetime.datetime,
@@ -128,32 +122,43 @@ class Timer(Generic[TimerDataT]):
         data: TimerDataT,
     ) -> Self:
         """Initiate the timer without the database before deciding to put it in."""
-        pseudo_record: PseudoTimerRecord[TimerDataT] = {
-            "id": None,
+        pseudo_row: TimerRow[TimerDataT] = {
+            "id": id,
             "event": event,
             "expires_at": expires_at,
             "created_at": created_at,
             "timezone": timezone,
             "data": data,
         }
-        return cls(record=pseudo_record)
+        return cls(row=pseudo_row)
 
-    @property
-    def format_dt_R(self) -> str:  # noqa: N802
-        return discord.utils.format_dt(self.created_at.replace(tzinfo=datetime.UTC), style="R")
+    @discord.utils.cached_slot_property("_cs_event_name")
+    def event_name(self) -> str:
+        """Returns the timer's event name."""
+        return f"{self.event}_timer_complete"
 
 
 class TimerManager:
     """Class to create and manage timers."""
 
-    __slots__: tuple[str, ...] = ("_current_timer", "_have_data", "_task", "bot", "name")
+    __slots__: tuple[str, ...] = (
+        "_current_timer",
+        "_have_data",
+        "_scheduling_task",
+        "_temporary_timer_id_count",
+        "bot",
+        "name",
+    )
 
     def __init__(self, *, bot: AluBot) -> None:
         self.bot: AluBot = bot
 
+        self._temporary_timer_id_count: int = -1
+        """Not really useful attribute, but just so `__eq__` can properly work on temporary timers."""
+
         self._have_data = asyncio.Event()
-        self._current_timer: Timer[TimerMapping] | None = None
-        self._task = self.bot.loop.create_task(self.dispatch_timers())
+        self._current_timer: Timer[TimerData] | None = None
+        self._scheduling_task = self.bot.loop.create_task(self.dispatch_timers())
 
     async def dispatch_timers(self) -> None:
         """The main dispatch timers loop.
@@ -169,7 +174,7 @@ class TimerManager:
                 # so we cap it at 40 days, see: http://bugs.python.org/issue20493
                 timer = self._current_timer = await self.wait_for_active_timers(days=40)
                 log.debug("Current_timer = %s", timer)
-                now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+                now = datetime.datetime.now(datetime.UTC)
 
                 if timer.expires_at >= now:
                     to_sleep = (timer.expires_at - now).total_seconds()
@@ -179,23 +184,22 @@ class TimerManager:
         except asyncio.CancelledError:
             raise
         except (OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError):
-            self._task.cancel()
-            self._task = self.bot.loop.create_task(self.dispatch_timers())
-        except Exception as exc:
+            self.reschedule_timers()
+        except Exception as exc:  # noqa: BLE001
             embed = discord.Embed(
                 colour=0xFF8243,
                 title="Error in dispatching the timer",
             ).set_footer(text="TimerManager.dispatch_timers")
             await self.bot.exc_manager.register_error(exc, embed)
 
-    async def wait_for_active_timers(self, *, days: int = 7) -> Timer[TimerMapping]:
+    async def wait_for_active_timers(self, *, days: int = 7) -> Timer[TimerData]:
         """Wait for a timer that has expired.
 
         This will wait until a timer is expired and should be dispatched.
 
         Parameters
         ----------
-        days : int
+        days: int
             Number of days to look into.
 
         Returns
@@ -214,28 +218,31 @@ class TimerManager:
         self._current_timer = None
         await self._have_data.wait()
 
-        return await self.get_active_timer(days=days)  # type: ignore  # bcs at this point we always have data
+        return await self.get_active_timer(days=days)  # type: ignore[reportReturnType]  # at this point we always have data
 
-    async def call_timer(self, timer: Timer) -> None:
+    async def call_timer(self, timer: Timer[TimerData]) -> None:
         """Call an expired timer to dispatch it.
 
         Parameters
         ----------
-        timer : Timer
+        timer: Timer[TimerData]
             The timer to dispatch.
 
         """
         log.debug("Calling and Dispatching the timer %s with event %s", timer.id, timer.event)
 
+        available_listeners = list(itertools.chain.from_iterable(cog.get_listeners() for cog in self.bot.cogs.values()))
+        available_listeners = [listener[0] for listener in available_listeners]
+
+        if f"on_{timer.event_name}" in available_listeners:
+            # the listener existence is confirmed therefore it should be safe to dispatch the event
+            self.bot.dispatch(timer.event_name, timer)
+
         # delete the timer
-        query = "DELETE FROM timers WHERE id=$1"
-        await self.bot.pool.execute(query, timer.id)
+        # query = "DELETE FROM timers WHERE id=$1"
+        # await self.bot.pool.execute(query, timer.id)
 
-        # dispatch the event
-        event_name = f"{timer.event}_timer_complete"
-        self.bot.dispatch(event_name, timer)
-
-    async def get_active_timer(self, *, days: int = 7) -> Timer[TimerMapping] | None:
+    async def get_active_timer(self, *, days: int = 7) -> Timer[TimerData] | None:
         """Get the most current active timer in the database.
 
         This timer is expired and should be dispatched.
@@ -247,7 +254,7 @@ class TimerManager:
 
         Returns
         -------
-        Timer | None
+        Timer[TimerData] | None
             The timer that is expired and should be dispatched.
 
         """
@@ -257,10 +264,9 @@ class TimerManager:
             ORDER BY expires_at
             LIMIT 1;
         """
-        record: TimerRecord[TimerMapping] = await self.bot.pool.fetchrow(query, datetime.timedelta(days=days))
+        record: TimerRow[TimerData] | None = await self.bot.pool.fetchrow(query, datetime.timedelta(days=days))
         if record:
-            timer = Timer(record=record)
-            return timer
+            return Timer(row=record)
         return None
 
     async def create_timer(
@@ -270,26 +276,26 @@ class TimerManager:
         expires_at: datetime.datetime,
         created_at: datetime.datetime | None = None,
         timezone: str | None = None,
-        data: TimerMapping,
-    ) -> Timer:
+        data: TimerData,
+    ) -> Timer[TimerData]:
         """Creates a timer.
 
         Used to create a timer and put it into a database, or just dispatch it if it's a short timer.
 
         Parameters
         ----------
-        when : datetime.datetime
-            When the timer should fire.
-        event : str
+        event: str
             The name of the event to trigger. Will transform to 'on_{event}_timer_complete'.
+        expires_at: datetime.datetime
+            When the timer should fire.
         created_at: datetime.datetime
             Special keyword-only argument to use as the creation time.
             Should make the time-deltas a bit more consistent.
-        timezone : str
+        timezone: str
             IANA alias. Special keyword-only argument to use as the timezone for the
             expiry time. This automatically adjusts the expiry time to be
             in the future, should it be in the past.
-        data : TimerMapping
+        data: TimerData
             data to pass to the timer to json it up and keep it in the database.
             This should be used when dispatching timer event.
 
@@ -299,7 +305,7 @@ class TimerManager:
 
         Returns
         -------
-        Timer
+        Timer[TimerData]
 
         """
         log.debug("Creating %s timer for %s", event, expires_at)
@@ -312,12 +318,14 @@ class TimerManager:
         created_at = created_at.astimezone(datetime.UTC).replace(tzinfo=None)
 
         timer = Timer.temporary(
+            id=self._temporary_timer_id_count,
             event=event,
             expires_at=expires_at,
             created_at=created_at,
             timezone=timezone,
             data=data,
         )
+        self._temporary_timer_id_count -= 1
 
         delta = (expires_at - created_at).total_seconds()
         if delta <= 60:
@@ -339,19 +347,17 @@ class TimerManager:
 
         # check if this timer is earlier than our currently run timer
         if self._current_timer and expires_at < self._current_timer.expires_at:
-            # cancel the task and re-run it
-            self._task.cancel()
-            self._task = self.bot.loop.create_task(self.dispatch_timers())
+            self.reschedule_timers()
 
         return timer
 
-    async def short_timer_optimisation(self, seconds: float, timer: Timer[TimerMapping]) -> None:
-        """Optimisation for small timers, skipping the whole insert/delete from the database procedure."""
+    async def short_timer_optimisation(self, seconds: float, timer: Timer[TimerData]) -> None:
+        """Optimisation for small timers, skipping the whole database insert/delete procedure."""
         await asyncio.sleep(seconds)
         event_name = f"{timer.event}_timer_complete"
         self.bot.dispatch(event_name, timer)
 
-    async def get_timer_by_id(self, id: int) -> Timer[TimerMapping] | None:
+    async def get_timer_by_id(self, id: int) -> Timer[TimerData] | None:  # noqa: A002
         """Get a timer from its ID.
 
         Parameters
@@ -366,10 +372,10 @@ class TimerManager:
 
         """
         query = "SELECT * FROM timers WHERE id = $1"
-        record: TimerRecord[TimerMapping] | None = await self.bot.pool.fetchrow(query, id)
-        return Timer(record=record) if record else None
+        record: TimerRow[TimerData] | None = await self.bot.pool.fetchrow(query, id)
+        return Timer(row=record) if record else None
 
-    async def delete_timer_by_id(self, id: int) -> None:
+    async def delete_timer_by_id(self, id: int) -> None:  # noqa: A002
         """Delete a timer by its ID.
 
         Parameters
@@ -381,28 +387,28 @@ class TimerManager:
         query = "DELETE * FROM timers WHERE id = $1"
         await self.bot.pool.execute(query, id)
 
-    async def get_timer_by_kwargs(self, event: str, /, **kwargs: Any) -> Timer | None:
+    async def get_timer_by_kwargs(self, event: str, /, **kwargs: Any) -> Timer[TimerData] | None:
         """Gets a timer from the database.
 
         Note you cannot find a database by its expiry or creation time.
 
         Parameters
         ----------
-        event : str
+        event: str
             The name of the event to search for.
-        **kwargs
+        **kwargs: Any
             Keyword arguments to search for in the database.
 
         Returns
         -------
-        Timer | None
+        Timer[TimerData] | None
             The timer if found, otherwise None.
 
         """
         filtered_clause = [f"data #>> ARRAY['{key}'] = ${i}" for (i, key) in enumerate(kwargs.keys(), start=2)]
         query = f"SELECT * FROM timers WHERE event = $1 AND {' AND '.join(filtered_clause)} LIMIT 1"
-        record: TimerRecord | None = await self.bot.pool.fetchrow(query, event, *kwargs.values())
-        return Timer(record=record) if record else None
+        record: TimerRow[TimerData] | None = await self.bot.pool.fetchrow(query, event, *kwargs.values())
+        return Timer(row=record) if record else None
 
     async def delete_timer_by_kwargs(self, event: str, /, **kwargs: Any) -> None:
         """Delete a timer from the database.
@@ -413,7 +419,7 @@ class TimerManager:
         ----------
         event: str
             The name of the event to search for.
-        **kwargs
+        **kwargs: Any
             Keyword arguments to search for in the database.
 
         """
@@ -424,21 +430,21 @@ class TimerManager:
         # if the current timer is being deleted
         if record is not None and self._current_timer and self._current_timer.id == record["id"]:
             # cancel the task and re-run it
-            self._task.cancel()
-            self._task = self.bot.loop.create_task(self.dispatch_timers())
+            self.reschedule_timers()
 
-    async def fetch_timers(self) -> list[Timer]:
+    async def fetch_timers(self) -> list[Timer[TimerData]]:
         """Fetch all timers from the database.
 
         Returns
         -------
-        list
+        list[Timer[TimerData]]
             A list of `Timer` objects.
 
         """
         rows = await self.bot.pool.fetch("SELECT * FROM timers")
-        return [Timer(record=row) for row in rows]
+        return [Timer(row=row) for row in rows]
 
-    def rerun_the_task(self) -> None:
-        self._task.cancel()
-        self._task = self.bot.loop.create_task(self.bot.dispatch_timers())
+    def reschedule_timers(self) -> None:
+        """A shortcut to cancel the scheduling task which dispatches the timers and rerun it."""
+        self._scheduling_task.cancel()
+        self._scheduling_task = self.bot.loop.create_task(self.dispatch_timers())

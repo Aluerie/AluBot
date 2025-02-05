@@ -93,7 +93,7 @@ def create() -> None:
                         await connection.execute(sql)
 
         asyncio.run(run_create())
-    except Exception:
+    except Exception:  # noqa: BLE001
         traceback.print_exc()
         click.secho("failed to apply SQL due to error", fg="red")
     else:

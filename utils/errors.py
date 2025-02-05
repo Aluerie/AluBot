@@ -22,7 +22,6 @@ __all__: tuple[str, ...] = (
     "PermissionsError",
     "PlaceholderRaiseError",
     "ResponseNotOK",
-    "SilentError",
     "SomethingWentWrong",
     "UserError",
 )
@@ -73,12 +72,6 @@ class ErroneousUsage(AluBotError):
     __slots__: tuple[str, ...] = ()
 
 
-class SilentError(AluBotError):
-    """Error that will be specifically ignored by command handlers."""
-
-    __slots__: tuple[str, ...] = ()
-
-
 class ResponseNotOK(AluBotError):
     """Raised when `aiohttp`'s session response is not OK.
 
@@ -110,9 +103,9 @@ class PlaceholderRaiseError(AluBotError):
     __slots__: tuple[str, ...] = ()
 
 
-class TimeoutError(AluBotError):
+class TimeoutError(AluBotError):  # noqa: A001
     __slots__: tuple[str, ...] = ()
 
 
-class PermissionsError(AluBotError):
+class PermissionsError(AluBotError):  # noqa: D101
     __slots__: tuple[str, ...] = ()

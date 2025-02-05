@@ -118,6 +118,7 @@ ignore = [
     "F403",     # wildcard imports: `from math import *` are used in __init__.py a lot
     "F405",     # wildcard imports are not that bad
     "INP001",   # due to how we load modules this results in annoyances
+    "PLC0105",  # no, we don't like co naming style for type vars
     "PLC0414",  # pyright ruling for `as` imports needed
     "PLC0415",  # ruff gets this wrong, import needs to be not at top of file in some cases
     "RUF001",   # ambiguous characters not something I want to enforce here.
@@ -139,33 +140,28 @@ ignore = [
     "S608",     # I use f-strings with SQL and I don't know better;
     "TID252",   # My relative imports are quite well structured 
 
-    # MISHA
-
-    # "EM101",    # in this case this is okay
-    # "F402",
-    # "PD011",    # this is not a numpy codebase
-    # "PERF203",
-    # "Q000",
-    # "RUF009",
-    # "SIM105",
-    # "UP034",
-    # "UP038",
-    
-    # SINBAD
+    # MISHA & SINBAD
 
     # "ANN202", # implied return fine sometimes
     # "B901", # I'm aware of how generators as coroutines work
     # "E501", # ruff format suggested
+    # "EM101",    # in this case this is okay
+    # "F402",
     # "FBT003", # Wrong end to enforce this on.
-    # "G002",  # erroneous issue with %-logging when logging can be confiured for % logging
+    # "G002",  # erroneous issue with %-logging when logging can be configured for % logging
     # "ISC001", # ruff format suggested
-    # "PLC0105",  # no, I don't like co naming style for typevars
-    # "SIM105",  # supressable exception, I'm not paying the overhead of contextlib.supress for stylistic choices.
+    # "PD011",    # this is not a numpy codebase
+    # "PERF203",
+    # "Q000",
+    # "RUF009",
+    # "SIM105",  # suppressible exception, I'm not paying the overhead of contextlib.suppress for stylistic choices.
     # "TC001", # I prefer to avoid if TYPE_CHECKING
     # "TC002", # I prefer to avoid if TYPE_CHECKING
     # "TC003", # I prefer to avoid if TYPE_CHECKING
-    # "UP007", # "Use | For Union" doesn't account for typevar tuple unpacking.
+    # "UP007", # "Use | For Union" doesn't account for type var tuple unpacking.
     # "UP031", # No, I like % formatting more for some things...
+    # "UP034",
+    # "UP038",
 
     # 3. Doc String: general exceptions
     "D100",     # Missing docstring in module: no, module level docs aren't always needed
@@ -189,7 +185,7 @@ unfixable = [
 
 [tool.ruff.lint.per-file-ignores]
 "ext/beta.py" = ["ANN201"]
-"*.ipynb" = ["T20", "F404", "ANN204"]
+"*.ipynb" = ["T20", "F404", "ANN204", "D", "DOC"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

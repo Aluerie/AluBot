@@ -6,6 +6,8 @@
         "dotaconstants",
         "emotestats",
         "EUNE",
+        "roleidentification",
+        "subscopes",
         "truststore",
         "wolframalpha"
     ]

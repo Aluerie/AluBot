@@ -55,7 +55,7 @@ class ShortTime:
 
         data = {k: int(v) for k, v in match.groupdict(default=0).items()}
         now = now or datetime.datetime.now(datetime.UTC)
-        self.dt = now + relativedelta(**data)  # type: ignore #todo: investigate
+        self.dt = now + relativedelta(**data)  # type: ignore[reportArgumentType]
 
     @classmethod
     async def convert(cls, ctx: AluContext, argument: str) -> Self:
@@ -73,11 +73,11 @@ class HumanTime:
         now = now or datetime.datetime.now(datetime.UTC)
         dt, status = self.calendar.parseDT(argument, sourceTime=now)
         dt = dt.replace(tzinfo=datetime.UTC)
-        if not status.hasDateOrTime:  # type: ignore # TODO: fix
+        if not status.hasDateOrTime:  # type: ignore[reportAttributeAccess]
             msg = 'invalid time provided, try e.g. "tomorrow" or "3 days"'
             raise commands.BadArgument(msg)
 
-        if not status.hasTime:  # type: ignore # TODO: fix
+        if not status.hasTime:  # type: ignore[reportAttributeAccess]
             # replace it with the current time
             dt = dt.replace(hour=now.hour, minute=now.minute, second=now.second, microsecond=now.microsecond)
 
@@ -93,7 +93,7 @@ class Time(HumanTime):
     def __init__(self, argument: str, *, now: datetime.datetime | None = None) -> None:
         try:
             o = ShortTime(argument, now=now)
-        except Exception:
+        except Exception:  # noqa: BLE001
             super().__init__(argument)
         else:
             self.dt = o.dt
@@ -207,7 +207,7 @@ class UserFriendlyTime(commands.Converter[FriendlyTimeResult]):
         if match is not None and match.group(0):
             data = {k: int(v) for k, v in match.groupdict(default=0).items()}
             remaining = argument[match.end() :].strip()
-            dt = now + relativedelta(**data)  # type: ignore #todo: investigate
+            dt = now + relativedelta(**data)  # type: ignore[reportArgumentType]
             result = FriendlyTimeResult(dt.astimezone(tzinfo))
             await result.ensure_constraints(ctx, self, now, remaining)
             return result

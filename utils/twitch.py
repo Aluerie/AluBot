@@ -78,10 +78,7 @@ class AluTwitchClient(twitchio.Client):
 
     @override
     async def add_token(self, token: str, refresh: str) -> twitchio.authentication.ValidateTokenPayload:
-        # Make sure to call super() as it will add the tokens internally and return us some data...
         resp: twitchio.authentication.ValidateTokenPayload = await super().add_token(token, refresh)
-
-        # Store our tokens in a simple SQLite Database when they are authorized...
         query = """
             INSERT INTO alubot_ttv_tokens (user_id, token, refresh)
             VALUES ($1, $2, $3)

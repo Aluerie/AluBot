@@ -71,6 +71,31 @@ Example:
 """
 ```
 
+### Why do they put extra space in parameters?
+
+I don't know why numpy-docs recommend this, but do not do this:
+
+```py
+"""
+        Parameters
+        ----------
+        event : str
+"""
+```
+
+do this, which is pretty much plain copy-paste of the function signature:
+
+```py
+"""
+        Parameters
+        ----------
+        event: str
+"""
+```
+
+Also don't do their `default=` thing, just copy paste the whole signature `event: str = "wow"` and not `event: str, default="wow"`. We aren't building doc web pages here. To be honest, we should just remove all Doc linters from Ruff.
+
 ## Random Standards
 
 * Write `# type: ignore[reportReturnType]` and not `# pyright: ignore[reportReturnType]`
+* add two empty lines before `__all__` which should be there right after `if TYPE_CHECKING`

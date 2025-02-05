@@ -428,7 +428,7 @@ class EmoteStats(StatsCog):
                 tabulate(
                     headers=["Period", "Usages", "Percent", "Per Day"],
                     tabular_data=[all_time_period, last_year_period],
-                    tablefmt="plain",
+                    tablefmt=formats.no_pad_fmt,
                 )
             )
 

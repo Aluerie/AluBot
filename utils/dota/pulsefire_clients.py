@@ -81,7 +81,7 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
                 wait_for = -1
             for requesting_target in requesting_targets:
                 count, *values = self._index[requesting_target]
-                self._index[requesting_target] = (count + 1, *values)  # type: ignore
+                self._index[requesting_target] = (count + 1, *values)  # type: ignore[reportArgumentType]
 
         return wait_for
 
@@ -100,10 +100,10 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
         try:
             header_limits, header_counts = self.analyze_headers(headers)
         except KeyError:
-            for pinging_target in pinging_targets:  # type: ignore
+            for pinging_target in pinging_targets:  # type: ignore[reportArgumentType]
                 self._index[pinging_target] = (0, 0, 0, 0, 0)
             return
-        for scope, idx, *subscopes in pinging_targets:  # type: ignore
+        for scope, idx, *subscopes in pinging_targets:  # type: ignore[reportArgumentType]
             if idx >= len(header_limits[scope]):
                 self._index[scope, idx, *subscopes] = (0, 10**10, response_time + 3600, 0, 0)
                 continue

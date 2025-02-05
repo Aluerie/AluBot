@@ -138,9 +138,10 @@ class AluBot(commands.Bot, AluBotHelper):
             if failed_to_load_some_ext:
                 log.info("Autosync: cancelled %s One or more cogs failed to load.", const.Tick.No)
             else:
-                self.loop.create_task(self.try_auto_sync_with_logging())
+                self.loop.create_task(self.try_hideout_auto_sync_with_logging())
 
-    async def try_auto_sync_with_logging(self) -> None:
+    async def try_hideout_auto_sync_with_logging(self) -> None:
+        """Helper function to wrap `try_hideout_auto_sync` `into try/except` block with some logging."""
         try:
             result = await self.try_hideout_auto_sync()
         except Exception as err:
@@ -153,7 +154,7 @@ class AluBot(commands.Bot, AluBotHelper):
         """Try automatic `copy_global_to` + `sync` Hideout Guild for easier testing purposes.
 
         ?tag ass (auto-syncing sucks) and all, but come on - it's just too convenient to pass on.
-        I haven't been rate-limited a single time (yet).
+        I'm using non-global sync methods so should be fine on rate-limits.
 
         Sources
         -------
@@ -367,11 +368,11 @@ class AluBot(commands.Bot, AluBotHelper):
 
         Parameters
         ----------
-        event : str
+        event: str
             The name of the event that raised the exception.
-        args : Any
+        args: Any
             The positional arguments for the event that raised the exception.
-        kwargs : Any
+        kwargs: Any
             The keyword arguments for the event that raised the exception.
 
         """
@@ -400,7 +401,6 @@ class AluBot(commands.Bot, AluBotHelper):
         # error handler working variables
         desc = "No description"
         is_unexpected = False
-        mention = True
 
         # error handler itself.
 
@@ -448,52 +448,42 @@ class AluBot(commands.Bot, AluBotHelper):
                 desc = f"Sorry, only {error.missing_role} are able to use this command."
             case commands.CheckFailure():
                 desc = f"{error}"
-
-            # elif isinstance(error, errors.SilentError):
-            #     # this will fail the interaction hmm
-            #     return
             case _:
                 # error is unhandled/unclear and thus developers need to be notified about it.
                 is_unexpected = True
 
                 cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
+
+                kwargs_join = (
+                    "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items())
+                    if ctx.kwargs
+                    else "No arguments"
+                )
+                snowflake_ids = (
+                    f"author  = {ctx.author.id}\n"
+                    f"channel = {ctx.channel.id}\n"
+                    f"guild   = {ctx.guild.id if ctx.guild else 'DM Channel'}"
+                )
+
                 metadata_embed = (
                     discord.Embed(
                         colour=0x890620,
                         title=f"Error with `{ctx.clean_prefix}{ctx.command}`",
                         url=ctx.message.jump_url,
                         description=textwrap.shorten(ctx.message.content, width=1024),
-                        # timestamp=ctx.message.created_at,
                     )
                     .set_author(
                         name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else 'DM Channel'})",
                         icon_url=ctx.author.display_avatar,
                     )
-                    .add_field(
-                        name="Command Args",
-                        value=(
-                            "```py\n" + "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items()) + "```"
-                            if ctx.kwargs
-                            else "```py\nNo arguments```"
-                        ),
-                        inline=False,
-                    )
-                    .add_field(
-                        name="Snowflake Ids",
-                        value=(
-                            "```py\n"
-                            f"author  = {ctx.author.id}\n"
-                            f"channel = {ctx.channel.id}\n"
-                            f"guild   = {ctx.guild.id if ctx.guild else 'DM Channel'}```"
-                        ),
-                    )
+                    .add_field(name="Command Args", value=formats.code(kwargs_join), inline=False)
+                    .add_field(name="Snowflake Ids", value=formats.code(snowflake_ids))
                     .set_footer(
                         text=f"on_command_error: {cmd_name}",
                         icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
                     )
                 )
-                mention = bool(ctx.channel.id != ctx.bot.hideout.spam_channel_id)
-                await ctx.bot.exc_manager.register_error(error, metadata_embed, mention=mention)
+                await ctx.bot.exc_manager.register_error(error, metadata_embed)
 
-        response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected, mention=mention)
+        response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
         await ctx.reply(embed=response_embed, ephemeral=True)

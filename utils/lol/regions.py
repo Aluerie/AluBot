@@ -7,6 +7,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from utils import errors
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
@@ -188,7 +190,7 @@ class PlatformConverter(commands.Converter[Platform], app_commands.Transformer):
             f"Couldn't find any servers like that `{argument!r}`\n"
             f"The list of League of Legends servers is {[v.upper() for v in Platform.OPGG_NAMES.values()]}"
         )
-        raise commands.BadArgument(msg)
+        raise errors.BadArgument(msg)
 
     @override
     async def transform(self, _: discord.Interaction[discord.Client], value: str) -> Platform:

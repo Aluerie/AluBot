@@ -139,7 +139,15 @@ class Timer[TimerDataT]:
 
 
 class TimerManager:
-    """Class to create and manage timers."""
+    """Class to create and manage timers.
+
+    Sources
+    -------
+    * Rapptz/RoboDanny (license MPL v2), Reminder cog:
+        https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/reminder.py
+    * DuckBot-Discord/DuckBot, rewrite branch (license MPL v2), TimerManager:
+        https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/utils/bases/timer.py
+    """
 
     __slots__: tuple[str, ...] = (
         "_current_timer",
@@ -375,7 +383,7 @@ class TimerManager:
         record: TimerRow[TimerData] | None = await self.bot.pool.fetchrow(query, id)
         return Timer(row=record) if record else None
 
-    async def delete_timer_by_id(self, id: int) -> None:  # noqa: A002
+    async def cleanup_timer(self, id: int) -> None:  # noqa: A002
         """Delete a timer by its ID.
 
         Parameters
@@ -384,6 +392,7 @@ class TimerManager:
             The ID of the timer to delete.
 
         """
+        self._skipped_timer_ids.remove(id)
         query = "DELETE * FROM timers WHERE id = $1"
         await self.bot.pool.execute(query, id)
 

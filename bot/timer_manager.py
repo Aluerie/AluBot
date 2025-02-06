@@ -91,7 +91,7 @@ class Timer[TimerDataT]:
     )
 
     def __init__(self, *, row: TimerRow[TimerDataT]) -> None:
-        self.id: int | None = row["id"]
+        self.id: int = row["id"]
         self.event: str = row["event"]
         self.expires_at: datetime.datetime = row["expires_at"].replace(tzinfo=datetime.UTC)
         self.created_at: datetime.datetime = row["created_at"].replace(tzinfo=datetime.UTC)
@@ -153,6 +153,7 @@ class TimerManager:
         "_current_timer",
         "_have_data",
         "_scheduling_task",
+        "_skipped_timer_ids",
         "_temporary_timer_id_count",
         "bot",
         "name",
@@ -163,6 +164,7 @@ class TimerManager:
 
         self._temporary_timer_id_count: int = -1
         """Not really useful attribute, but just so `__eq__` can properly work on temporary timers."""
+        self._skipped_timer_ids: set[int] = set()
 
         self._have_data = asyncio.Event()
         self._current_timer: Timer[TimerData] | None = None
@@ -242,6 +244,8 @@ class TimerManager:
         available_listeners = list(itertools.chain.from_iterable(cog.get_listeners() for cog in self.bot.cogs.values()))
         available_listeners = [listener[0] for listener in available_listeners]
 
+        self._skipped_timer_ids.add(timer.id)
+
         if f"on_{timer.event_name}" in available_listeners:
             # the listener existence is confirmed therefore it should be safe to dispatch the event
             self.bot.dispatch(timer.event_name, timer)
@@ -269,10 +273,13 @@ class TimerManager:
         query = """
             SELECT * FROM timers
             WHERE (expires_at AT TIME ZONE 'UTC' AT TIME ZONE timezone) < (CURRENT_TIMESTAMP + $1::interval)
+                AND NOT id=ANY($2)
             ORDER BY expires_at
             LIMIT 1;
         """
-        record: TimerRow[TimerData] | None = await self.bot.pool.fetchrow(query, datetime.timedelta(days=days))
+        record: TimerRow[TimerData] | None = await self.bot.pool.fetchrow(
+            query, datetime.timedelta(days=days), self._skipped_timer_ids
+        )
         if record:
             return Timer(row=record)
         return None

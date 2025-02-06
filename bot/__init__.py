@@ -1,4 +1,4 @@
 from .bases import *
 from .bot import *
 from .logs import *
-from .timer import *
+from .timer_manager import *

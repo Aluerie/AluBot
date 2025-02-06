@@ -190,8 +190,7 @@ class MatchToSend(BaseMatchToSend):
 
 
 class MatchToEdit(BaseMatchToEdit):
-    """
-    """
+    """ """
 
     def __init__(
         self,
@@ -251,8 +250,9 @@ class MatchToEdit(BaseMatchToEdit):
             # Item Icons
             for count, item_image in enumerate(item_icon_images):
                 left = count * CELL_SIZE
+                item_image = item_image.resize((CELL_SIZE, CELL_SIZE))  # noqa: PLW2901
                 img.paste(
-                    im=item_image.resize((CELL_SIZE, CELL_SIZE)),
+                    im=item_image,
                     box=(left, height - CELL_SIZE - item_image.height),
                 )
 
@@ -329,7 +329,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
     -----
     Import this into `beta_task` for easy testing of how new elements alignment like this:
     ```
-    from .fpc.lol._models import beta_test_edit_image
+    from .fpc.lol.models import beta_test_edit_image
     await beta_test_edit_image(self)
     ```
     """
@@ -362,7 +362,7 @@ async def beta_test_send_image(self: AluCog) -> None:
     -----
     Import this into `beta_task` for easy testing of how new elements alignment like this:
     ```
-    from .fpc.lol._models import beta_test_edit_image
+    from .fpc.lol.models import beta_test_edit_image
     await beta_test_edit_image(self)
     ```
     """

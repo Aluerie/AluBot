@@ -167,6 +167,7 @@ class Role(RoleEnum):
     event = 1090274008680902667
     jailed_bots = 1090428532162822234
     error = 1116171071528374394
+    test_error = 1337106675433340990
 
 
 CATEGORY_ROLES = [

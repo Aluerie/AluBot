@@ -18,7 +18,7 @@ from utils import cache, const, disambiguator, errors, formats, helpers, transpo
 
 from .exc_manager import ExceptionManager
 from .intents_perms import INTENTS, PERMISSIONS
-from .timer import TimerManager
+from .timer_manager import TimerManager
 from .tree import AluAppCommandTree
 
 if TYPE_CHECKING:

@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 async def count_lines(
     path: str,
     filetype: str = ".py",
+    *,
     skip_venv: bool = True,
 ) -> int:
     lines = 0
@@ -45,6 +46,7 @@ async def count_others(
     path: str,
     filetype: str = ".py",
     file_contains: str = "def",
+    *,
     skip_venv: bool = True,
 ) -> int:
     line_count = 0
@@ -77,8 +79,8 @@ def format_commit(commit: pygit2.Commit) -> str:
 
 
 def get_latest_commits(limit: int = 5) -> str:
-    repo = pygit2.Repository("./.git")
-    commits = list(itertools.islice(repo.walk(repo.head.target, sort_mode=SortMode.TOPOLOGICAL), limit))
+    repo = pygit2.repository.Repository("./.git")
+    commits = list(itertools.islice(repo.walk(repo.head.target, SortMode.TOPOLOGICAL), limit))
     return "\n".join(format_commit(c) for c in commits)
 
 
@@ -91,7 +93,7 @@ class PingTuple(NamedTuple):
 class OtherCog(AluCog):
     @app_commands.command()
     async def ping(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Checks the bot's ping to Discord and some other services."""
+        """\N{GLOBE WITH MERIDIANS} Checks the bot's ping to Discord and some other services."""
         typing_start = time.monotonic()
         await interaction.response.defer()
 
@@ -108,13 +110,13 @@ class OtherCog(AluCog):
         postgres_ms = (time.perf_counter() - postgres_start) * 1000
 
         pings = [
-            ("\N{LOWER LEFT BALLPOINT PEN}\N{VARIATION SELECTOR-16}", "Typing", typing_ms),
+            ("\N{MEMO}", "Typing", typing_ms),
             ("\N{LOVE LETTER}", "Message", message_ms),
-            ("\N{EARTH GLOBE EUROPE-AFRICA}", "Websocket", latency_ms),
+            ("\N{GLOBE WITH MERIDIANS}", "Websocket", latency_ms),
             ("\N{ELEPHANT}", "Database", postgres_ms),
         ]
         average = sum(p[2] for p in pings) / len(pings)
-        pings.append(("\N{PERMANENT PAPER SIGN}\N{VARIATION SELECTOR-16}", "Average", average))
+        pings.append(("\N{AVOCADO}", "Average", average))
 
         table = tabulate(
             tabular_data=pings, headers=("", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f")
@@ -124,7 +126,7 @@ class OtherCog(AluCog):
 
     @app_commands.command()
     async def about(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Show information about the bot."""
+        """\N{GLOBE WITH MERIDIANS} Show information about the bot."""
         await interaction.response.defer()
         information = self.bot.bot_app_info
 
@@ -133,15 +135,8 @@ class OtherCog(AluCog):
                 colour=const.Colour.darkviolet,
                 description=information.description,
             )
-            .set_author(
-                name=f"Made by @{information.owner}",
-                icon_url=information.owner.display_avatar.url,
-            )
-            .add_field(
-                name="Latest updates:",
-                value=get_latest_commits(limit=3),
-                inline=False,
-            )
+            .set_author(name=f"Made by @{information.owner}", icon_url=information.owner.display_avatar.url)
+            .add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
         )
 
         # statistics
@@ -180,7 +175,7 @@ class OtherCog(AluCog):
 
     @app_commands.command()
     async def source(self, interaction: discord.Interaction[AluBot], *, command: str | None = None) -> None:
-        """Links to the bots code, or a specific command's."""
+        """\N{GLOBE WITH MERIDIANS} Links to the bots code, or a specific command's."""
         source_url = interaction.client.repository_url
         branch = "main"
 

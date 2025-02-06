@@ -123,10 +123,9 @@ class ExceptionManager:
         code_chunks = list(self._yield_code_chunks(traceback))
 
         # hmm, this is honestly a bit too many sends for 5 seconds of rate limit :thinking:
-        if not self.bot.test:
-            # i don't need any extra pings when I'm testing since I'm right there.
-            await self.bot.error_webhook.send(const.Role.error.mention)
+        mention = const.Role.error.mention if not self.bot.test else const.Role.test_error.mention
 
+        await self.bot.error_webhook.send(mention)
         for chunk in code_chunks:
             await self.bot.error_webhook.send(chunk)
         await self.bot.error_webhook.send(embed=embed)

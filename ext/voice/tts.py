@@ -128,7 +128,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
             embed = discord.Embed(description="Stopped", colour=interaction.user.colour)
             await interaction.response.send_message(embed=embed)
         else:
-            embed = discord.Embed(description="I don't think I was talking", colour=const.Colour.maroon)
+            embed = discord.Embed(description="I don't think I was talking", colour=const.Colour.error)
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @tts_group.command()

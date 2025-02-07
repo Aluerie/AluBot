@@ -45,7 +45,7 @@ class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
         # Feedback to global logs
         logs_embed = (
             discord.Embed(
-                colour=const.Colour.blueviolet,
+                colour=const.Colour.prpl,
                 title=summary,
                 description=details,
                 timestamp=interaction.created_at,
@@ -73,7 +73,7 @@ class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
 
         # Success
         success_embed = discord.Embed(
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             title=summary,
             description=details,
         ).set_author(name="Successfully submitted feedback")
@@ -110,7 +110,7 @@ class FeedbackCog(MetaCog):
         # dm the user
         embed = (
             discord.Embed(
-                colour=const.Colour.blueviolet,
+                colour=const.Colour.prpl,
                 title="Message from a developer",
                 description=content,
             )
@@ -127,7 +127,7 @@ class FeedbackCog(MetaCog):
 
         # success message to the bot dev
         embed2 = discord.Embed(
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             description="DM successfully sent.",
         )
         await ctx.send(embed=embed2)

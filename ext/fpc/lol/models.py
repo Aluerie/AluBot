@@ -103,7 +103,7 @@ class MatchToSend(BaseMatchToSend):
 
         def build_notification_image() -> Image.Image:
             width, height = img.size
-            rectangle = Image.new("RGB", (width, 100), f"#{const.Colour.darkslategray:0>6x}")
+            rectangle = Image.new("RGB", (width, 100), f"#{const.Colour.league:0>6x}")
             ImageDraw.Draw(rectangle)
             img.paste(rectangle)
             img.paste(rectangle, (0, height - CELL_SIZE))
@@ -155,7 +155,7 @@ class MatchToSend(BaseMatchToSend):
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
         embed = (
             discord.Embed(
-                color=const.Colour.darkslategray,
+                color=const.Colour.league,
                 title=f"{title} {self.champion.emote}",
                 url=streamer.url,
                 description=(
@@ -301,8 +301,8 @@ class MatchToEdit(BaseMatchToEdit):
             # Outcome Text
             _, outcome_text_h = self.bot.transposer.get_text_wh(self.outcome, font)  # _ is `outcome_text_w`
             colour_dict = {
-                "Win": str(const.MaterialPalette.green(shade=800)),
-                "Loss": str(const.MaterialPalette.red(shade=900)),
+                "Win": str(const.Palette.green(shade=800)),
+                "Loss": str(const.Palette.red(shade=900)),
                 "No Scored": (255, 255, 255),
             }
             draw.text(

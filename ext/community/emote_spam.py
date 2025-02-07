@@ -65,7 +65,7 @@ class EmoteSpam(CommunityCog):
         embed = discord.Embed(
             title="Deleted message",
             description=message.content,
-            color=const.Colour.maroon,
+            color=const.Colour.error,
         ).set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
         if s := message.stickers:
             embed.set_thumbnail(url=s[0].url)
@@ -127,7 +127,7 @@ class EmoteSpam(CommunityCog):
         content = f"{emote!s} {emote!s} {emote!s}"
         await channel.send(content)
         embed = discord.Embed(
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             description=f"I sent {content} into {channel.mention}",
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -187,7 +187,7 @@ class ComfySpam(CommunityCog):
                     f"{message.author.mention}, you are NOT allowed to use anything but truly the only one comfy-emote in {channel.mention} ! "
                     f"{const.Emote.Ree} {const.Emote.Ree} {const.Emote.Ree}"
                 )
-                e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.blueviolet)
+                e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.prpl)
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 await message.delete()
@@ -208,7 +208,9 @@ class ComfySpam(CommunityCog):
     async def comfy_spam(self) -> None:
         """Periodic task to keep #comfy-spam channel alive."""
         if random.randint(1, 100 + 1) < 2:
-            await self.community.comfy_spam.send(f"{const.Emote.peepoComfy} {const.Emote.peepoComfy} {const.Emote.peepoComfy}")
+            await self.community.comfy_spam.send(
+                f"{const.Emote.peepoComfy} {const.Emote.peepoComfy} {const.Emote.peepoComfy}"
+            )
 
     @aluloop(count=1)
     async def offline_criminal_check(self) -> None:

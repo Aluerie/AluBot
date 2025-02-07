@@ -263,7 +263,7 @@ class AluAppCommandTree(app_commands.CommandTree):
 
         if warn_developers_desc:
             warn_developers_embed = discord.Embed(
-                colour=const.Colour.maroon,
+                colour=const.Colour.error,
                 description=warn_developers_desc,
             ).set_author(name=error.__class__.__name__)
             await interaction.client.hideout.spam.send(const.Role.error.mention, embed=warn_developers_embed)

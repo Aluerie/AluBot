@@ -102,9 +102,9 @@ RULE_BANK = [
 
 
 class DailyEmbedMessageEnum(Enum):
-    Simple = DailyEmbedMessageTuple("Daily Message", Colour.blueviolet, "advice", ADVICE_BANK)
-    Important = DailyEmbedMessageTuple("Daily Important Message", Colour.darkslategray, "important", IMPORTANT_BANK)
-    Fact = DailyEmbedMessageTuple("Daily Fact Message", Colour.slateblue, "fact", FACT_BANK)
+    Simple = DailyEmbedMessageTuple("Daily Message", Colour.prpl, "advice", ADVICE_BANK)
+    Important = DailyEmbedMessageTuple("Daily Important Message", Colour.league, "important", IMPORTANT_BANK)
+    Fact = DailyEmbedMessageTuple("Daily Fact Message", 0x6A5ACD, "fact", FACT_BANK)
     Rule = DailyEmbedMessageTuple("Daily Rule Message", 0x66FFBF, "rule", RULE_BANK)
 
 

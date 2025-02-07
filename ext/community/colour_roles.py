@@ -50,7 +50,7 @@ class ColourRolesDropdown(discord.ui.RoleSelect[ColourRolesView]):
             else:
                 raise ValueError
         except ValueError:
-            e = discord.Embed(color=const.Colour.maroon)
+            e = discord.Embed(color=const.Colour.error)
             e.description = "You are trying to choose non-colour role, which I won't give."
             await interaction.response.send_message(embed=e, ephemeral=True)
         else:

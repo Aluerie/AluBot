@@ -84,7 +84,7 @@ class BotManagement(DevBaseCog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """Send notification embed with guilds stats on `guild_join` events."""
-        embed = discord.Embed(colour=const.MaterialPalette.green(shade=500), title="New Guild")
+        embed = discord.Embed(colour=const.Palette.green(shade=500), title="New Guild")
         embed = self.get_guild_stats(embed, guild)
         await self.bot.hideout.global_logs.send(embed=embed)
 
@@ -136,7 +136,7 @@ class BotManagement(DevBaseCog):
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         """Send notification embed with guilds stats on `guild_remove` events."""
-        embed = discord.Embed(colour=const.MaterialPalette.red(shade=500), title="Left Guild")
+        embed = discord.Embed(colour=const.Palette.red(shade=500), title="Left Guild")
         embed = self.get_guild_stats(embed, guild)
         await self.bot.hideout.global_logs.send(embed=embed)
 
@@ -165,7 +165,7 @@ class BotManagement(DevBaseCog):
 
         await guild.leave()
         embed = discord.Embed(
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             description=f"Just left guild {guild.name} with id `{guild.id}`\n",
         )
         await interaction.followup.send(embed=embed)
@@ -177,7 +177,7 @@ class BotManagement(DevBaseCog):
         guild: app_commands.Transform[discord.Guild, DiscordGuildTransformer],
     ) -> None:
         """\N{GUITAR} Show basic stats about the guild."""
-        embed = discord.Embed(colour=const.MaterialPalette.blue(shade=500), title="Guild Stats")
+        embed = discord.Embed(colour=const.Palette.blue(shade=500), title="Guild Stats")
         embed = self.get_guild_stats(embed, guild)
         await interaction.response.send_message(embed=embed)
 
@@ -186,7 +186,7 @@ class BotManagement(DevBaseCog):
         """\N{GUITAR} Show list of guilds the bot is in."""
         guild_list = chr(10).join([f"• {item.name} `{item.id}`" for item in self.bot.guilds])
         embed = discord.Embed(
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             description=(f"The bot is in these guilds\n{guild_list}"),
         )
         # TODO: this will break when too many guilds;

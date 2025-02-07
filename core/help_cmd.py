@@ -48,7 +48,7 @@ class HelpPageSource(menus.ListPageSource):
 
     @override
     async def format_page(self, menu: HelpPages, page: CogPage) -> discord.Embed:
-        e = discord.Embed(colour=const.Colour.blueviolet)
+        e = discord.Embed(colour=const.Colour.prpl)
 
         if page.section == "_front_page":
             bot = menu.ctx_ntr.client
@@ -207,7 +207,10 @@ class AluHelp(commands.HelpCommand):
         )
 
     async def unpack_commands(
-        self, command: AluCommand, answer: list[AluCommand] | None = None, deep: int = 0,
+        self,
+        command: AluCommand,
+        answer: list[AluCommand] | None = None,
+        deep: int = 0,
     ) -> list[AluCommand]:
         """If a command is a group then unpack those until their very-last children.
 
@@ -385,7 +388,7 @@ class BaseHelpCog(AluCog):
             # announce to community/hideout that we logged in
             # from testing purposes it means we can use help with [proper slash mentions (if synced).
             embed = discord.Embed(
-                colour=const.Colour.blueviolet,
+                colour=const.Colour.prpl,
                 description=f"Logged in as {self.bot.user.name}",
             ).set_footer(text="Finished updating/rebooting")
             await self.community.bot_spam.send(embed=embed)

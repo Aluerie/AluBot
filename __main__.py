@@ -48,7 +48,7 @@ async def start_the_bot(*, test: bool) -> None:
                 url=config["WEBHOOKS"]["SPAM"],
                 session=session,
             )
-            embed = discord.Embed(color=const.Colour.maroon, description=msg)
+            embed = discord.Embed(color=const.Colour.error, description=msg)
             await webhook.send(content=const.Role.error.mention, embed=embed)
             await session.close()
         return

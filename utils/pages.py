@@ -41,13 +41,13 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
     @override
     async def on_submit(self, interaction: discord.Interaction) -> None:
         if self.paginator.is_finished():
-            e = discord.Embed(colour=const.Colour.maroon, description="Took too long")
+            e = discord.Embed(colour=const.Colour.error, description="Took too long")
             await interaction.response.send_message(embed=e, ephemeral=True)
             return
 
         value = str(self.goto.value)
         if not value.isdigit():
-            e = discord.Embed(colour=const.Colour.maroon)
+            e = discord.Embed(colour=const.Colour.error)
             e.description = f"Expected a page number between 1 and {self.max_pages_as_str}, not {value!r}"
             await interaction.response.send_message(embed=e, ephemeral=True)
             return
@@ -137,8 +137,7 @@ class Paginator(AluView):
             # we can handle it
             pass
 
-    def update_more_labels(self, page_number: int) -> None:
-        ...
+    def update_more_labels(self, page_number: int) -> None: ...
 
     def _update_nav_labels(self, page_number: int) -> None:
         max_pages = self.source.get_max_pages()
@@ -216,7 +215,8 @@ class Paginator(AluView):
         await interaction.response.send_message("sorry, the search feature is disabled for now", ephemeral=True)
 
     @discord.ui.button(
-        label="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}", style=discord.ButtonStyle.blurple,
+        label="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}",
+        style=discord.ButtonStyle.blurple,
     )
     async def refresh(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
         """Refresh current page.
@@ -230,7 +230,12 @@ class Paginator(AluView):
 
 class EnumeratedPageSource(menus.ListPageSource):
     def __init__(
-        self, entries: list[str], *, per_page: int, no_enumeration: bool = False, description_prefix: str = "",
+        self,
+        entries: list[str],
+        *,
+        per_page: int,
+        no_enumeration: bool = False,
+        description_prefix: str = "",
     ) -> None:
         super().__init__(entries, per_page=per_page)
         self.description_prefix = description_prefix

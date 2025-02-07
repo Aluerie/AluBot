@@ -127,7 +127,7 @@ class SyncAppTreeTools(DevBaseCog):
             desc = f"Synced `{len(synced)}` commands globally."
 
         # return the embed result
-        return discord.Embed(colour=const.Colour.blueviolet, description=desc)
+        return discord.Embed(colour=const.Colour.prpl, description=desc)
 
     # Need to split the commands bcs commands.Greedy can't be transferred to app_commands
     @app_commands.guilds(const.Guild.hideout)

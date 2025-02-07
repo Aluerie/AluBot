@@ -35,7 +35,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         """Give member a warning."""
         self.warn_check(member)
 
-        e = discord.Embed(title="Manual warning by a mod", colour=const.MaterialPalette.red(shade=300))
+        e = discord.Embed(title="Manual warning by a mod", colour=const.Palette.red(shade=300))
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         e.set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         e.set_thumbnail(url=discord.PartialEmoji.from_str(const.Emote.peepoYellowCard).url)
@@ -68,7 +68,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             except discord.HTTPException as exc:
                 e = (
                     discord.Embed(
-                        colour=const.Colour.maroon,
+                        colour=const.Colour.error,
                         title="Oups... Error during muting.",
                         description="If you think it's wrong then contact Aluerie.",
                     )
@@ -82,7 +82,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             msg = "Discord does not allow muting people for more than 28 days."
             raise errors.BadArgument(msg)
 
-        e = discord.Embed(title="Manual mute by a mod", colour=const.MaterialPalette.red(shade=600), description=reason)
+        e = discord.Embed(title="Manual mute by a mod", colour=const.Palette.red(shade=600), description=reason)
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         e.set_footer(text=f"Muted by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         e.set_thumbnail(url=discord.PartialEmoji.from_str(const.Emote.peepoRedCard).url)

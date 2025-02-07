@@ -115,7 +115,7 @@ class LeaderboardPageSource(menus.ListPageSource):
     @override
     async def format_page(self, _menu: pages.Paginator, entry: str) -> discord.Embed:
         return discord.Embed(
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             title="Server Leaderboard",
             description=entry,
         ).set_footer(
@@ -301,7 +301,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                     raise ValueError(msg)
 
                 text = f"{message.author.mention} just advanced to {level_up_role.mention} ! {const.Emote.PepoG}"
-                embed = discord.Embed(colour=const.Colour.blueviolet, description=text)
+                embed = discord.Embed(colour=const.Colour.prpl, description=text)
                 await message.channel.send(embed=embed)
                 await author.remove_roles(previous_level_role)
                 await author.add_roles(level_up_role)

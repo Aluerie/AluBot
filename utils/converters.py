@@ -122,7 +122,7 @@ class AluColourTransformer(app_commands.Transformer):
         # my custom situations/desires.
         if argument in ("lavender purple", "prpl"):
             # my fav colour, of course.
-            return discord.Colour(const.Colour.blueviolet)
+            return discord.Colour(const.Colour.prpl)
 
         # Material Palette
         m = re.match(r"mp\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", argument)
@@ -130,20 +130,20 @@ class AluColourTransformer(app_commands.Transformer):
             colour_name = m.group(1)
             shade = int(m.group(2))
             try:
-                return getattr(const.MaterialPalette, colour_name)(shade)
+                return getattr(const.Palette, colour_name)(shade)
             except AttributeError:
-                methods = [m[0] for m in inspect.getmembers(const.MaterialPalette, predicate=inspect.ismethod)]
+                methods = [m[0] for m in inspect.getmembers(const.Palette, predicate=inspect.ismethod)]
                 msg = (
                     f"Provided colour name is incorrect.\n\n"
                     "MaterialUI Google Palette supports the following colour names:"
-                    f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
+                    f"\n{', '.join(f'`{m}`' for m in methods)}{error_footer}"
                 )
                 raise InvalidColour(msg)
             except ValueError:
                 msg = (
                     "Provided shade value is incorrect.\n\n"
                     "MaterialUI Google Palette supports the following shades values:"
-                    f'\n{", ".join(f"`{v}`" for v in const.MaterialPalette.shades)}{error_footer}'
+                    f"\n{', '.join(f'`{v}`' for v in const.Palette.shades)}{error_footer}"
                 )
                 raise InvalidColour(msg)
 
@@ -153,20 +153,20 @@ class AluColourTransformer(app_commands.Transformer):
             colour_name = m.group(1)
             shade = int(m.group(2))
             try:
-                return getattr(const.MaterialAccentPalette, colour_name)(shade)
+                return getattr(const.Accent, colour_name)(shade)
             except AttributeError:
-                methods = [m[0] for m in inspect.getmembers(const.MaterialAccentPalette, predicate=inspect.ismethod)]
+                methods = [m[0] for m in inspect.getmembers(const.Accent, predicate=inspect.ismethod)]
                 msg = (
                     f"Provided colour name is incorrect.\n\n"
                     "MaterialAccentUI Google Palette supports the following colour names:"
-                    f'\n{", ".join(f"`{m}`" for m in methods)}{error_footer}'
+                    f"\n{', '.join(f'`{m}`' for m in methods)}{error_footer}"
                 )
                 raise InvalidColour(msg)
             except ValueError:
                 msg = (
                     "Provided shade value is incorrect.\n\n"
                     "MaterialAccentUI Google Palette supports the following shades values:"
-                    f'\n{", ".join(f"`{v}`" for v in const.MaterialAccentPalette.shades)}{error_footer}'
+                    f"\n{', '.join(f'`{v}`' for v in const.Accent.shades)}{error_footer}"
                 )
                 raise InvalidColour(msg)
 

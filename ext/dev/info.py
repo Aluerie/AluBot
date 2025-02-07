@@ -58,7 +58,7 @@ class DevInformation(DevBaseCog):
 
         embed = (
             discord.Embed(
-                colour=const.Colour.blueviolet,
+                colour=const.Colour.prpl,
                 title="Bot Host Machine System Info",
                 description=(
                     f"\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n"
@@ -74,9 +74,9 @@ class DevInformation(DevBaseCog):
                 value=(
                     f"\N{BLACK CIRCLE} CPU usage: \n{psutil.cpu_percent()}% {cpu_freq}"
                     f"\N{BLACK CIRCLE} RAM usage: \n{psutil.virtual_memory().percent}% | "
-                    f'{str(round(psutil.virtual_memory().total / (1024.0 ** 3))) + " GB"}\n'
-                    f'\N{BLACK CIRCLE} Disk usage: \n{(du := psutil.disk_usage("/")).percent} % | '
-                    f"{du.used / (1024 ** 3):.1f}GB/{du.total / (1024 ** 3):.1f}GB"
+                    f"{str(round(psutil.virtual_memory().total / (1024.0**3))) + ' GB'}\n"
+                    f"\N{BLACK CIRCLE} Disk usage: \n{(du := psutil.disk_usage('/')).percent} % | "
+                    f"{du.used / (1024**3):.1f}GB/{du.total / (1024**3):.1f}GB"
                 ),
             )
             .set_footer(text=f"AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}")
@@ -105,7 +105,7 @@ class DevInformation(DevBaseCog):
         pv = sys.version_info  # python version
 
         embed = (
-            discord.Embed(colour=const.Colour.blueviolet)
+            discord.Embed(colour=const.Colour.prpl)
             .add_field(
                 name="Python Version",
                 value=f"{pv.major}.{pv.minor}.{pv.micro} {pv.releaselevel} {pv.serial}",  # cspell: ignore releaselevel
@@ -175,7 +175,7 @@ class DevInformation(DevBaseCog):
 
         bad_inner_tasks = ", ".join(hex(id(t)) for t in inner_tasks if t.done() and t._exception is not None)
         total_warnings += bool(bad_inner_tasks)
-        embed.add_field(name="Inner Tasks", value=f'Total: {len(inner_tasks)}\nFailed: {bad_inner_tasks or "None"}')
+        embed.add_field(name="Inner Tasks", value=f"Total: {len(inner_tasks)}\nFailed: {bad_inner_tasks or 'None'}")
         embed.add_field(name="Events Waiting", value=f"Total: {len(event_tasks)}", inline=False)
 
         process = psutil.Process()

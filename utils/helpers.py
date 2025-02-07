@@ -77,7 +77,7 @@ def error_handler_response_embed(error: Exception, desc: str, *, unexpected: boo
         # means error is unexpected so let's return our ready to go answer
         return (
             discord.Embed(
-                colour=const.Colour.maroon,
+                colour=const.Colour.error,
                 description=(
                     "Sorry! Something went wrong! I've notified my developer about the error "
                     "with all the details. Hopefully, we'll get it fixed soon.\n"
@@ -89,7 +89,7 @@ def error_handler_response_embed(error: Exception, desc: str, *, unexpected: boo
             .set_footer(text="PS. No private data was recorded.")
         )
     # error was expected and has expected `desc` answer template
-    embed = discord.Embed(colour=const.Colour.maroon, description=desc)
+    embed = discord.Embed(colour=const.Colour.error, description=desc)
     if not isinstance(error, errors.ErroneousUsage):
         embed.set_author(name=formats.convert_PascalCase_to_spaces(error.__class__.__name__))
     return embed

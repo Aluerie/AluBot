@@ -45,7 +45,7 @@ class EmoteStatsPageSource(menus.ListPageSource):
     async def format_page(self, menu: pages.Paginator, entry: str) -> discord.Embed:
         return (
             discord.Embed(
-                colour=const.Colour.blueviolet,
+                colour=const.Colour.prpl,
                 title="Emote leaderboard",
                 description=entry,
             )
@@ -352,7 +352,7 @@ class EmoteStats(StatsCog):
         if not emoji:
             # TODO: raise my own error actually;
             embed = discord.Embed(
-                color=const.Colour.maroon,
+                color=const.Colour.error,
                 description=f"Didn't find any emotes matching the name `{emote}`",
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -360,7 +360,7 @@ class EmoteStats(StatsCog):
 
         embed = (
             discord.Embed(
-                colour=const.Colour.blueviolet,
+                colour=const.Colour.prpl,
                 title=f"`:{emoji.name}:`",
             )
             .set_author(name="Emote Stats")

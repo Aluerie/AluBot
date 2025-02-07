@@ -127,7 +127,7 @@ class AluView(discord.ui.View):
             return True
         # we need to deny control to this non-author user
         embed = discord.Embed(
-            colour=const.Colour.maroon,
+            colour=const.Colour.error,
             description=f"Sorry! This {self.view_name} is not meant to be controlled by you.",
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)

@@ -131,10 +131,7 @@ class OtherCog(AluCog):
         information = self.bot.bot_app_info
 
         embed = (
-            discord.Embed(
-                colour=const.Colour.darkviolet,
-                description=information.description,
-            )
+            discord.Embed(colour=0x9400D3, description=information.description)
             .set_author(name=f"Made by @{information.owner}", icon_url=information.owner.display_avatar.url)
             .add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
         )

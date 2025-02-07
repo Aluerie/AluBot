@@ -137,7 +137,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
             bot,
             *args,
             prefix="dota",
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             game_display_name="Dota 2",
             game_icon_url=const.Logo.Dota,
             character_singular="hero",

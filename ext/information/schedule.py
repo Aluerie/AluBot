@@ -208,7 +208,7 @@ class SchedulePageSource(menus.ListPageSource):
 
         match_with_longest_teams = max(matches, key=lambda x: len(x.teams))
         max_amount_of_chars = len(match_with_longest_teams.teams)
-        desc += f'`{"Datetime now ".ljust(max_amount_of_chars, " ")}`{formats.format_dt_custom(dt_now, "t", "d")}\n'
+        desc += f"`{'Datetime now '.ljust(max_amount_of_chars, ' ')}`{formats.format_dt_custom(dt_now, 't', 'd')}\n"
 
         # matches.sort(key=lambda x: (x.league, x.dt))
         # now it's sorted by leagues and dt
@@ -297,7 +297,10 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
     @app_commands.rename(schedule_mode="filter")
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in SELECT_OPTIONS])
     async def schedule(
-        self, interaction: discord.Interaction[AluBot], schedule_mode: int = 1, query: str | None = None,
+        self,
+        interaction: discord.Interaction[AluBot],
+        schedule_mode: int = 1,
+        query: str | None = None,
     ) -> None:
         """Dota 2 Pro Matches Schedule.
 
@@ -333,7 +336,8 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                 match_strings = []
                 for match in matches:
                     team_content = match.findAll(
-                        "of-simple-match-card-team", attrs={"class": "simple-match-card__team-content"},
+                        "of-simple-match-card-team",
+                        attrs={"class": "simple-match-card__team-content"},
                     )
                     team1 = team_content[0].find("span", attrs={"class": "simple-match-card-team__name"}).text
                     team2 = team_content[1].find("span", attrs={"class": "simple-match-card-team__name"}).text
@@ -359,7 +363,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                 await interaction.response.send_message(embed=embed)
             else:
                 embed = discord.Embed(
-                    colour=const.Colour.maroon,
+                    colour=const.Colour.error,
                     description="No matches found",
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)

@@ -351,14 +351,16 @@ class BugTracker(AluCog):
             self.valve_devs.extend(success_logins)
             embeds.append(
                 embed_answer(
-                    success_logins, const.MaterialPalette.green(), "Added user(-s) to the list of Valve devs.",
+                    success_logins,
+                    const.Palette.green(),
+                    "Added user(-s) to the list of Valve devs.",
                 ),
             )
         if error_logins:
             embeds.append(
                 embed_answer(
                     error_logins,
-                    const.MaterialPalette.red(),
+                    const.Palette.red(),
                     "User(-s) were already in the list of Valve devs.",
                 ),
             )
@@ -371,7 +373,7 @@ class BugTracker(AluCog):
         await self.bot.pool.execute(query, login)
         self.valve_devs.remove(login)
         embed = discord.Embed(
-            color=const.MaterialPalette.orange(),
+            color=const.Palette.orange(),
             description=f"Removed user `{login}` from the list of Valve devs.",
         )
         await ctx.reply(embed=embed)
@@ -383,7 +385,7 @@ class BugTracker(AluCog):
         valve_devs: list[str] = [i for (i,) in await self.bot.pool.fetch(query)]
         valve_devs.sort()
         embed = discord.Embed(
-            color=const.MaterialPalette.blue(),
+            color=const.Palette.blue(),
             title="List of known Valve devs",
             description="\n".join([f"\N{BLACK CIRCLE} {i}" for i in valve_devs]),
         )

@@ -90,9 +90,9 @@ class LogsViaWebhook(AluCog):
     }
 
     colours: Mapping[str, discord.Colour | int] = {
-        "INFO": const.MaterialPalette.light_blue(),
-        "WARNING": const.MaterialPalette.yellow(shade=700),
-        "ERROR": const.Colour.maroon,
+        "INFO": const.Palette.light_blue(),
+        "WARNING": const.Palette.yellow(shade=700),
+        "ERROR": const.Colour.error,
     }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

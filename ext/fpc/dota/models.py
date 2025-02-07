@@ -87,13 +87,13 @@ class MatchToSend(BaseMatchToSend):
                 "logo_url": const.Logo.Dota,
                 "vod_url": "",
                 "twitch_status": "NoTwitch",
-                "colour": const.MaterialPalette.gray(),
+                "colour": const.Palette.gray(),
             }
         streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
         if streamer.live:
             twitch_status = "Live"
             vod_url = await streamer.vod_link(seconds_ago=self.long_ago)
-            colour = discord.Colour(const.Colour.blueviolet)
+            colour = discord.Colour(const.Colour.prpl)
         else:
             twitch_status = "Offline"
             vod_url = ""
@@ -203,7 +203,13 @@ class MatchToSend(BaseMatchToSend):
             VALUES ($1, $2, $3, $4, $5, $6)
         """
         await self.bot.pool.execute(
-            query, message_id, channel_id, self.match_id, self.friend_id, self.player_hero.id, self.player_name,
+            query,
+            message_id,
+            channel_id,
+            self.match_id,
+            self.friend_id,
+            self.player_hero.id,
+            self.player_name,
         )
 
 
@@ -226,7 +232,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
         self.hero: Hero | PseudoHero | None = player_hero
         self.hero_id: int = player["heroId"]
         self.outcome: str = "Win" if player["isVictory"] else "Loss"
-        self.kda: str = f'{player["kills"]}/{player["deaths"]}/{player["assists"]}'
+        self.kda: str = f"{player['kills']}/{player['deaths']}/{player['assists']}"
 
         playback = player["playbackData"]
 
@@ -352,8 +358,8 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
                 w, h = self.bot.transposer.get_text_wh(self.outcome, font)
                 colour_map = {
-                    "Win": str(const.MaterialPalette.green(shade=800)),
-                    "Loss": str(const.MaterialPalette.red(shade=900)),
+                    "Win": str(const.Palette.green(shade=800)),
+                    "Loss": str(const.Palette.red(shade=900)),
                     "Not Scored": (255, 255, 255),
                 }
                 draw.text(
@@ -440,7 +446,11 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
             text = "Not Counted"
             text_w, text_h = self.bot.transposer.get_text_wh(text, font)
             draw.text(
-                xy=(0, height - text_h), text=text, font=font, align="left", fill=str(discord.Colour.dark_orange()),
+                xy=(0, height - text_h),
+                text=text,
+                font=font,
+                align="left",
+                fill=str(discord.Colour.dark_orange()),
             )
 
             # img.show()
@@ -471,6 +481,7 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
     data = await self.bot.dota.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
     match_to_edit = StratzMatchToEdit(self.bot, data)
     new_image = await match_to_edit.edit_notification_image(
-        const.DotaAsset.Placeholder640X360, discord.Colour.purple(),
+        const.DotaAsset.Placeholder640X360,
+        discord.Colour.purple(),
     )
     new_image.show()

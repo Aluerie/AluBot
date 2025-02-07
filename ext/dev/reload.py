@@ -42,7 +42,7 @@ class ReloadCog(DevBaseCog):
         """Shows available extensions to load/reload/unload."""
         extensions = [f"\N{BLACK CIRCLE} {ext}" for ext in sorted(self.bot.extensions, key=str.lower)]
         embed = discord.Embed(
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             title="Loaded Extensions",
             description="\n".join(extensions),
         )
@@ -125,12 +125,12 @@ class ReloadCog(DevBaseCog):
 
         if errors:
             content = "\n".join(
-                f'{formats.tick(status)} - {emoji} `{ext if not ext.startswith("ext.") else ext[5:]}`'
+                f"{formats.tick(status)} - {emoji} `{ext if not ext.startswith('ext.') else ext[5:]}`"
                 for status, emoji, ext in statuses
             )
 
             # let's format errors into embeds. It might backfire because of 25 fields restrictions.
-            embed = discord.Embed(colour=const.Colour.maroon)
+            embed = discord.Embed(colour=const.Colour.error)
             for name, value in errors:
                 embed.add_field(name=name, value=value, inline=False)
 
@@ -206,7 +206,7 @@ class ReloadCog(DevBaseCog):
 
         mods_text = "\n".join(f"{index}. `{module}`" for index, (_, module) in enumerate(modules, start=1))
         embed = discord.Embed(
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             description=f"This will update the following modules, are you sure?\n{mods_text}",
         )
         if not await ctx.bot.disambiguator.confirm(ctx, embed=embed):

@@ -38,12 +38,12 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         for date in parsed_dates:
             dt = date[1]
             if dt.tzinfo is not None:
-                e = discord.Embed(colour=const.Colour.blueviolet)
+                e = discord.Embed(colour=const.Colour.prpl)
                 utc_offset = o.seconds if (o := dt.utcoffset()) else 0
                 dst = d.seconds if (d := dt.dst()) else 0
                 e.description = (
                     f'"{date[0]}" in your timezone:\n {formats.format_dt_tdR(dt)}\n'
-                    f"{dt.tzname()} is GMT {utc_offset / 3600:+.1f}, dst: { dst / 3600:+.1f}"
+                    f"{dt.tzname()} is GMT {utc_offset / 3600:+.1f}, dst: {dst / 3600:+.1f}"
                 )
                 await message.channel.send(embed=e)
 
@@ -57,7 +57,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id: int) -> None:
             if (added_role and added_role[0] == role) or (removed_role and removed_role[0] == role):
                 msg = channel.get_partial_message(msg_id)
-                e = discord.Embed(title=f"List of {role.name}", colour=const.Colour.blueviolet)
+                e = discord.Embed(title=f"List of {role.name}", colour=const.Colour.prpl)
                 e.description = "".join([f"{member.mention}\n" for member in role.members])
                 await msg.edit(content="", embed=e)
 
@@ -71,7 +71,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
         embed = (
             discord.Embed(
-                colour=const.Colour.blueviolet,
+                colour=const.Colour.prpl,
                 title="GMT (Greenwich Mean Time)",
             )
             .set_footer(text="GMT is the same as UTC (Universal Time Coordinated)")
@@ -176,7 +176,8 @@ class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
         text = "".join([f"{msg.content}\n" async for msg in channel.history(limit=limit) if msg.author == member])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
         embed = discord.Embed(
-            colour=const.Colour.blueviolet, description=f"Member: {member}\nChannel: {channel}\nLimit: {limit}",
+            colour=const.Colour.prpl,
+            description=f"Member: {member}\nChannel: {channel}\nLimit: {limit}",
         )
         file = self.bot.transposer.image_to_file(wordcloud.to_image(), filename="wordcloud.png")
         await interaction.followup.send(embed=embed, file=file)

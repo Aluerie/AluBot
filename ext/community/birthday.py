@@ -241,7 +241,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         status = await self.remove_birthday_worker(interaction.user.id)
         if status == "DELETE 0":
             embed = discord.Embed(
-                colour=const.Colour.maroon,
+                colour=const.Colour.error,
                 description="Could not delete your birthday with that ID.",
             ).set_author(name="DatabaseError")
             await interaction.response.send_message(embed=embed)
@@ -395,7 +395,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             entries=string_list,
             per_page=20,
             title="Birthday List",
-            colour=const.Colour.blueviolet,
+            colour=const.Colour.prpl,
             footer_text="DD/Month/YYYY format",
         )
         await pgs.start()

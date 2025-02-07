@@ -355,6 +355,11 @@ class AluBot(commands.Bot, AluBotHelper):
         webhook_url = config["WEBHOOKS"]["ERROR"] if not self.test else config["WEBHOOKS"]["YEN_ERROR"]
         return self.webhook_from_url(webhook_url)
 
+    @discord.utils.cached_property
+    def error_ping(self) -> str:
+        """A short for @Error role ping in the hideout."""
+        return const.Role.error.mention if not self.test else const.Role.test_error.mention
+
     @override
     async def on_message(self, message: discord.Message) -> None:
         if message.guild and message.guild.id == const.Guild.hideout and not message.author.bot:
@@ -483,7 +488,10 @@ class AluBot(commands.Bot, AluBotHelper):
                         icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
                     )
                 )
-                await ctx.bot.exc_manager.register_error(error, metadata_embed)
+                await ctx.bot.exc_manager.register_error(error, metadata_embed, ctx.channel.id)
+                if ctx.channel.id == const.HideoutGuild.spam_channel_id:
+                    # we don't need any extra embeds;
+                    return
 
         response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
         await ctx.reply(embed=response_embed, ephemeral=True)

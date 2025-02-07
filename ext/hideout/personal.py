@@ -23,7 +23,7 @@ class PersonalCommands(HideoutCog):
             embeds = [e.copy() for e in message.embeds]
 
             for e in embeds:
-                if e.author and e.author.name not in [self.bot.developer, "dependabot[bot]"]:
+                if e.author and e.author.name not in {self.bot.developer, "dependabot[bot]"}:
                     await self.hideout.repost.send(embeds=embeds)
                     break
 

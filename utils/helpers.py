@@ -81,7 +81,7 @@ def error_handler_response_embed(error: Exception, desc: str, *, unexpected: boo
                 description=(
                     "Sorry! Something went wrong! I've notified my developer about the error "
                     "with all the details. Hopefully, we'll get it fixed soon.\n"
-                    f"Sorry for the inconvenience! {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}"
+                    f"Sorry for inconvenience! {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}"
                 ),
             )
             .set_thumbnail(url=const.Picture.DankFix)

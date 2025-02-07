@@ -254,7 +254,12 @@ class AluAppCommandTree(app_commands.CommandTree):
                     icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
                 )
             )
-            await interaction.client.exc_manager.register_error(error, metadata_embed)
+            await interaction.client.exc_manager.register_error(error, metadata_embed, interaction.channel_id)
+            if interaction.channel_id == const.HideoutGuild.spam_channel_id:
+                # we don't need any extra embeds;
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(":(")
+                return
 
         if warn_developers_desc:
             warn_developers_embed = discord.Embed(

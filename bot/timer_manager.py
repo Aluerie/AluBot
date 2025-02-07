@@ -93,8 +93,8 @@ class Timer[TimerDataT]:
     def __init__(self, *, row: TimerRow[TimerDataT]) -> None:
         self.id: int = row["id"]
         self.event: str = row["event"]
-        self.expires_at: datetime.datetime = row["expires_at"].replace(tzinfo=datetime.UTC)
-        self.created_at: datetime.datetime = row["created_at"].replace(tzinfo=datetime.UTC)
+        self.expires_at: datetime.datetime = row["expires_at"]
+        self.created_at: datetime.datetime = row["created_at"]
         self.timezone: str = row["timezone"]
         self.data: TimerDataT = row["data"]
 
@@ -184,6 +184,22 @@ class TimerManager:
                 # so we cap it at 40 days, see: http://bugs.python.org/issue20493
                 timer = self._current_timer = await self.wait_for_active_timers(days=40)
                 log.debug("Current_timer = %s", timer)
+
+                # Double check if there exist a listener for the current timer
+                available_listeners = [
+                    listener[0]
+                    for listener in itertools.chain.from_iterable(cog.get_listeners() for cog in self.bot.cogs.values())
+                ]
+                if f"on_{timer.event_name}" not in available_listeners:
+                    # the listener existence is NOT confirmed therefore it is not safe to dispatch the event
+                    # notify developers that there is no proper listener for the timer
+                    desc = (
+                        f"The timer with `event={timer.event_name}` tried to fire"
+                        "but there is no appropriate listener loaded."
+                    )
+                    embed = discord.Embed(colour=discord.Colour.dark_red(), description=desc)
+                    await self.bot.spam_webhook.send(content=self.bot.error_ping, embed=embed)
+
                 now = datetime.datetime.now(datetime.UTC)
 
                 if timer.expires_at >= now:
@@ -241,18 +257,8 @@ class TimerManager:
         """
         log.debug("Calling and Dispatching the timer %s with event %s", timer.id, timer.event)
 
-        available_listeners = list(itertools.chain.from_iterable(cog.get_listeners() for cog in self.bot.cogs.values()))
-        available_listeners = [listener[0] for listener in available_listeners]
-
         self._skipped_timer_ids.add(timer.id)
-
-        if f"on_{timer.event_name}" in available_listeners:
-            # the listener existence is confirmed therefore it should be safe to dispatch the event
-            self.bot.dispatch(timer.event_name, timer)
-
-        # delete the timer
-        # query = "DELETE FROM timers WHERE id=$1"
-        # await self.bot.pool.execute(query, timer.id)
+        self.bot.dispatch(timer.event_name, timer)
 
     async def get_active_timer(self, *, days: int = 7) -> Timer[TimerData] | None:
         """Get the most current active timer in the database.
@@ -369,8 +375,7 @@ class TimerManager:
     async def short_timer_optimisation(self, seconds: float, timer: Timer[TimerData]) -> None:
         """Optimisation for small timers, skipping the whole database insert/delete procedure."""
         await asyncio.sleep(seconds)
-        event_name = f"{timer.event}_timer_complete"
-        self.bot.dispatch(event_name, timer)
+        await self.call_timer(timer)
 
     async def get_timer_by_id(self, id: int) -> Timer[TimerData] | None:  # noqa: A002
         """Get a timer from its ID.

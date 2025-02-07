@@ -53,7 +53,8 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         member: discord.Member,
         *,
         until_when_and_reason: Annotated[
-            times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="..."),
+            times.FriendlyTimeResult,
+            times.UserFriendlyTime(commands.clean_content, default="..."),
         ],
     ) -> None:
         """Give member a mute."""
@@ -118,6 +119,10 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
 
     @commands.Cog.listener("on_guild_channel_create")
     async def give_aluerie_all_perms(self, channel: discord.abc.GuildChannel) -> None:
+        """Give Aluerie All Permissions in the channel.
+
+        Just an extra step to avoid some headache because my main acount is not an administrator in my own server.
+        """
         if channel.guild.id != self.community.id:
             return
 

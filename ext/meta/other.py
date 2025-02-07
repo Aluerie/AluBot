@@ -119,7 +119,7 @@ class OtherCog(AluCog):
         pings.append(("\N{AVOCADO}", "Average", average))
 
         table = tabulate(
-            tabular_data=pings, headers=("", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f")
+            tabular_data=pings, headers=(" ", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f")
         )
         embed = discord.Embed(colour=discord.Colour.dark_embed(), description=f"```py\n{table}\n```")
         await message.edit(embed=embed)

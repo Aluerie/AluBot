@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, override
 
 import discord
 
-from utils import const, errors, helpers
+from utils import const, errors, formats, helpers
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -36,7 +36,6 @@ async def on_views_modals_error(
     # error handler variables
     desc: str = "No description"
     is_unexpected: bool = False
-    mention = True
 
     if isinstance(error, errors.AluBotError):
         desc = str(error)
@@ -44,22 +43,15 @@ async def on_views_modals_error(
         # error is unexpected
         is_unexpected = True
 
+        args_join = f"[view]: {view}" + (f"\n[item]: {item}" if item else "")
+        snowflake_ids = (
+            f"author  = {interaction.user.id}\n"  # comment to prevent formatting from concatenating the lines
+            f"channel = {interaction.channel_id}\n"  # so I can see the alignment better
+            f"guild   = {interaction.guild_id}"
+        )
+
         metadata_embed = (
             discord.Embed(colour=0x2A0553, title="Error in View")
-            .add_field(
-                name="View Objects",
-                value=(f"```py\n[view]: {view}" + (f"\n[item]: {item}" if item else "") + "```"),
-            )
-            .add_field(
-                name="Snowflake Ids",
-                value=(
-                    "```py\n"
-                    f"author  = {interaction.user.id}\n"
-                    f"channel = {interaction.channel_id}\n"
-                    f"guild   = {interaction.guild_id}```"
-                ),
-                inline=False,
-            )
             .set_author(
                 name=(
                     f"@{interaction.user} in #{interaction.channel} "
@@ -67,19 +59,22 @@ async def on_views_modals_error(
                 ),
                 icon_url=interaction.user.display_avatar,
             )
+            .add_field(name="View Objects", value=formats.code(args_join), inline=False)
+            .add_field(name="Snowflake Ids", value=formats.code(snowflake_ids), inline=False)
             .set_footer(
                 text=f"on_views_modals_error: {view.__class__.__name__}",
                 icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
             )
         )
 
-        mention = interaction.channel_id != interaction.client.hideout.spam_channel_id
-        await interaction.client.exc_manager.register_error(error, metadata_embed, mention=mention)
+        await interaction.client.exc_manager.register_error(error, metadata_embed, interaction.channel_id)
+        if interaction.channel_id == const.HideoutGuild.spam_channel_id:
+            # we don't need any extra embeds;
+            if not interaction.response.is_done():
+                await interaction.response.send_message(":(")
+            return
 
-    response_to_user_embed = helpers.error_handler_response_embed(
-        error, desc, unexpected=is_unexpected, mention=mention
-    )
-
+    response_to_user_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
     if interaction.response.is_done():
         await interaction.followup.send(embed=response_to_user_embed, ephemeral=True)
     else:
@@ -147,7 +142,7 @@ class AluView(discord.ui.View):
         if hasattr(self, "message"):
             for item in self.children:
                 # item in self.children is Select/Button which have ``.disable`` but typehinted as Item
-                item.disabled = True  # type: ignore
+                item.disabled = True  # type: ignore[reportAttributeAccessIssue]
             await self.message.edit(view=self)
 
     @override

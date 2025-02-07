@@ -74,23 +74,35 @@ class ExceptionManager:
         for i in range(0, len(iterable), max_chars_in_code):
             yield codeblocks.format(iterable[i : i + max_chars_in_code])
 
-    async def register_error(self, error: BaseException, embed: discord.Embed) -> None:
+    async def register_error(
+        self,
+        error: BaseException,
+        embed: discord.Embed,
+        channel_id: int | None = None,
+        *,
+        log_message: str | None = None,
+    ) -> None:
         """Register, analyse error and put it into queue to send to developers.
 
         Parameters
         ----------
-        error : Exception
+        error: Exception
             Exception that the developers of AluBot are going to be notified about
-        embed : discord.Embed
+        embed: discord.Embed
             Embed to send after traceback messages.
             This should showcase some information that can't be gotten from the error, i.e.
             discord author information, guild where the error happened, some snowflakes, etc.
+        log_message: str = ""
+            Message to send to `log.error`. If none provided, it will use string from `embed.footer.text`.
+        channel_id: int | None = None
+            Channel where the error occurred. If this is one of developer's test channels then the `embed` from
+            will be omitted. `None` option forces sending that embed.
+            Example: a developer uses a slash command in a test channel expecting an error.
+            Then embed with slash command arguments is useless because that information is right there anyway.
 
-            Look the template of the formatting for this in something like `ctx_cmd_errors.py`.
-
-            Important!!! Embed's footer text will be duplicated to `log.error` so choose the wording carefully.
         """
-        log.error("%s: `%s`.", error.__class__.__name__, embed.footer.text, exc_info=error)
+        log_message = log_message if log_message is None else embed.footer.text
+        log.error("%s: `%s`.", error.__class__.__name__, log_message, exc_info=error)
 
         # apparently there is https://github.com/vi3k6i5/flashtext for "the fastest replacement"
         # not sure if I want to add an extra dependency
@@ -105,27 +117,31 @@ class ExceptionManager:
                 await asyncio.sleep(total_seconds)
 
             self._most_recent = datetime.datetime.now(datetime.UTC)
-            await self.send_error(traceback_string, embed)
+            await self.send_error(traceback_string, embed, channel_id=channel_id)
 
-    async def send_error(self, traceback: str, embed: discord.Embed) -> None:
+    async def send_error(self, traceback: str, embed: discord.Embed, *, channel_id: int | None = None) -> None:
         """Send an error to the error webhook.
 
         It is not recommended to call this yourself, call `register_error` instead.
 
         Parameters
         ----------
-        traceback : str
+        traceback: str
             The traceback of the error.
-        embed : discord.Embed
+        embed: discord.Embed
             The additional information about the error. This comes from registering the error.
-
+        channel_id: int | None = None
+            Channel ID coming from `register_error`.
         """
         code_chunks = list(self._yield_code_chunks(traceback))
 
         # hmm, this is honestly a bit too many sends for 5 seconds of rate limit :thinking:
-        mention = const.Role.error.mention if not self.bot.test else const.Role.test_error.mention
 
-        await self.bot.error_webhook.send(mention)
+        # if channel_id != const.HideoutGuild.spam_channel_id:
+        await self.bot.error_webhook.send(self.bot.error_ping)
+
         for chunk in code_chunks:
             await self.bot.error_webhook.send(chunk)
-        await self.bot.error_webhook.send(embed=embed)
+
+        if channel_id != const.HideoutGuild.spam_channel_id:
+            await self.bot.error_webhook.send(embed=embed)

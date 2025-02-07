@@ -436,7 +436,7 @@ class HideoutGuild(SavedGuild):
         """Channel for AluBot global logs."""
         return self.get_channel(Channel.global_logs, discord.TextChannel)
 
-    @property
+    @discord.utils.cached_property
     def spam_channel_id(self) -> int:
         """Spam channel ID. Note that test version of the bot has different spam channel compared to main one."""
         return Channel.yen_spam if self.bot.test else Channel.alu_spam

@@ -349,6 +349,12 @@ class AluBot(commands.Bot, AluBotHelper):
         webhook_url = config["WEBHOOKS"]["SPAM"] if not self.test else config["WEBHOOKS"]["YEN_SPAM"]
         return self.webhook_from_url(webhook_url)
 
+    async def send_warning(self, message: str) -> None:
+        """Send a quick warning embed to @Aluerie's spam channel."""
+        content = const.Role.warning.mention
+        embed = discord.Embed(colour=discord.Colour.yellow(), description=message)
+        await self.spam_webhook.send(content=content, embed=embed)
+
     @discord.utils.cached_property
     def error_webhook(self) -> discord.Webhook:
         """A shortcut to error webhook."""

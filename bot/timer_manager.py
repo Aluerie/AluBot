@@ -93,8 +93,8 @@ class Timer[TimerDataT]:
     def __init__(self, *, row: TimerRow[TimerDataT]) -> None:
         self.id: int = row["id"]
         self.event: str = row["event"]
-        self.expires_at: datetime.datetime = row["expires_at"]
-        self.created_at: datetime.datetime = row["created_at"]
+        self.expires_at: datetime.datetime = row["expires_at"].astimezone(datetime.UTC)
+        self.created_at: datetime.datetime = row["created_at"].astimezone(datetime.UTC)
         self.timezone: str = row["timezone"]
         self.data: TimerDataT = row["data"]
 
@@ -329,14 +329,19 @@ class TimerManager:
         Timer[TimerData]
 
         """
+        # Maybe, we don't need these two, I'm just scared.
+        if expires_at.tzinfo is None or expires_at.tzinfo.utcoffset(expires_at) is None:
+            # then expires_at is naive
+            await self.bot.send_warning(f"`{expires_at=}` for timer with `{event=}` is timezone-naive.")
+        if created_at and (created_at.tzinfo is None or created_at.tzinfo.utcoffset(created_at) is None):
+            # then created_at is naive
+            await self.bot.send_warning(f"`{created_at=}` for timer with `{event=}` is timezone-naive.")
+
+        expires_at = expires_at.astimezone(datetime.UTC)
         log.debug("Creating %s timer for %s", event, expires_at)
 
-        created_at = created_at or datetime.datetime.now(datetime.UTC)
+        created_at = created_at.astimezone(datetime.UTC) if created_at else datetime.datetime.now(datetime.UTC)
         timezone = timezone or "UTC"
-
-        # Remove timezone information since the database does not deal with it
-        expires_at = expires_at.astimezone(datetime.UTC).replace(tzinfo=None)
-        created_at = created_at.astimezone(datetime.UTC).replace(tzinfo=None)
 
         timer = Timer.temporary(
             id=self._temporary_timer_id_count,
@@ -359,7 +364,15 @@ class TimerManager:
             VALUES ($1, $2::jsonb, $3, $4, $5)
             RETURNING id;
         """
-        row = await self.bot.pool.fetchrow(query, event, data, expires_at, created_at, timezone)
+        row = await self.bot.pool.fetchrow(
+            query,
+            event,
+            data,
+            # Remove timezone information since the database does not deal with it
+            expires_at.replace(tzinfo=None),
+            created_at.replace(tzinfo=None),
+            timezone,
+        )
         timer.id = row[0]
 
         # only set the data check if it can be waited on

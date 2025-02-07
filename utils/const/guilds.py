@@ -168,6 +168,7 @@ class Role(RoleEnum):
     jailed_bots = 1090428532162822234
     error = 1116171071528374394
     test_error = 1337106675433340990
+    warning = 1337509922199306240
 
 
 CATEGORY_ROLES = [

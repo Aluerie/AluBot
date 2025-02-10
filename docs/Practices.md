@@ -34,7 +34,7 @@ embed = (
 * if it's a display name then we write "2", i.e. `"Dota 2"`
 * if it's not then do not write the number, i.e. `self.bot.dota`. Idk, I just don't like how things like `dota2_hero` look like.
 
-## Docs
+## Doc Strings
 
 Everything is covered well in numpy doc-style guide:
 <https://numpydoc.readthedocs.io/en/latest/format.html#examples>.
@@ -94,6 +94,37 @@ do this, which is pretty much plain copy-paste of the function signature:
 ```
 
 Also don't do their `default=` thing, just copy paste the whole signature `event: str = "wow"` and not `event: str, default="wow"`. We aren't building doc web pages here. To be honest, we should just remove all Doc linters from Ruff.
+
+## Error Handler Embeds
+
+Pseudo code:
+
+```py
+discord.Embed(
+    colour="Some shade of red",
+    title=(
+        "*Task/Event/Ctx Command/App Command/etc* Error: "  # note the colon : and space
+        "`*display name*, i.e. Class name for Views/Tasks or display name for commands`",  # note the backticks `
+    ) 
+    url=""  # ???
+    description="",  # ???
+)
+.set_author(
+    name="@User in #Channel (Guild Name)",  # or DM Channel if it's DM. 
+    icon_url="@User's avatar"
+)
+# .set_thumbnail(url="")  # None, because it takes away the space
+.add_field(name="Args if Any"),  # use `ps` code language
+.add_field(name="Kwargs if Any"),# use `ps` code language
+.add_field(name="Snowflake IDs if Any"), # use `ebnf` code language
+# .set_image(url="")  # None, because what to put there?
+.set_footer(
+    text=f"class_name.function_name for non-commands OR function_name: display_name for commands", # note that this goes to logger by default; Class name can be skipped if it's too obvious, i.e. ctx/app commands.
+    icon_url="Guild Icon",  # @User avatar if it's DM
+)
+```
+
+As we can see `url` and `description` are undecided.
 
 ## Random Standards
 

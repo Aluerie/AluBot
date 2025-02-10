@@ -110,7 +110,7 @@ class MatchToSend(BaseMatchToSend):
 
             # champion icons
             for count, champion_image in enumerate(champion_icon_images):
-                champion_image = champion_image.resize((62, 62))  # noqa: PLW2901
+                champion_image = champion_image.resize((62, 62))
                 extra_space = 0 if count < 5 else 20
                 img.paste(champion_image, (count * 62 + extra_space, 0))
 
@@ -126,7 +126,7 @@ class MatchToSend(BaseMatchToSend):
             for count, rune_image in enumerate(rune_icon_images):
                 if count < 6:
                     # actual runes (as in non-stat modifiers)
-                    rune_image = rune_image.resize((CELL_SIZE, CELL_SIZE))  # noqa: PLW2901
+                    rune_image = rune_image.resize((CELL_SIZE, CELL_SIZE))
 
                 try:
                     mask = rune_image.convert("RGBA")
@@ -139,7 +139,7 @@ class MatchToSend(BaseMatchToSend):
             # summoner spell icons
             left = width - 2 * CELL_SIZE
             for count, spell_image in enumerate(summoner_icon_images):
-                spell_image = spell_image.resize((CELL_SIZE, CELL_SIZE))  # noqa: PLW2901
+                spell_image = spell_image.resize((CELL_SIZE, CELL_SIZE))
                 img.paste(spell_image, (left + count * spell_image.width, height - spell_image.height))
             return img
 
@@ -250,7 +250,7 @@ class MatchToEdit(BaseMatchToEdit):
             # Item Icons
             for count, item_image in enumerate(item_icon_images):
                 left = count * CELL_SIZE
-                item_image = item_image.resize((CELL_SIZE, CELL_SIZE))  # noqa: PLW2901
+                item_image = item_image.resize((CELL_SIZE, CELL_SIZE))
                 img.paste(
                     im=item_image,
                     box=(left, height - CELL_SIZE - item_image.height),

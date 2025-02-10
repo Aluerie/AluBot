@@ -14,7 +14,7 @@ import discord
 from utils import const, errors, formats, helpers
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from .context import AluInteraction
 
 __all__ = (
     "AluModal",
@@ -25,7 +25,7 @@ __all__ = (
 
 async def on_views_modals_error(
     view: discord.ui.View,
-    interaction: discord.Interaction[AluBot],
+    interaction: AluInteraction,
     error: Exception,
     item: discord.ui.Item[discord.ui.View] | None = None,
 ) -> None:
@@ -51,7 +51,7 @@ async def on_views_modals_error(
         )
 
         metadata_embed = (
-            discord.Embed(colour=0x2A0553, title="Error in View")
+            discord.Embed(colour=0x2A0553, title=f"Error in View: `{view.__class__.__name__}`")
             .set_author(
                 name=(
                     f"@{interaction.user} in #{interaction.channel} "
@@ -59,16 +59,16 @@ async def on_views_modals_error(
                 ),
                 icon_url=interaction.user.display_avatar,
             )
-            .add_field(name="View Objects", value=formats.code(args_join), inline=False)
-            .add_field(name="Snowflake Ids", value=formats.code(snowflake_ids), inline=False)
+            .add_field(name="View Objects", value=formats.code(args_join, "ps"), inline=False)
+            .add_field(name="Snowflake IDs", value=formats.code(snowflake_ids, "ebnf"), inline=False)
             .set_footer(
-                text=f"on_views_modals_error: {view.__class__.__name__}",
+                text=f"{view.__class__.__name__}.on_error",
                 icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
             )
         )
 
         await interaction.client.exc_manager.register_error(error, metadata_embed, interaction.channel_id)
-        if interaction.channel_id == const.HideoutGuild.spam_channel_id:
+        if interaction.channel_id == interaction.client.hideout.spam_channel_id:
             # we don't need any extra embeds;
             if not interaction.response.is_done():
                 await interaction.response.send_message(":(")
@@ -89,11 +89,11 @@ class AluView(discord.ui.View):
 
     Parameters
     ----------
-    author_id : int | None
+    author_id: int | None
         _description_
-    timeout : float | None
+    timeout: float | None
         _description_, by default 5*60.0
-    view_name : str, optional
+    view_name: str, optional
         _description_, by default "Interactive Element"
 
     """
@@ -117,7 +117,7 @@ class AluView(discord.ui.View):
         self.view_name: str = view_name
 
     @override
-    async def interaction_check(self, interaction: discord.Interaction[AluBot]) -> bool:
+    async def interaction_check(self, interaction: AluInteraction) -> bool:
         """Interaction check that blocks non-authors from clicking view items."""
         if self.author_id is None:
             # we allow this view to be controlled by everybody
@@ -147,10 +147,7 @@ class AluView(discord.ui.View):
 
     @override
     async def on_error(
-        self,
-        interaction: discord.Interaction[AluBot],
-        error: Exception,
-        item: discord.ui.Item[discord.ui.View],
+        self, interaction: AluInteraction, error: Exception, item: discord.ui.Item[discord.ui.View]
     ) -> None:
         """My own Error Handler for Views."""
         await on_views_modals_error(self, interaction, error, item)
@@ -172,5 +169,5 @@ class AluModal(discord.ui.Modal):
     """
 
     @override
-    async def on_error(self, interaction: discord.Interaction[AluBot], error: Exception) -> None:
+    async def on_error(self, interaction: AluInteraction, error: Exception) -> None:
         await on_views_modals_error(self, interaction, error)

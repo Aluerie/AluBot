@@ -12,7 +12,7 @@ from utils import const, errors, formats, helpers
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
 
-    from .bot import AluBot
+    from .bases import AluInteraction
 
 
 __all__ = ("AluAppCommandTree",)
@@ -172,11 +172,7 @@ class AluAppCommandTree(app_commands.CommandTree):
                     log.warning("Could not find a mention for command %s in the API. Are you out of sync?", command)
 
     @override
-    async def on_error(
-        self,
-        interaction: discord.Interaction[AluBot],
-        error: app_commands.AppCommandError | Exception,
-    ) -> None:
+    async def on_error(self, interaction: AluInteraction, error: app_commands.AppCommandError | Exception) -> None:
         """Handler called when an error is raised while invoking an app command."""
         if isinstance(error, app_commands.CommandInvokeError):
             error = error.original
@@ -228,6 +224,16 @@ class AluAppCommandTree(app_commands.CommandTree):
                 if interaction.namespace.__dict__
                 else "No arguments"
             )
+            description = (
+                await self.find_mention_for(interaction.command) or cmd_name
+                if isinstance(interaction.command, app_commands.Command)
+                else cmd_name
+            )
+            if interaction.namespace.__dict__:
+                description += " " + " ".join(
+                    f"{name}: {value}" for name, value in interaction.namespace.__dict__.items()
+                )
+
             snowflake_ids = (
                 f"author  = {interaction.user.id}\n"  # comment to prevent formatting from concatenating the lines
                 f"channel = {interaction.channel_id}\n"  # so I can see the alignment better
@@ -237,7 +243,8 @@ class AluAppCommandTree(app_commands.CommandTree):
             metadata_embed = (
                 discord.Embed(
                     colour=0x2C0703,
-                    title=f"Error in `{cmd_name}`",
+                    title=f"App Command Error: `{cmd_name}`",
+                    description=description,
                     timestamp=interaction.created_at,
                 )
                 .set_author(
@@ -247,15 +254,15 @@ class AluAppCommandTree(app_commands.CommandTree):
                     ),
                     icon_url=interaction.user.display_avatar,
                 )
-                .add_field(name="Command Arguments", value=formats.code(args_join), inline=False)
-                .add_field(name="Snowflake Ids", value=formats.code(snowflake_ids), inline=False)
+                .add_field(name="Command Arguments", value=formats.code(args_join, "ps"), inline=False)
+                .add_field(name="Snowflake IDs", value=formats.code(snowflake_ids, "ebnf"), inline=False)
                 .set_footer(
                     text=f"on_app_command_error: {cmd_name}",
                     icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
                 )
             )
             await interaction.client.exc_manager.register_error(error, metadata_embed, interaction.channel_id)
-            if interaction.channel_id == const.HideoutGuild.spam_channel_id:
+            if interaction.channel_id == interaction.client.hideout.spam_channel_id:
                 # we don't need any extra embeds;
                 if not interaction.response.is_done():
                     await interaction.response.send_message(":(")

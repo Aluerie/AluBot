@@ -137,6 +137,7 @@ ignore = [
     "PLR0917",  # too many positional arguments
     "PLR2004",  # Magic value comparison, may remove later
     "PLR6301",  # discord.py uses `self` even if I don't 
+    "PLW2901",  # Redefined loop name;
     "S608",     # I use f-strings with SQL and I don't know better;
     "TID252",   # My relative imports are quite well structured 
 

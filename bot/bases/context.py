@@ -22,7 +22,11 @@ if TYPE_CHECKING:
 __all__ = (
     "AluContext",
     "AluGuildContext",
+    "AluInteraction",
 )
+
+# a much shorter alias
+type AluInteraction = discord.Interaction[AluBot]
 
 
 class AluContext(commands.Context["AluBot"]):
@@ -125,8 +129,7 @@ class AluContext(commands.Context["AluBot"]):
         suppress_embeds: bool = ...,
         ephemeral: bool = ...,
         silent: bool = ...,
-    ) -> discord.Message:
-        ...
+    ) -> discord.Message: ...
 
     @overload
     async def reply(
@@ -146,8 +149,7 @@ class AluContext(commands.Context["AluBot"]):
         suppress_embeds: bool = ...,
         ephemeral: bool = ...,
         silent: bool = ...,
-    ) -> discord.Message:
-        ...
+    ) -> discord.Message: ...
 
     @overload
     async def reply(
@@ -167,8 +169,7 @@ class AluContext(commands.Context["AluBot"]):
         suppress_embeds: bool = ...,
         ephemeral: bool = ...,
         silent: bool = ...,
-    ) -> discord.Message:
-        ...
+    ) -> discord.Message: ...
 
     @overload
     async def reply(
@@ -188,8 +189,7 @@ class AluContext(commands.Context["AluBot"]):
         suppress_embeds: bool = ...,
         ephemeral: bool = ...,
         silent: bool = ...,
-    ) -> discord.Message:
-        ...
+    ) -> discord.Message: ...
 
     # Literal copy of .reply from the library but with `.to_reference(fail_if_not_exists=False)`
     @override

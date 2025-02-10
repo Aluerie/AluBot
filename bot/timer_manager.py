@@ -190,12 +190,12 @@ class TimerManager:
                     listener[0]
                     for listener in itertools.chain.from_iterable(cog.get_listeners() for cog in self.bot.cogs.values())
                 ]
-                if f"on_{timer.event_name}" not in available_listeners:
+                if not self.bot.test and f"on_{timer.event_name}" not in available_listeners:
                     # the listener existence is NOT confirmed therefore it is not safe to dispatch the event
                     # notify developers that there is no proper listener for the timer
                     desc = (
-                        f"The timer with `event={timer.event_name}` tried to fire"
-                        "but there is no appropriate listener loaded."
+                        f"The timer with `event={timer.event_name}` is to fire "
+                        "but there is no appropriate listener loaded atm."
                     )
                     embed = discord.Embed(colour=discord.Colour.dark_red(), description=desc)
                     await self.bot.spam_webhook.send(content=self.bot.error_ping, embed=embed)
@@ -214,8 +214,8 @@ class TimerManager:
         except Exception as exc:  # noqa: BLE001
             embed = discord.Embed(
                 colour=0xFF8243,
-                title="Error in dispatching the timer",
-            ).set_footer(text="TimerManager.dispatch_timers")
+                title="Dispatching Timers Error",
+            ).set_footer(text=f"{self.__class__.__name__}.dispatch_timers")
             await self.bot.exc_manager.register_error(exc, embed)
 
     async def wait_for_active_timers(self, *, days: int = 7) -> Timer[TimerData]:

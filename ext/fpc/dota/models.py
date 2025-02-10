@@ -114,14 +114,14 @@ class MatchToSend(BaseMatchToSend):
         send_log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         canvas = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
-        heroes = [await self.bot.dota.heroes.by_id(id) for id in self.hero_ids]
+        heroes = [await self.bot.dota.heroes.by_id(id_) for id_ in self.hero_ids]
         hero_images = [await self.bot.transposer.url_to_image(hero.topbar_icon_url) for hero in heroes]
 
         def build_notification_image() -> Image.Image:
             """Image Builder."""
             send_log.debug("`build_notification_image` is starting")
 
-            canvas_w, canvas_h = canvas.size
+            canvas_w, _canvas_h = canvas.size
             draw = ImageDraw.Draw(canvas)
 
             topbar_h = 70
@@ -133,11 +133,11 @@ class MatchToSend(BaseMatchToSend):
                 canvas.paste(rectangle)
 
                 hero_w, hero_h = (62, 35)
-                for count, img in enumerate(hero_images):
-                    img = img.resize((hero_w, hero_h))
-                    img = ImageOps.expand(img, border=(0, 3, 0, 0), fill=const.Dota.PLAYER_COLOUR_MAP[count])
+                for count, hero_img in enumerate(hero_images):
+                    hero_img = hero_img.resize((hero_w, hero_h))
+                    hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=const.Dota.PLAYER_COLOUR_MAP[count])
                     extra_space = 0 if count < 5 else 20  # math 640 - 62 * 10 = 20 where 640 is initial resolution.
-                    canvas.paste(img, (count * hero_w + extra_space, 0))
+                    canvas.paste(hero_img, (count * hero_w + extra_space, 0))
 
             draw_picked_heroes()
 

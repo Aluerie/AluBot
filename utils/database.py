@@ -6,7 +6,7 @@ Unfortunately, `asyncpg` typing is a nightmare.
 * https://github.com/MagicStack/asyncpg/pull/577
 * installed stubs from `pip install asyncpg-stubs`.
 
-But we still want some way to type-hint query results. And this is how we do it:
+But we still want some way to type-hint query results. This is how we currently do it:
 
 ```py
 class UserRow(TypedDict):
@@ -23,10 +23,8 @@ async def beta_task(self) -> None:
         reveal_type(row.id)  # Cannot access member "id" for type "UserRow"
 ```
 This kinda works because we declared `fetch`, `fetchrow` return type as `Any` despite
-`asyncpg-stubs` declaring it as `asyncpg.Record`.
-
-Just remember the differences between TypedDict and Record and manually resort them,
-if we ever actually face any problems with it.
+`asyncpg-stubs` declaring it as `asyncpg.Record`. Just remember the differences
+between TypedDict and Record and manually resort them, if we ever actually face any problems with it.
 
 PS for more understanding:
 * asyncpg.Record is a cut-off version of both dict and tuple classes:
@@ -45,24 +43,6 @@ import orjson
 
 from config import config
 
-
-# @deprecated("Just use dictionary notations.")  # from warnings import deprecated # TODO: 3.13
-class DotRecord(asyncpg.Record):
-    """Dot Record.
-
-    Same as `asyncpg.Record`, but allows dot-notations
-    such as `record.id` instead of `record['id']`.
-
-    Notes
-    -----
-    in order to bring it back put `record_class=DotRecord` into `asyncpg.create_pool` function below.
-    """
-
-    def __getattr__(self, name: str) -> Any:
-        """Dot-notation, i.e. get Record attribute with `row.name`."""
-        return self[name]
-
-
 if TYPE_CHECKING:
 
     class PoolTypedWithAny(asyncpg.Pool[asyncpg.Record]):
@@ -72,11 +52,7 @@ if TYPE_CHECKING:
         that allows us to properly type the return values via narrowing like mentioned in instructions above
         without hundreds of "type: ignore" notices for each TypedDict.
 
-        I could use Protocol to type it all, but `async-stubs` provide a good job in typing most of the stuff
-        and we also don't lose doc-string this way.
-
         * Right now, asyncpg is untyped so this is better than the current status quo
-        * If we ever need the regular Pool type we have `bot.database` without any shenanigans.
         """
 
         # all methods below were changed from "asyncpg.Record" to "Any"

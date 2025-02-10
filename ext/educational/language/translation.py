@@ -37,6 +37,20 @@ if TYPE_CHECKING:
 
     from bot import AluBot
 
+    class TranslatedSentence(TypedDict):
+        """TranslatedSentence."""
+
+        trans: str
+        orig: str
+
+    class TranslateResult(NamedTuple):
+        """TranslatedResult."""
+
+        original: str
+        translated: str
+        source_lang: str
+        target_lang: str
+
 
 # fmt: off
 LANGUAGES = {  # there are 109 languages
@@ -60,22 +74,6 @@ LANGUAGES = {  # there are 109 languages
     "vi": "Vietnamese", "cy": "Welsh", "xh": "Xhosa", "yi": "Yiddish", "yo": "Yoruba", "zu": "Zulu",
 }
 # fmt: on
-
-
-class TranslatedSentence(TypedDict):
-    """TranslatedSentence."""
-
-    trans: str
-    orig: str
-
-
-class TranslateResult(NamedTuple):
-    """TranslatedResult."""
-
-    original: str
-    translated: str
-    source_lang: str
-    target_lang: str
 
 
 async def translate(

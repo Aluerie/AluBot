@@ -8,6 +8,8 @@ import discord
 from discord.ext import tasks
 from discord.utils import MISSING
 
+from utils import formats
+
 if TYPE_CHECKING:
     import datetime
 
@@ -73,10 +75,11 @@ class AluLoop(tasks.Loop[LF]):
     @override
     async def _error(self, cog: HasBotAttribute, exception: Exception) -> None:
         """Same `_error` as in parent class but with `exc_manager` integrated."""
+        meta = f"module   = {self.coro.__module__}\nqualname = {self.coro.__qualname__}"
         embed = (
-            discord.Embed(title=self.coro.__name__, colour=0xEF7A85)
-            .set_author(name=f"{self.coro.__module__}: {self.coro.__qualname__}")
-            .set_footer(text=f"{self.__class__.__name__}: {self.coro.__name__}")
+            discord.Embed(title=f"Task Error: `{self.coro.__name__}`", colour=0xEF7A85)
+            .add_field(name="Meta", value=formats.code(meta, "ebnf"), inline=False)
+            .set_footer(text=f"{self.__class__.__name__}._error: {self.coro.__name__}")
         )
         await cog.bot.exc_manager.register_error(exception, embed)
 

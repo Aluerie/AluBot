@@ -388,97 +388,177 @@ class Accent:
     @staticmethod
     def red(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of red colour from Google Material Accent Design."""
-        shades = {700: 0xD50000, 400: 0xFF1744, 200: 0xFF5252, 100: 0xFF8A80}
+        shades = {
+            700: 0xD50000,
+            400: 0xFF1744,
+            200: 0xFF5252,
+            100: 0xFF8A80,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def pink(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of pink colour from Google Material Accent Design."""
-        shades = {700: 0xC51162, 400: 0xF50057, 200: 0xFF4081, 100: 0xFF80AB}
+        shades = {
+            700: 0xC51162,
+            400: 0xF50057,
+            200: 0xFF4081,
+            100: 0xFF80AB,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def purple(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of purple colour from Google Material Accent Design."""
-        shades = {700: 0xAA00FF, 400: 0xD500F9, 200: 0xE040FB, 100: 0xEA80FC}
+        shades = {
+            700: 0xAA00FF,
+            400: 0xD500F9,
+            200: 0xE040FB,
+            100: 0xEA80FC,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def deep_purple(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of deep purple colour from Google Material Accent Design."""
-        shades = {700: 0x6200EA, 400: 0x651FFF, 200: 0x7C4DFF, 100: 0xB388FF}
+        shades = {
+            700: 0x6200EA,
+            400: 0x651FFF,
+            200: 0x7C4DFF,
+            100: 0xB388FF,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def indigo(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of indigo colour from Google Material Accent Design."""
-        shades = {700: 0x304FFE, 400: 0x3D5AFE, 200: 0x536DFE, 100: 0x8C9EFF}
+        shades = {
+            700: 0x304FFE,
+            400: 0x3D5AFE,
+            200: 0x536DFE,
+            100: 0x8C9EFF,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def blue(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of blue colour from Google Material Accent Design."""
-        shades = {700: 0x2962FF, 400: 0x2979FF, 200: 0x448AFF, 100: 0x82B1FF}
+        shades = {
+            700: 0x2962FF,
+            400: 0x2979FF,
+            200: 0x448AFF,
+            100: 0x82B1FF,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def light_blue(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of light blue colour from Google Material Accent Design."""
-        shades = {700: 0x0091EA, 400: 0x00B0FF, 200: 0x40C4FF, 100: 0x80D8FF}
+        shades = {
+            700: 0x0091EA,
+            400: 0x00B0FF,
+            200: 0x40C4FF,
+            100: 0x80D8FF,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def cyan(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of cyan colour from Google Material Accent Design."""
-        shades = {700: 0x00B8D4, 400: 0x00E5FF, 200: 0x18FFFF, 100: 0x84FFFF}
+        shades = {
+            700: 0x00B8D4,
+            400: 0x00E5FF,
+            200: 0x18FFFF,
+            100: 0x84FFFF,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def teal(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of teal colour from Google Material Accent Design."""
-        shades = {700: 0x00BFA5, 400: 0x1DE9B6, 200: 0x64FFDA, 100: 0xA7FFEB}
+        shades = {
+            700: 0x00BFA5,
+            400: 0x1DE9B6,
+            200: 0x64FFDA,
+            100: 0xA7FFEB,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def green(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of green colour from Google Material Accent Design."""
-        shades = {700: 0x00C853, 400: 0x00E676, 200: 0x69F0AE, 100: 0xB9F6CA}
+        shades = {
+            700: 0x00C853,
+            400: 0x00E676,
+            200: 0x69F0AE,
+            100: 0xB9F6CA,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def light_green(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of light green colour from Google Material Accent Design."""
-        shades = {700: 0x64DD17, 400: 0x76FF03, 200: 0xB2FF59, 100: 0xCCFF90}
+        shades = {
+            700: 0x64DD17,
+            400: 0x76FF03,
+            200: 0xB2FF59,
+            100: 0xCCFF90,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def lime(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of lime colour from Google Material Accent Design."""
-        shades = {700: 0xAEEA00, 400: 0xC6FF00, 200: 0xEEFF41, 100: 0xF4FF81}
+        shades = {
+            700: 0xAEEA00,
+            400: 0xC6FF00,
+            200: 0xEEFF41,
+            100: 0xF4FF81,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def yellow(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of yellow colour from Google Material Accent Design."""
-        shades = {700: 0xFFD600, 400: 0xFFEA00, 200: 0xFFFF00, 100: 0xFFFF8D}
+        shades = {
+            700: 0xFFD600,
+            400: 0xFFEA00,
+            200: 0xFFFF00,
+            100: 0xFFFF8D,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def amber(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of amber colour from Google Material Accent Design."""
-        shades = {700: 0xFFAB00, 400: 0xFFC400, 200: 0xFFD740, 100: 0xFFE57F}
+        shades = {
+            700: 0xFFAB00,
+            400: 0xFFC400,
+            200: 0xFFD740,
+            100: 0xFFE57F,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def orange(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of orange colour from Google Material Accent Design."""
-        shades = {700: 0xFF6D00, 400: 0xFF9100, 200: 0xFFAB40, 100: 0xFFD180}
+        shades = {
+            700: 0xFF6D00,
+            400: 0xFF9100,
+            200: 0xFFAB40,
+            100: 0xFFD180,
+        }
         return discord.Colour(shades[shade])
 
     @staticmethod
     def deep_orange(shade: Literal[700, 400, 200, 100] = 200) -> discord.Colour:
         """Get shade of deep orange colour from Google Material Accent Design."""
-        shades = {700: 0xDD2C00, 400: 0xFF3D00, 200: 0xFF6E40, 100: 0xFF9E80}
+        shades = {
+            700: 0xDD2C00,
+            400: 0xFF3D00,
+            200: 0xFF6E40,
+            100: 0xFF9E80,
+        }
         return discord.Colour(shades[shade])
 
     # PS. brown, gray, blue_gray, black, white - these colours do not have Accent versions

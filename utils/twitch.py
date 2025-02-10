@@ -129,7 +129,7 @@ class AluTwitchClient(twitchio.Client):
         embed = (
             discord.Embed(
                 colour=const.Colour.twitch,
-                title=f"{self.__class__.__name__} Error",
+                title="TwitchIO Event Error",
             )
             .add_field(name="Exception", value=f"`{payload.error.__class__.__name__}`")
             .set_footer(

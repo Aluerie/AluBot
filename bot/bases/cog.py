@@ -65,10 +65,6 @@ class AluCog(commands.Cog):
         """Shortcut to get Hideout Guild object."""
         return self.bot.hideout
 
-    # @property
-    # def pool(self):
-    #     return self.bot.pool
-
 
 class ExtCategory(NamedTuple):
     """Extension Category.

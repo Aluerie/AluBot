@@ -9,8 +9,6 @@ import traceback
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from utils import const
-
 if TYPE_CHECKING:
     from collections.abc import Generator
 
@@ -101,7 +99,7 @@ class ExceptionManager:
             Then embed with slash command arguments is useless because that information is right there anyway.
 
         """
-        log_message = log_message if log_message is None else embed.footer.text
+        log_message = log_message if log_message is not None else embed.footer.text
         log.error("%s: `%s`.", error.__class__.__name__, log_message, exc_info=error)
 
         # apparently there is https://github.com/vi3k6i5/flashtext for "the fastest replacement"
@@ -137,11 +135,11 @@ class ExceptionManager:
 
         # hmm, this is honestly a bit too many sends for 5 seconds of rate limit :thinking:
 
-        # if channel_id != const.HideoutGuild.spam_channel_id:
+        # if channel_id != self.bot.hideout.spam_channel_id:
         await self.bot.error_webhook.send(self.bot.error_ping)
 
         for chunk in code_chunks:
             await self.bot.error_webhook.send(chunk)
 
-        if channel_id != const.HideoutGuild.spam_channel_id:
+        if channel_id != self.bot.hideout.spam_channel_id:
             await self.bot.error_webhook.send(embed=embed)

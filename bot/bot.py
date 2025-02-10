@@ -95,8 +95,7 @@ class AluBot(commands.Bot, AluBotHelper):
             case_insensitive=True,
         )
         self.extensions_to_load: tuple[str, ...] = get_extensions(self.test)
-        self.database: asyncpg.Pool[asyncpg.Record] = pool
-        # Below: asyncpg typehinting crutch, read `utils.database` for more
+        # asyncpg typehinting crutch, read `utils.database` for more
         self.pool: PoolTypedWithAny = pool  # pyright:ignore[reportAttributeAccessIssue]
         self.session: ClientSession = session
 
@@ -124,7 +123,10 @@ class AluBot(commands.Bot, AluBotHelper):
                 await self.load_extension(ext)
             except commands.ExtensionError as error:
                 failed_to_load_some_ext = True
-                embed = discord.Embed(colour=0xDA9F93, description=f"Failed to load extension `{ext}`.").set_footer(
+                embed = discord.Embed(
+                    colour=0xDA9F93,
+                    description=f"Failed to load extension `{ext}`.",
+                ).set_footer(
                     text=f'setup_hook: loading extension "{ext}"',
                 )
                 await self.exc_manager.register_error(error, embed)
@@ -212,9 +214,6 @@ class AluBot(commands.Bot, AluBotHelper):
 
     @override
     async def start(self) -> None:
-        # erm, bcs of my horrendous .test logic we need to do it in a weird way
-        # todo: is there anything better ? :D
-
         discord_token = config["DISCORD"]["ALUBOT"] if not self.test else config["DISCORD"]["YENBOT"]
         coroutines = [super().start(discord_token, reconnect=True)]
 
@@ -270,7 +269,7 @@ class AluBot(commands.Bot, AluBotHelper):
 
             self.dota = Dota2Client(self)
 
-    def initialize_github(self) -> None:
+    def instantiate_github(self) -> None:
         """Initialize GitHub REST API Client."""
         if not hasattr(self, "github"):
             from githubkit import GitHub
@@ -285,8 +284,8 @@ class AluBot(commands.Bot, AluBotHelper):
             self.twitch = AluTwitchClient(self)
             await self.twitch.login()
 
-    def initialize_tz_manager(self) -> None:
-        """Initialize TimeZone Manager."""
+    def instantiate_tz_manager(self) -> None:
+        """Instantiate TimeZone Manager."""
         if not hasattr(self, "tz_manager"):
             from utils.timezones import TimezoneManager
 
@@ -393,9 +392,8 @@ class AluBot(commands.Bot, AluBotHelper):
 
         args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
         embed = (
-            discord.Embed(colour=0xA32952, title=f"`{event}`")
-            .set_author(name="Event Error")
-            .add_field(name="Args", value=formats.code(args_join), inline=False)
+            discord.Embed(colour=0xA32952, title=f"Event Error: `{event}`")
+            .add_field(name="Args", value=formats.code(args_join, "ps"), inline=False)
             .set_footer(text=f"{self.__class__.__name__}.on_error: {event}")
         )
         await self.exc_manager.register_error(exception, embed)
@@ -431,7 +429,7 @@ class AluBot(commands.Bot, AluBotHelper):
             case commands.BadLiteralArgument():
                 desc = (
                     f"Sorry! Incorrect argument value: {error.argument!r}.\n Only these options are valid "
-                    "for a parameter `{error.param.displayed_name or error.param.name}`:\n"
+                    f"for a parameter `{error.param.displayed_name or error.param.name}`:\n"
                     f"{formats.human_join([repr(literal) for literal in error.literals])}."
                 )
 
@@ -464,7 +462,6 @@ class AluBot(commands.Bot, AluBotHelper):
                 is_unexpected = True
 
                 cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
-
                 kwargs_join = (
                     "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items())
                     if ctx.kwargs
@@ -475,11 +472,10 @@ class AluBot(commands.Bot, AluBotHelper):
                     f"channel = {ctx.channel.id}\n"
                     f"guild   = {ctx.guild.id if ctx.guild else 'DM Channel'}"
                 )
-
                 metadata_embed = (
                     discord.Embed(
                         colour=0x890620,
-                        title=f"Error with `{ctx.clean_prefix}{ctx.command}`",
+                        title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
                         url=ctx.message.jump_url,
                         description=textwrap.shorten(ctx.message.content, width=1024),
                     )
@@ -487,15 +483,15 @@ class AluBot(commands.Bot, AluBotHelper):
                         name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else 'DM Channel'})",
                         icon_url=ctx.author.display_avatar,
                     )
-                    .add_field(name="Command Args", value=formats.code(kwargs_join), inline=False)
-                    .add_field(name="Snowflake Ids", value=formats.code(snowflake_ids))
+                    .add_field(name="Command Args", value=formats.code(kwargs_join, "ps"), inline=False)
+                    .add_field(name="Snowflake IDs", value=formats.code(snowflake_ids, "ebnf"), inline=False)
                     .set_footer(
                         text=f"on_command_error: {cmd_name}",
                         icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
                     )
                 )
                 await ctx.bot.exc_manager.register_error(error, metadata_embed, ctx.channel.id)
-                if ctx.channel.id == const.HideoutGuild.spam_channel_id:
+                if ctx.channel.id == ctx.bot.hideout.spam_channel_id:
                     # we don't need any extra embeds;
                     return
 

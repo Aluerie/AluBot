@@ -16,7 +16,7 @@ Just some glossary so that I try to keep consistent terminology across the proje
 
 * **context menu**
 
-    In docs it's called `app_commands.ContextMenu`, so I guess we have to suffer with this. We have so much meaning to the word `ctx` connected to `Context` related-stuff defined above that it doesn't make sense to call this "ctx menu", so let's call it "context menu" as in full words.
+    In docs it's called `app_commands.ContextMenu`, so I guess we have to suffer with this. It's a bit weird since `Context` as a class means the `commands.Context`, but it's fine.
 
 * **community**
 
@@ -44,4 +44,4 @@ We might go back to full words in pillow but specifically in pillow it feels rig
 
 * **canvas**
 
-    Similarly to IRL canvas - it's just a drawing board for us (the artist :o). We draw on this canvas.
+    Similarly to IRL canvas - it's just a drawing board for us (the artist :o). Practically, it's the most background layer, on which we draw/paste all the other images, text, geometry, etc. Pretty much like `Canvas` from `tkinter`.

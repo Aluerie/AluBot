@@ -292,7 +292,7 @@ class BugTracker(AluCog):
 
     @override
     async def cog_load(self) -> None:
-        self.bot.initialize_github()
+        self.bot.instantiate_github()
         self.valve_devs: list[str] = await self.get_valve_devs()
 
         self.bugtracker_news_worker.add_exception_type(RequestError, RequestFailed)

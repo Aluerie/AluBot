@@ -135,7 +135,7 @@ class OldTimers(CommunityCog):
         # which is actually not addressed in the TimerManager logic...
         now = datetime.datetime.now(datetime.UTC)
         data: OldTimerTimerData = {"advice": 0, "important": 0, "dynamic": 0, "fact": 0, "gif": 0, "rule": 0}
-        await self.bot.create_timer(
+        await self.bot.timers.create(
             event="old_timer",
             expires_at=now + datetime.timedelta(hours=20),
             data=data,
@@ -146,15 +146,14 @@ class OldTimers(CommunityCog):
         # TODO: please rework this into a simple +1 thing at bot_vars or something
         query = "SELECT SUM(msg_count) FROM community_members"
         val = await self.bot.pool.fetchval(query)
-        desc = f"Hey chat, {val} messages from people in total were sent in this server (which my bot tracked)."
-        return desc
+        return f"Hey chat, {val} messages from people in total were sent in this server (which my bot tracked)."
 
     @commands.Cog.listener("on_old_timer_timer_complete")
     async def old_timers(self, timer: Timer[OldTimerTimerData]) -> None:
         """Post various reminders or flavour text in #general periodically."""
         async for msg in self.community.general.history(limit=10):
             if msg.author == self.bot.user:
-                await self.bot.create_timer(
+                await self.bot.timers.create(
                     event="old_timer",
                     expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=2),
                     data=timer.data,
@@ -196,7 +195,8 @@ class OldTimers(CommunityCog):
             case _:
                 pass
 
-        await self.bot.create_timer(
+        await self.bot.timers.cleanup(timer.id)
+        await self.bot.timers.create(
             event="old_timer",
             expires_at=datetime.datetime.now(datetime.UTC)
             + datetime.timedelta(minutes=random.randint(5 * 60 * 24, 15 * 60 * 24)),

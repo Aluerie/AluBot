@@ -15,7 +15,7 @@ from ._base import HideoutCog
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class HideoutModeration(HideoutCog):
@@ -38,7 +38,7 @@ class HideoutModeration(HideoutCog):
     @commands.bot_has_permissions(manage_messages=True)
     async def purge(
         self,
-        interaction: discord.Interaction[AluBot],
+        interaction: AluInteraction,
         messages: app_commands.Range[int, 1, 2000] = 100,
         user: discord.User | None = None,
         after: int | None = None,
@@ -52,19 +52,19 @@ class HideoutModeration(HideoutCog):
 
         Parameters
         ----------
-        messages
-            Amount of messages to be deleted. Default: 10.
-        user
+        messages: app_commands.Range[int, 1, 2000] = 100
+            Amount of messages to be deleted.
+        user: discord.User | None = None
             User to delete messages of. Default: messages from all users will be deleted.
-        after
+        after: int | None = None
             Search for messages that come after this message ID.
-        before
+        before: int | None = None
             Search for messages that come before this message ID.
-        bot
+        bot: bool = False
             Remove messages from bots (not webhooks!).
-        webhooks
+        webhooks: bool = False
             Remove messages from webhooks.
-        require
+        require: Literal["any", "all"] = "all"
             Whether any or all of the flags should be met before deleting messages. Defaults to "all".
 
         Sources
@@ -140,7 +140,7 @@ class HideoutModeration(HideoutCog):
     @app_commands.guilds(const.Guild.hideout)
     @app_commands.command()
     @app_commands.default_permissions(manage_messages=True)
-    async def spam_chat(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def spam_chat(self, interaction: AluInteraction) -> None:
         """Make the bot to spam the chat.
 
         Useful when we want to move some bad messages out of sight,

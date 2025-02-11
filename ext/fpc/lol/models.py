@@ -10,7 +10,7 @@ import discord
 from PIL import Image, ImageDraw, ImageFont
 
 from utils import const, lol
-from utils.formats import human_timedelta
+from utils.fmt import human_timedelta
 
 from ..base_classes import BaseMatchToEdit, BaseMatchToSend
 

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypedDict, override
 
 import discord
 
-from .. import const, formats
+from .. import const, fmt
 from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 
 if TYPE_CHECKING:
@@ -154,7 +154,7 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
             return await self.create_character_emote_helper(
                 character_id=hero_id,
                 table="dota_heroes_info",
-                emote_name=formats.convert_camel_case_to_PascalCase(hero_short_name),
+                emote_name=fmt.convert_camel_case_to_PascalCase(hero_short_name),
                 emote_source_url=f"{CDN_REACT}/heroes/icons/{hero_short_name}.png",  # copy of `minimap_icon_url`
                 guild_id=const.EmoteGuilds.DOTA[3],
             )

@@ -11,7 +11,7 @@ from discord.ext import commands
 from PIL import Image, ImageColor
 from wordcloud import WordCloud
 
-from utils import const, converters, formats
+from utils import const, converters, fmt
 
 from ._base import InfoCog
 
@@ -42,7 +42,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
                 utc_offset = o.seconds if (o := dt.utcoffset()) else 0
                 dst = d.seconds if (d := dt.dst()) else 0
                 e.description = (
-                    f'"{date[0]}" in your timezone:\n {formats.format_dt_tdR(dt)}\n'
+                    f'"{date[0]}" in your timezone:\n {fmt.format_dt_tdR(dt)}\n'
                     f"{dt.tzname()} is GMT {utc_offset / 3600:+.1f}, dst: {dst / 3600:+.1f}"
                 )
                 await message.channel.send(embed=e)

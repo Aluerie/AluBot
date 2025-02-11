@@ -8,7 +8,7 @@ from steam import PersonaState
 from steam.ext.dota2 import Client
 
 from config import config
-from utils import const, formats
+from utils import const, fmt
 
 from .pulsefire_clients import OpenDotaConstantsClient, StratzClient
 from .storage import Abilities, Facets, Heroes, Items
@@ -113,7 +113,7 @@ class Dota2Client(Client):
                 title=f"Error in steam.py's {self.__class__.__name__}",
             )
             .set_author(name=f"Event: {event}", icon_url=const.Logo.Dota)
-            .add_field(name="Args", value=formats.code(args_join), inline=False)
-            .add_field(name="Kwargs", value=formats.code(kwargs_join), inline=False)
+            .add_field(name="Args", value=fmt.code(args_join), inline=False)
+            .add_field(name="Kwargs", value=fmt.code(kwargs_join), inline=False)
         )
         await self.bot.exc_manager.register_error(error, embed)

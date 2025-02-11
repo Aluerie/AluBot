@@ -8,17 +8,17 @@ from discord import app_commands
 from tabulate import tabulate
 
 from bot import AluCog
-from utils import const, errors
+from utils import const, errors, fmt
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class SteamUserTransformer(app_commands.Transformer):
     """Simple steam user converter."""
 
     @override
-    async def transform(self, interaction: discord.Interaction[AluBot], argument: str) -> steam.User:
+    async def transform(self, interaction: AluInteraction, argument: str) -> steam.User:
         try:
             return await interaction.client.dota.fetch_user(steam.utils.parse_id64(argument))
         except steam.InvalidID:
@@ -32,42 +32,34 @@ class SteamUserTransformer(app_commands.Transformer):
             raise errors.TimeoutError(msg) from None
 
     @override
-    async def autocomplete(
-        self,
-        interaction: discord.Interaction[AluBot],
-        arg: str,
-    ) -> list[app_commands.Choice[str]]:
+    async def autocomplete(self, interaction: AluInteraction, arg: str) -> list[app_commands.Choice[str]]:
         return [app_commands.Choice(name="Aluerie", value="112636165")]
 
 
 class SteamDotaProfiles(AluCog):
+    """Commands to get information about people's Dota/Steam profiles."""
+
     @app_commands.command()
     async def steam(
-        self,
-        interaction: discord.Interaction[AluBot],
-        user: app_commands.Transform[steam.User, SteamUserTransformer],
+        self, interaction: AluInteraction, user: app_commands.Transform[steam.User, SteamUserTransformer]
     ) -> None:
-        """🔎 Show some basic info on a steam user."""
+        """\N{RIGHT-POINTING MAGNIFYING GLASS} Show some basic info on a steam user."""
         await interaction.response.defer()
+
+        table = tabulate(
+            tabular_data=[
+                ["ID64", str(user.id64)],
+                ["ID32", str(user.id)],
+                ["ID3", str(user.id3)],
+                ["ID2", str(user.id2)],
+            ],
+            tablefmt="plain",
+        )
 
         embed = (
             discord.Embed(title=user.name)
             .set_thumbnail(url=user.avatar.url)
-            .add_field(
-                name="Steam IDs",
-                value=f"```{
-                    tabulate(
-                        tabular_data=[
-                            ['ID64', str(user.id64)],
-                            ['ID32', str(user.id)],
-                            ['ID3', str(user.id3)],
-                            ['ID2', str(user.id2)],
-                        ],
-                        tablefmt='plain',
-                    )
-                }\n```",
-                inline=False,
-            )
+            .add_field(name="Steam IDs", value=fmt.code(table), inline=False)
             .add_field(name="Currently playing:", value=f"{user.app or 'Nothing'}")
             # .add_field(name="Friends:", value=len(await user.friends()))
             .add_field(name="Apps:", value=len(await user.apps()))
@@ -76,24 +68,20 @@ class SteamDotaProfiles(AluCog):
 
     @app_commands.guilds(*const.MY_GUILDS)
     @app_commands.command(name="history")
-    async def match_history(self, interaction: discord.Interaction[AluBot]) -> None:
-        """🔎 Show Aluerie's Dota 2 recent match history."""
+    async def match_history(self, interaction: AluInteraction) -> None:
+        """\N{RIGHT-POINTING MAGNIFYING GLASS} Show Aluerie's Dota 2 recent match history."""
         await interaction.response.defer()
 
         player = interaction.client.dota.aluerie()
         history = await player.match_history()
 
-        embed = discord.Embed(
-            description="\n".join(
-                [
-                    (
-                        f"{count}. {match.hero} "
-                        f"{(await interaction.client.dota.heroes.by_id(match.hero)).emote} - {match.id}"
-                    )
-                    for count, match in enumerate(history)
-                ],
-            ),
+        description = "\n".join(
+            [
+                (f"{count}. {match.hero} {(await interaction.client.dota.heroes.by_id(match.hero)).emote} - {match.id}")
+                for count, match in enumerate(history)
+            ]
         )
+        embed = discord.Embed(description=description)
         await interaction.followup.send(embed=embed)
 
 

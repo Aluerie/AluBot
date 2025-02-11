@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, override
 
 import discord
 
-from utils import const, errors, formats, helpers
+from utils import const, errors, fmt, helpers
 
 if TYPE_CHECKING:
     from .context import AluInteraction
@@ -59,8 +59,8 @@ async def on_views_modals_error(
                 ),
                 icon_url=interaction.user.display_avatar,
             )
-            .add_field(name="View Objects", value=formats.code(args_join, "ps"), inline=False)
-            .add_field(name="Snowflake IDs", value=formats.code(snowflake_ids, "ebnf"), inline=False)
+            .add_field(name="View Objects", value=fmt.code(args_join, "ps"), inline=False)
+            .add_field(name="Snowflake IDs", value=fmt.code(snowflake_ids, "ebnf"), inline=False)
             .set_footer(
                 text=f"{view.__class__.__name__}.on_error",
                 icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Self
 
 import discord
 
-from . import const, errors, formats
+from . import const, errors, fmt
 
 __all__ = ("measure_time",)
 
@@ -92,6 +92,6 @@ def error_handler_response_embed(error: Exception, desc: str, *, unexpected: boo
         # error was expected and has expected `desc` answer template
         embed = discord.Embed(colour=const.Colour.error, description=desc)
         if not isinstance(error, errors.ErroneousUsage):
-            embed.set_author(name=formats.convert_PascalCase_to_spaces(error.__class__.__name__))
+            embed.set_author(name=fmt.convert_PascalCase_to_spaces(error.__class__.__name__))
 
     return embed

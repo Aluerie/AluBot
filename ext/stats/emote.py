@@ -14,7 +14,7 @@ from discord.ext import commands, menus
 from tabulate import tabulate
 
 from bot import AluBot, aluloop
-from utils import const, errors, formats, pages
+from utils import const, errors, fmt, pages
 
 from ._base import StatsCog
 
@@ -267,13 +267,13 @@ class EmoteStats(StatsCog):
             table = tabulate(
                 tabular_data=[
                     [
-                        f"`{formats.label_indent(counter, counter - 1, split_size)}`",
+                        f"`{fmt.label_indent(counter, counter - 1, split_size)}`",
                         *self.emote_fmt(emote_id=row[0], count=row[1], total=all_emotes_total),
                     ]
                     for counter, row in enumerate(batch, start=offset + 1)
                 ],
                 headers=[
-                    f"`{formats.label_indent('N', offset + 1, split_size)}`",
+                    f"`{fmt.label_indent('N', offset + 1, split_size)}`",
                     "\N{BLACK LARGE SQUARE}",  # "\N{FRAME WITH PICTURE}",
                     "`Name",
                     "Total",
@@ -367,7 +367,7 @@ class EmoteStats(StatsCog):
             .set_thumbnail(url=emoji.url)
             .add_field(
                 name="Emote Information",
-                value=f"ID: `{emoji.id}`\nCreated: {formats.format_dt_tdR(emoji.created_at)}",
+                value=f"ID: `{emoji.id}`\nCreated: {fmt.format_dt_tdR(emoji.created_at)}",
                 inline=False,
             )
         )
@@ -424,11 +424,11 @@ class EmoteStats(StatsCog):
                 ),
             ]
 
-            server_stats = formats.code(
+            server_stats = fmt.code(
                 tabulate(
                     headers=["Period", "Usages", "Percent", "Per Day"],
                     tabular_data=[all_time_period, last_year_period],
-                    tablefmt=formats.no_pad_fmt,
+                    tablefmt=fmt.no_pad_fmt,
                 )
             )
 

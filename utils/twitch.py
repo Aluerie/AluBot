@@ -9,7 +9,7 @@ from twitchio import eventsub
 
 from config import config
 
-from . import const, formats
+from . import const, fmt
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -233,8 +233,8 @@ class Streamer:
         if not video:
             return ""
 
-        duration = formats.hms_to_seconds(video.duration)
-        new_hms = formats.divmod_timedelta(duration - seconds_ago)
+        duration = fmt.hms_to_seconds(video.duration)
+        new_hms = fmt.divmod_timedelta(duration - seconds_ago)
         url = f"{video.url}?t={new_hms}"
         return f"/[VOD]({url})" if markdown else url
 

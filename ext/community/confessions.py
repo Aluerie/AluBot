@@ -7,7 +7,7 @@ from discord.ext import commands
 
 from bot import AluModal, AluView
 from utils.const import Colour, Emote
-from utils.formats import human_timedelta
+from utils.fmt import human_timedelta
 
 from ._base import CommunityCog
 

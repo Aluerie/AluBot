@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, overload, override
 import discord
 from discord.ext import commands
 
-from utils import formats
+from utils import fmt
 
 if TYPE_CHECKING:
     import datetime
@@ -42,7 +42,7 @@ class AluContext(commands.Context["AluBot"]):
 
     @override
     def __repr__(self) -> str:
-        return f"<AluContext cmd={self.command} ntr={formats.tick(bool(self.interaction))} author={self.author}>"
+        return f"<AluContext cmd={self.command} ntr={fmt.tick(bool(self.interaction))} author={self.author}>"
 
     # The following attributes are here just to match discord.Interaction properties
     # Just so we don't need to do `if isinstance(discord.Interaction):` checks every time
@@ -83,7 +83,7 @@ class AluContext(commands.Context["AluBot"]):
     async def tick_reaction(self, semi_bool: bool | None) -> None:
         """Add tick reaction to `ctx.message`."""
         with contextlib.suppress(discord.HTTPException):
-            await self.message.add_reaction(formats.tick(semi_bool))
+            await self.message.add_reaction(fmt.tick(semi_bool))
 
     # the next two functions mean the following in a context of discord chat:
     # /--> replying to @Bob: wow, 2+2=5

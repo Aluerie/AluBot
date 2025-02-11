@@ -8,7 +8,7 @@ import discord
 from discord.ext import tasks
 from discord.utils import MISSING
 
-from utils import formats
+from utils import fmt
 
 if TYPE_CHECKING:
     import datetime
@@ -78,7 +78,7 @@ class AluLoop(tasks.Loop[LF]):
         meta = f"module   = {self.coro.__module__}\nqualname = {self.coro.__qualname__}"
         embed = (
             discord.Embed(title=f"Task Error: `{self.coro.__name__}`", colour=0xEF7A85)
-            .add_field(name="Meta", value=formats.code(meta, "ebnf"), inline=False)
+            .add_field(name="Meta", value=fmt.code(meta, "ebnf"), inline=False)
             .set_footer(text=f"{self.__class__.__name__}._error: {self.coro.__name__}")
         )
         await cog.bot.exc_manager.register_error(exception, embed)

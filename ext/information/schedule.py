@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from discord import app_commands
 from discord.ext import menus
 
-from utils import cache, const, formats, pages
+from utils import cache, const, fmt, pages
 
 from ._base import InfoCog
 
@@ -208,7 +208,7 @@ class SchedulePageSource(menus.ListPageSource):
 
         match_with_longest_teams = max(matches, key=lambda x: len(x.teams))
         max_amount_of_chars = len(match_with_longest_teams.teams)
-        desc += f"`{'Datetime now '.ljust(max_amount_of_chars, ' ')}`{formats.format_dt_custom(dt_now, 't', 'd')}\n"
+        desc += f"`{'Datetime now '.ljust(max_amount_of_chars, ' ')}`{fmt.format_dt_custom(dt_now, 't', 'd')}\n"
 
         # matches.sort(key=lambda x: (x.league, x.dt))
         # now it's sorted by leagues and dt
@@ -228,7 +228,7 @@ class SchedulePageSource(menus.ListPageSource):
 
             desc += (
                 f"[`{match.teams.ljust(max_amount_of_chars, ' ')}`]({match.twitch_url})"
-                f"{formats.format_dt_custom(match.dt, 't', 'R')}\n"
+                f"{fmt.format_dt_custom(match.dt, 't', 'R')}\n"
             )
 
         embed.description = desc
@@ -348,7 +348,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                         ]
                         dt = datetime.datetime.strptime(match_time, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.UTC)
                         teams = f"{team1} - {team2}".ljust(40, " ")
-                        match_strings.append(f"`{teams}` {formats.format_dt_tdR(dt)}")
+                        match_strings.append(f"`{teams}` {fmt.format_dt_tdR(dt)}")
 
                 embed = discord.Embed(
                     colour=0xE0FA51,

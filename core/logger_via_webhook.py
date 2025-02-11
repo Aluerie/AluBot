@@ -11,7 +11,7 @@ from discord.ext import tasks
 
 from bot import AluCog
 from config import config
-from utils import const, formats
+from utils import const, fmt
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -141,7 +141,7 @@ class LogsViaWebhook(AluCog):
         # the time is there so the MM:SS is more clear. Discord stacks messages from the same webhook user
         # so if logger sends at 23:01 and 23:02 it will be hard to understand the time difference
         dt = datetime.datetime.fromtimestamp(record.created, datetime.UTC)
-        msg = textwrap.shorten(f"{emoji} {formats.format_dt(dt, style='T')} {record.message}", width=1995)
+        msg = textwrap.shorten(f"{emoji} {fmt.format_dt(dt, style='T')} {record.message}", width=1995)
         avatar_url = self.get_avatar(record.name)
 
         # Discord doesn't allow Webhooks names to contain "discord";

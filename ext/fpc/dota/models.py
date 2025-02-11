@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict, override
 import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
-from utils import const, formats
+from utils import const, fmt
 
 from ..base_classes import BaseMatchToEdit, BaseMatchToSend
 
@@ -180,7 +180,7 @@ class MatchToSend(BaseMatchToSend):
                 title=f"{title} {self.player_hero.emote}",
                 url=twitch_data["url"],
                 description=(
-                    f"`/match {self.match_id}` started {formats.human_timedelta(self.long_ago, mode='strip')}\n"
+                    f"`/match {self.match_id}` started {fmt.human_timedelta(self.long_ago, mode='strip')}\n"
                     f"{twitch_data['vod_url']}{self.links}"
                 ),
             )

@@ -46,7 +46,7 @@ class RPSView(AluView):
         *,
         player1: discord.User | discord.Member,
         player2: discord.User | discord.Member,
-        message: discord.Message = None,  # type: ignore # secured to be discord.Message
+        message: discord.Message = None,  # type: ignore[reportArgumentType] # secured to be discord.Message
     ) -> None:
         super().__init__(author_id=None)
         self.player1: discord.User | discord.Member = player1

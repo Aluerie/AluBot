@@ -14,7 +14,7 @@ from utils import const, errors
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluContext
+    from bot import AluBot, AluContext, AluInteraction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -75,10 +75,7 @@ class SyncAppTreeTools(DevBaseCog):
         return f"Synced {len(cmds)} guild-bound commands to `{successful_guild_syncs}/{len(guilds)}` guilds."
 
     async def sync_command_worker(
-        self,
-        spec: str | None,
-        current_guild: discord.Guild | None,
-        guilds: list[discord.Object],
+        self, spec: str | None, current_guild: discord.Guild | None, guilds: list[discord.Object]
     ) -> discord.Embed:
         """A worker function for both prefix/slash commands to sync application tree.
 
@@ -131,7 +128,7 @@ class SyncAppTreeTools(DevBaseCog):
 
     # Need to split the commands bcs commands.Greedy can't be transferred to app_commands
     @app_commands.guilds(const.Guild.hideout)
-    @app_commands.command(name="sync")
+    @app_commands.command(name="sync-dev")
     @app_commands.choices(
         method=[
             app_commands.Choice(name="Global Sync", value="global"),
@@ -143,21 +140,22 @@ class SyncAppTreeTools(DevBaseCog):
             app_commands.Choice(name="Specific Guilds", value="guilds"),
         ],
     )
-    async def slash_sync(self, interaction: discord.Interaction[AluBot], method: str) -> None:
+    async def slash_sync(self, interaction: AluInteraction, method: str) -> None:
         """\N{GREY HEART} Hideout-Only | Sync bot's app tree.
 
         Parameters
         ----------
-        method
+        method: str
             Method to sync bot's commands with.
 
         """
         if method == "guilds":
-            # it's not worth to mirror commands.Greedy argument into a slash command
+            # I don't want to bother to mirror `commands.Greedy` argument into a slash command
             # so just redirect yourself to a prefix $sync command.
-            return await interaction.response.send_message(
-                f"Use prefix command `{self.bot.main_prefix}`sync guild1_id guild2_id ... ` !",
+            await interaction.response.send_message(
+                f"Use prefix command `{self.bot.main_prefix}sync guild1_id guild2_id ... ` !",
             )
+            return
 
         embed = await self.sync_command_worker(method, interaction.guild, guilds=[])
         await interaction.response.send_message(embed=embed)

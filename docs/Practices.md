@@ -130,3 +130,12 @@ As we can see `url` and `description` are undecided.
 
 * Write `# type: ignore[reportReturnType]` and not `# pyright: ignore[reportReturnType]`
 * add two empty lines before `__all__` which should be there right after `if TYPE_CHECKING`
+
+## How to use Timers
+
+```py
+    @commands.Cog.listener("on_birthday_timer_complete")
+    async def birthday_congratulations(self, timer: Timer[BirthdayTimerData]) -> None:
+        # something something
+        await self.bot.timers.cleanup(timer.id)  # ! This is a must 
+```

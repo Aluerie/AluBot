@@ -9,17 +9,16 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, converters, errors, formats, pages, timezones
+from utils import const, converters, errors, fmt, pages, timezones
 
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, Timer, TimerRow
+    from bot import AluBot, AluInteraction, Timer, TimerRow
 
-
-class BirthdayTimerData(TypedDict):
-    user_id: int
-    year: int
+    class BirthdayTimerData(TypedDict):
+        user_id: int
+        year: int
 
 
 CONGRATULATION_TEXT_BANK = (
@@ -123,7 +122,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     @birthday_group.command(name="set")
     async def birthday_set(
         self,
-        interaction: discord.Interaction[AluBot],
+        interaction: AluInteraction,
         day: app_commands.Range[int, 1, 31],
         month: app_commands.Transform[int, converters.MonthPicker],
         year: app_commands.Range[int, 1970],
@@ -152,7 +151,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             )
         except ValueError:
             msg = "Invalid date given, please recheck the date."
-            raise errors.BadArgument(msg)
+            raise errors.BadArgument(msg) from None
 
         confirm_embed = (
             discord.Embed(
@@ -202,7 +201,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
         # clear the previous birthday data before adding a new one
         await self.remove_birthday_worker(interaction.user.id)
-        await self.bot.create_timer(
+        await self.bot.timers.create(
             event="birthday",
             expires_at=expires_at,
             timezone=timezone.key,
@@ -213,7 +212,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             discord.Embed(colour=interaction.user.colour, title="Your birthday is successfully set")
             .add_field(name="Data", value=birthday_fmt(birthday))
             .add_field(name="Timezone", value=timezone.label)
-            .add_field(name="Next congratulations incoming", value=formats.format_dt(expires_at, "R"))
+            .add_field(name="Next congratulations incoming", value=fmt.format_dt(expires_at, "R"))
             .set_footer(text="Important! By submitting this information you agree it can be shown to anyone.")
         )
         await interaction.followup.send(embed=embed)
@@ -226,16 +225,16 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         """  # noqa: RUF027
         status = await self.bot.pool.execute(query, str(user_id))
 
-        current_timer = self.bot._current_timer
+        current_timer = self.bot.timers.current_timer
         if current_timer and current_timer.event == "timer" and current_timer.data:
             author_id = current_timer.data.get("user_id")
             if author_id == user_id:
-                self.bot.reschedule_timers()
+                self.bot.timers.reschedule()
 
         return status
 
     @birthday_group.command()
-    async def remove(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def remove(self, interaction: AluInteraction) -> None:
         """Remove your birthday data and stop getting congratulations."""
         # TODO: make confirm message YES NO;
         status = await self.remove_birthday_worker(interaction.user.id)
@@ -254,7 +253,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @birthday_group.command()
-    async def check(self, interaction: discord.Interaction[AluBot], member: discord.Member | None) -> None:
+    async def check(self, interaction: AluInteraction, member: discord.Member | None) -> None:
         """Check your or somebody's birthday in database.
 
         Parameters
@@ -312,10 +311,6 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 return
 
             birthday_role = self.community.birthday_role
-            # if birthday_role in member.roles:
-            #     # I guess the notification already happened
-            #     return
-
             await member.add_roles(birthday_role)
 
             content = f"Chat, today is {member.mention}'s birthday ! {const.Role.birthday_lover}"
@@ -339,7 +334,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             await self.birthday_channel.send(content=content, embed=embed)
 
             # create remove roles timer
-            await self.bot.create_timer(
+            await self.bot.timers.create(
                 event="remove_birthday_role",
                 expires_at=timer.expires_at + datetime.timedelta(days=1),
                 created_at=timer.created_at,
@@ -348,13 +343,14 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
             )
 
         # create next year timer
-        await self.bot.create_timer(
+        await self.bot.timers.create(
             event="birthday",
             expires_at=timer.expires_at.replace(year=timer.expires_at.year + 1),
             created_at=timer.created_at,
             timezone=timer.timezone,
             data=timer.data,
         )
+        await self.bot.timers.cleanup(timer.id)
 
     @commands.Cog.listener("on_remove_birthday_role_timer_complete")
     async def birthday_cleanup(self, timer: Timer[BirthdayTimerData]) -> None:
@@ -366,9 +362,10 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         member = guild.get_member(user_id)
         if member is not None:
             await member.remove_roles(birthday_role)
+        await self.bot.timers.cleanup(timer.id)
 
     @birthday_group.command(name="list")
-    async def birthday_list(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def birthday_list(self, interaction: AluInteraction) -> None:
         """Show list of birthdays in this server."""
         guild = self.community.guild
 

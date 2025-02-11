@@ -6,7 +6,7 @@ import discord
 from discord.ext import menus
 
 from bot import AluView
-from utils import const, errors, formats, mimics, pages
+from utils import const, errors, fmt, mimics, pages
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -96,10 +96,10 @@ class SetupChannel(FPCView):
         await interaction.client.pool.execute(query, channel.guild.id, channel.guild.name, channel.id)
 
         self.embed.set_field_at(
-            0, name=f"Channel {formats.tick(bool(channel))}", value=channel.mention if channel else "Not set",
+            0, name=f"Channel {fmt.tick(bool(channel))}", value=channel.mention if channel else "Not set",
         )
         self.embed.set_field_at(
-            1, name=f"Webhook {formats.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set",
+            1, name=f"Webhook {fmt.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set",
         )
         await interaction.response.edit_message(embed=self.embed)
 
@@ -134,7 +134,7 @@ class SetupMisc(FPCView):
 
         old_field_name = self.embed.fields[field_index].name
         assert isinstance(old_field_name, str)
-        new_field_name = f'{old_field_name.split(":")[0]}: {"`on`" if new_value else "`off`"} {formats.tick(new_value)}'
+        new_field_name = f'{old_field_name.split(":")[0]}: {"`on`" if new_value else "`off`"} {fmt.tick(new_value)}'
         old_field_value = self.embed.fields[field_index].value
         self.embed.set_field_at(field_index, name=new_field_name, value=old_field_value, inline=False)
         await interaction.response.edit_message(embed=self.embed)

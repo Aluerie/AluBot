@@ -13,7 +13,7 @@ import discord
 from discord.ext import commands
 
 from ext import get_extensions
-from utils import const, formats
+from utils import const, fmt
 
 from ._base import DevBaseCog
 
@@ -70,6 +70,8 @@ class ReloadCog(DevBaseCog):
             tick = False
 
         await ctx.tick_reaction(tick)
+        # need to restart the timers in case new/old extensions add/remove timer listeners.
+        self.bot.timers.reschedule()
 
     @commands.command(name="load", hidden=True)
     async def load(self, ctx: AluContext, extension: Annotated[str, ExtensionConverter]) -> None:
@@ -114,7 +116,7 @@ class ReloadCog(DevBaseCog):
                     ).set_footer(text=f"reload_all_worker.do_the_job: {ext}")
                     await self.bot.exc_manager.register_error(exc, embed)
                     # name, value
-                    errors.append((f"{formats.tick(False)} `{exc.__class__.__name__}`", f"{exc}"))
+                    errors.append((f"{const.Tick.No} `{exc.__class__.__name__}`", f"{exc}"))
 
         for ext in extensions_to_reload:
             emoji = "\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}"
@@ -125,7 +127,7 @@ class ReloadCog(DevBaseCog):
 
         if errors:
             content = "\n".join(
-                f"{formats.tick(status)} - {emoji} `{ext if not ext.startswith('ext.') else ext[5:]}`"
+                f"{fmt.tick(status)} - {emoji} `{ext if not ext.startswith('ext.') else ext[5:]}`"
                 for status, emoji, ext in statuses
             )
 
@@ -138,10 +140,10 @@ class ReloadCog(DevBaseCog):
         else:
             # no errors thus let's not clutter my spam channel with output^
             try:
-                await ctx.message.add_reaction(formats.tick(True))
+                await ctx.message.add_reaction(const.Tick.Yes)
             except discord.HTTPException:
                 with contextlib.suppress(discord.HTTPException):
-                    await ctx.send(formats.tick(True))
+                    await ctx.send(const.Tick.No)
 
     @reload.command(name="all", hidden=True)
     async def reload_all(self, ctx: AluContext) -> None:
@@ -234,7 +236,7 @@ class ReloadCog(DevBaseCog):
                 else:
                     statuses.append((True, module))
 
-        await ctx.send("\n".join(f"{formats.tick(status)}: `{module}`" for status, module in statuses))
+        await ctx.send("\n".join(f"{fmt.tick(status)}: `{module}`" for status, module in statuses))
 
     @reload.command(name="pull", hidden=True)
     async def reload_pull(self, ctx: AluContext) -> None:

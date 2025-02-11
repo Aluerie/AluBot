@@ -14,7 +14,7 @@ from discord.utils import MISSING
 from bot import EXT_CATEGORY_NONE, AluContext, ExtCategory
 from config import config
 from ext import get_extensions
-from utils import cache, const, disambiguator, errors, formats, helpers, transposer
+from utils import cache, const, disambiguator, errors, fmt, helpers, transposer
 
 from .exc_manager import ExceptionManager
 from .intents_perms import INTENTS, PERMISSIONS
@@ -37,14 +37,7 @@ __all__ = ("AluBot",)
 log = logging.getLogger(__name__)
 
 
-class AluBotHelper(TimerManager):
-    """Extra class to help with MRO."""
-
-    def __init__(self, *, bot: AluBot) -> None:
-        super().__init__(bot=bot)
-
-
-class AluBot(commands.Bot, AluBotHelper):
+class AluBot(commands.Bot):
     """Main class for AluBot.
 
     Essentially extended subclass over discord.py's `commands.Bot`
@@ -71,15 +64,13 @@ class AluBot(commands.Bot, AluBotHelper):
 
         Parameters
         ----------
-        session : ClientSession
-            aiohttp.ClientSession to use within the bot.
-        pool : asyncpg.Pool[DotRecord]
-            A connection pool to the database.
-        test : bool, default=False
+        test: bool = False
             whether the bot is a testing version (YenBot) or main production bot (AluBot).
             I just like to use different discord bot token to debug issues, test new code, etc.
-        kwargs : Any
-            kwargs for the purpose of MRO and what not.
+        session: ClientSession
+            aiohttp.ClientSession to use within the bot.
+        pool: asyncpg.Pool[asyncpg.Record]
+            A connection pool to the database.
 
         """
         self.test: bool = test
@@ -134,7 +125,7 @@ class AluBot(commands.Bot, AluBotHelper):
         # we could go with attribute option like exceptions manager
         # but let's keep its methods nearby in AluBot namespace
         # needs to be done after cogs are loaded so all cog event listeners are ready
-        super(AluBotHelper, self).__init__(bot=self)
+        self.timers = TimerManager(bot=self)
 
         if self.test:
             if failed_to_load_some_ext:
@@ -393,7 +384,7 @@ class AluBot(commands.Bot, AluBotHelper):
         args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
         embed = (
             discord.Embed(colour=0xA32952, title=f"Event Error: `{event}`")
-            .add_field(name="Args", value=formats.code(args_join, "ps"), inline=False)
+            .add_field(name="Args", value=fmt.code(args_join, "ps"), inline=False)
             .set_footer(text=f"{self.__class__.__name__}.on_error: {event}")
         )
         await self.exc_manager.register_error(exception, embed)
@@ -430,7 +421,7 @@ class AluBot(commands.Bot, AluBotHelper):
                 desc = (
                     f"Sorry! Incorrect argument value: {error.argument!r}.\n Only these options are valid "
                     f"for a parameter `{error.param.displayed_name or error.param.name}`:\n"
-                    f"{formats.human_join([repr(literal) for literal in error.literals])}."
+                    f"{fmt.human_join([repr(literal) for literal in error.literals])}."
                 )
 
             case commands.EmojiNotFound():
@@ -450,7 +441,7 @@ class AluBot(commands.Bot, AluBotHelper):
                 # TODO: make a fuzzy search in here to recommend the command that user wants
                 desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
             case commands.CommandOnCooldown():
-                desc = f"Please retry in `{formats.human_timedelta(error.retry_after, mode='brief')}`"
+                desc = f"Please retry in `{fmt.human_timedelta(error.retry_after, mode='brief')}`"
             case commands.NotOwner():
                 desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
             case commands.MissingRole():
@@ -483,8 +474,8 @@ class AluBot(commands.Bot, AluBotHelper):
                         name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else 'DM Channel'})",
                         icon_url=ctx.author.display_avatar,
                     )
-                    .add_field(name="Command Args", value=formats.code(kwargs_join, "ps"), inline=False)
-                    .add_field(name="Snowflake IDs", value=formats.code(snowflake_ids, "ebnf"), inline=False)
+                    .add_field(name="Command Args", value=fmt.code(kwargs_join, "ps"), inline=False)
+                    .add_field(name="Snowflake IDs", value=fmt.code(snowflake_ids, "ebnf"), inline=False)
                     .set_footer(
                         text=f"on_command_error: {cmd_name}",
                         icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,

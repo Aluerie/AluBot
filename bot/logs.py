@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, override
 import discord
 
 from config import config
-from utils import const, formats
+from utils import const, fmt
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -60,7 +60,7 @@ def setup_logging(*, test: bool) -> Generator[Any, Any, Any]:
             log.info(ASCII_STARTING_UP_ART)
             # send a webhook message as well
             webhook = discord.SyncWebhook.from_url(config["WEBHOOKS"]["LOGGER"])
-            now_str = formats.format_dt(datetime.datetime.now(datetime.UTC), style="T")
+            now_str = fmt.format_dt(datetime.datetime.now(datetime.UTC), style="T")
             embed = discord.Embed(
                 colour=discord.Colour.og_blurple(),
                 description=f"{now_str} The bot is restarting",

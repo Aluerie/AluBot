@@ -10,7 +10,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from bot import AluContext
-from utils import const, formats, pages, times
+from utils import const, fmt, pages, times
 
 from ._base import RemindersCog
 
@@ -49,7 +49,7 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         await interaction.response.edit_message(view=self.parent)
 
         zone = await interaction.client.tz_manager.get_timezone(interaction.user.id)
-        refreshed = await interaction.client.create_timer(
+        refreshed = await interaction.client.timers.create(
             event=self.timer.event,
             expires_at=when,
             created_at=interaction.created_at,
@@ -58,7 +58,7 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         )
         author_id = self.timer.data.get("author_id")
         text = self.timer.data.get("text")
-        delta = formats.human_timedelta(when, source=refreshed.created_at)
+        delta = fmt.human_timedelta(when, source=refreshed.created_at)
         msg = f"Alright <@{author_id}>, I've snoozed your reminder for {delta}: {text}"
         await interaction.followup.send(msg, ephemeral=True)
 
@@ -118,17 +118,17 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             "text": text,
             "message_id": ctx.message.id,
         }
-        timer = await self.bot.create_timer(
+        timer = await self.bot.timers.create(
             event="reminder",
             expires_at=dt,
             created_at=ctx.message.created_at,
             timezone=zone or "UTC",
             data=data,
         )
-        delta = formats.human_timedelta(dt, source=timer.created_at)
+        delta = fmt.human_timedelta(dt, source=timer.created_at)
         e = discord.Embed(colour=ctx.author.colour)
         e.set_author(name=f"Reminder for {ctx.author.display_name} is created", icon_url=ctx.author.display_avatar)
-        e.description = f"in {delta} — {formats.format_dt_tdR(dt)}\n{text}"
+        e.description = f"in {delta} — {fmt.format_dt_tdR(dt)}\n{text}"
         if zone is None:
             e.set_footer(text=f'\N{ELECTRIC LIGHT BULB} You can set your timezone with "{ctx.prefix}timezone set')
         await ctx.reply(embed=e)
@@ -192,7 +192,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         string_list = []
         for _id, expires, message in records:
             shorten = textwrap.shorten(message, width=512)
-            string_list.append(f"\N{BLACK CIRCLE} {_id}: {formats.format_dt_tdR(expires)}\n{shorten}")
+            string_list.append(f"\N{BLACK CIRCLE} {_id}: {fmt.format_dt_tdR(expires)}\n{shorten}")
 
         pgs = pages.EnumeratedPaginator(
             interaction,
@@ -246,14 +246,11 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             embed = discord.Embed(
                 colour=const.Colour.error,
                 description="Could not delete any reminders with that ID.",
-            ).set_author(name="IDError")
+            ).set_author(name="NotFound")
             await interaction.response.send_message(embed=embed)
             return
 
-        # if the current timer is being deleted
-        if self.bot._current_timer and self.bot._current_timer.id == id:
-            # cancel the task and re-run it
-            self.bot.reschedule_timers()
+        self.bot.timers.check_reschedule(id)
 
         embed = discord.Embed(description="Successfully deleted reminder.", colour=const.Colour.prpl)
         await interaction.response.send_message(embed=embed)
@@ -279,7 +276,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
 
         confirm_embed = discord.Embed(
             colour=interaction.user.colour,
-            description=f"Are you sure you want to delete {formats.plural(total):reminder}?",
+            description=f"Are you sure you want to delete {fmt.plural(total):reminder}?",
         )
         if not await interaction.client.disambiguator.confirm(interaction, embed=confirm_embed):
             return
@@ -288,19 +285,19 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             DELETE FROM timers
             WHERE event = 'reminder'
             AND data #>> '{author_id}' = $1;
-        """
+        """  # noqa: RUF027
         await interaction.client.pool.execute(query, author_id)
 
         # Check if the current timer is the one being cleared and cancel it if so
-        current_timer = self.bot._current_timer
+        current_timer = self.bot.timers.current_timer
         if current_timer and current_timer.event == "reminder" and current_timer.data:
             author_id = current_timer.data.get("author_id")
             if author_id == interaction.user.id:
-                self.bot.reschedule_timers()
+                self.bot.timers.reschedule()
 
         response_embed = discord.Embed(
             colour=interaction.user.colour,
-            description=f"Successfully deleted {formats.plural(total):reminder}.",
+            description=f"Successfully deleted {fmt.plural(total):reminder}.",
         )
         await interaction.response.send_message(embed=response_embed)
 
@@ -328,7 +325,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             view = ReminderView(url=url, timer=timer, cog=self, author_id=author_id)
 
         try:
-            msg = await channel.send(content, view=view)  # type: ignore
+            msg = await channel.send(content, view=view)  # type:ignore[reportAttributeAccessIssue]
         except discord.HTTPException:
             return
         else:

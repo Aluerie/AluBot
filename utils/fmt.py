@@ -35,7 +35,7 @@ __all__ = (
 # All-time   7232 12.0%      19.9
 # Here, "Percent Per Day" blends one into another.
 tabulate.MIN_PADDING = 1
-# cSpell: disable
+# cSpell: disable  # noqa: ERA001
 no_pad_fmt = tabulate.TableFormat(
     lineabove=None,
     linebelowheader=None,
@@ -46,7 +46,7 @@ no_pad_fmt = tabulate.TableFormat(
     padding=0,
     with_header_hide=None,
 )
-# cSpell: enable
+# cSpell: enable  # noqa: ERA001
 
 
 class plural:  # noqa: N801 # pep8 allows lowercase names for classes that are used as functions
@@ -394,7 +394,7 @@ def ansi(
     bold: bool = False,
     underline: bool = False,
 ) -> str:
-    """Format text in ANSI colours for discord.
+    r"""Format text in ANSI colours for discord.
 
     Discord doesn't support bright colours in ANSI formats (90-97 and 100-107) or dim text highlight.
 
@@ -516,7 +516,9 @@ class TabularData:
         self._aligns: list[LiteralAligns] = []
         self._rows: list[list[str]] = []
 
-    def set_columns(self, columns: list[str], *, aligns: list[LiteralAligns] = []) -> None:
+    def set_columns(self, columns: list[str], *, aligns: list[LiteralAligns] | None = None) -> None:
+        if aligns is None:
+            aligns = []
         if aligns and len(aligns) != len(columns):
             msg = "columns and formats parameters should be the same length lists."
             raise ValueError(msg)
@@ -618,7 +620,8 @@ CODE_LANGUAGES = [
 def code(text: str, language: str = "py") -> str:
     """Wrap text into a Python triple "`" discord codeblock.
 
-    It's just annoying to type sometimes. It's also 1 symbol shorter :D
+    It's just annoying to type sometimes. Also shorter like this.
+    For no code version we can just use `language=""`.
     """
     return f"```{language}\n{text}```"
 

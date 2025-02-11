@@ -38,7 +38,7 @@ from tabulate import tabulate
 
 from bot import AluBot, AluCog, ExtCategory, aluloop
 from config import config
-from utils import cache, const, errors, formats, fuzzy, timezones
+from utils import cache, const, errors, fmt, fuzzy, timezones
 from utils.helpers import measure_time
 
 if TYPE_CHECKING:

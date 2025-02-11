@@ -8,7 +8,7 @@ import asyncpg
 import discord
 from discord import app_commands
 
-from utils import const, errors, formats, mimics
+from utils import const, errors, fmt, mimics
 
 from . import FPCCog, views
 
@@ -382,8 +382,8 @@ class BaseSettings(FPCCog):
                     "After choosing the channel, the bot will edit this message to showcase newly selected channel."
                 ),
             )
-            .add_field(name=f"Channel {formats.tick(bool(channel))}", value=channel.mention if channel else "Not set")
-            .add_field(name=f"Webhook {formats.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set")
+            .add_field(name=f"Channel {fmt.tick(bool(channel))}", value=channel.mention if channel else "Not set")
+            .add_field(name=f"Webhook {fmt.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set")
             .set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
         )
         view = views.SetupChannel(self, author_id=interaction.user.id, embed=embed)
@@ -423,7 +423,7 @@ class BaseSettings(FPCCog):
 
         def state(on_off: bool) -> str:  # noqa: FBT001
             word = "`on`" if on_off else "`off`"
-            return f"{word} {formats.tick(on_off)}"
+            return f"{word} {fmt.tick(on_off)}"
 
         embed = (
             discord.Embed(

@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from tabulate import tabulate
 
 from bot import aluloop
-from utils import const, errors, formats, pages
+from utils import const, errors, fmt, pages
 
 from ._base import CommunityCog
 
@@ -186,7 +186,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             row.rep,
             next_lvl_exp,
             prev_lvl_exp,
-            formats.ordinal(place),
+            fmt.ordinal(place),
             member,
         )
         return ctx.client.transposer.image_to_file(image, filename="rank.png")
@@ -237,7 +237,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                         # we put mentions on one line and the data onto the second line and properly align those;
                         # we put invisible symbol to trick the tabulate to make two lines for those
                         (
-                            f"{(label := '`' + formats.label_indent(counter, counter - 1, split_size) + '`')}"
+                            f"{(label := '`' + fmt.label_indent(counter, counter - 1, split_size) + '`')}"
                             f"\n`{' ' * len(label)}"
                         ),
                         f"{member.mention}\n{' ' * len(member.mention)}",
@@ -248,13 +248,13 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                     for counter, (member, row) in enumerate(batch, start=offset + 1)
                 ],
                 headers=[
-                    "`" + formats.label_indent("N", offset + 1, split_size),
+                    "`" + fmt.label_indent("N", offset + 1, split_size),
                     "Name",
                     "Level",
                     "Exp",
                     "Rep`",
                 ],
-                tablefmt=formats.no_pad_fmt,
+                tablefmt=fmt.no_pad_fmt,
             )
             offset += split_size
             tables.append(table)

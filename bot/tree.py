@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, errors, formats, helpers
+from utils import const, errors, fmt, helpers
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -190,7 +190,7 @@ class AluAppCommandTree(app_commands.CommandTree):
             # These errors are raised in code of this project by myself or with an explanation text as `error`
             desc = f"{error}"
         elif isinstance(error, app_commands.CommandOnCooldown):
-            desc = f"Please retry in `{formats.human_timedelta(error.retry_after, mode='full')}`"
+            desc = f"Please retry in `{fmt.human_timedelta(error.retry_after, mode='full')}`"
         elif isinstance(error, app_commands.CommandSignatureMismatch):
             desc = (
                 "\N{WARNING SIGN} This command's signature is out of date!\n"
@@ -254,8 +254,8 @@ class AluAppCommandTree(app_commands.CommandTree):
                     ),
                     icon_url=interaction.user.display_avatar,
                 )
-                .add_field(name="Command Arguments", value=formats.code(args_join, "ps"), inline=False)
-                .add_field(name="Snowflake IDs", value=formats.code(snowflake_ids, "ebnf"), inline=False)
+                .add_field(name="Command Arguments", value=fmt.code(args_join, "ps"), inline=False)
+                .add_field(name="Snowflake IDs", value=fmt.code(snowflake_ids, "ebnf"), inline=False)
                 .set_footer(
                     text=f"on_app_command_error: {cmd_name}",
                     icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,

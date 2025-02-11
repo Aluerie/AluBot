@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 
 from bot import aluloop
-from utils import const, formats
+from utils import const, fmt
 
 from ._base import CommunityCog
 
@@ -262,7 +262,7 @@ class CommunityLogging(CommunityCog):
         # for example if before is peepoComfy and after is dankComfy then it wont be obvious in the embed result
         # since discord formats emotes first.
         e.description = (
-            f"[**Jump link**]({after.jump_url}) {formats.inline_word_by_word_diff(before.content, after.content)}"
+            f"[**Jump link**]({after.jump_url}) {fmt.inline_word_by_word_diff(before.content, after.content)}"
         )
         await self.community.logs.send(embed=e)
 

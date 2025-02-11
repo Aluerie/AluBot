@@ -14,15 +14,13 @@ from utils import const, mimics
 from .._base import FunCog
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class Other(FunCog):
     @app_commands.command()
-    async def coinflip(self, interaction: discord.Interaction[AluBot]) -> None:
-        """Flip a coin: Heads or Tails?"""
+    async def coinflip(self, interaction: AluInteraction) -> None:
+        """Flip a coin: Heads or Tails?."""
         word = "Heads" if random.randint(0, 1) == 0 else "Tails"
         await interaction.response.send_message(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
 
@@ -41,7 +39,7 @@ class Other(FunCog):
                         await message.add_reaction(r)
 
     @app_commands.command()
-    async def roll(self, interaction: discord.Interaction[AluBot], max_roll_number: app_commands.Range[int, 1]) -> None:
+    async def roll(self, interaction: AluInteraction, max_roll_number: app_commands.Range[int, 1]) -> None:
         """Roll an integer from 1 to `max_roll_number`.
 
         Parameters
@@ -64,15 +62,15 @@ class Other(FunCog):
         combined_pattern = r"|".join(patterns)
         mentions_or_emotes = re.findall(combined_pattern, text)
 
-        style = style | {k: k for k in mentions_or_emotes}
+        style |= {k: k for k in mentions_or_emotes}
         pattern = "|".join(re.escape(k) for k in style)
 
-        match_repl: Callable[[re.Match[str]], str | re.Match[str]] = lambda c: (
-            style.get(c.group(0)) or style.get(c.group(0).lower()) or c
-        )
+        def match_repl(c: re.Match[str]) -> str | re.Match[str]:
+            return style.get(c.group(0)) or style.get(c.group(0).lower()) or c
+
         return re.sub(pattern, match_repl, text)  # type: ignore # i dont understand regex types x_x
 
-    async def send_mimic_text(self, interaction: discord.Interaction[AluBot], content: str) -> None:
+    async def send_mimic_text(self, interaction: AluInteraction, content: str) -> None:
         if not interaction.guild:
             # outside of guilds - probably DM
             await interaction.response.send_message(content)
@@ -88,7 +86,7 @@ class Other(FunCog):
     )
 
     @text_group.command()
-    async def emotify(self, interaction: discord.Interaction[AluBot], text: str) -> None:
+    async def emotify(self, interaction: AluInteraction, text: str) -> None:
         """Makes your text consist only of emotes.
 
         Parameters
@@ -113,7 +111,9 @@ class Other(FunCog):
 
     @text_group.command()
     async def fancify(
-        self, interaction: discord.Interaction[AluBot], text: str,
+        self,
+        interaction: discord.Interaction[AluBot],
+        text: str,
     ) -> None:  # cSpell:disable #fmt:off # black meeses it up x_x
         """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼.
 
@@ -121,7 +121,7 @@ class Other(FunCog):
         ----------
             Text to convert into fancy text.
         """  # noqa: RUF002
-        # cSpell:enable #fmt:on
+        # cSpell:enable #fmt:on  # noqa: ERA001
 
         style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy font
             chr(0x00000061 + x): chr(0x0001D4EA + x)

@@ -305,8 +305,7 @@ class BugTracker(AluCog):
     @discord.utils.cached_property
     def news_channel(self) -> discord.TextChannel:
         """Dota 2 Bug tracker news channel."""
-        channel = self.hideout.spam if self.bot.test else self.community.bugtracker_news
-        return channel
+        return self.hideout.spam if self.bot.test else self.community.bugtracker_news
 
     async def get_valve_devs(self) -> list[str]:
         """Get the list of known Valve developers."""
@@ -332,37 +331,29 @@ class BugTracker(AluCog):
 
         error_logins = []
         success_logins = []
-        for l in logins:
+        for name in logins:
             # looks like executemany wont work bcs it executes strings letter by letter!
-            val = await self.bot.pool.fetchval(query, l)
+            val = await self.bot.pool.fetchval(query, name)
             if val:
                 # query above returned True
-                success_logins.append(l)
+                success_logins.append(name)
             else:
                 # query above returned None
-                error_logins.append(l)
+                error_logins.append(name)
 
         def embed_answer(logins: list[str], color: discord.Color, description: str) -> discord.Embed:
-            logins_join = ", ".join(f"`{l}`" for l in logins)
+            logins_join = ", ".join(f"`{name}`" for name in logins)
             return discord.Embed(color=color, description=f"{description}\n{logins_join}")
 
         embeds: list[discord.Embed] = []
         if success_logins:
             self.valve_devs.extend(success_logins)
             embeds.append(
-                embed_answer(
-                    success_logins,
-                    const.Palette.green(),
-                    "Added user(-s) to the list of Valve devs.",
-                ),
+                embed_answer(success_logins, const.Palette.green(), "Added user(-s) to the list of Valve devs."),
             )
         if error_logins:
             embeds.append(
-                embed_answer(
-                    error_logins,
-                    const.Palette.red(),
-                    "User(-s) were already in the list of Valve devs.",
-                ),
+                embed_answer(error_logins, const.Palette.red(), "User(-s) were already in the list of Valve devs."),
             )
         await ctx.reply(embeds=embeds)
 
@@ -405,8 +396,9 @@ class BugTracker(AluCog):
         dt: datetime.datetime = await self.bot.pool.fetchval(query, const.Guild.community)
         now = datetime.datetime.now(datetime.UTC)
 
-        # if self.bot.test:  # FORCE TESTING
-        #     dt = now - datetime.timedelta(hours=2)
+        if self.bot.test:
+            # FORCE TESTING
+            dt = now - datetime.timedelta(hours=2)
 
         issue_dict: dict[int, TimeLine] = {}
 
@@ -560,4 +552,5 @@ class BugTracker(AluCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    # await bot.add_cog(BugTracker(bot))
+    # uncomment when https://github.com/yanyongyu/githubkit/issues/188 fixed
+    # await bot.add_cog(BugTracker(bot))  # noqa: ERA001

@@ -136,10 +136,14 @@ class ExceptionManager:
         # hmm, this is honestly a bit too many sends for 5 seconds of rate limit :thinking:
 
         # if channel_id != self.bot.hideout.spam_channel_id:
-        await self.bot.error_webhook.send(self.bot.error_ping)
+        try:
+            await self.bot.error_webhook.send(self.bot.error_ping)
 
-        for chunk in code_chunks:
-            await self.bot.error_webhook.send(chunk)
+            for chunk in code_chunks:
+                await self.bot.error_webhook.send(chunk)
 
-        if channel_id != self.bot.hideout.spam_channel_id:
-            await self.bot.error_webhook.send(embed=embed)
+            if channel_id != self.bot.hideout.spam_channel_id:
+                await self.bot.error_webhook.send(embed=embed)
+        except discord.HTTPException as error:
+            warning = f"{self.bot.error_ping} {error.__class__.__name__} {error}"
+            await self.bot.spam_webhook.send(warning)

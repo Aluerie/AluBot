@@ -267,8 +267,7 @@ class AluHelp(commands.HelpCommand):
         help_str = command.help or "No documentation"
         split = help_str.split("\n", 1)
         extra_info = " [...]" if len(split) > 1 else ""
-        help_str = split[0] + extra_info
-        return help_str
+        return split[0] + extra_info
 
     @override
     def get_bot_mapping(self) -> dict[ExtCategory, dict[AluCog, list[AluCommand]]]:
@@ -276,9 +275,8 @@ class AluHelp(commands.HelpCommand):
         # TODO: include solo slash commands and Context Menu commands.
         categories = self.context.bot.category_cogs
 
-        mapping = {category: {cog: cog.get_commands() for cog in cog_list} for category, cog_list in categories.items()}
+        return {category: {cog: cog.get_commands() for cog in cog_list} for category, cog_list in categories.items()}
         # todo: think how to sort front page to front
-        return mapping
 
     async def send_help_menu(
         self,

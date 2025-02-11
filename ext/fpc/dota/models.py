@@ -318,9 +318,9 @@ class StratzMatchToEdit(BaseMatchToEdit):
                     canvas.paste(img.resize((item_w, h)), (count * item_w, canvas_h - h))
 
                 # item timings
-                for count, (item_id, item_timing) in enumerate(self.sorted_item_purchases):
+                for count, (_item_id, item_timing) in enumerate(self.sorted_item_purchases):
                     if item_timing:
-                        text_w, text_h = self.bot.transposer.get_text_wh(item_timing, font)
+                        _text_w, text_h = self.bot.transposer.get_text_wh(item_timing, font)
                         draw.text((count * item_w, canvas_h - text_h), item_timing, font=font, align="left")
 
                 canvas.paste(im=neutral_item_image.resize((item_w, h)), box=(canvas_w - item_w, canvas_h - h))
@@ -344,7 +344,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 Returns height of the segment.
                 """
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
-                w, h = self.bot.transposer.get_text_wh(self.kda, font)
+                _w, h = self.bot.transposer.get_text_wh(self.kda, font)
                 draw.text((0, canvas_h - items_h - abilities_h - h), self.kda, font=font)
                 return h
 
@@ -356,7 +356,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 Returns height of the segment.
                 """
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
-                w, h = self.bot.transposer.get_text_wh(self.outcome, font)
+                _w, h = self.bot.transposer.get_text_wh(self.outcome, font)
                 colour_map = {
                     "Win": str(const.Palette.green(shade=800)),
                     "Loss": str(const.Palette.red(shade=900)),
@@ -382,7 +382,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 p = 6
 
                 for count, (talent_id, talent) in enumerate(talents.items()):
-                    text_w, text_h = self.bot.transposer.get_text_wh(talent.display_name, font)
+                    text_w, _text_h = self.bot.transposer.get_text_wh(talent.display_name, font)
 
                     x = 0 if count % 2 else canvas_w - text_w
                     position = (x, canvas_h - items_h - abilities_h - kda_h - outcome_h - 20 - 26 * (count // 2))
@@ -439,12 +439,12 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
 
         def build_notification_image() -> Image.Image:
             edit_log.debug("Building edited notification message.")
-            width, height = img.size
+            _width, height = img.size
 
             draw = ImageDraw.Draw(img)
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 45)
             text = "Not Counted"
-            text_w, text_h = self.bot.transposer.get_text_wh(text, font)
+            _text_w, text_h = self.bot.transposer.get_text_wh(text, font)
             draw.text(
                 xy=(0, height - text_h),
                 text=text,

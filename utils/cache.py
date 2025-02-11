@@ -102,14 +102,18 @@ def cache(
 ) -> Callable[[Callable[..., Coroutine[Any, Any, R]]], CacheProtocol[R]]:
     def decorator(func: Callable[..., Coroutine[Any, Any, R]]) -> CacheProtocol[R]:
         if strategy is Strategy.lru:
-            _internal_cache = LRU(maxsize)
-            _stats = _internal_cache.get_stats
+            internal_cache = LRU(maxsize)
+            stats = internal_cache.get_stats
         elif strategy is Strategy.raw:
-            _internal_cache = {}
-            _stats = lambda: (0, 0)
+            internal_cache = {}
+
+            def stats():
+                return (0, 0)
         elif strategy is Strategy.timed:
-            _internal_cache = ExpiringCache(seconds=maxsize)
-            _stats = lambda: (0, 0)
+            internal_cache = ExpiringCache(seconds=maxsize)
+
+            def stats():
+                return (0, 0)
 
         def _make_key(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
             # this is a bit of a cluster fuck
@@ -127,11 +131,10 @@ def cache(
                     # I want to pass asyncpg.Connection objects to the parameters
                     # however, they use default __repr__ and I do not care what
                     # connection is passed in, so I needed a bypass.
-                    if k == "connection" or k == "pool":
+                    if k in {"connection", "pool"}:
                         continue
 
-                    key.append(_true_repr(k))
-                    key.append(_true_repr(v))
+                    key.extend((_true_repr(k), _true_repr(v)))
 
             return ":".join(key)
 
@@ -139,34 +142,34 @@ def cache(
         def wrapper(*args: Any, **kwargs: Any) -> asyncio.Task[Any]:  # is it proper type?
             key = _make_key(args, kwargs)
             try:
-                task = _internal_cache[key]
+                task = internal_cache[key]
             except KeyError:
-                _internal_cache[key] = task = asyncio.create_task(func(*args, **kwargs))
+                internal_cache[key] = task = asyncio.create_task(func(*args, **kwargs))
                 return task
             else:
                 return task
 
         def _invalidate(*args: Any, **kwargs: Any) -> bool:
             try:
-                del _internal_cache[_make_key(args, kwargs)]
+                del internal_cache[_make_key(args, kwargs)]
             except KeyError:
                 return False
             else:
                 return True
 
         def _invalidate_containing(key: str) -> None:
-            to_remove = [k for k in _internal_cache if key in k]
+            to_remove = [k for k in internal_cache if key in k]
             for k in to_remove:
                 try:
-                    del _internal_cache[k]
+                    del internal_cache[k]
                 except KeyError:
                     continue
 
         # TODO: investigate those "type: ignore"
-        wrapper.cache = _internal_cache  # type: ignore
+        wrapper.cache = internal_cache  # type: ignore
         wrapper.get_key = lambda *args, **kwargs: _make_key(args, kwargs)  # type: ignore
         wrapper.invalidate = _invalidate  # type: ignore
-        wrapper.get_stats = _stats  # type: ignore
+        wrapper.get_stats = stats  # type: ignore
         wrapper.invalidate_containing = _invalidate_containing  # type: ignore
         return wrapper  # type: ignore
 

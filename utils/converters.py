@@ -35,9 +35,9 @@ def my_bool(argument: str) -> bool:
     Example: $levels opt in/out - to opt in or out of levels system.
     """
     lowered = argument.lower()
-    if lowered in ("in", "yes", "y", "true", "t", "1", "enable", "on"):
+    if lowered in {"in", "yes", "y", "true", "t", "1", "enable", "on"}:
         return True
-    if lowered in ("out", "no", "n", "false", "f", "0", "disable", "off"):
+    if lowered in {"out", "no", "n", "false", "f", "0", "disable", "off"}:
         return False
     raise commands.errors.BadBoolArgument(lowered)
 
@@ -120,7 +120,7 @@ class AluColourTransformer(app_commands.Transformer):
         error_footer = f'\n\nTo see supported colour formats by the bot - use "{const.Slash.help}` command: colour`"'
 
         # my custom situations/desires.
-        if argument in ("lavender purple", "prpl"):
+        if argument in {"lavender purple", "prpl"}:
             # my fav colour, of course.
             return discord.Colour(const.Colour.prpl)
 

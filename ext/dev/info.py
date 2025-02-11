@@ -4,7 +4,6 @@ import asyncio
 import importlib
 import importlib.metadata
 import logging
-import os
 import platform
 import socket
 import sys
@@ -44,9 +43,9 @@ class DevInformation(DevBaseCog):
         await asyncio.sleep(3)
         try:
             # non systemctl users - sorry
-            os.system("sudo systemctl restart alubot")
-        except Exception as error:
-            log.error(error, stack_info=True)
+            await asyncio.create_subprocess_shell("sudo systemctl restart alubot")
+        except Exception:
+            log.exception("Failed to restart the bot", stack_info=True)
             # it might not go off
             await interaction.followup.send("Something went wrong.")
 

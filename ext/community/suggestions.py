@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from typing import TYPE_CHECKING
 
 import discord
@@ -24,10 +25,8 @@ class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
             return
 
         message = thread.get_partial_message(thread.id)
-        try:
+        with contextlib.suppress(discord.HTTPException):
             await message.pin()
-        except discord.HTTPException:
-            pass
 
         query = """
             UPDATE botinfo

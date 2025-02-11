@@ -10,7 +10,7 @@ class BetaTest(BetaCog):
         pass
 
     @app_commands.command()
-    async def slash(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def slash(self, interaction: AluInteraction) -> None:
         await interaction.response.send_message("slash")
 
 

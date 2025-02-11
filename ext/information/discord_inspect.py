@@ -49,11 +49,10 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
         user: discord.User,
     ) -> discord.Embed:
         """Embed for view user avatar related commands."""
-        embed = discord.Embed(
+        return discord.Embed(
             colour=user.colour,
             title=f"Avatar for {user.display_name}",
         ).set_image(url=user.display_avatar.url)
-        return embed
 
     async def view_user_avatar(self, interaction: discord.Interaction, user: discord.User) -> None:
         """Callback for context menu command "View User Avatar"."""

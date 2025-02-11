@@ -44,6 +44,8 @@ from utils.helpers import measure_time
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Sequence
 
+    from bot import AluInteraction
+
 
 log = logging.getLogger(__name__)
 

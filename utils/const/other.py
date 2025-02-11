@@ -28,7 +28,7 @@ class LogoAsset(StrEnum):
 
     @override
     def __str__(self) -> str:
-        """Relative location compared to the workplace directory, i.e. `./assets/images/logo/dota_white.png`"""
+        """Relative location compared to the workplace directory, i.e. `./assets/images/logo/dota_white.png`."""
         return ASSETS_IMAGES + "logo/" + self.value
 
     @property

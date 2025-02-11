@@ -92,7 +92,7 @@ class Welcome(CommunityCog):
 
     @commands.Cog.listener("on_member_join")
     async def welcome_new_member(self, member: discord.Member) -> None:
-        """Welcome new member
+        """Welcome new member.
 
         This listener also gives back to old returning members their roles and old nickname if any.
         """

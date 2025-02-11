@@ -62,7 +62,7 @@ IMPORTANT_BANK = [
     f"Hey chat, {Channel.confessions} exist {Emote.PepoBeliever} {Emote.PepoBeliever} {Emote.PepoBeliever}",
     f"Hey chat, fix your posture {Emote.PepoBeliever}",
     "Hey chat, remember to smile \N{SLIGHTLY SMILING FACE}",
-    f"Hey chat, feel free to invite new cool people to this server {Emote.peepoComfy} {Emote.peepoComfy} {Emote.peepoComfy}",
+    f"Hey chat, feel free to invite new people to this server {Emote.peepoComfy} {Emote.peepoComfy} {Emote.peepoComfy}",
     "Hey chat, follow étiquette.",
     f"Hey chat, if you ever see {User.alubot} offline (it should be always at the top of the members list online) - "
     "immediately ping me",

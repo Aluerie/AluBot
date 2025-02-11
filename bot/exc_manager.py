@@ -145,5 +145,6 @@ class ExceptionManager:
             if channel_id != self.bot.hideout.spam_channel_id:
                 await self.bot.error_webhook.send(embed=embed)
         except discord.HTTPException as error:
+            # possible rate limit or worse :c
             warning = f"{self.bot.error_ping} {error.__class__.__name__} {error}"
             await self.bot.spam_webhook.send(warning)

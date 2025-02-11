@@ -206,4 +206,4 @@ class OldTimers(CommunityCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(OldTimers(bot))
+    # await bot.add_cog(OldTimers(bot))

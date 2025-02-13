@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     class LivePlayerAccountRow(TypedDict):
         puuid: str
         player_id: int
-        game_name: str
+        in_game_name: str
         tag_line: str
         platform: str
         display_name: str
@@ -68,7 +68,7 @@ class Notifications(BaseNotifications):
         player_streams = await self.get_player_streams(const.Twitch.LOL_GAME_CATEGORY_ID, favourite_player_ids)
 
         query = """
-            SELECT a.puuid, a.player_id, game_name, tag_line, platform, display_name, twitch_id, last_edited
+            SELECT a.puuid, a.player_id, in_game_name, tag_line, platform, display_name, twitch_id, last_edited
             FROM lol_accounts a
             JOIN lol_players p ON a.player_id = p.player_id
             WHERE p.player_id=ANY($1)
@@ -93,14 +93,14 @@ class Notifications(BaseNotifications):
                     log.debug(
                         "%s is not in the active game on account %s#%s",
                         player_account_row["display_name"],
-                        player_account_row["game_name"],
+                        player_account_row["in_game_name"],
                         player_account_row["tag_line"],
                     )
                 else:
                     log.warning(
                         "`lol_spectator_v4_active_game_by_summoner` failed with %s for %s#%s",
                         exc.status,
-                        player_account_row["game_name"],
+                        player_account_row["in_game_name"],
                         player_account_row["tag_line"],
                     )
                 continue
@@ -144,7 +144,7 @@ class Notifications(BaseNotifications):
                         player_account_row["display_name"],
                         (
                             f"https://op.gg/summoners/{player_account_row['platform']}/"
-                            f"{player_account_row['game_name']}-{player_account_row['tag_line']}"
+                            f"{player_account_row['in_game_name']}-{player_account_row['tag_line']}"
                         ),
                         champion.emote,
                     )

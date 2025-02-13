@@ -6,7 +6,7 @@ import logging
 import random
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic, TypeVar, override
+from typing import TYPE_CHECKING, TypeVar, override
 
 import discord
 from discord import app_commands
@@ -15,7 +15,7 @@ from bot import aluloop
 from utils import const, errors, fuzzy
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 __all__ = (
     "Character",
@@ -57,22 +57,15 @@ class CharacterTransformer[CharacterT: Character, PseudoCharacterT: Character](a
         return discord.AppCommandOptionType.number
 
     @abc.abstractmethod
-    def get_character_storage(
-        self,
-        interaction: discord.Interaction[AluBot],
-    ) -> CharacterStorage[CharacterT, PseudoCharacterT]: ...
+    def get_character_storage(self, interaction: AluInteraction) -> CharacterStorage[CharacterT, PseudoCharacterT]: ...
 
     @override
-    async def transform(self, interaction: discord.Interaction[AluBot], hero_id: int) -> CharacterT | PseudoCharacterT:
+    async def transform(self, interaction: AluInteraction, hero_id: int) -> CharacterT | PseudoCharacterT:
         storage = self.get_character_storage(interaction)
         return await storage.by_id(hero_id)
 
     @override
-    async def autocomplete(
-        self,
-        interaction: discord.Interaction[AluBot],
-        current: str,
-    ) -> list[app_commands.Choice[int]]:
+    async def autocomplete(self, interaction: AluInteraction, current: str) -> list[app_commands.Choice[int]]:
         storage = self.get_character_storage(interaction)
         characters = await storage.all()
 

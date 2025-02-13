@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 from utils import const
 
 from .notifications import Notifications
-from .settings import Settings
+from .settings import LeagueFPCSettings
 from .summoner_check import SummonerNameCheck
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class LolFPC(
     Notifications,
-    Settings,
+    LeagueFPCSettings,
     SummonerNameCheck,
     emote=const.Emote.PogChampPepe,
     name="League of Legends FPC",  # careful with this name since it's used in `database_management.py`

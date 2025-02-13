@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, override
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Self, override
 
 import discord
 from discord import app_commands
@@ -11,7 +12,7 @@ from steam import ID, InvalidID
 from utils import const
 from utils.dota import Hero, HeroTransformer  # noqa: TC001
 
-from ..base_classes import Account, BaseSettings
+from ..base_classes import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
@@ -21,91 +22,62 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class DotaPlayerCandidate(NamedTuple):
-    name: str
+@dataclass
+class DotaRequestPlayerArguments(BaseRequestPlayerArguments):
+    """Arguments for the following slash commands.
+
+    * /dota request player
+    * /database-dota-dev add
+    """
+
     steam: str
-    twitch: bool
 
 
-class DotaAccountDict(TypedDict):
+@dataclass
+class DotaAccount(BaseAccount):
+    """Dota 2 Account."""
+
     steam_id: int
     friend_id: int
 
-
-class DotaAccount(Account):
-    if TYPE_CHECKING:
-        steam_id: int
-        friend_id: int
-
     @override
-    async def set_game_specific_attrs(self, bot: AluBot, player: DotaPlayerCandidate) -> None:
+    @classmethod
+    async def create(cls, bot: AluBot, arguments: DotaRequestPlayerArguments) -> Self:
         try:
-            steam_id = ID(player.steam)
+            steam_id = ID(arguments.steam)
         except InvalidID:
-            steam_id = await ID.from_url(player.steam, session=bot.session)
+            steam_id = await ID.from_url(arguments.steam, session=bot.session)
 
         if steam_id is None:
             msg = (
-                f"Error checking steam profile for {player.steam}.\n"
-                "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
-                "or just give steam profile link to the bot."
+                f"Error checking steam profile for `{arguments.steam}`.\n"
+                "Check if your `steam` flag is a correct SteamID in either 64/32/3/2/friend_id representations "
+                "or just give their steam profile link to the bot."
             )
             raise commands.BadArgument(msg)
 
-        self.steam_id = steam_id.id64
-        self.friend_id = steam_id.id  # also known as id32
-
-    # @override
-    # async def set_game_specific_attrs(self, _: AluBot, player: DotaPlayerCandidate) -> None:
-    #     steam_id_obj = SteamID(player.steam)
-    #     if steam_id_obj.type != EType.Individual:
-    #         steam_id_obj = SteamID.from_url(player.steam)  # type-ignore # ValvePython doesn't care about TypeHints
-    #     if steam_id_obj is None or (hasattr(steam_id_obj, "type") and steam_id_obj.type != EType.Individual):
-    #         msg = (
-    #             f"Error checking steam profile for {player.steam}.\n"
-    #             "Check if your `steam` flag is correct steam id in either 64/32/3/2/friend_id representations "
-    #             "or just give steam profile link to the bot."
-    #         )
-    #         raise commands.BadArgument(msg)
-
-    #     self.steam_id = steam_id_obj.as_64
-    #     self.friend_id = steam_id_obj.id
-
-    @property
-    @override
-    def hint_database_add_command_args(self) -> str:
-        return f"name: {self.player_display_name} steam: {self.friend_id} twitch: {self.is_twitch_streamer}"
+        return cls(steam_id.id64, steam_id.id)
 
     @override
-    @staticmethod
-    def static_account_name_with_links(steam_id: int, friend_id: int) -> str:
+    def links(self) -> str:
         return (
-            f"`{steam_id}` - `{friend_id}`| "
-            f"[Steam](https://steamcommunity.com/profiles/{steam_id})"
-            f"/[Dotabuff](https://www.dotabuff.com/players/{friend_id})"
+            f"`{self.steam_id}` - `{self.friend_id}`| "
+            f"[Steam](https://steamcommunity.com/profiles/{self.steam_id})"
+            f"/[Dotabuff](https://www.dotabuff.com/players/{self.friend_id})"
         )
 
     @property
     @override
-    def account_string_with_links(self) -> str:
-        return self.static_account_name_with_links(self.steam_id, self.friend_id)
+    def display_name(self) -> str:
+        return str(self.friend_id)
+
+
+class DotaPlayer(BasePlayer[DotaAccount]):
+    """Dota 2 Player."""
 
     @override
-    @staticmethod
-    def static_account_string(friend_id: int, **kwargs: Any) -> str:
-        return f"{friend_id}"
-
-    @property
-    @override
-    def account_string(self) -> str:
-        return self.static_account_string(self.friend_id)
-
-    @override
-    def to_pseudo_record(self) -> DotaAccountDict:
-        return {
-            "steam_id": self.steam_id,
-            "friend_id": self.friend_id,
-        }
+    def hint_database_add_command_arguments(self) -> str:
+        return f"name: {self.display_name} steam: {self.account.friend_id} twitch: {bool(self.twitch_id)}"
 
 
 class DotaFPCSettings(BaseSettings, name="Dota 2"):
@@ -128,7 +100,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     5. Use `remove` counterpart commands to `add` to edit out player/hero lists
     *Pro-Tip.* Use autocomplete
     6. Ready ! More info below
-    """
+    """  # cSpell: ignore tdota
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         bot.instantiate_dota()
@@ -141,8 +113,7 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
             game_icon_url=const.Logo.Dota,
             character_singular="hero",
             character_plural="heroes",
-            account_cls=DotaAccount,
-            account_typed_dict_cls=DotaAccountDict,
+            player_cls=DotaPlayer,
             characters=bot.dota.heroes,
             **kwargs,
         )
@@ -176,8 +147,8 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
         twitch
             Is this person a twitch.tv streamer (under same name)?
         """
-        player_tuple = DotaPlayerCandidate(name=name, steam=steam, twitch=twitch)
-        await self.request_player(interaction, player_tuple)
+        player_arguments = DotaRequestPlayerArguments(name=name, steam=steam, is_twitch_streamer=twitch)
+        await self.request_player(interaction, player_arguments)
 
     dota_setup = app_commands.Group(
         name="setup",
@@ -213,13 +184,13 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     # HIDEOUT ONLY COMMANDS (at least, at the moment)
 
     hideout_dota_group = app_commands.Group(
-        name="dotafpc",  # cspell: ignore dotafpc
+        name="dota-dev",
         description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
         guild_ids=[const.Guild.hideout],
     )
 
     hideout_dota_player = app_commands.Group(
-        name="player",  # cspell: ignore dotafpc
+        name="player",
         description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
         parent=hideout_dota_group,
     )
@@ -237,10 +208,12 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
     @hideout_dota_player_add.autocomplete("player")
     async def hideout_dota_player_add_autocomplete(
-        self,
-        interaction: AluInteraction,
-        current: str,
+        self, interaction: AluInteraction, current: str
     ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for `/dota-dev player add` command.
+
+        Suggests players from the Dota 2 FPC database that the current guild hasn't subscribed to.
+        """
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
     @hideout_dota_player.command(name="remove")
@@ -258,10 +231,14 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     async def hideout_dota_player_remove_autocomplete(
         self, interaction: AluInteraction, current: str
     ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for `/database dota remove` command.
+
+        Suggests pro players in the Dota 2 FPC database that the current guild subscribed to.
+        """
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
     hideout_dota_hero = app_commands.Group(
-        name="hero",  # cspell: ignore dotafpc
+        name="hero",
         description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
         parent=hideout_dota_group,
     )
@@ -274,35 +251,23 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
 
         Parameters
         ----------
-        hero
+        hero: Hero
             Hero Name. Autocomplete suggestions exclude your favourite champs.
         """
         await self.hideout_character_add(interaction, hero)
 
-    # @hideout_dota_hero_add.autocomplete("hero_name")
-    # async def hideout_dota_hero_add_autocomplete(
-    #     self, interaction: discord.AluInteraction[AluBot], current: str
-    # ) -> list[app_commands.Choice[str]]:
-    #     return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=True)
-
     @hideout_dota_hero.command(name="remove")
-    async def hideout_dota_hero_remove(
+    async def hideout_dota_hero_remove(  # TODO: should autocomplete for hero only include heroes we have in the thing?
         self, interaction: AluInteraction, hero: app_commands.Transform[Hero, HeroTransformer]
     ) -> None:
         """\N{RED APPLE} Remove a Dota 2 hero into your favourite FPC heroes list.
 
         Parameters
         ----------
-        hero
+        hero: Hero
             Hero Name. Autocomplete suggestions only include your favourite champs.
         """
         await self.hideout_character_remove(interaction, hero)
-
-    # @hideout_dota_hero_remove.autocomplete("hero_name")
-    # async def hideout_dota_hero_remove_autocomplete(
-    #     self, interaction: discord.AluInteraction[AluBot], current: str
-    # ) -> list[app_commands.Choice[str]]:
-    #     return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
     @hideout_dota_player.command(name="list")
     async def hideout_dota_player_list(self, interaction: AluInteraction) -> None:
@@ -313,6 +278,52 @@ class DotaFPCSettings(BaseSettings, name="Dota 2"):
     async def hideout_dota_hero_list(self, interaction: AluInteraction) -> None:
         """\N{RED APPLE} Show a list of your favourite Dota 2 FPC heroes."""
         await self.hideout_character_list(interaction)
+
+    # DOTA DATABASE COMMANDS
+
+    database_dota = app_commands.Group(
+        name="database-dota-dev",
+        description="Group command about managing Dota 2 players/accounts in the bot's FPC database.",
+        guild_ids=[const.Guild.hideout],
+    )
+
+    @database_dota.command(name="add")
+    async def database_dota_add(self, interaction: AluInteraction, name: str, steam: str, *, twitch: bool) -> None:
+        """\N{TANGERINE} Add Dota 2 player to the FPC database.
+
+        Parameters
+        ----------
+        name: str
+            Player name. if it's a twitch streamer then it should match their twitch handle.
+        steam: str
+            Steam_id in any of 64/32/3/2 versions, friend_id or just steam profile link.
+        twitch: bool
+            Is this person a twitch.tv streamer (under same name)?
+
+        """
+        player_arguments = DotaRequestPlayerArguments(name=name, steam=steam, is_twitch_streamer=twitch)
+        await self.database_add(interaction, player_arguments)
+
+    @database_dota.command(name="remove")
+    async def database_dota_remove(self, interaction: AluInteraction, player_name: str) -> None:
+        """\N{TANGERINE} Show menu with buttons to remove Dota 2 account/player from the database.
+
+        Parameters
+        ----------
+        player_name: str
+            Player Name to find accounts from the database for.
+        """
+        await self.database_remove(interaction, player_name)
+
+    @database_dota_remove.autocomplete("player_name")
+    async def database_dota_remove_autocomplete(
+        self, interaction: AluInteraction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for `/database dota remove` command.
+
+        Includes all pro players in the Dota 2 FPC database.
+        """
+        return await self.database_remove_autocomplete(interaction, current)
 
 
 async def setup(bot: AluBot) -> None:

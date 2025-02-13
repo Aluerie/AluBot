@@ -99,12 +99,12 @@ select = [
     "UP",       # upgrade syntax for newer versions of the language.
     "YTT",      # misuse of sys.version or sys.version_info
     # EXPERIMENTAL ADDITIONS
+    "N",        # pep-8 namings
+    "W",        # pycodestyle warnings
+    # TURN IT OFF ON EXPERIMENTS
     "D",        # Doc-strings, kinda annoying for a bot, to be honest, might remove
     "DOC",      # Doc strings, kinda annoying for a bot, to be honest, might remove
     "ERA",      # eradicate commented out code
-    "N",        # pep-8 namings
-    "W",        # pycodestyle warnings
-    
 ]
 ignore = [
     # 1. General "Somewhat Public" disagreement with Ruff

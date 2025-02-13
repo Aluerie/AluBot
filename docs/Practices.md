@@ -27,12 +27,13 @@ embed = (
 )
 ```
 
-## Dota 2 namings
+## Game namings
 
 <!-- # TODO: maybe change this? just write 2 everywhere -->
 
 * if it's a display name then we write "2", i.e. `"Dota 2"`
 * if it's not then do not write the number, i.e. `self.bot.dota`. Idk, I just don't like how things like `dota2_hero` look like.
+* Don't say LoL for league for things like `LoLPlayer`, use `League` instead.
 
 ## Doc Strings
 

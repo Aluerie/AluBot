@@ -19,6 +19,7 @@ venv/
 # beta test
 /ext/beta.py
 _test.py
+draft.py
 
 # config secrets
 /config.toml

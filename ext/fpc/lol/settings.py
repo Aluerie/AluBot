@@ -1,59 +1,58 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, override
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Self, override
 
 import aiohttp
 import discord
 from discord import app_commands
 
 from utils import const, errors
-from utils.lol import Champion, ChampionTransformer, LiteralPlatform, Platform
+from utils.lol import Champion, ChampionTransformer, Platform  # noqa: TC001
 
-from ..base_classes import Account, BaseSettings
-from .models import lol_links
+from ..base_classes import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class LolPlayerCandidate(NamedTuple):
-    name: str
+@dataclass
+class LeagueRequestPlayerArguments(BaseRequestPlayerArguments):
+    """Arguments for the following slash commands.
+
+    * /lol request player
+    * /database-lol-dev add
+    """
+
     platform: Platform
-    game_name: str
+    in_game_name: str
     tag_line: str
 
 
-class LoLAccountDict(TypedDict):
+@dataclass
+class LeagueAccount(BaseAccount):
+    """League Account."""
+
     summoner_id: str
     puuid: str
-    platform: LiteralPlatform
-    game_name: str
+    platform: Platform
+    in_game_name: str
     tag_line: str
-    # player_id: int
-    # last_edited: int
-
-
-class LoLAccount(Account):
-    if TYPE_CHECKING:
-        summoner_id: str
-        puuid: str
-        platform: Platform
-        game_name: str
-        tag_line: str
 
     @override
-    async def set_game_specific_attrs(self, bot: AluBot, player: LolPlayerCandidate) -> None:
+    @classmethod
+    async def create(cls, bot: AluBot, arguments: LeagueRequestPlayerArguments) -> Self:
         # RIOT ACCOUNT INFO
         try:
             riot_account = await bot.lol.get_account_v1_by_riot_id(
-                game_name=player.game_name,
-                tag_line=player.tag_line,
-                region=player.platform.continent,
+                game_name=arguments.in_game_name,
+                tag_line=arguments.tag_line,
+                region=arguments.platform.continent,
                 # in theory we can use continent closest to me bcs they all share the same data
                 # for account_v1 endpoint
                 # so check response time to this request (BUT WHATEVER)
@@ -61,69 +60,57 @@ class LoLAccount(Account):
         except aiohttp.ClientResponseError:
             msg = (
                 "Error `get_account_v1_by_riot_id` for "
-                f"`{player.game_name}#{player.tag_line}` for `{player.platform}` platform.\n"
+                f"`{arguments.in_game_name}#{arguments.tag_line}` for `{arguments.platform}` platform.\n"
                 "This account probably does not exist."
             )
-            raise errors.BadArgument(msg)
+            raise errors.BadArgument(msg) from None
 
-        self.puuid = puuid = riot_account["puuid"]
-        self.platform = player.platform
-        self.game_name = riot_account["gameName"]
-        self.tag_line = riot_account["tagLine"]
+        puuid = riot_account["puuid"]
 
         # SUMMONER INFO
         try:
-            summoner = await bot.lol.get_lol_summoner_v4_by_puuid(puuid=puuid, region=self.platform)
+            summoner = await bot.lol.get_lol_summoner_v4_by_puuid(puuid=puuid, region=arguments.platform)
         except aiohttp.ClientResponseError:
             msg = (
                 f"Error `get_lol_summoner_v4_by_puuid` for riot account\n"
-                f"`{player.game_name}#{player.tag_line}` in `{player.platform}` platform, puuid: `{puuid}`"
+                f"`{arguments.in_game_name}#{arguments.tag_line}` in `{arguments.platform}` platform, puuid: `{puuid}`"
             )
-            raise errors.BadArgument(msg)
-        self.summoner_id = summoner["id"]
+            raise errors.BadArgument(msg) from None
 
-    @property
-    @override
-    def hint_database_add_command_args(self) -> str:
-        return (
-            f"name: {self.player_display_name} game_name: {self.game_name} "
-            f"tag_line: {self.tag_line} server: {self.platform.display_name}"
+        return cls(
+            summoner_id=summoner["id"],
+            puuid=puuid,
+            platform=arguments.platform,
+            in_game_name=riot_account["gameName"],
+            tag_line=riot_account["tagLine"],
         )
 
     @override
-    @staticmethod
-    def static_account_name_with_links(platform: LiteralPlatform, game_name: str, tag_line: str, **kwargs: Any) -> str:
-        opgg_name = Platform(platform).opgg_name
-        links = lol_links(platform, game_name, tag_line)
-        return f"`{opgg_name}`: `{game_name} #{tag_line}` {links}"
+    def links(self) -> str:
+        opgg_platform = self.platform.opgg_name
+
+        # self.platform would work too instead of opgg_platform
+        opgg_link = f"https://op.gg/summoners/{opgg_platform}/{self.in_game_name}-{self.tag_line}"
+        return f"`{opgg_platform}`: `{self.in_game_name} #{self.tag_line}` /[Opgg]({opgg_link})"
 
     @property
     @override
-    def account_string_with_links(self) -> str:
-        return self.static_account_name_with_links(self.platform.value, self.game_name, self.tag_line)
+    def display_name(self) -> str:
+        return f"{self.in_game_name} #{self.tag_line}"
+
+
+class LeaguePlayer(BasePlayer[LeagueAccount]):
+    """League of Legends Player."""
 
     @override
-    @staticmethod
-    def static_account_string(game_name: str, tag_line: str, **kwargs: Any) -> str:
-        return f"{game_name} #{tag_line}"
-
-    @property
-    @override
-    def account_string(self) -> str:
-        return self.static_account_string(self.game_name, self.tag_line)
-
-    @override
-    def to_pseudo_record(self) -> LoLAccountDict:
-        return {
-            "summoner_id": self.summoner_id,
-            "puuid": self.puuid,
-            "platform": self.platform.value,
-            "game_name": self.game_name,
-            "tag_line": self.tag_line,
-        }
+    def hint_database_add_command_arguments(self) -> str:
+        return (
+            f"name: {self.display_name} in_game_name: {self.account.in_game_name} "
+            f"tag_line: {self.account.tag_line} server: {self.account.platform.display_name}"
+        )
 
 
-class Settings(BaseSettings):
+class LeagueFPCSettings(BaseSettings):
     """Commands to set up fav champ + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \
@@ -142,8 +129,7 @@ class Settings(BaseSettings):
             game_icon_url=const.Logo.Lol,
             character_singular="champion",
             character_plural="champions",
-            account_cls=LoLAccount,
-            account_typed_dict_cls=LoLAccountDict,
+            player_cls=LeaguePlayer,
             characters=bot.lol.champions,
             **kwargs,
         )
@@ -162,14 +148,9 @@ class Settings(BaseSettings):
     )
 
     @lol_request.command(name="player")
-    @app_commands.rename(platform="server", game_name="in-game-name")
+    @app_commands.rename(platform="server")
     async def lol_request_player(
-        self,
-        interaction: discord.Interaction[AluBot],
-        name: str,
-        platform: Platform,
-        game_name: str,
-        tag_line: str,
+        self, interaction: AluInteraction, name: str, platform: Platform, in_game_name: str, tag_line: str
     ) -> None:
         """\N{BANANA} Request LoL Player to be added into the bot's FPC database.
 
@@ -178,17 +159,19 @@ class Settings(BaseSettings):
 
         Parameters
         ----------
-        name
+        name: str
             Player name. if it's a twitch streamer then it should match their twitch handle.
-        platform
+        platform: Platform
             Server where the account is from, i.e. "KR", "NA", "EUW".
-        game_name
+        in_game_name: str
             Riot ID name (without a hashtag or a tag), i.e. "Hide on bush", "Sneaky".
-        tag_line
+        tag_line: str
             Riot ID tag line (characters after a hashtag), i.e. "KR1", "NA69".
         """
-        player_tuple = LolPlayerCandidate(name=name, platform=platform, game_name=game_name, tag_line=tag_line)
-        await self.request_player(interaction, player_tuple)
+        player_arguments = LeagueRequestPlayerArguments(
+            name=name, platform=platform, in_game_name=in_game_name, tag_line=tag_line, is_twitch_streamer=True
+        )
+        await self.request_player(interaction, player_arguments)
 
     lol_setup = app_commands.Group(
         name="setup",
@@ -197,45 +180,45 @@ class Settings(BaseSettings):
     )
 
     @lol_setup.command(name="channel")
-    async def lol_setup_channel(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def lol_setup_channel(self, interaction: AluInteraction) -> None:
         """\N{BANANA} Setup/manage your LoL FPC Notifications channel."""
         await self.setup_channel(interaction)
 
     @lol_setup.command(name="champions")
-    async def lol_setup_champions(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def lol_setup_champions(self, interaction: AluInteraction) -> None:
         """\N{BANANA} Setup/manage your LoL FPC favourite champions list."""
         await self.setup_characters(interaction)
 
     @lol_setup.command(name="players")
-    async def lol_setup_players(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def lol_setup_players(self, interaction: AluInteraction) -> None:
         """\N{BANANA} Setup/manage your LoL FPC favourite players list."""
         await self.setup_players(interaction)
 
     @lol_setup.command(name="miscellaneous")
-    async def lol_setup_misc(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def lol_setup_misc(self, interaction: AluInteraction) -> None:
         """\N{BANANA} Manage your LoL FPC misc settings."""
         await self.setup_misc(interaction)
 
     @lol_group.command(name="tutorial")
-    async def lol_tutorial(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def lol_tutorial(self, interaction: AluInteraction) -> None:
         """\N{BANANA} Guide to setup League of Legends FPC Notifications."""
         await self.tutorial(interaction)
 
     # HIDEOUT ONLY COMMANDS (at least, at the moment)
     hideout_lol_group = app_commands.Group(
-        name="lolfpc",  # cspell: ignore lolfpc
+        name="lol-dev",
         description="League of Legends FPC (Favourite Player+Character) Hideout-only commands.",
         guild_ids=[const.Guild.hideout],
     )
 
     hideout_lol_player = app_commands.Group(
-        name="player",  # cspell: ignore lolfpc
+        name="player",
         description="League of Legends FPC (Favourite Player+Character) Hideout-only player-related commands.",
         parent=hideout_lol_group,
     )
 
     @hideout_lol_player.command(name="add")
-    async def hideout_lol_player_add(self, interaction: discord.Interaction[AluBot], player: str) -> None:
+    async def hideout_lol_player_add(self, interaction: AluInteraction, player: str) -> None:
         """\N{GREEN APPLE} Add a League of Legends player into your favourite FPC players list.
 
         Parameters
@@ -247,14 +230,16 @@ class Settings(BaseSettings):
 
     @hideout_lol_player_add.autocomplete("player")
     async def hideout_lol_player_add_autocomplete(
-        self,
-        interaction: discord.Interaction[AluBot],
-        current: str,
+        self, interaction: AluInteraction, current: str
     ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for `/lol-dev player add` command.
+
+        Suggests players from the League FPC database that the current guild hasn't subscribed to.
+        """
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=True)
 
     @hideout_lol_player.command(name="remove")
-    async def hideout_lol_player_remove(self, interaction: discord.Interaction[AluBot], player: str) -> None:
+    async def hideout_lol_player_remove(self, interaction: AluInteraction, player: str) -> None:
         """\N{GREEN APPLE} Remove a League of Legends player into your favourite FPC players list.
 
         Parameters
@@ -266,23 +251,23 @@ class Settings(BaseSettings):
 
     @hideout_lol_player_remove.autocomplete("player")
     async def hideout_lol_player_remove_autocomplete(
-        self,
-        interaction: discord.Interaction[AluBot],
-        current: str,
+        self, interaction: AluInteraction, current: str
     ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for `/lol-dev player remove` command.
+
+        Suggests players from the League FPC database that the current guild subscribed to.
+        """
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
     hideout_lol_champion = app_commands.Group(
-        name="champion",  # cspell: ignore lolfpc
+        name="champion",
         description="League of Legends FPC (Favourite Player+Character) Hideout-only champion-related commands.",
         parent=hideout_lol_group,
     )
 
     @hideout_lol_champion.command(name="add")
     async def hideout_lol_champion_add(
-        self,
-        interaction: discord.Interaction[AluBot],
-        champion: app_commands.Transform[Champion, ChampionTransformer],
+        self, interaction: AluInteraction, champion: app_commands.Transform[Champion, ChampionTransformer]
     ) -> None:
         """\N{GREEN APPLE} Add a League of Legends champion into your favourite FPC champions list.
 
@@ -293,17 +278,9 @@ class Settings(BaseSettings):
         """
         await self.hideout_character_add(interaction, champion)
 
-    # @hideout_lol_champion_add.autocomplete("champion")
-    # async def hideout_lol_champion_add_autocomplete(
-    #     self, interaction: discord.Interaction[AluBot], current: str
-    # ) -> list[app_commands.Choice[str]]:
-    #     return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=True)
-
     @hideout_lol_champion.command(name="remove")
     async def hideout_lol_champion_remove(
-        self,
-        interaction: discord.Interaction[AluBot],
-        champion: app_commands.Transform[Champion, ChampionTransformer],
+        self, interaction: AluInteraction, champion: app_commands.Transform[Champion, ChampionTransformer]
     ) -> None:
         """\N{GREEN APPLE} Remove a League of Legends champion into your favourite FPC champions list.
 
@@ -314,19 +291,13 @@ class Settings(BaseSettings):
         """
         await self.hideout_character_remove(interaction, champion)
 
-    # @hideout_lol_champion_remove.autocomplete("champion_name")
-    # async def hideout_lol_champion_remove_autocomplete(
-    #     self, interaction: discord.Interaction[AluBot], current: str
-    # ) -> list[app_commands.Choice[str]]:
-    #     return await self.hideout_character_add_remove_autocomplete(interaction, current, mode_add_remove=False)
-
     @hideout_lol_player.command(name="list")
-    async def hideout_lol_player_list(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def hideout_lol_player_list(self, interaction: AluInteraction) -> None:
         """\N{GREEN APPLE} Show a list of your favourite League of Legends FPC players."""
         await self.hideout_player_list(interaction)
 
     @hideout_lol_champion.command(name="list")
-    async def hideout_lol_champion_list(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def hideout_lol_champion_list(self, interaction: AluInteraction) -> None:
         """\N{GREEN APPLE} Show a list of your favourite League of Legends FPC champions."""
         await self.hideout_character_list(interaction)
 
@@ -334,7 +305,7 @@ class Settings(BaseSettings):
 
     @app_commands.guilds(const.Guild.hideout)
     @app_commands.command()
-    async def meraki(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def meraki(self, interaction: AluInteraction) -> None:
         """Show list of champions that are missing from Meraki JSON."""
         embed = (
             discord.Embed(
@@ -361,7 +332,59 @@ class Settings(BaseSettings):
         )
         await interaction.response.send_message(embed=embed)
 
+    # LEAGUE DATABASE COMMANDS
+
+    database_lol = app_commands.Group(
+        name="database-lol-dev",
+        description="Group command about managing League players/accounts in the bot's FPC database.",
+        guild_ids=[const.Guild.hideout],
+    )
+
+    @database_lol.command(name="add")
+    async def database_lol_add(
+        self, interaction: AluInteraction, name: str, platform: Platform, in_game_name: str, tag_line: str
+    ) -> None:
+        """\N{PEACH} Add League player to the FPC database.
+
+        Parameters
+        ----------
+        name: str
+            Player name. if it's a twitch streamer then it should match their twitch handle.
+        platform: Platform
+            Server where the account is from, i.e. "KR", "NA", "EUW".
+        in_game_name: str
+            Riot ID name (without a hashtag or a tag), i.e. "Hide on bush", "Sneaky".
+        tag_line: str
+            Riot ID tag line (characters after a hashtag), i.e. "KR1", "NA69".
+
+        """
+        player_arguments = LeagueRequestPlayerArguments(
+            name=name, platform=platform, in_game_name=in_game_name, tag_line=tag_line, is_twitch_streamer=True
+        )
+        await self.database_add(interaction, player_arguments)
+
+    @database_lol.command(name="remove")
+    async def database_lol_remove(self, interaction: AluInteraction, player_name: str) -> None:
+        """\N{PEACH} Remove League account/player from the FPC database.
+
+        Parameters
+        ----------
+        player_name: str
+            Player Name to find accounts from the database for.
+        """
+        await self.database_remove(interaction, player_name)
+
+    @database_lol_remove.autocomplete("player_name")
+    async def database_lol_remove_autocomplete(
+        self, interaction: AluInteraction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete for `/database lol remove` command.
+
+        Includes all pro-players/streamers in the League FPC database.
+        """
+        return await self.database_remove_autocomplete(interaction, current)
+
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(Settings(bot))
+    await bot.add_cog(LeagueFPCSettings(bot))

@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS lol_accounts (
     summoner_id TEXT PRIMARY KEY,
     puuid TEXT NOT NULL UNIQUE,
     platform TEXT NOT NULL,
-    game_name TEXT NOT NULL,
+    in_game_name TEXT NOT NULL,
     tag_line TEXT NOT NULL,
     player_id INT,
     last_edited BIGINT, -- this column is needed bcs Riot API is not precise

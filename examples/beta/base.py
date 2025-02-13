@@ -8,6 +8,7 @@ where I do various beta testings in the test version of the bot.
 
 from __future__ import annotations
 
+import abc
 import asyncio
 import datetime
 import enum
@@ -22,6 +23,8 @@ from typing import (
     Any,
     ClassVar,
     Literal,
+    NamedTuple,
+    Self,
     TypedDict,
     TypeVar,
     Unpack,

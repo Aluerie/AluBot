@@ -145,6 +145,10 @@ class Platform(StrEnum):
         """OP.GG names for platforms.
 
         Used in their links as sub-domain.
+
+        Warning
+        -------
+        Looks like, it's not needed anymore as they redirect pages like `summoners/NA1/gosu` to `summoners/NA/gosu`.
         """
         return {
             cls.Brazil: "BR",

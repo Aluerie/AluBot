@@ -153,9 +153,10 @@ class OldTimers(CommunityCog):
         """Post various reminders or flavour text in #general periodically."""
         async for msg in self.community.general.history(limit=10):
             if msg.author == self.bot.user:
+                await self.bot.timers.cleanup(timer.id)
                 await self.bot.timers.create(
                     event="old_timer",
-                    expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=2),
+                    expires_at=datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=3),
                     data=timer.data,
                 )
                 return
@@ -206,4 +207,4 @@ class OldTimers(CommunityCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    # await bot.add_cog(OldTimers(bot))
+    await bot.add_cog(OldTimers(bot))

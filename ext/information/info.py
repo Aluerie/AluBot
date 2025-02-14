@@ -132,7 +132,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         e.set_thumbnail(url=f"attachment://{file.filename}")
         await interaction.response.send_message(embed=e, file=file)
 
-    @color.autocomplete("colour")
+    @color.autocomplete("color")
     async def autocomplete(self, _: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         colors = ["prpl", "rgb(", "hsl(", "hsv(", "mp(", "map(", *list(ImageColor.colormap.keys())]
         return [

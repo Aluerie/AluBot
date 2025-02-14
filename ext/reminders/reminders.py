@@ -194,13 +194,17 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             shorten = textwrap.shorten(message, width=512)
             string_list.append(f"\N{BLACK CIRCLE} {_id}: {fmt.format_dt_tdR(expires)}\n{shorten}")
 
-        pgs = pages.EnumeratedPaginator(
+        pgs = pages.EmbedDescriptionPaginator(
             interaction,
             string_list,
             per_page=10,
-            author_name=f"{interaction.user.display_name}'s Reminders list",
-            author_icon=interaction.user.display_avatar.url,
-            color=interaction.user.color,
+            template={
+                "color": interaction.user.color.value,
+                "author": {
+                    "name": f"{interaction.user.display_name}'s Reminders list",
+                    "icon_url": interaction.user.display_avatar.url,
+                },
+            },
         )
         await pgs.start()
 

@@ -329,10 +329,9 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
             soup = BeautifulSoup(await r.read(), "html.parser")
             fixtures = soup.find("of-match-cards-list")
             if fixtures:
-                # game_week = fixtures.find('h3', attrs={'class': 'section-header__subtitle'})
-                # print(game_week.text)
-                # i dont actually know if the following type: ignore is safe
-                matches = fixtures.findAll("li", attrs={"class": "simple-match-cards-list__match-card"})  # type: ignore
+                # game_week = fixtures.find('h3', attrs={'class': 'section-header__subtitle'})  # noqa: ERA001
+                # print(game_week.text)  # noqa: ERA001
+                matches = fixtures.findAll("li", attrs={"class": "simple-match-cards-list__match-card"})  # type:ignore[reportAttributeAccessIssue]
                 match_strings = []
                 for match in matches:
                     team_content = match.findAll(

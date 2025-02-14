@@ -358,8 +358,8 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
                 _w, h = self.bot.transposer.get_text_wh(self.outcome, font)
                 color_map = {
-                    "Win": str(const.Palette.green(shade=800)),
-                    "Loss": str(const.Palette.red(shade=900)),
+                    "Win": const.Palette.green(shade=800),
+                    "Loss": const.Palette.red(shade=900),
                     "Not Scored": (255, 255, 255),
                 }
                 draw.text(

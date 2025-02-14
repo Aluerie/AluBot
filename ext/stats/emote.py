@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict, override
 import asyncpg
 import discord
 from discord import app_commands
-from discord.ext import commands, menus
+from discord.ext import commands
 from tabulate import tabulate
 
 from bot import AluBot, aluloop
@@ -32,29 +32,6 @@ if TYPE_CHECKING:
 
 EMOJI_REGEX = re.compile(r"<a?:.+?:([0-9]{15,21})>")
 EMOTE_STATS_TRACKING_START = datetime.datetime(2024, 2, 6, tzinfo=datetime.UTC)
-
-
-class EmoteStatsPageSource(menus.ListPageSource):
-    def __init__(self, entries: list[str], footer_text: str, query: str, guild_icon: discord.Asset | None) -> None:
-        super().__init__(entries, per_page=1)
-        self.footer_text: str = footer_text
-        self.query: str = query
-        self.guild_icon: discord.Asset | None = guild_icon
-
-    @override
-    async def format_page(self, menu: pages.Paginator, entry: str) -> discord.Embed:
-        return (
-            discord.Embed(
-                color=const.Color.prpl,
-                title="Emote leaderboard",
-                description=entry,
-            )
-            .set_author(name=self.query)
-            .set_footer(
-                icon_url=self.guild_icon,
-                text=self.footer_text,
-            )
-        )
 
 
 class EmoteStats(StatsCog):
@@ -285,14 +262,24 @@ class EmoteStats(StatsCog):
             offset += split_size
             tables.append(table)
 
-        paginator = pages.Paginator(
+        paginator = pages.EmbedDescriptionPaginator(
             interaction,
-            EmoteStatsPageSource(
-                tables,
-                f"During the timeframe: total {all_emotes_total} emotes were used: {all_emotes_per_day} per day",
-                f"Emote Type: {emote_type}, Timeframe: {'last' if timeframe != 'all-time' else ''} {timeframe}",
-                interaction.guild.icon,
-            ),
+            tables,
+            template={
+                "color": const.Color.prpl,
+                "title": "Emote leaderboard",
+                "author": {
+                    "name": (
+                        f"Emote Type: {emote_type}, Timeframe: {'last' if timeframe != 'all-time' else ''} {timeframe}"
+                    ),
+                },
+                "footer": {
+                    "text": (
+                        f"During the timeframe: total {all_emotes_total} emotes were used; {all_emotes_per_day} per day"
+                    ),
+                    "icon_url": interaction.guild.icon.url if interaction.guild.icon else discord.utils.MISSING,
+                },
+            },
         )
         await paginator.start()
 
@@ -428,7 +415,7 @@ class EmoteStats(StatsCog):
                 tabulate(
                     headers=["Period", "Usages", "Percent", "Per Day"],
                     tabular_data=[all_time_period, last_year_period],
-                    tablefmt=fmt.no_pad_table,
+                    tablefmt="plain",
                 )
             )
 

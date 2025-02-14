@@ -311,6 +311,11 @@ class Paginator(AluView):
         self.stop()
 
 
+class EmbedAuthorTemplate(TypedDict):
+    name: str
+    icon_url: NotRequired[str]
+
+
 class EmbedFooterTemplate(TypedDict):
     text: str
     icon_url: NotRequired[str]
@@ -327,6 +332,7 @@ class EmbedTemplate(TypedDict):
 
     title: NotRequired[str]
     color: NotRequired[int]
+    author: NotRequired[EmbedAuthorTemplate]
     footer: NotRequired[EmbedFooterTemplate]
 
 

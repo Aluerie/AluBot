@@ -63,9 +63,10 @@ def setup_logging(*, test: bool) -> Generator[Any, Any, Any]:
             webhooks = [discord.SyncWebhook.from_url(w) for w in webhook_uls]
 
             for webhook in webhooks:
+                content = "# Restarting"
                 now_str = fmt.format_dt(datetime.datetime.now(datetime.UTC), style="T")
                 embed = discord.Embed(color=discord.Color.og_blurple(), description=f"{now_str} The bot is restarting")
-                webhook.send(avatar_url=const.Emoticon.Swan, embed=embed)
+                webhook.send(content=content, avatar_url=const.Emoticon.Swan, embed=embed)
 
         yield
     finally:

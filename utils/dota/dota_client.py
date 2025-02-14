@@ -100,7 +100,6 @@ class DotaClient(Client):
     @override
     async def on_ready(self) -> None:
         if not self.bot.test:
-            await self.bot.wait_until_ready()
             await self.bot.send_warning("DotaClient is ready.")
 
     @override

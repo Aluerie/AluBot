@@ -42,7 +42,7 @@ class LogoAsset(StrEnum):
 class Slash(StrEnum):
     """Slash mentions strings.
 
-    These are to be used when we can't easily access `bot.tree` for its `find_mention_for` method.
+    These are to be used when we can't easily access `bot.tree` for its `find_mention` method.
     """
 
     feedback = "</feedback:1060350834367549541>"

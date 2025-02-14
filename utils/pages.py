@@ -1,5 +1,11 @@
 """Pagination Menus View Classes.
 
+These classes do not use `discord.ext.menus` and instead mirror some of their methods
+under `Paginator` class' namespace instead. The principle is the same though:
+We need to subclass `Paginator` and implement `format_page` that
+uses slice of entries passed to the class and  should return kwargs to be send
+with `.send` methods, i.e. Embed or dict.
+
 Sources
 -------
 * Gist by Soheab
@@ -20,7 +26,7 @@ import discord
 
 from bot import AluView
 
-from . import const
+from . import MISSING, const
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -32,10 +38,15 @@ if TYPE_CHECKING:
         embed: NotRequired[discord.Embed]
 
 
-__all__ = ("EmbedDescriptionPaginator", "Paginator")
+__all__ = (
+    "EmbedDescriptionPaginator",
+    "Paginator",
+)
 
 
 class IndexModal(discord.ui.Modal, title="Go to page"):
+    """Modal for the default button "index" which allows to navigate to a custom page in the Paginator."""
+
     goto = discord.ui.TextInput(label="Page Number", min_length=1, required=True)
 
     def __init__(self, paginator: Paginator) -> None:
@@ -55,7 +66,7 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
         if not value.isdigit():
             embed = discord.Embed(
                 color=const.Color.error,
-                description=f"Expected a page number between 1 and {self.paginator.max_pages}, not {value!r}",
+                description=f"Expected a page number between 1 and {self.paginator.max_pages}, not `{value!r}`",
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
@@ -192,9 +203,9 @@ class Paginator(AluView):
         if isinstance(send_kwargs, dict):
             return send_kwargs
         if isinstance(send_kwargs, str):
-            return {"content": send_kwargs, "embed": discord.utils.MISSING}
+            return {"content": send_kwargs, "embed": MISSING}
         if isinstance(send_kwargs, discord.Embed):
-            return {"embed": send_kwargs, "content": discord.utils.MISSING}
+            return {"embed": send_kwargs, "content": MISSING}
         return {}
 
     def format_page(self, entries: Any | Sequence[Any]) -> str | discord.Embed | SendKwargs:
@@ -311,29 +322,31 @@ class Paginator(AluView):
         self.stop()
 
 
-class EmbedAuthorTemplate(TypedDict):
-    name: str
-    icon_url: NotRequired[str]
+if TYPE_CHECKING:
 
+    class EmbedAuthorTemplate(TypedDict):
+        name: str
+        url: NotRequired[str]
+        icon_url: NotRequired[str]
 
-class EmbedFooterTemplate(TypedDict):
-    text: str
-    icon_url: NotRequired[str]
+    class EmbedFooterTemplate(TypedDict):
+        text: str
+        icon_url: NotRequired[str]
 
+    class EmbedTemplate(TypedDict):
+        """Embed template with keys that I use the most in paginators (so it's quite incomplete).
 
-class EmbedTemplate(TypedDict):
-    """Embed template with keys that I use the most in paginators (so it's quite incomplete).
+        I mainly use this class for IDE-autocomplete purposes.
 
-    I mainly use this class for IDE-autocomplete purposes.
+        You can find out about this format in the discord API docs:
+        https://discord.com/developers/docs/resources/message#embed-object
+        """
 
-    You can find out about this format in the discord API docs:
-    https://discord.com/developers/docs/resources/message#embed-object
-    """
-
-    title: NotRequired[str]
-    color: NotRequired[int]
-    author: NotRequired[EmbedAuthorTemplate]
-    footer: NotRequired[EmbedFooterTemplate]
+        title: NotRequired[str]
+        url: NotRequired[str]
+        color: NotRequired[int]
+        author: NotRequired[EmbedAuthorTemplate]
+        footer: NotRequired[EmbedFooterTemplate]
 
 
 class EmbedDescriptionPaginator(Paginator):

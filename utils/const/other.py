@@ -19,6 +19,8 @@ __all__ = (
 
 
 class LogoAsset(StrEnum):
+    """Logo images saved as .png file in the repository assets folder."""
+
     DotaWhite = "dota_white.png"
     """ ^ image above is made by removing (R) from:
     https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png
@@ -33,6 +35,7 @@ class LogoAsset(StrEnum):
 
     @property
     def url(self) -> str:
+        """Link to the image hosted on raw.githubusercontent.com."""
         return RAW_GITHUB_IMAGES + "logo/" + self.value
 
 
@@ -95,7 +98,7 @@ class Logo(StrEnum):
     Python = "https://i.imgur.com/5BFecvA.png"
 
     Dota = "https://i.imgur.com/F8uMnWr.png"
-    Lol = "https://i.imgur.com/1DJa07b.png"
+    LeagueOfLegends = "https://i.imgur.com/1DJa07b.png"
     Twitch = "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
 
 

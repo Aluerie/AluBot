@@ -35,6 +35,7 @@ class DotaAsset(StrEnum):
 
     @property
     def url(self) -> str:
+        """Link to the image hosted on raw.githubusercontent.com."""
         return RAW_GITHUB_IMAGES + "dota/" + self.value
 
 

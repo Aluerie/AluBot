@@ -741,7 +741,7 @@ class BaseSettings(FPCCog):
         Display icon for the game. For example, this is used in footnote icons mentioning the game.
     character_singular_word: str
         Gathering word to describe the characters for the game,
-        i.e. "hero" for Dota 2, "champion" for LoL, "agent" for Valorant.
+        i.e. "hero" for Dota 2, "champion" for League of Legends, "agent" for Valorant.
     character_plural_word: str
         A plural form for the `character_singular_word` above.
         Sometimes adding -s is not enough.

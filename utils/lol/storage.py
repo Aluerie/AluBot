@@ -156,7 +156,7 @@ class ItemIcons(GameDataStorage[str, str]):
     @override
     @staticmethod
     def generate_unknown_object(_: int) -> str:
-        return const.LoLAsset.ItemUnknown
+        return const.LeagueAsset.ItemUnknown
 
 
 class RuneIcons(GameDataStorage[str, str]):
@@ -180,7 +180,7 @@ class RuneIcons(GameDataStorage[str, str]):
     @override
     @staticmethod
     def generate_unknown_object(_: int) -> str:
-        return const.LoLAsset.RuneUnknown
+        return const.LeagueAsset.RuneUnknown
 
 
 class SummonerSpellIcons(GameDataStorage[str, str]):
@@ -203,7 +203,7 @@ class SummonerSpellIcons(GameDataStorage[str, str]):
     @override
     @staticmethod
     def generate_unknown_object(_: int) -> str:
-        return const.LoLAsset.SummonerSpellUnknown
+        return const.LeagueAsset.SummonerSpellUnknown
 
 
 class RoleDict(TypedDict):

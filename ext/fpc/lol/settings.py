@@ -126,7 +126,7 @@ class LeagueFPCSettings(BaseSettings):
             prefix="lol",
             color=const.Color.league,
             game_display_name="League of Legends",
-            game_icon_url=const.Logo.Lol,
+            game_icon_url=const.Logo.LeagueOfLegends,
             character_singular="champion",
             character_plural="champions",
             player_cls=LeaguePlayer,
@@ -152,7 +152,7 @@ class LeagueFPCSettings(BaseSettings):
     async def lol_request_player(
         self, interaction: AluInteraction, name: str, platform: Platform, in_game_name: str, tag_line: str
     ) -> None:
-        """\N{BANANA} Request LoL Player to be added into the bot's FPC database.
+        """\N{BANANA} Request League of Legends Player to be added into the bot's FPC database.
 
         So you and other people can add the player into their favourite later and start \
         receiving FPC Notifications.
@@ -181,22 +181,22 @@ class LeagueFPCSettings(BaseSettings):
 
     @lol_setup.command(name="channel")
     async def lol_setup_channel(self, interaction: AluInteraction) -> None:
-        """\N{BANANA} Setup/manage your LoL FPC Notifications channel."""
+        """\N{BANANA} Setup/manage your League of Legends FPC Notifications channel."""
         await self.setup_channel(interaction)
 
     @lol_setup.command(name="champions")
     async def lol_setup_champions(self, interaction: AluInteraction) -> None:
-        """\N{BANANA} Setup/manage your LoL FPC favourite champions list."""
+        """\N{BANANA} Setup/manage your League of Legends FPC favourite champions list."""
         await self.setup_characters(interaction)
 
     @lol_setup.command(name="players")
     async def lol_setup_players(self, interaction: AluInteraction) -> None:
-        """\N{BANANA} Setup/manage your LoL FPC favourite players list."""
+        """\N{BANANA} Setup/manage your League of Legends FPC favourite players list."""
         await self.setup_players(interaction)
 
     @lol_setup.command(name="miscellaneous")
     async def lol_setup_misc(self, interaction: AluInteraction) -> None:
-        """\N{BANANA} Manage your LoL FPC misc settings."""
+        """\N{BANANA} Manage your League of Legends FPC misc settings."""
         await self.setup_misc(interaction)
 
     @lol_group.command(name="tutorial")

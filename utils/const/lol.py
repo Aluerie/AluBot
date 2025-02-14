@@ -7,11 +7,13 @@ from ._meta import ASSETS_IMAGES, RAW_GITHUB_IMAGES
 
 __all__ = (
     "NEW_CHAMPION_EMOTE",
-    "LoLAsset",
+    "LeagueAsset",
 )
 
 
-class LoLAsset(StrEnum):
+class LeagueAsset(StrEnum):
+    """League images saved as .png file in the repository assets folder."""
+
     ItemUnknown = "item_unknown_64x64.png"
     RuneUnknown = "rune_unknown_64x64.png"
     SummonerSpellUnknown = "summoner_spell_unknown_64x64.png"
@@ -23,6 +25,7 @@ class LoLAsset(StrEnum):
 
     @property
     def url(self) -> str:
+        """Link to the image hosted on raw.githubusercontent.com."""
         return RAW_GITHUB_IMAGES + "lol/" + self.value
 
 

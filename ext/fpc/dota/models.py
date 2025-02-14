@@ -15,7 +15,7 @@ from utils import const, fmt
 from ..base_classes import BaseMatchToEdit, BaseMatchToSend
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluCog
     from utils.dota import Hero, PseudoHero
     from utils.dota.schemas import stratz
 
@@ -33,7 +33,7 @@ class TwitchData(TypedDict):
     logo_url: str
     vod_url: str
     twitch_status: LiteralTwitchStatus
-    color: discord.Color
+    color: int
 
 
 send_log = logging.getLogger("send_dota_fpc")
@@ -93,11 +93,11 @@ class MatchToSend(BaseMatchToSend):
         if streamer.live:
             twitch_status = "Live"
             vod_url = await streamer.vod_link(seconds_ago=self.long_ago)
-            color = discord.Color(const.Color.prpl)
+            color = const.Color.prpl
         else:
             twitch_status = "Offline"
             vod_url = ""
-            color = discord.Color(const.Color.twitch)
+            color = const.Color.twitch
 
         return {
             "preview_url": streamer.preview_url,
@@ -110,7 +110,7 @@ class MatchToSend(BaseMatchToSend):
         }
 
     @override
-    async def notification_image(self, twitch_data: TwitchData, color: discord.Color) -> Image.Image:
+    async def notification_image(self, twitch_data: TwitchData, color: int) -> Image.Image:
         send_log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         canvas = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
@@ -424,7 +424,6 @@ class StratzMatchToEdit(BaseMatchToEdit):
 
             draw_facet()
 
-            # img.show()
             return canvas
 
         return await asyncio.to_thread(build_notification_image)
@@ -453,25 +452,20 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
                 fill=str(discord.Color.dark_orange()),
             )
 
-            # img.show()
             return img
 
         return await asyncio.to_thread(build_notification_image)
 
 
-if TYPE_CHECKING:
-    from bot import AluCog
-
-    # BETA TESTING USAGE
-    # from .fpc.dota._models import beta_test_stratz_edit
-
-    # await beta_test_stratz_edit(self)
-
-
 async def beta_test_stratz_edit(self: AluCog) -> None:
-    """Testing function for `edit_notification_image` from LoL's MatchToEdit class.
+    """Testing function for `edit_notification_image` from League's MatchToEdit class.
 
     Import this into `beta_task` for easy testing of how new elements alignment.
+
+    Beta Testing
+    ------------
+    from .fpc.dota._models import beta_test_stratz_edit
+    await beta_test_stratz_edit(self)
     """
     self.bot.instantiate_dota()
     await self.bot.dota.start_helpers()

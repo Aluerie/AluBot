@@ -73,7 +73,7 @@ class LogsViaWebhook(AluCog):
         "utils.dota.valvepython": "https://i.imgur.com/D96bMgG.png",
         "utils.dota.dota2client": "https://i.imgur.com/D96bMgG.png",
         "exc_manager": "https://em-content.zobj.net/source/microsoft/378/sos-button_1f198.png",
-        "ext.fpc.lol.notifications": const.Logo.Lol,
+        "ext.fpc.lol.notifications": const.Logo.LeagueOfLegends,
         "githubkit": "https://seeklogo.com/images/G/github-colored-logo-FDDF6EB1F0-seeklogo.com.png",
         # use discord py icon somewhere here
     }

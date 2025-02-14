@@ -244,7 +244,7 @@ class AluBot(commands.Bot):
     def instantiate_lol(self) -> None:
         """Instantiate League of Legends Client."""
         if not hasattr(self, "lol"):
-            from utils.lol.lol_client import LeagueClient
+            from utils.lol.client import LeagueClient
 
             self.lol = LeagueClient(self)
 
@@ -254,7 +254,7 @@ class AluBot(commands.Bot):
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from utils.dota.dota_client import DotaClient
+            from utils.dota.steamio_client import DotaClient
 
             self.dota = DotaClient(self)
 

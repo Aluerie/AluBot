@@ -156,10 +156,10 @@ class Notifications(BaseNotifications):
 
     @aluloop(seconds=59)
     async def notification_worker(self) -> None:
-        log.debug("--- LoL FPC Notifications Task is starting now ---")
+        log.debug("--- League FPC Notifications Task is starting now ---")
         await self.send_notifications()
         await self.edit_notifications()
-        log.debug("--- LoL FPC Notifications Task is finished ---")
+        log.debug("--- League FPC Notifications Task is finished ---")
 
     # POST MATCH EDITS
 

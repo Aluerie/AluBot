@@ -15,7 +15,7 @@ from utils import const, fmt, pages, times
 from ._base import RemindersCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, Timer
+    from bot import AluBot, AluInteraction, Timer
 
     class RemindTimerData(TypedDict):
         author_id: int
@@ -232,7 +232,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     @remind_group.command(name="delete")
     # @app_commands.autocomplete(id=remind_delete_id_autocomplete)  # type: ignored
     # @app_commands.describe(id='either input a number of reminder id or choose it from suggestion^')
-    async def remind_delete(self, interaction: discord.Interaction[AluBot], id: int) -> None:
+    async def remind_delete(self, interaction: AluInteraction, id_: int) -> None:
         """Deletes a reminder by its ID.
 
         To get a reminder ID, use the reminder list command or autocomplete for slash command.
@@ -245,7 +245,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             AND event = 'reminder'
             AND data #>> '{author_id}' = $2;
         """
-        status = await interaction.client.pool.execute(query, id, str(interaction.user.id))
+        status = await interaction.client.pool.execute(query, id_, str(interaction.user.id))
         if status == "DELETE 0":
             embed = discord.Embed(
                 color=const.Color.error,
@@ -254,7 +254,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             await interaction.response.send_message(embed=embed)
             return
 
-        self.bot.timers.check_reschedule(id)
+        self.bot.timers.check_reschedule(id_)
 
         embed = discord.Embed(description="Successfully deleted reminder.", color=const.Color.prpl)
         await interaction.response.send_message(embed=embed)

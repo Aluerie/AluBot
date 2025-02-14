@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 
 class HideoutModeration(HideoutCog):
+    """Moderation utilities for Hideout Discord Server."""
+
     @commands.Cog.listener(name="on_member_join")
     async def jail_bots_kick_people_on_join(self, member: discord.Member) -> None:
         """Jail or kick outsiders.
@@ -113,7 +115,8 @@ class HideoutModeration(HideoutCog):
         for chunk in discord.utils.as_chunks(deleted, 100):
             try:
                 await interaction.channel.delete_messages(
-                    chunk, reason=f"Action done by {interaction.user} (ID: {interaction.user.id}): Purge",
+                    chunk,
+                    reason=f"Action done by {interaction.user} (ID: {interaction.user.id}): Purge",
                 )
             except discord.Forbidden:
                 msg = "I do not have permissions to delete messages."
@@ -124,7 +127,7 @@ class HideoutModeration(HideoutCog):
 
         spammers = Counter(m.author.display_name for m in deleted)
         deleted = len(deleted)
-        deleted_messages = [f'{deleted} message{" was" if deleted == 1 else "s were"} removed.']
+        deleted_messages = [f"{deleted} message{' was' if deleted == 1 else 's were'} removed."]
         if deleted:
             deleted_messages.append("")
             spammers = sorted(spammers.items(), key=operator.itemgetter(1), reverse=True)

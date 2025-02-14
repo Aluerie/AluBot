@@ -83,18 +83,19 @@ COMPILED_REGEX = re.compile(
 )
 
 
-def fix_social_links(text: str, omit_rest: bool = False) -> str | None:
+def fix_social_links(text: str, *, omit_rest: bool = False) -> str | None:
     """Fix metadata embeds for social links with better embeds.
 
     Parameters
     ----------
-    text
+    text: str
         Text to search social links in.
-    omit_rest
-        Whether the final result should only include "better" links.
+    omit_rest: bool = False
+        Whether the final result should only include "better" links and exclude the rest of the text.
 
     Returns
     -------
+    str | None
         Either
         * `str` text with new social links if a link to replace was found or `None` in case nothing was found;
         * `None` in case no match was found.
@@ -102,12 +103,9 @@ def fix_social_links(text: str, omit_rest: bool = False) -> str | None:
     Examples
     --------
     ```py
-    text = (
-        "https://www.instagram.com/p/DBg0L6foRNW/ bla bla bla bla bla bla bla"
-        "https://x.com/IceFrog/status/1718834746300719265"
-    )
+    text = "https://www.instagram.com/p/DBg0L6foRNW/ bla bla bla https://x.com/IceFrog/status/1718834746300719265"
     fix_social_links(text)
-    "https://ddinstagram.com/p/DBg0L6foRNW/ bla bla bla bla bla bla bla https://fxtwitter.com/IceFrog/status/1718834746300719265"
+    "https://ddinstagram.com/p/DBg0L6foRNW/ bla bla bla https://fxtwitter.com/IceFrog/status/1718834746300719265"
     ```
     Sources
     ------

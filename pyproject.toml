@@ -102,13 +102,13 @@ select = [
     "N",        # pep-8 namings
     "W",        # pycodestyle warnings
     # TURN IT/OFF ON EXPERIMENTS, kinda annoying for a bot, to be honest, might remove
-    # "D",        # Doc-strings, 
-    # "DOC",      # Doc strings
-    # "ERA",      # eradicate commented out code
+    "D",        # Doc-strings, 
+    "DOC",      # Doc strings
+    "ERA",      # eradicate commented out code
 ]
 ignore = [
     # 0. Toggle
-    "RUF100",
+    # "RUF100",
 
     # 1. General "Somewhat Public" disagreement with Ruff
     "ANN401",   # `Any` is the correct type in some cases

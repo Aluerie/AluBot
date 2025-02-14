@@ -59,13 +59,13 @@ def setup_logging(*, test: bool) -> Generator[Any, Any, Any]:
             # so start-ups in logs are way more noticeable
             log.info(ASCII_STARTING_UP_ART)
             # send a webhook message as well
-            webhook = discord.SyncWebhook.from_url(config["WEBHOOKS"]["LOGGER"])
-            now_str = fmt.format_dt(datetime.datetime.now(datetime.UTC), style="T")
-            embed = discord.Embed(
-                colour=discord.Colour.og_blurple(),
-                description=f"{now_str} The bot is restarting",
-            )
-            webhook.send(avatar_url=const.Emoticon.Swan, embed=embed)
+            webhook_uls = [config["WEBHOOKS"]["LOGGER"], config["WEBHOOKS"]["SPAM"]]
+            webhooks = [discord.SyncWebhook.from_url(w) for w in webhook_uls]
+
+            for webhook in webhooks:
+                now_str = fmt.format_dt(datetime.datetime.now(datetime.UTC), style="T")
+                embed = discord.Embed(color=discord.Color.og_blurple(), description=f"{now_str} The bot is restarting")
+                webhook.send(avatar_url=const.Emoticon.Swan, embed=embed)
 
         yield
     finally:
@@ -76,8 +76,8 @@ def setup_logging(*, test: bool) -> Generator[Any, Any, Any]:
             log.removeHandler(h)
 
 
-class MyColourFormatter(logging.Formatter):
-    """My colour formatter.
+class MyColorFormatter(logging.Formatter):
+    """My color formatter.
 
     Sources
     -------
@@ -86,14 +86,14 @@ class MyColourFormatter(logging.Formatter):
 
     # ANSI codes are a bit weird to decipher if you're unfamiliar with them, so here's a refresher
     # It starts off with a format like \x1b[XXXm where XXX is a semicolon separated list of commands
-    # The important ones here relate to colour.
+    # The important ones here relate to color.
     # 30-37 are black, red, green, yellow, blue, magenta, cyan and white in that order
     # 40-47 are the same except for the background
     # 90-97 are the same but "bright" foreground
     # 100-107 are the same as the bright ones but for the background.
     # 1 means bold, 2 means dim, 0 means reset, and 4 means underline.
 
-    LEVEL_COLOURS = (
+    LEVEL_COLORS = (
         (logging.DEBUG, "\x1b[40;1m"),
         (logging.INFO, "\x1b[34;1m"),
         (logging.WARNING, "\x1b[33;1m"),
@@ -103,11 +103,13 @@ class MyColourFormatter(logging.Formatter):
 
     FORMATS: ClassVar[dict[int, logging.Formatter]] = {
         level: logging.Formatter(
-            f"\x1b[37;1m%(asctime)s\x1b[0m | {colour}%(levelname)-7s\x1b[0m | "
-            f"\x1b[35m%(name)-30s\x1b[0m | %(lineno)-4d | %(funcName)-30s | %(message)s",
-            "%H:%M:%S %d/%m",
+            (
+                f"\x1b[37;1m%(asctime)s\x1b[0m {color}%(levelname)-4.4s\x1b[0m "
+                "\x1b[35m%(name)-30s\x1b[0m \x1b[92m%(lineno)-4d\x1b[0m \x1b[36m%(funcName)-35s\x1b[0m %(message)s"
+            ),
+            "%H:%M:%S",  # note there is no "%d/%m" because I'm saving those 6 characters :D
         )
-        for level, colour in LEVEL_COLOURS
+        for level, color in LEVEL_COLORS
     }
 
     @override
@@ -132,14 +134,15 @@ def get_log_fmt(handler: logging.Handler) -> logging.Formatter:
     if (
         isinstance(handler, logging.StreamHandler)
         and discord.utils.stream_supports_colour(handler.stream)
-        and not isinstance(handler, RotatingFileHandler)
-    ):  # force file handler fmt into `else`
-        formatter = MyColourFormatter()
+        and not isinstance(handler, RotatingFileHandler)  # force file handler fmt into `else`
+    ):
+        # local terminal formatter
+        formatter = MyColorFormatter()
     else:
+        # files
         formatter = logging.Formatter(
-            "{asctime} | {levelname:<7} | {name:<23} | {lineno:<4} | {funcName:<30} | {message}",
+            "%(asctime)s %(levelname)-4.4s %(name)-30s %(lineno)-4d %(funcName)-35s %(message)s",
             "%H:%M:%S %d/%m",
-            style="{",
         )
 
     return formatter

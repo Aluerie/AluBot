@@ -205,7 +205,7 @@ class TimerManager:
                         f"The timer with `event={timer.event_name}` is to fire "
                         "but there is no appropriate listener loaded atm."
                     )
-                    embed = discord.Embed(colour=discord.Colour.dark_red(), description=desc)
+                    embed = discord.Embed(color=discord.Color.dark_red(), description=desc)
                     await self.bot.spam_webhook.send(content=self.bot.error_ping, embed=embed)
 
                 now = datetime.datetime.now(datetime.UTC)
@@ -221,7 +221,7 @@ class TimerManager:
             self.reschedule()
         except Exception as exc:  # noqa: BLE001
             embed = discord.Embed(
-                colour=0xFF8243,
+                color=0xFF8243,
                 title="Dispatching Timers Error",
             ).set_footer(text=f"{self.__class__.__name__}.dispatch_timers")
             await self.bot.exc_manager.register_error(exc, embed)
@@ -463,7 +463,7 @@ class TimerManager:
 
         """
         self._skipped_timer_ids.remove(id)
-        query = "DELETE * FROM timers WHERE id = $1"
+        query = "DELETE FROM timers WHERE id = $1"
         await self.bot.pool.execute(query, id)
 
     async def delete_by_kwargs(self, event: str, /, **kwargs: Any) -> None:

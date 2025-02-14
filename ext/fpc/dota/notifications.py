@@ -345,7 +345,7 @@ class DotaFPCNotifications(BaseNotifications):
     def get_ratelimit_embed(self) -> discord.Embed:
         """Get Stratz RateLimits embed to send to my logger channel (on daily basis)."""
         return discord.Embed(
-            colour=discord.Colour.blue(),
+            color=discord.Color.blue(),
             title="Stratz RateLimits",
             description=self.bot.dota.stratz.rate_limiter.rate_limits_string,
         )

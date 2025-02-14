@@ -114,11 +114,8 @@ class AluBot(commands.Bot):
                 await self.load_extension(ext)
             except commands.ExtensionError as error:
                 failed_to_load_some_ext = True
-                embed = discord.Embed(
-                    colour=0xDA9F93,
-                    description=f"Failed to load extension `{ext}`.",
-                ).set_footer(
-                    text=f'setup_hook: loading extension "{ext}"',
+                embed = discord.Embed(color=0xDA9F93, description=f"Failed to load extension `{ext}`.").set_footer(
+                    text=f'setup_hook: loading extension "{ext}"'
                 )
                 await self.exc_manager.register_error(error, embed)
 
@@ -147,11 +144,11 @@ class AluBot(commands.Bot):
         """Try automatic `copy_global_to` + `sync` Hideout Guild for easier testing purposes.
 
         ?tag ass (auto-syncing sucks) and all, but come on - it's just too convenient to pass on.
-        I'm using non-global sync methods so should be fine on rate-limits.
+        The function is using non-global sync methods so should be fine on rate-limits.
 
         Sources
         -------
-        * DuckBot-Discord/DuckBot (licensed MPL v2), `try_autosync` function:
+        * DuckBot-Discord/DuckBot (licensed MPL v2), `try_autosync` function
             https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/bot.py
         """
         # safeguard. Need the app id.
@@ -202,6 +199,7 @@ class AluBot(commands.Bot):
         if not hasattr(self, "launch_time"):
             self.launch_time = datetime.datetime.now(datetime.UTC)
         log.info("Logged in as `%s`", self.user)
+        await self.send_warning("AluBot is ready.")
 
     @override
     async def start(self) -> None:
@@ -256,9 +254,9 @@ class AluBot(commands.Bot):
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from utils.dota.dota_client import Dota2Client
+            from utils.dota.dota_client import DotaClient
 
-            self.dota = Dota2Client(self)
+            self.dota = DotaClient(self)
 
     def instantiate_github(self) -> None:
         """Initialize GitHub REST API Client."""
@@ -286,6 +284,7 @@ class AluBot(commands.Bot):
     async def close(self) -> None:
         """Close the connection to Discord while cleaning up other open sessions and clients."""
         log.info("%s is closing.", self.__class__.__name__)
+        await self.send_warning("AluBot is closing.")
 
         await self.pool.close()
         if hasattr(self, "twitch"):
@@ -342,7 +341,7 @@ class AluBot(commands.Bot):
     async def send_warning(self, message: str) -> None:
         """Send a quick warning embed to @Aluerie's spam channel."""
         content = const.Role.warning.mention
-        embed = discord.Embed(colour=discord.Colour.yellow(), description=message)
+        embed = discord.Embed(color=discord.Color.yellow(), description=message)
         await self.spam_webhook.send(content=content, embed=embed)
 
     @discord.utils.cached_property
@@ -383,7 +382,7 @@ class AluBot(commands.Bot):
 
         args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
         embed = (
-            discord.Embed(colour=0xA32952, title=f"Event Error: `{event}`")
+            discord.Embed(color=0xA32952, title=f"Event Error: `{event}`")
             .add_field(name="Args", value=fmt.code(args_join, "ps"), inline=False)
             .set_footer(text=f"{self.__class__.__name__}.on_error: {event}")
         )
@@ -465,7 +464,7 @@ class AluBot(commands.Bot):
                 )
                 metadata_embed = (
                     discord.Embed(
-                        colour=0x890620,
+                        color=0x890620,
                         title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
                         url=ctx.message.jump_url,
                         description=textwrap.shorten(ctx.message.content, width=1024),

@@ -68,7 +68,7 @@ class EmoteSpam(CommunityCog):
         embed = discord.Embed(
             title="Deleted message",
             description=message.content,
-            color=const.Colour.error,
+            color=const.Color.error,
         ).set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
         if stickers := message.stickers:
             embed.set_thumbnail(url=stickers[0].url)
@@ -130,7 +130,7 @@ class EmoteSpam(CommunityCog):
         content = f"{emote!s} {emote!s} {emote!s}"
         await channel.send(content)
         embed = discord.Embed(
-            colour=const.Colour.prpl,
+            color=const.Color.prpl,
             description=f"I sent {content} into {channel.mention}",
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -190,7 +190,7 @@ class ComfySpam(CommunityCog):
                     f"{message.author.mention}, you are NOT allowed to use anything but truly the only one comfy-emote "
                     f"in {channel.mention} ! {const.Emote.Ree} {const.Emote.Ree} {const.Emote.Ree}"
                 )
-                e = discord.Embed(title="Deleted message", description=message.content, color=const.Colour.prpl)
+                e = discord.Embed(title="Deleted message", description=message.content, color=const.Color.prpl)
                 e.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
                 await self.bot.community.bot_spam.send(answer_text, embed=e)
                 await message.delete()

@@ -1,5 +1,5 @@
 from ._meta import *
-from .colours import *
+from .colors import *
 from .dota import *
 from .emotes import *
 from .guilds import *

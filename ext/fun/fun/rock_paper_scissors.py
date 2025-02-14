@@ -84,14 +84,14 @@ class RPSView(AluView):
         if interaction.user and interaction.user in self.players:
             if interaction.user in self.choices:
                 embed = discord.Embed(
-                    colour=const.Colour.error,
+                    color=const.Color.error,
                     description=f"You've already chosen **{self.choices[interaction.user]}**",
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)
                 return False
             return True
         embed = discord.Embed(
-            colour=const.Colour.error,
+            color=const.Color.error,
             description="Sorry! This game dialog is not for you.",
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -120,7 +120,7 @@ class RPSView(AluView):
         """Boiler-plate function for Rock/Scissor/Paper buttons as player move choices."""
         self.choices[interaction.user] = choice
 
-        embed = discord.Embed(colour=const.Colour.prpl, description=f"You've chosen **{choice.emote_name}**")
+        embed = discord.Embed(color=const.Color.prpl, description=f"You've chosen **{choice.emote_name}**")
         await interaction.response.send_message(embed=embed, ephemeral=True)
         await self.edit_embed_player_choice(interaction.user)
 
@@ -172,7 +172,7 @@ class RockPaperScissorsCommand(FunCog):
         player1, player2 = (interaction.user, user)
         embed = (
             discord.Embed(
-                colour=const.Colour.prpl,
+                color=const.Color.prpl,
                 title="Rock Paper Scissors Game",
             )
             .add_field(name="Player 1", value=f"{player1.mention}")

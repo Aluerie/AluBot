@@ -3,7 +3,6 @@
 
 # Discord
 discord.py[speed, voice] @ git+https://github.com/Rapptz/discord.py.git
-git+https://github.com/Rapptz/discord-ext-menus
 git+https://github.com/Gorialis/jishaku.git
 
 # Twitch
@@ -11,17 +10,9 @@ git+https://github.com/Gorialis/jishaku.git
 twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@dev/3.0
 # py -m pip install "twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@dev/3.0" --force-reinstall 
 
-
 # Dota 2 (steamio)
 # my own branch with dota2 extension
 steamio @ git+https://github.com/Aluerie/steam.py@introduce-ext.dota2
-
-# Dota 2 (ValvePython)
-# steam~=1.4.4
-# protobuf==3.20.1  # any later version won't work since they are based of protoc4
-# dota2 @ git+https://github.com/Aluerie/dota2.git  # my own fork with updated proto
-# vdf~=3.4
-
 
 # League of Legends
 pulsefire~=2.0.21

@@ -51,7 +51,7 @@ async def on_views_modals_error(
         )
 
         metadata_embed = (
-            discord.Embed(colour=0x2A0553, title=f"Error in View: `{view.__class__.__name__}`")
+            discord.Embed(color=0x2A0553, title=f"Error in View: `{view.__class__.__name__}`")
             .set_author(
                 name=(
                     f"@{interaction.user} in #{interaction.channel} "
@@ -90,23 +90,25 @@ class AluView(discord.ui.View):
     Parameters
     ----------
     author_id: int | None
-        _description_
-    timeout: float | None
-        _description_, by default 5*60.0
+        Author of the Interactive View . The bot will disallow other people to interact with elements of this View.
+        If `None` then everybody is allowed to do so.
     view_name: str, optional
         _description_, by default "Interactive Element"
 
     """
 
     if TYPE_CHECKING:
-        message: discord.Message | discord.InteractionMessage
+        message: discord.Message | discord.WebhookMessage
+        """Note that technically this attribute might not exist because we manually assign it after sending the message.
+        Therefore check for `hasattr(self, "message")` when needed.
+        """
 
     def __init__(
         self,
         *,
         author_id: int | None,
         view_name: str = "Interactive Element",
-        timeout: float | None = 5 * 60.0,
+        timeout: float | None = 180.0,
     ) -> None:
         """Initialize AluView."""
         super().__init__(timeout=timeout)
@@ -127,7 +129,7 @@ class AluView(discord.ui.View):
             return True
         # we need to deny control to this non-author user
         embed = discord.Embed(
-            colour=const.Colour.error,
+            color=const.Color.error,
             description=f"Sorry! This {self.view_name} is not meant to be controlled by you.",
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)

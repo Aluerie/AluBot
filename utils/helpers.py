@@ -77,7 +77,7 @@ def error_handler_response_embed(error: Exception, desc: str, *, unexpected: boo
         # means error is unexpected so let's return our ready to go answer
         embed = (
             discord.Embed(
-                colour=const.Colour.error,
+                color=const.Color.error,
                 description=(
                     "Sorry! Something went wrong! I've notified my developer about the error "
                     "with all the details. Hopefully, we'll get it fixed soon.\n"
@@ -90,7 +90,7 @@ def error_handler_response_embed(error: Exception, desc: str, *, unexpected: boo
         )
     else:
         # error was expected and has expected `desc` answer template
-        embed = discord.Embed(colour=const.Colour.error, description=desc)
+        embed = discord.Embed(color=const.Color.error, description=desc)
         if not isinstance(error, errors.ErroneousUsage):
             embed.set_author(name=fmt.convert_PascalCase_to_spaces(error.__class__.__name__))
 

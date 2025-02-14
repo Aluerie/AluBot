@@ -319,7 +319,7 @@ class Facet:
     id: int
     display_name: str
     icon: str
-    colour: str
+    color: str
 
     @property
     def icon_url(self) -> str:
@@ -343,7 +343,7 @@ class PseudoFacet:
     id: int
     display_name: str
     icon: str
-    colour: str
+    color: str
     icon_url: str
 
     @override
@@ -370,7 +370,7 @@ class Facets(GameDataStorage[Facet, PseudoFacet]):
                 or short_name_display_name_lookup.get(facet["name"])
                 or "Unknown Facet",
                 facet["icon"],
-                const.FACET_COLOURS[f"{facet['color']}{facet['gradientId']}"],
+                const.FACET_COLORS[f"{facet['color']}{facet['gradientId']}"],
             )
             for facet in facets["data"]["constants"]["facets"]
         }
@@ -382,6 +382,6 @@ class Facets(GameDataStorage[Facet, PseudoFacet]):
             id=facet_id,
             display_name="Unknown",
             icon="question",
-            colour="#675CAE",
+            color="#675CAE",
             icon_url=const.DotaAsset.FacetQuestion,
         )

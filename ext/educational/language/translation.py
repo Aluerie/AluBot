@@ -144,7 +144,7 @@ class TranslateCog(EducationalCog):
         result = await translate(text, session=self.bot.session)
 
         return discord.Embed(
-            colour=const.Colour.prpl,
+            color=const.Color.prpl,
             title="Translate to English",
             description=result.translated,
         ).set_footer(text=f"Detected language: {result.source_lang}")

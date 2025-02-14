@@ -128,7 +128,7 @@ class AluTwitchClient(twitchio.Client):
     async def event_error(self, payload: twitchio.EventErrorPayload) -> None:
         embed = (
             discord.Embed(
-                colour=const.Colour.twitch,
+                color=const.Color.twitch,
                 title="TwitchIO Event Error",
             )
             .add_field(name="Exception", value=f"`{payload.error.__class__.__name__}`")

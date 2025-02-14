@@ -33,7 +33,7 @@ class TwitchData(TypedDict):
     logo_url: str
     vod_url: str
     twitch_status: LiteralTwitchStatus
-    colour: discord.Colour
+    color: discord.Color
 
 
 send_log = logging.getLogger("send_dota_fpc")
@@ -87,17 +87,17 @@ class MatchToSend(BaseMatchToSend):
                 "logo_url": const.Logo.Dota,
                 "vod_url": "",
                 "twitch_status": "NoTwitch",
-                "colour": const.Palette.gray(),
+                "color": const.Palette.gray(),
             }
         streamer = await self.bot.twitch.fetch_streamer(self.twitch_id)
         if streamer.live:
             twitch_status = "Live"
             vod_url = await streamer.vod_link(seconds_ago=self.long_ago)
-            colour = discord.Colour(const.Colour.prpl)
+            color = discord.Color(const.Color.prpl)
         else:
             twitch_status = "Offline"
             vod_url = ""
-            colour = discord.Colour(const.Colour.twitch)
+            color = discord.Color(const.Color.twitch)
 
         return {
             "preview_url": streamer.preview_url,
@@ -106,11 +106,11 @@ class MatchToSend(BaseMatchToSend):
             "logo_url": streamer.avatar_url,
             "vod_url": vod_url,
             "twitch_status": twitch_status,
-            "colour": colour,
+            "color": color,
         }
 
     @override
-    async def notification_image(self, twitch_data: TwitchData, colour: discord.Colour) -> Image.Image:
+    async def notification_image(self, twitch_data: TwitchData, color: discord.Color) -> Image.Image:
         send_log.debug("`get_notification_image` is starting")
         # prepare stuff for the following PIL procedures
         canvas = await self.bot.transposer.url_to_image(twitch_data["preview_url"])
@@ -128,14 +128,14 @@ class MatchToSend(BaseMatchToSend):
 
             def draw_picked_heroes() -> None:
                 """Draw picked heroes in the match."""
-                rectangle = Image.new("RGB", (canvas_w, topbar_h), str(colour))
+                rectangle = Image.new("RGB", (canvas_w, topbar_h), str(color))
                 ImageDraw.Draw(rectangle)
                 canvas.paste(rectangle)
 
                 hero_w, hero_h = (62, 35)
                 for count, hero_img in enumerate(hero_images):
                     hero_img = hero_img.resize((hero_w, hero_h))
-                    hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=const.Dota.PLAYER_COLOUR_MAP[count])
+                    hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=const.Dota.PLAYER_COLOR_MAP[count])
                     extra_space = 0 if count < 5 else 20  # math 640 - 62 * 10 = 20 where 640 is initial resolution.
                     canvas.paste(hero_img, (count * hero_w + extra_space, 0))
 
@@ -156,7 +156,7 @@ class MatchToSend(BaseMatchToSend):
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 13)
                 text = twitch_data["twitch_status"]
                 w, h = self.bot.transposer.get_text_wh(text, font)
-                draw.text(xy=(canvas_w - w, topbar_h + 1 + h), text=text, font=font, fill=str(colour))
+                draw.text(xy=(canvas_w - w, topbar_h + 1 + h), text=text, font=font, fill=str(color))
 
             draw_twitch_status()
 
@@ -170,13 +170,13 @@ class MatchToSend(BaseMatchToSend):
 
         twitch_data = await self.get_twitch_data()
 
-        notification_image = await self.notification_image(twitch_data, twitch_data["colour"])
+        notification_image = await self.notification_image(twitch_data, twitch_data["color"])
         title = f"{twitch_data['display_name']} - {self.player_hero.display_name}"
         filename = twitch_data["twitch_status"] + "-" + re.sub(r"[_' ]", "", title) + ".png"
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
         embed = (
             discord.Embed(
-                colour=twitch_data["colour"],
+                color=twitch_data["color"],
                 title=f"{title} {self.player_hero.emote}",
                 url=twitch_data["url"],
                 description=(
@@ -275,7 +275,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
         return f"<{self.__class__.__name__} {pairs}>"
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
+    async def edit_notification_image(self, embed_image_url: str, color: discord.Color) -> Image.Image:
         canvas = await self.bot.transposer.url_to_image(embed_image_url)
         items = [await self.bot.dota.items.by_id(id_) for id_, _ in self.sorted_item_purchases]
         item_icon_images = [await self.bot.transposer.url_to_cached_image(item.icon_url) for item in items]
@@ -309,7 +309,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 19)  # font for item timings
 
                 # rectangle for the row
-                rectangle = Image.new("RGB", (canvas_w, h), str(colour))
+                rectangle = Image.new("RGB", (canvas_w, h), str(color))
                 ImageDraw.Draw(rectangle)
                 canvas.paste(rectangle, (0, canvas_h - h))
 
@@ -357,7 +357,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 """
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
                 _w, h = self.bot.transposer.get_text_wh(self.outcome, font)
-                colour_map = {
+                color_map = {
                     "Win": str(const.Palette.green(shade=800)),
                     "Loss": str(const.Palette.red(shade=900)),
                     "Not Scored": (255, 255, 255),
@@ -366,7 +366,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                     xy=(0, canvas_h - items_h - abilities_h - kda_h - h),
                     text=self.outcome,
                     font=font,
-                    fill=colour_map[self.outcome],
+                    fill=color_map[self.outcome],
                 )
                 return h
 
@@ -389,13 +389,13 @@ class StratzMatchToEdit(BaseMatchToEdit):
                     x, y, u, v = draw.textbbox(position, talent.display_name, font=font)
 
                     if talent_id in talents_order[:4]:
-                        fill_colour = "darkorange"
+                        fill_color = "darkorange"
                     elif talent_id in talents_order[4:]:
-                        fill_colour = "gray"
+                        fill_color = "gray"
                     else:
-                        fill_colour = "black"
+                        fill_color = "black"
 
-                    draw.rectangle(xy=(x - p, y - p, u + p, v + p), fill=fill_colour)
+                    draw.rectangle(xy=(x - p, y - p, u + p, v + p), fill=fill_color)
                     draw.text(xy=position, text=talent.display_name, font=font, align="right")
 
             draw_talent_tree_choices()
@@ -415,7 +415,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
                     canvas_w,
                     canvas_h - items_h - abilities_h,
                 )
-                draw.rectangle(xy=(x, y, u, v), fill=facet.colour)
+                draw.rectangle(xy=(x, y, u, v), fill=facet.color)
                 draw.text((x + icon_h + text_p, v - (icon_h + text_h) / 2), facet.display_name, font=font)
 
                 # icon
@@ -434,7 +434,7 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
     """Class."""
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
+    async def edit_notification_image(self, embed_image_url: str, color: discord.Color) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
 
         def build_notification_image() -> Image.Image:
@@ -450,7 +450,7 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
                 text=text,
                 font=font,
                 align="left",
-                fill=str(discord.Colour.dark_orange()),
+                fill=str(discord.Color.dark_orange()),
             )
 
             # img.show()
@@ -482,6 +482,6 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
     match_to_edit = StratzMatchToEdit(self.bot, data)
     new_image = await match_to_edit.edit_notification_image(
         const.DotaAsset.Placeholder640X360,
-        discord.Colour.purple(),
+        discord.Color.purple(),
     )
     new_image.show()

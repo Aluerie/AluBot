@@ -66,7 +66,7 @@ class TimezoneSetting(UserSettingsBaseCog):
         dt = now.astimezone(tz=zoneinfo.ZoneInfo(key=timezone.key))
 
         embed = (
-            discord.Embed(colour=discord.Colour.blurple(), title=timezone.label)
+            discord.Embed(color=discord.Color.blurple(), title=timezone.label)
             .add_field(name="Current Time", value=dt.strftime("%Y-%m-%d %I:%M %p"))
             .add_field(name="UTC Offset", value=self.bot.tz_manager.get_utc_offset_string(timezone.key, now))
             .add_field(name="IANA Database Alias", value=timezone.key)

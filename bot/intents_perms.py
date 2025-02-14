@@ -68,7 +68,7 @@ and should match what that webpage offers.
 # +-------------------------------+---------------------------+---------------------------+---------------------------+
 # | View Audit Log                | Emote logging                                                           | <- | <- |
 p.view_audit_log = True
-# | Manage Roles                  |                           | .set_permissions/colour roles                    | <- |
+# | Manage Roles                  |                           | .set_permissions/color roles                    | <- |
 p.manage_roles = True
 # | Manage Webhooks               |                           | Mimic User Webhooks                              | <- |
 p.manage_webhooks = True

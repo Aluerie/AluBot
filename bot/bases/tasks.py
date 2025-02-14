@@ -77,7 +77,7 @@ class AluLoop(tasks.Loop[LF]):
         """Same `_error` as in parent class but with `exc_manager` integrated."""
         meta = f"module   = {self.coro.__module__}\nqualname = {self.coro.__qualname__}"
         embed = (
-            discord.Embed(title=f"Task Error: `{self.coro.__name__}`", colour=0xEF7A85)
+            discord.Embed(title=f"Task Error: `{self.coro.__name__}`", color=0xEF7A85)
             .add_field(name="Meta", value=fmt.code(meta, "ebnf"), inline=False)
             .set_footer(text=f"{self.__class__.__name__}._error: {self.coro.__name__}")
         )

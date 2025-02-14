@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     class AccountRow(TypedDict):
         puuid: str
         platform: str
-        game_name: str
+        in_game_name: str
         tag_line: str
 
 
@@ -43,7 +43,7 @@ class SummonerNameCheck(FPCCog):
         if datetime.datetime.now(datetime.UTC).day % 3 == 0:
             return
 
-        query = "SELECT puuid, platform, game_name, tag_line FROM lol_accounts"
+        query = "SELECT puuid, platform, in_game_name, tag_line FROM lol_accounts"
         rows: list[AccountRow] = await self.bot.pool.fetch(query)
 
         for row in rows:
@@ -51,14 +51,14 @@ class SummonerNameCheck(FPCCog):
                 account = await self.bot.lol.get_account_v1_by_puuid(region=row["platform"], puuid=row["puuid"])
             except aiohttp.ClientResponseError as exc:
                 if exc.status == 404:
-                    log.info("Failed to get summoner under previous name %s#%s", row["game_name"], row["tag_line"])
+                    log.info("Failed to get summoner under previous name %s#%s", row["in_game_name"], row["tag_line"])
                     continue
                 raise
 
-            if account["gameName"] != row["game_name"] or account["tagLine"] != row["tag_line"]:
+            if account["gameName"] != row["in_game_name"] or account["tagLine"] != row["tag_line"]:
                 query = """
                     UPDATE lol_accounts
-                    SET game_name = $1, tag_line = $2
+                    SET in_game_name = $1, tag_line = $2
                     WHERE puuid = $3
                 """
                 await self.bot.pool.execute(query, account["gameName"], account["tagLine"], account["puuid"])

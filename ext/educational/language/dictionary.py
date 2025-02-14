@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, Any, NamedTuple, Self, override
 import discord
 import yarl
 from discord import app_commands
-from discord.ext import menus
 from lxml import html
 
 from utils import errors, pages
@@ -29,13 +28,10 @@ log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from bot import AluBot
-
-    # from .utils.context import Context, GuildContext
-    # from .utils.paginator import RoboPages
+    from bot import AluBot, AluInteraction
 
 
-DICTIONARY_EMBED_COLOUR = discord.Colour(0x5F9EB3)
+DICTIONARY_EMBED_COLOR = discord.Color(0x5F9EB3)
 
 
 def html_to_markdown(node: Any, *, include_spans: bool = False) -> str:
@@ -108,7 +104,7 @@ class FreeDictionaryDefinition(NamedTuple):
         if not content:
             content = "\u200b"
         if self.children:
-            inner = "\n".join(f'{" " * indent }- {child.to_markdown(indent=indent + 2)}' for child in self.children)
+            inner = "\n".join(f"{' ' * indent}- {child.to_markdown(indent=indent + 2)}" for child in self.children)
             return f"{content}\n{inner}"
         return content
 
@@ -137,7 +133,7 @@ class FreeDictionaryPhrasalVerb(NamedTuple):
     meaning: FreeDictionaryMeaning
 
     def to_embed(self) -> discord.Embed:
-        return discord.Embed(title=self.word, colour=DICTIONARY_EMBED_COLOUR, description=self.meaning.markdown)
+        return discord.Embed(title=self.word, color=DICTIONARY_EMBED_COLOR, description=self.meaning.markdown)
 
 
 class FreeDictionaryWord:
@@ -317,27 +313,25 @@ async def free_dictionary_autocomplete_query(session: ClientSession, *, query: s
         return []
 
 
-class FreeDictionaryWordMeaningPageSource(menus.ListPageSource):
+class FreeDictionaryWordMeaningPaginator(pages.Paginator):
     entries: list[FreeDictionaryMeaning]
 
-    def __init__(self, word: FreeDictionaryWord) -> None:
-        super().__init__(entries=word.meanings, per_page=1)
+    def __init__(self, interaction: AluInteraction, word: FreeDictionaryWord) -> None:
+        super().__init__(interaction=interaction, entries=word.meanings, per_page=1)
         self.word: FreeDictionaryWord = word
 
     @override
     async def format_page(self, menu: pages.Paginator, entry: FreeDictionaryMeaning) -> discord.Embed:
-        maximum = self.get_max_pages()
         heading = (
-            f"{self.word.raw_word}: {menu.current_page_number + 1} out of {maximum}"
-            if maximum >= 2
+            f"{self.word.raw_word}: {menu.current_page_number + 1} out of {self.max_pages}"
+            if self.max_pages >= 2
             else self.word.raw_word
         )
-        title = f"{self.word.word} {self.word.pronunciation}" if self.word.pronunciation else self.word.word
-
-        embed = discord.Embed(title=title, colour=DICTIONARY_EMBED_COLOUR)
-        embed.set_author(name=heading)
-        embed.description = entry.markdown
-        return embed
+        return discord.Embed(
+            title=f"{self.word.word} {self.word.pronunciation}" if self.word.pronunciation else self.word.word,
+            color=DICTIONARY_EMBED_COLOR,
+            description=entry.markdown,
+        ).set_author(name=heading)
 
 
 class DictionaryCog(EducationalCog):
@@ -362,12 +356,14 @@ class DictionaryCog(EducationalCog):
             raise errors.SomethingWentWrong(msg)
 
         # Paginate over the various meanings of the word
-        p = pages.Paginator(interaction, FreeDictionaryWordMeaningPageSource(result))
+        p = FreeDictionaryWordMeaningPaginator(interaction, result)
         await p.start()
 
     @_define.autocomplete("word")
     async def _define_word_autocomplete(
-        self, interaction: discord.Interaction[AluBot], query: str,
+        self,
+        interaction: discord.Interaction[AluBot],
+        query: str,
     ) -> list[app_commands.Choice[str]]:
         if not query:
             return []

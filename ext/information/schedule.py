@@ -188,7 +188,7 @@ class SchedulePageSource(menus.ListPageSource):
     async def format_page(self, menu: SchedulePages, matches: list[Match]) -> discord.Embed:
         embed = (
             discord.Embed(
-                colour=0x042B4C,
+                color=0x042B4C,
                 title="Dota 2 Pro Matches Schedule",
                 url=MATCHES_URL,
             )
@@ -351,7 +351,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                         match_strings.append(f"`{teams}` {fmt.format_dt_tdR(dt)}")
 
                 embed = discord.Embed(
-                    colour=0xE0FA51,
+                    color=0xE0FA51,
                     title="Premier League Fixtures",
                     url=url,
                     description="\n".join(match_strings),
@@ -363,7 +363,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
                 await interaction.response.send_message(embed=embed)
             else:
                 embed = discord.Embed(
-                    colour=const.Colour.error,
+                    color=const.Color.error,
                     description="No matches found",
                 )
                 await interaction.response.send_message(embed=embed, ephemeral=True)

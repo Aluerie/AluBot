@@ -26,14 +26,14 @@ async def get_metadata_embed_links(message: discord.Message) -> discord.Message 
     await asyncio.sleep(2.7)
 
     links = []
-    colour = discord.Colour.pink()
+    color = discord.Color.pink()
     for e in message.embeds:
         links += re.findall(Regex.URL, str(e.description))
-        colour = e.colour
+        color = e.color
 
     if links:
         embed = discord.Embed(
-            color=colour,
+            color=color,
             description="\n".join(links),
         ).set_author(name="links in the embed above in clickable format:")
         return await message.channel.send(embed=embed)

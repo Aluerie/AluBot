@@ -124,7 +124,7 @@ class LeagueFPCSettings(BaseSettings):
             bot,
             *args,
             prefix="lol",
-            colour=const.Colour.league,
+            color=const.Color.league,
             game_display_name="League of Legends",
             game_icon_url=const.Logo.Lol,
             character_singular="champion",
@@ -309,7 +309,7 @@ class LeagueFPCSettings(BaseSettings):
         """Show list of champions that are missing from Meraki JSON."""
         embed = (
             discord.Embed(
-                colour=const.Colour.league,
+                color=const.Color.league,
                 title="List of champs missing from Meraki JSON",
                 description=(
                     "\n".join(

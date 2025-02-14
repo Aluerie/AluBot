@@ -35,7 +35,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         """Give member a warning."""
         self.warn_check(member)
 
-        e = discord.Embed(title="Manual warning by a mod", colour=const.Palette.red(shade=300))
+        e = discord.Embed(title="Manual warning by a mod", color=const.Palette.red(shade=300))
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         e.set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         e.set_thumbnail(url=discord.PartialEmoji.from_str(const.Emote.peepoYellowCard).url)
@@ -68,7 +68,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             except discord.HTTPException as exc:
                 e = (
                     discord.Embed(
-                        colour=const.Colour.error,
+                        color=const.Color.error,
                         title="Oups... Error during muting.",
                         description="If you think it's wrong then contact Aluerie.",
                     )
@@ -82,7 +82,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             msg = "Discord does not allow muting people for more than 28 days."
             raise errors.BadArgument(msg)
 
-        e = discord.Embed(title="Manual mute by a mod", colour=const.Palette.red(shade=600), description=reason)
+        e = discord.Embed(title="Manual mute by a mod", color=const.Palette.red(shade=600), description=reason)
         e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         e.set_footer(text=f"Muted by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
         e.set_thumbnail(url=discord.PartialEmoji.from_str(const.Emote.peepoRedCard).url)
@@ -98,13 +98,13 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
             return
 
         if after.timed_out_until and before.is_timed_out() is False and after.is_timed_out() is True:  # member is muted
-            e = discord.Embed(colour=discord.Colour.red())
+            e = discord.Embed(color=discord.Color.red())
             e.description = discord.utils.format_dt(after.timed_out_until, style="R")
 
             mute_actor_str = "Unknown"
             async for entry in after.guild.audit_logs(action=discord.AuditLogAction.member_update):
-                target: discord.Member = entry.target  # type: ignore
-                user: discord.Member = entry.target  # type: ignore
+                target: discord.Member = entry.target  # type: ignore[reportAssignmentType]
+                user: discord.Member = entry.target  # type: ignore[reportAssignmentType]
                 if target.id == after.id and entry.after.timed_out_until == after.timed_out_until:
                     mute_actor_str = user.name
 

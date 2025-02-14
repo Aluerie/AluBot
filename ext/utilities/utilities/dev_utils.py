@@ -44,7 +44,7 @@ class DevUtilities(AluCog):
             description_parts.append(desc_name)
 
         content = "```js\n" + "\n".join(content_parts) + "```"
-        embed = discord.Embed(colour=discord.Colour.blurple(), description="\n".join(description_parts))
+        embed = discord.Embed(color=discord.Color.blurple(), description="\n".join(description_parts))
         if len(characters) > 10:
             embed.set_footer(text="Output was too long. Displaying only first 10 chars.")
 

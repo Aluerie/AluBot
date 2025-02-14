@@ -101,9 +101,9 @@ select = [
     # EXPERIMENTAL ADDITIONS
     "N",        # pep-8 namings
     "W",        # pycodestyle warnings
-    # TURN IT OFF ON EXPERIMENTS
-    "D",        # Doc-strings, kinda annoying for a bot, to be honest, might remove
-    "DOC",      # Doc strings, kinda annoying for a bot, to be honest, might remove
+    # TURN IT/OFF ON EXPERIMENTS, kinda annoying for a bot, to be honest, might remove
+    "D",        # Doc-strings, 
+    "DOC",      # Doc strings
     "ERA",      # eradicate commented out code
 ]
 ignore = [
@@ -171,8 +171,9 @@ ignore = [
     "D107",     # Missing docstring in `__init__`: __init__ is the wrong place to doc this.
     "D401",     # Doc should be starting with an imperative verb: dumb rule tbh.
 
-    # 4. Doc String: exceptions for this bot because and it's pointless to document *everything* in one-person project.
+    # # 4. Doc String: exceptions for this bot because and it's pointless to document *everything* in one-person project.
     "DOC201",   # `return` is not documented in docstring
+    "DOC402",   # `yield` is not documented in docstring
     "DOC501",   # raised exception is missing from docstring
 
     # "D417",    # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
@@ -180,23 +181,20 @@ ignore = [
     # "D213", # multi-line-summary-second-line
 ]
 unfixable = [
-    "E501", # line length handled in other ways by ruff format
-    "ERA",  # Don't delete commented out code
+    "E501",     # line length handled in other ways by ruff format
+    "ERA",      # Don't delete commented out code
+    "RUF100",   # Unused `noqa` directive. Most likely, we are toggling ERA and DOCs.
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "ext/beta.py" = ["ANN201"]
-"*.ipynb" = ["T20", "F404", "ANN204", "D", "DOC"]
+"*.ipynb" = ["ANN204", "D", "DOC", "ERA001", "F404", "T20", "W391"]
 
 [tool.ruff.format]
-# Like Black, use double quotes for strings.
-quote-style = "double"
-# Like Black, indent with spaces, rather than tabs.
-indent-style = "space"
-# Like Black, respect magic trailing commas.
-skip-magic-trailing-comma = false
-# Like Black, automatically detect the appropriate line ending.
-line-ending = "auto"
+quote-style = "double"              # Like Black, use double quotes for strings.
+indent-style = "space"              # Like Black, indent with spaces, rather than tabs.
+skip-magic-trailing-comma = false   # Like Black, respect magic trailing commas.
+line-ending = "auto"                # Like Black, automatically detect the appropriate line ending.
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true

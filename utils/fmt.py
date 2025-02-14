@@ -7,7 +7,7 @@ import difflib
 import re
 from enum import IntEnum
 from itertools import starmap
-from typing import TYPE_CHECKING, Any, Literal, override
+from typing import TYPE_CHECKING, Literal, override
 
 import tabulate
 from dateutil.relativedelta import relativedelta
@@ -19,34 +19,19 @@ from discord.utils import TimestampStyle, format_dt
 from . import const
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Sequence
 
 
 __all__ = (
-    "no_pad_fmt",
+    "code",
+    "format_dt_custom",
+    "human_join",
+    "human_timedelta",
     "plural",
 )
 
-# the absolute minimum padding edition of "plain" tablefmt from tabulate package.
-# Note, that the following line also nullifies padding in other table formats from the package.
-# we choose 1 because otherwise the column headers can blend into one another as space i.e.:
-# Example with `tabulate.MIN_PADDING = 0`
-# Period   Usages Percent Per Day
-# All-time   7232 12.0%      19.9
-# Here, "Percent Per Day" blends one into another.
-tabulate.MIN_PADDING = 1
-# cSpell: disable  # noqa: ERA001
-no_pad_fmt = tabulate.TableFormat(
-    lineabove=None,
-    linebelowheader=None,
-    linebetweenrows=None,
-    linebelow=None,
-    headerrow=tabulate.DataRow("", " ", ""),
-    datarow=tabulate.DataRow("", " ", ""),
-    padding=0,
-    with_header_hide=None,
-)
-# cSpell: enable  # noqa: ERA001
+# https://github.com/astanin/python-tabulate/issues/195#issuecomment-1270483262
+tabulate.MIN_PADDING = 0
 
 
 class plural:  # noqa: N801 # pep8 allows lowercase names for classes that are used as functions
@@ -353,7 +338,7 @@ def label_indent(label: str | int, counter: int, split_size: int) -> str:
 
 
 class AnsiFG(IntEnum):
-    """Ansi foreground colours."""
+    """Ansi foreground colors."""
 
     gray = 30
     red = 31
@@ -366,7 +351,7 @@ class AnsiFG(IntEnum):
 
 
 class AnsiBG(IntEnum):
-    """Ansi background colours."""
+    """Ansi background colors."""
 
     firefly_dark_blue = 40
     orange = 41
@@ -394,13 +379,13 @@ def ansi(
     bold: bool = False,
     underline: bool = False,
 ) -> str:
-    r"""Format text in ANSI colours for discord.
+    r"""Format text in ANSI colors for discord.
 
-    Discord doesn't support bright colours in ANSI formats (90-97 and 100-107) or dim text highlight.
+    Discord doesn't support bright colors in ANSI formats (90-97 and 100-107) or dim text highlight.
 
     Warning
     -------
-    Currently, it's not used anywhere in the bot because the colouring doesn't work on mobile.
+    Currently, it's not used anywhere in the bot because the coloring doesn't work on mobile.
     But I've figured out that late so let's keep the code.
 
     Sources
@@ -500,96 +485,6 @@ def convert_camel_case_to_PascalCase(text: str) -> str:  # noqa: N802 # sorry, I
     return "".join(word.title() for word in text.split("_"))
 
 
-LiteralAligns = Literal["^", "<", ">"]
-
-
-class TabularData:
-    """A helper class to simplify making a table-like text inside discord codeblocks."""
-
-    def __init__(self, *, outer: str, inner: str, separators: bool) -> None:
-        self.outer: str = outer
-        self.inner: str = inner
-        self.separators: bool = separators
-
-        self._widths: list[int] = []
-        self._columns: list[str] = []
-        self._aligns: list[LiteralAligns] = []
-        self._rows: list[list[str]] = []
-
-    def set_columns(self, columns: list[str], *, aligns: list[LiteralAligns] | None = None) -> None:
-        if aligns is None:
-            aligns = []
-        if aligns and len(aligns) != len(columns):
-            msg = "columns and formats parameters should be the same length lists."
-            raise ValueError(msg)
-
-        self._columns = columns
-        self._aligns = aligns or ["^"] * len(columns)  # fancy default
-        self._widths = [len(c) + 2 * len(self.outer) for c in columns]
-
-    def add_row(self, row: Iterable[Any]) -> None:
-        rows = [str(r) for r in row]
-        self._rows.append(rows)
-        for index, element in enumerate(rows):
-            width = len(element) + 2 * len(self.outer)
-            self._widths[index] = max(width, self._widths[index])
-
-    def add_rows(self, rows: Iterable[Iterable[Any]]) -> None:
-        for row in rows:
-            self.add_row(row)
-
-    def render(self) -> str:
-        """Renders a table."""
-        # todo: maybe make render abstract method and impl it in subclasses instead
-        # so we don't have this gibberish unclear code with a lot of " if conditions"
-        # then remove + 2 * len(self.outer) in self._widths above
-        # maybe move set_columns as __init__
-        # and add logic where columns is allowed to be empty so like NoBorderTable can be without column names
-
-        def align_properly(e: str, i: int) -> str:
-            align_lookup = {"^": e, ">": e + " " * bool(self.outer), "<": " " * bool(self.outer) + e}
-            return f"{align_lookup[self._aligns[i]]:{self._aligns[i]}{self._widths[i]}}"
-
-        def get_entry(d: list[str]) -> str:
-            elem = f"{self.inner}".join(align_properly(e, i) for i, e in enumerate(d))
-            return f"{self.outer}{elem}{self.outer}"
-
-        to_draw = []
-
-        if self.separators:
-            sep = "+".join("-" * w for w in self._widths)
-            sep = f"+{sep}+"
-
-            to_draw = [sep, get_entry(self._columns), sep]
-            to_draw.extend([get_entry(row) for row in self._rows])
-            to_draw.append(sep)
-        else:
-            to_draw = [get_entry(self._columns)]
-            to_draw.extend([get_entry(row) for row in self._rows])
-
-        return "\n".join(to_draw)
-
-
-class RstTable(TabularData):
-    """RST Table for Discord Markdown Codeblocks.
-
-    Example:
-    -------
-    ```txt
-    +-------+-----+
-    | Name  | Age |
-    +-------+-----+
-    | Alice | 24  |
-    |  Bob  | 19  |
-    +-------+-----+
-    ```
-
-    """
-
-    def __init__(self) -> None:
-        super().__init__(outer="|", inner="|", separators=True)
-
-
 # fmt: off
 # cSpell:disable  # noqa: ERA001
 CODE_LANGUAGES = [
@@ -624,36 +519,3 @@ def code(text: str, language: str = "py") -> str:
     For no code version we can just use `language=""`.
     """
     return f"```{language}\n{text}```"
-
-
-class NoBorderTable(TabularData):
-    """No line-border Table for Discord Markdown Codeblocks.
-
-    Example:
-    -------
-    ```txt
-    Name  Age
-    Alice  24
-    Bob    19
-    ```
-
-    """
-
-    def __init__(self) -> None:
-        super().__init__(outer="", inner=" ", separators=False)
-
-
-if __name__ == "__main__":
-    import tabulate
-
-    table = NoBorderTable()
-    table.set_columns(["Name", "AgeAgeAgeAgeAge", "JobTitle"], aligns=["<", ">", "^"])
-    table.add_rows([["Alice", 29, "xd"], ["Bob", 23, "artist"]])
-    print(table.render())  # noqa: T201
-    print(  # noqa: T201
-        tabulate.tabulate(
-            headers=["Name", "XXX", "JobTitle"],
-            tabular_data=[["Alice", "hh", "xd"], ["Bob", "ko", "artist"]],
-            tablefmt=no_pad_fmt,
-        )
-    )

@@ -141,7 +141,7 @@ class Mimic:
         return None
 
     async def report(self, description: str) -> None:
-        embed = discord.Embed(colour=const.Colour.error, description=description)
+        embed = discord.Embed(color=const.Color.error, description=description)
         if self.thread:
             await self.thread.send(embed=embed)
         else:

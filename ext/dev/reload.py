@@ -42,7 +42,7 @@ class ReloadCog(DevBaseCog):
         """Shows available extensions to load/reload/unload."""
         extensions = [f"\N{BLACK CIRCLE} {ext}" for ext in sorted(self.bot.extensions, key=str.lower)]
         embed = discord.Embed(
-            colour=const.Colour.prpl,
+            color=const.Color.prpl,
             title="Loaded Extensions",
             description="\n".join(extensions),
         )
@@ -63,7 +63,7 @@ class ReloadCog(DevBaseCog):
             tick = True
         except Exception as exc:
             embed = discord.Embed(
-                colour=0x663322,
+                color=0x663322,
                 description=f"Job `{job_func.__name__}` for extension `{extension}` failed.",
             ).set_footer(text=f"load_unload_reload_job: {extension}")
             await self.bot.exc_manager.register_error(exc, embed)
@@ -111,7 +111,7 @@ class ReloadCog(DevBaseCog):
                 statuses.append((False, emote, ext))
                 for exc in eg.exceptions:
                     embed = discord.Embed(
-                        colour=0x663322,
+                        color=0x663322,
                         description=f"Job `{method.__name__}` for extension `{ext}` failed.",
                     ).set_footer(text=f"reload_all_worker.do_the_job: {ext}")
                     await self.bot.exc_manager.register_error(exc, embed)
@@ -132,7 +132,7 @@ class ReloadCog(DevBaseCog):
             )
 
             # let's format errors into embeds. It might backfire because of 25 fields restrictions.
-            embed = discord.Embed(colour=const.Colour.error)
+            embed = discord.Embed(color=const.Color.error)
             for name, value in errors:
                 embed.add_field(name=name, value=value, inline=False)
 
@@ -208,7 +208,7 @@ class ReloadCog(DevBaseCog):
 
         mods_text = "\n".join(f"{index}. `{module}`" for index, (_, module) in enumerate(modules, start=1))
         embed = discord.Embed(
-            colour=const.Colour.prpl,
+            color=const.Color.prpl,
             description=f"This will update the following modules, are you sure?\n{mods_text}",
         )
         if not await ctx.bot.disambiguator.confirm(ctx, embed=embed):

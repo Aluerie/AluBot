@@ -121,7 +121,7 @@ class OtherCog(AluCog):
         table = tabulate(
             tabular_data=pings, headers=(" ", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f")
         )
-        embed = discord.Embed(colour=discord.Colour.dark_embed(), description=f"```py\n{table}\n```")
+        embed = discord.Embed(color=discord.Color.dark_embed(), description=f"```py\n{table}\n```")
         await message.edit(embed=embed)
 
     @app_commands.command()
@@ -131,7 +131,7 @@ class OtherCog(AluCog):
         information = self.bot.bot_app_info
 
         embed = (
-            discord.Embed(colour=0x9400D3, description=information.description)
+            discord.Embed(color=0x9400D3, description=information.description)
             .set_author(name=f"Made by @{information.owner}", icon_url=information.owner.display_avatar.url)
             .add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
         )
@@ -179,7 +179,7 @@ class OtherCog(AluCog):
         license_url = f"{source_url}/blob/main/LICENSE"
         embed = (
             discord.Embed(
-                colour=0x612783,
+                color=0x612783,
                 title="Mozilla Public License 2.0",
                 url=license_url,
                 description=(

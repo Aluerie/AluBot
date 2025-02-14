@@ -105,7 +105,7 @@ class Snowflake:
             raise commands.BadArgument(msg)
 
 
-class InvalidColour(AluBotError):  # noqa: N818
+class InvalidColor(AluBotError):  # noqa: N818
     """Exception for custom cases of AluColourConverter."""
 
     __slots__: tuple[str, ...] = ()
@@ -121,16 +121,16 @@ class AluColourTransformer(app_commands.Transformer):
 
         # my custom situations/desires.
         if argument in {"lavender purple", "prpl"}:
-            # my fav colour, of course.
-            return discord.Colour(const.Colour.prpl)
+            # my fav color, of course.
+            return discord.Color(const.Color.prpl)
 
         # Material Palette
         m = re.match(r"mp\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", argument)
         if m:
-            colour_name = m.group(1)
+            color_name = m.group(1)
             shade = int(m.group(2))
             try:
-                return getattr(const.Palette, colour_name)(shade)
+                return getattr(const.Palette, color_name)(shade)
             except AttributeError:
                 methods = [m[0] for m in inspect.getmembers(const.Palette, predicate=inspect.ismethod)]
                 msg = (
@@ -138,22 +138,22 @@ class AluColourTransformer(app_commands.Transformer):
                     "MaterialUI Google Palette supports the following colour names:"
                     f"\n{', '.join(f'`{m}`' for m in methods)}{error_footer}"
                 )
-                raise InvalidColour(msg)
+                raise InvalidColor(msg)
             except ValueError:
                 msg = (
                     "Provided shade value is incorrect.\n\n"
                     "MaterialUI Google Palette supports the following shades values:"
                     f"\n{', '.join(f'`{v}`' for v in const.Palette.shades)}{error_footer}"
                 )
-                raise InvalidColour(msg)
+                raise InvalidColor(msg)
 
         # Material Accent Palette
         m = re.match(r"map\(\s*([a-zA-Z]+)\s*,\s*(\d+)\s*\)$", argument)
         if m:
-            colour_name = m.group(1)
+            color_name = m.group(1)
             shade = int(m.group(2))
             try:
-                return getattr(const.Accent, colour_name)(shade)
+                return getattr(const.Accent, color_name)(shade)
             except AttributeError:
                 methods = [m[0] for m in inspect.getmembers(const.Accent, predicate=inspect.ismethod)]
                 msg = (
@@ -161,20 +161,20 @@ class AluColourTransformer(app_commands.Transformer):
                     "MaterialAccentUI Google Palette supports the following colour names:"
                     f"\n{', '.join(f'`{m}`' for m in methods)}{error_footer}"
                 )
-                raise InvalidColour(msg)
+                raise InvalidColor(msg)
             except ValueError:
                 msg = (
                     "Provided shade value is incorrect.\n\n"
                     "MaterialAccentUI Google Palette supports the following shades values:"
                     f"\n{', '.join(f'`{v}`' for v in const.Accent.shades)}{error_footer}"
                 )
-                raise InvalidColour(msg)
+                raise InvalidColor(msg)
 
         # ImageColor
         try:
             # https://pillow.readthedocs.io/en/stable/reference/ImageColor.html
             rgb: tuple[int, int, int] = ImageColor.getcolor(argument, "RGB")  # type:ignore
-            return discord.Colour.from_rgb(*rgb)
+            return discord.Color.from_rgb(*rgb)
         except ValueError:
             pass
 
@@ -184,7 +184,7 @@ class AluColourTransformer(app_commands.Transformer):
             return await super().transform(interaction, argument)
         except commands.BadColourArgument:
             msg = f"Colour `{argument}` is invalid.{error_footer}"
-            raise InvalidColour(msg)
+            raise InvalidColor(msg)
 
     # async def transform(self, interaction: discord.Interaction, value: str):
     #     return await self.convert(interaction, value)  # type: ignored

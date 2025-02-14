@@ -40,7 +40,7 @@ class CommunityLogging(CommunityCog):
 
     def base_embed(self, member: discord.Member) -> discord.Embed:
         return discord.Embed(
-            colour=member.colour,
+            color=member.color,
         ).set_author(
             name=str(member),
             icon_url=member.display_avatar.url,
@@ -154,14 +154,14 @@ class CommunityLogging(CommunityCog):
 
         added_role = list(set(after.roles) - set(before.roles))
         if added_role and added_role[0].id not in const.IGNORED_FOR_LOGS:
-            e = discord.Embed(description=f"**Role added:** {added_role[0].mention}", colour=0x00FF7F)
+            e = discord.Embed(description=f"**Role added:** {added_role[0].mention}", color=0x00FF7F)
             e.set_author(name=f"{after.display_name}'s roles changed", icon_url=after.display_avatar.url)
             await self.bot.community.logs.send(embed=e)
             return
 
         removed_role = list(set(before.roles) - set(after.roles))
         if removed_role and removed_role[0].id not in const.IGNORED_FOR_LOGS:
-            e = discord.Embed(description=f"**Role removed:** {removed_role[0].mention}", colour=0x006400)
+            e = discord.Embed(description=f"**Role removed:** {removed_role[0].mention}", color=0x006400)
             e.set_author(name=f"{after.display_name}'s roles changed", icon_url=after.display_avatar.url)
             await self.bot.community.logs.send(embed=e)
             return
@@ -200,7 +200,7 @@ class CommunityLogging(CommunityCog):
             return
 
         if "Stone" in after.nick and after not in rolling_stones_role.members:
-            e = discord.Embed(colour=rolling_stones_role.colour)
+            e = discord.Embed(color=rolling_stones_role.color)
             e.description = f"{after.mention} gets lucky {rolling_stones_role.mention} role {const.Emote.PogChampPepe}"
             await self.bot.community.bot_spam.send(embed=e)
             await after.add_roles(rolling_stones_role)
@@ -254,7 +254,7 @@ class CommunityLogging(CommunityCog):
             return
 
         channel: discord.abc.GuildChannel = after.channel  # type: ignore[reportAssignmentType] # it's secured to be .community channel
-        e = discord.Embed(colour=0x00BFFF)
+        e = discord.Embed(color=0x00BFFF)
         msg = f"{after.author.display_name} edit in #{channel.name}"
         e.set_author(name=msg, icon_url=after.author.display_avatar.url, url=after.jump_url)
         # TODO: if discord ever makes author field jumpable from mobile then remove [Jump Link] from below
@@ -278,7 +278,7 @@ class CommunityLogging(CommunityCog):
 
         channel: discord.abc.GuildChannel = message.channel  # type: ignore[reportAssignmentType] # it's secured to be .community channel
         embed = discord.Embed(
-            colour=0xB22222,
+            color=0xB22222,
             description=message.content,
         ).set_author(
             name=f"{message.author.display_name}'s del in #{channel}",
@@ -310,7 +310,7 @@ class CommunityLogging(CommunityCog):
             jump_url = ctx.message.jump_url
             cmd_text = ctx.message.content
 
-        e = discord.Embed(description=f"{cmd_text}\n{cmd_kwargs}", colour=ctx.author.colour)
+        e = discord.Embed(description=f"{cmd_text}\n{cmd_kwargs}", color=ctx.author.color)
         if isinstance(ctx.channel, discord.DMChannel):
             channel_name = "DMs"
         else:
@@ -415,7 +415,7 @@ class CommunityLogging(CommunityCog):
         if diff_after == [] and diff_before != []:
             for emote in diff_before:
                 embed = discord.Embed(
-                    colour=0xB22222,
+                    color=0xB22222,
                     title=f"`:{emote.name}:` emote removed",
                     description=f"[Image link]({emote.url})",
                 ).set_thumbnail(url=emote.url)
@@ -426,7 +426,7 @@ class CommunityLogging(CommunityCog):
         elif diff_after != [] and diff_before == []:
             for emote in diff_after:
                 embed = discord.Embed(
-                    colour=0x00FF7F,
+                    color=0x00FF7F,
                     title=f"`:{emote.name}:` emote created",
                     description=f"[Image link]({emote.url})",
                 ).set_thumbnail(url=emote.url)
@@ -447,7 +447,7 @@ class CommunityLogging(CommunityCog):
                 word = "replaced by" if emote_after.managed else "renamed into"
 
                 embed = discord.Embed(
-                    colour=0x1E90FF,
+                    color=0x1E90FF,
                     title=f"`:{emote_before.name}:` emote {word} `:{emote_after.name}:`",
                     description=f"[Image link]({emote_after.url})",
                 ).set_thumbnail(url=emote_after.url)

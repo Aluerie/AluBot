@@ -149,7 +149,7 @@ class Role(RoleEnum):
     level_zero = 852663921085251585
     birthday_lover = 1106342236100243499
 
-    colour_category = 851786344354938880
+    color_category = 851786344354938880
     activity_category = 852199351808032788
 
     # activity roles
@@ -287,7 +287,7 @@ class CommunityGuild(SavedGuild):
     # channels #########################################################################################################
     @property
     def role_selection(self) -> discord.TextChannel:
-        """Colour and other roles selection channel."""
+        """Color and other roles selection channel."""
         return self.get_channel(Channel.role_selection, discord.TextChannel)
 
     @property

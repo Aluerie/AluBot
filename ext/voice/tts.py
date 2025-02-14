@@ -104,7 +104,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         await self.speak_worker(interaction, lang, text=text)
         embed = (
             discord.Embed(
-                colour=interaction.user.colour,
+                color=interaction.user.color,
                 title="Text-To-Speech request",
                 description=text,
             )
@@ -125,10 +125,10 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
 
         if vc.is_playing():
             vc.stop()
-            embed = discord.Embed(description="Stopped", colour=interaction.user.colour)
+            embed = discord.Embed(description="Stopped", color=interaction.user.color)
             await interaction.response.send_message(embed=embed)
         else:
-            embed = discord.Embed(description="I don't think I was talking", colour=const.Colour.error)
+            embed = discord.Embed(description="I don't think I was talking", color=const.Color.error)
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @tts_group.command()
@@ -142,7 +142,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
             raise errors.ErroneousUsage(msg) from None
 
         await vc.disconnect()
-        embed = discord.Embed(description=f"I left {vc.channel.mention}", colour=interaction.user.colour)
+        embed = discord.Embed(description=f"I left {vc.channel.mention}", color=interaction.user.color)
         await interaction.response.send_message(embed=embed)
 
     @tts_group.command(name="bonjour")

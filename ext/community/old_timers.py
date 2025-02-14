@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 
 from bot import aluloop
-from utils.const import DIGITS, Channel, Colour, Emote, Role, User
+from utils.const import DIGITS, Channel, Color, Emote, Role, User
 
 from ._base import CommunityCog
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 class DailyEmbedMessageTuple(NamedTuple):
     title: str
-    colour: int
+    color: int
     category: str
     message_bank: list[str]
 
@@ -102,8 +102,8 @@ RULE_BANK = [
 
 
 class DailyEmbedMessageEnum(Enum):
-    Simple = DailyEmbedMessageTuple("Daily Message", Colour.prpl, "advice", ADVICE_BANK)
-    Important = DailyEmbedMessageTuple("Daily Important Message", Colour.league, "important", IMPORTANT_BANK)
+    Simple = DailyEmbedMessageTuple("Daily Message", Color.prpl, "advice", ADVICE_BANK)
+    Important = DailyEmbedMessageTuple("Daily Important Message", Color.league, "important", IMPORTANT_BANK)
     Fact = DailyEmbedMessageTuple("Daily Fact Message", 0x6A5ACD, "fact", FACT_BANK)
     Rule = DailyEmbedMessageTuple("Daily Rule Message", 0x66FFBF, "rule", RULE_BANK)
 
@@ -174,7 +174,7 @@ class OldTimers(CommunityCog):
                 timer.data[data.category] = index = timer.data[data.category] + 1
 
                 embed = discord.Embed(
-                    colour=data.colour,
+                    color=data.color,
                     title=data.title,
                     description=data.message_bank[index % len(data.message_bank)],
                 )
@@ -191,7 +191,7 @@ class OldTimers(CommunityCog):
                     ],
                 )
                 desc = await coro()
-                embed = discord.Embed(colour=discord.Colour.blue(), title="Dynamic Fact", description=desc)
+                embed = discord.Embed(color=discord.Color.blue(), title="Dynamic Fact", description=desc)
                 await self.community.general.send(embed=embed)
             case _:
                 pass

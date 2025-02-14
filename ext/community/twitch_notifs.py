@@ -68,7 +68,7 @@ class TwitchCog(CommunityCog):
         This is used for testing twitchio eventsub.
         """
         embed = discord.Embed(
-            colour=0x9146FF,
+            color=0x9146FF,
             description=f"`{event.user.name}` redeemed `{event.reward.title}` for {event.reward.cost} channel points",
         )
         await self.hideout.alubot_logs.send(embed=embed)
@@ -162,7 +162,7 @@ class TwitchCog(CommunityCog):
         content = f"{self.community.stream_lover_role.mention} and chat, **`@{irene.display_name}`** just went live!"
         embed = (
             discord.Embed(
-                colour=0x9146FF,
+                color=0x9146FF,
                 title=f"{channel_info.title}",
                 url=stream_url,
                 description=(f"Playing {channel_info.game_name}\n/[Watch Stream]({stream_url}){current_vod_link}"),

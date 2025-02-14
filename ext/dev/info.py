@@ -57,7 +57,7 @@ class DevInformation(DevBaseCog):
 
         embed = (
             discord.Embed(
-                colour=const.Colour.prpl,
+                color=const.Color.prpl,
                 title="Bot Host Machine System Info",
                 description=(
                     f"\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n"
@@ -104,7 +104,7 @@ class DevInformation(DevBaseCog):
         pv = sys.version_info  # python version
 
         embed = (
-            discord.Embed(colour=const.Colour.prpl)
+            discord.Embed(color=const.Color.prpl)
             .add_field(
                 name="Python Version",
                 value=f"{pv.major}.{pv.minor}.{pv.micro} {pv.releaselevel} {pv.serial}",  # cspell: ignore releaselevel
@@ -134,12 +134,12 @@ class DevInformation(DevBaseCog):
         # This uses a lot of private methods because there is no
         # clean way of doing this otherwise.
 
-        HEALTHY = discord.Colour(value=0x43B581)  # noqa: N806
-        UNHEALTHY = discord.Colour(value=0xF04947)  # noqa: N806
-        discord.Colour(value=0xF09E47)
+        HEALTHY = discord.Color(value=0x43B581)  # noqa: N806
+        UNHEALTHY = discord.Color(value=0xF04947)  # noqa: N806
+        discord.Color(value=0xF09E47)
         total_warnings = 0
 
-        embed = discord.Embed(title="Bot Health Report", colour=HEALTHY)
+        embed = discord.Embed(title="Bot Health Report", color=HEALTHY)
 
         # Check the connection pool health.
         pool = self.bot.pool
@@ -186,7 +186,7 @@ class DevInformation(DevBaseCog):
         description.append(f"Global Rate Limit: {global_rate_limit}")
 
         if global_rate_limit or total_warnings >= 9:
-            embed.colour = UNHEALTHY
+            embed.color = UNHEALTHY
 
         embed.set_footer(text=f"{total_warnings} warning(s)")
         embed.description = "\n".join(description)

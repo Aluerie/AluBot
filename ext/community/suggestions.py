@@ -36,10 +36,7 @@ class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
         """
         suggestion_num = await self.bot.pool.fetchval(query, const.Guild.community)
         embed = (
-            discord.Embed(
-                colour=const.Colour.prpl,
-                title=f"Suggestion #{suggestion_num}",
-            )
+            discord.Embed(color=const.Color.prpl, title=f"Suggestion #{suggestion_num}")
             .add_field(
                 name="Hey chat, don't forget to \n",
                 value=(

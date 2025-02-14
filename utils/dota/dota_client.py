@@ -20,10 +20,10 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-__all__ = ("Dota2Client",)
+__all__ = ("DotaClient",)
 
 
-class Dota2Client(Client):
+class DotaClient(Client):
     """My subclass to steam.py's Dota 2 Client.
 
     Extends functionality to provide
@@ -86,6 +86,7 @@ class Dota2Client(Client):
 
     @override
     async def close(self) -> None:
+        await self.bot.send_warning("DotaClient is closing.")
         # clients
         await self.stratz.__aexit__()
         await self.opendota_constants.__aexit__()
@@ -100,8 +101,7 @@ class Dota2Client(Client):
     async def on_ready(self) -> None:
         if not self.bot.test:
             await self.bot.wait_until_ready()
-            embed = discord.Embed(colour=discord.Colour.blue(), description="Dota2Client: `on_ready`.")
-            await self.bot.hideout.spam.send(embed=embed)
+            await self.bot.send_warning("DotaClient is ready.")
 
     @override
     async def on_error(self, event: str, error: Exception, *args: object, **kwargs: object) -> None:
@@ -109,7 +109,7 @@ class Dota2Client(Client):
         kwargs_join = "\n".join(f"[{name}]: {value!r}" for name, value in kwargs.items()) if kwargs else "No Kwargs"
         embed = (
             discord.Embed(
-                colour=discord.Colour.dark_red(),
+                color=discord.Color.dark_red(),
                 title=f"Error in steam.py's {self.__class__.__name__}",
             )
             .set_author(name=f"Event: {event}", icon_url=const.Logo.Dota)

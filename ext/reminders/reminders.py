@@ -126,7 +126,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             data=data,
         )
         delta = fmt.human_timedelta(dt, source=timer.created_at)
-        e = discord.Embed(colour=ctx.author.colour)
+        e = discord.Embed(color=ctx.author.color)
         e.set_author(name=f"Reminder for {ctx.author.display_name} is created", icon_url=ctx.author.display_avatar)
         e.description = f"in {delta} — {fmt.format_dt_tdR(dt)}\n{text}"
         if zone is None:
@@ -200,7 +200,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
             per_page=10,
             author_name=f"{interaction.user.display_name}'s Reminders list",
             author_icon=interaction.user.display_avatar.url,
-            colour=interaction.user.colour,
+            color=interaction.user.color,
         )
         await pgs.start()
 
@@ -244,7 +244,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         status = await interaction.client.pool.execute(query, id, str(interaction.user.id))
         if status == "DELETE 0":
             embed = discord.Embed(
-                colour=const.Colour.error,
+                color=const.Color.error,
                 description="Could not delete any reminders with that ID.",
             ).set_author(name="NotFound")
             await interaction.response.send_message(embed=embed)
@@ -252,7 +252,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
 
         self.bot.timers.check_reschedule(id)
 
-        embed = discord.Embed(description="Successfully deleted reminder.", colour=const.Colour.prpl)
+        embed = discord.Embed(description="Successfully deleted reminder.", color=const.Color.prpl)
         await interaction.response.send_message(embed=embed)
 
     @remind_group.command(name="clear")
@@ -268,14 +268,14 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         total: int = await interaction.client.pool.fetchval(query, author_id)
         if total == 0:
             no_reminders_embed = discord.Embed(
-                colour=interaction.user.colour,
+                color=interaction.user.color,
                 description="You do not have any reminders to delete.",
             )
             await interaction.response.send_message(embed=no_reminders_embed)
             return
 
         confirm_embed = discord.Embed(
-            colour=interaction.user.colour,
+            color=interaction.user.color,
             description=f"Are you sure you want to delete {fmt.plural(total):reminder}?",
         )
         if not await interaction.client.disambiguator.confirm(interaction, embed=confirm_embed):
@@ -296,7 +296,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
                 self.bot.timers.reschedule()
 
         response_embed = discord.Embed(
-            colour=interaction.user.colour,
+            color=interaction.user.color,
             description=f"Successfully deleted {fmt.plural(total):reminder}.",
         )
         await interaction.response.send_message(embed=response_embed)

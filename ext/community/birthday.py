@@ -116,7 +116,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
     birthday_group = app_commands.Group(
         name="birthday",
         description="Birthday related commands.",
-        guild_ids=[const.Guild.community],
+        guild_ids=const.MY_GUILDS,
     )
 
     @birthday_group.command(name="set")
@@ -155,7 +155,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
         confirm_embed = (
             discord.Embed(
-                colour=0xF46344,
+                color=0xF46344,
                 title="Birthday Confirmation",
                 description="Do you confirm that this is the correct date/timezone for your birthday?",
             )
@@ -209,7 +209,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         )
 
         embed = (
-            discord.Embed(colour=interaction.user.colour, title="Your birthday is successfully set")
+            discord.Embed(color=interaction.user.color, title="Your birthday is successfully set")
             .add_field(name="Data", value=birthday_fmt(birthday))
             .add_field(name="Timezone", value=timezone.label)
             .add_field(name="Next congratulations incoming", value=fmt.format_dt(expires_at, "R"))
@@ -240,15 +240,14 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         status = await self.remove_birthday_worker(interaction.user.id)
         if status == "DELETE 0":
             embed = discord.Embed(
-                colour=const.Colour.error,
+                color=const.Color.error,
                 description="Could not delete your birthday with that ID.",
             ).set_author(name="DatabaseError")
             await interaction.response.send_message(embed=embed)
             return
 
         embed = discord.Embed(
-            colour=interaction.user.color,
-            description="Your birthday is successfully removed from the bot database",
+            color=interaction.user.color, description="Your birthday is successfully removed from the bot database"
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -272,7 +271,7 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
         """
         row: TimerRow[BirthdayTimerData] | None = await self.bot.pool.fetchrow(query, str(member.id))
 
-        embed = discord.Embed(colour=member.color)
+        embed = discord.Embed(color=member.color)
         embed.set_author(name=f"{member.display_name}'s birthday status", icon_url=member.display_avatar.url)
         if row is None:
             embed.description = "It's not set yet."
@@ -302,12 +301,14 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 pass
             else:
                 # don't continue the timer
+                await self.bot.timers.cleanup(timer.id)
                 return
         else:
             # Send notification
 
             if self.community.blacklisted in member.roles:
                 # the person is blacklisted from using the bot features.
+                await self.bot.timers.cleanup(timer.id)
                 return
 
             birthday_role = self.community.birthday_role
@@ -328,7 +329,12 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 .set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
                 .set_thumbnail(url=member.display_avatar.url)
                 .set_image(url=random.choice(GIF_URLS_BANK))
-                .set_footer(text=f"Their birthday: {birthday_fmt(now.replace(year=year))}. Timezone: {timer.timezone}.")
+                .set_footer(
+                    text=(
+                        f"Their birthday: {birthday_fmt(timer.expires_at.replace(year=year))}. "
+                        f"Timezone: {timer.timezone}."
+                    )
+                )
             )
 
             await self.birthday_channel.send(content=content, embed=embed)
@@ -387,13 +393,15 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
                 )
                 string_list.append(f"{birthday_fmt(date)}, {row['timezone']} - {birthday_person.mention}")
 
-        pgs = pages.EnumeratedPaginator(
+        pgs = pages.EmbedDescriptionPaginator(
             interaction,
             entries=string_list,
+            template={
+                "title": "Birthday List",
+                "color": const.Color.prpl,
+                "footer": {"text": "DD/Month/YYYY format"},
+            },
             per_page=20,
-            title="Birthday List",
-            colour=const.Colour.prpl,
-            footer_text="DD/Month/YYYY format",
         )
         await pgs.start()
 

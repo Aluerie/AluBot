@@ -41,8 +41,7 @@ class FixLinksCommunity(CommunityCog):
             # ^ userid_ttl[0] represents both
             # the message in cache and belongs to the interaction author (user)
             await message.delete()
-            e = discord.Embed(colour=const.Colour.prpl)
-            e.description = "Successfully deleted your Mimic message."
+            e = discord.Embed(color=const.Color.prpl, description="Successfully deleted your Mimic message.")
             await interaction.response.send_message(embed=e, ephemeral=True)
             return
         if not message.webhook_id:

@@ -57,7 +57,7 @@ class MatchToSend(BaseMatchToSend):
         self.match_id: int = game["gameId"]
         self.platform: lol.LiteralPlatform = game["platformId"]  # pyright: ignore[reportAttributeAccessIssue]
 
-        self.game_name: str = player_account_row["game_name"]
+        self.game_name: str = player_account_row["in_game_name"]
         self.tag_line: str = player_account_row["tag_line"]
         self.twitch_id: str = player_account_row["twitch_id"]
 
@@ -103,7 +103,7 @@ class MatchToSend(BaseMatchToSend):
 
         def build_notification_image() -> Image.Image:
             width, height = img.size
-            rectangle = Image.new("RGB", (width, 100), f"#{const.Colour.league:0>6x}")
+            rectangle = Image.new("RGB", (width, 100), f"#{const.Color.league:0>6x}")
             ImageDraw.Draw(rectangle)
             img.paste(rectangle)
             img.paste(rectangle, (0, height - CELL_SIZE))
@@ -155,7 +155,7 @@ class MatchToSend(BaseMatchToSend):
         image_file = self.bot.transposer.image_to_file(notification_image, filename=filename)
         embed = (
             discord.Embed(
-                color=const.Colour.league,
+                color=const.Color.league,
                 title=f"{title} {self.champion.emote}",
                 url=streamer.url,
                 description=(
@@ -234,7 +234,7 @@ class MatchToEdit(BaseMatchToEdit):
                         continue
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, _colour: discord.Colour) -> Image.Image:
+    async def edit_notification_image(self, embed_image_url: str, _color: discord.Color) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
         item_icon_urls = [await self.bot.lol.item_icons.by_id(id_) for id_ in reversed(self.sorted_item_ids) if id_]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
@@ -266,7 +266,7 @@ class MatchToEdit(BaseMatchToEdit):
             # Skill Build
             # I got these images by downloading .png from
             # https://commons.wikimedia.org/wiki/Category:Emoji_One_BW
-            # and using Paint Bucket Tool to give it proper colours
+            # and using Paint Bucket Tool to give it proper colors
             # plus resized to 50x50 afterwards
             skill_slot_mapping = {
                 1: "assets/images/local/Q.png",
@@ -300,7 +300,7 @@ class MatchToEdit(BaseMatchToEdit):
 
             # Outcome Text
             _, outcome_text_h = self.bot.transposer.get_text_wh(self.outcome, font)  # _ is `outcome_text_w`
-            colour_dict = {
+            color_dict = {
                 "Win": str(const.Palette.green(shade=800)),
                 "Loss": str(const.Palette.red(shade=900)),
                 "No Scored": (255, 255, 255),
@@ -310,7 +310,7 @@ class MatchToEdit(BaseMatchToEdit):
                 text=self.outcome,
                 font=font,
                 align="center",
-                fill=colour_dict[self.outcome],
+                fill=color_dict[self.outcome],
             )
 
             return img
@@ -350,7 +350,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
     )
 
     new_image = await post_match_player.edit_notification_image(
-        const.DotaAsset.Placeholder640X360, discord.Colour.purple()
+        const.DotaAsset.Placeholder640X360, discord.Color.purple()
     )
     new_image.show()
 

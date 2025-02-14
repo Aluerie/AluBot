@@ -62,5 +62,5 @@ class BaseMatchToEdit(abc.ABC):
         self.bot: AluBot = bot
 
     @abc.abstractmethod
-    async def edit_notification_image(self, embed_image_url: str, colour: discord.Colour) -> Image.Image:
+    async def edit_notification_image(self, embed_image_url: str, color: discord.Color) -> Image.Image:
         """Edit the notification image."""

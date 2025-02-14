@@ -42,7 +42,7 @@ class ConfessionModal(AluModal):
 
     @override
     async def on_submit(self, interaction: AluInteraction) -> None:
-        embed = discord.Embed(title=self.title, colour=const.Colour.prpl, description=self.conf.value)
+        embed = discord.Embed(title=self.title, color=const.Color.prpl, description=self.conf.value)
         if self.title == "Non-anonymous confession":
             embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
         channel = interaction.channel
@@ -87,7 +87,7 @@ class ConfessionView(AluView):
     ) -> None:
         if isinstance(error, ButtonOnCooldown):
             msg = f"Sorry, you are on cooldown \nTime left `{fmt.human_timedelta(error.retry_after, mode='brief')}`"
-            embed = discord.Embed(colour=const.Colour.error, description=msg).set_author(name=error.__class__.__name__)
+            embed = discord.Embed(color=const.Color.error, description=msg).set_author(name=error.__class__.__name__)
             await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
             await super().on_error(interaction, error, item)

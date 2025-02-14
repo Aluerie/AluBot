@@ -50,7 +50,7 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
     ) -> discord.Embed:
         """Embed for view user avatar related commands."""
         return discord.Embed(
-            colour=user.colour,
+            color=user.color,
             title=f"Avatar for {user.display_name}",
         ).set_image(url=user.display_avatar.url)
 
@@ -84,30 +84,30 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
         user:
             User to view banner of.
         """
-        # banner and accent_colour info is only available via Client.fetch_user().
+        # banner and accent_color info is only available via Client.fetch_user().
         # https://discordpy.readthedocs.io/en/latest/api.html?highlight=user#discord.User.banner
         fetched_user = await self.bot.fetch_user(user.id)
 
         if banner := fetched_user.banner:
             # user set an image as a banner
             embed = discord.Embed(
-                colour=user.colour,
+                color=user.color,
                 title=f"Banner for {user.display_name}",
             ).set_image(url=banner.url)
             await interaction.response.send_message(embed=embed)
-        elif accent_colour := fetched_user.accent_colour:
-            # user set some colour as a banner
-            img = Image.new("RGB", (300, 300), accent_colour.to_rgb())
-            file = interaction.client.transposer.image_to_file(img, filename="colour.png")
+        elif accent_color := fetched_user.accent_color:
+            # user set some color as a banner
+            img = Image.new("RGB", (300, 300), accent_color.to_rgb())
+            file = interaction.client.transposer.image_to_file(img, filename="color.png")
             embed = discord.Embed(
-                colour=user.colour,
+                color=user.color,
                 title=f"Banner for {user.display_name}",
             ).set_image(url=f"attachment://{file.filename}")
             await interaction.response.send_message(embed=embed)
         else:
             # user does not have a banner set
             embed = discord.Embed(
-                colour=user.colour,
+                color=user.color,
                 title=f"Banner for {user.display_name}",
                 description="The user did not set a profile banner nor explicitly set their profile accent colour.",
             )

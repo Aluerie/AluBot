@@ -39,8 +39,8 @@ class ActionBase:
     ----------
     name
         Event's name. Matches github terminology from API.
-    colour
-        Colour to assign for embed when sending the bugtracker news message.
+    color
+        Color to assign for embed when sending the bugtracker news message.
     word
         Verb to put into author string in the said embed.
     emote
@@ -49,9 +49,9 @@ class ActionBase:
 
     """
 
-    def __init__(self, name: str, *, colour: int, word: str, emote: str) -> None:
+    def __init__(self, name: str, *, color: int, word: str, emote: str) -> None:
         self.name: str = name
-        self.colour: int = colour
+        self.color: int = color
         self.word: str = word
         self.emote: str = emote
 
@@ -96,16 +96,16 @@ class CommentBase(ActionBase):
 class EventType(Enum):
     """Kinda data-mapping for git issue events."""
 
-    assigned = EventBase("assigned", colour=0x21262D, word="self-assigned", emote=str(const.GitIssueEvent.assigned))
-    closed = EventBase("closed", colour=0x9B6CEA, word="closed", emote=str(const.GitIssueEvent.closed))
-    reopened = EventBase("reopened", colour=0x238636, word="reopened", emote=str(const.GitIssueEvent.reopened))
+    assigned = EventBase("assigned", color=0x21262D, word="self-assigned", emote=str(const.GitIssueEvent.assigned))
+    closed = EventBase("closed", color=0x9B6CEA, word="closed", emote=str(const.GitIssueEvent.closed))
+    reopened = EventBase("reopened", color=0x238636, word="reopened", emote=str(const.GitIssueEvent.reopened))
 
 
 class CommentType(Enum):
     """Kinda data-mapping for git issue comments."""
 
-    commented = CommentBase("commented", colour=0x4285F4, word="commented", emote=str(const.GitIssueEvent.commented))
-    opened = CommentBase("opened", colour=0x52CC99, word="opened", emote=str(const.GitIssueEvent.opened))
+    commented = CommentBase("commented", color=0x4285F4, word="commented", emote=str(const.GitIssueEvent.commented))
+    opened = CommentBase("opened", color=0x52CC99, word="opened", emote=str(const.GitIssueEvent.opened))
 
 
 class Action:
@@ -233,7 +233,7 @@ class TimeLine:
                 msg = "Somehow lead_event is None"
                 raise RuntimeError(msg)
 
-            embed.colour = lead_action.event_type.colour
+            embed.color = lead_action.event_type.color
             url = comment.comment_url if comment else None
             embed.set_author(name=lead_action.author_str, icon_url=lead_action.actor.avatar_url, url=url)
             if comment:
@@ -241,7 +241,7 @@ class TimeLine:
             file = lead_action.event_type.file(self.issue.number)
             embed.set_thumbnail(url=f"attachment://{file.filename}")
         else:
-            embed.colour = 0x4078C0  # git colour, first in google :D
+            embed.color = 0x4078C0  # git color, first in google :D
             pil_pics: list[str] = []
             for p in self.sorted_points_list():
                 pil_pics.append(p.event_type.file_path)
@@ -341,7 +341,7 @@ class BugTracker(AluCog):
                 # query above returned None
                 error_logins.append(name)
 
-        def embed_answer(logins: list[str], color: discord.Color, description: str) -> discord.Embed:
+        def embed_answer(logins: list[str], color: int, description: str) -> discord.Embed:
             logins_join = ", ".join(f"`{name}`" for name in logins)
             return discord.Embed(color=color, description=f"{description}\n{logins_join}")
 

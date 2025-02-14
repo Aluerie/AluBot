@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 import discord
 from discord import app_commands
-from discord.ext import commands, menus
+from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from tabulate import tabulate
 
@@ -16,7 +16,7 @@ from utils import const, errors, fmt, pages
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext
+    from bot import AluBot, AluGuildContext, AluInteraction
 
     class RemoveLongGoneRow(TypedDict):
         id: int
@@ -34,7 +34,7 @@ LAST_SEEN_TIMEOUT = 60
 # fmt: off
 exp_lvl_table = [
         5, 230, 600, 1080, 1660,  # 1-5
-    2_260, 2980, 3730, 4620, 5550,  # 6-10 # "_" so rainbow indent doesn't make erroneous indent colour :D
+    2_260, 2980, 3730, 4620, 5550,  # 6-10 # "_" so rainbow indent doesn't make erroneous indent color :D
     6_520, 7530, 8580, 9805, 11055,  # 11-15
     12330, 13630, 14955, 16455, 18045,  # 16-20
     19645, 21495, 23595, 25945, 28545,  # 21-25
@@ -106,24 +106,6 @@ def get_exp_for_next_level(lvl: int) -> int:
     return exp_lvl_table[lvl]
 
 
-class LeaderboardPageSource(menus.ListPageSource):
-    def __init__(self, entries: list[str], *, footer_text: str, guild_icon: discord.Asset | None) -> None:
-        super().__init__(entries, per_page=1)
-        self.footer_text: str = footer_text
-        self.guild_icon: discord.Asset | None = guild_icon
-
-    @override
-    async def format_page(self, _menu: pages.Paginator, entry: str) -> discord.Embed:
-        return discord.Embed(
-            colour=const.Colour.prpl,
-            title="Server Leaderboard",
-            description=entry,
-        ).set_footer(
-            icon_url=self.guild_icon,
-            text=self.footer_text,
-        )
-
-
 class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA):
     """Commands about member profiles.
 
@@ -151,11 +133,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         c = self.view_user_rank
         self.bot.tree.remove_command(c.name, type=c.type)
 
-    async def context_menu_view_user_rank_callback(
-        self,
-        interaction: discord.Interaction[AluBot],
-        member: discord.Member,
-    ) -> None:
+    async def context_menu_view_user_rank_callback(self, interaction: AluInteraction, member: discord.Member) -> None:
         await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
 
     async def rank_work(
@@ -197,13 +175,9 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         """View member's rank and level in this server."""
         await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
 
-    @app_commands.guilds(const.Guild.community)
+    @app_commands.guilds(*const.MY_GUILDS)
     @app_commands.command(name="leaderboard")
-    async def leaderboard(
-        self,
-        interaction: discord.Interaction[AluBot],
-        sort_by: Literal["exp", "rep"] = "exp",
-    ) -> None:
+    async def leaderboard(self, interaction: AluInteraction, sort_by: Literal["exp", "rep"] = "exp") -> None:
         """View experience leaderboard for this server.
 
         Parameters
@@ -254,18 +228,20 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                     "Exp",
                     "Rep`",
                 ],
-                tablefmt=fmt.no_pad_fmt,
+                tablefmt="plain",
             )
             offset += split_size
             tables.append(table)
 
-        paginator = pages.Paginator(
+        paginator = pages.EmbedDescriptionPaginator(
             interaction,
-            LeaderboardPageSource(
-                tables,
-                footer_text=f"Sorted by {sort_by}",
-                guild_icon=guild.icon,
-            ),
+            tables,
+            template={
+                "footer": {
+                    "text": f"Sorted by {sort_by}",
+                    "icon_url": guild.icon.url if guild.icon else discord.utils.MISSING,
+                }
+            },
         )
         await paginator.start()
 
@@ -301,7 +277,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                     raise ValueError(msg)
 
                 text = f"{message.author.mention} just advanced to {level_up_role.mention} ! {const.Emote.PepoG}"
-                embed = discord.Embed(colour=const.Colour.prpl, description=text)
+                embed = discord.Embed(color=const.Color.prpl, description=text)
                 await message.channel.send(embed=embed)
                 await author.remove_roles(previous_level_role)
                 await author.add_roles(level_up_role)
@@ -320,7 +296,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
         query = "UPDATE community_members SET rep=rep+1 WHERE id=$1 RETURNING rep"
         reputation: int = await self.bot.pool.fetchval(query, member.id)
         embed = discord.Embed(
-            color=discord.Colour.green(),
+            color=discord.Color.green(),
             description=f"Added +1 reputation to **{member.display_name}**: now {reputation} reputation",
         )
         await interaction.response.send_message(embed=embed)
@@ -362,7 +338,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
                 query = "DELETE FROM community_members WHERE id=$1"
                 await self.bot.pool.execute(query, row["id"])
                 embed = discord.Embed(
-                    colour=0xE6D690,
+                    color=0xE6D690,
                     description=f"id = {row['id']}",
                 ).set_author(name=f"{row['name']} was removed from the database")
                 await self.community.logs.send(embed=embed)

@@ -37,18 +37,22 @@ class LogoAsset(StrEnum):
 
 
 class Slash(StrEnum):
-    """Slash mentions strings."""
+    """Slash mentions strings.
+
+    These are to be used when we can't easily access `bot.tree` for its `find_mention_for` method.
+    """
 
     feedback = "</feedback:1060350834367549541>"
     help = "</help:971447382787108919>"
 
 
 class Emoticon(StrEnum):
-    """
+    """CDN links for source images for emojis from emojipedia.
+
     Notes
     -----
     Maybe a bad name, considering everything is taken from emojipedia,
-    but I didn't want to sound similar to Emote class
+    but I didn't want to sound similar to Emote/Emoji classes.
     """
 
     Swan = "407/swan_1f9a2.png"
@@ -130,7 +134,7 @@ class Dota(CONSTANTS):
     # because they rate-limit my bot
     # otherwise `bot.transposer.url_to_image` will fail
 
-    PLAYER_COLOUR_MAP = (
+    PLAYER_COLOR_MAP = (
         "#3375FF",
         "#66FFBF",
         "#BF00BF",

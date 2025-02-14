@@ -89,10 +89,10 @@ class LogsViaWebhook(AluCog):
         "ERROR": "\N{CROSS MARK}",
     }
 
-    colours: Mapping[str, discord.Colour | int] = {
+    colors: Mapping[str, discord.Color | int] = {
         "INFO": const.Palette.light_blue(),
         "WARNING": const.Palette.yellow(shade=700),
-        "ERROR": const.Colour.error,
+        "ERROR": const.Color.error,
     }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -137,7 +137,7 @@ class LogsViaWebhook(AluCog):
     async def send_log_record(self, record: logging.LogRecord) -> None:
         """Send Log record to discord webhook."""
         emoji = self.emojis.get(record.levelname, "\N{WHITE QUESTION MARK ORNAMENT}")
-        colour = self.colours.get(record.levelname)
+        color = self.colors.get(record.levelname)
         # the time is there so the MM:SS is more clear. Discord stacks messages from the same webhook user
         # so if logger sends at 23:01 and 23:02 it will be hard to understand the time difference
         dt = datetime.datetime.fromtimestamp(record.created, datetime.UTC)
@@ -149,10 +149,7 @@ class LogsViaWebhook(AluCog):
         # thus we replace letters: "c" is cyrillic, "o" is greek.
         username = record.name.replace("discord", "disсοrd")  # cSpell: ignore disсοrd  # noqa: RUF003
 
-        embed = discord.Embed(
-            colour=colour,
-            description=msg,
-        )
+        embed = discord.Embed(color=color, description=msg)
         await self.logger_webhook.send(embed=embed, username=username, avatar_url=avatar_url)
 
     @tasks.loop(seconds=0.0)

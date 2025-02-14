@@ -6,7 +6,7 @@ from typing import override
 from ._meta import ASSETS_IMAGES, RAW_GITHUB_IMAGES
 
 __all__ = (
-    "FACET_COLOURS",
+    "FACET_COLORS",
     "NEW_HERO_EMOTE",
     "TALENT_TREE_ICON",
     "DotaAsset",
@@ -38,7 +38,7 @@ class DotaAsset(StrEnum):
         return RAW_GITHUB_IMAGES + "dota/" + self.value
 
 
-FACET_COLOURS = {
+FACET_COLORS = {
     # yoinked from https://github.com/mdiller/MangoByte/blob/master/resource/json/facet_colors.json
     "Red0": "#9F3C3C",
     "Red1": "#954533",

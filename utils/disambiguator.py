@@ -149,7 +149,7 @@ class Disambiguator:
 
         # we want to send universally applicable embed
         cancel_embed = discord.Embed(
-            colour=discord.Colour.yellow(),
+            color=discord.Color.yellow(),
             description=f"{desc} Thus, canceling the operation.",
         )
         await self.send_message(ctx_ntr, cancel_embed)
@@ -190,7 +190,7 @@ class Disambiguator:
             raise ValueError(msg)
 
         view = DisambiguatorView(ctx_ntr, matches, entry)
-        embed = discord.Embed(colour=discord.Colour.dark_gray())
+        embed = discord.Embed(color=discord.Color.dark_gray())
         embed.description = "There are too many matches... Which one did you mean?"
 
         view.message = await self.send_message(ctx_ntr, embed, view, ephemeral=ephemeral)

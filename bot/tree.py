@@ -72,7 +72,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         except KeyError:
             return await self.fetch_commands(guild=guild)
 
-    async def find_mention_for(
+    async def find_mention(
         self,
         command: app_commands.Command[Any, ..., Any] | commands.HybridCommand[Any, ..., Any] | str,
         *,
@@ -160,12 +160,12 @@ class AluAppCommandTree(app_commands.CommandTree):
             The command along with its associated mention.
         """
         for command in self._walk_children(self.get_commands(guild=guild, type=discord.AppCommandType.chat_input)):
-            mention = await self.find_mention_for(command, guild=guild)
+            mention = await self.find_mention(command, guild=guild)
             if mention:
                 yield command, mention
         if guild and self.fallback_to_global is True:
             for command in self._walk_children(self.get_commands(guild=None, type=discord.AppCommandType.chat_input)):
-                mention = await self.find_mention_for(command, guild=guild)
+                mention = await self.find_mention(command, guild=guild)
                 if mention:
                     yield command, mention
                 else:
@@ -225,7 +225,7 @@ class AluAppCommandTree(app_commands.CommandTree):
                 else "No arguments"
             )
             description = (
-                await self.find_mention_for(interaction.command) or cmd_name
+                await self.find_mention(interaction.command) or cmd_name
                 if isinstance(interaction.command, app_commands.Command)
                 else cmd_name
             )
@@ -242,7 +242,7 @@ class AluAppCommandTree(app_commands.CommandTree):
 
             metadata_embed = (
                 discord.Embed(
-                    colour=0x2C0703,
+                    color=0x2C0703,
                     title=f"App Command Error: `{cmd_name}`",
                     description=description,
                     timestamp=interaction.created_at,
@@ -270,7 +270,7 @@ class AluAppCommandTree(app_commands.CommandTree):
 
         if warn_developers_desc:
             warn_developers_embed = discord.Embed(
-                colour=const.Colour.error,
+                color=const.Color.error,
                 description=warn_developers_desc,
             ).set_author(name=error.__class__.__name__)
             await interaction.client.hideout.spam.send(const.Role.error.mention, embed=warn_developers_embed)

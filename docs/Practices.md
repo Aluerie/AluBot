@@ -12,10 +12,13 @@ Just some things that do not get handled automatically by Black/Ruff.
 
 Mostly same as its own parameters and "visual" order in Discord App from top-left -> bottom-right diagonal.
 
+Also use `color` keyword and `discord.Color` namings.
+We prefer american english as a standard in code and british for display names reasons.
+
 ```py
 embed = (
     discord.Embed(
-        colour=discord.Colour.blue(),
+        color=discord.Color.blue(),
         title="Test",
         url="https://www.google.co.uk/"
         description="Test Description",
@@ -102,7 +105,7 @@ Pseudo code:
 
 ```py
 discord.Embed(
-    colour="Some shade of red",
+    color="Some shade of red",
     title=(
         "*Task/Event/Ctx Command/App Command/etc* Error: "  # note the colon : and space
         "`*display name*, i.e. Class name for Views/Tasks or display name for commands`",  # note the backticks `

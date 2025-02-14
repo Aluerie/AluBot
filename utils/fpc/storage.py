@@ -158,7 +158,7 @@ class GameDataStorage[VT, PseudoVT](abc.ABC):
 
     async def send_unknown_value_report(self, object_id: int) -> None:
         embed = discord.Embed(
-            color=const.Colour.error,
+            color=const.Color.error,
             title=f"Unknown {self.__class__.__name__} appeared!",
             description=f"```py\nid={object_id}\n```",
         ).set_footer(text=f"Package: {__package__}")
@@ -213,7 +213,7 @@ class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]):
 
         embed = (
             discord.Embed(
-                colour=const.Colour.prpl,
+                color=const.Color.prpl,
                 title=f"New emote was added to `{table}` table.",
                 description=f'```py\n{new_emote.name} = "{new_emote}"```',
             )

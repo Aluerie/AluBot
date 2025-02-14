@@ -13,14 +13,14 @@ if TYPE_CHECKING:
     from bot import AluBot, AluGuildContext
 
 
-class ColourRolesView(discord.ui.View):
+class ColorRolesView(discord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None)
         # Adds the dropdown to our view object.
-        self.add_item(ColourRolesDropdown())
+        self.add_item(ColorRolesDropdown())
 
 
-class ColourRolesDropdown(discord.ui.RoleSelect[ColourRolesView]):
+class ColorRolesDropdown(discord.ui.RoleSelect[ColorRolesView]):
     def __init__(self) -> None:
         super().__init__(
             custom_id="colour_roles_dropdown",
@@ -37,21 +37,21 @@ class ColourRolesDropdown(discord.ui.RoleSelect[ColourRolesView]):
             )
             return await interaction.response.send_message(embed=embed, ephemeral=True)
 
-        colour_category_role = interaction.client.community.guild.get_role(const.Role.colour_category)
+        color_category_role = interaction.client.community.guild.get_role(const.Role.color_category)
         activity_category_role = interaction.client.community.guild.get_role(const.Role.activity_category)
 
-        def is_colour_role(role: discord.Role) -> bool:
-            return activity_category_role < role < colour_category_role
+        def is_color_role(role: discord.Role) -> bool:
+            return activity_category_role < role < color_category_role
 
         role = self.values[0]
         try:
-            if is_colour_role(role):
+            if is_color_role(role):
                 pass
             else:
                 raise ValueError
         except ValueError:
-            e = discord.Embed(color=const.Colour.error)
-            e.description = "You are trying to choose non-colour role, which I won't give."
+            e = discord.Embed(color=const.Color.error)
+            e.description = "You are trying to choose a non-colour role, which I won't give."
             await interaction.response.send_message(embed=e, ephemeral=True)
         else:
             member = interaction.client.community.guild.get_member(interaction.user.id)
@@ -64,7 +64,7 @@ class ColourRolesDropdown(discord.ui.RoleSelect[ColourRolesView]):
                     await interaction.response.send_message(embed=e, ephemeral=True)
                 else:
                     for r in member.roles:
-                        if is_colour_role(r):
+                        if is_color_role(r):
                             await member.remove_roles(r)
                     await member.add_roles(role)
 
@@ -76,19 +76,19 @@ class ColourRolesDropdown(discord.ui.RoleSelect[ColourRolesView]):
                 return None
 
 
-class ColourRoles(CommunityCog):
+class ColorRoles(CommunityCog):
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        """Register/activate persistent view for Colour Roles dropdown."""
-        self.bot.add_view(ColourRolesView())
+        """Register/activate persistent view for Color Roles dropdown."""
+        self.bot.add_view(ColorRolesView())
 
     @commands.is_owner()
     @commands.command(hidden=True)
     async def new_role_selection(self, ctx: AluGuildContext) -> None:
-        await ctx.send(view=ColourRolesView())
-        # await self.bot.community.role_selection.send(embed=e, view=ColourRolesView())
+        await ctx.send(view=ColorRolesView())
+        # await self.bot.community.role_selection.send(embed=e, view=ColorRolesView())
 
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(ColourRoles(bot))
+    await bot.add_cog(ColorRoles(bot))

@@ -38,7 +38,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         for date in parsed_dates:
             dt = date[1]
             if dt.tzinfo is not None:
-                e = discord.Embed(colour=const.Colour.prpl)
+                e = discord.Embed(color=const.Color.prpl)
                 utc_offset = o.seconds if (o := dt.utcoffset()) else 0
                 dst = d.seconds if (d := dt.dst()) else 0
                 e.description = (
@@ -57,7 +57,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         async def give_text_list(role: discord.Role, channel: discord.TextChannel, msg_id: int) -> None:
             if (added_role and added_role[0] == role) or (removed_role and removed_role[0] == role):
                 msg = channel.get_partial_message(msg_id)
-                e = discord.Embed(title=f"List of {role.name}", colour=const.Colour.prpl)
+                e = discord.Embed(title=f"List of {role.name}", color=const.Color.prpl)
                 e.description = "".join([f"{member.mention}\n" for member in role.members])
                 await msg.edit(content="", embed=e)
 
@@ -71,7 +71,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
         embed = (
             discord.Embed(
-                colour=const.Colour.prpl,
+                color=const.Color.prpl,
                 title="GMT (Greenwich Mean Time)",
             )
             .set_footer(text="GMT is the same as UTC (Universal Time Coordinated)")
@@ -85,7 +85,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
     async def role_info(self, interaction: discord.Interaction[AluBot], role: discord.Role) -> None:
         """View info about selected role."""
         embed = discord.Embed(
-            colour=role.colour,
+            color=role.color,
             title="Role information",
             description=f"Role {role.mention}\n"
             + "\n".join(
@@ -95,14 +95,15 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
 
         await interaction.response.send_message(embed=embed)
         # todo: make pagination about it^.
-        # Also add stuff like colour code, amount of members and some garbage other bots include
+        # Also add stuff like color code, amount of members and some garbage other bots include
 
-    @app_commands.command()
-    @app_commands.describe(colour="Colour in any of supported formats")
-    async def colour(
+    @app_commands.command(name="colour")
+    @app_commands.describe(color="Colour in any of supported formats")
+    @app_commands.rename(color="colour")
+    async def color(
         self,
         interaction: discord.Interaction[AluBot],
-        colour: app_commands.Transform[discord.Colour, converters.AluColourTransformer],
+        color: app_commands.Transform[discord.Color, converters.AluColourTransformer],
     ) -> None:
         r"""Get info about colour in specified <formatted_colour_string>.
 
@@ -117,11 +118,11 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         \N{BULLET} Extra: MateriaAccentUI Google Palette: `map(colour_name, shade)`
         \N{BULLET} Last but not least: `prpl` for favourite Aluerie\'s colour
         """
-        rgb = colour.to_rgb()
+        rgb = color.to_rgb()
 
         img = Image.new("RGB", (300, 300), rgb)
         file = interaction.client.transposer.image_to_file(img, filename="colour.png")
-        e = discord.Embed(color=discord.Colour.from_rgb(*rgb), title="Colour info")
+        e = discord.Embed(color=discord.Color.from_rgb(*rgb), title="Colour info")
         e.description = (
             "Hex triplet: `#{:02x}{:02x}{:02x}`\n".format(*rgb)
             + "RGB: `({}, {}, {})`\n".format(*rgb)
@@ -131,11 +132,11 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         e.set_thumbnail(url=f"attachment://{file.filename}")
         await interaction.response.send_message(embed=e, file=file)
 
-    @colour.autocomplete("colour")
+    @color.autocomplete("colour")
     async def autocomplete(self, _: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
-        colours = ["prpl", "rgb(", "hsl(", "hsv(", "mp(", "map(", *list(ImageColor.colormap.keys())]
+        colors = ["prpl", "rgb(", "hsl(", "hsv(", "mp(", "map(", *list(ImageColor.colormap.keys())]
         return [
-            app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
+            app_commands.Choice(name=Color, value=Color) for Color in colors if current.lower() in Color.lower()
         ][:25]
 
 
@@ -176,7 +177,7 @@ class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
         text = "".join([f"{msg.content}\n" async for msg in channel.history(limit=limit) if msg.author == member])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)
         embed = discord.Embed(
-            colour=const.Colour.prpl,
+            color=const.Color.prpl,
             description=f"Member: {member}\nChannel: {channel}\nLimit: {limit}",
         )
         file = self.bot.transposer.image_to_file(wordcloud.to_image(), filename="wordcloud.png")

@@ -1,10 +1,9 @@
 """Pagination Menus View Classes.
 
-These classes do not use `discord.ext.menus` and instead mirror some of their methods
-under `Paginator` class' namespace instead. The principle is the same though:
-We need to subclass `Paginator` and implement `format_page` that
-uses slice of entries passed to the class and  should return kwargs to be send
-with `.send` methods, i.e. Embed or dict.
+Unlike popular implementations for paginators, these classes do not use `discord.ext.menus`
+and instead mirror some of their methods under `Paginator` class' namespace.
+The principle is the same though: We need to subclass `Paginator` and implement `format_page` that
+uses slice of `self.entries` returns kwargs to be send with `.send` methods, i.e. Embed or dict.
 
 Sources
 -------

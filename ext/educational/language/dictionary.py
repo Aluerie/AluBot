@@ -321,9 +321,9 @@ class FreeDictionaryWordMeaningPaginator(pages.Paginator):
         self.word: FreeDictionaryWord = word
 
     @override
-    async def format_page(self, menu: pages.Paginator, entry: FreeDictionaryMeaning) -> discord.Embed:
+    async def format_page(self, entry: FreeDictionaryMeaning) -> discord.Embed:
         heading = (
-            f"{self.word.raw_word}: {menu.current_page_number + 1} out of {self.max_pages}"
+            f"{self.word.raw_word}: {self.current_page_number + 1} out of {self.max_pages}"
             if self.max_pages >= 2
             else self.word.raw_word
         )

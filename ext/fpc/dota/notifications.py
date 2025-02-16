@@ -284,6 +284,13 @@ class DotaFPCNotifications(BaseNotifications):
                 continue
 
             if not stratz_data["data"]["match"]:
+                # This is None when either:
+                # * Game did not count
+                # * Game was less than 10 minutes
+                # * Game was less than 15 minutes and Stratz considered it as a suspicious game
+                # * Game is still live
+                # * Steam Web API / Dota 2 Game Coordinator is dying
+
                 edit_log.warning("%s GetMatchDetails does not work \N{CROSS MARK}", log_str)
                 continue  # idk fuck my life, GetMatchDetails does not work.
                 # # This is None when conditions under "*" below happen
@@ -304,13 +311,11 @@ class DotaFPCNotifications(BaseNotifications):
                 #     continue
 
                 # if duration < 900:  # 15 minutes (stratz excluded some 11 minutes games too)
-                #     # * Game did not count
-                #     # * Game was less than 10 minutes
+
                 #     edit_log.info("%s SteamWebAPI: match did not count. Deleting the match.", log_str)
                 #     match_to_edit = NotCountedMatchToEdit(self.bot)
                 # else:
-                #     # * Game is still live
-                #     # * Steam Web API / Dota 2 Game Coordinator is dying
+
                 #     edit_log.warning("%s SteamWebAPI: match is not ready (still live or GC dying).", log_str)
                 #     continue
 

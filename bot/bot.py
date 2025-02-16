@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from discord.abc import Snowflake
 
     from bot import AluCog
-    from utils.database import PoolTypedWithAny
+    from types_.database import PoolTypedWithAny
 
 
 __all__ = ("AluBot",)

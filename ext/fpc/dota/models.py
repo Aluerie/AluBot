@@ -275,7 +275,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
         return f"<{self.__class__.__name__} {pairs}>"
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, color: discord.Color) -> Image.Image:
+    async def edit_notification_image(self, embed_image_url: str, color: int) -> Image.Image:
         canvas = await self.bot.transposer.url_to_image(embed_image_url)
         items = [await self.bot.dota.items.by_id(id_) for id_, _ in self.sorted_item_purchases]
         item_icon_images = [await self.bot.transposer.url_to_cached_image(item.icon_url) for item in items]
@@ -358,8 +358,8 @@ class StratzMatchToEdit(BaseMatchToEdit):
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 33)
                 _w, h = self.bot.transposer.get_text_wh(self.outcome, font)
                 color_map = {
-                    "Win": const.Palette.green(shade=800),
-                    "Loss": const.Palette.red(shade=900),
+                    "Win": fmt.color_to_str(const.Palette.green(shade=800)),
+                    "Loss": fmt.color_to_str(const.Palette.red(shade=900)),
                     "Not Scored": (255, 255, 255),
                 }
                 draw.text(
@@ -474,8 +474,5 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
     friend_id = 321580662
     data = await self.bot.dota.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
     match_to_edit = StratzMatchToEdit(self.bot, data)
-    new_image = await match_to_edit.edit_notification_image(
-        const.DotaAsset.Placeholder640X360,
-        discord.Color.purple(),
-    )
+    new_image = await match_to_edit.edit_notification_image(const.DotaAsset.Placeholder640X360, const.Color.prpl)
     new_image.show()

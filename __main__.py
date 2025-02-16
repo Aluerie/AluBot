@@ -15,15 +15,17 @@ import platform
 import sys
 import traceback
 from pathlib import Path
+from typing import Any
 
 import aiohttp
 import asyncpg
 import click
 import discord
+import orjson
 
 from bot import AluBot, setup_logging
 from config import config
-from utils import const, database
+from utils import const
 
 try:
     import uvloop  # type: ignore[reportMissingImports] # not available on Windows
@@ -33,11 +35,40 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
+async def create_pool() -> asyncpg.Pool[asyncpg.Record]:
+    """Create a database connection pool."""
+
+    def _encode_jsonb(value: Any) -> str:
+        return orjson.dumps(value).decode("utf-8")
+
+    def _decode_jsonb(value: str) -> Any:
+        return orjson.loads(value)
+
+    async def init(con: asyncpg.Connection[asyncpg.Record]) -> None:
+        await con.set_type_codec(
+            "jsonb",
+            schema="pg_catalog",
+            encoder=_encode_jsonb,
+            decoder=_decode_jsonb,
+            format="text",
+        )
+
+    postgres_url = config["POSTGRES"]["VPS"] if platform.system() == "Linux" else config["POSTGRES"]["HOME"]
+    return await asyncpg.create_pool(
+        postgres_url,
+        init=init,
+        command_timeout=60,
+        min_size=20,
+        max_size=20,
+        statement_cache_size=0,
+    )  # pyright: ignore[reportReturnType]
+
+
 async def start_the_bot(*, test: bool) -> None:
     """Helper function to start the bot."""
     log = logging.getLogger()
     try:
-        pool = await database.create_pool()
+        pool = await create_pool()
     except Exception:
         msg = "Could not set up PostgreSQL. Exiting."
         click.echo(msg, file=sys.stderr)

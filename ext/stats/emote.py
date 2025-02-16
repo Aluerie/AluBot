@@ -346,10 +346,7 @@ class EmoteStats(StatsCog):
             return
 
         embed = (
-            discord.Embed(
-                color=const.Color.prpl,
-                title=f"`:{emoji.name}:`",
-            )
+            discord.Embed(color=const.Color.prpl, title=f"`:{emoji.name}:`")
             .set_author(name="Emote Stats")
             .set_thumbnail(url=emoji.url)
             .add_field(

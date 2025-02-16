@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, override
 import discord
 from PIL import Image, ImageDraw, ImageFont
 
-from utils import const, lol
+from utils import const, fmt, lol
 from utils.fmt import human_timedelta
 
 from ..base_classes import BaseMatchToEdit, BaseMatchToSend
@@ -234,7 +234,7 @@ class MatchToEdit(BaseMatchToEdit):
                         continue
 
     @override
-    async def edit_notification_image(self, embed_image_url: str, _color: discord.Color) -> Image.Image:
+    async def edit_notification_image(self, embed_image_url: str, _color: int) -> Image.Image:
         img = await self.bot.transposer.url_to_image(embed_image_url)
         item_icon_urls = [await self.bot.lol.item_icons.by_id(id_) for id_ in reversed(self.sorted_item_ids) if id_]
         item_icon_images = [await self.bot.transposer.url_to_image(url) for url in item_icon_urls]
@@ -301,8 +301,8 @@ class MatchToEdit(BaseMatchToEdit):
             # Outcome Text
             _, outcome_text_h = self.bot.transposer.get_text_wh(self.outcome, font)  # _ is `outcome_text_w`
             color_dict = {
-                "Win": str(const.Palette.green(shade=800)),
-                "Loss": str(const.Palette.red(shade=900)),
+                "Win": fmt.color_to_str(const.Palette.green(shade=800)),
+                "Loss": fmt.color_to_str(const.Palette.red(shade=900)),
                 "No Scored": (255, 255, 255),
             }
             draw.text(
@@ -349,9 +349,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
         timeline=timeline,
     )
 
-    new_image = await post_match_player.edit_notification_image(
-        const.DotaAsset.Placeholder640X360, discord.Color.purple()
-    )
+    new_image = await post_match_player.edit_notification_image(const.DotaAsset.Placeholder640X360, 0x000000)
     new_image.show()
 
 

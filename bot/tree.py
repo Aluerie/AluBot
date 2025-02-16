@@ -265,7 +265,7 @@ class AluAppCommandTree(app_commands.CommandTree):
             if interaction.channel_id == interaction.client.hideout.spam_channel_id:
                 # we don't need any extra embeds;
                 if not interaction.response.is_done():
-                    await interaction.response.send_message(":(")
+                    await interaction.response.send_message(":(", ephemeral=True)
                 return
 
         if warn_developers_desc:

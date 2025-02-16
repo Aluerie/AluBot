@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     "code",
+    "color_to_str",
     "format_dt_custom",
     "human_join",
     "human_timedelta",
@@ -519,3 +520,11 @@ def code(text: str, language: str = "py") -> str:
     For no code version we can just use `language=""`.
     """
     return f"```{language}\n{text}```"
+
+
+def color_to_str(value: int) -> str:
+    """Convert integer colour to a string #RRGGBB representation.
+
+    For som reason, PIL library in some places accepts colours in this string format (but not `int`).
+    """
+    return f"#{value:0>6x}"

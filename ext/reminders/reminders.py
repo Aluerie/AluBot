@@ -10,7 +10,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from bot import AluContext
-from utils import const, fmt, pages, times
+from utils import MISSING, const, fmt, pages, times
 
 from ._base import RemindersCog
 
@@ -322,7 +322,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
 
         guild_id = channel.guild.id if isinstance(channel, discord.TextChannel | discord.Thread) else "@me"
         content = f"<@{author_id}>, {discord.utils.format_dt(timer.created_at, style='R')}\n{text}"
-        view = discord.utils.MISSING
+        view = MISSING
 
         if message_id:
             url = f"https://discord.com/channels/{guild_id}/{channel.id}/{message_id}"
@@ -331,10 +331,12 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         try:
             msg = await channel.send(content, view=view)  # type:ignore[reportAttributeAccessIssue]
         except discord.HTTPException:
-            return
+            pass
         else:
-            if view is not discord.utils.MISSING:
+            if view is not MISSING:
                 view.message = msg
+
+        await self.bot.timers.cleanup(timer.id)
 
 
 async def setup(bot: AluBot) -> None:

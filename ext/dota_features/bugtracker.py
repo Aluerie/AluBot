@@ -552,5 +552,4 @@ class BugTracker(AluCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    # uncomment when https://github.com/yanyongyu/githubkit/issues/188 fixed
-    # await bot.add_cog(BugTracker(bot))  # noqa: ERA001
+    await bot.add_cog(BugTracker(bot))

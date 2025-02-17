@@ -277,6 +277,6 @@ class AluAppCommandTree(app_commands.CommandTree):
 
         response_embed = helpers.error_handler_response_embed(error, desc, unexpected=unexpected)
         if not interaction.response.is_done():
-            await interaction.response.send_message(embed=response_embed, ephemeral=True)
+            await interaction.response.send_message(embed=response_embed)
         else:
-            await interaction.followup.send(embed=response_embed, ephemeral=True)
+            await interaction.followup.send(embed=response_embed)

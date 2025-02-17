@@ -128,7 +128,7 @@ class MatchToSend(BaseMatchToSend):
 
             def draw_picked_heroes() -> None:
                 """Draw picked heroes in the match."""
-                rectangle = Image.new("RGB", (canvas_w, topbar_h), str(color))
+                rectangle = Image.new("RGB", (canvas_w, topbar_h), fmt.color_to_str(color))
                 ImageDraw.Draw(rectangle)
                 canvas.paste(rectangle)
 
@@ -156,7 +156,7 @@ class MatchToSend(BaseMatchToSend):
                 font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 13)
                 text = twitch_data["twitch_status"]
                 w, h = self.bot.transposer.get_text_wh(text, font)
-                draw.text(xy=(canvas_w - w, topbar_h + 1 + h), text=text, font=font, fill=str(color))
+                draw.text(xy=(canvas_w - w, topbar_h + 1 + h), text=text, font=font, fill=fmt.color_to_str(color))
 
             draw_twitch_status()
 

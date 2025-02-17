@@ -31,7 +31,7 @@ reportUnusedVariable = "none"
 reportUnusedClass = "none"
 reportUnusedFunction = "none"
 
-# Unknown stuff - a lot of libs don't **properly** declare types
+# Unknown stuff - a lot of libs do not **properly** declare types for everything
 reportUnknownMemberType = "none"
 reportUnknownVariableType = "none"
 reportUnknownArgumentType = "none"

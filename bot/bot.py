@@ -199,7 +199,8 @@ class AluBot(commands.Bot):
         if not hasattr(self, "launch_time"):
             self.launch_time = datetime.datetime.now(datetime.UTC)
         log.info("Logged in as `%s`", self.user)
-        await self.send_warning("AluBot is ready.")
+        if not self.test:
+            await self.send_warning("AluBot is ready.")
 
     @override
     async def start(self) -> None:

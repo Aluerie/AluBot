@@ -71,14 +71,14 @@ async def on_views_modals_error(
         if interaction.channel_id == interaction.client.hideout.spam_channel_id:
             # we don't need any extra embeds;
             if not interaction.response.is_done():
-                await interaction.response.send_message(":(")
+                await interaction.response.send_message(":(", ephemeral=True)
             return
 
     response_to_user_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
     if interaction.response.is_done():
-        await interaction.followup.send(embed=response_to_user_embed, ephemeral=True)
+        await interaction.followup.send(embed=response_to_user_embed)
     else:
-        await interaction.response.send_message(embed=response_to_user_embed, ephemeral=True)
+        await interaction.response.send_message(embed=response_to_user_embed)
 
 
 class AluView(discord.ui.View):
@@ -104,11 +104,7 @@ class AluView(discord.ui.View):
         """
 
     def __init__(
-        self,
-        *,
-        author_id: int | None,
-        view_name: str = "Interactive Element",
-        timeout: float | None = 180.0,
+        self, *, author_id: int | None, view_name: str = "Interactive Element", timeout: float | None = 180.0
     ) -> None:
         """Initialize AluView."""
         super().__init__(timeout=timeout)

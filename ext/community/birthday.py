@@ -257,8 +257,8 @@ class Birthday(CommunityCog, emote=const.Emote.peepoHappyDank):
 
         Parameters
         ----------
-        member
-            Member of the server. If you send empty - it will show your birthday.
+        member: discord.Member | None
+            Member of the server. If not specified - it will show your birthday.
         """
         if not member:
             assert isinstance(interaction.user, discord.Member)

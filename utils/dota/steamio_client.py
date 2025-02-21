@@ -38,9 +38,9 @@ class DotaClient(Client):
         self.bot: AluBot = bot
         self.started: bool = False
 
-        # # TODO: EXPERIMENT
-        # # https://discord.com/channels/678629505094647819/1019749658551144458/1341421914714804296
-        # self.http.api_key = config["TOKENS"]["STEAM"]
+        # TODO: EXPERIMENT
+        # https://discord.com/channels/678629505094647819/1019749658551144458/1341421914714804296
+        self.http.api_key = config["TOKENS"]["STEAM"]
 
         # clients
         self.stratz = StratzClient()

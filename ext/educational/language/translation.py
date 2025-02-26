@@ -37,19 +37,21 @@ if TYPE_CHECKING:
 
     from bot import AluBot
 
-    class TranslatedSentence(TypedDict):
-        """TranslatedSentence."""
 
-        trans: str
-        orig: str
+class TranslatedSentence(TypedDict):
+    """TranslatedSentence."""
 
-    class TranslateResult(NamedTuple):
-        """TranslatedResult."""
+    trans: str
+    orig: str
 
-        original: str
-        translated: str
-        source_lang: str
-        target_lang: str
+
+class TranslateResult(NamedTuple):
+    """TranslatedResult."""
+
+    original: str
+    translated: str
+    source_lang: str
+    target_lang: str
 
 
 # fmt: off

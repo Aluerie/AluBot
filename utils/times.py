@@ -13,7 +13,6 @@ import datetime
 import re
 from typing import TYPE_CHECKING, Any, Self, override
 
-import discord
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
 from discord import app_commands
@@ -22,7 +21,7 @@ from discord.ext import commands
 from .errors import AluBotError
 
 if TYPE_CHECKING:
-    from bot import AluContext
+    from bot import AluContext, AluInteraction
 
 
 class ShortTime:
@@ -115,7 +114,7 @@ class BadTimeTransform(app_commands.AppCommandError, AluBotError):  # noqa: N818
 
 class TimeTransformer(app_commands.Transformer):
     @override
-    async def transform(self, interaction: discord.Interaction, value: str) -> datetime.datetime:
+    async def transform(self, interaction: AluInteraction, value: str) -> datetime.datetime:
         # fix timezone thing
         # tzinfo = datetime.timezone.utc
         # reminder = interaction.client.get_cog('Reminder')

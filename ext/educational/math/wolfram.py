@@ -11,9 +11,7 @@ from utils import const, errors
 from .._base import EducationalCog
 
 if TYPE_CHECKING:
-    import discord
-
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
@@ -37,7 +35,7 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
 
     @wolfram_group.command(name="long")
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-    async def wolfram_long(self, interaction: discord.Interaction[AluBot], query: str) -> None:
+    async def wolfram_long(self, interaction: AluInteraction, query: str) -> None:
         """Get a long, detailed image-answer from WolframAlpha.
 
         Parameters
@@ -52,7 +50,7 @@ class WolframAlphaCog(EducationalCog, emote=const.Emote.bedNerdge):
 
     @wolfram_group.command(name="short")
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-    async def wolfram_short(self, interaction: discord.Interaction[AluBot], query: str) -> None:
+    async def wolfram_short(self, interaction: AluInteraction, query: str) -> None:
         """Get a quick, short answer from WolframAlpha.
 
         Parameters

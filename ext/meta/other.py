@@ -21,7 +21,7 @@ from bot import AluCog, Url
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 async def count_lines(
@@ -92,7 +92,7 @@ class PingTuple(NamedTuple):
 
 class OtherCog(AluCog):
     @app_commands.command()
-    async def ping(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def ping(self, interaction: AluInteraction) -> None:
         """\N{GLOBE WITH MERIDIANS} Checks the bot's ping to Discord and some other services."""
         typing_start = time.monotonic()
         await interaction.response.defer()
@@ -125,7 +125,7 @@ class OtherCog(AluCog):
         await message.edit(embed=embed)
 
     @app_commands.command()
-    async def about(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def about(self, interaction: AluInteraction) -> None:
         """\N{GLOBE WITH MERIDIANS} Show information about the bot."""
         await interaction.response.defer()
         information = self.bot.bot_app_info
@@ -171,7 +171,7 @@ class OtherCog(AluCog):
         await interaction.followup.send(embed=embed)
 
     @app_commands.command()
-    async def source(self, interaction: discord.Interaction[AluBot], *, command: str | None = None) -> None:
+    async def source(self, interaction: AluInteraction, *, command: str | None = None) -> None:
         """\N{GLOBE WITH MERIDIANS} Links to the bots code, or a specific command's."""
         source_url = interaction.client.repository_url
         branch = "main"

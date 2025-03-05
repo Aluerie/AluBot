@@ -17,7 +17,7 @@ from ._base import InfoCog
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
 
-    from bot import AluBot, AluContext
+    from bot import AluBot, AluContext, AluInteraction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -240,7 +240,7 @@ class SchedulePages(pages.Paginator):
 
     def __init__(
         self,
-        ctx: AluContext | discord.Interaction[AluBot],
+        ctx: AluContext | AluInteraction,
         soup: BeautifulSoup,
         schedule_enum: ScheduleModeEnum,
         query: str | None = None,
@@ -258,13 +258,13 @@ class ScheduleSelect(discord.ui.Select[SchedulePages]):
         self.author: discord.User | discord.Member = author
 
     @override
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def callback(self, interaction: AluInteraction) -> None:
         sch_enum = ScheduleModeEnum(value=int(self.values[0]))
         p = SchedulePages(interaction, self.soup, sch_enum, self.query)
         await p.start(edit_response=True)
 
     @override
-    async def interaction_check(self, interaction: discord.Interaction[AluBot]) -> bool:
+    async def interaction_check(self, interaction: AluInteraction) -> bool:
         if interaction.user and interaction.user.id == self.author.id:
             return True
         schedule_enum = ScheduleModeEnum(value=int(self.values[0]))
@@ -298,7 +298,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
     @app_commands.choices(schedule_mode=[app_commands.Choice(name=i.label, value=int(i.value)) for i in SELECT_OPTIONS])
     async def schedule(
         self,
-        interaction: discord.Interaction[AluBot],
+        interaction: AluInteraction,
         schedule_mode: int = 1,
         query: str | None = None,
     ) -> None:
@@ -319,10 +319,7 @@ class Schedule(InfoCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
         await p.start()
 
     @app_commands.command()
-    async def fixtures(
-        self,
-        interaction: discord.Interaction[AluBot],
-    ) -> None:
+    async def fixtures(self, interaction: AluInteraction) -> None:
         """Get football fixtures."""
         url = "https://onefootball.com/en/competition/premier-league-9/fixtures"
         async with self.bot.session.get(url) as r:

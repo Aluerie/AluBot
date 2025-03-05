@@ -9,14 +9,14 @@ from discord import app_commands
 from bot import AluCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluInteraction
 
 
 class DevUtilities(AluCog):
     """Utility functions that are mostly usable to developers like me."""
 
     @app_commands.command()
-    async def charinfo(self, interaction: discord.Interaction[AluBot], characters: str) -> None:
+    async def charinfo(self, interaction: AluInteraction, characters: str) -> None:
         """Shows information about character(-s).
 
         Only up to a 10 characters at a time though.

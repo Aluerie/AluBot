@@ -11,7 +11,7 @@ from . import const, errors
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from bot import AluBot, AluContext
+    from bot import AluBot, AluContext, AluInteraction
 
     type WebhookSourceChannel = discord.ForumChannel | discord.VoiceChannel | discord.TextChannel | discord.StageChannel
 
@@ -68,7 +68,7 @@ class Mimic:
         return cls(bot, channel_, thread)
 
     @classmethod
-    def from_interaction(cls, interaction: discord.Interaction[AluBot]) -> Self:
+    def from_interaction(cls, interaction: AluInteraction) -> Self:
         channel, thread = cls.get_channel_thread(interaction.channel)
         return cls(interaction.client, channel, thread)
 

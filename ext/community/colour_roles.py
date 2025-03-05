@@ -10,7 +10,7 @@ from utils import const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext
+    from bot import AluBot, AluGuildContext, AluInteraction
 
 
 class ColorRolesView(discord.ui.View):
@@ -30,7 +30,7 @@ class ColorRolesDropdown(discord.ui.RoleSelect[ColorRolesView]):
         )
 
     @override
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def callback(self, interaction: AluInteraction) -> None:
         if not len(self.values):
             embed = discord.Embed(
                 description=f"You've selected zero roles and thus I did nothing {const.Emote.peepoComfy}",

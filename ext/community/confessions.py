@@ -79,12 +79,7 @@ class ConfessionView(AluView):
         return True
 
     @override
-    async def on_error(
-        self,
-        interaction: discord.Interaction[AluBot],
-        error: Exception,
-        item: discord.ui.Item[Self],
-    ) -> None:
+    async def on_error(self, interaction: AluInteraction, error: Exception, item: discord.ui.Item[Self]) -> None:
         if isinstance(error, ButtonOnCooldown):
             msg = f"Sorry, you are on cooldown \nTime left `{fmt.human_timedelta(error.retry_after, mode='brief')}`"
             embed = discord.Embed(color=const.Color.error, description=msg).set_author(name=error.__class__.__name__)

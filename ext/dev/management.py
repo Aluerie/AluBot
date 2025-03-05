@@ -12,7 +12,7 @@ from utils import const, errors, fmt, fuzzy
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 AMOUNT_OF_ALLOWED_GUILDS = 69
 
@@ -21,7 +21,7 @@ class DiscordGuildTransformer(app_commands.Transformer):
     """Discord Guild Transformer."""
 
     @override
-    async def transform(self, interaction: discord.Interaction[AluBot], argument: str) -> discord.Guild:
+    async def transform(self, interaction: AluInteraction, argument: str) -> discord.Guild:
         if argument.isdigit():
             # assume ID
             guild = discord.utils.find(lambda g: g.id == int(argument), interaction.client.guilds)
@@ -38,11 +38,7 @@ class DiscordGuildTransformer(app_commands.Transformer):
         return guild
 
     @override
-    async def autocomplete(
-        self,
-        interaction: discord.Interaction[AluBot],
-        current: str,
-    ) -> list[app_commands.Choice[str]]:
+    async def autocomplete(self, interaction: AluInteraction, current: str) -> list[app_commands.Choice[str]]:
         guild_mapping = {f"{guild.name} ({guild.id})": guild.id for guild in interaction.client.guilds}
         keys = fuzzy.finder(current, guild_mapping.keys())
         return [app_commands.Choice(name=key, value=str(guild_mapping[key])) for key in keys][:10]
@@ -149,9 +145,7 @@ class BotManagement(DevBaseCog):
 
     @guild_group.command(name="leave")
     async def guild_leave(
-        self,
-        interaction: discord.Interaction[AluBot],
-        guild: app_commands.Transform[discord.Guild, DiscordGuildTransformer],
+        self, interaction: AluInteraction, guild: app_commands.Transform[discord.Guild, DiscordGuildTransformer]
     ) -> None:
         """\N{GUITAR} Make the bot leave the guild."""
         confirm_embed = discord.Embed(
@@ -172,9 +166,7 @@ class BotManagement(DevBaseCog):
 
     @guild_group.command(name="stats")
     async def guild_stats(
-        self,
-        interaction: discord.Interaction[AluBot],
-        guild: app_commands.Transform[discord.Guild, DiscordGuildTransformer],
+        self, interaction: AluInteraction, guild: app_commands.Transform[discord.Guild, DiscordGuildTransformer]
     ) -> None:
         """\N{GUITAR} Show basic stats about the guild."""
         embed = discord.Embed(color=const.Palette.blue(shade=500), title="Guild Stats")
@@ -182,7 +174,7 @@ class BotManagement(DevBaseCog):
         await interaction.response.send_message(embed=embed)
 
     @guild_group.command(name="list")
-    async def list(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def list(self, interaction: AluInteraction) -> None:
         """\N{GUITAR} Show list of guilds the bot is in."""
         guild_list = chr(10).join([f"• {item.name} `{item.id}`" for item in self.bot.guilds])
         embed = discord.Embed(

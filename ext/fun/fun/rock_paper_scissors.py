@@ -14,7 +14,7 @@ from utils import const
 from .._base import FunCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class RPSElement(NamedTuple):
@@ -80,7 +80,7 @@ class RPSView(AluView):
         await self.message.edit(embed=e)
 
     @override
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+    async def interaction_check(self, interaction: AluInteraction) -> bool:
         if interaction.user and interaction.user in self.players:
             if interaction.user in self.choices:
                 embed = discord.Embed(
@@ -116,7 +116,7 @@ class RPSView(AluView):
         ggwp = f"\n\n**Good Game, Well Played {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}**"
         return f"{choices_string}\n{winning_strings[0]}{ggwp}\n{winning_strings[1]}", winning_strings[2]
 
-    async def rps_button_callback(self, interaction: discord.Interaction, choice: RPSChoice) -> None:
+    async def rps_button_callback(self, interaction: AluInteraction, choice: RPSChoice) -> None:
         """Boiler-plate function for Rock/Scissor/Paper buttons as player move choices."""
         self.choices[interaction.user] = choice
 
@@ -134,12 +134,12 @@ class RPSView(AluView):
             self.stop()
 
     @discord.ui.button(label=RPSChoice.Rock.name, emoji=RPSChoice.Rock.value.emote, style=discord.ButtonStyle.red)
-    async def rock_button(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
+    async def rock_button(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
         """Button to play rock in a Rock Paper Scissors game."""
         await self.rps_button_callback(interaction, RPSChoice.Rock)
 
     @discord.ui.button(label=RPSChoice.Paper.name, emoji=RPSChoice.Paper.value.emote, style=discord.ButtonStyle.green)
-    async def paper_button(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
+    async def paper_button(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
         """Button to play paper in a Rock Paper Scissors game."""
         await self.rps_button_callback(interaction, RPSChoice.Paper)
 
@@ -148,7 +148,7 @@ class RPSView(AluView):
         emoji=RPSChoice.Scissors.value.emote,
         style=discord.ButtonStyle.blurple,
     )
-    async def scissors_button(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
+    async def scissors_button(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
         """Button to play scissors in a Rock Paper SCissors game."""
         await self.rps_button_callback(interaction, RPSChoice.Scissors)
 
@@ -160,7 +160,7 @@ class RockPaperScissorsCommand(FunCog):
     """
 
     @app_commands.command(name="rock-paper-scissors")
-    async def rps(self, interaction: discord.Interaction[AluBot], user: discord.Member | discord.User) -> None:
+    async def rps(self, interaction: AluInteraction, user: discord.Member | discord.User) -> None:
         """Rock Paper Scissors game with @member."""
         if user == interaction.user:
             msg = "You cannot challenge yourself in a Rock Paper Scissors game"

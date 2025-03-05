@@ -11,7 +11,7 @@ from discord import app_commands
 from utils.timezones import TimeZone, TimeZoneTransformer  # noqa: TC001
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 from ._base import UserSettingsBaseCog
 
@@ -31,7 +31,7 @@ class TimezoneSetting(UserSettingsBaseCog):
     @timezone_group.command(name="set")
     async def timezone_set(
         self,
-        interaction: discord.Interaction[AluBot],
+        interaction: AluInteraction,
         timezone: app_commands.Transform[TimeZone, TimeZoneTransformer],
     ) -> None:
         """Sets your timezone.
@@ -51,9 +51,7 @@ class TimezoneSetting(UserSettingsBaseCog):
 
     @timezone_group.command(name="info")
     async def timezone_info(
-        self,
-        interaction: discord.Interaction[AluBot],
-        timezone: app_commands.Transform[TimeZone, TimeZoneTransformer],
+        self, interaction: AluInteraction, timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
     ) -> None:
         """Retrieves info about a timezone.
 
@@ -74,7 +72,7 @@ class TimezoneSetting(UserSettingsBaseCog):
         await interaction.response.send_message(embed=embed)
 
     @timezone_group.command(name="get")
-    async def timezone_get(self, interaction: discord.Interaction[AluBot], user: discord.User | None = None) -> None:
+    async def timezone_get(self, interaction: AluInteraction, user: discord.User | None = None) -> None:
         """Shows the timezone of a user.
 
         Parameters
@@ -98,7 +96,7 @@ class TimezoneSetting(UserSettingsBaseCog):
             await interaction.response.send_message(f"The current time for {user} is {time}.")
 
     @timezone_group.command(name="clear")
-    async def timezone_clear(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def timezone_clear(self, interaction: AluInteraction) -> None:
         """Clears your timezone."""
         query = "UPDATE user_settings SET timezone = NULL WHERE id=$1"
         await interaction.client.pool.execute(query, interaction.user.id)

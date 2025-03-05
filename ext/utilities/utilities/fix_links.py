@@ -11,7 +11,7 @@ from bot import AluCog
 from utils import links
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluInteraction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)  # .DEBUG)
@@ -47,12 +47,12 @@ class LinkUtilities(AluCog):
             raise commands.BadArgument(msg)
         return res
 
-    async def fix_link_ctx_menu_callback(self, interaction: discord.Interaction, message: discord.Message) -> None:
+    async def fix_link_ctx_menu_callback(self, interaction: AluInteraction, message: discord.Message) -> None:
         content = self.fix_link_worker(message.content)
         await interaction.response.send_message(content)
 
     @app_commands.command()
-    async def fix_links(self, interaction: discord.Interaction[AluBot], link: str) -> None:
+    async def fix_links(self, interaction: AluInteraction, link: str) -> None:
         """Enter Twitter/Instagram/TikTok link(-s) to "fix"."""
         content = self.fix_link_worker(link)
         await interaction.response.send_message(content)

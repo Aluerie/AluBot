@@ -12,7 +12,7 @@ from utils import const, errors
 from ._base import VoiceChatCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class LanguageData(NamedTuple):
@@ -50,13 +50,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         guild_only=True,
     )
 
-    async def speak_worker(
-        self,
-        interaction: discord.Interaction[AluBot],
-        lang: LanguageData,
-        *,
-        text: str = "Allo",
-    ) -> None:
+    async def speak_worker(self, interaction: AluInteraction, lang: LanguageData, *, text: str = "Allo") -> None:
         assert isinstance(interaction.user, discord.Member)
         voice_state = interaction.user.voice
         if not voice_state:
@@ -86,10 +80,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
     @tts_group.command(name="speak")
     @app_commands.describe()
     async def tts_speak(
-        self,
-        interaction: discord.Interaction[AluBot],
-        language: LanguageCollection.Literal = "fr",
-        text: str = "Allo",
+        self, interaction: AluInteraction, language: LanguageCollection.Literal = "fr", text: str = "Allo"
     ) -> None:
         """\N{STUDIO MICROPHONE} Make Text-To-Speech request for the voice-chat.
 
@@ -114,7 +105,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         await interaction.response.send_message(embed=embed)
 
     @tts_group.command()
-    async def stop(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def stop(self, interaction: AluInteraction) -> None:
         """\N{STUDIO MICROPHONE} Stop playing current audio. Useful if somebody is abusing TTS system."""
         assert interaction.guild
         try:
@@ -132,7 +123,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @tts_group.command()
-    async def leave(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def leave(self, interaction: AluInteraction) -> None:
         """\N{STUDIO MICROPHONE} Make the bot leave the voice channel."""
         assert interaction.guild
         try:
@@ -146,7 +137,7 @@ class TextToSpeech(VoiceChatCog, name="Text To Speech", emote=const.Emote.Ree):
         await interaction.response.send_message(embed=embed)
 
     @tts_group.command(name="bonjour")
-    async def tts_bonjour(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def tts_bonjour(self, interaction: AluInteraction) -> None:
         """\N{STUDIO MICROPHONE} Make the bot say "Bonjour !" into both text/voice chats (that you're connected to)."""
         await self.speak_worker(interaction, LanguageCollection.fr, text="Bonjour !")
         await interaction.response.send_message(content=f"Bonjour {const.Emote.bubuAYAYA}")

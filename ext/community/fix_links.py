@@ -11,7 +11,7 @@ from utils import const, errors, links, mimics
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class FixLinksCommunity(CommunityCog):
@@ -31,11 +31,7 @@ class FixLinksCommunity(CommunityCog):
         c = self.delete_mimic_ctx_menu
         self.bot.tree.remove_command(c.name, type=c.type)
 
-    async def delete_mimic_ctx_menu_callback(
-        self,
-        interaction: discord.Interaction[commands.Bot],
-        message: discord.Message,
-    ) -> None:
+    async def delete_mimic_ctx_menu_callback(self, interaction: AluInteraction, message: discord.Message) -> None:
         # todo: why it's there, wrong cog
         if self.bot.mimic_message_user_mapping.get(message.id) == interaction.user.id:
             # ^ userid_ttl[0] represents both

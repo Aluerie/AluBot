@@ -17,7 +17,7 @@ from .timezones import TimeZone, TransformTimeZone
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from bot import AluBot, AluContext
+    from bot import AluBot, AluContext, AluInteraction
 
 __all__ = (
     "AluColourTransformer",
@@ -115,7 +115,7 @@ class AluColourTransformer(app_commands.Transformer):
     """Some super overloaded colour converted made for /colour command."""
 
     @override
-    async def transform(self, interaction: discord.Interaction[AluBot], argument: str) -> discord.Colour:
+    async def transform(self, interaction: AluInteraction, argument: str) -> discord.Colour:
         # TODO: we will rename command: for below, probably so be careful.
         error_footer = f'\n\nTo see supported colour formats by the bot - use "{const.Slash.help}` command: colour`"'
 
@@ -186,11 +186,11 @@ class AluColourTransformer(app_commands.Transformer):
             msg = f"Colour `{argument}` is invalid.{error_footer}"
             raise InvalidColor(msg)
 
-    # async def transform(self, interaction: discord.Interaction, value: str):
+    # async def transform(self, interaction: AluInteraction, value: str):
     #     return await self.convert(interaction, value)  # type: ignored
     # # todo: do it properly (idk how but for now should be fine since super().convert does not use ctx)
 
-    # async def autocomplete(self, _: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+    # async def autocomplete(self, _: AluInteraction, current: str) -> List[app_commands.Choice[str]]:
     #     colours = ['prpl', 'rgb(', 'hsl(', 'hsv(', 'mp(', 'map('] + list(ImageColor.colormap.keys())
     #     return [
     #         app_commands.Choice(name=Colour, value=Colour) for Colour in colours if current.lower() in Colour.lower()
@@ -229,11 +229,11 @@ class MonthPicker(commands.Converter[int], app_commands.Transformer):
         return self.worker(argument)
 
     @override
-    async def transform(self, interaction: discord.Interaction, value: str) -> int:
+    async def transform(self, interaction: AluInteraction, value: str) -> int:
         return self.worker(value)
 
     @override
-    async def autocomplete(self, interaction: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice[str]]:
+    async def autocomplete(self, interaction: AluInteraction, arg: str) -> list[app_commands.Choice[str]]:
         month_names = self.mapping.keys() if not arg else fuzzy.finder(arg, self.mapping.keys())
         return [app_commands.Choice(name=name, value=name) for name in month_names]
 

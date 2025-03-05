@@ -10,7 +10,7 @@ from utils import const
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 __all__ = ("Disambiguator",)
@@ -21,7 +21,7 @@ class ConfirmationView(AluView):
         super().__init__(author_id=author_id, view_name="Confirmation Prompt", timeout=timeout)
         self.value: bool | None = None
 
-    async def button_callback(self, interaction: discord.Interaction, yes_no: bool) -> None:
+    async def button_callback(self, interaction: AluInteraction, yes_no: bool) -> None:
         self.value = yes_no
         await interaction.response.defer()
         for item in self.children:
@@ -30,22 +30,20 @@ class ConfirmationView(AluView):
         self.stop()
 
     @discord.ui.button(emoji=const.Tick.Yes, label="Confirm", style=discord.ButtonStyle.green)
-    async def confirm(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
+    async def confirm(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
         await self.button_callback(interaction, True)
 
     @discord.ui.button(emoji=const.Tick.No, label="Cancel", style=discord.ButtonStyle.red)
-    async def cancel(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
+    async def cancel(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
         await self.button_callback(interaction, False)
 
 
 class DisambiguatorView[T](AluView):
     selected: T
 
-    def __init__(
-        self, ctx_ntr: AluContext | discord.Interaction[AluBot], data: list[T], entry: Callable[[T], Any],
-    ) -> None:
+    def __init__(self, ctx_ntr: AluContext | AluInteraction, data: list[T], entry: Callable[[T], Any]) -> None:
         super().__init__(author_id=ctx_ntr.user.id, view_name="Select Menu")
-        self.ctx_ntr: AluContext | discord.Interaction[AluBot] = ctx_ntr
+        self.ctx_ntr: AluContext | AluInteraction = ctx_ntr
         self.data: list[T] = data
 
         options = []
@@ -62,7 +60,7 @@ class DisambiguatorView[T](AluView):
         self.select = select
         self.add_item(select)
 
-    async def on_select_submit(self, interaction: discord.Interaction) -> None:
+    async def on_select_submit(self, interaction: AluInteraction) -> None:
         index = int(self.select.values[0])
         self.selected = self.data[index]
         await interaction.response.defer()
@@ -84,12 +82,12 @@ class Disambiguator:
 
     async def send_message(
         self,
-        ctx_ntr: AluContext | discord.Interaction[AluBot],
+        ctx_ntr: AluContext | AluInteraction,
         embed: discord.Embed,
         view: discord.ui.View = discord.utils.MISSING,
         ephemeral: bool = True,
     ) -> discord.Message | discord.InteractionMessage:
-        """Boiler plate function that replies for both cases of AluContext and discord.Interaction."""
+        """Boiler plate function that replies for both cases of AluContext and AluInteraction."""
         if isinstance(ctx_ntr, AluContext):
             # Context
             return await ctx_ntr.reply(embed=embed, view=view, ephemeral=ephemeral)
@@ -101,7 +99,7 @@ class Disambiguator:
 
     async def confirm(
         self,
-        ctx_ntr: AluContext | discord.Interaction[AluBot],
+        ctx_ntr: AluContext | AluInteraction,
         embed: discord.Embed,
         *,
         timeout: float = 120.0,
@@ -116,7 +114,7 @@ class Disambiguator:
 
         Parameters
         ----------
-        ctx_ntr : AluContext | discord.Interaction[AluBot]
+        ctx_ntr : AluContext | AluInteraction
             context object to send confirmation with.
         embed : discord.Embed
             Embed to show along with the prompt.
@@ -157,7 +155,7 @@ class Disambiguator:
 
     async def disambiguate[T](
         self,
-        ctx_ntr: AluContext | discord.Interaction[AluBot],
+        ctx_ntr: AluContext | AluInteraction,
         matches: list[T],
         entry: Callable[[T], Any],
         *,

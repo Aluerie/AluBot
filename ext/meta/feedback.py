@@ -9,7 +9,7 @@ from discord.ext import commands
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluContext
+    from bot import AluBot, AluContext, AluInteraction
 
 from ._base import MetaCog
 
@@ -34,7 +34,7 @@ class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
         self.cog: FeedbackCog = cog
 
     @override
-    async def on_submit(self, interaction: discord.Interaction) -> None:
+    async def on_submit(self, interaction: AluInteraction) -> None:
         feedback_channel = self.cog.feedback_channel
         if feedback_channel is None:
             await interaction.response.send_message("Sorry, something went wrong \N{THINKING FACE}", ephemeral=True)
@@ -96,7 +96,7 @@ class FeedbackCog(MetaCog):
 
     @app_commands.checks.cooldown(1, 5 * 60.0, key=lambda i: i.user.id)
     @app_commands.command()
-    async def feedback(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def feedback(self, interaction: AluInteraction) -> None:
         """🦜 Give feedback about the bot directly to the bot developer."""
         await interaction.response.send_modal(FeedbackModal(self))
 

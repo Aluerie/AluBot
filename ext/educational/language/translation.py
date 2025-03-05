@@ -35,7 +35,7 @@ from .._base import EducationalCog
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class TranslatedSentence(TypedDict):
@@ -151,17 +151,17 @@ class TranslateCog(EducationalCog):
             description=result.translated,
         ).set_footer(text=f"Detected language: {result.source_lang}")
 
-    async def translate_context_menu_callback(self, interaction: discord.Interaction, message: discord.Message) -> None:
+    async def translate_context_menu_callback(self, interaction: AluInteraction, message: discord.Message) -> None:
         """Context Menu Translate."""
         if len(text := message.content) == 0:
             msg = "Sorry, but it seems, that this message doesn't have any text content to translate."
             raise errors.BadArgument(msg)
 
         embed = await self.translate_embed(text)
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed)
 
     @app_commands.command()
-    async def translate(self, interaction: discord.Interaction[AluBot], text: str) -> None:
+    async def translate(self, interaction: AluInteraction, text: str) -> None:
         """Google Translate to English, auto-detects source language.
 
         Parameters

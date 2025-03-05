@@ -21,7 +21,7 @@ from ._base import StatsCog
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
     class BatchLastYearEntry(TypedDict):
         emote_id: int
@@ -176,7 +176,7 @@ class EmoteStats(StatsCog):
     )
     async def emotestats_server(
         self,
-        interaction: discord.Interaction[AluBot],
+        interaction: AluInteraction,
         emote_type: Literal["both", "static", "animated"],
         timeframe: Literal["all-time", "year", "month"],
     ) -> None:
@@ -324,7 +324,7 @@ class EmoteStats(StatsCog):
             await self.bot.pool.execute(query, clean_up_dt)
 
     @emotestats_group.command(name="specific")
-    async def emotestats_specific(self, interaction: discord.Interaction[AluBot], emote: str) -> None:
+    async def emotestats_specific(self, interaction: AluInteraction, emote: str) -> None:
         """\N{ROLLING ON THE FLOOR LAUGHING} Show information and stats about specific emote.
 
         Parameters

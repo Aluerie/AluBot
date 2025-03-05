@@ -3,7 +3,6 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar, override
 
-import discord
 from discord import app_commands
 from discord.ext import commands
 
@@ -12,7 +11,7 @@ from utils import errors
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-    from bot import AluContext
+    from bot import AluContext, AluInteraction
 
 __all__ = (
     "LiteralPlatform",
@@ -197,7 +196,7 @@ class PlatformConverter(commands.Converter[Platform], app_commands.Transformer):
         raise errors.BadArgument(msg)
 
     @override
-    async def transform(self, _: discord.Interaction[discord.Client], value: str) -> Platform:
+    async def transform(self, _: AluInteraction, value: str) -> Platform:
         # since we have choices hard-coded it will be of Platform type-string
         # PS. app_commands.Transformer won't run without subclassed `transform`
         return Platform(value)

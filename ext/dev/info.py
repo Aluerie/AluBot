@@ -19,7 +19,7 @@ from utils import const
 from ._base import DevBaseCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -34,7 +34,7 @@ class DevInformation(DevBaseCog):
     )
 
     @system_group.command(name="restart")
-    async def system_restart(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def system_restart(self, interaction: AluInteraction) -> None:
         """🔬 (#Hideout) Restart the bot process on VPS.
 
         Usable to restart the bot without logging to VPS machine or committing something.
@@ -50,7 +50,7 @@ class DevInformation(DevBaseCog):
             await interaction.followup.send("Something went wrong.")
 
     @system_group.command(name="information")
-    async def system_information(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def system_information(self, interaction: AluInteraction) -> None:
         """🔬 (#Hideout) Get system info about machine hosting the bot."""
         # some data doesn't fit nicely with chained embed initialization format
         cpu_freq = f"| {ghz.current / 1000:.1f}GHz\n" if (ghz := psutil.cpu_freq()) else ""
@@ -93,7 +93,7 @@ class DevInformation(DevBaseCog):
         await interaction.response.send_message(embed=embed)
 
     @system_group.command(name="packages")
-    async def system_packages(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def system_packages(self, interaction: AluInteraction) -> None:
         """🔬 (#Hideout) Get info bot's main Python Packages."""
         curious_packages = [
             "discord.py",
@@ -119,13 +119,13 @@ class DevInformation(DevBaseCog):
         await interaction.response.send_message(embed=embed)
 
     @system_group.command(name="logs")
-    async def system_logs(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def system_logs(self, interaction: AluInteraction) -> None:
         """🔬 (#Hideout) Get bot's logs."""
         await interaction.response.defer()
         await interaction.followup.send(file=discord.File(".temp/alubot.log"))
 
     @system_group.command(name="health")
-    async def system_health(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def system_health(self, interaction: AluInteraction) -> None:
         """🔬 (#Hideout) Get bot's health status."""
         await interaction.response.defer()
 
@@ -194,11 +194,7 @@ class DevInformation(DevBaseCog):
 
     @app_commands.guilds(const.Guild.hideout)
     @app_commands.command(name="logs")
-    async def logs(
-        self,
-        interaction: discord.Interaction[AluBot],
-        project: Literal["AluBot", "LueBot", "Gloria"],
-    ) -> None:
+    async def logs(self, interaction: AluInteraction, project: Literal["AluBot", "LueBot", "Gloria"]) -> None:
         """(\N{GREY HEART} Hideout-Only) Get project's logs.
 
         Parameters

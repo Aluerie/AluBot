@@ -10,7 +10,7 @@ from .. import const
 from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
     class GetChampionEmoteRow(TypedDict):
         id: int
@@ -131,7 +131,7 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
 
 class ChampionTransformer(CharacterTransformer[Champion, PseudoChampion]):
     @override
-    def get_character_storage(self, interaction: discord.Interaction[AluBot]) -> Champions:
+    def get_character_storage(self, interaction: AluInteraction) -> Champions:
         return interaction.client.lol.champions
 
 

@@ -16,7 +16,7 @@ from utils import const, converters, fmt
 from ._base import InfoCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(
@@ -65,7 +65,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         await give_text_list(self.community.nsfw_bots_role, self.community.nsfw_bot_spam, 959982171492323388)
 
     @app_commands.command(name="gmt")
-    async def gmt(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def gmt(self, interaction: AluInteraction) -> None:
         """Show GMT (UTC) time."""
         now_time = discord.utils.utcnow().strftime("%H:%M:%S")
         now_date = discord.utils.utcnow().strftime("%d/%m/%Y")
@@ -82,7 +82,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
 
     @app_commands.command(name="role")
     @app_commands.describe(role="Choose role to get info about")
-    async def role_info(self, interaction: discord.Interaction[AluBot], role: discord.Role) -> None:
+    async def role_info(self, interaction: AluInteraction, role: discord.Role) -> None:
         """View info about selected role."""
         embed = discord.Embed(
             color=role.color,
@@ -102,7 +102,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
     @app_commands.rename(color="colour")
     async def color(
         self,
-        interaction: discord.Interaction[AluBot],
+        interaction: AluInteraction,
         color: app_commands.Transform[discord.Color, converters.AluColourTransformer],
     ) -> None:
         r"""Get info about colour in specified <formatted_colour_string>.
@@ -133,11 +133,11 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         await interaction.response.send_message(embed=e, file=file)
 
     @color.autocomplete("color")
-    async def autocomplete(self, _: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+    async def autocomplete(self, _: AluInteraction, current: str) -> list[app_commands.Choice[str]]:
         colors = ["prpl", "rgb(", "hsl(", "hsv(", "mp(", "map(", *list(ImageColor.colormap.keys())]
-        return [
-            app_commands.Choice(name=Color, value=Color) for Color in colors if current.lower() in Color.lower()
-        ][:25]
+        return [app_commands.Choice(name=Color, value=Color) for Color in colors if current.lower() in Color.lower()][
+            :25
+        ]
 
 
 class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
@@ -151,7 +151,7 @@ class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
     @app_commands.rename(member_="member", channel_="channel")
     async def wordcloud(
         self,
-        interaction: discord.Interaction[AluBot],
+        interaction: AluInteraction,
         member_: discord.Member | None = None,
         channel_: discord.TextChannel | None = None,
         limit: app_commands.Range[int, 2000] = 1000,

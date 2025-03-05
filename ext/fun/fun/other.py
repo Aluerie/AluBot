@@ -111,9 +111,7 @@ class Other(FunCog):
 
     @text_group.command()
     async def fancify(
-        self,
-        interaction: discord.Interaction[AluBot],
-        text: str,
+        self, interaction: AluInteraction, text: str
     ) -> None:  # cSpell:disable #fmt:off # black meeses it up x_x
         """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼.
 
@@ -131,7 +129,7 @@ class Other(FunCog):
         await self.send_mimic_text(interaction, answer)
 
     @app_commands.command()
-    async def apuband(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def apuband(self, interaction: AluInteraction) -> None:
         """Send apuband emote combo."""
         emote_names = ["peepo1Maracas", "peepo2Drums", "peepo3Piano", "peepo4Guitar", "peepo5Singer", "peepo6Sax"]
         content = " ".join([str(discord.utils.get(self.community.guild.emojis, name=e)) for e in emote_names])

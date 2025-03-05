@@ -255,7 +255,7 @@ class SetupMisc(FPCView):
         super().__init__(cog, author_id=author_id)
         self.embed: discord.Embed = embed
 
-    async def toggle_worker(self, interaction: discord.Interaction[AluBot], setting: str, field_index: int) -> None:
+    async def toggle_worker(self, interaction: AluInteraction, setting: str, field_index: int) -> None:
         """Helper function to toggle boolean settings for the subscriber's guild."""
         query = f"""
             UPDATE {self.cog.prefix}_settings
@@ -493,7 +493,7 @@ class SetupCharactersPaginator(pages.Paginator):
         self.cog.setup_messages_cache.pop(self.message.id, None)
 
     @discord.ui.button(emoji="\N{PAGE WITH CURL}", label="Favourites", style=discord.ButtonStyle.blurple)
-    async def favourite_characters(self, interaction: discord.Interaction, _: discord.ui.Button[Self]) -> None:
+    async def favourite_characters(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
         """Show favourite object list."""
         assert interaction.guild
         embed = await self.cog.get_character_list_embed(interaction.guild.id)
@@ -592,7 +592,7 @@ class AddRemoveButton(discord.ui.Button[SetupCharactersPaginator | SetupCharacte
         self.menu: SetupCharactersPaginator | SetupPlayersPaginator = menu
 
     @override
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def callback(self, interaction: AluInteraction) -> None:
         assert interaction.guild
 
         if self.is_favourite:
@@ -662,7 +662,7 @@ class RemoveAllAccountsButton(discord.ui.Button[DatabaseRemoveView]):
         self.player_name: str = player_name
 
     @override
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def callback(self, interaction: AluInteraction) -> None:
         query = f"DELETE FROM {self.cog.prefix}_players WHERE player_id=$1"
         result: str = await interaction.client.pool.execute(query, self.player_id)
 
@@ -698,7 +698,7 @@ class RemoveAccountButton(discord.ui.Button[DatabaseRemoveView]):
         self.account_id_column: str = account_id_column
 
     @override
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def callback(self, interaction: AluInteraction) -> None:
         query = f"DELETE FROM {self.cog.prefix}_accounts WHERE {self.account_id_column} = $1"
         result: str = await interaction.client.pool.execute(query, self.account_id)
         if result != "DELETE 1":
@@ -906,11 +906,11 @@ class BaseSettings(FPCCog):
         ).set_footer(text="Don't forget to add the player to your favourites!")
         await self.hideout.global_logs.send(embed=logs_embed)
 
-    async def database_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
+    async def database_remove(self, interaction: AluInteraction, player_name: str) -> None:
         """Base function for `/database {game} remove` command.
 
         This allows bot owner to remove player accounts from the bot's FPC database.
-        """  # TODO: docs on actual commands to say that it's a menu not insta death
+        """  # TODO: docs on actual commands to say that it's a menu not instant death
         await interaction.response.defer()
 
         player_id, display_name = await self.get_player_id_and_display_name(player_name)
@@ -934,7 +934,7 @@ class BaseSettings(FPCCog):
 
     # fpc settings related functions ###################################################################################
 
-    async def setup_channel(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def setup_channel(self, interaction: AluInteraction) -> None:
         """Base function for `/{game} setup channel` command.
 
         This gives
@@ -975,7 +975,7 @@ class BaseSettings(FPCCog):
         view.message = message
         self.setup_messages_cache[message.id] = view
 
-    async def is_fpc_channel_set(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def is_fpc_channel_set(self, interaction: AluInteraction) -> None:
         """Checks if the current guild has fpc channel set.
 
         It's somewhat needed because without it functions like `setup_characters`, `setup_players`
@@ -994,7 +994,7 @@ class BaseSettings(FPCCog):
             )
             raise errors.ErroneousUsage(msg)
 
-    async def setup_misc(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def setup_misc(self, interaction: AluInteraction) -> None:
         """Base function for `/{game} setup miscellaneous` command.
 
         This gives
@@ -1069,7 +1069,7 @@ class BaseSettings(FPCCog):
     # async def get_character_name_by_id_cache(self) -> dict[int, str]:
     #     raise NotImplementedError
 
-    async def setup_characters(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def setup_characters(self, interaction: AluInteraction) -> None:
         """Base function for `/{game} setup {character_plural}` command.
 
         This gives
@@ -1086,7 +1086,7 @@ class BaseSettings(FPCCog):
         # paginator.message is already assigned
         self.setup_messages_cache[message.id] = paginator
 
-    async def setup_players(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def setup_players(self, interaction: AluInteraction) -> None:
         """Base function for `/{game} setup players` command.
 
         This gives
@@ -1152,7 +1152,7 @@ class BaseSettings(FPCCog):
         )
         await interaction.followup.send(embed=embed)
 
-    async def hideout_player_remove(self, interaction: discord.Interaction[AluBot], player_name: str) -> None:
+    async def hideout_player_remove(self, interaction: AluInteraction, player_name: str) -> None:
         """Base function for `/{game}-dev player remove` Hideout-only command.
 
         Parameters
@@ -1205,7 +1205,7 @@ class BaseSettings(FPCCog):
         )
         await interaction.followup.send(embed=embed)
 
-    async def hideout_character_remove(self, interaction: discord.Interaction[AluBot], character: Character) -> None:
+    async def hideout_character_remove(self, interaction: AluInteraction, character: Character) -> None:
         """Base function for `/{game}-dev {character_singular} remove` Hideout-only command.
 
         Removes the character from subscriber's favourites.
@@ -1344,7 +1344,7 @@ class BaseSettings(FPCCog):
             for (name,) in await interaction.client.pool.fetch(query, current)
         ]
 
-    async def tutorial(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def tutorial(self, interaction: AluInteraction) -> None:
         """Base function for `/{game} tutorial` command.
 
         Responds with an embed explaining the whole work-flow for the end user on how to use FPC feature.

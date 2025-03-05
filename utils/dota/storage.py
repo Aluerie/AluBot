@@ -9,7 +9,7 @@ from .. import const, fmt
 from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluInteraction
 
     from .schemas import stratz
 
@@ -167,7 +167,7 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
 
 class HeroTransformer(CharacterTransformer[Hero, PseudoHero]):
     @override
-    def get_character_storage(self, interaction: discord.Interaction[AluBot]) -> Heroes:
+    def get_character_storage(self, interaction: AluInteraction) -> Heroes:
         return interaction.client.dota.heroes
 
 

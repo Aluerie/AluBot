@@ -37,7 +37,7 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         self.timer: Timer[RemindTimerData] = timer
 
     @override
-    async def on_submit(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def on_submit(self, interaction: AluInteraction) -> None:
         try:
             when = times.FutureTime(str(self.duration)).dt
         except commands.BadArgument:  # Exception
@@ -70,7 +70,7 @@ class SnoozeButton(discord.ui.Button["ReminderView"]):
         self.cog: Reminder = cog
 
     @override
-    async def callback(self, interaction: discord.Interaction) -> Any:
+    async def callback(self, interaction: AluInteraction) -> Any:
         assert self.view is not None
         await interaction.response.send_modal(SnoozeModal(self.view, self.timer))
 
@@ -86,7 +86,7 @@ class ReminderView(discord.ui.View):
         self.add_item(self.snooze)
 
     @override
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+    async def interaction_check(self, interaction: AluInteraction) -> bool:
         if interaction.user.id != self.author_id:
             await interaction.response.send_message("This snooze button is not for you, sorry!", ephemeral=True)
             return False
@@ -141,7 +141,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     @remind_group.command(name="set")
     async def reminder_set(
         self,
-        interaction: discord.Interaction[AluBot],
+        interaction: AluInteraction,
         when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
         text: str = "...",
     ) -> None:
@@ -178,7 +178,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     #     await self.remind_helper(ctx, dt=when_and_what.dt, text=when_and_what.arg)
 
     @remind_group.command(name="list")
-    async def remind_list(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def remind_list(self, interaction: AluInteraction) -> None:
         """Shows a list of your current reminders."""
         query = """
             SELECT id, expires, extra #>> '{args,2}'
@@ -211,7 +211,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
     # TODO: finish this?
     # async def remind_delete_id_autocomplete(
     #         self,
-    #         interaction: discord.Interaction,
+    #         interaction: AluInteraction,
     #         current: str
     # ) -> List[app_commands.Choice[str]]:
     #     """idk if it is a good idea"""
@@ -260,7 +260,7 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         await interaction.response.send_message(embed=embed)
 
     @remind_group.command(name="clear")
-    async def reminder_clear(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def reminder_clear(self, interaction: AluInteraction) -> None:
         """Clears all reminders you have set."""
         # For UX purposes this has to be two queries.
         query = """

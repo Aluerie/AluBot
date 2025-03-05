@@ -16,7 +16,7 @@ from utils import const, errors, fmt, pages
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext, AluInteraction
+    from bot import AluBot, AluInteraction
 
     class RemoveLongGoneRow(TypedDict):
         id: int
@@ -136,11 +136,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
     async def context_menu_view_user_rank_callback(self, interaction: AluInteraction, member: discord.Member) -> None:
         await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
 
-    async def rank_work(
-        self,
-        ctx: AluGuildContext | discord.Interaction[AluBot],
-        member: discord.Member,
-    ) -> discord.File:
+    async def rank_work(self, ctx: AluInteraction, member: discord.Member) -> discord.File:
         """Get file that is image for rank/levels information for desired member."""
         member = member or ctx.author or ctx.user
         if member.bot:
@@ -171,7 +167,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
     @app_commands.guilds(const.Guild.community)
     @app_commands.command(name="rank")
-    async def rank(self, interaction: discord.Interaction[AluBot], member: discord.Member) -> None:
+    async def rank(self, interaction: AluInteraction, member: discord.Member) -> None:
         """View member's rank and level in this server."""
         await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
 
@@ -288,8 +284,8 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
     @app_commands.guilds(const.Guild.community)
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @app_commands.describe(member="Member to give rep to")
-    async def reputation(self, interaction: discord.Interaction[AluBot], member: discord.Member) -> None:
-        """Give +1 to `@member`'s reputation ;"""
+    async def reputation(self, interaction: AluInteraction, member: discord.Member) -> None:
+        """Give +1 to `@member`'s reputation."""
         if member == interaction.user or member.bot:
             msg = "You can't give reputation to yourself or bots."
             raise errors.ErroneousUsage(msg)
@@ -337,10 +333,9 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
             if person is None and discord.utils.utcnow() - row["last_seen"] > datetime.timedelta(days=365):
                 query = "DELETE FROM community_members WHERE id=$1"
                 await self.bot.pool.execute(query, row["id"])
-                embed = discord.Embed(
-                    color=0xE6D690,
-                    description=f"id = {row['id']}",
-                ).set_author(name=f"{row['name']} was removed from the database")
+                embed = discord.Embed(color=0xE6D690, description=f"id = {row['id']}").set_author(
+                    name=f"{row['name']} was removed from the database"
+                )
                 await self.community.logs.send(embed=embed)
 
 

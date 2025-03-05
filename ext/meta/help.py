@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import discord
 from discord import app_commands
 from discord.ext import commands
 
@@ -12,7 +11,7 @@ from core.help_cmd import AluHelp
 from ._base import MetaCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class AluHelpCog(MetaCog):
@@ -25,7 +24,7 @@ class AluHelpCog(MetaCog):
 
     @app_commands.command(name="help")
     @app_commands.describe(query="Command/Section/Category name to get help about.")
-    async def slash_help(self, interaction: discord.Interaction[AluBot], *, query: str | None) -> None:
+    async def slash_help(self, interaction: AluInteraction, *, query: str | None) -> None:
         """Show help menu for the bot."""
         ctx = await AluContext.from_interaction(interaction)
         if query:

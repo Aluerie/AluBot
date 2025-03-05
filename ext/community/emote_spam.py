@@ -17,7 +17,7 @@ from utils import cache, const
 from ._base import CommunityCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class EmoteSpam(CommunityCog):
@@ -123,7 +123,7 @@ class EmoteSpam(CommunityCog):
             await self.bot.community.emote_spam.send(f"{emote!s} {emote!s} {emote!s}")
 
     @app_commands.command()
-    async def do_emote_spam(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def do_emote_spam(self, interaction: AluInteraction) -> None:
         """Send 3x random emote into emote spam channel."""
         emote = await self.get_random_emote()
         channel = self.community.emote_spam

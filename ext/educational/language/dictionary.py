@@ -337,7 +337,7 @@ class FreeDictionaryWordMeaningPaginator(pages.Paginator):
 class DictionaryCog(EducationalCog):
     @app_commands.command(name="define")
     @app_commands.describe(word="The word to look up")
-    async def define(self, interaction: discord.Interaction[AluBot], word: str) -> None:
+    async def define(self, interaction: AluInteraction, word: str) -> None:
         """Looks up an English word in the dictionary."""
         result = await parse_free_dictionary_for_word(self.bot.session, word=word)
         if result is None:

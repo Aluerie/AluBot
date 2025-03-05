@@ -11,7 +11,7 @@ from utils import const
 from ._base import ImageToolsCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class ToolsCog(ImageToolsCog, name="Tools", emote=const.Emote.DankFix):
@@ -22,7 +22,7 @@ class ToolsCog(ImageToolsCog, name="Tools", emote=const.Emote.DankFix):
 
     @app_commands.command()
     @app_commands.describe(url="Url of image to convert")
-    async def convert(self, interaction: discord.Interaction[AluBot], url: str) -> None:
+    async def convert(self, interaction: AluInteraction, url: str) -> None:
         """Convert image from webp to png format.
 
         Parameters

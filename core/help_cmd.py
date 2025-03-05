@@ -12,7 +12,7 @@ from utils import const, pages
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 type AluCommand = commands.Command[AluCog, Any, Any]
@@ -106,7 +106,7 @@ class HelpPages(pages.Paginator):
 
     def __init__(
         self,
-        ctx: AluContext | discord.Interaction[AluBot],
+        ctx: AluContext | AluInteraction,
         help_cmd: AluHelp,
         help_data: dict[ExtCategory, list[CogPage]],
     ) -> None:
@@ -122,7 +122,7 @@ class HelpPages(pages.Paginator):
             self.add_item(HelpSelect(self))
 
     @discord.ui.button(label="\N{WHITE QUESTION MARK ORNAMENT}", style=discord.ButtonStyle.blurple)
-    async def legend_page(self, interaction: discord.Interaction[AluBot], _button: discord.ui.Button[Self]) -> None:
+    async def legend_page(self, interaction: AluInteraction, _button: discord.ui.Button[Self]) -> None:
         """Show legend page."""
         e = discord.Embed(
             title="Legend used in the Help menu.",
@@ -186,7 +186,7 @@ class HelpSelect(discord.ui.Select[HelpPages]):
             )
 
     @override
-    async def callback(self, interaction: discord.Interaction[AluBot]) -> None:
+    async def callback(self, interaction: AluInteraction) -> None:
         page_to_open = int(self.values[0])
         await self.paginator.show_page(interaction, page_to_open)
 

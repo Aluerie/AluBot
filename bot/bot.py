@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from aiohttp import ClientSession
     from discord.abc import Snowflake
 
-    from bot import AluCog
+    from bot import AluCog, AluInteraction
     from types_.database import PoolTypedWithAny
 
 
@@ -218,7 +218,7 @@ class AluBot(commands.Bot):
         await asyncio.gather(*coroutines)
 
     @override
-    async def get_context(self, origin: discord.Interaction | discord.Message) -> AluContext:
+    async def get_context(self, origin: AluInteraction | discord.Message) -> AluContext:
         return await super().get_context(origin, cls=AluContext)
 
     @property

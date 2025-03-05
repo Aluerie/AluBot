@@ -21,7 +21,7 @@ from utils import const
 from ._base import InfoCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.PepoG):
@@ -45,7 +45,7 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
 
     def get_avatar_embed_worker(
         self,
-        # ctx: AluGuildContext | discord.Interaction[AluBot],
+        # ctx: AluGuildContext | AluInteraction,
         user: discord.User,
     ) -> discord.Embed:
         """Embed for view user avatar related commands."""
@@ -54,7 +54,7 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
             title=f"Avatar for {user.display_name}",
         ).set_image(url=user.display_avatar.url)
 
-    async def view_user_avatar(self, interaction: discord.Interaction, user: discord.User) -> None:
+    async def view_user_avatar(self, interaction: AluInteraction, user: discord.User) -> None:
         """Callback for context menu command "View User Avatar"."""
         embed = self.get_avatar_embed_worker(user)
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -65,7 +65,7 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
     )
 
     @profile_group.command(name="avatar")
-    async def profile_avatar(self, interaction: discord.Interaction[AluBot], user: discord.User) -> None:
+    async def profile_avatar(self, interaction: AluInteraction, user: discord.User) -> None:
         """\N{IDENTIFICATION CARD} View @user's avatar picture.
 
         Parameters
@@ -76,7 +76,7 @@ class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.Pe
         await interaction.response.send_message(embed=self.get_avatar_embed_worker(user))
 
     @profile_group.command(name="banner")
-    async def profile_banner(self, interaction: discord.Interaction[AluBot], user: discord.User) -> None:
+    async def profile_banner(self, interaction: AluInteraction, user: discord.User) -> None:
         """\N{IDENTIFICATION CARD} View @user's banner picture.
 
         Parameters

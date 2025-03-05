@@ -4,7 +4,6 @@ import datetime
 import zoneinfo
 from typing import TYPE_CHECKING, NamedTuple, override
 
-import discord
 from discord import app_commands
 from lxml import etree
 
@@ -13,7 +12,7 @@ from bot import AluContext
 from . import cache, errors, fuzzy
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from bot import AluBot, AluInteraction
 
 
 class TimeZone(NamedTuple):
@@ -78,12 +77,12 @@ class TimeZoneTransformer(app_commands.Transformer):
     """Transformer to use in app_commands."""
 
     @override
-    async def transform(self, interaction: discord.Interaction[AluBot], value: str) -> TimeZone:
+    async def transform(self, interaction: AluInteraction, value: str) -> TimeZone:
         ctx = await AluContext.from_interaction(interaction)
         return await TimeZone.convert(ctx, value)
 
     @override
-    async def autocomplete(self, interaction: discord.Interaction[AluBot], arg: str) -> list[app_commands.Choice[str]]:
+    async def autocomplete(self, interaction: AluInteraction, arg: str) -> list[app_commands.Choice[str]]:
         tz_manager = interaction.client.tz_manager
 
         if not arg:

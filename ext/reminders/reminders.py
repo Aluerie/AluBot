@@ -3,16 +3,14 @@ from __future__ import annotations
 import datetime  # noqa: TC003
 import logging
 import textwrap
-from typing import TYPE_CHECKING, Any, TypedDict, override
+from typing import TYPE_CHECKING, Any, Self, TypedDict, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot import AluContext
-from utils import MISSING, const, fmt, pages, times
-
-from ._base import RemindersCog
+from bot import AluCog, AluView
+from utils import MISSING, const, errors, fmt, pages, times
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction, Timer
@@ -23,6 +21,8 @@ if TYPE_CHECKING:
         text: str
         message_id: int
 
+
+__all__ = ("Reminders",)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -64,10 +64,10 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
 
 
 class SnoozeButton(discord.ui.Button["ReminderView"]):
-    def __init__(self, cog: Reminder, timer: Timer[RemindTimerData]) -> None:
+    def __init__(self, cog: Reminders, timer: Timer[RemindTimerData]) -> None:
         super().__init__(label="Snooze", style=discord.ButtonStyle.blurple)
         self.timer: Timer[RemindTimerData] = timer
-        self.cog: Reminder = cog
+        self.cog: Reminders = cog
 
     @override
     async def callback(self, interaction: AluInteraction) -> Any:
@@ -75,15 +75,13 @@ class SnoozeButton(discord.ui.Button["ReminderView"]):
         await interaction.response.send_modal(SnoozeModal(self.view, self.timer))
 
 
-class ReminderView(discord.ui.View):
-    message: discord.Message
-
-    def __init__(self, *, url: str, timer: Timer[RemindTimerData], cog: Reminder, author_id: int) -> None:
-        super().__init__(timeout=300)
+class ReminderView(AluView, name="Reminder Buttons"):
+    def __init__(self, *, url: str, timer: Timer[RemindTimerData], cog: Reminders, author_id: int) -> None:
+        super().__init__(timeout=300, author_id=author_id)
+        self.timer: Timer[RemindTimerData] = timer
+        self.cog: Reminders = cog
         self.author_id: int = author_id
-        self.snooze = SnoozeButton(cog, timer)
         self.add_item(discord.ui.Button(url=url, label="Go to original message"))
-        self.add_item(self.snooze)
 
     @override
     async def interaction_check(self, interaction: AluInteraction) -> bool:
@@ -97,41 +95,19 @@ class ReminderView(discord.ui.View):
         self.snooze.disabled = True
         await self.message.edit(view=self)
 
+    @discord.ui.button(label="Snooze", style=discord.ButtonStyle.blurple)
+    async def snooze(self, interaction: AluInteraction, button: discord.ui.Button[Self]) -> None:
+        """Make a non-anonymous confession."""
+        await interaction.response.send_modal(SnoozeModal(self, self.timer))
 
-class Reminder(RemindersCog, emote=const.Emote.DankG):
+
+class Reminders(AluCog):
     """Remind yourself of something at sometime."""
 
     @override
     async def cog_load(self) -> None:
         self.bot.instantiate_tz_manager()
-
-    async def remind_helper(self, ctx: AluContext, *, dt: datetime.datetime, text: str) -> None:
-        """Remind helper so we don't duplicate."""
-        if len(text) >= 1500:
-            await ctx.send("Reminder must be fewer than 1500 characters.")
-            return
-
-        zone = await self.bot.tz_manager.get_timezone(ctx.author.id)
-        data: RemindTimerData = {
-            "author_id": ctx.author.id,
-            "channel_id": ctx.channel.id,
-            "text": text,
-            "message_id": ctx.message.id,
-        }
-        timer = await self.bot.timers.create(
-            event="reminder",
-            expires_at=dt,
-            created_at=ctx.message.created_at,
-            timezone=zone or "UTC",
-            data=data,
-        )
-        delta = fmt.human_timedelta(dt, source=timer.created_at)
-        e = discord.Embed(color=ctx.author.color)
-        e.set_author(name=f"Reminder for {ctx.author.display_name} is created", icon_url=ctx.author.display_avatar)
-        e.description = f"in {delta} — {fmt.format_dt_tdR(dt)}\n{text}"
-        if zone is None:
-            e.set_footer(text=f'\N{ELECTRIC LIGHT BULB} You can set your timezone with "{ctx.prefix}timezone set')
-        await ctx.reply(embed=e)
+        await super().cog_load()
 
     remind_group = app_commands.Group(
         name="remind",
@@ -154,8 +130,39 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
         text
             What to be reminded of.
         """
-        ctx = await AluContext.from_interaction(interaction)
-        await self.remind_helper(ctx, dt=when, text=text)
+        if len(text) >= 1500:
+            msg = "Reminder must be fewer than 1500 characters."
+            raise errors.BadArgument(msg)
+
+        assert interaction.channel
+
+        zone = await self.bot.tz_manager.get_timezone(interaction.user.id)
+        data: RemindTimerData = {
+            "author_id": interaction.user.id,
+            "channel_id": interaction.channel.id,
+            "text": text,
+            "message_id": interaction.id,  # synthetic, it's invalid id
+        }
+        timer = await self.bot.timers.create(
+            event="reminder",
+            expires_at=when,
+            created_at=interaction.created_at,
+            timezone=zone or "UTC",
+            data=data,
+        )
+        delta = fmt.human_timedelta(when, source=timer.created_at)
+        embed = discord.Embed(
+            color=interaction.user.color, description=f"in {delta} — {fmt.format_dt_tdR(when)}\n{text}"
+        ).set_author(
+            name=f"Reminder for {interaction.user.display_name} is created", icon_url=interaction.user.display_avatar
+        )
+        if zone is None:
+            mention = interaction.client.tree.find_mention("timezone set")
+            embed.add_field(
+                name="P.S.",
+                value=f"\N{ELECTRIC LIGHT BULB} You can set your timezone with {mention}",
+            )
+        await interaction.response.send_message(embed=embed)
 
     # @remind.command(name="me", with_app_command=False)
     # async def remind_me(
@@ -341,4 +348,4 @@ class Reminder(RemindersCog, emote=const.Emote.DankG):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(Reminder(bot))
+    await bot.add_cog(Reminders(bot))

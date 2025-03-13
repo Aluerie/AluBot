@@ -7,9 +7,7 @@ from typing import TYPE_CHECKING, override
 
 from discord.ext import commands
 
-from bot import aluloop
-
-from ._base import CommunityCog
+from bot import AluCog, aluloop
 
 if TYPE_CHECKING:
     import discord
@@ -17,7 +15,7 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 
-class StatsVoiceChannels(CommunityCog):
+class StatsVoiceChannels(AluCog):
     """Keep flavour info as names for private voice channels.
 
     To be honest, this is discord API abuse.
@@ -32,17 +30,19 @@ class StatsVoiceChannels(CommunityCog):
         self._lock: asyncio.Lock = asyncio.Lock()
         self.cooldown: datetime.timedelta = datetime.timedelta(seconds=3600)
         self._most_recent: datetime.datetime | None = None
+        await super().cog_load()
 
     @override
     async def cog_unload(self) -> None:
         self.my_time.stop()
+        await super().cog_unload()
 
     @aluloop(time=[datetime.time(hour=x) for x in range(24)])  # 24 times a day
     async def my_time(self) -> None:
         """Update channel name to show Irene's Current Time."""
         symbol = "#" if platform.system() == "Windows" else "-"
         msk_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3)))
-        new_name = f'\N{ALARM CLOCK} {msk_now.strftime(f"%{symbol}I %p")}, MSK, Aluerie time'
+        new_name = f"\N{ALARM CLOCK} {msk_now.strftime(f'%{symbol}I %p')}, MSK, Aluerie time"
         await self.bot.community.my_time.edit(name=new_name)
 
     @commands.Cog.listener("on_member_join")

@@ -20,7 +20,7 @@ __all__: tuple[str, ...] = (
     "BadArgument",
     "ErroneousUsage",
     "PermissionsError",
-    "PlaceholderRaiseError",
+    "PlaceholderError",
     "ResponseNotOK",
     "SomethingWentWrong",
     "UserError",
@@ -92,7 +92,7 @@ class TranslateError(AluBotError):
         super().__init__(f"Google Translate responded with HTTP Status Code {status_code}")
 
 
-class PlaceholderRaiseError(AluBotError):
+class PlaceholderError(AluBotError):
     """Placeholder Error.
 
     Maybe silly thing, but instead of doing empty `raise` that is not clear later in logs what exactly it is
@@ -104,8 +104,21 @@ class PlaceholderRaiseError(AluBotError):
 
 
 class TimeoutError(AluBotError):  # noqa: A001
+    """Timeout Error."""
+
     __slots__: tuple[str, ...] = ()
 
 
-class PermissionsError(AluBotError):  # noqa: D101
+class PermissionsError(AluBotError):
+    """Permissions Error."""
+
+    __slots__: tuple[str, ...] = ()
+
+
+class NotFound(AluBotError):
+    """Something wasn't found.
+
+    Simple as that, this error implies that the bot was searching for something and didn't find anything.
+    """
+
     __slots__: tuple[str, ...] = ()

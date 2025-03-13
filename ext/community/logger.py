@@ -8,10 +8,8 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext import commands
 
-from bot import aluloop
+from bot import AluCog, aluloop
 from utils import const, fmt
-
-from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -19,7 +17,7 @@ if TYPE_CHECKING:
     from bot import AluBot, AluContext
 
 
-class CommunityLogging(CommunityCog):
+class Logger(AluCog):
     """Logging actions of community members.
 
     Notes
@@ -32,11 +30,13 @@ class CommunityLogging(CommunityCog):
     async def cog_load(self) -> None:
         self.nicknames_database_check.start()
         self.check_voice_members.start()
+        await super().cog_load()
 
     @override
     async def cog_unload(self) -> None:
         self.nicknames_database_check.cancel()
         self.check_voice_members.cancel()
+        await super().cog_unload()
 
     def base_embed(self, member: discord.Member) -> discord.Embed:
         return discord.Embed(
@@ -58,42 +58,52 @@ class CommunityLogging(CommunityCog):
         self,
         member: discord.Member,
         attribute_locale: str,
-        before_field: str | None,
-        after_field: str | None,
+        before: str | None,
+        after: str | None,
     ) -> discord.Embed:
         """Gives Before/After embed to send later for logger purposes.
 
         Parameters
         ----------
-        member
+        member: discord.Member
             member for whom the embed is triggered for
-        attribute_locale
+        attribute_locale: str
             Name from Discord Settings page for changed @member's object attribute
-        before_field
+        before: str | None
             Value of the said attribute before the triggered event
-        after_field
-            Value of the said attribute before the triggered event
+        after: str | None
+            Value of the said attribute after the triggered event
 
         Returns
         -------
-        Embed to send for logger purposes
+        discord.Embed
+            Embed to send for logger purposes
 
         """
-        embed = self.base_embed(member)
-        embed.description = (
-            f"{member.mention}'s {attribute_locale} was {self.verb_word(before_field, after_field)} "
-            f"{const.Emote.PepoDetective}\n"
+        if before is None and after:
+            verb = "set"
+        elif before and after is None:
+            verb = "removed"
+        else:
+            verb = "changed"
+
+        return (
+            discord.Embed(
+                color=member.color,
+                description=(f"{member.mention}'s {attribute_locale} was {verb} {const.Emote.PepoDetective}\n"),
+            )
+            .set_author(
+                name=str(member),
+                icon_url=member.display_avatar.url,
+            )
+            .add_field(name="Before", value=discord.utils.escape_markdown(before) if before else "`...`")
+            .add_field(name="After", value=discord.utils.escape_markdown(after) if after else "`...`")
         )
-        embed.add_field(name="Before", value=discord.utils.escape_markdown(before_field) if before_field else "`...`")
-        embed.add_field(name="After", value=discord.utils.escape_markdown(after_field) if after_field else "`...`")
-        return embed
 
     # MEMBER UPDATES
 
     @commands.Cog.listener("on_user_update")
     async def logger_on_user_update(self, before: discord.User, after: discord.User) -> None:
-        # if self.community.guild.id not in before.mutual_guilds:
-        #     return
         member = self.community.guild.get_member(after.id)
         if member is None:
             return
@@ -457,4 +467,4 @@ class CommunityLogging(CommunityCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(CommunityLogging(bot))
+    await bot.add_cog(Logger(bot))

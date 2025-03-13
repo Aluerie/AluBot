@@ -1,4 +1,5 @@
-#  ruff: noqa: D101, D102, D103, T200, T201, F841
+# ruff: noqa: D100, D101, D102, D103, T200, T201, F841
+# pyright: reportImplicitOverride=false
 from __future__ import annotations
 
 from examples.beta.base import *

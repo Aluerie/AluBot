@@ -74,7 +74,7 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
         await self.paginator.show_page(interaction, new_page_number)
 
 
-class Paginator(AluView):
+class Paginator(AluView, name="Pagination Menu"):
     """Pagination Menu.
 
     Subclassing
@@ -117,7 +117,7 @@ class Paginator(AluView):
         author_id: int | None = None,
         timeout: float | None = 300.0,
     ) -> None:
-        super().__init__(author_id=author_id or interaction.user.id, view_name="Pagination Menu", timeout=timeout)
+        super().__init__(author_id=author_id or interaction.user.id, timeout=timeout)
         self.interaction: AluInteraction = interaction
         self.bot: AluBot = interaction.client  # just a shortcut
         self.entries: Sequence[Any] = entries

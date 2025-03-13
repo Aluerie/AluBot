@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import itertools
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
+from typing import TYPE_CHECKING, Literal, TypedDict, override
 
 import discord
 from discord import app_commands
@@ -10,10 +11,8 @@ from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from tabulate import tabulate
 
-from bot import aluloop
+from bot import AluCog, aluloop
 from utils import const, errors, fmt, pages
-
-from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
@@ -27,6 +26,14 @@ if TYPE_CHECKING:
         id: int
         exp: int
         rep: int
+
+    class RankQueryRow(TypedDict):
+        in_lvl: bool
+        exp: int
+        rep: int
+
+
+__all__ = ("Levels",)
 
 
 LAST_SEEN_TIMEOUT = 60
@@ -43,57 +50,6 @@ exp_lvl_table = [
 # fmt: on
 
 
-async def rank_image(
-    bot: AluBot,
-    lvl: int,
-    exp: int,
-    rep: int,
-    next_lvl_exp: int,
-    prev_lvl_exp: int,
-    place_str: str,
-    member: discord.Member,
-) -> Image.Image:
-    image = Image.open("./assets/images/profile/welcome.png", mode="r")
-    avatar = await bot.transposer.url_to_image(member.display_avatar.url)
-    avatar = avatar.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
-
-    width, height = image.size
-    new_width, new_height = avatar.size
-
-    left = int(width - new_width)
-    top = int((height - new_height) / 2)
-    # right = int((width + new_width) / 2)
-    # bottom = int((height + new_height) / 2)
-
-    mask_im = Image.new("L", avatar.size, 0)
-    draw = ImageDraw.Draw(mask_im)
-    draw.ellipse((0, 0, new_width, new_height), fill=255)
-    mask_im.save("./assets/images/profile/mask_circle.jpg", quality=95)
-
-    mask_im_blur = mask_im.filter(ImageFilter.GaussianBlur(5))
-    mask_im_blur.save("./assets/images/profile/mask_circle_blur.jpg", quality=95)
-
-    image.paste(avatar, (left, top), mask_im)
-
-    d = ImageDraw.Draw(image)
-    d.rectangle((0, height * 6 / 7, width, height), fill=(98, 98, 98))
-    d.rectangle(
-        (0, height * 6 / 7, (exp - prev_lvl_exp) / (next_lvl_exp - prev_lvl_exp) * width, height),
-        fill=member.color.to_rgb(),
-    )
-
-    font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 60)
-    d.text((width / 4, 0), member.display_name, fill=(255, 255, 255), font=font)
-    d.text((width / 4, height * 2 / 6), f"{place_str} rank", fill=(255, 255, 255), font=font)
-    d.text((width / 4, height * 3 / 6), f"LVL {lvl}", fill=(255, 255, 255), font=font)
-    d.text((width / 4, height * 4 / 6), f"{rep} REP", fill=(255, 255, 255), font=font)
-
-    msg = f"{exp}/{next_lvl_exp} EXP"
-    w4, _h4 = bot.transposer.get_text_wh(msg, font)
-    d.text((width - w4, height * 5 / 6), msg, fill=(255, 255, 255), font=font)
-    return image
-
-
 def get_level(exp: int) -> int:
     level = 0
     for item in exp_lvl_table:
@@ -106,70 +62,95 @@ def get_exp_for_next_level(lvl: int) -> int:
     return exp_lvl_table[lvl]
 
 
-class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA):
-    """Commands about member profiles.
+class Levels(AluCog):
+    """Experience and Levels System.
 
-    There is a profile system in Irene's server: levelling experience,
-    reputation and many other things (currency, custom profile) to come
+    Just a lame XP per Message system with some fancy images and tables.
     """
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.view_user_rank = app_commands.ContextMenu(
-            name="View User Server Rank",
-            callback=self.context_menu_view_user_rank_callback,
-            guild_ids=[const.Guild.community],
-        )
 
     @override
     async def cog_load(self) -> None:
         self.remove_long_gone_members.start()
-        self.bot.tree.add_command(self.view_user_rank)
+        await super().cog_load()
 
     @override
     async def cog_unload(self) -> None:
         self.remove_long_gone_members.cancel()
-        c = self.view_user_rank
-        self.bot.tree.remove_command(c.name, type=c.type)
+        await super().cog_unload()
 
-    async def context_menu_view_user_rank_callback(self, interaction: AluInteraction, member: discord.Member) -> None:
-        await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
+    @app_commands.guilds(*const.MY_GUILDS)
+    @app_commands.command(name="rank")
+    @app_commands.rename(member_="member")
+    async def rank(self, interaction: AluInteraction, member_: discord.Member | None = None) -> None:
+        """View member's rank and experience level in this server.
 
-    async def rank_work(self, ctx: AluInteraction, member: discord.Member) -> discord.File:
-        """Get file that is image for rank/levels information for desired member."""
-        member = member or ctx.author or ctx.user
+        Parameters
+        ----------
+        member_: discord.User | None = None
+            Member to check experience and rank of.
+        """
+        member = member_ or interaction.user
+
         if member.bot:
             msg = "Sorry! our system does not count experience for bots."
             raise errors.ErroneousUsage(msg)
 
         query = "SELECT in_lvl, exp, rep FROM community_members WHERE id=$1"
-        row = await ctx.client.pool.fetchrow(query, member.id)
-        if not row.in_lvl:
+        row: RankQueryRow = await interaction.client.pool.fetchrow(query, member.id)
+        if not row["in_lvl"]:
             msg = "You decided to opt out of the exp system before"
             raise errors.ErroneousUsage(msg)
-        lvl = get_level(row.exp)
+
+        lvl = get_level(row["exp"])
         next_lvl_exp, prev_lvl_exp = get_exp_for_next_level(lvl), get_exp_for_next_level(lvl - 1)
 
         query = "SELECT COUNT(*) FROM community_members WHERE exp > $1"
-        place = 1 + await ctx.client.pool.fetchval(query, row.exp)
-        image = await rank_image(
-            ctx.client,
-            lvl,
-            row.exp,
-            row.rep,
-            next_lvl_exp,
-            prev_lvl_exp,
-            fmt.ordinal(place),
-            member,
-        )
-        return ctx.client.transposer.image_to_file(image, filename="rank.png")
+        place: int = 1 + await interaction.client.pool.fetchval(query, row["exp"])
 
-    @app_commands.guilds(const.Guild.community)
-    @app_commands.command(name="rank")
-    async def rank(self, interaction: AluInteraction, member: discord.Member) -> None:
-        """View member's rank and level in this server."""
-        await interaction.response.send_message(file=await self.rank_work(interaction, member), ephemeral=True)
+        member_avatar = await interaction.client.transposer.url_to_image(member.display_avatar.url)
+
+        def build_image() -> Image.Image:
+            """Build Rank Image."""
+            canvas = Image.open("./assets/images/profile/welcome.png", mode="r")
+            avatar = member_avatar.resize((round(canvas.size[1] * 1.00), round(canvas.size[1] * 1.00)))
+
+            canvas_w, canvas_h = canvas.size
+            avatar_w, avatar_h = avatar.size
+
+            left = int(canvas_w - avatar_w)
+            top = int((canvas_h - avatar_h) / 2)
+
+            mask_im = Image.new("L", avatar.size, 0)
+            draw = ImageDraw.Draw(mask_im)
+            draw.ellipse((0, 0, avatar_w, avatar_h), fill=255)
+            mask_im.save("./assets/images/profile/mask_circle.jpg", quality=95)
+
+            mask_im_blur = mask_im.filter(ImageFilter.GaussianBlur(5))
+            mask_im_blur.save("./assets/images/profile/mask_circle_blur.jpg", quality=95)
+
+            canvas.paste(avatar, (left, top), mask_im)
+
+            d = ImageDraw.Draw(canvas)
+            d.rectangle((0, canvas_h * 6 / 7, canvas_w, canvas_h), fill=(98, 98, 98))
+            d.rectangle(
+                (0, canvas_h * 6 / 7, (row["exp"] - prev_lvl_exp) / (next_lvl_exp - prev_lvl_exp) * canvas_w, canvas_h),
+                fill=member.color.to_rgb(),
+            )
+
+            font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 60)
+            d.text((canvas_w / 4, 0), member.display_name, fill=(255, 255, 255), font=font)
+            d.text((canvas_w / 4, canvas_h * 2 / 6), f"{fmt.ordinal(place)} rank", fill=(255, 255, 255), font=font)
+            d.text((canvas_w / 4, canvas_h * 3 / 6), f"{fmt.ordinal(lvl)} level", fill=(255, 255, 255), font=font)
+            d.text((canvas_w / 4, canvas_h * 4 / 6), f"{row['rep']} rep", fill=(255, 255, 255), font=font)
+
+            msg = f"{row['exp']}/{next_lvl_exp} EXP"
+            w4, _h4 = interaction.client.transposer.get_text_wh(msg, font)
+            d.text((canvas_w - w4, canvas_h * 5 / 6), msg, fill=(255, 255, 255), font=font)
+            return canvas
+
+        rank_image = await asyncio.to_thread(build_image)
+        file = interaction.client.transposer.image_to_file(rank_image, filename="rank.png")
+        await interaction.response.send_message(file=file)
 
     @app_commands.guilds(*const.MY_GUILDS)
     @app_commands.command(name="leaderboard")
@@ -178,7 +159,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
         Parameters
         ----------
-        sort_by
+        sort_by: Literal["exp", "rep"] = "exp"
             Choose how to sort leaderboard
         """
         guild = self.community.guild
@@ -243,6 +224,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
     @commands.Cog.listener(name="on_message")
     async def experience_counting(self, message: discord.Message) -> None:
+        """Message listener that counts experience points."""
         if message.author.bot:
             return
 
@@ -299,6 +281,7 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
     @commands.Cog.listener(name="on_message")
     async def reputation_counting(self, message: discord.Message) -> None:
+        """Message listener that counts experience points."""
         if message.author.bot:
             return
 
@@ -341,4 +324,4 @@ class ExperienceSystem(CommunityCog, name="Profile", emote=const.Emote.bubuAYAYA
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(ExperienceSystem(bot))
+    await bot.add_cog(Levels(bot))

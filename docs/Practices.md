@@ -143,3 +143,7 @@ As we can see `url` and `description` are undecided.
         # something something
         await self.bot.timers.cleanup(timer.id)  # ! This is a must 
 ```
+
+## Docs String Emotes
+
+Use actual emotes in the beginning of doc strings for app commands. This way it's much easier to Ctrl+F in the whole project since in all other places we use N{} versions of those.

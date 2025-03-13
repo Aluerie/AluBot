@@ -103,16 +103,24 @@ class AluView(discord.ui.View):
         Therefore check for `hasattr(self, "message")` when needed.
         """
 
+    def __init_subclass__(cls, name: str = "Interactive Element") -> None:
+        cls.name: str = name
+        """Essentially a display name for the View, which is shown to the end-user in some cases.
+
+        We can try doing __class__.__name__ stuff and add spaces instead of "Interactive Element",
+        but it might get tricky since like FPCSetupMiscView exists
+        """
+        return super().__init_subclass__()
+
     def __init__(
-        self, *, author_id: int | None, view_name: str = "Interactive Element", timeout: float | None = 180.0
+        self,
+        *,
+        author_id: int | None,
+        timeout: float | None = 180.0,
     ) -> None:
         """Initialize AluView."""
         super().__init__(timeout=timeout)
         self.author_id: int | None = author_id
-
-        # we could try doing __class__.__name__ stuff and add spaces, replace "view" with "interactive element"
-        # but it might get tricky since like FPCSetupMiscView exists
-        self.view_name: str = view_name
 
     @override
     async def interaction_check(self, interaction: AluInteraction) -> bool:
@@ -126,7 +134,7 @@ class AluView(discord.ui.View):
         # we need to deny control to this non-author user
         embed = discord.Embed(
             color=const.Color.error,
-            description=f"Sorry! This {self.view_name} is not meant to be controlled by you.",
+            description=f"Sorry! This `{self.name}` is not meant for you.",
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return False

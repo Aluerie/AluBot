@@ -14,6 +14,7 @@ import datetime
 import enum
 import logging
 import os
+import pprint
 import random
 import sys
 from dataclasses import dataclass
@@ -39,7 +40,7 @@ from discord import app_commands
 from discord.ext import commands, menus
 from tabulate import tabulate
 
-from bot import AluBot, AluCog, ExtCategory, aluloop
+from bot import AluBot, AluCog, aluloop
 from config import config
 from utils import cache, const, errors, fmt, fuzzy, timezones
 from utils.helpers import measure_time
@@ -53,14 +54,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-category = ExtCategory(
-    name="Beta Features",
-    emote=const.Emote.bedWTF,
-    description="Beta Features",
-)
-
-
-class BetaCog(AluCog, category=category):
+class BetaCog(AluCog):
     """Base Class for BetaTest cog."""
 
     @override

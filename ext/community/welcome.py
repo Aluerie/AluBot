@@ -7,9 +7,8 @@ import discord
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from bot import AluCog
 from utils import const
-
-from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from bot import AluBot, AluContext
@@ -24,41 +23,41 @@ if TYPE_CHECKING:
         name: str
 
 
-class Welcome(CommunityCog):
+class Welcome(AluCog):
     async def welcome_image(self, member: discord.User | discord.Member) -> Image.Image:
         avatar_asset = await self.bot.transposer.url_to_image(member.display_avatar.url)
 
         def build_image() -> Image.Image:
-            image = Image.open("./assets/images/profile/welcome.png", mode="r")
-            avatar = avatar_asset.resize((round(image.size[1] * 1.00), round(image.size[1] * 1.00)))
+            canvas = Image.open("./assets/images/profile/welcome.png", mode="r")
+            avatar = avatar_asset.resize((round(canvas.size[1] * 1.00), round(canvas.size[1] * 1.00)))
 
-            width, height = image.size
-            new_width, new_height = avatar.size
+            canvas_w, canvas_h = canvas.size
+            avatar_w, avatar_h = avatar.size
 
-            left = int((width - new_width) / 2)
-            top = int((height - new_height) / 2)
+            left = int((canvas_w - avatar_w) / 2)
+            top = int((canvas_h - avatar_h) / 2)
 
             mask_im = Image.new("L", avatar.size, 0)
             draw = ImageDraw.Draw(mask_im)
-            draw.ellipse((0, 0, new_width, new_height), fill=255)
+            draw.ellipse((0, 0, avatar_w, avatar_h), fill=255)
             mask_im.save("./assets/images/profile/mask_circle.jpg", quality=95)
 
             mask_im_blur = mask_im.filter(ImageFilter.GaussianBlur(5))
             mask_im_blur.save("./assets/images/profile/mask_circle_blur.jpg", quality=95)
 
-            image.paste(avatar, (left, top), mask_im)
+            canvas.paste(avatar, (left, top), mask_im)
 
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 80)
-            d = ImageDraw.Draw(image)
+            d = ImageDraw.Draw(canvas)
             msg = member.display_name
             w1, h1 = self.bot.transposer.get_text_wh(msg, font)
-            d.text(((width - w1) / 1 - 10, (height - h1) / 1 - 10), msg, fill=(255, 255, 255), font=font)
+            d.text(((canvas_w - w1) / 1 - 10, (canvas_h - h1) / 1 - 10), msg, fill=(255, 255, 255), font=font)
 
             font = ImageFont.truetype("./assets/fonts/MonsieurLaDoulaise-Regular.ttf", 90)
             msg = "Welcome !"
             w2, h2 = self.bot.transposer.get_text_wh(msg, font)
-            d.text(((width - w2) / 1 - 10, (height - h2) / 1 - 10 - h1 - 10), msg, fill=(255, 255, 255), font=font)
-            return image
+            d.text(((canvas_w - w2) / 1 - 10, (canvas_h - h2) / 1 - 10 - h1 - 10), msg, fill=(255, 255, 255), font=font)
+            return canvas
 
         return await asyncio.to_thread(build_image)
 
@@ -75,14 +74,13 @@ class Welcome(CommunityCog):
 
         if not member.bot:
             description = (
-                f"**💜 {const.User.aluerie} is our princess"
-                f"and I'm her bot ! {const.Emote.peepoRoseDank} {const.Emote.peepoRoseDank} {const.Emote.peepoRoseDank}**\n"  # noqa: E501
+                f"**💜 {const.User.aluerie} is our princess and I'm her bot ! {const.Emote.peepoRoseDank}**\n"
                 f"{const.DIGITS[1]} Read the rules and useful info in {const.Channel.rules} {const.Emote.PepoG}\n"
                 f"{const.DIGITS[2]} Choose some fancy roles in {const.Channel.role_selection} {const.Emote.peepoNiceDay}\n"  # noqa: E501
                 f"{const.DIGITS[3]} Go to {const.Channel.general} or any other channel and chat with us {const.Emote.peepoComfy}\n"  # noqa: E501
                 f"{const.DIGITS[4]} Check out <id:customize>, <id:guide>, <id:browse> {const.Emote.DankApprove}\n"
-                f"{const.DIGITS[5]} Use `/help` in {const.Channel.bot_spam} to see insane Aluerie's coding skills {const.Emote.PogChampPepe}\n"  # noqa: E501
-                f"{const.DIGITS[6]} Have fun ! (but follow the rules {const.Emote.bubuGun} {const.Emote.bubuGun} {const.Emote.bubuGun} )"  # noqa: E501
+                # f"{const.DIGITS[5]} Use `/help` in {const.Channel.bot_spam} to see insane Aluerie's coding skills {const.Emote.PogChampPepe}\n"  # noqa: E501, ERA001
+                f"{const.DIGITS[5]} Have fun ! (but follow the rules {const.Emote.bubuGun} )"
             )
         else:
             description = f"Chat, it's a new bot in our server. Use it wisely {const.Emote.peepoComfy}"

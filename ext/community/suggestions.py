@@ -7,15 +7,16 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
+from bot import AluCog
 from utils import const
-
-from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from bot import AluBot
 
+__all__ = ("Suggestions",)
 
-class Suggestions(CommunityCog, emote=const.Emote.peepoWTF):
+
+class Suggestions(AluCog):
     """Suggestions."""
 
     @commands.Cog.listener(name="on_thread_create")

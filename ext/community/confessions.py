@@ -1,17 +1,19 @@
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any, Self, override
 
 import discord
 from discord.ext import commands
 
-from bot import AluModal, AluView
+from bot import AluCog, AluModal, AluView
 from utils import const, fmt
 
-from ._base import CommunityCog
-
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from bot import AluBot, AluGuildContext, AluInteraction
+
+
+__all__ = ("Confessions",)
 
 
 class ButtonOnCooldown(commands.CommandError):
@@ -72,9 +74,8 @@ class ConfessionView(AluView):
 
     @override
     async def interaction_check(self, interaction: AluInteraction) -> bool:
-        # retry_after = self.cd.update_rate_limit(ntr) # returns retry_after which is nice
-        bucket = cd.get_bucket(interaction)
-        if bucket and (retry_after := bucket.get_retry_after()):
+        retry_after = cd.update_rate_limit(interaction)
+        if retry_after:
             raise ButtonOnCooldown(retry_after)
         return True
 
@@ -93,7 +94,8 @@ class ConfessionView(AluView):
         style=discord.ButtonStyle.primary,
         emoji=const.Emote.bubuChrist,
     )
-    async def button0_callback(self, interaction: AluInteraction, button: discord.ui.Button[Self]) -> None:
+    async def anonymous_confession(self, interaction: AluInteraction, button: discord.ui.Button[Self]) -> None:
+        """Make an anonymous confession."""
         await interaction.response.send_modal(ConfessionModal(title=button.label))
 
     @discord.ui.button(
@@ -102,20 +104,35 @@ class ConfessionView(AluView):
         style=discord.ButtonStyle.primary,
         emoji=const.Emote.PepoBeliever,
     )
-    async def button1_callback(self, interaction: AluInteraction, button: discord.ui.Button[Self]) -> None:
+    async def non_anonymous_confession(self, interaction: AluInteraction, button: discord.ui.Button[Self]) -> None:
+        """Make a non-anonymous confession."""
         await interaction.response.send_modal(ConfessionModal(title=button.label))
 
 
-class Confession(CommunityCog):
-    @commands.Cog.listener()
-    async def on_ready(self) -> None:
-        self.bot.add_view(ConfessionView())  # Registers a View for persistent listening
+class Confessions(AluCog):
+    """Community Confessions.
 
-        # very silly testing way
-        # print('hello')
-        # await self.bot.get_channel(Channel.spam_me).send(view=ConfView())
+    Members can confess their sins to the community.
+    Confessions can be anonymous/non-anonymous.
+    """
+
+    @commands.Cog.listener(name="on_ready")
+    async def activate_confessions(self) -> None:
+        """Register a view for persistent listening."""
+        self.bot.add_view(ConfessionView())
+
+    @commands.is_owner()
+    @commands.command(hidden=True)
+    async def new_confession_buttons(self, ctx: AluGuildContext) -> None:
+        """Create a view with anonymous/non-anonymous confession buttons.
+
+        Ideally, this should only be used once to setup the confession menu.
+        """
+        await ctx.send(view=ConfessionView())
+        await asyncio.sleep(2.0)
+        await ctx.message.delete()
 
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(Confession(bot))
+    await bot.add_cog(Confessions(bot))

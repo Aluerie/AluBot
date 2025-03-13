@@ -4,9 +4,8 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
+from bot import AluCog
 from utils import const
-
-from ._base import HideoutCog
 
 if TYPE_CHECKING:
     import discord
@@ -14,9 +13,10 @@ if TYPE_CHECKING:
     from bot import AluBot
 
 
-class PersonalCommands(HideoutCog):
+class HideoutPersonal(AluCog):
     @commands.Cog.listener(name="on_message")
     async def personal_git_copy_paste(self, message: discord.Message) -> None:
+        """Cringe moment, sends."""
         if message.channel.id == const.Channel.alubot_github:
             # Send me discord notifications when somebody except me or dependabot
             # spams my repository with updates
@@ -36,4 +36,4 @@ class PersonalCommands(HideoutCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(PersonalCommands(bot))
+    await bot.add_cog(HideoutPersonal(bot))

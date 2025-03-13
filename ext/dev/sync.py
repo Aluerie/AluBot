@@ -11,7 +11,7 @@ from discord.ext import commands
 from bot import aluloop
 from utils import const, errors
 
-from ._base import DevBaseCog
+from ._base import BaseDevCog
 
 if TYPE_CHECKING:
     from bot import AluBot, AluContext, AluInteraction
@@ -20,16 +20,19 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class SyncAppTreeTools(DevBaseCog):
+class Sync(BaseDevCog):
     """Cog responsible for syncing application commands tree.
 
-    Includes both manual ways (commands) and automatic (task, which is not recommended).
+    Includes both manual ways (via commands) and automatic (via tasks).
+    Automatic ways to sync the tree are not recommended, but we will try to do it without triggering rate-limits.
 
     Notes
     -----
     * I have another autosync task in the AluBot class.
         Do not move that task here because I want it to run on every test-bot launch while
         this cog does not get loaded at all times.
+    * This extension is separate from "control.py" just so I can load it separately as `ext.dev.sync`
+        without loading other commands as well.
 
     """
 
@@ -37,10 +40,12 @@ class SyncAppTreeTools(DevBaseCog):
     async def cog_load(self) -> None:
         if not self.bot.test:
             self.auto_sync.start()
+        await super().cog_load()
 
     @override
     async def cog_unload(self) -> None:
         self.auto_sync.cancel()
+        await super().cog_unload()
 
     @aluloop(count=1)
     async def auto_sync(self) -> None:
@@ -75,7 +80,10 @@ class SyncAppTreeTools(DevBaseCog):
         return f"Synced {len(cmds)} guild-bound commands to `{successful_guild_syncs}/{len(guilds)}` guilds."
 
     async def sync_command_worker(
-        self, spec: str | None, current_guild: discord.Guild | None, guilds: list[discord.Object]
+        self,
+        spec: str | None,
+        current_guild: discord.Guild | None,
+        guilds: list[discord.Object],
     ) -> discord.Embed:
         """A worker function for both prefix/slash commands to sync application tree.
 
@@ -184,4 +192,4 @@ class SyncAppTreeTools(DevBaseCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(SyncAppTreeTools(bot))
+    await bot.add_cog(Sync(bot))

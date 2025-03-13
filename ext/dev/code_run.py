@@ -11,13 +11,13 @@ from discord.ext import commands
 
 from utils.converters import Codeblock
 
-from ._base import DevBaseCog
+from ._base import BaseDevCog
 
 if TYPE_CHECKING:
     from bot import AluBot, AluContext
 
 
-class CodeRun(DevBaseCog):
+class CodeRun(BaseDevCog):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(bot)
         self._last_result: Any = None
@@ -93,7 +93,7 @@ class CodeRun(DevBaseCog):
         stdout = io.StringIO()
 
         # why does discord use only two spaces for tab indent
-        to_compile = f'async def func():\n{textwrap.indent(codeblock.code, "  ")}'
+        to_compile = f"async def func():\n{textwrap.indent(codeblock.code, '  ')}"
 
         try:
             exec(to_compile, env)

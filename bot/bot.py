@@ -9,9 +9,8 @@ from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
 from discord.ext import commands
-from discord.utils import MISSING
 
-from bot import EXT_CATEGORY_NONE, AluContext, ExtCategory
+from bot import AluContext
 from config import config
 from ext import get_extensions
 from utils import cache, const, disambiguator, errors, fmt, helpers, transposer
@@ -22,13 +21,12 @@ from .timer_manager import TimerManager
 from .tree import AluAppCommandTree
 
 if TYPE_CHECKING:
-    from collections.abc import MutableMapping, Sequence
+    from collections.abc import MutableMapping
 
     import asyncpg
     from aiohttp import ClientSession
-    from discord.abc import Snowflake
 
-    from bot import AluCog, AluInteraction
+    from bot import AluInteraction
     from types_.database import PoolTypedWithAny
 
 
@@ -84,6 +82,7 @@ class AluBot(commands.Bot):
             tree_cls=AluAppCommandTree,
             strip_after_prefix=True,
             case_insensitive=True,
+            help_command=None,
         )
         self.extensions_to_load: tuple[str, ...] = get_extensions(self.test)
         # asyncpg typehinting crutch, read `utils.database` for more
@@ -98,11 +97,9 @@ class AluBot(commands.Bot):
         self.developer: str = "Aluerie"  # it's my GitHub account name
         self.community_invite_url: str = "https://discord.gg/K8FuDeP"
 
-        self.category_cogs: dict[ExtCategory, list[AluCog]] = {}
-
-        self.mimic_message_user_mapping: MutableMapping[int, int] = cache.ExpiringCache(
-            seconds=datetime.timedelta(days=7).seconds,
-        )
+        # self.help_categories: dict[ExtCategory, list[AluCog]] = {}  # TODO:???
+        self.mimic_messages: MutableMapping[int, int] = cache.ExpiringCache(seconds=datetime.timedelta(days=7).seconds)
+        """Mapping of `message_id -> user_id` for Mimic Messages."""
 
     @override
     async def setup_hook(self) -> None:
@@ -175,25 +172,6 @@ class AluBot(commands.Bot):
             return True
         return False
 
-    @override
-    async def add_cog(
-        self,
-        cog: AluCog,
-        /,
-        *,
-        override: bool = False,
-        guild: Snowflake | None = MISSING,
-        guilds: Sequence[Snowflake] = MISSING,
-    ) -> None:
-        await super().add_cog(cog, override=override, guild=guild, guilds=guilds)
-
-        # jishaku does not have a category thus we have this weird typehint
-        category = getattr(cog, "category", None)
-        if not category or not isinstance(category, ExtCategory):
-            category = EXT_CATEGORY_NONE
-
-        self.category_cogs.setdefault(category, []).append(cog)
-
     async def on_ready(self) -> None:
         """Handle `ready` event."""
         if not hasattr(self, "launch_time"):
@@ -208,7 +186,8 @@ class AluBot(commands.Bot):
         coroutines = [super().start(discord_token, reconnect=True)]
 
         dota_extensions = (
-            "ext.fpc.dota",
+            "ext.dota",
+            "ext.dota.fpc_notifications",
             # "ext.beta", # uncomment when we are testing dota-related stuff in `ext.beta`
         )
         if any(ext in self.extensions_to_load for ext in dota_extensions):
@@ -255,7 +234,7 @@ class AluBot(commands.Bot):
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from utils.dota.steamio_client import DotaClient
+            from ext.dota._utils.steamio_client import DotaClient
 
             self.dota = DotaClient(self)
 
@@ -285,7 +264,8 @@ class AluBot(commands.Bot):
     async def close(self) -> None:
         """Close the connection to Discord while cleaning up other open sessions and clients."""
         log.info("%s is closing.", self.__class__.__name__)
-        await self.send_warning("AluBot is closing.")
+        if not self.test:
+            await self.send_warning("AluBot is closing.")
 
         await self.pool.close()
         if hasattr(self, "twitch"):
@@ -331,7 +311,7 @@ class AluBot(commands.Bot):
         if webhook_url:
             return self.webhook_from_url(webhook_url)
         msg = f"There is no webhook in the database for channel with id={channel_id}"
-        raise errors.PlaceholderRaiseError(msg)
+        raise errors.PlaceholderError(msg)
 
     @discord.utils.cached_property
     def spam_webhook(self) -> discord.Webhook:

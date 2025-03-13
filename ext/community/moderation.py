@@ -6,21 +6,20 @@ from typing import TYPE_CHECKING, Annotated, Any
 import discord
 from discord.ext import commands
 
+from bot import AluCog
 from utils import const, errors, times
-
-from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from bot import AluBot, AluGuildContext
 
 
-class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
+class Moderation(AluCog):
     """Commands to moderate servers with."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-    def warn_check(self, member: discord.Member) -> None:
+    def member_check(self, member: discord.Member) -> None:
         if member.id == self.bot.owner_id:
             msg = f"You can't do that to Aluerie {const.Emote.bubuGun}"
             raise errors.ErroneousUsage(msg)
@@ -32,17 +31,32 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
     # @app_commands.guilds(const.Guild.community)
     @commands.command()
     async def warn(self, ctx: AluGuildContext, member: discord.Member, *, reason: str = "No reason") -> None:
-        """Give member a warning."""
-        self.warn_check(member)
+        """Give member a warning.
 
-        e = discord.Embed(title="Manual warning by a mod", color=const.Palette.red(shade=300))
-        e.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-        e.set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
-        e.set_thumbnail(url=discord.PartialEmoji.from_str(const.Emote.peepoYellowCard).url)
-        e.add_field(name="Reason", value=reason)
-        msg = await ctx.reply(embed=e)
-        e.url = msg.jump_url
-        await self.community.logs.send(embed=e)
+        Doesn't do anything besides that.
+
+        Parameters
+        ----------
+        member: discord.Member
+            Member to warn.
+        reason: str = "No reason"
+            Reason for the warning.
+        """
+        self.member_check(member)
+
+        embed = (
+            discord.Embed(
+                color=const.Palette.red(shade=300),
+                title="Manual warning by a mod",
+            )
+            .add_field(name="Reason", value=reason)
+            .set_author(name=member.display_name, icon_url=member.display_avatar.url)
+            .set_thumbnail(url=discord.PartialEmoji.from_str(const.Emote.peepoYellowCard).url)
+            .set_footer(text=f"Warned by {ctx.author.display_name}", icon_url=ctx.author.display_avatar.url)
+        )
+        message = await ctx.reply(embed=embed)
+        embed.url = message.jump_url
+        await self.community.logs.send(embed=embed)
 
     @commands.has_role(const.Role.discord_mods)
     # @app_commands.guilds(const.Guild.community)
@@ -58,7 +72,7 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         ],
     ) -> None:
         """Give member a mute."""
-        self.warn_check(member)
+        self.member_check(member)
 
         dt, reason = until_when_and_reason.dt, until_when_and_reason.arg
         days_out = dt - discord.utils.utcnow()
@@ -92,14 +106,14 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         e.url = msg.jump_url
         await self.community.logs.send(embed=e)
 
-    @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
+    @commands.Cog.listener(name="on_member_update")
+    async def log_mutes(self, before: discord.Member, after: discord.Member) -> None:
+        """Log mutes into #logs channel."""
         if after.guild.id != const.Guild.community:
             return
 
-        if after.timed_out_until and before.is_timed_out() is False and after.is_timed_out() is True:  # member is muted
-            e = discord.Embed(color=discord.Color.red())
-            e.description = discord.utils.format_dt(after.timed_out_until, style="R")
+        if after.timed_out_until and before.is_timed_out() is False and after.is_timed_out() is True:
+            # member is muted
 
             mute_actor_str = "Unknown"
             async for entry in after.guild.audit_logs(action=discord.AuditLogAction.member_update):
@@ -108,12 +122,17 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
                 if target.id == after.id and entry.after.timed_out_until == after.timed_out_until:
                     mute_actor_str = user.name
 
-            author_text = f"{after.display_name} is muted by {mute_actor_str} until"
-            e.set_author(name=author_text, icon_url=after.display_avatar.url)
-            await self.community.logs.send(embed=e)
-            return
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                description=discord.utils.format_dt(after.timed_out_until, style="R"),
+            ).set_author(
+                name=f"{after.display_name} is muted by {mute_actor_str} until",
+                icon_url=after.display_avatar.url,
+            )
+            await self.community.logs.send(embed=embed)
 
-        # elif before.is_timed_out() is True and after.is_timed_out() is False:  # member is unmuted
+        # elif before.is_timed_out() is True and after.is_timed_out() is False:
+        #     # member is unmuted
         #     return
         # apparently discord limitation -> it does not ever happen
 
@@ -126,12 +145,14 @@ class ModerationCog(CommunityCog, emote=const.Emote.peepoPolice):
         if channel.guild.id != self.community.id:
             return
 
-        allow, deny = discord.Permissions.all(), discord.Permissions.none()
-        all_perms = discord.PermissionOverwrite.from_pair(allow=allow, deny=deny)
+        all_perms = discord.PermissionOverwrite.from_pair(
+            allow=discord.Permissions.all(),
+            deny=discord.Permissions.none(),
+        )
         reason = "Give all permissions to Aluerie"
         await channel.set_permissions(self.community.sister_of_the_veil, overwrite=all_perms, reason=reason)
 
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(ModerationCog(bot))
+    await bot.add_cog(Moderation(bot))

@@ -368,5 +368,5 @@ class Mirror(Mimic):
             embeds=embeds,
             wait=True,
         )
-        self.bot.mimic_message_user_mapping[message.id] = member.id
+        self.bot.mimic_messages[message.id] = member.id
         return message

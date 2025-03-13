@@ -8,9 +8,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from bot import AluCog
 from utils import const, errors
-
-from ._base import HideoutCog
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -18,7 +17,7 @@ if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
 
 
-class HideoutModeration(HideoutCog):
+class HideoutModeration(AluCog):
     """Moderation utilities for Hideout Discord Server."""
 
     @commands.Cog.listener(name="on_member_join")

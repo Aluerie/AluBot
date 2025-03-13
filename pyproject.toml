@@ -104,7 +104,7 @@ select = [
     # TURN IT/OFF ON EXPERIMENTS, kinda annoying for a bot, to be honest, might remove
     "D",        # Doc-strings, 
     "DOC",      # Doc strings
-    "ERA",      # eradicate commented out code
+    # "ERA",      # eradicate commented out code
 ]
 ignore = [
     # 0. Toggle

@@ -8,10 +8,8 @@ from typing import TYPE_CHECKING, NamedTuple, TypedDict, override
 import discord
 from discord.ext import commands
 
-from bot import aluloop
+from bot import AluCog, aluloop
 from utils.const import DIGITS, Channel, Color, Emote, Role, User
-
-from ._base import CommunityCog
 
 if TYPE_CHECKING:
     from bot import AluBot, Timer
@@ -27,12 +25,7 @@ if TYPE_CHECKING:
         dynamic: int
 
 
-class DailyEmbedMessageTuple(NamedTuple):
-    title: str
-    color: int
-    category: str
-    message_bank: list[str]
-
+__all__ = ("OldTimers",)
 
 ADVICE_BANK = [
     f"Hey chat, don't forget to spam some emotes in {Channel.comfy_spam} or {Channel.emote_spam}",
@@ -101,6 +94,13 @@ RULE_BANK = [
 ]
 
 
+class DailyEmbedMessageTuple(NamedTuple):
+    title: str
+    color: int
+    category: str
+    message_bank: list[str]
+
+
 class DailyEmbedMessageEnum(Enum):
     Simple = DailyEmbedMessageTuple("Daily Message", Color.prpl, "advice", ADVICE_BANK)
     Important = DailyEmbedMessageTuple("Daily Important Message", Color.league, "important", IMPORTANT_BANK)
@@ -108,16 +108,18 @@ class DailyEmbedMessageEnum(Enum):
     Rule = DailyEmbedMessageTuple("Daily Rule Message", 0x66FFBF, "rule", RULE_BANK)
 
 
-class OldTimers(CommunityCog):
+class OldTimers(AluCog):
     """Old Timers."""
 
     @override
     async def cog_load(self) -> None:
         self.initiate_timer.start()
+        await super().cog_load()
 
     @override
     async def cog_unload(self) -> None:
         self.initiate_timer.cancel()
+        await super().cog_unload()
 
     @aluloop(count=1)
     async def initiate_timer(self) -> None:

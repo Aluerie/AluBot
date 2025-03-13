@@ -15,12 +15,14 @@ from discord.ext import commands
 from ext import get_extensions
 from utils import const, fmt
 
-from ._base import DevBaseCog
+from ._base import BaseDevCog
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from bot import AluBot, AluContext
+
+__all__ = ("Reload",)
 
 
 class ExtensionConverter(commands.Converter[str]):
@@ -36,7 +38,7 @@ class ExtensionConverter(commands.Converter[str]):
         return f"ext.{m}"
 
 
-class ReloadCog(DevBaseCog):
+class Reload(BaseDevCog):
     @commands.command(name="extensions", hidden=True)
     async def extensions(self, ctx: AluContext) -> None:
         """Shows available extensions to load/reload/unload."""
@@ -251,4 +253,4 @@ class ReloadCog(DevBaseCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(ReloadCog(bot))
+    await bot.add_cog(Reload(bot))

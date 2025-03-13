@@ -83,13 +83,13 @@ class LogsViaWebhook(AluCog):
         "steam.": const.LogoAsset.SteamPy.url,
     }
 
-    emojis: Mapping[str, str] = {
+    EMOJIS: Mapping[str, str] = {
         "INFO": "\N{INFORMATION SOURCE}\ufe0f",
         "WARNING": "\N{WARNING SIGN}\ufe0f",
         "ERROR": "\N{CROSS MARK}",
     }
 
-    colors: Mapping[str, discord.Color | int] = {
+    COLORS: Mapping[str, discord.Color | int] = {
         "INFO": const.Palette.light_blue(),
         "WARNING": const.Palette.yellow(shade=700),
         "ERROR": const.Color.error,
@@ -136,8 +136,8 @@ class LogsViaWebhook(AluCog):
 
     async def send_log_record(self, record: logging.LogRecord) -> None:
         """Send Log record to discord webhook."""
-        emoji = self.emojis.get(record.levelname, "\N{WHITE QUESTION MARK ORNAMENT}")
-        color = self.colors.get(record.levelname)
+        emoji = self.EMOJIS.get(record.levelname, "\N{WHITE QUESTION MARK ORNAMENT}")
+        color = self.COLORS.get(record.levelname)
         # the time is there so the MM:SS is more clear. Discord stacks messages from the same webhook user
         # so if logger sends at 23:01 and 23:02 it will be hard to understand the time difference
         dt = datetime.datetime.fromtimestamp(record.created, datetime.UTC)

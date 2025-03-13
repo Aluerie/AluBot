@@ -15,7 +15,7 @@ twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@dev/3.
 steamio @ git+https://github.com/Aluerie/steam.py@introduce-ext.dota2
 
 # League of Legends
-pulsefire~=2.0.21
+pulsefire~=2.0.23
 git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
@@ -27,13 +27,13 @@ gtts~=2.5.4
 ffmpeg
 
 # WebScrape
-beautifulsoup4==4.13.2
+beautifulsoup4==4.13.3
 lxml
 
 # DateParsing
 parsedatetime==2.6
 python-dateutil==2.9.0.post0
-dateparser==1.2.0
+dateparser==1.2.1
 
 # Jupyter Notebooks (I like to mess with those on home PC)
 ipykernel; platform_system == 'Windows'
@@ -41,7 +41,7 @@ ipykernel; platform_system == 'Windows'
 # Bot's Base
 asyncpg==0.30.0
 asyncpg-stubs
-aiohttp==3.11.11
+aiohttp==3.11.13
 
 # Optimisation
 orjson
@@ -51,12 +51,12 @@ uvloop==0.21.0; platform_system == 'Linux'  # ignore on non-Linux - because not 
 aiofiles==24.1.0
 pillow==11.1.0
 emoji==2.14.1
-numpy==2.2.2
+numpy==2.2.3
 urllib3==2.3.0
 wordcloud==1.9.4
-matplotlib==3.10.0
+matplotlib==3.10.1
 unidiff==0.7.5
-psutil==6.1.1
+psutil==7.0.0
 click==8.1.8
 lru_dict==1.3.0
 thefuzz==0.22.1

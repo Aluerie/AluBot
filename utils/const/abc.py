@@ -22,7 +22,10 @@ class ConstantsMeta(type):
 
 
 class CONSTANTS(metaclass=ConstantsMeta):
-    pass
+    """CONSTANTS.
+
+    Attributes of this class are not allowed to be changed or deleted during runtime.
+    """
 
 
 ASSETS_IMAGES = "./assets/images/"

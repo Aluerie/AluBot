@@ -56,7 +56,7 @@ class WolframAlpha(AluCog):
 
         Parameters
         ----------
-        query : str
+        query: str
             Query for WolframAlpha.
         """
         await interaction.response.defer()

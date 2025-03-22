@@ -11,9 +11,8 @@ from discord.ext import commands
 from PIL import Image, ImageColor
 from wordcloud import WordCloud
 
+from bot import AluCog
 from utils import const, converters, fmt
-
-from ._base import InfoCog
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
@@ -25,7 +24,7 @@ warnings.filterwarnings(
 )
 
 
-class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
+class Info(AluCog, name="Info", emote=const.Emote.PepoG):
     """Commands to get some useful info."""
 
     @commands.Cog.listener()
@@ -140,7 +139,7 @@ class Info(InfoCog, name="Info", emote=const.Emote.PepoG):
         ]
 
 
-class StatsCommands(InfoCog, name="Stats Commands", emote=const.Emote.Smartge):
+class StatsCommands(AluCog, name="Stats Commands", emote=const.Emote.Smartge):
     """Some stats/infographics/diagrams/info.
 
     More to come.

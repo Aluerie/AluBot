@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
 
 
-class Mimics(AluCog):
+class MimicManagement(AluCog):
     """Manage your mimic messages.
 
     Mimic messages are messages that the bot sends from users name by copying your name/avatar and
@@ -66,4 +66,4 @@ class Mimics(AluCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(Mimics(bot))
+    await bot.add_cog(MimicManagement(bot))

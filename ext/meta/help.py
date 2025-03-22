@@ -5,16 +5,13 @@ from typing import TYPE_CHECKING, Any
 from discord import app_commands
 from discord.ext import commands
 
-from bot import AluContext
-from core.old_help_cmd import AluHelp
-
-from ._base import MetaCog
+from bot import AluCog, AluContext
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
 
 
-class AluHelpCog(MetaCog):
+class AluHelpCog(AluCog):
     """Help command."""
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
@@ -36,13 +33,13 @@ class AluHelpCog(MetaCog):
         # my_help.context = ctx = await AluContext.from_interaction(ntr)
         # await my_help.command_callback(ctx, command=command)
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def devhelp(self, ctx: AluContext, *, query: str | None) -> None:
-        """Show dev help menu for the bot."""
-        my_help = AluHelp(show_hidden=True)
-        my_help.context = ctx
-        await my_help.command_callback(ctx, command=query)
+    # @commands.is_owner()
+    # @commands.command(hidden=True)
+    # async def devhelp(self, ctx: AluContext, *, query: str | None) -> None:
+    #     """Show dev help menu for the bot."""
+    #     my_help = AluHelp(show_hidden=True)
+    #     my_help.context = ctx
+    #     await my_help.command_callback(ctx, command=query)
 
 
 async def setup(bot: AluBot) -> None:

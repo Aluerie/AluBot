@@ -12,14 +12,15 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from utils import const, fmt
 
-from ..._fpc_base import BaseMatchToEdit, BaseMatchToSend
+from ..._base_fpc import BaseMatchToEdit, BaseMatchToSend
+from ..api import game_const
 
 if TYPE_CHECKING:
     from bot import AluBot, AluCog
-    from ext.dota._utils import Hero, PseudoHero
+    from ext.dota.api import Hero, PseudoHero
 
-    from ..._fpc_base import RecipientKwargs
-    from .._utils.schemas import stratz
+    from ..._base_fpc import RecipientKwargs
+    from ..api.schemas import stratz
 
 
 __all__ = ("MatchToSend", "NotCountedMatchToEdit", "StratzMatchToEdit")
@@ -81,7 +82,7 @@ class MatchToSend(BaseMatchToSend):
         send_log.debug("`get_twitch_data` is starting")
         if self.twitch_id is None:
             return {
-                "preview_url": const.DotaAsset.Placeholder640X360,
+                "preview_url": game_const.FpcAsset.Placeholder640X360,
                 "display_name": self.player_name,
                 "url": "",
                 "logo_url": const.Logo.Dota,
@@ -135,7 +136,7 @@ class MatchToSend(BaseMatchToSend):
                 hero_w, hero_h = (62, 35)
                 for count, hero_img in enumerate(hero_images):
                     hero_img = hero_img.resize((hero_w, hero_h))
-                    hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=const.Dota.PLAYER_COLOR_MAP[count])
+                    hero_img = ImageOps.expand(hero_img, border=(0, 3, 0, 0), fill=game_const.PLAYER_COLOR_MAP[count])
                     extra_space = 0 if count < 5 else 20  # math 640 - 62 * 10 = 20 where 640 is initial resolution.
                     canvas.paste(hero_img, (count * hero_w + extra_space, 0))
 
@@ -246,9 +247,9 @@ class StratzMatchToEdit(BaseMatchToEdit):
         for buff_event in player["stats"]["matchPlayerBuffEvent"]:
             item_id = buff_event.get("itemId")
             if item_id:
-                if item_id == const.Dota.AGHANIMS_SCEPTER_ITEM_ID:
+                if item_id == game_const.LazyItemID.AghanimsScepter:
                     # Stratz writes it like it's buff from aghs when it's a buff from a blessing, idk
-                    item_ids.append(const.Dota.AGHANIMS_BLESSING_ITEM_ID)
+                    item_ids.append(game_const.LazyItemID.AghanimsBlessing)
                 else:
                     item_ids.append(item_id)
 
@@ -474,5 +475,5 @@ async def beta_test_stratz_edit(self: AluCog) -> None:
     friend_id = 321580662
     data = await self.bot.dota.stratz.get_fpc_match_to_edit(match_id=match_id, friend_id=friend_id)
     match_to_edit = StratzMatchToEdit(self.bot, data)
-    new_image = await match_to_edit.edit_notification_image(const.DotaAsset.Placeholder640X360, const.Color.prpl)
+    new_image = await match_to_edit.edit_notification_image(game_const.FpcAsset.Placeholder640X360, const.Color.prpl)
     new_image.show()

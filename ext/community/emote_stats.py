@@ -42,7 +42,7 @@ class EmoteStats(AluCog):
     """
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
-        super().__init__(bot, args, kwargs)
+        super().__init__(bot, *args, **kwargs)
         self._batch_total: defaultdict[int, Counter[int]] = defaultdict(Counter)
         self._batch_last_year: list[BatchLastYearEntry] = []
         self._batch_lock = asyncio.Lock()

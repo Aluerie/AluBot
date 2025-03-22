@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING, Literal, TypedDict, override
 import discord
 from roleidentification import get_roles
 
-from .. import const
-from ..fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
+from utils import const
+
+from ..._base_fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
+from . import game_const
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
@@ -106,7 +108,7 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
             alias="Unknown",
             icon_url=cdragon_asset_url("/lol-game-data/assets/v1/champion-icons/-1.png"),
             # taken from `get_lol_v1_champion_summary` response ^ for champion with id=-1
-            emote=const.NEW_CHAMPION_EMOTE,
+            emote=game_const.NEW_CHAMPION_EMOTE,
         )
 
     async def create_champion_emote(self, champion_id: int, champion_alias: str, champion_icon_url: str) -> str:
@@ -126,7 +128,7 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
                 ),
             )
             await self.bot.exc_manager.register_error(exc, embed=embed)
-            return const.NEW_CHAMPION_EMOTE
+            return game_const.NEW_CHAMPION_EMOTE
 
 
 class ChampionTransformer(CharacterTransformer[Champion, PseudoChampion]):
@@ -156,7 +158,7 @@ class ItemIcons(GameDataStorage[str, str]):
     @override
     @staticmethod
     def generate_unknown_object(_: int) -> str:
-        return const.LeagueAsset.ItemUnknown
+        return game_const.LeagueAsset.ItemUnknown
 
 
 class RuneIcons(GameDataStorage[str, str]):
@@ -180,7 +182,7 @@ class RuneIcons(GameDataStorage[str, str]):
     @override
     @staticmethod
     def generate_unknown_object(_: int) -> str:
-        return const.LeagueAsset.RuneUnknown
+        return game_const.LeagueAsset.RuneUnknown
 
 
 class SummonerSpellIcons(GameDataStorage[str, str]):
@@ -203,7 +205,7 @@ class SummonerSpellIcons(GameDataStorage[str, str]):
     @override
     @staticmethod
     def generate_unknown_object(_: int) -> str:
-        return const.LeagueAsset.SummonerSpellUnknown
+        return game_const.LeagueAsset.SummonerSpellUnknown
 
 
 class RoleDict(TypedDict):

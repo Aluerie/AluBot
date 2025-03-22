@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypeVar, override
 
 import discord
 
-from ._meta import CONSTANTS
+from .abc import CONSTANTS
 
 if TYPE_CHECKING:
     from bot import AluBot

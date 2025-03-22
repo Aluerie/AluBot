@@ -13,7 +13,7 @@ from bot import aluloop
 from utils import const
 from utils.helpers import measure_time
 
-from ..._fpc_base import BaseNotifications, EditTuple, RecipientTuple
+from ..._base_fpc import BaseNotifications, EditTuple, RecipientTuple
 from .models import MatchToSend, StratzMatchToEdit
 
 if TYPE_CHECKING:
@@ -65,7 +65,7 @@ class DotaFPCNotifications(BaseNotifications):
             _description_
 
         """
-        super().__init__(bot, prefix="dota", *args, **kwargs)
+        super().__init__(bot, "dota", *args, **kwargs)
         # Send Matches related attrs
         self.game_coordinator_death_counter: int = 0
         self.top_live_matches: list[LiveMatch] = []

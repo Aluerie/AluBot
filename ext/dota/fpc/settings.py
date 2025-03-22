@@ -9,10 +9,10 @@ from discord import app_commands
 from discord.ext import commands
 from steam import ID, InvalidID
 
-from ext.dota._utils import Hero, HeroTransformer  # noqa: TC001
+from ext.dota.api import Hero, HeroTransformer  # noqa: TC001
 from utils import const
 
-from ..._fpc_base import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
+from ..._base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction

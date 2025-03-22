@@ -16,15 +16,14 @@ import discord
 from discord import app_commands
 from PIL import Image
 
+from bot import AluCog
 from utils import const
-
-from ._base import InfoCog
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
 
 
-class DiscordInspect(InfoCog, name="Inspect Discord Info.", emote=const.Emote.PepoG):
+class DiscordInspect(AluCog, name="Inspect Discord Info.", emote=const.Emote.PepoG):
     """Commands to inspect Discord members/roles/servers/etc and get more info about them."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

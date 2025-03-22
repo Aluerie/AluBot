@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._base import BaseCog
+from bot import AluCog
 
 if TYPE_CHECKING:
     from bot import AluBot
 
 
-class MyCog(BaseCog): ...
+class MyCog(AluCog):
+    """MyCog."""
 
 
 async def setup(bot: AluBot) -> None:

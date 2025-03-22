@@ -7,9 +7,10 @@ import aiohttp
 import asyncpg
 
 from bot import aluloop
-from utils import const, lol
+from utils import const
 
-from ..._fpc_base import BaseNotifications, EditTuple, RecipientTuple
+from ..._base_fpc import BaseNotifications, EditTuple, RecipientTuple
+from ..api import game_const, regions
 from .models import MatchToEdit, MatchToSend
 
 if TYPE_CHECKING:
@@ -28,13 +29,15 @@ if TYPE_CHECKING:
     class FindMatchesToEditQueryRow(TypedDict):
         match_id: int
         champion_id: int
-        platform: lol.LiteralPlatform
+        platform: regions.LiteralPlatform
         channel_message_tuples: list[tuple[int, int]]
 
     class GetRecipientsQueryRow(TypedDict):
         channel_id: int
         spoil: bool
 
+
+__all__ = ("Notifications",)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -106,7 +109,7 @@ class Notifications(BaseNotifications):
                 continue
 
             # continue game analysis
-            if game["gameQueueConfigId"] != const.League.SOLO_RANKED_5v5_QUEUE_ENUM:
+            if game["gameQueueConfigId"] != game_const.SOLO_RANKED_5v5_QUEUE_ENUM:
                 continue
 
             self.live_match_ids.append(game["gameId"])
@@ -175,7 +178,7 @@ class Notifications(BaseNotifications):
         for match_row in match_rows:
             try:
                 match_id = f"{match_row['platform'].upper()}_{match_row['match_id']}"
-                continent = lol.Platform(match_row["platform"]).continent
+                continent = regions.Platform(match_row["platform"]).continent
 
                 match = await self.bot.lol.get_lol_match_v5_match(id=match_id, region=continent)
                 timeline = await self.bot.lol.get_lol_match_v5_match_timeline(id=match_id, region=continent)

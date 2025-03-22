@@ -9,18 +9,18 @@ from typing import TYPE_CHECKING, override
 import discord
 from PIL import Image, ImageDraw, ImageFont
 
-from utils import const, fmt, lol
-from utils.fmt import human_timedelta
+from utils import const, fmt
 
-from ..._fpc_base import BaseMatchToEdit, BaseMatchToSend
+from ..._base_fpc import BaseMatchToEdit, BaseMatchToSend
+from ..api import LiteralPlatform, Platform
 
 if TYPE_CHECKING:
     from pulsefire.schemas import RiotAPISchema
 
     from bot import AluBot
-    from utils.lol import Champion, PseudoChampion
 
-    from ..._fpc_base import RecipientKwargs
+    from ..._base_fpc import RecipientKwargs
+    from ..api import Champion, PseudoChampion
     from .notifications import LivePlayerAccountRow
 
 
@@ -36,8 +36,8 @@ log.setLevel(logging.INFO)
 CELL_SIZE = 50  # height/width for pretty much everything in league pictures: runes, spells, items, trinkets, skills.
 
 
-def lol_links(platform: lol.LiteralPlatform, game_name: str, tag_line: str) -> str:
-    opgg_name = lol.Platform(platform).opgg_name
+def lol_links(platform: LiteralPlatform, game_name: str, tag_line: str) -> str:
+    opgg_name = Platform(platform).opgg_name
     opgg = f"https://op.gg/summoners/{opgg_name}/{game_name}-{tag_line}"
     ugg = f"https://u.gg/lol/profile/{platform}/{game_name}-{tag_line}"
     return f"/[Opgg]({opgg})/[Ugg]({ugg})"
@@ -55,7 +55,7 @@ class MatchToSend(BaseMatchToSend):
         super().__init__(bot)
 
         self.match_id: int = game["gameId"]
-        self.platform: lol.LiteralPlatform = game["platformId"]  # pyright: ignore[reportAttributeAccessIssue]
+        self.platform: LiteralPlatform = game["platformId"]  # pyright: ignore[reportAttributeAccessIssue]
 
         self.game_name: str = player_account_row["in_game_name"]
         self.tag_line: str = player_account_row["tag_line"]
@@ -160,7 +160,7 @@ class MatchToSend(BaseMatchToSend):
                 url=streamer.url,
                 description=(
                     f"Match `{self.platform.upper()}_{self.match_id}` "
-                    f"started {human_timedelta(self.long_ago, mode='strip')}\n"
+                    f"started {fmt.human_timedelta(self.long_ago, mode='strip')}\n"
                     f"{await streamer.vod_link(seconds_ago=self.long_ago)}{self.links}"
                 ),
             )
@@ -349,7 +349,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
         timeline=timeline,
     )
 
-    new_image = await post_match_player.edit_notification_image(const.DotaAsset.Placeholder640X360, 0x000000)
+    new_image = await post_match_player.edit_notification_image("assets/images/dota/Lavender640x360.png", 0x000000)
     new_image.show()
 
 
@@ -389,5 +389,5 @@ async def beta_test_send_image(self: AluCog) -> None:
         champion=await self.bot.lol.champions.by_id(game["participants"][0]["championId"]),
     )
 
-    new_image = await post_match_player.notification_image(const.DotaAsset.Placeholder640X360, "gosu")
+    new_image = await post_match_player.notification_image("assets/images/dota/Lavender640x360.png", "gosu")
     new_image.show()

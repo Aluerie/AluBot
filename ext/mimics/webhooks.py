@@ -6,10 +6,8 @@ from typing import TYPE_CHECKING, TypedDict
 import discord
 from discord.ext import commands
 
-from bot import AluBot, aluloop
+from bot import AluBot, AluCog, aluloop
 from utils import errors
-
-from ..config_guilds._base import ConfigGuildCog
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -24,7 +22,7 @@ if TYPE_CHECKING:
 __all__ = ("WebhookMaintenance",)
 
 
-class WebhookMaintenance(ConfigGuildCog):
+class WebhookMaintenance(AluCog):
     """Maintaining `webhooks` database.
 
     This cog keeps the table up-to-date, i.e.

@@ -1,33 +1,29 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
 
 from utils import const
 
 from .bugtracker import BugTracker
-from .fpc.notifications import DotaFPCNotifications
-from .fpc.settings import DotaFPCSettings
+from .fpc import DotaFPC
+from .profile import SteamDotaProfiles
+from .steamdb import SteamDB
 
 if TYPE_CHECKING:
     from bot import AluBot
 
 
-class DotaFPC(
+class Dota(
     BugTracker,
-    DotaFPCNotifications,
-    DotaFPCSettings,
+    DotaFPC,
+    SteamDotaProfiles,
+    SteamDB,
     emote=const.Emote.DankLove,
-    name="Dota 2 FPC",  # careful with this name since it's used in `database_management.py`
+    name="Dota",
 ):
     """Dota 2 - __F__avourite __P__layer+__C__haracter combo notifications."""
-
-    @override
-    async def cog_load(self) -> None:
-        self.bot.instantiate_dota()
-        await self.bot.instantiate_twitch()
-        await super().cog_load()
 
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(DotaFPC(bot))
+    await bot.add_cog(Dota(bot))

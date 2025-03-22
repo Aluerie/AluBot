@@ -4,7 +4,7 @@ import asyncio
 import datetime
 import logging
 from enum import IntEnum
-from typing import TYPE_CHECKING, NamedTuple, override
+from typing import TYPE_CHECKING, Any, NamedTuple, override
 
 import discord
 from discord.ext import commands
@@ -41,8 +41,8 @@ class TwitchNotifications(AluCog):
     * giving @LiveStreamer role to folks in the server who are currently streaming on twitch.tv
     """
 
-    def __init__(self, bot: AluBot) -> None:
-        super().__init__(bot)
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+        super().__init__(bot, *args, **kwargs)
         self._logging_queue: asyncio.Queue[NotificationRecord] = asyncio.Queue()
 
         # cooldown attrs

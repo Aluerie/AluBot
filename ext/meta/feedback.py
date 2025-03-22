@@ -6,12 +6,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from bot import AluCog
 from utils import const
 
 if TYPE_CHECKING:
     from bot import AluBot, AluContext, AluInteraction
-
-from ._base import MetaCog
 
 
 class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
@@ -89,7 +88,7 @@ class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
         await interaction.user.send(embed=logs_embed)
 
 
-class FeedbackCog(MetaCog):
+class FeedbackCog(AluCog):
     @property
     def feedback_channel(self) -> discord.TextChannel | None:
         return self.bot.hideout.global_logs

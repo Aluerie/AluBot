@@ -25,11 +25,12 @@ class StatsVoiceChannels(AluCog):
 
     @override
     async def cog_load(self) -> None:
-        self.my_time.start()
+        if not self.bot.test:
+            self.my_time.start()
 
-        self._lock: asyncio.Lock = asyncio.Lock()
-        self.cooldown: datetime.timedelta = datetime.timedelta(seconds=3600)
-        self._most_recent: datetime.datetime | None = None
+            self._lock: asyncio.Lock = asyncio.Lock()
+            self.cooldown: datetime.timedelta = datetime.timedelta(seconds=3600)
+            self._most_recent: datetime.datetime | None = None
         await super().cog_load()
 
     @override

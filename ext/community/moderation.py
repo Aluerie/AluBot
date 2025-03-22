@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated
 
 import discord
 from discord.ext import commands
@@ -15,9 +15,6 @@ if TYPE_CHECKING:
 
 class Moderation(AluCog):
     """Commands to moderate servers with."""
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
 
     def member_check(self, member: discord.Member) -> None:
         if member.id == self.bot.owner_id:

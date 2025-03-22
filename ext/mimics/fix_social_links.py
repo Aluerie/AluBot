@@ -98,7 +98,7 @@ def fix_social_links(text: str, *, omit_rest: bool = False) -> str | None:
         if omit_rest:
             # found is list[tuple[str, ...]], where tuple has 2 strings (because we have 2 matching groups in regex)
             #  i.e. [('instagram.com', '/p/DBg0L6foRNW/'), ('x.com', '/IceFrog/status/1718834746300719265')]
-            return "\n".join([f"{FIX_DICT[group[0]]}{group[1]}" for group in found])
+            return "\n".join([f"{FIX_DICT[group[0].lower().split('.')[0]]}{group[1]}" for group in found])
         return COMPILED_REGEX.sub(lambda mo: rf"{FIX_DICT[mo.group(1).lower().split('.')[0]]}{mo.group(2)}", text)
     return None
 

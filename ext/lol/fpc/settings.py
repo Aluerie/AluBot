@@ -9,9 +9,9 @@ import discord
 from discord import app_commands
 
 from utils import const, errors
-from utils.lol import Champion, ChampionTransformer, Platform  # noqa: TC001
 
-from ..._fpc_base import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
+from ..._base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
+from ..api import Champion, ChampionTransformer, Platform  # noqa: TC001
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
@@ -110,7 +110,7 @@ class LeaguePlayer(BasePlayer[LeagueAccount]):
         )
 
 
-class LeagueFPCSettings(BaseSettings):
+class LolFPCSettings(BaseSettings):
     """Commands to set up fav champ + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \
@@ -387,4 +387,4 @@ class LeagueFPCSettings(BaseSettings):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(LeagueFPCSettings(bot))
+    await bot.add_cog(LolFPCSettings(bot))

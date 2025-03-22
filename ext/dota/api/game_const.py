@@ -1,21 +1,43 @@
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 from typing import override
 
-from utils.const._meta import ASSETS_IMAGES, RAW_GITHUB_IMAGES
+from utils.const.abc import ASSETS_IMAGES, RAW_GITHUB_IMAGES
 
-__all__ = (
-    "FACET_COLORS",
-    "NEW_HERO_EMOTE",
-    "TALENT_TREE_ICON",
-    "DotaAsset",
+__all__ = ("FACET_COLORS", "NEW_HERO_EMOTE", "PLAYER_COLOR_MAP", "FpcAsset", "LazyIcon")
+
+
+PLAYER_COLOR_MAP = (
+    "#3375FF",
+    "#66FFBF",
+    "#BF00BF",
+    "#F3F00B",
+    "#FF6B00",
+    "#FE86C2",
+    "#A1B447",
+    "#65D9F7",
+    "#008321",
+    "#A46900",
 )
 
-TALENT_TREE_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
+
+class LazyIcon(StrEnum):
+    """Lazy links to some commonly used images for Dota 2."""
+
+    TalentTree = "https://liquipedia.net/commons/images/5/54/Talents.png"
+    AttributeBonus = "https://static.wikia.nocookie.net/dota2_gamepedia/images/e/e2/Attribute_Bonus_icon.png"
 
 
-class DotaAsset(StrEnum):
+class LazyItemID(IntEnum):
+    """Lazy ids for some items that are easier to remember like this for image generation."""
+
+    AghanimsScepter = 108
+    AghanimsBlessing = 271
+    AghanimsShard = 609
+
+
+class FpcAsset(StrEnum):
     """Dota 2 images saved as .png file in the repository assets folder."""
 
     AbilityUnknown = "ability_unknown.png"
@@ -25,8 +47,6 @@ class DotaAsset(StrEnum):
     ItemEmpty = "item_empty.png"
     ItemUnknown = "item_unknown.png"
     Placeholder640X360 = "Lavender640x360.png"
-    EditFPC = "edit_fpc.png"
-    SendFPC = "send_fpc.png"
 
     @override
     def __str__(self) -> str:

@@ -4,6 +4,7 @@ import asyncio
 import enum
 import logging
 import time
+from collections import UserDict
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, override
 
@@ -23,23 +24,18 @@ R = TypeVar("R")
 class CacheProtocol(Protocol[R]):
     cache: MutableMapping[str, asyncio.Task[R]]
 
-    def __call__(self, *args: Any, **kwds: Any) -> asyncio.Task[R]:
-        ...
+    def __call__(self, *args: Any, **kwds: Any) -> asyncio.Task[R]: ...
 
-    def get_key(self, *args: Any, **kwargs: Any) -> str:
-        ...
+    def get_key(self, *args: Any, **kwargs: Any) -> str: ...
 
-    def invalidate(self, *args: Any, **kwargs: Any) -> bool:
-        ...
+    def invalidate(self, *args: Any, **kwargs: Any) -> bool: ...
 
-    def invalidate_containing(self, key: str) -> None:
-        ...
+    def invalidate_containing(self, key: str) -> None: ...
 
-    def get_stats(self) -> tuple[int, int]:
-        ...
+    def get_stats(self) -> tuple[int, int]: ...
 
 
-class ExpiringCache(dict[Any, Any]):
+class ExpiringCache(UserDict[Any, Any]):
     def __init__(self, seconds: float) -> None:
         self.__ttl: float = seconds
         super().__init__()
@@ -98,6 +94,7 @@ class Strategy(enum.Enum):
 def cache(
     maxsize: int = 128,
     strategy: Strategy = Strategy.lru,
+    *,
     ignore_kwargs: bool = False,
 ) -> Callable[[Callable[..., Coroutine[Any, Any, R]]], CacheProtocol[R]]:
     def decorator(func: Callable[..., Coroutine[Any, Any, R]]) -> CacheProtocol[R]:
@@ -106,14 +103,10 @@ def cache(
             stats = internal_cache.get_stats
         elif strategy is Strategy.raw:
             internal_cache = {}
-
-            def stats():
-                return (0, 0)
+            stats = lambda: (0, 0)  # noqa: E731
         elif strategy is Strategy.timed:
             internal_cache = ExpiringCache(seconds=maxsize)
-
-            def stats():
-                return (0, 0)
+            stats = lambda: (0, 0)  # noqa: E731
 
         def _make_key(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
             # this is a bit of a cluster fuck
@@ -166,11 +159,11 @@ def cache(
                     continue
 
         # TODO: investigate those "type: ignore"
-        wrapper.cache = internal_cache  # type: ignore
-        wrapper.get_key = lambda *args, **kwargs: _make_key(args, kwargs)  # type: ignore
-        wrapper.invalidate = _invalidate  # type: ignore
-        wrapper.get_stats = stats  # type: ignore
-        wrapper.invalidate_containing = _invalidate_containing  # type: ignore
-        return wrapper  # type: ignore
+        wrapper.cache = internal_cache  # type:ignore[reportAttributeAccessIssue]
+        wrapper.get_key = lambda *args, **kwargs: _make_key(args, kwargs)  # type: ignore[reportAttributeAccessIssue]
+        wrapper.invalidate = _invalidate  # type: ignore[reportAttributeAccessIssue]
+        wrapper.get_stats = stats  # type: ignore[reportAttributeAccessIssue]
+        wrapper.invalidate_containing = _invalidate_containing  # type: ignore[reportAttributeAccessIssue]
+        return wrapper  # type: ignore[reportAttributeAccessIssue]
 
     return decorator

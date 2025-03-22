@@ -37,7 +37,7 @@ from typing import (
 import asyncpg
 import discord  # noqa: TC002
 from discord import app_commands
-from discord.ext import commands, menus
+from discord.ext import commands
 from tabulate import tabulate
 
 from bot import AluBot, AluCog, aluloop

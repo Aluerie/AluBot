@@ -64,8 +64,8 @@ class LogsViaWebhook(AluCog):
     # TODO: ADD MORE STUFF
     EXACT_AVATAR_MAPPING: Mapping[str, str] = {
         # custom name loggers
-        "send_dota_fpc": const.DotaAsset.SendFPC.url,
-        "edit_dota_fpc": const.DotaAsset.EditFPC.url,
+        "send_dota_fpc": const.LogoAsset.SendFPC.url,
+        "edit_dota_fpc": const.LogoAsset.EditFPC.url,
         "discord.gateway": "https://i.imgur.com/4PnCKB3.png",
         "discord.ext.tasks": "https://em-content.zobj.net/source/microsoft/378/alarm-clock_23f0.png",
         "bot.bot": "https://i.imgur.com/6XZ8Roa.png",  # lady Noir

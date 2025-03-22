@@ -6,9 +6,7 @@ from typing import TYPE_CHECKING, TypedDict, override
 
 import aiohttp
 
-from bot import aluloop
-
-from ..._fpc_base import FPCCog
+from bot import AluCog, aluloop
 
 if TYPE_CHECKING:
 
@@ -25,7 +23,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class SummonerNameCheck(FPCCog):
+class SummonerNameCheck(AluCog):
     """Summoner Name Check."""
 
     @override

@@ -7,7 +7,7 @@
 """
 
 TEST_EXTENSIONS = (
-    "dev.sync",
+    # "dev.sync",
     # 'dev.reload',
     # 'dev.utilities',
     # 'community.moderation'
@@ -16,11 +16,11 @@ TEST_EXTENSIONS = (
     # 'meta.meta.help',
     # 'community.fix_links',
     # 'info.schedule',
-    "community.twitch_notifications",
+    # "community.twitch_notifications",
     # 'fpc_notifications.dota',
     # 'meta.meta',
     # 'educational.language'
-    # "beta",
+    "beta",
     # "reminders.reminders",
     # "user_settings.timezone",
 )

@@ -1,12 +1,10 @@
 from enum import StrEnum
 from typing import override
 
-from ._meta import ASSETS_IMAGES, CONSTANTS, RAW_GITHUB_IMAGES
+from .abc import ASSETS_IMAGES, CONSTANTS, RAW_GITHUB_IMAGES
 
 __all__ = (
-    "Dota",
     "Emoticon",
-    "League",
     "Limit",
     "Logo",
     "LogoAsset",
@@ -27,6 +25,10 @@ class LogoAsset(StrEnum):
     """
     TwitchIO = "twitchio.png"
     SteamPy = "steampy.png"
+    EditFPC = "edit_fpc.png"
+    """Used as an avatar for Edit FPC log messages via webhook."""
+    SendFPC = "send_fpc.png"
+    """Used as an avatar for Send FPC log messages via webhook."""
 
     @override
     def __str__(self) -> str:
@@ -123,36 +125,3 @@ class Twitch(CONSTANTS):
     LOL_GAME_CATEGORY_ID = "21779"
     DOTA_GAME_CATEGORY_ID = "29595"
     MY_OFFLINE_SCREEN = "https://static-cdn.jtvnw.net/jtv_user_pictures/ed948895-c574-4325-9c0c-d7639a45df64-channel_offline_image-1920x1080.png"
-
-
-class League(CONSTANTS):
-    # https://static.developer.riotgames.com/docs/lol/queues.json
-    # says 420 is 5v5 Ranked Solo games
-    SOLO_RANKED_5v5_QUEUE_ENUM = 420
-
-
-class Dota(CONSTANTS):
-    # remember the imgur.com 429 catastrophe
-    # which means that we shouldn't host images there ever
-    # because they rate-limit my bot
-    # otherwise `bot.transposer.url_to_image` will fail
-
-    PLAYER_COLOR_MAP = (
-        "#3375FF",
-        "#66FFBF",
-        "#BF00BF",
-        "#F3F00B",
-        "#FF6B00",
-        "#FE86C2",
-        "#A1B447",
-        "#65D9F7",
-        "#008321",
-        "#A46900",
-    )
-
-    TALENT_TREE_ICON = "https://liquipedia.net/commons/images/5/54/Talents.png"
-    ATTR_BONUS_ICON = "https://static.wikia.nocookie.net/dota2_gamepedia/images/e/e2/Attribute_Bonus_icon.png"
-
-    AGHANIMS_SCEPTER_ITEM_ID = 108
-    AGHANIMS_BLESSING_ITEM_ID = 271
-    AGHANIMS_SHARD_ITEM_ID = 609

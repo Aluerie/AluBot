@@ -84,7 +84,7 @@ class AluBot(commands.Bot):
             case_insensitive=True,
             help_command=None,
         )
-        self.extensions_to_load: tuple[str, ...] = get_extensions(self.test)
+        self.extensions_to_load: tuple[str, ...] = get_extensions(test=self.test)
         # asyncpg typehinting crutch, read `utils.database` for more
         self.pool: PoolTypedWithAny = pool  # pyright:ignore[reportAttributeAccessIssue]
         self.session: ClientSession = session
@@ -224,7 +224,7 @@ class AluBot(commands.Bot):
     def instantiate_lol(self) -> None:
         """Instantiate League of Legends Client."""
         if not hasattr(self, "lol"):
-            from utils.lol.client import LeagueClient
+            from ext.lol.api import LeagueClient
 
             self.lol = LeagueClient(self)
 
@@ -234,7 +234,7 @@ class AluBot(commands.Bot):
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from ext.dota._utils.steamio_client import DotaClient
+            from ext.dota.api.steamio_client import DotaClient
 
             self.dota = DotaClient(self)
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import override
 
-from ....utils.const._meta import ASSETS_IMAGES, RAW_GITHUB_IMAGES
+from utils.const import ASSETS_IMAGES, RAW_GITHUB_IMAGES
 
 __all__ = (
     "NEW_CHAMPION_EMOTE",
@@ -30,3 +30,9 @@ class LeagueAsset(StrEnum):
 
 
 NEW_CHAMPION_EMOTE = "\N{SQUARED NEW}"
+
+SOLO_RANKED_5v5_QUEUE_ENUM = 420
+"""
+https://static.developer.riotgames.com/docs/lol/queues.json
+says 420 is 5v5 Ranked Solo games.
+"""

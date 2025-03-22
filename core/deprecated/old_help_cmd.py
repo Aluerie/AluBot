@@ -4,7 +4,7 @@ import itertools
 from typing import TYPE_CHECKING, Any, Literal, Self, override
 
 import discord
-from discord.ext import commands, menus
+from discord.ext import commands
 
 from bot import AluCog, AluContext, aluloop
 from utils import const, pages
@@ -394,4 +394,3 @@ class BaseHelpCog(AluCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(BaseHelpCog(bot))

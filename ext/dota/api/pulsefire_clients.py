@@ -454,7 +454,7 @@ if __name__ == "__main__":
             match = await opendota_client.get_match(match_id=7543594334)
 
             for item in ["players", "teamfights", "radiant_xp_adv", "radiant_gold_adv", "picks_bans"]:
-                match.pop(item, None)  # type: ignore[reportArgumentType]
+                match.pop(item, None)
 
         print(opendota_client.rate_limiter.rate_limits_string)  # noqa: T201
 

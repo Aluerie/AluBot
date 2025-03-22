@@ -95,8 +95,8 @@ class LogsViaWebhook(AluCog):
         "ERROR": const.Color.error,
     }
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+        super().__init__(bot, *args, **kwargs)
         self._logging_queue: asyncio.Queue[logging.LogRecord] = asyncio.Queue()
 
         # cooldown attrs
@@ -107,10 +107,17 @@ class LogsViaWebhook(AluCog):
     @override
     async def cog_load(self) -> None:
         self.logging_worker.start()
+        self.logs_handler = LoggingHandler(self)
+        logging.getLogger().addHandler(self.logs_handler)
+        await super().cog_load()
 
     @override
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.logging_worker.stop()
+        log.warning("Tearing down logger via webhook.")
+        logging.getLogger().removeHandler(self.logs_handler)
+        del self.logs_handler
+        await super().cog_unload()
 
     @discord.utils.cached_property
     def logger_webhook(self) -> discord.Webhook:
@@ -169,32 +176,9 @@ class LogsViaWebhook(AluCog):
 
 
 async def setup(bot: AluBot) -> None:
-    """Load AluBot extension. Framework of discord.py.
-
-    The reason why this extension is in the list of core extensions is
-    because some `cog_load` from normal extensions sometimes have pretty important log messages
-    that we want to log into the discord webhook. Thus, we want to load this as early as possible.
-
-    Future
-    ------
-    If we ever need to load this even earlier then we will have to
-    manually order extensions in `core/__init__.py` or at least bump this one
-    """
+    """Load AluBot extension. Framework of discord.py."""
     if bot.test:
         # no need since I'm directly watching.
         return
 
-    cog = LogsViaWebhook(bot)
-    await bot.add_cog(cog)
-    bot.logs_via_webhook_handler = handler = LoggingHandler(cog)
-    logging.getLogger().addHandler(handler)
-
-
-async def teardown(bot: AluBot) -> None:
-    """Teardown AluBot extension. Framework of discord.py."""
-    if bot.test:
-        return
-
-    log.warning("Tearing down logger via webhook.")
-    logging.getLogger().removeHandler(bot.logs_via_webhook_handler)
-    del bot.logs_via_webhook_handler
+    await bot.add_cog(LogsViaWebhook(bot))

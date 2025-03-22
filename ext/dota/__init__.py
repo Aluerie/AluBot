@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING
 from utils import const
 
 from .bugtracker import BugTracker
-from .fpc import DotaFPC
-from .profile import SteamDotaProfiles
+
+# from .fpc import DotaFPC
+# from .profile import SteamDotaProfiles
 from .steamdb import SteamDB
 
 if TYPE_CHECKING:
@@ -15,8 +16,8 @@ if TYPE_CHECKING:
 
 class Dota(
     BugTracker,
-    DotaFPC,
-    SteamDotaProfiles,
+    # DotaFPC,
+    # SteamDotaProfiles,
     SteamDB,
     emote=const.Emote.DankLove,
     name="Dota",

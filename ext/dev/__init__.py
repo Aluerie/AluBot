@@ -8,6 +8,7 @@ from .code_run import CodeRun
 from .control import Control
 from .discord_management import DiscordManagement
 from .jsk import AluJishaku
+from .logs_via_webhook import LogsViaWebhook
 from .reload import Reload
 from .sync import Sync
 from .tools import Tools
@@ -20,6 +21,7 @@ class Dev(
     CodeRun,
     Control,
     DiscordManagement,
+    LogsViaWebhook,
     Reload,
     Sync,
     Tools,

@@ -12,14 +12,14 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from utils import const, fmt
 
-from ..._base_fpc import BaseMatchToEdit, BaseMatchToSend
+from ...base_fpc import BaseMatchToEdit, BaseMatchToSend
 from ..api import game_const
 
 if TYPE_CHECKING:
     from bot import AluBot, AluCog
     from ext.dota.api import Hero, PseudoHero
 
-    from ..._base_fpc import RecipientKwargs
+    from ...base_fpc import RecipientKwargs
     from ..api.schemas import stratz
 
 

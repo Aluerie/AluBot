@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypedDict, override
 
 import discord
 
-from ext._base_fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
+from ext.base_fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 from utils import const, fmt
 
 from . import game_const

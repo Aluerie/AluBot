@@ -13,7 +13,7 @@ from bot import aluloop
 from utils import const
 from utils.helpers import measure_time
 
-from ..._base_fpc import BaseNotifications, EditTuple, RecipientTuple
+from ...base_fpc import BaseNotifications, EditTuple, RecipientTuple
 from .models import MatchToSend, StratzMatchToEdit
 
 if TYPE_CHECKING:

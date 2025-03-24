@@ -10,7 +10,7 @@ from discord import app_commands
 
 from utils import const, errors
 
-from ..._base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
+from ...base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
 from ..api import Champion, ChampionTransformer, Platform  # noqa: TC001
 
 if TYPE_CHECKING:

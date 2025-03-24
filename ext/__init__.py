@@ -123,5 +123,5 @@ def get_extensions(*, test: bool) -> tuple[str, ...]:
     return tuple(
         module.name
         for module in iter_modules(__path__, f"{__package__}.")
-        if module.name not in DISABLED_EXTENSIONS and not module.name.rsplit(".")[-1].startswith("_")
+        if module.name not in DISABLED_EXTENSIONS and not module.name.rsplit(".")[-1].startswith(("base", "abc", "_"))
     )

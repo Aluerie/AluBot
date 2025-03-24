@@ -8,7 +8,7 @@ from roleidentification import get_roles
 
 from utils import const
 
-from ..._base_fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
+from ...base_fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 from . import game_const
 
 if TYPE_CHECKING:

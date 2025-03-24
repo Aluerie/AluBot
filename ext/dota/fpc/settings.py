@@ -12,7 +12,7 @@ from steam import ID, InvalidID
 from ext.dota.api import Hero, HeroTransformer  # noqa: TC001
 from utils import const
 
-from ..._base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
+from ...base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction

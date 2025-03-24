@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from utils import const, fmt
 
-from ..._base_fpc import BaseMatchToEdit, BaseMatchToSend
+from ...base_fpc import BaseMatchToEdit, BaseMatchToSend
 from ..api import LiteralPlatform, Platform
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from bot import AluBot
 
-    from ..._base_fpc import RecipientKwargs
+    from ...base_fpc import RecipientKwargs
     from ..api import Champion, PseudoChampion
     from .notifications import LivePlayerAccountRow
 

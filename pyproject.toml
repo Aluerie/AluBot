@@ -133,6 +133,7 @@ ignore = [
     
     # 2. Personal disagreement
     "PLR0904",  # too many public methods
+    "PLR0911",  # too many returns
     "PLR0912",  # too many branches
     "PLR0913",  # number of function arguments
     "PLR0914",  # too many variables: come on

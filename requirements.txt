@@ -7,8 +7,8 @@ git+https://github.com/Gorialis/jishaku.git
 
 # Twitch
 # twitchio[speed] @ git+https://github.com/PythonistaGuild/TwitchIO.git  # @maintain/2.x  # test other branch 
-twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@dev/3.0
-# py -m pip install "twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@dev/3.0" --force-reinstall 
+twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@main
+# py -m pip install "twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@main" --force-reinstall 
 
 # Dota 2 (steamio)
 # my own branch with dota2 extension

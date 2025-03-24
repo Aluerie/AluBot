@@ -9,7 +9,7 @@ import asyncpg
 from bot import aluloop
 from utils import const
 
-from ..._base_fpc import BaseNotifications, EditTuple, RecipientTuple
+from ...base_fpc import BaseNotifications, EditTuple, RecipientTuple
 from ..api import game_const, regions
 from .models import MatchToEdit, MatchToSend
 

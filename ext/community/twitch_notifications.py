@@ -53,7 +53,6 @@ class TwitchNotifications(AluCog):
         self._most_recent: datetime.datetime | None = None
         self.last_notification_message: discord.Message | None = None
 
-        self.notifications_worker.start()
         self.restart_clean_up.start()
 
     @override
@@ -74,10 +73,54 @@ class TwitchNotifications(AluCog):
         await self.hideout.alubot_logs.send(embed=embed)
 
     @commands.Cog.listener("on_twitchio_stream_online")
-    async def twitch_tv_live_notifications(self, _: twitchio.StreamOnline) -> None:
+    async def twitch_tv_live_notifications(self, payload: twitchio.StreamOnline) -> None:
         """Receive notifications for my stream via eventsub."""
-        record = NotificationRecord(created_at=datetime.datetime.now(datetime.UTC), type=NotificationType.eventsub)
-        self._logging_queue.put_nowait(record)
+        # record = NotificationRecord(created_at=datetime.datetime.now(datetime.UTC), type=NotificationType.eventsub)
+        # self._logging_queue.put_nowait(record)
+
+        # query = "SELECT twitch_last_offline FROM bot_vars"
+        # stream_last_offline: datetime.datetime = await self.bot.pool.fetchval(query)
+        # if (datetime.datetime.now(datetime.UTC) - stream_last_offline).seconds < 900:
+        #     # the assumption here is that I won't take a break shorter than 15 minutes between streams
+        #     self.edit_offline_screen.cancel()
+        #     return
+
+        # I only have notifications for myself
+        irene = payload.broadcaster
+        irene_user = await irene.user()
+        channel_info = await irene.fetch_channel_info()
+        game = await channel_info.fetch_game()
+
+        stream_url = f"https://twitch.tv/{payload.broadcaster.name}"
+        current_vod = next(iter(await self.bot.twitch.fetch_videos(user_id=irene.id, period="day")), None)
+        current_vod_link = f"/[VOD]({current_vod.url})" if current_vod else ""
+
+        # send notification
+        content = (
+            f"{self.community.stream_lover_role.mention} and chat, "
+            f"**`@{payload.broadcaster.display_name}`** just went live!"
+        )
+        embed = (
+            discord.Embed(
+                color=0x9146FF,
+                title=f"{channel_info.title}",
+                url=stream_url,
+                description=(f"Playing {channel_info.game_name}\n/[Watch Stream]({stream_url}){current_vod_link}"),
+            )
+            .set_author(
+                name=f"{irene.display_name} just went live on Twitch!",
+                icon_url=irene_user.profile_image,
+                url=stream_url,
+            )
+            .set_thumbnail(url=game.box_art if game else irene_user.profile_image)
+            .set_image(
+                url=(
+                    f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{irene.display_name}-1280x720.jpg"
+                    "?format=webp&width=720&height=405"
+                ),
+            )
+        )
+        self.last_notification_message = await self.community.stream_notifs.send(content=content, embed=embed)
 
     @commands.Cog.listener(name="on_presence_update")
     async def community_twitch_tv_management(self, before: discord.Member, after: discord.Member) -> None:
@@ -116,12 +159,6 @@ class TwitchNotifications(AluCog):
                 log.debug("Adding %s role to %s", live_streaming_role.name, after.display_name)
                 await after.add_roles(live_streaming_role)
 
-            if after.id == const.User.aluerie:
-                # back up for my own notifications
-                now = datetime.datetime.now(datetime.UTC)
-                record = NotificationRecord(created_at=now, type=NotificationType.presence)
-                self._logging_queue.put_nowait(record)
-
         elif streaming_type in before_set and streaming_type not in after_set:
             live_streaming_role = self.community.live_stream_role
             if live_streaming_role in after.roles:
@@ -133,87 +170,9 @@ class TwitchNotifications(AluCog):
             # TODO: we need to add the voice chat thing where it checks/sets up things on restart bot
             # like get all folks with streaming status and clear the role
 
-    async def send_twitch_tv_notification(self) -> None:
-        """Finally, send the notification.
-
-        * Notification message has a sneak-peak image in embed that always shows the live-stream
-            whenever the user enters #stream-notifications channel.
-        * Also double-checks that stream is truly new, i.e. to avoid duplicate notifications in case my stream crashed.
-        """
-        # brute force check if stream died
-        # due to Internet, lag, twitch being twitch or something else
-        query = "SELECT twitch_last_offline FROM bot_vars"
-        stream_last_offline: datetime.datetime = await self.bot.pool.fetchval(query)
-        if (datetime.datetime.now(datetime.UTC) - stream_last_offline).seconds < 900:
-            # the assumption here is that I won't take a break shorter than 15 minutes between streams
-            self.edit_offline_screen.cancel()
-            return
-
-        irene = await self.bot.twitch.irene.user()
-        channel_info = await irene.fetch_channel_info()
-        game = await channel_info.fetch_game()
-
-        stream_url = f"https://twitch.tv/{irene.name}"
-        current_vod = next(iter(await self.bot.twitch.fetch_videos(user_id=irene.id, period="day")), None)
-        current_vod_link = f"/[VOD]({current_vod.url})" if current_vod else ""
-
-        # send notification
-
-        content = f"{self.community.stream_lover_role.mention} and chat, **`@{irene.display_name}`** just went live!"
-        embed = (
-            discord.Embed(
-                color=0x9146FF,
-                title=f"{channel_info.title}",
-                url=stream_url,
-                description=(f"Playing {channel_info.game_name}\n/[Watch Stream]({stream_url}){current_vod_link}"),
-            )
-            .set_author(
-                name=f"{irene.display_name} just went live on Twitch!",
-                icon_url=irene.profile_image,
-                url=stream_url,
-            )
-            .set_thumbnail(url=game.box_art if game else irene.profile_image)
-            .set_image(
-                url=(
-                    f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{irene.display_name}-1280x720.jpg"
-                    "?format=webp&width=720&height=405"
-                ),
-            )
-        )
-        message = await self.community.stream_notifs.send(content=content, embed=embed)
-        self.last_notification_message = message
-
-    @aluloop(seconds=0.0)
-    async def notifications_worker(self) -> None:
-        """Task responsible for controlling the flow of Twitch.TV notifications.
-
-        If notification comes from both presence and eventsub - only one should be sent.
-        """
-        record = await self._logging_queue.get()
-
-        async with self._lock:
-            if self._most_recent and (datetime.datetime.now(datetime.UTC) - self._most_recent) < self.cooldown:
-                # We already have a notif ?
-                return
-
-            self._most_recent = datetime.datetime.now(datetime.UTC)
-            log.debug("Sending twitch.tv received via %s", record.type.name)
-            embed = discord.Embed(
-                color=const.Accent.indigo(700),
-                description=f"Got twitch.tv starting stream notif via `{record.type.name}`",
-            )
-            await self.community.logs.send(embed=embed)
-            await self.send_twitch_tv_notification()
-
     @commands.Cog.listener("on_twitchio_stream_offline")
     async def twitch_tv_offline_edit_notification(self, _: twitchio.StreamOffline) -> None:
         """Starts the task to edit the notification message."""
-        await self.bot.pool.execute("UPDATE bot_vars SET twitch_last_offline = $1", datetime.datetime.now(datetime.UTC))
-        self.edit_offline_screen.start()
-
-    @aluloop(count=1)
-    async def edit_offline_screen(self) -> None:
-        """Task to edit the notification image to my offline screen when it's confirmed that stream truly ended."""
         await asyncio.sleep(11 * 60)
         message = self.last_notification_message
         if message is None:

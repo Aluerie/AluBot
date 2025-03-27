@@ -51,6 +51,7 @@ class TwitchNotifications(AluCog):
         # I close discord during the stream but then reopen it (presence gonna proc without anything holding it back)
         self.cooldown: datetime.timedelta = datetime.timedelta(hours=13)
         self._most_recent: datetime.datetime | None = None
+        self.last_notification_message: discord.Message | None = None
 
         self.notifications_worker.start()
         self.restart_clean_up.start()

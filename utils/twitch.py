@@ -67,14 +67,14 @@ class AluTwitchClient(twitchio.Client):
 
         broadcaster = const.TwitchID.Me
         for sub in [
-            # ✅ Channel Points Redeem                 channel:read:redemptions or channel:manage:redemptions
+            # ✅ Channel Points Redeem              channel:read:redemptions or channel:manage:redemptions
             eventsub.ChannelPointsRedeemAddSubscription(broadcaster_user_id=broadcaster),
             # Stream went offline                   No authorization required
             eventsub.StreamOfflineSubscription(broadcaster_user_id=broadcaster),
             # Stream went live                      No authorization required
             eventsub.StreamOnlineSubscription(broadcaster_user_id=broadcaster),
         ]:
-            await self.subscribe_websocket(payload=sub)
+            await self.subscribe_websocket(payload=sub, token_for=broadcaster, as_bot=False)
 
     @override
     async def add_token(self, token: str, refresh: str) -> twitchio.authentication.ValidateTokenPayload:

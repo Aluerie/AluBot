@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-import datetime
 import logging
-from enum import IntEnum
-from typing import TYPE_CHECKING, Any, NamedTuple, override
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord.ext import commands
@@ -23,16 +21,6 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class NotificationType(IntEnum):
-    eventsub = 1
-    presence = 2
-
-
-class NotificationRecord(NamedTuple):
-    created_at: datetime.datetime
-    type: NotificationType
-
-
 class TwitchNotifications(AluCog):
     """Cog responsible for Twitch Related functions for my discord community.
 
@@ -43,16 +31,7 @@ class TwitchNotifications(AluCog):
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
-        self._logging_queue: asyncio.Queue[NotificationRecord] = asyncio.Queue()
-
-        # cooldown attrs
-        self._lock: asyncio.Lock = asyncio.Lock()
-        # TODO: This is a crutch, if we make it `seconds=600`, then it will give it out fake notifications for when
-        # I close discord during the stream but then reopen it (presence gonna proc without anything holding it back)
-        self.cooldown: datetime.timedelta = datetime.timedelta(hours=13)
-        self._most_recent: datetime.datetime | None = None
         self.last_notification_message: discord.Message | None = None
-
         self.restart_clean_up.start()
 
     @override
@@ -75,16 +54,6 @@ class TwitchNotifications(AluCog):
     @commands.Cog.listener("on_twitchio_stream_online")
     async def twitch_tv_live_notifications(self, payload: twitchio.StreamOnline) -> None:
         """Receive notifications for my stream via eventsub."""
-        # record = NotificationRecord(created_at=datetime.datetime.now(datetime.UTC), type=NotificationType.eventsub)
-        # self._logging_queue.put_nowait(record)
-
-        # query = "SELECT twitch_last_offline FROM bot_vars"
-        # stream_last_offline: datetime.datetime = await self.bot.pool.fetchval(query)
-        # if (datetime.datetime.now(datetime.UTC) - stream_last_offline).seconds < 900:
-        #     # the assumption here is that I won't take a break shorter than 15 minutes between streams
-        #     self.edit_offline_screen.cancel()
-        #     return
-
         # I only have notifications for myself
         irene = payload.broadcaster
         irene_user = await irene.user()

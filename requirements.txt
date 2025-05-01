@@ -19,15 +19,15 @@ pulsefire~=2.0.24
 git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
-githubkit==0.12.9
-pygit2==1.17.0
+githubkit==0.12.12
+pygit2==1.18.0
 
 # TTS
 gtts~=2.5.4
 ffmpeg
 
 # WebScrape
-beautifulsoup4==4.13.3
+beautifulsoup4==4.13.4
 lxml
 
 # DateParsing
@@ -41,7 +41,7 @@ ipykernel; platform_system == 'Windows'
 # Bot's Base
 asyncpg==0.30.0
 asyncpg-stubs
-aiohttp==3.11.15
+aiohttp==3.11.18
 
 # Optimisation
 orjson
@@ -49,10 +49,10 @@ uvloop==0.21.0; platform_system == 'Linux'  # ignore on non-Linux - because not 
 
 # Uncategorised (or Other)
 aiofiles==24.1.0
-pillow==11.2.0
+pillow==11.2.1
 emoji==2.14.1
-numpy==2.2.4
-urllib3==2.3.0
+numpy==2.2.5
+urllib3==2.4.0
 wordcloud==1.9.4
 matplotlib==3.10.1
 unidiff==0.7.5

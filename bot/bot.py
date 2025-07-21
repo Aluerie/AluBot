@@ -338,6 +338,14 @@ class AluBot(commands.Bot):
 
     @override
     async def on_message(self, message: discord.Message) -> None:
+        """A bot's listener for processing commands from discord messages that the bot can see.
+
+        Currently, the bot doesn't allow text command anywhere except my secret hideout server.
+        People should use slash commands. Some remaining text commands are dev-only.
+
+        Note that this doesn't change behavior of other "on_message" listeners,
+        i.e. they will still listen to messages from all guilds.
+        """
         if message.guild and message.guild.id == const.Guild.hideout and not message.author.bot:
             # only process commands in my own private server and only from me (the only non-bot account in there);
             # everybody else everywhere else should use slash commands.

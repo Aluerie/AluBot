@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from utils.const import Emote
 
 from .moderation import HideoutModeration
-from .personal import HideoutPersonal
 
 if TYPE_CHECKING:
     from bot import AluBot
@@ -13,7 +12,6 @@ if TYPE_CHECKING:
 
 class Hideout(
     HideoutModeration,
-    HideoutPersonal,
     emote=Emote.KURU,
     hidden=True,
 ):

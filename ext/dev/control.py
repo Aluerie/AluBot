@@ -28,28 +28,14 @@ log.setLevel(logging.INFO)
 
 
 class Control(BaseDevCog):
+    """Utilities for system-wide control and information for AluBot and some other projects of mine."""
+
     system_group = app_commands.Group(
         name="system-dev",
         description="(#Hideout) commands for bot's system-wide control.",
         guild_ids=[const.Guild.hideout],
         default_permissions=discord.Permissions(manage_guild=True),
     )
-
-    @system_group.command(name="restart")
-    async def system_restart(self, interaction: AluInteraction) -> None:
-        """🔬 Restart the bot process on VPS.
-
-        Usable to restart the bot without logging to VPS machine or committing something.
-        """
-        await interaction.response.send_message("Rebooting in 3 2 1")
-        await asyncio.sleep(3)
-        try:
-            # non systemctl users - sorry
-            await asyncio.create_subprocess_shell("sudo systemctl restart alubot")
-        except Exception:
-            log.exception("Failed to restart the bot", stack_info=True)
-            # it might not go off
-            await interaction.followup.send("Something went wrong.")
 
     @system_group.command(name="information")
     async def system_information(self, interaction: AluInteraction) -> None:
@@ -118,23 +104,6 @@ class Control(BaseDevCog):
         )
         await interaction.response.send_message(embed=embed)
 
-    @system_group.command(name="logs")
-    async def system_logs(self, interaction: AluInteraction, project: Literal["AluBot", "IreBot", "Gloria"]) -> None:
-        """🔬 Get project's logs.
-
-        Parameters
-        ----------
-        project
-            Project to fetch `.log` file for.
-        """
-        await interaction.response.defer()
-        mapping = {
-            "AluBot": ".alubot/.temp/alubot.log",
-            "IreBot": "../IreBot/.temp/irenesbot.log",
-            "Gloria": "../Gloria/.steam.log",
-        }
-        await interaction.followup.send(file=discord.File(mapping[project]))
-
     @system_group.command(name="health")
     async def system_health(self, interaction: AluInteraction) -> None:
         """🔬 (#Hideout) Get bot's health status."""
@@ -202,6 +171,62 @@ class Control(BaseDevCog):
         embed.set_footer(text=f"{total_warnings} warning(s)")
         embed.description = "\n".join(description)
         await interaction.followup.send(embed=embed)
+
+    async def send_logs_helper(self, interaction: AluInteraction, path: str) -> None:
+        """Helper function to send project logs as a file with a command.
+
+        Parameters
+        ----------
+        interaction: AluInteraction
+            Application Command Interaction that was triggered by the command.
+        path: str
+            FIle path to `.log` file.
+        """
+        await interaction.response.defer()
+        await interaction.followup.send(file=discord.File(path))
+
+    async def restart_helper(self, interaction: AluInteraction, project: Literal["alubot", "irebot"]) -> None:
+        """Restart a systemctl based process on VPS.
+
+        Usable to restart the bot (or other projects) without logging to VPS machine or committing something.
+        Sometimes, it's just more comfortable to do it from discord window or mobile.
+        """
+        await interaction.response.send_message("Rebooting in 3 2 1")
+        await asyncio.sleep(3)
+        try:
+            # non systemctl users - sorry
+            await asyncio.create_subprocess_shell(f"sudo systemctl restart {project}")
+        except Exception:
+            log.exception("Failed to restart %s", project, stack_info=True)
+            # it might not go off
+            await interaction.followup.send("Something went wrong.")
+
+    @system_group.command(name="logs")
+    async def system_logs(self, interaction: AluInteraction) -> None:
+        """🔬 Get AluBot's logs."""
+        await self.send_logs_helper(interaction, ".alubot/.temp/alubot.log")
+
+    @system_group.command(name="restart")
+    async def system_restart(self, interaction: AluInteraction) -> None:
+        """🔬 Restart AluBot process on VPS."""
+        await self.restart_helper(interaction, "alubot")
+
+    irebot_group = app_commands.Group(
+        name="irebot-dev",
+        description="(#Hideout) commands for irebot's control.",
+        guild_ids=[const.Guild.hideout],
+        default_permissions=discord.Permissions(manage_guild=True),
+    )
+
+    @irebot_group.command(name="logs")
+    async def irebot_logs(self, interaction: AluInteraction) -> None:
+        """🔬 Get IreBot logs."""
+        await self.send_logs_helper(interaction, "../IreBot/.temp/irebot.log")
+
+    @irebot_group.command(name="restart")
+    async def irebot_restart(self, interaction: AluInteraction) -> None:
+        """🔬 Restart IreBot process on VPS."""
+        await self.restart_helper(interaction, "irebot")
 
 
 async def setup(bot: AluBot) -> None:

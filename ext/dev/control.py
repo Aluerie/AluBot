@@ -31,7 +31,7 @@ class Control(BaseDevCog):
     """Utilities for system-wide control and information for AluBot and some other projects of mine."""
 
     system_group = app_commands.Group(
-        name="system-dev",
+        name="system-dev",  # TODO: maybe rename this to alubot-dev so it matches irebot-dev :thinking:
         description="(#Hideout) commands for bot's system-wide control.",
         guild_ids=[const.Guild.hideout],
         default_permissions=discord.Permissions(manage_guild=True),

@@ -25,12 +25,13 @@ __all__ = ("AluTwitchClient",)
 log = logging.getLogger(__name__)
 
 
-class AluTwitchClient(twitchio.Client):
+class AluTwitchClient(twitchio.AutoClient):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(
             client_id=config["TWITCH"]["CLIENT_ID"],
             client_secret=config["TWITCH"]["CLIENT_SECRET"],
             bot_id=const.TwitchID.Bot,
+            subscriptions=self.get_eventsub_subscriptions(),
         )
         self._bot: AluBot = bot
 
@@ -65,16 +66,19 @@ class AluTwitchClient(twitchio.Client):
         # return
         # await self.add_component(AluComponent(self))
 
+        # await self.subscribe_websocket(payload=sub, token_for=broadcaster, as_bot=False)
+        pass
+
+    def get_eventsub_subscriptions(self) -> list[twitchio.eventsub.SubscriptionPayload]:
         broadcaster = const.TwitchID.Me
-        for sub in [
+        return [
             # ✅ Channel Points Redeem              channel:read:redemptions or channel:manage:redemptions
             eventsub.ChannelPointsRedeemAddSubscription(broadcaster_user_id=broadcaster),
             # Stream went offline                   No authorization required
             eventsub.StreamOfflineSubscription(broadcaster_user_id=broadcaster),
             # Stream went live                      No authorization required
             eventsub.StreamOnlineSubscription(broadcaster_user_id=broadcaster),
-        ]:
-            await self.subscribe_websocket(payload=sub, token_for=broadcaster, as_bot=False)
+        ]
 
     @override
     async def add_token(self, token: str, refresh: str) -> twitchio.authentication.ValidateTokenPayload:

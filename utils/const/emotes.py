@@ -5,13 +5,9 @@ These emotes are hosted in my emote servers (why not on discord dev portal - exp
 
 Notes
 -----
-* Unfortunately, as of today (13/October/2024) uploading emotes to the bot page on discord developer portal
-    has some severe disadvantages compared to having many emote servers:
-    1. Webhooks cannot utilize them (even with @everybody having "Use external emojis" permission) - just sends :emote:
-    2. Then we have to upload same emote twice - once to AluBot page, once to YenBot page
-    3. And we have to list the emotes twice and have some kind of global namespace variable for it - kinda bad.
-        (as in emotes = YENBOT_EMOTES if TEST_BOT_TOKEN else ALUBOT_EMOTES) where TEST_BOT_TOKEN is a global var.
-    # TODO: after 13/October/2025 - check if now it's possible to use bot emotes from dev portal in webhooks.
+* Emotes uploaded to Discord Developer Portal (to the bot's application page, under "Emotes" tab) can only be used
+    by the bot itself and by webhooks that bot created. Unfortunately, this restricts us to make sure that
+    the bot creates all webhooks that it's going to use to send messages containing custom emotes.
 """
 
 from enum import StrEnum

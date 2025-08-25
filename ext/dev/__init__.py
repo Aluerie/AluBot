@@ -11,6 +11,7 @@ from .jsk import AluJishaku
 from .logs_via_webhook import LogsViaWebhook
 from .reload import Reload
 from .sync import Sync
+from .testing import Testing
 from .tools import Tools
 
 if TYPE_CHECKING:
@@ -24,6 +25,7 @@ class Dev(
     LogsViaWebhook,
     Reload,
     Sync,
+    Testing,
     Tools,
     emote=Emote.DankFix,
 ):

@@ -48,8 +48,8 @@ class Mimic:
     I call it mimic because it's awkward to write `alu_webhook`, when it's not a webhook...
     it's just an extra layer to find or create a webhook for me.
 
-    But "mimic" because I originally used this structure for mimic messages that try to mirror discord members
-    via matching avatar/name in `discord.Webhook.send` arguments.
+    But "mimic" as a word choice because I originally used this structure for mimic messages that
+    try to mirror discord members via matching avatar/name in `discord.Webhook.send` arguments.
     """
 
     def __init__(

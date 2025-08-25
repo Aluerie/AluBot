@@ -61,7 +61,7 @@ async def create_pool() -> asyncpg.Pool[asyncpg.Record]:
         min_size=20,
         max_size=20,
         statement_cache_size=0,
-    )  # type: ignore[reportReturnType]
+    )
 
 
 async def start_the_bot(*, test: bool) -> None:

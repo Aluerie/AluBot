@@ -147,3 +147,9 @@ As we can see `url` and `description` are undecided.
 ## Docs String Emotes
 
 Use actual emotes in the beginning of doc strings for app commands. This way it's much easier to Ctrl+F in the whole project since in all other places we use N{} versions of those.
+
+## Emotes in command doc strings
+
+| Command / Group        | Emote |
+| --------               | ----- |
+| January                | $250  |

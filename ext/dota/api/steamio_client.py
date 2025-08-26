@@ -53,7 +53,7 @@ class DotaClient(Client):
 
     def aluerie(self) -> PartialUser:
         """Shortcut to get partial user object for @Aluerie's steam/dota2 profile."""
-        return self.instantiate_partial_user(config["STEAM"]["ALUERIE_FRIEND_ID"])
+        return self.create_partial_user(config["STEAM"]["ALUERIE_FRIEND_ID"])
 
     async def start_helpers(self) -> None:
         """Starting helping clients, tasks and services.

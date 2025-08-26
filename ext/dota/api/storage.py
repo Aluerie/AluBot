@@ -158,7 +158,6 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
                 table="dota_heroes_info",
                 emote_name=fmt.convert_camel_case_to_PascalCase(hero_short_name),
                 emote_source_url=f"{CDN_REACT}/heroes/icons/{hero_short_name}.png",  # copy of `minimap_icon_url`
-                guild_id=const.EmoteGuilds.DOTA[3],
             )
         except Exception as exc:  # noqa: BLE001
             desc = f"Something went wrong when creating hero emote for `id={hero_id}, name={hero_short_name}`."

@@ -317,7 +317,7 @@ class StratzClient(BaseClient):
         except aiohttp.ClientResponseError as exc:
             if exc.status == 403:
                 msg = (
-                    "403 Forbidden. Please, check if your Bearer Token in config.py matches "
+                    "403 Forbidden. Please, check if your `STRATZ_BEARER` in config.toml matches "
                     "the one at https://stratz.com/api. "
                     "PS. This error is manual and not given by Stratz API."
                 )

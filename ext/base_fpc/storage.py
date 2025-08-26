@@ -67,7 +67,7 @@ class CharacterTransformer[CharacterT: Character, PseudoCharacterT: Character](a
     @override
     async def autocomplete(self, interaction: AluInteraction, current: str) -> list[app_commands.Choice[int]]:
         storage = self.get_character_storage(interaction)
-        characters = await storage.all()
+        characters = await storage.walk_characters()
 
         options = fuzzy.finder(current, characters, key=lambda x: x.display_name)
         if not options:
@@ -175,7 +175,7 @@ class GameDataStorage[VT, PseudoVT](abc.ABC):
         except KeyError:
             return self.generate_unknown_object(object_id)
 
-    async def all(self) -> list[VT | PseudoVT]:
+    async def walk_characters(self) -> list[VT | PseudoVT]:
         data = await self.get_cached_data()
         return list(data.values())
 
@@ -188,27 +188,24 @@ class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]):
         table: str,
         emote_name: str,
         emote_source_url: str,
-        guild_id: int,
     ) -> str:
         """Helper function to create a new discord emote for a game character and remember it in the database."""
-        guild = self.bot.get_guild(guild_id)
-        if guild is None:
-            msg = f"Guild id={guild_id} is `None`."
-            raise errors.SomethingWentWrong(msg)
-
-        existing_emote = discord.utils.find(lambda e: e.name == emote_name, guild.emojis)
+        # TODO: maybe cache this properly
+        app_emojis = await self.bot.get_or_fetch_app_emojis()
+        existing_emote = discord.utils.find(lambda e: e.name == emote_name, app_emojis)
         if existing_emote:
             query = f"INSERT INTO {table} (id, emote) VALUES ($1, $2)"
             await self.bot.pool.execute(query, character_id, str(existing_emote))
             return str(existing_emote)
 
-        new_emote = await guild.create_custom_emoji(
+        new_emote = await self.bot.create_application_emoji(
             name=emote_name,
             image=await self.bot.transposer.url_to_bytes(emote_source_url),
         )
 
         # str(emote) is full emote representation, i.e. "<:AntiMage:1202019770787176529>"
-        query = f"INSERT INTO {table} (id, emote) VALUES ($1, $2)"
+        # query = f"INSERT INTO {table} (id, emote) VALUES ($1, $2)"
+        query = f"UPDATE {table} SET emote=$2 where id=$1"
         await self.bot.pool.execute(query, character_id, str(new_emote))
 
         embed = (

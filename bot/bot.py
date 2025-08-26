@@ -185,14 +185,14 @@ class AluBot(commands.Bot):
         discord_token = config["DISCORD"]["ALUBOT"] if not self.test else config["DISCORD"]["YENBOT"]
         coroutines = [super().start(discord_token, reconnect=True)]
 
-        # dota_extensions = (
-        #     "ext.dota",
-        #     "ext.dota.fpc_notifications",
-        #     # "ext.beta", # uncomment when we are testing dota-related stuff in `ext.beta`
-        # )
-        # if any(ext in self.extensions_to_load for ext in dota_extensions):
-        #     self.instantiate_dota()
-        #     coroutines.append(self.dota.login())
+        dota_extensions = (
+            "ext.dota",
+            "ext.dota.fpc_notifications",
+            "ext.beta",  # uncomment when we are testing dota-related stuff in `ext.beta`
+        )
+        if any(ext in self.extensions_to_load for ext in dota_extensions):
+            self.instantiate_dota()
+            coroutines.append(self.dota.login())
 
         await asyncio.gather(*coroutines)
 
@@ -476,3 +476,12 @@ class AluBot(commands.Bot):
 
         response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
         await ctx.reply(embed=response_embed, ephemeral=True)
+
+    # todo: I don't think it's a proper way of doing this;
+    async def get_or_fetch_app_emojis(self, *, force: bool = False) -> list[discord.Emoji]:
+        """Get application emojis and cache them."""
+        self.app_emojis = []
+        if not self.app_emojis or force:
+            self.app_emojis = await self.fetch_application_emojis()
+
+        return self.app_emojis

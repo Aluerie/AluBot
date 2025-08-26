@@ -1073,7 +1073,7 @@ class BaseSettings(AluCog):
         await interaction.response.defer()
         await self.is_fpc_channel_set(interaction)
 
-        characters: list[Character] = await self.characters.all()
+        characters: list[Character] = await self.characters.walk_characters()
         characters.sort(key=lambda x: x.display_name)
 
         paginator = SetupCharactersPaginator(interaction, characters, self)

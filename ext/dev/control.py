@@ -204,7 +204,7 @@ class Control(BaseDevCog):
     @system_group.command(name="logs")
     async def system_logs(self, interaction: AluInteraction) -> None:
         """🔬 Get AluBot's logs."""
-        await self.send_logs_helper(interaction, ".alubot/.temp/alubot.log")
+        await self.send_logs_helper(interaction, ".temp/alubot.log")
 
     @system_group.command(name="restart")
     async def system_restart(self, interaction: AluInteraction) -> None:

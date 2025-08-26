@@ -1,13 +1,16 @@
 """EMOTE CONSTANTS.
 
 This file contains emote constants in Discord string format.
-These emotes are hosted in my emote servers (why not on discord dev portal - explained below).
 
 Notes
 -----
 * Emotes uploaded to Discord Developer Portal (to the bot's application page, under "Emotes" tab) can only be used
     by the bot itself and by webhooks that bot created. Unfortunately, this restricts us to make sure that
     the bot creates all webhooks that it's going to use to send messages containing custom emotes.
+* Unfortunately, YenBot and AluBot do not share their application emojis pools on Discord Developer Portal.
+    So emotes uploaded to YenBot DevPortal page aren't accessible by AluBot.
+* Because of this^  it's still more convenient to upload custom emojis to discord servers where they are both members
+    Therefore, it's still *preferred* to upload emojis to Emote Servers #1 #2 #3.
 """
 
 from enum import StrEnum
@@ -15,27 +18,39 @@ from enum import StrEnum
 # emote names should match discord ones and etc thus:
 # ruff: noqa: N815
 
+__all__ = (
+    "DIGITS",
+    "Emote",
+    "EmoteLogo",
+    "GitIssueEvent",
+    "Tick",
+    "UnicodeEmoji",
+)
+
 
 class Emote(StrEnum):
-    """Emote strings.
+    """Common Discord Emotes used by the bot.
 
-    Names should match namings for discord emotes they represent.
+    These emotes are uploaded to discord servers where the bots are members.
+    Names should match double-colon namings in Discord.
     """
 
     # comments mean that this emote is used in help command for something so i don't reuse it by accident
 
-    #########################################
-    # COMMUNITY SERVER, NON-ANIMATED EMOTES #
-    #########################################
-    peepoComfy = "<:_:726438781208756288>"  # Category: Community
-    UpvoteSuggestion = "<:DankApprove:853015071042961468>"  # it has to be from the community guild itself
-
-    ##################
-    # Emote Server 1 #
-    ##################
+    ####################
+    # COMMUNITY SERVER #
+    ####################
 
     # non animated
-    DankApprove = "<:DankApprove:1125591734332706907>"
+
+    peepoComfy = "<:peepoComfy:726438781208756288>"  # Category: Community
+    DankApprove = "<:DankApprove:1125591734332706907>"  # has to be from the community guild itself to work in forums
+
+    ###################
+    # Emote Server #1 #
+    ###################
+
+    # non animated
     DankFix = "<:DankFix:1125591737939791963>"  # Category: Jishaku
     DankG = "<:DankG:1125591639256211596>"
     DankHatTooBig = "<:DankHatTooBig:1125591656192806922>"
@@ -81,12 +96,17 @@ class Emote(StrEnum):
     WeebsOutOut = "<a:WeebsOutOut:1125597169957748826>"
     peepoWeebSmash = "<a:peepoWeebSmash:1125597172675653662>"
 
-    #################
-    # COMMON EMOTES #
-    #################
 
-    Offline = "\N{LARGE RED CIRCLE}"
-    Online = "\N{LARGE GREEN CIRCLE}"
+class UnicodeEmoji(StrEnum):
+    """Default Unicode Discord emojis (the standard ones in the end of emote menu).
+
+    Notes
+    -----
+    * Names should match their discord double-colon analogy.
+    """
+
+    green_circle = "\N{LARGE GREEN CIRCLE}"
+    red_circle = "\N{LARGE RED CIRCLE}"
 
 
 class Tick(StrEnum):
@@ -99,6 +119,7 @@ class Tick(StrEnum):
 
 
 DIGITS = [
+    # Standard Emojis for digits;
     "\N{DIGIT ZERO}\N{COMBINING ENCLOSING KEYCAP}",
     "\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP}",
     "\N{DIGIT TWO}\N{COMBINING ENCLOSING KEYCAP}",

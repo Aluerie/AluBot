@@ -21,14 +21,14 @@ class Testing(BaseDevCog):
         to check if this wish came true - I will just use a command that tries to send an emote in a webhook.
     """
 
-    tools_group = app_commands.Group(
+    test_group = app_commands.Group(
         name="test-dev",
         description="\N{ELECTRIC TORCH} Commands to test various technicalities.",
         guild_ids=[const.Guild.hideout],
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
-    @tools_group.command(name="webhook-emote")
+    @test_group.command(name="webhook-emote")
     async def webhook_emote(self, interaction: AluInteraction) -> None:
         """🔦Test if webhooks can send emotes from bots' dashboards."""
         content = (

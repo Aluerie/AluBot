@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from utils.const import Emote
-
 from .code_run import CodeRun
 from .control import Control
 from .discord_management import DiscordManagement
@@ -27,7 +25,6 @@ class Dev(
     Sync,
     Testing,
     Tools,
-    emote=Emote.DankFix,
 ):
     """Developer only commands.
 

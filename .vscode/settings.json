@@ -5,6 +5,7 @@
         "aluloop",
         "avourite",
         "bday",
+        "coinflip",
         "dotaconstants",
         "emotestats",
         "EUNE",
@@ -21,6 +22,7 @@
         "playrate",
         "prpl",
         "roleidentification",
+        "stilify",
         "subscopes",
         "truststore",
         "wolframalpha"

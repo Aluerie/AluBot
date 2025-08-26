@@ -150,6 +150,6 @@ Use actual emotes in the beginning of doc strings for app commands. This way it'
 
 ## Emotes in command doc strings
 
-| Command / Group        | Emote |
-| --------               | ----- |
-| January                | $250  |
+| Command / Group       | Emote                 |\N                        |
+| --------------------- | --------------------- |------------------------- |
+| /about                | globe_with_meridians  | \N{GLOBE WITH MERIDIANS} |

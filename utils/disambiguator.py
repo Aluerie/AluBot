@@ -16,9 +16,9 @@ if TYPE_CHECKING:
 __all__ = ("Disambiguator",)
 
 
-class ConfirmationView(AluView):
+class ConfirmationView(AluView, name="Confirmation Prompt"):
     def __init__(self, *, author_id: int, timeout: float) -> None:
-        super().__init__(author_id=author_id, view_name="Confirmation Prompt", timeout=timeout)
+        super().__init__(author_id=author_id, timeout=timeout)
         self.value: bool | None = None
 
     async def button_callback(self, interaction: AluInteraction, yes_no: bool) -> None:
@@ -33,7 +33,7 @@ class ConfirmationView(AluView):
     async def confirm(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
         await self.button_callback(interaction, True)
 
-    @discord.ui.button(emoji=const.Tick.No, label="Cancel", style=discord.ButtonStyle.red)
+    @discord.ui.button(emoji="\N{HEAVY MULTIPLICATION X}", label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
         await self.button_callback(interaction, False)
 
@@ -140,7 +140,7 @@ class Disambiguator:
         if view.value is None:
             desc = "The Confirmation Prompt time-outed without receiving a response."
         elif not view.value:
-            desc = f"You pressed {const.Tick.Yes}`Cancel`."
+            desc = f"You pressed {const.Tick.No}`Cancel`."
         else:
             # view.value is True so we just return it
             return view.value

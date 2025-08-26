@@ -399,7 +399,10 @@ class Logger(AluCog):
             const.Guild.community: const.Channel.patch_notes,
             const.Guild.hideout: const.Channel.hideout_logs,
         }
-        channel = self.bot.get_channel(channel_mapping[guild.id])
+        if not (channel_id := channel_mapping.get(guild.id)):
+            return
+
+        channel = self.bot.get_channel(channel_id)
         assert isinstance(channel, discord.TextChannel)
 
         diff_after = [x for x in after if x not in before]

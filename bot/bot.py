@@ -188,7 +188,7 @@ class AluBot(commands.Bot):
         dota_extensions = (
             "ext.dota",
             "ext.dota.fpc_notifications",
-            "ext.beta",  # uncomment when we are testing dota-related stuff in `ext.beta`
+            # "ext.beta",  # uncomment when we are testing dota-related stuff in `ext.beta`
         )
         if any(ext in self.extensions_to_load for ext in dota_extensions):
             self.instantiate_dota()

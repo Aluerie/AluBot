@@ -208,8 +208,9 @@ class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]):
         )
 
         # str(emote) is full emote representation, i.e. "<:AntiMage:1202019770787176529>"
-        # query = f"INSERT INTO {table} (id, emote) VALUES ($1, $2)"
-        query = f"UPDATE {table} SET emote=$2 where id=$1"
+        query = f"INSERT INTO {table} (id, emote) VALUES ($1, $2)"
+        # what if Valve/Riot gonna update some icons (Riot does it from tome to time)
+        # query = f"UPDATE {table} SET emote=$2 where id=$1"
         await self.bot.pool.execute(query, character_id, str(new_emote))
 
         embed = (

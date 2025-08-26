@@ -12,7 +12,7 @@ from steam import ID, InvalidID
 from ext.dota.api import Hero, HeroTransformer  # noqa: TC001
 from utils import const
 
-from ...base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
+from ...base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettingsCog
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
@@ -80,7 +80,7 @@ class DotaPlayer(BasePlayer[DotaAccount]):
         return f"name: {self.display_name} steam: {self.account.friend_id} twitch: {bool(self.twitch_id)}"
 
 
-class DotaFPCSettings(BaseSettings, name="Dota 2"):
+class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
     """Commands to set up fav hero + player notifications.
 
     These commands allow you to choose players from our database as your favorite \

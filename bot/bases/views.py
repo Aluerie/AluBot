@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from .context import AluInteraction
 
 __all__ = (
+    "AluLayoutView",
     "AluModal",
     "AluView",
     "Url",
@@ -24,7 +25,7 @@ __all__ = (
 
 
 async def on_views_modals_error(
-    view: discord.ui.View,
+    view: discord.ui.View | discord.ui.Modal | discord.ui.LayoutView,
     interaction: AluInteraction,
     error: Exception,
     item: discord.ui.Item[discord.ui.View] | None = None,
@@ -177,3 +178,81 @@ class AluModal(discord.ui.Modal):
     @override
     async def on_error(self, interaction: AluInteraction, error: Exception) -> None:
         await on_views_modals_error(self, interaction, error)
+
+
+class AluLayoutView(discord.ui.LayoutView):
+    """Subclass for discord.ui.View.
+
+    All view elements used in AluBot should subclass this class when using views.
+    Because this class provides universal features like error handler.
+
+    Parameters
+    ----------
+    author_id: int | None
+        Author of the Interactive View . The bot will disallow other people to interact with elements of this View.
+        If `None` then everybody is allowed to do so.
+    view_name: str, optional
+        _description_, by default "Interactive Element"
+
+    """
+
+    if TYPE_CHECKING:
+        message: discord.Message | discord.WebhookMessage
+        """Note that technically this attribute might not exist because we manually assign it after sending the message.
+        Therefore check for `hasattr(self, "message")` when needed.
+        """
+
+    def __init_subclass__(cls, name: str = "Interactive Element") -> None:
+        cls.name: str = name
+        """Essentially a display name for the View, which is shown to the end-user in some cases.
+
+        We can try doing __class__.__name__ stuff and add spaces instead of "Interactive Element",
+        but it might get tricky since like FPCSetupMiscView exists
+        """
+        return super().__init_subclass__()
+
+    def __init__(
+        self,
+        *,
+        author_id: int | None,
+        timeout: float | None = 180.0,
+    ) -> None:
+        """Initialize AluView."""
+        super().__init__(timeout=timeout)
+        self.author_id: int | None = author_id
+
+    @override
+    async def interaction_check(self, interaction: AluInteraction) -> bool:
+        """Interaction check that blocks non-authors from clicking view items."""
+        if self.author_id is None:
+            # we allow this view to be controlled by everybody
+            return True
+        if interaction.user.id == self.author_id:
+            # we allow this view to be controlled only by interaction author
+            return True
+        # we need to deny control to this non-author user
+        embed = discord.Embed(
+            color=const.Color.error,
+            description=f"Sorry! This `{self.name}` is not meant for you.",
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return False
+
+    @override
+    async def on_timeout(self) -> None:
+        """On timeout we disable items in view so they are not clickable any longer if possible.
+
+        Requires us to assign message object to view so it can edit the message.
+        """
+        if hasattr(self, "message"):
+            for item in self.children:
+                # item in self.children is Select/Button which have ``.disable`` but typehinted as Item
+                item.disabled = True  # type: ignore[reportAttributeAccessIssue]
+            await self.message.edit(view=self)
+
+    @override
+    async def on_error(
+        self, interaction: AluInteraction, error: Exception, item: discord.ui.Item[discord.ui.View]
+    ) -> None:
+        """My own Error Handler for Views."""
+        await on_views_modals_error(self, interaction, error, item)

@@ -24,7 +24,6 @@ __all__ = (
     "EmoteLogo",
     "GitIssueEvent",
     "Tick",
-    "UnicodeEmoji",
 )
 
 
@@ -95,18 +94,6 @@ class Emote(StrEnum):
     SmogeInTheRain = "<a:SmogeInTheRain:1125591908656361574>"
     WeebsOutOut = "<a:WeebsOutOut:1125597169957748826>"
     peepoWeebSmash = "<a:peepoWeebSmash:1125597172675653662>"
-
-
-class UnicodeEmoji(StrEnum):
-    """Default Unicode Discord emojis (the standard ones in the end of emote menu).
-
-    Notes
-    -----
-    * Names should match their discord double-colon analogy.
-    """
-
-    green_circle = "\N{LARGE GREEN CIRCLE}"
-    red_circle = "\N{LARGE RED CIRCLE}"
 
 
 class Tick(StrEnum):

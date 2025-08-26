@@ -8,7 +8,7 @@ import asyncpg
 import discord
 from discord import app_commands
 
-from bot import AluCog, AluView
+from bot import AluCog, AluLayoutView, AluView
 from utils import const, errors, fmt, mimics, pages
 
 if TYPE_CHECKING:
@@ -50,7 +50,7 @@ __all__ = (
     "BaseAccount",
     "BasePlayer",
     "BaseRequestPlayerArguments",
-    "BaseSettings",
+    "BaseSettingsCog",
 )
 
 
@@ -165,9 +165,9 @@ class BasePlayer(abc.ABC, Generic[AccountT]):  # noqa: UP046 # we need covarianc
 class FPCView(AluView):
     """Base Class for FPC View classes."""
 
-    def __init__(self, cog: BaseSettings, *, author_id: int | None) -> None:
+    def __init__(self, cog: BaseSettingsCog, *, author_id: int | None) -> None:
         super().__init__(author_id=author_id)
-        self.cog: BaseSettings = cog
+        self.cog: BaseSettingsCog = cog
         # overwrite the name
         self.name: str = f"{cog.game_display_name} FPC {self.__class__.__name__} Menu"
 
@@ -184,7 +184,7 @@ class SetupChannel(FPCView):
     * Dropdown menu to select a new channel for notifications.
     """
 
-    def __init__(self, cog: BaseSettings, *, author_id: int | None, embed: discord.Embed) -> None:
+    def __init__(self, cog: BaseSettingsCog, *, author_id: int | None, embed: discord.Embed) -> None:
         super().__init__(cog, author_id=author_id)
         self.embed: discord.Embed = embed
 
@@ -240,56 +240,17 @@ class SetupChannel(FPCView):
         await interaction.response.edit_message(embed=self.embed)
 
 
-class SetupMisc(FPCView):
-    """View for a command `/{game} setup misc`.
+class DeleteDataButton(discord.ui.Button["SetupMiscView"]):
+    def __init__(self, cog: BaseSettingsCog) -> None:
+        super().__init__(emoji="\N{WARNING SIGN}", label="Delete Your Data", style=discord.ButtonStyle.red)
+        self.cog: BaseSettingsCog = cog
 
-    This gives
-    * Button to disable/enable notifications for a time being
-    * Button to disable/enable spoil-ing post-match results
-    * Button to delete user's FPC data from the database
-    """
-
-    def __init__(self, cog: BaseSettings, embed: discord.Embed, *, author_id: int) -> None:
-        super().__init__(cog, author_id=author_id)
-        self.embed: discord.Embed = embed
-
-    async def toggle_worker(self, interaction: AluInteraction, setting: str, field_index: int) -> None:
-        """Helper function to toggle boolean settings for the subscriber's guild."""
-        query = f"""
-            UPDATE {self.cog.prefix}_settings
-            SET {setting}=not({setting})
-            WHERE guild_id = $1
-            RETURNING {setting}
-        """
-        new_value: bool = await interaction.client.pool.fetchval(query, interaction.guild_id)
-
-        old_field_name = self.embed.fields[field_index].name
-        assert isinstance(old_field_name, str)
-        new_field_name = f"{old_field_name.split(':')[0]}: {'`on`' if new_value else '`off`'} {fmt.tick(new_value)}"
-        old_field_value = self.embed.fields[field_index].value
-        self.embed.set_field_at(field_index, name=new_field_name, value=old_field_value, inline=False)
-        await interaction.response.edit_message(embed=self.embed)
-
-    @discord.ui.button(emoji="\N{BLACK SQUARE FOR STOP}", label='Toggle "Receive Notifications Setting"', row=0)
-    async def toggle_enable(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
-        """Enable/disable FPC feature all together. By Default On."""
-        await self.toggle_worker(interaction, "enabled", 0)
-
-    @discord.ui.button(emoji="\N{MICROSCOPE}", label='Toggle "Show Post-Match Results Setting"', row=1)
-    async def toggle_spoil(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
-        """Enable/disable spoiling end-match results. By Default On."""
-        await self.toggle_worker(interaction, "spoil", 1)
-
-    @discord.ui.button(emoji="\N{CLAPPER BOARD}", label='Toggle "Only Twitch Live Players Setting"', row=2)
-    async def toggle_twitch_live_only(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
-        """Enable/disable sending notifications for twitch-offline games."""
-        await self.toggle_worker(interaction, "twitch_live_only", 2)
-
-    @discord.ui.button(
-        label="Delete Your Data and Stop Notifications", style=discord.ButtonStyle.red, emoji="\N{WASTEBASKET}", row=3
-    )
-    async def delete_data(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+    @override
+    async def callback(self, interaction: AluInteraction) -> None:
         """Delete all data, stop all notifications and turn off everything related to FPC."""
+        # Tell the type checker that a view is attached already
+        assert self.view is not None
+
         # Confirmation
         confirm_embed = (
             discord.Embed(
@@ -335,6 +296,130 @@ class SetupMisc(FPCView):
         await interaction.followup.send(embed=response_embed)
 
 
+class MiscSettingsToggleButton(discord.ui.Button["SetupMiscView"]):
+    def __init__(self, cog: BaseSettingsCog, *, setting: str, initial_value: bool) -> None:
+        super().__init__(label="\N{BELL}", style=discord.ButtonStyle.gray)
+        self.cog: BaseSettingsCog = cog
+        self.setting: str = setting
+        self.value: bool = initial_value
+        self.update_button()
+
+    def update_button(self) -> None:
+        if self.value:
+            self.emoji = "\N{WHITE HEAVY CHECK MARK}"
+            self.label = " Enabled"
+        else:
+            self.emoji = "\N{CROSS MARK}"
+            self.label = "Disabled"
+
+    async def toggle_worker(self, interaction: AluInteraction) -> None:
+        """Helper function to toggle boolean settings for the subscriber's guild."""
+        query = f"""
+            UPDATE {self.cog.prefix}_settings
+            SET {self.setting}=not({self.setting})
+            WHERE guild_id = $1
+            RETURNING {self.setting}
+        """
+        self.value: bool = await interaction.client.pool.fetchval(query, interaction.guild_id)
+
+    @override
+    async def callback(self, interaction: AluInteraction) -> None:
+        await self.toggle_worker(interaction)
+        self.update_button()
+        await interaction.response.edit_message(view=self.view)
+
+
+class SetupMiscView(AluLayoutView):
+    """View for a command `/{game} setup misc`.
+
+    This gives
+    * Button to disable/enable notifications for a time being
+    * Button to disable/enable spoil-ing post-match results
+    * Button to delete user's FPC data from the database
+    """
+
+    def __init__(self, cog: BaseSettingsCog, *, author_id: int, settings: SetupMiscQueryRow) -> None:
+        super().__init__(author_id=author_id)
+        self.cog: BaseSettingsCog = cog
+        self.settings: SetupMiscQueryRow = settings
+
+        container = discord.ui.Container(accent_color=cog.color)
+
+        # Header
+        header = discord.ui.TextDisplay(
+            content=(
+                "## FPC (Favourite Player+Character) Misc Settings Setup\n"
+                "Below there is a list of settings with descriptions and their current state.\n"
+                "\N{BLACK CIRCLE} Each setting has correspondent toggle/use button.\n"
+                "\N{BLACK CIRCLE} After pressing `Toggle` button the embed will be "
+                "edited to showcase the current state of that setting."
+            )
+        )
+        container.add_item(header)
+        container.add_item(discord.ui.Separator(spacing=discord.SeparatorSpacing.large))
+
+        # Receive Notifications = on/off
+        container.add_item(
+            discord.ui.Section(
+                discord.ui.TextDisplay(
+                    "### \N{BLACK SQUARE FOR STOP} Receive Notifications\n"
+                    "If you want to manually temporarily disable FPC Notifications feature then use this toggle "
+                    "button. Your data will be intact in case you want to enable receiving notifications again."
+                ),
+                accessory=MiscSettingsToggleButton(self.cog, setting="enabled", initial_value=self.settings["enabled"]),
+            )
+        )
+        container.add_item(discord.ui.Separator(spacing=discord.SeparatorSpacing.large))
+
+        # Show Post-Match Results = on/off
+        container.add_item(
+            discord.ui.Section(
+                discord.ui.TextDisplay(
+                    "### \N{MICROSCOPE} Show Post-Match Results\n"
+                    "By default, the bot edits messages with post-game results to include stats like Win/Loss, "
+                    "KDA. However, if you don't like such behavior - toggle this setting. "
+                    "Note that the current ongoing match will still use old setting "
+                    "(i.e. only next notification will use the updated value)."
+                ),
+                accessory=MiscSettingsToggleButton(self.cog, setting="spoil", initial_value=self.settings["spoil"]),
+            )
+        )
+        container.add_item(discord.ui.Separator(spacing=discord.SeparatorSpacing.large))
+
+        # Only Twitch Live = on/off
+        container.add_item(
+            discord.ui.Section(
+                discord.ui.TextDisplay(
+                    "### \N{CLAPPER BOARD} Only Twitch Live\n"
+                    "By default, the bot sends notifications no matter if a person is streaming or not at the moment. "
+                    "However, if you want to catch [twitch.tv](https://www.twitch.tv/) streamers only when they are "
+                    "playing your favourite characters live - toggle this setting."
+                ),
+                accessory=MiscSettingsToggleButton(
+                    self.cog, setting="twitch_live_only", initial_value=self.settings["twitch_live_only"]
+                ),
+            )
+        )
+        container.add_item(discord.ui.Separator(spacing=discord.SeparatorSpacing.large))
+
+        # Delete Your Data = on/off
+        container.add_item(
+            discord.ui.Section(
+                discord.ui.TextDisplay(
+                    "### \N{WASTEBASKET} Delete Your Data and Stop Notifications\n"
+                    "In case you don't want to receive notifications anymore "
+                    "and you want to erase all your FPC related data - use this button."
+                ),
+                accessory=DeleteDataButton(
+                    self.cog,
+                ),
+            )
+        )
+
+        # the final step
+        self.add_item(container)
+
+
 class SetupPlayersPaginator(pages.Paginator):
     """A Paginator for `/{game} setup players` command.
 
@@ -345,9 +430,9 @@ class SetupPlayersPaginator(pages.Paginator):
     * button to view all accounts for presented embed
     """
 
-    def __init__(self, interaction: AluInteraction, player_tuples: list[tuple[int, str]], cog: BaseSettings) -> None:
+    def __init__(self, interaction: AluInteraction, player_tuples: list[tuple[int, str]], cog: BaseSettingsCog) -> None:
         super().__init__(interaction, entries=player_tuples, per_page=20)
-        self.cog: BaseSettings = cog
+        self.cog: BaseSettingsCog = cog
 
     @override
     async def on_timeout(self) -> None:  # TODO: do it properly, via combining FPCView and pages.Paginator as a class.
@@ -481,9 +566,9 @@ class SetupCharactersPaginator(pages.Paginator):
     * buttons to mark/demark character as favourite
     """
 
-    def __init__(self, interaction: AluInteraction, characters: list[Character], cog: BaseSettings) -> None:
+    def __init__(self, interaction: AluInteraction, characters: list[Character], cog: BaseSettingsCog) -> None:
         super().__init__(interaction, entries=characters, per_page=20)
-        self.cog: BaseSettings = cog
+        self.cog: BaseSettingsCog = cog
 
     @override
     async def on_timeout(self) -> None:  # TODO: do it properly, via combining FPCView and pages.Paginator as a class.
@@ -626,7 +711,7 @@ class DatabaseRemoveView(AluView, name="Database Remove View"):
     def __init__(
         self,
         author_id: int,
-        cog: BaseSettings,
+        cog: BaseSettingsCog,
         player_id: int,
         player_name: str,
         account_ids_names: Mapping[AccountIDType, str],
@@ -646,13 +731,13 @@ class DatabaseRemoveView(AluView, name="Database Remove View"):
 class RemoveAllAccountsButton(discord.ui.Button[DatabaseRemoveView]):
     """Button to remove all specific player's accounts in  `/database {game} remove` command's view."""
 
-    def __init__(self, cog: BaseSettings, player_id: int, player_name: str) -> None:
+    def __init__(self, cog: BaseSettingsCog, player_id: int, player_name: str) -> None:
         super().__init__(
             style=discord.ButtonStyle.red,
             label=f"Remove all {player_name}'s accounts.",
             emoji="\N{POUTING FACE}",
         )
-        self.cog: BaseSettings = cog
+        self.cog: BaseSettingsCog = cog
         self.player_id: int = player_id
         self.player_name: str = player_name
 
@@ -678,7 +763,7 @@ class RemoveAccountButton(discord.ui.Button[DatabaseRemoveView]):
     def __init__(
         self,
         emoji: str,
-        cog: BaseSettings,
+        cog: BaseSettingsCog,
         account_id: AccountIDType,
         account_name: str,
         account_id_column: str,
@@ -688,7 +773,7 @@ class RemoveAccountButton(discord.ui.Button[DatabaseRemoveView]):
             label=account_name,
             emoji=emoji,
         )
-        self.cog: BaseSettings = cog
+        self.cog: BaseSettingsCog = cog
         self.account_id: AccountIDType = account_id
         self.account_id_column: str = account_id_column
 
@@ -707,7 +792,7 @@ class RemoveAccountButton(discord.ui.Button[DatabaseRemoveView]):
         await interaction.response.send_message(embed=embed)
 
 
-class BaseSettings(AluCog):
+class BaseSettingsCog(AluCog):
     """Base class for cogs representing FPC (Favourite Player+Character) feature.
 
     The following games are currently supported:
@@ -785,7 +870,7 @@ class BaseSettings(AluCog):
         self.characters: CharacterStorage[Character, Character] = characters
 
         # setup messages cache
-        self.setup_messages_cache: dict[int, AluView] = {}
+        self.setup_messages_cache: dict[int, AluView | AluLayoutView] = {}
 
     # fpc database management related functions ########################################################################
 
@@ -1003,61 +1088,8 @@ class BaseSettings(AluCog):
         query = f"SELECT enabled, spoil, twitch_live_only FROM {self.prefix}_settings WHERE guild_id=$1"
         row: SetupMiscQueryRow = await interaction.client.pool.fetchrow(query, interaction.guild_id)
 
-        def state(on_off: bool) -> str:  # noqa: FBT001
-            word = "`on`" if on_off else "`off`"
-            return f"{word} {fmt.tick(on_off)}"
-
-        embed = (
-            discord.Embed(
-                color=self.color,
-                title="FPC (Favourite Player+Character) Misc Settings Setup",
-                description=(
-                    "Below there is a list of settings with descriptions and their current state.\n"
-                    "\N{BLACK CIRCLE} Each setting has correspondent toggle/use button.\n"
-                    "\N{BLACK CIRCLE} After pressing `Toggle` button the embed will be "
-                    "edited to showcase the current state of that setting."
-                ),
-            )
-            # REMEMBER that the following fields should have ":" in their names
-            # it's because view buttons hackily use split by : to edit the field name
-            .add_field(
-                name=f"\N{BLACK SQUARE FOR STOP} Receive Notifications Setting: {state(row['enabled'])}",
-                value=(
-                    "If you want to manually temporarily disable FPC Notifications feature then use this toggle "
-                    "button. Your data will be intact in case you want to enable receiving notifications again."
-                ),
-                inline=False,
-            )
-            .add_field(
-                name=f"\N{MICROSCOPE} Show Post-Match Results Setting: {state(row['spoil'])}",
-                value=(
-                    "By default, the bot edits messages with post-game results to include stats like Win/Loss, "
-                    "KDA. However, if you don't like such behavior - toggle this setting. "
-                    "Note that the current ongoing match will still use old setting "
-                    "(i.e. only next notification will use the updated value)."
-                ),
-                inline=False,
-            )
-            .add_field(
-                name=f"\N{CLAPPER BOARD} Only Twitch Live Players Setting: {state(row['twitch_live_only'])}",
-                value=(
-                    "By default, the bot sends notifications no matter if a person is streaming or not at the moment. "
-                    "However, if you only want to catch [twitch.tv](https://www.twitch.tv/) streamers playing your "
-                    f"favourite {self.character_plural} live - toggle this setting."
-                ),
-            )
-            .add_field(
-                name="\N{WASTEBASKET} Delete Your Data and Stop Notifications",
-                value=(
-                    "In case you don't want to receive notifications anymore "
-                    "and you want to erase all your FPC related data - use this button."
-                ),
-                inline=False,
-            )
-            .set_footer(text="Buttons below correspond embed fields above. Read them!")
-        )
-        view = SetupMisc(self, embed, author_id=interaction.user.id)
-        message = await interaction.followup.send(embed=embed, view=view, wait=True)
+        view = SetupMiscView(self, author_id=interaction.user.id, settings=row)
+        message = await interaction.followup.send(view=view, wait=True)
         view.message = message
         self.setup_messages_cache[message.id] = view
 

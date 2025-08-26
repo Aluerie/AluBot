@@ -51,7 +51,8 @@ class FunOther(AluCog):
         await interaction.response.send_message(content=str(random.randint(1, max_roll_number + 1)))
 
     @staticmethod
-    def fancify_text(text: str, *, style: dict[str, str]) -> str:
+    def stilify_text(text: str, *, style: dict[str, str]) -> str:
+        """Apply a "style" to the text."""
         patterns = [
             const.Regex.USER_MENTION,
             const.Regex.ROLE_MENTION,
@@ -68,9 +69,10 @@ class FunOther(AluCog):
         def match_repl(c: re.Match[str]) -> str | re.Match[str]:
             return style.get(c.group(0)) or style.get(c.group(0).lower()) or c
 
-        return re.sub(pattern, match_repl, text)  # type: ignore # i dont understand regex types x_x
+        return re.sub(pattern, match_repl, text)  # type:ignore[reportCallIssue] # I don't understand regex types.
 
-    async def send_mimic_text(self, interaction: AluInteraction, content: str) -> None:
+    async def send_mimic_confirmation_text(self, interaction: AluInteraction, content: str) -> None:
+        """Send confirmation to the user."""
         if not interaction.guild:
             # outside of guilds - probably DM
             await interaction.response.send_message(content)
@@ -78,7 +80,11 @@ class FunOther(AluCog):
             # in guild - hopefully we can make a webhook
             mirror = mimics.Mirror.from_interaction(interaction)
             await mirror.send(member=interaction.user, content=content)
-            await interaction.response.send_message(content=f"We did it {const.Emote.DankApprove}", ephemeral=True)
+            await interaction.response.send_message(
+                content="We did it \N{WHITE HEAVY CHECK MARK}\nDeleting *this* ephemeral message in 5 seconds",
+                ephemeral=True,
+                delete_after=5,
+            )
 
     text_group = app_commands.Group(
         name="text",
@@ -106,8 +112,8 @@ class FunOther(AluCog):
                 chr(0x00000061 + x): f"{chr(0x0001F1E6 + x)} " for x in range(26)
             }  # a-z into :regional_identifier_a:-:regional_identifier_z:
         )
-        answer = self.fancify_text(text, style=style)
-        await self.send_mimic_text(interaction, answer)
+        answer = self.stilify_text(text, style=style)
+        await self.send_mimic_confirmation_text(interaction, answer)
 
     @text_group.command()
     async def fancify(
@@ -125,15 +131,15 @@ class FunOther(AluCog):
             chr(0x00000061 + x): chr(0x0001D4EA + x)
             for x in range(26)  # a-z into fancy a-z (Black messes it up)
         }
-        answer = self.fancify_text(text, style=style)
-        await self.send_mimic_text(interaction, answer)
+        answer = self.stilify_text(text, style=style)
+        await self.send_mimic_confirmation_text(interaction, answer)
 
     @app_commands.command()
     async def apuband(self, interaction: AluInteraction) -> None:
         """Send apuband emote combo."""
         emote_names = ["peepo1Maracas", "peepo2Drums", "peepo3Piano", "peepo4Guitar", "peepo5Singer", "peepo6Sax"]
         content = " ".join([str(discord.utils.get(self.community.guild.emojis, name=e)) for e in emote_names])
-        await self.send_mimic_text(interaction, content)
+        await self.send_mimic_confirmation_text(interaction, content)
 
 
 async def setup(bot: AluBot) -> None:

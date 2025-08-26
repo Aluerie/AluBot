@@ -10,7 +10,7 @@ from discord import app_commands
 
 from utils import const, errors
 
-from ...base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettings
+from ...base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettingsCog
 from ..api import Champion, ChampionTransformer, Platform  # noqa: TC001
 
 if TYPE_CHECKING:
@@ -110,7 +110,7 @@ class LeaguePlayer(BasePlayer[LeagueAccount]):
         )
 
 
-class LolFPCSettings(BaseSettings):
+class LolFPCSettings(BaseSettingsCog):
     """Commands to set up fav champ + fav stream notifs.
 
     These commands allow you to choose streamers from our database as your favorite \

@@ -23,32 +23,32 @@ class AluCog(commands.Cog):
 
     """
 
-    if TYPE_CHECKING:
-        emote: discord.PartialEmoji | None
-        brief: str | None
-        hidden: bool
+    # def __init_subclass__(
+    #     cls: type[AluCog],
+    #     *,
+    #     emote: str | None = None,
+    #     brief: str | None = None,
+    #     hidden: bool = False,
+    #     **kwargs: Any,
+    # ) -> None:
+    #     cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
+    #     cls.brief = brief
+    #     cls.hidden = hidden
+    #     return super().__init_subclass__(**kwargs)
 
-    def __init_subclass__(
-        cls: type[AluCog],
-        *,
-        emote: str | None = None,
-        brief: str | None = None,
-        hidden: bool = False,
-        **kwargs: Any,
-    ) -> None:
-        cls.emote = discord.PartialEmoji.from_str(emote) if emote else None
-        cls.brief = brief
-        cls.hidden = hidden
-        return super().__init_subclass__(**kwargs)
-
-    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, bot: AluBot, emote: str | None = None, *args: Any, **kwargs: Any) -> None:
         self.bot: AluBot = bot
+        self.emote: discord.PartialEmoji | None = discord.PartialEmoji.from_str(emote) if emote else None
 
+        # some jsk magic from DuckBot
         next_in_mro = next(iter(self.__class__.__mro__))
         if hasattr(next_in_mro, "__is_jishaku__") or isinstance(next_in_mro, self.__class__):
             kwargs["bot"] = bot
 
         super().__init__(*args, **kwargs)
+
+    # idk, yes these two are redundant
+    # but it's just annoying to type `self.bot.community` everywhere
 
     @property
     def community(self) -> const.CommunityGuild:

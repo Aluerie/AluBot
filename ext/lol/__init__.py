@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class Lol(
     LolFPC,
-    emote=const.Emote.DankLove,
+    # emote=const.Emote.DankLove,
     name="Lol",
 ):
     """League of Legends."""

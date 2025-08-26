@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, TypedDict, override
 
@@ -116,7 +117,8 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
                 talent_ids=[talent["abilityId"] for talent in hero["talents"]],
                 facet_ids=[facet["facetId"] for facet in hero["facets"]],
                 # if I don't provide a ready-to-go emote -> assume the hero is new and thus give it a template emote
-                emote=hero_emotes.get(hero["id"]) or await self.create_hero_emote(hero["id"], hero["shortName"]),
+                emote=hero_emotes.get(hero["id"])
+                or await self.create_hero_emote(hero["id"], hero["shortName"], hero["displayName"]),
             )
             for hero in heroes["data"]["constants"]["heroes"]
         }
@@ -150,13 +152,14 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
         self,
         hero_id: int,
         hero_short_name: str,
+        hero_display_name: str,
     ) -> str:
         """Create a new discord emote for a Dota 2 hero."""
         try:
             return await self.create_character_emote_helper(
                 character_id=hero_id,
+                character_display_name=hero_display_name,
                 table="dota_heroes_info",
-                emote_name=fmt.convert_camel_case_to_PascalCase(hero_short_name),
                 emote_source_url=f"{CDN_REACT}/heroes/icons/{hero_short_name}.png",  # copy of `minimap_icon_url`
             )
         except Exception as exc:  # noqa: BLE001

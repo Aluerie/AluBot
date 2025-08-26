@@ -319,7 +319,8 @@ class StratzClient(BaseClient):
                 msg = (
                     "403 Forbidden. Please, check if your `STRATZ_BEARER` in config.toml matches "
                     "the one at https://stratz.com/api. "
-                    "PS. This error is manual and not given by Stratz API."
+                    "PS. This error is manual and not given by Stratz API. "
+                    "You also might need to re-sign into stratz.com for it to work (yes, I mean it)."
                 )
                 raise errors.ResponseNotOK(msg) from None
             raise

@@ -4,6 +4,7 @@ import abc
 import asyncio
 import logging
 import random
+import re
 import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, TypeVar, override
@@ -185,12 +186,15 @@ class CharacterStorage(GameDataStorage[CharacterT, PseudoCharacterT]):
         self,
         *,
         character_id: int,
+        character_display_name: str,
         table: str,
-        emote_name: str,
         emote_source_url: str,
     ) -> str:
         """Helper function to create a new discord emote for a game character and remember it in the database."""
         # TODO: maybe cache this properly
+        # Discord emojis can only contain alphanumeric characters and underscores
+        emote_name = re.sub(r"[^a-zA-Z0-9_]", "", character_display_name)
+
         app_emojis = await self.bot.get_or_fetch_app_emojis()
         existing_emote = discord.utils.find(lambda e: e.name == emote_name, app_emojis)
         if existing_emote:

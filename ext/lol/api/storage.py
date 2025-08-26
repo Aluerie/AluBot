@@ -116,10 +116,9 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
         try:
             return await self.create_character_emote_helper(
                 character_id=champion_id,
+                character_display_name=champion_alias,
                 table="lol_champions_info",
-                emote_name=champion_alias,
                 emote_source_url=champion_icon_url,  # copy of `minimap_icon_url` property
-                guild_id=const.EmoteGuilds.LOL[3],
             )
         except Exception as exc:
             embed = discord.Embed(

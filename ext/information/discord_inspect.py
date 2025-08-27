@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
 
 
-class DiscordInspect(AluCog, name="Inspect Discord Info.", emote=const.Emote.PepoG):
+class DiscordInspect(AluCog, name="Inspect Discord Info."):
     """Commands to inspect Discord members/roles/servers/etc and get more info about them."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

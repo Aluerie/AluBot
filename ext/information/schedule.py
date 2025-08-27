@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class Schedule(AluCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
+class Schedule(AluCog, name="Schedules"):
     """Check Pro Matches schedule.
 
     Currently, the bot supports Dota 2 and football.

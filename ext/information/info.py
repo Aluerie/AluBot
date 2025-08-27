@@ -24,7 +24,7 @@ warnings.filterwarnings(
 )
 
 
-class Info(AluCog, name="Info", emote=const.Emote.PepoG):
+class Info(AluCog, name="Info"):
     """Commands to get some useful info."""
 
     @commands.Cog.listener()

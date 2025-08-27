@@ -19,7 +19,7 @@ class Dota(
     # DotaFPC,
     # SteamDotaProfiles,
     SteamDB,
-    emote=const.Emote.DankLove,
+    # emote=const.Emote.DankLove,
     name="Dota",
 ):
     """Dota 2 - __F__avourite __P__layer+__C__haracter combo notifications."""

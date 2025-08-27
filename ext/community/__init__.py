@@ -36,7 +36,7 @@ class Community(
     Suggestions,
     TwitchNotifications,
     Welcome,
-    emote=Emote.peepoComfy,
+    # emote=Emote.peepoComfy,
 ):
     """Aluerie's community server commands.
 

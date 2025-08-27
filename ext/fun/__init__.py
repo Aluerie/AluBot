@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class Fun(
     FunOther,
     MiniGames,
-    emote=Emote.FeelsDankMan,
+    # emote=Emote.FeelsDankMan,
 ):
     """Commands to have fun with."""
 

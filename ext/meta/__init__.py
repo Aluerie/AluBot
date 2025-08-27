@@ -16,8 +16,8 @@ class Meta(
     FeedbackCog,
     AluHelpCog,
     OtherCog,
-    emote=const.Emote.DankLove,
-    name="Meta",
+    # emote=const.Emote.DankLove,
+    # name="Meta",
 ):
     """Meta."""
 

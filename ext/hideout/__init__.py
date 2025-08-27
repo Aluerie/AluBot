@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 class Hideout(
     HideoutModeration,
-    emote=Emote.KURU,
-    hidden=True,
+    # emote=Emote.KURU,
+    # hidden=True,
 ):
     """Hideout Only commands."""
 

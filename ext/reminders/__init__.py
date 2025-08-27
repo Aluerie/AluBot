@@ -15,7 +15,7 @@ class Remembrances(
     Reminders,
     TimezoneSettings,
     name="Reminders",
-    emote=Emote.peepoBusiness,
+    # emote=Emote.peepoBusiness,
 ):
     """Remind yourself of something important.
 

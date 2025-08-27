@@ -16,7 +16,7 @@ class Educational(
     Translations,
     Dictionary,
     WolframAlpha,
-    emote=Emote.PepoG,
+    # emote=Emote.PepoG,
 ):
     """Let us learn together."""
 

@@ -16,7 +16,7 @@ class Information(
     DiscordInspect,
     Info,
     Schedule,
-    emote=Emote.PepoG,
+    # emote=Emote.PepoG,
 ):
     """Information."""
 

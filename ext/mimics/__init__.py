@@ -16,7 +16,7 @@ class Mimics(
     FixSocialLinks,
     MimicManagement,
     WebhookMaintenance,
-    emote=Emote.FeelsDankManLostHisHat,
+    # emote=Emote.FeelsDankManLostHisHat,
 ):
     """Mimics."""
 

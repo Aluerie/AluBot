@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class Uncategorised(
     TextToSpeech,
-    emote=Emote.DankHatTooBig,
+    # emote=Emote.DankHatTooBig,
 ):
     """Let us learn together."""
 

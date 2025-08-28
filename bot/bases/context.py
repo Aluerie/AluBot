@@ -82,14 +82,14 @@ class AluContext(commands.Context["AluBot"]):
         """Shortcut to `ctx.bot.session`."""
         return self.bot.session
 
-    async def tick_reaction(self, semi_bool: bool | None) -> None:
+    async def tick_reaction(self, semi_bool: bool | None) -> None:  # noqa: FBT001
         """Add tick reaction to `ctx.message`."""
         with contextlib.suppress(discord.HTTPException):
             await self.message.add_reaction(fmt.tick(semi_bool))
 
     # the next two functions mean the following in a context of discord chat:
-    # /--> replying to @Bob: wow, 2+2=5
-    # Alice: hey Bob, this is wrong!
+    # /==> replying to @Bob: wow, 2+2=5
+    # || Alice: hey Bob, this is wrong!
     # redirect reference means we are getting "replying to Bob".
     # replied message means we are getting the message object for "wow" Bob's message.
 

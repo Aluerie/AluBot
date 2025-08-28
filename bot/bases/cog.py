@@ -20,9 +20,12 @@ class AluCog(commands.Cog):
     ----------
     bot: AluBot
         The bot instance.
+    emote: str | None = None
+        Emote to be used in metadata for the cog, i.e. for `/help` command.
 
     """
 
+    # TODO: wait till library fixes it for us;
     # def __init_subclass__(
     #     cls: type[AluCog],
     #     *,
@@ -47,7 +50,7 @@ class AluCog(commands.Cog):
 
         super().__init__(*args, **kwargs)
 
-    # idk, yes these two are redundant
+    # idk, yes, these two are redundant
     # but it's just annoying to type `self.bot.community` everywhere
 
     @property

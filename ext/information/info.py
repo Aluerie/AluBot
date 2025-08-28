@@ -139,7 +139,7 @@ class Info(AluCog, name="Info"):
         ]
 
 
-class StatsCommands(AluCog, name="Stats Commands", emote=const.Emote.Smartge):
+class StatsCommands(AluCog, name="Stats Commands"):
     """Some stats/infographics/diagrams/info.
 
     More to come.

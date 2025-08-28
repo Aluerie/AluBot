@@ -93,6 +93,8 @@ class Champions(CharacterStorage[Champion, PseudoChampion]):
                 ),
             )
             for champion in champion_summary
+            # idk, for some reason they included Doom Bots as separate champions into the json
+            if not champion["alias"].startswith("Ruby_")
         }
         # they provide champion value for None, but I've never seen their API to give me "-1" yet.
         # maybe will regret it

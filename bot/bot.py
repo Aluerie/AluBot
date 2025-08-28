@@ -372,7 +372,7 @@ class AluBot(commands.Bot):
         args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
         embed = (
             discord.Embed(color=0xA32952, title=f"Event Error: `{event}`")
-            .add_field(name="Args", value=fmt.code(args_join, "ps"), inline=False)
+            .add_field(name="Args", value=fmt.code(args_join, "ps")[:1023], inline=False)  # field value 1024 limit
             .set_footer(text=f"{self.__class__.__name__}.on_error: {event}")
         )
         await self.exc_manager.register_error(exception, embed)

@@ -438,8 +438,9 @@ class BugTracker(AluCog):
                 if (login := event.actor.login) in self.valve_devs:
                     # it's confirmed that Valve dev is an actor of the event.
                     pass
-                elif login != event.issue.user.login:
-                    # if actor is not OP of the issue then we can consider that this person is a valve dev
+                elif login not in {event.issue.user.login, "github-actions[bot]"}:
+                    # if actor is not OP of the issue or the bot
+                    # then we can consider that this person is a valve dev
                     self.valve_devs.append(login)
                     query = """
                         INSERT INTO valve_devs (login) VALUES ($1)

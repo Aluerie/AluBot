@@ -185,14 +185,14 @@ class AluBot(commands.Bot):
         discord_token = config["DISCORD"]["ALUBOT"] if not self.test else config["DISCORD"]["YENBOT"]
         coroutines = [super().start(discord_token, reconnect=True)]
 
-        dota_extensions = (
-            "ext.dota",
-            "ext.dota.fpc",
-            # "ext.beta",  # uncomment when we are testing dota-related stuff in `ext.beta`
-        )
-        if any(ext in self.extensions_to_load for ext in dota_extensions):
-            self.instantiate_dota()
-            coroutines.append(self.dota.login())
+        # dota_extensions = (
+        #     "ext.dota",
+        #     "ext.dota.fpc",
+        #     # "ext.beta",  # uncomment when we are testing dota-related stuff in `ext.beta`
+        # )
+        # if any(ext in self.extensions_to_load for ext in dota_extensions):
+        #     self.instantiate_dota()
+        #     coroutines.append(self.dota.login())
 
         await asyncio.gather(*coroutines)
 

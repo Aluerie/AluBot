@@ -19,15 +19,15 @@ pulsefire~=2.0.28
 git+https://github.com/meraki-analytics/role-identification.git
 
 # GitHub
-githubkit==0.13.0
-pygit2==1.18.1
+githubkit==0.13.1
+pygit2==1.18.2
 
 # TTS
 gtts~=2.5.4
 ffmpeg
 
 # WebScrape
-beautifulsoup4==4.13.4
+beautifulsoup4==4.13.5
 lxml
 
 # DateParsing
@@ -54,7 +54,7 @@ emoji==2.14.1
 numpy==2.3.2
 urllib3==2.5.0
 wordcloud==1.9.4
-matplotlib==3.10.5
+matplotlib==3.10.6
 unidiff==0.7.5
 psutil==7.0.0
 click

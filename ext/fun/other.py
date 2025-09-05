@@ -134,6 +134,7 @@ class FunOther(AluCog):
         answer = self.stilify_text(text, style=style)
         await self.send_mimic_confirmation_text(interaction, answer)
 
+    @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.command()
     async def apuband(self, interaction: AluInteraction) -> None:
         """🎸 Send apuband emote combo (pepe-frogs' music band)."""

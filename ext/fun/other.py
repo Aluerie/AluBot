@@ -135,8 +135,6 @@ class FunOther(AluCog):
         await self.send_mimic_confirmation_text(interaction, answer)
 
     @app_commands.command()
-    @app_commands.allowed_installs(guilds=True, users=True)
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def apuband(self, interaction: AluInteraction) -> None:
         """🎸 Send apuband emote combo (pepe-frogs' music band)."""
         emote_names = ["peepo1Maracas", "peepo2Drums", "peepo3Piano", "peepo4Guitar", "peepo5Singer", "peepo6Sax"]

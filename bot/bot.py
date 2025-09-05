@@ -83,6 +83,11 @@ class AluBot(commands.Bot):
             strip_after_prefix=True,
             case_insensitive=True,
             help_command=None,
+            allowed_contexts=discord.app_commands.AppCommandContext(
+                guild=True,
+                dm_channel=True,
+                private_channel=True,
+            ),
             allowed_installs=discord.app_commands.AppInstallationType(guild=True, user=True),
         )
         self.extensions_to_load: tuple[str, ...] = get_extensions(test=self.test)

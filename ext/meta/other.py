@@ -126,7 +126,7 @@ class OtherCog(AluCog):
 
     @app_commands.command()
     async def about(self, interaction: AluInteraction) -> None:
-        """\N{GLOBE WITH MERIDIANS} Show information about the bot."""
+        """🌐 Show information about the bot."""
         await interaction.response.defer()
         information = self.bot.bot_app_info
 

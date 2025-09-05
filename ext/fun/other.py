@@ -136,7 +136,7 @@ class FunOther(AluCog):
 
     @app_commands.command()
     async def apuband(self, interaction: AluInteraction) -> None:
-        """Send apuband emote combo."""
+        """🎸 Send apuband emote combo (pepe-frogs' music band)."""
         emote_names = ["peepo1Maracas", "peepo2Drums", "peepo3Piano", "peepo4Guitar", "peepo5Singer", "peepo6Sax"]
         content = " ".join([str(discord.utils.get(self.community.guild.emojis, name=e)) for e in emote_names])
         await self.send_mimic_confirmation_text(interaction, content)

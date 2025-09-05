@@ -151,7 +151,7 @@ class DiscordManagement(BaseDevCog):
     async def guild_leave(
         self, interaction: AluInteraction, guild: app_commands.Transform[discord.Guild, DiscordGuildTransformer]
     ) -> None:
-        """\N{GUITAR} Make the bot leave the guild."""
+        """🚓 Make the bot leave the guild."""
         confirm_embed = discord.Embed(
             description="Do you really want the bot to leave the following guild?",
         ).add_field(
@@ -172,14 +172,14 @@ class DiscordManagement(BaseDevCog):
     async def guild_stats(
         self, interaction: AluInteraction, guild: app_commands.Transform[discord.Guild, DiscordGuildTransformer]
     ) -> None:
-        """\N{GUITAR} Show basic stats about the guild."""
+        """🚓 Show basic stats about the guild."""
         embed = discord.Embed(color=const.Palette.blue(shade=500), title="Guild Stats")
         embed = self.get_guild_stats(embed, guild)
         await interaction.response.send_message(embed=embed)
 
     @guild_group.command(name="list")
     async def list(self, interaction: AluInteraction) -> None:
-        """\N{GUITAR} Show list of guilds the bot is in."""
+        """🚓 Show list of guilds the bot is in."""
         guild_list = chr(10).join([f"• {item.name} `{item.id}`" for item in self.bot.guilds])
         embed = discord.Embed(
             color=const.Color.prpl,

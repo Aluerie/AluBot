@@ -83,6 +83,7 @@ class AluBot(commands.Bot):
             strip_after_prefix=True,
             case_insensitive=True,
             help_command=None,
+            allowed_installs=discord.app_commands.AppInstallationType(guild=True, user=True),
         )
         self.extensions_to_load: tuple[str, ...] = get_extensions(test=self.test)
         # asyncpg typehinting crutch, read `utils.database` for more

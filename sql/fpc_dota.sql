@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS dota_players (
     twitch_id TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS dota_favourite_players (
+CREATE TABLE IF NOT EXISTS dota_favorite_players (
     guild_id BIGINT,
     player_id INT,
 
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS dota_favourite_players (
         REFERENCES dota_players(player_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS dota_favourite_characters (
+CREATE TABLE IF NOT EXISTS dota_favorite_characters (
     guild_id BIGINT,
     character_id INT NOT NULL,
 

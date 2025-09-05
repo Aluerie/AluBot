@@ -63,12 +63,12 @@ class Notifications(BaseNotifications):
     async def send_notifications(self) -> None:
         self.live_match_ids = []
 
-        query = "SELECT DISTINCT character_id FROM lol_favourite_characters"
-        favourite_champion_ids = [r for (r,) in await self.bot.pool.fetch(query)]  # row.unnest
+        query = "SELECT DISTINCT character_id FROM lol_favorite_characters"
+        favorite_champion_ids = [r for (r,) in await self.bot.pool.fetch(query)]  # row.unnest
 
-        query = "SELECT DISTINCT player_id FROM lol_favourite_players"
-        favourite_player_ids = [r for (r,) in await self.bot.pool.fetch(query)]
-        player_streams = await self.get_player_streams(const.Twitch.LOL_GAME_CATEGORY_ID, favourite_player_ids)
+        query = "SELECT DISTINCT player_id FROM lol_favorite_players"
+        favorite_player_ids = [r for (r,) in await self.bot.pool.fetch(query)]
+        player_streams = await self.get_player_streams(const.Twitch.LOL_GAME_CATEGORY_ID, favorite_player_ids)
 
         query = """
             SELECT a.puuid, a.player_id, in_game_name, tag_line, platform, display_name, twitch_id, last_edited
@@ -118,13 +118,13 @@ class Notifications(BaseNotifications):
 
             if (
                 participant
-                and participant["championId"] in favourite_champion_ids
+                and participant["championId"] in favorite_champion_ids
                 and player_account_row["last_edited"] != game["gameId"]
             ):
                 query = """
                     SELECT s.channel_id, s.spoil
-                    FROM lol_favourite_characters c
-                    JOIN lol_favourite_players p on c.guild_id = p.guild_id
+                    FROM lol_favorite_characters c
+                    JOIN lol_favorite_players p on c.guild_id = p.guild_id
                     JOIN lol_settings s on s.guild_id = c.guild_id
                     WHERE character_id=$1
                         AND player_id=$2

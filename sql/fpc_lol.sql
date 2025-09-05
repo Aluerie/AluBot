@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS lol_players (
     twitch_id TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS lol_favourite_players (
+CREATE TABLE IF NOT EXISTS lol_favorite_players (
     guild_id BIGINT,
     player_id INT NOT NULL,
 
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS lol_favourite_players (
         REFERENCES lol_players(player_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS lol_favourite_characters (
+CREATE TABLE IF NOT EXISTS lol_favorite_characters (
     guild_id BIGINT,
     character_id INT NOT NULL,
 

@@ -1,5 +1,5 @@
 """
-Base classes for FPC (Favourite Player + Character notifications) related cogs of the bot.
+Base classes for FPC (Favorite Player + Character notifications) related cogs of the bot.
 
 Currently supported games:
 * Dota 2:               ext.dota.fpc

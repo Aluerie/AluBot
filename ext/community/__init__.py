@@ -36,6 +36,7 @@ class Community(
     Suggestions,
     TwitchNotifications,
     Welcome,
+    emote=Emote.peepoComfy,
 ):
     """Aluerie's community server commands.
 
@@ -46,4 +47,4 @@ class Community(
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(Community(bot, emote=Emote.peepoComfy))
+    await bot.add_cog(Community(bot))

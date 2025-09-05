@@ -26,6 +26,8 @@ log = logging.getLogger(__name__)
 
 
 class AluTwitchClient(twitchio.AutoClient):
+    """Subclass for TwitchIO's AutoClient."""
+
     def __init__(self, bot: AluBot) -> None:
         super().__init__(
             client_id=config["TWITCH"]["CLIENT_ID"],
@@ -36,6 +38,7 @@ class AluTwitchClient(twitchio.AutoClient):
         self._bot: AluBot = bot
 
     def print_bot_oauth(self) -> None:
+        """Print oauth permissions for the bot."""
         scopes = "%20".join(
             [
                 "user:read:chat",
@@ -47,6 +50,7 @@ class AluTwitchClient(twitchio.AutoClient):
         print(f"🤖🤖🤖 BOT OATH LINK: 🤖🤖🤖\n{link}")  # noqa: T201
 
     def print_broadcaster_oauth(self) -> None:
+        """Print broadcaster oauth."""
         scopes = "%20".join(
             [
                 "channel:bot",
@@ -70,6 +74,7 @@ class AluTwitchClient(twitchio.AutoClient):
         pass
 
     def get_eventsub_subscriptions(self) -> list[twitchio.eventsub.SubscriptionPayload]:
+        """AutoClient."""
         broadcaster = const.TwitchID.Me
         return [
             # ✅ Channel Points Redeem              channel:read:redemptions or channel:manage:redemptions
@@ -105,6 +110,7 @@ class AluTwitchClient(twitchio.AutoClient):
 
     # @override
     async def event_ready(self) -> None:
+        """Event Ready."""
         log.info("%s is ready as bot_id = %s", self.__class__.__name__, self.bot_id)
 
     # EVENT SUB

@@ -115,7 +115,7 @@ class Info(AluCog, name="Info"):
         \N{BULLET} Common HTML or discord color names: `red`, `Blue`
         \N{BULLET} Extra: MaterialUI Google Palette: `mp(colour_name, shade)`
         \N{BULLET} Extra: MateriaAccentUI Google Palette: `map(colour_name, shade)`
-        \N{BULLET} Last but not least: `prpl` for favourite Aluerie\'s colour
+        \N{BULLET} Last but not least: `prpl` for favorite Aluerie\'s colour
         """
         rgb = color.to_rgb()
 

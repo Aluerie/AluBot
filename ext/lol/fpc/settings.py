@@ -136,14 +136,14 @@ class LolFPCSettings(BaseSettingsCog):
 
     lol_group = app_commands.Group(
         name="lol",
-        description="League of Legends FPC (Favourite Player+Character) commands.",
+        description="League of Legends FPC (Favorite Player+Character) commands.",
         guild_ids=[const.Guild.hideout],
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
     lol_request = app_commands.Group(
         name="request",
-        description="League of Legends FPC (Favourite Player+Character) request commands.",
+        description="League of Legends FPC (Favorite Player+Character) request commands.",
         parent=lol_group,
     )
 
@@ -154,7 +154,7 @@ class LolFPCSettings(BaseSettingsCog):
     ) -> None:
         """\N{BANANA} Request League of Legends Player to be added into the bot's FPC database.
 
-        So you and other people can add the player into their favourite later and start \
+        So you and other people can add the player into their favorite later and start \
         receiving FPC Notifications.
 
         Parameters
@@ -186,12 +186,12 @@ class LolFPCSettings(BaseSettingsCog):
 
     @lol_setup.command(name="champions")
     async def lol_setup_champions(self, interaction: AluInteraction) -> None:
-        """\N{BANANA} Setup/manage your League of Legends FPC favourite champions list."""
+        """\N{BANANA} Setup/manage your League of Legends FPC favorite champions list."""
         await self.setup_characters(interaction)
 
     @lol_setup.command(name="players")
     async def lol_setup_players(self, interaction: AluInteraction) -> None:
-        """\N{BANANA} Setup/manage your League of Legends FPC favourite players list."""
+        """\N{BANANA} Setup/manage your League of Legends FPC favorite players list."""
         await self.setup_players(interaction)
 
     @lol_setup.command(name="miscellaneous")
@@ -207,24 +207,24 @@ class LolFPCSettings(BaseSettingsCog):
     # HIDEOUT ONLY COMMANDS (at least, at the moment)
     hideout_lol_group = app_commands.Group(
         name="lol-dev",
-        description="League of Legends FPC (Favourite Player+Character) Hideout-only commands.",
+        description="League of Legends FPC (Favorite Player+Character) Hideout-only commands.",
         guild_ids=[const.Guild.hideout],
     )
 
     hideout_lol_player = app_commands.Group(
         name="player",
-        description="League of Legends FPC (Favourite Player+Character) Hideout-only player-related commands.",
+        description="League of Legends FPC (Favorite Player+Character) Hideout-only player-related commands.",
         parent=hideout_lol_group,
     )
 
     @hideout_lol_player.command(name="add")
     async def hideout_lol_player_add(self, interaction: AluInteraction, player: str) -> None:
-        """\N{GREEN APPLE} Add a League of Legends player into your favourite FPC players list.
+        """\N{GREEN APPLE} Add a League of Legends player into your favorite FPC players list.
 
         Parameters
         ----------
         player
-            "Player Name. Autocomplete suggestions exclude your favourite players."
+            "Player Name. Autocomplete suggestions exclude your favorite players."
         """
         await self.hideout_player_add(interaction, player)
 
@@ -240,12 +240,12 @@ class LolFPCSettings(BaseSettingsCog):
 
     @hideout_lol_player.command(name="remove")
     async def hideout_lol_player_remove(self, interaction: AluInteraction, player: str) -> None:
-        """\N{GREEN APPLE} Remove a League of Legends player into your favourite FPC players list.
+        """\N{GREEN APPLE} Remove a League of Legends player into your favorite FPC players list.
 
         Parameters
         ----------
         player
-            Player Name. Autocomplete suggestions include only your favourite players.
+            Player Name. Autocomplete suggestions include only your favorite players.
         """
         await self.hideout_player_remove(interaction, player)
 
@@ -261,7 +261,7 @@ class LolFPCSettings(BaseSettingsCog):
 
     hideout_lol_champion = app_commands.Group(
         name="champion",
-        description="League of Legends FPC (Favourite Player+Character) Hideout-only champion-related commands.",
+        description="League of Legends FPC (Favorite Player+Character) Hideout-only champion-related commands.",
         parent=hideout_lol_group,
     )
 
@@ -269,12 +269,12 @@ class LolFPCSettings(BaseSettingsCog):
     async def hideout_lol_champion_add(
         self, interaction: AluInteraction, champion: app_commands.Transform[Champion, ChampionTransformer]
     ) -> None:
-        """\N{GREEN APPLE} Add a League of Legends champion into your favourite FPC champions list.
+        """\N{GREEN APPLE} Add a League of Legends champion into your favorite FPC champions list.
 
         Parameters
         ----------
         champion
-            Champion Name. Autocomplete suggestions exclude your favourite champs.
+            Champion Name. Autocomplete suggestions exclude your favorite champs.
         """
         await self.hideout_character_add(interaction, champion)
 
@@ -282,23 +282,23 @@ class LolFPCSettings(BaseSettingsCog):
     async def hideout_lol_champion_remove(
         self, interaction: AluInteraction, champion: app_commands.Transform[Champion, ChampionTransformer]
     ) -> None:
-        """\N{GREEN APPLE} Remove a League of Legends champion into your favourite FPC champions list.
+        """\N{GREEN APPLE} Remove a League of Legends champion into your favorite FPC champions list.
 
         Parameters
         ----------
         champion
-            Champion Name. Autocomplete suggestions only include your favourite champs.
+            Champion Name. Autocomplete suggestions only include your favorite champs.
         """
         await self.hideout_character_remove(interaction, champion)
 
     @hideout_lol_player.command(name="list")
     async def hideout_lol_player_list(self, interaction: AluInteraction) -> None:
-        """\N{GREEN APPLE} Show a list of your favourite League of Legends FPC players."""
+        """\N{GREEN APPLE} Show a list of your favorite League of Legends FPC players."""
         await self.hideout_player_list(interaction)
 
     @hideout_lol_champion.command(name="list")
     async def hideout_lol_champion_list(self, interaction: AluInteraction) -> None:
-        """\N{GREEN APPLE} Show a list of your favourite League of Legends FPC champions."""
+        """\N{GREEN APPLE} Show a list of your favorite League of Legends FPC champions."""
         await self.hideout_character_list(interaction)
 
     # Utilities to debug some rare situations.

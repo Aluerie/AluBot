@@ -191,6 +191,10 @@ class Logger(AluCog):
 
     @commands.Cog.listener("on_member_update")
     async def logger_member_nickname_update(self, before: discord.Member, after: discord.Member) -> None:
+        """Event called when community members change their profile.
+
+        These updates go into #bot-spam channel.
+        """
         if before.bot:
             return
 

@@ -265,8 +265,8 @@ class DeleteDataButton(discord.ui.Button["SetupMiscView"]):
             .add_field(
                 name="The data that will be deleted",
                 value=(
-                    f"\N{BLACK CIRCLE} your favourite players data\n"
-                    f"\N{BLACK CIRCLE} your favourite {self.cog.character_plural} data\n"
+                    f"\N{BLACK CIRCLE} your favorite players data\n"
+                    f"\N{BLACK CIRCLE} your favorite {self.cog.character_plural} data\n"
                     f"\N{BLACK CIRCLE} your {self.cog.character_plural} FPC Notifications channel data."
                 ),
             )
@@ -290,7 +290,7 @@ class DeleteDataButton(discord.ui.Button["SetupMiscView"]):
 
         response_embed = discord.Embed(
             color=discord.Color.green(),
-            title="FPC (Favourite Player+Character) channel removed.",
+            title="FPC (Favorite Player+Character) channel removed.",
             description="Notifications will not be sent anymore. Your data was deleted as well.",
         ).set_author(name=self.cog.game_display_name, icon_url=self.cog.game_icon_url)
         await interaction.followup.send(embed=response_embed)
@@ -348,7 +348,7 @@ class SetupMiscView(AluLayoutView):
         # Header
         header = discord.ui.TextDisplay(
             content=(
-                "## FPC (Favourite Player+Character) Misc Settings Setup\n"
+                "## FPC (Favorite Player+Character) Misc Settings Setup\n"
                 "Below there is a list of settings with descriptions and their current state.\n"
                 "\N{BLACK CIRCLE} Each setting has correspondent toggle/use button.\n"
                 "\N{BLACK CIRCLE} After pressing `Toggle` button the embed will be "
@@ -393,7 +393,7 @@ class SetupMiscView(AluLayoutView):
                     "### \N{CLAPPER BOARD} Only Twitch Live\n"
                     "By default, the bot sends notifications no matter if a person is streaming or not at the moment. "
                     "However, if you want to catch [twitch.tv](https://www.twitch.tv/) streamers only when they are "
-                    "playing your favourite characters live - toggle this setting."
+                    "playing your favorite characters live - toggle this setting."
                 ),
                 accessory=MiscSettingsToggleButton(
                     self.cog, setting="twitch_live_only", initial_value=self.settings["twitch_live_only"]
@@ -425,8 +425,8 @@ class SetupPlayersPaginator(pages.Paginator):
 
     This gives:
     * pagination menu
-    * list of favourite players button
-    * buttons to mark/demark player as favourite
+    * list of favorite players button
+    * buttons to mark/demark player as favorite
     * button to view all accounts for presented embed
     """
 
@@ -445,7 +445,7 @@ class SetupPlayersPaginator(pages.Paginator):
 
         This gives
          * Embed with explanation text
-         * Buttons to add/remove characters to/from favourite list.
+         * Buttons to add/remove characters to/from favorite list.
 
         Parameters
         ----------
@@ -454,32 +454,32 @@ class SetupPlayersPaginator(pages.Paginator):
             for example: [(1, "gosu"), (2, "Quantum"), ...].
 
         """
-        # unfortunately we have to fetch favourites each format page
+        # unfortunately we have to fetch favorites each format page
         # in case they are bad acting with using both slash commands
         # or several menus
 
-        query = f"SELECT player_id FROM {self.cog.prefix}_favourite_players WHERE guild_id=$1"
+        query = f"SELECT player_id FROM {self.cog.prefix}_favorite_players WHERE guild_id=$1"
         assert self.interaction.guild
-        favourite_ids: list[int] = [r for (r,) in await self.bot.pool.fetch(query, self.interaction.guild.id)]
+        favorite_ids: list[int] = [r for (r,) in await self.bot.pool.fetch(query, self.interaction.guild.id)]
 
         embed = (
             discord.Embed(
                 color=self.cog.color,
-                title=f"Your favourite {self.cog.game_display_name} {self.cog.character_plural} list interactive setup",
+                title=f"Your favorite {self.cog.game_display_name} {self.cog.character_plural} list interactive setup",
                 description=f"Menu below represents all {self.cog.character_plural} from {self.cog.game_display_name}.",
             )
             .add_field(
                 name="\N{LARGE GREEN SQUARE}/\N{BLACK LARGE SQUARE} Buttons",
                 value=(
-                    f"Press those buttons to mark/demark a a {self.cog.character_plural} as your favourite.\n"
-                    "Button's colour shows if it's currently chosen as your favourite. "
+                    f"Press those buttons to mark/demark a a {self.cog.character_plural} as your favorite.\n"
+                    "Button's colour shows if it's currently chosen as your favorite. "
                     "(\N{LARGE GREEN SQUARE} - yes, \N{BLACK LARGE SQUARE} - no)\n"
                 ),
                 inline=False,
             )
             .add_field(
-                name=f"{self.favourite_players.emoji} Your favourite {self.cog.character_plural} list Button",
-                value="Show your favourite players list.",
+                name=f"{self.favorite_players.emoji} Your favorite {self.cog.character_plural} list Button",
+                value="Show your favorite players list.",
                 inline=False,
             )
             .add_field(
@@ -491,7 +491,7 @@ class SetupPlayersPaginator(pages.Paginator):
 
         self.clear_items()
         self.fill_items()
-        for item in [self.favourite_players, self.previous_page, self.index, self.next_page, self.account_list]:
+        for item in [self.favorite_players, self.previous_page, self.index, self.next_page, self.account_list]:
             self.add_item(item)
 
         for player_id, player_display_name in entries:
@@ -499,8 +499,8 @@ class SetupPlayersPaginator(pages.Paginator):
                 AddRemoveButton(
                     player_display_name,
                     player_id,
-                    is_favourite=player_id in favourite_ids,
-                    table=f"{self.cog.prefix}_favourite_players",
+                    is_favorite=player_id in favorite_ids,
+                    table=f"{self.cog.prefix}_favorite_players",
                     column="player_id",
                     menu=self,
                 ),
@@ -508,9 +508,9 @@ class SetupPlayersPaginator(pages.Paginator):
 
         return embed
 
-    @discord.ui.button(emoji="\N{PAGE WITH CURL}", label="Favourites", style=discord.ButtonStyle.blurple)
-    async def favourite_players(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
-        """Show favourite object list."""
+    @discord.ui.button(emoji="\N{PAGE WITH CURL}", label="Favorites", style=discord.ButtonStyle.blurple)
+    async def favorite_players(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+        """Show favorite object list."""
         assert interaction.guild
         embed = await self.cog.get_player_list_embed(interaction.guild.id)
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -562,8 +562,8 @@ class SetupCharactersPaginator(pages.Paginator):
 
     This gives:
     * pagination menu
-    * list of favourite characters button
-    * buttons to mark/demark character as favourite
+    * list of favorite characters button
+    * buttons to mark/demark character as favorite
     """
 
     def __init__(self, interaction: AluInteraction, characters: list[Character], cog: BaseSettingsCog) -> None:
@@ -575,9 +575,9 @@ class SetupCharactersPaginator(pages.Paginator):
         await super().on_timeout()
         self.cog.setup_messages_cache.pop(self.message.id, None)
 
-    @discord.ui.button(emoji="\N{PAGE WITH CURL}", label="Favourites", style=discord.ButtonStyle.blurple)
-    async def favourite_characters(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
-        """Show favourite object list."""
+    @discord.ui.button(emoji="\N{PAGE WITH CURL}", label="Favorites", style=discord.ButtonStyle.blurple)
+    async def favorite_characters(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+        """Show favorite object list."""
         assert interaction.guild
         embed = await self.cog.get_character_list_embed(interaction.guild.id)
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -588,7 +588,7 @@ class SetupCharactersPaginator(pages.Paginator):
 
         This gives
         * Embed with explanation text
-        * Buttons to add/remove characters to/from favourite list.
+        * Buttons to add/remove characters to/from favorite list.
 
         Parameters
         ----------
@@ -596,38 +596,38 @@ class SetupCharactersPaginator(pages.Paginator):
             List of characters
 
         """
-        # unfortunately we have to fetch favourites each format page
+        # unfortunately we have to fetch favorites each format page
         # in case they are bad acting with using both slash commands
         # or several menus
 
-        query = f"SELECT character_id FROM {self.cog.prefix}_favourite_characters WHERE guild_id=$1"
+        query = f"SELECT character_id FROM {self.cog.prefix}_favorite_characters WHERE guild_id=$1"
         assert self.interaction.guild
-        favourite_ids: list[int] = [r for (r,) in await self.bot.pool.fetch(query, self.interaction.guild.id)]
+        favorite_ids: list[int] = [r for (r,) in await self.bot.pool.fetch(query, self.interaction.guild.id)]
 
         embed = (
             discord.Embed(
                 color=self.cog.color,
-                title=f"Your favourite {self.cog.game_display_name} {self.cog.character_plural} list interactive setup",
+                title=f"Your favorite {self.cog.game_display_name} {self.cog.character_plural} list interactive setup",
                 description=f"Menu below represents all {self.cog.character_plural} from {self.cog.game_display_name}.",
             )
             .add_field(
                 name="\N{LARGE GREEN SQUARE}/\N{BLACK LARGE SQUARE} Buttons",
                 value=(
-                    f"Press those buttons to mark/demark a a {self.cog.character_singular} as your favourite.\n"
-                    "Button's colour shows if it's currently chosen as your favourite. "
+                    f"Press those buttons to mark/demark a a {self.cog.character_singular} as your favorite.\n"
+                    "Button's colour shows if it's currently chosen as your favorite. "
                     "(\N{LARGE GREEN SQUARE} - yes, \N{BLACK LARGE SQUARE} - no)\n"
                 ),
                 inline=False,
             )
             .add_field(
-                name=f"{self.favourite_characters.emoji} Your favourite {self.cog.character_plural} list Button",
-                value=f"Show your favourite {self.cog.character_plural} list.",
+                name=f"{self.favorite_characters.emoji} Your favorite {self.cog.character_plural} list Button",
+                value=f"Show your favorite {self.cog.character_plural} list.",
                 inline=False,
             )
         )
 
         self.clear_items()
-        for item in [self.favourite_characters, self.previous_page, self.index, self.next_page, self.last_page]:
+        for item in [self.favorite_characters, self.previous_page, self.index, self.next_page, self.last_page]:
             self.add_item(item)
 
         for character in entries:
@@ -635,9 +635,9 @@ class SetupCharactersPaginator(pages.Paginator):
                 AddRemoveButton(
                     character.display_name,
                     character.id,
-                    is_favourite=character.id in favourite_ids,
+                    is_favorite=character.id in favorite_ids,
                     emoji=character.emote,
-                    table=f"{self.cog.prefix}_favourite_characters",
+                    table=f"{self.cog.prefix}_favorite_characters",
                     column="character_id",
                     menu=self,
                 ),
@@ -647,7 +647,7 @@ class SetupCharactersPaginator(pages.Paginator):
 
 
 class AddRemoveButton(discord.ui.Button[SetupCharactersPaginator | SetupCharactersPaginator]):
-    """Green/Black Buttons to Remove from/Add to favourite list.
+    """Green/Black Buttons to Remove from/Add to favorite list.
 
     Used for `/{game} setup players/{characters}` command's view.
     """
@@ -657,7 +657,7 @@ class AddRemoveButton(discord.ui.Button[SetupCharactersPaginator | SetupCharacte
         label: str,
         object_id: int,
         *,
-        is_favourite: bool,
+        is_favorite: bool,
         table: str,
         column: str,
         menu: SetupCharactersPaginator | SetupPlayersPaginator,
@@ -665,10 +665,10 @@ class AddRemoveButton(discord.ui.Button[SetupCharactersPaginator | SetupCharacte
     ) -> None:
         super().__init__(
             emoji=emoji,
-            style=discord.ButtonStyle.green if is_favourite else discord.ButtonStyle.gray,
+            style=discord.ButtonStyle.green if is_favorite else discord.ButtonStyle.gray,
             label=label,
         )
-        self.is_favourite: bool = is_favourite
+        self.is_favorite: bool = is_favorite
         self.object_id: int = object_id
         self.table: str = table
         self.column: str = column
@@ -678,11 +678,11 @@ class AddRemoveButton(discord.ui.Button[SetupCharactersPaginator | SetupCharacte
     async def callback(self, interaction: AluInteraction) -> None:
         assert interaction.guild
 
-        if self.is_favourite:
-            # delete from the favourites list
+        if self.is_favorite:
+            # delete from the favorites list
             query = f"DELETE FROM {self.table} WHERE guild_id=$1 AND {self.column}=$2"
         else:
-            # add to the favourites list
+            # add to the favorites list
             query = f"""
                 INSERT INTO {self.table}
                 (guild_id, {self.column})
@@ -692,8 +692,8 @@ class AddRemoveButton(discord.ui.Button[SetupCharactersPaginator | SetupCharacte
         await interaction.client.pool.execute(query, interaction.guild.id, self.object_id)
 
         # Edit the message with buttons
-        self.is_favourite = not self.is_favourite
-        self.style = discord.ButtonStyle.green if self.is_favourite else discord.ButtonStyle.gray
+        self.is_favorite = not self.is_favorite
+        self.style = discord.ButtonStyle.green if self.is_favorite else discord.ButtonStyle.gray
         await interaction.response.edit_message(view=self.menu)
 
 
@@ -793,7 +793,7 @@ class RemoveAccountButton(discord.ui.Button[DatabaseRemoveView]):
 
 
 class BaseSettingsCog(AluCog):
-    """Base class for cogs representing FPC (Favourite Player+Character) feature.
+    """Base class for cogs representing FPC (Favorite Player+Character) feature.
 
     The following games are currently supported:
     * Dota 2
@@ -983,7 +983,7 @@ class BaseSettingsCog(AluCog):
         logs_embed.set_author(
             name=interaction.user,
             icon_url=interaction.user.display_avatar.url,
-        ).set_footer(text="Don't forget to add the player to your favourites!")
+        ).set_footer(text="Don't forget to add the player to your favorites!")
         await self.hideout.global_logs.send(embed=logs_embed)
 
     async def database_remove(self, interaction: AluInteraction, player_name: str) -> None:
@@ -1038,7 +1038,7 @@ class BaseSettingsCog(AluCog):
         embed = (
             discord.Embed(
                 color=self.color,
-                title="FPC (Favourite Player+Character) Channel Setup",
+                title="FPC (Favorite Player+Character) Channel Setup",
                 description=(
                     "This embed shows the channel where the bot will send FPC notifications. "
                     "You can choose a new channel, "
@@ -1069,7 +1069,7 @@ class BaseSettingsCog(AluCog):
             )
             msg = (
                 "I'm sorry! You cannot use this command without setting up "
-                f"{self.game_display_name} FPC (Favourite Player+Character) channel first. "
+                f"{self.game_display_name} FPC (Favorite Player+Character) channel first. "
                 f"Please, use {cmd_mention} to assign it."
             )
             raise errors.ErroneousUsage(msg)
@@ -1100,7 +1100,7 @@ class BaseSettingsCog(AluCog):
         """Base function for `/{game} setup {character_plural}` command.
 
         This gives
-        * View of buttons to add/remove characters to/from person favourite characters
+        * View of buttons to add/remove characters to/from person favorite characters
         """
         await interaction.response.defer()
         await self.is_fpc_channel_set(interaction)
@@ -1117,7 +1117,7 @@ class BaseSettingsCog(AluCog):
         """Base function for `/{game} setup players` command.
 
         This gives
-        * View of buttons to add/remove players to/from person favourite players
+        * View of buttons to add/remove players to/from person favorite players
         """
         await interaction.response.defer()
         await self.is_fpc_channel_set(interaction)
@@ -1161,20 +1161,20 @@ class BaseSettingsCog(AluCog):
         Parameters
         ----------
         player_name: str
-            Player name to add to subscriber's favourites, received from a slash command argument.
+            Player name to add to subscriber's favorites, received from a slash command argument.
         """  # TODO: check AluInteraction # TODO: check if all functions have Parameters in their docs
         await interaction.response.defer()
         player_id, player_display_name = await self.get_player_id_and_display_name(player_name)
 
-        query = f"INSERT INTO {self.prefix}_favourite_players (guild_id, player_id) VALUES ($1, $2)"
+        query = f"INSERT INTO {self.prefix}_favorite_players (guild_id, player_id) VALUES ($1, $2)"
         try:
             await interaction.client.pool.execute(query, interaction.guild_id, player_id)
         except asyncpg.UniqueViolationError:
-            msg = f"Player {player_display_name} was already in your favourite list."
+            msg = f"Player {player_display_name} was already in your favorite list."
             raise errors.BadArgument(msg) from None
 
         embed = discord.Embed(color=self.color).add_field(
-            name="Successfully added the player to your favourites.",
+            name="Successfully added the player to your favorites.",
             value=player_display_name,
         )
         await interaction.followup.send(embed=embed)
@@ -1185,22 +1185,22 @@ class BaseSettingsCog(AluCog):
         Parameters
         ----------
         player_name: str
-            Player name to remove from subscriber's favourites, received from a slash command argument.
+            Player name to remove from subscriber's favorites, received from a slash command argument.
         """
         await interaction.response.defer()
         player_id, player_display_name = await self.get_player_id_and_display_name(player_name)
 
-        query = f"DELETE FROM {self.prefix}_favourite_players WHERE guild_id=$1 AND player_id=$2"
+        query = f"DELETE FROM {self.prefix}_favorite_players WHERE guild_id=$1 AND player_id=$2"
         result = await interaction.client.pool.execute(query, interaction.guild_id, player_id)
         if result == "DELETE 1":
             embed = discord.Embed(
                 color=self.color,
-                title="Successfully removed the player from your favourites.",
+                title="Successfully removed the player from your favorites.",
                 description=player_display_name,
             )
             await interaction.followup.send(embed=embed)
         elif result == "DELETE 0":
-            msg = f"Player {player_display_name} is already not in your favourite list."
+            msg = f"Player {player_display_name} is already not in your favorite list."
             raise errors.BadArgument(msg)
         else:
             msg = "Unknown error."
@@ -1209,25 +1209,25 @@ class BaseSettingsCog(AluCog):
     async def hideout_character_add(self, interaction: AluInteraction, character: Character) -> None:
         """Base function for `/{game}-dev {character_singular} add` Hideout-only command.
 
-        Adds the character from subscriber's favourites.
+        Adds the character from subscriber's favorites.
         This function supports adding only one character at a time.
 
         Parameters
         ----------
         character: Character
-            Character to add to subscriber's favourites, received from a slash command argument.
+            Character to add to subscriber's favorites, received from a slash command argument.
         """
         await interaction.response.defer()
 
-        query = f"INSERT INTO {self.prefix}_favourite_characters (guild_id, character_id) VALUES ($1, $2)"
+        query = f"INSERT INTO {self.prefix}_favorite_characters (guild_id, character_id) VALUES ($1, $2)"
         try:
             await interaction.client.pool.execute(query, interaction.guild_id, character.id)
         except asyncpg.UniqueViolationError:
-            msg = f"{self.character_singular.capitalize()} {character.display_name} was already in your favourite list."
+            msg = f"{self.character_singular.capitalize()} {character.display_name} was already in your favorite list."
             raise errors.BadArgument(msg) from None
 
         embed = discord.Embed(color=self.color).add_field(
-            name=f"Successfully added a {self.character_singular} to your favourites.",
+            name=f"Successfully added a {self.character_singular} to your favorites.",
             value=character.display_name,
         )
         await interaction.followup.send(embed=embed)
@@ -1235,29 +1235,29 @@ class BaseSettingsCog(AluCog):
     async def hideout_character_remove(self, interaction: AluInteraction, character: Character) -> None:
         """Base function for `/{game}-dev {character_singular} remove` Hideout-only command.
 
-        Removes the character from subscriber's favourites.
+        Removes the character from subscriber's favorites.
         This function supports removing only one character at a time.
 
         Parameters
         ----------
         character: Character
-            Character to remove from subscriber's favourites, received from a slash command argument.
+            Character to remove from subscriber's favorites, received from a slash command argument.
         """
         await interaction.response.defer()
 
-        query = f"DELETE FROM {self.prefix}_favourite_characters WHERE guild_id=$1 AND character_id=$2"
+        query = f"DELETE FROM {self.prefix}_favorite_characters WHERE guild_id=$1 AND character_id=$2"
         result = await interaction.client.pool.execute(query, interaction.guild_id, character.id)
         if result == "DELETE 1":
             embed = discord.Embed(
                 color=self.color,
-                title=f"Successfully removed a {self.character_singular} from your favourites.",
+                title=f"Successfully removed a {self.character_singular} from your favorites.",
                 description=character.display_name,
             )
             await interaction.followup.send(embed=embed)
         elif result == "DELETE 0":
             msg = (
                 f"{self.character_singular.capitalize()} {character.display_name} is already not "
-                "in your favourite list."
+                "in your favorite list."
             )
             raise errors.BadArgument(msg)
         else:
@@ -1265,32 +1265,32 @@ class BaseSettingsCog(AluCog):
             raise errors.BadArgument(msg)
 
     async def get_player_list_embed(self, guild_id: int) -> discord.Embed:
-        """Helper function to get an embed with the subscriber's list of favourite players.
+        """Helper function to get an embed with the subscriber's list of favorite players.
 
         Parameters
         ----------
         guild_id: int
-            Guild ID of the subscriber, for which the bot will fetch the favourite players list.
+            Guild ID of the subscriber, for which the bot will fetch the favorite players list.
         """
         query = f"""
             SELECT display_name, twitch_id
             FROM {self.prefix}_players
-            WHERE player_id=ANY(SELECT player_id FROM {self.prefix}_favourite_players WHERE guild_id=$1)
+            WHERE player_id=ANY(SELECT player_id FROM {self.prefix}_favorite_players WHERE guild_id=$1)
         """
         rows: list[PlayerListQueryRow] = await self.bot.pool.fetch(query, guild_id)
-        favourite_player_names = (
+        favorite_player_names = (
             "\n".join([field_name(row["display_name"], row["twitch_id"]) for row in rows]) or "Empty list"
         )
         return discord.Embed(
             color=self.color,
-            title="List of your favourite players",
-            description=favourite_player_names,
+            title="List of your favorite players",
+            description=favorite_player_names,
         ).set_footer(text=self.game_display_name, icon_url=self.game_icon_url)
 
     async def hideout_player_list(self, interaction: AluInteraction) -> None:
         """Base function for `/{game}-dev player list` Hideout-only command.
 
-        Responds with an embed containing the list of subscriber's favourite players.
+        Responds with an embed containing the list of subscriber's favorite players.
         """
         await interaction.response.defer()
         assert interaction.guild
@@ -1298,31 +1298,31 @@ class BaseSettingsCog(AluCog):
         await interaction.followup.send(embed=embed)
 
     async def get_character_list_embed(self, guild_id: int) -> discord.Embed:
-        """Helper function to get an embed with the subscriber's list of favourite characters.
+        """Helper function to get an embed with the subscriber's list of favorite characters.
 
         Parameters
         ----------
         guild_id: int
-            Guild ID of the subscriber, for which the bot will fetch the favourite characters list.
+            Guild ID of the subscriber, for which the bot will fetch the favorite characters list.
         """
-        query = f"SELECT character_id FROM {self.prefix}_favourite_characters WHERE guild_id=$1"
-        favourite_character_ids: list[int] = [
+        query = f"SELECT character_id FROM {self.prefix}_favorite_characters WHERE guild_id=$1"
+        favorite_character_ids: list[int] = [
             character_id for (character_id,) in await self.bot.pool.fetch(query, guild_id)
         ]
-        favourite_characters = [await self.characters.by_id(i) for i in favourite_character_ids]
-        favourite_character_names = (
-            "\n".join([f"{c.emote} {c.display_name}" for c in favourite_characters]) or "Empty list"
+        favorite_characters = [await self.characters.by_id(i) for i in favorite_character_ids]
+        favorite_character_names = (
+            "\n".join([f"{c.emote} {c.display_name}" for c in favorite_characters]) or "Empty list"
         )
         return discord.Embed(
             color=self.color,
-            title=f"List of your favourite {self.character_plural}",
-            description=favourite_character_names,
+            title=f"List of your favorite {self.character_plural}",
+            description=favorite_character_names,
         )
 
     async def hideout_character_list(self, interaction: AluInteraction) -> None:
         """Base function for `/{game}-dev {character} list` Hideout-only command.
 
-        Responds with an embed containing the list of subscriber's favourite characters.
+        Responds with an embed containing the list of subscriber's favorite characters.
         """
         await interaction.response.defer()
         assert interaction.guild
@@ -1346,7 +1346,7 @@ class BaseSettingsCog(AluCog):
             SELECT display_name
             FROM {self.prefix}_players
             WHERE {"NOT" if mode_add_remove else ""} player_id=ANY(
-                SELECT player_id FROM {self.prefix}_favourite_players WHERE guild_id=$1
+                SELECT player_id FROM {self.prefix}_favorite_players WHERE guild_id=$1
             )
             ORDER BY similarity(display_name, $2) DESC
             LIMIT 6;
@@ -1377,8 +1377,8 @@ class BaseSettingsCog(AluCog):
         Responds with an embed explaining the whole work-flow for the end user on how to use FPC feature.
         Walks with them through process of
         * Setting up a channel for notifications;
-        * Setting up a list of favourite players;
-        * Setting up a list of favourite characters;
+        * Setting up a list of favorite players;
+        * Setting up a list of favorite characters;
         * Changing miscellaneous settings for this feature;
         * Requesting developers to add new accounts into the database;
         """

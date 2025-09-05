@@ -43,7 +43,7 @@ class TimeZone(NamedTuple):
         """Convert."""
         tz_manager = ctx.bot.tz_manager
 
-        # Prioritise aliases because they handle short codes slightly better
+        # Prioritize aliases because they handle short codes slightly better
         if argument in tz_manager._timezone_aliases:
             # list of display_name -> IANA key so we look in display names here
             return cls(key=tz_manager._timezone_aliases[argument], label=argument)

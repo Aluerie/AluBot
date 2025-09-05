@@ -90,12 +90,12 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
     **Tutorial**
     1. Set channel with
     `$dota channel set #channel`
-    2. Add players to your favourites, i.e.
+    2. Add players to your favorites, i.e.
     `$dota player add gorgc, bzm`
     List of available players can be seen with `$dota database list`
     3. Request missing players to the database , i.e.
     `/dota database request name: cr1tdota steam: 76561197986172872 twitch: yes`
-    4. Add heroes to your favourites, i.e.
+    4. Add heroes to your favorites, i.e.
     `/dota hero add name1: Dark Willow name2: Mirana name3: Anti-Mage`
     5. Use `remove` counterpart commands to `add` to edit out player/hero lists
     *Pro-Tip.* Use autocomplete
@@ -120,14 +120,14 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
 
     dota_group = app_commands.Group(
         name="dota",
-        description="Dota 2 FPC (Favourite Player+Character) commands.",
+        description="Dota 2 FPC (Favorite Player+Character) commands.",
         guild_ids=const.PREMIUM_GUILDS,
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
     dota_request = app_commands.Group(
         name="request",
-        description="Dota 2 FPC (Favourite Player+Character) request commands.",
+        description="Dota 2 FPC (Favorite Player+Character) request commands.",
         parent=dota_group,
     )
 
@@ -135,7 +135,7 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
     async def dota_request_player(self, interaction: AluInteraction, name: str, steam: str, *, twitch: bool) -> None:
         """\N{LEMON} Request Dota 2 Player to be added into the bot's FPC database.
 
-        So you and other people can add the player into their favourite later and start \
+        So you and other people can add the player into their favorite later and start \
         receiving FPC Notifications.
 
         Parameters
@@ -163,12 +163,12 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
 
     @dota_setup.command(name="heroes")
     async def dota_setup_heroes(self, interaction: AluInteraction) -> None:
-        """\N{LEMON} Setup/manage your Dota 2 FPC favourite heroes list."""
+        """\N{LEMON} Setup/manage your Dota 2 FPC favorite heroes list."""
         await self.setup_characters(interaction)
 
     @dota_setup.command(name="players")
     async def dota_setup_players(self, interaction: AluInteraction) -> None:
-        """\N{LEMON} Setup/manage your Dota 2 FPC favourite players list."""
+        """\N{LEMON} Setup/manage your Dota 2 FPC favorite players list."""
         await self.setup_players(interaction)
 
     @dota_setup.command(name="miscellaneous")
@@ -185,24 +185,24 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
 
     hideout_dota_group = app_commands.Group(
         name="dota-dev",
-        description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
+        description="Dota 2 FPC (Favorite Player+Character) Hideout-only commands.",
         guild_ids=[const.Guild.hideout],
     )
 
     hideout_dota_player = app_commands.Group(
         name="player",
-        description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
+        description="Dota 2 FPC (Favorite Player+Character) Hideout-only commands.",
         parent=hideout_dota_group,
     )
 
     @hideout_dota_player.command(name="add")
     async def hideout_dota_player_add(self, interaction: AluInteraction, player: str) -> None:
-        """\N{RED APPLE} Add a Dota 2 player into your favourite FPC players list.
+        """\N{RED APPLE} Add a Dota 2 player into your favorite FPC players list.
 
         Parameters
         ----------
         player
-            Player Name. Autocomplete suggestions exclude your favourite players.
+            Player Name. Autocomplete suggestions exclude your favorite players.
         """
         await self.hideout_player_add(interaction, player)
 
@@ -218,12 +218,12 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
 
     @hideout_dota_player.command(name="remove")
     async def hideout_dota_player_remove(self, interaction: AluInteraction, player: str) -> None:
-        """\N{RED APPLE} Remove a Dota 2 player into your favourite FPC players list.
+        """\N{RED APPLE} Remove a Dota 2 player into your favorite FPC players list.
 
         Parameters
         ----------
         player
-            Player Name. Autocomplete suggestions include only your favourite players.
+            Player Name. Autocomplete suggestions include only your favorite players.
         """
         await self.hideout_player_remove(interaction, player)
 
@@ -239,7 +239,7 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
 
     hideout_dota_hero = app_commands.Group(
         name="hero",
-        description="Dota 2 FPC (Favourite Player+Character) Hideout-only commands.",
+        description="Dota 2 FPC (Favorite Player+Character) Hideout-only commands.",
         parent=hideout_dota_group,
     )
 
@@ -247,12 +247,12 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
     async def hideout_dota_hero_add(
         self, interaction: AluInteraction, hero: app_commands.Transform[Hero, HeroTransformer]
     ) -> None:
-        """\N{RED APPLE} Add a Dota 2 hero into your favourite FPC heroes list.
+        """\N{RED APPLE} Add a Dota 2 hero into your favorite FPC heroes list.
 
         Parameters
         ----------
         hero: Hero
-            Hero Name. Autocomplete suggestions exclude your favourite champs.
+            Hero Name. Autocomplete suggestions exclude your favorite champs.
         """
         await self.hideout_character_add(interaction, hero)
 
@@ -260,23 +260,23 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
     async def hideout_dota_hero_remove(  # TODO: should autocomplete for hero only include heroes we have in the thing?
         self, interaction: AluInteraction, hero: app_commands.Transform[Hero, HeroTransformer]
     ) -> None:
-        """\N{RED APPLE} Remove a Dota 2 hero into your favourite FPC heroes list.
+        """\N{RED APPLE} Remove a Dota 2 hero into your favorite FPC heroes list.
 
         Parameters
         ----------
         hero: Hero
-            Hero Name. Autocomplete suggestions only include your favourite champs.
+            Hero Name. Autocomplete suggestions only include your favorite champs.
         """
         await self.hideout_character_remove(interaction, hero)
 
     @hideout_dota_player.command(name="list")
     async def hideout_dota_player_list(self, interaction: AluInteraction) -> None:
-        """\N{RED APPLE} Show a list of your favourite Dota 2 FPC players."""
+        """\N{RED APPLE} Show a list of your favorite Dota 2 FPC players."""
         await self.hideout_player_list(interaction)
 
     @hideout_dota_hero.command(name="list")
     async def hideout_dota_hero_list(self, interaction: AluInteraction) -> None:
-        """\N{RED APPLE} Show a list of your favourite Dota 2 FPC heroes."""
+        """\N{RED APPLE} Show a list of your favorite Dota 2 FPC heroes."""
         await self.hideout_character_list(interaction)
 
     # DOTA DATABASE COMMANDS

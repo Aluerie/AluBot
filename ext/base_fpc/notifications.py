@@ -52,7 +52,7 @@ class BaseNotifications(AluCog):
         self.message_cache: dict[int, discord.WebhookMessage] = {}
 
     async def get_player_streams(self, twitch_category_id: str, player_ids: list[int]) -> dict[int, twitchio.Stream]:
-        """Get `player_id` for favourite FPC streams that are currently live on Twitch."""
+        """Get `player_id` for favorite FPC streams that are currently live on Twitch."""
         query = f"""
             SELECT twitch_id, player_id
             FROM {self.prefix}_players

@@ -129,12 +129,12 @@ class GitIssueEvent(StrEnum):
     # =========================================================
     # Emotes from B1-50 extra emote server, names match GitHub event names (and emote names)
     # events
-    reopened = "<:reopened:1125588760269164587>"
-    opened = "<:opened:1125588763087753307>"
-    closed = "<:closed:1125588765759508552>"
+    reopened = "<:reopened:1413405897752973444>"
+    opened = "<:opened:1413405895655690323>"
+    closed = "<:closed:1413405892547706992>"
     # comments
-    assigned = "<:assigned:1125588768070578196>"
-    commented = "<:commented:1125588770679431258>"
+    assigned = "<:assigned:1413405891000270868>"
+    commented = "<:commented:1413405894137348147>"
 
 
 class EmoteLogo(StrEnum):

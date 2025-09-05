@@ -160,7 +160,7 @@ class EmoteStats(AluCog):
 
     emotestats_group = app_commands.Group(
         name="emote-stats",
-        description="\N{ROLLING ON THE FLOOR LAUGHING} Dota 2 FPC (Favourite Player+Character) commands.",
+        description="\N{ROLLING ON THE FLOOR LAUGHING} Dota 2 FPC (Favorite Player+Character) commands.",
         guild_ids=const.MY_GUILDS,
     )
 

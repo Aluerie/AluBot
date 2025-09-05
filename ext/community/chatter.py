@@ -80,7 +80,7 @@ class Chatter(AluCog):
 
     @commands.Cog.listener("on_message")
     async def random_comfy_react(self, message: discord.Message) -> None:
-        """Bot sometimes reacts to random messages with its favourite emote: peepoComfy."""
+        """Bot sometimes reacts to random messages with its favorite emote: peepoComfy."""
         if not self.community_server_check(message):
             return
 

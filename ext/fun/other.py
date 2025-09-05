@@ -44,7 +44,7 @@ class FunOther(AluCog):
 
         Parameters
         ----------
-        max_roll_number
+        max_roll_number: app_commands.Range[int, 1]
             Max limit to roll.
 
         """

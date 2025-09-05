@@ -101,16 +101,16 @@ class DotaFPCNotifications(BaseNotifications):
     async def analyze_top_source_response(self, live_matches: list[LiveMatch]) -> None:
         """Analyze FindTopSourceTVGames response from Dota 2 Coordinator and select matches to send notifications for.
 
-        This function looks for favourite player + favourite hero combos per subscribed person
+        This function looks for favorite player + favorite hero combos per subscribed person
         in matches provided by FindTopSourceTVGames response.
         Also sends the message via MatchToSend class model.
         """
-        query = "SELECT DISTINCT character_id FROM dota_favourite_characters"
-        favourite_hero_ids: list[int] = [r for (r,) in await self.bot.pool.fetch(query)]
+        query = "SELECT DISTINCT character_id FROM dota_favorite_characters"
+        favorite_hero_ids: list[int] = [r for (r,) in await self.bot.pool.fetch(query)]
 
         query = """
             SELECT twitch_live_only, ARRAY_AGG(player_id) player_ids
-            FROM dota_favourite_players p
+            FROM dota_favorite_players p
             JOIN dota_settings s ON s.guild_id = p.guild_id
             WHERE s.enabled = TRUE
             GROUP by twitch_live_only
@@ -130,7 +130,7 @@ class DotaFPCNotifications(BaseNotifications):
 
         for match in live_matches:
             for twitch_live_only, friend_ids in friend_id_cache.items():
-                our_players = [p for p in match.players if p.id in friend_ids and p.hero.id in favourite_hero_ids]
+                our_players = [p for p in match.players if p.id in friend_ids and p.hero.id in favorite_hero_ids]
                 for player in our_players:
                     account_id = player.id
                     hero_id = player.hero.id
@@ -143,8 +143,8 @@ class DotaFPCNotifications(BaseNotifications):
                     user: AnalyzeTopSourceResponsePlayerQueryRow = await self.bot.pool.fetchrow(query, account_id)
                     query = """
                         SELECT s.channel_id, s.spoil
-                        FROM dota_favourite_characters c
-                        JOIN dota_favourite_players p on c.guild_id = p.guild_id
+                        FROM dota_favorite_characters c
+                        JOIN dota_favorite_players p on c.guild_id = p.guild_id
                         JOIN dota_settings s on s.guild_id = c.guild_id
                         WHERE character_id = $1
                             AND p.player_id = $2

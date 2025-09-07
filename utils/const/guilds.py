@@ -431,11 +431,20 @@ class HideoutGuild(SavedGuild):
     def __init__(self, bot: AluBot) -> None:
         super().__init__(bot, Guild.hideout)
 
-    # channels
+    # 1. CHANNELS
+
+    # 1.1. BOT LOGS
     @property
     def global_logs(self) -> discord.TextChannel:
         """Channel for AluBot global logs."""
         return self.get_channel(Channel.global_logs, discord.TextChannel)
+
+    # 1.2. LOOK TO-DO APP
+
+    @property
+    def alu_spam(self) -> discord.TextChannel:
+        """AluBot's Spam channel."""
+        return self.get_channel(Channel.alu_spam, discord.TextChannel)
 
     @discord.utils.cached_property
     def spam_channel_id(self) -> int:

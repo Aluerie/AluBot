@@ -59,8 +59,8 @@ def setup_logging(*, test: bool) -> Generator[Any, Any, Any]:
             # so VPS start-ups in logs are way more noticeable
             log.info(ASCII_STARTING_UP_ART)
             # send a webhook message as well
-            webhook_uls = [config["WEBHOOKS"]["LOGGER"], config["WEBHOOKS"]["SPAM"]]
-            webhooks = [discord.SyncWebhook.from_url(w) for w in webhook_uls]
+            webhook_urls = [config["WEBHOOKS"]["LOGGER"], config["WEBHOOKS"]["SPAM"]]
+            webhooks = [discord.SyncWebhook.from_url(w) for w in webhook_urls]
 
             for webhook in webhooks:
                 content = "# Restarting"

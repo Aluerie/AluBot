@@ -126,18 +126,14 @@ class Mimic:
 
         owned_webhooks = [wh for wh in channel_webhooks if wh.user == self.bot.user]
         if owned_webhooks:
-            for wh in owned_webhooks[1:]:
-                log.debug("Deleting unnecessary webhook %r", wh)
-                await wh.delete()
-
-            webhook = owned_webhooks[0]
-            await self.insert_into_database(
-                webhook_id=webhook.id,
-                channel_id=self.channel.id,
-                guild_id=self.channel.guild.id,
-                url=webhook.url,
-            )
-            return webhook
+            for webhook in owned_webhooks:
+                await self.insert_into_database(
+                    webhook_id=webhook.id,
+                    channel_id=self.channel.id,
+                    guild_id=self.channel.guild.id,
+                    url=webhook.url,
+                )
+            return owned_webhooks[0]
         return None
 
     async def report(self, description: str) -> None:

@@ -5,7 +5,8 @@ import itertools
 import logging
 import re
 import textwrap
-from enum import Enum
+from dataclasses import dataclass
+from enum import Enum, StrEnum
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any, override
 
@@ -25,35 +26,46 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-# this might backfire but why the hell githubkit put GET REST logs from httpx as log.INFO, jesus christ.
+# this might backfire but why the hell `githubkit` put `GET REST` logs from `httpx` as `log.INFO`, jesus christ.
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 GITHUB_REPO = "ValveSoftware/Dota2-Gameplay"
 GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
 
 
+@dataclass
 class ActionBase:
-    """_summary_.
+    """Class for organizing GitHub Issue "Actions".
+
+    In the context of this file "git issue action" is an action that can happen within GitHub issue
+    and can be one of the following:
+    * opened
+    * closed
+    * commented
+    * assigned
+    * reopened
+
+    If we spot a Valve developer doing one of these things, i.e. commenting on the issue - we want
+    to make a news post out of it.
 
     Attributes
     ----------
-    name
+    name: str
         Event's name. Matches github terminology from API.
-    color
+    color: int
         Color to assign for embed when sending the bugtracker news message.
-    word
+    word: str
         Verb to put into author string in the said embed.
-    emote
+    emote: str
         Emote to use in a special type of embed where there is many different events per one issue.
         Emote differentiates "actions" from each other.
 
     """
 
-    def __init__(self, name: str, *, color: int, word: str, emote: str) -> None:
-        self.name: str = name
-        self.color: int = color
-        self.word: str = word
-        self.emote: str = emote
+    name: str
+    color: int
+    word: str
+    emote: str
 
     @property
     def file_path(self) -> str:
@@ -66,10 +78,29 @@ class ActionBase:
         return discord.File(self.file_path, filename=f"{self.name}_{number}.png")
 
 
+class ActionEmote(StrEnum):
+    """Emotes to showcase GitHub Issue Actions with.
+
+    Notes
+    -----
+    * pictures are taken from 16px versions here https://primer.style/octicons/
+        and background circles are added with a simple online editor https://iconscout.com/color-editor;
+    * make pics to be 128x128, so it's consistent for all sizes;
+    * Emotes are currently hosted in E#2 extra emote server, their names match GitHub event names;
+    """
+
+    reopened = "<:reopened:1413405897752973444>"
+    opened = "<:opened:1413405895655690323>"
+    closed = "<:closed:1413405892547706992>"
+    # comments
+    assigned = "<:assigned:1413405891000270868>"
+    commented = "<:commented:1413405894137348147>"
+
+
 class EventBase(ActionBase):
     """Base class for github issue event.
 
-    In a context of this file git issue "event" means stuff that doesn't have to have text with it, i.e.
+    In a context of this file "git issue event" means stuff that doesn't have to have text with it, i.e.
     closed, assigned, reopened.
     """
 
@@ -77,15 +108,15 @@ class EventBase(ActionBase):
 class CommentBase(ActionBase):
     """Base class for github issue comment.
 
-    In a context of this file git issue "comment" means stuff that has to have text with it, i.e.
+    In a context of this file "git issue comment" means stuff that has to have text with it, i.e.
     commented, opened.
 
     An often case for github developers is to leave a comment and do one of the events.
     We will build a Timeline for each issue and then:
-        * if mentioned above case happens - we will try to combine
-        comments and event into one embed assuming they are related.
-        * if there is many more events - we will list them with emotes
-        * if there is only one - then easy life.
+    * if mentioned above case happens - we will try to combine
+    comments and event into one embed assuming they are related.
+    * if there is many more events - we will list them with emotes
+    * if there is only one - then easy life.
     """
 
 
@@ -96,16 +127,16 @@ class CommentBase(ActionBase):
 class EventType(Enum):
     """Kinda data-mapping for git issue events."""
 
-    assigned = EventBase("assigned", color=0x21262D, word="self-assigned", emote=str(const.GitIssueEvent.assigned))
-    closed = EventBase("closed", color=0x9B6CEA, word="closed", emote=str(const.GitIssueEvent.closed))
-    reopened = EventBase("reopened", color=0x238636, word="reopened", emote=str(const.GitIssueEvent.reopened))
+    assigned = EventBase("assigned", color=0x21262D, word="self-assigned", emote=str(ActionEmote.assigned))
+    closed = EventBase("closed", color=0x9B6CEA, word="closed", emote=str(ActionEmote.closed))
+    reopened = EventBase("reopened", color=0x238636, word="reopened", emote=str(ActionEmote.reopened))
 
 
 class CommentType(Enum):
     """Kinda data-mapping for git issue comments."""
 
-    commented = CommentBase("commented", color=0x4285F4, word="commented", emote=str(const.GitIssueEvent.commented))
-    opened = CommentBase("opened", color=0x52CC99, word="opened", emote=str(const.GitIssueEvent.opened))
+    commented = CommentBase("commented", color=0x4285F4, word="commented", emote=str(ActionEmote.commented))
+    opened = CommentBase("opened", color=0x52CC99, word="opened", emote=str(ActionEmote.opened))
 
 
 class Action:

@@ -188,18 +188,18 @@ class Reminders(AluCog):
     async def remind_list(self, interaction: AluInteraction) -> None:
         """Shows a list of your current reminders."""
         query = """
-            SELECT id, expires, extra #>> '{args,2}'
+            SELECT id, expires_at, extra #>> '{args,2}'
             FROM timers
             WHERE event = 'reminder'
             AND data #>> '{author_id}' = $1
-            ORDER BY expires
+            ORDER BY expires_at
         """
         records = await self.bot.pool.fetch(query, str(interaction.user.id))
 
         string_list = []
-        for _id, expires, message in records:
+        for _id, expires_at, message in records:
             shorten = textwrap.shorten(message, width=512)
-            string_list.append(f"\N{BLACK CIRCLE} {_id}: {fmt.format_dt_tdR(expires)}\n{shorten}")
+            string_list.append(f"\N{BLACK CIRCLE} {_id}: {fmt.format_dt_tdR(expires_at)}\n{shorten}")
 
         pgs = pages.EmbedDescriptionPaginator(
             interaction,

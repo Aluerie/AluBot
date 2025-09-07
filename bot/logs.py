@@ -56,7 +56,7 @@ def setup_logging(*, test: bool) -> Generator[Any, Any, Any]:
         log.addHandler(file_handler)
 
         if platform.system() == "Linux":
-            # so start-ups in logs are way more noticeable
+            # so VPS start-ups in logs are way more noticeable
             log.info(ASCII_STARTING_UP_ART)
             # send a webhook message as well
             webhook_uls = [config["WEBHOOKS"]["LOGGER"], config["WEBHOOKS"]["SPAM"]]

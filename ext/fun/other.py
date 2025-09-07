@@ -23,7 +23,7 @@ class FunOther(AluCog):
         word = "Heads" if random.randint(0, 1) == 0 else "Tails"
         await interaction.response.send_message(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
 
-    # todo: this should be sonehere else
+    # todo: this should be somewhere else
     @commands.Cog.listener("on_message")
     async def reply_non_command_mentions(self, message: discord.Message) -> None:
         """For now there is only blush and question marks."""
@@ -81,7 +81,7 @@ class FunOther(AluCog):
             mirror = mimics.Mirror.from_interaction(interaction)
             await mirror.send(member=interaction.user, content=content)
             await interaction.response.send_message(
-                content="We did it \N{WHITE HEAVY CHECK MARK}\nDeleting *this* ephemeral message in 5 seconds",
+                content="We did it \N{WHITE HEAVY CHECK MARK}\n\nDeleting *this* ephemeral message in 5 seconds",
                 ephemeral=True,
                 delete_after=5,
             )
@@ -116,9 +116,7 @@ class FunOther(AluCog):
         await self.send_mimic_confirmation_text(interaction, answer)
 
     @text_group.command()
-    async def fancify(
-        self, interaction: AluInteraction, text: str
-    ) -> None:  # cSpell:disable #fmt:off # black meeses it up x_x
+    async def fancify(self, interaction: AluInteraction, text: str) -> None:  # cSpell:disable-next-line
         """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼.
 
         Parameters
@@ -137,8 +135,10 @@ class FunOther(AluCog):
     @app_commands.command()
     async def apuband(self, interaction: AluInteraction) -> None:
         """🎸 Send apuband emote combo (pepe-frogs' music band)."""
-        emote_names = ["peepo1Maracas", "peepo2Drums", "peepo3Piano", "peepo4Guitar", "peepo5Singer", "peepo6Sax"]
-        content = " ".join([str(discord.utils.get(self.community.guild.emojis, name=e)) for e in emote_names])
+        content = (
+            f"{const.Emote.peepo1Maracas} {const.Emote.peepo2Drums} {const.Emote.peepo3Piano} "
+            f"{const.Emote.peepo4Guitar} {const.Emote.peepo5Singer} {const.Emote.peepo6Sax}"
+        )
         await self.send_mimic_confirmation_text(interaction, content)
 
 

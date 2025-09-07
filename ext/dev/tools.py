@@ -25,7 +25,7 @@ class Tools(BaseDevCog):
     tools_group = app_commands.Group(
         name="tools-dev",
         description="\N{SCREWDRIVER} Some useful tools for AluBot's developers.",
-        guild_ids=[const.Guild.hideout],
+        guild_ids=[const.Guild.hideout, const.Guild.community],
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
@@ -93,6 +93,28 @@ class Tools(BaseDevCog):
                 f"{emoji} - `{emoji}`" for emoji in filter(lambda e: e.name.lower() == emote.lower(), all_emotes)
             )
             await interaction.response.send_message(content=content)
+
+    @tools_group.command()
+    async def yoink_emote(self, interaction: AluInteraction, emote_name: str) -> None:
+        """🪛 Yoink emote from this server to the bot's application emojis.
+
+        Parameters
+        ----------
+        emote_name: str
+            Input an emote or emote's name like "AYAYA".
+        """
+        assert interaction.guild
+        existing = discord.utils.find(
+            lambda e: e.name.lower() == emote_name.lower() or str(e) == emote_name, interaction.guild.emojis
+        )
+        if not existing:
+            await interaction.response.send_message("This server doesn't have any emotes named like that.")
+            return
+
+        created = await self.bot.create_application_emoji(name=existing.name, image=await existing.read())
+        await interaction.response.send_message(f"Successfully yoinked {created}.")
+        # TODO: make embeds for this? also this is not the best implementation, we need to think of cases where we want
+        # to yoink from messages;
 
 
 async def setup(bot: AluBot) -> None:

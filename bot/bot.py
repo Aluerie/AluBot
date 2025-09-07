@@ -55,6 +55,7 @@ class AluBot(commands.Bot):
         self,
         *,
         test: bool = False,
+        token: str,
         session: ClientSession,
         pool: asyncpg.Pool[asyncpg.Record],
     ) -> None:
@@ -72,6 +73,8 @@ class AluBot(commands.Bot):
 
         """
         self.test: bool = test
+        self._token: str = token
+
         self.main_prefix: Literal["~", "$"] = "~" if test else "$"
 
         super().__init__(
@@ -102,6 +105,7 @@ class AluBot(commands.Bot):
         # self.help_categories: dict[ExtCategory, list[AluCog]] = {}  # TODO:???
         self.mimic_messages: MutableMapping[int, int] = cache.ExpiringCache(seconds=datetime.timedelta(days=7).seconds)
         """Mapping of `message_id -> user_id` for Mimic Messages."""
+        self.app_emojis: list[discord.Emoji] = []
 
     @override
     async def setup_hook(self) -> None:
@@ -184,8 +188,7 @@ class AluBot(commands.Bot):
 
     @override
     async def start(self) -> None:
-        discord_token = config["DISCORD"]["ALUBOT"] if not self.test else config["DISCORD"]["YENBOT"]
-        coroutines = [super().start(discord_token, reconnect=True)]
+        coroutines = [super().start(self._token, reconnect=True)]
 
         # dota_extensions = (
         #     "ext.dota",
@@ -340,9 +343,9 @@ class AluBot(commands.Bot):
 
     @override
     async def on_message(self, message: discord.Message) -> None:
-        """A bot's listener for processing commands from discord messages that the bot can see.
+        """A listener for processing commands from discord messages that the bot can see.
 
-        Currently, the bot doesn't allow text command anywhere except my secret hideout server.
+        Currently, the bot doesn't allow text command anywhere except my private hideout server.
         People should use slash commands. Some remaining text commands are dev-only.
 
         Note that this doesn't change behavior of other "on_message" listeners,
@@ -350,7 +353,6 @@ class AluBot(commands.Bot):
         """
         if message.guild and message.guild.id == const.Guild.hideout and not message.author.bot:
             # only process commands in my own private server and only from me (the only non-bot account in there);
-            # everybody else everywhere else should use slash commands.
             await self.process_commands(message)
 
     @override
@@ -480,10 +482,9 @@ class AluBot(commands.Bot):
         await ctx.reply(embed=response_embed, ephemeral=True)
 
     # todo: I don't think it's a proper way of doing this;
-    async def get_or_fetch_app_emojis(self, *, force: bool = False) -> list[discord.Emoji]:
+    async def get_or_fetch_app_emojis(self, *, force_fetch: bool = False) -> list[discord.Emoji]:
         """Get application emojis and cache them."""
-        self.app_emojis = []
-        if not self.app_emojis or force:
+        if not self.app_emojis or force_fetch:
             self.app_emojis = await self.fetch_application_emojis()
 
         return self.app_emojis

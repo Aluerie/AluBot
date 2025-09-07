@@ -10,7 +10,9 @@
             "request": "launch",
             "program": "__main__.py",
             "args": [
-                "-t"
+                "-t",
+                "-a",
+                "YENBOT",
             ],
             "console": "integratedTerminal",
             //"justMyCode": true
@@ -20,7 +22,11 @@
             "type": "debugpy",
             "request": "launch",
             "program": "__main__.py",
-            "args": [],
+            "args": [
+                "-t",
+                "-a",
+                "ALUBOT",
+            ],
             "console": "integratedTerminal",
             //"justMyCode": true
         }

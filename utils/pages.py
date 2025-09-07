@@ -332,7 +332,7 @@ if TYPE_CHECKING:
         text: str
         icon_url: NotRequired[str]
 
-    class EmbedTemplate(TypedDict):
+    class EmbedTemplate(TypedDict, total=False):
         """Embed template with keys that I use the most in paginators (so it's quite incomplete).
 
         I mainly use this class for IDE-autocomplete purposes.
@@ -341,11 +341,11 @@ if TYPE_CHECKING:
         https://discord.com/developers/docs/resources/message#embed-object
         """
 
-        title: NotRequired[str]
-        url: NotRequired[str]
-        color: NotRequired[int]
-        author: NotRequired[EmbedAuthorTemplate]
-        footer: NotRequired[EmbedFooterTemplate]
+        title: str
+        url: str
+        color: int
+        author: EmbedAuthorTemplate
+        footer: EmbedFooterTemplate
 
 
 class EmbedDescriptionPaginator(Paginator):

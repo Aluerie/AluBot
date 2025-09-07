@@ -150,8 +150,8 @@ class TimerManager:
 
     Workflow
     -------
-    * __init__ ➡️ dispatch ➡️ wait_for_active (get_active) ➡️ call ➡️ looped
-    * create ➡️ maybe short_optimisation ➡️ reschedule
+    * __init__ > dispatch > wait_for_active (get_active) > call > looped again
+    * create > maybe short_optimization > reschedule
 
     Warning
     -------
@@ -364,7 +364,7 @@ class TimerManager:
         delta = (expires_at - created_at).total_seconds()
         if delta <= 60:
             # a shortcut for small timers
-            self.bot.loop.create_task(self.short_optimisation(delta, timer))
+            self.bot.loop.create_task(self.short_optimization(delta, timer))
             return timer
 
         query = """
@@ -393,8 +393,8 @@ class TimerManager:
 
         return timer
 
-    async def short_optimisation(self, seconds: float, timer: Timer[TimerData]) -> None:
-        """Optimisation for small timers, skipping the whole database insert/delete procedure."""
+    async def short_optimization(self, seconds: float, timer: Timer[TimerData]) -> None:
+        """Optimization for small timers, skipping the whole database insert/delete procedure."""
         await asyncio.sleep(seconds)
         await self.call(timer)
 

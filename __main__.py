@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 try:
-    # `?tag truststore` in discord.py server.
-    # Why Windows is so bad with SSL?
-    import truststore
+    # `?tag truststore` in discord.py server. It's sad that, on average, Windows is so bad with SSL.
+    import truststore  # type: ignore[reportMissingImport] "if it doesn't work" measure, we don't need to install this.
 except ImportError:
     pass
 else:
@@ -15,7 +14,7 @@ import platform
 import sys
 import traceback
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import aiohttp
 import asyncpg
@@ -64,21 +63,21 @@ async def create_pool() -> asyncpg.Pool[asyncpg.Record]:
     )
 
 
-async def start_the_bot(*, test: bool) -> None:
+async def start_the_bot(*, test: bool, token: str) -> None:
     """Helper function to start the bot."""
     log = logging.getLogger()
     try:
         pool = await create_pool()
     except Exception:
         msg = "Could not set up PostgreSQL. Exiting."
+        # error message to terminal
         click.echo(msg, file=sys.stderr)
+        # error message to logs
         log.exception(msg)
+        # error message to discord webhook (if VPS)
         if platform.system() != "Windows":
             session = aiohttp.ClientSession()
-            webhook = discord.Webhook.from_url(
-                url=config["WEBHOOKS"]["SPAM"],
-                session=session,
-            )
+            webhook = discord.Webhook.from_url(url=config["WEBHOOKS"]["SPAM"], session=session)
             embed = discord.Embed(color=const.Color.error, description=msg)
             await webhook.send(content=const.Role.error.mention, embed=embed)
             await session.close()
@@ -87,20 +86,32 @@ async def start_the_bot(*, test: bool) -> None:
         async with (
             aiohttp.ClientSession() as session,
             pool as pool,
-            AluBot(test=test, session=session, pool=pool) as alubot,
+            AluBot(test=test, token=token, session=session, pool=pool) as alubot,
         ):
             await alubot.start()
 
 
 @click.group(invoke_without_command=True, options_metavar="[options]")
 @click.pass_context
-@click.option("--test", "-t", is_flag=True)
-def main(click_ctx: click.Context, *, test: bool) -> None:
+@click.option(
+    "--test",
+    "-t",
+    is_flag=True,
+    help="Whether to launch test/debug version of the bot or full production functionality.",
+)
+@click.option(
+    "--account",
+    "-a",
+    type=click.Choice(["ALUBOT", "YENBOT"]),
+    default="ALUBOT",
+    help="Whether to launch the bot with AluBot or YenBot's bot account token.",
+)
+def main(click_ctx: click.Context, *, test: bool, account: Literal["ALUBOT", "YENBOT"]) -> None:
     """Launches the bot."""
     if click_ctx.invoked_subcommand is None:
         with setup_logging(test=test):
             try:
-                asyncio.run(start_the_bot(test=test))
+                asyncio.run(start_the_bot(test=test, token=config["DISCORD"][account]))
             except KeyboardInterrupt:
                 print("Aborted! The bot was interrupted with `KeyboardInterrupt`!")  # noqa: T201
 

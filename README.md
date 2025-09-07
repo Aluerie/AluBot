@@ -15,12 +15,12 @@ with pretty much everything I ever needed!
 > [!IMPORTANT]
 > I put A LOT of information into GitHub [🏠 Wiki](https://github.com/Aluerie/AluBot/wiki) - so go check it out. Including:
 
-- [🛠️ Running/Installation guide](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9B%A0%EF%B8%8FRunning-Installation-guide)
-- [📖 Features](https://github.com/Aluerie/AluBot/wiki/%F0%9F%93%96-Features)
-- [🕵️ Privacy Policy](https://github.com/Aluerie/AluBot/wiki/%F0%9F%95%B5%EF%B8%8F--Privacy-Policy)
-- [🖊️ Terms of Service](https://github.com/Aluerie/AluBot/wiki/%F0%9F%96%8A%EF%B8%8F-Terms-of-Service)
-- [🔬 GitHub stats for the project](https://github.com/Aluerie/AluBot/wiki/%F0%9F%94%AC-GitHub-stats-for-the-project)
-- [🚓 Credits, Licence, Copyright](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9A%93-Credits,-Licence,-Copyright)
+* [🛠️ Running/Installation guide](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9B%A0%EF%B8%8FRunning-Installation-guide)
+* [📖 Features](https://github.com/Aluerie/AluBot/wiki/%F0%9F%93%96-Features)
+* [🕵️ Privacy Policy](https://github.com/Aluerie/AluBot/wiki/%F0%9F%95%B5%EF%B8%8F--Privacy-Policy)
+* [🖊️ Terms of Service](https://github.com/Aluerie/AluBot/wiki/%F0%9F%96%8A%EF%B8%8F-Terms-of-Service)
+* [🔬 GitHub stats for the project](https://github.com/Aluerie/AluBot/wiki/%F0%9F%94%AC-GitHub-stats-for-the-project)
+* [🚓 Credits, License, Copyright](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9A%93-Credits,-License,-Copyright)
 
 ## 🤗 Thanks
 

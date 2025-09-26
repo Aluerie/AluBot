@@ -137,9 +137,11 @@ class Logger(AluCog):
                 if attr
                 not in {
                     "system",  # sometimes it's missing resulting in "None != False"
-                    "avatar_decoration",  # not interested
+                    "avatar_decoration",  # the rest = not interested
                     "avatar_decoration_sku_id",  # not interested
-                    "primary_guild",  # not interested
+                    "primary_guild",
+                    "collectibles",
+                    "public_flags",
                 }
                 and not attr.startswith("_")
                 and not inspect.ismethod(getattr(before, attr, None))

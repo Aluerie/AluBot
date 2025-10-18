@@ -153,9 +153,7 @@ class AluView(discord.ui.View):
             await self.message.edit(view=self)
 
     @override
-    async def on_error(
-        self, interaction: AluInteraction, error: Exception, item: discord.ui.Item[discord.ui.View]
-    ) -> None:
+    async def on_error(self, interaction: AluInteraction, error: Exception, item: discord.ui.Item[discord.ui.View]) -> None:
         """My own Error Handler for Views."""
         await on_views_modals_error(self, interaction, error, item)
 
@@ -251,8 +249,6 @@ class AluLayoutView(discord.ui.LayoutView):
             await self.message.edit(view=self)
 
     @override
-    async def on_error(
-        self, interaction: AluInteraction, error: Exception, item: discord.ui.Item[discord.ui.View]
-    ) -> None:
+    async def on_error(self, interaction: AluInteraction, error: Exception, item: discord.ui.Item[discord.ui.View]) -> None:
         """My own Error Handler for Views."""
         await on_views_modals_error(self, interaction, error, item)

@@ -63,8 +63,7 @@ CONGRATULATION_TEXT_BANK = (
     "Never feel blue and always be happy!",
     "May the dream that means most to you, start coming true this year. Happy Bday!",
     "May you enjoy your special day to the fullest extent, buddy!",
-    "With you, it is always about bringing in fun, in more ways than one, come rain come sun, just fun. "
-    "Happy Birthday!",
+    "With you, it is always about bringing in fun, in more ways than one, come rain come sun, just fun. Happy Birthday!",
     "May your birthday mark the beginning of a wonderful period of time in your life!",
     "My dear friend, may your special day be full of beautiful, magical and unforgettable moments!",
     "Happy birthday, gorgeous! You are another year older and I just can't see it. Have a blast! "
@@ -335,8 +334,7 @@ class Birthdays(AluCog):
                 .set_image(url=random.choice(GIF_URLS_BANK))
                 .set_footer(
                     text=(
-                        f"Their birthday: {birthday_fmt(timer.expires_at.replace(year=year))}. "
-                        f"Timezone: {timer.timezone}."
+                        f"Their birthday: {birthday_fmt(timer.expires_at.replace(year=year))}. Timezone: {timer.timezone}."
                     )
                 )
             )
@@ -390,11 +388,7 @@ class Birthdays(AluCog):
         for row in rows:
             birthday_person = guild.get_member(row["data"]["user_id"])
             if birthday_person is not None:
-                date = (
-                    row["expires_at"]
-                    .astimezone(zoneinfo.ZoneInfo(key=row["timezone"]))
-                    .replace(year=row["data"]["year"])
-                )
+                date = row["expires_at"].astimezone(zoneinfo.ZoneInfo(key=row["timezone"])).replace(year=row["data"]["year"])
                 string_list.append(f"{birthday_fmt(date)}, {row['timezone']} - {birthday_person.mention}")
 
         pgs = pages.EmbedDescriptionPaginator(

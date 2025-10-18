@@ -446,9 +446,7 @@ class AluBot(commands.Bot):
 
                 cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
                 kwargs_join = (
-                    "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items())
-                    if ctx.kwargs
-                    else "No arguments"
+                    "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items()) if ctx.kwargs else "No arguments"
                 )
                 snowflake_ids = (
                     f"author  = {ctx.author.id}\n"

@@ -370,9 +370,7 @@ class Facets(GameDataStorage[Facet, PseudoFacet]):
         return {
             facet["id"]: Facet(
                 facet["id"],
-                facet["language"]["displayName"]
-                or short_name_display_name_lookup.get(facet["name"])
-                or "Unknown Facet",
+                facet["language"]["displayName"] or short_name_display_name_lookup.get(facet["name"]) or "Unknown Facet",
                 facet["icon"],
                 game_const.FACET_COLORS[f"{facet['color']}{facet['gradientId']}"],
             )

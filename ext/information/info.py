@@ -134,9 +134,7 @@ class Info(AluCog, name="Info"):
     @color.autocomplete("color")
     async def autocomplete(self, _: AluInteraction, current: str) -> list[app_commands.Choice[str]]:
         colors = ["prpl", "rgb(", "hsl(", "hsv(", "mp(", "map(", *list(ImageColor.colormap.keys())]
-        return [app_commands.Choice(name=Color, value=Color) for Color in colors if current.lower() in Color.lower()][
-            :25
-        ]
+        return [app_commands.Choice(name=Color, value=Color) for Color in colors if current.lower() in Color.lower()][:25]
 
 
 class StatsCommands(AluCog, name="Stats Commands"):
@@ -167,11 +165,7 @@ class StatsCommands(AluCog, name="Stats Commands"):
 
         member = member_ or interaction.user
         channel = channel_ or interaction.channel
-        assert (
-            channel
-            and not isinstance(channel, discord.ForumChannel)
-            and not isinstance(channel, discord.CategoryChannel)
-        )
+        assert channel and not isinstance(channel, discord.ForumChannel) and not isinstance(channel, discord.CategoryChannel)
 
         text = "".join([f"{msg.content}\n" async for msg in channel.history(limit=limit) if msg.author == member])
         wordcloud = WordCloud(width=640, height=360, max_font_size=40).generate(text)

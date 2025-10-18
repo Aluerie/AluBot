@@ -57,9 +57,7 @@ class ConfessionModal(AluModal):
             f"{const.Emote.PepoBeliever} {const.Emote.PepoBeliever} {const.Emote.PepoBeliever}"
         )
         await channel.send(saint_string)
-        await interaction.response.send_message(
-            content=f"The Lord be with you {const.Emote.PepoBeliever}", ephemeral=True
-        )
+        await interaction.response.send_message(content=f"The Lord be with you {const.Emote.PepoBeliever}", ephemeral=True)
         if interaction.message:
             await interaction.message.delete()
         await channel.send(view=ConfessionView())

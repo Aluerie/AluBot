@@ -1,4 +1,5 @@
 """Schemas representing data structure for Steam WEB API."""
+
 from __future__ import annotations
 
 from typing import Literal, TypedDict

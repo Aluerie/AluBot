@@ -63,9 +63,7 @@ class AluAppCommandTree(app_commands.CommandTree):
         self.cache.pop(guild_id, None)
         return ret
 
-    async def get_or_fetch_commands(
-        self, *, guild: discord.abc.Snowflake | None = None
-    ) -> list[app_commands.AppCommand]:
+    async def get_or_fetch_commands(self, *, guild: discord.abc.Snowflake | None = None) -> list[app_commands.AppCommand]:
         """Get the commands from the storage or fetch them from discord."""
         try:
             return self.application_commands[guild.id if guild else None]
@@ -230,9 +228,7 @@ class AluAppCommandTree(app_commands.CommandTree):
                 else cmd_name
             )
             if interaction.namespace.__dict__:
-                description += " " + " ".join(
-                    f"{name}: {value}" for name, value in interaction.namespace.__dict__.items()
-                )
+                description += " " + " ".join(f"{name}: {value}" for name, value in interaction.namespace.__dict__.items())
 
             snowflake_ids = (
                 f"author  = {interaction.user.id}\n"  # comment to prevent formatting from concatenating the lines

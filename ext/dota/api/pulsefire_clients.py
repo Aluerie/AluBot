@@ -49,8 +49,8 @@ class DotaAPIsRateLimiter(BaseRateLimiter):
         self._track_syncs: dict[str, tuple[float, list[Any]]] = {}
         self.rate_limits_string: str = "Not Set Yet"
         self.rate_limits_ratio: float = 1.0
-        self._index: dict[tuple[str, int, Any, Any, Any], tuple[int, int, float, float, float]] = (
-            collections.defaultdict(lambda: (0, 0, 0, 0, 0))
+        self._index: dict[tuple[str, int, Any, Any, Any], tuple[int, int, float, float, float]] = collections.defaultdict(
+            lambda: (0, 0, 0, 0, 0)
         )
 
     @override
@@ -259,8 +259,7 @@ class StratzAPIRateLimiter(DotaAPIsRateLimiter):
     def analyze_headers(self, headers: dict[str, str]) -> tuple[HeaderRateLimitInfo, HeaderRateLimitInfo]:
         self.rate_limits_string = "\n".join(
             [
-                f"{timeframe}: "
-                f"{headers[f'X-RateLimit-Remaining-{timeframe}']}/{headers[f'X-RateLimit-Limit-{timeframe}']}"
+                f"{timeframe}: {headers[f'X-RateLimit-Remaining-{timeframe}']}/{headers[f'X-RateLimit-Limit-{timeframe}']}"
                 for timeframe in ("Second", "Minute", "Hour", "Day")
             ],
         )

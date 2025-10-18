@@ -1,4 +1,5 @@
 """Schemas representing data structure for my GraphQL calls with StratzClient."""
+
 from __future__ import annotations
 
 from typing import TypedDict

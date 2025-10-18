@@ -2,6 +2,7 @@
 
 Basically, Duck typing for ValvePython stuff (they don't do any typing stuff).
 """
+
 from __future__ import annotations
 
 from typing import Literal, NamedTuple

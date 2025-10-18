@@ -31,9 +31,7 @@ class Testing(BaseDevCog):
     @test_group.command(name="webhook-emote")
     async def webhook_emote(self, interaction: AluInteraction) -> None:
         """🔦Test if webhooks can send emotes from bots' dashboards."""
-        content = (
-            "AluBot dashboard emote - <:hu:1409577106601676862>\nYenBot dashboard emote - <:hu:1409577790700912690>"
-        )
+        content = "AluBot dashboard emote - <:hu:1409577106601676862>\nYenBot dashboard emote - <:hu:1409577790700912690>"
         await interaction.response.send_message(f"## 1. The Interaction.\n{content}")
         await self.bot.spam_webhook.send(f"## 2. Aluerie's Owned Webhook.\n{content}")
 

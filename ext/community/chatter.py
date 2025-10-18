@@ -61,8 +61,7 @@ class Chatter(AluCog):
 
         if random.randint(1, 456 + 1) < 6:
             await message.channel.send(
-                f"{const.Emote.WeebsOutOut} {const.Emote.WeebsOut} {const.Emote.peepoWeebSmash} "
-                f"{const.Emote.peepoRiot} ",
+                f"{const.Emote.WeebsOutOut} {const.Emote.WeebsOut} {const.Emote.peepoWeebSmash} {const.Emote.peepoRiot} ",
             )
 
     @commands.Cog.listener("on_message")

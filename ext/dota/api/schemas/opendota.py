@@ -2,6 +2,7 @@
 
 Note that it can be outdated, wrong, incomplete.
 """
+
 from __future__ import annotations
 
 from typing import Literal, NotRequired, TypedDict

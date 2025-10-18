@@ -66,8 +66,7 @@ class TwitchNotifications(AluCog):
 
         # send notification
         content = (
-            f"{self.community.stream_lover_role.mention} and chat, "
-            f"**`@{payload.broadcaster.display_name}`** just went live!"
+            f"{self.community.stream_lover_role.mention} and chat, **`@{payload.broadcaster.display_name}`** just went live!"
         )
         embed = (
             discord.Embed(

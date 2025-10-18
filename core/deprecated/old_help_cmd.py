@@ -84,8 +84,7 @@ class HelpPageSource(menus.ListPageSource):
         )
         emote_url = discord.PartialEmoji.from_str(page.category.emote)
         author_text = (
-            f"Category: {page.category.name} "
-            f"(Category page {page.category_page_number + 1}/{page.category_total_pages})"
+            f"Category: {page.category.name} (Category page {page.category_page_number + 1}/{page.category_total_pages})"
         )
         e.set_author(name=author_text, icon_url=emote_url.url)
         e.description = page.section.description

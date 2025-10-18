@@ -1,16 +1,12 @@
 # Practices
 
-In this file I will list common code practices (mostly small ones) such as
-
-* naming
-* order
-to keep things consistent across the repository. Just some things that do not get handled automatically by Black/Ruff. This document is kinda "over-cooking" moment for such for fun project, but sometimes things like this bother me. So this is the file where we decide what should be used.
+In this file I will advice some code practices to keep some *specific* things that aren't handled automatically by a formatter/linter consistent across the repository.
+Frankly, this document is a little bit over-doing, but hey, sometimes things like this bother me.
 
 ## 0. Table of Content
 
 * [Practices](#practices)
   * [0. Table of Content](#0-table-of-content)
-  * [1. Use en-US language](#1-use-en-us-language)
   * [2. `discord.Embed` order](#2-discordembed-order)
   * [3. Game namings](#3-game-namings)
   * [4. Doc Strings](#4-doc-strings)
@@ -20,10 +16,6 @@ to keep things consistent across the repository. Just some things that do not ge
   * [Error Handler Embeds](#error-handler-embeds)
   * [Random Standards](#random-standards)
   * [How to use Timers](#how-to-use-timers)
-
-## 1. Use en-US language
-
-Use American English. This tip might be obvious, but for the longest time, I was using en-GB words a lot. However, NA English is a standard (and it's also one letter shorter when there is a difference in most cases).
 
 ## 2. `discord.Embed` order
 
@@ -55,7 +47,7 @@ embed = (
 | CamelCase    | `Dota`, `DotaClient`, ... | `League`, `LeagueClient`, ... |
 
 * I don't like writing "2" in any variations of "Dota 2" writing for any Python definitions.
-* For League of Legends, using `Lol` or `LoL` for class names just feels ridiculous (while `lol` is fine for `snake_case` variables). So let's go with `League`.
+* For League of Legends, using `Lol` or `LoL` for class names just feels ridiculous (while `lol` is fine for `snake_case` variables). So let's go with `League`. Consistent inconsistency, smh.
 
 ## 4. Doc Strings
 

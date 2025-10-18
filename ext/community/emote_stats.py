@@ -423,9 +423,7 @@ class EmoteStats(AluCog):
             )
 
         else:
-            server_stats = (
-                "Sorry! At the moment, we only track server stats for only Aluerie's Community Server emotes."
-            )
+            server_stats = "Sorry! At the moment, we only track server stats for only Aluerie's Community Server emotes."
 
         embed.add_field(name="Server Usage Stats", value=server_stats, inline=False)
         await interaction.response.send_message(embed=embed)

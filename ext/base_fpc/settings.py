@@ -234,9 +234,7 @@ class SetupChannel(FPCView):
         self.embed.set_field_at(
             0, name=f"Channel {fmt.tick(bool(channel))}", value=channel.mention if channel else "Not set"
         )
-        self.embed.set_field_at(
-            1, name=f"Webhook {fmt.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set"
-        )
+        self.embed.set_field_at(1, name=f"Webhook {fmt.tick(bool(webhook))}", value="Properly Set" if webhook else "Not set")
         await interaction.response.edit_message(embed=self.embed)
 
 
@@ -257,8 +255,7 @@ class DeleteDataButton(discord.ui.Button["SetupMiscView"]):
                 color=self.cog.color,
                 title="Confirmation Prompt",
                 description=(
-                    f"Are you sure you want to stop {self.cog.game_display_name} FPC Notifications "
-                    "and delete your data?"
+                    f"Are you sure you want to stop {self.cog.game_display_name} FPC Notifications and delete your data?"
                 ),
             )
             .set_author(name=self.cog.game_display_name, icon_url=self.cog.game_icon_url)
@@ -1064,9 +1061,7 @@ class BaseSettingsCog(AluCog):
         query = f"SELECT channel_id FROM {self.prefix}_settings WHERE guild_id=$1"
         channel_id: int | None = await interaction.client.pool.fetchval(query, interaction.guild_id)
         if not channel_id:
-            cmd_mention = (
-                self.bot.tree.find_mention(f"{self.prefix} setup channel") or f"`/{self.prefix} setup channel`"
-            )
+            cmd_mention = self.bot.tree.find_mention(f"{self.prefix} setup channel") or f"`/{self.prefix} setup channel`"
             msg = (
                 "I'm sorry! You cannot use this command without setting up "
                 f"{self.game_display_name} FPC (Favorite Player+Character) channel first. "
@@ -1255,10 +1250,7 @@ class BaseSettingsCog(AluCog):
             )
             await interaction.followup.send(embed=embed)
         elif result == "DELETE 0":
-            msg = (
-                f"{self.character_singular.capitalize()} {character.display_name} is already not "
-                "in your favorite list."
-            )
+            msg = f"{self.character_singular.capitalize()} {character.display_name} is already not in your favorite list."
             raise errors.BadArgument(msg)
         else:
             msg = "Unknown error."
@@ -1306,13 +1298,9 @@ class BaseSettingsCog(AluCog):
             Guild ID of the subscriber, for which the bot will fetch the favorite characters list.
         """
         query = f"SELECT character_id FROM {self.prefix}_favorite_characters WHERE guild_id=$1"
-        favorite_character_ids: list[int] = [
-            character_id for (character_id,) in await self.bot.pool.fetch(query, guild_id)
-        ]
+        favorite_character_ids: list[int] = [character_id for (character_id,) in await self.bot.pool.fetch(query, guild_id)]
         favorite_characters = [await self.characters.by_id(i) for i in favorite_character_ids]
-        favorite_character_names = (
-            "\n".join([f"{c.emote} {c.display_name}" for c in favorite_characters]) or "Empty list"
-        )
+        favorite_character_names = "\n".join([f"{c.emote} {c.display_name}" for c in favorite_characters]) or "Empty list"
         return discord.Embed(
             color=self.color,
             title=f"List of your favorite {self.character_plural}",
@@ -1367,8 +1355,7 @@ class BaseSettingsCog(AluCog):
             LIMIT 6;
         """
         return [
-            app_commands.Choice(name=name, value=name)
-            for (name,) in await interaction.client.pool.fetch(query, current)
+            app_commands.Choice(name=name, value=name) for (name,) in await interaction.client.pool.fetch(query, current)
         ]
 
     async def tutorial(self, interaction: AluInteraction) -> None:
@@ -1438,9 +1425,7 @@ class BaseSettingsCog(AluCog):
         ]
 
         for count, (almost_qualified_name, field_value) in enumerate(cmd_field_tuples, start=1):
-            cmd_mention = await self.bot.tree.find_mention(
-                f"{self.prefix} {almost_qualified_name}", guild=interaction.guild
-            )
+            cmd_mention = await self.bot.tree.find_mention(f"{self.prefix} {almost_qualified_name}", guild=interaction.guild)
             if cmd_mention:
                 embed.add_field(name=f"{const.DIGITS[count]}. Use {cmd_mention}", value=field_value, inline=False)
             else:

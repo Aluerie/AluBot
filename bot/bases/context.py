@@ -42,9 +42,7 @@ class AluContext(commands.Context["AluBot"]):
 
     @override
     def __repr__(self) -> str:
-        return (
-            f"<AluContext command={self.command} interaction={fmt.tick(bool(self.interaction))} author={self.author}>"
-        )
+        return f"<AluContext command={self.command} interaction={fmt.tick(bool(self.interaction))} author={self.author}>"
 
     # The following attributes are here just to match discord.Interaction properties
     # Just so we don't need to do `if isinstance(discord.Interaction):` checks every time

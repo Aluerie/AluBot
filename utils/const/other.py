@@ -101,7 +101,9 @@ class Logo(StrEnum):
 
     Dota = "https://i.imgur.com/F8uMnWr.png"
     LeagueOfLegends = "https://i.imgur.com/1DJa07b.png"
-    Twitch = "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
+    Twitch = (
+        "https://cdn3.iconfinder.com/data/icons/social-messaging-ui-color-shapes-2-free/128/social-twitch-circle-512.png"
+    )
 
 
 class Limit:

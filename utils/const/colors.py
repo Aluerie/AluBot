@@ -371,12 +371,12 @@ class Palette:
         return shades[shade]
 
     @staticmethod
-    def black(shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = 500) -> int:
+    def black(_shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = 500) -> int:
         """Get shade of black color from Google Material Design."""
         return 0x000000  # yes shade doesn't matter
 
     @staticmethod
-    def white(shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = 500) -> int:
+    def white(_shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = 500) -> int:
         """Get shade of white color from Google Material Design."""
         return 0xFFFFFF  # yes shade doesn't matter
 

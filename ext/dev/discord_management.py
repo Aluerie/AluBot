@@ -73,9 +73,7 @@ class DiscordManagement(BaseDevCog):
 
         bots = sum(m.bot for m in guild.members)
         total = guild.member_count or 1
-        guild_stats = tabulate(
-            tabular_data=[("Members", total), ("Bots", f"{bots} ({bots / total:.2%})")], tablefmt="plain"
-        )
+        guild_stats = tabulate(tabular_data=[("Members", total), ("Bots", f"{bots} ({bots / total:.2%})")], tablefmt="plain")
         embed.add_field(name="Guild Stats", value=fmt.code(guild_stats))
         if guild.me:
             embed.timestamp = guild.me.joined_at

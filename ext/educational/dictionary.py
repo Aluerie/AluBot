@@ -86,9 +86,7 @@ class FreeDictionaryDefinition(NamedTuple):
         if example_nodes:
             example = example_nodes[0].text_content()
 
-        children: list[FreeDictionaryDefinition] = [
-            cls.from_node(child) for child in node.xpath("./div[@class='sds-list']")
-        ]
+        children: list[FreeDictionaryDefinition] = [cls.from_node(child) for child in node.xpath("./div[@class='sds-list']")]
         return cls(definition, example, children)
 
     def to_json(self) -> dict[str, Any]:

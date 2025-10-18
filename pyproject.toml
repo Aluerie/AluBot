@@ -1,207 +1,180 @@
+[project]
+name = "AluBot"
+description = "Personal Discord Bot"
+readme = { file = "README.md", content-type = "text/markdown" }
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+authors = [{ name = "Aluerie", email = "aluerie@gmail.com" }]
+maintainers = [{ name = "Aluerie", email = "aluerie@gmail.com" }]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python ",
+    "Topic :: Utilities",
+    "Topic :: Discord Bots",
+    "Typing :: Typed",
+]
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/Aluerie/AluBot"
+
 [tool.black]
-# I use ruff over it
-line-length = 120
+# I use Ruff instead
+line-length = 125
 target-version = ["py312"]
 
 [tool.isort]
-# I use ruff over it
+# I use Ruff instead
 profile = "black"
+line_length = 125
 combine_as_imports = true
 combine_star = true
-line_length = 120
 
 [tool.pyright]
 pythonVersion = "3.12"
-typeCheckingMode = "strict"  # let's enable the default max setting and go down from here.
+typeCheckingMode = "strict"
 exclude = ["venv", "docs", "**/__pycache__"]
+
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
-
 deprecateTypingAliases = true
-reportMissingTypeStubs = "none"    # a lot of libs don't have stubs
+reportImplicitOverride = "warning"
+reportMissingTypeStubs = "none"    # A lot of libraries don't have stubs.
 reportPrivateUsage = "none"        # it's my choice x_x
-reportImplicitOverride = "warning" # I love it
-
-# Unnecessary
-reportUnnecessaryIsInstance = "none"           # I like "else" raising the error if type is somehow not it
-reportUnnecessaryTypeIgnoreComment = "warning" # why it's "none" by default, even for strict ?!
-
-# Unused stuff - yes, I write a lot of unused stuff
-reportUnusedImport = "warning"
-reportUnusedVariable = "none"
-reportUnusedClass = "none"
-reportUnusedFunction = "none"
-
-# Unknown stuff - a lot of libs do not **properly** declare types for everything
-reportUnknownMemberType = "none"
-reportUnknownVariableType = "none"
-reportUnknownArgumentType = "none"
 
 # there is a lot of **Incompatible** overriding in discord.py Bot development
 # like `convert(ctx: AluContext, argument: str)` in converters.
 reportIncompatibleVariableOverride = "none"
 reportIncompatibleMethodOverride = "none"
 
+reportUnnecessaryIsInstance = "none"           # I like "else" raising the error if type is somehow not it
+reportUnnecessaryTypeIgnoreComment = "warning" # Preventing accidents
+
+reportUnusedClass = "none"
+reportUnusedFunction = "none"
+reportUnusedImport = "warning"
+reportUnusedVariable = "none"
+
+# Unknown stuff - a lot of libraries do not **properly** declare types for everything
+reportUnknownMemberType = "none"
+reportUnknownVariableType = "none"
+reportUnknownArgumentType = "none"
+
+# `None` in strict, let's experiment
+reportCallInDefaultInitializer = "warning"
+reportImportCycles = "warning"
+reportPropertyTypeMismatch = "warning"
+reportUninitializedInstanceVariable	= "warning"
+reportUnreachable = "warning"
+
+# overly-worrisome linter-esque options
+reportDuplicateImport = "none"  # handled by ruff
+
 [tool.ruff]
 # https://docs.astral.sh/ruff/rules/
 # Examples of good ruff configurations:
 # * https://github.com/AbstractUmbra/Mipha/blob/main/pyproject.toml
 # * https://github.com/mikeshardmind/async-utils/blob/main/pyproject.toml
-line-length = 120
+# * https://github.com/Rapptz/discord.py/blob/master/pyproject.toml
+line-length = 125
 target-version = "py312"
-# requires-python = ">= 3.10"
 exclude = ["venv", "docs"]
 
 [tool.ruff.lint]
 preview = true
-select = [
-    "A",        # shadowing
-    "ANN",      # annotations
-    "ASYNC",    # async
-    "B",        # _bug-bear
-    "BLE",      # blind except
-    "C4",       # better list/set/dict comprehensions
-    "COM",      # commas
-    "DTZ",      # datetime timezone
-    "E",        # pycodestyle against PEP-8
-    "EM",       # exception messages
-    "F",        # pyflakes analyze for errors 
-    "FA",       # future annotations
-    "FBT",      # boolean trap
-    "FURB",     # refurbishing and modernizing Python codebases.  # cSpell: ignore FURB
-    "G",        # logging format
-    "I",        # isort
-    "INP",      # ban PEP-420 (implicit-namespace-package)
-    "ICN",      # import conventions
-    "ISC",      # encourage correct string literal concatenation.
-    "NPY",      # NumPy specific rules
-    "PD",       # Pandas specific rules
-    "PERF",     # performance anti-patterns
-    "PGH",      # py grep-hooks
-    "PIE",      # miscellaneous lints
-    "PLC",      # PyLint Conventions
-    "PLE",      # PyLint Errors
-    "PLR",      # PyLint Refactor
-    "PLW",      # PyLint Warnings
-    "PTH",      # Use PathLib
-    "PYI",      # linting for stub files
-    "Q",        # quotes
-    "Q003",     # change outer quotes to avoid escaping inner quotes
-    "RET",      # return
-    "RSE",      # raise statements.
-    "RUF",      # Ruff-specific rules
-    "S",        # security testing 
-    "SIM",      # simplify
-    "SLOT",     # require __slots__ to be defined for subclasses of immutable types
-    "T20",      # print
-    "TC",       # type checking
-    "TID",      # tidy imports
-    "TRY",      # clean try/except
-    "UP",       # upgrade syntax for newer versions of the language.
-    "YTT",      # misuse of sys.version or sys.version_info
-    # EXPERIMENTAL ADDITIONS
-    "N",        # pep-8 namings
-    "W",        # pycodestyle warnings
-    # TURN IT/OFF ON EXPERIMENTS, kinda annoying for a bot, to be honest, might remove
-    "D",        # Doc-strings, 
-    "DOC",      # Doc strings
-    # "ERA",      # eradicate commented out code
-]
+select = ["ALL"]
 ignore = [
-    # 0. Toggle
-    "RUF100",
+    # 0. Toggle - still thinking if we need those
+    "D",      # pydocstyle: Doc-strings, 
+    "D417",   # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
+    "DOC",    # pydoclint: Doc strings, 
+    "ERA",    # eradicate: Found commented-out code
+    "RUF100", # unused-noqa: Unused noqa directive
 
-    # 1. General "Somewhat Public" disagreement with Ruff
+    # 1. Conflict with Ruff as a formatter, recommendation: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules.
+    "W191",   # tab-indentation
+    "E111",   # indentation-with-invalid-multiple
+    "E114",   # indentation-with-invalid-multiple-comment 
+    "E117",   # over-indented
+    "D206",   # docstring-tab-indentation
+    "D300",   # triple-single-quotes 
+    "Q000",   # bad-quotes-inline-string
+    "Q001",   # bad-quotes-multiline-string
+    "Q002",   # bad-quotes-docstring
+    "Q003",   # avoidable-escaped-quote
+    "COM812", # missing-trailing-comma
+    "COM819", # prohibited-trailing-comma
+    "ISC002", # multi-line-implicit-string-concatenation
+
+    # 1. General "public" disagreement with Ruff
     "ANN401",   # `Any` is the correct type in some cases
-    "ASYNC109", # dpy and other libraries commonly use this parameter
     "ASYNC116", # Long sleeps are fine
-    "C90",      # mc cabe complexity memes
-    "COM812",   # Ruff page recommends using formatter instead
-    "COM819",   # Ruff page recommends using formatter instead
-    "F401",     # unused imports
-    "F403",     # wildcard imports: `from math import *` are used in __init__.py a lot
-    "F405",     # wildcard imports are not that bad
-    "INP001",   # due to how we load modules this results in annoyances
-    "PLC0105",  # no, we don't like co naming style for type vars
-    "PLC0414",  # pyright ruling for `as` imports needed
+    "ASYNC109", # Discord.py and other libraries commonly use this parameter
+    "C90",      # McCabe complexity memes
+    "CPY001",   # Copyright stuff
+    "F401",
+    "F402", 
+    "F403",
+    "F405", 	
+    "FBT003",   # Wrong end to enforce this on.
+    "FIX",      # Wrong place to enforce this, Todo Tree extension (or any other) is advised.
+    "INP001",   # Due to how we load modules this results in annoyances
+    "PD011",    # This is not a numpy codebase
     "PLC0415",  # ruff gets this wrong, import needs to be not at top of file in some cases
-    "RUF001",   # ambiguous characters not something I want to enforce here.
-    "RUF029",   # no, don't try and tell me I'm wrong for async def when something is for an interface.
-    "S101",     # use of assert here is a known quantity, blame typing memes
-    "S311",     # standard pseudo-random generators are not suitable for cryptographic purposes, so what;
+    "PLR0904",  # **too many** public methods
+    "PLR0911",  # **too many** returns
+    "PLR0912",  # **too many** branches
+    "PLR0913",  # **too many** function arguments
+    "PLR0914",  # **too many** variables
+    "PLR0915",  # **too many** statements: come on, not everything is solvable in <50 lines.
+    "PLR0917",  # **too many** positional arguments
+    "PLR6301",
+    "PLR2004",  # Most people hate this rule - might remove later.
+    "PYI058",   # This opinionated "fix" causes incompatibilities with things expecting a generator.
+    "RUF001",   # Ambiguous characters not something I want to enforce here.
+    "RUF029",   # Don't try and tell me I'm wrong for async def when something is for an interface.
+    "S101",     # `assert` is used for type checking in this codebase, blame typing memes.
+    "S311",     # Standard pseudo-random generators are not suitable for **cryptographic** purposes, so what.
+    "SIM105",   # Suppressible exception, I'm not paying the overhead of `contextlib.suppress` for stylistic choices.
+    "SLF001",
+    "TD",       # Wrong place to enforce this, Todo Tree extension (or any other) is advised.
     "TRY003",   # over-eager rule
     "TRY301",   # unrealistic rule
     
     # 2. Personal disagreement
-    "PLR0904",  # too many public methods
-    "PLR0911",  # too many returns
-    "PLR0912",  # too many branches
-    "PLR0913",  # number of function arguments
-    "PLR0914",  # too many variables: come on
-    "PLR0915",  # too many statements: come on, not everything is solvable in <50 lines.
-    "PLR0917",  # too many positional arguments
-    "PLR2004",  # Magic value comparison, may remove later
-    "PLR6301",  # discord.py uses `self` even if I don't 
-    "PLW2901",  # Redefined loop name;
-    "S608",     # I use f-strings with SQL and I don't know better;
-    "TID252",   # My relative imports are quite well structured 
+    "FLY002",
+    "PLW2901", # Redefined loop name;
+    "S608",    # I use f-strings with SQL and I don't know better;
+    "TID252",  # My relative imports are quite well structured 
 
-    # MISHA & SINBAD
-
-    # "ANN202", # implied return fine sometimes
-    # "B901", # I'm aware of how generators as coroutines work
-    # "E501", # ruff format suggested
-    # "EM101",    # in this case this is okay
-    # "F402",
-    # "FBT003", # Wrong end to enforce this on.
-    # "G002",  # erroneous issue with %-logging when logging can be configured for % logging
-    # "ISC001", # ruff format suggested
-    # "PD011",    # this is not a numpy codebase
-    # "PERF203",
-    # "Q000",
-    # "RUF009",
-    # "SIM105",  # suppressible exception, I'm not paying the overhead of contextlib.suppress for stylistic choices.
-    # "TC001", # I prefer to avoid if TYPE_CHECKING
-    # "TC002", # I prefer to avoid if TYPE_CHECKING
-    # "TC003", # I prefer to avoid if TYPE_CHECKING
-    # "UP007", # "Use | For Union" doesn't account for type var tuple unpacking.
-    # "UP031", # No, I like % formatting more for some things...
-    # "UP034",
-    # "UP038",
-
-    # 3. Doc String: general exceptions
-    "D100",     # Missing docstring in module: no, module level docs aren't always needed
-    "D104",     # Missing docstring in public package
-    "D105",     # Missing docstring in magic method: documenting magic methods is often dumb.
-    "D107",     # Missing docstring in `__init__`: __init__ is the wrong place to doc this.
-    "D401",     # Doc should be starting with an imperative verb: dumb rule tbh.
-
-    # # 4. Doc String: exceptions for this bot because and it's pointless to document *everything* in one-person project.
-    "DOC201",   # `return` is not documented in docstring
-    "DOC402",   # `yield` is not documented in docstring
-    "DOC501",   # raised exception is missing from docstring
-
-    # "D417",    # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
-    # "D203", # one-blank-line-before-class
-    # "D213", # multi-line-summary-second-line
+    # 3. Doc String
+    "D100",   # Module level docs aren't always needed.
+    "D104",   # Public package level docs aren't always needed.
+    "D105",   # Documenting magic methods is often dumb.
+    "D107",   # `__init__` is the wrong place to doc this.
+    "D401",   # Not enforcing the imperative verb rule.
+    "DOC201", # Not documenting generic return types
+    "DOC402", # Not documenting generic `yield` types
+    "DOC501", # Not explicitly documenting raised exception types
 ]
 unfixable = [
-    "E501",     # line length handled in other ways by ruff format
-    "ERA",      # Don't delete commented out code
-    "RUF100",   # Unused `noqa` directive. Most likely, we are toggling ERA and DOCs.
+    "E501",   # Line length handled in other ways by ruff formatter.
+    "ERA",    # Don't delete commented out code.
+    "RUF100", # Unused `noqa` directive. I prefer to deal with it manually, also annoying when toggling some rules.
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "ext/beta.py" = ["ANN201"]
-"*.ipynb" = ["ANN204", "D", "DOC", "ERA001", "F404", "T20", "W391"]
+"*.ipynb" = ["ANN204", "D", "DOC", "ERA", "F404", "T20", "W391"]
 
 [tool.ruff.format]
-quote-style = "double"              # Like Black, use double quotes for strings.
-indent-style = "space"              # Like Black, indent with spaces, rather than tabs.
-skip-magic-trailing-comma = false   # Like Black, respect magic trailing commas.
-line-ending = "auto"                # Like Black, automatically detect the appropriate line ending.
+quote-style = "double"             # Like Black, use double quotes for strings.
+indent-style = "space"             # Like Black, indent with spaces, rather than tabs.
+skip-magic-trailing-comma = false  # Like Black, respect magic trailing commas.
+line-ending = "auto"               # Like Black, automatically detect the appropriate line ending.
 
 [tool.ruff.lint.isort]
-split-on-trailing-comma = true
 combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]
@@ -212,15 +185,3 @@ allow-star-arg-any = true
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
-
-[project]
-name = "AluBot"
-description = "Personal Discord Bot"
-readme = "readme.md"
-version = "2024.0.0"
-requires-python = ">=3.12"
-authors = [{ name = "Aluerie" }]
-maintainers = [{ name = "Aluerie" }]
-
-[project.urls]
-Homepage = "https://github.com/Aluerie/AluBot"

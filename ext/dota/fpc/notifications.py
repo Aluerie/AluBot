@@ -122,7 +122,8 @@ class DotaFPCNotifications(BaseNotifications):
             if row["twitch_live_only"]:
                 # need to check what streamers are live
                 twitch_live_player_ids = await self.get_player_streams(
-                    const.Twitch.DOTA_GAME_CATEGORY_ID, row["player_ids"],
+                    const.Twitch.DOTA_GAME_CATEGORY_ID,
+                    row["player_ids"],
                 )
                 friend_id_cache[True] = await self.convert_player_id_to_friend_id(list(twitch_live_player_ids.keys()))
             else:
@@ -247,7 +248,8 @@ class DotaFPCNotifications(BaseNotifications):
             GROUP BY match_id, friend_id, hero_id, player_name
         """
         match_rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(
-            query, [match.id for match in self.top_live_matches],
+            query,
+            [match.id for match in self.top_live_matches],
         )
 
         for match_row in match_rows:

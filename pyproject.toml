@@ -37,7 +37,7 @@ pythonVersion = "3.12"
 typeCheckingMode = "strict"
 exclude = ["venv", "docs", "**/__pycache__"]
 
-# https://github.com/microsoft/pyright/blob/main/docs/configuration.md
+# https://microsoft.github.io/pyright/#/configuration?id=type-check-rule-overrides
 deprecateTypingAliases = true
 reportImplicitOverride = "warning"
 reportMissingTypeStubs = "none"    # A lot of libraries don't have stubs.

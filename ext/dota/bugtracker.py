@@ -354,7 +354,7 @@ class BugTracker(AluCog):
     async def bugtracker_add(self, ctx: AluContext, *, login: str) -> None:
         """Manually add a user login to the list of known Valve developers."""
         logins = [b for x in login.split(",") if (b := x.lstrip().rstrip())]
-        query = """
+        query = """--sql
             INSERT INTO valve_devs (login) VALUES ($1)
             ON CONFLICT DO NOTHING
             RETURNING True;
@@ -473,7 +473,7 @@ class BugTracker(AluCog):
                     # if actor is not OP of the issue or the bot
                     # then we can consider that this person is a valve dev
                     self.valve_devs.append(login)
-                    query = """
+                    query = """--sql
                         INSERT INTO valve_devs (login) VALUES ($1)
                         ON CONFLICT DO NOTHING;
                     """

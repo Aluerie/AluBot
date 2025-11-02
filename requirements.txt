@@ -1,8 +1,10 @@
 # thanks @abstractumbra for extra wheels provided in:
 # --extra-index-url https://pip.twitchio.dev
+--extra-index-url https://about.abstractumbra.dev/pip
 
 # Discord
-discord.py[speed, voice] @ git+https://github.com/Rapptz/discord.py.git
+discord.py[speed, voice]~=2.6.4
+# discord.py[speed, voice] @ git+https://github.com/Rapptz/discord.py.git
 git+https://github.com/Gorialis/jishaku.git
 
 # Twitch

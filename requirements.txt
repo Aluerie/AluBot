@@ -41,7 +41,7 @@ ipykernel; platform_system == 'Windows'
 # Bot's Base
 asyncpg==0.30.0
 asyncpg-stubs
-aiohttp==3.13.2
+aiohttp==3.13.1
 
 # Optimisation
 orjson

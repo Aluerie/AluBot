@@ -319,9 +319,9 @@ class Birthdays(AluCog):
 
             content = f"Chat, today is {member.mention}'s birthday ! {const.Role.birthday_lover}"
 
-            now = datetime.datetime.now().astimezone(zoneinfo.ZoneInfo(timer.timezone))
+            now_as_birthday_timezone = datetime.datetime.now().astimezone(zoneinfo.ZoneInfo(timer.timezone))
             if year != 1900:
-                content += f"\n{member.display_name} is now {now.year - year} years old !"
+                content += f"\n{member.display_name} is now {now_as_birthday_timezone.year - year} years old !"
 
             embed = (
                 discord.Embed(
@@ -333,9 +333,7 @@ class Birthdays(AluCog):
                 .set_thumbnail(url=member.display_avatar.url)
                 .set_image(url=random.choice(GIF_URLS_BANK))
                 .set_footer(
-                    text=(
-                        f"Their birthday: {birthday_fmt(timer.expires_at.replace(year=year))}. Timezone: {timer.timezone}."
-                    )
+                    text=(f"Their birthday: {birthday_fmt(now_as_birthday_timezone)}. Timezone: {timer.timezone}.")
                 )
             )
 

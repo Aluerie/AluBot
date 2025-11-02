@@ -9,7 +9,8 @@ git+https://github.com/Gorialis/jishaku.git
 
 # Twitch
 # twitchio[speed] @ git+https://github.com/PythonistaGuild/TwitchIO.git  # @maintain/2.x  # test other branch 
-twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@main
+twitchio[starlette]~=3.1.0
+# twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@main
 # py -m pip install "twitchio[starlette] @ git+https://github.com/PythonistaGuild/TwitchIO.git@main" --force-reinstall 
 
 # Dota 2 (steamio)

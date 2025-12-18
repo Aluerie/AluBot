@@ -30,6 +30,6 @@ jobs:
           set -e
           cd ./AluBot
           git pull
-          source venv/bin/activate
-          python3.12 -m pip install -U -r ./requirements.txt --force-reinstall
+          ~/.local/bin/uv sync --no-dev
           sudo systemctl restart alubot.service
+          sudo systemctl start alubot.service

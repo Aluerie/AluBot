@@ -1,9 +1,10 @@
 [project]
 name = "AluBot"
+version = "0.1.0"
 description = "Personal Discord Bot"
 readme = { file = "README.md", content-type = "text/markdown" }
-license = { file = "LICENSE" }
 requires-python = ">=3.12"
+license = { file = "LICENSE" }
 authors = [{ name = "Aluerie", email = "aluerie@gmail.com" }]
 maintainers = [{ name = "Aluerie", email = "aluerie@gmail.com" }]
 classifiers = [
@@ -15,68 +16,141 @@ classifiers = [
     "Topic :: Discord Bots",
     "Typing :: Typed",
 ]
-dynamic = ["version", "dependencies"]
+dependencies = [
+    "aiofiles==25.1.0",
+    "aiohttp==3.13.2",
+    "asyncpg==0.30.0",
+    "beautifulsoup4==4.14.2",
+    "click>=8.1.8",
+    "dateparser==1.2.2",
+    "discord-py[speed,voice]~=2.6.4",
+    "emoji==2.15.0",
+    "ffmpeg>=1.4",
+    "githubkit==0.13.5",
+    "gtts~=2.5.4",
+    "jishaku",
+    "lru-dict==1.3.0",
+    "lxml>=6.0.2",
+    "matplotlib==3.10.7",
+    "numpy==2.3.4",
+    "orjson>=3.11.5",
+    "parsedatetime==2.6",
+    "pillow==12.0.0",
+    "psutil==7.1.2",
+    "pulsefire~=2.0.29",
+    "pygit2==1.19.0",
+    "python-dateutil==2.9.0.post0",
+    "role-identification",
+    "steamio>=1.1.0",
+    "tabulate==0.9.0",
+    "thefuzz==0.22.1",
+    "twitchio[starlette]~=3.1.0",
+    "unidiff==0.7.5",
+    "urllib3>=2.6.2",
+    "uvloop==0.22.1 ; sys_platform == 'linux'",
+    "wordcloud==1.9.4",
+]
+
+[tool.uv.sources]
+steamio = { git = "https://github.com/Aluerie/steam.py", rev = "introduce-ext.dota2" }
+jishaku = { git = "https://github.com/Gorialis/jishaku.git" }
+role-identification = { git = "https://github.com/meraki-analytics/role-identification.git" }
+
+[dependency-groups]
+dev = [
+    "asyncpg-stubs>=0.30.2",
+    "ipykernel>=7.1.0",
+]
+
+[[tool.uv.index]]
+name = "umbra"
+url = "https://about.abstractumbra.dev/pip/"
+explicit = true
 
 [project.urls]
 Homepage = "https://github.com/Aluerie/AluBot"
 
-[tool.black]
-# I use Ruff instead
-line-length = 125
-target-version = ["py312"]
-
-[tool.isort]
-# I use Ruff instead
-profile = "black"
-line_length = 125
-combine_as_imports = true
-combine_star = true
+# 1. PYRIGHT
+# 
+# Links:
+# * Rules: 
+#   https://microsoft.github.io/pyright/#/configuration?id=type-check-rule-overrides
+# * Defaults per type checking mode:
+#   https://microsoft.github.io/pyright/#/configuration?id=diagnostic-settings-defaults
+# 
+# In my personal projects, I like to select `typeCheckingMode` as "strict" and 
+# turn on all optional settings on and then explicitly mention which should be lower severity or "none" at all.
+# Basically, visit the second link, turn on all "false" and "none" and then fine-tune it. 
 
 [tool.pyright]
-pythonVersion = "3.12"
-typeCheckingMode = "strict"
-exclude = ["venv", "docs", "**/__pycache__"]
+# 1A. Environment Options
+exclude = ["venv", "docs", "**/__pycache__"] # TODO: Change to .venv
+pythonVersion = "3.12" # TODO: Distant future - upgrade to 3.14+, I'm excited and scared for annotation changes;
 
-# https://microsoft.github.io/pyright/#/configuration?id=type-check-rule-overrides
+# 1B. Type Evaluation Settings
 deprecateTypingAliases = true
-reportImplicitOverride = "warning"
-reportMissingTypeStubs = "none"    # A lot of libraries don't have stubs.
-reportPrivateUsage = "none"        # it's my choice x_x
 
-# there is a lot of **Incompatible** overriding in discord.py Bot development
-# like `convert(ctx: AluContext, argument: str)` in converters.
-reportIncompatibleVariableOverride = "none"
-reportIncompatibleMethodOverride = "none"
+# 1C. Type Check Diagnostics Settings
+typeCheckingMode = "strict"
 
-reportUnnecessaryIsInstance = "none"           # I like "else" raising the error if type is somehow not it
-reportUnnecessaryTypeIgnoreComment = "warning" # Preventing accidents
+# 1D. Type Check Rule Overrides
 
-reportUnusedClass = "none"
-reportUnusedFunction = "none"
-reportUnusedImport = "warning"
-reportUnusedVariable = "none"
-
-# Unknown stuff - a lot of libraries do not **properly** declare types for everything
-reportUnknownMemberType = "none"
-reportUnknownVariableType = "none"
-reportUnknownArgumentType = "none"
-
-# `None` in strict, let's experiment
+# 1D.1. Elevating "none" in strict type checking to warnings
 reportCallInDefaultInitializer = "warning"
+reportImplicitOverride = "warning"
+reportImplicitStringConcatenation = "warning"  # TODO: `none` in SinBad as "overly-worrisome linter-esque options"
 reportImportCycles = "warning"
+reportMissingSuperCall = "warning"  # TODO: `none` in SinBad
 reportPropertyTypeMismatch = "warning"
-reportUninitializedInstanceVariable	= "warning"
+reportUninitializedInstanceVariable = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
 reportUnreachable = "warning"
 
-# overly-worrisome linter-esque options
-reportDuplicateImport = "none"  # handled by ruff
+# 1D.2. Overly-worrisome linter-esque options
+reportUnusedCallResult = "none"
 
-[tool.ruff]
-# https://docs.astral.sh/ruff/rules/
-# Examples of good ruff configurations:
+# 1X. NOT SURE NOT CATEGORIZED
+reportDuplicateImport = "error" # "none"  # TODO: should it be just handled by ruff ??? `none` in SinBad as "overly-worrisome linter-esque options"
+
+# 1Z. OLD 
+# My Additions.
+
+# reportUnusedCoroutine = "warning" # TODO: is there a point for those to be warnings ?
+# reportUnusedExpression = "warning"
+
+# reportUnusedImport = "warning"
+# reportUnusedClass = "warning"
+# reportUnusedFunction = "warning"
+# reportUnusedVariable = "warning"
+
+# reportDeprecated = "warning"
+# reportUnnecessaryCast = "warning"
+
+# MY OLD
+
+# reportMissingTypeStubs = "none"    # A lot of libraries don't have stubs.
+# reportPrivateUsage = "none"        # it's my choice x_x
+
+# # there is a lot of **Incompatible** overriding in discord.py Bot development
+# # like `convert(ctx: AluContext, argument: str)` in converters.
+# reportIncompatibleVariableOverride = "none"
+# reportIncompatibleMethodOverride = "none"
+
+# reportUnnecessaryIsInstance = "none"           # I like "else" raising the error if type is somehow not it
+
+
+# # Unknown stuff - a lot of libraries do not **properly** declare types for everything
+# reportUnknownMemberType = "none"
+# reportUnknownVariableType = "none"
+# reportUnknownArgumentType = "none"
+
+# 1. Good 
+# Examples of good Ruff configurations:
 # * https://github.com/AbstractUmbra/Mipha/blob/main/pyproject.toml
 # * https://github.com/mikeshardmind/async-utils/blob/main/pyproject.toml
 # * https://github.com/Rapptz/discord.py/blob/master/pyproject.toml
+# https://docs.astral.sh/ruff/rules/
+[tool.ruff]
 line-length = 125
 target-version = "py312"
 exclude = ["venv", "docs"]
@@ -106,6 +180,9 @@ ignore = [
     "COM812", # missing-trailing-comma
     "COM819", # prohibited-trailing-comma
     "ISC002", # multi-line-implicit-string-concatenation
+
+    # 2. Pyright should manage those
+    # "F401",
 
     # 1. General "public" disagreement with Ruff
     "ANN401",   # `Any` is the correct type in some cases
@@ -185,3 +262,17 @@ allow-star-arg-any = true
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
+
+# DEPRECATED
+
+[tool.black]
+# We use Ruff instead
+line-length = 125
+target-version = ["py312"]
+
+[tool.isort]
+# We use Ruff instead
+profile = "black"
+line_length = 125
+combine_as_imports = true
+combine_star = true

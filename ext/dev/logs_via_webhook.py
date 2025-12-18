@@ -151,10 +151,9 @@ class LogsViaWebhook(AluCog):
         msg = textwrap.shorten(f"{emoji} {fmt.format_dt(dt, style='T')} {record.message}", width=1995)
         avatar_url = self.get_avatar(record.name)
 
-        # Discord doesn't allow Webhooks names to contain "discord";
-        # so if the record.name comes from discord.py library - it gonna block it
-        # thus we replace letters: "c" is cyrillic, "o" is greek.
-        username = record.name.replace("discord", "disсοrd")  # cSpell: ignore disсοrd  # noqa: RUF003
+        # Otherwise we hit the following exception:
+        # 400 Bad Request (error code: 50035): Invalid Form Body In username: Username cannot contain "discord"
+        username = record.name.replace("discord", "dpy")
 
         embed = discord.Embed(color=color, description=msg)
         await self.logger_webhook.send(embed=embed, username=username, avatar_url=avatar_url)

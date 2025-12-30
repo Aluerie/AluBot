@@ -28,7 +28,7 @@ FIX_DICT: dict[str, str] = {
     "x": "https://fxtwitter.com",
     "twitter": "https://fxtwitter.com",
     "reddit": "https://rxddit.com",
-    "instagram": "https://ddinstagram.com",
+    "instagram": "https://kkinstagram.com",
     "tiktok": "https://tnktok.com",
     "deviantart": "https://fixdeviantart.com",
     "tumblr": "https://tpmblr.com",

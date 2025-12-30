@@ -19,7 +19,6 @@ from typing import Any, Literal
 import aiohttp
 import asyncpg
 import click
-import dateparser
 import discord
 import orjson
 

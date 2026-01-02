@@ -113,7 +113,7 @@ async def get_metadata_embed_links(message: discord.Message) -> None:
     # wait till website meta embed actually renders
     await asyncio.sleep(2.7)
 
-    links = []
+    links: list[str] = []
     color = discord.Color.pink()
     for embed in message.embeds:
         links += re.findall(const.Regex.URL, str(embed.description))

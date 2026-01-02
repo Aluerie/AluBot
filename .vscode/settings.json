@@ -1,31 +1,10 @@
 {
-    // DO NOT SHARE ANY SENSITIVE INFG (i.e. SQL EXTENSION SETTINGS) IN THIS FILE
-    // IT IS NOT GIT IGNORED
+    // WARNING !
+    // DO NOT SHARE ANY SENSITIVE INFG (i.e. SQL EXTENSION PASSWORD SETTINGS) IN THIS FILE.
+    // IT IS NOT GIT IGNORED.
     "cSpell.words": [
-        "aluloop",
-        "avourite",
-        "bday",
-        "coinflip",
-        "disambiguator",
-        "dotaconstants",
-        "emotestats",
-        "EUNE",
-        "fileformat",
-        "haracter",
-        "irebot",
-        "leagueofgraphs",
-        "messageable",
-        "MISHA",
-        "notifs",
-        "paginators",
-        "partialuser",
-        "pepoblanket",
-        "playrate",
-        "prpl",
-        "roleidentification",
-        "stilify",
-        "subscopes",
-        "truststore",
-        "wolframalpha"
+        "deviantart",
+        "pixiv",
+        "bsky"
     ]
 }

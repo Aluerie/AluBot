@@ -13,7 +13,7 @@ from .levels import Levels
 from .logger import Logger
 from .moderation import Moderation
 from .old_timers import OldTimers
-from .stats import StatsVoiceChannels
+from ...deprecated.stats import StatsVoiceChannels
 from .suggestions import Suggestions
 from .twitch_notifications import TwitchNotifications
 from .welcome import Welcome

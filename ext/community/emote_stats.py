@@ -241,7 +241,7 @@ class EmoteStats(AluCog):
 
         offset = 0
         split_size = 20
-        tables = []
+        tables: list[str] = []
 
         for batch in itertools.batched(rows, n=split_size):
             table = tabulate(

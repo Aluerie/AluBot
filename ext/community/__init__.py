@@ -13,7 +13,6 @@ from .levels import Levels
 from .logger import Logger
 from .moderation import Moderation
 from .old_timers import OldTimers
-from ...deprecated.stats import StatsVoiceChannels
 from .suggestions import Suggestions
 from .twitch_notifications import TwitchNotifications
 from .welcome import Welcome
@@ -32,7 +31,6 @@ class Community(
     Logger,
     Moderation,
     OldTimers,
-    StatsVoiceChannels,
     Suggestions,
     TwitchNotifications,
     Welcome,

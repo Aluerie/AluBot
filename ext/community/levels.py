@@ -176,7 +176,7 @@ class Levels(AluCog):
 
         offset = 0
         split_size = 10
-        tables = []
+        tables: list[str] = []
 
         for batch in itertools.batched(members, n=split_size):
             table = tabulate(

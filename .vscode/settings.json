@@ -1,10 +1,13 @@
 {
     // WARNING !
-    // DO NOT SHARE ANY SENSITIVE INFG (i.e. SQL EXTENSION PASSWORD SETTINGS) IN THIS FILE.
+    // DO NOT SHARE ANY SENSITIVE INFG (i.e. EXTENSION PASSWORD SETTINGS) IN THIS FILE.
     // IT IS NOT GIT IGNORED.
     "cSpell.words": [
+        "alubot",
+        "aluloop",
         "deviantart",
         "pixiv",
-        "bsky"
+        "bsky",
+        "yenbot",
     ]
 }

@@ -36,7 +36,7 @@ DICTIONARY_EMBED_COLOR = discord.Color(0x5F9EB3)
 
 
 def html_to_markdown(node: Any, *, include_spans: bool = False) -> str:
-    text = []
+    text: list[str] = []
     for child in node:
         if child.tag == "i":
             text.append(f"_{child.text.strip()}_")  # `_` is italics marker

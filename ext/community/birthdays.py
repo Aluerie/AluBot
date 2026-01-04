@@ -36,8 +36,10 @@ CONGRATULATION_TEXT_BANK = (
     "It's as simple as ABC; today makes more sense because of you, Happy birthday.",
     "Let your all the dreams to be on fire and light your birthday candles with that. Have a gorgeous birthday.",
     "May you continue to improve as a person with each passing year. Wishing you a very happy birthday.",
-    "Today is the birthday of the person who is spreading joy and positivity all around. May your birthday "
-    "and your life be as wonderful as you are!",
+    (
+        "Today is the birthday of the person who is spreading joy and positivity all around. May your birthday "
+        "and your life be as wonderful as you are!"
+    ),
     "Happy birthday! Here's to a bright, healthy and exciting future!",
     "The joy is in the air because your special day is here!",
     "Your birthday only comes once a year, so make sure this is the most memorable one ever and have a colorful day.",
@@ -47,8 +49,10 @@ CONGRATULATION_TEXT_BANK = (
     "Wishing you a wonderful day and all the most amazing things on your Big Day!",
     "Life is tough but birthdays are smooth because I will finally have a chance to smile at you. Happy birthday.",
     "May your birthday be full of happy hours and special moments to remember for a long long time!",
-    "Soon you're going to start a new year of your life and "
-    "I hope this coming year will bring every success you deserve. Happy birthday.",
+    (
+        "Soon you're going to start a new year of your life and "
+        "I hope this coming year will bring every success you deserve. Happy birthday."
+    ),
     "Wishing you a memorable day and an adventurous year, Happy birthday",
     "Hope your birthday is as wonderful and extraordinary as you are.",
     "I wish you to enjoy your special day, relax and let yourself be spoiled, you deserve it!",
@@ -332,9 +336,7 @@ class Birthdays(AluCog):
                 .set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
                 .set_thumbnail(url=member.display_avatar.url)
                 .set_image(url=random.choice(GIF_URLS_BANK))
-                .set_footer(
-                    text=(f"Their birthday: {birthday_fmt(now_as_birthday_timezone)}. Timezone: {timer.timezone}.")
-                )
+                .set_footer(text=(f"Their birthday: {birthday_fmt(now_as_birthday_timezone)}. Timezone: {timer.timezone}."))
             )
 
             await self.birthday_channel.send(content=content, embed=embed)

@@ -325,15 +325,16 @@ class Logger(AluCog):
             jump_url = ctx.message.jump_url
             cmd_text = ctx.message.content
 
-        e = discord.Embed(description=f"{cmd_text}\n{cmd_kwargs}", color=ctx.author.color)
-        if isinstance(ctx.channel, discord.DMChannel):
-            channel_name = "DMs"
-        else:
-            channel_name = getattr(ctx.channel, "name", "somewhere \N{THINKING FACE}")
-
-        msg = f"{ctx.author.display_name} used command in {channel_name}"
-        e.set_author(icon_url=ctx.author.display_avatar.url, name=msg, url=jump_url)
-        await self.bot.community.logs.send(embed=e)
+        channel_name = "DMs" if isinstance(ctx.channel, discord.DMChannel) else getattr(ctx.channel, "name", "somewhere 🤔")
+        embed = discord.Embed(
+            color=ctx.author.color,
+            description=f"{cmd_text}\n{cmd_kwargs}",
+        ).set_author(
+            icon_url=ctx.author.display_avatar.url,
+            name=f"{ctx.author.display_name} used command in {channel_name}",
+            url=jump_url,
+        )
+        await self.bot.community.logs.send(embed=embed)
 
     # VOICE CHAT LOGGING
 

@@ -32,13 +32,17 @@ ADVICE_BANK = [
     # f"Hey chat, if you see some high/elite MMR streamer pick PA/DW/Muerta - "
     # f"don't hesitate to ping {User.aluerie} about it pretty please !",
     "Hey chat, please use channels according to their description",
-    f"Hey chat, please use {Role.bots} strictly in {Channel.bot_spam} "
-    f"(and {Role.nsfw_bots} in {Channel.nsfw_bot_spam} with exceptions of \n"
-    f"\N{DIGIT ZERO}\N{COMBINING ENCLOSING KEYCAP} feel free to use {User.alubot} everywhere\n"
-    f"\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP} {User.mango} in {Channel.pubs_talk}\n"
-    f'\N{DIGIT TWO}\N{COMBINING ENCLOSING KEYCAP} {User.nqn}\'s in-built "free-nitro" functions everywhere',
-    f"Hey chat, remember to check `$help` and {Channel.patch_notes}. We have a lot of cool features and "
-    f"bot commands. Even more to come in future !",
+    (
+        f"Hey chat, please use {Role.bots} strictly in {Channel.bot_spam} "
+        f"(and {Role.nsfw_bots} in {Channel.nsfw_bot_spam} with exceptions of \n"
+        f"\N{DIGIT ZERO}\N{COMBINING ENCLOSING KEYCAP} feel free to use {User.alubot} everywhere\n"
+        f"\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP} {User.mango} in {Channel.pubs_talk}\n"
+        f'\N{DIGIT TWO}\N{COMBINING ENCLOSING KEYCAP} {User.nqn}\'s in-built "free-nitro" functions everywhere'
+    ),
+    (
+        f"Hey chat, remember to check `$help` and {Channel.patch_notes}. We have a lot of cool features and "
+        f"bot commands. Even more to come in future !"
+    ),
     "Hey chat, follow me on twitch if you haven't done it yet: "
     f"[twitch.tv/aluerie](https://www.twitch.tv/aluerie) {Emote.DankLove} {Emote.DankLove} {Emote.DankLove}\n",
     f"Hey chat, you can get list of {Role.bots} available to use in {Channel.bot_spam} and "
@@ -81,8 +85,10 @@ RULE_BANK = [
     f"Hey chat, remember the rule\n{DIGITS[2]} Keep the chat in English if possible so everyone understands.",
     f"Hey chat, remember the rule\n{DIGITS[3]} No racism, sexism or homophobia.",
     f"Hey chat, remember the rule\n{DIGITS[4]} No offensive language.",
-    f"Hey chat, remember the rule\n{DIGITS[5]} Spam is OK. That means as long as it doesn't completely clog chat up "
-    "and makes it unreadable then it's fine. And well #xxx_spam channels are created to be spammed.",
+    (
+        f"Hey chat, remember the rule\n{DIGITS[5]} Spam is OK. That means as long as it doesn't completely clog chat up "
+        "and makes it unreadable then it's fine. And well #xxx_spam channels are created to be spammed."
+    ),
     "Hey chat, follow étiqueté.",
     f"Hey chat, remember the rule\n{DIGITS[6]} No spoilers of any kind "
     "(this includes games stories and IRL-things like movies/tournaments/etc). ",
@@ -173,7 +179,8 @@ class OldTimers(AluCog):
             case "embed":
                 # STATIC EMBED MESSAGE
                 data = (random.choice(list(DailyEmbedMessageEnum))).value
-                timer.data[data.category] = index = timer.data[data.category] + 1
+                timer.data[data.category] += 1
+                index: int = timer.data[data.category]
 
                 embed = discord.Embed(
                     color=data.color,
@@ -202,7 +209,7 @@ class OldTimers(AluCog):
         await self.bot.timers.create(
             event="old_timer",
             expires_at=datetime.datetime.now(datetime.UTC)
-            + datetime.timedelta(minutes=random.randint(5 * 60 * 24, 15 * 60 * 24)),
+            + datetime.timedelta(minutes=random.randint(14 * 60 * 24, 100 * 60 * 24)),
             data=timer.data,
         )
 

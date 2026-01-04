@@ -77,15 +77,11 @@ Homepage = "https://github.com/Aluerie/AluBot"
 #   https://microsoft.github.io/pyright/#/configuration?id=type-check-rule-overrides
 # * Defaults per type checking mode:
 #   https://microsoft.github.io/pyright/#/configuration?id=diagnostic-settings-defaults
-# 
-# In my personal projects, I like to select `typeCheckingMode` as "strict" and 
-# turn on all optional settings on and then explicitly mention which should be lower severity or "none" at all.
-# Basically, visit the second link, turn on all "false" and "none" and then fine-tune it. 
 
 [tool.pyright]
 # 1A. Environment Options
-exclude = ["venv", "docs", "**/__pycache__"] # TODO: Change to .venv
-pythonVersion = "3.12" # TODO: Distant future - upgrade to 3.14+, I'm excited and scared for annotation changes;
+exclude = [".venv", "docs", "**/__pycache__"]
+pythonVersion = "3.12"
 
 # 1B. Type Evaluation Settings
 deprecateTypingAliases = true
@@ -95,78 +91,49 @@ typeCheckingMode = "strict"
 
 # 1D. Type Check Rule Overrides
 
-# 1D.1. Elevating "none" in strict type checking to warnings
+# 1D.1. "None" even in strict - let's explicitly set them;
 reportCallInDefaultInitializer = "warning"
 reportImplicitOverride = "warning"
-reportImplicitStringConcatenation = "warning"  # TODO: `none` in SinBad as "overly-worrisome linter-esque options"
+reportImplicitStringConcatenation = "warning"  # Linter-esque option but it works better than Ruff's ISC002 for some reason.
 reportImportCycles = "warning"
 reportMissingSuperCall = "warning"  # TODO: `none` in SinBad
 reportPropertyTypeMismatch = "warning"
 reportUninitializedInstanceVariable = "warning"
 reportUnnecessaryTypeIgnoreComment = "warning"
 reportUnreachable = "warning"
+reportUnusedCallResult = "none"  # (Overly-worrisome) linter-esque option
 
-# 1D.2. Overly-worrisome linter-esque options
-reportUnusedCallResult = "none"
+# 1D.2. Rejected Pyright rules;
+reportDuplicateImport = "none" # handled by Ruff, linter-esque option
 
-# 1X. NOT SURE NOT CATEGORIZED
-reportDuplicateImport = "error" # "none"  # TODO: should it be just handled by ruff ??? `none` in SinBad as "overly-worrisome linter-esque options"
-
-# 1Z. OLD 
-# My Additions.
-
-# reportUnusedCoroutine = "warning" # TODO: is there a point for those to be warnings ?
-# reportUnusedExpression = "warning"
-
-# reportUnusedImport = "warning"
-# reportUnusedClass = "warning"
-# reportUnusedFunction = "warning"
-# reportUnusedVariable = "warning"
-
-# reportDeprecated = "warning"
-# reportUnnecessaryCast = "warning"
-
-# MY OLD
-
-# reportMissingTypeStubs = "none"    # A lot of libraries don't have stubs.
-# reportPrivateUsage = "none"        # it's my choice x_x
-
-# # there is a lot of **Incompatible** overriding in discord.py Bot development
-# # like `convert(ctx: AluContext, argument: str)` in converters.
-# reportIncompatibleVariableOverride = "none"
-# reportIncompatibleMethodOverride = "none"
-
-# reportUnnecessaryIsInstance = "none"           # I like "else" raising the error if type is somehow not it
-
-
-# # Unknown stuff - a lot of libraries do not **properly** declare types for everything
-# reportUnknownMemberType = "none"
-# reportUnknownVariableType = "none"
-# reportUnknownArgumentType = "none"
-
-# 1. Good 
+# 2. RUFF
+# 
 # Examples of good Ruff configurations:
 # * https://github.com/AbstractUmbra/Mipha/blob/main/pyproject.toml
 # * https://github.com/mikeshardmind/async-utils/blob/main/pyproject.toml
-# * https://github.com/Rapptz/discord.py/blob/master/pyproject.toml
-# https://docs.astral.sh/ruff/rules/
+# 
+# More Links:
+# * Ruff configuration rules
+#   https://docs.astral.sh/ruff/rules/
 [tool.ruff]
 line-length = 125
 target-version = "py312"
-exclude = ["venv", "docs"]
+exclude = [".venv", "docs"]
 
 [tool.ruff.lint]
 preview = true
 select = ["ALL"]
 ignore = [
-    # 0. Toggle - still thinking if we need those
+    # 0. Situational toggles 
+    "ERA",    # eradicate: Found commented-out code
+    # "RUF100", # unused-noqa: toggle off when we play around with some rules
+
+    # 0. Uncategorized - still thinking if we need those
     "D",      # pydocstyle: Doc-strings, 
     "D417",   # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
     "DOC",    # pydoclint: Doc strings, 
-    "ERA",    # eradicate: Found commented-out code
-    "RUF100", # unused-noqa: Unused noqa directive
 
-    # 1. Conflict with Ruff as a formatter, recommendation: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules.
+    # 1. Conflict with Ruff Formatter, recommendation from: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules.
     "W191",   # tab-indentation
     "E111",   # indentation-with-invalid-multiple
     "E114",   # indentation-with-invalid-multiple-comment 
@@ -236,10 +203,13 @@ ignore = [
     "DOC501", # Not explicitly documenting raised exception types
 ]
 unfixable = [
-    "E501",   # Line length handled in other ways by ruff formatter.
+    "E501",   # Line length handled in other ways by Ruff Formatter.
     "ERA",    # Don't delete commented out code.
-    "RUF100", # Unused `noqa` directive. I prefer to deal with it manually, also annoying when toggling some rules.
+    "RUF100", # Unused `noqa` directive. Annoying when toggling rules.
 ]
+# Extra Options
+flake8-annotations.allow-star-arg-any = true
+flake8-quotes.inline-quotes = "double"
 
 [tool.ruff.lint.per-file-ignores]
 "ext/beta.py" = ["ANN201"]
@@ -256,23 +226,3 @@ combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
-
-[tool.ruff.lint.flake8-annotations]
-allow-star-arg-any = true
-
-[tool.ruff.lint.flake8-quotes]
-inline-quotes = "double"
-
-# DEPRECATED
-
-[tool.black]
-# We use Ruff instead
-line-length = 125
-target-version = ["py312"]
-
-[tool.isort]
-# We use Ruff instead
-profile = "black"
-line_length = 125
-combine_as_imports = true
-combine_star = true

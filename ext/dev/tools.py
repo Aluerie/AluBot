@@ -55,8 +55,8 @@ class Tools(BaseDevCog):
             u_name = f"[`\\U{digit:>08}`](https://www.fileformat.info/info/unicode/char/{digit})"
             return python_name, f"{u_name}: `{python_name}` \N{EM DASH} `{c}` {c}"
 
-        content_parts = []
-        description_parts = []
+        content_parts: list[str] = []
+        description_parts: list[str] = []
 
         for c in characters[:10]:
             python_name, desc_name = to_string(c)

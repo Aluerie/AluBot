@@ -35,8 +35,12 @@ class Testing(BaseDevCog):
         await interaction.response.send_message(f"## 1. The Interaction.\n{content}")
         await self.bot.spam_webhook.send(f"## 2. Aluerie's Owned Webhook.\n{content}")
 
-        if channel_webhooks := await interaction.channel.webhooks():  # type: ignore[reportAttributeAccessIssue]
-            await channel_webhooks[0].send(f"## 3. The Bot's Owned Webhook.\n{content}")
+        channel = interaction.channel
+        assert channel
+        assert not isinstance(channel, discord.CategoryChannel | discord.Thread | discord.DMChannel | discord.GroupChannel)
+
+        if channel and (webhooks := await channel.webhooks()):
+            await webhooks[0].send(f"## 3. The Bot's Owned Webhook.\n{content}")
 
         mirror = mimics.Mirror.from_interaction(interaction)
         await mirror.send(member=interaction.user, content=f"## 4. Mirror-Mimic.\n{content}")

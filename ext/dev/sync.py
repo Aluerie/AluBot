@@ -69,7 +69,7 @@ class Sync(BaseDevCog):
     async def sync_to_guild_list(self, guilds: list[discord.Object]) -> str:
         """Syncs app tree for the guilds."""
         successful_guild_syncs = 0
-        cmds = []
+        cmds: list[discord.app_commands.AppCommand] = []
         for guild in guilds:
             try:
                 cmds += await self.bot.tree.sync(guild=guild)

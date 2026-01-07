@@ -121,7 +121,8 @@ class DiscordManagement(BaseDevCog):
                     return
 
         # we secured the type in `check_channel` but still, let's do it again
-        assert channel and not isinstance(channel, discord.ForumChannel | discord.CategoryChannel)
+        assert channel
+        assert not isinstance(channel, discord.ForumChannel | discord.CategoryChannel)
         embed = discord.Embed(
             title="I'm sorry",
             description=(

@@ -18,7 +18,7 @@ class SteamDB(AluCog):
 
     Notes
     -----
-    Yes, this is rude and copyright-bad reposting from steamdb resources.
+    Yes, this is rude and copyright-bad reposting from steamDB resources.
 
     Unfortunately, I'm clueless about how to get the info from steam itself.
     Simply following steamDB announcement channels in their discord is not a solution
@@ -39,13 +39,14 @@ class SteamDB(AluCog):
         return self.bot.webhook_from_url(webhook_url)
 
     @commands.Cog.listener("on_message")
-    async def filter_steamdb_messages(self, message: discord.Message) -> None:
+    async def filter_steam_db_messages(self, message: discord.Message) -> None:
         """Filter SteamDB messages from uninteresting ones.
 
         That channel contains all kind of updates, but we are only interested in blogpost ones.
         """
         if message.channel.id == const.Channel.dota_updates and "https://steamcommunity.com" in message.content:
-            msg = await self.news_webhook.send(content=message.content, wait=True)
+            new_content = f"# {message.content}"
+            msg = await self.news_webhook.send(content=new_content, wait=True)
             await msg.publish()
 
 

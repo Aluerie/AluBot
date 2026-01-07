@@ -133,7 +133,7 @@ class Control(BaseDevCog):
         ]
 
         questionable_connections = 0
-        connection_value = []
+        connection_value: list[str] = []
         for index, holder in enumerate(pool._holders, start=1):
             generation = holder._generation
             in_use = holder._in_use is not None

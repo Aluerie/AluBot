@@ -115,14 +115,14 @@ class FunOther(AluCog):
         answer = self.stilify_text(text, style=style)
         await self.send_mimic_confirmation_text(interaction, answer)
 
-    @text_group.command()
-    async def fancify(self, interaction: AluInteraction, text: str) -> None:  # cSpell:disable-next-line
-        """𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼.
+    @text_group.command(description="𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼.")  # cSpell:disable-line
+    async def fancify(self, interaction: AluInteraction, text: str) -> None:
+        """Make your text look fancy.
 
         Parameters
         ----------
             Text to convert into fancy text.
-        """  # noqa: RUF002
+        """
         # cSpell:enable #fmt:on  # noqa: ERA001
 
         style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy font

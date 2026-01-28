@@ -37,8 +37,6 @@ import importlib
 import os
 from pkgutil import iter_modules
 
-from core import CORE_EXTENSIONS
-
 try:
     import _test
 
@@ -53,7 +51,7 @@ except ModuleNotFoundError:
 
 DISABLED_EXTENSIONS = (
     # extensions that should not be loaded
-    "beta",
+    "ext.beta",
     # currently disabled
     # "ext.lol",
 )
@@ -117,7 +115,7 @@ DISABLED_EXTENSIONS = (
 def get_extensions(*, test: bool) -> tuple[str, ...]:
     if test and not USE_ALL_EXTENSIONS:
         # assume testing specific extensions from `_test.py`
-        return tuple(f"{__package__}.{ext}" for ext in TEST_EXTENSIONS)
+        return TEST_EXTENSIONS
 
     # assume running full bot functionality (besides `DISABLED_EXTENSIONS`)
     return tuple(

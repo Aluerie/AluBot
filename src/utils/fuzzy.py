@@ -79,7 +79,9 @@ def _sort_tokens(a: str) -> str:
 
 
 def token_sort_ratio(a: str, b: str) -> int:
-    """Return a measure of the sequences' similarity between 0 and 100 but sorting the token before comparing."""
+    """Return a measure of the sequences' similarity between 0 and 100 but sorting the token before comparing.
+
+    This sort ratio is case-insensitive."""
     a = _sort_tokens(a)
     b = _sort_tokens(b)
     return ratio(a, b)

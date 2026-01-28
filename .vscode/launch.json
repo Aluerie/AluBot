@@ -8,7 +8,7 @@
             "name": "YenBot",
             "type": "debugpy",
             "request": "launch",
-            "program": "__main__.py",
+            "program": "src/main.py",
             "args": [
                 "-t",
                 "-a",
@@ -21,7 +21,7 @@
             "name": "AluBot",
             "type": "debugpy",
             "request": "launch",
-            "program": "__main__.py",
+            "program": "src/main.py",
             "args": [
                 "-t",
                 "-a",

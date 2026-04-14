@@ -1,55 +1,57 @@
 [project]
 name = "AluBot"
-version = "0.1.0"
+version = "0.7.7"
 description = "Personal Discord Bot"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.12"
-license = { file = "LICENSE" }
 authors = [{ name = "Aluerie", email = "aluerie@gmail.com" }]
 maintainers = [{ name = "Aluerie", email = "aluerie@gmail.com" }]
+urls.Homepage = "https://github.com/Aluerie/AluBot"
+license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Programming Language :: Python ",
-    "Topic :: Utilities",
     "Topic :: Discord Bots",
+    "Topic :: Utilities",
     "Typing :: Typed",
 ]
 dependencies = [
-    "aiofiles==25.1.0",
-    "aiohttp==3.13.2",
-    "asyncpg==0.31.0",
-    "beautifulsoup4==4.14.3",
-    "click>=8.1.8",
-    "dateparser==1.2.2",
-    "discord-py[speed,voice]~=2.6.4",
-    "emoji==2.15.0",
-    "ffmpeg>=1.4",
-    "githubkit==0.14.0",
-    "gtts~=2.5.4",
+    "aiofiles",
+    "aiohttp",
+    "asyncpg",
+    "beautifulsoup4",
+    "click",
+    "dateparser",
+    "discord-py[speed,voice]",
+    "emoji",
+    "ffmpeg",
+    "githubkit",
+    "gtts",
     "jishaku",
-    "lru-dict==1.4.1",
-    "lxml>=6.0.2",
-    "matplotlib==3.10.8",
-    "numpy==2.3.5",
-    "orjson>=3.11.5",
-    "parsedatetime==2.6",
-    "pillow==12.0.0",
-    "psutil==7.1.3",
-    "pulsefire~=2.0.29",
-    "pygit2==1.19.0",
-    "python-dateutil==2.9.0.post0",
+    "lru-dict",
+    "lxml",
+    "matplotlib",
+    "numpy",
+    "orjson",
+    "parsedatetime",
+    "pillow",
+    "psutil",
+    "pulsefire",
+    "pygit2",
+    "python-dateutil",
     "role-identification",
-    "steamio>=1.1.0",
-    "tabulate==0.9.0",
-    "thefuzz==0.22.1",
-    "twitchio[starlette]~=3.1.0",
-    "unidiff==0.7.5",
-    "urllib3>=2.6.2",
-    "uvloop==0.22.1 ; sys_platform == 'linux'",
-    "wordcloud==1.9.4",
+    "steamio",
+    "tabulate",
+    "thefuzz",
+    "twitchio[starlette]",
+    "unidiff",
+    "urllib3",
+    "uvloop ; sys_platform == 'linux'",
+    "wordcloud",
 ]
+
 
 [tool.uv.sources]
 steamio = { git = "https://github.com/Aluerie/steam.py", rev = "introduce-ext.dota2" }
@@ -58,8 +60,8 @@ role-identification = { git = "https://github.com/meraki-analytics/role-identifi
 
 [dependency-groups]
 dev = [
-    "asyncpg-stubs>=0.30.2",
-    "ipykernel>=7.1.0",
+    "asyncpg-stubs",
+    "ipykernel",
 ]
 
 [[tool.uv.index]]
@@ -67,8 +69,18 @@ name = "umbra"
 url = "https://about.abstractumbra.dev/pip/"
 explicit = true
 
-[project.urls]
-Homepage = "https://github.com/Aluerie/AluBot"
+# ##############################
+# SHARED PYPROJECT TOML CONFIG #
+# ##############################
+#
+# Shared with `Aluerie/IreBot` (twitch/discord bot - same thing pretty much), 
+# but here I will try to leave detailed explanations why this or that setting was chosen.
+# In `Aluerie/IreBot` - it won't contain any, just strictly configuration.
+
+# 0. EXAMPLES OF GOOD PYPROJECT.TOML 
+#
+# * https://github.com/AbstractUmbra/Mipha/blob/main/pyproject.toml
+# * https://github.com/mikeshardmind/async-utils/blob/main/pyproject.toml
 
 # 1. PYRIGHT
 # 
@@ -79,43 +91,33 @@ Homepage = "https://github.com/Aluerie/AluBot"
 #   https://microsoft.github.io/pyright/#/configuration?id=diagnostic-settings-defaults
 
 [tool.pyright]
-# 1A. Environment Options
-exclude = [".venv", "docs", "**/__pycache__"]
+exclude = [".venv", "docs", "**/__pycache__", "**/node_modules", "**/.*"]
 pythonVersion = "3.12"
-
-# 1B. Type Evaluation Settings
 deprecateTypingAliases = true
-
-# 1C. Type Check Diagnostics Settings
 typeCheckingMode = "strict"
 
-# 1D. Type Check Rule Overrides
+# 1.1. Rules that are "None" by default even in strict - let's explicitly set them
+reportCallInDefaultInitializer      = "warning" #
+reportImplicitOverride              = "warning" #
+reportImplicitStringConcatenation   = "warning" # Linter-esque option but it works better than Ruff's ISC002.
+reportImportCycles                  = "none"    # Not smart enough; doesn't understand `if TYPE_CHECKING`.
+reportMissingSuperCall              = "warning" # 
+reportPropertyTypeMismatch          = "warning" #
+reportUninitializedInstanceVariable = "warning" # 
+reportUnnecessaryTypeIgnoreComment  = "warning" # 
+reportUnreachable                   = "warning" #
+reportUnusedCallResult              = "none"    # (Overly-worrisome) linter-esque option.
 
-# 1D.1. "None" even in strict - let's explicitly set them;
-reportCallInDefaultInitializer = "warning"
-reportImplicitOverride = "warning"
-reportImplicitStringConcatenation = "warning"  # Linter-esque option but it works better than Ruff's ISC002 for some reason.
-reportImportCycles = "warning"
-reportMissingSuperCall = "warning"  # TODO: `none` in SinBad
-reportPropertyTypeMismatch = "warning"
-reportUninitializedInstanceVariable = "warning"
-reportUnnecessaryTypeIgnoreComment = "warning"
-reportUnreachable = "warning"
-reportUnusedCallResult = "none"  # (Overly-worrisome) linter-esque option
-
-# 1D.2. Rejected Pyright rules;
-reportDuplicateImport = "none" # handled by Ruff, linter-esque option
-reportIncompatibleMethodOverride = "none" # Dpy and general Python workflow of subclassing base models result in false-positives
+# 1.2. Rejected rules;
+reportDuplicateImport            = "none" # handled by Ruff, linter-esque option.
+reportIncompatibleMethodOverride = "none" # Dpy and general workflow of subclassing base models require such overwrites.
+reportMissingTypeStubs           = "none" # I'm not going to write stubs for all the libraries that don't have them. And some libraries are fully typed without any stubs anyway.
 
 # 2. RUFF
 # 
-# Examples of good Ruff configurations:
-# * https://github.com/AbstractUmbra/Mipha/blob/main/pyproject.toml
-# * https://github.com/mikeshardmind/async-utils/blob/main/pyproject.toml
-# 
-# More Links:
 # * Ruff configuration rules
 #   https://docs.astral.sh/ruff/rules/
+
 [tool.ruff]
 line-length = 125
 target-version = "py312"
@@ -123,7 +125,6 @@ exclude = [".venv", "docs"]
 src = ["src"]
 
 [tool.ruff.lint]
-preview = true
 select = ["ALL"]
 ignore = [
     # 0. Situational toggles 
@@ -135,20 +136,21 @@ ignore = [
     "D417",   # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
     "DOC",    # pydoclint: Doc strings, 
 
-    # 1. Handled by Ruff Formatter instead, recommendation from: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules.
-    "W191",   # tab-indentation
-    "E111",   # indentation-with-invalid-multiple
-    "E114",   # indentation-with-invalid-multiple-comment 
-    "E117",   # over-indented
-    "D206",   # docstring-tab-indentation
-    "D300",   # triple-single-quotes 
-    "Q000",   # bad-quotes-inline-string
-    "Q001",   # bad-quotes-multiline-string
-    "Q002",   # bad-quotes-docstring
-    "Q003",   # avoidable-escaped-quote
-    "COM812", # missing-trailing-comma
-    "COM819", # prohibited-trailing-comma
-    "ISC002", # multi-line-implicit-string-concatenation
+    # 1. Handled by Ruff Formatter instead
+    # Recommendation from: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules.
+    "W191",   # tab-indentation                           #
+    "E111",   # indentation-with-invalid-multiple         #
+    "E114",   # indentation-with-invalid-multiple-comment #
+    "E117",   # over-indented                             #
+    "D206",   # docstring-tab-indentation                 #
+    "D300",   # triple-single-quotes                      #
+    "Q000",   # bad-quotes-inline-string                  #
+    "Q001",   # bad-quotes-multiline-string               #
+    "Q002",   # bad-quotes-docstring                      #
+    "Q003",   # avoidable-escaped-quote                   #
+    "COM812", # missing-trailing-comma                    #
+    "COM819", # prohibited-trailing-comma                 #
+    "ISC002", # multi-line-implicit-string-concatenation  #
 
     # 2. Pyright should manage those
     # "F401",
@@ -227,13 +229,20 @@ flake8-quotes.inline-quotes = "double"
 ]
 
 [tool.ruff.format]
-quote-style = "double"             # Like Black, use double quotes for strings.
-indent-style = "space"             # Like Black, indent with spaces, rather than tabs.
-skip-magic-trailing-comma = false  # Like Black, respect magic trailing commas.
-line-ending = "lf"                 # Unlike Black ("auto"), set the line ending to LF so it's consistent with uv.
+quote-style = "double"           # Like Black, use double quotes for strings.
+indent-style = "space"           # Like Black, indent with spaces, rather than tabs.
+skip-magic-trailing-comma = true # Unlike Black (false), do not respect magic trailing commas (let's be strict).
+line-ending = "lf"               # Unlike Black ("auto"), set the line ending to LF so it's consistent with uv.
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.pytest]
+addopts = ["-vv", "-p", "no:cacheprovider", "--disable-warnings"]
+norecursedirs = ["env/*", "venv/*", ".venv/*"]
+filterwarnings = ["ignore::DeprecationWarning"]
+# testpaths = ["tests/"]
+# python_files = ["test_*.py"]

@@ -38,14 +38,14 @@ import os
 from pkgutil import iter_modules
 
 try:
-    import _test
+    import etl
 
-    TEST_EXTENSIONS = _test.TEST_EXTENSIONS
-    USE_ALL_EXTENSIONS = _test.USE_ALL_EXTENSIONS
+    EXTENSIONS_TO_LOAD = etl.EXTENSIONS_TO_LOAD
+    LOAD_ALL_EXTENSIONS = etl.LOAD_ALL_EXTENSIONS
 except ModuleNotFoundError:
-    _test = None
-    TEST_EXTENSIONS: tuple[str, ...] = ()  # type: ignore[reportConstantRedefinition]
-    USE_ALL_EXTENSIONS: bool = True  # type: ignore[reportConstantRedefinition]
+
+    EXTENSIONS_TO_LOAD: tuple[str, ...] = ()  # type: ignore[reportConstantRedefinition]
+    LOAD_ALL_EXTENSIONS: bool = True  # type: ignore[reportConstantRedefinition]
 
 # EXTENSIONS
 
@@ -113,9 +113,9 @@ DISABLED_EXTENSIONS = (
 
 
 def get_extensions(*, test: bool) -> tuple[str, ...]:
-    if test and not USE_ALL_EXTENSIONS:
+    if test and not LOAD_ALL_EXTENSIONS:
         # assume testing specific extensions from `_test.py`
-        return TEST_EXTENSIONS
+        return EXTENSIONS_TO_LOAD
 
     # assume running full bot functionality (besides `DISABLED_EXTENSIONS`)
     return tuple(

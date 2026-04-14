@@ -11,16 +11,14 @@ import discord
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from utils import const, fmt
-
-from ...base_fpc import BaseMatchToEdit, BaseMatchToSend
-from ..api import game_const
+from utils.base_fpc import BaseMatchToEdit, BaseMatchToSend
+from utils.dota import game_const
 
 if TYPE_CHECKING:
     from bot import AluBot, AluCog
-    from ext.dota.api import Hero, PseudoHero
-
-    from ...base_fpc import RecipientKwargs
-    from ..api.schemas import stratz
+    from utils.base_fpc import RecipientKwargs
+    from utils.dota import Hero, PseudoHero
+    from utils.dota.schemas import stratz
 
 
 __all__ = ("MatchToSend", "NotCountedMatchToEdit", "StratzMatchToEdit")
@@ -190,12 +188,7 @@ class MatchToSend(BaseMatchToSend):
             .set_image(url=f"attachment://{image_file.filename}")
             .set_footer(text=f"watch_server {self.server_steam_id}")
         )  # | dota2://matchid={self.match_id}&matchtime={matchtime}") # but it's not really convenient.
-        return {
-            "embed": embed,
-            "file": image_file,
-            "username": title,
-            "avatar_url": self.player_hero.topbar_icon_url,
-        }
+        return {"embed": embed, "file": image_file, "username": title, "avatar_url": self.player_hero.topbar_icon_url}
 
     @override
     async def insert_into_game_messages(self, message_id: int, channel_id: int) -> None:
@@ -204,13 +197,7 @@ class MatchToSend(BaseMatchToSend):
             VALUES ($1, $2, $3, $4, $5, $6)
         """
         await self.bot.pool.execute(
-            query,
-            message_id,
-            channel_id,
-            self.match_id,
-            self.friend_id,
-            self.player_hero.id,
-            self.player_name,
+            query, message_id, channel_id, self.match_id, self.friend_id, self.player_hero.id, self.player_name
         )
 
 
@@ -220,12 +207,7 @@ class StratzMatchToEdit(BaseMatchToEdit):
     if TYPE_CHECKING:
         ability_upgrades_ids: list[int]
 
-    def __init__(
-        self,
-        bot: AluBot,
-        data: stratz.FPCMatchesResponse,
-        player_hero: Hero | PseudoHero | None = None,
-    ) -> None:
+    def __init__(self, bot: AluBot, data: stratz.FPCMatchesResponse, player_hero: Hero | PseudoHero | None = None) -> None:
         super().__init__(bot)
 
         player = data["data"]["match"]["players"][0]
@@ -445,13 +427,7 @@ class NotCountedMatchToEdit(BaseMatchToEdit):
             font = ImageFont.truetype("./assets/fonts/Inter-Black-slnt=0.ttf", 45)
             text = "Not Counted"
             _text_w, text_h = self.bot.transposer.get_text_wh(text, font)
-            draw.text(
-                xy=(0, height - text_h),
-                text=text,
-                font=font,
-                align="left",
-                fill=str(discord.Color.dark_orange()),
-            )
+            draw.text(xy=(0, height - text_h), text=text, font=font, align="left", fill=str(discord.Color.dark_orange()))
 
             return img
 

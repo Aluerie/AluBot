@@ -8,9 +8,9 @@ import asyncpg
 
 from bot import aluloop
 from utils import const
+from utils.base_fpc import BaseNotifications, EditTuple, RecipientTuple
+from utils.lol import game_const, regions
 
-from ...base_fpc import BaseNotifications, EditTuple, RecipientTuple
-from ..api import game_const, regions
 from .models import MatchToEdit, MatchToSend
 
 if TYPE_CHECKING:
@@ -84,8 +84,7 @@ class Notifications(BaseNotifications):
         for player_account_row in player_account_rows:
             try:
                 game = await self.bot.lol.get_lol_spectator_v5_active_game_by_summoner(
-                    puuid=player_account_row["puuid"],
-                    region=player_account_row["platform"],
+                    puuid=player_account_row["puuid"], region=player_account_row["platform"]
                 )
             except aiohttp.ClientResponseError as exc:
                 # we have to do try/except because discord.ext.tasks has aiohttp errors as
@@ -132,10 +131,7 @@ class Notifications(BaseNotifications):
                         AND s.enabled = TRUE;
                 """
                 rows: list[GetRecipientsQueryRow] = await self.bot.pool.fetch(
-                    query,
-                    participant["championId"],
-                    player_account_row["player_id"],
-                    game["gameId"],
+                    query, participant["championId"], player_account_row["player_id"], game["gameId"]
                 )
 
                 if rows:
@@ -153,8 +149,7 @@ class Notifications(BaseNotifications):
                     )
                     match_to_send = MatchToSend(self.bot, game, participant, player_account_row, champion)
                     await self.send_match(
-                        match_to_send,
-                        [RecipientTuple(channel_id=row["channel_id"], spoil=row["spoil"]) for row in rows],
+                        match_to_send, [RecipientTuple(channel_id=row["channel_id"], spoil=row["spoil"]) for row in rows]
                     )
 
     @aluloop(seconds=59)

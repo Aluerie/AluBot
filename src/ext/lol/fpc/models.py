@@ -10,24 +10,20 @@ import discord
 from PIL import Image, ImageDraw, ImageFont
 
 from utils import const, fmt
-
-from ...base_fpc import BaseMatchToEdit, BaseMatchToSend
-from ..api import LiteralPlatform, Platform
+from utils.base_fpc import BaseMatchToEdit, BaseMatchToSend
+from utils.lol import LiteralPlatform, Platform
 
 if TYPE_CHECKING:
     from pulsefire.schemas import RiotAPISchema
 
     from bot import AluBot
+    from utils.base_fpc import RecipientKwargs
+    from utils.lol import Champion, PseudoChampion
 
-    from ...base_fpc import RecipientKwargs
-    from ..api import Champion, PseudoChampion
     from .notifications import LivePlayerAccountRow
 
 
-__all__ = (
-    "MatchToEdit",
-    "MatchToSend",
-)
+__all__ = ("MatchToEdit", "MatchToSend")
 
 
 log = logging.getLogger(__name__)
@@ -169,12 +165,7 @@ class MatchToSend(BaseMatchToSend):
             .set_image(url=f"attachment://{image_file.filename}")
         )
 
-        return {
-            "embed": embed,
-            "file": image_file,
-            "username": title,
-            "avatar_url": self.champion.icon_url,
-        }
+        return {"embed": embed, "file": image_file, "username": title, "avatar_url": self.champion.icon_url}
 
     @override
     async def insert_into_game_messages(self, message_id: int, channel_id: int) -> None:
@@ -251,17 +242,11 @@ class MatchToEdit(BaseMatchToEdit):
             for count, item_image in enumerate(item_icon_images):
                 left = count * CELL_SIZE
                 item_image = item_image.resize((CELL_SIZE, CELL_SIZE))
-                img.paste(
-                    im=item_image,
-                    box=(left, height - CELL_SIZE - item_image.height),
-                )
+                img.paste(im=item_image, box=(left, height - CELL_SIZE - item_image.height))
 
             # Trinket Icon
             trinket_image = trinket_icon_img.resize((CELL_SIZE, CELL_SIZE))
-            img.paste(
-                im=trinket_image,
-                box=(width - trinket_image.width, height - CELL_SIZE - trinket_image.height),
-            )
+            img.paste(im=trinket_image, box=(width - trinket_image.width, height - CELL_SIZE - trinket_image.height))
 
             # Skill Build
             # I got these images by downloading .png from
@@ -283,20 +268,12 @@ class MatchToEdit(BaseMatchToEdit):
                 skill_slot_image = skill_slot_images[skill_slot]
                 img.paste(
                     im=skill_slot_image,
-                    box=(
-                        count * skill_slot_image.width,
-                        height - CELL_SIZE * 2 - skill_slot_image.height,
-                    ),
+                    box=(count * skill_slot_image.width, height - CELL_SIZE * 2 - skill_slot_image.height),
                 )
 
             # KDA Text
             _, kda_text_h = self.bot.transposer.get_text_wh(self.kda, font)  # _ is `kda_text_w`
-            draw.text(
-                (0, height - CELL_SIZE * 3 - kda_text_h),
-                self.kda,
-                font=font,
-                align="right",
-            )
+            draw.text((0, height - CELL_SIZE * 3 - kda_text_h), self.kda, font=font, align="right")
 
             # Outcome Text
             _, outcome_text_h = self.bot.transposer.get_text_wh(self.outcome, font)  # _ is `outcome_text_w`
@@ -343,11 +320,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
     match = await self.bot.lol.get_lol_match_v5_match(id=match_id, region=continent)
     timeline = await self.bot.lol.get_lol_match_v5_match_timeline(id=match_id, region=continent)
 
-    post_match_player = MatchToEdit(
-        self.bot,
-        participant=match["info"]["participants"][0],
-        timeline=timeline,
-    )
+    post_match_player = MatchToEdit(self.bot, participant=match["info"]["participants"][0], timeline=timeline)
 
     new_image = await post_match_player.edit_notification_image("assets/images/dota/Lavender640x360.png", 0x000000)
     new_image.show()
@@ -370,8 +343,7 @@ async def beta_test_send_image(self: AluCog) -> None:
     await self.bot.lol.start()
 
     game = await self.bot.lol.get_lol_spectator_v5_active_game_by_summoner(
-        puuid="L_h65XdX9XFsGdp0UJjQ_HhUf6tV57U2IsjdKVy1tIF4DDdloYCQJY_EwWnenjC4f4hl3-wcfTIskA",
-        region="na1",
+        puuid="L_h65XdX9XFsGdp0UJjQ_HhUf6tV57U2IsjdKVy1tIF4DDdloYCQJY_EwWnenjC4f4hl3-wcfTIskA", region="na1"
     )
     query = """
         SELECT a.puuid, a.player_id, game_name, tag_line, platform, display_name, twitch_id, last_edited

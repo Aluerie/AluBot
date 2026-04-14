@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, TypedDict, override
 
 import discord
 
-from ext.base_fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 from utils import const, fmt
+from utils.base_fpc import Character, CharacterStorage, CharacterTransformer, GameDataStorage
 
 from . import game_const
 
@@ -21,15 +21,7 @@ if TYPE_CHECKING:
         emote: str
 
 
-__all__ = (
-    "Abilities",
-    "Facets",
-    "Hero",
-    "HeroTransformer",
-    "Heroes",
-    "Items",
-    "PseudoHero",
-)
+__all__ = ("Abilities", "Facets", "Hero", "HeroTransformer", "Heroes", "Items", "PseudoHero")
 
 # old CDN was "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react"
 # idk, dota2.com uses the following cdn for hero icons:
@@ -94,8 +86,8 @@ class PseudoHero(Character):
     topbar_icon_url: str
     minimap_icon_url: str | None = None
 
-    talent_ids: list[int] = field(default_factory=list)
-    facet_ids: list[int] = field(default_factory=list)
+    talent_ids: list[int] = field(default_factory=list[int])
+    facet_ids: list[int] = field(default_factory=list[int])
 
 
 class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
@@ -148,12 +140,7 @@ class Heroes(CharacterStorage[Hero, PseudoHero]):  # CharacterCache
             )
         return await super().by_id(hero_id)
 
-    async def create_hero_emote(
-        self,
-        hero_id: int,
-        hero_short_name: str,
-        hero_display_name: str,
-    ) -> str:
+    async def create_hero_emote(self, hero_id: int, hero_short_name: str, hero_display_name: str) -> str:
         """Create a new discord emote for a Dota 2 hero."""
         try:
             return await self.create_character_emote_helper(
@@ -229,12 +216,7 @@ class Abilities(GameDataStorage[Ability, PseudoAbility]):
             return "Unknown"
 
         return {
-            ability["id"]: Ability(
-                ability["id"],
-                ability["name"],
-                get_display_name(ability),
-                ability["isTalent"],
-            )
+            ability["id"]: Ability(ability["id"], ability["name"], get_display_name(ability), ability["isTalent"])
             for ability in abilities["data"]["constants"]["abilities"]
         }
 
@@ -288,33 +270,19 @@ class Items(GameDataStorage[Item, PseudoItem]):
     @override
     async def fill_data(self) -> dict[int, Item]:
         items = await self.bot.dota.stratz.get_items()
-        return {
-            item["id"]: Item(
-                item["id"],
-                item["shortName"],
-            )
-            for item in items["data"]["constants"]["items"]
-        }
+        return {item["id"]: Item(item["id"], item["shortName"]) for item in items["data"]["constants"]["items"]}
 
     @override
     @staticmethod
     def generate_unknown_object(item_id: int) -> PseudoItem:
-        return PseudoItem(
-            id=item_id,
-            short_name="unknown_item",
-            icon_url=game_const.FpcAsset.ItemUnknown,
-        )
+        return PseudoItem(id=item_id, short_name="unknown_item", icon_url=game_const.FpcAsset.ItemUnknown)
 
     @override
     async def by_id(self, item_id: int) -> Item | PseudoItem:
         """Get Item by its ID."""
         # special case
         if item_id == 0:
-            return PseudoItem(
-                0,
-                "Empty Slot",
-                game_const.FpcAsset.ItemEmpty,
-            )
+            return PseudoItem(0, "Empty Slot", game_const.FpcAsset.ItemEmpty)
         return await super().by_id(item_id)
 
 
@@ -381,9 +349,5 @@ class Facets(GameDataStorage[Facet, PseudoFacet]):
     @staticmethod
     def generate_unknown_object(facet_id: int) -> PseudoFacet:
         return PseudoFacet(
-            id=facet_id,
-            display_name="Unknown",
-            icon="question",
-            color="#675CAE",
-            icon_url=game_const.FpcAsset.FacetQuestion,
+            id=facet_id, display_name="Unknown", icon="question", color="#675CAE", icon_url=game_const.FpcAsset.FacetQuestion
         )

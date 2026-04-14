@@ -52,12 +52,7 @@ class AluBot(commands.Bot):
         user: discord.ClientUser
 
     def __init__(
-        self,
-        *,
-        test: bool = False,
-        token: str,
-        session: ClientSession,
-        pool: asyncpg.Pool[asyncpg.Record],
+        self, *, test: bool = False, token: str, session: ClientSession, pool: asyncpg.Pool[asyncpg.Record]
     ) -> None:
         """Initialize the AluBot.
 
@@ -146,7 +141,7 @@ class AluBot(commands.Bot):
     async def try_hideout_auto_sync(self) -> bool:
         """Try automatic `copy_global_to` + `sync` Hideout Guild for easier testing purposes.
 
-        ?tag ass (auto-syncing sucks) and all, but come on - it's just too convenient to pass on.
+        ?tag ass (auto-syncing sucks) and all, but it's just too convenient to pass on.
         The function is using non-global sync methods so should be fine on rate-limits.
 
         Sources
@@ -229,9 +224,9 @@ class AluBot(commands.Bot):
     def instantiate_lol(self) -> None:
         """Instantiate League of Legends Client."""
         if not hasattr(self, "lol"):
-            from ext.lol.api import LeagueClient
+            from utils.lol import LeagueClient
 
-            self.lol = LeagueClient(self)
+            self.lol = LeagueClient(self)  # pyright: ignore[reportUninitializedInstanceVariable]
 
     def instantiate_dota(self) -> None:
         """Instantiate Dota 2 Client.
@@ -239,23 +234,23 @@ class AluBot(commands.Bot):
         * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
         """
         if not hasattr(self, "dota"):
-            from ext.dota.api.steamio_client import DotaClient
+            from utils.dota.steamio_client import DotaClient
 
-            self.dota = DotaClient(self)
+            self.dota = DotaClient(self)  # pyright: ignore[reportUninitializedInstanceVariable]
 
     def instantiate_github(self) -> None:
         """Initialize GitHub REST API Client."""
         if not hasattr(self, "github"):
             from githubkit import GitHub
 
-            self.github = GitHub(config["TOKENS"]["GIT_PERSONAL"])
+            self.github = GitHub(config["TOKENS"]["GIT_PERSONAL"])  # pyright: ignore[reportUninitializedInstanceVariable]
 
     async def instantiate_twitch(self) -> None:
         """Instantiate subclassed twitchio's Twitch Client."""
         if not hasattr(self, "twitch"):
             from utils.twitch import AluTwitchClient
 
-            self.twitch = AluTwitchClient(self)
+            self.twitch = AluTwitchClient(self)  # pyright: ignore[reportUninitializedInstanceVariable]
             await self.twitch.login()
 
     def instantiate_tz_manager(self) -> None:
@@ -263,7 +258,7 @@ class AluBot(commands.Bot):
         if not hasattr(self, "tz_manager"):
             from utils.timezones import TimezoneManager
 
-            self.tz_manager = TimezoneManager(self)
+            self.tz_manager = TimezoneManager(self)  # pyright: ignore[reportUninitializedInstanceVariable]
 
     @override
     async def close(self) -> None:
@@ -302,12 +297,7 @@ class AluBot(commands.Bot):
 
     def webhook_from_url(self, url: str) -> discord.Webhook:
         """A shortcut function with filled in discord.Webhook.from_url arguments."""
-        return discord.Webhook.from_url(
-            url=url,
-            session=self.session,
-            client=self,
-            bot_token=self.http.token,
-        )
+        return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
 
     async def webhook_from_database(self, channel_id: int) -> discord.Webhook:
         """Fetch webhook_url from the database by the `channel_id`."""

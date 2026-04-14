@@ -86,10 +86,7 @@ class FunOther(AluCog):
                 delete_after=5,
             )
 
-    text_group = app_commands.Group(
-        name="text",
-        description="Commands to transform text into something nice.",
-    )
+    text_group = app_commands.Group(name="text", description="Commands to transform text into something nice.")
 
     @text_group.command()
     async def emotify(self, interaction: AluInteraction, text: str) -> None:
@@ -101,16 +98,25 @@ class FunOther(AluCog):
         """
         style = (
             {
+                # Turn ?! into emotes
                 "!": "\N{WHITE EXCLAMATION MARK ORNAMENT}",
                 "?": "\N{WHITE QUESTION MARK ORNAMENT}",
-            }  # Turn ?! into emotes
-            | {str(i): n for i, n in enumerate(const.DIGITS)}  # digits into emotes :zero:, :one:, :two:, ...
+            }
             | {
-                chr(0x00000041 + x): f"{chr(0x0001F1E6 + x)} " for x in range(26)
-            }  # A-Z into :regional_identifier_a:-:regional_identifier_z:
+                # digits into emotes :zero:, :one:, :two:, ...
+                str(i): n
+                for i, n in enumerate(const.DIGITS)
+            }
             | {
-                chr(0x00000061 + x): f"{chr(0x0001F1E6 + x)} " for x in range(26)
-            }  # a-z into :regional_identifier_a:-:regional_identifier_z:
+                # A-Z into :regional_identifier_a:-:regional_identifier_z:
+                chr(0x00000041 + x): f"{chr(0x0001F1E6 + x)} "
+                for x in range(26)
+            }
+            | {
+                # a-z into :regional_identifier_a:-:regional_identifier_z:
+                chr(0x00000061 + x): f"{chr(0x0001F1E6 + x)} "
+                for x in range(26)
+            }
         )
         answer = self.stilify_text(text, style=style)
         await self.send_mimic_confirmation_text(interaction, answer)

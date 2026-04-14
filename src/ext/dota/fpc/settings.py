@@ -9,10 +9,9 @@ from discord import app_commands
 from discord.ext import commands
 from steam import ID, InvalidID
 
-from ext.dota.api import Hero, HeroTransformer  # noqa: TC001
 from utils import const
-
-from ...base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettingsCog
+from utils.base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettingsCog
+from utils.dota import Hero, HeroTransformer  # noqa: TC001
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
@@ -126,9 +125,7 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
     )
 
     dota_request = app_commands.Group(
-        name="request",
-        description="Dota 2 FPC (Favorite Player+Character) request commands.",
-        parent=dota_group,
+        name="request", description="Dota 2 FPC (Favorite Player+Character) request commands.", parent=dota_group
     )
 
     @dota_request.command(name="player")
@@ -151,9 +148,7 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
         await self.request_player(interaction, player_arguments)
 
     dota_setup = app_commands.Group(
-        name="setup",
-        description="Manage FPC feature settings in your server with those commands..",
-        parent=dota_group,
+        name="setup", description="Manage FPC feature settings in your server with those commands..", parent=dota_group
     )
 
     @dota_setup.command(name="channel")
@@ -190,9 +185,7 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
     )
 
     hideout_dota_player = app_commands.Group(
-        name="player",
-        description="Dota 2 FPC (Favorite Player+Character) Hideout-only commands.",
-        parent=hideout_dota_group,
+        name="player", description="Dota 2 FPC (Favorite Player+Character) Hideout-only commands.", parent=hideout_dota_group
     )
 
     @hideout_dota_player.command(name="add")
@@ -238,9 +231,7 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
         return await self.hideout_player_add_remove_autocomplete(interaction, current, mode_add_remove=False)
 
     hideout_dota_hero = app_commands.Group(
-        name="hero",
-        description="Dota 2 FPC (Favorite Player+Character) Hideout-only commands.",
-        parent=hideout_dota_group,
+        name="hero", description="Dota 2 FPC (Favorite Player+Character) Hideout-only commands.", parent=hideout_dota_group
     )
 
     @hideout_dota_hero.command(name="add")

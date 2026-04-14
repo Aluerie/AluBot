@@ -360,8 +360,8 @@ class BugTracker(AluCog):
             RETURNING True;
         """
 
-        error_logins = []
-        success_logins = []
+        error_logins: list[str] = []
+        success_logins: list[str] = []
         for name in logins:
             # looks like executemany wont work bcs it executes strings letter by letter!
             val = await self.bot.pool.fetchval(query, name)

@@ -9,9 +9,8 @@ import discord
 from discord import app_commands
 
 from utils import const, errors
-
-from ...base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettingsCog
-from ..api import Champion, ChampionTransformer, Platform  # noqa: TC001
+from utils.base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, BaseSettingsCog
+from utils.lol import Champion, ChampionTransformer, Platform  # noqa: TC001
 
 if TYPE_CHECKING:
     from bot import AluBot, AluInteraction
@@ -54,8 +53,7 @@ class LeagueAccount(BaseAccount):
                 tag_line=arguments.tag_line,
                 region=arguments.platform.continent,
                 # in theory we can use continent closest to me bcs they all share the same data
-                # for account_v1 endpoint
-                # so check response time to this request (BUT WHATEVER)
+                # for account_v1 endpoint but whatever ;
             )
         except aiohttp.ClientResponseError:
             msg = (
@@ -142,9 +140,7 @@ class LolFPCSettings(BaseSettingsCog):
     )
 
     lol_request = app_commands.Group(
-        name="request",
-        description="League of Legends FPC (Favorite Player+Character) request commands.",
-        parent=lol_group,
+        name="request", description="League of Legends FPC (Favorite Player+Character) request commands.", parent=lol_group
     )
 
     @lol_request.command(name="player")
@@ -174,9 +170,7 @@ class LolFPCSettings(BaseSettingsCog):
         await self.request_player(interaction, player_arguments)
 
     lol_setup = app_commands.Group(
-        name="setup",
-        description="Manage FPC feature settings in your server with those commands..",
-        parent=lol_group,
+        name="setup", description="Manage FPC feature settings in your server with those commands..", parent=lol_group
     )
 
     @lol_setup.command(name="channel")
@@ -316,7 +310,7 @@ class LolFPCSettings(BaseSettingsCog):
                         [
                             f"\N{BLACK CIRCLE} {(await self.bot.lol.champions.by_id(i)).display_name} - `{i}`"
                             for i in await self.bot.lol.roles.get_missing_from_meraki_champion_ids()
-                        ],
+                        ]
                     )
                     or "None missing"
                 ),

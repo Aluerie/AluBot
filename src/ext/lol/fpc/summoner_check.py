@@ -40,6 +40,7 @@ class SummonerNameCheck(AluCog):
         """
         if datetime.datetime.now(datetime.UTC).day % 3 == 0:
             return
+        log.debug("Starting `check_summoner_renames` task.")
 
         query = "SELECT puuid, platform, in_game_name, tag_line FROM lol_accounts"
         rows: list[AccountRow] = await self.bot.pool.fetch(query)

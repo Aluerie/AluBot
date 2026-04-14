@@ -11,9 +11,9 @@ from discord.ext import commands
 
 from bot import aluloop
 from utils import const
+from utils.base_fpc import BaseNotifications, EditTuple, RecipientTuple
 from utils.helpers import measure_time
 
-from ...base_fpc import BaseNotifications, EditTuple, RecipientTuple
 from .models import MatchToSend, StratzMatchToEdit
 
 if TYPE_CHECKING:
@@ -121,10 +121,7 @@ class DotaFPCNotifications(BaseNotifications):
         for row in player_id_rows:
             if row["twitch_live_only"]:
                 # need to check what streamers are live
-                twitch_live_player_ids = await self.get_player_streams(
-                    const.Twitch.DOTA_GAME_CATEGORY_ID,
-                    row["player_ids"],
-                )
+                twitch_live_player_ids = await self.get_player_streams(const.Twitch.DOTA_GAME_CATEGORY_ID, row["player_ids"])
                 friend_id_cache[True] = await self.convert_player_id_to_friend_id(list(twitch_live_player_ids.keys()))
             else:
                 friend_id_cache[False] = await self.convert_player_id_to_friend_id(row["player_ids"])
@@ -158,12 +155,7 @@ class DotaFPCNotifications(BaseNotifications):
                             AND s.enabled = TRUE;
                     """
                     rows: list[GetRecipientsQueryRow] = await self.bot.pool.fetch(
-                        query,
-                        hero_id,
-                        user["player_id"],
-                        match.id,
-                        account_id,
-                        twitch_live_only,
+                        query, hero_id, user["player_id"], match.id, account_id, twitch_live_only
                     )
 
                     if rows:
@@ -183,8 +175,7 @@ class DotaFPCNotifications(BaseNotifications):
                         # SENDING
                         start_time = time.perf_counter()
                         await self.send_match(
-                            match_to_send,
-                            [RecipientTuple(channel_id=row["channel_id"], spoil=row["spoil"]) for row in rows],
+                            match_to_send, [RecipientTuple(channel_id=row["channel_id"], spoil=row["spoil"]) for row in rows]
                         )
                         send_log.debug("Sending took %.5f secs", time.perf_counter() - start_time)
 
@@ -248,8 +239,7 @@ class DotaFPCNotifications(BaseNotifications):
             GROUP BY match_id, friend_id, hero_id, player_name
         """
         match_rows: list[FindMatchesToEditQueryRow] = await self.bot.pool.fetch(
-            query,
-            [match.id for match in self.top_live_matches],
+            query, [match.id for match in self.top_live_matches]
         )
 
         for match_row in match_rows:

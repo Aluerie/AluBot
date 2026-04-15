@@ -67,9 +67,6 @@ class Guild:
     community = 702561315478044804
     hideout = 759916212842659850
 
-    # friends
-    stone = 773607529879699497
-
     # emotes
 
     brand1 = 1125050799572131982
@@ -77,7 +74,7 @@ class Guild:
 
 
 MY_GUILDS = [Guild.hideout, Guild.community]
-PREMIUM_GUILDS = [Guild.community, Guild.hideout, Guild.stone]
+PREMIUM_GUILDS = [Guild.community, Guild.hideout]
 
 
 class EmoteGuilds(CONSTANTS):

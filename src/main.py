@@ -44,22 +44,11 @@ async def create_pool() -> asyncpg.Pool[asyncpg.Record]:
         return orjson.loads(value)
 
     async def init(con: asyncpg.Connection[asyncpg.Record]) -> None:
-        await con.set_type_codec(
-            "jsonb",
-            schema="pg_catalog",
-            encoder=_encode_jsonb,
-            decoder=_decode_jsonb,
-            format="text",
-        )
+        await con.set_type_codec("jsonb", schema="pg_catalog", encoder=_encode_jsonb, decoder=_decode_jsonb, format="text")
 
     postgres_url = config["POSTGRES"]["VPS"] if platform.system() == "Linux" else config["POSTGRES"]["HOME"]
     return await asyncpg.create_pool(
-        postgres_url,
-        init=init,
-        command_timeout=60,
-        min_size=20,
-        max_size=20,
-        statement_cache_size=0,
+        postgres_url, init=init, command_timeout=60, min_size=20, max_size=20, statement_cache_size=0
     )
 
 
@@ -94,10 +83,7 @@ async def start_the_bot(*, test: bool, token: str) -> None:
 @click.group(invoke_without_command=True, options_metavar="[options]")
 @click.pass_context
 @click.option(
-    "--test",
-    "-t",
-    is_flag=True,
-    help="Whether to launch test/debug version of the bot or full production functionality.",
+    "--test", "-t", is_flag=True, help="Whether to launch test/debug version of the bot or full production functionality."
 )
 @click.option(
     "--account",

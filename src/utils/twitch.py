@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, TypedDict, override
 
 import discord
 import twitchio
-from twitchio import eventsub
 
 from config import config
 
@@ -25,7 +24,7 @@ __all__ = ("AluTwitchClient",)
 log = logging.getLogger(__name__)
 
 
-class AluTwitchClient(twitchio.AutoClient):
+class AluTwitchClient(twitchio.Client):
     """Subclass for TwitchIO's AutoClient."""
 
     def __init__(self, bot: AluBot) -> None:
@@ -33,106 +32,13 @@ class AluTwitchClient(twitchio.AutoClient):
             client_id=config["TWITCH"]["CLIENT_ID"],
             client_secret=config["TWITCH"]["CLIENT_SECRET"],
             bot_id=const.TwitchID.Bot,
-            subscriptions=self.get_eventsub_subscriptions(),
         )
         self._bot: AluBot = bot
-
-    def print_bot_oauth(self) -> None:
-        """Print oauth permissions for the bot."""
-        scopes = "%20".join(
-            [
-                "user:read:chat",
-                "user:write:chat",
-                "user:bot",
-            ],
-        )
-        link = f"http://localhost:4343/oauth?scopes={scopes}&force_verify=true"
-        print(f"🤖🤖🤖 BOT OATH LINK: 🤖🤖🤖\n{link}")  # noqa: T201
-
-    def print_broadcaster_oauth(self) -> None:
-        """Print broadcaster oauth."""
-        scopes = "%20".join(
-            [
-                "channel:bot",
-                "channel:read:redemptions",
-            ],
-        )
-        link = f"http://localhost:4343/oauth?scopes={scopes}&force_verify=true"
-        print(f"🎬🎬🎬 BROADCASTER OATH LINK: 🎬🎬🎬\n{link}")  # noqa: T201
-
-    @override
-    async def setup_hook(self) -> None:
-        # Twitchio tokens magic
-        # Uncomment the following three lines and run the bot when creating tokens (otherwise they should be commented)
-        # This will make the bot update the database with new tokens.
-        # self.print_bot_oauth()
-        # self.print_broadcaster_oauth()
-        # return
-        # await self.add_component(AluComponent(self))
-
-        # await self.subscribe_websocket(payload=sub, token_for=broadcaster, as_bot=False)
-        pass
-
-    def get_eventsub_subscriptions(self) -> list[twitchio.eventsub.SubscriptionPayload]:
-        """AutoClient."""
-        broadcaster = const.TwitchID.Me
-        return [
-            # ✅ Channel Points Redeem              channel:read:redemptions or channel:manage:redemptions
-            eventsub.ChannelPointsRedeemAddSubscription(broadcaster_user_id=broadcaster),
-            # Stream went offline                   No authorization required
-            eventsub.StreamOfflineSubscription(broadcaster_user_id=broadcaster),
-            # Stream went live                      No authorization required
-            eventsub.StreamOnlineSubscription(broadcaster_user_id=broadcaster),
-        ]
-
-    @override
-    async def add_token(self, token: str, refresh: str) -> twitchio.authentication.ValidateTokenPayload:
-        resp: twitchio.authentication.ValidateTokenPayload = await super().add_token(token, refresh)
-        query = """
-            INSERT INTO alubot_ttv_tokens (user_id, token, refresh)
-            VALUES ($1, $2, $3)
-            ON CONFLICT(user_id)
-            DO UPDATE SET
-                token = excluded.token,
-                refresh = excluded.refresh;
-        """
-        await self._bot.pool.execute(query, resp.user_id, token, refresh)
-        log.debug("Added token to the database for user: %s", resp.user_id)
-        return resp
-
-    @override
-    async def load_tokens(self, path: str | None = None) -> None:
-        # We don't need to call this manually, it is called in .login() from .start() internally...
-
-        rows: list[LoadTokensQueryRow] = await self._bot.pool.fetch("""SELECT * from alubot_ttv_tokens""")
-        for row in rows:
-            await self.add_token(row["token"], row["refresh"])
 
     # @override
     async def event_ready(self) -> None:
         """Event Ready."""
         log.info("%s is ready as bot_id = %s", self.__class__.__name__, self.bot_id)
-
-    # EVENT SUB
-
-    async def event_custom_redemption_add(self, event: twitchio.ChannelPointsRedemptionAdd) -> None:
-        self._bot.dispatch("twitchio_custom_redemption_add", event)
-
-        if event.user.id == const.TwitchID.Me and event.reward.cost < 4:
-            # < 4 is a weird way to exclude my "Text-To-Speech" redemption.
-            # channel = self.get_channel(payload.broadcaster)
-            await event.broadcaster.send_message(
-                sender=const.TwitchID.Bot,
-                message="Thanks, I think bot is working PepoG",
-            )
-
-    async def event_stream_offline(self, offline: twitchio.StreamOffline) -> None:
-        self._bot.dispatch("twitchio_stream_offline", offline)
-
-    async def event_stream_online(self, online: twitchio.StreamOnline) -> None:
-        self._bot.dispatch("twitchio_stream_online", online)
-
-    # OVERRIDE
 
     @override
     async def event_error(self, payload: twitchio.EventErrorPayload) -> None:
@@ -160,22 +66,11 @@ class AluTwitchClient(twitchio.AutoClient):
         return Streamer(self, user, stream)
 
 
-# class AluComponent(commands.Component):
-#     # need eventsub.ChatMessageSubscription
-#     # @twitchio_commands.command()
-#     # async def hi(self, ctx: twitchio_commands.Context) -> None:
-#     #     """Simple command that says hello!"""
-#     #     await ctx.reply("hello")
-
-#     def __init__(self, bot: Bot) -> None:
-#         self.bot = bot
-
-
 class Streamer:
     """Concatenation between `twitchio.User` and `twitch.Stream`.
 
     Do not confuse "streamer" with "user" or "stream" terms. This is meant to be a concatenation.
-    There is a weird problem that they both don't aren't enough separately.
+    There is a weird problem that they both aren't enough separately.
     While we need to fill into the same attributes for both online/offline streamers.
 
     Attributes

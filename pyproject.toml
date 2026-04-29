@@ -99,7 +99,7 @@ typeCheckingMode = "strict"
 # 1.1. Rules that are "None" by default even in strict - let's explicitly set them
 reportCallInDefaultInitializer      = "warning" #
 reportImplicitOverride              = "warning" #
-reportImplicitStringConcatenation   = "warning" # Linter-esque option but it works better than Ruff's ISC002.
+reportImplicitStringConcatenation   = "none"    # Linter-esque option; Let Ruff's ISC002 do the job.
 reportImportCycles                  = "none"    # Not smart enough; doesn't understand `if TYPE_CHECKING`.
 reportMissingSuperCall              = "none"    # Not smart enough; Base parent class does not needs `super().__init__` from `object`. 
 reportPropertyTypeMismatch          = "warning" #
@@ -109,9 +109,10 @@ reportUnreachable                   = "warning" #
 reportUnusedCallResult              = "none"    # (Overly-worrisome) linter-esque option.
 
 # 1.2. Rejected rules;
-reportDuplicateImport            = "none" # handled by Ruff, linter-esque option.
-reportIncompatibleMethodOverride = "none" # Dpy and general workflow of subclassing base models require such overwrites.
-reportMissingTypeStubs           = "none" # I'm not going to write stubs for all the libraries that don't have them. And some libraries are fully typed without any stubs anyway.
+reportDuplicateImport            = "none"   # handled by Ruff, linter-esque option.
+reportIncompatibleMethodOverride = "none"   # Dpy and general Python's workflow of subclassing base models require such overwrites.
+reportIncompatibleVariableOverride = "none" # Somewhat same^, sometimes it's needed.
+reportMissingTypeStubs           = "none"   # I'm not going to write stubs for all the libraries that don't have them. And some libraries are fully typed without any stubs anyway.
 
 # 2. RUFF
 # 
@@ -127,9 +128,9 @@ src = ["src"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    # 0. Situational toggles 
-    # "ERA",    # eradicate: Found commented-out code
-    # "RUF100", # unused-noqa: toggle off when we play around with some rules
+    # 0. Situational toggles
+    "ERA",    # eradicate: Ignore by default
+    # "RUF100", # unused-noqa: Ignore when we play around with some rules
 
     # 0. Uncategorized - still thinking if we need those
     "D",      # pydocstyle: Doc-strings, 
@@ -209,7 +210,7 @@ ignore = [
 unfixable = [
     "E501",   # Line length handled in other ways by Ruff Formatter.
     "ERA",    # Don't delete commented out code.
-    "RUF100", # Unused `noqa` directive. Annoying when toggling rules.
+    "RUF100", # unused-noqa: Annoying when toggling rules.
 ]
 # Extra Options
 flake8-annotations.allow-star-arg-any = true
@@ -229,12 +230,19 @@ flake8-quotes.inline-quotes = "double"
 ]
 
 [tool.ruff.format]
-quote-style = "double"           # Like Black, use double quotes for strings.
-indent-style = "space"           # Like Black, indent with spaces, rather than tabs.
-skip-magic-trailing-comma = true # Unlike Black (false), do not respect magic trailing commas (let's be strict).
-line-ending = "lf"               # Unlike Black ("auto"), set the line ending to LF so it's consistent with uv.
+# Like Black, use double quotes for strings.
+quote-style = "double"            
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"            
+# Like Black, respect magic trailing commas. (I've been thinking a lot about this one 😖)
+# There are some situations where formatting gets better looking if it's manually controlled by the magic comma. 
+# I.e. some Django models. Or look in `file://./src/utils/lol/client.py#L20-40 > LeagueClient class, lines ~20-40:
+# middlewares all being "vertical" makes it a lot more consistent/readable and it's easily seen where the difference is.
+line-ending = "lf"                
+skip-magic-trailing-comma = false # Unlike Black ("auto"), set the line ending to LF so it's consistent with `uv` defaults.
 
 [tool.ruff.lint.isort]
+split-on-trailing-comma = false
 combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]

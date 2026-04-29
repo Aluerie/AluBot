@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -11,8 +10,6 @@ from bot import AluCog, aluloop
 from utils import const
 
 if TYPE_CHECKING:
-    import twitchio
-
     from bot import AluBot
 
 __all__ = ("TwitchNotifications",)
@@ -31,7 +28,6 @@ class TwitchNotifications(AluCog):
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
-        self.last_notification_message: discord.Message | None = None
         self.restart_clean_up.start()
 
     @override
@@ -39,64 +35,11 @@ class TwitchNotifications(AluCog):
         await self.bot.instantiate_twitch()
         await super().cog_load()
 
-    @commands.Cog.listener("on_twitchio_custom_redemption_add")
-    async def twitch_tv_redeem_notifications(self, event: twitchio.ChannelPointsRedemptionAdd) -> None:
-        """Send a notification for channel points redeems at @Irene_Adler__ into my person #logger channel.
-
-        This is used for testing twitchio eventsub.
-        """
-        embed = discord.Embed(
-            color=0x9146FF,
-            description=f"`{event.user.name}` redeemed `{event.reward.title}` for {event.reward.cost} channel points",
-        )
-        await self.hideout.alubot_logs.send(embed=embed)
-
-    @commands.Cog.listener("on_twitchio_stream_online")
-    async def twitch_tv_live_notifications(self, payload: twitchio.StreamOnline) -> None:
-        """Receive notifications for my stream via eventsub."""
-        # I only have notifications for myself
-        irene = payload.broadcaster
-        irene_user = await irene.user()
-        channel_info = await irene.fetch_channel_info()
-        game = await channel_info.fetch_game()
-
-        stream_url = f"https://twitch.tv/{payload.broadcaster.name}"
-        current_vod = next(iter(await self.bot.twitch.fetch_videos(user_id=irene.id, period="day")), None)
-        current_vod_link = f"/[VOD]({current_vod.url})" if current_vod else ""
-
-        # send notification
-        content = (
-            f"{self.community.stream_lover_role.mention} and chat, **`@{payload.broadcaster.display_name}`** just went live!"
-        )
-        embed = (
-            discord.Embed(
-                color=0x9146FF,
-                title=f"{channel_info.title}",
-                url=stream_url,
-                description=(f"Playing {channel_info.game_name}\n/[Watch Stream]({stream_url}){current_vod_link}"),
-            )
-            .set_author(
-                name=f"{irene.display_name} just went live on Twitch!",
-                icon_url=irene_user.profile_image,
-                url=stream_url,
-            )
-            .set_thumbnail(url=game.box_art if game else irene_user.profile_image)
-            .set_image(
-                url=(
-                    f"https://static-cdn.jtvnw.net/previews-ttv/live_user_{irene.display_name}-1280x720.jpg"
-                    "?format=webp&width=720&height=405"
-                ),
-            )
-        )
-        self.last_notification_message = await self.community.stream_notifs.send(content=content, embed=embed)
-
     @commands.Cog.listener(name="on_presence_update")
     async def community_twitch_tv_management(self, before: discord.Member, after: discord.Member) -> None:
         """Detects if community members are streaming and actions on it.
 
-        Does the following:
-        * Grant people who are streaming on twitch.tv role @LiveStreamer.
-        * Gives backup for Aluerie's stream notifications (in case eventsub dies because I'm bad)
+        Grant people who are streaming on twitch.tv role @LiveStreamer.
         """
         if after.guild.id != const.Guild.community:
             # not community
@@ -137,17 +80,6 @@ class TwitchNotifications(AluCog):
             log.debug("No Changes")
             # TODO: we need to add the voice chat thing where it checks/sets up things on restart bot
             # like get all folks with streaming status and clear the role
-
-    @commands.Cog.listener("on_twitchio_stream_offline")
-    async def twitch_tv_offline_edit_notification(self, _: twitchio.StreamOffline) -> None:
-        """Starts the task to edit the notification message."""
-        await asyncio.sleep(11 * 60)
-        message = self.last_notification_message
-        if message is None:
-            return
-        embed = message.embeds[0]
-        embed.set_image(url=const.Twitch.MY_OFFLINE_SCREEN)
-        await message.edit(embed=embed)
 
     @aluloop(count=1)
     async def restart_clean_up(self) -> None:

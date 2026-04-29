@@ -46,7 +46,7 @@ class LoggingHandler(logging.Handler):
             "Clock drift detected for task",  # idk, I won't do anything about any of those messages.
             "Shard ID None has successfully RESUMED",
             "Shard ID None has connected to Gateway",
-            # "Webhook ID 1116501979133399113 is rate limited.",
+            "Webhook ID 1409631863063974109 is rate limited.",
         )
         return not any(msg in record.message for msg in messages_to_ignore)
 
@@ -103,11 +103,11 @@ class LogsViaWebhook(AluCog):
         self._lock: asyncio.Lock = asyncio.Lock()
         self.cooldown: datetime.timedelta = datetime.timedelta(seconds=5)
         self._most_recent: datetime.datetime | None = None
+        self.logs_handler = LoggingHandler(self)
 
     @override
     async def cog_load(self) -> None:
         self.logging_worker.start()
-        self.logs_handler = LoggingHandler(self)
         logging.getLogger().addHandler(self.logs_handler)
         await super().cog_load()
 

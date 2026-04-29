@@ -31,154 +31,66 @@ Special thanks to the whole `discord.py` community for endless amount of educati
 ## 🚀 Powered by
 
 <table>
-    <tr>
-        <th style="text-align: center;">Site</th>
-        <th style="text-align: center;">API Docs</th>
-        <th style="text-align: center;">Repo</th>
-        <th style="text-align: center;">Library/Wrapper Docs</th>
-    </tr>
-    <tr>
-        <td>
-            <a href="https://discord.com/">
-                <img valign="bottom" src="./assets/readme/discord.png" alt="Discord" width="40" />
-            </a>
-        </td>
-        <td>
-            <a href="https://discord.com/developers/docs/intro">Discord Bot API</a>
-        </td>
-        <td>
-            <a href="https://github.com/Rapptz/discord.py">
-                <img valign="bottom" src="./assets/readme/DiscordPy.png" alt="Discord.py" width="40" />
-            </a>
-        </td>
-        <td>
-            <a href="https://discordpy.readthedocs.io/en/latest/">discord.py</a>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <a href="https://www.dota2.com/">
-                <img valign="bottom" src="./assets/readme/dota_logo_psd.png" alt="Dota 2" width="40" />
-            </a>
-        </td>
-        <td>Dota 2 Game Coordinator  API</td>
-        <td>
-            <a href="https://github.com/Gobot1234/steam.py">
-                <img valign="bottom" src="./assets/images/logo/steampy.png" alt="Dota 2" width="40" />
-            </a>
-        </td>
-        <td><a href="https://steam-py.github.io/docs/latest/">steam.py</a></td>
-    </tr>
-    <tr>
-        <td>
-            <a href="https://stratz.com/">
-                <img valign="bottom" src="./assets/readme/Stratz.png" alt="Stratz" width="40" />
-            </a>
-        </td>
-        <td><a href="https://api.stratz.com/graphiql/">Stratz GraphQL API</a></td>
-        <td>
-            <a href="https://github.com/iann838/pulsefire">
-                <img valign="bottom" src="./assets/readme/pulsefire.png" alt="Pulsefire" width="40" />
-            </a>
-        </td>
-        <td>pulsefire-like client</td>
-    </tr>
-    <tr>
-        <td>
-            <a href="https://opendota.com/">
-                <img valign="bottom" src="./assets/readme/Opendota.png" alt="OpenDota" width="40" />
-            </a>
-        </td>
-        <td><a href="https://docs.opendota.com/">OpenDota API</a></td>
-        <td>
-            <a href="https://github.com/iann838/pulsefire">
-                <img valign="bottom" src="./assets/readme/pulsefire.png" alt="Pulsefire" width="40" />
-            </a>
-        </td>
-        <td>pulsefire-like client</td>
-    </tr>
-    <tr>
-        <td>
-            <a href="https://developer.riotgames.com/">
-                <img valign="bottom" src="./assets/readme/riot-logo.png" alt="Riot Games" width="40" />
-            </a>
-        </td>
-        <td><a href="https://developer.riotgames.com/apis">Riot Games API</a></td>
-        <td>
-            <a href="https://github.com/iann838/pulsefire">
-                <img valign="bottom" src="./assets/readme/pulsefire.png" alt="Pulsefire" width="40" />
-            </a>
-        </td>
-        <td><a href="https://pulsefire.iann838.com/">pulsefire</a></td>
-    </tr>
-    <tr>
-        <td>
-            <a href="https://twitch.tv/">
-                <img valign="bottom" src="./assets/readme/twitch.png" alt="Twitch" width="40" />
-            </a>
-        </td>
-        <td>
-            <a href="https://dev.twitch.tv/">Twitch API</a>
-        </td>
-        <td>
-            <a href="https://github.com/PythonistaGuild/TwitchIO">
-                <img valign="bottom" src="./assets/images/logo/twitchio.png" alt="Twitchio" width="40" />
-            </a>
-        </td>
-        <td>
-            <a href="https://twitchio.dev/en/stable/">twitchio</a>
-        </td>
-    </tr>
-        <tr>
-        <td>
-            <a href="https://github.com/">
-                <img valign="bottom" src="./assets/readme/github-mark-white.png" alt="Github" width="40" />
-            </a>
-        </td>
-        <td>
-            <a href="https://docs.github.com/en/rest">GitHub API</a>
-        </td>
-        <td>
-            <a href="https://github.com/yanyongyu/githubkit">
-                <img valign="bottom" src="./assets/readme/githubkit.png" alt="Twitch" width="40" />
-            </a>
-        </td>
-        <td>
-            <a href="https://yanyongyu.github.io/githubkit/">githubkit </a>
-        </td>
-    </tr>
-    </tr>
-        <tr>
-        <td>
-            <a href="https://steamcommunity.com/">
-                <img valign="bottom" src="./assets/readme/steam.png" alt="Github" width="40" />
-            </a>
-        </td>
-        <td>
-            <a href="https://steamapi.xpaw.me/#IDOTA2MatchStats_570">Steam Web API</a>
-        </td>
-        <td>
-            <a href="https://github.com/iann838/pulsefire">
-                <img valign="bottom" src="./assets/readme/pulsefire.png" alt="Pulsefire" width="40" />
-            </a>
-        </td>
-        <td>
-            pulsefire-like client
-        </td>
-    </tr>
-    </tr>
-        <tr>
-        <td>
-            <a href="https://www.wolframalpha.com/">
-                <img valign="bottom" src="./assets/readme/wolfram.png" alt="WolframAlpha" width="40" />
-            </a>
-        </td>
-        <td>
-            <a href="https://products.wolframalpha.com/api">WolframAlpha API</a>
-        </td>
-        <td style="text-align: center;">—</td>
-        <td>Just aiohttp requests</td>
-    </tr>
+<tr>
+<th style="text-align: center;">Site</th>
+<th style="text-align: center;">API Docs</th>
+<th style="text-align: center;">Repo</th>
+<th style="text-align: center;">Library/Wrapper Docs</th>
+</tr>
+<tr> <!-- Discord Bot API -->
+<td><a href="https://discord.com/"><img valign="bottom" src="./assets/readme/discord.png" alt="Discord" width="40"/></a></td>
+<td><a href="https://discord.com/developers/docs/intro">Discord Bot API</a></td>
+<td><a href="https://github.com/Rapptz/discord.py"><img valign="bottom" src="./assets/readme/DiscordPy.png" alt="Discord.py" width="40" /></a></td>
+<td><a href="https://discordpy.readthedocs.io/en/latest/">discord.py</a></td>
+</tr>
+<tr> <!-- Dota 2 Game Coordinator API -->
+<td><a href="https://www.dota2.com/"><img valign="bottom" src="./assets/readme/dota_logo_psd.png" alt="Dota 2" width="40"/></a></td>
+<td>Dota 2 Game Coordinator  API</td>
+<td><a href="https://github.com/Gobot1234/steam.py"><img valign="bottom" src="./assets/images/logo/steampy.png" alt="Dota 2" width="40"/></a></td>
+<td><a href="https://steam-py.github.io/docs/latest/">steam.py</a></td>
+</tr>
+<tr> <!-- Stratz GraphQL API -->
+<td><a href="https://stratz.com/"><img valign="bottom" src="./assets/readme/Stratz.png" alt="Stratz" width="40"/></a></td>
+<td><a href="https://api.stratz.com/graphiql/">Stratz GraphQL API</a></td>
+<td style="text-align: center;"><img src=https://docs.aiohttp.org/en/stable/_static/aiohttp-plain.svg width=40></td>
+<td><a href="https://docs.aiohttp.org/en/stable/">aiohttp</a> requests</td>
+</tr>
+<tr> <!-- OpenDota API -->
+<td><a href="https://opendota.com/"><img valign="bottom" src="./assets/readme/opendota.png" alt="OpenDota" width="40"/></a></td>
+<td><a href="https://docs.opendota.com/">OpenDota API</a></td>
+<td style="text-align: center;"><img src=https://docs.aiohttp.org/en/stable/_static/aiohttp-plain.svg width=40></td>
+<td><a href="https://docs.aiohttp.org/en/stable/">aiohttp</a> requests</td>
+</tr>
+<tr> <!-- Riot Games API -->
+<td><a href="https://developer.riotgames.com/"><img valign="bottom" src="./assets/readme/riot-logo.png" alt="Riot Games" width="40"/></a></td>
+<td><a href="https://developer.riotgames.com/apis">Riot Games API</a></td>
+<td><a href="https://github.com/iann838/pulsefire"><img valign="bottom" src="./assets/readme/pulsefire.png" alt="Pulsefire" width="40"/></a></td>
+<td><a href="https://pulsefire.iann838.com/">pulsefire</a></td>
+</tr>
+<tr> <!-- Twitch API -->
+<td><a href="https://twitch.tv/"><img valign="bottom" src="./assets/readme/twitch.png" alt="Twitch" width="40" /></a></td>
+<td><a href="https://dev.twitch.tv/">Twitch API</a></td>
+<td><a href="https://github.com/PythonistaGuild/TwitchIO"><img valign="bottom" src="./assets/images/logo/twitchio.png" alt="Twitchio" width="40" /></a></td>
+<td><a href="https://twitchio.dev/en/stable/">twitchio</a></td>
+</tr>
+<tr> <!-- GitHub API -->
+<td><a href="https://github.com/"><img valign="bottom" src="./assets/readme/github-mark-white.png" alt="Github" width="40" /></a></td>
+<td><a href="https://docs.github.com/en/rest">GitHub API</a></td>
+<td><a href="https://github.com/yanyongyu/githubkit"><img valign="bottom" src="./assets/readme/githubkit.png" alt="Twitch" width="40" /></a></td>
+<td><a href="https://yanyongyu.github.io/githubkit/">githubkit </a></td>
+</tr>
+<tr> <!-- Steam Web API -->
+<td><a href="https://steamcommunity.com/"><img valign="bottom" src="./assets/readme/steam.png" alt="Github" width="40" /></a></td>
+<td><a href="https://steamapi.xpaw.me/#IDOTA2MatchStats_570">Steam Web API</a></td>
+<td style="text-align: center;"><img src=https://docs.aiohttp.org/en/stable/_static/aiohttp-plain.svg width=40></td>
+<td><a href="https://docs.aiohttp.org/en/stable/">aiohttp</a> requests</td>
+</tr>
+<tr>
+<td><a href="https://www.wolframalpha.com/"><img valign="bottom" src="./assets/readme/wolfram.png" alt="WolframAlpha" width="40"/></a></td>
+<td><a href="https://products.wolframalpha.com/api">WolframAlpha API</a></td>
+<td style="text-align: center;"><img src=https://docs.aiohttp.org/en/stable/_static/aiohttp-plain.svg width=40></td>
+<td><a href="https://docs.aiohttp.org/en/stable/">aiohttp</a> requests</td>
+</tr>
 </table>
 
-TODO: ^Finish this table
+\# TODO: Add other api we use;

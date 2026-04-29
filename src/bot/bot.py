@@ -102,9 +102,11 @@ class AluBot(commands.Bot):
         """Mapping of `message_id -> user_id` for Mimic Messages."""
         self.app_emojis: list[discord.Emoji] = []
 
+        self.bot_app_info: discord.AppInfo
+
     @override
     async def setup_hook(self) -> None:
-        self.bot_app_info: discord.AppInfo = await self.application_info()
+        self.bot_app_info = await self.application_info()
 
         failed_to_load_some_ext = False
         for ext in self.extensions_to_load:
@@ -268,13 +270,9 @@ class AluBot(commands.Bot):
             await self.send_warning("AluBot is closing.")
 
         await self.pool.close()
-        if hasattr(self, "twitch"):
-            await self.twitch.close()
-        if hasattr(self, "dota"):
-            await self.dota.close()
-        if hasattr(self, "lol"):
-            await self.lol.close()
-
+        for client_attribute_name in ("twitch", "dota", "lol"):
+            if hasattr(self, client_attribute_name):
+                await getattr(self, client_attribute_name).close()
         await super().close()
         # session needs to be closed the last probably
         if hasattr(self, "session"):

@@ -1,6 +1,18 @@
 Mozilla Public License Version 2.0
 ==================================
 
+Disclaimer
+-------------
+This license is applied to all source code files in this repository. The notable exceptions:
+
+* Profile bot's picture belongs to Lady Noir stickerpack published by
+    Telegram Team: <https://tlgrm.eu/stickers/MiladyNoir>. I should probably commission my own instead.
+* I'm not really sure about license situation for fonts in `assets/fonts`
+* Hopefully I attributed code by other people in the code comments where
+    appropriate either on top of the file, in the function docstring or near the code snippet
+
+If anything is wrong and it bothers you - please, contact me.
+
 1. Definitions
 --------------
 

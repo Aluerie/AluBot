@@ -38,10 +38,10 @@ import os
 from pkgutil import iter_modules
 
 try:
-    import etl
+    import subset
 
-    EXTENSIONS_TO_LOAD = etl.EXTENSIONS_TO_LOAD
-    LOAD_ALL_EXTENSIONS = etl.LOAD_ALL_EXTENSIONS
+    EXTENSIONS_TO_LOAD = subset.EXTENSIONS_TO_LOAD
+    LOAD_ALL_EXTENSIONS = subset.LOAD_ALL_EXTENSIONS
 except ModuleNotFoundError:
 
     EXTENSIONS_TO_LOAD: tuple[str, ...] = ()  # type: ignore[reportConstantRedefinition]

@@ -13,13 +13,18 @@ venv/
 .ipynb_checkpoints
 *.ipynb
 
-# windows
+# windows memes
 *.ini
 
 # beta test
 /ext/beta.py
-_test.py
+subset.py
 draft.py
 
 # config secrets
 /config.toml
+
+# wiki
+# I like cloning wiki https://github.com/Aluerie/AluBot.wiki.git 
+# into the same folder so I can edit it in the same IDE window
+.wiki

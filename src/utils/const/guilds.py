@@ -10,7 +10,7 @@ from .abc import CONSTANTS
 if TYPE_CHECKING:
     from bot import AluBot
 
-__all__ = ("MY_GUILDS", "PREMIUM_GUILDS", "Channel", "CommunityGuild", "Guild", "HideoutGuild", "Role", "User")
+__all__ = ("MY_BOTS", "MY_GUILDS", "PREMIUM_GUILDS", "Channel", "CommunityGuild", "Guild", "HideoutGuild", "Role", "User")
 
 
 class SnowflakeEnum(IntEnum):

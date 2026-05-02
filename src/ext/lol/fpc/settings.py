@@ -117,7 +117,7 @@ class LolFPCSettings(BaseSettingsCog):
     """
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
-        bot.instantiate_lol()
+        bot.initialize_lol()
         super().__init__(
             bot,
             *args,

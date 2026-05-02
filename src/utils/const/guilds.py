@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, TypeVar, override
+from typing import TYPE_CHECKING, override
 
 import discord
 
@@ -10,7 +10,7 @@ from .abc import CONSTANTS
 if TYPE_CHECKING:
     from bot import AluBot
 
-T = TypeVar("T")
+__all__ = ("MY_GUILDS", "PREMIUM_GUILDS", "Channel", "CommunityGuild", "Guild", "HideoutGuild", "Role", "User")
 
 
 class SnowflakeEnum(IntEnum):
@@ -234,7 +234,7 @@ class SavedGuild:
             raise RuntimeError(msg)
         return guild
 
-    def get_channel(self, channel_id: int, channel_type: type[T]) -> T:
+    def get_channel[T](self, channel_id: int, channel_type: type[T]) -> T:
         """Get channel object by id."""
         channel = self.guild.get_channel(channel_id)
         if channel:

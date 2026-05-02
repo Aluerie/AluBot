@@ -162,7 +162,6 @@ class Action:
         created_at: datetime.datetime,
         actor: SimpleUser,
         issue_number: int,
-        **kwargs: Any,
     ) -> None:
         self.event_type: EventBase | CommentBase = enum_type
         self.created_at: datetime.datetime = created_at.replace(tzinfo=datetime.UTC)
@@ -321,10 +320,14 @@ class BugTracker(AluCog):
 
     """
 
+    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+        super().__init__(bot, *args, **kwargs)
+        self.valve_devs: list[str]
+
     @override
     async def cog_load(self) -> None:
         self.bot.instantiate_github()
-        self.valve_devs: list[str] = await self.get_valve_devs()
+        self.valve_devs = await self.get_valve_devs()
 
         self.bugtracker_news_worker.add_exception_type(RequestError, RequestFailed)
         self.bugtracker_news_worker.start()

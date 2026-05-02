@@ -312,7 +312,7 @@ async def beta_test_edit_image(self: AluCog) -> None:
     """
     from ext.lol.fpc.models import MatchToEdit
 
-    self.bot.instantiate_lol()
+    self.bot.initialize_lol()
     await self.bot.lol.start()
 
     match_id = "NA1_5217990177"
@@ -339,7 +339,7 @@ async def beta_test_send_image(self: AluCog) -> None:
     """
     from ext.lol.fpc.models import MatchToSend
 
-    self.bot.instantiate_lol()
+    self.bot.initialize_lol()
     await self.bot.lol.start()
 
     game = await self.bot.lol.get_lol_spectator_v5_active_game_by_summoner(

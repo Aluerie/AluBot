@@ -1,6 +1,6 @@
 # AluBot 💜
 
-![AluBot Social Preview](<assets/bots_profile/GitHub - Social Preview.png>)
+![AluBot Social Preview](<assets/social/GitHub - Social Preview.png>)
 
 The initial idea was to send me notifications when my favorite  Dota 2/ League of Legends
 [twitch.tv](https://www.twitch.tv/) streamers pick my favorite heroes/champions and as games end edit the messages to include post-game information.
@@ -13,14 +13,11 @@ with pretty much everything I ever needed!
 ## 🏠 [Wiki](<https://github.com/Aluerie/AluBot/wiki>)
 
 > [!IMPORTANT]
-> I put A LOT of information into GitHub [🏠 Wiki](https://github.com/Aluerie/AluBot/wiki) - so go check it out. Including:
+> I put some information into GitHub [🏠 Wiki](https://github.com/Aluerie/AluBot/wiki) instead of writing it in the `README.md`. Including:
 
-* [🛠️ Running/Installation guide](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9B%A0%EF%B8%8FRunning-Installation-guide)
-* [📖 Features](https://github.com/Aluerie/AluBot/wiki/%F0%9F%93%96-Features)
-* [🕵️ Privacy Policy](https://github.com/Aluerie/AluBot/wiki/%F0%9F%95%B5%EF%B8%8F--Privacy-Policy)
-* [🖊️ Terms of Service](https://github.com/Aluerie/AluBot/wiki/%F0%9F%96%8A%EF%B8%8F-Terms-of-Service)
-* [🔬 GitHub stats for the project](https://github.com/Aluerie/AluBot/wiki/%F0%9F%94%AC-GitHub-stats-for-the-project)
-* [🚓 Credits, License, Copyright](https://github.com/Aluerie/AluBot/wiki/%F0%9F%9A%93-Credits,-License,-Copyright)
+* [🛠️ Running Installation Guide](https://github.com/Aluerie/AluBot/wiki/🛠️-Running-Installation-Guide)
+* [📖 Features](https://github.com/Aluerie/AluBot/wiki/📖-Features)
+* etc
 
 ## 🤗 Thanks
 

@@ -25,7 +25,7 @@ class LolFPC(
 
     @override
     async def cog_load(self) -> None:
-        self.bot.instantiate_lol()
+        self.bot.initialize_lol()
         await self.bot.lol.start()
         await self.bot.instantiate_twitch()
         return await super().cog_load()

@@ -60,6 +60,8 @@ role-identification = { git = "https://github.com/meraki-analytics/role-identifi
 
 [dependency-groups]
 dev = [
+    "pyright",
+    "ruff",
     "asyncpg-stubs",
     "ipykernel",
 ]
@@ -80,7 +82,7 @@ explicit = true
 # 0. EXAMPLES OF GOOD PYPROJECT.TOML 
 #
 # * https://github.com/AbstractUmbra/Mipha/blob/main/pyproject.toml
-# * https://github.com/mikeshardmind/async-utils/blob/main/pyproject.toml
+# * https://github.com/mikeshardmind/salamander-reloaded/blob/75d6f44709fc12a486809ebdaf92eb6e733b63cf/pyproject.toml
 
 # 1. PYRIGHT
 # 
@@ -96,23 +98,23 @@ pythonVersion = "3.12"
 deprecateTypingAliases = true
 typeCheckingMode = "strict"
 
-# 1.1. Rules that are "None" by default even in strict - let's explicitly set them
-reportCallInDefaultInitializer      = "warning" #
-reportImplicitOverride              = "warning" #
-reportImplicitStringConcatenation   = "none"    # Linter-esque option; Let Ruff's ISC002 do the job.
-reportImportCycles                  = "none"    # Not smart enough; doesn't understand `if TYPE_CHECKING`.
-reportMissingSuperCall              = "none"    # Not smart enough; Base parent class does not needs `super().__init__` from `object`. 
-reportPropertyTypeMismatch          = "warning" #
-reportUninitializedInstanceVariable = "warning" # 
-reportUnnecessaryTypeIgnoreComment  = "warning" # 
-reportUnreachable                   = "warning" #
-reportUnusedCallResult              = "none"    # (Overly-worrisome) linter-esque option.
+# 1.1. Rules that are "None" by default even in strict
+reportCallInDefaultInitializer = "warning"
+reportImplicitOverride = "warning"
+reportImplicitStringConcatenation = "none" # Linter-esque option; Let Ruff's ISC002 do the job.
+reportImportCycles = "error" # Not smart enough; doesn't understand `if TYPE_CHECKING`.
+reportMissingSuperCall = "none" # Not smart enough; Base parent class does not needs `super().__init__` from `object`. 
+reportPropertyTypeMismatch = "warning"
+reportUninitializedInstanceVariable = "warning" 
+reportUnnecessaryTypeIgnoreComment = "warning" 
+reportUnreachable = "warning"
+reportUnusedCallResult = "none" # (Overly-worrisome) linter-esque option.
 
 # 1.2. Rejected rules;
-reportDuplicateImport            = "none"   # handled by Ruff, linter-esque option.
-reportIncompatibleMethodOverride = "none"   # Dpy and general Python's workflow of subclassing base models require such overwrites.
-reportIncompatibleVariableOverride = "none" # Somewhat same^, sometimes it's needed.
-reportMissingTypeStubs           = "none"   # I'm not going to write stubs for all the libraries that don't have them. And some libraries are fully typed without any stubs anyway.
+reportDuplicateImport = "none" # handled by Ruff, linter-esque option.
+# reportIncompatibleMethodOverride = "none" # Dpy and general Python's workflow of subclassing base models require such overwrites.
+# reportIncompatibleVariableOverride = "none" # Somewhat same^, sometimes it's needed.
+# reportMissingTypeStubs = "none" # I'm not going to write stubs for the libraries that don't have them.
 
 # 2. RUFF
 # 
@@ -122,6 +124,7 @@ reportMissingTypeStubs           = "none"   # I'm not going to write stubs for a
 [tool.ruff]
 line-length = 125
 target-version = "py312"
+preview = false
 exclude = [".venv", "docs"]
 src = ["src"]
 
@@ -130,7 +133,7 @@ select = ["ALL"]
 ignore = [
     # 0. Situational toggles
     "ERA",    # eradicate: Ignore by default
-    # "RUF100", # unused-noqa: Ignore when we play around with some rules
+    "RUF100", # unused-noqa: Ignore when we play around with some rules
 
     # 0. Uncategorized - still thinking if we need those
     "D",      # pydocstyle: Doc-strings, 
@@ -139,19 +142,19 @@ ignore = [
 
     # 1. Handled by Ruff Formatter instead
     # Recommendation from: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules.
-    "W191",   # tab-indentation                           #
-    "E111",   # indentation-with-invalid-multiple         #
-    "E114",   # indentation-with-invalid-multiple-comment #
-    "E117",   # over-indented                             #
-    "D206",   # docstring-tab-indentation                 #
-    "D300",   # triple-single-quotes                      #
-    "Q000",   # bad-quotes-inline-string                  #
-    "Q001",   # bad-quotes-multiline-string               #
-    "Q002",   # bad-quotes-docstring                      #
-    "Q003",   # avoidable-escaped-quote                   #
-    "COM812", # missing-trailing-comma                    #
-    "COM819", # prohibited-trailing-comma                 #
-    "ISC002", # multi-line-implicit-string-concatenation  #
+    "W191",   # tab-indentation                           
+    "E111",   # indentation-with-invalid-multiple         
+    "E114",   # indentation-with-invalid-multiple-comment 
+    "E117",   # over-indented                             
+    "D206",   # docstring-tab-indentation               
+    "D300",   # triple-single-quotes                  
+    "Q000",   # bad-quotes-inline-string               
+    "Q001",   # bad-quotes-multiline-string              
+    "Q002",   # bad-quotes-docstring                   
+    "Q003",   # avoidable-escaped-quote                   
+    "COM812", # missing-trailing-comma                 
+    "COM819", # prohibited-trailing-comma  
+    "ISC002", # multi-line-implicit-string-concatenation
 
     # 2. Pyright should manage those
     # "F401",

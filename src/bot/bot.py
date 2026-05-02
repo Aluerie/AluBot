@@ -199,8 +199,16 @@ class AluBot(commands.Bot):
         await asyncio.gather(*coroutines)
 
     @override
-    async def get_context(self, origin: AluInteraction | discord.Message) -> AluContext:
+    async def get_context(
+        self, origin: discord.Interaction | discord.Message, /, *, cls: type[commands.Context[Any]] = AluContext
+    ) -> AluContext:
         return await super().get_context(origin, cls=AluContext)
+
+    # @override
+    # async def get_context(
+    #     self, origin: discord.Message | discord.Interaction[discord.Client], /, *, cls: type[AluContext] = ...
+    # ) -> Any:
+    #     return super().get_context(origin, cls=cls)
 
     @property
     def owner(self) -> discord.User:
@@ -223,7 +231,7 @@ class AluBot(commands.Bot):
     and I exactly want these^
     """
 
-    def instantiate_lol(self) -> None:
+    def initialize_lol(self) -> None:
         """Instantiate League of Legends Client."""
         if not hasattr(self, "lol"):
             from utils.lol import LeagueClient

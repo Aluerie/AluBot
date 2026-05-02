@@ -166,14 +166,14 @@ class Logger(AluCog):
             return
 
         added_role = list(set(after.roles) - set(before.roles))
-        if added_role and added_role[0].id not in const.IGNORED_FOR_LOGS:
+        if added_role and added_role[0].id not in const.ROLES_IGNORED_FOR_LOGS:
             e = discord.Embed(description=f"**Role added:** {added_role[0].mention}", color=0x00FF7F)
             e.set_author(name=f"{after.display_name}'s roles changed", icon_url=after.display_avatar.url)
             await self.bot.community.logs.send(embed=e)
             return
 
         removed_role = list(set(before.roles) - set(after.roles))
-        if removed_role and removed_role[0].id not in const.IGNORED_FOR_LOGS:
+        if removed_role and removed_role[0].id not in const.ROLES_IGNORED_FOR_LOGS:
             e = discord.Embed(description=f"**Role removed:** {removed_role[0].mention}", color=0x006400)
             e.set_author(name=f"{after.display_name}'s roles changed", icon_url=after.display_avatar.url)
             await self.bot.community.logs.send(embed=e)

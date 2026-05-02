@@ -10,7 +10,19 @@ from .abc import CONSTANTS
 if TYPE_CHECKING:
     from bot import AluBot
 
-__all__ = ("MY_BOTS", "MY_GUILDS", "PREMIUM_GUILDS", "Channel", "CommunityGuild", "Guild", "HideoutGuild", "Role", "User")
+__all__ = (
+    "CATEGORY_ROLES",
+    "MY_BOTS",
+    "MY_GUILDS",
+    "PREMIUM_GUILDS",
+    "ROLES_IGNORED_FOR_LOGS",
+    "Channel",
+    "CommunityGuild",
+    "Guild",
+    "HideoutGuild",
+    "Role",
+    "User",
+)
 
 
 class SnowflakeEnum(IntEnum):
@@ -178,7 +190,7 @@ CATEGORY_ROLES = [
     727492782196916275,  # plebs
 ]
 
-IGNORED_FOR_LOGS = [Role.voice, Role.live_stream, *CATEGORY_ROLES]
+ROLES_IGNORED_FOR_LOGS = [Role.voice, Role.live_stream, *CATEGORY_ROLES]
 
 
 class User(UserEnum):

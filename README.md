@@ -53,7 +53,7 @@ Special thanks to the whole `discord.py` community for endless amount of educati
 <td><a href="https://docs.aiohttp.org/en/stable/">aiohttp</a> requests</td>
 </tr>
 <tr> <!-- OpenDota API -->
-<td><a href="https://opendota.com/"><img valign="bottom" src="./assets/readme/opendota.png" alt="OpenDota" width="40"/></a></td>
+<td><a href="https://opendota.com/"><img valign="bottom" src="./assets/readme/Opendota.png" alt="OpenDota" width="40"/></a></td>
 <td><a href="https://docs.opendota.com/">OpenDota API</a></td>
 <td style="text-align: center;"><img src=https://docs.aiohttp.org/en/stable/_static/aiohttp-plain.svg width=40></td>
 <td><a href="https://docs.aiohttp.org/en/stable/">aiohttp</a> requests</td>

@@ -42,7 +42,7 @@ class Control(BaseDevCog):
         self.database_backup.stop()
         await super().cog_unload()
 
-    @aluloop(time=datetime.time(hour=17, minute=50, tzinfo=datetime.UTC))
+    @aluloop(time=datetime.time(hour=18, minute=5, tzinfo=datetime.UTC))
     async def database_backup(self) -> None:
         """Daily task to backup the bot's database.
 
@@ -51,6 +51,7 @@ class Control(BaseDevCog):
         """
         if self.bot.is_vps:
             await asyncio.create_subprocess_shell("pg_dump alubot > .temp/alubot.sql")
+            await asyncio.sleep(10)  # wait till pg_dump finished dumping (otherwise next line will send 0 bytes empty file)
             await self.hideout.database.send(file=discord.File(fp=".temp/alubot.sql", filename="alubot.sql"))
 
     system_group = app_commands.Group(

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
+import platform
 import sys
 import textwrap
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -103,6 +104,8 @@ class AluBot(commands.Bot):
         self.app_emojis: list[discord.Emoji] = []
 
         self.bot_app_info: discord.AppInfo
+
+        self.is_vps: bool = platform.system() == "Linux"
 
     @override
     async def setup_hook(self) -> None:

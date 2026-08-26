@@ -42,15 +42,16 @@ class Control(BaseDevCog):
         self.database_backup.stop()
         await super().cog_unload()
 
-    @aluloop(time=datetime.time(hour=14, minute=14, tzinfo=datetime.UTC))
+    @aluloop(time=datetime.time(hour=17, minute=35, tzinfo=datetime.UTC))
     async def database_backup(self) -> None:
         """Daily task to backup the bot's database.
 
         Sends pg_dump into my private discord server.
         Which is not secure, I guess, but for now it's fine.
         """
-        await asyncio.create_subprocess_shell("pg_dump alubot > alubot.sql")
-        await self.hideout.database.send(file=discord.File("alubot.sql"))
+        if self.bot.is_vps:
+            await asyncio.create_subprocess_shell("pg_dump alubot > .temp/alubot.sql")
+            await self.hideout.database.send(file=discord.File(".temp/alubot.sql"))
 
     system_group = app_commands.Group(
         name="system-dev",  # TODO: maybe rename this to alubot-dev so it matches irebot-dev :thinking:

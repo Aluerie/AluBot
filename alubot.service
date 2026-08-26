@@ -14,7 +14,8 @@ After=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/home/ubuntu/AluBot/
-ExecStart=/home/ubuntu/AluBot/.venv/bin/python3.12 src/main.py
+ExecStart=/home/ubuntu/.local/bin/uv run src/main.py
+; ExecStart=/home/ubuntu/AluBot/.venv/bin/python3.12 src/main.py
 User=ubuntu
 Restart=always
 RestartSec=30

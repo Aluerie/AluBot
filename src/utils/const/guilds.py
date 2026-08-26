@@ -133,6 +133,8 @@ class Channel(ChannelEnum):
     total_bots = 795743065787990066
 
     # HIDEOUT
+    # TODO: add channel names with emotes here
+    # TODO: Maybe we separate community and hideout channel ids
     global_logs = 997149550324240465
 
     alu_spam = 970823670702411810
@@ -144,6 +146,8 @@ class Channel(ChannelEnum):
     hideout_logs = 869735263209947228
     dota_updates = 873430376033452053
     alubot_github = 1107050162628595742
+
+    database = 1541985585810378823
 
 
 class Role(RoleEnum):
@@ -474,6 +478,11 @@ class HideoutGuild(SavedGuild):
     def repost(self) -> discord.TextChannel:
         """Channel where all news/announcements/notifications get posted/reposted."""
         return self.get_channel(Channel.repost, discord.TextChannel)
+
+    @property
+    def database(self) -> discord.TextChannel:
+        """Channel where the bot sends daily database backups."""
+        return self.get_channel(Channel.database, discord.TextChannel)
 
     # roles ############################################################################################################
     @property

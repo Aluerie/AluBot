@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
 import importlib
 import importlib.metadata
 import logging
@@ -8,12 +9,13 @@ import platform
 import socket
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, override
 
 import discord
 import psutil
 from discord import app_commands
 
+from bot import aluloop
 from utils import const
 
 from ._base import BaseDevCog
@@ -29,6 +31,26 @@ log.setLevel(logging.INFO)
 
 class Control(BaseDevCog):
     """Utilities for system-wide control and information for AluBot and some other projects of mine."""
+
+    @override
+    async def cog_load(self) -> None:
+        self.database_backup.start()
+        await super().cog_load()
+
+    @override
+    async def cog_unload(self) -> None:
+        self.database_backup.stop()
+        await super().cog_unload()
+
+    @aluloop(time=datetime.time(hour=14, minute=14, tzinfo=datetime.UTC))
+    async def database_backup(self) -> None:
+        """Daily task to backup the bot's database.
+
+        Sends pg_dump into my private discord server.
+        Which is not secure, I guess, but for now it's fine.
+        """
+        await asyncio.create_subprocess_shell("pg_dump alubot > alubot.sql")
+        await self.hideout.database.send(file=discord.File("alubot.sql"))
 
     system_group = app_commands.Group(
         name="system-dev",  # TODO: maybe rename this to alubot-dev so it matches irebot-dev :thinking:

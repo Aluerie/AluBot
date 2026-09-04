@@ -291,6 +291,7 @@ class FixSocialLinks(AluCog):
 
         Contains random links that are supposed to be fixed by this cog if they were to be sent by a human."""
         await ctx.send(TEST_STRING, suppress_embeds=True)
+        await ctx.send(subn_links_to_fix(TEST_STRING)[0])
 
 
 async def setup(bot: AluBot) -> None:

@@ -188,9 +188,11 @@ class FixSocialLinks(AluCog):
     async def community_fix_links(self, message: discord.Message) -> None:
         """(#Community Only!) Immediately fix messages with "wrong" social links with "better" ones.
 
-        Currently only enabled in the community server.
+        Currently only enabled in the community and hideout servers.
         """
-        if not message.guild or message.guild.id not in const.MY_GUILDS:
+        if not message.guild or message.guild.id not in const.MY_GUILDS or message.channel.id == const.Channel.jailed_bots:
+            # Don't allow outside of community/hideout servers.
+            # Don't allow in #jailed_bots as this is where I test other embed fix bots.
             return
         if message.author.bot:
             return

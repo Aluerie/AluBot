@@ -139,6 +139,7 @@ class Channel(ChannelEnum):
 
     alu_spam = 970823670702411810
     yen_spam = 1066379298363166791
+    jailed_bots = 1090427312631197756
     alu_logs = 1075497084075130880
 
     repost = 971504469995049041

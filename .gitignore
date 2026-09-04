@@ -21,6 +21,7 @@ ipynb/
 /ext/beta.py
 subset.py
 draft.py
+alpha.py
 
 # config secrets
 /config.toml

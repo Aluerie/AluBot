@@ -64,7 +64,7 @@ FIX_DICT: dict[str, str] = {
     # cSpell: disable
     "x": "fxtwitter.com",
     "twitter": "fxtwitter.com",
-    "reddit": "rxddit.com",
+    "reddit": "vxreddit.com",
     "instagram": "oginstagram.com",
     "tiktok": "tnktok.com",
     "deviantart": "fixdeviantart.com",
@@ -168,24 +168,34 @@ def subn_links_to_fix(text: str) -> tuple[str, int]:
     )
 
 
-TEST_STRING = """
+TEST_STRINGS: dict[str, int] = {
+    # Number is an amount of expected embed produced if a user sends this string as a message
+    # Remember that embeds with multiple images count as many embeds at once (e.g. 4 images = 4 embeds)
+    """
 * https://www.instagram.com/taylorswift/p/DXrxObojod9/?hl=en - Taylor Swift;
 * https://instagram.com/reel/CsfO_chhPEe/ - Kuru Cosplay;
 * https://instagram.com/p/DBg0L6foRNW/ - Pale Waves;
 * https://x.com/IceFrog/status/1718834746300719265 - IceFrog;
 * https://open.spotify.com/track/42VUCXerQ5qTr4Qp6PhKo4 - Sabrina Carpenter;
 * https://www.twitch.tv/irene_adler__/clip/SincereCuteOtterBudBlast-tFLu0wQZE6WgrlvD - E33 clip;
+""": 8,
+    """
 * https://clips.twitch.tv/SincereCuteOtterBudBlast-tFLu0wQZE6WgrlvD - E33 clip;
-"""
+* https://clips.twitch.tv/AmazingVainEelBloodTrail-lWA1mPXy6arU3stT - SB cLip;
+* https://reddit.com/r/DotA2/s/Fjev0bPyO5 - WR Statue post;
+""": 4,
+}
+
 
 # Copy-paste for alpha.py
 """
-from ext.mimics.embed_fixer import TEST_STRING, find_all_links_to_fix, subn_links_to_fix
+from ext.mimics.embed_fixer import TEST_STRINGS, find_all_links_to_fix, subn_links_to_fix
 
-result = x = find_all_links_to_fix(TEST_STRING)
+x = next(iter(TEST_STRINGS.keys()))
+result = find_all_links_to_fix(x)
 print(result)
 
-result = x = subn_links_to_fix(TEST_STRING)
+result = subn_links_to_fix(x)
 print(result[0])
 print(result[1])
 """
@@ -290,8 +300,21 @@ class FixSocialLinks(AluCog):
         """Test Fix Link Examples.
 
         Contains random links that are supposed to be fixed by this cog if they were to be sent by a human."""
-        await ctx.send(TEST_STRING, suppress_embeds=True)
-        await ctx.send(subn_links_to_fix(TEST_STRING)[0])
+
+        results: list[str] = []
+        for test_number, (test_string, correct_embed_count) in enumerate(TEST_STRINGS.items()):
+            await ctx.send(f"# Original Links\n{test_string}", suppress_embeds=True)
+            message = await ctx.send(f"# Fixed Links\n{subn_links_to_fix(test_string)[0]}")
+            await asyncio.sleep(10.0)
+
+            same_message_but_with_meta_embeds = await message.channel.fetch_message(message.id)
+            if correct_embed_count != (embed_count := len(same_message_but_with_meta_embeds.embeds)):
+                results.append(f"* Test #{test_number + 1} failed: expected {correct_embed_count}, but we got {embed_count}")
+
+        if results:
+            await ctx.send("# ❌ Failed\n" + "\n".join(results))
+        else:
+            await ctx.send("# ✅ All Tests passed")
 
 
 async def setup(bot: AluBot) -> None:

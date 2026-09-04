@@ -164,7 +164,7 @@ def subn_links_to_fix(text: str) -> tuple[str, int]:
     # mo.group(2) is '/p/DBg0L6foRNW/'
     # So `.findall` doesn't include `group(0)` into its groups, which makes sense, but might be confusing.
     return EMBED_FIXER_REGEX_PATTERN.subn(
-        lambda mo: mo.group(1) + FIX_DICT[mo.group(2).lower().split(".")[0]] + mo.group(3), text
+        lambda mo: mo.group(1).replace("www.", "") + FIX_DICT[mo.group(2).lower().split(".")[0]] + mo.group(3), text
     )
 
 

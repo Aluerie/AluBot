@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from utils import const
-
 from .feedback import FeedbackCog
 from .help import AluHelpCog
 from .other import OtherCog

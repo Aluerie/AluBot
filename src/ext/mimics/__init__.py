@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from utils.const import Emote
 
-from .fix_social_links import FixSocialLinks
+from .embed_fixer import FixSocialLinks
 from .manage_mimics import MimicManagement
 from .webhooks import WebhookMaintenance
 

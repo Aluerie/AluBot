@@ -1,3 +1,16 @@
+"""
+Python file to launch the bot with, so called "main".
+
+Generally, it's preferred to use `make run` to run this bot, however you can use
+`uv run src/main.py`, `python src/main.py`, etc. if you like.
+CLI supported flags can be viewed with `--help` flag.
+
+License
+-------
+* This Source Code Form is subject to the terms of the [Mozilla Public License v2.0](<http://mozilla.org/MPL/2.0/>).
+* Copyright (C) 2020-present [Aluerie](<https://github.com/Aluerie>).
+"""
+
 from __future__ import annotations
 
 try:

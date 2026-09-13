@@ -20,13 +20,13 @@ class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES):  # pyright: ig
     __is_jishaku__: bool = True
 
     @override
-    def cog_load(self) -> None:
+    async def cog_load(self) -> None:
         os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
         os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
         os.environ["JISHAKU_HIDE"] = "True"
 
     @override
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         pass
 
 

@@ -13,7 +13,17 @@ Guide
 
 """
 
-EXTENSIONS_TO_LOAD: tuple[str, ...] = ("ext.dev.sync", "ext.beta")
+EXT_SUBSET: dict[str, list[str]] = {
+    "community": [
+        # "moderation",
+    ],
+    "dev": [
+        # "sync",
+    ],
+    "mimics": [
+        "embed_fixer",
+    ],
+}
 
 # Change this to `True` if you want to load all extensions on the test bot anyway
 LOAD_ALL_EXTENSIONS: bool = False

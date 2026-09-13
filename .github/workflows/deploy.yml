@@ -4,32 +4,33 @@ run-name: Deploy
 on:
   push:
     branches:
-      - 'main'
-        
+      - "main"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6  
-    
-    - name: Restarting the bot
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        USERNAME: ${{ secrets.USERNAME }}
-        PORT: ${{ secrets.PORT }}
-        KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        # 1. `set -e` supposedly fails the workflow in case when any command in the script fails
-        #    https://github.com/appleboy/ssh-action/issues/48#issuecomment-671846368 
-        #    Not tested^. Otherwise, we can try https://stackoverflow.com/a/76927462/19217368
-        #    This is needed because if `git pull` fails - it still continues to go on like nothing happened and 
-        #    it's confusing (I've spent a lot of hours in confusion figuring it out).
-        #
-        # 2. --force-reinstall = paste it if you need to reinstall packages from some other same-version git-branch.
-        script: |
-          set -e
-          cd ./AluBot
-          git pull
-          ~/.local/bin/uv sync --no-dev
-          sudo systemctl restart alubot.service
-          sudo systemctl start alubot.service
+      - uses: actions/checkout@v6
+
+      - name: Restarting the bot
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # 1. `set -e` supposedly fails the workflow in case when any command in the script fails
+          #    https://github.com/appleboy/ssh-action/issues/48#issuecomment-671846368
+          #    Not tested^. Otherwise, we can try https://stackoverflow.com/a/76927462/19217368
+          #    This is needed because if `git pull` fails - it still continues to go on like nothing happened and
+          #    it's confusing (I've spent a lot of hours in confusion figuring it out).
+          #
+          # 2. --force-reinstall = paste it if you need to reinstall packages from some other same-version git-branch.
+          script: |
+            set -e
+            cd ./AluBot
+            git pull
+            git submodule update --recursive
+            ~/.local/bin/uv sync --no-dev
+            sudo systemctl restart alubot.service
+            sudo systemctl start alubot.service

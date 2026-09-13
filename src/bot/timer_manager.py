@@ -11,7 +11,7 @@ import asyncpg
 import discord
 
 if TYPE_CHECKING:
-    from .bot import AluBot
+    from bot import AluBot
 
 __all__: tuple[str, ...] = (
     "Timer",

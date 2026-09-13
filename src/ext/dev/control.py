@@ -252,6 +252,21 @@ class Control(BaseDevCog):
         """🔬 Restart IreBot process on VPS."""
         await self.restart_helper(interaction, "irebot")
 
+    @irebot_group.command(name="journal")
+    async def irebot_journal(self, interaction: AluInteraction) -> None:
+        """🔬 Get IreBot journal."""
+        await interaction.response.defer()
+
+        proc = await asyncio.create_subprocess_shell(
+            "sudo journalctl -u irebot -e",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
+
+        await interaction.followup.send(file=self.bot.transposer.str_to_file(stdout.decode()))
+        await interaction.followup.send(file=self.bot.transposer.str_to_file(stderr.decode()))
+
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""

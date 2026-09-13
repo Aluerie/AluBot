@@ -31,6 +31,9 @@ This particular file aims to collect those files into Tuple of extensions so end
 where full name for usual extensions consists of the following parts `extensions.ext_category.cog_name`.
 """
 
+# VPS / HOME import difference
+# pyright: reportUnnecessaryTypeIgnoreComment=false
+
 from __future__ import annotations
 
 import importlib
@@ -38,13 +41,9 @@ import os
 from pkgutil import iter_modules
 
 try:
-    import subset
-
-    EXTENSIONS_TO_LOAD = subset.EXTENSIONS_TO_LOAD
-    LOAD_ALL_EXTENSIONS = subset.LOAD_ALL_EXTENSIONS
+    from ext_subset import EXT_SUBSET, LOAD_ALL_EXTENSIONS  # pyright: ignore[reportMissingImports]
 except ModuleNotFoundError:
-
-    EXTENSIONS_TO_LOAD: tuple[str, ...] = ()  # type: ignore[reportConstantRedefinition]
+    EXT_SUBSET: dict[str, list[str]] = {}  # pyright: ignore[reportConstantRedefinition]
     LOAD_ALL_EXTENSIONS: bool = True  # type: ignore[reportConstantRedefinition]
 
 # EXTENSIONS
@@ -112,10 +111,34 @@ DISABLED_EXTENSIONS = (
 #     return CORE_EXTENSIONS + uncategorised_extensions + categorised_extensions
 
 
+def get_subset_extensions(categories: dict[str, list[str]]) -> tuple[str, ...]:
+    """Get a tuple of extensions to load from a friendly formatted categories dictionary.
+
+    This is intended to be used by @YenBot, the subset version of the bot.
+
+    Returns
+    -------
+    tuple[str, ...]
+        Tuple of extensions to load. Extensions are listed in a dot-format, i.e. `"ext.community.moderation"`.
+    """
+    return (
+        # Categorized extensions
+        *tuple(
+            f"ext.{category}.{extension}"
+            for category, extensions in categories.items()
+            for extension in extensions
+            if extensions
+        ),
+        # Extras
+        # Always load `ext.beta` when testing
+        "ext.beta",
+    )
+
+
 def get_extensions(*, test: bool) -> tuple[str, ...]:
     if test and not LOAD_ALL_EXTENSIONS:
         # assume testing specific extensions from `_test.py`
-        return EXTENSIONS_TO_LOAD
+        return get_subset_extensions(EXT_SUBSET)
 
     # assume running full bot functionality (besides `DISABLED_EXTENSIONS`)
     return tuple(

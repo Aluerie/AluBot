@@ -201,31 +201,6 @@ print(result[1])
 """
 
 
-async def get_metadata_embed_links(message: discord.Message) -> None:
-    """Get links from website metadata embeds and make them clickable by sending extra embed with links.
-
-    Unfortunately `certified discord tm moment` where
-    it does not allow links to be clickable in website metadata embeds
-    thus we have to extract them ourselves after it's compiled on discord side.
-    """
-    # wait till website meta embed actually renders
-    await asyncio.sleep(2.7)
-
-    links: list[str] = []
-    color = discord.Color.pink()
-    for embed in message.embeds:
-        links += re.findall(const.Regex.URL, str(embed.description))
-        color = embed.color
-
-    if not links:
-        return
-
-    embed = discord.Embed(color=color, description="\n".join(links)).set_author(
-        name="links in the embed above in a clickable format:"
-    )
-    await message.channel.send(embed=embed)
-
-
 class FixSocialLinks(AluCog):
     """Fix Social Links."""
 
@@ -291,9 +266,8 @@ class FixSocialLinks(AluCog):
             return
 
         mirror = mimics.Mirror.from_message(bot=self.bot, message=message)
-        msg = await mirror.send(message.author, content=fixed_message[0])
+        await mirror.send(message.author, content=fixed_message[0])
         await message.delete()
-        await get_metadata_embed_links(msg)
 
     @commands.command()
     async def test_fix_links_examples(self, ctx: AluContext) -> None:

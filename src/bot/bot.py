@@ -14,7 +14,8 @@ from discord.ext import commands
 from bot import AluContext
 from config import config
 from ext import get_extensions
-from utils import cache, const, disambiguator, errors, fmt, helpers, transposer
+from shared import fmt as shared_fmt  # TODO: fix it
+from utils import MISSING, cache, const, disambiguator, errors, fmt, helpers, transposer
 
 from .exc_manager import ExceptionManager
 from .intents_perms import INTENTS, PERMISSIONS
@@ -27,7 +28,6 @@ if TYPE_CHECKING:
     import asyncpg
     from aiohttp import ClientSession
 
-    from bot import AluInteraction
     from types_.database import PoolTypedWithAny
 
 
@@ -45,12 +45,13 @@ class AluBot(commands.Bot):
     """
 
     if TYPE_CHECKING:
-        command_prefix: set[Literal["~", "$"]]  # default is some mix of Iterable[str] and Callable
-        launch_time: datetime.datetime
+        command_prefix: set[  # pyright: ignore[reportIncompatibleVariableOverride]
+            Literal["~", "$"]
+        ]  # default is some mix of Iterable[str] and Callable
         listener_connection: asyncpg.Connection[asyncpg.Record]
         logs_via_webhook_handler: Any
-        tree: AluAppCommandTree
-        user: discord.ClientUser
+        tree: AluAppCommandTree  # pyright: ignore[reportIncompatibleMethodOverride]
+        user: discord.ClientUser  # pyright: ignore[reportIncompatibleMethodOverride]
 
     def __init__(
         self, *, test: bool = False, token: str, session: ClientSession, pool: asyncpg.Pool[asyncpg.Record]
@@ -106,6 +107,8 @@ class AluBot(commands.Bot):
         self.bot_app_info: discord.AppInfo
 
         self.is_vps: bool = platform.system() == "Linux"
+
+        self.launch_time: datetime.datetime = MISSING
 
     @override
     async def setup_hook(self) -> None:
@@ -187,7 +190,7 @@ class AluBot(commands.Bot):
             await self.send_warning("AluBot is ready.")
 
     @override
-    async def start(self) -> None:
+    async def start(self) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
         coroutines = [super().start(self._token, reconnect=True)]
 
         # dota_extensions = (
@@ -375,7 +378,9 @@ class AluBot(commands.Bot):
         args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
         embed = (
             discord.Embed(color=0xA32952, title=f"Event Error: `{event}`")
-            .add_field(name="Args", value=fmt.code(args_join, "ps")[:1023], inline=False)  # field value 1024 limit
+            .add_field(
+                name="Args", value=shared_fmt.codeblock(args_join, "ps")[:1023], inline=False
+            )  # field value 1024 limit
             .set_footer(text=f"{self.__class__.__name__}.on_error: {event}")
         )
         await self.exc_manager.register_error(exception, embed)
@@ -463,8 +468,8 @@ class AluBot(commands.Bot):
                         name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else 'DM Channel'})",
                         icon_url=ctx.author.display_avatar,
                     )
-                    .add_field(name="Command Args", value=fmt.code(kwargs_join, "ps"), inline=False)
-                    .add_field(name="Snowflake IDs", value=fmt.code(snowflake_ids, "ebnf"), inline=False)
+                    .add_field(name="Command Args", value=shared_fmt.codeblock(kwargs_join, "ps"), inline=False)
+                    .add_field(name="Snowflake IDs", value=shared_fmt.codeblock(snowflake_ids, "ebnf"), inline=False)
                     .set_footer(
                         text=f"on_command_error: {cmd_name}",
                         icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,

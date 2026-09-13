@@ -262,10 +262,9 @@ class Control(BaseDevCog):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await proc.communicate()
+        stdout, _stderr = await proc.communicate()
 
-        await interaction.followup.send(file=self.bot.transposer.str_to_file(stdout.decode()))
-        await interaction.followup.send(file=self.bot.transposer.str_to_file(stderr.decode()))
+        await interaction.followup.send(file=self.bot.transposer.str_to_file(stdout.decode(), "irebot-journal.log"))
 
 
 async def setup(bot: AluBot) -> None:

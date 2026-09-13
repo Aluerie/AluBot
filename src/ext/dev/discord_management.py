@@ -7,6 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 from tabulate import tabulate
 
+from shared import fmt as shared_fmt  # TODO: fix
 from utils import const, errors, fmt, fuzzy
 
 from ._base import BaseDevCog
@@ -62,7 +63,7 @@ class DiscordManagement(BaseDevCog):
             tabular_data=[("Name", guild.name), ("ID", guild.id), ("Shard ID", guild.shard_id or "N/A")],
             tablefmt="plain",
         )
-        embed.add_field(name="Guild Info", value=fmt.code(guild_info))
+        embed.add_field(name="Guild Info", value=shared_fmt.codeblock(guild_info))
         if guild.owner:
             embed.set_author(
                 name=f"Owner: {guild.owner} (ID: {guild.owner_id})",
@@ -74,7 +75,7 @@ class DiscordManagement(BaseDevCog):
         bots = sum(m.bot for m in guild.members)
         total = guild.member_count or 1
         guild_stats = tabulate(tabular_data=[("Members", total), ("Bots", f"{bots} ({bots / total:.2%})")], tablefmt="plain")
-        embed.add_field(name="Guild Stats", value=fmt.code(guild_stats))
+        embed.add_field(name="Guild Stats", value=shared_fmt.codeblock(guild_stats))
         if guild.me:
             embed.timestamp = guild.me.joined_at
         return embed

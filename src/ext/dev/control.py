@@ -258,13 +258,18 @@ class Control(BaseDevCog):
         await interaction.response.defer()
 
         proc = await asyncio.create_subprocess_shell(
-            "sudo journalctl -u irebot -e",
+            "sudo journalctl --unit=irebot -n 5000 --no-pager",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, _stderr = await proc.communicate()
 
-        await interaction.followup.send(file=self.bot.transposer.str_to_file(stdout.decode(), "irebot-journal.log"))
+        await interaction.followup.send(
+            file=self.bot.transposer.str_to_file(
+                stdout.decode(),
+                "irebot-journal.log",
+            )
+        )
 
 
 async def setup(bot: AluBot) -> None:

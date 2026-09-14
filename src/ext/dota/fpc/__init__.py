@@ -7,7 +7,7 @@ from .settings import DotaFPCSettings
 from .twitch_renames import FPCDatabaseManagement
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 __all__ = ("DotaFPC",)
 

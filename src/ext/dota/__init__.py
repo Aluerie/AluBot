@@ -11,7 +11,7 @@ from .bugtracker import BugTracker
 from .steamdb import SteamDB
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Dota(

@@ -11,11 +11,11 @@ from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from tabulate import tabulate
 
-from bot import AluCog, aluloop
+from core import AluCog, aluloop
 from utils import const, errors, fmt, pages
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
     class RemoveLongGoneRow(TypedDict):
         id: int

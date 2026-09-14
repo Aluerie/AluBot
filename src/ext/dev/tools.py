@@ -12,7 +12,7 @@ from utils import const
 from ._base import BaseDevCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class Tools(BaseDevCog):

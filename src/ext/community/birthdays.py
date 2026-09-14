@@ -9,11 +9,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot import AluCog
+from core import AluCog
 from utils import const, converters, errors, fmt, pages, timezones
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction, Timer, TimerRow
+    from core import AluBot, AluInteraction, Timer, TimerRow
 
     class BirthdayTimerData(TypedDict):
         user_id: int

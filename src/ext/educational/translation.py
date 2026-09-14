@@ -28,13 +28,13 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, override
 import discord
 from discord import app_commands
 
-from bot import AluCog
+from core import AluCog
 from utils import const, errors
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class TranslatedSentence(TypedDict):

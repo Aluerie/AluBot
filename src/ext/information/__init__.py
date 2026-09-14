@@ -9,7 +9,7 @@ from .info import Info
 from .schedule import Schedule
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Information(

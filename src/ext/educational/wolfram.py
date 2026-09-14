@@ -5,12 +5,12 @@ from urllib import parse as urlparse
 
 from discord import app_commands
 
-from bot import AluCog
 from config import config
+from core import AluCog
 from utils import errors
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 __all__ = ("WolframAlpha",)
 

@@ -14,7 +14,7 @@ from utils.converters import Codeblock
 from ._base import BaseDevCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluContext
+    from core import AluBot, AluContext
 
 
 class CodeRun(BaseDevCog):

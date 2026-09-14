@@ -8,13 +8,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot import AluCog
+from core import AluCog
 from utils import const, errors
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class HideoutModeration(AluCog):
@@ -94,7 +94,8 @@ class HideoutModeration(AluCog):
         search_before = discord.Object(id=before) if before else None
         search_after = discord.Object(id=after) if after else None
 
-        assert interaction.channel and not isinstance(
+        assert interaction.channel
+        assert not isinstance(
             interaction.channel,
             discord.ForumChannel | discord.CategoryChannel | discord.DMChannel | discord.GroupChannel,
         )

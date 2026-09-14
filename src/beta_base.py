@@ -40,15 +40,15 @@ from discord import app_commands
 from discord.ext import commands
 from tabulate import tabulate
 
-from bot import AluBot, AluCog, aluloop
 from config import config
+from core import AluBot, AluCog, aluloop
 from utils import cache, const, errors, fmt, fuzzy, timezones
 from utils.helpers import measure_time
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Sequence
 
-    from bot import AluInteraction
+    from core import AluInteraction
 
 
 log = logging.getLogger(__name__)

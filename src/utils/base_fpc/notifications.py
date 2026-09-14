@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict
 
 import discord
 
-from bot import AluCog
+from core import AluCog
 from utils import errors, mimics
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
     from .models import BaseMatchToEdit, BaseMatchToSend
 

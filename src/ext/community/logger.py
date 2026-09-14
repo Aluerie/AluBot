@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext import commands
 
-from bot import AluCog, aluloop
+from core import AluCog, aluloop
 from utils import const, fmt
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from bot import AluBot, AluContext
+    from core import AluBot, AluContext
 
 
 class Logger(AluCog):

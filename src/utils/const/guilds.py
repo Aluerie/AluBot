@@ -8,7 +8,7 @@ import discord
 from .abc import CONSTANTS
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 __all__ = (
     "CATEGORY_ROLES",

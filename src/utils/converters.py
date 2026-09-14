@@ -17,7 +17,7 @@ from .timezones import TimeZone, TransformTimeZone
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from bot import AluContext, AluInteraction
+    from core import AluContext, AluInteraction
 
 __all__ = (
     "AluColourTransformer",

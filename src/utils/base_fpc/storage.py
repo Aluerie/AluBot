@@ -12,11 +12,11 @@ from typing import TYPE_CHECKING, TypeVar, override
 import discord
 from discord import app_commands
 
-from bot import aluloop
+from core import aluloop
 from utils import const, fuzzy
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 __all__ = (
     "Character",

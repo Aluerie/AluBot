@@ -15,7 +15,7 @@ from utils.base_fpc import BaseMatchToEdit, BaseMatchToSend
 from utils.dota import game_const
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluCog
+    from core import AluBot, AluCog
     from utils.base_fpc import RecipientKwargs
     from utils.dota import Hero, PseudoHero
     from utils.dota.schemas import stratz

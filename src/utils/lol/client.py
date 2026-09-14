@@ -12,7 +12,7 @@ from config import config
 from .storage import Champions, ItemIcons, RolesIdentifiers, RuneIcons, SummonerSpellIcons
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class LeagueClient(RiotAPIClient):

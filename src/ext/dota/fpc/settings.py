@@ -14,7 +14,7 @@ from utils.base_fpc import BaseAccount, BasePlayer, BaseRequestPlayerArguments, 
 from utils.dota import Hero, HeroTransformer  # noqa: TC001
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 log = logging.getLogger(__name__)

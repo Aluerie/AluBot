@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, override
 import aiohttp
 import asyncpg
 
-from bot import aluloop
+from core import aluloop
 from utils import const
 from utils.base_fpc import BaseNotifications, EditTuple, RecipientTuple
 from utils.lol import game_const, regions
@@ -14,7 +14,7 @@ from utils.lol import game_const, regions
 from .models import MatchToEdit, MatchToSend
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
     class LivePlayerAccountRow(TypedDict):
         puuid: str

@@ -18,7 +18,7 @@ import yarl
 from discord import app_commands
 from lxml import html
 
-from bot import AluCog
+from core import AluCog
 from utils import errors, pages
 
 log = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 __all__ = ("Dictionary",)

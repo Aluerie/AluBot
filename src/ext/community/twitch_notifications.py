@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext import commands
 
-from bot import AluCog, aluloop
+from core import AluCog, aluloop
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 __all__ = ("TwitchNotifications",)
 

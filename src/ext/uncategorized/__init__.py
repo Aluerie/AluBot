@@ -7,7 +7,7 @@ from utils.const import Emote
 from .tts import TextToSpeech
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Uncategorised(

@@ -8,11 +8,11 @@ import discord
 from bs4 import BeautifulSoup
 from discord import app_commands
 
-from bot import AluCog
+from core import AluCog
 from utils import const, fmt
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

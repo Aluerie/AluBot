@@ -8,11 +8,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot import AluCog, AluView
+from core import AluCog, AluView
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class RPSElement(NamedTuple):

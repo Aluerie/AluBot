@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from bot import AluCog
+from core import AluCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class MyCog(AluCog):

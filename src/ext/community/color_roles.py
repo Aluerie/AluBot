@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Self
 import discord
 from discord.ext import commands
 
-from bot import AluCog
+from core import AluCog
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext, AluInteraction
+    from core import AluBot, AluGuildContext, AluInteraction
 
 
 __all__ = ("ColorRoles",)

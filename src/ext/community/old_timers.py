@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING, NamedTuple, TypedDict, override
 import discord
 from discord.ext import commands
 
-from bot import AluCog, aluloop
+from core import AluCog, aluloop
 from utils.const import DIGITS, Channel, Color, Emote, Role, User
 
 if TYPE_CHECKING:
-    from bot import AluBot, Timer
+    from core import AluBot, Timer
 
     class OldTimerTimerData(TypedDict):
         """Schema."""

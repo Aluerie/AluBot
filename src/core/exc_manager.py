@@ -14,7 +14,7 @@ import discord
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    from bot import AluBot
+    from core import AluBot
 
 
 log = logging.getLogger("exc_manager")

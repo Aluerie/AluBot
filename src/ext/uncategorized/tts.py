@@ -7,11 +7,11 @@ from discord import app_commands
 from discord.ext import commands
 from gtts import gTTS
 
-from bot import AluCog
+from core import AluCog
 from utils import const, errors
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 __all__ = ("TextToSpeech",)

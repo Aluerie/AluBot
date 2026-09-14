@@ -35,8 +35,8 @@ import click
 import discord
 import orjson
 
-from bot import AluBot, setup_logging
 from config import config
+from core import AluBot, setup_logging
 from utils import const
 
 try:

@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     import discord
     from PIL import Image
 
-    from bot import AluBot
+    from core import AluBot
 
 
 __all__ = (

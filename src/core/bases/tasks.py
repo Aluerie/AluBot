@@ -13,7 +13,7 @@ from utils import fmt
 if TYPE_CHECKING:
     import datetime
 
-    from bot import AluBot
+    from core import AluBot
 
     class HasBotAttribute(Protocol):
         bot: AluBot

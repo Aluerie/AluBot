@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from bot import AluCog
+from core import AluCog
 
 if TYPE_CHECKING:
-    from bot import AluContext, AluInteraction
+    from core import AluContext, AluInteraction
 
 
 class BaseDevCog(AluCog):

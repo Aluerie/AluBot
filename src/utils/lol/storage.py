@@ -12,7 +12,7 @@ from ..base_fpc import Character, CharacterStorage, CharacterTransformer, GameDa
 from . import game_const
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
     class GetChampionEmoteRow(TypedDict):
         id: int

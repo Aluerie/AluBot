@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any, Self
 
 import discord
 
-from bot import AluContext, AluView
+from core import AluContext, AluView
 from utils import const
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 __all__ = ("Disambiguator",)

@@ -12,7 +12,7 @@ from utils.base_fpc import Character, CharacterStorage, CharacterTransformer, Ga
 from . import game_const
 
 if TYPE_CHECKING:
-    from bot import AluInteraction
+    from core import AluInteraction
 
     from .schemas import stratz
 

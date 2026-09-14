@@ -7,11 +7,11 @@ import steam
 from discord import app_commands
 from tabulate import tabulate
 
-from bot import AluCog
+from core import AluCog
 from utils import const, errors, fmt
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class SteamUserTransformer(app_commands.Transformer):

@@ -9,11 +9,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot import AluCog, AluView
+from core import AluCog, AluView
 from utils import MISSING, const, errors, fmt, pages, times
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction, Timer
+    from core import AluBot, AluInteraction, Timer
 
     class RemindTimerData(TypedDict):
         author_id: int

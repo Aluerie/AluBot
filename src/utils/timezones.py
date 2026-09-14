@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, NamedTuple, override
 from discord import app_commands
 from lxml import etree
 
-from bot import AluContext
+from core import AluContext
 
 from . import cache, errors, fuzzy
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class TimeZone(NamedTuple):

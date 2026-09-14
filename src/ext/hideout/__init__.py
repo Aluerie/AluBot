@@ -7,7 +7,7 @@ from utils.const import Emote
 from .moderation import HideoutModeration
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Hideout(

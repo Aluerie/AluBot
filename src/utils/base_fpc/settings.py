@@ -8,13 +8,13 @@ import asyncpg
 import discord
 from discord import app_commands
 
-from bot import AluCog, AluLayoutView, AluView
+from core import AluCog, AluLayoutView, AluView
 from utils import const, errors, fmt, mimics, pages
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
     from .storage import Character, CharacterStorage
 

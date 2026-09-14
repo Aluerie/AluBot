@@ -18,7 +18,7 @@ from .twitch_notifications import TwitchNotifications
 from .welcome import Welcome
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Community(

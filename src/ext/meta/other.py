@@ -17,11 +17,11 @@ from discord.ext import commands
 from pygit2.enums import SortMode
 from tabulate import tabulate
 
-from bot import AluCog, Url
+from core import AluCog, Url
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 async def count_lines(

@@ -13,7 +13,7 @@ from utils import const, errors, fmt, fuzzy
 from ._base import BaseDevCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 __all__ = ("DiscordManagement",)

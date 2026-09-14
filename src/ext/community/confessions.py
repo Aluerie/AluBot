@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Any, Self, override
 import discord
 from discord.ext import commands
 
-from bot import AluCog, AluModal, AluView
+from core import AluCog, AluModal, AluView
 from utils import const, fmt
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext, AluInteraction
+    from core import AluBot, AluGuildContext, AluInteraction
 
 
 __all__ = ("Confessions",)

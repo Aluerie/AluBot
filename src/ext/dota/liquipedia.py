@@ -9,13 +9,13 @@ import discord
 from bs4 import BeautifulSoup
 from discord import app_commands
 
-from bot import AluCog
+from core import AluCog
 from utils import cache, const, fmt, pages
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
 
-    from bot import AluBot, AluContext, AluInteraction
+    from core import AluBot, AluContext, AluInteraction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

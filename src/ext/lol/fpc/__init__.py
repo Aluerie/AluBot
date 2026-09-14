@@ -9,7 +9,7 @@ from .settings import LolFPCSettings
 from .summoner_check import SummonerNameCheck
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 __all__ = ("LolFPC",)
 

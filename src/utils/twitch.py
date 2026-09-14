@@ -11,7 +11,7 @@ from config import config
 from . import const, fmt
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
     class LoadTokensQueryRow(TypedDict):
         user_id: str

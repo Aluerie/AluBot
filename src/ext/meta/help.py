@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any
 
 from discord import app_commands
 
-from bot import AluCog, AluContext
+from core import AluCog, AluContext
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class AluHelpCog(AluCog):

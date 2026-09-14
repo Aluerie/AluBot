@@ -11,11 +11,11 @@ from discord.ext import commands
 from PIL import Image, ImageColor
 from wordcloud import WordCloud
 
-from bot import AluCog
+from core import AluCog
 from utils import const, converters, fmt
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 # Ignore dateparser warnings regarding pytz
 warnings.filterwarnings(

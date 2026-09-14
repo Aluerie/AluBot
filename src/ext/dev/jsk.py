@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, override
 
 from jishaku.cog import OPTIONAL_FEATURES, STANDARD_FEATURES
 
-from bot import AluCog
+from core import AluCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES):  # pyright: ignore[reportUntypedBaseClass]

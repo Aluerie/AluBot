@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Annotated
 import discord
 from discord.ext import commands
 
-from bot import AluCog
+from core import AluCog
 from utils import const, errors, times
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluGuildContext
+    from core import AluBot, AluGuildContext
 
 
 class Moderation(AluCog):

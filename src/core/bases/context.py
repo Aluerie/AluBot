@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
     from aiohttp import ClientSession
 
-    from bot import AluBot
+    from core import AluBot
     from types_.database import PoolTypedWithAny
 
 

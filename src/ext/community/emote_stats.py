@@ -13,13 +13,13 @@ from discord import app_commands
 from discord.ext import commands
 from tabulate import tabulate
 
-from bot import AluCog, aluloop
+from core import AluCog, aluloop
 from utils import const, errors, fmt, pages
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
     class BatchLastYearEntry(TypedDict):
         emote_id: int

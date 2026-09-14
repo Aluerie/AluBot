@@ -10,7 +10,7 @@ from utils import const, mimics
 from ._base import BaseDevCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class Testing(BaseDevCog):

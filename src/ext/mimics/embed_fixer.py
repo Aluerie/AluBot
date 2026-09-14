@@ -32,11 +32,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot import AluCog, AluContext
+from core import AluCog, AluContext
 from utils import const, mimics
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 __all__ = ("FixSocialLinks",)
 

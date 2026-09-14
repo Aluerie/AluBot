@@ -6,11 +6,11 @@ import discord
 from discord import app_commands
 from PIL import Image
 
-from bot import AluCog
+from core import AluCog
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class ImageTools(AluCog):

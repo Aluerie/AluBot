@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
     from utils import const
 
 __all__ = ("AluCog",)

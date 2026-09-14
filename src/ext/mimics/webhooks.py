@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, TypedDict
 import discord
 from discord.ext import commands
 
-from bot import AluBot, AluCog, aluloop
+from core import AluBot, AluCog, aluloop
 from utils import errors
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
     class AllWebhooksQueryRow(TypedDict):
         id: int

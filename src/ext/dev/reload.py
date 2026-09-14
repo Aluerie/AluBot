@@ -20,7 +20,7 @@ from ._base import BaseDevCog
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from bot import AluBot, AluContext
+    from core import AluBot, AluContext
 
 __all__ = ("Reload",)
 

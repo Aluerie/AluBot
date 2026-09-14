@@ -9,14 +9,14 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext import tasks
 
-from bot import AluCog
 from config import config
+from core import AluCog
 from utils import const, fmt
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from bot import AluBot
+    from core import AluBot
 
 log = logging.getLogger(__name__)
 

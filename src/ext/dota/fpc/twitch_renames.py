@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, TypedDict
 
 from discord.ext import commands
 
-from bot import AluCog
+from core import AluCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, Timer
+    from core import AluBot, Timer
 
     class CheckAccRenamesQueryRow(TypedDict):
         player_id: int

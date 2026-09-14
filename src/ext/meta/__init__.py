@@ -7,7 +7,7 @@ from .help import AluHelpCog
 from .other import OtherCog
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Meta(

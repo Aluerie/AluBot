@@ -11,7 +11,7 @@ from . import const, errors
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from bot import AluBot, AluContext, AluInteraction
+    from core import AluBot, AluContext, AluInteraction
 
     type WebhookSourceChannel = discord.ForumChannel | discord.VoiceChannel | discord.TextChannel | discord.StageChannel
 

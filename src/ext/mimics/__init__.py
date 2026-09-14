@@ -7,7 +7,7 @@ from .manage_mimics import MimicManagement
 from .webhooks import WebhookMaintenance
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Mimics(

@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING, override
 import discord
 from discord import app_commands
 
-from bot import AluCog
+from core import AluCog
 from utils.timezones import TimeZone, TimeZoneTransformer  # noqa: TC001
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class TimezoneSettings(AluCog):

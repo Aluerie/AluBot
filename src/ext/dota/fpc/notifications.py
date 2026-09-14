@@ -9,7 +9,7 @@ import aiohttp
 import discord
 from discord.ext import commands
 
-from bot import aluloop
+from core import aluloop
 from utils import const
 from utils.base_fpc import BaseNotifications, EditTuple, RecipientTuple
 from utils.helpers import measure_time
@@ -19,7 +19,7 @@ from .models import MatchToSend, StratzMatchToEdit
 if TYPE_CHECKING:
     from steam.ext.dota2 import LiveMatch
 
-    from bot import AluBot, AluContext
+    from core import AluBot, AluContext
 
     class AnalyzeGetPlayerIDsQueryRow(TypedDict):
         twitch_live_only: bool

@@ -11,7 +11,7 @@ from utils import errors
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-    from bot import AluContext, AluInteraction
+    from core import AluContext, AluInteraction
 
 __all__ = (
     "LiteralPlatform",

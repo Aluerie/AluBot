@@ -16,7 +16,7 @@ from .storage import Abilities, Facets, Heroes, Items
 if TYPE_CHECKING:
     from steam.ext.dota2 import PartialUser
 
-    from bot import AluBot
+    from core import AluBot
 
 log = logging.getLogger(__name__)
 

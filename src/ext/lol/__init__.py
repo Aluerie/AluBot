@@ -7,7 +7,7 @@ from utils import const
 from .fpc import LolFPC
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Lol(

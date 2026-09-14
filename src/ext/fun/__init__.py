@@ -8,7 +8,7 @@ from .mini_games import MiniGames
 from .other import FunOther
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Fun(

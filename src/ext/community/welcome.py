@@ -4,14 +4,14 @@ import asyncio
 from typing import TYPE_CHECKING, TypedDict
 
 import discord
+from core import AluCog
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from bot import AluCog
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluContext
+    from core import AluBot, AluContext
 
     class SendWelcomeKwargs(TypedDict):
         content: str

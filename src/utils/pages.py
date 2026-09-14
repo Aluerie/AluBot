@@ -23,14 +23,14 @@ from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
 
 import discord
 
-from bot import AluView
+from core import AluView
 
 from . import MISSING, const
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
     class SendKwargs(TypedDict):
         content: NotRequired[str]

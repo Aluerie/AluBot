@@ -11,12 +11,12 @@ from typing import TYPE_CHECKING, Any, Literal, override
 import discord
 from discord.ext import commands
 
-from bot import AluContext
 from config import config
 from ext import get_extensions
 from shared import fmt as shared_fmt  # TODO: fix it
 from utils import MISSING, cache, const, disambiguator, errors, fmt, helpers, transposer
 
+from .bases import AluContext
 from .exc_manager import ExceptionManager
 from .intents_perms import INTENTS, PERMISSIONS
 from .timer_manager import TimerManager

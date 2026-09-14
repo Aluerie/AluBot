@@ -16,7 +16,7 @@ from utils.lol import LiteralPlatform, Platform
 if TYPE_CHECKING:
     from pulsefire.schemas import RiotAPISchema
 
-    from bot import AluBot
+    from core import AluBot
     from utils.base_fpc import RecipientKwargs
     from utils.lol import Champion, PseudoChampion
 
@@ -296,7 +296,7 @@ class MatchToEdit(BaseMatchToEdit):
 
 
 if TYPE_CHECKING:
-    from bot import AluCog
+    from core import AluCog
 
 
 async def beta_test_edit_image(self: AluCog) -> None:

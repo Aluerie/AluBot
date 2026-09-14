@@ -8,13 +8,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot import aluloop
+from core import aluloop
 from utils import const, errors
 
 from ._base import BaseDevCog
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluContext, AluInteraction
+    from core import AluBot, AluContext, AluInteraction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)

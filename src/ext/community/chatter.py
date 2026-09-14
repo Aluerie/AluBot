@@ -7,11 +7,11 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from bot import AluCog
+from core import AluCog
 from utils import const
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 __all__ = ("Chatter",)

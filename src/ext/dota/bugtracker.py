@@ -15,13 +15,13 @@ from discord.ext import commands
 from githubkit.exception import RequestError, RequestFailed
 from PIL import Image
 
-from bot import AluCog, aluloop
+from core import AluCog, aluloop
 from utils import const
 
 if TYPE_CHECKING:
     from githubkit.rest import Issue, SimpleUser
 
-    from bot import AluBot, AluContext
+    from core import AluBot, AluContext
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)

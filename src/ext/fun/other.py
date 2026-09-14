@@ -9,11 +9,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot import AluCog
+from core import AluCog
 from utils import const, mimics
 
 if TYPE_CHECKING:
-    from bot import AluBot, AluInteraction
+    from core import AluBot, AluInteraction
 
 
 class FunOther(AluCog):

@@ -13,7 +13,7 @@ from .testing import Testing
 from .tools import Tools
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Dev(

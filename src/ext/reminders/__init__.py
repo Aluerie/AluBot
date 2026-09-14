@@ -2,13 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from utils.const import Emote
-
 from .reminders import Reminders
 from .timezone import TimezoneSettings
 
 if TYPE_CHECKING:
-    from bot import AluBot
+    from core import AluBot
 
 
 class Remembrances(

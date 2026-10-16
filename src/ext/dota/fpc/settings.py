@@ -120,7 +120,7 @@ class DotaFPCSettings(BaseSettingsCog, name="Dota 2"):
     dota_group = app_commands.Group(
         name="dota",
         description="Dota 2 FPC (Favorite Player+Character) commands.",
-        guild_ids=const.PREMIUM_GUILDS,
+        # guild_ids=const.PREMIUM_GUILDS,
         default_permissions=discord.Permissions(manage_guild=True),
     )
 

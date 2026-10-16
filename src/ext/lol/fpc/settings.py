@@ -135,7 +135,7 @@ class LolFPCSettings(BaseSettingsCog):
     lol_group = app_commands.Group(
         name="lol",
         description="League of Legends FPC (Favorite Player+Character) commands.",
-        guild_ids=[const.Guild.hideout],
+        # guild_ids=[const.Guild.hideout],
         default_permissions=discord.Permissions(manage_guild=True),
     )
 

@@ -7,7 +7,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import const, errors, fmt, helpers
+from shared import fmt
+from utils import const, errors, helpers
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -170,7 +171,11 @@ class AluAppCommandTree(app_commands.CommandTree):
                     log.warning("Could not find a mention for command %s in the API. Are you out of sync?", command)
 
     @override
-    async def on_error(self, interaction: AluInteraction, error: app_commands.AppCommandError | Exception) -> None:
+    async def on_error(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self,
+        interaction: AluInteraction,
+        error: app_commands.AppCommandError | Exception,
+    ) -> None:
         """Handler called when an error is raised while invoking an app command."""
         if isinstance(error, app_commands.CommandInvokeError):
             error = error.original
@@ -250,8 +255,8 @@ class AluAppCommandTree(app_commands.CommandTree):
                     ),
                     icon_url=interaction.user.display_avatar,
                 )
-                .add_field(name="Command Arguments", value=fmt.code(args_join, "ps"), inline=False)
-                .add_field(name="Snowflake IDs", value=fmt.code(snowflake_ids, "ebnf"), inline=False)
+                .add_field(name="Command Arguments", value=fmt.codeblock(args_join, "ps"), inline=False)
+                .add_field(name="Snowflake IDs", value=fmt.codeblock(snowflake_ids, "ebnf"), inline=False)
                 .set_footer(
                     text=f"on_app_command_error: {cmd_name}",
                     icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,

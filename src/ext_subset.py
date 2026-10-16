@@ -8,8 +8,11 @@ EXT_SUBSET: dict[str, list[str]] = {
         # "sync",
     ],
     "mimics": [
-        "embed_fixer",
+        # "embed_fixer",
     ],
+    'uncategorized': [
+        'tools'
+    ]
 }
 
 LOAD_ALL_EXTENSIONS: bool = False

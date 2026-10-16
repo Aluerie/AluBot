@@ -91,4 +91,11 @@ CREATE TABLE
         last_dota_news TEXT,
         last_ms_insider_news TEXT,
         last_lol_patch TEXT,
+    );
+
+CREATE TABLE
+    IF NOT EXISTS button_roles (
+        guild_id BIGINT,
+        role_id BIGINT,
+        PRIMARY KEY (guild_id, role_id)
     )

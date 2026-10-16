@@ -71,181 +71,110 @@ name = "umbra"
 url = "https://about.abstractumbra.dev/pip/"
 explicit = true
 
-# ##############################
-# SHARED PYPROJECT TOML CONFIG #
-# ##############################
-#
-# Shared with `Aluerie/IreBot` (twitch/discord bot - same thing pretty much), 
-# but here I will try to leave detailed explanations why this or that setting was chosen.
-# In `Aluerie/IreBot` - it won't contain any, just strictly configuration.
+[tool.uv]
+package = false
 
-# 0. EXAMPLES OF GOOD PYPROJECT.TOML 
-#
-# * https://github.com/AbstractUmbra/Mipha/blob/main/pyproject.toml
-# * https://github.com/mikeshardmind/salamander-reloaded/blob/75d6f44709fc12a486809ebdaf92eb6e733b63cf/pyproject.toml
 
-# 1. PYRIGHT
-# 
-# Links:
-# * Rules: 
-#   https://microsoft.github.io/pyright/#/configuration?id=type-check-rule-overrides
-# * Defaults per type checking mode:
-#   https://microsoft.github.io/pyright/#/configuration?id=diagnostic-settings-defaults
+[tool.ty.rules]
+all = "error"
+dynamic-function-decorator-return = "ignore" # TwitchIO's decorators return `Any`
+possibly-missing-import = "ignore" # False positives, maybe we'll try it later.
+unsound-assignment = "ignore" # `Any` is fine
+unsound-return-statement = "ignore" # `Any` is fine
+unsound-yield = "ignore" # `Any` is fine
 
-[tool.pyright]
-exclude = [".venv", "docs", "**/__pycache__", "**/node_modules", "**/.*"]
-pythonVersion = "3.12"
-deprecateTypingAliases = true
-typeCheckingMode = "strict"
-
-# 1.1. Rules that are "None" by default even in strict
-reportCallInDefaultInitializer = "warning"
-reportImplicitOverride = "warning"
-reportImplicitStringConcatenation = "none" # Linter-esque option; Let Ruff's ISC002 do the job.
-reportImportCycles = "error" # Not smart enough; doesn't understand `if TYPE_CHECKING`.
-reportMissingSuperCall = "none" # Not smart enough; Base parent class does not needs `super().__init__` from `object`. 
-reportPropertyTypeMismatch = "warning"
-reportUninitializedInstanceVariable = "warning" 
-reportUnnecessaryTypeIgnoreComment = "warning" 
-reportUnreachable = "warning"
-reportUnusedCallResult = "none" # (Overly-worrisome) linter-esque option.
-
-# 1.2. Rejected rules;
-reportDuplicateImport = "none" # handled by Ruff, linter-esque option.
-# reportIncompatibleMethodOverride = "none" # Dpy and general Python's workflow of subclassing base models require such overwrites.
-# reportIncompatibleVariableOverride = "none" # Somewhat same^, sometimes it's needed.
-# reportMissingTypeStubs = "none" # I'm not going to write stubs for the libraries that don't have them.
-
-# 2. RUFF
-# 
-# * Ruff configuration rules
-#   https://docs.astral.sh/ruff/rules/
 
 [tool.ruff]
+preview = true
 line-length = 125
-target-version = "py312"
-preview = false
-exclude = [".venv", "docs"]
+target-version = "py314"
+exclude = [".venv"]
 src = ["src"]
+
 
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    # 0. Situational toggles
-    "ERA",    # eradicate: Ignore by default
-    "RUF100", # unused-noqa: Ignore when we play around with some rules
-
-    # 0. Uncategorized - still thinking if we need those
-    "D",      # pydocstyle: Doc-strings, 
-    "D417",   # Missing argument description. Otherwise, it keeps asking to document interaction/context args.
-    "DOC",    # pydoclint: Doc strings, 
-
-    # 1. Handled by Ruff Formatter instead
-    # Recommendation from: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules.
-    "W191",   # tab-indentation                           
-    "E111",   # indentation-with-invalid-multiple         
-    "E114",   # indentation-with-invalid-multiple-comment 
-    "E117",   # over-indented                             
-    "D206",   # docstring-tab-indentation               
-    "D300",   # triple-single-quotes                  
-    "Q000",   # bad-quotes-inline-string               
-    "Q001",   # bad-quotes-multiline-string              
-    "Q002",   # bad-quotes-docstring                   
-    "Q003",   # avoidable-escaped-quote                   
-    "COM812", # missing-trailing-comma                 
-    "COM819", # prohibited-trailing-comma  
-    "ISC002", # multi-line-implicit-string-concatenation
-
-    # 2. Pyright should manage those
-    # "F401",
-
-    # 1. General "public" disagreement with Ruff
-    "ANN401",   # `Any` is the correct type in some cases
-    "ASYNC116", # Long sleeps are fine
-    "ASYNC109", # Discord.py and other libraries commonly use this parameter
-    "C90",      # McCabe complexity memes
-    "CPY001",   # Copyright stuff
-    "F401",
-    "F402", 
-    "F403",
-    "F405", 	
-    "FBT003",   # Wrong end to enforce this on.
-    "FIX",      # Wrong place to enforce this, Todo Tree extension (or any other) is advised.
-    "INP001",   # Due to how we load modules this results in annoyances
-    "PD011",    # This is not a numpy codebase
-    "PLC0415",  # ruff gets this wrong, import needs to be not at top of file in some cases
-    "PLR0904",  # **too many** public methods
-    "PLR0911",  # **too many** returns
-    "PLR0912",  # **too many** branches
-    "PLR0913",  # **too many** function arguments
-    "PLR0914",  # **too many** variables
-    "PLR0915",  # **too many** statements: come on, not everything is solvable in <50 lines.
-    "PLR0917",  # **too many** positional arguments
-    "PLR6301",
-    "PLR2004",  # Most people hate this rule - might remove later.
-    "PYI058",   # This opinionated "fix" causes incompatibilities with things expecting a generator.
-    "RUF001",   # Ambiguous characters not something I want to enforce here.
-    "RUF029",   # Don't try and tell me I'm wrong for async def when something is for an interface.
-    "S101",     # `assert` is used for type checking in this codebase, blame typing memes.
-    "S311",     # Standard pseudo-random generators are not suitable for **cryptographic** purposes, so what.
-    "SIM105",   # Suppressible exception, I'm not paying the overhead of `contextlib.suppress` for stylistic choices.
-    "SLF001",
-    "TD",       # Wrong place to enforce this, Todo Tree extension (or any other) is advised.
-    "TRY003",   # over-eager rule
-    "TRY301",   # unrealistic rule
-    
-    # 2. Personal disagreement
-    "FLY002",
-    "PLW2901", # Redefined loop name;
-    "S608",    # I use f-strings with SQL and I don't know better;
-    "TID252",  # My relative imports are quite well structured 
-
-    # 3. Doc String
-    "D100",   # Module level docs aren't always needed.
-    "D104",   # Public package level docs aren't always needed.
-    "D105",   # Documenting magic methods is often dumb.
-    "D107",   # `__init__` is the wrong place to doc this.
-    "D401",   # Not enforcing the imperative verb rule.
-    "DOC201", # Not documenting generic return types
-    "DOC402", # Not documenting generic `yield` types
-    "DOC501", # Not explicitly documenting raised exception types
+    # Recommended to disable by https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "tab-indentation",
+    "indentation-with-invalid-multiple",
+    "indentation-with-invalid-multiple-comment",
+    "over-indented",
+    "incorrect-blank-line-before-class",
+    "docstring-tab-indentation",
+    "triple-single-quotes",
+    "bad-quotes-inline-string",
+    "bad-quotes-multiline-string",
+    "bad-quotes-docstring",
+    "avoidable-escaped-quote",
+    "unnecessary-escaped-quote",
+    "missing-trailing-comma",
+    "prohibited-trailing-comma",
+    "multi-line-implicit-string-concatenation",
+    # Docstring related
+    "docstring-missing-exception", 
+    "docstring-missing-returns",
+    "docstring-missing-yields",
+    "undocumented-magic-method",
+    # Complexity memes
+    "complex-structure",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-locals",
+    "too-many-positional-arguments",
+    "too-many-public-methods",
+    "too-many-return-statements",
+    "too-many-statements-in-try-clause",
+    # Todo
+    "line-contains-todo", # I use TODO Tree VSCode extension for this
+    "missing-todo-author",
+    "missing-todo-link",
+    # Other (uncategorized) Rules
+    "ambiguous-unicode-character-string",
+    "any-type",
+    "assert", # assert is fine for "casting" type checks and in tests
+    "commented-out-code",
+    "implicit-namespace-package", # Annoying rule, it doesn't know what **I** want to be an implicit namespace-package
+    "magic-value-comparison", # I hate this rule (quoting @AbstractUmbra)
+    "no-self-use",
+    "non-empty-init-module", # we do some stuff here
+    "suspicious-non-cryptographic-random-usage",
+    "undefined-local-with-import-star",
+    "undefined-local-with-import-star-usage",
+]
+extend-select = [
+    # NumPy Doc convention turns these rules off
+    "multi-line-summary-first-line", 
+    "undocumented-param",
 ]
 unfixable = [
-    "E501",   # Line length handled in other ways by Ruff Formatter.
-    "ERA",    # Don't delete commented out code.
-    "RUF100", # unused-noqa: Annoying when toggling rules.
+    "commented-out-code",
+    "unused-noqa",
 ]
-# Extra Options
-flake8-annotations.allow-star-arg-any = true
 flake8-quotes.inline-quotes = "double"
 
 [tool.ruff.lint.per-file-ignores]
-"ext/beta.py" = ["ANN201"]
-"*.ipynb" = [
-    "I001", # completely buggy in notebook cells
-    "ANN204", 
+"{src/ext/beta.py,templates/fresh_beta.py,src/alpha.py,src/zeta.py,*.ipynb}" = [
+    # These files are my playground to mess around and test stuff.
+    "ANN",
     "D", 
-    "DOC", 
-    "ERA", 
-    "F404", 
-    "T20", 
-    "W391"
+    "missing-copyright-notice",
+    "print",
+    "unused-method-argument",
+    "unused-noqa",
+]
+"src/ext/*.py" = [
+    "undocumented-param", # I don't want to document all the `ctx: IreContext`
 ]
 
 [tool.ruff.format]
-# Like Black, use double quotes for strings.
 quote-style = "double"            
-# Like Black, indent with spaces, rather than tabs.
 indent-style = "space"            
-# Like Black, respect magic trailing commas. (I've been thinking a lot about this one 😖)
-# There are some situations where formatting gets better looking if it's manually controlled by the magic comma. 
-# I.e. some Django models. Or look in `file://./src/utils/lol/client.py#L20-40 > LeagueClient class, lines ~20-40:
-# middlewares all being "vertical" makes it a lot more consistent/readable and it's easily seen where the difference is.
-line-ending = "lf"                
-skip-magic-trailing-comma = false # Unlike Black ("auto"), set the line ending to LF so it's consistent with `uv` defaults.
+line-ending = "auto"                
+skip-magic-trailing-comma = false
 
 [tool.ruff.lint.isort]
-split-on-trailing-comma = false
+split-on-trailing-comma = true
 combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]

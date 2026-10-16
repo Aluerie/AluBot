@@ -24,8 +24,6 @@ jobs:
           #    Not tested^. Otherwise, we can try https://stackoverflow.com/a/76927462/19217368
           #    This is needed because if `git pull` fails - it still continues to go on like nothing happened and
           #    it's confusing (I've spent a lot of hours in confusion figuring it out).
-          #
-          # 2. --force-reinstall = paste it if you need to reinstall packages from some other same-version git-branch.
           script: |
             set -e
             cd ./AluBot

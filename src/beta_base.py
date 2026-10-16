@@ -48,7 +48,7 @@ from utils.helpers import measure_time
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Sequence
 
-    from core import AluInteraction
+    from core import AluInteraction, AluContext
 
 
 log = logging.getLogger(__name__)

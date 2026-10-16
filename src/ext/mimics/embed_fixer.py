@@ -81,13 +81,13 @@ EMBED_FIXER_REGEX_PATTERN = re.compile(
     r"""
         # group(0) - the whole URL
         # group(1) - pre URL stuff
-        (
+        (?P<pre>
         http[s]?
         ://
         (?: [a-zA-Z]+ \.)?  # `www.` or some subdomains like `open.spotify.`
         )
         # group(2) - the actual site host
-        (
+        (?P<domain>
         x\.com|
         twitter\.com|
         reddit\.com|
@@ -104,7 +104,9 @@ EMBED_FIXER_REGEX_PATTERN = re.compile(
         # group(3) - the rest of url
         # it's taken from `?tag url regex` in discord.py server. In a nutshell:
         # letters | digits | some symbols | some more symbols | url %percent-encoded symbols, i.e. %20 for space
-        (/ (?: [a-zA-Z] | [0-9] | [$-_@.&+] | [!*(),] | (?:% [0-9a-fA-F][0-9a-fA-F]) )+ )
+        (?P<after>
+        / (?: [a-zA-Z] | [0-9] | [$-_@.&+] | [!*(),] | (?:% [0-9a-fA-F][0-9a-fA-F]) )+
+        )
     """,
     flags=re.VERBOSE | re.IGNORECASE,  # X = VERBOSE, I = IGNORECASE
 )
@@ -130,9 +132,10 @@ def find_all_links_to_fix(text: str) -> str:
     # for group in EMBED_FIXER_REGEX_PATTERN.findall(text):
     #     print(group)
     #     return
-    # >>> ('https://www.', 'instagram.com', '/p/DBg0L6foRNW/'), e.g. `group[1] = 'instagram.com'`, etc
+    # >>> tuple('https://www.', 'instagram.com', '/p/DBg0L6foRNW/'), e.g. `group[1] = 'instagram.com'`, etc
     return "\n".join(
         [
+            # TODO: replace with group titles too, also in the doc/comment strings
             group[0].replace("www.", "") + FIX_DICT[group[1].lower().split(".")[0]] + group[2]
             for group in EMBED_FIXER_REGEX_PATTERN.findall(text)
         ]
@@ -160,11 +163,15 @@ def subn_links_to_fix(text: str) -> tuple[str, int]:
 
     # text = "https://www.instagram.com/p/DBg0L6foRNW/ bla bla bla https://x.com/IceFrog/status/1718834746300719265"
     # mo.group(0) is 'https://www.instagram.com/p/DBg0L6foRNW/'
-    # mo.group(1) is 'instagram.com'
-    # mo.group(2) is '/p/DBg0L6foRNW/'
+    # mo.group(1) or mo.group("pre") is 'https://www.'
+    # mo.group(2) or mo.group("domain") is 'instagram.com'
+    # mo.group(3) or "mo.group("after") is '/p/DBg0L6foRNW/'
     # So `.findall` doesn't include `group(0)` into its groups, which makes sense, but might be confusing.
     return EMBED_FIXER_REGEX_PATTERN.subn(
-        lambda mo: mo.group(1).replace("www.", "") + FIX_DICT[mo.group(2).lower().split(".")[0]] + mo.group(3), text
+        lambda mo: (
+            mo.group("pre").replace("www.", "") + FIX_DICT[mo.group("domain").lower().split(".")[0]] + mo.group("after")
+        ),
+        text,
     )
 
 
@@ -285,10 +292,8 @@ class FixSocialLinks(AluCog):
             if correct_embed_count != (embed_count := len(same_message_but_with_meta_embeds.embeds)):
                 results.append(f"* Test #{test_number + 1} failed: expected {correct_embed_count}, but we got {embed_count}")
 
-        if results:
-            await ctx.send("# ❌ Failed\n" + "\n".join(results))
-        else:
-            await ctx.send("# ✅ All Tests passed")
+        content = "# ❌ Failed\n" + "\n".join(results) if results else "# ✅ All Tests passed"
+        await ctx.send(content)
 
 
 async def setup(bot: AluBot) -> None:

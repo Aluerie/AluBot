@@ -7,7 +7,7 @@ import difflib
 import re
 from enum import IntEnum
 from itertools import starmap
-from typing import TYPE_CHECKING, Literal, override
+from typing import TYPE_CHECKING, Literal
 
 import tabulate
 from dateutil.relativedelta import relativedelta
@@ -23,44 +23,14 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "code",
     "color_to_str",
     "format_dt_custom",
     "human_join",
     "human_timedelta",
-    "plural",
 )
 
 # https://github.com/astanin/python-tabulate/issues/195#issuecomment-1270483262
 tabulate.MIN_PADDING = 0
-
-
-class plural:  # noqa: N801 # pep8 allows lowercase names for classes that are used as functions
-    """Helper class to format tricky plural nouns.
-
-    Examples
-    --------
-    >>> format(plural(1), "child|children")  # "1 child"
-    >>> format(plural(8), "week|weeks")  # "8 weeks"
-    >>> f"{plural(3):reminder}" # "3 reminders"
-
-    Sources
-    -------
-    * Rapptz/RoboDanny (license MPL v2), `plural` class:
-        https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
-    """
-
-    def __init__(self, value: int) -> None:
-        self.value: int = value
-
-    @override
-    def __format__(self, format_spec: str) -> str:
-        v = self.value
-        singular, _separator, plural = format_spec.partition("|")
-        plural = plural or f"{singular}s"
-        if abs(v) != 1:
-            return f"{v} {plural}"
-        return f"{v} {singular}"
 
 
 def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
@@ -431,7 +401,7 @@ def hms_to_seconds(hms_time: str) -> int:
     """
 
     def letter_to_seconds(letter: str) -> int:
-        """regex_time('h') = 3, regex_time('m') = 51, regex_time('s') = 8 for above example."""
+        """letter_to_seconds('h') = 3, letter_to_seconds('m') = 51, letter_to_seconds('s') = 8 for above example."""
         pattern = rf"\d+(?={letter})"  # UP032
         units = re.search(pattern, hms_time)
         return int(units.group(0)) if units else 0

@@ -4,20 +4,21 @@ from __future__ import annotations
 from beta_base import *
 
 
+class BanFlags(commands.FlagConverter):
+    reason: str
+    days: int = 1
+    text: str = commands.flag(positional=True)
+
+
 class BetaTest(BetaCog):
     @aluloop(count=1)
     async def beta_task(self) -> None:
-        # url = "https://na1.api.riotgames.com/riot/account/v1/accounts/by-puuid/8201ytXCZ3e2n8PmrFoFa2_zdnxZW1OuQtCEDnhvF5tpbnLokVGVAz6Hq9TLWBODX-FQBUB1CNiGVA"
-        # headers = {"X-Riot-Token": config["TOKENS"]["RIOT"]}
-        # async with self.bot.session.get(
-        #     url,
-        #     headers=headers,
-        # ) as resp:
-        #     return await resp.json()
+        print("hi")
 
-        await self.bot.instantiate_twitch()
-        irene = await self.bot.twitch.irene.user()
-        print(irene.offline_image)
+    @commands.command()
+    async def wow(self, ctx: AluContext, *, flags: BanFlags) -> None:
+        print(flags)
+        await ctx.send("slash")
 
 
 async def setup(bot: AluBot) -> None:

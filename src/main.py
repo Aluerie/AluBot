@@ -1,5 +1,4 @@
-"""
-Python file to launch the bot with, so called "main".
+"""Python file to launch the bot with, so called "main".
 
 Generally, it's preferred to use `make run` to run this bot, however you can use
 `uv run src/main.py`, `python src/main.py`, etc. if you like.
@@ -112,7 +111,7 @@ def main(click_ctx: click.Context, *, test: bool, account: Literal["ALUBOT", "YE
             try:
                 asyncio.run(start_the_bot(test=test, token=config["DISCORD"][account]))
             except KeyboardInterrupt:
-                print("Aborted! The bot was interrupted with `KeyboardInterrupt`!")  # noqa: T201
+                print("Aborted! The bot was interrupted with `KeyboardInterrupt`!")  # ruff: ignore[print]
 
 
 @main.group(short_help="database stuff", options_metavar="[options]")
@@ -134,7 +133,7 @@ def create() -> None:
                         await connection.execute(sql)
 
         asyncio.run(run_create())
-    except Exception:  # noqa: BLE001
+    except Exception:  # ruff: ignore[blind-except]
         traceback.print_exc()
         click.secho("failed to apply SQL due to error", fg="red")
     else:

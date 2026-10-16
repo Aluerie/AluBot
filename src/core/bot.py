@@ -377,7 +377,8 @@ class AluBot(commands.Bot):
 
         args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
         embed = (
-            discord.Embed(color=0xA32952, title=f"Event Error: `{event}`")
+            discord
+            .Embed(color=0xA32952, title=f"Event Error: `{event}`")
             .add_field(
                 name="Args", value=shared_fmt.codeblock(args_join, "ps")[:1023], inline=False
             )  # field value 1024 limit
@@ -386,7 +387,11 @@ class AluBot(commands.Bot):
         await self.exc_manager.register_error(exception, embed)
 
     @override
-    async def on_command_error(self, ctx: AluContext, error: commands.CommandError | Exception) -> None:
+    async def on_command_error(
+        self,
+        ctx: AluContext,
+        error: commands.CommandError | Exception,
+    ) -> None:  # ty: ignore[invalid-method-override]
         """Handler called when an error is raised while invoking a ctx command.
 
         In case of problems - check out on_command_error in parent BotBase class - it's not simply `pass`
@@ -458,7 +463,8 @@ class AluBot(commands.Bot):
                     f"guild   = {ctx.guild.id if ctx.guild else 'DM Channel'}"
                 )
                 metadata_embed = (
-                    discord.Embed(
+                    discord
+                    .Embed(
                         color=0x890620,
                         title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
                         url=ctx.message.jump_url,
@@ -483,7 +489,7 @@ class AluBot(commands.Bot):
         response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
         await ctx.reply(embed=response_embed, ephemeral=True)
 
-    # todo: I don't think it's a proper way of doing this;
+    # TODO: I don't think it's a proper way of doing this;
     async def get_or_fetch_app_emojis(self, *, force_fetch: bool = False) -> list[discord.Emoji]:
         """Get application emojis and cache them."""
         if not self.app_emojis or force_fetch:

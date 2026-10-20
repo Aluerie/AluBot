@@ -10,10 +10,14 @@ from __future__ import annotations
 
 import asyncio
 import math
+import os
+import platform
+import socket
 import time
 from typing import TYPE_CHECKING
 
 import discord
+import psutil
 from discord import app_commands
 from tabulate import tabulate
 
@@ -45,6 +49,11 @@ def _cell(value: float | None) -> str:
 
 class Meta(AluCog):
     """Meta."""
+
+    def __init__(self, bot: AluBot) -> None:
+        super().__init__(bot)
+        self.process = psutil.Process()
+        self.process.cpu_percent()
 
     botinfo_group = app_commands.Group(  # apparently, `bot_group` is not allowed
         name="bot",
@@ -117,7 +126,7 @@ class Meta(AluCog):
                 .Embed(
                     color=0x9400D3,
                     description=(
-                        f"{const.Emote.GitHub}Source: {self.bot.repository_url}\n"
+                        f"{const.Emote.GitHub} Source: {self.bot.repository_url}\n"
                         f"## {const.Emote.GitHub} Latest updates\n{commits}"
                     ),
                 )
@@ -127,6 +136,74 @@ class Meta(AluCog):
                 )
                 .add_field(name="Code stats", value=stats)
                 .set_footer(text="Made with love... ❤", icon_url=self.bot.user.display_avatar)
+            )
+        )
+
+    def _collect_machine_info(self) -> dict[str, str]:
+        vm = psutil.virtual_memory()
+        du = psutil.disk_usage("/")
+
+        cores_logical = psutil.cpu_count() or 1
+        cpu_lines = [
+            f"* Usage: **{psutil.cpu_percent(interval=0.5):.1f}%**",
+            f"* Cores: {psutil.cpu_count(logical=False) or cores_logical} physical / {cores_logical} logical",
+        ]
+        if freq := psutil.cpu_freq():  # ty: ignore[possibly-missing-attribute]
+            cpu_lines.append(f"* Frequency: {freq.current / 1000:.2f} GHz")
+        if model := platform.processor():
+            cpu_lines.append(f"* Model: {model}")
+        if hasattr(os, "getloadavg"):
+            l1, l5, l15 = os.getloadavg()
+            cpu_lines.append(f"* Load avg: {l1:.2f} / {l5:.2f} / {l15:.2f}")
+
+        return {
+            "System": "\n".join([
+                f"* Hostname: `{socket.gethostname()}`",
+                f"* OS: `{platform.system()} {platform.release()}`",
+                f"* Platform: `{platform.platform()}`",
+                f"* Arch: `{platform.machine()}`",
+                f"* Python: `{platform.python_version()}`",
+            ]),
+            "CPU": "\n".join(cpu_lines),
+            "RAM": f"* Usage: **{vm.percent:.1f}%**\n* Used: {vm.used / 1024**3:.1f} / {vm.total / 1024**3:.1f} GB",
+            "Disk": f"* Usage: **{du.percent:.1f}%**\n* Used: {du.used / 1024**3:.1f} / {du.total / 1024**3:.1f} GB",
+        }
+
+    @botinfo_group.command()
+    async def machine(self, interaction: AluInteraction) -> None:
+        """🌐 Show bot's machine information."""
+        await interaction.response.defer()
+        info = await asyncio.to_thread(self._collect_machine_info)
+        embed = discord.Embed(title="👩🏻‍⚕️ Bot Machine", color=0x9400D3)
+        for name, value in info.items():
+            embed.add_field(name=name, value=value, inline=name != "System")
+        await interaction.followup.send(embed=embed)
+
+        # health_stats = await asyncio.to_thread(self._collect_health_stats)
+        # for name, value in health_stats.items():
+        # "Last restart": clock.discord(self.bot.launch_time, "R")
+
+    @botinfo_group.command(name="discord-stats")
+    async def discord_stats(self, interaction: AluInteraction) -> None:
+        """🌐 Show bot's discord stats: in how many servers in, etc."""
+        available = [g for g in self.bot.guilds if not g.unavailable]
+
+        total_servers = len(self.bot.guilds)
+        total_members = sum(g.member_count or 0 for g in available)
+        total_channels = sum(len(g.channels) for g in available)
+        cached_users = len(self.bot.users)
+        user_installs = (await self.bot.application_info()).approximate_user_install_count or 0
+        total_commands = sum(isinstance(c, app_commands.Command) for c in self.bot.tree.walk_commands())
+
+        await interaction.response.send_message(
+            embed=(
+                discord
+                .Embed(title=f"{const.Emote.Discord} Discord Stats", color=0x9400D3)
+                .add_field(name="Servers", value=f"{total_servers:,}")
+                .add_field(name="Members", value=f"{total_members:,} total\n{cached_users:,} unique")
+                .add_field(name="Channels", value=f"{total_channels:,}")
+                .add_field(name="User Installs", value=f"{user_installs:,}")
+                .add_field(name="Slash Commands", value=f"{total_commands:,}")
             )
         )
 

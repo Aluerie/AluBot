@@ -133,7 +133,7 @@ class AluAppCommandTree(app_commands.CommandTree):
 
     def _walk_children(
         self, commands: list[app_commands.Group | app_commands.Command[Any, ..., Any]]
-    ) -> Generator[app_commands.Command[Any, ..., Any], None, None]:
+    ) -> Generator[app_commands.Command[Any, ..., Any]]:
         for command in commands:
             if isinstance(command, app_commands.Group):
                 yield from self._walk_children(command.commands)
@@ -142,7 +142,7 @@ class AluAppCommandTree(app_commands.CommandTree):
 
     async def walk_mentions(
         self, *, guild: discord.abc.Snowflake | None = None
-    ) -> AsyncGenerator[tuple[app_commands.Command[Any, ..., Any] | commands.HybridCommand[Any, ..., Any], str], None]:
+    ) -> AsyncGenerator[tuple[app_commands.Command[Any, ..., Any] | commands.HybridCommand[Any, ..., Any], str]]:
         """Gets all valid mentions for app commands in a specific guild.
 
         This takes into consideration group commands, it will only return mentions for
@@ -242,7 +242,8 @@ class AluAppCommandTree(app_commands.CommandTree):
             )
 
             metadata_embed = (
-                discord.Embed(
+                discord
+                .Embed(
                     color=0x2C0703,
                     title=f"App Command Error: `{cmd_name}`",
                     description=description,
@@ -262,7 +263,7 @@ class AluAppCommandTree(app_commands.CommandTree):
                     icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
                 )
             )
-            await interaction.client.exc_manager.register_error(error, metadata_embed, interaction.channel_id)
+            await interaction.client.error_notification_manager.register(error, metadata_embed)
             if interaction.channel_id == interaction.client.hideout.spam_channel_id:
                 # we don't need any extra embeds;
                 if not interaction.response.is_done():

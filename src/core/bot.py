@@ -11,7 +11,6 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import sys
-import textwrap
 from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
@@ -19,9 +18,9 @@ from discord.ext import commands
 
 from config import env
 from ext import DISABLED_EXTENSIONS, EXT_PACKAGE
-from shared import clock, fmt as shared_fmt  # TODO: fix it
+from shared import clock, fmt  # TODO: fix it
 from shared.concepts import BotBase
-from utils import MISSING, const, disambiguator, errors, fmt, helpers, transposer
+from utils import MISSING, const, disambiguator, errors, transposer
 
 from .bases import AluContext
 from .timer_manager import TimerManager
@@ -123,14 +122,16 @@ class AluBot(BotBase, commands.Bot):
             is_subset_mode=is_subset_mode, package=EXT_PACKAGE, disabled_extensions=DISABLED_EXTENSIONS
         )
 
+        # Stats / Info
+        self.repository_url: str = "https://github.com/Aluerie/AluBot"
+        self.bot_app_info: discord.AppInfo
+        self.ready_flag: bool = False
+        self.launch_time: dt.datetime = clock.utcnow()
+
         # idk
         self.transposer: transposer.TransposeClient = transposer.TransposeClient(session=session)
         self.disambiguator: disambiguator.Disambiguator = disambiguator.Disambiguator()
-        self.repository_url: str = "https://github.com/Aluerie/AluBot"
-        self.developer: str = "Aluerie"  # it's my GitHub account name
-        self.community_invite_url: str = "https://discord.gg/K8FuDeP"
         self.app_emojis: list[discord.Emoji] = []
-        self.bot_app_info: discord.AppInfo
         self.launch_time: dt.datetime = MISSING
 
     @discord.utils.cached_property
@@ -165,6 +166,157 @@ class AluBot(BotBase, commands.Bot):
                 "applications.commands",
             ),
         )
+
+    @override
+    async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
+        """Event error: called when an exception is raised in an event listener.
+
+        Parameters
+        ----------
+        event
+            The name of the event that raised the exception.
+        args
+            The positional arguments for the event that raised the exception.
+        kwargs
+            The keyword arguments for the event that raised the exception.
+        """
+        (_exception_type, exception, _traceback) = sys.exc_info()
+        assert exception is not None, "Somehow `on_error` fired with exception being `None`."
+        if isinstance(exception, commands.CommandInvokeError):
+            # Silence command errors that somehow get bubbled up far enough here
+            return
+
+        embed = discord.Embed(
+            color=0xA32952,
+            title=f"Event Error: `{event}`",
+            description=f"Event Args:\n{fmt.pformat_args(*args)}",
+        ).set_footer(text=f"{self.__class__.__name__}.on_error: {event}")
+        await self.error_notification_manager.register(exception, embed)
+
+    @override
+    async def on_command_error(
+        self,
+        ctx: AluContext,
+        error: commands.CommandError | Exception,
+    ) -> None:  # ty: ignore[invalid-method-override]
+        """Command error: called when an error is raised while invoking a ctx command."""
+        if ctx.is_error_handled is True:
+            return
+
+        if isinstance(error, commands.CommandInvokeError):
+            # we aren't interested in the chain traceback.
+            error = error.original
+
+        match error:
+            case _:
+                embed = discord.Embed(
+                    color=0x890620,
+                    title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
+                )
+                await ctx.bot.error_notification_manager.register(error, embed)
+
+    async def on_command_error_old(
+        self,
+        ctx: AluContext,
+        error: commands.CommandError | Exception,
+    ) -> None:
+        """Command error: called when an error is raised while invoking a ctx command."""
+        if ctx.is_error_handled is True:
+            return
+
+        # error handler working variables
+        desc = "No description"
+        is_unexpected = False
+
+        # error handler itself.
+
+        if isinstance(error, commands.CommandInvokeError):
+            # we aren't interested in the chain traceback.
+            error = error.original
+
+        match error:
+            # MY OWN ERRORS
+            case errors.AluBotError():
+                # These errors are generally raised in code by myself or by my code with an explanation text as `error`
+                # AluBotError subclassed exceptions are all mine.
+                desc = f"{error}"
+
+            # UserInputError SUBCLASSED ERRORS
+            case commands.BadLiteralArgument():
+                desc = (
+                    f"Sorry! Incorrect argument value: {error.argument!r}.\n Only these options are valid "
+                    f"for a parameter `{error.param.displayed_name or error.param.name}`:\n"
+                    f"{fmt.human_join([repr(literal) for literal in error.literals])}."
+                )
+
+            case commands.EmojiNotFound():
+                desc = f"Sorry! `{error.argument}` is not a custom emote."
+            case commands.BadArgument():
+                desc = f"{error}"
+
+            case commands.MissingRequiredArgument():
+                desc = f"Please, provide this argument:\n`{error.param.name}`"
+            case commands.CommandNotFound():
+                if ctx.prefix in {"/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "}:
+                    return
+                if ctx.prefix == "$" and ctx.message.content[1].isdigit():
+                    # "$200 for this?" 2 is `ctx.message.content[1]`
+                    # prefix commands should not start with digits
+                    return
+                # TODO: make a fuzzy search in here to recommend the command that user wants
+                desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
+            case commands.CommandOnCooldown():
+                desc = (
+                    f"Please retry in `{clock.human_timedelta(seconds=error.retry_after, mode='short')} {clock.discord()}`"
+                )
+            case commands.NotOwner():
+                desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
+            case commands.MissingRole():
+                desc = f"Sorry, only {error.missing_role} are able to use this command."
+            case commands.CheckFailure():
+                desc = f"{error}"
+            case _:
+                # error is unhandled/unclear and thus developers need to be notified about it.
+                is_unexpected = True
+
+                cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
+                kwargs_join = (
+                    "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items()) if ctx.kwargs else "No arguments"
+                )
+                snowflake_ids = (
+                    f"author  = {ctx.author.id}\n"
+                    f"channel = {ctx.channel.id}\n"
+                    f"guild   = {ctx.guild.id if ctx.guild else 'DM Channel'}"
+                )
+                metadata_embed = (
+                    discord
+                    .Embed(
+                        title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
+                        url=ctx.message.jump_url,
+                        description=textwrap.shorten(ctx.message.content, width=1024),
+                    )
+                    .set_author(
+                        name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else 'DM Channel'})",
+                        icon_url=ctx.author.display_avatar,
+                    )
+                    .add_field(name="Command Args", value=shared_fmt.codeblock(kwargs_join, "ps"), inline=False)
+                    .add_field(name="Snowflake IDs", value=shared_fmt.codeblock(snowflake_ids, "ebnf"), inline=False)
+                    .set_footer(
+                        text=f"on_command_error: {cmd_name}",
+                        icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
+                    )
+                )
+                await ctx.bot.error_notification_manager.register(error, metadata_embed)
+
+        response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
+        await ctx.reply(embed=response_embed, ephemeral=True)
+
+    async def on_ready(self) -> None:
+        """Handle `ready` event."""
+        if not self.ready_flag:
+            self.launch_time = clock.utcnow()
+            self.ready_flag = True
+        log.info("Logged in as `%s`", self.user)
 
     @override
     async def setup_hook(self) -> None:
@@ -217,25 +369,20 @@ class AluBot(BotBase, commands.Bot):
         guild = discord.Object(id=self.hideout.id)
         self.tree.copy_global_to(guild=guild)
 
-        all_cmds = self.tree.get_commands(guild=guild)
+        new: list[dict[str, Any]] = [cmd.to_dict(self.tree) for cmd in self.tree.get_commands(guild=guild)]
+        old: list[dict[str, Any]] = [r["payload"] for r in await self.pool.fetch("SELECT payload FROM auto_sync")]
 
-        new_payloads = [(guild.id, cmd.to_dict(self.tree)) for cmd in all_cmds]
+        if len(new) == len(old) and all(p in old for p in new):
+            # Compared dicts, seems same.
+            return False
 
-        query = "SELECT payload FROM auto_sync WHERE guild_id = $1"
-        db_payloads = [r["payload"] for r in await self.pool.fetch(query, guild.id)]
+        async with self.pool.acquire() as conn, conn.transaction():
+            await conn.execute("DELETE FROM auto_sync")
+            await conn.executemany("INSERT INTO auto_sync (payload) VALUES ($1)", [(p,) for p in new])
+        await self.tree.sync(guild=guild)
+        return True
 
-        updated_payloads = [p for _, p in new_payloads if p not in db_payloads]
-        outdated_payloads = [p for p in db_payloads if p not in [p for _, p in new_payloads]]
-        not_synced = updated_payloads + outdated_payloads
-
-        if not_synced:
-            await self.pool.execute("DELETE FROM auto_sync WHERE guild_id = $1", guild.id)
-            await self.pool.executemany("INSERT INTO auto_sync (guild_id, payload) VALUES ($1, $2)", new_payloads)
-            await self.tree.sync(guild=guild)
-            return True
-        return False
-
-    async def on_ready(self) -> None:
+    async def on_ready_old(self) -> None:
         """Handle `ready` event."""
         if not hasattr(self, "launch_time"):
             self.launch_time = clock.utcnow()
@@ -399,135 +546,6 @@ class AluBot(BotBase, commands.Bot):
         if message.guild and message.guild.id == const.Guild.hideout and not message.author.bot:
             # only process commands in my own private server and only from me (the only non-bot account in there);
             await self.process_commands(message)
-
-    @override
-    async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
-        """Called when an error is raised in an event listener.
-
-        Parameters
-        ----------
-        event: str
-            The name of the event that raised the exception.
-        args: Any
-            The positional arguments for the event that raised the exception.
-        kwargs: Any
-            The keyword arguments for the event that raised the exception.
-
-        """
-        (_exception_type, exception, _traceback) = sys.exc_info()
-        if exception is None:
-            exception = TypeError("Somehow `on_error` fired with exception being `None`.")
-
-        args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
-        embed = (
-            discord
-            .Embed(color=0xA32952, title=f"Event Error: `{event}`")
-            .add_field(
-                name="Args", value=shared_fmt.codeblock(args_join, "ps")[:1023], inline=False
-            )  # field value 1024 limit
-            .set_footer(text=f"{self.__class__.__name__}.on_error: {event}")
-        )
-        await self.exc_manager.register_error(exception, embed)
-
-    @override
-    async def on_command_error(
-        self,
-        ctx: AluContext,
-        error: commands.CommandError | Exception,
-    ) -> None:  # ty: ignore[invalid-method-override]
-        """Handler called when an error is raised while invoking a ctx command.
-
-        In case of problems - check out on_command_error in parent BotBase class - it's not simply `pass`
-        """
-        if ctx.is_error_handled is True:
-            return
-
-        # error handler working variables
-        desc = "No description"
-        is_unexpected = False
-
-        # error handler itself.
-
-        if isinstance(error, commands.CommandInvokeError):
-            # we aren't interested in the chain traceback.
-            # commands.HybridCommandError() if we ever bring back hybrid commands;
-            error = error.original
-
-        match error:
-            # MY OWN ERRORS
-            case errors.AluBotError():
-                # These errors are generally raised in code by myself or by my code with an explanation text as `error`
-                # AluBotError subclassed exceptions are all mine.
-                desc = f"{error}"
-
-            # UserInputError SUBCLASSED ERRORS
-            case commands.BadLiteralArgument():
-                desc = (
-                    f"Sorry! Incorrect argument value: {error.argument!r}.\n Only these options are valid "
-                    f"for a parameter `{error.param.displayed_name or error.param.name}`:\n"
-                    f"{fmt.human_join([repr(literal) for literal in error.literals])}."
-                )
-
-            case commands.EmojiNotFound():
-                desc = f"Sorry! `{error.argument}` is not a custom emote."
-            case commands.BadArgument():
-                desc = f"{error}"
-
-            case commands.MissingRequiredArgument():
-                desc = f"Please, provide this argument:\n`{error.param.name}`"
-            case commands.CommandNotFound():
-                if ctx.prefix in {"/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "}:
-                    return
-                if ctx.prefix == "$" and ctx.message.content[1].isdigit():
-                    # "$200 for this?" 2 is `ctx.message.content[1]`
-                    # prefix commands should not start with digits
-                    return
-                # TODO: make a fuzzy search in here to recommend the command that user wants
-                desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
-            case commands.CommandOnCooldown():
-                desc = f"Please retry in `{fmt.human_timedelta(error.retry_after, mode='brief')}`"
-            case commands.NotOwner():
-                desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
-            case commands.MissingRole():
-                desc = f"Sorry, only {error.missing_role} are able to use this command."
-            case commands.CheckFailure():
-                desc = f"{error}"
-            case _:
-                # error is unhandled/unclear and thus developers need to be notified about it.
-                is_unexpected = True
-
-                cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
-                kwargs_join = (
-                    "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items()) if ctx.kwargs else "No arguments"
-                )
-                snowflake_ids = (
-                    f"author  = {ctx.author.id}\n"
-                    f"channel = {ctx.channel.id}\n"
-                    f"guild   = {ctx.guild.id if ctx.guild else 'DM Channel'}"
-                )
-                metadata_embed = (
-                    discord
-                    .Embed(
-                        color=0x890620,
-                        title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
-                        url=ctx.message.jump_url,
-                        description=textwrap.shorten(ctx.message.content, width=1024),
-                    )
-                    .set_author(
-                        name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else 'DM Channel'})",
-                        icon_url=ctx.author.display_avatar,
-                    )
-                    .add_field(name="Command Args", value=shared_fmt.codeblock(kwargs_join, "ps"), inline=False)
-                    .add_field(name="Snowflake IDs", value=shared_fmt.codeblock(snowflake_ids, "ebnf"), inline=False)
-                    .set_footer(
-                        text=f"on_command_error: {cmd_name}",
-                        icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
-                    )
-                )
-                await ctx.bot.error_notification_manager.register(error, metadata_embed)
-
-        response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
-        await ctx.reply(embed=response_embed, ephemeral=True)
 
     # TODO: I don't think it's a proper way of doing this;
     async def get_or_fetch_app_emojis(self, *, force_fetch: bool = False) -> list[discord.Emoji]:

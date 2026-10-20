@@ -21,7 +21,7 @@ desktop.ini
 ipynb/
 
 # beta test
-/ext/beta.py
+src/ext/beta.py
 subset.py
 draft.py
 alpha.py

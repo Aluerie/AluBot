@@ -27,7 +27,7 @@ class AluHelpCog(AluCog):
             await ctx.send_help(query)
         else:
             await ctx.send_help()
-        # todo: starting category
+        # TODO: starting category
         # my_help = AluHelp()
         # my_help.context = ctx = await AluContext.from_interaction(ntr)
         # await my_help.command_callback(ctx, command=command)

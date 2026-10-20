@@ -8,14 +8,16 @@ Notices
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
 from core import AluDevCog
+from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
@@ -33,7 +35,52 @@ type SyncSpecLiteral = Literal["global", "current", "copy", "clear"]
 
 
 class ControlCog(AluDevCog):
-    """Control Cog."""
+    """Control Cog.
+
+    * Sync command (both prefix and slash);
+    * Autosync task;
+    """
+
+    #########################################################################################################################
+    # AUTOSYNC
+    #########################################################################################################################
+
+    @override
+    async def cog_load(self) -> None:
+        if not self.bot.test:
+            self.autosync.start()
+        await super().cog_load()
+
+    @override
+    async def cog_unload(self) -> None:
+        self.autosync.cancel()
+        await super().cog_unload()
+
+    @loop(count=1)
+    async def autosync(self) -> None:
+        """Auto Syncing bot's application tree task.
+
+        `?tag ass` and all. But It's too convenient to pass on.
+        If we ever get rate limited then we will think of better measures.
+
+        Notes
+        -----
+        * There is a different `autosync_hideout` task in the AluBot class. Do not move that task here because
+          we want to run it on every test-bot launch while this cog is not being loaded at all times.
+        """
+        # Initial wait
+        await asyncio.sleep(60.0)  # 1 minute
+        # Global
+        await self.bot.tree.sync()
+        # Hideout Guild
+        await asyncio.sleep(30.0)
+        await self.bot.tree.sync(guild=discord.Object(id=const.Guild.hideout))
+
+        log.info("Synced global and Hideout bound commands.")
+
+    #########################################################################################################################
+    # SYNC COMMANDS
+    #########################################################################################################################
 
     async def sync_command_worker(
         self,
@@ -96,10 +143,10 @@ class ControlCog(AluDevCog):
     @app_commands.default_permissions(ban_members=True)
     @app_commands.choices(
         spec=[
-            app_commands.Choice(name="Global Sync", value="global"),
-            app_commands.Choice(name="Current Guild", value="current"),
-            app_commands.Choice(name="Copy Global commands to Current Guild", value="copy"),
-            app_commands.Choice(name="Clear Current Guild", value="clear"),
+            app_commands.Choice(name="🌐 Global Sync", value="global"),
+            app_commands.Choice(name="🏠 Current Guild", value="current"),
+            app_commands.Choice(name="🥷 Copy Global commands to Current Guild", value="copy"),
+            app_commands.Choice(name="🗑️ Clear Current Guild", value="clear"),
         ],
     )
     async def slash_sync_dev(self, interaction: AluInteraction, spec: SyncSpecLiteral = "global") -> None:

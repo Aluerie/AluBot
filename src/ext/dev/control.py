@@ -66,7 +66,7 @@ class ControlCog(AluDevCog):
         Notes
         -----
         * There is a different `autosync_hideout` task in the AluBot class. Do not move that task here because
-          we want to run it on every test-bot launch while this cog is not being loaded at all times.
+            we want to run it on every test-bot launch while this cog is not being loaded at all times.
         """
         # Initial wait
         await asyncio.sleep(60.0)  # 1 minute
@@ -93,7 +93,7 @@ class ControlCog(AluDevCog):
         Source
         ------
         * Umbra's Sync Command
-          https://about.abstractumbra.dev/discord.py/2023/01/29/sync-command-example.html
+            https://about.abstractumbra.dev/discord.py/2023/01/29/sync-command-example.html
         * Discord.py has tag `?tag usc` which should mirror the link above.
         """
         # Multiple Guilds sync
@@ -171,7 +171,17 @@ class ControlCog(AluDevCog):
         guilds: commands.Greedy[discord.Object],
         spec: SyncSpecLiteral | None = None,
     ) -> None:
-        """🩶 Sync bot's app tree."""
+        """🩶 Sync bot's app tree.
+
+        Examples
+        --------
+        * `$sync` or `$sync global` - takes all global commands within the CommandTree and sends them to Discord.
+        * `$sync current` - sync all guild commands for the current context's guild.
+        * `$sync copy` - copies all global commands to the current guild (within the CommandTree) and syncs.
+        * `$sync clear` - remove all guild commands from the CommandTree and syncs,
+            which effectively removes all commands from the guild.
+        * `$sync 123 456 789` - sync the 3 guild ids we passed: 123, 456 and 789. Only their guilds and guild-bound command.
+        """
         content = await self.sync_command_worker(spec, current_guild=ctx.guild, guilds=guilds)
         await ctx.reply(content)
 

@@ -82,15 +82,11 @@ class AluBot(BotBase, commands.Bot):
             self.test = True
             self.prefix = "~"
             ping_role_mention = env.PING_TEST_MENTION
-            webhook_error = env.WEBHOOK_YEN_ERROR
-            webhook_notification = env.WEBHOOK_YEN_NOTIFICATION
         else:
             # production account
             self.test = False
             self.prefix = "$"
             ping_role_mention = env.PING_PROD_MENTION
-            webhook_error = env.WEBHOOK_ALU_ERROR
-            webhook_notification = env.WEBHOOK_ALU_NOTIFICATION
 
         super(commands.Bot, self).__init__(
             command_prefix={self.prefix},
@@ -117,8 +113,8 @@ class AluBot(BotBase, commands.Bot):
         super().__init__(
             session,
             ping_role_mention=ping_role_mention,
-            error_webhook_url=webhook_error,
-            notification_webhook_url=webhook_notification,
+            error_webhook_url=env.WEBHOOK_ERROR,
+            notification_webhook_url=env.WEBHOOK_NOTIFICATION,
         )
 
         self.pool: PoolTypedWithAny = pool

@@ -14,6 +14,7 @@ import math
 import os
 import platform
 import socket
+import textwrap
 import time
 from typing import TYPE_CHECKING
 
@@ -217,7 +218,7 @@ class Meta(AluCog):
             )
         )
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def location(self, ctx: AluContext) -> None:
         """🌐 Show bot's hosted location, based on IP."""
@@ -234,6 +235,31 @@ class Meta(AluCog):
         except TimeoutError, aiohttp.ClientError:
             log.exception("Failed to fetch host location")
             await ctx.reply("Sorry! Couldn't reach the geolocation service.")
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def db_health(self, ctx: AluContext) -> None:
+        """🌐 Database health."""
+        pool = self.bot.pool
+        lines = [
+            f"<Holder i={i} gen={holder._generation} in_use={holder._in_use is not None} "  # ruff: ignore[private-member-access]
+            f"closed={holder._con is None or holder._con.is_closed()}>"  # ruff: ignore[private-member-access]
+            for i, holder in enumerate(pool._holders, start=1)  # ruff: ignore[private-member-access]
+        ]
+        await ctx.send(
+            embed=discord.Embed(
+                title="Bot's Database Connections Report",
+                description="\n".join([
+                    f"Pool.acquire Waiters: {len(pool._queue._getters)}",  # ruff: ignore[private-member-access]
+                    f"Pool Generation: {pool._generation}",  # ruff: ignore[private-member-access]
+                    f"Connections In Use: {len(pool._holders) - pool._queue.qsize()}",  # ruff: ignore[private-member-access]
+                ]),
+            ).add_field(
+                name="Connections",
+                value=fmt.codeblock("\n".join(lines)[:1000]),
+                inline=False,
+            )
+        )
 
 
 async def setup(bot: AluBot) -> None:

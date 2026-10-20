@@ -28,7 +28,7 @@ __all__ = ("ReloadCog",)
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-type SyncSpecLiteral = Literal["global", "current", "copy", "clear"]
+type SyncSpecLiteral = Literal["global", "current", "copy", "clear", "~", "*", "^"]
 
 
 # TODO: add errors.Respond when we figure out
@@ -69,7 +69,7 @@ class ReloadCog(AluDevCog):
             we want to run it on every test-bot launch while this cog is not being loaded at all times.
         """
         # Initial wait
-        await asyncio.sleep(60.0)  # 1 minute
+        await asyncio.sleep(30.0)  # 1 minute
         # Global
         await self.bot.tree.sync()
         # Hideout Guild
@@ -125,12 +125,12 @@ class ReloadCog(AluDevCog):
             return f"`{spec}` can only be used inside a guild."
 
         match spec:
-            case "current":  # "~" in Umbra's Sync Command
+            case "current" | "~":
                 synced = await self.bot.tree.sync(guild=current_guild)
-            case "copy":  # "*" in Umbra's Sync Command
+            case "copy" | "*":
                 self.bot.tree.copy_global_to(guild=current_guild)
                 synced = await self.bot.tree.sync(guild=current_guild)
-            case "clear":  # "^" in Umbra's Sync Command
+            case "clear" | "^":
                 self.bot.tree.clear_commands(guild=current_guild)
                 await self.bot.tree.sync(guild=current_guild)
                 return "Cleared all commands from the current guild."

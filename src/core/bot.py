@@ -102,13 +102,13 @@ class AluBot(BotBase, commands.Bot):
                 presences=True,
                 voice_states=True,
             ),
-            allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
+            allowed_mentions=discord.AllowedMentions(everyone=False, users=True, roles=False, replied_user=False),
             tree_cls=AluAppCommandTree,
             strip_after_prefix=True,
             case_insensitive=True,
             help_command=None,
-            allowed_contexts=discord.app_commands.AppCommandContext(guild=True, dm_channel=True, private_channel=True),
-            allowed_installs=discord.app_commands.AppInstallationType(guild=True, user=True),
+            # allowed_contexts=discord.app_commands.AppCommandContext(guild=True, dm_channel=True, private_channel=True),
+            # allowed_installs=discord.app_commands.AppInstallationType(guild=True, user=True),
         )
         super().__init__(
             session,

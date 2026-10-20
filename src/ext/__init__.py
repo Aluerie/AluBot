@@ -9,7 +9,7 @@ Notices
 EXT_PACKAGE = str(__package__)
 DISABLED_EXTENSIONS = (
     # extensions that should not be loaded
-    "ext.beta",
+    # "ext.beta",
     # currently disabled
     # "ext.lol",
 )

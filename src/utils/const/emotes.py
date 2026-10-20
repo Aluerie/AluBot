@@ -19,12 +19,11 @@ import platform
 from enum import StrEnum
 
 # emote names should match discord ones and etc thus:
-# ruff: noqa: N815
+# ruff: file-ignore[mixed-case-variable-in-class-scope]
 
 __all__ = (
     "DIGITS",
     "Emote",
-    "EmoteLogo",
     "Tick",
 )
 
@@ -134,6 +133,7 @@ class AluEmote(StrEnum):
     FeelsBingMan = "<a:FeelsBingMan:1414018099493208136>"
     FeelsDankMan = "<:FeelsDankMan:1414018016059854918>"
     FeelsDankManLostHisHat = "<:FeelsDankManLostHisHat:1414018374161141971>"
+    GitHub = "<:GitHub:1562130860256530482>"
     GlassWineHead = "<a:GlassWineHead:1414018225246572595>"
     GOTTEM = "<:GOTTEM:1414018210566508556>"
     HappyComfy = "<a:HappyComfy:1414018504230965338>"
@@ -375,6 +375,7 @@ class YenEmote(StrEnum):
     FeelsBingMan = "<a:FeelsBingMan:1414015019141693482>"
     FeelsDankMan = "<:FeelsDankMan:1414014908378513498>"
     FeelsDankManLostHisHat = "<:FeelsDankManLostHisHat:1414015370448343075>"
+    GitHub = "<:GitHub:1562130775501971536>"
     GlassWineHead = "<a:GlassWineHead:1414015180593172654>"
     GOTTEM = "<:GOTTEM:1414015161400033421>"
     HappyComfy = "<a:HappyComfy:1414015558034264186>"
@@ -602,11 +603,3 @@ DIGITS = [
     "\N{DIGIT EIGHT}\N{COMBINING ENCLOSING KEYCAP}",
     "\N{DIGIT NINE}\N{COMBINING ENCLOSING KEYCAP}",
 ]
-
-
-class EmoteLogo(StrEnum):
-    """Emotes to showcase some logos with."""
-
-    # Emotes from BXX extra emote servers, names match emote names in those servers (try to keep them PascalCase)
-    GitHub = "<:GitHub:1125588758197178439>"
-    AluerieServer = "<:AluerieServer:1125600089109442661>"

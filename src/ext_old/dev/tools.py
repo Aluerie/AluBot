@@ -30,47 +30,6 @@ class Tools(BaseDevCog):
     )
 
     @tools_group.command()
-    async def charinfo(self, interaction: AluInteraction, characters: str) -> None:
-        """🪛 Shows information about character(-s).
-
-        Only up to a 10 characters at a time though.
-
-        Parameters
-        ----------
-        characters: str
-            Input up to 10 characters to get format info about.
-
-        """
-
-        def to_string(c: str) -> tuple[str, str]:
-            """Returns Pythonic Emoji name and a whole string for the slash command's embed.
-
-            Example
-            -------
-            🦢 -> ("\N{SWAN}", "[\U0001f9a2](*fileformat link*): \N{SWAN} — 🦢 🦢")
-            """
-            digit = f"{ord(c):x}"
-            name = unicodedata.name(c, None)
-            python_name = f"\\N{{{name}}}" if name else '"Name not found"'
-            u_name = f"[`\\U{digit:>08}`](https://www.fileformat.info/info/unicode/char/{digit})"
-            return python_name, f"{u_name}: `{python_name}` \N{EM DASH} `{c}` {c}"
-
-        content_parts: list[str] = []
-        description_parts: list[str] = []
-
-        for c in characters[:10]:
-            python_name, desc_name = to_string(c)
-            content_parts.append(python_name)
-            description_parts.append(desc_name)
-
-        content = f"{characters}\n```js\n" + "\n".join(content_parts) + "```"
-        embed = discord.Embed(color=discord.Color.blurple(), description="\n".join(description_parts))
-        if len(characters) > 10:
-            embed.set_footer(text="Output was too long. Displaying only first 10 chars.")
-
-        await interaction.response.send_message(content=content, embed=embed)
-
-    @tools_group.command()
     async def emote_str(self, interaction: AluInteraction, emote: str) -> None:
         """🪛 Shows emote string in a `<?a:name:id>` format.
 

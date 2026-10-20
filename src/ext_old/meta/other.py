@@ -5,7 +5,6 @@ import inspect
 import itertools
 import os
 import re
-import time
 from typing import TYPE_CHECKING, NamedTuple
 
 import aiofiles
@@ -15,7 +14,6 @@ import pygit2
 from discord import app_commands
 from discord.ext import commands
 from pygit2.enums import SortMode
-from tabulate import tabulate
 
 from core import AluCog, Url
 from utils import const
@@ -74,7 +72,7 @@ def format_commit(commit: pygit2.Commit) -> str:
     commit_tz = datetime.timezone(datetime.timedelta(minutes=commit.commit_time_offset))
     commit_time = datetime.datetime.fromtimestamp(commit.commit_time).astimezone(commit_tz)
     offset = discord.utils.format_dt(commit_time, style="R")
-    # todo: change the link below to proper global variable I guess ;
+    # TODO: change the link below to proper global variable I guess ;
     return f"[`{short_sha2}`](https://github.com/Aluerie/AluBot/commit/{commit.id}) {short} ({offset})"
 
 
@@ -92,46 +90,14 @@ class PingTuple(NamedTuple):
 
 class OtherCog(AluCog):
     @app_commands.command()
-    async def ping(self, interaction: AluInteraction) -> None:
-        """\N{GLOBE WITH MERIDIANS} Checks the bot's ping to Discord and some other services."""
-        typing_start = time.monotonic()
-        await interaction.response.defer()
-
-        typing_ms = (time.monotonic() - typing_start) * 1000
-
-        start = time.perf_counter()
-        message = await interaction.followup.send("\N{TABLE TENNIS PADDLE AND BALL} Pong!", wait=True)
-        message_ms = (time.perf_counter() - start) * 1000
-
-        latency_ms = self.bot.latency * 1000
-
-        postgres_start = time.perf_counter()
-        await self.bot.pool.fetch("SELECT 1")
-        postgres_ms = (time.perf_counter() - postgres_start) * 1000
-
-        pings = [
-            ("\N{MEMO}", "Typing", typing_ms),
-            ("\N{LOVE LETTER}", "Message", message_ms),
-            ("\N{GLOBE WITH MERIDIANS}", "Websocket", latency_ms),
-            ("\N{ELEPHANT}", "Database", postgres_ms),
-        ]
-        average = sum(p[2] for p in pings) / len(pings)
-        pings.append(("\N{AVOCADO}", "Average", average))
-
-        table = tabulate(
-            tabular_data=pings, headers=(" ", "Ping", "Time, ms"), tablefmt="plain", floatfmt=("g", "g", "07.3f")
-        )
-        embed = discord.Embed(color=discord.Color.dark_embed(), description=f"```py\n{table}\n```")
-        await message.edit(embed=embed)
-
-    @app_commands.command()
     async def about(self, interaction: AluInteraction) -> None:
         """🌐 Show information about the bot."""
         await interaction.response.defer()
         information = self.bot.bot_app_info
 
         embed = (
-            discord.Embed(color=0x9400D3, description=information.description)
+            discord
+            .Embed(color=0x9400D3, description=information.description)
             .set_author(name=f"Made by @{information.owner}", icon_url=information.owner.display_avatar.url)
             .add_field(name="Latest updates:", value=get_latest_commits(limit=3), inline=False)
         )
@@ -156,7 +122,7 @@ class OtherCog(AluCog):
 
         embed.add_field(name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU")
         embed.add_field(name="Command Stats", value="*stats coming soon*")
-        # todo: implement command run total and total amount of slash/text commands in the bot maybe tasks
+        # TODO: implement command run total and total amount of slash/text commands in the bot maybe tasks
 
         embed.add_field(
             name="Code stats",
@@ -178,7 +144,8 @@ class OtherCog(AluCog):
 
         license_url = f"{source_url}/blob/main/LICENSE"
         embed = (
-            discord.Embed(
+            discord
+            .Embed(
                 color=0x612783,
                 title="Mozilla Public License 2.0",
                 url=license_url,

@@ -14,11 +14,27 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from PIL import ImageFont
 
+__all__ = ("Transposer",)
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class TransposeClient:
+class Transposer:
+    """Transposer."""
+
+    def __init__(self, session: ClientSession) -> None:
+        self.session: ClientSession = session
+
+    @staticmethod
+    def str_to_file(string: str, filename: str = "file.txt") -> discord.File:
+        """Convert ``str`` to ``discord.File``."""
+        fp = BytesIO(StringIO(string).read().encode("utf8"))
+        fp.seek(0)
+        return discord.File(fp, filename=filename)
+
+
+class TransposeOLDClient:
     """Transpose object of X class to an object of Y class.
 
     The class primarily used to convert things into discord.File or PIL.Image.Image.

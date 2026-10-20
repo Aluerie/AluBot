@@ -128,8 +128,11 @@ class AluBot(BotBase, commands.Bot):
         self.ready_flag: bool = False
         self.launch_time: dt.datetime = clock.utcnow()
 
+        # Extra
+        self.transposer = transposer.Transposer(session=session)
+
         # idk
-        self.transposer: transposer.TransposeClient = transposer.TransposeClient(session=session)
+        # self.transposer: transposer.TransposeClient = transposer.TransposeClient(session=session)
         self.disambiguator: disambiguator.Disambiguator = disambiguator.Disambiguator()
         self.app_emojis: list[discord.Emoji] = []
         self.launch_time: dt.datetime = MISSING

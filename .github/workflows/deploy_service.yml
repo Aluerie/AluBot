@@ -27,7 +27,7 @@ jobs:
           script: |
             set -e
             cd ./AluBot
-            git pull
+            git pull --ff-only
             git submodule update --recursive
             ~/.local/bin/uv sync --no-dev
             sudo systemctl restart alubot.service

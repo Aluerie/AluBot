@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import datetime  # noqa: TC003
+import datetime  # ruff: ignore[typing-only-standard-library-import]
 import logging
 import textwrap
 from typing import TYPE_CHECKING, Any, Self, TypedDict, override
@@ -10,7 +10,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from core import AluCog, AluView
-from utils import MISSING, const, errors, fmt, pages, times
+from shared import clock, fmt
+from utils import MISSING, const, errors, pages, times
 
 if TYPE_CHECKING:
     from core import AluBot, AluInteraction, Timer
@@ -58,7 +59,7 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         )
         author_id = self.timer.data.get("author_id")
         text = self.timer.data.get("text")
-        delta = fmt.human_timedelta(when, source=refreshed.created_at)
+        delta = clock.human_timedelta(when, source=refreshed.created_at)
         msg = f"Alright <@{author_id}>, I've snoozed your reminder for {delta}: {text}"
         await interaction.followup.send(msg, ephemeral=True)
 
@@ -150,7 +151,7 @@ class Reminders(AluCog):
             timezone=zone or "UTC",
             data=data,
         )
-        delta = fmt.human_timedelta(when, source=timer.created_at)
+        delta = clock.human_timedelta(when, source=timer.created_at)
         embed = discord.Embed(
             color=interaction.user.color, description=f"in {delta} — {fmt.format_dt_tdR(when)}\n{text}"
         ).set_author(
@@ -296,7 +297,7 @@ class Reminders(AluCog):
             DELETE FROM timers
             WHERE event = 'reminder'
             AND data #>> '{author_id}' = $1;
-        """  # noqa: RUF027
+        """  # ruff: ignore[missing-f-string-syntax]
         await interaction.client.pool.execute(query, author_id)
 
         # Check if the current timer is the one being cleared and cancel it if so
@@ -336,7 +337,7 @@ class Reminders(AluCog):
             view = ReminderView(url=url, timer=timer, cog=self, author_id=author_id)
 
         try:
-            msg = await channel.send(content, view=view)  # type:ignore[reportAttributeAccessIssue]
+            msg = await channel.send(content, view=view)  # ty: ignore[unresolved-attribute]
         except discord.HTTPException:
             pass
         else:

@@ -1,3 +1,11 @@
+"""New extension.
+
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -8,10 +16,10 @@ if TYPE_CHECKING:
     from core import AluBot
 
 
-class MyCog(AluCog):
-    """MyCog."""
+class NewCog(AluCog):
+    """NewCog."""
 
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(MyCog(bot))
+    await bot.add_cog(NewCog(bot))

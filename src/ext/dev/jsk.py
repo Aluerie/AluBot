@@ -1,33 +1,37 @@
+"""Jishaku.
+
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
+
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
+
+# Must be set before jishaku is imported; some flags are read at import time.
+os.environ.setdefault("JISHAKU_NO_DM_TRACEBACK", "True")
+os.environ.setdefault("JISHAKU_NO_UNDERSCORE", "True")
+os.environ.setdefault("JISHAKU_HIDE", "True")
 
 from jishaku.cog import OPTIONAL_FEATURES, STANDARD_FEATURES
-
-from core import AluCog
 
 if TYPE_CHECKING:
     from core import AluBot
 
 
-class AluJishaku(AluCog, *STANDARD_FEATURES, *OPTIONAL_FEATURES):  # pyright: ignore[reportUntypedBaseClass]
+class AluJishaku(*STANDARD_FEATURES, *OPTIONAL_FEATURES):
     """My subclass to main frontend class for Jishaku.
 
     This implements all Features and is the main entry point for Jishaku.
     """
 
+    if TYPE_CHECKING:
+        bot: AluBot  # ty: ignore[invalid-mutable-override]
+
     __is_jishaku__: bool = True
-
-    @override
-    async def cog_load(self) -> None:
-        os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
-        os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
-        os.environ["JISHAKU_HIDE"] = "True"
-
-    @override
-    async def cog_unload(self) -> None:
-        pass
 
 
 async def setup(bot: AluBot) -> None:

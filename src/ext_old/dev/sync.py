@@ -1,3 +1,11 @@
+"""Control.
+
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,10 +16,9 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core import aluloop
+from core import AluDevCog
+from shared.concepts import loop
 from utils import const, errors
-
-from ._base import BaseDevCog
 
 if TYPE_CHECKING:
     from core import AluBot, AluContext, AluInteraction
@@ -20,15 +27,15 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class Sync(BaseDevCog):
+class Control(AluDevCog):
     """Cog responsible for syncing application commands tree.
 
-    Includes both manual ways (via commands) and automatic (via tasks).
+    Includes both manual ways (via prefix and slash commands) and automatic (via tasks).
     Automatic ways to sync the tree are not recommended, but we will try to do it without triggering rate-limits.
 
     Notes
     -----
-    * I have another autosync task in the AluBot class.
+    * I have another `autosync_hideout` task in the AluBot class.
         Do not move that task here because I want it to run on every test-bot launch while
         this cog does not get loaded at all times.
     * This extension is separate from "control.py" just so I can load it separately as `ext.dev.sync`
@@ -39,16 +46,16 @@ class Sync(BaseDevCog):
     @override
     async def cog_load(self) -> None:
         if not self.bot.test:
-            self.auto_sync.start()
+            self.autosync.start()
         await super().cog_load()
 
     @override
     async def cog_unload(self) -> None:
-        self.auto_sync.cancel()
+        self.autosync.cancel()
         await super().cog_unload()
 
-    @aluloop(count=1)
-    async def auto_sync(self) -> None:
+    @loop(count=1)
+    async def autosync(self) -> None:
         """Auto Syncing bot's application tree task.
 
         `?tag ass` and all. But I forget to sync the tree manually.
@@ -67,7 +74,7 @@ class Sync(BaseDevCog):
         log.info("Synced global and premium guild bound commands.")
 
     async def sync_to_guild_list(self, guilds: list[discord.Object]) -> str:
-        """Syncs app tree for the guilds."""
+        """Sync app tree for the guilds."""
         successful_guild_syncs = 0
         cmds: list[discord.app_commands.AppCommand] = []
         for guild in guilds:
@@ -85,7 +92,7 @@ class Sync(BaseDevCog):
         current_guild: discord.Guild | None,
         guilds: list[discord.Object],
     ) -> discord.Embed:
-        """A worker function for both prefix/slash commands to sync application tree.
+        """Worker function for both prefix/slash commands to sync application tree.
 
         Sources
         -----
@@ -105,7 +112,7 @@ class Sync(BaseDevCog):
             desc = await self.sync_to_guild_list(guilds)
 
         # SYNC METHODS ABOUT CURRENT GUILD
-        elif spec and spec != "global":
+        elif spec is not None and spec != "global":
             if not current_guild:
                 msg = "You used `sync` command with a spec outside of a guild"
                 raise errors.BadArgument(msg)
@@ -149,7 +156,7 @@ class Sync(BaseDevCog):
         ],
     )
     async def slash_sync(self, interaction: AluInteraction, method: str) -> None:
-        """\N{GREY HEART} Hideout-Only | Sync bot's app tree.
+        """\N{GREY HEART} Sync bot's app tree.
 
         Parameters
         ----------
@@ -161,7 +168,7 @@ class Sync(BaseDevCog):
             # I don't want to bother to mirror `commands.Greedy` argument into a slash command
             # so just redirect yourself to a prefix $sync command.
             await interaction.response.send_message(
-                f"Use prefix command `{self.bot.main_prefix}sync guild1_id guild2_id ... ` !",
+                f"Use prefix command `{self.bot.prefix}sync guild1_id guild2_id ... ` !",
             )
             return
 
@@ -192,4 +199,4 @@ class Sync(BaseDevCog):
 
 async def setup(bot: AluBot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(Sync(bot))
+    await bot.add_cog(Control(bot))

@@ -6,139 +6,113 @@ CLI supported flags can be viewed with `--help` flag.
 
 License
 -------
-* This Source Code Form is subject to the terms of the [Mozilla Public License v2.0](<http://mozilla.org/MPL/2.0/>).
-* Copyright (C) 2020-present [Aluerie](<https://github.com/Aluerie>).
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
 """
 
 from __future__ import annotations
 
+import asyncio
+
 try:
-    # `?tag truststore` in discord.py server. It's sad that, on average, Windows is so bad with SSL.
-    import truststore  # type: ignore[reportMissingImport] "if it doesn't work" measure, we don't need to install this.
+    # `?tag truststore` in discord.py server. Unfortunately, on average, Windows is very bad with SSL.
+    import truststore  # ty: ignore[unresolved-import] "if it doesn't work" measure, we don't need to install this.
 except ImportError:
     pass
 else:
     truststore.inject_into_ssl()
 
-import asyncio
-import logging
-import platform
-import sys
-import traceback
-from pathlib import Path
-from typing import Any, Literal
 
 import aiohttp
-import asyncpg
 import click
-import discord
-import orjson
 
-from config import config
-from core import AluBot, setup_logging
-from utils import const
+from config import env
+from core import AluBot
+from shared import ut
+from shared.concepts import db, logs
 
-try:
-    import uvloop  # type: ignore[reportMissingImports] # not available on Windows
-except ImportError:
-    pass
-else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
-
-async def create_pool() -> asyncpg.Pool[asyncpg.Record]:
-    """Create a database connection pool."""
-
-    def _encode_jsonb(value: Any) -> str:
-        return orjson.dumps(value).decode("utf-8")
-
-    def _decode_jsonb(value: str) -> Any:
-        return orjson.loads(value)
-
-    async def init(con: asyncpg.Connection[asyncpg.Record]) -> None:
-        await con.set_type_codec("jsonb", schema="pg_catalog", encoder=_encode_jsonb, decoder=_decode_jsonb, format="text")
-
-    postgres_url = config["POSTGRES"]["VPS"] if platform.system() == "Linux" else config["POSTGRES"]["HOME"]
-    return await asyncpg.create_pool(
-        postgres_url, init=init, command_timeout=60, min_size=20, max_size=20, statement_cache_size=0
-    )
+# generated at https://patorjk.com/software/taag/ using "Standard" font
+ASCII_STARTING_UP_ART = r"""
+     _    _       ____        _     ____  _             _   _
+    / \  | |_   _| __ )  ___ | |_  / ___|| |_ __ _ _ __| |_(_)_ __   __ _
+   / _ \ | | | | |  _ \ / _ \| __| \___ \| __/ _` | '__| __| | '_ \ / _` |
+  / ___ \| | |_| | |_) | (_) | |_   ___) | || (_| | |  | |_| | | | | (_| |
+ /_/   \_\_|\__,_|____/ \___/ \__| |____/ \__\__,_|_|   \__|_|_| |_|\__, |
+                                                                    |___/
+            [ ALUBOT IS STARTING NOW ]
+"""
 
 
-async def start_the_bot(*, test: bool, token: str) -> None:
-    """Helper function to start the bot."""
-    log = logging.getLogger()
-    try:
-        pool = await create_pool()
-    except Exception:
-        msg = "Could not set up PostgreSQL. Exiting."
-        # error message to terminal
-        click.echo(msg, file=sys.stderr)
-        # error message to logs
-        log.exception(msg)
-        # error message to discord webhook (if VPS)
-        if platform.system() != "Windows":
-            session = aiohttp.ClientSession()
-            webhook = discord.Webhook.from_url(url=config["WEBHOOKS"]["SPAM"], session=session)
-            embed = discord.Embed(color=const.Color.error, description=msg)
-            await webhook.send(content=const.Role.error.mention, embed=embed)
-            await session.close()
-        return
-    else:
-        async with (
-            aiohttp.ClientSession() as session,
-            pool as pool,
-            AluBot(test=test, token=token, session=session, pool=pool) as alubot,
-        ):
-            await alubot.start()
+async def start_the_bot(
+    *,
+    is_subset_mode: bool,
+    is_test_account: bool,
+) -> None:
+    """Start the bot."""
+    async with (
+        aiohttp.ClientSession() as session,
+        await db.try_create_pool(
+            env.POSTGRES_PROD,
+            env.POSTGRES_TEST,
+            is_test=is_test_account,
+        ) as pool,
+        AluBot(
+            session=session,
+            pool=pool,
+            is_subset_mode=is_subset_mode,
+            is_test_account=is_test_account,
+        ) as alubot,
+    ):
+        await alubot.start()
 
 
 @click.group(invoke_without_command=True, options_metavar="[options]")
 @click.pass_context
 @click.option(
-    "--test", "-t", is_flag=True, help="Whether to launch test/debug version of the bot or full production functionality."
+    "--subset-mode",
+    "-u",
+    is_flag=True,
+    default=False,  # usual default: False ✅
+    help=(
+        "Whether to launch the bot in subset-mode. "
+        "In this mode the bot only loads extensions that are listed in `ext_subset.py` file."
+        "Useful for debugging as it makes launch times much faster."
+    ),
 )
 @click.option(
-    "--account",
-    "-a",
-    type=click.Choice(["ALUBOT", "YENBOT"]),
-    default="ALUBOT",
-    help="Whether to launch the bot with AluBot or YenBot's bot account token.",
+    "--test-account",
+    "-t",
+    is_flag=True,
+    default=False,  # usual default: False ✅
+    help=(
+        "Whether to launch the bot using test dummy account (@YenBot) or real account (@AluBot). "
+        "It's useful when we want to test some features without interrupting the main account."
+    ),
 )
-def main(click_ctx: click.Context, *, test: bool, account: Literal["ALUBOT", "YENBOT"]) -> None:
-    """Launches the bot."""
+def launch(
+    click_ctx: click.Context,
+    *,
+    subset_mode: bool,
+    test_account: bool,
+) -> None:
+    """Launch the bot."""
     if click_ctx.invoked_subcommand is None:
-        with setup_logging(test=test):
+        with logs.setup_logging(
+            starting_up_art=ASCII_STARTING_UP_ART,
+            filename="alubot.log",
+        ):
             try:
-                asyncio.run(start_the_bot(test=test, token=config["DISCORD"][account]))
+                ut.run(
+                    start_the_bot(
+                        is_subset_mode=subset_mode,
+                        is_test_account=test_account,
+                    )
+                )
             except KeyboardInterrupt:
                 print("Aborted! The bot was interrupted with `KeyboardInterrupt`!")  # ruff: ignore[print]
-
-
-@main.group(short_help="database stuff", options_metavar="[options]")
-def db() -> None:
-    """Group for cli database related commands."""
-
-
-@db.command()
-def create() -> None:
-    """Creates the database tables."""
-    try:
-
-        async def run_create() -> None:
-            connection = await asyncpg.connect(config["POSTGRES"]["HOME"])
-            async with connection.transaction():
-                for f in Path("sql").iterdir():
-                    if f.is_file() and f.suffix == ".sql" and not f.name.startswith("_"):
-                        sql = f.read_text("utf-8")
-                        await connection.execute(sql)
-
-        asyncio.run(run_create())
-    except Exception:  # ruff: ignore[blind-except]
-        traceback.print_exc()
-        click.secho("failed to apply SQL due to error", fg="red")
-    else:
-        click.secho("Applied SQL tables", fg="green")
+            except asyncio.CancelledError:
+                print("Aborted! The bot was interrupted with `asyncio.CancelledError`!")  # ruff: ignore[print]
 
 
 if __name__ == "__main__":
-    main()
+    launch()

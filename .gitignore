@@ -1,21 +1,24 @@
+# DEFAULT GITIGNORE
+# -----------------
+
+# Python-generated files
+__pycache__/
+
+# Virtual environments
+venv
+.venv
+
+# Windows `desktop.ini` memes
+desktop.ini
+
 # the bot temporary folder for garbage
 .alubot/
 .temp/
-
-# pycharm (I'm using vscode btw)
-.idea/
-
-# python
-__pycache__/
-venv/
 
 # ipython notebooks
 .ipynb_checkpoints
 *.ipynb
 ipynb/
-
-# windows memes
-*.ini
 
 # beta test
 /ext/beta.py
@@ -26,8 +29,19 @@ alpha.py
 # config secrets
 /config.toml
 
-# wiki
-# I like cloning wiki https://github.com/Aluerie/AluBot.wiki.git 
-# into the same folder so I can edit it in the same IDE window
+# FILES TO COMMIT ELSEWHERE
+# -------------------------
+# Wiki
+# I like cloning wiki https://github.com/Aluerie/IreBot.wiki.git 
+# into the same folder so I can edit it in the same IDE window without much hassle.
+# It would be inappropriate to use git-submodules for it, but I guess, gitignore trickery is fine.
 .wiki
 AluBot.wiki
+
+# FILES TO PRIVATELY SAVE
+# -----------------------
+
+# Config
+.env
+
+mimics_trashy.py

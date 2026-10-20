@@ -1,9 +1,15 @@
+"""Bot.
+
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
+
 from __future__ import annotations
 
-import asyncio
-import datetime
+import datetime as dt
 import logging
-import platform
 import sys
 import textwrap
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -11,24 +17,21 @@ from typing import TYPE_CHECKING, Any, Literal, override
 import discord
 from discord.ext import commands
 
-from config import config
-from ext import get_extensions
-from shared import fmt as shared_fmt  # TODO: fix it
-from utils import MISSING, cache, const, disambiguator, errors, fmt, helpers, transposer
+from config import env
+from ext import DISABLED_EXTENSIONS, EXT_PACKAGE
+from shared import clock, fmt as shared_fmt  # TODO: fix it
+from shared.concepts import BotBase
+from utils import MISSING, const, disambiguator, errors, fmt, helpers, transposer
 
 from .bases import AluContext
-from .exc_manager import ExceptionManager
-from .intents_perms import INTENTS, PERMISSIONS
 from .timer_manager import TimerManager
 from .tree import AluAppCommandTree
 
 if TYPE_CHECKING:
-    from collections.abc import MutableMapping
-
     import asyncpg
     from aiohttp import ClientSession
 
-    from types_.database import PoolTypedWithAny
+    from shared.concepts.db import PoolTypedWithAny
 
 
 __all__ = ("AluBot",)
@@ -36,48 +39,73 @@ __all__ = ("AluBot",)
 log = logging.getLogger(__name__)
 
 
-class AluBot(commands.Bot):
-    """Main class for AluBot.
+class AluBot(BotBase, commands.Bot):
+    """AluBot.
 
-    Essentially extended subclass over discord.py's `commands.Bot`
-    Used to interact with the Discord WebSocket, API and more.
-    Includes discord.py's `ext.commands` extension to organize cogs/commands framework.
+    Extended subclass over discord.py's `commands.Bot`
+    * Used to interact with the Discord WebSocket, API and more.
+    * Includes discord.py's `ext.commands` extension to organize cogs/commands framework.
     """
 
     if TYPE_CHECKING:
-        command_prefix: set[  # pyright: ignore[reportIncompatibleVariableOverride]
-            Literal["~", "$"]
-        ]  # default is some mix of Iterable[str] and Callable
+        command_prefix: set[Literal["~", "$"]]  # ty: ignore[invalid-mutable-override]
         listener_connection: asyncpg.Connection[asyncpg.Record]
         logs_via_webhook_handler: Any
-        tree: AluAppCommandTree  # pyright: ignore[reportIncompatibleMethodOverride]
-        user: discord.ClientUser  # pyright: ignore[reportIncompatibleMethodOverride]
+        tree: AluAppCommandTree
+        user: discord.ClientUser
 
     def __init__(
-        self, *, test: bool = False, token: str, session: ClientSession, pool: asyncpg.Pool[asyncpg.Record]
+        self,
+        *,
+        session: ClientSession,
+        pool: PoolTypedWithAny,
+        is_subset_mode: bool,
+        is_test_account: bool,
     ) -> None:
         """Initialize the AluBot.
 
         Parameters
         ----------
-        test: bool = False
+        session
+            aiohttp.ClientSession to use within the bot.
+        pool
+            A connection pool to the database.
+        is_subset_mode
+            A boolean flag indicating whether we launch the whole bot (e.g. production)
+            or just a subset of features (e.g. testing environment).
+        is_test_account
             whether the bot is a testing version (YenBot) or main production bot (AluBot).
             I just like to use different discord bot token to debug issues, test new code, etc.
-        session: ClientSession
-            aiohttp.ClientSession to use within the bot.
-        pool: asyncpg.Pool[asyncpg.Record]
-            A connection pool to the database.
-
         """
-        self.test: bool = test
-        self._token: str = token
+        if is_test_account:
+            # test account
+            self.test = True
+            self.prefix = "~"
+            ping_role_mention = env.PING_TEST_MENTION
+            webhook_error = env.WEBHOOK_YEN_ERROR
+            webhook_notification = env.WEBHOOK_YEN_NOTIFICATION
+        else:
+            # production account
+            self.test = False
+            self.prefix = "$"
+            ping_role_mention = env.PING_PROD_MENTION
+            webhook_error = env.WEBHOOK_ALU_ERROR
+            webhook_notification = env.WEBHOOK_ALU_NOTIFICATION
 
-        self.main_prefix: Literal["~", "$"] = "~" if test else "$"
-
-        super().__init__(
-            command_prefix={self.main_prefix},
-            activity=discord.Streaming(name="\N{PURPLE HEART} /help /setup", url="https://twitch.tv/irene_adler__"),
-            intents=INTENTS,
+        super(commands.Bot, self).__init__(
+            command_prefix={self.prefix},
+            activity=discord.Streaming(name="\N{PURPLE HEART}", url="https://twitch.tv/irene_adler__"),
+            intents=discord.Intents(
+                dm_messages=True,
+                emojis_and_stickers=True,
+                guild_messages=True,
+                guilds=True,
+                members=True,
+                message_content=True,
+                moderation=True,
+                presences=True,
+                voice_states=True,
+            ),
             allowed_mentions=discord.AllowedMentions(roles=True, replied_user=False, everyone=False),  # .none()
             tree_cls=AluAppCommandTree,
             strip_after_prefix=True,
@@ -86,12 +114,19 @@ class AluBot(commands.Bot):
             allowed_contexts=discord.app_commands.AppCommandContext(guild=True, dm_channel=True, private_channel=True),
             allowed_installs=discord.app_commands.AppInstallationType(guild=True, user=True),
         )
-        self.extensions_to_load: tuple[str, ...] = get_extensions(test=self.test)
-        # asyncpg typehinting crutch, read `utils.database` for more
-        self.pool: PoolTypedWithAny = pool  # pyright:ignore[reportAttributeAccessIssue]
-        self.session: ClientSession = session
+        super().__init__(
+            session,
+            ping_role_mention=ping_role_mention,
+            error_webhook_url=webhook_error,
+            notification_webhook_url=webhook_notification,
+        )
 
-        self.exc_manager: ExceptionManager = ExceptionManager(self)
+        self.pool: PoolTypedWithAny = pool
+        self.session: ClientSession = session
+        self.extensions_to_load: tuple[str, ...] = self.get_extensions(
+            is_subset_mode=is_subset_mode, package=EXT_PACKAGE, disabled_extensions=DISABLED_EXTENSIONS
+        )
+
         self.transposer: transposer.TransposeClient = transposer.TransposeClient(session=session)
         self.disambiguator: disambiguator.Disambiguator = disambiguator.Disambiguator()
 
@@ -99,54 +134,80 @@ class AluBot(commands.Bot):
         self.developer: str = "Aluerie"  # it's my GitHub account name
         self.community_invite_url: str = "https://discord.gg/K8FuDeP"
 
-        # self.help_categories: dict[ExtCategory, list[AluCog]] = {}  # TODO:???
-        self.mimic_messages: MutableMapping[int, int] = cache.ExpiringCache(seconds=datetime.timedelta(days=7).seconds)
-        """Mapping of `message_id -> user_id` for Mimic Messages."""
         self.app_emojis: list[discord.Emoji] = []
 
         self.bot_app_info: discord.AppInfo
 
-        self.is_vps: bool = platform.system() == "Linux"
+        self.launch_time: dt.datetime = MISSING
 
-        self.launch_time: datetime.datetime = MISSING
+    @discord.utils.cached_property
+    def invite_link(self) -> str:
+        """Get invite link for the bot.
+
+        Note for developers
+        -------------------
+        Please, make sure `permissions` are the same as the ones checked in this page (Guild Install):
+        https://discord.com/developers/applications/713124699663499274/installation
+        """
+        return discord.utils.oauth_url(
+            client_id=self.user.id,
+            permissions=discord.Permissions(
+                add_reactions=True,
+                attach_files=True,
+                connect=True,
+                embed_links=True,
+                manage_messages=True,
+                manage_roles=True,
+                manage_webhooks=True,
+                read_message_history=True,
+                send_messages=True,
+                send_messages_in_threads=True,
+                speak=True,
+                use_external_emojis=True,
+                view_audit_log=True,
+                view_channel=True,
+            ),
+            scopes=(
+                "bot",
+                "applications.commands",
+            ),
+        )
 
     @override
     async def setup_hook(self) -> None:
         self.bot_app_info = await self.application_info()
 
-        failed_to_load_some_ext = False
+        failed_to_load_extensions = False
         for ext in self.extensions_to_load:
             try:
                 await self.load_extension(ext)
             except commands.ExtensionError as error:
-                failed_to_load_some_ext = True
-                embed = discord.Embed(color=0xDA9F93, description=f"Failed to load extension `{ext}`.").set_footer(
-                    text=f'setup_hook: loading extension "{ext}"'
-                )
-                await self.exc_manager.register_error(error, embed)
+                failed_to_load_extensions = True
+                embed = discord.Embed(
+                    color=0xDA9F93,
+                    description=f"Failed to load extension `{ext}`.",
+                ).set_footer(text=f'setup_hook: loading extension "{ext}"')
+                await self.error_notification_manager.register(error, embed)
 
-        # we could go with attribute option like exceptions manager
-        # but let's keep its methods nearby in AluBot namespace
-        # needs to be done after cogs are loaded so all cog event listeners are ready
         self.timers = TimerManager(bot=self)
 
         if self.test:
-            if failed_to_load_some_ext:
+            if failed_to_load_extensions:
                 log.info("Autosync: cancelled %s One or more cogs failed to load.", const.Tick.No)
             else:
-                self.loop.create_task(self.try_hideout_auto_sync_with_logging())
+                self.loop.create_task(self.try_autosync_hideout())
 
-    async def try_hideout_auto_sync_with_logging(self) -> None:
-        """Helper function to wrap `try_hideout_auto_sync` `into try/except` block with some logging."""
+    async def try_autosync_hideout(self) -> None:
+        """Wrap `auto_sync_hideout` into `try/except` with some logging."""
         try:
-            result = await self.try_hideout_auto_sync()
+            result = await self.autosync_hideout()
         except Exception as err:
             log.exception("Autosync: failed %s.", const.Tick.No, exc_info=err)
         else:
             phrase = f"success {const.Tick.Yes}" if result else f"not needed {const.Tick.Black}"
             log.info("Autosync: %s.", phrase)
 
-    async def try_hideout_auto_sync(self) -> bool:
+    async def autosync_hideout(self) -> bool:
         """Try automatic `copy_global_to` + `sync` Hideout Guild for easier testing purposes.
 
         ?tag ass (auto-syncing sucks) and all, but it's just too convenient to pass on.
@@ -154,7 +215,7 @@ class AluBot(commands.Bot):
 
         Sources
         -------
-        * DuckBot-Discord/DuckBot (licensed MPL v2), `try_autosync` function
+        * DuckBot-Discord/DuckBot (MPL v2 License), `try_autosync` function
             https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/bot.py
         """
         # safeguard. Need the app id.
@@ -184,25 +245,15 @@ class AluBot(commands.Bot):
     async def on_ready(self) -> None:
         """Handle `ready` event."""
         if not hasattr(self, "launch_time"):
-            self.launch_time = datetime.datetime.now(datetime.UTC)
+            self.launch_time = clock.utcnow()
         log.info("Logged in as `%s`", self.user)
         if not self.test:
             await self.send_warning("AluBot is ready.")
 
     @override
-    async def start(self) -> None:  # pyright: ignore[reportIncompatibleMethodOverride]
-        coroutines = [super().start(self._token, reconnect=True)]
-
-        # dota_extensions = (
-        #     "ext.dota",
-        #     "ext.dota.fpc",
-        #     # "ext.beta",  # uncomment when we are testing dota-related stuff in `ext.beta`
-        # )
-        # if any(ext in self.extensions_to_load for ext in dota_extensions):
-        #     self.instantiate_dota()
-        #     coroutines.append(self.dota.login())
-
-        await asyncio.gather(*coroutines)
+    async def start(self) -> None:  # ty: ignore[invalid-method-override]
+        token = env.DISCORD_TOKEN_YENBOT if self.test else env.DISCORD_TOKEN_ALUBOT
+        await super().start(token, reconnect=True)
 
     @override
     async def get_context(
@@ -218,7 +269,7 @@ class AluBot(commands.Bot):
 
     @property
     def owner(self) -> discord.User:
-        """Get bot's owner user."""
+        """Bot's owner."""
         return self.bot_app_info.owner
 
     """
@@ -302,20 +353,19 @@ class AluBot(commands.Bot):
         """Shortcut for Community guild, its channels and roles."""
         return const.CommunityGuild(self)
 
-    @discord.utils.cached_property
-    def invite_link(self) -> str:
-        """Get invite link for the bot."""
-        return discord.utils.oauth_url(self.user.id, permissions=PERMISSIONS, scopes=("bot", "applications.commands"))
-
+    @override
     def webhook_from_url(self, url: str) -> discord.Webhook:
-        """A shortcut function with filled in discord.Webhook.from_url arguments."""
+        """Shortcut to discord.Webhook.from_url with some filled args.
+
+        The override adds some specific to discord bots arguments.
+        """
         return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
 
     async def webhook_from_database(self, channel_id: int) -> discord.Webhook:
         """Fetch webhook_url from the database by the `channel_id`."""
         query = "SELECT url FROM webhooks WHERE channel_id = $1"
         webhook_url: str | None = await self.pool.fetchval(query, channel_id)
-        if webhook_url:
+        if webhook_url is not None:
             return self.webhook_from_url(webhook_url)
         msg = f"There is no webhook in the database for channel with id={channel_id}"
         raise errors.PlaceholderError(msg)
@@ -481,10 +531,7 @@ class AluBot(commands.Bot):
                         icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
                     )
                 )
-                await ctx.bot.exc_manager.register_error(error, metadata_embed, ctx.channel.id)
-                if ctx.channel.id == ctx.bot.hideout.spam_channel_id:
-                    # we don't need any extra embeds;
-                    return
+                await ctx.bot.error_notification_manager.register(error, metadata_embed)
 
         response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
         await ctx.reply(embed=response_embed, ephemeral=True)

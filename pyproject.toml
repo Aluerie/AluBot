@@ -1,6 +1,6 @@
 [project]
 name = "AluBot"
-version = "0.7.7"
+version = "1.0.7"
 description = "Personal Discord Bot"
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.12"
@@ -39,6 +39,7 @@ dependencies = [
     "pillow",
     "psutil",
     "pulsefire",
+    "pydantic-settings>=2.16.0",
     "pygit2",
     "python-dateutil",
     "role-identification",
@@ -64,6 +65,7 @@ dev = [
     "ruff",
     "asyncpg-stubs",
     "ipykernel",
+    "ty>=0.0.89",
 ]
 
 [[tool.uv.index]]
@@ -164,14 +166,15 @@ flake8-quotes.inline-quotes = "double"
     "unused-noqa",
 ]
 "src/ext/*.py" = [
-    "undocumented-param", # I don't want to document all the `ctx: IreContext`
+    "undocumented-param", # I don't want to document all the `ctx: AluContext`
 ]
 
 [tool.ruff.format]
 quote-style = "double"            
-indent-style = "space"            
-line-ending = "auto"                
-skip-magic-trailing-comma = false
+indent-style = "space"
+skip-magic-trailing-comma = false        
+line-ending = "auto"              
+
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true
@@ -179,10 +182,3 @@ combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
-
-[tool.pytest]
-addopts = ["-vv", "-p", "no:cacheprovider", "--disable-warnings"]
-norecursedirs = ["env/*", "venv/*", ".venv/*"]
-filterwarnings = ["ignore::DeprecationWarning"]
-# testpaths = ["tests/"]
-# python_files = ["test_*.py"]

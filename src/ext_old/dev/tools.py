@@ -24,7 +24,7 @@ class Tools(BaseDevCog):
 
     tools_group = app_commands.Group(
         name="tools-dev",
-        description="\N{SCREWDRIVER} Some useful tools for AluBot's developers.",
+        description="🪛 Some useful tools for AluBot's developers.",
         guild_ids=[const.Guild.hideout, const.Guild.community],
         default_permissions=discord.Permissions(manage_guild=True),
     )

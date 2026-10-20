@@ -140,7 +140,7 @@ class ControlCog(AluDevCog):
 
     @app_commands.guilds(const.Guild.hideout)
     @app_commands.command(name="sync-dev")
-    @app_commands.default_permissions(ban_members=True)
+    @app_commands.default_permissions(manage_guild=True)
     @app_commands.choices(
         spec=[
             app_commands.Choice(name="🌐 Global Sync", value="global"),

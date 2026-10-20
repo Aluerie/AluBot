@@ -7,8 +7,11 @@
         "aluloop",
         "autosync",
         "bsky",
+        "charinfo",
+        "codepoint",
         "deviantart",
         "DOTANEWS",
+        "fileformat",
         "pixiv",
         "truststore",
         "yenbot"

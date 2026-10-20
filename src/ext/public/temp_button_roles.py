@@ -55,7 +55,8 @@ class ImageTools(AluCog):
         self.bot.add_view(ButtonRolesView(roles))  # ty: ignore[invalid-argument-type]
 
     @app_commands.command()
-    @discord.app_commands.guild_install()
+    @app_commands.guild_only()
+    @app_commands.guild_install()
     @app_commands.default_permissions(manage_roles=True)
     async def create_button_roles(  # ruff: ignore[undocumented-public-method]
         self,

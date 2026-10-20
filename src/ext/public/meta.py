@@ -9,6 +9,7 @@ Notices
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
 import os
 import platform
@@ -16,9 +17,11 @@ import socket
 import time
 from typing import TYPE_CHECKING
 
+import aiohttp
 import discord
 import psutil
 from discord import app_commands
+from discord.ext import commands
 from tabulate import tabulate
 
 from core import AluCog, AluInteraction
@@ -28,7 +31,10 @@ from utils import cache, const
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
-    from core import AluBot
+    from core import AluBot, AluContext
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 async def _timed_ping(awaitable: Awaitable[object]) -> float | None:
@@ -145,28 +151,32 @@ class Meta(AluCog):
 
         cores_logical = psutil.cpu_count() or 1
         cpu_lines = [
-            f"* Usage: **{psutil.cpu_percent(interval=0.5):.1f}%**",
+            f"* Usage: {psutil.cpu_percent(interval=0.5):.1f}%",
             f"* Cores: {psutil.cpu_count(logical=False) or cores_logical} physical / {cores_logical} logical",
         ]
-        if freq := psutil.cpu_freq():  # ty: ignore[possibly-missing-attribute]
-            cpu_lines.append(f"* Frequency: {freq.current / 1000:.2f} GHz")
+        if cpu_freq := psutil.cpu_freq():  # ty: ignore[possibly-missing-attribute]
+            cpu_lines.append(f"* Frequency: {cpu_freq.current / 1000:.2f} GHz")
         if model := platform.processor():
             cpu_lines.append(f"* Model: {model}")
         if hasattr(os, "getloadavg"):
             l1, l5, l15 = os.getloadavg()
             cpu_lines.append(f"* Load avg: {l1:.2f} / {l5:.2f} / {l15:.2f}")
 
+        def _clean(s: str) -> str:
+            return s.replace("-oracle", "")
+
         return {
             "System": "\n".join([
                 f"* Hostname: `{socket.gethostname()}`",
-                f"* OS: `{platform.system()} {platform.release()}`",
-                f"* Platform: `{platform.platform()}`",
-                f"* Arch: `{platform.machine()}`",
+                f"* OS: `{platform.system()} {_clean(platform.release())}`",
+                f"* Platform: `{_clean(platform.platform())}`",
+                f"* Architecture: `{platform.machine()}`",
                 f"* Python: `{platform.python_version()}`",
+                f"* Booted: <t:{int(psutil.boot_time())}:R>",
             ]),
             "CPU": "\n".join(cpu_lines),
-            "RAM": f"* Usage: **{vm.percent:.1f}%**\n* Used: {vm.used / 1024**3:.1f} / {vm.total / 1024**3:.1f} GB",
-            "Disk": f"* Usage: **{du.percent:.1f}%**\n* Used: {du.used / 1024**3:.1f} / {du.total / 1024**3:.1f} GB",
+            "RAM": f"* Usage: {vm.percent:.1f}%\n* Used: {vm.used / 1024**3:.1f} / {vm.total / 1024**3:.1f} GB",
+            "Disk": f"* Usage: {du.percent:.1f}%\n* Used: {du.used / 1024**3:.1f} / {du.total / 1024**3:.1f} GB",
         }
 
     @botinfo_group.command()
@@ -206,6 +216,24 @@ class Meta(AluCog):
                 .add_field(name="Slash Commands", value=f"{total_commands:,}")
             )
         )
+
+    @commands.command()
+    @commands.is_owner()
+    async def location(self, ctx: AluContext) -> None:
+        """🌐 Show bot's hosted location, based on IP."""
+        if getattr(ctx.guild, "id", None) != self.hideout.id:
+            await ctx.reply("Sorry! This command only works in my private hideout server.")
+            return
+
+        try:
+            async with self.bot.session.get("https://ipinfo.io/json", timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.ok:
+                    await ctx.reply(fmt.pformat_kwargs(**(await resp.json())))
+                else:
+                    await ctx.reply(f"Sorry! Couldn't fetch the data (HTTP {resp.status}).")
+        except TimeoutError, aiohttp.ClientError:
+            log.exception("Failed to fetch host location")
+            await ctx.reply("Sorry! Couldn't reach the geolocation service.")
 
 
 async def setup(bot: AluBot) -> None:

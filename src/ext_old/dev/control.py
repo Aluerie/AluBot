@@ -2,12 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
-import importlib
-import importlib.metadata
 import logging
-import platform
-import socket
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, override
 
@@ -61,85 +56,18 @@ class Control(BaseDevCog):
         default_permissions=discord.Permissions(manage_guild=True),
     )
 
-    @system_group.command(name="information")
-    async def system_information(self, interaction: AluInteraction) -> None:
-        """🔬 Get system info about machine hosting the bot."""
-        cpu_freq = f"| {ghz.current / 1000:.1f}GHz\n" if (ghz := psutil.cpu_freq()) else ""
-        embed = (
-            discord.Embed(
-                color=const.Color.prpl,
-                title="Bot Host Machine System Info",
-                description=(
-                    f"\N{BLACK CIRCLE} Hostname: {socket.gethostname()}\n"
-                    f"\N{BLACK CIRCLE} Machine: {platform.machine()}\n"
-                    f"\N{BLACK CIRCLE} Platform: {platform.platform()}\n"
-                    f"\N{BLACK CIRCLE} System: `{platform.system()}` release: `{platform.release()}`\n"
-                    f"\N{BLACK CIRCLE} Version: `{platform.version()}`\n"
-                    f"\N{BLACK CIRCLE} Processor: {platform.processor()}\n"
-                ),
-            )
-            .add_field(
-                name="Current % | max values",
-                value=(
-                    f"\N{BLACK CIRCLE} CPU usage: \n{psutil.cpu_percent()}% {cpu_freq}"
-                    f"\N{BLACK CIRCLE} RAM usage: \n{psutil.virtual_memory().percent}% | "
-                    f"{str(round(psutil.virtual_memory().total / (1024.0**3))) + ' GB'}\n"
-                    f"\N{BLACK CIRCLE} Disk usage: \n{(du := psutil.disk_usage('/')).percent} % | "
-                    f"{du.used / (1024**3):.1f}GB/{du.total / (1024**3):.1f}GB"
-                ),
-            )
-            .set_footer(text=f"AluBot is a copyright 2020-{discord.utils.utcnow().year} of {self.bot.owner.name}")
-        )
-
-        if not self.bot.test:
-            # Sorry, I don't want to randomly dox myself on test bot :D
-            async with self.bot.session.get("https://ipinfo.io/json") as resp:
-                if resp.ok:
-                    ip_data = await resp.json()
-                    location_string = f"· {ip_data['country']} {ip_data['region']} {ip_data['city']}"
-                else:
-                    location_string = "Sorry! Couldn't fetch the data"
-            embed.add_field(name="Bot's Location judging by IP", value=location_string)
-        await interaction.response.send_message(embed=embed)
-
-    @system_group.command(name="packages")
-    async def system_packages(self, interaction: AluInteraction) -> None:
-        """🔬 Get info bot's main Python Packages."""
-        curious_packages = [
-            "discord.py",
-            "twitchio",
-            "steam",
-            "pulsefire",
-        ]  # list of packages versions of which I'm interested the most
-        pv = sys.version_info  # python version
-
-        embed = (
-            discord.Embed(color=const.Color.prpl)
-            .add_field(
-                name="Python Version",
-                value=f"{pv.major}.{pv.minor}.{pv.micro} {pv.releaselevel} {pv.serial}",  # cspell: ignore releaselevel
-            )
-            .add_field(
-                name="List of bot's Main Packages",
-                value="\n".join(
-                    f"\N{BLACK CIRCLE} {package}: {importlib.metadata.version(package)}" for package in curious_packages
-                ),
-            )
-        )
-        await interaction.response.send_message(embed=embed)
-
     @system_group.command(name="health")
     async def system_health(self, interaction: AluInteraction) -> None:
         """🔬 (#Hideout) Get bot's health status."""
         await interaction.response.defer()
 
-        # todo: customize this to my liking.
+        # TODO: customize this to my liking.
 
         # This uses a lot of private methods because there is no
         # clean way of doing this otherwise.
 
-        HEALTHY = discord.Color(value=0x43B581)  # noqa: N806
-        UNHEALTHY = discord.Color(value=0xF04947)  # noqa: N806
+        HEALTHY = discord.Color(value=0x43B581)  # ruff: ignore[non-lowercase-variable-in-function]
+        UNHEALTHY = discord.Color(value=0xF04947)  # ruff: ignore[non-lowercase-variable-in-function]
         discord.Color(value=0xF09E47)
         total_warnings = 0
 

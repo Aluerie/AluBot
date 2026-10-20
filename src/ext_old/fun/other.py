@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import contextlib
 import random
-import re
 from typing import TYPE_CHECKING
 
 import discord
@@ -10,7 +9,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core import AluCog
-from utils import const, mimics
+from utils import const
 
 if TYPE_CHECKING:
     from core import AluBot, AluInteraction
@@ -23,7 +22,7 @@ class FunOther(AluCog):
         word = "Heads" if random.randint(0, 1) == 0 else "Tails"
         await interaction.response.send_message(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
 
-    # todo: this should be somewhere else
+    # TODO: this should be somewhere else
     @commands.Cog.listener("on_message")
     async def reply_non_command_mentions(self, message: discord.Message) -> None:
         """For now there is only blush and question marks."""
@@ -49,103 +48,6 @@ class FunOther(AluCog):
 
         """
         await interaction.response.send_message(content=str(random.randint(1, max_roll_number + 1)))
-
-    @staticmethod
-    def stilify_text(text: str, *, style: dict[str, str]) -> str:
-        """Apply a "style" to the text."""
-        patterns = [
-            const.Regex.USER_MENTION,
-            const.Regex.ROLE_MENTION,
-            const.Regex.CHANNEL_MENTION,
-            const.Regex.SLASH_MENTION,
-            const.Regex.EMOTE,
-        ]
-        combined_pattern = r"|".join(patterns)
-        mentions_or_emotes = re.findall(combined_pattern, text)
-
-        style |= {k: k for k in mentions_or_emotes}
-        pattern = "|".join(re.escape(k) for k in style)
-
-        def match_repl(c: re.Match[str]) -> str | re.Match[str]:
-            return style.get(c.group(0)) or style.get(c.group(0).lower()) or c
-
-        return re.sub(pattern, match_repl, text)  # type:ignore[reportCallIssue] # I don't understand regex types.
-
-    async def send_mimic_confirmation_text(self, interaction: AluInteraction, content: str) -> None:
-        """Send confirmation to the user."""
-        if not interaction.guild:
-            # outside of guilds - probably DM
-            await interaction.response.send_message(content)
-        else:
-            # in guild - hopefully we can make a webhook
-            mirror = mimics.Mirror.from_interaction(interaction)
-            await mirror.send(member=interaction.user, content=content)
-            await interaction.response.send_message(
-                content="We did it \N{WHITE HEAVY CHECK MARK}\n\nDeleting *this* ephemeral message in 5 seconds",
-                ephemeral=True,
-                delete_after=5,
-            )
-
-    text_group = app_commands.Group(name="text", description="Commands to transform text into something nice.")
-
-    @text_group.command()
-    async def emotify(self, interaction: AluInteraction, text: str) -> None:
-        """Makes your text consist only of emotes.
-
-        Parameters
-        ----------
-            Text to convert into emotes.
-        """
-        style = (
-            {
-                # Turn ?! into emotes
-                "!": "\N{WHITE EXCLAMATION MARK ORNAMENT}",
-                "?": "\N{WHITE QUESTION MARK ORNAMENT}",
-            }
-            | {
-                # digits into emotes :zero:, :one:, :two:, ...
-                str(i): n
-                for i, n in enumerate(const.DIGITS)
-            }
-            | {
-                # A-Z into :regional_identifier_a:-:regional_identifier_z:
-                chr(0x00000041 + x): f"{chr(0x0001F1E6 + x)} "
-                for x in range(26)
-            }
-            | {
-                # a-z into :regional_identifier_a:-:regional_identifier_z:
-                chr(0x00000061 + x): f"{chr(0x0001F1E6 + x)} "
-                for x in range(26)
-            }
-        )
-        answer = self.stilify_text(text, style=style)
-        await self.send_mimic_confirmation_text(interaction, answer)
-
-    @text_group.command(description="𝓜𝓪𝓴𝓮𝓼 𝔂𝓸𝓾𝓻 𝓽𝓮𝔁𝓽 𝓵𝓸𝓸𝓴 𝓵𝓲𝓴𝓮 𝓽𝓱𝓲𝓼.")  # cSpell:disable-line
-    async def fancify(self, interaction: AluInteraction, text: str) -> None:
-        """Make your text look fancy.
-
-        Parameters
-        ----------
-            Text to convert into fancy text.
-        """
-        # cSpell:enable #fmt:on  # noqa: ERA001
-
-        style = {chr(0x00000041 + x): chr(0x0001D4D0 + x) for x in range(26)} | {  # A-Z into fancy font
-            chr(0x00000061 + x): chr(0x0001D4EA + x)
-            for x in range(26)  # a-z into fancy a-z (Black messes it up)
-        }
-        answer = self.stilify_text(text, style=style)
-        await self.send_mimic_confirmation_text(interaction, answer)
-
-    @app_commands.command()
-    async def apuband(self, interaction: AluInteraction) -> None:
-        """🎸 Send apuband emote combo (pepe-frogs' music band)."""
-        content = (
-            f"{const.Emote.peepo1Maracas} {const.Emote.peepo2Drums} {const.Emote.peepo3Piano} "
-            f"{const.Emote.peepo4Guitar} {const.Emote.peepo5Singer} {const.Emote.peepo6Sax}"
-        )
-        await self.send_mimic_confirmation_text(interaction, content)
 
 
 async def setup(bot: AluBot) -> None:

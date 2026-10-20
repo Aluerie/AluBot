@@ -50,7 +50,6 @@ dependencies = [
     "unidiff",
     "urllib3",
     "uvloop ; sys_platform == 'linux'",
-    "wordcloud",
 ]
 
 

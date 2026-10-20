@@ -29,6 +29,9 @@ log.setLevel(logging.DEBUG)
 type SyncSpecLiteral = Literal["global", "current", "copy", "clear"]
 
 
+# TODO: add errors.Respond when we figure out
+
+
 class ControlCog(AluDevCog):
     """Control Cog."""
 

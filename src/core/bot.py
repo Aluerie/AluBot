@@ -94,7 +94,7 @@ class AluBot(BotBase, commands.Bot):
 
         super(commands.Bot, self).__init__(
             command_prefix={self.prefix},
-            activity=discord.Streaming(name="\N{PURPLE HEART}", url="https://twitch.tv/irene_adler__"),
+            activity=discord.Streaming(name="\N{HEAVY BLACK HEART}", url="https://twitch.tv/irene_adler__"),
             intents=discord.Intents(
                 dm_messages=True,
                 emojis_and_stickers=True,
@@ -127,17 +127,14 @@ class AluBot(BotBase, commands.Bot):
             is_subset_mode=is_subset_mode, package=EXT_PACKAGE, disabled_extensions=DISABLED_EXTENSIONS
         )
 
+        # idk
         self.transposer: transposer.TransposeClient = transposer.TransposeClient(session=session)
         self.disambiguator: disambiguator.Disambiguator = disambiguator.Disambiguator()
-
         self.repository_url: str = "https://github.com/Aluerie/AluBot"
         self.developer: str = "Aluerie"  # it's my GitHub account name
         self.community_invite_url: str = "https://discord.gg/K8FuDeP"
-
         self.app_emojis: list[discord.Emoji] = []
-
         self.bot_app_info: discord.AppInfo
-
         self.launch_time: dt.datetime = MISSING
 
     @discord.utils.cached_property

@@ -113,12 +113,8 @@ class Meta(AluCog):
     @cache.cache()
     async def _code_stats_field_value(self) -> str:
         """Code stats field value."""
-        lines, funcs, classes = await asyncio.gather(
-            gh.LinesCounter(folder="./", filetypes=(".py", ".sql")).count(),
-            gh.MatchingLinesCounter(folder="./", filetypes=".py", substring="def ").count(),
-            gh.MatchingLinesCounter(folder="./", filetypes=".py", substring="class ").count(),
-        )
-        return f"Lines: {lines:,}\nFunctions: {funcs:,}\nClasses: {classes:,}"
+        lines = await asyncio.to_thread(gh.count_lines)
+        return f"* Lines of code: {lines:,}"
 
     @botinfo_group.command()
     async def source(self, interaction: AluInteraction) -> None:
@@ -140,7 +136,7 @@ class Meta(AluCog):
                     name=f"Made by {bot_app_info.owner.display_name} (@{bot_app_info.owner})",
                     icon_url=bot_app_info.owner.display_avatar.url,
                 )
-                .add_field(name="Code stats", value=stats)
+                .add_field(name="Repository stats", value=stats)
                 .set_footer(text="Made with love... ❤", icon_url=self.bot.user.display_avatar)
             )
         )

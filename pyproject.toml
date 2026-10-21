@@ -134,6 +134,7 @@ ignore = [
     "ambiguous-unicode-character-string",
     "any-type",
     "assert", # assert is fine for "casting" type checks and in tests
+    "blocking-path-method-in-async-function", # I don't like neither ``aiofiles``, ``anyio``, ``trio``
     "commented-out-code",
     "implicit-namespace-package", # Annoying rule, it doesn't know what **I** want to be an implicit namespace-package
     "magic-value-comparison", # I hate this rule (quoting @AbstractUmbra)

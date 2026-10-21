@@ -9,14 +9,17 @@ Notices
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
 import logging
-from typing import TYPE_CHECKING, ClassVar
+from pathlib import Path
+from typing import TYPE_CHECKING, ClassVar, override
 
 import discord
 from discord import app_commands
 
 from core import AluDevCog
 from shared import fmt
+from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
@@ -30,6 +33,58 @@ log.setLevel(logging.DEBUG)
 
 class ControlCog(AluDevCog):
     """Control Cog."""
+
+    @override
+    async def cog_load(self) -> None:
+        self.database_backup.start()
+        await super().cog_load()
+
+    @override
+    async def cog_unload(self) -> None:
+        self.database_backup.stop()
+        await super().cog_unload()
+
+    #########################################################################################################################
+    # DATABASE BACKUP
+    #########################################################################################################################
+
+    @loop(time=dt.time(hour=18, minute=5, tzinfo=dt.UTC))
+    async def database_backup(self) -> None:
+        """Daily task to backup the bot's database.
+
+        Sends pg_dump to my private discord server.
+        """
+        if self.bot.test:
+            return
+
+        path = Path(".temp/alubot.sql")
+        path.parent.mkdir(exist_ok=True)
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "pg_dump",
+                "-f",
+                str(path),
+                "alubot",
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                _, stderr = await asyncio.wait_for(proc.communicate(), timeout=300)
+            except TimeoutError:
+                proc.kill()
+                await proc.wait()
+                raise
+            if proc.returncode != 0:
+                msg = f"pg_dump exited with {proc.returncode}: {stderr.decode()}"
+                raise RuntimeError(msg)
+            await self.hideout.database.send(file=discord.File(path, filename=path.name))
+        finally:
+            path.unlink(missing_ok=True)
+
+    #########################################################################################################################
+    # PROJECT CONTROL
+    #########################################################################################################################
 
     project_group = app_commands.Group(
         name="project-dev",

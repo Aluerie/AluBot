@@ -114,9 +114,9 @@ class Meta(AluCog):
     async def _code_stats_field_value(self) -> str:
         """Code stats field value."""
         lines, funcs, classes = await asyncio.gather(
-            gh.LinesCounter("./", (".py", ".sql")).count(),
-            gh.ContainsCounter("./", ".py", "def ").count(),
-            gh.ContainsCounter("./", ".py", "class ").count(),
+            gh.LinesCounter(folder="./", filetypes=(".py", ".sql")).count(),
+            gh.MatchingLinesCounter(folder="./", filetypes=".py", substring="def ").count(),
+            gh.MatchingLinesCounter(folder="./", filetypes=".py", substring="class ").count(),
         )
         return f"Lines: {lines:,}\nFunctions: {funcs:,}\nClasses: {classes:,}"
 
@@ -172,7 +172,8 @@ class Meta(AluCog):
                 f"* Platform: `{_clean(platform.platform())}`",
                 f"* Architecture: `{platform.machine()}`",
                 f"* Python: `{platform.python_version()}`",
-                f"* Booted: <t:{int(psutil.boot_time())}:R>",
+                f"* Machine booted: <t:{int(psutil.boot_time())}:R>",
+                f"* Bot started: {clock.discord(self.bot.launch_time, 'R')}",
             ]),
             "CPU": "\n".join(cpu_lines),
             "RAM": f"* Usage: {vm.percent:.1f}%\n* Used: {vm.used / 1024**3:.1f} / {vm.total / 1024**3:.1f} GB",

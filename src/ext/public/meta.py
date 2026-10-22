@@ -61,6 +61,10 @@ class Meta(AluCog):
         self.process = psutil.Process()
         self.process.cpu_percent()
 
+    #########################################################################################################################
+    # 🌐 /bot COMMAND
+    #########################################################################################################################
+
     botinfo_group = app_commands.Group(  # apparently, `bot_group` is not allowed
         name="bot",
         description="🌐 Information about the bot.",

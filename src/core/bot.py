@@ -8,7 +8,7 @@ Notices
 
 from __future__ import annotations
 
-import datetime as dt
+import io
 import logging
 import sys
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -18,15 +18,17 @@ from discord.ext import commands
 
 from config import env
 from ext import DISABLED_EXTENSIONS, EXT_PACKAGE
-from shared import clock, fmt  # TODO: fix it
+from shared import clock, fmt
 from shared.concepts import BotBase
-from utils import MISSING, const, disambiguator, errors, transposer
+from utils import MISSING, const, disambiguator
 
 from .bases import AluContext
 from .timer_manager import TimerManager
 from .tree import AluAppCommandTree
 
 if TYPE_CHECKING:
+    import datetime as dt
+
     import asyncpg
     from aiohttp import ClientSession
 
@@ -111,7 +113,7 @@ class AluBot(BotBase, commands.Bot):
         )
         super().__init__(
             session,
-            ping_role_mention=ping_role_mention,
+            dev_ping=ping_role_mention,
             error_webhook_url=env.WEBHOOK_ERROR,
             notification_webhook_url=env.WEBHOOK_NOTIFICATION,
         )
@@ -127,9 +129,6 @@ class AluBot(BotBase, commands.Bot):
         self.bot_app_info: discord.AppInfo
         self.ready_flag: bool = False
         self.launch_time: dt.datetime = clock.utcnow()
-
-        # Extra
-        self.transposer = transposer.Transposer(session=session)
 
         # idk
         # self.transposer: transposer.TransposeClient = transposer.TransposeClient(session=session)
@@ -170,8 +169,16 @@ class AluBot(BotBase, commands.Bot):
             ),
         )
 
+    #########################################################################################################################
+    # ERROR HANDLERS
+    # --------------
+    # Bot subclass contains error handlers for exceptions raised in event listeners and in ctx commands.
+    # Note, that the files `core.tree.py`, `core.bases.views.py`, `shared.concepts.tasks` also contain error handlers:
+    # app command tree errors, UI elements and tasks respectively.
+    #########################################################################################################################
+
     @override
-    async def on_error(self: AluBot, event: str, *args: Any, **kwargs: Any) -> None:
+    async def on_error(self, event: str, *args: Any, **kwargs: Any) -> None:
         """Event error: called when an exception is raised in an event listener.
 
         Parameters
@@ -185,9 +192,6 @@ class AluBot(BotBase, commands.Bot):
         """
         (_exception_type, exception, _traceback) = sys.exc_info()
         assert exception is not None, "Somehow `on_error` fired with exception being `None`."
-        if isinstance(exception, commands.CommandInvokeError):
-            # Silence command errors that somehow get bubbled up far enough here
-            return
 
         embed = discord.Embed(
             color=0xA32952,
@@ -200,126 +204,36 @@ class AluBot(BotBase, commands.Bot):
     async def on_command_error(
         self,
         ctx: AluContext,
-        error: commands.CommandError | Exception,
+        error: commands.CommandError,
     ) -> None:  # ty: ignore[invalid-method-override]
         """Command error: called when an error is raised while invoking a ctx command."""
-        if ctx.is_error_handled is True:
-            return
+        # if ctx.is_error_handled is True:
+        #     return
 
-        if isinstance(error, commands.CommandInvokeError):
+        if isinstance(error, commands.CommandInvokeError | commands.HybridCommandError):
             # we aren't interested in the chain traceback.
-            error = error.original
+            error: Exception = error.original
 
         match error:
+            case commands.MissingRequiredArgument():
+                await ctx.reply(f"Please, provide `{error.param.name}` argument")
+            case commands.CommandNotFound():
+                await ctx.reply("Command not found")
+            case commands.UserInputError() | commands.CheckFailure():
+                await ctx.reply(str(error))
             case _:
+                if not await self._respond_per_policy(error, respond=ctx.reply):
+                    return
+
                 embed = discord.Embed(
                     color=0x890620,
                     title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
                 )
                 await ctx.bot.error_notification_manager.register(error, embed)
 
-    async def on_command_error_old(
-        self,
-        ctx: AluContext,
-        error: commands.CommandError | Exception,
-    ) -> None:
-        """Command error: called when an error is raised while invoking a ctx command."""
-        if ctx.is_error_handled is True:
-            return
-
-        # error handler working variables
-        desc = "No description"
-        is_unexpected = False
-
-        # error handler itself.
-
-        if isinstance(error, commands.CommandInvokeError):
-            # we aren't interested in the chain traceback.
-            error = error.original
-
-        match error:
-            # MY OWN ERRORS
-            case errors.AluBotError():
-                # These errors are generally raised in code by myself or by my code with an explanation text as `error`
-                # AluBotError subclassed exceptions are all mine.
-                desc = f"{error}"
-
-            # UserInputError SUBCLASSED ERRORS
-            case commands.BadLiteralArgument():
-                desc = (
-                    f"Sorry! Incorrect argument value: {error.argument!r}.\n Only these options are valid "
-                    f"for a parameter `{error.param.displayed_name or error.param.name}`:\n"
-                    f"{fmt.human_join([repr(literal) for literal in error.literals])}."
-                )
-
-            case commands.EmojiNotFound():
-                desc = f"Sorry! `{error.argument}` is not a custom emote."
-            case commands.BadArgument():
-                desc = f"{error}"
-
-            case commands.MissingRequiredArgument():
-                desc = f"Please, provide this argument:\n`{error.param.name}`"
-            case commands.CommandNotFound():
-                if ctx.prefix in {"/", f"<@{ctx.bot.user.id}> ", f"<@!{ctx.bot.user.id}> "}:
-                    return
-                if ctx.prefix == "$" and ctx.message.content[1].isdigit():
-                    # "$200 for this?" 2 is `ctx.message.content[1]`
-                    # prefix commands should not start with digits
-                    return
-                # TODO: make a fuzzy search in here to recommend the command that user wants
-                desc = f"Please, double-check, did you make a typo? Or use `{ctx.prefix}help`"
-            case commands.CommandOnCooldown():
-                desc = (
-                    f"Please retry in `{clock.human_timedelta(seconds=error.retry_after, mode='short')} {clock.discord()}`"
-                )
-            case commands.NotOwner():
-                desc = f"Sorry, only {ctx.bot.owner} as the bot developer is allowed to use this command."
-            case commands.MissingRole():
-                desc = f"Sorry, only {error.missing_role} are able to use this command."
-            case commands.CheckFailure():
-                desc = f"{error}"
-            case _:
-                # error is unhandled/unclear and thus developers need to be notified about it.
-                is_unexpected = True
-
-                cmd_name = f"{ctx.clean_prefix}{ctx.command.qualified_name if ctx.command else 'non-cmd'}"
-                kwargs_join = (
-                    "\n".join(f"[{name}]: {value!r}" for name, value in ctx.kwargs.items()) if ctx.kwargs else "No arguments"
-                )
-                snowflake_ids = (
-                    f"author  = {ctx.author.id}\n"
-                    f"channel = {ctx.channel.id}\n"
-                    f"guild   = {ctx.guild.id if ctx.guild else 'DM Channel'}"
-                )
-                metadata_embed = (
-                    discord
-                    .Embed(
-                        title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
-                        url=ctx.message.jump_url,
-                        description=textwrap.shorten(ctx.message.content, width=1024),
-                    )
-                    .set_author(
-                        name=f"@{ctx.author} in #{ctx.channel} ({ctx.guild.name if ctx.guild else 'DM Channel'})",
-                        icon_url=ctx.author.display_avatar,
-                    )
-                    .add_field(name="Command Args", value=shared_fmt.codeblock(kwargs_join, "ps"), inline=False)
-                    .add_field(name="Snowflake IDs", value=shared_fmt.codeblock(snowflake_ids, "ebnf"), inline=False)
-                    .set_footer(
-                        text=f"on_command_error: {cmd_name}",
-                        icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
-                    )
-                )
-                await ctx.bot.error_notification_manager.register(error, metadata_embed)
-
-        response_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
-        await ctx.reply(embed=response_embed, ephemeral=True)
-
-    async def on_ready(self) -> None:
-        """Handle `ready` event."""
-        if not self.ready_flag:
-            self.launch_time = clock.utcnow()
-            self.ready_flag = True
-        log.info("Logged in as `%s`", self.user)
+    #########################################################################################################################
+    # STARTING THE BOT
+    #########################################################################################################################
 
     @override
     async def setup_hook(self) -> None:
@@ -385,106 +299,73 @@ class AluBot(BotBase, commands.Bot):
         await self.tree.sync(guild=guild)
         return True
 
-    async def on_ready_old(self) -> None:
+    async def on_ready(self) -> None:
         """Handle `ready` event."""
-        if not hasattr(self, "launch_time"):
+        if not self.ready_flag:
             self.launch_time = clock.utcnow()
+            self.ready_flag = True
         log.info("Logged in as `%s`", self.user)
-        if not self.test:
-            await self.send_warning("AluBot is ready.")
 
     @override
     async def start(self) -> None:  # ty: ignore[invalid-method-override]
         token = env.DISCORD_TOKEN_YENBOT if self.test else env.DISCORD_TOKEN_ALUBOT
         await super().start(token, reconnect=True)
 
+    #########################################################################################################################
+    # MANAGEMENT
+    #########################################################################################################################
+
+    @override
+    async def close(self) -> None:
+        """Close the connection to Discord while cleaning up other open sessions and clients."""
+        log.info("%s is closing.", self.__class__.__name__)
+        await super().close()
+        await self.pool.close()
+        await self.session.close()
+
     @override
     async def get_context(
-        self, origin: discord.Interaction | discord.Message, /, *, cls: type[commands.Context[Any]] = AluContext
+        self,
+        origin: discord.Interaction | discord.Message,
+        /,
+        *,
+        cls: type[commands.Context[Any]] = AluContext,
     ) -> AluContext:
         return await super().get_context(origin, cls=AluContext)
 
-    # @override
-    # async def get_context(
-    #     self, origin: discord.Message | discord.Interaction[discord.Client], /, *, cls: type[AluContext] = ...
-    # ) -> Any:
-    #     return super().get_context(origin, cls=cls)
+    @override
+    async def on_message(self, message: discord.Message) -> None:
+        """Listen to discord messages.
+
+        By default, this is used for processing text commands.
+
+        However, this bot does not support public text commands: all public users should use slash commands.
+
+        There are a few dev-only text commands that are only allowed in my private hideout server.
+        This listener makes sure of it.
+
+        Note that this listener doesn't change behavior of other "on_message" listeners (e.g. in cogs),
+        they will still listen to messages from all the guilds.
+        """
+        if message.guild and message.guild.id == const.Guild.hideout and not message.author.bot:
+            await self.process_commands(message)
+
+    #########################################################################################################################
+    # SHORTCUTS
+    #########################################################################################################################
 
     @property
     def owner(self) -> discord.User:
         """Bot's owner."""
         return self.bot_app_info.owner
 
-    """
-    Instantiate Functions
-    ---------------------
-    The following functions are `instantiate_something`
-    which import some heavy modules and instantiate some ~heavy clients under bot's namespace.
-    They should be used in `__init__` or in `cog_load` methods in cog classes that require them,
-    i.e. fpc dota notifications should call `bot.initialize_dota`, `bot.instantiate_twitch`.
-    This is done exclusively so when I run only a few cogs with a test bot -
-    I don't need to load those heavy modules/clients.
-
-    Note, that while I import inside the functions which is against PEP-8 - apparently it is not so bad:
-    * pep8 answer: https://stackoverflow.com/a/1188672/19217368
-    * points to import inside the function: https://stackoverflow.com/a/1188693/19217368
-    and I exactly want these^
-    """
-
-    def initialize_lol(self) -> None:
-        """Instantiate League of Legends Client."""
-        if not hasattr(self, "lol"):
-            from utils.lol import LeagueClient
-
-            self.lol = LeagueClient(self)  # pyright: ignore[reportUninitializedInstanceVariable]
-
-    def instantiate_dota(self) -> None:
-        """Instantiate Dota 2 Client.
-
-        * Dota 2 Client, allows communicating with Dota 2 Game Coordinator and Steam
-        """
-        if not hasattr(self, "dota"):
-            from utils.dota.steamio_client import DotaClient
-
-            self.dota = DotaClient(self)  # pyright: ignore[reportUninitializedInstanceVariable]
-
-    def instantiate_github(self) -> None:
-        """Initialize GitHub REST API Client."""
-        if not hasattr(self, "github"):
-            from githubkit import GitHub
-
-            self.github = GitHub(config["TOKENS"]["GIT_PERSONAL"])  # pyright: ignore[reportUninitializedInstanceVariable]
-
-    async def instantiate_twitch(self) -> None:
-        """Instantiate subclassed twitchio's Twitch Client."""
-        if not hasattr(self, "twitch"):
-            from utils.twitch import AluTwitchClient
-
-            self.twitch = AluTwitchClient(self)  # pyright: ignore[reportUninitializedInstanceVariable]
-            await self.twitch.login()
-
-    def instantiate_tz_manager(self) -> None:
-        """Instantiate TimeZone Manager."""
-        if not hasattr(self, "tz_manager"):
-            from utils.timezones import TimezoneManager
-
-            self.tz_manager = TimezoneManager(self)  # pyright: ignore[reportUninitializedInstanceVariable]
-
     @override
-    async def close(self) -> None:
-        """Close the connection to Discord while cleaning up other open sessions and clients."""
-        log.info("%s is closing.", self.__class__.__name__)
-        if not self.test:
-            await self.send_warning("AluBot is closing.")
+    def webhook_from_url(self, url: str) -> discord.Webhook:
+        """Shortcut to discord.Webhook.from_url with some filled args.
 
-        await self.pool.close()
-        for client_attribute_name in ("twitch", "dota", "lol"):
-            if hasattr(self, client_attribute_name):
-                await getattr(self, client_attribute_name).close()
-        await super().close()
-        # session needs to be closed the last probably
-        if hasattr(self, "session"):
-            await self.session.close()
+        The override adds some specific to discord bots arguments.
+        """
+        return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
 
     @property
     def hideout(self) -> const.HideoutGuild:
@@ -496,64 +377,13 @@ class AluBot(BotBase, commands.Bot):
         """Shortcut for Community guild, its channels and roles."""
         return const.CommunityGuild(self)
 
-    @override
-    def webhook_from_url(self, url: str) -> discord.Webhook:
-        """Shortcut to discord.Webhook.from_url with some filled args.
+    #########################################################################################################################
+    # TRANSPOSE X TO Y (Mainly to transpose to/from ``discord.File``, but some other types too)
+    #########################################################################################################################
 
-        The override adds some specific to discord bots arguments.
-        """
-        return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
-
-    async def webhook_from_database(self, channel_id: int) -> discord.Webhook:
-        """Fetch webhook_url from the database by the `channel_id`."""
-        query = "SELECT url FROM webhooks WHERE channel_id = $1"
-        webhook_url: str | None = await self.pool.fetchval(query, channel_id)
-        if webhook_url is not None:
-            return self.webhook_from_url(webhook_url)
-        msg = f"There is no webhook in the database for channel with id={channel_id}"
-        raise errors.PlaceholderError(msg)
-
-    @discord.utils.cached_property
-    def spam_webhook(self) -> discord.Webhook:
-        """A shortcut to spam webhook."""
-        webhook_url = config["WEBHOOKS"]["SPAM"] if not self.test else config["WEBHOOKS"]["YEN_SPAM"]
-        return self.webhook_from_url(webhook_url)
-
-    async def send_warning(self, message: str, *, mention: bool = False) -> None:
-        """Send a quick warning embed to @Aluerie's spam channel."""
-        content = const.Role.warning.mention if mention else ""
-        embed = discord.Embed(color=discord.Color.yellow(), description=message)
-        await self.spam_webhook.send(content=content, embed=embed)
-
-    @discord.utils.cached_property
-    def error_webhook(self) -> discord.Webhook:
-        """A shortcut to error webhook."""
-        webhook_url = config["WEBHOOKS"]["ERROR"] if not self.test else config["WEBHOOKS"]["YEN_ERROR"]
-        return self.webhook_from_url(webhook_url)
-
-    @discord.utils.cached_property
-    def error_ping(self) -> str:
-        """A short for @Error role ping in the hideout."""
-        return const.Role.error.mention if not self.test else const.Role.test_error.mention
-
-    @override
-    async def on_message(self, message: discord.Message) -> None:
-        """A listener for processing commands from discord messages that the bot can see.
-
-        Currently, the bot doesn't allow text command anywhere except my private hideout server.
-        People should use slash commands. Some remaining text commands are dev-only.
-
-        Note that this doesn't change behavior of other "on_message" listeners,
-        i.e. they will still listen to messages from all guilds.
-        """
-        if message.guild and message.guild.id == const.Guild.hideout and not message.author.bot:
-            # only process commands in my own private server and only from me (the only non-bot account in there);
-            await self.process_commands(message)
-
-    # TODO: I don't think it's a proper way of doing this;
-    async def get_or_fetch_app_emojis(self, *, force_fetch: bool = False) -> list[discord.Emoji]:
-        """Get application emojis and cache them."""
-        if not self.app_emojis or force_fetch:
-            self.app_emojis = await self.fetch_application_emojis()
-
-        return self.app_emojis
+    @staticmethod
+    def str_to_file(string: str, filename: str = "file.txt") -> discord.File:
+        """Convert ``str`` to ``discord.File``."""
+        fp = io.BytesIO(io.StringIO(string).read().encode("utf8"))
+        fp.seek(0)
+        return discord.File(fp, filename=filename)

@@ -156,7 +156,7 @@ class ControlCog(AluDevCog):
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, _stderr = await proc.communicate()
-        await interaction.followup.send(file=self.bot.transposer.str_to_file(stdout.decode(), f"{project}-journal.log"))
+        await interaction.followup.send(file=self.bot.str_to_file(stdout.decode(), f"{project}-journal.log"))
 
 
 async def setup(bot: AluBot) -> None:

@@ -326,6 +326,13 @@ class BugTracker(AluCog):
 
     @override
     async def cog_load(self) -> None:
+        # def instantiate_github(self) -> None:
+        #     """Initialize GitHub REST API Client."""
+        #     if not hasattr(self, "github"):
+        #         from githubkit import GitHub
+
+        #         self.github = GitHub(config["TOKENS"]["GIT_PERSONAL"])  # pyright: ignore[reportUninitializedInstanceVariable]
+
         self.bot.instantiate_github()
         self.valve_devs = await self.get_valve_devs()
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from io import BytesIO, StringIO
+from io import BytesIO
 from typing import TYPE_CHECKING
 
 import discord
@@ -25,13 +25,6 @@ class Transposer:
 
     def __init__(self, session: ClientSession) -> None:
         self.session: ClientSession = session
-
-    @staticmethod
-    def str_to_file(string: str, filename: str = "file.txt") -> discord.File:
-        """Convert ``str`` to ``discord.File``."""
-        fp = BytesIO(StringIO(string).read().encode("utf8"))
-        fp.seek(0)
-        return discord.File(fp, filename=filename)
 
 
 class TransposeOLDClient:
@@ -66,13 +59,6 @@ class TransposeOLDClient:
         text_height: int = font.getmask(text).getbbox()[3] + descent
 
         return text_width, text_height
-
-    @staticmethod
-    def str_to_file(string: str, filename: str = "file.txt") -> discord.File:
-        """Convert string to discord.File."""
-        fp = BytesIO(StringIO(string).read().encode("utf8"))
-        fp.seek(0)
-        return discord.File(fp, filename=filename)
 
     @staticmethod
     def plot_to_file(figure: Figure, filename: str = "plt.png") -> discord.File:

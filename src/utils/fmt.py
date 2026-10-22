@@ -7,20 +7,15 @@ import difflib
 import re
 from enum import IntEnum
 from itertools import starmap
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 import tabulate
-from dateutil.relativedelta import relativedelta
 
 # remember that we can now use `from utils import formats` into `formats.format_dt` with this:
 # which is a bit more convenient.
 from discord.utils import TimestampStyle, format_dt
 
 from . import const
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
-
 
 __all__ = (
     "color_to_str",
@@ -31,147 +26,6 @@ __all__ = (
 
 # https://github.com/astanin/python-tabulate/issues/195#issuecomment-1270483262
 tabulate.MIN_PADDING = 0
-
-
-def human_join(seq: Sequence[str], delim: str = ", ", final: str = "or") -> str:
-    """Join sequence of string in human-readable format.
-
-    Examples
-    --------
-    >>> human_join(['Conan Doyle', 'Nabokov', 'Fitzgerald'], final='and')
-    'Conan Doyle, Nabokov and Fitzgerald'
-
-    Sources
-    -------
-    * Rapptz/RoboDanny (license MPL v2)
-        https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/formats.py
-    """
-    size = len(seq)
-    if size == 0:
-        return ""
-
-    if size == 1:
-        return seq[0]
-
-    if size == 2:
-        return f"{seq[0]} {final} {seq[1]}"
-
-    return delim.join(seq[:-1]) + f" {final} {seq[-1]}"
-
-
-def human_timedelta(
-    dt: datetime.datetime | datetime.timedelta | float,
-    *,
-    source: datetime.datetime | None = None,
-    accuracy: int | None = 3,
-    mode: Literal["full", "brief", "strip"] = "full",
-    suffix: bool = True,
-) -> str:
-    """Human timedelta between `dt` and `source` `datetime.datetime`'s.
-
-    Examples
-    --------
-    >>> d = datetime.datetime.today().replace(hour=0, minute=0, second=0)
-    >>> human_timedelta(d)  # '14 hours, 25 minutes and 15 seconds ago'
-    >>> human_timedelta(d, brief=True)  # '14h 39m 48s ago'
-    >>> human_timedelta(d, strip=True)  # '14h50m22s ago'
-    >>> human_timedelta(20000.5324234, strip=True, suffix=False)  # 5h33m20s
-
-    Parameters
-    ----------
-    dt
-        if it is int/float/timedelta then it's assumed to be in the past (as in "dt: int = 5" -> 5 seconds ago)
-    source
-        Assumed as now if not given
-    accuracy
-        How many unit of time words to return
-    brief
-        if to abbreviate units of time as one letters such as 'seconds' -> 's'
-        if `strip` is True then brief param is ignored.
-    strip
-        if to strip the return time string from spaces like '22m33s ago'.
-    suffix
-        If to include 'ago' into return string for past times
-
-    Returns
-    -------
-    str
-        Human readable string describing difference between `dt` and `source`
-
-    """
-    # licensed MPL v2 from Rapptz/RoboDanny
-    # https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
-
-    now = source.astimezone(datetime.UTC) if source else datetime.datetime.now(datetime.UTC)
-
-    match dt:
-        # todo: i dont like this garbage
-        case datetime.datetime():
-            dt = dt.astimezone(datetime.UTC)
-        case datetime.timedelta():
-            dt = now - dt
-        case int() | float():
-            dt = now - datetime.timedelta(seconds=dt)
-
-    now = now.replace(microsecond=0)
-    dt = dt.replace(microsecond=0)
-
-    # This implementation uses `relativedelta` instead of the much more obvious
-    # `divmod` approach with seconds because the seconds approach is not entirely
-    # accurate once you go over 1 week in terms of accuracy since you have to
-    # hardcode a month as 30 or 31 days.
-    # A query like "11 months" can be interpreted as "11 months and 6 days"
-    # ---------------------------------------------------------------------
-    # if you ever need probably (?)slightly faster and more obvious `divmod` implementation,
-    # then `?tag format timedelta` in dpy guild
-    if dt > now:
-        delta = relativedelta(dt, now)
-        output_suffix = ""
-    else:
-        delta = relativedelta(now, dt)
-        output_suffix = " ago" if suffix else ""
-
-    attrs = [
-        ("year", "y"),
-        ("month", "mo"),
-        ("day", "d"),
-        ("hour", "h"),
-        ("minute", "m"),
-        ("second", "s"),
-    ]
-
-    output = []
-    for attr, brief_attr in attrs:
-        elem = getattr(delta, attr + "s")
-        if not elem:
-            continue
-
-        if attr == "day":
-            weeks = delta.weeks
-            if weeks:
-                elem -= weeks * 7
-                if mode == "full":
-                    output.append(format(plural(weeks), "week"))
-                else:
-                    output.append(f"{weeks}w")
-
-        if elem <= 0:
-            continue
-
-        if mode == "full":
-            output.append(format(plural(elem), attr))
-        else:
-            output.append(f"{elem}{brief_attr}")
-
-    if accuracy is not None:
-        output = output[:accuracy]
-
-    if len(output) == 0:
-        return "now"
-    if mode == "full":
-        return human_join(output, final="and") + output_suffix
-    sep = "" if mode == "strip" else " "
-    return sep.join(output) + output_suffix
 
 
 def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> str:
@@ -201,7 +55,7 @@ def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> s
     return " ".join([format_dt(dt, letter) for letter in style_letters])
 
 
-def format_dt_tdR(dt: datetime.datetime) -> str:  # noqa: N802 # tdR is discord format choices.
+def format_dt_tdR(dt: datetime.datetime) -> str:  # ruff: ignore[invalid-function-name] # tdR is discord format choices.
     """Shortcut to combine t, d, R styles for the discord timestamp together.
 
     The most used discord timestamp combination in the bot.
@@ -384,7 +238,7 @@ def ansi(
     return f"\u001b[{final_format}m{text}\u001b[0m"
 
 
-def tick(opt: bool | None, /) -> str:  # noqa: FBT001 # this function has just one argument;
+def tick(opt: bool | None, /) -> str:  # ruff: ignore[boolean-type-hint-positional-argument] # this function has just one argument;
     lookup = {
         True: const.Tick.Yes,
         False: const.Tick.No,
@@ -423,7 +277,7 @@ def divmod_timedelta(total_seconds: float) -> str:
     return "".join(f"{letter}{number}" for letter, number in timeunit_dict.items() if number)
 
 
-def convert_PascalCase_to_spaces(text: str) -> str:  # noqa: N802 # sorry, I always forget what case is what.
+def convert_PascalCase_to_spaces(text: str) -> str:  # ruff: ignore[invalid-function-name] # sorry, I always forget what case is what.
     """Separate PascalCase string with spaces.
 
     Examples
@@ -438,7 +292,7 @@ def convert_PascalCase_to_spaces(text: str) -> str:  # noqa: N802 # sorry, I alw
     return re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", text)
 
 
-def convert_camel_case_to_PascalCase(text: str) -> str:  # noqa: N802 # sorry, I always forget what case is what.
+def convert_camel_case_to_PascalCase(text: str) -> str:  # ruff: ignore[invalid-function-name] # sorry, I always forget what case is what.
     """Convert camel_case string into PascalCase.
 
     Examples

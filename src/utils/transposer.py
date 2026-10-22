@@ -14,17 +14,9 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from PIL import ImageFont
 
-__all__ = ("Transposer",)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
-
-
-class Transposer:
-    """Transposer."""
-
-    def __init__(self, session: ClientSession) -> None:
-        self.session: ClientSession = session
 
 
 class TransposeOLDClient:

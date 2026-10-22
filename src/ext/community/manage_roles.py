@@ -63,7 +63,7 @@ class ManageRoles(AluCog):
         elif not is_streaming and role in after.roles:
             await after.remove_roles(role)
 
-    @loop(count=1)
+    @loop(count=1, wait_for_ready=True)
     async def restart_clean_up(self) -> None:
         """Restart clean up.
 

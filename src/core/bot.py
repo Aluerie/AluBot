@@ -103,7 +103,7 @@ class AluBot(BotBase, commands.Bot):
                 presences=True,
                 voice_states=True,
             ),
-            allowed_mentions=discord.AllowedMentions(everyone=False, users=True, roles=False, replied_user=False),
+            allowed_mentions=discord.AllowedMentions(everyone=False, users=True, roles=True, replied_user=False),
             tree_cls=AluAppCommandTree,
             strip_after_prefix=True,
             case_insensitive=True,

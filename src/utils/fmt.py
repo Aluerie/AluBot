@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import datetime
 import difflib
 import re
 from enum import IntEnum
@@ -13,63 +12,10 @@ import tabulate
 
 # remember that we can now use `from utils import formats` into `formats.format_dt` with this:
 # which is a bit more convenient.
-from discord.utils import TimestampStyle, format_dt
-
 from . import const
-
-__all__ = (
-    "color_to_str",
-    "format_dt_custom",
-    "human_join",
-    "human_timedelta",
-)
 
 # https://github.com/astanin/python-tabulate/issues/195#issuecomment-1270483262
 tabulate.MIN_PADDING = 0
-
-
-def format_dt_custom(dt: datetime.datetime, *style_letters: TimestampStyle) -> str:
-    """Format `datetime.datetime` to discord's application friendly timestamp.
-
-    The Styles Example table:
-    (it's copied from discord.py docs - click on TimestampStyle for the original).
-
-    +-------------+----------------------------+-----------------+
-    |    Style    |       Example Output       |   Description   |
-    +=============+============================+=================+
-    | t           | 22:57                      | Short Time      |
-    +-------------+----------------------------+-----------------+
-    | T           | 22:57:58                   | Long Time       |
-    +-------------+----------------------------+-----------------+
-    | d           | 17/05/2016                 | Short Date      |
-    +-------------+----------------------------+-----------------+
-    | D           | 17 May 2016                | Long Date       |
-    +-------------+----------------------------+-----------------+
-    | f (default) | 17 May 2016 22:57          | Short Date Time |
-    +-------------+----------------------------+-----------------+
-    | F           | Tuesday, 17 May 2016 22:57 | Long Date Time  |
-    +-------------+----------------------------+-----------------+
-    | R           | 5 years ago                | Relative Time   |
-    +-------------+----------------------------+-----------------+.
-    """
-    return " ".join([format_dt(dt, letter) for letter in style_letters])
-
-
-def format_dt_tdR(dt: datetime.datetime) -> str:  # ruff: ignore[invalid-function-name] # tdR is discord format choices.
-    """Shortcut to combine t, d, R styles for the discord timestamp together.
-
-    The most used discord timestamp combination in the bot.
-    Discord will show something like this:
-    "22:57 17/05/2015 5 Years Ago"
-    """
-    return format_dt_custom(dt, "t", "d", "R")
-
-
-def ordinal(n: int | str) -> str:
-    """Convert an integer into its ordinal representation, i.e. 0->'0th', '3'->'3rd'."""
-    n = int(n)
-    suffix = "th" if 11 <= n % 100 <= 13 else ["th", "st", "nd", "rd", "th"][min(n % 10, 4)]
-    return str(n) + suffix
 
 
 def inline_diff(a: str, b: str) -> str:
@@ -262,19 +208,6 @@ def hms_to_seconds(hms_time: str) -> int:
 
     timeunit_dict = {"h": 3600, "m": 60, "s": 1}
     return sum(v * letter_to_seconds(letter) for letter, v in timeunit_dict.items())
-
-
-def divmod_timedelta(total_seconds: float) -> str:
-    """Easier human timedelta than `formats.human_timedelta`.
-
-    But because of this, for accuracy sake, this only supports days, hours, minutes, seconds.
-    """
-    minutes, seconds = divmod(total_seconds, 60)
-    hours, minutes = divmod(minutes, 60)
-    days, hours = divmod(hours, 24)
-
-    timeunit_dict = {"d": days, "h": hours, "m": minutes, "s": seconds}
-    return "".join(f"{letter}{number}" for letter, number in timeunit_dict.items() if number)
 
 
 def convert_PascalCase_to_spaces(text: str) -> str:  # ruff: ignore[invalid-function-name] # sorry, I always forget what case is what.

@@ -22,21 +22,20 @@ if TYPE_CHECKING:
 class EmbedRolesModal(ui.Modal, title="Button Roles with an Embed"):
     """Embed Role Modal."""
 
-    def __init__(self) -> None:
-        super().__init__()
+    # def __init__(self) -> None:
+    #     super().__init__()
 
-        for 
-        self.add_item()
-
+    #     for
+    #     self.add_item()
 
     embed_title = ui.Label(text="Title", component=ui.TextInput())
     description = ui.Label(text="Answer", component=ui.TextInput(style=discord.TextStyle.paragraph))
-    color = 
+    # color =
 
     @override
     async def on_submit(self, interaction: AluInteraction) -> None:
         embed = discord.Embed(
-            color=self.color,
+            # color=self.color,
             title=self.embed_title,
             description=self.description,
         )

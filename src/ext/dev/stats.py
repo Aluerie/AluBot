@@ -8,22 +8,43 @@ Notices
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import discord
 from discord.ext import commands
 
+from config import env
 from core import DevCog
+from shared.concepts.discord_logs import DiscordWebhookLogs
 from utils import const
 
 if TYPE_CHECKING:
     from core import AluBot, Context
 
 
-class StatsCog(DevCog):
+class StatsCog(DiscordWebhookLogs, DevCog):
     """Stats Cog."""
 
     JAILED_BOTS_ROLE_ID = 1090428532162822234
+
+    def __init__(self, bot: AluBot) -> None:
+        super().__init__(env.WEBHOOK_LOGGER, bot.session)
+        super(DevCog, self).__init__(bot)
+
+        self.extra_exact_avatar_mapping: dict[str, str] = {
+            "discord.gateway": "https://em-content.zobj.net/source/microsoft/476/broken-heart_1f494.png",
+            "core.bot": "https://em-content.zobj.net/source/microsoft/476/swan_1f9a2.png",
+        }
+
+    @override
+    async def cog_load(self) -> None:
+        await self.load()
+        await super().cog_load()
+
+    @override
+    async def cog_unload(self) -> None:
+        await self.teardown()
+        await super().cog_unload()
 
     @commands.command(name="invite-link")
     async def invite_link(self, ctx: Context) -> None:

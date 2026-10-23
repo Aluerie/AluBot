@@ -191,10 +191,6 @@ class Meta(Cog):
             embed.add_field(name=name, value=value, inline=name != "System")
         await interaction.followup.send(embed=embed)
 
-        # health_stats = await asyncio.to_thread(self._collect_health_stats)
-        # for name, value in health_stats.items():
-        # "Last restart": clock.discord(self.bot.launch_time, "R")
-
     @botinfo_group.command(name="discord-stats")
     async def discord_stats(self, interaction: Interaction) -> None:
         """🌐 Show bot's discord stats: in how many servers in, etc."""

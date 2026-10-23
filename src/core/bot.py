@@ -19,12 +19,12 @@ from discord.ext import commands
 
 from config import env
 from ext import DISABLED_EXTENSIONS, EXT_PACKAGE
-from shared import clock, fmt
+from shared import clock, errors, fmt
 from shared.concepts import BotBase
 from utils import const
 
+from .interactions import AppCommandTree
 from .scheduler import Scheduler
-from .tree import AppCommandTree
 
 if TYPE_CHECKING:
     import datetime as dt
@@ -43,54 +43,6 @@ __all__ = (
 log = logging.getLogger(__name__)
 
 type Context = commands.Context[Bot]
-
-
-def _build_ctx_error_embed(ctx: Context) -> discord.Embed:
-    """Build the error report embed for a prefix command invocation."""
-    embed = (
-        discord
-        .Embed(
-            color=0x890620,
-            title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
-            url=ctx.message.jump_url,
-            description=textwrap.shorten(ctx.message.content, width=1024),
-            timestamp=ctx.message.created_at,
-        )
-        .set_author(
-            name=f"@{ctx.author} in #{ctx.channel}",
-            icon_url=ctx.author.display_avatar,
-        )
-        .set_footer(
-            text=ctx.guild.name if ctx.guild else "DM Channel",
-            icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
-        )
-    )
-    fmt.add_args_field(embed, "Ctx Args", *ctx.args[2:])  # cut `self, ctx: Context`
-    fmt.add_mapping_field(embed, "Ctx Kwargs", ctx.kwargs)
-    fmt.add_mapping_field(
-        embed,
-        "Snowflake IDs",
-        {
-            "author": ctx.author.id,
-            "channel": ctx.channel.id,
-            "guild": ctx.guild.id if ctx.guild else None,
-            "message": ctx.message.id,
-        },
-    )
-    return embed
-
-
-def _build_event_error_embed(event: str, /, *args: Any, **kwargs: Any) -> discord.Embed:
-    """Build the error report embed for an exception raised inside an event listener."""
-    embed = discord.Embed(
-        color=0xA32952,
-        title=f"Event Error: `{event}`",
-    )
-    if args:
-        fmt.add_args_field(embed, "Event Args", *args)
-    if kwargs:
-        fmt.add_mapping_field(embed, "Event Kwargs", kwargs)
-    return embed
 
 
 class Bot(BotBase, commands.Bot):
@@ -238,7 +190,16 @@ class Bot(BotBase, commands.Bot):
         (_exception_type, exception, _traceback) = sys.exc_info()
         assert exception is not None, "Somehow `on_error` fired with exception being `None`."
 
-        embed = _build_event_error_embed(event, *args, **kwargs)
+        embed = discord.Embed(
+            color=0xA32952,
+            title=f"Event Error: `{event}`",
+        )
+        if args:
+            fmt.add_args_field(embed, "Event Args", *args)
+        if kwargs:
+            fmt.add_mapping_field(embed, "Event Kwargs", kwargs)
+        if isinstance(exception, errors.BotError) and exception.data:
+            fmt.add_mapping_field(embed, "BotError Data", exception.data)
         await self.error_notification_manager.register(exception, embed)
 
     @override
@@ -266,7 +227,38 @@ class Bot(BotBase, commands.Bot):
                 if not await self.respond_per_policy(error, respond=ctx.reply):
                     return
 
-                embed = _build_ctx_error_embed(ctx)
+                embed = (
+                    discord
+                    .Embed(
+                        color=0x890620,
+                        title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
+                        url=ctx.message.jump_url,
+                        description=textwrap.shorten(ctx.message.content, width=1024),
+                        timestamp=ctx.message.created_at,
+                    )
+                    .set_author(
+                        name=f"@{ctx.author} in #{ctx.channel}",
+                        icon_url=ctx.author.display_avatar,
+                    )
+                    .set_footer(
+                        text=ctx.guild.name if ctx.guild else "DM Channel",
+                        icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
+                    )
+                )
+                fmt.add_args_field(embed, "Ctx Args", *ctx.args[2:])  # cut `self, ctx: Context`
+                fmt.add_mapping_field(embed, "Ctx Kwargs", ctx.kwargs)
+                fmt.add_mapping_field(
+                    embed,
+                    "Snowflake IDs",
+                    {
+                        "author": ctx.author.id,
+                        "channel": ctx.channel.id,
+                        "guild": ctx.guild.id if ctx.guild else None,
+                        "message": ctx.message.id,
+                    },
+                )
+                if isinstance(error, errors.BotError) and error.data:
+                    fmt.add_mapping_field(embed, "BotError Data", error.data)
                 await ctx.bot.error_notification_manager.register(error, embed)
 
     #########################################################################################################################

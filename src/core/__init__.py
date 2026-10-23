@@ -8,6 +8,5 @@ Notices
 
 from .bot import *
 from .cog import *
+from .interactions import *
 from .scheduler import *
-from .tree import *
-from .views import *

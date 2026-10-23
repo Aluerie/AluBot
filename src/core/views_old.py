@@ -46,29 +46,8 @@ async def on_views_modals_error(
         is_unexpected = True
 
         args_join = f"[view]: {view}" + (f"\n[item]: {item}" if item else "")
-        snowflake_ids = (
-            f"author  = {interaction.user.id}\n"  # comment to prevent formatting from concatenating the lines
-            f"channel = {interaction.channel_id}\n"  # so I can see the alignment better
-            f"guild   = {interaction.guild_id}"
-        )
 
-        metadata_embed = (
-            discord
-            .Embed(color=0x2A0553, title=f"Error in View: `{view.__class__.__name__}`")
-            .set_author(
-                name=(
-                    f"@{interaction.user} in #{interaction.channel} "
-                    f"({interaction.guild.name if interaction.guild else 'DM Channel'})"
-                ),
-                icon_url=interaction.user.display_avatar,
-            )
-            .add_field(name="View Objects", value=fmt.code(args_join, "ps"), inline=False)
-            .add_field(name="Snowflake IDs", value=fmt.code(snowflake_ids, "ebnf"), inline=False)
-            .set_footer(
-                text=f"{view.__class__.__name__}.on_error",
-                icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
-            )
-        )
+        metadata_embed = discord.Embed().add_field(name="View Objects", value=fmt.code(args_join, "ps"), inline=False)
 
         await interaction.client.exc_manager.register_error(error, metadata_embed, interaction.channel_id)
         if interaction.channel_id == interaction.client.hideout.spam_channel_id:
@@ -141,23 +120,6 @@ class AluView(discord.ui.View):
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return False
-
-    @override
-    async def on_timeout(self) -> None:
-        """On timeout we disable items in view so they are not clickable any longer if possible.
-
-        Requires us to assign message object to view so it can edit the message.
-        """
-        if hasattr(self, "message"):
-            for item in self.children:
-                # item in self.children is Select/Button which have ``.disable`` but typehinted as Item
-                item.disabled = True  # type: ignore[reportAttributeAccessIssue]
-            await self.message.edit(view=self)
-
-    @override
-    async def on_error(self, interaction: AluInteraction, error: Exception, item: discord.ui.Item[discord.ui.View]) -> None:
-        """My own Error Handler for Views."""
-        await on_views_modals_error(self, interaction, error, item)
 
 
 class Url(discord.ui.View):
@@ -237,20 +199,3 @@ class AluLayoutView(discord.ui.LayoutView):
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return False
-
-    @override
-    async def on_timeout(self) -> None:
-        """On timeout we disable items in view so they are not clickable any longer if possible.
-
-        Requires us to assign message object to view so it can edit the message.
-        """
-        if hasattr(self, "message"):
-            for item in self.children:
-                # item in self.children is Select/Button which have ``.disable`` but typehinted as Item
-                item.disabled = True  # type: ignore[reportAttributeAccessIssue]
-            await self.message.edit(view=self)
-
-    @override
-    async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item[discord.ui.View]) -> None:
-        """My own Error Handler for Views."""
-        await on_views_modals_error(self, interaction, error, item)
